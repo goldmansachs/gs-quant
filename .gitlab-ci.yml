@@ -1,0 +1,106 @@
+#Copyright 2018 Goldman Sachs.
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.  
+#You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing,
+#software distributed under the License is distributed on an
+#"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+#KIND, either express or implied.  See the License for the
+#specific language governing permissions and limitations
+#under the License.
+
+include:
+  - "https://gitlab.gs.com/sdlc-global/ci-utils/raw/latest/ci-area.yml"
+
+variables:
+  ENABLE_SEMVER: "true"
+  NPM_CACHE: $NPM_PREFIX/cache
+  NPM_PREFIX: $CI_PROJECT_DIR/npm
+  NPM_REGISTRY: http://prod2-04.npmscopes.site.gs.com:62990
+  NPM_TMP: $NPM_PREFIX/tmp
+
+before_script:
+    - export NO_UPDATE_NOTIFIER=true
+    - export JAVA_HOME=/sw/external/jdk-1.8.0_162_x64/
+    - export NODE=/gns/area/certified/external/org/nodejs/node.js/node.js-8.11.1.gns/node_v8.11.1_linux_x64.tar.gz/node-v8.11.1-linux-x64/bin/
+    - export PATH=$NODE:$M2_HOME/bin:$JAVA_HOME/bin:$PATH
+    - export AREA_IS_FINAL=$([[ "$CI_BUILD_REF_NAME" =~ ^release-[0-9]+\.[0-9]+\.[0-9]+$ ]] && echo "true" || echo "false")
+    - export AREA_BUILD_ID=$([ "$AREA_IS_FINAL" == true ] && echo "FINAL" || echo "$CI_PIPELINE_ID")
+
+.job_template: &job_definition
+    before_script:
+        - export PATH=/sw/external/anaconda3-5.0.0/bin:$PATH
+        - export GS_PYPI_URL="http://pypi.site.gs.com/simple"
+        - export GS_PYPI_HOST="pypi.site.gs.com"
+        - pip install -i $GS_PYPI_URL --user virtualenv
+        - ~/.local/bin/virtualenv holodeck
+        - chmod 755 holodeck/bin/activate
+        
+build:main:
+    <<: *job_definition
+    stage: build
+    tags:
+        - linux-default
+    script:
+        # build distribution package        
+        - ls -lF
+        - python3.6 setup.py sdist
+        - cp -R dist/ artifacts/
+        # clean notebooks
+        - ~/.local/bin/virtualenv sandcastle
+        - chmod 755 sandcastle/bin/activate
+        - source sandcastle/bin/activate
+        - pip install nbstripout
+        - nbstripout gs_quant/notebooks/*.ipynb
+        - deactivate
+        # generate requirements file
+        - source holodeck/bin/activate
+        - pip install artifacts/gs_quant-?.?.?.tar.gz
+        - pip freeze > artifacts/requirements.txt
+        # build installation bundle
+        - tempdir=$(mktemp -d /tmp/wheelhouse-XXXXX)
+        - pip wheel -r artifacts/requirements.txt --wheel-dir=$tempdir --find-links=dist
+        - cwd=`pwd`
+        - (cd "$tempdir"; tar -cjvf "$cwd/artifacts/bundled.tar.bz2" *)
+        - cd artifacts
+        - zip gs_quant-latest.zip gs_quant-?.?.?.tar.gz requirements.txt
+    artifacts:
+        paths:
+            - "$CI_PROJECT_DIR/artifacts/"
+        expire_in: 1 month
+
+test:doctest:
+    <<: *job_definition
+    stage: test
+    tags:
+        - linux-default
+    script:
+        - source holodeck/bin/activate
+        - tempdir=$(mktemp -d /tmp/wheelhouse-XXXXX)
+        - cwd=`pwd`
+        - (cd $tempdir; tar -xvf $cwd/artifacts/bundled.tar.bz2)
+        - pip install --force-reinstall --ignore-installed --upgrade --no-index --no-deps $tempdir/*
+        - python -m gs_quant -v
+    except:
+        variables:
+            - $CI_COMMIT_MESSAGE =~ /skip-tests/
+
+test:pytest:
+    <<: *job_definition
+    stage: test
+    tags:
+        - linux-default
+    script:
+        - source holodeck/bin/activate
+        - tempdir=$(mktemp -d /tmp/wheelhouse-XXXXX)
+        - cwd=`pwd`
+        - (cd $tempdir; tar -xvf $cwd/artifacts/bundled.tar.bz2)
+        - pip install --force-reinstall --ignore-installed --upgrade --no-index --no-deps $tempdir/*
+        - pip install pytest-cov pytest-mock
+        - pytest -rsx --cov=gs_quant gs_quant/test
+    except:
+        variables:
+            - $CI_COMMIT_MESSAGE =~ /skip-tests/
