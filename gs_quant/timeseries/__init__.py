@@ -15,5 +15,8 @@ under the License.
 """
 
 from .prices import *
+from .statistics import *
+from .econometrics import *
+from .technicals import *
 
 __name__ = 'timeseries'
