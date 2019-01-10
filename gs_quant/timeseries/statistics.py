@@ -431,7 +431,6 @@ def std(series, window=0):
     assert series.index.is_monotonic_increasing
     return series.rolling(window, 0).std()
 
-
 std.__annotations__ = {'series': pd.Series, 'window': int, 'return': pd.Series}
 
 
