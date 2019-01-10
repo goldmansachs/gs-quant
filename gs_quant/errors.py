@@ -14,11 +14,13 @@ specific language governing permissions and limitations
 under the License.
 """
 
+from __future__ import (absolute_import, division, print_function, unicode_literals)
+from builtins import *  # install future
 import sys
 
 
 class MqError(Exception):
-    """Base class for errors in this package"""
+    """Base class for errors in this module"""
     pass
 
 
@@ -42,3 +44,15 @@ class MqRequestError(MqError):
         if sys.version_info.major < 3:
             result = result.encode('ascii', 'ignore')
         return result
+
+
+class MqAuthenticationError(MqRequestError):
+    pass
+
+
+class MqAuthorizationError(MqRequestError):
+    pass
+
+
+class MqUninitialisedError(MqError):
+    pass

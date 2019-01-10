@@ -14,6 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 
+from ..timeseries import *
 import inspect
 import pytest
 import re
@@ -52,7 +53,7 @@ def test_docstrings(ts_map):
 
         assert params == set(inspect.signature(v).parameters.keys()), 'all parameters documented'
         assert has_return, 'return value is documented'
-        assert others == 1, 'single line description'
+        assert others >= 1, 'at least one line description'
 
 
 def test_annotations(ts_map):
