@@ -1,3 +1,4 @@
+""""""
 """
 Copyright 2018 Goldman Sachs.
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,14 +22,14 @@ The technical analysis timeseries library contains functions which compute techn
 timeseries operations (moving average), and finance-specific technical indicators (e.g. bollinger bands)
 """
 
-
 from .statistics import *
 
 
 def moving_average(series, window=22):
     """
     Compute moving average of a timeseries over specified window
-    :param series: time series of prices
+
+:param series: time series of prices
     :param window: number of observations in window
     :return: date-based time series of return
     """

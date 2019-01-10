@@ -18,6 +18,8 @@ should be fully documented: docstrings should describe parameters and the return
 description. Type annotations should be provided for parameters.
 """
 
+from __future__ import (absolute_import, division, print_function, unicode_literals)
+from builtins import *  # requires future
 import collections
 import math
 import numpy
@@ -33,6 +35,7 @@ _WEEKLY = 52
 _SEMI_MONTHLY = 26
 _MONTHLY = 12
 _QUARTERLY = 4
+_SEMI_ANNUALLY = 2
 _ANNUALLY = 1
 
 

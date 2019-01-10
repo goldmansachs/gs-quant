@@ -1,34 +1,33 @@
-"""
-Copyright 2018 Goldman Sachs.
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-  http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing,
-software distributed under the License is distributed on an
-"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-KIND, either express or implied.  See the License for the
-specific language governing permissions and limitations
-under the License.
-
-Chart Service will attempt to make public functions (not prefixed with _) from this module available. Such functions
-should be fully documented: docstrings should describe parameters and the return value, and provide a 1-line
-description. Type annotations should be provided for parameters.
-
-Econometrics timeseries library is for standard economic and time series analytics operations, including returns,
-diffs, lags, volatilities and other numerical operations which are generally finance-oriented
-"""
-
+# Copyright 2018 Goldman Sachs.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#   http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+#
+# Chart Service will attempt to make public functions (not prefixed with _) from this module available. Such functions
+# should be fully documented: docstrings should describe parameters and the return value, and provide a 1-line
+# description. Type annotations should be provided for parameters.
 
 import math
 from .statistics import *
 from ..errors import *
 
+"""
+Econometrics timeseries library is for standard economic and time series analytics operations, including returns,
+diffs, lags, volatilities and other numerical operations which are generally finance-oriented
+"""
+
+
 # Return types
-_SIMPLE = "SIMPLE"
-_LOG = "LOG"
+_SIMPLE = "simple"
+_LOG = "log"
 
 # Annualization factors
 _DAILY = 252
@@ -40,7 +39,6 @@ _ANNUALLY = 1
 
 
 def _get_annualization_factor(series):
-
     prev_idx = series.index[0]
     prev_value = series[0]
     distances = []
@@ -84,8 +82,11 @@ def _get_annualization_factor(series):
 
 def annualize(series):
     """
-    Annualize series based on observation periods. Will attempt to determine the observation frequency automatically
-    (e.g. daily, weekly), and then apply the corresponding annualization factor, e.g. sqrt(252), sqrt(52)
+    Annualize timeseries based on sample observation frequency
+
+    Annualize series based on sample observation periods. Will attempt to determine the observation frequency
+    automatically (e.g. daily, weekly), and then apply the corresponding annualization factor, e.g. sqrt(252), sqrt(52)
+
     :param series: time series of prices
     :return: date-based time series of annualized values
     """
@@ -94,39 +95,85 @@ def annualize(series):
     return series * math.sqrt(factor)
 
 
-def lag(series, observations=1):
+annualize.__annotations__ = {'series': pd.Series, 'return': pd.Series}
+
+
+def lag(series, obs=1):
     """
     Lag timeseries by a specified number of observations
+
+    :math:`Y_t =  X_{t-obs}`
+
     :param series: time series of prices
-    :param observations: number of observations to lag series
+    :param obs: number of observations to lag series
     :return: date-based time series of return
     """
 
     # Determine how we want to handle observations prior to start date
 
-    return series.shift(-observations)
+    return series.shift(-obs)
 
 
-lag.__annotations__ = {'series': pd.Series, 'observations': int, 'return': pd.Series}
+lag.__annotations__ = {'series': pd.Series, 'obs': int, 'return': pd.Series}
 
 
-def returns(series, ret_type=_SIMPLE, naiszero=1):
+def returns(series, type=_SIMPLE, naiszero=1):
     """
-    Calculate returns of a given price series
+    Calculate returns from price series
+
     :param series: time series of prices
-    :param ret_type: returns type (simple, log)
+    :param type: returns type
     :param naiszero: returns zero rather than NaN for lagged dates
     :return: date-based time series of return
+
+    **Usage**
+
+    Compute returns series from price levels, based on the value of *type*:
+
+    ======   =============================
+    Type     Description
+    ======   =============================
+    simple   Simple arithmetic returns
+    log      Logarithmic returns
+    ======   =============================
+
+    *Simple*
+
+    Simple geometric change in asset prices, which can be aggregated across assets
+
+    :math:`Y_t = \\frac{X_t}{X_{t-1}} - 1`
+
+    where :math:`X_t` is the asset price at time :math:`t`
+
+    *Logarithmic*
+
+    Natural logarithm of asset price changes, which can be aggregated through time
+
+    :math:`Y_t = log(X_t) - log(X_{t-1})`
+
+    where :math:`X_t` is the asset price at time :math:`t`
+
+    **Examples**
+
+    Generate price series and take compute returns
+
+    >>> from gs_quant.timeseries import *
+    >>> prices = generate_series(100)
+    >>> returns = returns(prices)
+
+    **See also**
+
+    :func:`prices`
     """
 
     if series.size < 1:
         return series
 
-    if ret_type is _SIMPLE:
-        ret_series = series/series.shift(1) - 1
-    elif ret_type is _LOG:
+    if type == _SIMPLE:
+        ret_series = series / series.shift(1) - 1
+    elif type == _LOG:
         log_s = series.apply(math.log)
-        ret_series = log_s-log_s.shift(1)
+        ret_series = log_s - log_s.shift(1)
     else:
         raise MqValueError('Unknown returns type (use simple / log)')
 
@@ -140,21 +187,33 @@ def returns(series, ret_type=_SIMPLE, naiszero=1):
 returns.__annotations__ = {'series': pd.Series, 'type': str, 'naiszero': bool, 'return': pd.Series}
 
 
-def prices(series, initial=1, ret_type=_SIMPLE):
+def prices(series, initial=1, type=_SIMPLE):
     """
-    Calculate price levels from a given returns series
+    Calculate price levels from returns series
+
     :param series: time series of prices
     :param initial: initial price level
-    :param ret_type: returns type (simple, log)
+    :param type: returns type (simple, log)
     :return: date-based time series of return
+
+    **Usage**
+
+    Compute price levels from returns series, based on the value of *type*:
+
+    ======   =============================
+    Type     Description
+    ======   =============================
+    simple   Simple arithmetic returns
+    log      Logarithmic returns
+    ======   =============================
     """
 
     if series.size < 1:
         return series
 
-    if ret_type is _SIMPLE:
-        return product(1+series) * initial
-    elif ret_type is _LOG:
+    if type == _SIMPLE:
+        return product(1 + series) * initial
+    elif type == _LOG:
         return product(series.apply(math.exp)) * initial
     else:
         raise MqValueError('Unknown returns type (use simple / log)')
@@ -163,11 +222,12 @@ def prices(series, initial=1, ret_type=_SIMPLE):
 prices.__annotations__ = {'series': pd.Series, 'initial': int, 'type': str, 'return': pd.Series}
 
 
-def diff(series, observations=1, naiszero=1):
+def diff(series, lag=1, naiszero=1):
     """
-    Calculate differences of a given timeseries
+    Diff observations with given lag
+
     :param series: time series of prices
-    :param observations: number of observations
+    :param lag: number of observations to lag
     :param naiszero: returns zero rather than NaN for lagged dates
     :return: date-based time series of return
     """
@@ -175,21 +235,24 @@ def diff(series, observations=1, naiszero=1):
     if series.size < 1:
         return series
 
-    ret_series = series - series.shift(observations)
+    ret_series = series - series.shift(lag)
 
     # Ensures 1+sum(diff(s)) == s
     if naiszero:
-        ret_series[0:observations] = 0
+        ret_series[0:lag] = 0
 
     return ret_series
 
 
-diff.__annotations__ = {'series': pd.Series, 'observations': int, 'naiszero': bool, 'return': pd.Series}
+diff.__annotations__ = {'series': pd.Series, 'lag': int, 'naiszero': bool, 'return': pd.Series}
 
 
 def index(x):
     """
-    Multiplicative series normalization. Divides every value in x by the initial value of x.
+    Geometric series normalization
+
+    Divides every value in x by the initial value of x.
+
     :param x: time series
     :return: normalized time series
     """
@@ -201,7 +264,10 @@ index.__annotations__ = {'x': pd.Series, 'return': pd.Series}
 
 def volatility(series, window=0):
     """
-    Calculate rolling annualized realized volatility of a given price series
+    Realized volatility of price series
+
+    Calculate rolling annualized realized volatility of a price series, calculated over a given window
+
     :param series: time series of prices
     :param window: number of observations
     :return: date-based time series of return
@@ -211,7 +277,7 @@ def volatility(series, window=0):
     if series.size < 1:
         return series
 
-    return annualize(standard_deviation(returns(series), window))
+    return annualize(std(returns(series), window))
 
 
 volatility.__annotations__ = {'series': pd.Series, 'window': int, 'return': pd.Series}
@@ -219,7 +285,8 @@ volatility.__annotations__ = {'series': pd.Series, 'window': int, 'return': pd.S
 
 def correlation(series1, series2, window=0):
     """
-    Calculate rolling correlation of two price series
+    Rolling correlation of two price series
+
     :param series1: time series of prices
     :param series2: time series of prices
     :param window: number of observations
@@ -237,3 +304,26 @@ def correlation(series1, series2, window=0):
 
 
 correlation.__annotations__ = {'series1': pd.Series, 'series2': pd.Series, 'window': int, 'return': pd.Series}
+
+
+def beta(series1, series2, window=0):
+    """
+    Rolling beta of two price series
+
+    :param series1: time series of prices
+    :param series2: time series of prices
+    :param window: number of observations
+    :return: date-based time series of return
+    """
+    window = window or series1.size
+
+    if series1.size < 1:
+        return series1
+
+    ret_1 = returns(series1)
+    ret_2 = returns(series2)
+
+    return ret_1.rolling(window, 0).corr(ret_2)
+
+
+beta.__annotations__ = {'series1': pd.Series, 'series2': pd.Series, 'window': int, 'return': pd.Series}
