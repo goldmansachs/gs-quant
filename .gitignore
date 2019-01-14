@@ -1,6 +1,0 @@
-/build/
-/dist/
-/gs_quant.egg-info/
-.ipynb_checkpoints/
-.pytest_cache/
-.coverage

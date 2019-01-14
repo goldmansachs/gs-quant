@@ -34,15 +34,17 @@ class ContextBase(metaclass=ContextMeta):
         self.__previous = None
 
     def __enter__(self):
-        self.__previous = type(self).current
-        type(self).current = self
+        cls = next(b for b in self.__class__.__bases__ if issubclass(b, ContextBase))
+        self.__previous = cls.current
+        cls.current = self
         self._on_enter()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         try:
             self._on_exit(exc_type, exc_val, exc_tb)
         finally:
-            type(self).current = self.__previous
+            cls = next(b for b in self.__class__.__bases__ if issubclass(b, ContextBase))
+            cls.current = self.__previous
             self.__previous = None
 
     @property

@@ -21,7 +21,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="gs_quant",
-    version="0.4.8",
+    version="0.5.2",
     author="Goldman Sachs",
     author_email="developer@gs.com",
     description="Goldman Sachs Quant",
@@ -34,17 +34,22 @@ setuptools.setup(
         "backoff",
         "cachetools",
         "configparser",
+        "enum34",
         "funcsigs",
         "future",
         "inflection",
         "pandas",
         "requests",
+        "scipy",
         "six",
         "typing",
+        "scipy",
     ],
     extras_require={
+        "kerb": ["requests-kerberos"],
         "notebook": ["jupyter", "matplotlib~=2.1.0", "pprint"],
-        "test": ["pytest", "pytest-cov", "pytest-mock"]
+        "test": ["pytest", "pytest-cov", "pytest-mock"],
+        "develop": ["sphinx", "sphinx_rtd_theme"]
     },
     classifiers=[
         "Programming Language :: Python :: 3",

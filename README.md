@@ -1,13 +1,7 @@
 # GS Quant
 
-**GS Quant** is a python toolkit for quantitative finance, which provides access to an extensive set of derivatives pricing data through the Goldman Sachs Marquee developer APIs. Libraries are provided for timeseries analytics, portfolio manipulation, risk and scenario analytics and backtesting. Can be used to interact with the Marquee platform programmatically, or as a standalone software package for quantitiative analytics.
-
-Created and maintained by quantitative developers (quants) at Goldman Sachs to enable development of trading strategies and analysis of derivative products. Can be used to facilitate derivative structuring and trading, or as statistical packages for a variety of timeseries analytics applications. 
-
-See also Getting Started notebook in the gs_quant folder or package.
-
 ## Installation
-```pip install gs_quant```
+pip install gs_quant
 
 ## Dependencies
 Python 3.6 or 3.7  
@@ -15,13 +9,33 @@ Package dependencies can be installed by pip.
 
 ## Example
 ```python
-from gs_quant import *
+from gs_quant.api.dataset import Dataset
+from gs_quant.api.instrument import IRSwap
+from gs_quant.api.common import Currency, PayReceive
+import gs_quant.api.risk as risk
+from gs_quant.session import Environment, GsSession
+from gs_quant.timeseries import realized_volatility
 
-with AppSession('CLIENT_ID', 'CLIENT_SECRET', Environment.PROD) as session:
-    # get coverage for a dataset and run a query
-    coverage = session.get_coverage('WEATHER')
-    df = session.get_data('WEATHER', {'city': ['Boston', 'Austin']}, '2016-02-01', '2016-02-14')
+# N.b., GsSession.use(Environment.PROD, <client_id>, <client_secret>) will set the default session
+ 
+with GsSession.get(Environment.PROD, <client_id>, <client_secret>):
+    # get coverage for a dataset; run a query
+    wmFxSpot = Dataset('WMFXSPOT')
+    coverage = wmFxSpot.get_coverage()
+    df = wmFxSpot.get_data('2018-01-03', '2018-01-04', bbid=['USDEUR', 'USDGBP'])
+
+    # get prices as a time series, then calculate vol
+    treod = Dataset('TREOD')
+    curve = treod.get_data_series('tradePrice', ric='.SPX', start='2003-01-01', end='2018-08-31')
+    vol = realized_volatility(curve, 252)
+    vol.plot()  # requires matplotlib
+    
+    # price an interest rates swap and compute its bucketed delta
+    irs = IRSwap(PayReceive.Pay, "5y", Currency.USD, fixedRate=0.035)
+    pv = irs.price()
+    irDelta = irs.calc(risk.IRDelta)
 ```
 
+## Help
 ## Help
 Questions? Comments? Write to data-services@gs.com
