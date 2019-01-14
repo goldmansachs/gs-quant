@@ -90,7 +90,7 @@ class GsSession(ContextBase):
             self._session.headers.update({'X-Application': self.application})
             self._authenticate()
 
-    def __request(self, method: str, path: str, payload: Optional[Union[dict, str, Base, pd.DataFrame]]=None, cls: Optional[type]=None) -> Union[list, dict]:
+    def __request(self, method: str, path: str, payload: Optional[Union[dict, str, Base, pd.DataFrame]]=None, cls: Optional[type]=None, try_auth=True) -> Union[list, dict]:
         is_dataframe = isinstance(payload, pd.DataFrame)
         if not is_dataframe:
             payload = payload or {}
@@ -111,9 +111,11 @@ class GsSession(ContextBase):
 
         response = self._session.request(method, url, **kwargs)
         if response.status_code == 401:
-            # Expired token
+            # Expired token or other authorization issue
+            if not try_auth:
+                raise MqRequestError(response.status_code, response.text, context='{} {}'.format(method, url))
             self._authenticate()
-            return self.__request(method, path, payload=payload, cls=cls)
+            return self.__request(method, path, payload=payload, cls=cls, try_auth=False)
         elif not 199 < response.status_code < 300:
             raise MqRequestError(response.status_code, response.text, context='{} {}'.format(method, url))
         elif 'application/json' in response.headers['content-type']:

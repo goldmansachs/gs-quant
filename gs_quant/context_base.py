@@ -32,24 +32,31 @@ class ContextBase(metaclass=ContextMeta):
 
     def __init__(self):
         self.__previous = None
+        self.__entered = False
 
     def __enter__(self):
-        cls = next(b for b in self.__class__.__bases__ if issubclass(b, ContextBase))
-        self.__previous = cls.current
-        cls.current = self
+        clz = self._cls
+        self.__previous = clz.current
+        self.__entered = True
+        clz.current = self
         self._on_enter()
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         try:
             self._on_exit(exc_type, exc_val, exc_tb)
         finally:
-            cls = next(b for b in self.__class__.__bases__ if issubclass(b, ContextBase))
-            cls.current = self.__previous
+            self._cls.current = self.__previous
             self.__previous = None
+            self.__entered = False
+
+    @property
+    def _cls(self) -> ContextMeta:
+        return next(b for b in self.__class__.__bases__ if issubclass(b, ContextBase))
 
     @property
     def _is_entered(self) -> bool:
-        return self.__previous is not None
+        return self.__entered
 
     def _on_enter(self):
         pass
@@ -59,6 +66,10 @@ class ContextBase(metaclass=ContextMeta):
 
 
 class ContextBaseWithDefault(ContextBase):
+
+    @property
+    def _cls(self) -> ContextMeta:
+        return self.__class__
 
     @classmethod
     def has_default(cls) -> bool:
