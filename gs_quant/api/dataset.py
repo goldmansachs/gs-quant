@@ -164,6 +164,15 @@ class Dataset:
         result = GsSession.current._post('/data/{}/query'.format(self.dataset_id), payload=payload)
         return pd.DataFrame(result['data'])
 
+    def upload_data(
+            self,
+            data: Union[pd.DataFrame, list]
+                    ) -> dict:
+
+        result = GsSession.current._post('/data/{}'.format(self.dataset_id), payload=data)
+        return result
+
+
     def get_data_series(
             self,
             field: str,

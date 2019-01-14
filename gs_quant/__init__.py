@@ -14,6 +14,10 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from .mqapi import AppSession, Environment
+from gs_quant.api.generator.module_generator import GeneratedModuleFinder
+from .session import Environment, GsSession
+import sys
 
 name = "gs_quant"
+
+sys.meta_path.append(GeneratedModuleFinder())

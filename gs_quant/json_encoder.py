@@ -17,20 +17,21 @@ under the License.
 from gs_quant.api.base import Base, EnumBase
 import datetime
 import json
-
+import pandas as pd
 
 class JSONEncoder(json.JSONEncoder):
 
     def default(self, o):
-
-        cls = o.__class__
         if isinstance(o, datetime.datetime):
             return o.isoformat()[:-3] + 'Z'
         if isinstance(o, datetime.date):
             return o.isoformat()
         elif isinstance(o, EnumBase):
             return o.value
+        elif isinstance(o, pd.DataFrame):
+            return o.to_json()
         elif isinstance(o, Base):
+            cls = o.__class__
             properties = [i for i in dir(cls) if isinstance(getattr(cls, i), property)]
             values = [getattr(o, p) for p in properties]
             return dict((p, v) for p, v in zip(properties, values) if v is not None)

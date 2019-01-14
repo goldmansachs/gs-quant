@@ -31,6 +31,7 @@ from gs_quant.api.base import Base
 from gs_quant.context_base import ContextBase
 from gs_quant.errors import MqError, MqRequestError, MqAuthenticationError
 from gs_quant.json_encoder import JSONEncoder
+import pandas as pd
 
 API_VERSION = 'v1'
 DEFAULT_APPLICATION = 'gs-quant'
@@ -45,7 +46,6 @@ class Environment(Enum):
 
 class GsSession(ContextBase):
 
-    __sessions = {}
     __config = None
 
     def __init__(self, domain: str, api_version: str=API_VERSION, application: str=DEFAULT_APPLICATION):
@@ -54,6 +54,7 @@ class GsSession(ContextBase):
         self.domain = domain
         self.api_version = api_version
         self.application = application
+        self.verify = True
 
     @backoff.on_exception(lambda: backoff.expo(factor=2),
                           (requests.exceptions.HTTPError, requests.exceptions.Timeout),
@@ -85,12 +86,15 @@ class GsSession(ContextBase):
     def init(self):
         if not self._session:
             self._session = requests.Session()
-            self._session.verify = True
+            self._session.verify = self.verify
             self._session.headers.update({'X-Application': self.application})
             self._authenticate()
 
-    def __request(self, method: str, path: str, payload: Optional[Union[dict, str, Base]]=None, cls: Optional[type]=None) -> Union[list, dict]:
-        payload = payload or {}
+    def __request(self, method: str, path: str, payload: Optional[Union[dict, str, Base, pd.DataFrame]]=None, cls: Optional[type]=None) -> Union[list, dict]:
+        is_dataframe = isinstance(payload, pd.DataFrame)
+        if not is_dataframe:
+            payload = payload or {}
+
         url = '{}{}{}'.format(self.domain, '/' + self.api_version, path)
 
         kwargs = {}
@@ -100,13 +104,17 @@ class GsSession(ContextBase):
             headers = self._session.headers.copy()
             headers.update({'Content-Type': 'application/json'})
             kwargs['headers'] = headers
-            if payload:
+            if is_dataframe or payload:
                 kwargs['data'] = payload if isinstance(payload, str) else json.dumps(payload, cls=JSONEncoder)
         else:
             raise MqError('not implemented')
 
         response = self._session.request(method, url, **kwargs)
-        if not 199 < response.status_code < 300:
+        if response.status_code == 401:
+            # Expired token
+            self._authenticate()
+            return self.__request(method, path, payload=payload, cls=cls)
+        elif not 199 < response.status_code < 300:
             raise MqRequestError(response.status_code, response.text, context='{} {}'.format(method, url))
         elif 'application/json' in response.headers['content-type']:
             dct = json.loads(response.text)
@@ -117,7 +125,7 @@ class GsSession(ContextBase):
     def _get(self, path: str, payload: Optional[Union[dict, Base]]=None, cls: Optional[type]=None) -> Union[dict, str]:
         return self.__request('GET', path, payload=payload, cls=cls)
 
-    def _post(self, path: str, payload: Optional[Union[dict, Base]]=None, cls: Optional[type]=None) -> Union[dict, str]:
+    def _post(self, path: str, payload: Optional[Union[dict, Base, pd.DataFrame]]=None, cls: Optional[type]=None) -> Union[dict, str]:
         return self.__request('POST', path, payload=payload, cls=cls)
 
     def _delete(self, path: str, payload: Optional[Union[dict, Base]]=None, cls: Optional[type]=None) -> Union[dict, str]:
@@ -145,28 +153,21 @@ class GsSession(ContextBase):
             application: str = DEFAULT_APPLICATION
     ) -> None:
         environment_or_domain = environment_or_domain.name if isinstance(environment_or_domain, Environment) else environment_or_domain
-        key = (environment_or_domain, client_id, scopes)
-        session = cls.__sessions.get(key)
+        session = cls.get(
+            environment_or_domain,
+            client_id=client_id,
+            client_secret=client_secret,
+            scopes=scopes,
+            api_version=api_version,
+            application=application
+        )
 
-        if session is None:
-            session = cls.get(
-                environment_or_domain,
-                client_id=client_id,
-                client_secret=client_secret,
-                scopes=scopes,
-                api_version=api_version,
-                application=application
-            )
+        session.init()
 
-            session.init()
-            cls.__sessions[key] = session
-
-        current = type(session).current or cls.current
-        if current is not None and current._is_entered:
+        if cls.current is not None and cls.current._is_entered:
             raise RuntimeError('Cannot call GsSession.use while an existing session is entered')
 
         cls.current = session
-        type(session).current = session
 
     @classmethod
     def get(
@@ -183,8 +184,8 @@ class GsSession(ContextBase):
         environment_or_domain = environment_or_domain.name if isinstance(environment_or_domain, Environment) else environment_or_domain
 
         if client_id is not None:
-            if environment_or_domain not in (Environment.PROD.name, Environment.QA.name):
-                raise MqAuthenticationError('Only PROD and QA are valid environments')
+            if environment_or_domain not in (Environment.PROD.name, Environment.QA.name, Environment.DEV.name):
+                raise MqAuthenticationError('Only PROD, QA and DEV are valid environments')
 
             return OAuth2Session(environment_or_domain, client_id, client_secret, scopes, api_version=api_version, application=application)
         else:
@@ -207,6 +208,11 @@ class OAuth2Session(GsSession):
         self.client_secret = client_secret
         self.scopes = scopes
 
+        if environment == Environment.DEV.name:
+            import urllib3
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            self.verify = False
+
     def _authenticate(self):
         auth_data = {
             'grant_type': 'client_credentials',
@@ -214,7 +220,7 @@ class OAuth2Session(GsSession):
             'client_secret': self.client_secret,
             'scope': ' '.join(self.scopes)
         }
-        reply = requests.post(self.auth_url, data=auth_data, verify=True)
+        reply = requests.post(self.auth_url, data=auth_data, verify=self.verify)
         if reply.status_code != 200:
             raise MqAuthenticationError(reply.status_code, reply.text, context=self.auth_url)
 
