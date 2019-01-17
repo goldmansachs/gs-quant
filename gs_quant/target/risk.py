@@ -186,6 +186,32 @@ To specify an instrument use one of the listed types"""
         self._property_changed('quantity')        
 
 
+class CoordinatesRequest(Base):
+               
+    def __init__(self, asOf: datetime.date, instruments: Iterable['Priceable']):
+        super().__init__()
+        self.__asOf = asOf
+        self.__instruments = instruments
+
+    @property
+    def asOf(self) -> datetime.date:
+        return self.__asOf
+
+    @asOf.setter
+    def asOf(self, value: datetime.date):
+        self.__asOf = value
+        self._property_changed('asOf')        
+
+    @property
+    def instruments(self) -> Iterable['Priceable']:
+        return self.__instruments
+
+    @instruments.setter
+    def instruments(self, value: Iterable['Priceable']):
+        self.__instruments = value
+        self._property_changed('instruments')        
+
+
 class CoordinatesResponse(Base):
                
     def __init__(self, results: Iterable['MarketDataCoordinate']):
@@ -261,29 +287,3 @@ class MarketDataCoordinate(Base):
     def field(self, value: str):
         self.__field = value
         self._property_changed('field')        
-
-
-class CoordinatesRequest(Base):
-               
-    def __init__(self, asOf: datetime.date, instruments: Iterable['Priceable']):
-        super().__init__()
-        self.__asOf = asOf
-        self.__instruments = instruments
-
-    @property
-    def asOf(self) -> datetime.date:
-        return self.__asOf
-
-    @asOf.setter
-    def asOf(self, value: datetime.date):
-        self.__asOf = value
-        self._property_changed('asOf')        
-
-    @property
-    def instruments(self) -> Iterable['Priceable']:
-        return self.__instruments
-
-    @instruments.setter
-    def instruments(self, value: Iterable['Priceable']):
-        self.__instruments = value
-        self._property_changed('instruments')        

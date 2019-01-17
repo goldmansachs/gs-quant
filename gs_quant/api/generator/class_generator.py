@@ -60,7 +60,8 @@ class ClassInfo(namedtuple('ClassInfo', ('name', 'property_infos', 'doc', 'requi
         init = []
 
         # Prior to Python 3.7 there was a maximum of 255 arguments
-        add_args = sys.hexversion >= 50790640 or len(self.property_infos) <= 255
+        # add_args = sys.hexversion >= 50790640 or len(self.property_infos) <= 255
+        add_args = len(self.property_infos) <= 255
 
         for prop in self.property_infos:
             if prop.has_setter:

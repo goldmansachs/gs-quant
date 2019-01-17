@@ -51,6 +51,7 @@ class Asset:
             input_type: Union[IdType, str],
             output_type: Union[IdType, str],
             ids: List[str],
+            where: dict={},
             as_of=None
     ):
         if isinstance(input_type, IdType):
@@ -63,7 +64,7 @@ class Asset:
         elif not isinstance(output_type, str):
             raise ValueError('output_type must be of type str or IdType')
 
-        query = {'where': {input_type: ids}, 'fields': (input_type, output_type), 'asOfTime': as_of or datetime.now()}
+        where.update({input_type: ids})
+        query = {'where': where, 'fields': (input_type, output_type), 'asOfTime': as_of or datetime.datetime.now()}
         response = GsSession.current._post('/assets/data/query', payload=query)
         return {entry.pop(input_type): entry.get(output_type) for entry in response['results']}
-
