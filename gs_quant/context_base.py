@@ -1,5 +1,7 @@
 from abc import ABCMeta
 
+from gs_quant.errors import MqUninitialisedError
+
 
 class ContextMeta(type, metaclass=ABCMeta):
 
@@ -14,7 +16,11 @@ class ContextMeta(type, metaclass=ABCMeta):
 
     @property
     def current(cls) -> 'ContextBase':
-        return cls.__current or cls.default
+        current = cls.__current or cls.default
+        if current is None:
+            raise MqUninitialisedError('{} is not initialised'.format(cls.__name__))
+
+        return current
 
     @current.setter
     def current(cls, current: 'ContextBase'):
@@ -36,7 +42,12 @@ class ContextBase(metaclass=ContextMeta):
 
     def __enter__(self):
         clz = self._cls
-        self.__previous = clz.current
+
+        try:
+            self.__previous = clz.current
+        except MqUninitialisedError:
+            pass
+
         self.__entered = True
         clz.current = self
         self._on_enter()

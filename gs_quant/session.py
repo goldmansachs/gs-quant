@@ -29,7 +29,7 @@ from typing import Optional, Tuple, Union
 
 from gs_quant.api.base import Base
 from gs_quant.context_base import ContextBase
-from gs_quant.errors import MqError, MqRequestError, MqAuthenticationError
+from gs_quant.errors import MqError, MqRequestError, MqAuthenticationError, MqUninitialisedError
 from gs_quant.json_encoder import JSONEncoder
 import pandas as pd
 
@@ -166,8 +166,12 @@ class GsSession(ContextBase):
 
         session.init()
 
-        if cls.current is not None and cls.current._is_entered:
-            raise RuntimeError('Cannot call GsSession.use while an existing session is entered')
+        try:
+            current = cls.current
+            if cls.current is not None and cls.current._is_entered:
+                raise RuntimeError('Cannot call GsSession.use while an existing session is entered')
+        except MqUninitialisedError:
+            pass
 
         cls.current = session
 
