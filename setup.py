@@ -21,13 +21,14 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="gs_quant",
-    version="0.5.4",
+    version="0.5.5",
     author="Goldman Sachs",
     author_email="developer@gs.com",
     description="Goldman Sachs Quant",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://marquee.gs.com",
+    license="http://www.apache.org/licenses/LICENSE-2.0",
     packages=setuptools.find_packages(),
     include_package_data=True,
     install_requires=[
@@ -56,5 +57,6 @@ setuptools.setup(
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Operating System :: OS Independent",
+        "License :: OSI Approved :: Apache Software License"
     ],
 )
