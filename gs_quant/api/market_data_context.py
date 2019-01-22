@@ -16,7 +16,7 @@ under the License.
 
 from gs_quant.context_base import ContextBaseWithDefault
 from gs_quant.datetime.date import adjust_to_business_date
-from gs_quant.api.risk import MarketDataCoordinate
+from gs_quant.api.common import MarketDataCoordinate
 
 from datetime import date, datetime, timedelta
 from typing import Mapping, Union

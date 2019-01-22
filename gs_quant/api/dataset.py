@@ -20,7 +20,7 @@ from typing import Optional, Iterable, Union, Tuple, List
 import pandas as pd
 
 from gs_quant.api.data import DataSetEntity
-from gs_quant.api.risk import MarketDataCoordinate
+from gs_quant.api.common import MarketDataCoordinate
 from gs_quant.errors import MqTypeError, MqValueError
 from gs_quant.session import GsSession
 

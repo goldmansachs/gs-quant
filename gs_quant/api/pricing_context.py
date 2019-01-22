@@ -15,7 +15,8 @@ under the License.
 """
 
 from gs_quant.api.base import Priceable
-from gs_quant.api.risk import FormattedRiskMeasure, RiskMeasure, RiskRequest, RiskPosition, CoordinatesRequest, MarketDataCoordinate
+from gs_quant.api.common import MarketDataCoordinate
+from gs_quant.api.risk import FormattedRiskMeasure, RiskMeasure, RiskRequest, RiskPosition, CoordinatesRequest
 from gs_quant.context_base import ContextBaseWithDefault
 from gs_quant.datetime.date import adjust_to_business_date
 from gs_quant.session import GsSession

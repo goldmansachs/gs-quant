@@ -136,6 +136,22 @@ class GsSession(ContextBase):
     def _put(self, path: str, payload: Optional[Union[dict, Base]]=None, cls: Optional[type]=None) -> Union[dict, str]:
         return self.__request('PUT', path, payload=payload, cls=cls)
 
+    @staticmethod
+    def _dict_to_url(params: dict) -> str:
+        if not params:
+            return ''
+        out = '?'
+        for key, value in params.items():
+            if isinstance(value, (list, tuple)) and value:
+                for item in value:
+                    out += '&%s=%s' % (key, item)
+            elif value:
+                out += '&%s=%s' % (key, value)
+
+        if out == '?':
+            return ''
+        return out
+
     @classmethod
     def _config_for_environment(cls, environment):
         if cls.__config is None:
@@ -168,7 +184,7 @@ class GsSession(ContextBase):
 
         try:
             current = cls.current
-            if cls.current is not None and cls.current._is_entered:
+            if current is not None and current._is_entered:
                 raise RuntimeError('Cannot call GsSession.use while an existing session is entered')
         except MqUninitialisedError:
             pass
@@ -191,14 +207,14 @@ class GsSession(ContextBase):
 
         if client_id is not None:
             if environment_or_domain not in (Environment.PROD.name, Environment.QA.name, Environment.DEV.name):
-                raise MqAuthenticationError('Only PROD, QA and DEV are valid environments')
+                raise MqUninitialisedError('Only PROD, QA and DEV are valid environments')
 
             return OAuth2Session(environment_or_domain, client_id, client_secret, scopes, api_version=api_version, application=application)
         else:
             try:
                 from gs_quant.kerberos.session_kerberos import KerberosSession
-            except ImportError:
-                raise MqAuthenticationError('Must specify client_id and client_secret')
+            except ModuleNotFoundError:
+                raise MqUninitialisedError('Must specify client_id and client_secret')
 
             return KerberosSession(environment_or_domain, api_version=api_version, application=application)
 

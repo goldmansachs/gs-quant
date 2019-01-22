@@ -17,7 +17,7 @@ under the License.
 import datetime
 from typing import Any, Iterable, Union
 from enum import Enum
-from gs_quant.api.base import EnumBase, Base
+from gs_quant.api.base import Base, EnumBase
 
 
 class AssetType(EnumBase, Enum):    
@@ -50,6 +50,7 @@ class AssetType(EnumBase, Enum):
     ETF = 'ETF'
     ETN = 'ETN'
     Event = 'Event'
+    Fixing = 'Fixing'
     Floor = 'Floor'
     Forward = 'Forward'
     Future = 'Future'
@@ -1697,12 +1698,15 @@ class SecuritiesLendingLoan(Base):
         
     """Parameters specific to a securities lending loan"""
        
-    def __init__(self, loanReferenceId: str, loanStatus: str = None, settlementStatus: str = None, borrowerId: str = None, collateralType: str = None, loanCurrency: Union['Currency', str] = None, adjustmentInd: bool = None, countryOfIssue: str = None, inputDate: Union[datetime.date, str] = None, effectiveDate: Union[datetime.date, str] = None, securitySettleDate: Union[datetime.date, str] = None, cashSettleDate: Union[datetime.date, str] = None, termDate: Union[datetime.date, str] = None, returnDate: Union[datetime.date, str] = None):
+    def __init__(self, loanReferenceId: str, assetId: Union[str, str], fundId: Union[str, str], lenderId: Union[str, str], borrowerId: Union[str, str], loanStatus: str = None, settlementStatus: str = None, collateralType: str = None, loanCurrency: Union['Currency', str] = None, adjustmentInd: bool = None, countryOfIssue: str = None, inputDate: Union[datetime.date, str] = None, effectiveDate: Union[datetime.date, str] = None, securitySettleDate: Union[datetime.date, str] = None, cashSettleDate: Union[datetime.date, str] = None, termDate: Union[datetime.date, str] = None, returnDate: Union[datetime.date, str] = None):
         super().__init__()
         self.__loanReferenceId = loanReferenceId
+        self.__assetId = assetId
+        self.__fundId = fundId
+        self.__lenderId = lenderId
+        self.__borrowerId = borrowerId
         self.__loanStatus = loanStatus
         self.__settlementStatus = settlementStatus
-        self.__borrowerId = borrowerId
         self.__collateralType = collateralType
         self.__loanCurrency = loanCurrency
         self.__adjustmentInd = adjustmentInd
@@ -1725,6 +1729,46 @@ class SecuritiesLendingLoan(Base):
         self._property_changed('loanReferenceId')        
 
     @property
+    def assetId(self) -> Union[str, str]:
+        """Id of the security being lent as part of this loan.  This Id should tie to an Asset"""
+        return self.__assetId
+
+    @assetId.setter
+    def assetId(self, value: Union[str, str]):
+        self.__assetId = value
+        self._property_changed('assetId')        
+
+    @property
+    def fundId(self) -> Union[str, str]:
+        """Id of the fund from which the loan is booked.  This Id should tie to an Asset"""
+        return self.__fundId
+
+    @fundId.setter
+    def fundId(self, value: Union[str, str]):
+        self.__fundId = value
+        self._property_changed('fundId')        
+
+    @property
+    def lenderId(self) -> Union[str, str]:
+        """Id of the counterpart lending the security.  This Id should tie to a Company"""
+        return self.__lenderId
+
+    @lenderId.setter
+    def lenderId(self, value: Union[str, str]):
+        self.__lenderId = value
+        self._property_changed('lenderId')        
+
+    @property
+    def borrowerId(self) -> Union[str, str]:
+        """Id of the counterpart borrowing the security.  This Id should tie to a Company"""
+        return self.__borrowerId
+
+    @borrowerId.setter
+    def borrowerId(self, value: Union[str, str]):
+        self.__borrowerId = value
+        self._property_changed('borrowerId')        
+
+    @property
     def loanStatus(self) -> str:
         """The current state of the loan"""
         return self.__loanStatus
@@ -1743,16 +1787,6 @@ class SecuritiesLendingLoan(Base):
     def settlementStatus(self, value: str):
         self.__settlementStatus = value
         self._property_changed('settlementStatus')        
-
-    @property
-    def borrowerId(self) -> str:
-        """Identify of the counterpart/entity borrowing the security"""
-        return self.__borrowerId
-
-    @borrowerId.setter
-    def borrowerId(self, value: str):
-        self.__borrowerId = value
-        self._property_changed('borrowerId')        
 
     @property
     def collateralType(self) -> str:

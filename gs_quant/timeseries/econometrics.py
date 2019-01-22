@@ -26,16 +26,16 @@ diffs, lags, volatilities and other numerical operations which are generally fin
 
 
 # Return types
-_SIMPLE = "simple"
-_LOG = "log"
+RETURN_TYPE_SIMPLE = "simple"
+RETURN_TYPE_LOG = "log"
 
 # Annualization factors
-_DAILY = 252
-_WEEKLY = 52
-_SEMI_MONTHLY = 26
-_MONTHLY = 12
-_QUARTERLY = 4
-_ANNUALLY = 1
+ANNUALIZATION_FACTOR_DAILY = 252
+ANNUALIZATION_FACTOR_WEEKLY = 52
+ANNUALIZATION_FACTOR_SEMI_MONTHLY = 26
+ANNUALIZATION_FACTOR_MONTHLY = 12
+ANNUALIZATION_FACTOR_QUARTERLY = 4
+ANNUALIZATION_FACTOR_ANNUALLY = 1
 
 
 def _get_annualization_factor(series):
@@ -54,70 +54,107 @@ def _get_annualization_factor(series):
 
     average = numpy.average(distances)
     if average < 2.1:
-        factor = _DAILY
+        factor = ANNUALIZATION_FACTOR_DAILY
     elif average <= 6:
-        factor = _WEEKLY + ((6 - average) * (_DAILY - _WEEKLY) / 3.9)
+        factor = ANNUALIZATION_FACTOR_WEEKLY + ((6 - average) * (ANNUALIZATION_FACTOR_DAILY - ANNUALIZATION_FACTOR_WEEKLY) / 3.9)
     elif average < 8:
-        factor = _WEEKLY
+        factor = ANNUALIZATION_FACTOR_WEEKLY
     elif average <= 14:
-        factor = _SEMI_MONTHLY + ((14 - average) * (_WEEKLY - _SEMI_MONTHLY) / 6)
+        factor = ANNUALIZATION_FACTOR_SEMI_MONTHLY + ((14 - average) * (ANNUALIZATION_FACTOR_WEEKLY - ANNUALIZATION_FACTOR_SEMI_MONTHLY) / 6)
     elif average < 17:
-        factor = _SEMI_MONTHLY
+        factor = ANNUALIZATION_FACTOR_SEMI_MONTHLY
     elif average <= 25:
-        factor = _MONTHLY + ((25 - average) * (_SEMI_MONTHLY - _MONTHLY) / 8)
+        factor = ANNUALIZATION_FACTOR_MONTHLY + ((25 - average) * (ANNUALIZATION_FACTOR_SEMI_MONTHLY - ANNUALIZATION_FACTOR_MONTHLY) / 8)
     elif average < 35:
-        factor = _MONTHLY
+        factor = ANNUALIZATION_FACTOR_MONTHLY
     elif average <= 85:
-        factor = _QUARTERLY + ((85 - average) * (_MONTHLY - _QUARTERLY) / 50)
+        factor = ANNUALIZATION_FACTOR_QUARTERLY + ((85 - average) * (ANNUALIZATION_FACTOR_MONTHLY - ANNUALIZATION_FACTOR_QUARTERLY) / 50)
     elif average < 97:
-        factor = _QUARTERLY
+        factor = ANNUALIZATION_FACTOR_QUARTERLY
     elif average <= 364:
-        factor = _ANNUALLY + ((364 - average) * (_QUARTERLY - _ANNUALLY) / 279)
+        factor = ANNUALIZATION_FACTOR_ANNUALLY + ((364 - average) * (ANNUALIZATION_FACTOR_QUARTERLY - ANNUALIZATION_FACTOR_ANNUALLY) / 279)
     elif average < 386:
-        factor = _ANNUALLY
+        factor = ANNUALIZATION_FACTOR_ANNUALLY
     else:
         raise MqValueError('data points are too far apart')
     return factor
 
 
-def annualize(series):
+def annualize(series: pd.Series) -> pd.Series:
     """
     Annualize timeseries based on sample observation frequency
 
-    Annualize series based on sample observation periods. Will attempt to determine the observation frequency
-    automatically (e.g. daily, weekly), and then apply the corresponding annualization factor, e.g. sqrt(252), sqrt(52)
-
     :param series: time series of prices
     :return: date-based time series of annualized values
+
+    **Usage**
+
+    Based on number of days between observations, will determine an annualization factor and then adjust values
+    accordingly. Useful for annualizing daily or monthly returns
+
+    :math:`Y_t = X_t * \sqrt{F}`
+
+    Annualization factors as follows, based on period implied by observations:
+
+    =========   =============================
+    Period      Annualization Factor (F)
+    =========   =============================
+    Daily       :math:`252`
+    Weekly      :math:`52`
+    Bi-Weekly   :math:`26`
+    Monthly     :math:`12`
+    Quarterly   :math:`4`
+    Annually    :math:`1`
+    =========   =============================
+
+    **Examples**
+
+    Annualize daily returns series:
+
+    >>> prices = generate_series(100)
+    >>> ann = annualize(returns(prices))
+
+    **See also**
+
+    :func:`returns`
     """
 
     factor = _get_annualization_factor(series)
     return series * math.sqrt(factor)
 
 
-annualize.__annotations__ = {'series': pd.Series, 'return': pd.Series}
-
-
-def lag(series, obs=1):
+def lag(series: pd.Series, obs: int=1) -> pd.Series:
     """
     Lag timeseries by a specified number of observations
-
-    :math:`Y_t =  X_{t-obs}`
 
     :param series: time series of prices
     :param obs: number of observations to lag series
     :return: date-based time series of return
+
+    **Usage**
+
+    Shift the series backwards by a specified number of observations:
+
+    :math:`Y_t =  X_{t-obs}`
+
+    **Examples**
+
+    Lag series by 2 observations:
+
+    >>> prices = generate_series(100)
+    >>> lagged = lag(prices, 2)
+
+    **See also**
+
+    :func:`prices`
     """
 
     # Determine how we want to handle observations prior to start date
 
-    return series.shift(-obs)
+    return series.shift(obs)
 
 
-lag.__annotations__ = {'series': pd.Series, 'obs': int, 'return': pd.Series}
-
-
-def returns(series, type=_SIMPLE, naiszero=1):
+def returns(series: pd.Series, type: str=RETURN_TYPE_SIMPLE, naiszero: bool=True) -> pd.Series:
     """
     Calculate returns from price series
 
@@ -157,7 +194,6 @@ def returns(series, type=_SIMPLE, naiszero=1):
 
     Generate price series and take compute returns
 
-    >>> from gs_quant.timeseries import *
     >>> prices = generate_series(100)
     >>> returns = returns(prices)
 
@@ -169,25 +205,22 @@ def returns(series, type=_SIMPLE, naiszero=1):
     if series.size < 1:
         return series
 
-    if type == _SIMPLE:
+    if type == RETURN_TYPE_SIMPLE:
         ret_series = series / series.shift(1) - 1
-    elif type == _LOG:
+    elif type == RETURN_TYPE_LOG:
         log_s = series.apply(math.log)
         ret_series = log_s - log_s.shift(1)
     else:
         raise MqValueError('Unknown returns type (use simple / log)')
 
-    # Ensures prod(1+returns(series)) == index(series
+    # Ensures prod(1+returns(series)) == index(series)
     if naiszero:
-        ret_series[0] = 0
+        ret_series[0] = math.nan
 
     return ret_series
 
 
-returns.__annotations__ = {'series': pd.Series, 'type': str, 'naiszero': bool, 'return': pd.Series}
-
-
-def prices(series, initial=1, type=_SIMPLE):
+def prices(series: pd.Series, initial: int=1, type: str=RETURN_TYPE_SIMPLE) ->pd.Series:
     """
     Calculate price levels from returns series
 
@@ -206,23 +239,47 @@ def prices(series, initial=1, type=_SIMPLE):
     simple   Simple arithmetic returns
     log      Logarithmic returns
     ======   =============================
+
+    *Simple*
+
+    Compute asset price series from simple returns:
+
+    :math:`Y_t = (1 + X_{t-1}) Y_{t-1}`
+
+    where :math:`X_t` is the asset price at time :math:`t`
+
+    *Logarithmic*
+
+    Compute asset price series from logarithmic returns:
+
+    :math:`Y_t = e^{X_{t-1}} Y_{t-1}`
+
+    where :math:`X_t` is the asset price at time :math:`t`
+
+    **Examples**
+
+    Generate price series and take compute returns
+
+    >>> series = generate_series(100)
+    >>> returns = prices(returns(series))
+
+    **See also**
+
+    :func:`returns` :func:`product` :func:`exp`
     """
 
     if series.size < 1:
         return series
 
-    if type == _SIMPLE:
+    if type == RETURN_TYPE_SIMPLE:
         return product(1 + series) * initial
-    elif type == _LOG:
+    elif type == RETURN_TYPE_LOG:
         return product(series.apply(math.exp)) * initial
     else:
         raise MqValueError('Unknown returns type (use simple / log)')
 
 
-prices.__annotations__ = {'series': pd.Series, 'initial': int, 'type': str, 'return': pd.Series}
-
-
-def diff(series, lag=1, naiszero=1):
+def diff(series: pd.Series, lag: int=1, naiszero: bool=True) -> pd.Series:
     """
     Diff observations with given lag
 
@@ -230,6 +287,26 @@ def diff(series, lag=1, naiszero=1):
     :param lag: number of observations to lag
     :param naiszero: returns zero rather than NaN for lagged dates
     :return: date-based time series of return
+
+    **Usage**
+
+    Compute the difference in series values over a given lag:
+
+    :math:`Y_t = X_t - X_{t-l}`
+
+    where :math:`l` is the number of observations to lag series in diff function
+
+    **Examples**
+
+    Diff prices levels:
+
+    >>> series = generate_series(100)
+    >>> returns = diff(series)
+
+    **See also**
+
+    :func:`lag`
+
     """
 
     if series.size < 1:
@@ -244,46 +321,199 @@ def diff(series, lag=1, naiszero=1):
     return ret_series
 
 
-diff.__annotations__ = {'series': pd.Series, 'lag': int, 'naiszero': bool, 'return': pd.Series}
+def first(x: pd.Series) -> pd.Series:
+    """
+    First value of series
+
+    :param x: time series
+    :return: time series of first value
+
+    **Usage**
+
+    Return series with first value of X for all dates:
+
+    :math:`Y_t = X_0`
+
+    where :math:`X_0` is the first value in the series
+
+    **Examples**
+
+    Last value of series:
+
+    >>> series = generate_series(100)
+    >>> returns = first(series)
+
+    **See also**
+
+    :func:`last`
+
+    """
+    return pd.Series(x[0], x.index)
 
 
-def index(x):
+def last(x: pd.Series) -> pd.Series:
+    """
+    Last value of series
+
+    :param x: time series
+    :return: time series of last value
+
+    **Usage**
+
+    Return series with last value of X for all dates:
+
+    :math:`Y_t = X_T`
+
+    where :math:`X_T` is the last value in the series
+
+    **Examples**
+
+    Last value of series:
+
+    >>> series = generate_series(100)
+    >>> returns = last(series)
+
+    **See also**
+
+    :func:`first`
+
+    """
+    return pd.Series(x[-1], x.index)
+
+
+def index(x: pd.Series) -> pd.Series:
     """
     Geometric series normalization
 
-    Divides every value in x by the initial value of x.
-
     :param x: time series
     :return: normalized time series
+
+    **Usage**
+
+    Divides every value in x by the initial value of x:
+
+    :math:`Y_t = X_t / X_0`
+
+    where :math:`X_0` is the first value in the series
+
+    **Examples**
+
+    Normalize series to 1:
+
+    >>> series = generate_series(100)
+    >>> returns = index(series)
+
+    **See also**
+
+    :func:`returns`
+
     """
     return x / x[0]
 
 
-index.__annotations__ = {'x': pd.Series, 'return': pd.Series}
+def change(x: pd.Series) -> pd.Series:
+    """
+    Arithmetic series normalization
+
+    :param x: time series
+    :return: normalized time series
+
+    **Usage**
+
+    Compute difference of every value from the initial value of x:
+
+    :math:`Y_t = X_t - X_0`
+
+    where :math:`X_0` is the first value in the series
+
+    **Examples**
+
+    Change in level from initial value:
+
+    >>> series = generate_series(100)
+    >>> returns = change(series)
+
+    **See also**
+
+    :func:`index`
+
+    """
+    return x - x[0]
 
 
-def volatility(series, window=0):
+def max_drawdown(series: pd.Series, window: int=0) -> pd.Series:
+    """
+    Compute the maximum peak to trough drawdown over a rolling window.
+
+    :param series: time series
+    :param window: number of days / observations to use (defaults to length of series)
+    :return: time series of rolling maximum drawdown
+
+    **Examples**
+
+    Compute the maximum peak to trough `drawdown <https://en.wikipedia.org/wiki/Drawdown_(economics)>`_
+
+    >>> series = generate_series(100)
+    >>> max_drawdown(series)
+
+    **See also**
+
+    :func:`returns`
+
+    """
+    window = window or series.size
+
+    rolling_max = series.rolling(window, 0).max()
+    result = (series / rolling_max - 1).rolling(window, 0).min()
+    return result
+
+
+def volatility(series: pd.Series, window: int=0) -> pd.Series:
     """
     Realized volatility of price series
-
-    Calculate rolling annualized realized volatility of a price series, calculated over a given window
 
     :param series: time series of prices
     :param window: number of observations
     :return: date-based time series of return
+
+    **Usage**
+
+    Calculate rolling annualized realized volatility of a price series over a given window:
+
+    :math:`Y_t = \sqrt{\\frac{1}{N-1} \sum_{i=t-w-1}^t (R_t - \overline{R_t})^2} * \sqrt{252}`
+
+    where N is the number of observations in each rolling window, :math:`w`, :math:`R_t` is the simple return on time
+    :math:`t`:
+
+    :math:`R_t = \\frac{X_t}{X_{t-1}} - 1`
+
+    and :math:`\overline{R_t}` is the mean value over the same window:
+
+    :math:`\overline{R_t} = \\frac{\sum_{i=t-w-1}^{t} R_t}{N}`
+
+    If window is not provided, computes realized volatility over the full series
+
+    **Examples**
+
+    Compute rolling :math:`1` month (:math:`22` business day) annualized volatility of price series
+
+    >>> series = generate_series(100)
+    >>> returns = volatility(series)
+
+    **See also**
+
+    :func:`std` :func:`annualize` :func:`returns`
+
     """
     window = window or series.size
 
     if series.size < 1:
         return series
 
-    return annualize(std(returns(series), window))
+    return annualize(std(returns(series), window)) * 100
 
 
-volatility.__annotations__ = {'series': pd.Series, 'window': int, 'return': pd.Series}
-
-
-def correlation(series1, series2, window=0):
+def correlation(series1: pd.Series, series2: pd.Series, window: int=0) -> pd.Series:
     """
     Rolling correlation of two price series
 
@@ -303,27 +533,33 @@ def correlation(series1, series2, window=0):
     return ret_1.rolling(window, 0).corr(ret_2)
 
 
-correlation.__annotations__ = {'series1': pd.Series, 'series2': pd.Series, 'window': int, 'return': pd.Series}
-
-
-def beta(series1, series2, window=0):
+def beta(series: pd.Series, benchmark: pd.Series, window: int=0) -> pd.Series:
     """
-    Rolling beta of two price series
+    Rolling beta of a price series and a corresponding benchmark price series.
 
-    :param series1: time series of prices
-    :param series2: time series of prices
+    :param series: time series of prices
+    :param benchmark: time series of benchmark prices
     :param window: number of observations
-    :return: date-based time series of return
+    :return: date-based time series of beta
+
+    **Examples**
+
+    Compute rolling :math:`1` month (:math:`22` business day) beta of two price series
+
+    >>> series = generate_series(100)
+    >>> benchmark = generate_series(100)
+    >>> b = beta(series, benchmark, 22)
+
+    **See also**
+
+    :func:`correlation` :func:`returns`
     """
-    window = window or series1.size
+    window = window or series.size
 
-    if series1.size < 1:
-        return series1
+    ret_series = returns(series)
+    ret_benchmark = returns(benchmark)
 
-    ret_1 = returns(series1)
-    ret_2 = returns(series2)
+    cov = ret_series.rolling(window, 0).cov(ret_benchmark.rolling(window, 0))
+    result = cov / ret_benchmark.rolling(window, 0).var()
 
-    return ret_1.rolling(window, 0).corr(ret_2)
-
-
-beta.__annotations__ = {'series1': pd.Series, 'series2': pd.Series, 'window': int, 'return': pd.Series}
+    return result.iloc[1:]  # remove first na val

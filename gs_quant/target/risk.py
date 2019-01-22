@@ -17,7 +17,7 @@ under the License.
 import datetime
 from typing import Any, Iterable, Union
 from enum import Enum
-from gs_quant.api.base import EnumBase, Base
+from gs_quant.api.base import Base, EnumBase
 
 
 class RiskMeasureUnit(EnumBase, Enum):    
@@ -226,64 +226,3 @@ class CoordinatesResponse(Base):
     def results(self, value: Iterable['MarketDataCoordinate']):
         self.__results = value
         self._property_changed('results')        
-
-
-class MarketDataCoordinate(Base):
-        
-    """Object representation of a market data coordinate"""
-       
-    def __init__(self, marketDataType, assetId: Union[str, str] = None, pointClass=None, point: str = None, field: str = None):
-        super().__init__()
-        self.__marketDataType = marketDataType
-        self.__assetId = assetId
-        self.__pointClass = pointClass
-        self.__point = point
-        self.__field = field
-
-    @property
-    def marketDataType(self):
-        return self.__marketDataType
-
-    @marketDataType.setter
-    def marketDataType(self, value):
-        self.__marketDataType = value
-        self._property_changed('marketDataType')        
-
-    @property
-    def assetId(self) -> Union[str, str]:
-        """Marquee unique asset identifier."""
-        return self.__assetId
-
-    @assetId.setter
-    def assetId(self, value: Union[str, str]):
-        self.__assetId = value
-        self._property_changed('assetId')        
-
-    @property
-    def pointClass(self):
-        return self.__pointClass
-
-    @pointClass.setter
-    def pointClass(self, value):
-        self.__pointClass = value
-        self._property_changed('pointClass')        
-
-    @property
-    def point(self) -> str:
-        """The specific point, e.g. 3m, 10y,11y, Dec19"""
-        return self.__point
-
-    @point.setter
-    def point(self, value: str):
-        self.__point = value
-        self._property_changed('point')        
-
-    @property
-    def field(self) -> str:
-        """The specific field: bid, mid, rate etc"""
-        return self.__field
-
-    @field.setter
-    def field(self, value: str):
-        self.__field = value
-        self._property_changed('field')        

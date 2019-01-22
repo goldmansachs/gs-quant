@@ -15,7 +15,7 @@ under the License.
 """
 
 from gs_quant.context_base import ContextBaseWithDefault
-from gs_quant.api.risk import MarketDataCoordinate
+from gs_quant.api.common import MarketDataCoordinate
 
 from typing import Mapping
 
