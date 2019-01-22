@@ -50,13 +50,15 @@ class Base:
 class Priceable(Base):
 
     def price(self):
-        from gs_quant.api.pricing_context import PricingContext
         from gs_quant.api.risk import PresentValue
-        return PricingContext.current.calc(self, PresentValue)[0]
+        return self.calc(PresentValue)
 
     def calc(self, risk_measure):
         from gs_quant.api.pricing_context import PricingContext
-        return PricingContext.current.calc(self, risk_measure)[0]
+        result = PricingContext.current.calc(self, risk_measure)
+        if not result:
+            raise RuntimeError('Failed to price')
+        return result[0]
 
     def market_data_coordinates(self):
         from gs_quant.api.pricing_context import PricingContext

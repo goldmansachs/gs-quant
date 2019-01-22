@@ -16,7 +16,7 @@ under the License.
 
 from gs_quant.target.data import *
 from gs_quant.api.common import FieldFilterMap
-from gs_quant.api.risk import MarketDataCoordinate
+from gs_quant.api.common import MarketDataCoordinate
 from gs_quant.session import GsSession
 from datetime import date, datetime, timedelta
 import pandas as pd

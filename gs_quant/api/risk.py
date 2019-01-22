@@ -15,39 +15,38 @@ under the License.
 """
 
 from gs_quant.target.risk import *
-from gs_quant.target.risk import MarketDataCoordinate as __MarketDataCoordinate
 from gs_quant.api.common import AssetClass
 from collections import namedtuple
+import pandas as pd
 from typing import List, Any
-
-
-class MarketDataCoordinate(__MarketDataCoordinate):
-
-    def __str__(self):
-        return "|".join(f or '' for f in (self.__marketDataType, self.__assetId, self.__pointClass, self.__point, self.__field))
 
 
 FormattedRiskMeasure = namedtuple('FormattedRiskMeasure', ('risk_measure', 'formatter'))
 
 
-def scalar_formatter(result: List) -> Any:
+def scalar_formatter(result: List) -> float:
     return result[0].get('value', result[0].get('Val'))
 
 
+def structured_formatter(result: List) -> pd.DataFrame:
+    df = pd.DataFrame(result)
+    del df['field']
+    return df
+
+
 PresentValue = FormattedRiskMeasure(RiskMeasure(measureType=RiskMeasureType.Dollar_Price), scalar_formatter)
+Theta = FormattedRiskMeasure(RiskMeasure(measureType=RiskMeasureType.Theta), scalar_formatter)
+
 EqDelta = FormattedRiskMeasure(RiskMeasure(measureType=RiskMeasureType.Delta, assetClass=AssetClass.Equity), scalar_formatter)
 EqGamma = FormattedRiskMeasure(RiskMeasure(measureType=RiskMeasureType.Gamma, assetClass=AssetClass.Equity), scalar_formatter)
 EqVega = FormattedRiskMeasure(RiskMeasure(measureType=RiskMeasureType.Vega, assetClass=AssetClass.Equity), scalar_formatter)
-EqTheta = FormattedRiskMeasure(RiskMeasure(measureType=RiskMeasureType.Theta, assetClass=AssetClass.Equity), scalar_formatter)
-CommodDelta = RiskMeasure(measureType=RiskMeasureType.Delta, assetClass=AssetClass.Commod)
-CommodGamma = RiskMeasure(measureType=RiskMeasureType.Gamma, assetClass=AssetClass.Commod)
-CommodVega = RiskMeasure(measureType=RiskMeasureType.Vega, assetClass=AssetClass.Commod)
-CommodTheta = RiskMeasure(measureType=RiskMeasureType.Theta, assetClass=AssetClass.Commod)
-FXDelta = RiskMeasure(measureType=RiskMeasureType.Delta, assetClass=AssetClass.FX)
-FXGamma = RiskMeasure(measureType=RiskMeasureType.Gamma, assetClass=AssetClass.FX)
-FXVega = RiskMeasure(measureType=RiskMeasureType.Vega, assetClass=AssetClass.FX)
-FXTheta = RiskMeasure(measureType=RiskMeasureType.Theta, assetClass=AssetClass.FX)
-IRDelta = RiskMeasure(measureType=RiskMeasureType.Delta, assetClass=AssetClass.Rates)
-IRGamma = RiskMeasure(measureType=RiskMeasureType.Gamma, assetClass=AssetClass.Rates)
-IRVega = RiskMeasure(measureType=RiskMeasureType.Vega, assetClass=AssetClass.Rates)
-IRTheta = RiskMeasure(measureType=RiskMeasureType.Theta, assetClass=AssetClass.Rates)
+CommodDelta = FormattedRiskMeasure(RiskMeasure(measureType=RiskMeasureType.Delta, assetClass=AssetClass.Commod), structured_formatter)
+CommodGamma = FormattedRiskMeasure(RiskMeasure(measureType=RiskMeasureType.Gamma, assetClass=AssetClass.Commod), structured_formatter)
+CommodVega = FormattedRiskMeasure(RiskMeasure(measureType=RiskMeasureType.Vega, assetClass=AssetClass.Commod), structured_formatter)
+CommodTheta = FormattedRiskMeasure(RiskMeasure(measureType=RiskMeasureType.Theta, assetClass=AssetClass.Commod), structured_formatter)
+FXDelta = FormattedRiskMeasure(RiskMeasure(measureType=RiskMeasureType.Delta, assetClass=AssetClass.FX), structured_formatter)
+FXGamma = FormattedRiskMeasure(RiskMeasure(measureType=RiskMeasureType.Gamma, assetClass=AssetClass.FX), structured_formatter)
+FXVega = FormattedRiskMeasure(RiskMeasure(measureType=RiskMeasureType.Vega, assetClass=AssetClass.FX), structured_formatter)
+IRDelta = FormattedRiskMeasure(RiskMeasure(measureType=RiskMeasureType.Delta, assetClass=AssetClass.Rates), structured_formatter)
+IRGamma = FormattedRiskMeasure(RiskMeasure(measureType=RiskMeasureType.Gamma, assetClass=AssetClass.Rates), structured_formatter)
+IRVega = FormattedRiskMeasure(RiskMeasure(measureType=RiskMeasureType.Vega, assetClass=AssetClass.Rates), structured_formatter)

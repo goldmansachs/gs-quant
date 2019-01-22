@@ -539,12 +539,13 @@ class DataSetDimensions(Base):
         
     """Dataset dimensions."""
        
-    def __init__(self, timeField: str, transactionTimeField: str = None, symbolDimensions: Iterable[str] = None, nonSymbolDimensions: Iterable['FieldColumnPair'] = None, measures: Iterable['FieldColumnPair'] = None, entityDimension: str = None, adjustments: Union['Adjustments', str] = None):
+    def __init__(self, timeField: str, transactionTimeField: str = None, symbolDimensions: Iterable[str] = None, nonSymbolDimensions: Iterable['FieldColumnPair'] = None, keyDimensions: Iterable[str] = None, measures: Iterable['FieldColumnPair'] = None, entityDimension: str = None, adjustments: Union['Adjustments', str] = None):
         super().__init__()
         self.__timeField = timeField
         self.__transactionTimeField = transactionTimeField
         self.__symbolDimensions = symbolDimensions
         self.__nonSymbolDimensions = nonSymbolDimensions
+        self.__keyDimensions = keyDimensions
         self.__measures = measures
         self.__entityDimension = entityDimension
         self.__adjustments = adjustments
@@ -587,6 +588,15 @@ class DataSetDimensions(Base):
     def nonSymbolDimensions(self, value: Iterable['FieldColumnPair']):
         self.__nonSymbolDimensions = value
         self._property_changed('nonSymbolDimensions')        
+
+    @property
+    def keyDimensions(self) -> Iterable[str]:
+        return self.__keyDimensions
+
+    @keyDimensions.setter
+    def keyDimensions(self, value: Iterable[str]):
+        self.__keyDimensions = value
+        self._property_changed('keyDimensions')        
 
     @property
     def measures(self) -> Iterable['FieldColumnPair']:
@@ -1045,12 +1055,14 @@ class MDAPI(Base):
 
 class DataQuery(Base):
                
-    def __init__(self, id: Union[str, str] = None, dataSetId: Union[str, str] = None, format: Union['Format', str] = None, where: Union['FieldFilterMap', str] = None, startDate: Union[datetime.date, str] = None, endDate: Union[datetime.date, str] = None, startTime: Union[datetime.datetime, str] = None, endTime: Union[datetime.datetime, str] = None, asOfTime: Union[datetime.datetime, str] = None, idAsOfDate: Union[datetime.date, str] = None, since: Union[datetime.datetime, str] = None, dates=None, times=None, delay: int = None, intervals: int = None, pollingInterval: int = None, groupBy: Iterable['Field'] = None, grouped: bool = None, fields: Iterable['Selector'] = None):
+    def __init__(self, id: Union[str, str] = None, dataSetId: Union[str, str] = None, format: Union['Format', str] = None, marketDataCoordinates: Iterable['MarketDataCoordinate'] = None, where: Union['FieldFilterMap', str] = None, vendor: str = None, startDate: Union[datetime.date, str] = None, endDate: Union[datetime.date, str] = None, startTime: Union[datetime.datetime, str] = None, endTime: Union[datetime.datetime, str] = None, asOfTime: Union[datetime.datetime, str] = None, idAsOfDate: Union[datetime.date, str] = None, since: Union[datetime.datetime, str] = None, dates=None, times=None, delay: int = None, intervals: int = None, pollingInterval: int = None, groupBy: Iterable['Field'] = None, grouped: bool = None, fields: Iterable['Selector'] = None):
         super().__init__()
         self.__id = id
         self.__dataSetId = dataSetId
         self.__format = format
+        self.__marketDataCoordinates = marketDataCoordinates
         self.__where = where
+        self.__vendor = vendor
         self.__startDate = startDate
         self.__endDate = endDate
         self.__startTime = startTime
@@ -1098,6 +1110,15 @@ class DataQuery(Base):
         self._property_changed('format')        
 
     @property
+    def marketDataCoordinates(self) -> Iterable['MarketDataCoordinate']:
+        return self.__marketDataCoordinates
+
+    @marketDataCoordinates.setter
+    def marketDataCoordinates(self, value: Iterable['MarketDataCoordinate']):
+        self.__marketDataCoordinates = value
+        self._property_changed('marketDataCoordinates')        
+
+    @property
     def where(self) -> Union['FieldFilterMap', str]:
         """Filters on data fields."""
         return self.__where
@@ -1106,6 +1127,15 @@ class DataQuery(Base):
     def where(self, value: Union['FieldFilterMap', str]):
         self.__where = value
         self._property_changed('where')        
+
+    @property
+    def vendor(self) -> str:
+        return self.__vendor
+
+    @vendor.setter
+    def vendor(self, value: str):
+        self.__vendor = value
+        self._property_changed('vendor')        
 
     @property
     def startDate(self) -> Union[datetime.date, str]:

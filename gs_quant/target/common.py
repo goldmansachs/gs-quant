@@ -17,7 +17,7 @@ under the License.
 import datetime
 from typing import Any, Iterable, Union
 from enum import Enum
-from gs_quant.api.base import EnumBase, Base
+from gs_quant.api.base import Base, EnumBase
 
 
 class AssetClass(EnumBase, Enum):    
@@ -491,10 +491,12 @@ class Field(EnumBase, Enum):
 
     queueClockTimeLabel = 'queueClockTimeLabel'
     marketPnl = 'marketPnl'
+    year = 'year'
     sustainAsiaExJapan = 'sustainAsiaExJapan'
     investmentRate = 'investmentRate'
     assetClassificationsGicsSubIndustry = 'assetClassificationsGicsSubIndustry'
     economicTermsHash = 'economicTermsHash'
+    neighbourAssetId = 'neighbourAssetId'
     simonIntlAssetTags = 'simonIntlAssetTags'
     path = 'path'
     availableInventory = 'availableInventory'
@@ -524,6 +526,7 @@ class Field(EnumBase, Enum):
     correlation = 'correlation'
     exposure = 'exposure'
     domain = 'domain'
+    marketDataAsset = 'marketDataAsset'
     forwardTenor = 'forwardTenor'
     sourceImportance = 'sourceImportance'
     eid = 'eid'
@@ -556,6 +559,7 @@ class Field(EnumBase, Enum):
     simonId = 'simonId'
     newIdeasQtd = 'newIdeasQtd'
     adjustedAskPrice = 'adjustedAskPrice'
+    quarter = 'quarter'
     factorUniverse = 'factorUniverse'
     eventCategory = 'eventCategory'
     impliedNormalVolatility = 'impliedNormalVolatility'
@@ -587,6 +591,7 @@ class Field(EnumBase, Enum):
     shortConvictionMedium = 'shortConvictionMedium'
     bidChange = 'bidChange'
     exchange = 'exchange'
+    expiration = 'expiration'
     tradePrice = 'tradePrice'
     cid = 'cid'
     importance = 'importance'
@@ -652,6 +657,7 @@ class Field(EnumBase, Enum):
     valueActual = 'valueActual'
     bcid = 'bcid'
     originalCountry = 'originalCountry'
+    field = 'field'
     spot = 'spot'
     expectedCompletionDate = 'expectedCompletionDate'
     loanValue = 'loanValue'
@@ -775,6 +781,7 @@ class Field(EnumBase, Enum):
     shortConvictionSmall = 'shortConvictionSmall'
     prevCloseBid = 'prevCloseBid'
     fxPnl = 'fxPnl'
+    forecast = 'forecast'
     tcmCostHorizon16Day = 'tcmCostHorizon16Day'
     pnl = 'pnl'
     assetClassificationsGicsIndustryGroup = 'assetClassificationsGicsIndustryGroup'
@@ -865,6 +872,7 @@ class Field(EnumBase, Enum):
     turnover = 'turnover'
     complianceEffectiveTime = 'complianceEffectiveTime'
     expirationDate = 'expirationDate'
+    gsfeer = 'gsfeer'
     coverage = 'coverage'
     backtestId = 'backtestId'
     marketValue = 'marketValue'
@@ -1387,10 +1395,12 @@ class FieldValueMap(Base):
         super().__init__()
         self.__queueClockTimeLabel = kwargs.get('queueClockTimeLabel')
         self.__marketPnl = kwargs.get('marketPnl')
+        self.__year = kwargs.get('year')
         self.__sustainAsiaExJapan = kwargs.get('sustainAsiaExJapan')
         self.__investmentRate = kwargs.get('investmentRate')
         self.__assetClassificationsGicsSubIndustry = kwargs.get('assetClassificationsGicsSubIndustry')
         self.__economicTermsHash = kwargs.get('economicTermsHash')
+        self.__neighbourAssetId = kwargs.get('neighbourAssetId')
         self.__simonIntlAssetTags = kwargs.get('simonIntlAssetTags')
         self.__path = kwargs.get('path')
         self.__availableInventory = kwargs.get('availableInventory')
@@ -1420,6 +1430,7 @@ class FieldValueMap(Base):
         self.__correlation = kwargs.get('correlation')
         self.__exposure = kwargs.get('exposure')
         self.__domain = kwargs.get('domain')
+        self.__marketDataAsset = kwargs.get('marketDataAsset')
         self.__forwardTenor = kwargs.get('forwardTenor')
         self.__sourceImportance = kwargs.get('sourceImportance')
         self.__eid = kwargs.get('eid')
@@ -1452,6 +1463,7 @@ class FieldValueMap(Base):
         self.__simonId = kwargs.get('simonId')
         self.__newIdeasQtd = kwargs.get('newIdeasQtd')
         self.__adjustedAskPrice = kwargs.get('adjustedAskPrice')
+        self.__quarter = kwargs.get('quarter')
         self.__factorUniverse = kwargs.get('factorUniverse')
         self.__eventCategory = kwargs.get('eventCategory')
         self.__impliedNormalVolatility = kwargs.get('impliedNormalVolatility')
@@ -1483,6 +1495,7 @@ class FieldValueMap(Base):
         self.__shortConvictionMedium = kwargs.get('shortConvictionMedium')
         self.__bidChange = kwargs.get('bidChange')
         self.__exchange = kwargs.get('exchange')
+        self.__expiration = kwargs.get('expiration')
         self.__tradePrice = kwargs.get('tradePrice')
         self.__cid = kwargs.get('cid')
         self.__importance = kwargs.get('importance')
@@ -1548,6 +1561,7 @@ class FieldValueMap(Base):
         self.__valueActual = kwargs.get('valueActual')
         self.__bcid = kwargs.get('bcid')
         self.__originalCountry = kwargs.get('originalCountry')
+        self.__field = kwargs.get('field')
         self.__spot = kwargs.get('spot')
         self.__expectedCompletionDate = kwargs.get('expectedCompletionDate')
         self.__loanValue = kwargs.get('loanValue')
@@ -1671,6 +1685,7 @@ class FieldValueMap(Base):
         self.__shortConvictionSmall = kwargs.get('shortConvictionSmall')
         self.__prevCloseBid = kwargs.get('prevCloseBid')
         self.__fxPnl = kwargs.get('fxPnl')
+        self.__forecast = kwargs.get('forecast')
         self.__tcmCostHorizon16Day = kwargs.get('tcmCostHorizon16Day')
         self.__pnl = kwargs.get('pnl')
         self.__assetClassificationsGicsIndustryGroup = kwargs.get('assetClassificationsGicsIndustryGroup')
@@ -1761,6 +1776,7 @@ class FieldValueMap(Base):
         self.__turnover = kwargs.get('turnover')
         self.__complianceEffectiveTime = kwargs.get('complianceEffectiveTime')
         self.__expirationDate = kwargs.get('expirationDate')
+        self.__gsfeer = kwargs.get('gsfeer')
         self.__coverage = kwargs.get('coverage')
         self.__backtestId = kwargs.get('backtestId')
         self.__marketValue = kwargs.get('marketValue')
@@ -1905,6 +1921,15 @@ class FieldValueMap(Base):
         self._property_changed('marketPnl')        
 
     @property
+    def year(self):
+        return self.__year
+
+    @year.setter
+    def year(self, value):
+        self.__year = value
+        self._property_changed('year')        
+
+    @property
     def sustainAsiaExJapan(self):
         return self.__sustainAsiaExJapan
 
@@ -1939,6 +1964,15 @@ class FieldValueMap(Base):
     def economicTermsHash(self, value):
         self.__economicTermsHash = value
         self._property_changed('economicTermsHash')        
+
+    @property
+    def neighbourAssetId(self):
+        return self.__neighbourAssetId
+
+    @neighbourAssetId.setter
+    def neighbourAssetId(self, value):
+        self.__neighbourAssetId = value
+        self._property_changed('neighbourAssetId')        
 
     @property
     def simonIntlAssetTags(self) -> Iterable[Any]:
@@ -2200,6 +2234,15 @@ class FieldValueMap(Base):
     def domain(self, value):
         self.__domain = value
         self._property_changed('domain')        
+
+    @property
+    def marketDataAsset(self):
+        return self.__marketDataAsset
+
+    @marketDataAsset.setter
+    def marketDataAsset(self, value):
+        self.__marketDataAsset = value
+        self._property_changed('marketDataAsset')        
 
     @property
     def forwardTenor(self):
@@ -2490,6 +2533,15 @@ class FieldValueMap(Base):
         self._property_changed('adjustedAskPrice')        
 
     @property
+    def quarter(self):
+        return self.__quarter
+
+    @quarter.setter
+    def quarter(self, value):
+        self.__quarter = value
+        self._property_changed('quarter')        
+
+    @property
     def factorUniverse(self):
         return self.__factorUniverse
 
@@ -2767,6 +2819,15 @@ class FieldValueMap(Base):
     def exchange(self, value):
         self.__exchange = value
         self._property_changed('exchange')        
+
+    @property
+    def expiration(self):
+        return self.__expiration
+
+    @expiration.setter
+    def expiration(self, value):
+        self.__expiration = value
+        self._property_changed('expiration')        
 
     @property
     def tradePrice(self):
@@ -3352,6 +3413,15 @@ class FieldValueMap(Base):
     def originalCountry(self, value):
         self.__originalCountry = value
         self._property_changed('originalCountry')        
+
+    @property
+    def field(self):
+        return self.__field
+
+    @field.setter
+    def field(self, value):
+        self.__field = value
+        self._property_changed('field')        
 
     @property
     def spot(self):
@@ -4461,6 +4531,15 @@ class FieldValueMap(Base):
         self._property_changed('fxPnl')        
 
     @property
+    def forecast(self):
+        return self.__forecast
+
+    @forecast.setter
+    def forecast(self, value):
+        self.__forecast = value
+        self._property_changed('forecast')        
+
+    @property
     def tcmCostHorizon16Day(self):
         return self.__tcmCostHorizon16Day
 
@@ -5269,6 +5348,15 @@ class FieldValueMap(Base):
     def expirationDate(self, value):
         self.__expirationDate = value
         self._property_changed('expirationDate')        
+
+    @property
+    def gsfeer(self):
+        return self.__gsfeer
+
+    @gsfeer.setter
+    def gsfeer(self, value):
+        self.__gsfeer = value
+        self._property_changed('gsfeer')        
 
     @property
     def coverage(self):
@@ -6387,6 +6475,77 @@ class FieldValueMap(Base):
         self._property_changed('methodology')        
 
 
+class MarketDataCoordinate(Base):
+        
+    """Object representation of a market data coordinate"""
+       
+    def __init__(self, marketDataType, field: str, assetId: Union[str, str] = None, marketDataAsset: str = None, pointClass=None, point: str = None):
+        super().__init__()
+        self.__marketDataType = marketDataType
+        self.__assetId = assetId
+        self.__marketDataAsset = marketDataAsset
+        self.__pointClass = pointClass
+        self.__point = point
+        self.__field = field
+
+    @property
+    def marketDataType(self):
+        return self.__marketDataType
+
+    @marketDataType.setter
+    def marketDataType(self, value):
+        self.__marketDataType = value
+        self._property_changed('marketDataType')        
+
+    @property
+    def assetId(self) -> Union[str, str]:
+        """Marquee unique asset identifier."""
+        return self.__assetId
+
+    @assetId.setter
+    def assetId(self, value: Union[str, str]):
+        self.__assetId = value
+        self._property_changed('assetId')        
+
+    @property
+    def marketDataAsset(self) -> str:
+        return self.__marketDataAsset
+
+    @marketDataAsset.setter
+    def marketDataAsset(self, value: str):
+        self.__marketDataAsset = value
+        self._property_changed('marketDataAsset')        
+
+    @property
+    def pointClass(self):
+        return self.__pointClass
+
+    @pointClass.setter
+    def pointClass(self, value):
+        self.__pointClass = value
+        self._property_changed('pointClass')        
+
+    @property
+    def point(self) -> str:
+        """The specific point, e.g. 3m, 10y,11y, Dec19"""
+        return self.__point
+
+    @point.setter
+    def point(self, value: str):
+        self.__point = value
+        self._property_changed('point')        
+
+    @property
+    def field(self) -> str:
+        """The specific field: bid, mid, rate etc"""
+        return self.__field
+
+    @field.setter
+    def field(self, value: str):
+        self.__field = value
+        self._property_changed('field')        
+
+
 class Entitlements(Base):
         
     """Defines the entitlements of a given resource"""
@@ -6489,10 +6648,12 @@ class FieldFilterMap(Base):
         super().__init__()
         self.__queueClockTimeLabel = kwargs.get('queueClockTimeLabel')
         self.__marketPnl = kwargs.get('marketPnl')
+        self.__year = kwargs.get('year')
         self.__sustainAsiaExJapan = kwargs.get('sustainAsiaExJapan')
         self.__investmentRate = kwargs.get('investmentRate')
         self.__assetClassificationsGicsSubIndustry = kwargs.get('assetClassificationsGicsSubIndustry')
         self.__economicTermsHash = kwargs.get('economicTermsHash')
+        self.__neighbourAssetId = kwargs.get('neighbourAssetId')
         self.__simonIntlAssetTags = kwargs.get('simonIntlAssetTags')
         self.__path = kwargs.get('path')
         self.__availableInventory = kwargs.get('availableInventory')
@@ -6522,6 +6683,7 @@ class FieldFilterMap(Base):
         self.__correlation = kwargs.get('correlation')
         self.__exposure = kwargs.get('exposure')
         self.__domain = kwargs.get('domain')
+        self.__marketDataAsset = kwargs.get('marketDataAsset')
         self.__forwardTenor = kwargs.get('forwardTenor')
         self.__sourceImportance = kwargs.get('sourceImportance')
         self.__eid = kwargs.get('eid')
@@ -6553,6 +6715,7 @@ class FieldFilterMap(Base):
         self.__simonId = kwargs.get('simonId')
         self.__newIdeasQtd = kwargs.get('newIdeasQtd')
         self.__adjustedAskPrice = kwargs.get('adjustedAskPrice')
+        self.__quarter = kwargs.get('quarter')
         self.__factorUniverse = kwargs.get('factorUniverse')
         self.__eventCategory = kwargs.get('eventCategory')
         self.__impliedNormalVolatility = kwargs.get('impliedNormalVolatility')
@@ -6644,6 +6807,7 @@ class FieldFilterMap(Base):
         self.__valueActual = kwargs.get('valueActual')
         self.__bcid = kwargs.get('bcid')
         self.__originalCountry = kwargs.get('originalCountry')
+        self.__field = kwargs.get('field')
         self.__spot = kwargs.get('spot')
         self.__expectedCompletionDate = kwargs.get('expectedCompletionDate')
         self.__loanValue = kwargs.get('loanValue')
@@ -6761,6 +6925,7 @@ class FieldFilterMap(Base):
         self.__shortConvictionSmall = kwargs.get('shortConvictionSmall')
         self.__prevCloseBid = kwargs.get('prevCloseBid')
         self.__fxPnl = kwargs.get('fxPnl')
+        self.__forecast = kwargs.get('forecast')
         self.__tcmCostHorizon16Day = kwargs.get('tcmCostHorizon16Day')
         self.__pnl = kwargs.get('pnl')
         self.__assetClassificationsGicsIndustryGroup = kwargs.get('assetClassificationsGicsIndustryGroup')
@@ -6846,6 +7011,7 @@ class FieldFilterMap(Base):
         self.__longConvictionSmall = kwargs.get('longConvictionSmall')
         self.__serviceId = kwargs.get('serviceId')
         self.__turnover = kwargs.get('turnover')
+        self.__gsfeer = kwargs.get('gsfeer')
         self.__coverage = kwargs.get('coverage')
         self.__backtestId = kwargs.get('backtestId')
         self.__marketValue = kwargs.get('marketValue')
@@ -6981,6 +7147,15 @@ class FieldFilterMap(Base):
         self._property_changed('marketPnl')        
 
     @property
+    def year(self):
+        return self.__year
+
+    @year.setter
+    def year(self, value):
+        self.__year = value
+        self._property_changed('year')        
+
+    @property
     def sustainAsiaExJapan(self):
         return self.__sustainAsiaExJapan
 
@@ -7015,6 +7190,15 @@ class FieldFilterMap(Base):
     def economicTermsHash(self, value):
         self.__economicTermsHash = value
         self._property_changed('economicTermsHash')        
+
+    @property
+    def neighbourAssetId(self):
+        return self.__neighbourAssetId
+
+    @neighbourAssetId.setter
+    def neighbourAssetId(self, value):
+        self.__neighbourAssetId = value
+        self._property_changed('neighbourAssetId')        
 
     @property
     def simonIntlAssetTags(self):
@@ -7276,6 +7460,15 @@ class FieldFilterMap(Base):
     def domain(self, value):
         self.__domain = value
         self._property_changed('domain')        
+
+    @property
+    def marketDataAsset(self):
+        return self.__marketDataAsset
+
+    @marketDataAsset.setter
+    def marketDataAsset(self, value):
+        self.__marketDataAsset = value
+        self._property_changed('marketDataAsset')        
 
     @property
     def forwardTenor(self):
@@ -7555,6 +7748,15 @@ class FieldFilterMap(Base):
     def adjustedAskPrice(self, value):
         self.__adjustedAskPrice = value
         self._property_changed('adjustedAskPrice')        
+
+    @property
+    def quarter(self):
+        return self.__quarter
+
+    @quarter.setter
+    def quarter(self, value):
+        self.__quarter = value
+        self._property_changed('quarter')        
 
     @property
     def factorUniverse(self):
@@ -8374,6 +8576,15 @@ class FieldFilterMap(Base):
     def originalCountry(self, value):
         self.__originalCountry = value
         self._property_changed('originalCountry')        
+
+    @property
+    def field(self):
+        return self.__field
+
+    @field.setter
+    def field(self, value):
+        self.__field = value
+        self._property_changed('field')        
 
     @property
     def spot(self):
@@ -9429,6 +9640,15 @@ class FieldFilterMap(Base):
         self._property_changed('fxPnl')        
 
     @property
+    def forecast(self):
+        return self.__forecast
+
+    @forecast.setter
+    def forecast(self, value):
+        self.__forecast = value
+        self._property_changed('forecast')        
+
+    @property
     def tcmCostHorizon16Day(self):
         return self.__tcmCostHorizon16Day
 
@@ -10192,6 +10412,15 @@ class FieldFilterMap(Base):
     def turnover(self, value):
         self.__turnover = value
         self._property_changed('turnover')        
+
+    @property
+    def gsfeer(self):
+        return self.__gsfeer
+
+    @gsfeer.setter
+    def gsfeer(self, value):
+        self.__gsfeer = value
+        self._property_changed('gsfeer')        
 
     @property
     def coverage(self):

@@ -16,7 +16,14 @@ under the License.
 
 from gs_quant.api.base import Priceable
 from gs_quant.target.common import *
+from gs_quant.target.common import MarketDataCoordinate as __MarketDataCoordinate
 from gs_quant.target.common import XRef as __XRef
+
+
+class MarketDataCoordinate(__MarketDataCoordinate):
+
+    def __str__(self):
+        return "|".join(f or '' for f in (self.__marketDataType, self.__assetId, self.__pointClass, self.__point, self.__field))
 
 
 class XRef(__XRef, Priceable):
@@ -25,19 +32,3 @@ class XRef(__XRef, Priceable):
         properties = [i for i in dir(self.__class__) if isinstance(getattr(self.__class__, i), property)]
         values = [getattr(self, p) for p in properties]
         return ', '.join(('{}={}'.format(p, v) for p, v in zip(properties, values) if v))
-
-
-def dict_to_url(params: dict) -> str:
-    if not params:
-        return ''
-    out = '?'
-    for key, value in params.items():
-        if isinstance(value, list) and value:
-            for item in value:
-                out += '&%s=%s' % (key, item)
-        elif value:
-            out += '&%s=%s' % (key, value)
-
-    if out == '?':
-        return ''
-    return out
