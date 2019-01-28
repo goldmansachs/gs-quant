@@ -43,8 +43,7 @@ setuptools.setup(
         "requests",
         "scipy",
         "six",
-        "typing",
-        "scipy",
+        "typing"
     ],
     extras_require={
         "kerb": ["requests-kerberos"],

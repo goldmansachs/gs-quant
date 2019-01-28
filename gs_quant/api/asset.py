@@ -18,12 +18,15 @@ from gs_quant.target.assets import *
 from gs_quant.target.assets import Asset as __Asset
 from gs_quant.api.common import FieldFilterMap
 from gs_quant.session import GsSession
+from gs_quant.errors import *
 
 from datetime import datetime
 from enum import auto, Enum
 from typing import List, Tuple, Union
+import logging
 
 IdList = Union[List[str], Tuple[str]]
+_logger = logging.getLogger(__name__)
 
 
 class IdType(Enum):
@@ -78,7 +81,8 @@ class Asset(__Asset):
             input_type: Union[IdType, str],
             output_type: Union[IdType, str],
             ids: IdList,
-            as_of: datetime=None,
+            as_of: datetime = None,
+            multimap: bool = False,
             **kwargs
     ) -> dict:
         if isinstance(input_type, IdType):
@@ -99,7 +103,24 @@ class Asset(__Asset):
         query = EntityQuery(
             where=where,
             fields=(input_type, output_type),
-            asOfTime=as_of or datetime.now()
+            asOfTime=as_of or datetime.now(),
+            limit=len(ids) * 5
         )
         response = GsSession.current._post('/assets/data/query', payload=query)
-        return {entry.pop(input_type): entry.get(output_type) for entry in response['results']}
+
+        results = response['results']
+        if response['totalResults'] > len(results):
+            raise MqValueError('number of results exceeded capacity')
+
+        out = {}
+        for entry in response['results']:
+            key = entry.get(input_type)
+            value = entry.get(output_type)
+            if multimap:
+                bunch = out.setdefault(key, [])
+                bunch.append(value)
+            else:
+                if key in out:
+                    _logger.warning('%s: more than one possible mapping for %s', Asset.map_identifiers.__name__, key)
+                out[key] = value
+        return out
