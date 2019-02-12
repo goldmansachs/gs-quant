@@ -33,6 +33,10 @@ class ContextMeta(type, metaclass=ABCMeta):
 
         return cls.__default
 
+    @default.setter
+    def default(cls, default: 'ContextBase'):
+        cls.__default = default
+
 
 class ContextBase(metaclass=ContextMeta):
 

@@ -17,7 +17,7 @@ under the License.
 import datetime
 from typing import Any, Iterable, Union
 from enum import Enum
-from gs_quant.api.base import Base, EnumBase
+from gs_quant.api.base import EnumBase, Base
 
 
 class AssetClass(EnumBase, Enum):    
@@ -57,6 +57,7 @@ class DayCountFraction(EnumBase, Enum):
     """Day Count Fraction."""
 
     ACT_OVER_360 = 'ACT/360'
+    ACT_OVER_365_Fixed = 'ACT/365 Fixed'
     ACT_OVER_365_ISDA = 'ACT/365 ISDA'
     ACT_OVER_ACT_ISDA = 'ACT/ACT ISDA'
     _30_OVER_360 = '30/360'
@@ -528,6 +529,7 @@ class Field(EnumBase, Enum):
     domain = 'domain'
     marketDataAsset = 'marketDataAsset'
     forwardTenor = 'forwardTenor'
+    unadjustedHigh = 'unadjustedHigh'
     sourceImportance = 'sourceImportance'
     eid = 'eid'
     jsn = 'jsn'
@@ -538,6 +540,7 @@ class Field(EnumBase, Enum):
     quoteType = 'quoteType'
     tenor = 'tenor'
     tcmCostParticipationRate75Pct = 'tcmCostParticipationRate75Pct'
+    close = 'close'
     tcmCostParticipationRate100Pct = 'tcmCostParticipationRate100Pct'
     disclaimer = 'disclaimer'
     measureIdx = 'measureIdx'
@@ -563,6 +566,7 @@ class Field(EnumBase, Enum):
     factorUniverse = 'factorUniverse'
     eventCategory = 'eventCategory'
     impliedNormalVolatility = 'impliedNormalVolatility'
+    unadjustedOpen = 'unadjustedOpen'
     arrivalRt = 'arrivalRt'
     transactionCost = 'transactionCost'
     servicingCostShortPnl = 'servicingCostShortPnl'
@@ -601,12 +605,14 @@ class Field(EnumBase, Enum):
     stsAssetName = 'stsAssetName'
     valueUnit = 'valueUnit'
     bidHigh = 'bidHigh'
+    adjustedLowPrice = 'adjustedLowPrice'
     netExposureClassification = 'netExposureClassification'
     longConvictionLarge = 'longConvictionLarge'
     fairVariance = 'fairVariance'
     hitRateWtd = 'hitRateWtd'
     oad = 'oad'
     bosInBpsDescription = 'bosInBpsDescription'
+    lowPrice = 'lowPrice'
     realizedVolatility = 'realizedVolatility'
     rate = 'rate'
     adv22DayPct = 'adv22DayPct'
@@ -620,6 +626,7 @@ class Field(EnumBase, Enum):
     tcmCostHorizon1Day = 'tcmCostHorizon1Day'
     servicingCostLongPnl = 'servicingCostLongPnl'
     stsRatesCountry = 'stsRatesCountry'
+    meetingNumber = 'meetingNumber'
     exchangeId = 'exchangeId'
     horizon = 'horizon'
     tcmCostHorizon20Day = 'tcmCostHorizon20Day'
@@ -627,6 +634,7 @@ class Field(EnumBase, Enum):
     sourceValueForecast = 'sourceValueForecast'
     shortConvictionLarge = 'shortConvictionLarge'
     realm = 'realm'
+    bid = 'bid'
     dataDescription = 'dataDescription'
     gsn = 'gsn'
     isAggressive = 'isAggressive'
@@ -641,6 +649,7 @@ class Field(EnumBase, Enum):
     division = 'division'
     marketCapUSD = 'marketCapUSD'
     deploymentId = 'deploymentId'
+    highPrice = 'highPrice'
     shortWeight = 'shortWeight'
     absoluteShares = 'absoluteShares'
     action = 'action'
@@ -707,12 +716,14 @@ class Field(EnumBase, Enum):
     sourceURL = 'sourceURL'
     estimatedReturn = 'estimatedReturn'
     underlyingAssetIds = 'underlyingAssetIds'
+    high = 'high'
     sourceLastUpdate = 'sourceLastUpdate'
     queueInLotsLabel = 'queueInLotsLabel'
     adv10DayPct = 'adv10DayPct'
     longConvictionMedium = 'longConvictionMedium'
     eventName = 'eventName'
     annualRisk = 'annualRisk'
+    unadjustedBid = 'unadjustedBid'
     gsdeer = 'gsdeer'
     marketCap = 'marketCap'
     clusterRegion = 'clusterRegion'
@@ -743,6 +754,7 @@ class Field(EnumBase, Enum):
     assetId = 'assetId'
     lastUpdatedTime = 'lastUpdatedTime'
     fairValue = 'fairValue'
+    adjustedHighPrice = 'adjustedHighPrice'
     openTime = 'openTime'
     beta = 'beta'
     direction = 'direction'
@@ -774,6 +786,7 @@ class Field(EnumBase, Enum):
     ideaSource = 'ideaSource'
     hedgeNotional = 'hedgeNotional'
     askLow = 'askLow'
+    unadjustedAsk = 'unadjustedAsk'
     expiry = 'expiry'
     tradingPnl = 'tradingPnl'
     strikePercentage = 'strikePercentage'
@@ -785,6 +798,7 @@ class Field(EnumBase, Enum):
     tcmCostHorizon16Day = 'tcmCostHorizon16Day'
     pnl = 'pnl'
     assetClassificationsGicsIndustryGroup = 'assetClassificationsGicsIndustryGroup'
+    unadjustedClose = 'unadjustedClose'
     tcmCostHorizon4Day = 'tcmCostHorizon4Day'
     assetClassificationsIsPrimary = 'assetClassificationsIsPrimary'
     styles = 'styles'
@@ -812,9 +826,11 @@ class Field(EnumBase, Enum):
     assetClassificationsCountryName = 'assetClassificationsCountryName'
     newIdeasYtd = 'newIdeasYtd'
     managementFee = 'managementFee'
+    ask = 'ask'
     impliedLognormalVolatility = 'impliedLognormalVolatility'
     closePrice = 'closePrice'
     endTime = 'endTime'
+    open = 'open'
     sourceId = 'sourceId'
     country = 'country'
     cusip = 'cusip'
@@ -839,6 +855,7 @@ class Field(EnumBase, Enum):
     weight = 'weight'
     historicalClose = 'historicalClose'
     assetCountPriced = 'assetCountPriced'
+    marketDataPoint = 'marketDataPoint'
     ideaId = 'ideaId'
     commentStatus = 'commentStatus'
     marginalCost = 'marginalCost'
@@ -900,6 +917,7 @@ class Field(EnumBase, Enum):
     cumulativePnl = 'cumulativePnl'
     sourceOrigin = 'sourceOrigin'
     shortTenor = 'shortTenor'
+    unadjustedVolume = 'unadjustedVolume'
     measures = 'measures'
     tradingCostPnl = 'tradingCostPnl'
     internalUser = 'internalUser'
@@ -910,6 +928,7 @@ class Field(EnumBase, Enum):
     positionIdx = 'positionIdx'
     secName = 'secName'
     percentADV = 'percentADV'
+    unadjustedLow = 'unadjustedLow'
     contract = 'contract'
     sedol = 'sedol'
     roundingCostPnl = 'roundingCostPnl'
@@ -927,6 +946,7 @@ class Field(EnumBase, Enum):
     adjustedBidPrice = 'adjustedBidPrice'
     hitRateQtd = 'hitRateQtd'
     sectorsRaw = 'sectorsRaw'
+    low = 'low'
     integratedScore = 'integratedScore'
     reportRunTime = 'reportRunTime'
     tradeSize = 'tradeSize'
@@ -1008,7 +1028,6 @@ class Field(EnumBase, Enum):
     carry = 'carry'
     cashConversion = 'cashConversion'
     category = 'category'
-    close = 'close'
     convexity = 'convexity'
     countryCode = 'countryCode'
     croci = 'croci'
@@ -1432,6 +1451,7 @@ class FieldValueMap(Base):
         self.__domain = kwargs.get('domain')
         self.__marketDataAsset = kwargs.get('marketDataAsset')
         self.__forwardTenor = kwargs.get('forwardTenor')
+        self.__unadjustedHigh = kwargs.get('unadjustedHigh')
         self.__sourceImportance = kwargs.get('sourceImportance')
         self.__eid = kwargs.get('eid')
         self.__jsn = kwargs.get('jsn')
@@ -1442,6 +1462,7 @@ class FieldValueMap(Base):
         self.__quoteType = kwargs.get('quoteType')
         self.__tenor = kwargs.get('tenor')
         self.__tcmCostParticipationRate75Pct = kwargs.get('tcmCostParticipationRate75Pct')
+        self.__close = kwargs.get('close')
         self.__tcmCostParticipationRate100Pct = kwargs.get('tcmCostParticipationRate100Pct')
         self.__disclaimer = kwargs.get('disclaimer')
         self.__measureIdx = kwargs.get('measureIdx')
@@ -1467,6 +1488,7 @@ class FieldValueMap(Base):
         self.__factorUniverse = kwargs.get('factorUniverse')
         self.__eventCategory = kwargs.get('eventCategory')
         self.__impliedNormalVolatility = kwargs.get('impliedNormalVolatility')
+        self.__unadjustedOpen = kwargs.get('unadjustedOpen')
         self.__arrivalRt = kwargs.get('arrivalRt')
         self.__transactionCost = kwargs.get('transactionCost')
         self.__servicingCostShortPnl = kwargs.get('servicingCostShortPnl')
@@ -1505,12 +1527,14 @@ class FieldValueMap(Base):
         self.__stsAssetName = kwargs.get('stsAssetName')
         self.__valueUnit = kwargs.get('valueUnit')
         self.__bidHigh = kwargs.get('bidHigh')
+        self.__adjustedLowPrice = kwargs.get('adjustedLowPrice')
         self.__netExposureClassification = kwargs.get('netExposureClassification')
         self.__longConvictionLarge = kwargs.get('longConvictionLarge')
         self.__fairVariance = kwargs.get('fairVariance')
         self.__hitRateWtd = kwargs.get('hitRateWtd')
         self.__oad = kwargs.get('oad')
         self.__bosInBpsDescription = kwargs.get('bosInBpsDescription')
+        self.__lowPrice = kwargs.get('lowPrice')
         self.__realizedVolatility = kwargs.get('realizedVolatility')
         self.__rate = kwargs.get('rate')
         self.__adv22DayPct = kwargs.get('adv22DayPct')
@@ -1524,6 +1548,7 @@ class FieldValueMap(Base):
         self.__tcmCostHorizon1Day = kwargs.get('tcmCostHorizon1Day')
         self.__servicingCostLongPnl = kwargs.get('servicingCostLongPnl')
         self.__stsRatesCountry = kwargs.get('stsRatesCountry')
+        self.__meetingNumber = kwargs.get('meetingNumber')
         self.__exchangeId = kwargs.get('exchangeId')
         self.__horizon = kwargs.get('horizon')
         self.__tcmCostHorizon20Day = kwargs.get('tcmCostHorizon20Day')
@@ -1531,6 +1556,7 @@ class FieldValueMap(Base):
         self.__sourceValueForecast = kwargs.get('sourceValueForecast')
         self.__shortConvictionLarge = kwargs.get('shortConvictionLarge')
         self.__realm = kwargs.get('realm')
+        self.__bid = kwargs.get('bid')
         self.__dataDescription = kwargs.get('dataDescription')
         self.__gsn = kwargs.get('gsn')
         self.__isAggressive = kwargs.get('isAggressive')
@@ -1545,6 +1571,7 @@ class FieldValueMap(Base):
         self.__division = kwargs.get('division')
         self.__marketCapUSD = kwargs.get('marketCapUSD')
         self.__deploymentId = kwargs.get('deploymentId')
+        self.__highPrice = kwargs.get('highPrice')
         self.__shortWeight = kwargs.get('shortWeight')
         self.__absoluteShares = kwargs.get('absoluteShares')
         self.__action = kwargs.get('action')
@@ -1611,12 +1638,14 @@ class FieldValueMap(Base):
         self.__sourceURL = kwargs.get('sourceURL')
         self.__estimatedReturn = kwargs.get('estimatedReturn')
         self.__underlyingAssetIds = kwargs.get('underlyingAssetIds')
+        self.__high = kwargs.get('high')
         self.__sourceLastUpdate = kwargs.get('sourceLastUpdate')
         self.__queueInLotsLabel = kwargs.get('queueInLotsLabel')
         self.__adv10DayPct = kwargs.get('adv10DayPct')
         self.__longConvictionMedium = kwargs.get('longConvictionMedium')
         self.__eventName = kwargs.get('eventName')
         self.__annualRisk = kwargs.get('annualRisk')
+        self.__unadjustedBid = kwargs.get('unadjustedBid')
         self.__gsdeer = kwargs.get('gsdeer')
         self.__marketCap = kwargs.get('marketCap')
         self.__clusterRegion = kwargs.get('clusterRegion')
@@ -1647,6 +1676,7 @@ class FieldValueMap(Base):
         self.__assetId = kwargs.get('assetId')
         self.__lastUpdatedTime = kwargs.get('lastUpdatedTime')
         self.__fairValue = kwargs.get('fairValue')
+        self.__adjustedHighPrice = kwargs.get('adjustedHighPrice')
         self.__openTime = kwargs.get('openTime')
         self.__beta = kwargs.get('beta')
         self.__direction = kwargs.get('direction')
@@ -1678,6 +1708,7 @@ class FieldValueMap(Base):
         self.__ideaSource = kwargs.get('ideaSource')
         self.__hedgeNotional = kwargs.get('hedgeNotional')
         self.__askLow = kwargs.get('askLow')
+        self.__unadjustedAsk = kwargs.get('unadjustedAsk')
         self.__expiry = kwargs.get('expiry')
         self.__tradingPnl = kwargs.get('tradingPnl')
         self.__strikePercentage = kwargs.get('strikePercentage')
@@ -1689,6 +1720,7 @@ class FieldValueMap(Base):
         self.__tcmCostHorizon16Day = kwargs.get('tcmCostHorizon16Day')
         self.__pnl = kwargs.get('pnl')
         self.__assetClassificationsGicsIndustryGroup = kwargs.get('assetClassificationsGicsIndustryGroup')
+        self.__unadjustedClose = kwargs.get('unadjustedClose')
         self.__tcmCostHorizon4Day = kwargs.get('tcmCostHorizon4Day')
         self.__assetClassificationsIsPrimary = kwargs.get('assetClassificationsIsPrimary')
         self.__styles = kwargs.get('styles')
@@ -1716,9 +1748,11 @@ class FieldValueMap(Base):
         self.__assetClassificationsCountryName = kwargs.get('assetClassificationsCountryName')
         self.__newIdeasYtd = kwargs.get('newIdeasYtd')
         self.__managementFee = kwargs.get('managementFee')
+        self.__ask = kwargs.get('ask')
         self.__impliedLognormalVolatility = kwargs.get('impliedLognormalVolatility')
         self.__closePrice = kwargs.get('closePrice')
         self.__endTime = kwargs.get('endTime')
+        self.__open = kwargs.get('open')
         self.__sourceId = kwargs.get('sourceId')
         self.__country = kwargs.get('country')
         self.__cusip = kwargs.get('cusip')
@@ -1743,6 +1777,7 @@ class FieldValueMap(Base):
         self.__weight = kwargs.get('weight')
         self.__historicalClose = kwargs.get('historicalClose')
         self.__assetCountPriced = kwargs.get('assetCountPriced')
+        self.__marketDataPoint = kwargs.get('marketDataPoint')
         self.__ideaId = kwargs.get('ideaId')
         self.__commentStatus = kwargs.get('commentStatus')
         self.__marginalCost = kwargs.get('marginalCost')
@@ -1804,6 +1839,7 @@ class FieldValueMap(Base):
         self.__cumulativePnl = kwargs.get('cumulativePnl')
         self.__sourceOrigin = kwargs.get('sourceOrigin')
         self.__shortTenor = kwargs.get('shortTenor')
+        self.__unadjustedVolume = kwargs.get('unadjustedVolume')
         self.__measures = kwargs.get('measures')
         self.__tradingCostPnl = kwargs.get('tradingCostPnl')
         self.__internalUser = kwargs.get('internalUser')
@@ -1814,6 +1850,7 @@ class FieldValueMap(Base):
         self.__positionIdx = kwargs.get('positionIdx')
         self.__secName = kwargs.get('secName')
         self.__percentADV = kwargs.get('percentADV')
+        self.__unadjustedLow = kwargs.get('unadjustedLow')
         self.__contract = kwargs.get('contract')
         self.__sedol = kwargs.get('sedol')
         self.__roundingCostPnl = kwargs.get('roundingCostPnl')
@@ -1831,6 +1868,7 @@ class FieldValueMap(Base):
         self.__adjustedBidPrice = kwargs.get('adjustedBidPrice')
         self.__hitRateQtd = kwargs.get('hitRateQtd')
         self.__sectorsRaw = kwargs.get('sectorsRaw')
+        self.__low = kwargs.get('low')
         self.__integratedScore = kwargs.get('integratedScore')
         self.__reportRunTime = kwargs.get('reportRunTime')
         self.__tradeSize = kwargs.get('tradeSize')
@@ -2254,6 +2292,15 @@ class FieldValueMap(Base):
         self._property_changed('forwardTenor')        
 
     @property
+    def unadjustedHigh(self):
+        return self.__unadjustedHigh
+
+    @unadjustedHigh.setter
+    def unadjustedHigh(self, value):
+        self.__unadjustedHigh = value
+        self._property_changed('unadjustedHigh')        
+
+    @property
     def sourceImportance(self):
         return self.__sourceImportance
 
@@ -2342,6 +2389,15 @@ class FieldValueMap(Base):
     def tcmCostParticipationRate75Pct(self, value):
         self.__tcmCostParticipationRate75Pct = value
         self._property_changed('tcmCostParticipationRate75Pct')        
+
+    @property
+    def close(self):
+        return self.__close
+
+    @close.setter
+    def close(self, value):
+        self.__close = value
+        self._property_changed('close')        
 
     @property
     def tcmCostParticipationRate100Pct(self):
@@ -2567,6 +2623,15 @@ class FieldValueMap(Base):
     def impliedNormalVolatility(self, value):
         self.__impliedNormalVolatility = value
         self._property_changed('impliedNormalVolatility')        
+
+    @property
+    def unadjustedOpen(self):
+        return self.__unadjustedOpen
+
+    @unadjustedOpen.setter
+    def unadjustedOpen(self, value):
+        self.__unadjustedOpen = value
+        self._property_changed('unadjustedOpen')        
 
     @property
     def arrivalRt(self):
@@ -2911,6 +2976,15 @@ class FieldValueMap(Base):
         self._property_changed('bidHigh')        
 
     @property
+    def adjustedLowPrice(self):
+        return self.__adjustedLowPrice
+
+    @adjustedLowPrice.setter
+    def adjustedLowPrice(self, value):
+        self.__adjustedLowPrice = value
+        self._property_changed('adjustedLowPrice')        
+
+    @property
     def netExposureClassification(self):
         return self.__netExposureClassification
 
@@ -2963,6 +3037,15 @@ class FieldValueMap(Base):
     def bosInBpsDescription(self, value):
         self.__bosInBpsDescription = value
         self._property_changed('bosInBpsDescription')        
+
+    @property
+    def lowPrice(self):
+        return self.__lowPrice
+
+    @lowPrice.setter
+    def lowPrice(self, value):
+        self.__lowPrice = value
+        self._property_changed('lowPrice')        
 
     @property
     def realizedVolatility(self):
@@ -3082,6 +3165,15 @@ class FieldValueMap(Base):
         self._property_changed('stsRatesCountry')        
 
     @property
+    def meetingNumber(self):
+        return self.__meetingNumber
+
+    @meetingNumber.setter
+    def meetingNumber(self, value):
+        self.__meetingNumber = value
+        self._property_changed('meetingNumber')        
+
+    @property
     def exchangeId(self):
         return self.__exchangeId
 
@@ -3143,6 +3235,15 @@ class FieldValueMap(Base):
     def realm(self, value):
         self.__realm = value
         self._property_changed('realm')        
+
+    @property
+    def bid(self):
+        return self.__bid
+
+    @bid.setter
+    def bid(self, value):
+        self.__bid = value
+        self._property_changed('bid')        
 
     @property
     def dataDescription(self):
@@ -3269,6 +3370,15 @@ class FieldValueMap(Base):
     def deploymentId(self, value):
         self.__deploymentId = value
         self._property_changed('deploymentId')        
+
+    @property
+    def highPrice(self):
+        return self.__highPrice
+
+    @highPrice.setter
+    def highPrice(self, value):
+        self.__highPrice = value
+        self._property_changed('highPrice')        
 
     @property
     def shortWeight(self):
@@ -3865,6 +3975,15 @@ class FieldValueMap(Base):
         self._property_changed('underlyingAssetIds')        
 
     @property
+    def high(self):
+        return self.__high
+
+    @high.setter
+    def high(self, value):
+        self.__high = value
+        self._property_changed('high')        
+
+    @property
     def sourceLastUpdate(self):
         return self.__sourceLastUpdate
 
@@ -3917,6 +4036,15 @@ class FieldValueMap(Base):
     def annualRisk(self, value):
         self.__annualRisk = value
         self._property_changed('annualRisk')        
+
+    @property
+    def unadjustedBid(self):
+        return self.__unadjustedBid
+
+    @unadjustedBid.setter
+    def unadjustedBid(self, value):
+        self.__unadjustedBid = value
+        self._property_changed('unadjustedBid')        
 
     @property
     def gsdeer(self):
@@ -4187,6 +4315,15 @@ class FieldValueMap(Base):
     def fairValue(self, value):
         self.__fairValue = value
         self._property_changed('fairValue')        
+
+    @property
+    def adjustedHighPrice(self):
+        return self.__adjustedHighPrice
+
+    @adjustedHighPrice.setter
+    def adjustedHighPrice(self, value):
+        self.__adjustedHighPrice = value
+        self._property_changed('adjustedHighPrice')        
 
     @property
     def openTime(self):
@@ -4468,6 +4605,15 @@ class FieldValueMap(Base):
         self._property_changed('askLow')        
 
     @property
+    def unadjustedAsk(self):
+        return self.__unadjustedAsk
+
+    @unadjustedAsk.setter
+    def unadjustedAsk(self, value):
+        self.__unadjustedAsk = value
+        self._property_changed('unadjustedAsk')        
+
+    @property
     def expiry(self):
         return self.__expiry
 
@@ -4565,6 +4711,15 @@ class FieldValueMap(Base):
     def assetClassificationsGicsIndustryGroup(self, value):
         self.__assetClassificationsGicsIndustryGroup = value
         self._property_changed('assetClassificationsGicsIndustryGroup')        
+
+    @property
+    def unadjustedClose(self):
+        return self.__unadjustedClose
+
+    @unadjustedClose.setter
+    def unadjustedClose(self, value):
+        self.__unadjustedClose = value
+        self._property_changed('unadjustedClose')        
 
     @property
     def tcmCostHorizon4Day(self):
@@ -4810,6 +4965,15 @@ class FieldValueMap(Base):
         self._property_changed('managementFee')        
 
     @property
+    def ask(self):
+        return self.__ask
+
+    @ask.setter
+    def ask(self, value):
+        self.__ask = value
+        self._property_changed('ask')        
+
+    @property
     def impliedLognormalVolatility(self):
         return self.__impliedLognormalVolatility
 
@@ -4835,6 +4999,15 @@ class FieldValueMap(Base):
     def endTime(self, value):
         self.__endTime = value
         self._property_changed('endTime')        
+
+    @property
+    def open(self):
+        return self.__open
+
+    @open.setter
+    def open(self, value):
+        self.__open = value
+        self._property_changed('open')        
 
     @property
     def sourceId(self):
@@ -5051,6 +5224,15 @@ class FieldValueMap(Base):
     def assetCountPriced(self, value):
         self.__assetCountPriced = value
         self._property_changed('assetCountPriced')        
+
+    @property
+    def marketDataPoint(self) -> Iterable[Any]:
+        return self.__marketDataPoint
+
+    @marketDataPoint.setter
+    def marketDataPoint(self, value: Iterable[Any]):
+        self.__marketDataPoint = value
+        self._property_changed('marketDataPoint')        
 
     @property
     def ideaId(self):
@@ -5602,6 +5784,15 @@ class FieldValueMap(Base):
         self._property_changed('shortTenor')        
 
     @property
+    def unadjustedVolume(self):
+        return self.__unadjustedVolume
+
+    @unadjustedVolume.setter
+    def unadjustedVolume(self, value):
+        self.__unadjustedVolume = value
+        self._property_changed('unadjustedVolume')        
+
+    @property
     def measures(self) -> Iterable[Any]:
         return self.__measures
 
@@ -5690,6 +5881,15 @@ class FieldValueMap(Base):
     def percentADV(self, value):
         self.__percentADV = value
         self._property_changed('percentADV')        
+
+    @property
+    def unadjustedLow(self):
+        return self.__unadjustedLow
+
+    @unadjustedLow.setter
+    def unadjustedLow(self, value):
+        self.__unadjustedLow = value
+        self._property_changed('unadjustedLow')        
 
     @property
     def contract(self):
@@ -5843,6 +6043,15 @@ class FieldValueMap(Base):
     def sectorsRaw(self, value: Iterable[Any]):
         self.__sectorsRaw = value
         self._property_changed('sectorsRaw')        
+
+    @property
+    def low(self):
+        return self.__low
+
+    @low.setter
+    def low(self, value):
+        self.__low = value
+        self._property_changed('low')        
 
     @property
     def integratedScore(self):
@@ -6479,13 +6688,13 @@ class MarketDataCoordinate(Base):
         
     """Object representation of a market data coordinate"""
        
-    def __init__(self, marketDataType, field: str, assetId: Union[str, str] = None, marketDataAsset: str = None, pointClass=None, point: str = None):
+    def __init__(self, marketDataType, field: str, assetId: Union[str, str] = None, marketDataAsset: str = None, pointClass=None, marketDataPoint: Iterable[str] = None):
         super().__init__()
         self.__marketDataType = marketDataType
         self.__assetId = assetId
         self.__marketDataAsset = marketDataAsset
         self.__pointClass = pointClass
-        self.__point = point
+        self.__marketDataPoint = marketDataPoint
         self.__field = field
 
     @property
@@ -6526,14 +6735,14 @@ class MarketDataCoordinate(Base):
         self._property_changed('pointClass')        
 
     @property
-    def point(self) -> str:
-        """The specific point, e.g. 3m, 10y,11y, Dec19"""
-        return self.__point
+    def marketDataPoint(self) -> Iterable[str]:
+        """The specific point, e.g. 3m, 10y, 11y, Dec19"""
+        return self.__marketDataPoint
 
-    @point.setter
-    def point(self, value: str):
-        self.__point = value
-        self._property_changed('point')        
+    @marketDataPoint.setter
+    def marketDataPoint(self, value: Iterable[str]):
+        self.__marketDataPoint = value
+        self._property_changed('marketDataPoint')        
 
     @property
     def field(self) -> str:
@@ -6685,6 +6894,7 @@ class FieldFilterMap(Base):
         self.__domain = kwargs.get('domain')
         self.__marketDataAsset = kwargs.get('marketDataAsset')
         self.__forwardTenor = kwargs.get('forwardTenor')
+        self.__unadjustedHigh = kwargs.get('unadjustedHigh')
         self.__sourceImportance = kwargs.get('sourceImportance')
         self.__eid = kwargs.get('eid')
         self.__jsn = kwargs.get('jsn')
@@ -6695,6 +6905,7 @@ class FieldFilterMap(Base):
         self.__quoteType = kwargs.get('quoteType')
         self.__tenor = kwargs.get('tenor')
         self.__tcmCostParticipationRate75Pct = kwargs.get('tcmCostParticipationRate75Pct')
+        self.__close = kwargs.get('close')
         self.__tcmCostParticipationRate100Pct = kwargs.get('tcmCostParticipationRate100Pct')
         self.__disclaimer = kwargs.get('disclaimer')
         self.__a = kwargs.get('a')
@@ -6719,6 +6930,7 @@ class FieldFilterMap(Base):
         self.__factorUniverse = kwargs.get('factorUniverse')
         self.__eventCategory = kwargs.get('eventCategory')
         self.__impliedNormalVolatility = kwargs.get('impliedNormalVolatility')
+        self.__unadjustedOpen = kwargs.get('unadjustedOpen')
         self.__arrivalRt = kwargs.get('arrivalRt')
         self.__transactionCost = kwargs.get('transactionCost')
         self.__servicingCostShortPnl = kwargs.get('servicingCostShortPnl')
@@ -6753,12 +6965,14 @@ class FieldFilterMap(Base):
         self.__stsAssetName = kwargs.get('stsAssetName')
         self.__valueUnit = kwargs.get('valueUnit')
         self.__bidHigh = kwargs.get('bidHigh')
+        self.__adjustedLowPrice = kwargs.get('adjustedLowPrice')
         self.__netExposureClassification = kwargs.get('netExposureClassification')
         self.__longConvictionLarge = kwargs.get('longConvictionLarge')
         self.__fairVariance = kwargs.get('fairVariance')
         self.__hitRateWtd = kwargs.get('hitRateWtd')
         self.__oad = kwargs.get('oad')
         self.__bosInBpsDescription = kwargs.get('bosInBpsDescription')
+        self.__lowPrice = kwargs.get('lowPrice')
         self.__realizedVolatility = kwargs.get('realizedVolatility')
         self.__rate = kwargs.get('rate')
         self.__adv22DayPct = kwargs.get('adv22DayPct')
@@ -6779,6 +6993,7 @@ class FieldFilterMap(Base):
         self.__sourceValueForecast = kwargs.get('sourceValueForecast')
         self.__shortConvictionLarge = kwargs.get('shortConvictionLarge')
         self.__realm = kwargs.get('realm')
+        self.__bid = kwargs.get('bid')
         self.__dataDescription = kwargs.get('dataDescription')
         self.__gsn = kwargs.get('gsn')
         self.__orderId = kwargs.get('orderId')
@@ -6791,6 +7006,7 @@ class FieldFilterMap(Base):
         self.__positionSourceId = kwargs.get('positionSourceId')
         self.__division = kwargs.get('division')
         self.__marketCapUSD = kwargs.get('marketCapUSD')
+        self.__highPrice = kwargs.get('highPrice')
         self.__shortWeight = kwargs.get('shortWeight')
         self.__absoluteShares = kwargs.get('absoluteShares')
         self.__action = kwargs.get('action')
@@ -6853,12 +7069,14 @@ class FieldFilterMap(Base):
         self.__sourceURL = kwargs.get('sourceURL')
         self.__estimatedReturn = kwargs.get('estimatedReturn')
         self.__underlyingAssetIds = kwargs.get('underlyingAssetIds')
+        self.__high = kwargs.get('high')
         self.__sourceLastUpdate = kwargs.get('sourceLastUpdate')
         self.__queueInLotsLabel = kwargs.get('queueInLotsLabel')
         self.__adv10DayPct = kwargs.get('adv10DayPct')
         self.__longConvictionMedium = kwargs.get('longConvictionMedium')
         self.__eventName = kwargs.get('eventName')
         self.__annualRisk = kwargs.get('annualRisk')
+        self.__unadjustedBid = kwargs.get('unadjustedBid')
         self.__gsdeer = kwargs.get('gsdeer')
         self.__marketCap = kwargs.get('marketCap')
         self.__clusterRegion = kwargs.get('clusterRegion')
@@ -6888,6 +7106,7 @@ class FieldFilterMap(Base):
         self.__riskModel = kwargs.get('riskModel')
         self.__assetId = kwargs.get('assetId')
         self.__fairValue = kwargs.get('fairValue')
+        self.__adjustedHighPrice = kwargs.get('adjustedHighPrice')
         self.__beta = kwargs.get('beta')
         self.__direction = kwargs.get('direction')
         self.__valueForecast = kwargs.get('valueForecast')
@@ -6918,6 +7137,7 @@ class FieldFilterMap(Base):
         self.__ideaSource = kwargs.get('ideaSource')
         self.__hedgeNotional = kwargs.get('hedgeNotional')
         self.__askLow = kwargs.get('askLow')
+        self.__unadjustedAsk = kwargs.get('unadjustedAsk')
         self.__expiry = kwargs.get('expiry')
         self.__tradingPnl = kwargs.get('tradingPnl')
         self.__strikePercentage = kwargs.get('strikePercentage')
@@ -6929,6 +7149,7 @@ class FieldFilterMap(Base):
         self.__tcmCostHorizon16Day = kwargs.get('tcmCostHorizon16Day')
         self.__pnl = kwargs.get('pnl')
         self.__assetClassificationsGicsIndustryGroup = kwargs.get('assetClassificationsGicsIndustryGroup')
+        self.__unadjustedClose = kwargs.get('unadjustedClose')
         self.__tcmCostHorizon4Day = kwargs.get('tcmCostHorizon4Day')
         self.__assetClassificationsIsPrimary = kwargs.get('assetClassificationsIsPrimary')
         self.__styles = kwargs.get('styles')
@@ -6956,8 +7177,10 @@ class FieldFilterMap(Base):
         self.__assetClassificationsCountryName = kwargs.get('assetClassificationsCountryName')
         self.__newIdeasYtd = kwargs.get('newIdeasYtd')
         self.__managementFee = kwargs.get('managementFee')
+        self.__ask = kwargs.get('ask')
         self.__impliedLognormalVolatility = kwargs.get('impliedLognormalVolatility')
         self.__closePrice = kwargs.get('closePrice')
+        self.__open = kwargs.get('open')
         self.__sourceId = kwargs.get('sourceId')
         self.__country = kwargs.get('country')
         self.__cusip = kwargs.get('cusip')
@@ -6981,6 +7204,7 @@ class FieldFilterMap(Base):
         self.__weight = kwargs.get('weight')
         self.__historicalClose = kwargs.get('historicalClose')
         self.__assetCountPriced = kwargs.get('assetCountPriced')
+        self.__marketDataPoint = kwargs.get('marketDataPoint')
         self.__ideaId = kwargs.get('ideaId')
         self.__commentStatus = kwargs.get('commentStatus')
         self.__marginalCost = kwargs.get('marginalCost')
@@ -7037,6 +7261,7 @@ class FieldFilterMap(Base):
         self.__cumulativePnl = kwargs.get('cumulativePnl')
         self.__sourceOrigin = kwargs.get('sourceOrigin')
         self.__shortTenor = kwargs.get('shortTenor')
+        self.__unadjustedVolume = kwargs.get('unadjustedVolume')
         self.__measures = kwargs.get('measures')
         self.__tradingCostPnl = kwargs.get('tradingCostPnl')
         self.__internalUser = kwargs.get('internalUser')
@@ -7045,6 +7270,7 @@ class FieldFilterMap(Base):
         self.__underlyer = kwargs.get('underlyer')
         self.__secName = kwargs.get('secName')
         self.__percentADV = kwargs.get('percentADV')
+        self.__unadjustedLow = kwargs.get('unadjustedLow')
         self.__contract = kwargs.get('contract')
         self.__sedol = kwargs.get('sedol')
         self.__roundingCostPnl = kwargs.get('roundingCostPnl')
@@ -7062,6 +7288,7 @@ class FieldFilterMap(Base):
         self.__adjustedBidPrice = kwargs.get('adjustedBidPrice')
         self.__hitRateQtd = kwargs.get('hitRateQtd')
         self.__sectorsRaw = kwargs.get('sectorsRaw')
+        self.__low = kwargs.get('low')
         self.__integratedScore = kwargs.get('integratedScore')
         self.__tradeSize = kwargs.get('tradeSize')
         self.__symbolDimensions = kwargs.get('symbolDimensions')
@@ -7480,6 +7707,15 @@ class FieldFilterMap(Base):
         self._property_changed('forwardTenor')        
 
     @property
+    def unadjustedHigh(self):
+        return self.__unadjustedHigh
+
+    @unadjustedHigh.setter
+    def unadjustedHigh(self, value):
+        self.__unadjustedHigh = value
+        self._property_changed('unadjustedHigh')        
+
+    @property
     def sourceImportance(self):
         return self.__sourceImportance
 
@@ -7568,6 +7804,15 @@ class FieldFilterMap(Base):
     def tcmCostParticipationRate75Pct(self, value):
         self.__tcmCostParticipationRate75Pct = value
         self._property_changed('tcmCostParticipationRate75Pct')        
+
+    @property
+    def close(self):
+        return self.__close
+
+    @close.setter
+    def close(self, value):
+        self.__close = value
+        self._property_changed('close')        
 
     @property
     def tcmCostParticipationRate100Pct(self):
@@ -7784,6 +8029,15 @@ class FieldFilterMap(Base):
     def impliedNormalVolatility(self, value):
         self.__impliedNormalVolatility = value
         self._property_changed('impliedNormalVolatility')        
+
+    @property
+    def unadjustedOpen(self):
+        return self.__unadjustedOpen
+
+    @unadjustedOpen.setter
+    def unadjustedOpen(self, value):
+        self.__unadjustedOpen = value
+        self._property_changed('unadjustedOpen')        
 
     @property
     def arrivalRt(self):
@@ -8092,6 +8346,15 @@ class FieldFilterMap(Base):
         self._property_changed('bidHigh')        
 
     @property
+    def adjustedLowPrice(self):
+        return self.__adjustedLowPrice
+
+    @adjustedLowPrice.setter
+    def adjustedLowPrice(self, value):
+        self.__adjustedLowPrice = value
+        self._property_changed('adjustedLowPrice')        
+
+    @property
     def netExposureClassification(self):
         return self.__netExposureClassification
 
@@ -8144,6 +8407,15 @@ class FieldFilterMap(Base):
     def bosInBpsDescription(self, value):
         self.__bosInBpsDescription = value
         self._property_changed('bosInBpsDescription')        
+
+    @property
+    def lowPrice(self):
+        return self.__lowPrice
+
+    @lowPrice.setter
+    def lowPrice(self, value):
+        self.__lowPrice = value
+        self._property_changed('lowPrice')        
 
     @property
     def realizedVolatility(self):
@@ -8326,6 +8598,15 @@ class FieldFilterMap(Base):
         self._property_changed('realm')        
 
     @property
+    def bid(self):
+        return self.__bid
+
+    @bid.setter
+    def bid(self, value):
+        self.__bid = value
+        self._property_changed('bid')        
+
+    @property
     def dataDescription(self):
         return self.__dataDescription
 
@@ -8432,6 +8713,15 @@ class FieldFilterMap(Base):
     def marketCapUSD(self, value):
         self.__marketCapUSD = value
         self._property_changed('marketCapUSD')        
+
+    @property
+    def highPrice(self):
+        return self.__highPrice
+
+    @highPrice.setter
+    def highPrice(self, value):
+        self.__highPrice = value
+        self._property_changed('highPrice')        
 
     @property
     def shortWeight(self):
@@ -8992,6 +9282,15 @@ class FieldFilterMap(Base):
         self._property_changed('underlyingAssetIds')        
 
     @property
+    def high(self):
+        return self.__high
+
+    @high.setter
+    def high(self, value):
+        self.__high = value
+        self._property_changed('high')        
+
+    @property
     def sourceLastUpdate(self):
         return self.__sourceLastUpdate
 
@@ -9044,6 +9343,15 @@ class FieldFilterMap(Base):
     def annualRisk(self, value):
         self.__annualRisk = value
         self._property_changed('annualRisk')        
+
+    @property
+    def unadjustedBid(self):
+        return self.__unadjustedBid
+
+    @unadjustedBid.setter
+    def unadjustedBid(self, value):
+        self.__unadjustedBid = value
+        self._property_changed('unadjustedBid')        
 
     @property
     def gsdeer(self):
@@ -9305,6 +9613,15 @@ class FieldFilterMap(Base):
     def fairValue(self, value):
         self.__fairValue = value
         self._property_changed('fairValue')        
+
+    @property
+    def adjustedHighPrice(self):
+        return self.__adjustedHighPrice
+
+    @adjustedHighPrice.setter
+    def adjustedHighPrice(self, value):
+        self.__adjustedHighPrice = value
+        self._property_changed('adjustedHighPrice')        
 
     @property
     def beta(self):
@@ -9577,6 +9894,15 @@ class FieldFilterMap(Base):
         self._property_changed('askLow')        
 
     @property
+    def unadjustedAsk(self):
+        return self.__unadjustedAsk
+
+    @unadjustedAsk.setter
+    def unadjustedAsk(self, value):
+        self.__unadjustedAsk = value
+        self._property_changed('unadjustedAsk')        
+
+    @property
     def expiry(self):
         return self.__expiry
 
@@ -9674,6 +10000,15 @@ class FieldFilterMap(Base):
     def assetClassificationsGicsIndustryGroup(self, value):
         self.__assetClassificationsGicsIndustryGroup = value
         self._property_changed('assetClassificationsGicsIndustryGroup')        
+
+    @property
+    def unadjustedClose(self):
+        return self.__unadjustedClose
+
+    @unadjustedClose.setter
+    def unadjustedClose(self, value):
+        self.__unadjustedClose = value
+        self._property_changed('unadjustedClose')        
 
     @property
     def tcmCostHorizon4Day(self):
@@ -9919,6 +10254,15 @@ class FieldFilterMap(Base):
         self._property_changed('managementFee')        
 
     @property
+    def ask(self):
+        return self.__ask
+
+    @ask.setter
+    def ask(self, value):
+        self.__ask = value
+        self._property_changed('ask')        
+
+    @property
     def impliedLognormalVolatility(self):
         return self.__impliedLognormalVolatility
 
@@ -9935,6 +10279,15 @@ class FieldFilterMap(Base):
     def closePrice(self, value):
         self.__closePrice = value
         self._property_changed('closePrice')        
+
+    @property
+    def open(self):
+        return self.__open
+
+    @open.setter
+    def open(self, value):
+        self.__open = value
+        self._property_changed('open')        
 
     @property
     def sourceId(self):
@@ -10142,6 +10495,15 @@ class FieldFilterMap(Base):
     def assetCountPriced(self, value):
         self.__assetCountPriced = value
         self._property_changed('assetCountPriced')        
+
+    @property
+    def marketDataPoint(self):
+        return self.__marketDataPoint
+
+    @marketDataPoint.setter
+    def marketDataPoint(self, value):
+        self.__marketDataPoint = value
+        self._property_changed('marketDataPoint')        
 
     @property
     def ideaId(self):
@@ -10648,6 +11010,15 @@ class FieldFilterMap(Base):
         self._property_changed('shortTenor')        
 
     @property
+    def unadjustedVolume(self):
+        return self.__unadjustedVolume
+
+    @unadjustedVolume.setter
+    def unadjustedVolume(self, value):
+        self.__unadjustedVolume = value
+        self._property_changed('unadjustedVolume')        
+
+    @property
     def measures(self):
         return self.__measures
 
@@ -10718,6 +11089,15 @@ class FieldFilterMap(Base):
     def percentADV(self, value):
         self.__percentADV = value
         self._property_changed('percentADV')        
+
+    @property
+    def unadjustedLow(self):
+        return self.__unadjustedLow
+
+    @unadjustedLow.setter
+    def unadjustedLow(self, value):
+        self.__unadjustedLow = value
+        self._property_changed('unadjustedLow')        
 
     @property
     def contract(self):
@@ -10871,6 +11251,15 @@ class FieldFilterMap(Base):
     def sectorsRaw(self, value):
         self.__sectorsRaw = value
         self._property_changed('sectorsRaw')        
+
+    @property
+    def low(self):
+        return self.__low
+
+    @low.setter
+    def low(self, value):
+        self.__low = value
+        self._property_changed('low')        
 
     @property
     def integratedScore(self):

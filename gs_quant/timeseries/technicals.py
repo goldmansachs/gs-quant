@@ -24,12 +24,12 @@ statistical properties of trading activity, such as price movement and volume ch
 """
 
 
-def moving_average(series: pd.Series, window: int=22) -> pd.Series:
+def moving_average(x: pd.Series, w: int=22) -> pd.Series:
     """
     Moving average over specified window
 
-    :param series: time series of prices
-    :param window: number of observations in window
+    :param x: time series of prices
+    :param w: window: number of observations to use (defaults to length of series)
     :return: date-based time series of return
 
     **Usage**
@@ -38,7 +38,7 @@ def moving_average(series: pd.Series, window: int=22) -> pd.Series:
     reactive to changes in the asset price, but more volatile. Larger windows will be smoother but less reactive to
     near term changes in asset prices.
 
-    :math:`Y_t = \\frac{\sum_{i=t-w-1}^{t} X_t}{N}`
+    :math:`R_t = \\frac{\sum_{i=t-w+1}^{t} X_t}{N}`
 
     where N is the number of observations in each rolling window, :math:`w`. If window is not provided, computes
     rolling mean over the full series
@@ -58,26 +58,27 @@ def moving_average(series: pd.Series, window: int=22) -> pd.Series:
 
     """
 
-    return mean(series, window)
+    return mean(x, w)
 
 
-def bollinger_bands(series: pd.Series, window: int=20, k: float=2) -> pd.Series:
+def bollinger_bands(x: pd.Series, w: int=20, k: float=2) -> pd.DataFrame:
     """
     Bollinger bands with given window and width
 
-    :param series: time series of prices
-    :param window: number of observations in window
-    :param k: band width in standard deviations
+    :param x: time series of prices
+    :param w: window: number of observations to use (defaults to length of series)
+    :param k: band width in standard deviations (default: 2)
     :return: date-based time series of return
 
     **Usage**
 
     Standard deviation bands around the moving average of asset price level. Bollinger bands can be used to determine
-    a range around the price level which responds to local volatility changes.
+    a range around the price level which responds to local volatility changes. Returns two series,
+    upper, :math:`u_t` and lower, :math:`l_t`
 
-    :math:`upper_t = \\bar{X_t} + k\sigma_t`
+    :math:`u_t = \\bar{X_t} + k\sigma_t`
 
-    :math:`lower_t = \\bar{X_t} - k\sigma_t`
+    :math:`l_t = \\bar{X_t} - k\sigma_t`
 
     where :math:`\\bar{X_t}` is the moving average over specified window, and :math:`\\sigma_t` is the rolling
     standard deviation over the specified window
@@ -96,11 +97,10 @@ def bollinger_bands(series: pd.Series, window: int=20, k: float=2) -> pd.Series:
     :func:`moving_average` :func:`std`
     """
 
-    avg = moving_average(series, window)
-    sigma_t = std(series, window)
+    avg = moving_average(x, w)
+    sigma_t = std(x, w)
 
     upper = avg + k * sigma_t
     lower = avg - k * sigma_t
 
     return pd.concat([lower, upper], axis=1)
-

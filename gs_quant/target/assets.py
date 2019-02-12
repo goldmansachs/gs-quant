@@ -17,7 +17,7 @@ under the License.
 import datetime
 from typing import Any, Iterable, Union
 from enum import Enum
-from gs_quant.api.base import Base, EnumBase
+from gs_quant.api.base import EnumBase, Base
 
 
 class AssetType(EnumBase, Enum):    
@@ -2168,7 +2168,7 @@ class AssetParameters(Base):
         
     """Parameters specific to the asset type"""
        
-    def __init__(self, basketType: str = None, constituents: Iterable['IndexConstituent'] = None, style: str = None, indexCalculationType: str = None, indexReturnType: str = None, indexDivisor: float = None, currency: Union['Currency', str] = None, quoteCurrency: Union['Currency', str] = None, indexInitialPrice: float = None, initialPricingDate: Union[datetime.date, str] = None, expirationDate: Union[datetime.date, str] = None, expirationLocation: str = None, optionStyle: str = None, optionType: Union['OptionType', str] = None, settlementDate: Union[datetime.date, str] = None, settlementType: str = None, strikePrice: float = None, putCurrency: Union['Currency', str] = None, putAmount: float = None, automaticExercise: bool = None, callAmount: float = None, callCurrency: Union['Currency', str] = None, exerciseTime: str = None, multiplier: float = None, premiumPaymentDate: Union[datetime.date, str] = None, premium: float = None, premiumCurrency: Union['Currency', str] = None, secDB: str = None, callable: bool = None, puttable: bool = None, perpetual: bool = None, seniority: str = None, couponType: str = None, index: str = None, indexTerm: str = None, indexMargin: float = None, coupon: float = None, issueDate: Union[datetime.date, str] = None, issuer: str = None, issuerCountryCode: str = None, issuerType: str = None, issueSize: float = None, commoditySector: str = None, pricingLocation: Union['PricingLocation', str] = None, contractMonths: Iterable[str] = None, g10Currency: bool = None, hedgeId: Union[str, str] = None, tenor: str = None, defaultTenor: str = None, ultimateTicker: str = None, strategy: Union['Strategy', str] = None, supraStrategy: Union['SupraStrategy', str] = None, exchangeCurrency: Union['Currency', str] = None, region: str = None, deliveryPoint: str = None, pricingIndex: str = None, contractMonth: str = None, loadType: str = None, contractUnit: str = None, indexCreateSource: str = None, indexApprovalIds=None, isPairBasket: bool = None):
+    def __init__(self, basketType: str = None, constituents: Iterable['IndexConstituent'] = None, style: str = None, indexCalculationType: str = None, indexReturnType: str = None, indexDivisor: float = None, currency: Union['Currency', str] = None, quoteCurrency: Union['Currency', str] = None, indexInitialPrice: float = None, initialPricingDate: Union[datetime.date, str] = None, expirationDate: Union[datetime.date, str] = None, expirationLocation: str = None, optionStyle: str = None, optionType: Union['OptionType', str] = None, settlementDate: Union[datetime.date, str] = None, settlementType: str = None, strikePrice: float = None, putCurrency: Union['Currency', str] = None, putAmount: float = None, automaticExercise: bool = None, callAmount: float = None, callCurrency: Union['Currency', str] = None, exerciseTime: str = None, multiplier: float = None, premiumPaymentDate: Union[datetime.date, str] = None, premium: float = None, premiumCurrency: Union['Currency', str] = None, secDB: str = None, callable: bool = None, puttable: bool = None, perpetual: bool = None, seniority: str = None, couponType: str = None, index: str = None, indexTerm: str = None, indexMargin: float = None, coupon: float = None, issueDate: Union[datetime.date, str] = None, issuer: str = None, issuerCountryCode: str = None, issuerType: str = None, issueSize: float = None, commoditySector: str = None, pricingLocation: Union['PricingLocation', str] = None, contractMonths: Iterable[str] = None, g10Currency: bool = None, hedgeId: Union[str, str] = None, tenor: str = None, defaultTenor: str = None, ultimateTicker: str = None, strategy: Union['Strategy', str] = None, supraStrategy: Union['SupraStrategy', str] = None, exchangeCurrency: Union['Currency', str] = None, region: str = None, deliveryPoint: str = None, pricingIndex: str = None, contractMonth: str = None, loadType: str = None, contractUnit: str = None, indexCreateSource: str = None, indexApprovalIds=None, isPairBasket: bool = None, fixedRateDayCountFraction: Union['DayCountFraction', str] = None, floatingRateDayCountFraction: Union['DayCountFraction', str] = None, payDayCountFraction: Union['DayCountFraction', str] = None, receiveDayCountFraction: Union['DayCountFraction', str] = None, payFrequency: Union[str, str] = None, receiveFrequency: Union[str, str] = None, resettableLeg: Union['PayReceive', str] = None, fxIndex: str = None):
         super().__init__()
         self.__basketType = basketType
         self.__constituents = constituents
@@ -2232,6 +2232,14 @@ class AssetParameters(Base):
         self.__indexCreateSource = indexCreateSource
         self.__indexApprovalIds = indexApprovalIds
         self.__isPairBasket = isPairBasket
+        self.__fixedRateDayCountFraction = fixedRateDayCountFraction
+        self.__floatingRateDayCountFraction = floatingRateDayCountFraction
+        self.__payDayCountFraction = payDayCountFraction
+        self.__receiveDayCountFraction = receiveDayCountFraction
+        self.__payFrequency = payFrequency
+        self.__receiveFrequency = receiveFrequency
+        self.__resettableLeg = resettableLeg
+        self.__fxIndex = fxIndex
 
     @property
     def basketType(self) -> str:
@@ -2841,6 +2849,86 @@ class AssetParameters(Base):
         self.__isPairBasket = value
         self._property_changed('isPairBasket')        
 
+    @property
+    def fixedRateDayCountFraction(self) -> Union['DayCountFraction', str]:
+        """Default day count fraction for fixed legs"""
+        return self.__fixedRateDayCountFraction
+
+    @fixedRateDayCountFraction.setter
+    def fixedRateDayCountFraction(self, value: Union['DayCountFraction', str]):
+        self.__fixedRateDayCountFraction = value
+        self._property_changed('fixedRateDayCountFraction')        
+
+    @property
+    def floatingRateDayCountFraction(self) -> Union['DayCountFraction', str]:
+        """Default day count fraction for floating legs"""
+        return self.__floatingRateDayCountFraction
+
+    @floatingRateDayCountFraction.setter
+    def floatingRateDayCountFraction(self, value: Union['DayCountFraction', str]):
+        self.__floatingRateDayCountFraction = value
+        self._property_changed('floatingRateDayCountFraction')        
+
+    @property
+    def payDayCountFraction(self) -> Union['DayCountFraction', str]:
+        """Default day count fraction for pay leg"""
+        return self.__payDayCountFraction
+
+    @payDayCountFraction.setter
+    def payDayCountFraction(self, value: Union['DayCountFraction', str]):
+        self.__payDayCountFraction = value
+        self._property_changed('payDayCountFraction')        
+
+    @property
+    def receiveDayCountFraction(self) -> Union['DayCountFraction', str]:
+        """Default day count fraction for the receive leg"""
+        return self.__receiveDayCountFraction
+
+    @receiveDayCountFraction.setter
+    def receiveDayCountFraction(self, value: Union['DayCountFraction', str]):
+        self.__receiveDayCountFraction = value
+        self._property_changed('receiveDayCountFraction')        
+
+    @property
+    def payFrequency(self) -> Union[str, str]:
+        """Default frequency of the pay leg"""
+        return self.__payFrequency
+
+    @payFrequency.setter
+    def payFrequency(self, value: Union[str, str]):
+        self.__payFrequency = value
+        self._property_changed('payFrequency')        
+
+    @property
+    def receiveFrequency(self) -> Union[str, str]:
+        """Default frequency of the receive leg"""
+        return self.__receiveFrequency
+
+    @receiveFrequency.setter
+    def receiveFrequency(self, value: Union[str, str]):
+        self.__receiveFrequency = value
+        self._property_changed('receiveFrequency')        
+
+    @property
+    def resettableLeg(self) -> Union['PayReceive', str]:
+        """Resettable leg"""
+        return self.__resettableLeg
+
+    @resettableLeg.setter
+    def resettableLeg(self, value: Union['PayReceive', str]):
+        self.__resettableLeg = value
+        self._property_changed('resettableLeg')        
+
+    @property
+    def fxIndex(self) -> str:
+        """FX index"""
+        return self.__fxIndex
+
+    @fxIndex.setter
+    def fxIndex(self, value: str):
+        self.__fxIndex = value
+        self._property_changed('fxIndex')        
+
 
 class IndexConstituent(Base):
                
@@ -3244,7 +3332,7 @@ class SimonDomain(Base):
 
 class AssetClassifications(Base):
                
-    def __init__(self, countryName: str = None, countryCode: str = None, isPrimary: bool = None, gicsSector: str = None, gicsIndustryGroup: str = None, gicsIndustry: str = None, gicsSubIndustry: str = None, commodTemplate: str = None):
+    def __init__(self, countryName: str = None, countryCode: str = None, isPrimary: bool = None, gicsSector: str = None, gicsIndustryGroup: str = None, gicsIndustry: str = None, gicsSubIndustry: str = None, commodTemplate: str = None, fixedRateDayCountFraction: Union['DayCountFraction', str] = None, floatingRateDayCountFraction: Union['DayCountFraction', str] = None, payerFixedRateDayCountFraction: Union['DayCountFraction', str] = None, payerFloatingRateDayCountFraction: Union['DayCountFraction', str] = None, receiverFixedRateDayCountFraction: Union['DayCountFraction', str] = None, receiverFloatingRateDayCountFraction: Union['DayCountFraction', str] = None):
         super().__init__()
         self.__countryName = countryName
         self.__countryCode = countryCode
@@ -3254,6 +3342,12 @@ class AssetClassifications(Base):
         self.__gicsIndustry = gicsIndustry
         self.__gicsSubIndustry = gicsSubIndustry
         self.__commodTemplate = commodTemplate
+        self.__fixedRateDayCountFraction = fixedRateDayCountFraction
+        self.__floatingRateDayCountFraction = floatingRateDayCountFraction
+        self.__payerFixedRateDayCountFraction = payerFixedRateDayCountFraction
+        self.__payerFloatingRateDayCountFraction = payerFloatingRateDayCountFraction
+        self.__receiverFixedRateDayCountFraction = receiverFixedRateDayCountFraction
+        self.__receiverFloatingRateDayCountFraction = receiverFloatingRateDayCountFraction
 
     @property
     def countryName(self) -> str:
@@ -3334,6 +3428,66 @@ class AssetClassifications(Base):
     def commodTemplate(self, value: str):
         self.__commodTemplate = value
         self._property_changed('commodTemplate')        
+
+    @property
+    def fixedRateDayCountFraction(self) -> Union['DayCountFraction', str]:
+        """Default day count fraction for fixed legs"""
+        return self.__fixedRateDayCountFraction
+
+    @fixedRateDayCountFraction.setter
+    def fixedRateDayCountFraction(self, value: Union['DayCountFraction', str]):
+        self.__fixedRateDayCountFraction = value
+        self._property_changed('fixedRateDayCountFraction')        
+
+    @property
+    def floatingRateDayCountFraction(self) -> Union['DayCountFraction', str]:
+        """Default day count fraction for floating legs"""
+        return self.__floatingRateDayCountFraction
+
+    @floatingRateDayCountFraction.setter
+    def floatingRateDayCountFraction(self, value: Union['DayCountFraction', str]):
+        self.__floatingRateDayCountFraction = value
+        self._property_changed('floatingRateDayCountFraction')        
+
+    @property
+    def payerFixedRateDayCountFraction(self) -> Union['DayCountFraction', str]:
+        """Default day count fraction for fixed legs for the payer"""
+        return self.__payerFixedRateDayCountFraction
+
+    @payerFixedRateDayCountFraction.setter
+    def payerFixedRateDayCountFraction(self, value: Union['DayCountFraction', str]):
+        self.__payerFixedRateDayCountFraction = value
+        self._property_changed('payerFixedRateDayCountFraction')        
+
+    @property
+    def payerFloatingRateDayCountFraction(self) -> Union['DayCountFraction', str]:
+        """Default day count fraction for floating legs for the payer"""
+        return self.__payerFloatingRateDayCountFraction
+
+    @payerFloatingRateDayCountFraction.setter
+    def payerFloatingRateDayCountFraction(self, value: Union['DayCountFraction', str]):
+        self.__payerFloatingRateDayCountFraction = value
+        self._property_changed('payerFloatingRateDayCountFraction')        
+
+    @property
+    def receiverFixedRateDayCountFraction(self) -> Union['DayCountFraction', str]:
+        """Default day count fraction for fixed legs for the receiver"""
+        return self.__receiverFixedRateDayCountFraction
+
+    @receiverFixedRateDayCountFraction.setter
+    def receiverFixedRateDayCountFraction(self, value: Union['DayCountFraction', str]):
+        self.__receiverFixedRateDayCountFraction = value
+        self._property_changed('receiverFixedRateDayCountFraction')        
+
+    @property
+    def receiverFloatingRateDayCountFraction(self) -> Union['DayCountFraction', str]:
+        """Default day count fraction for floating legs for the receiver"""
+        return self.__receiverFloatingRateDayCountFraction
+
+    @receiverFloatingRateDayCountFraction.setter
+    def receiverFloatingRateDayCountFraction(self, value: Union['DayCountFraction', str]):
+        self.__receiverFloatingRateDayCountFraction = value
+        self._property_changed('receiverFloatingRateDayCountFraction')        
 
 
 class EntityQuery(Base):

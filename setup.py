@@ -14,14 +14,33 @@ specific language governing permissions and limitations
 under the License.
 """
 
+import os
 import setuptools
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+if "sdist" in sys.argv:
+    reference = os.path.dirname(__file__)
+    doc_dir = os.path.join(reference, "docs")
+    p = subprocess.Popen(["make", "html"], cwd=doc_dir, shell=True)
+    p.wait(30)
+    if p.returncode != 0:
+        raise RuntimeError("unable to make docs")
+
+    generated_dir = Path(os.path.join(doc_dir, "_build", "html", "functions"))
+    generated_dir.mkdir(parents=True, exist_ok=True)
+    target_dir = os.path.join(reference, "gs_quant", "docs")
+    shutil.rmtree(target_dir, ignore_errors=True)
+    shutil.copytree(generated_dir, target_dir)
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name="gs_quant",
-    version="0.5.6",
+    version="0.6.1",
     author="Goldman Sachs",
     author_email="developer@gs.com",
     description="Goldman Sachs Quant",
@@ -43,14 +62,13 @@ setuptools.setup(
         "requests",
         "scipy",
         "six",
-        "typing",
-        "scipy",
+        "typing"
     ],
     extras_require={
         "kerb": ["requests-kerberos"],
         "notebook": ["jupyter", "matplotlib~=2.1.0", "pprint"],
         "test": ["pytest", "pytest-cov", "pytest-mock"],
-        "develop": ["sphinx", "sphinx_rtd_theme"]
+        "develop": ["sphinx", "sphinx_rtd_theme", "pytest", "pytest-cov", "pytest-mock"]
     },
     classifiers=[
         "Programming Language :: Python :: 3",
