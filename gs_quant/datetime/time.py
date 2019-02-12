@@ -14,6 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 
+import datetime
 import numpy as np
 
 from gs_quant.errors import *
@@ -33,6 +34,22 @@ MINS_IN_WEEK = HOURS_IN_WEEK * MINS_IN_HOUR
 SECS_IN_WEEK = MINS_IN_WEEK * SECS_IN_HOUR
 
 SECS_IN_YEAR = SECS_IN_MIN * MINS_IN_HOUR * HOURS_IN_DAY * DAYS_IN_YEAR
+
+
+class Timer:
+
+    def __init__(self, print_on_exit=True, label='Execution'):
+        self.print_on_exit = print_on_exit
+        self.label = label
+
+    def __enter__(self):
+        self.start = datetime.datetime.now()
+
+    def __exit__(self, *args):
+        self.elapsed = datetime.datetime.now() - self.start
+
+        if self.print_on_exit:
+            print("{} took {} seconds".format(self.label, self.elapsed.seconds + self.elapsed.microseconds / 1000000))
 
 
 def time_difference_as_string(

@@ -14,15 +14,23 @@ specific language governing permissions and limitations
 under the License.
 """
 
-import datetime
-from typing import Tuple
+import datetime as dt
+import numpy as np
+from typing import Tuple, Union
+from gs_quant.datetime.gscalendar import GsCalendar
 
 
-def adjust_to_business_date(date: datetime.date, prev: bool=False, calendar=None, weekend_days: Tuple[int]=(5, 6)) -> datetime.date:
-    def is_business_date(d: date):
-        return not (d.weekday() in weekend_days or (calendar and d in calendar))
+def is_business_day(dates, calendars: Union[str, Tuple]=(), week_mask: str=None):
+    calendar = GsCalendar.get(calendars)
+    return np.is_busday(dates, busdaycal=calendar.business_day_calendar(week_mask))
 
-    while not is_business_date(date):
-        date += datetime.timedelta(days=-1 if prev else 1)
 
-    return date
+def business_day_offset(dates, offsets, roll: str= 'raise', calendars: Union[str, Tuple]=(), week_mask: str=None):
+    calendar = GsCalendar.get(calendars)
+    return np.busday_offset(dates, offsets, roll, busdaycal=calendar.business_day_calendar(week_mask)).astype(dt.date)
+
+
+def business_day_count(begin_dates, end_dates, calendars: Union[str, Tuple]=(), week_mask: str=None):
+    calendar = GsCalendar.get(calendars)
+    return np.busday_count(begin_dates, end_dates, busdaycal=calendar.business_day_calendar(week_mask))
+

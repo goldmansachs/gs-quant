@@ -46,6 +46,17 @@ class Base:
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    @classmethod
+    def properties(cls) -> tuple:
+        """The public properties of this class"""
+        return tuple(i for i in dir(cls) if isinstance(getattr(cls, i), property))
+
+    def as_dict(self) -> dict:
+        """Dictionary of the public non-null properties and values"""
+        properties = self.properties()
+        values = [getattr(self, p) for p in properties]
+        return dict((p, v) for p, v in zip(properties, values) if v is not None)
+
 
 class Priceable(Base):
 

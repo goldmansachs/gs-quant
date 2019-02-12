@@ -17,7 +17,7 @@ under the License.
 import datetime
 from typing import Any, Iterable, Union
 from enum import Enum
-from gs_quant.api.base import Base, EnumBase
+from gs_quant.api.base import EnumBase, Base
 
 
 class RiskMeasureUnit(EnumBase, Enum):    

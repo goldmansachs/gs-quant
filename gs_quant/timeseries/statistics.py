@@ -19,12 +19,522 @@ import numpy
 import pandas as pd
 import datetime
 import scipy.stats.mstats as stats
+from .algebra import *
 
 """
 Stats library is for basic arithmetic and statistical operations on timeseries.
 These include basic algebraic operations, probability and distribution analysis.
 Generally not finance-specific routines.
 """
+
+
+def min_(x: pd.Series, w: int=0) -> pd.Series:
+    """
+    Minimum value of series over given window
+
+    :param x: series: timeseries
+    :param w: window: number of observations to use (defaults to length of series)
+    :return: timeseries of minimum value
+
+    **Usage**
+
+    Returns the minimum value of the series over each window:
+
+    :math:`R_t = min(X_{t-w+1}:X_t)`
+
+    where :math:`w` is the size of the rolling window. If window is not provided, returns the minimum value over the
+    full series. If the window size is greater than the available data, will return minimum of available values.
+
+    **Examples**
+
+    Minimum value of price series over the last :math:`22` observations:
+
+    >>> prices = generate_series(100)
+    >>> min_(prices, 22)
+
+    **See also**
+
+    :func:`max_`
+
+    """
+    w = w or x.size
+    assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
+    return x.rolling(w, 0).min()
+
+
+def max_(x: pd.Series, w: int=0) -> pd.Series:
+    """
+    Maximum value of series over given window
+
+    :param x: series: timeseries
+    :param w: window: number of observations to use (defaults to length of series)
+    :return: timeseries of maximum value
+
+    **Usage**
+
+    Returns the maximum value of the series over each window:
+
+    :math:`R_t = max(X_{t-w+1}:X_t)`
+
+    where :math:`w` is the size of the rolling window. If window is not provided, returns the minimum value over the
+    full series. If the window size is greater than the available data, will return minimum of available values.
+
+    **Examples**
+
+    Maximum value of price series over the last :math:`22` observations:
+
+    >>> prices = generate_series(100)
+    >>> max_(prices, 22)
+
+    **See also**
+
+    :func:`min_`
+
+    """
+    w = w or x.size
+    assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
+    return x.rolling(w, 0).max()
+
+
+def range_(x: pd.Series, w: int=0) -> pd.Series:
+    """
+    Range of series over given window
+
+    :param x: series: timeseries
+    :param w: window: number of observations to use (defaults to length of series)
+    :return: timeseries of range
+
+    **Usage**
+
+    Returns the range of the series (max - min) over rolling window:
+
+    :math:`R_t = max(X_{t-w+1}:X_t) - min(X_{t-w+1}:X_t)`
+
+    where :math:`w` is the size of the rolling window. If window is not provided, returns the range over the
+    full series. If the window size is greater than the available data, will return range of all available values.
+
+    **Examples**
+
+    Range of price series over the last :math:`22` observations:
+
+    >>> prices = generate_series(100)
+    >>> range_(prices, 22)
+
+    **See also**
+
+    :func:`min_` :func:`max_`
+
+    """
+    w = w or x.size
+    assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
+
+    max = max_(x, w)
+    min = min_(x, w)
+
+    return max - min
+
+
+def mean(x: pd.Series, w: int=0) -> pd.Series:
+    """
+    Arithmetic mean of series over given window
+
+    :param x: series: timeseries
+    :param w: window: number of observations to use (defaults to length of series)
+    :return: timeseries of mean value
+
+    **Usage**
+
+    Calculates `arithmetic mean <https://en.wikipedia.org/wiki/Arithmetic_mean>`_ of the series over a rolling window
+
+    :math:`R_t = \\frac{\sum_{i=t-w+1}^{t} X_i}{N}`
+
+    where :math:`N` is the number of observations in each rolling window, :math:`w`. If window is not provided, computes
+    rolling mean over the full series. If the window size is greater than the available data, will return mean of
+    available values.
+
+    **Examples**
+
+    Generate price series and compute mean over :math:`22` observations
+
+    >>> prices = generate_series(100)
+    >>> mean(prices, 22)
+
+    **See also**
+
+    :func:`median` :func:`mode`
+
+    """
+    w = w or x.size
+    assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
+    return x.rolling(w, 0).mean()
+
+
+def median(x: pd.Series, w: int=0) -> pd.Series:
+    """
+    Median value of series over given window
+
+    :param x: series: timeseries
+    :param w: window: number of observations to use (defaults to length of series)
+    :return: timeseries of median value
+
+    **Usage**
+
+    Computes the `median <https://en.wikipedia.org/wiki/Median>`_ value over a given window. For each window, this
+    function will return the middle value when all elements in the window are sorted. If the number of observations in
+    the window is even, will return the average of the middle two values. If the window size is greater than the
+    available data, will return median of available values:
+
+    :math:`d = \\frac{w-1}{2}`
+
+    :math:`R_t = \\frac{X_{\lfloor t-d \\rfloor} + X_{\lceil t-d \\rceil}}{2}`
+
+    where :math:`w` is the size of the rolling window. If window is not provided, computes median over the full series
+
+    **Examples**
+
+    Generate price series and compute median over :math:`22` observations
+
+    >>> prices = generate_series(100)
+    >>> median(prices, 22)
+
+    **See also**
+
+    :func:`mean` :func:`mode`
+    """
+    w = w or x.size
+    assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
+    return x.rolling(w, 0).median()
+
+
+def mode(x: pd.Series, w: int=0) -> pd.Series:
+    """
+    Most common value in series over given window
+
+    :param x: series: timeseries
+    :param w: window: number of observations to use (defaults to length of series)
+    :return: timeseries of mode value
+
+    **Usage**
+
+    Computes the `mode <https://en.wikipedia.org/wiki/Mode_(statistics)>`_ over a given window. For each window, this
+    function will return the most common value of all elements in the window. If there are multiple values with the same
+    frequency of occurrence, will return the smallest value.
+
+    If window is not provided, computes mode over the full series.
+
+    **Examples**
+
+    Generate price series and compute mode over :math:`22` observations
+
+    >>> prices = generate_series(100)
+    >>> mode(prices, 22)
+
+    **See also**
+
+    :func:`mean` :func:`median`
+    """
+    w = w or x.size
+    assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
+    return x.rolling(w, 0).apply(lambda y: stats.mode(y).mode, raw=True)
+
+
+def sum_(x: pd.Series, w: int=0) -> pd.Series:
+    """
+    Rolling sum of series over given window
+
+    :param x: series: timeseries
+    :param w: window: number of observations to use (defaults to length of series)
+    :return: timeseries of rolling sum
+
+    **Usage**
+
+    Calculate the sum of observations over a given rolling window. For each time, :math:`t`, returns the value
+    of all observations from :math:`t-w+1` to :math:`t` summed together:
+
+    :math:`R_t = \sum_{i=t-w+1}^{t} X_i`
+
+    where :math:`w` is the size of the rolling window. If window is not provided, computes sum over the full series
+
+    **Examples**
+
+    Generate price series and compute rolling sum over :math:`22` observations
+
+    >>> prices = generate_series(100)
+    >>> sum_(prices, 22)
+
+    **See also**
+
+    :func:`product`
+
+    """
+    w = w or x.size
+    assert x.index.is_monotonic_increasing
+    return x.rolling(w, 0).sum()
+
+
+def product(x: pd.Series, w: int=0) -> pd.Series:
+    """
+    Rolling product of series over given window
+
+    :param x: series: timeseries
+    :param w: window: number of observations to use (defaults to length of series)
+    :return: timeseries of rolling product
+
+    **Usage**
+
+    Calculate the product of observations over a given rolling window. For each time, :math:`t`, returns the value
+    of all observations from :math:`t-w+1` to :math:`t` multiplied together:
+
+    :math:`R_t = \prod_{i=t-w+1}^{t} X_i`
+
+    where :math:`w` is the size of the rolling window. If window is not provided, computes product over the full series
+
+    **Examples**
+
+    Generate price series and compute rolling sum over :math:`22` observations
+
+    >>> prices = generate_series(100)
+    >>> product(1+returns(prices))
+
+    **See also**
+
+    :func:`sum_`
+    """
+    w = w or x.size
+    assert x.index.is_monotonic_increasing
+    return x.rolling(w, 0).agg(pd.Series.prod)
+
+
+def std(x: pd.Series, w: int=0) -> pd.Series:
+    """
+    Rolling standard deviation of series over given window
+
+    :param x: series: timeseries
+    :param w: window: number of observations to use (defaults to length of series)
+    :return: timeseries of standard deviation
+
+    **Usage**
+
+    Provides `unbiased estimator <https://en.wikipedia.org/wiki/Unbiased_estimation_of_standard_deviation>`_ of sample
+    `standard deviation <https://en.wikipedia.org/wiki/Standard_deviation>`_ over a rolling window:
+
+    :math:`R_t = \sqrt{\\frac{1}{N-1} \sum_{i=t-w+1}^t (X_i - \overline{X_t})^2}`
+
+    where :math:`N` is the number of observations in each rolling window, :math:`w`, and :math:`\overline{X_t}` is the
+    mean value over the same window:
+
+    :math:`\overline{X_t} = \\frac{\sum_{i=t-w+1}^{t} X_i}{N}`
+
+    If window is not provided, computes standard deviation over the full series
+
+    **Examples**
+
+    Generate price series and compute standard deviation of returns over :math:`22` observations
+
+    >>> prices = generate_series(100)
+    >>> std(returns(prices), 22)
+
+    **See also**
+
+    :func:`sum` :func:`mean` :func:`var`
+
+    """
+    w = w or x.size
+    assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
+    return x.rolling(w, 0).std()
+
+
+def var(x: pd.Series, w: int=0) -> pd.Series:
+    """
+    Rolling variance of series over given window
+
+    :param x: series: timeseries
+    :param w: window: number of observations to use (defaults to length of series)
+    :return: timeseries of variance
+
+    **Usage**
+
+    Provides `unbiased estimator <https://en.wikipedia.org/wiki/Unbiased_estimation_of_standard_deviation>`_ of sample
+    `variance <https://en.wikipedia.org/wiki/Variance>`_ over a rolling window:
+
+    :math:`R_t = \\frac{1}{N-1} \sum_{i=t-w+1}^t (X_i - \overline{X_t})^2`
+
+    where :math:`N` is the number of observations in each rolling window, :math:`w`, and :math:`\overline{X_t}` is the
+    mean value over the same window:
+
+    :math:`\overline{X_t} = \\frac{\sum_{i=t-w+1}^{t} X_i}{N}`
+
+    If window is not provided, computes variance over the full series
+
+    **Examples**
+
+    Generate price series and compute variance of returns over :math:`22` observations
+
+    >>> prices = generate_series(100)
+    >>> var(returns(prices), 22)
+
+    **See also**
+
+    :func:`var` :func:`mean` :func:`std`
+
+    """
+    w = w or x.size
+    assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
+    return x.rolling(w, 0).var()
+
+
+def cov(x: pd.Series, y: pd.Series, w: int=0) -> pd.Series:
+    """
+    Rolling co-variance of series over given window
+
+    :param x: series: timeseries
+    :param y: series: timeseries
+    :param w: window: number of observations to use (defaults to length of series)
+    :return: timeseries of covariance
+
+    **Usage**
+
+    Provides `unbiased estimator <https://en.wikipedia.org/wiki/Unbiased_estimation_of_standard_deviation>`_ of sample
+    `co-variance <https://en.wikipedia.org/wiki/Covariance>`_ over a rolling window:
+
+    :math:`R_t = \\frac{1}{N-1} \sum_{i=t-w+1}^t (X_i - \overline{X_t}) (Y_i - \overline{Y_t})`
+
+    where :math:`N` is the number of observations in each rolling window, :math:`w`, and :math:`\overline{X_t}` and
+    :math:`\overline{Y_t}` represent the sample mean of series :math:`X_t` and :math:`Y_t` over the same window:
+
+    :math:`\overline{X_t} = \\frac{\sum_{i=t-w+1}^{t} X_i}{N}` and
+    :math:`\overline{Y_t} = \\frac{\sum_{i=t-w+1}^{t} Y_i}{N}`
+
+    If window is not provided, computes variance over the full series
+
+    **Examples**
+
+    Generate price series and compute variance of returns over :math:`22` observations
+
+    >>> prices_x = generate_series(100)
+    >>> prices_y = generate_series(100)
+    >>> cov(returns(prices_x) returns(prices_y), 22)
+
+    **See also**
+
+    :func:`sum` :func:`mean` :func:`var`
+    """
+    w = w or x.size
+    assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
+    return x.rolling(w, 0).cov(y)
+
+
+def _zscore(x):
+
+    if x.size == 1:
+        return 0
+
+    return stats.zscore(x, ddof=1)[-1]
+
+
+def zscores(x: pd.Series, w: int=0) -> pd.Series:
+    """
+    Rolling z-scores over a given window
+
+    :param x: time series of prices
+    :param w: window: number of observations to use (defaults to length of series)
+    :return: timeseries of z-scores
+
+    **Usage**
+
+    Calculate `standard score <https://en.wikipedia.org/wiki/Standard_score>`_ of each value in series over given
+    window. Standard deviation and sample mean are computed over the specified rolling window, then element is
+    normalized to provide a rolling z-score:
+
+    :math:`R_t = \\frac { X_t - \mu }{ \sigma }`
+
+    Where :math:`\mu` and :math:`\sigma` are sample mean and standard deviation over the given window
+
+    If window is not provided, computes z-score relative to mean and standard deviation over the full series
+
+    **Examples**
+
+    Generate price series and compute z-score of returns over :math:`22` observations
+
+    >>> prices = generate_series(100)
+    >>> zscores(returns(prices), 22)
+
+    **See also**
+
+    :func:`mean` :func:`std`
+
+    """
+    if x.size < 1:
+        return x
+
+    if not w:
+
+        if x.size == 1:
+            return pd.Series([0.0], index=x.index)
+
+        clean_series = x.dropna()
+        zscore_series = pd.Series(stats.zscore(clean_series, ddof=1), clean_series.index)
+        return interpolate(zscore_series, x, Interpolate.NAN)
+
+    return x.rolling(w, 0).apply(_zscore, raw=False)
+
+
+def winsorize(x: pd.Series, limit: float=2.5, w: int=0) -> pd.Series:
+    """
+    Limit extreme values in series
+
+    :param x: time series of prices
+    :param limit: max z-score of values
+    :param w: window: number of observations to use (defaults to length of series)
+    :return: timeseries of winsorized values
+
+    **Usage**
+
+    Cap and floor values in the series which have a z-score greater or less than provided value. This function will
+    restrict the distribution of values. Calculates the sample standard deviation and adjusts values which
+    fall outside the specified range to be equal to the upper or lower limits
+
+    Lower and upper limits are defined as:
+
+    :math:`upper = \mu + \sigma \\times limit`
+
+    :math:`lower = \mu - \sigma \\times limit`
+
+    Where :math:`\mu` and :math:`\sigma` are sample mean and standard deviation. The series is restricted by:
+
+    :math:`R_t = max( min( X_t, upper), lower )`
+
+    See `winsorising <https://en.wikipedia.org/wiki/Winsorizing>`_ for additional information
+
+    **Examples**
+
+    Generate price series and winsorize z-score of returns over :math:`22` observations
+
+    >>> prices = generate_series(100)
+    >>> winsorize(zscore(returns(prices), 22))
+
+    **See also**
+
+    :func:`zscore` :func:`mean` :func:`std`
+
+    """
+    w = w or x.size
+
+    if x.size < 1:
+        return x
+
+    assert w, "window is not 0"
+
+    mu = x.mean()
+    sigma = x.std()
+
+    high = mu + sigma * limit
+    low = mu - sigma * limit
+
+    ret = ceil(x, high)
+    ret = floor(ret, low)
+
+    return ret
 
 
 def generate_series(length: int) -> pd.Series:
@@ -68,576 +578,3 @@ def generate_series(length: int) -> pd.Series:
 
     return pd.Series(data=levels, index=dates)
 
-
-def exp(series: pd.Series) -> pd.Series:
-    """
-    Exponential of series
-
-    :param series: time series
-    :return: exponential of each element
-
-    **Usage**
-
-    For each element in the series, :math:`X_t`, raise :math:`e` (Euler's number) to the power of :math:`X_t`.
-    Euler's number is the base of the natural logarithm, :math:`ln`.
-
-    :math:`Y_t = e^{X_t}`
-
-    **Examples**
-
-    Raise :math:`e` to the power :math:`1`. Returns Euler's number, approximately 2.71828
-
-    >>> exp(1)
-
-    **See also**
-
-    :func:`log`
-
-    """
-    return numpy.exp(series)
-
-
-def log(series: pd.Series) -> pd.Series:
-    """
-    Natural logarithm of series
-
-    :param series: time series
-    :return: series with exponential of each element
-
-    **Usage**
-
-    For each element in the series, :math:`X_t`, return the natural logarithm :math:`ln` of :math:`X_t`
-    The natural logarithm is the logarithm in base :math:`e`.
-
-    :math:`Y_t = log(X_t)`
-
-    This function is the inverse of the exponential function.
-
-    More information on `logarithms <https://en.wikipedia.org/wiki/Logarithm>`_
-
-    **Examples**
-
-    Take natural logarithm of 3
-
-    >>> log(3)
-
-    **See also**
-
-    :func:`exp`
-
-    """
-    return numpy.log(series)
-
-
-def absolute(series: pd.Series) -> pd.Series:
-    """
-    Absolute value of each element in series
-
-    :param series: date-based time series of prices
-    :return: date-based time series of minimum value
-
-    **Usage**
-
-    Return the absolute value of :math:`X`. For each value in time series :math:`X_t`, return :math:`X_t` if :math:`X_t`
-    is greater than or equal to 0; otherwise return :math:`-X_t`:
-
-    :math:`Y_t = |X_t|`
-
-    Equivalent to :math:`Y_t = \sqrt{X_t^2}`
-
-    **Examples**
-
-    Generate price series and take absolute value of :math:`X_t-100`
-
-    >>> prices = generate_series(100) - 100
-    >>> abs(prices)
-
-    **See also**
-
-    :func:`exp` :func:`sqrt`
-
-    """
-    return abs(series)
-
-
-def minimum(series: pd.Series, window: int=0) -> pd.Series:
-    """
-    Minimum value of series over given window
-
-    :param series: date-based time series of prices
-    :param window: number of days / observations to use (defaults to length of series)
-    :return: date-based time series of minimum value
-
-    **Usage**
-
-    Returns the minimum value of the series over each window:
-
-    :math:`Y_t = min(X_{t-w-1}:X_t)`
-
-    where :math:`w` is the size of the rolling window. If window is not provided, returns the minimum value over the full series
-
-    **Examples**
-
-    Minimum value of price series over the last 22 observations:
-
-    >>> prices = generate_series(100)
-    >>> min(prices, 22)
-
-    **See also**
-
-    :func:`maximum`
-
-    """
-    window = window or series.size
-    assert series.index.is_monotonic_increasing
-    return series.rolling(window, 0).min()
-
-
-def maximum(series: pd.Series, window: int=0) -> pd.Series:
-    """
-    Maximum value of series over given window
-
-    :param series: date-based time series of prices
-    :param window: number of days / observations to use (defaults to length of series)
-    :return: date-based time series of maximum value
-
-    **Usage**
-
-    Returns the maximum value of the series over each window:
-
-    :math:`Y_t = max(X_{t-w-1}:X_t)`
-
-    where :math:`w` is the size of the rolling window. If window is not provided, returns the minimum value over the full series
-
-    **Examples**
-
-    Maximum value of price series over the last 22 observations:
-
-    >>> prices = generate_series(100)
-    >>> maximum(prices, 22)
-
-    **See also**
-
-    :func:`minimum`
-
-    """
-    window = window or series.size
-    assert series.index.is_monotonic_increasing
-    return series.rolling(window, 0).max()
-
-
-def floor(series: pd.Series, value: float=0) -> pd.Series:
-    """
-    Floor series at minimum value
-
-    :param series: date-based time series of prices
-    :param value: minimum value
-    :return: date-based time series of maximum value
-
-    **Usage**
-
-    Returns series where all values are greater than or equal to the minimum value.
-
-    :math:`Y_t = max(X_t, value)`
-
-    See `Floor and Ceil functions <https://en.wikipedia.org/wiki/Floor_and_ceiling_functions>`_ for more details
-
-    **Examples**
-
-    Generate price series and floor all values at 100
-
-    >>> prices = generate_series(100)
-    >>> floor(prices, 100)
-
-    **See also**
-
-    :func:`ceil`
-
-    """
-    assert series.index.is_monotonic_increasing
-    return series.apply(lambda x: max(x, value))
-
-
-def ceil(series: pd.Series, value: float=0) -> pd.Series:
-    """
-    Cap series at maximum value
-
-    :param series: date-based time series of prices
-    :param value: maximum value
-    :return: date-based time series of maximum value
-
-    **Usage**
-
-    Returns series where all values are less than or equal to the maximum value.
-
-    :math:`Y_t = min(X_t, value)`
-
-    See `Floor and Ceil functions <https://en.wikipedia.org/wiki/Floor_and_ceiling_functions>`_ for more details
-
-    **Examples**
-
-    Generate price series and floor all values at 100
-
-    >>> prices = generate_series(100)
-    >>> floor(prices, 100)
-
-    **See also**
-
-    :func:`floor`
-
-    """
-    assert series.index.is_monotonic_increasing
-    return series.apply(lambda x: min(x, value))
-
-
-def mean(series: pd.Series, window: int=0) -> pd.Series:
-    """
-    Arithmetic mean of series over given window
-
-    :param series: date-based time series of prices
-    :param window: number of days / observations to use (defaults to length of series)
-    :return: date-based time series of mean value
-
-    **Usage**
-
-    :math:`Y_t = \\frac{\sum_{i=t-w-1}^{t} X_t}{N}`
-
-    where N is the number of observations in each rolling window, :math:`w`. If window is not provided, computes
-    rolling mean over the full series
-
-    **Examples**
-
-    Generate price series and compute mean over 22 observations
-
-    >>> prices = generate_series(100)
-    >>> mean(prices, 22)
-
-    **See also**
-
-    :func:`median` :func:`mode`
-
-    """
-    window = window or series.size
-    assert series.index.is_monotonic_increasing
-    return series.rolling(window, 0).mean()
-
-
-def median(series: pd.Series, window: int=0) -> pd.Series:
-    """
-    Median value of series over given window
-
-    :param series: date-based time series of prices
-    :param window: number of days / observations to use (defaults to length of series)
-    :return: date-based time series of median value
-
-    **Usage**
-
-    Computes the median value over a given window. For each window, this function will return the middle value when
-    all elements in the window are sorted. If the number of observations in the window is even, will return the average
-    of the middle two values.
-
-    :math:`d = \\frac{w-1}{2}`
-
-    :math:`Y_t = \\frac{X_{\lfloor t-d \\rfloor} + X_{\lceil t-d \\rceil}}{2}`
-
-    where :math:`w` is the size of the rolling window. If window is not provided, computes median over the full series
-
-    **Examples**
-
-    Generate price series and compute median over 22 observations
-
-    >>> prices = generate_series(100)
-    >>> median(prices, 22)
-
-    **See also**
-
-    :func:`mean` :func:`mode`
-    """
-    window = window or series.size
-    assert series.index.is_monotonic_increasing
-    return series.rolling(window, 0).median()
-
-
-def mode(series: pd.Series, window: int=0) -> pd.Series:
-    """
-    Most common value in series over given window
-
-    :param series: date-based time series of prices
-    :param window: number of days / observations to use (defaults to length of series)
-    :return: date-based time series of modal value
-
-    **Usage**
-
-    Computes the mode value over a given window. For each window, this function will return the most common value of
-    all elements in the window.
-
-    If window is not provided, computes mode over the full series
-
-    **Examples**
-
-    Generate price series and compute mode over 22 observations
-
-    >>> prices = generate_series(100)
-    >>> mode(prices, 22)
-
-    **See also**
-
-    :func:`mean` :func:`median`
-    """
-    window = window or series.size
-    assert series.index.is_monotonic_increasing
-    return series.rolling(window, 0).apply(lambda x: stats.mode(x).mode)
-
-
-def summation(series: pd.Series, window: int=0) -> pd.Series:
-    """
-    Rolling sum of series over given window
-
-    :param series: date-based time series of prices
-    :param window: number of days / observations to use (defaults to length of series)
-    :return: date-based time series of median value
-
-    **Usage**
-
-    Calculate the sum of observations over a given rolling window. For each time, :math:`t`, returns the value
-    of all observations from :math:`t-w-1` to :math:`t` summed together:
-
-    :math:`Y_t = \sum_{i=t-w-1}^{t} X_t`
-
-    where :math:`w` is the size of the rolling window. If window is not provided, computes sum over the full series
-
-    **Examples**
-
-    Generate price series and compute rolling sum over 22 observations
-
-    >>> prices = generate_series(100)
-    >>> summation(prices, 22)
-
-    **See also**
-
-    :func:`product`
-
-    """
-    window = window or series.size
-    assert series.index.is_monotonic_increasing
-    return series.rolling(window, 0).sum()
-
-
-def product(series: pd.Series, window: int=0) -> pd.Series:
-    """
-    Rolling product of series over given window
-
-    :param series: date-based time series of prices
-    :param window: number of days / observations to use (defaults to length of series)
-    :return: date-based time series of median value
-
-    **Usage**
-
-    Calculate the product of observations over a given rolling window. For each time, :math:`t`, returns the value
-    of all observations from :math:`t-w-1` to :math:`t` multiplied together:
-
-    :math:`Y_t = \prod_{i=t-w-1}^{t} X_t`
-
-    where :math:`w` is the size of the rolling window. If window is not provided, computes product over the full series
-
-    **Examples**
-
-    Generate price series and compute rolling sum over 22 observations
-
-    >>> prices = generate_series(100)
-    >>> product(1+returns(prices))
-
-    **See also**
-
-    :func:`summation`
-    """
-    window = window or series.size
-    assert series.index.is_monotonic_increasing
-    return series.rolling(window, 0).agg(pd.Series.prod)
-
-
-def std(series: pd.Series, window: int=0) -> pd.Series:
-    """
-    Rolling standard deviation of series over given window
-
-    :param series: date-based time series of prices
-    :param window: number of days / observations to use (defaults to length of series)
-    :return: date-based time series of median value
-
-    **Usage**
-
-    Provides `unbiased estimator <https://en.wikipedia.org/wiki/Unbiased_estimation_of_standard_deviation>`_ of sample
-    standard deviation over a rolling window:
-
-    :math:`Y_t = \sqrt{\\frac{1}{N-1} \sum_{i=t-w-1}^t (X_t - \overline{X_t})^2}`
-
-    where N is the number of observations in each rolling window, :math:`w`, and :math:`\overline{X_t}` is the mean
-    value over the same window:
-
-    :math:`\overline{X_t} = \\frac{\sum_{i=t-w-1}^{t} X_t}{N}`
-
-    If window is not provided, computes standard deviation over the full series
-
-    **Examples**
-
-    Generate price series and compute standard deviation of returns over 22 observations
-
-    >>> prices = generate_series(100)
-    >>> std(returns(prices), 22)
-
-    **See also**
-
-    :func:`sum` :func:`mean` :func:`var`
-
-    """
-    window = window or series.size
-    assert series.index.is_monotonic_increasing
-    return series.rolling(window, 0).std()
-
-
-def var(series: pd.Series, window: int=0) -> pd.Series:
-    """
-    Rolling variance of series over given window
-
-    :param series: date-based time series of prices
-    :param window: number of days / observations to use (defaults to length of series)
-    :return: date-based time series of median value
-
-    **Usage**
-
-    Provides `unbiased estimator <https://en.wikipedia.org/wiki/Unbiased_estimation_of_standard_deviation>`_ of sample
-    variance over a rolling window:
-
-    :math:`Y_t = \\frac{1}{N-1} \sum_{i=t-w-1}^t (X_t - \overline{X_t})^2`
-
-    where N is the number of observations in each rolling window, :math:`w`, and :math:`\overline{X_t}` is the mean
-    value over the same window:
-
-    :math:`\overline{X_t} = \\frac{\sum_{i=t-w-1}^{t} X_t}{N}`
-
-    If window is not provided, computes variance over the full series
-
-    **Examples**
-
-    Generate price series and compute variance of returns over 22 observations
-
-    >>> prices = generate_series(100)
-    >>> var(returns(prices), 22)
-
-    **See also**
-
-    :func:`sum` :func:`mean` :func:`std`
-
-    """
-    window = window or series.size
-    assert series.index.is_monotonic_increasing
-    return series.rolling(window, 0).var()
-
-
-def _zscore(series):
-    if series.size < 1:
-        return series
-
-    if series.size == 1:
-        return 0
-
-    return stats.zscore(series)[-1]
-
-
-def zscore(series: pd.Series, window: int=0) -> pd.Series:
-    """
-    Rolling z-score over a given window
-
-    :param series: time series of prices
-    :param window: number of observations
-    :return: date-based time series of return
-
-    **Usage**
-
-    Calculate `standard score <https://en.wikipedia.org/wiki/Standard_score>`_ of each value in series over given
-    window. Standard deviation and sample mean are computed over the specified rolling window, then element is
-    normalized to provide a rolling z-score:
-
-    :math:`Y_t = \\frac { X_t - \mu }{ \sigma }`
-
-    Where :math:`\mu` and :math:`\sigma` are sample mean and standard deviation over the given window
-
-    If window is not provided, computes z-score relative to mean and standard deviation over the full series
-
-    **Examples**
-
-    Generate price series and compute variance of returns over 22 observations
-
-    >>> prices = generate_series(100)
-    >>> zscore(returns(prices), 22)
-
-    **See also**
-
-    :func:`mean` :func:`std`
-
-    """
-    if series.size < 1:
-        return series
-
-    if not window:
-        return pd.Series(stats.zscore(series), series.index)
-
-    return series.rolling(window, 0).apply(_zscore)
-
-
-def winsorize(series: pd.Series, limit: float=2.5, window: int=0) -> pd.Series:
-    """
-    Limit extreme values in series
-
-    :param series: time series of prices
-    :param limit: max z-score of values
-    :param window: number of observations
-    :return: date-based time series of return
-
-    **Usage**
-
-    Cap and floor values in the series which have a z-score greater or less than provided value. This function will
-    restrict the distribution of values. Calculates the sample standard deviation and adjusts values which
-    fall outside the specified range to be equal to the upper or lower limits
-
-    Lower and upper limits are defined as:
-
-    :math:`upper = \mu + \sigma \\times limit`
-
-    :math:`lower = \mu - \sigma \\times limit`
-
-    Where :math:`\mu` and :math:`\sigma` are sample mean and standard deviation. The series is restricted by:
-
-    :math:`Y_t = max( min( X_t, upper), lower )`
-
-    See `winsorising <https://en.wikipedia.org/wiki/Winsorizing>`_ for additional information
-
-    **Examples**
-
-    Generate price series and winsorize z-score of returns over 22 observations
-
-    >>> prices = generate_series(100)
-    >>> winsorize(zscore(returns(prices), 22))
-
-    **See also**
-
-    :func:`zscore` :func:`mean` :func:`std`
-
-    """
-    window = window or series.size
-
-    if series.size < 1:
-        return series
-
-    assert window
-
-    mu = series.mean()
-    sigma = series.std()
-
-    high = mu + sigma * limit
-    low = mu - sigma * limit
-
-    ret = ceil(series, high)
-    ret = floor(ret, low)
-
-    return ret
