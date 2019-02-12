@@ -27,6 +27,8 @@ from gs_quant.session import GsSession
 
 class Dataset:
 
+    DATASET_HOLIDAY = 'HOLIDAY'
+
     __catalogs_by_dataset_id = {}
     __catalogs_by_mdapi_vendor_is_time = {}
 

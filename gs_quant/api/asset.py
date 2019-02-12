@@ -25,7 +25,8 @@ from enum import auto, Enum
 from typing import List, Tuple, Union
 import logging
 
-IdList = Union[List[str], Tuple[str]]
+IdList = Union[List, Tuple]
+
 _logger = logging.getLogger(__name__)
 
 
@@ -42,7 +43,6 @@ class IdType(Enum):
 
 
 class Asset(__Asset):
-
     @staticmethod
     def __check_kwargs_valid_for_where(**kwargs):
         keys = set(kwargs.keys())
@@ -55,9 +55,9 @@ class Asset(__Asset):
 
     @staticmethod
     def get_many_assets(
-            fields: IdList=None,
-            as_of: datetime=None,
-            limit: int=None,
+            fields: IdList = None,
+            as_of: datetime = None,
+            limit: int = None,
             **kwargs
     ) -> List[Asset]:
         Asset.__check_kwargs_valid_for_where(**kwargs)

@@ -15,101 +15,68 @@ under the License.
 """
 
 from gs_quant.target.data import *
-from gs_quant.api.common import FieldFilterMap
-from gs_quant.api.common import MarketDataCoordinate
 from gs_quant.session import GsSession
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
+from itertools import chain
 import pandas as pd
-from typing import Union, Iterable, Optional
+from typing import Union, List, Tuple, Optional
 
 
-def queries_for_coordinates(
-    coordinates: Union[MarketDataCoordinate, Iterable[MarketDataCoordinate]],
-    vendor: str,
-    is_time: bool
-) -> Iterable[DataQuery]:
-    from gs_quant.api.dataset import Dataset
-
-    queries = {}
-    for coordinate in coordinates:
-        dataset = Dataset.dataset_for_coordinate_vendor_is_time(coordinate, vendor, is_time)
-        field = next(qs['field'] for qs in dataset.catalog['mdapi']['quotingStyles'] if qs['quotingStyle'] == coordinate.field) if coordinate.field else None
-
-        query = queries.setdefault((coordinate.marketDataType, coordinate.pointClass), DataQuery(
-            dataSetId=dataset.dataset_id,
-            fields=[],
-            where=FieldFilterMap(assetId=[], point=[], pointClass=coordinate.pointClass)))
-
-        if field not in query.fields:
-            query.fields.append(field)
-
-        query.where.assetId.append(coordinate.assetId)
-        query.where.point.append(coordinate.point)
-
-    return tuple(queries.values())
-
-
-def values_for_coordinates(
-    coordinates: Union[MarketDataCoordinate, Iterable[MarketDataCoordinate]],
-    vendor: str,
-    as_of: Union[date, datetime]
-) -> dict:
-    from gs_quant.api.dataset import Dataset
-
-    ret = {coordinate: None for coordinate in coordinates}
-    session = GsSession.current
+def snapshot_coordinates(
+    coordinates: Union[List, Tuple],
+    as_of: Union[date, datetime],
+    vendor: str = 'Goldman Sachs',
+    as_dataframe: bool=False
+) -> Union[dict, pd.DataFrame]:
     is_time = isinstance(as_of, datetime)
-    queries = queries_for_coordinates(coordinates, vendor, is_time)
-    for query in queries:
-        if is_time:
-            query.endTime = as_of
-            query.startTime = as_of - timedelta(days=1)
-        else:
-            query.endDate = as_of
-            query.startDate = 4
+    ret = {coordinate: None for coordinate in coordinates}
 
-    all_results = session._post('/data/last/query/bulk', queries)
-    for idx, query_results in enumerate(all_results):
-        query = queries[idx]
-        dataset = Dataset(query.dataSetId)
-        quotingStyles = dataset.catalog['mdapi']['quotingStyles']
+    query = DataQuery(
+        marketDataCoordinates=coordinates,
+        vendor=vendor,
+        endDate=as_of if not is_time else None,
+        endTime=as_of if is_time else None
+    )
+    response = GsSession.current._post('/data/coordinates/query/last', query)
 
-        for result in query_results['data']:
-            for quotingStyle in quotingStyles:
-                field = quotingStyle['field']
-                if field in query.fields:
-                    coordinate = MarketDataCoordinate(
-                        marketDataType=dataset.marketDataType,
-                        assetId=result.get('assetId'),
-                        pointClass=result.get('pointClass'),
-                        point=result.get('point'),
-                        field=quotingStyle['quotingStyle']
-                    )
+    for idx, row in enumerate(response['data']):
+        if not row:
+            continue
 
-                    ret[coordinate] = result.get(field)
+        value = row[row['field']]
+        ret[coordinates[idx]] = value
+
+    if as_dataframe:
+        data = [dict(chain(c.as_dict().items(), (('value', v),))) for c, v in ret.items()]
+        return pd.DataFrame(data)
 
     return ret
 
 
-def get_data(
-    coordinate: MarketDataCoordinate,
-    vendor: str,
+def coordinates_data(
+    coordinates: Union[List, Tuple],
     start: Optional[Union[date, datetime]] = None,
     end: Optional[Union[date, datetime]] = None,
+    vendor: str = 'Goldman Sachs',
     as_of: Optional[datetime] = None,
     since: Optional[datetime] = None,
-) -> pd.Series:
-    from gs_quant.api.dataset import Dataset
+) -> pd.DataFrame:
+    if isinstance(start, datetime) != isinstance(end, datetime):
+        raise RuntimeError('start and end must both either be dates or datetimes')
 
-    dataset = Dataset.dataset_for_coordinate_vendor_is_time(coordinate, vendor, isinstance(end, datetime))
-    field = next(qs['field'] for qs in dataset.catalog['mdapi']['quotingStyles'] if qs['quotingStyle'] == coordinate.field)
-    return dataset.get_data(
-        start=start,
-        end=end,
-        as_of=as_of,
-        since=since,
-        fields=(field,),
-        assetId=coordinate.assetId,
-        pointClass=coordinate.pointClass,
-        point=coordinate.point
+    is_time = isinstance(start, datetime)
+
+    query = DataQuery(
+        marketDataCoordinates=coordinates,
+        vendor=vendor,
+        startDate=start if not is_time else None,
+        startTime=start if is_time else None,
+        endDate=end if not is_time else None,
+        endTime=end if is_time else None,
+        asOfTime=as_of,
+        since=since
     )
+    response = GsSession.current._post('/data/coordinates/query', query)
+
+    return pd.DataFrame(response['data'])
+

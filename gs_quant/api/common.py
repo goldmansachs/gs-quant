@@ -23,7 +23,7 @@ from gs_quant.target.common import XRef as __XRef
 class MarketDataCoordinate(__MarketDataCoordinate):
 
     def __str__(self):
-        return "|".join(f or '' for f in (self.__marketDataType, self.__assetId, self.__pointClass, self.__point, self.__field))
+        return "|".join(f or '' for f in (self.marketDataType, self.marketDataAsset or self.assetId, self.pointClass, '_'.join(self.marketDataPoint), self.field))
 
 
 class XRef(__XRef, Priceable):

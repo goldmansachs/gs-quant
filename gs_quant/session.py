@@ -7,7 +7,7 @@ You may obtain a copy of the License at
   http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing,
-software distributed under the License is distributed on an
+software distributed under the License is distributed on ans
 "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
@@ -24,7 +24,7 @@ import requests
 from abc import abstractmethod
 from configparser import ConfigParser
 from enum import Enum, auto, unique
-from typing import Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 
 from gs_quant.api.base import Base
@@ -166,7 +166,7 @@ class GsSession(ContextBase):
             environment_or_domain: Union[Environment, str] = Environment.PROD,
             client_id: Optional[str] = None,
             client_secret: Optional[str] = None,
-            scopes: Optional[Tuple[str]] = (),
+            scopes: Optional[Union[Tuple, List]] = (),
             api_version: str = API_VERSION,
             application: str = DEFAULT_APPLICATION
     ) -> None:
@@ -181,15 +181,7 @@ class GsSession(ContextBase):
         )
 
         session.init()
-
-        try:
-            current = cls.current
-            if current is not None and current._is_entered:
-                raise RuntimeError('Cannot call GsSession.use while an existing session is entered')
-        except MqUninitialisedError:
-            pass
-
-        cls.current = session
+        cls.default = session
 
     @classmethod
     def get(
@@ -197,7 +189,7 @@ class GsSession(ContextBase):
             environment_or_domain: Union[Environment, str],
             client_id: Optional[str] = None,
             client_secret: Optional[str] = None,
-            scopes: Optional[Tuple[str]] = (),
+            scopes: Optional[Union[Tuple, List]] = (),
             api_version: str = API_VERSION,
             application: str = DEFAULT_APPLICATION
     ) -> 'GsSession':

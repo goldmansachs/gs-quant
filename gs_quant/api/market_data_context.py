@@ -15,7 +15,7 @@ under the License.
 """
 
 from gs_quant.context_base import ContextBaseWithDefault
-from gs_quant.datetime.date import adjust_to_business_date
+from gs_quant.datetime.date import business_day_offset
 from gs_quant.api.common import MarketDataCoordinate
 
 from datetime import date, datetime, timedelta
@@ -28,7 +28,7 @@ class MarketDataContext(ContextBaseWithDefault):
 
     def __init__(self, as_of: Union[date, datetime]=None, overrides: Mapping[MarketDataCoordinate, float]=None):
         super().__init__()
-        self.__as_of = as_of or adjust_to_business_date(date.today() + timedelta(days=-1), prev=True)
+        self.__as_of = as_of or business_day_offset(date.today(), -1, roll='preceding')
         self.__overrides = overrides or {}
 
     @property

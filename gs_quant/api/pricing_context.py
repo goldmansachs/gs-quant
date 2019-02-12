@@ -18,7 +18,7 @@ from gs_quant.api.base import Priceable
 from gs_quant.api.common import MarketDataCoordinate
 from gs_quant.api.risk import FormattedRiskMeasure, RiskMeasure, RiskRequest, RiskPosition, CoordinatesRequest
 from gs_quant.context_base import ContextBaseWithDefault
-from gs_quant.datetime.date import adjust_to_business_date
+from gs_quant.datetime.date import business_day_offset
 from gs_quant.session import GsSession
 import asyncio
 from collections import namedtuple
@@ -38,7 +38,7 @@ class PricingContext(ContextBaseWithDefault):
     def __init__(self, is_async: bool = False, pricing_date: date = None):
         super().__init__()
         self.__is_async = is_async
-        self.__pricing_date = pricing_date or adjust_to_business_date(date.today() + timedelta(days=-1), prev=True)
+        self.__pricing_date = pricing_date or business_day_offset(date.today(), -1, roll='preceding')
         self.__pending_requests = {}
 
     def _on_exit(self, exc_type, exc_val, exc_tb):
@@ -135,7 +135,7 @@ class PricingContext(ContextBaseWithDefault):
             marketDataType=r.get('marketDataType'),
             assetId=r.get('assetId'),
             pointClass=r.get('pointClass'),
-            point=r.get('point'),
+            marketDataPoint=tuple(r.get('marketDataPoint', r.get('point', '')).split('_')),
             field=r.get('field'))
             for r in response
         ]
