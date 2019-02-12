@@ -26,6 +26,7 @@ from typing import List, Tuple, Union
 import logging
 
 IdList = Union[List, Tuple]
+
 _logger = logging.getLogger(__name__)
 
 
