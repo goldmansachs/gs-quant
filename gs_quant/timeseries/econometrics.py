@@ -29,13 +29,16 @@ diffs, lags, volatilities and other numerical operations which are generally fin
 # Return types
 
 class Returns(Enum):
-
     SIMPLE = "simple"
     LOGARITHMIC = "log"
 
 
-class AnnualizationFactor(IntEnum):
+class SeriesType(Enum):
+    PRICES = "prices"
+    RETURNS = "returns"
 
+
+class AnnualizationFactor(IntEnum):
     DAILY = 252
     WEEKLY = 52
     SEMI_MONTHLY = 26
@@ -44,7 +47,7 @@ class AnnualizationFactor(IntEnum):
     ANNUALLY = 1
 
 
-def returns(series: pd.Series, type: Returns=Returns.SIMPLE) -> pd.Series:
+def returns(series: pd.Series, type: Returns = Returns.SIMPLE) -> pd.Series:
     """
     Calculate returns from price series
 
@@ -105,7 +108,7 @@ def returns(series: pd.Series, type: Returns=Returns.SIMPLE) -> pd.Series:
     return ret_series
 
 
-def prices(series: pd.Series, initial: int=1, type: Returns=Returns.SIMPLE) ->pd.Series:
+def prices(series: pd.Series, initial: int = 1, type: Returns = Returns.SIMPLE) -> pd.Series:
     """
     Calculate price levels from returns series
 
@@ -164,7 +167,7 @@ def prices(series: pd.Series, initial: int=1, type: Returns=Returns.SIMPLE) ->pd
         raise MqValueError('Unknown returns type (use simple / log)')
 
 
-def index(x: pd.Series, initial: int=1) -> pd.Series:
+def index(x: pd.Series, initial: int = 1) -> pd.Series:
     """
     Geometric series normalization
 
@@ -251,7 +254,7 @@ def _get_annualization_factor(x):
     elif 360 <= average_distance < 386:
         factor = AnnualizationFactor.ANNUALLY
     else:
-        raise MqValueError('Cannot infer annualization factor, average distance: ' + str(average_distance) )
+        raise MqValueError('Cannot infer annualization factor, average distance: ' + str(average_distance))
     return factor
 
 
@@ -298,7 +301,7 @@ def annualize(x: pd.Series) -> pd.Series:
     return x * math.sqrt(factor)
 
 
-def volatility(x: pd.Series, w: int=0) -> pd.Series:
+def volatility(x: pd.Series, w: int = 0) -> pd.Series:
     """
     Realized volatility of price series
 
@@ -329,7 +332,7 @@ def volatility(x: pd.Series, w: int=0) -> pd.Series:
     Compute rolling :math:`1` month (:math:`22` business day) annualized volatility of price series
 
     >>> series = generate_series(100)
-    >>> vol_series = vol(series, 22)
+    >>> vol_series = volatility(series, 22)
 
     **See also**
 
@@ -344,14 +347,14 @@ def volatility(x: pd.Series, w: int=0) -> pd.Series:
     return annualize(std(returns(x), w)) * 100
 
 
-def correlation(x: pd.Series, y: pd.Series, w: int=0, prices: bool=True) -> pd.Series:
+def correlation(x: pd.Series, y: pd.Series, w: int = 0, type_: SeriesType = SeriesType.PRICES) -> pd.Series:
     """
     Rolling correlation of two price series
 
     :param x: price series
     :param y: price series
     :param w: window: number of observations to use (defaults to length of series)
-    :param prices: True if input series are prices, False if they are returns
+    :param type_: type of both input series
     :return: date-based time series of correlation
 
     **Usage**
@@ -394,8 +397,9 @@ def correlation(x: pd.Series, y: pd.Series, w: int=0, prices: bool=True) -> pd.S
     if x.size < 1:
         return x
 
-    ret_1 = returns(x) if prices else x
-    ret_2 = returns(y) if prices else y
+    given_prices = type_ == SeriesType.PRICES
+    ret_1 = returns(x) if given_prices else x
+    ret_2 = returns(y) if given_prices else y
 
     clean_ret1 = ret_1.dropna()
     clean_ret2 = ret_2.dropna()
@@ -405,7 +409,7 @@ def correlation(x: pd.Series, y: pd.Series, w: int=0, prices: bool=True) -> pd.S
     return interpolate(corr, x, Interpolate.NAN)
 
 
-def beta(x: pd.Series, b: pd.Series, w: int=0, prices: bool=True) -> pd.Series:
+def beta(x: pd.Series, b: pd.Series, w: int = 0, prices: bool = True) -> pd.Series:
     """
     Rolling beta of price series and benchmark
 
@@ -467,7 +471,7 @@ def beta(x: pd.Series, b: pd.Series, w: int=0, prices: bool=True) -> pd.Series:
     return interpolate(result, x, Interpolate.NAN)
 
 
-def max_drawdown(x: pd.Series, w: int=0) -> pd.Series:
+def max_drawdown(x: pd.Series, w: int = 0) -> pd.Series:
     """
     Compute the maximum peak to trough drawdown over a rolling window.
 

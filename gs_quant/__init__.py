@@ -13,11 +13,4 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-
-from gs_quant.api.generator.module_generator import GeneratedModuleFinder
-from .session import Environment, GsSession
-import sys
-
 name = "gs_quant"
-
-sys.meta_path.append(GeneratedModuleFinder())

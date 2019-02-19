@@ -16,14 +16,13 @@ under the License.
 
 import datetime
 from typing import Any, Iterable, Union
-from gs_quant.api.base import Base
+from gs_quant.base import Base
 
 
 class DataSetEntity(Base):
                
-    def __init__(self, id: Union[str, str], name: str, description: str, shortDescription: str, vendor: str, dataProduct: str, parameters: Union['DataSetParameters', str], dimensions: Union['DataSetDimensions', str], active: bool = None, ownerId: Union[str, str] = None, startDate: Union[datetime.date, str] = None, mdapi: Union['MDAPI', str] = None, entitlements: Union['Entitlements', str] = None, queryProcessors: Union['ProcessorEntity', str] = None, defaults: Union['DataSetDefaults', str] = None, filters: Union['DataSetFilters', str] = None, createdById: Union[str, str] = None, createdTime: Union[datetime.datetime, str] = None, lastUpdatedById: Union[str, str] = None, lastUpdatedTime: Union[datetime.datetime, str] = None, tags: Iterable[str] = None):
+    def __init__(self, id: Union[str, str], name: str, description: str, shortDescription: str, vendor: str, dataProduct: str, parameters: Union['DataSetParameters', str], dimensions: Union['DataSetDimensions', str], ownerId: Union[str, str] = None, startDate: Union[datetime.date, str] = None, mdapi: Union['MDAPI', str] = None, entitlements: Union['Entitlements', str] = None, queryProcessors: Union['ProcessorEntity', str] = None, defaults: Union['DataSetDefaults', str] = None, filters: Union['DataSetFilters', str] = None, createdById: Union[str, str] = None, createdTime: Union[datetime.datetime, str] = None, lastUpdatedById: Union[str, str] = None, lastUpdatedTime: Union[datetime.datetime, str] = None, tags: Iterable[str] = None):
         super().__init__()
-        self.__active = active
         self.__ownerId = ownerId
         self.__id = id
         self.__name = name
@@ -44,15 +43,6 @@ class DataSetEntity(Base):
         self.__lastUpdatedById = lastUpdatedById
         self.__lastUpdatedTime = lastUpdatedTime
         self.__tags = tags
-
-    @property
-    def active(self) -> bool:
-        return self.__active
-
-    @active.setter
-    def active(self, value: bool):
-        self.__active = value
-        self._property_changed('active')        
 
     @property
     def ownerId(self) -> Union[str, str]:
@@ -402,9 +392,10 @@ class DataFilter(Base):
         
     """Filter on specified field."""
        
-    def __init__(self, field: str, values: Iterable[str]):
+    def __init__(self, field: str, values: Iterable[str], column: Union[str, str] = None):
         super().__init__()
         self.__field = field
+        self.__column = column
         self.__values = values
 
     @property
@@ -416,6 +407,16 @@ class DataFilter(Base):
     def field(self, value: str):
         self.__field = value
         self._property_changed('field')        
+
+    @property
+    def column(self) -> Union[str, str]:
+        """Database column name."""
+        return self.__column
+
+    @column.setter
+    def column(self, value: Union[str, str]):
+        self.__column = value
+        self._property_changed('column')        
 
     @property
     def values(self) -> Iterable[str]:
@@ -539,7 +540,7 @@ class DataSetDimensions(Base):
         
     """Dataset dimensions."""
        
-    def __init__(self, timeField: str, transactionTimeField: str = None, symbolDimensions: Iterable[str] = None, nonSymbolDimensions: Iterable['FieldColumnPair'] = None, keyDimensions: Iterable[str] = None, measures: Iterable['FieldColumnPair'] = None, entityDimension: str = None, adjustments: Union['Adjustments', str] = None):
+    def __init__(self, timeField: str, transactionTimeField: str = None, symbolDimensions: Iterable[str] = None, nonSymbolDimensions: Iterable['FieldColumnPair'] = None, keyDimensions: Iterable[str] = None, measures: Iterable['FieldColumnPair'] = None, entityDimension: str = None):
         super().__init__()
         self.__timeField = timeField
         self.__transactionTimeField = transactionTimeField
@@ -548,7 +549,6 @@ class DataSetDimensions(Base):
         self.__keyDimensions = keyDimensions
         self.__measures = measures
         self.__entityDimension = entityDimension
-        self.__adjustments = adjustments
 
     @property
     def timeField(self) -> str:
@@ -617,16 +617,6 @@ class DataSetDimensions(Base):
     def entityDimension(self, value: str):
         self.__entityDimension = value
         self._property_changed('entityDimension')        
-
-    @property
-    def adjustments(self) -> Union['Adjustments', str]:
-        """Corporate action adjustments."""
-        return self.__adjustments
-
-    @adjustments.setter
-    def adjustments(self, value: Union['Adjustments', str]):
-        self.__adjustments = value
-        self._property_changed('adjustments')        
 
 
 class Adjustments(Base):
@@ -1053,6 +1043,75 @@ class MDAPI(Base):
         self._property_changed('quotingStyles')        
 
 
+class DataQueryResponse(Base):
+               
+    def __init__(self, requestId: Union[str, str] = None, data: Iterable['FieldValueMap'] = None, groups: Iterable['DataGroup'] = None):
+        super().__init__()
+        self.__requestId = requestId
+        self.__data = data
+        self.__groups = groups
+
+    @property
+    def requestId(self) -> Union[str, str]:
+        """Marquee unique identifier"""
+        return self.__requestId
+
+    @requestId.setter
+    def requestId(self, value: Union[str, str]):
+        self.__requestId = value
+        self._property_changed('requestId')        
+
+    @property
+    def data(self) -> Iterable['FieldValueMap']:
+        """Array of data elements from dataset"""
+        return self.__data
+
+    @data.setter
+    def data(self, value: Iterable['FieldValueMap']):
+        self.__data = value
+        self._property_changed('data')        
+
+    @property
+    def groups(self) -> Iterable['DataGroup']:
+        """If the data is requested in grouped mode, will return data group object"""
+        return self.__groups
+
+    @groups.setter
+    def groups(self, value: Iterable['DataGroup']):
+        self.__groups = value
+        self._property_changed('groups')        
+
+
+class DataGroup(Base):
+        
+    """Dataset grouped by context (key dimensions)"""
+       
+    def __init__(self, context: Union['FieldValueMap', str] = None, data: Iterable['FieldValueMap'] = None):
+        super().__init__()
+        self.__context = context
+        self.__data = data
+
+    @property
+    def context(self) -> Union['FieldValueMap', str]:
+        """Context map for the grouped data (key dimensions)"""
+        return self.__context
+
+    @context.setter
+    def context(self, value: Union['FieldValueMap', str]):
+        self.__context = value
+        self._property_changed('context')        
+
+    @property
+    def data(self) -> Iterable['FieldValueMap']:
+        """Array of grouped data objects"""
+        return self.__data
+
+    @data.setter
+    def data(self, value: Iterable['FieldValueMap']):
+        self.__data = value
+        self._property_changed('data')        
+
+
 class DataQuery(Base):
                
     def __init__(self, id: Union[str, str] = None, dataSetId: Union[str, str] = None, format: Union['Format', str] = None, marketDataCoordinates: Iterable['MarketDataCoordinate'] = None, where: Union['FieldFilterMap', str] = None, vendor: str = None, startDate: Union[datetime.date, str] = None, endDate: Union[datetime.date, str] = None, startTime: Union[datetime.datetime, str] = None, endTime: Union[datetime.datetime, str] = None, asOfTime: Union[datetime.datetime, str] = None, idAsOfDate: Union[datetime.date, str] = None, since: Union[datetime.datetime, str] = None, dates=None, times=None, delay: int = None, intervals: int = None, pollingInterval: int = None, groupBy: Iterable['Field'] = None, grouped: bool = None, fields: Iterable['Selector'] = None):
@@ -1286,124 +1345,3 @@ class DataQuery(Base):
     def fields(self, value: Iterable['Selector']):
         self.__fields = value
         self._property_changed('fields')        
-
-
-class DataQueryResponse(Base):
-               
-    def __init__(self, type: str, requestId: Union[str, str] = None, errorMessage: str = None, id: Union[str, str] = None, dataSetId: Union[str, str] = None, delay: int = None, data: Iterable['FieldValueMap'] = None, groups: Iterable['DataGroup'] = None):
-        super().__init__()
-        self.__requestId = requestId
-        self.__type = type
-        self.__errorMessage = errorMessage
-        self.__id = id
-        self.__dataSetId = dataSetId
-        self.__delay = delay
-        self.__data = data
-        self.__groups = groups
-
-    @property
-    def requestId(self) -> Union[str, str]:
-        """Marquee unique identifier"""
-        return self.__requestId
-
-    @requestId.setter
-    def requestId(self, value: Union[str, str]):
-        self.__requestId = value
-        self._property_changed('requestId')        
-
-    @property
-    def type(self) -> str:
-        return self.__type
-
-    @type.setter
-    def type(self, value: str):
-        self.__type = value
-        self._property_changed('type')        
-
-    @property
-    def errorMessage(self) -> str:
-        return self.__errorMessage
-
-    @errorMessage.setter
-    def errorMessage(self, value: str):
-        self.__errorMessage = value
-        self._property_changed('errorMessage')        
-
-    @property
-    def id(self) -> Union[str, str]:
-        """Marquee unique identifier"""
-        return self.__id
-
-    @id.setter
-    def id(self, value: Union[str, str]):
-        self.__id = value
-        self._property_changed('id')        
-
-    @property
-    def dataSetId(self) -> Union[str, str]:
-        """Unique id of dataset."""
-        return self.__dataSetId
-
-    @dataSetId.setter
-    def dataSetId(self, value: Union[str, str]):
-        self.__dataSetId = value
-        self._property_changed('dataSetId')        
-
-    @property
-    def delay(self) -> int:
-        return self.__delay
-
-    @delay.setter
-    def delay(self, value: int):
-        self.__delay = value
-        self._property_changed('delay')        
-
-    @property
-    def data(self) -> Iterable['FieldValueMap']:
-        """Array of data elements from dataset"""
-        return self.__data
-
-    @data.setter
-    def data(self, value: Iterable['FieldValueMap']):
-        self.__data = value
-        self._property_changed('data')        
-
-    @property
-    def groups(self) -> Iterable['DataGroup']:
-        """If the data is requested in grouped mode, will return data group object"""
-        return self.__groups
-
-    @groups.setter
-    def groups(self, value: Iterable['DataGroup']):
-        self.__groups = value
-        self._property_changed('groups')        
-
-
-class DataGroup(Base):
-        
-    """Dataset grouped by context (key dimensions)"""
-       
-    def __init__(self, context: Union['FieldValueMap', str] = None, data: Iterable['FieldValueMap'] = None):
-        super().__init__()
-        self.__context = context
-        self.__data = data
-
-    @property
-    def context(self) -> Union['FieldValueMap', str]:
-        """Context map for the grouped data (key dimensions)"""
-        return self.__context
-
-    @context.setter
-    def context(self, value: Union['FieldValueMap', str]):
-        self.__context = value
-        self._property_changed('context')        
-
-    @property
-    def data(self) -> Iterable['FieldValueMap']:
-        """Array of grouped data objects"""
-        return self.__data
-
-    @data.setter
-    def data(self, value: Iterable['FieldValueMap']):
-        self.__data = value
-        self._property_changed('data')        

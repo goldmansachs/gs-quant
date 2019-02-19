@@ -1,7 +1,7 @@
 import numpy as np
 import datetime as dt
 from typing import Tuple, Union
-from gs_quant.api.dataset import Dataset
+from gs_quant.data import DataSet
 
 
 class GsCalendar:
@@ -37,7 +37,7 @@ class GsCalendar:
     @property
     def holidays(self) -> set:
         if self.__calendars and not self.__holidays:
-            dataset = Dataset(Dataset.DATASET_HOLIDAY)
+            dataset = DataSet(DataSet.DATASET_HOLIDAY)
             for holiday_id in self.__calendars:
                 data = dataset.get_data(exchange=holiday_id, start=self.DATE_LOW_LIMIT, end=self.DATE_HIGH_LIMIT)
                 if not data.empty:

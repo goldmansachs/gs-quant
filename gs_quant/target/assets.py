@@ -17,7 +17,7 @@ under the License.
 import datetime
 from typing import Any, Iterable, Union
 from enum import Enum
-from gs_quant.api.base import EnumBase, Base
+from gs_quant.base import EnumBase, Base
 
 
 class AssetType(EnumBase, Enum):    
@@ -548,18 +548,14 @@ class Asset(Base):
         
     """A security or instrument which can be held in a trading book (for example a stock or a bond) or a publically identifiable object with observable market data fixings which can be referenced in derivative transations (for example the SPX Index)"""
        
-    def __init__(self, assetClass: Union['AssetClass', str], type: Union['AssetType', str], name: Union[str, str], active: bool = None, classifications: Union['AssetClassifications', str] = None, createdById: Union[str, str] = None, createdTime: Union[datetime.datetime, str] = None, currency: Union['Currency', str] = None, defaultQuantity: Union[float, str] = None, description: Union[str, str] = None, domains: Union['Domains', str] = None, economicTermsHash: str = None, entitlements: Union['Entitlements', str] = None, exchange: Union[str, str] = None, id: Union[str, str] = None, identifiers: Iterable['Identifier'] = None, lastUpdatedById: Union[str, str] = None, lastUpdatedTime: Union[datetime.datetime, str] = None, listed: bool = None, liveDate: Union[datetime.date, str] = None, key: str = None, keyMap=None, ownerId: Union[str, str] = None, parameters=None, assetStats: Iterable['AssetStats'] = None, people: Union['People', str] = None, peopleHistory: Iterable['TemporalPeople'] = None, rank: float = None, region: Union['Region', str] = None, reportIds=None, sectors: Iterable[str] = None, shortName: Union[str, str] = None, styles=None, tags=None, underliers: Iterable[str] = None, underlyingAssetIds: Iterable[str] = None, xrefs: Iterable['TemporalXRef'] = None, xref: Union['XRef', str] = None):
+    def __init__(self, assetClass: Union['AssetClass', str], type: Union['AssetType', str], name: Union[str, str], createdById: Union[str, str] = None, createdTime: Union[datetime.datetime, str] = None, currency: Union['Currency', str] = None, description: Union[str, str] = None, domains: Union['Domains', str] = None, entitlements: Union['Entitlements', str] = None, exchange: Union[str, str] = None, id: Union[str, str] = None, identifiers: Iterable['Identifier'] = None, lastUpdatedById: Union[str, str] = None, lastUpdatedTime: Union[datetime.datetime, str] = None, listed: bool = None, liveDate: Union[datetime.date, str] = None, ownerId: Union[str, str] = None, parameters=None, assetStats: Iterable['AssetStats'] = None, people: Union['People', str] = None, region: Union['Region', str] = None, reportIds=None, shortName: Union[str, str] = None, styles=None, tags=None, underlyingAssetIds: Iterable[str] = None):
         super().__init__()
-        self.__active = active
         self.__assetClass = assetClass
-        self.__classifications = classifications
         self.__createdById = createdById
         self.__createdTime = createdTime
         self.__currency = currency
-        self.__defaultQuantity = defaultQuantity
         self.__description = description
         self.__domains = domains
-        self.__economicTermsHash = economicTermsHash
         self.__entitlements = entitlements
         self.__exchange = exchange
         self.__id = id
@@ -568,35 +564,18 @@ class Asset(Base):
         self.__lastUpdatedTime = lastUpdatedTime
         self.__listed = listed
         self.__liveDate = liveDate
-        self.__key = key
-        self.__keyMap = keyMap
         self.__name = name
         self.__ownerId = ownerId
         self.__parameters = parameters
         self.__assetStats = assetStats
         self.__people = people
-        self.__peopleHistory = peopleHistory
-        self.__rank = rank
         self.__region = region
         self.__reportIds = reportIds
-        self.__sectors = sectors
         self.__shortName = shortName
         self.__styles = styles
         self.__tags = tags
         self.__type = type
-        self.__underliers = underliers
         self.__underlyingAssetIds = underlyingAssetIds
-        self.__xrefs = xrefs
-        self.__xref = xref
-
-    @property
-    def active(self) -> bool:
-        return self.__active
-
-    @active.setter
-    def active(self, value: bool):
-        self.__active = value
-        self._property_changed('active')        
 
     @property
     def assetClass(self) -> Union['AssetClass', str]:
@@ -607,15 +586,6 @@ class Asset(Base):
     def assetClass(self, value: Union['AssetClass', str]):
         self.__assetClass = value
         self._property_changed('assetClass')        
-
-    @property
-    def classifications(self) -> Union['AssetClassifications', str]:
-        return self.__classifications
-
-    @classifications.setter
-    def classifications(self, value: Union['AssetClassifications', str]):
-        self.__classifications = value
-        self._property_changed('classifications')        
 
     @property
     def createdById(self) -> Union[str, str]:
@@ -648,15 +618,6 @@ class Asset(Base):
         self._property_changed('currency')        
 
     @property
-    def defaultQuantity(self) -> Union[float, str]:
-        return self.__defaultQuantity
-
-    @defaultQuantity.setter
-    def defaultQuantity(self, value: Union[float, str]):
-        self.__defaultQuantity = value
-        self._property_changed('defaultQuantity')        
-
-    @property
     def description(self) -> Union[str, str]:
         """Free text description of asset. Description provided will be indexed in the search service for free text relevance match"""
         return self.__description
@@ -675,15 +636,6 @@ class Asset(Base):
     def domains(self, value: Union['Domains', str]):
         self.__domains = value
         self._property_changed('domains')        
-
-    @property
-    def economicTermsHash(self) -> str:
-        return self.__economicTermsHash
-
-    @economicTermsHash.setter
-    def economicTermsHash(self, value: str):
-        self.__economicTermsHash = value
-        self._property_changed('economicTermsHash')        
 
     @property
     def entitlements(self) -> Union['Entitlements', str]:
@@ -766,24 +718,6 @@ class Asset(Base):
         self._property_changed('liveDate')        
 
     @property
-    def key(self) -> str:
-        return self.__key
-
-    @key.setter
-    def key(self, value: str):
-        self.__key = value
-        self._property_changed('key')        
-
-    @property
-    def keyMap(self):
-        return self.__keyMap
-
-    @keyMap.setter
-    def keyMap(self, value):
-        self.__keyMap = value
-        self._property_changed('keyMap')        
-
-    @property
     def name(self) -> Union[str, str]:
         """Display name of the asset"""
         return self.__name
@@ -832,25 +766,6 @@ class Asset(Base):
         self._property_changed('people')        
 
     @property
-    def peopleHistory(self) -> Iterable['TemporalPeople']:
-        """Historical list of people"""
-        return self.__peopleHistory
-
-    @peopleHistory.setter
-    def peopleHistory(self, value: Iterable['TemporalPeople']):
-        self.__peopleHistory = value
-        self._property_changed('peopleHistory')        
-
-    @property
-    def rank(self) -> float:
-        return self.__rank
-
-    @rank.setter
-    def rank(self, value: float):
-        self.__rank = value
-        self._property_changed('rank')        
-
-    @property
     def region(self) -> Union['Region', str]:
         """Regional classification for the asset"""
         return self.__region
@@ -869,16 +784,6 @@ class Asset(Base):
     def reportIds(self, value):
         self.__reportIds = value
         self._property_changed('reportIds')        
-
-    @property
-    def sectors(self) -> Iterable[str]:
-        """Sectors associated with the asset"""
-        return self.__sectors
-
-    @sectors.setter
-    def sectors(self, value: Iterable[str]):
-        self.__sectors = value
-        self._property_changed('sectors')        
 
     @property
     def shortName(self) -> Union[str, str]:
@@ -921,16 +826,6 @@ class Asset(Base):
         self._property_changed('type')        
 
     @property
-    def underliers(self) -> Iterable[str]:
-        """Underlying asset ids (deprecated, use underlyingAssetIds)"""
-        return self.__underliers
-
-    @underliers.setter
-    def underliers(self, value: Iterable[str]):
-        self.__underliers = value
-        self._property_changed('underliers')        
-
-    @property
     def underlyingAssetIds(self) -> Iterable[str]:
         """Underlying asset ids"""
         return self.__underlyingAssetIds
@@ -939,25 +834,6 @@ class Asset(Base):
     def underlyingAssetIds(self, value: Iterable[str]):
         self.__underlyingAssetIds = value
         self._property_changed('underlyingAssetIds')        
-
-    @property
-    def xrefs(self) -> Iterable['TemporalXRef']:
-        """xref history"""
-        return self.__xrefs
-
-    @xrefs.setter
-    def xrefs(self, value: Iterable['TemporalXRef']):
-        self.__xrefs = value
-        self._property_changed('xrefs')        
-
-    @property
-    def xref(self) -> Union['XRef', str]:
-        return self.__xref
-
-    @xref.setter
-    def xref(self, value: Union['XRef', str]):
-        self.__xref = value
-        self._property_changed('xref')        
 
 
 class TemporalXRef(Base):
@@ -1698,9 +1574,8 @@ class SecuritiesLendingLoan(Base):
         
     """Parameters specific to a securities lending loan"""
        
-    def __init__(self, loanReferenceId: str, assetId: Union[str, str], fundId: Union[str, str], lenderId: Union[str, str], borrowerId: Union[str, str], loanStatus: str = None, settlementStatus: str = None, collateralType: str = None, loanCurrency: Union['Currency', str] = None, adjustmentInd: bool = None, countryOfIssue: str = None, inputDate: Union[datetime.date, str] = None, effectiveDate: Union[datetime.date, str] = None, securitySettleDate: Union[datetime.date, str] = None, cashSettleDate: Union[datetime.date, str] = None, termDate: Union[datetime.date, str] = None, returnDate: Union[datetime.date, str] = None):
+    def __init__(self, assetId: Union[str, str], fundId: Union[str, str], lenderId: Union[str, str], borrowerId: Union[str, str], loanStatus: str = None, settlementStatus: str = None, collateralType: str = None, loanCurrency: Union['Currency', str] = None, adjustmentInd: bool = None, countryOfIssue: str = None, inputDate: Union[datetime.date, str] = None, effectiveDate: Union[datetime.date, str] = None, securitySettleDate: Union[datetime.date, str] = None, cashSettleDate: Union[datetime.date, str] = None, termDate: Union[datetime.date, str] = None, returnDate: Union[datetime.date, str] = None):
         super().__init__()
-        self.__loanReferenceId = loanReferenceId
         self.__assetId = assetId
         self.__fundId = fundId
         self.__lenderId = lenderId
@@ -1717,16 +1592,6 @@ class SecuritiesLendingLoan(Base):
         self.__cashSettleDate = cashSettleDate
         self.__termDate = termDate
         self.__returnDate = returnDate
-
-    @property
-    def loanReferenceId(self) -> str:
-        """Loan reference number"""
-        return self.__loanReferenceId
-
-    @loanReferenceId.setter
-    def loanReferenceId(self, value: str):
-        self.__loanReferenceId = value
-        self._property_changed('loanReferenceId')        
 
     @property
     def assetId(self) -> Union[str, str]:
@@ -2168,7 +2033,7 @@ class AssetParameters(Base):
         
     """Parameters specific to the asset type"""
        
-    def __init__(self, basketType: str = None, constituents: Iterable['IndexConstituent'] = None, style: str = None, indexCalculationType: str = None, indexReturnType: str = None, indexDivisor: float = None, currency: Union['Currency', str] = None, quoteCurrency: Union['Currency', str] = None, indexInitialPrice: float = None, initialPricingDate: Union[datetime.date, str] = None, expirationDate: Union[datetime.date, str] = None, expirationLocation: str = None, optionStyle: str = None, optionType: Union['OptionType', str] = None, settlementDate: Union[datetime.date, str] = None, settlementType: str = None, strikePrice: float = None, putCurrency: Union['Currency', str] = None, putAmount: float = None, automaticExercise: bool = None, callAmount: float = None, callCurrency: Union['Currency', str] = None, exerciseTime: str = None, multiplier: float = None, premiumPaymentDate: Union[datetime.date, str] = None, premium: float = None, premiumCurrency: Union['Currency', str] = None, secDB: str = None, callable: bool = None, puttable: bool = None, perpetual: bool = None, seniority: str = None, couponType: str = None, index: str = None, indexTerm: str = None, indexMargin: float = None, coupon: float = None, issueDate: Union[datetime.date, str] = None, issuer: str = None, issuerCountryCode: str = None, issuerType: str = None, issueSize: float = None, commoditySector: str = None, pricingLocation: Union['PricingLocation', str] = None, contractMonths: Iterable[str] = None, g10Currency: bool = None, hedgeId: Union[str, str] = None, tenor: str = None, defaultTenor: str = None, ultimateTicker: str = None, strategy: Union['Strategy', str] = None, supraStrategy: Union['SupraStrategy', str] = None, exchangeCurrency: Union['Currency', str] = None, region: str = None, deliveryPoint: str = None, pricingIndex: str = None, contractMonth: str = None, loadType: str = None, contractUnit: str = None, indexCreateSource: str = None, indexApprovalIds=None, isPairBasket: bool = None, fixedRateDayCountFraction: Union['DayCountFraction', str] = None, floatingRateDayCountFraction: Union['DayCountFraction', str] = None, payDayCountFraction: Union['DayCountFraction', str] = None, receiveDayCountFraction: Union['DayCountFraction', str] = None, payFrequency: Union[str, str] = None, receiveFrequency: Union[str, str] = None, resettableLeg: Union['PayReceive', str] = None, fxIndex: str = None):
+    def __init__(self, basketType: str = None, constituents: Iterable['IndexConstituent'] = None, style: str = None, indexCalculationType: str = None, indexReturnType: str = None, indexDivisor: float = None, currency: Union['Currency', str] = None, quoteCurrency: Union['Currency', str] = None, indexInitialPrice: float = None, initialPricingDate: Union[datetime.date, str] = None, expirationDate: Union[datetime.date, str] = None, expirationLocation: str = None, optionStyle: str = None, optionType: Union['OptionType', str] = None, settlementDate: Union[datetime.date, str] = None, settlementType: str = None, strikePrice: float = None, putCurrency: Union['Currency', str] = None, putAmount: float = None, automaticExercise: bool = None, callAmount: float = None, callCurrency: Union['Currency', str] = None, exerciseTime: str = None, multiplier: float = None, premiumPaymentDate: Union[datetime.date, str] = None, premium: float = None, premiumCurrency: Union['Currency', str] = None, callable: bool = None, puttable: bool = None, perpetual: bool = None, seniority: str = None, couponType: str = None, index: str = None, indexTerm: str = None, indexMargin: float = None, coupon: float = None, issueDate: Union[datetime.date, str] = None, issuer: str = None, issuerCountryCode: str = None, issuerType: str = None, issueSize: float = None, commoditySector: str = None, pricingLocation: Union['PricingLocation', str] = None, contractMonths: Iterable[str] = None, g10Currency: bool = None, hedgeId: Union[str, str] = None, ultimateTicker: str = None, strategy: Union['Strategy', str] = None, supraStrategy: Union['SupraStrategy', str] = None, exchangeCurrency: Union['Currency', str] = None, region: str = None, deliveryPoint: str = None, pricingIndex: str = None, contractMonth: str = None, loadType: str = None, contractUnit: str = None, indexCreateSource: str = None, indexApprovalIds=None, isPairBasket: bool = None, fixedRateDayCountFraction: Union['DayCountFraction', str] = None, floatingRateDayCountFraction: Union['DayCountFraction', str] = None, payDayCountFraction: Union['DayCountFraction', str] = None, receiveDayCountFraction: Union['DayCountFraction', str] = None, payFrequency: Union[str, str] = None, receiveFrequency: Union[str, str] = None, resettableLeg: Union['PayReceive', str] = None, fxIndex: str = None):
         super().__init__()
         self.__basketType = basketType
         self.__constituents = constituents
@@ -2197,7 +2062,6 @@ class AssetParameters(Base):
         self.__premiumPaymentDate = premiumPaymentDate
         self.__premium = premium
         self.__premiumCurrency = premiumCurrency
-        self.__secDB = secDB
         self.__callable = callable
         self.__puttable = puttable
         self.__perpetual = perpetual
@@ -2217,8 +2081,6 @@ class AssetParameters(Base):
         self.__contractMonths = contractMonths
         self.__g10Currency = g10Currency
         self.__hedgeId = hedgeId
-        self.__tenor = tenor
-        self.__defaultTenor = defaultTenor
         self.__ultimateTicker = ultimateTicker
         self.__strategy = strategy
         self.__supraStrategy = supraStrategy
@@ -2508,16 +2370,6 @@ class AssetParameters(Base):
         self._property_changed('premiumCurrency')        
 
     @property
-    def secDB(self) -> str:
-        """Internal Goldman Sachs security database location for the asset"""
-        return self.__secDB
-
-    @secDB.setter
-    def secDB(self, value: str):
-        self.__secDB = value
-        self._property_changed('secDB')        
-
-    @property
     def callable(self) -> bool:
         """Bond is callable"""
         return self.__callable
@@ -2706,26 +2558,6 @@ class AssetParameters(Base):
     def hedgeId(self, value: Union[str, str]):
         self.__hedgeId = value
         self._property_changed('hedgeId')        
-
-    @property
-    def tenor(self) -> str:
-        """Tenor of instrument."""
-        return self.__tenor
-
-    @tenor.setter
-    def tenor(self, value: str):
-        self.__tenor = value
-        self._property_changed('tenor')        
-
-    @property
-    def defaultTenor(self) -> str:
-        """Default tenor of benchmark."""
-        return self.__defaultTenor
-
-    @defaultTenor.setter
-    def defaultTenor(self, value: str):
-        self.__defaultTenor = value
-        self._property_changed('defaultTenor')        
 
     @property
     def ultimateTicker(self) -> str:
@@ -2990,7 +2822,7 @@ class Domains(Base):
         
     """Application specific domain information"""
        
-    def __init__(self, simon: Union['SimonDomain', str] = None, simonIntl: Union['SimonDomain', str] = None, sts: Union['StsDomain', str] = None, data: Union['DataDomain', str] = None, compliance: Union['ComplianceDomain', str] = None, compl: Union['ComplDomain', str] = None, gir: Union['GIRDomain', str] = None):
+    def __init__(self, simon: Union['SimonDomain', str] = None, simonIntl: Union['SimonDomain', str] = None, sts: Union['StsDomain', str] = None, data: Union['DataDomain', str] = None, compliance: Union['ComplianceDomain', str] = None, compl: Union['ComplDomain', str] = None, gir: Union['GIRDomain', str] = None, social: Union['SocialDomain', str] = None):
         super().__init__()
         self.__simon = simon
         self.__simonIntl = simonIntl
@@ -2999,6 +2831,7 @@ class Domains(Base):
         self.__compliance = compliance
         self.__compl = compl
         self.__gir = gir
+        self.__social = social
 
     @property
     def simon(self) -> Union['SimonDomain', str]:
@@ -3063,52 +2896,30 @@ class Domains(Base):
         self.__gir = value
         self._property_changed('gir')        
 
+    @property
+    def social(self) -> Union['SocialDomain', str]:
+        return self.__social
 
-class GIRDomain(Base):
+    @social.setter
+    def social(self, value: Union['SocialDomain', str]):
+        self.__social = value
+        self._property_changed('social')        
+
+
+class SocialDomain(Base):
                
-    def __init__(self, documentLinks: Iterable['Link'] = None):
+    def __init__(self, onboarded):
         super().__init__()
-        self.__documentLinks = documentLinks
+        self.__onboarded = onboarded
 
     @property
-    def documentLinks(self) -> Iterable['Link']:
-        """Documents related to this asset"""
-        return self.__documentLinks
+    def onboarded(self):
+        return self.__onboarded
 
-    @documentLinks.setter
-    def documentLinks(self, value: Iterable['Link']):
-        self.__documentLinks = value
-        self._property_changed('documentLinks')        
-
-
-class Link(Base):
-        
-    """Hyperlink"""
-       
-    def __init__(self, title: str = None, source: str = None):
-        super().__init__()
-        self.__title = title
-        self.__source = source
-
-    @property
-    def title(self) -> str:
-        """display text"""
-        return self.__title
-
-    @title.setter
-    def title(self, value: str):
-        self.__title = value
-        self._property_changed('title')        
-
-    @property
-    def source(self) -> str:
-        """link"""
-        return self.__source
-
-    @source.setter
-    def source(self, value: str):
-        self.__source = value
-        self._property_changed('source')        
+    @onboarded.setter
+    def onboarded(self, value):
+        self.__onboarded = value
+        self._property_changed('onboarded')        
 
 
 class ComplDomain(Base):
@@ -3332,7 +3143,7 @@ class SimonDomain(Base):
 
 class AssetClassifications(Base):
                
-    def __init__(self, countryName: str = None, countryCode: str = None, isPrimary: bool = None, gicsSector: str = None, gicsIndustryGroup: str = None, gicsIndustry: str = None, gicsSubIndustry: str = None, commodTemplate: str = None, fixedRateDayCountFraction: Union['DayCountFraction', str] = None, floatingRateDayCountFraction: Union['DayCountFraction', str] = None, payerFixedRateDayCountFraction: Union['DayCountFraction', str] = None, payerFloatingRateDayCountFraction: Union['DayCountFraction', str] = None, receiverFixedRateDayCountFraction: Union['DayCountFraction', str] = None, receiverFloatingRateDayCountFraction: Union['DayCountFraction', str] = None):
+    def __init__(self, countryName: str = None, countryCode: str = None, isPrimary: bool = None, gicsSector: str = None, gicsIndustryGroup: str = None, gicsIndustry: str = None, gicsSubIndustry: str = None, commodTemplate: str = None):
         super().__init__()
         self.__countryName = countryName
         self.__countryCode = countryCode
@@ -3342,12 +3153,6 @@ class AssetClassifications(Base):
         self.__gicsIndustry = gicsIndustry
         self.__gicsSubIndustry = gicsSubIndustry
         self.__commodTemplate = commodTemplate
-        self.__fixedRateDayCountFraction = fixedRateDayCountFraction
-        self.__floatingRateDayCountFraction = floatingRateDayCountFraction
-        self.__payerFixedRateDayCountFraction = payerFixedRateDayCountFraction
-        self.__payerFloatingRateDayCountFraction = payerFloatingRateDayCountFraction
-        self.__receiverFixedRateDayCountFraction = receiverFixedRateDayCountFraction
-        self.__receiverFloatingRateDayCountFraction = receiverFloatingRateDayCountFraction
 
     @property
     def countryName(self) -> str:
@@ -3429,74 +3234,11 @@ class AssetClassifications(Base):
         self.__commodTemplate = value
         self._property_changed('commodTemplate')        
 
-    @property
-    def fixedRateDayCountFraction(self) -> Union['DayCountFraction', str]:
-        """Default day count fraction for fixed legs"""
-        return self.__fixedRateDayCountFraction
-
-    @fixedRateDayCountFraction.setter
-    def fixedRateDayCountFraction(self, value: Union['DayCountFraction', str]):
-        self.__fixedRateDayCountFraction = value
-        self._property_changed('fixedRateDayCountFraction')        
-
-    @property
-    def floatingRateDayCountFraction(self) -> Union['DayCountFraction', str]:
-        """Default day count fraction for floating legs"""
-        return self.__floatingRateDayCountFraction
-
-    @floatingRateDayCountFraction.setter
-    def floatingRateDayCountFraction(self, value: Union['DayCountFraction', str]):
-        self.__floatingRateDayCountFraction = value
-        self._property_changed('floatingRateDayCountFraction')        
-
-    @property
-    def payerFixedRateDayCountFraction(self) -> Union['DayCountFraction', str]:
-        """Default day count fraction for fixed legs for the payer"""
-        return self.__payerFixedRateDayCountFraction
-
-    @payerFixedRateDayCountFraction.setter
-    def payerFixedRateDayCountFraction(self, value: Union['DayCountFraction', str]):
-        self.__payerFixedRateDayCountFraction = value
-        self._property_changed('payerFixedRateDayCountFraction')        
-
-    @property
-    def payerFloatingRateDayCountFraction(self) -> Union['DayCountFraction', str]:
-        """Default day count fraction for floating legs for the payer"""
-        return self.__payerFloatingRateDayCountFraction
-
-    @payerFloatingRateDayCountFraction.setter
-    def payerFloatingRateDayCountFraction(self, value: Union['DayCountFraction', str]):
-        self.__payerFloatingRateDayCountFraction = value
-        self._property_changed('payerFloatingRateDayCountFraction')        
-
-    @property
-    def receiverFixedRateDayCountFraction(self) -> Union['DayCountFraction', str]:
-        """Default day count fraction for fixed legs for the receiver"""
-        return self.__receiverFixedRateDayCountFraction
-
-    @receiverFixedRateDayCountFraction.setter
-    def receiverFixedRateDayCountFraction(self, value: Union['DayCountFraction', str]):
-        self.__receiverFixedRateDayCountFraction = value
-        self._property_changed('receiverFixedRateDayCountFraction')        
-
-    @property
-    def receiverFloatingRateDayCountFraction(self) -> Union['DayCountFraction', str]:
-        """Default day count fraction for floating legs for the receiver"""
-        return self.__receiverFloatingRateDayCountFraction
-
-    @receiverFloatingRateDayCountFraction.setter
-    def receiverFloatingRateDayCountFraction(self, value: Union['DayCountFraction', str]):
-        self.__receiverFloatingRateDayCountFraction = value
-        self._property_changed('receiverFloatingRateDayCountFraction')        
-
 
 class EntityQuery(Base):
                
-    def __init__(self, assetParameters: Union['AssetParameters', str] = None, assetStats: Union['AssetStatsRequest', str] = None, includeInactive: bool = False, format: Union['Format', str] = None, where: Union['FieldFilterMap', str] = None, asOfTime: Union[datetime.datetime, str] = None, date: Union[datetime.date, str] = None, time: Union[datetime.datetime, str] = None, delay: int = None, orderBy: Iterable['OrderBy'] = None, scroll: str = None, scrollId: str = None, fields: Iterable['Selector'] = None, limit: int = None, offset: int = None):
+    def __init__(self, format: Union['Format', str] = None, where: Union['FieldFilterMap', str] = None, asOfTime: Union[datetime.datetime, str] = None, date: Union[datetime.date, str] = None, time: Union[datetime.datetime, str] = None, delay: int = None, orderBy: Iterable['OrderBy'] = None, scroll: str = None, scrollId: str = None, fields: Iterable['Selector'] = None, limit: int = None, offset: int = None):
         super().__init__()
-        self.__assetParameters = assetParameters
-        self.__assetStats = assetStats
-        self.__includeInactive = includeInactive
         self.__format = format
         self.__where = where
         self.__asOfTime = asOfTime
@@ -3509,36 +3251,6 @@ class EntityQuery(Base):
         self.__fields = fields
         self.__limit = limit
         self.__offset = offset
-
-    @property
-    def assetParameters(self) -> Union['AssetParameters', str]:
-        """Parameters specific to the asset type"""
-        return self.__assetParameters
-
-    @assetParameters.setter
-    def assetParameters(self, value: Union['AssetParameters', str]):
-        self.__assetParameters = value
-        self._property_changed('assetParameters')        
-
-    @property
-    def assetStats(self) -> Union['AssetStatsRequest', str]:
-        """Performance statistics."""
-        return self.__assetStats
-
-    @assetStats.setter
-    def assetStats(self, value: Union['AssetStatsRequest', str]):
-        self.__assetStats = value
-        self._property_changed('assetStats')        
-
-    @property
-    def includeInactive(self) -> bool:
-        """include inactive when querying"""
-        return self.__includeInactive
-
-    @includeInactive.setter
-    def includeInactive(self, value: bool):
-        self.__includeInactive = value
-        self._property_changed('includeInactive')        
 
     @property
     def format(self) -> Union['Format', str]:
@@ -3880,11 +3592,10 @@ class Op(Base):
 
 class PositionSet(Base):
                
-    def __init__(self, positionDate: Union[datetime.date, str] = None, lastUpdateTime: Union[datetime.datetime, str] = None, portfolioKey: str = None, positions=None, type: str = None, divisor: float = None):
+    def __init__(self, positionDate: Union[datetime.date, str] = None, lastUpdateTime: Union[datetime.datetime, str] = None, positions=None, type: str = None, divisor: float = None):
         super().__init__()
         self.__positionDate = positionDate
         self.__lastUpdateTime = lastUpdateTime
-        self.__portfolioKey = portfolioKey
         self.__positions = positions
         self.__type = type
         self.__divisor = divisor
@@ -3908,16 +3619,6 @@ class PositionSet(Base):
     def lastUpdateTime(self, value: Union[datetime.datetime, str]):
         self.__lastUpdateTime = value
         self._property_changed('lastUpdateTime')        
-
-    @property
-    def portfolioKey(self) -> str:
-        """Portfolio Position Id"""
-        return self.__portfolioKey
-
-    @portfolioKey.setter
-    def portfolioKey(self, value: str):
-        self.__portfolioKey = value
-        self._property_changed('portfolioKey')        
 
     @property
     def positions(self):
@@ -3976,3 +3677,30 @@ class DateRange(Base):
     def startDate(self, value: Union[datetime.date, str]):
         self.__startDate = value
         self._property_changed('startDate')        
+
+
+class AssetComplDomainMap(Base):
+               
+    def __init__(self, assetId: Union[str, str] = None, complDomain: Union['ComplDomain', str] = None):
+        super().__init__()
+        self.__assetId = assetId
+        self.__complDomain = complDomain
+
+    @property
+    def assetId(self) -> Union[str, str]:
+        """Marquee unique asset identifier."""
+        return self.__assetId
+
+    @assetId.setter
+    def assetId(self, value: Union[str, str]):
+        self.__assetId = value
+        self._property_changed('assetId')        
+
+    @property
+    def complDomain(self) -> Union['ComplDomain', str]:
+        return self.__complDomain
+
+    @complDomain.setter
+    def complDomain(self, value: Union['ComplDomain', str]):
+        self.__complDomain = value
+        self._property_changed('complDomain')        
