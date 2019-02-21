@@ -13,6 +13,10 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+from concurrent.futures import Future
+import pandas as pd
+from typing import Union
+
 
 class EnumBase:
     pass
@@ -47,9 +51,9 @@ class Base:
         return not self.__eq__(other)
 
     @classmethod
-    def properties(cls) -> tuple:
+    def properties(cls) -> set:
         """The public properties of this class"""
-        return tuple(i for i in dir(cls) if isinstance(getattr(cls, i), property))
+        return set(i for i in dir(cls) if isinstance(getattr(cls, i), property))
 
     def as_dict(self) -> dict:
         """Dictionary of the public non-null properties and values"""
@@ -60,20 +64,30 @@ class Base:
 
 class Priceable(Base):
 
-    def price(self):
-        from gs_quant.api.risk import PresentValue
-        return self.calc(PresentValue)
+    PROVIDER = None
 
-    def calc(self, risk_measure):
-        from gs_quant.api.pricing_context import PricingContext
-        result = PricingContext.current.calc(self, risk_measure)
-        if not result:
-            raise RuntimeError('Failed to price')
-        return result[0]
+    def provider(self) -> 'RiskApi':
+        if self.PROVIDER is None:
+            from gs_quant.api.gs.risk import GsRiskApi
+            self.PROVIDER = GsRiskApi
 
-    def market_data_coordinates(self):
-        from gs_quant.api.pricing_context import PricingContext
-        return PricingContext.current.coordinates([self])
+        return self.PROVIDER
+
+    def resolve(self):
+        from gs_quant.risk import PricingContext
+        PricingContext.current.resolve_fields(self)
+
+    def dollar_price(self) -> Union[float, Future]:
+        from gs_quant.risk import DollarPrice
+        return self.calc(DollarPrice)
+
+    def price(self) -> Union[float, Future]:
+        from gs_quant.risk import Price
+        return self.calc(Price)
+
+    def calc(self, risk_measure: 'RiskMeasure') -> Union[pd.DataFrame, Future]:
+        from gs_quant.risk import PricingContext
+        return PricingContext.current.calc(self, risk_measure)
 
 
 class Instrument(Priceable):

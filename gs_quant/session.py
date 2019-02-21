@@ -27,7 +27,7 @@ from enum import Enum, auto, unique
 from typing import List, Optional, Tuple, Union
 
 
-from gs_quant.api.base import Base
+from gs_quant.base import Base
 from gs_quant.context_base import ContextBase
 from gs_quant.errors import MqError, MqRequestError, MqAuthenticationError, MqUninitialisedError
 from gs_quant.json_encoder import JSONEncoder
@@ -120,7 +120,12 @@ class GsSession(ContextBase):
             raise MqRequestError(response.status_code, response.text, context='{} {}'.format(method, url))
         elif 'application/json' in response.headers['content-type']:
             dct = json.loads(response.text)
-            return cls(**dct) if cls else dct
+            if cls and isinstance(dct, dict):
+                properties = cls.properties() if issubclass(cls, Base) else set(dct.keys())
+                dct = {k: v for k, v in dct.items() if k in properties}
+                return cls(**dct)
+
+            return dct
         else:
             return {'raw': response}
 

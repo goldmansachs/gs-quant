@@ -14,4 +14,4 @@ specific language governing permissions and limitations
 under the License.
 """
 
-__name__ = 'generator'
+__name__ = 'gs'

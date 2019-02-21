@@ -14,8 +14,8 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.api.base import Priceable
 from gs_quant.target.common import *
+from gs_quant.base import Priceable
 from gs_quant.target.common import MarketDataCoordinate as __MarketDataCoordinate
 from gs_quant.target.common import XRef as __XRef
 

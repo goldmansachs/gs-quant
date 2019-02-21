@@ -13,23 +13,21 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-
-from gs_quant.target.assets import *
-from gs_quant.target.assets import Asset as __Asset
-from gs_quant.api.common import FieldFilterMap
-from gs_quant.session import GsSession
-from gs_quant.errors import *
-
-from datetime import datetime
+import datetime as dt
+import logging
 from enum import auto, Enum
 from typing import List, Tuple, Union
-import logging
+from gs_quant.target.assets import EntityQuery
+from gs_quant.common import FieldFilterMap
+from gs_quant.errors import MqValueError
+from gs_quant.session import GsSession
+from gs_quant.target.assets import Asset as __Asset, Asset
 
-IdList = Union[List, Tuple]
 _logger = logging.getLogger(__name__)
+IdList = Union[List, Tuple]
 
 
-class IdType(Enum):
+class GsIdType(Enum):
     ric = auto()
     bbid = auto()
     bcid = auto()
@@ -37,13 +35,25 @@ class IdType(Enum):
     isin = auto()
     sedol = auto()
     mdapi = auto()
-    id = auto(),
-    name = auto()
+    primeId = auto()
+    id = auto()
 
 
-class Asset(__Asset):
-    @staticmethod
-    def __check_kwargs_valid_for_where(**kwargs):
+class GsAsset(__Asset):
+
+    pass
+
+
+class GsAssetApi:
+
+    @classmethod
+    def __create_query(
+        cls,
+        fields: Union[List, Tuple],
+        as_of: dt.datetime=None,
+        limit: int=None,
+        **kwargs
+    ) -> EntityQuery:
         keys = set(kwargs.keys())
         valid = keys.intersection(i for i in dir(FieldFilterMap) if isinstance(getattr(FieldFilterMap, i), property))
         invalid = keys.difference(valid)
@@ -52,59 +62,64 @@ class Asset(__Asset):
             bad_args = ['{}={}'.format(k, kwargs[k]) for k in invalid]
             raise KeyError('Invalid asset query argument(s): {}'.format(', '.join(bad_args)))
 
-    @staticmethod
-    def get_many_assets(
-            fields: IdList = None,
-            as_of: datetime = None,
-            limit: int = None,
-            **kwargs
-    ) -> List[Asset]:
-        Asset.__check_kwargs_valid_for_where(**kwargs)
-
-        query = EntityQuery(
+        return EntityQuery(
             where=FieldFilterMap(**kwargs),
             fields=fields,
-            asOfTime=as_of or datetime.now(),
+            asOfTime=as_of or dt.datetime.now(),
             limit=limit
         )
+
+
+    @classmethod
+    def get_many_assets(
+            cls,
+            fields: IdList = None,
+            as_of: dt.datetime = None,
+            limit: int = None,
+            **kwargs
+    ) -> List[GsAsset]:
+        query = cls.__create_query(fields, as_of, limit, **kwargs)
         response = GsSession.current._post('/assets/query', payload=query)
 
         results = []
         for result in response.get('results', ()):
-            results.append(Asset(**result))
+            results.append(GsAsset(**result))
 
         return results
 
     @staticmethod
+    def get_asset(
+            asset_id: str,
+    ) -> GsAsset:
+        response = GsSession.current._get('/assets/{id}'.format(id=asset_id), cls=GsAsset)
+
+        return response
+
+    @classmethod
     def map_identifiers(
-            input_type: Union[IdType, str],
-            output_type: Union[IdType, str],
+            cls,
+            input_type: Union[GsIdType, str],
+            output_type: Union[GsIdType, str],
             ids: IdList,
-            as_of: datetime = None,
+            as_of: dt.datetime = None,
             multimap: bool = False,
+            limit: int = None,
             **kwargs
     ) -> dict:
-        if isinstance(input_type, IdType):
+        if isinstance(input_type, GsIdType):
             input_type = input_type.name
         elif not isinstance(input_type, str):
             raise ValueError('input_type must be of type str or IdType')
 
-        if isinstance(output_type, IdType):
+        if isinstance(output_type, GsIdType):
             output_type = output_type.name
         elif not isinstance(output_type, str):
             raise ValueError('output_type must be of type str or IdType')
 
-        Asset.__check_kwargs_valid_for_where(**kwargs)
+        the_args = kwargs
+        the_args[input_type] = ids
 
-        where = FieldFilterMap(**kwargs)
-        setattr(where, input_type, ids)
-
-        query = EntityQuery(
-            where=where,
-            fields=(input_type, output_type),
-            asOfTime=as_of or datetime.now(),
-            limit=len(ids) * 5
-        )
+        query = cls.__create_query((input_type, output_type), as_of, limit, **the_args)
         response = GsSession.current._post('/assets/data/query', payload=query)
 
         results = response['results']
@@ -120,6 +135,6 @@ class Asset(__Asset):
                 bunch.append(value)
             else:
                 if key in out:
-                    _logger.warning('%s: more than one possible mapping for %s', Asset.map_identifiers.__name__, key)
+                    _logger.warning('%s: more than one mapping for %s', GsAssetApi.map_identifiers.__name__, key)
                 out[key] = value
         return out

@@ -40,7 +40,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="gs_quant",
-    version="0.6.2",
+    version="0.6.3",
     author="Goldman Sachs",
     author_email="developer@gs.com",
     description="Goldman Sachs Quant",
@@ -54,7 +54,6 @@ setuptools.setup(
         "backoff",
         "cachetools",
         "configparser",
-        "enum34",
         "funcsigs",
         "future",
         "inflection",
@@ -62,7 +61,7 @@ setuptools.setup(
         "requests",
         "scipy",
         "six",
-        "typing"
+        "typing;python_version<'3.7'"
     ],
     extras_require={
         "kerb": ["requests-kerberos"],

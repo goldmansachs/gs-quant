@@ -14,7 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.api.base import Base, EnumBase
+from gs_quant.base import Base, EnumBase
 import datetime
 import json
 import pandas as pd

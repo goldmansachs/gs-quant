@@ -17,7 +17,7 @@ under the License.
 import datetime
 from typing import Any, Iterable, Union
 from enum import Enum
-from gs_quant.api.base import EnumBase, Base
+from gs_quant.base import EnumBase, Base
 
 
 class RiskMeasureUnit(EnumBase, Enum):    
@@ -38,6 +38,8 @@ class RiskMeasureType(EnumBase, Enum):
 
     Delta = 'Delta'
     Dollar_Price = 'Dollar Price'
+    Forward_Price = 'Forward Price'
+    Price = 'Price'
     DV01 = 'DV01'
     Gamma = 'Gamma'
     OAS = 'OAS'
@@ -46,6 +48,10 @@ class RiskMeasureType(EnumBase, Enum):
     Theta = 'Theta'
     Vanna = 'Vanna'
     Vega = 'Vega'
+    Annual_Implied_Volatility = 'Annual Implied Volatility'
+    Annual_ATMF_Implied_Volatility = 'Annual ATMF Implied Volatility'
+    Daily_Implied_Volatility = 'Daily Implied Volatility'
+    Resolved_Instrument_Values = 'Resolved Instrument Values'
     
     def __repr__(self):
         return self.value
@@ -55,13 +61,12 @@ class RiskRequest(Base):
         
     """Object representation of a risk calculation request"""
        
-    def __init__(self, positions: Iterable['RiskPosition'], measures: Iterable['RiskMeasure'], asOf, waitForResults: bool = False, userId: Union[str, str] = None):
+    def __init__(self, positions: Iterable['RiskPosition'], measures: Iterable['RiskMeasure'], asOf, waitForResults: bool = False):
         super().__init__()
         self.__positions = positions
         self.__measures = measures
         self.__asOf = asOf
         self.__waitForResults = waitForResults
-        self.__userId = userId
 
     @property
     def positions(self) -> Iterable['RiskPosition']:
@@ -102,16 +107,6 @@ class RiskRequest(Base):
     def waitForResults(self, value: bool):
         self.__waitForResults = value
         self._property_changed('waitForResults')        
-
-    @property
-    def userId(self) -> Union[str, str]:
-        """Marquee unique identifier"""
-        return self.__userId
-
-    @userId.setter
-    def userId(self, value: Union[str, str]):
-        self.__userId = value
-        self._property_changed('userId')        
 
 
 class RiskMeasure(Base):
@@ -186,6 +181,22 @@ To specify an instrument use one of the listed types"""
         self._property_changed('quantity')        
 
 
+class CoordinatesResponse(Base):
+               
+    def __init__(self, results: Iterable['MarketDataCoordinate']):
+        super().__init__()
+        self.__results = results
+
+    @property
+    def results(self) -> Iterable['MarketDataCoordinate']:
+        return self.__results
+
+    @results.setter
+    def results(self, value: Iterable['MarketDataCoordinate']):
+        self.__results = value
+        self._property_changed('results')        
+
+
 class CoordinatesRequest(Base):
                
     def __init__(self, asOf: datetime.date, instruments: Iterable['Priceable']):
@@ -210,19 +221,3 @@ class CoordinatesRequest(Base):
     def instruments(self, value: Iterable['Priceable']):
         self.__instruments = value
         self._property_changed('instruments')        
-
-
-class CoordinatesResponse(Base):
-               
-    def __init__(self, results: Iterable['MarketDataCoordinate']):
-        super().__init__()
-        self.__results = results
-
-    @property
-    def results(self) -> Iterable['MarketDataCoordinate']:
-        return self.__results
-
-    @results.setter
-    def results(self, value: Iterable['MarketDataCoordinate']):
-        self.__results = value
-        self._property_changed('results')        
