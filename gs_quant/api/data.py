@@ -16,25 +16,25 @@ under the License.
 from abc import ABCMeta
 import datetime as dt
 from typing import Optional, Union
-from gs_quant.common import FieldFilterMap
+from gs_quant.target.common import FieldFilterMap
 
 
 class DataApi(metaclass=ABCMeta):
 
     @classmethod
-    def query_data(cls, query: 'DataQuery', dataset: 'DataSet'=None) -> Union[list, tuple]:
+    def query_data(cls, query: 'DataQuery', dataset_id: str=None) -> Union[list, tuple]:
         raise NotImplementedError('Must implement get_data')
 
     @classmethod
-    def last_data(cls, query: 'DataQuery', dataset: 'DataSet'=None) -> Union[list, tuple]:
+    def last_data(cls, query: 'DataQuery', dataset_id: str=None) -> Union[list, tuple]:
         raise NotImplementedError('Must implement last_data')
 
     @classmethod
-    def symbol_dimensions(cls, dataset: 'DataSet') -> tuple:
+    def symbol_dimensions(cls, dataset_id: str) -> tuple:
         raise NotImplementedError('Must implement symbol_dimensions')
 
     @classmethod
-    def time_field(cls, dataset: 'DataSet') -> str:
+    def time_field(cls, dataset_id: str) -> str:
         raise NotImplementedError('Must implement time_field')
 
     @staticmethod
@@ -47,15 +47,20 @@ class DataApi(metaclass=ABCMeta):
     ):
         from gs_quant.data import DataQuery
 
-        is_time = isinstance(end, dt.datetime)
-        if start is not None and is_time != isinstance(start, dt.datetime):
-            raise ValueError('start and end must both either be date or datetime')
+        end_is_time = isinstance(end, dt.datetime)
+        start_is_time = isinstance(start, dt.datetime)
+
+        if start_is_time and end is not None and not end_is_time:
+            raise ValueError('If start is of type datetime, so must end be!')
+
+        if isinstance(start, dt.date) and end is not None and not isinstance(end, dt.date):
+            raise ValueError('If start is of type date, so must end be!')
 
         query = DataQuery(
-            startDate=start if not is_time else None,
-            startTime=start if is_time else None,
-            endDate=end if not is_time else None,
-            endTime=end if is_time else None,
+            startDate=start if not start_is_time else None,
+            startTime=start if start_is_time else None,
+            endDate=end if not end_is_time else None,
+            endTime=end if end_is_time else None,
             asOfTime=as_of,
             since=since
         )

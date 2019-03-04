@@ -24,7 +24,7 @@ class JSONEncoder(json.JSONEncoder):
 
     def default(self, o):
         if isinstance(o, datetime.datetime):
-            return o.isoformat()[:-3] + 'Z'
+            return o.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
         if isinstance(o, datetime.date):
             return o.isoformat()
         elif isinstance(o, EnumBase):

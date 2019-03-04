@@ -18,7 +18,7 @@ from itertools import chain
 import pandas as pd
 from typing import List, Optional, Tuple, Union
 from gs_quant.api.data import DataApi
-from gs_quant.data import DataQuery, DataSet
+from gs_quant.target.data import DataQuery
 from gs_quant.errors import MqValueError
 from gs_quant.session import GsSession
 from gs_quant.target.data import DataSetEntity
@@ -27,51 +27,74 @@ from gs_quant.target.data import DataSetEntity
 class GsDataApi(DataApi):
 
     __definitions = {}
+    DEFAULT_SCROLL = '30s'
 
     # DataApi interface
 
     @classmethod
-    def query_data(cls, query: DataQuery, dataset: DataSet=None) -> Union[list, tuple]:
+    def query_data(cls, query: DataQuery, dataset_id: str=None) -> Union[list, tuple]:
         if query.marketDataCoordinates:
             result = GsSession.current._post('/data/coordinates/query', payload=query)
         else:
-            result = GsSession.current._post('/data/{}/query'.format(dataset.dataset_id), payload=query)
+            result = GsSession.current._post('/data/{}/query'.format(dataset_id), payload=query)
 
         return result.get('data', ())
 
     @classmethod
-    def last_data(cls, query: DataQuery, dataset: DataSet=None) -> Union[list, tuple]:
+    def last_data(cls, query: DataQuery, dataset_id: str=None) -> Union[list, tuple]:
         if query.marketDataCoordinates:
             result = GsSession.current._post('/data/coordinates/query/last', payload=query)
         else:
-            result = GsSession.current._post('/data/{}/last/query'.format(dataset.dataset_id), payload=query)
+            result = GsSession.current._post('/data/{}/last/query'.format(dataset_id), payload=query)
 
         return result.get('data', ())
 
     @classmethod
-    def symbol_dimensions(cls, dataset: DataSet) -> tuple:
-        definition = cls.get_definition(dataset)
+    def symbol_dimensions(cls, dataset_id: str) -> tuple:
+        definition = cls.get_definition(dataset_id)
         # TODO Sort out proper JSON decoding
-        return tuple(definition.dimensions['symbolDimensions'])
+        return tuple(definition.dimensions.symbolDimensions)
 
     @classmethod
-    def time_field(cls, dataset: DataSet) -> str:
-        definition = cls.get_definition(dataset)
+    def time_field(cls, dataset_id: str) -> str:
+        definition = cls.get_definition(dataset_id)
         # TODO Sort out proper JSON decoding
-        return definition.dimensions['timeField']
+        return definition.dimensions.timeField
 
     # GS-specific functionality
 
     @classmethod
-    def get_coverage(cls, dataset: DataSet, scroll_id: Optional[str] = None) -> List[dict]:
-        params = {'scroll': '1m', 'limit': 1000}
+    def get_coverage(
+            cls,
+            dataset_id: str,
+            scroll: str = DEFAULT_SCROLL,
+            scroll_id: Optional[str] = None,
+            limit: int = None,
+            offset: int = None,
+            fields: List[str] = None
+    ) -> List[dict]:
+        params = {}
+        if scroll:
+            params['scroll'] = scroll
+
         if scroll_id:
             params['scrollId'] = scroll_id
 
-        body = GsSession.current._get('/data/{}/coverage'.format(dataset.dataset_id), payload=params)
+        if not limit:
+            limit = 4000
+        params['limit'] = limit
+
+        if offset:
+            params['offset'] = offset
+
+        if fields:
+            params['fields'] = fields
+
+        body = GsSession.current._get('/data/{}/coverage'.format(dataset_id), payload=params)
         results = body['results']
-        if len(results) > 0:
-            return results + cls.get_coverage(dataset, body['scrollId'])
+        if len(results) > 0 and 'scrollId' in body:
+
+            return results + cls.get_coverage(dataset_id, scroll_id=body['scrollId'], scroll=GsDataApi.DEFAULT_SCROLL, limit=limit)
         else:
             return results
 
@@ -81,24 +104,24 @@ class GsDataApi(DataApi):
         return result
 
     @classmethod
-    def update_definition(cls, dataset: DataSet, definition: Union[DataSetEntity, dict]) -> DataSetEntity:
-        result = GsSession.current._put('/data/datasets/{}'.format(dataset.dataset_id), payload=definition, cls=DataSetEntity)
+    def update_definition(cls, dataset_id: str, definition: Union[DataSetEntity, dict]) -> DataSetEntity:
+        result = GsSession.current._put('/data/datasets/{}'.format(dataset_id), payload=definition, cls=DataSetEntity)
         return result
 
     @classmethod
-    def upload_data(cls, dataset: DataSet, data: Union[pd.DataFrame, list, tuple]) -> dict:
-        result = GsSession.current._post('/data/{}'.format(dataset.dataset_id), payload=data)
+    def upload_data(cls, dataset_id: str, data: Union[pd.DataFrame, list, tuple]) -> dict:
+        result = GsSession.current._post('/data/{}'.format(dataset_id), payload=data)
         return result
 
     @classmethod
-    def get_definition(cls, dataset: DataSet) -> DataSetEntity:
-        definition = cls.__definitions.get(dataset.dataset_id)
+    def get_definition(cls, dataset_id: str) -> DataSetEntity:
+        definition = cls.__definitions.get(dataset_id)
         if not definition:
-            definition = GsSession.current._get('/data/datasets/{}'.format(dataset.dataset_id), cls=DataSetEntity)
+            definition = GsSession.current._get('/data/datasets/{}'.format(dataset_id), cls=DataSetEntity)
             if not definition:
-                raise MqValueError('Unknown dataset {}'.format(dataset.dataset_id))
+                raise MqValueError('Unknown dataset {}'.format(dataset_id))
 
-            cls.__definitions[dataset.dataset_id] = definition
+            cls.__definitions[dataset_id] = definition
 
         return definition
 

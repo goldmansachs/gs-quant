@@ -13,25 +13,48 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+from enum import Enum
+
 from gs_quant.target.data import *
 from gs_quant.api.data import DataApi
 from gs_quant.errors import MqValueError
 import datetime as dt
 import pandas as pd
-from typing import Union, Optional
+from typing import Iterable, Optional, Union, List
 
 
 class DataSet:
 
-    DATASET_HOLIDAY = 'HOLIDAY'
+    class Ids(Enum):
+        HOLIDAY = 'HOLIDAY'
+        EDRVOL_PERCENT_INTRADAY =  'EDRVOL_PERCENT_INTRADAY'
+        EDRVOL_PERCENT_SHORT = 'EDRVOL_PERCENT_SHORT'
+        EDRVOL_PERCENT_LONG = 'EDRVOL_PERCENT_LONG'
+        TREOD = 'TREOD'
+        MA_RANK = 'MA_RANK'
+        EDRVS_INDEX_SHORT = 'EDRVS_INDEX_SHORT'
+        EDRVS_INDEX_LONG = 'EDRVS_INDEX_LONG'
 
-    def __init__(self, dataset_id: str, provider: DataApi=None):
-        self.__dataset_id = dataset_id
+
+    def __init__(self, dataset_id: Union[str, Ids], provider: DataApi=None):
+
+        dataset_id_str = self._get_dataset_id_str(dataset_id)
+
+        self.__id = dataset_id_str
+
         self.__provider = provider
 
+    def _get_dataset_id_str(self, dataset_id):
+        if dataset_id in self.Ids:
+            dataset_id_str = dataset_id.value
+        else:
+            dataset_id_str = dataset_id
+
+        return dataset_id_str
+
     @property
-    def dataset_id(self):
-        return self.__dataset_id
+    def id(self):
+        return self.__id
 
     @property
     def provider(self):
@@ -56,7 +79,7 @@ class DataSet:
             **kwargs
         )
 
-        data = self.provider.query_data(query, self)
+        data = self.provider.query_data(query, self.id)
         return pd.DataFrame(data)
 
     def get_data_series(
@@ -77,19 +100,19 @@ class DataSet:
             **kwargs
         )
 
-        symbol_dimensions = self.provider.symbol_dimensions(self)
+        symbol_dimensions = self.provider.symbol_dimensions(self.id)
         if len(symbol_dimensions) != 1:
             raise MqValueError('get_data_series only valid for symbol_dimensions of length 1')
 
         symbol_dimension = symbol_dimensions[0]
 
-        df = pd.DataFrame(self.provider.query_data(query, self))
+        df = pd.DataFrame(self.provider.query_data(query, self.id))
 
         gb = df.groupby(symbol_dimension)
         if len(gb.groups) > 1:
             raise MqValueError('Not a series for a single {}'.format(symbol_dimension))
 
-        time_field = self.provider.time_field(self)
+        time_field = self.provider.time_field(self.id)
         index = pd.to_datetime(df.loc[:, time_field].values)
         return pd.Series(index=index, data=df.loc[:, field].values)
 
@@ -107,5 +130,20 @@ class DataSet:
             **kwargs
         )
 
-        data = self.provider.last_data(query, self)
+        data = self.provider.last_data(query, self.id)
         return pd.DataFrame(data)
+
+    def get_coverage(
+        self,
+            limit: int = None,
+            offset: int = None,
+            fields: List[str] = None
+    ) -> pd.DataFrame:
+        coverage = self.provider.get_coverage(
+            self.id,
+            limit=limit,
+            offset=offset,
+            fields=fields
+        )
+
+        return pd.DataFrame(coverage)

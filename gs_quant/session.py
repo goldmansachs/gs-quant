@@ -23,15 +23,16 @@ import requests
 
 from abc import abstractmethod
 from configparser import ConfigParser
+import datetime as dt
 from enum import Enum, auto, unique
-from typing import List, Optional, Tuple, Union
+from inspect import signature, Parameter
+import pandas as pd
+from typing import List, Optional, Tuple, Union, get_type_hints
 
-
-from gs_quant.base import Base
+from gs_quant.base import Base, EnumBase, get_enum_value
 from gs_quant.context_base import ContextBase
 from gs_quant.errors import MqError, MqRequestError, MqAuthenticationError, MqUninitialisedError
 from gs_quant.json_encoder import JSONEncoder
-import pandas as pd
 
 API_VERSION = 'v1'
 DEFAULT_APPLICATION = 'gs-quant'
@@ -90,7 +91,45 @@ class GsSession(ContextBase):
             self._session.headers.update({'X-Application': self.application})
             self._authenticate()
 
-    def __request(self, method: str, path: str, payload: Optional[Union[dict, str, Base, pd.DataFrame]]=None, cls: Optional[type]=None, try_auth=True) -> Union[list, dict]:
+    @classmethod
+    def __json_dict_to_object(cls, typ: type, values: dict) -> object:
+        if issubclass(typ, Base):
+            args = [k for k, v in signature(typ.__init__).parameters.items() if v.default == Parameter.empty][1:]
+            obj = typ(**{a: values.get(a) for a in args})
+
+            for prop in obj.properties():
+                if prop in values:
+                    prop_value = values[prop]
+                    return_hints = get_type_hints(getattr(obj.__class__, prop).fget).get('return')
+                    if hasattr(return_hints, '__origin__'):
+                        prop_type = return_hints.__origin__
+                    else:
+                        prop_type = return_hints
+
+                    if prop_type == Union:
+                        prop_type = next((a for a in return_hints.__args__ if issubclass(a, (Base, EnumBase))), None)
+
+                    if issubclass(prop_type, dt.datetime):
+                        setattr(obj, prop, dt.datetime.fromisoformat(prop_value[:-1]))
+                    elif issubclass(prop_type, EnumBase):
+                        setattr(obj, prop, get_enum_value(prop_type, prop_value))
+                    elif issubclass(prop_type, Base):
+                        setattr(obj, prop, cls.__json_dict_to_object(prop_type, prop_value))
+                    elif issubclass(prop_type, tuple):
+                        item_type = return_hints.__args__[0]
+                        if issubclass(item_type, (Base, EnumBase)):
+                            item_values = tuple(cls.__json_dict_to_object(item_type, v) for v in prop_value)
+                        else:
+                            item_values = tuple(prop_value)
+                        setattr(obj, prop, item_values)
+                    else:
+                        setattr(obj, prop, prop_value)
+
+            return obj
+        else:
+            return typ(**values)
+
+    def __request(self, method: str, path: str, payload: Optional[Union[dict, str, Base, pd.DataFrame]]=None, cls: Optional[type]=None, try_auth=True) -> Union[Base, list, dict]:
         is_dataframe = isinstance(payload, pd.DataFrame)
         if not is_dataframe:
             payload = payload or {}
@@ -120,12 +159,7 @@ class GsSession(ContextBase):
             raise MqRequestError(response.status_code, response.text, context='{} {}'.format(method, url))
         elif 'application/json' in response.headers['content-type']:
             dct = json.loads(response.text)
-            if cls and isinstance(dct, dict):
-                properties = cls.properties() if issubclass(cls, Base) else set(dct.keys())
-                dct = {k: v for k, v in dct.items() if k in properties}
-                return cls(**dct)
-
-            return dct
+            return self.__json_dict_to_object(cls, dct) if cls else dct
         else:
             return {'raw': response}
 
@@ -140,22 +174,6 @@ class GsSession(ContextBase):
 
     def _put(self, path: str, payload: Optional[Union[dict, Base]]=None, cls: Optional[type]=None) -> Union[dict, str]:
         return self.__request('PUT', path, payload=payload, cls=cls)
-
-    @staticmethod
-    def _dict_to_url(params: dict) -> str:
-        if not params:
-            return ''
-        out = '?'
-        for key, value in params.items():
-            if isinstance(value, (list, tuple)) and value:
-                for item in value:
-                    out += '&%s=%s' % (key, item)
-            elif value:
-                out += '&%s=%s' % (key, value)
-
-        if out == '?':
-            return ''
-        return out
 
     @classmethod
     def _config_for_environment(cls, environment):

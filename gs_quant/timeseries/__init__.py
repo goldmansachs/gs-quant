@@ -21,5 +21,6 @@ from .analysis import *
 from .statistics import *
 from .econometrics import *
 from .technicals import *
+from .helper import *
 
 __name__ = 'timeseries'

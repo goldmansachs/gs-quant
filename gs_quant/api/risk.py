@@ -13,7 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
 from concurrent.futures import Future
 from typing import Mapping
 from gs_quant.base import Priceable
@@ -24,8 +24,7 @@ RiskFutureMapping = Mapping[RiskMeasure, Mapping[Priceable, Future]]
 
 class RiskApi(metaclass=ABCMeta):
 
-    def calc(self, request: RiskRequest, futures: RiskFutureMapping, is_async: bool, is_batch: bool):
+    @classmethod
+    @abstractmethod
+    def calc(cls, request: RiskRequest, futures: RiskFutureMapping, is_async: bool, is_batch: bool):
         raise NotImplementedError('Must implement calc')
-
-    def resolve_fields(self, priceable: Priceable):
-        raise NotImplementedError('Must implement resolve_fields')
