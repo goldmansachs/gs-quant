@@ -14,20 +14,23 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime as dt
+import dateutil.parser as dup
 import logging
 from enum import auto, Enum
 from typing import List, Tuple, Union
-from gs_quant.target.assets import EntityQuery
-from gs_quant.common import FieldFilterMap
+from gs_quant.target.common import FieldFilterMap, AssetClass
+from gs_quant.target.assets import Asset as __Asset, AssetType, TemporalXRef, PositionSet, EntityQuery
 from gs_quant.errors import MqValueError
 from gs_quant.session import GsSession
 from gs_quant.target.assets import Asset as __Asset, Asset
 
 _logger = logging.getLogger(__name__)
-IdList = Union[List, Tuple]
+IdList = Union[Tuple[str, ...], List]
 
 
 class GsIdType(Enum):
+    """GS Asset API identifier type enumeration"""
+
     ric = auto()
     bbid = auto()
     bcid = auto()
@@ -40,16 +43,25 @@ class GsIdType(Enum):
 
 
 class GsAsset(__Asset):
+    """GS Asset API object model for an asset object"""
+
+    @classmethod
+    def from_dict(cls, dct: dict):
+        properties = cls.properties()
+        dct = {k: v for k, v in dct.items() if k in properties}
+        return cls(**dct)
+
+class GsTemporalXRef(TemporalXRef):
 
     pass
 
-
 class GsAssetApi:
+    """GS Asset API client implementation"""
 
     @classmethod
     def __create_query(
         cls,
-        fields: Union[List, Tuple],
+        fields: Union[List, Tuple]=None,
         as_of: dt.datetime=None,
         limit: int=None,
         **kwargs
@@ -65,7 +77,7 @@ class GsAssetApi:
         return EntityQuery(
             where=FieldFilterMap(**kwargs),
             fields=fields,
-            asOfTime=as_of or dt.datetime.now(),
+            asOfTime=as_of or dt.datetime.utcnow(),
             limit=limit
         )
 
@@ -75,23 +87,92 @@ class GsAssetApi:
             cls,
             fields: IdList = None,
             as_of: dt.datetime = None,
-            limit: int = None,
+            limit: int = 100,
             **kwargs
     ) -> List[GsAsset]:
+
         query = cls.__create_query(fields, as_of, limit, **kwargs)
         response = GsSession.current._post('/assets/query', payload=query)
 
         results = []
         for result in response.get('results', ()):
-            results.append(GsAsset(**result))
+            results.append(GsAsset.from_dict(result))
 
-        return results
+        response['results'] = results
 
-    @staticmethod
+        return response
+
+    @classmethod
+    def get_many_assets_data(
+            cls,
+            fields: IdList = None,
+            as_of: dt.datetime = None,
+            limit: int = None,
+            **kwargs
+    ) -> dict:
+        query = cls.__create_query(fields, as_of, limit, **kwargs)
+        response = GsSession.current._post('/assets/data/query', payload=query)
+
+        return response
+
+    @classmethod
+    def get_asset_xrefs(
+            cls,
+            asset_id: str
+    ) -> List[GsTemporalXRef]:
+        response = GsSession.current._get('/assets/{id}/xrefs'.format(id=asset_id))
+
+        xrefs = [GsTemporalXRef(**xref) for xref in response['xrefs']]
+        return xrefs
+
+    @classmethod
     def get_asset(
+            cls,
             asset_id: str,
     ) -> GsAsset:
         response = GsSession.current._get('/assets/{id}'.format(id=asset_id), cls=GsAsset)
+
+        return response
+
+    @staticmethod
+    def get_asset_xrefs(
+            asset_id: str,
+    ) -> dict:
+        response = GsSession.current._get('/assets/{id}/xrefs'.format(id=asset_id))
+
+        xrefs = list(map(lambda x: TemporalXRef(
+            dup.parse(x['startDate']).date(),
+            dup.parse(x['endDate']).date(),
+            x['identifiers'],
+        ), response['xrefs']))
+
+        return {'xrefs': xrefs}
+
+    @staticmethod
+    def get_asset_positions_for_date(
+            asset_id: str,
+            position_date: dt.date,
+            position_type: str=None,
+    ) -> List[PositionSet]:
+
+        position_date_str = position_date.isoformat()
+
+        url = '/assets/{id}/positions/{date}'.format(id=asset_id, date=position_date_str)
+
+        if position_type is None:
+            response = GsSession.current._get(url)
+        else:
+            response = GsSession.current._get(url + '?type=' + position_type)
+
+        position_sets = [PositionSet(
+            dup.parse(x['positionDate']).date(),
+            dup.parse(x['lastUpdateTime']),
+            x['positions'],
+            x.get('type'),
+            x.get('divisor')
+        ) for x in response['results']]
+
+        response['results'] = position_sets
 
         return response
 

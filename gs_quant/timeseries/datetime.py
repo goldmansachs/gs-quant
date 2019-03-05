@@ -19,27 +19,26 @@ from datetime import date, time
 import numpy as np
 import pandas as pd
 from ..errors import *
-from enum import Enum
 from typing import Iterable, List, Union
+from .helper import *
 
 """
 Date and time manipulation for timeseries, including date or time shifting, calendar operations, curve alignment and
-interpolation operations. Includes sampling operations based on date or time manipulation
+interpolation operations. Includes sampling operations based on daif dates[0]te or time manipulation
 """
 
 
-class Interpolate(Enum):
+def __interpolate_step(x: pd.Series, dates: Iterable[float] = None) -> pd.Series:
 
-    INTERSECT = "intersect"
-    STEP = "step"
-    NAN = "nan"
-    ZERO = "zero"
+    first_date =  dates.index[0] if type(dates) is pd.Series else dates[0]
 
+    # locate previous valid date or take first value from series
+    prev = x.index[0] if first_date < x.index[0] else x.index[x.index.get_loc(first_date, 'pad')]
 
-def __interpolate_step(x: pd.Series, dates: Iterable[float]=None) -> pd.Series:
+    current = x[prev]
 
-    curve = x.align(dates, 'right')[0]
-    current = x[0]
+    curve = x.align(dates, 'right', )[0]                  # only need values from dates
+
     for knot in curve.iteritems():
         if np.isnan(knot[1]):
             curve[knot[0]] = current
@@ -48,7 +47,7 @@ def __interpolate_step(x: pd.Series, dates: Iterable[float]=None) -> pd.Series:
     return curve
 
 
-def align(x: pd.Series, y: pd.Series, method: Interpolate=Interpolate.INTERSECT) -> List[pd.Series]:
+def align(x: pd.Series, y: pd.Series, method: Interpolate = Interpolate.INTERSECT) -> List[pd.Series]:
     """
     Align dates of two series
 
@@ -85,7 +84,7 @@ def align(x: pd.Series, y: pd.Series, method: Interpolate=Interpolate.INTERSECT)
 
     >>> a = generate_series(100)
     >>> b = generate_series(100)
-    >>> align(a,b, "step")
+    >>> align(a, b, Interpolate.INTERSECT)
 
     **See also**
 
@@ -125,7 +124,8 @@ def align(x: pd.Series, y: pd.Series, method: Interpolate=Interpolate.INTERSECT)
         raise MqValueError('Unknown intersection type: ' + method)
 
 
-def interpolate(x: pd.Series, dates: Union[List[date], List[time], pd.Series]=None, method: Interpolate=Interpolate.INTERSECT) -> pd.Series:
+def interpolate(x: pd.Series, dates: Union[List[date], List[time], pd.Series] = None,
+                method: Interpolate = Interpolate.INTERSECT) -> pd.Series:
     """
     Interpolate over specified dates or times
 
@@ -163,7 +163,7 @@ def interpolate(x: pd.Series, dates: Union[List[date], List[time], pd.Series]=No
 
     >>> a = generate_series(100)
     >>> b = generate_series(100)
-    >>> interpolate(a,b, "step")
+    >>> interpolate(a, b, Interpolate.INTERSECT)
 
     **See also**
 
@@ -188,3 +188,50 @@ def interpolate(x: pd.Series, dates: Union[List[date], List[time], pd.Series]=No
         return __interpolate_step(x, align_series)
     else:
         raise MqValueError('Unknown intersection type: ' + method)
+
+
+def value(x: pd.Series, date: Union[date, time], method: Interpolate = Interpolate.STEP) -> pd.Series:
+    """
+    Value at specified date or time
+
+    :param x: timeseries
+    :param date: requested date or time
+    :param method: interpolation method (default: step)
+    :return: value at specified date or time
+
+    **Usage**
+
+    Returns the value of series X at the specified date:
+
+    :math:`Y_t = X_{date}`
+
+    If the requested date or time is not present in the series, the value function will return the value from the
+    previous available date or time by default. Caller can specify other interpolation styles via the method param:
+
+    Interpolation methods:
+
+    =========   ========================================================================
+    Type        Behavior
+    =========   ========================================================================
+    intersect   Only returns a value for valid dates
+    nan         Value will be NaN for dates not present in the series
+    zero        Value will be zero for dates not present in the series
+    step        Value of the previous valid point if requested date does not exist.
+                Values prior to the first date will be equivalent to the first available
+                value
+    =========   ========================================================================
+
+    **Examples**
+
+    Value of series on 5Mar18:
+
+    >>> a = generate_series(100)
+    >>> value(a, date(2019, 1, 3)
+
+    **See also**
+
+    :func:`interpolate`
+    """
+
+    values = interpolate(x, [date], method)
+    return values.get(0)

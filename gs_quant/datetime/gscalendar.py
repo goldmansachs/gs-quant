@@ -37,7 +37,7 @@ class GsCalendar:
     @property
     def holidays(self) -> set:
         if self.__calendars and not self.__holidays:
-            dataset = DataSet(DataSet.DATASET_HOLIDAY)
+            dataset = DataSet(DataSet.Ids.HOLIDAY)
             for holiday_id in self.__calendars:
                 data = dataset.get_data(exchange=holiday_id, start=self.DATE_LOW_LIMIT, end=self.DATE_HIGH_LIMIT)
                 if not data.empty:

@@ -17,11 +17,9 @@
 
 
 import math
-import numpy as np
-import pandas as pd
-from gs_quant.timeseries.datetime import *
 from .datetime import *
 from ..errors import *
+from numbers import Number
 
 """
 Algebra library contains basic numerical and algebraic operations, including addition, division, multiplication, 
@@ -68,7 +66,7 @@ def add(x: pd.Series, y: pd.Series, method: Interpolate=Interpolate.STEP) -> pd.
 
     >>> a = generate_series(100)
     >>> b = generate_series(100)
-    >>> add(a,b, "step")
+    >>> add(a, b, Interpolate.STEP)
 
     **See also**
 
@@ -110,7 +108,7 @@ def subtract(x: pd.Series, y: pd.Series, method: Interpolate=Interpolate.STEP) -
 
     >>> a = generate_series(100)
     >>> b = generate_series(100)
-    >>> subtract(a,b, "step")
+    >>> subtract(a, b, Interpolate.STEP)
 
     **See also**
 
@@ -162,7 +160,7 @@ def multiply(x: pd.Series, y: pd.Series, method: Interpolate=Interpolate.STEP) -
 
     >>> a = generate_series(100)
     >>> b = generate_series(100)
-    >>> multiply(a,b, "step")
+    >>> multiply(a, b, Interpolate.STEP)
 
     **See also**
 
@@ -212,7 +210,7 @@ def divide(x: pd.Series, y: pd.Series, method: Interpolate=Interpolate.STEP) -> 
 
     >>> a = generate_series(100)
     >>> b = generate_series(100)
-    >>> divide(a,b, "step")
+    >>> divide(a, b, Interpolate.STEP)
 
     **See also**
 
@@ -312,12 +310,12 @@ def power(x: pd.Series, y: float=1) -> pd.Series:
     return np.power(x, y)
 
 
-def sqrt(x: pd.Series) -> pd.Series:
+def sqrt(x: Union[Number, pd.Series]) -> pd.Series:
     """
-    Square root of each element in series
+    Square root of (a) each element in a series or (b) a number
 
-    :param x: date-based time series of prices
-    :return: date-based time series of square roots
+    :param x: either (a) date-based time series of prices or (b) a number
+    :return: either (a) date-based time series of square roots or (b) square root of given number
 
     **Usage**
 
@@ -337,7 +335,7 @@ def sqrt(x: pd.Series) -> pd.Series:
     :func:`pow`
 
     """
-    return np.sqrt(x)
+    return np.sqrt(x) if isinstance(x, pd.Series) else math.sqrt(x)
 
 
 def abs_(x: pd.Series) -> pd.Series:

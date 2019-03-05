@@ -19,25 +19,24 @@ import pandas as pd
 from typing import List, Mapping
 from gs_quant.target.risk import *
 from gs_quant.base import Priceable
-from gs_quant.common import AssetClass, MarketDataCoordinate
+from gs_quant.common import AssetClass
+from gs_quant.markets.core import MarketDataCoordinate
 from gs_quant.context_base import ContextBaseWithDefault
 from gs_quant.datetime.date import business_day_offset
 
 
 def scalar_formatter(result: List) -> float:
-    return result[0].get('value', result[0].get('Val'))
+    return next((r.get('value', r.get('Val')) for r in result if r.get('value', r.get('Val')) != 0), 0)
 
 
 def structured_formatter(result: List) -> pd.DataFrame:
-    df = pd.DataFrame(result)
-    del df['field']
-    return df
+    return pd.DataFrame(result)
 
 
 DollarPrice = RiskMeasure(measureType=RiskMeasureType.Dollar_Price)
-Price = RiskMeasure(measureType=RiskMeasureType.Price)
+Price = RiskMeasure(measureType=RiskMeasureType.PV)
 PresentValue = Price
-ForwardPrice = RiskMeasure(measureType='Forward Price', unit=RiskMeasureUnit.BPS)
+ForwardPrice = RiskMeasure(measureType=RiskMeasureType.Forward_Price, unit=RiskMeasureUnit.BPS)
 Theta = RiskMeasure(measureType=RiskMeasureType.Theta)
 EqDelta = RiskMeasure(measureType=RiskMeasureType.Delta, assetClass=AssetClass.Equity)
 EqGamma = RiskMeasure(measureType=RiskMeasureType.Gamma, assetClass=AssetClass.Equity)
@@ -147,24 +146,6 @@ class PricingContext(ContextBaseWithDefault):
             res.add_done_callback(set_field_values)
         else:
             set_field_values(res)
-
-
-class MarketDataContext(ContextBaseWithDefault):
-
-    """A context containing market data parameters, such as as_of date/time and overrides"""
-
-    def __init__(self, as_of: Union[dt.date, dt.datetime]=None, overrides: Mapping[MarketDataCoordinate, float]=None):
-        super().__init__()
-        self.__as_of = as_of or business_day_offset(dt.date.today(), -1, roll='preceding')
-        self.__overrides = overrides or {}
-
-    @property
-    def as_of(self):
-        return self.__as_of
-
-    @property
-    def overrides(self):
-        return self.__overrides
 
 
 class ScenarioContext(ContextBaseWithDefault):

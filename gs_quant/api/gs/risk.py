@@ -15,12 +15,11 @@ under the License.
 """
 from gs_quant.api.risk import RiskFutureMapping, RiskApi
 from gs_quant.base import Priceable
-from gs_quant.common import MarketDataCoordinate
+from gs_quant.markets.core import MarketDataCoordinate
 from gs_quant.session import GsSession
-from gs_quant.risk import CoordinatesRequest, Formatters, RiskRequest
+from gs_quant.risk import CoordinatesRequest, Formatters, RiskRequest, PricingContext
 import asyncio
-import datetime as dt
-from typing import List, Iterable
+from typing import Iterable, Tuple
 
 
 class GsRiskApi(RiskApi):
@@ -29,7 +28,7 @@ class GsRiskApi(RiskApi):
     def calc(cls, request: RiskRequest, futures: RiskFutureMapping, is_async: bool, is_batch: bool):
         if is_batch:
             request.waitForResults = False
-            response = cls.__exec(request)
+            response = cls._exec(request)
 
             if is_async:
                 asyncio.create_task(cls.__wait_for_results(response['reportId'], request, futures))
@@ -40,30 +39,30 @@ class GsRiskApi(RiskApi):
             asyncio.create_task(cls.__run_async(request, futures))
         else:
             request.waitForResults = True
-            results = cls.__exec(request)
+            results = cls._exec(request)
             cls.__complete_futures(request, results, futures)
 
     @classmethod
-    def coordinates(cls, priceables: Iterable[Priceable]) -> List[MarketDataCoordinate]:
-        coordinates_request = CoordinatesRequest(dt.date.today(), instruments=priceables)
+    def coordinates(cls, priceables: Iterable[Priceable]) -> Tuple[MarketDataCoordinate, ...]:
+        coordinates_request = CoordinatesRequest(PricingContext.current.pricing_date, instruments=tuple(priceables))
         response = GsSession.current._post(r'/risk/coordinates', coordinates_request)
 
-        return [MarketDataCoordinate(
+        return tuple(MarketDataCoordinate(
             marketDataType=r.get('marketDataType'),
             assetId=r.get('assetId'),
             pointClass=r.get('pointClass'),
             marketDataPoint=tuple(r.get('marketDataPoint', r.get('point', '')).split('_')),
             field=r.get('field'))
             for r in response
-        ]
+        )
 
     @classmethod
-    def __exec(cls, request: RiskRequest):
+    def _exec(cls, request: RiskRequest):
         return GsSession.current._post(r'/risk/calculate', request)
 
     @classmethod
     async def __run_async(cls, request: RiskRequest, futures: RiskFutureMapping):
-        results = cls.__exec(request)
+        results = cls._exec(request)
         cls.__complete_futures(request, results, futures)
 
     @classmethod

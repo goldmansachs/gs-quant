@@ -52,6 +52,10 @@ class Timer:
             print("{} took {} seconds".format(self.label, self.elapsed.seconds + self.elapsed.microseconds / 1000000))
 
 
+def to_zulu_string(time:datetime.datetime):
+    return time.isoformat()[:-3] + 'Z'
+
+
 def time_difference_as_string(
         time_delta: np.timedelta64,
         resolution: str = 'Second'

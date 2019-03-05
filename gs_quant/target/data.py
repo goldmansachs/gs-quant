@@ -14,292 +14,88 @@ specific language governing permissions and limitations
 under the License.
 """
 
+from gs_quant.target.common import *
 import datetime
-from typing import Any, Iterable, Union
-from gs_quant.base import Base
+from typing import Tuple, Union
+from gs_quant.base import Base, get_enum_value
 
 
-class DataSetEntity(Base):
-               
-    def __init__(self, id: Union[str, str], name: str, description: str, shortDescription: str, vendor: str, dataProduct: str, parameters: Union['DataSetParameters', str], dimensions: Union['DataSetDimensions', str], ownerId: Union[str, str] = None, startDate: Union[datetime.date, str] = None, mdapi: Union['MDAPI', str] = None, entitlements: Union['Entitlements', str] = None, queryProcessors: Union['ProcessorEntity', str] = None, defaults: Union['DataSetDefaults', str] = None, filters: Union['DataSetFilters', str] = None, createdById: Union[str, str] = None, createdTime: Union[datetime.datetime, str] = None, lastUpdatedById: Union[str, str] = None, lastUpdatedTime: Union[datetime.datetime, str] = None, tags: Iterable[str] = None):
-        super().__init__()
-        self.__ownerId = ownerId
-        self.__id = id
-        self.__name = name
-        self.__description = description
-        self.__shortDescription = shortDescription
-        self.__vendor = vendor
-        self.__startDate = startDate
-        self.__mdapi = mdapi
-        self.__dataProduct = dataProduct
-        self.__entitlements = entitlements
-        self.__queryProcessors = queryProcessors
-        self.__parameters = parameters
-        self.__dimensions = dimensions
-        self.__defaults = defaults
-        self.__filters = filters
-        self.__createdById = createdById
-        self.__createdTime = createdTime
-        self.__lastUpdatedById = lastUpdatedById
-        self.__lastUpdatedTime = lastUpdatedTime
-        self.__tags = tags
-
-    @property
-    def ownerId(self) -> Union[str, str]:
-        """Marquee unique identifier for user who owns the object."""
-        return self.__ownerId
-
-    @ownerId.setter
-    def ownerId(self, value: Union[str, str]):
-        self.__ownerId = value
-        self._property_changed('ownerId')        
-
-    @property
-    def id(self) -> Union[str, str]:
-        """Unique id of dataset."""
-        return self.__id
-
-    @id.setter
-    def id(self, value: Union[str, str]):
-        self.__id = value
-        self._property_changed('id')        
-
-    @property
-    def name(self) -> str:
-        """Name of dataset."""
-        return self.__name
-
-    @name.setter
-    def name(self, value: str):
-        self.__name = value
-        self._property_changed('name')        
-
-    @property
-    def description(self) -> str:
-        """Description of dataset."""
-        return self.__description
-
-    @description.setter
-    def description(self, value: str):
-        self.__description = value
-        self._property_changed('description')        
-
-    @property
-    def shortDescription(self) -> str:
-        """Short description of dataset."""
-        return self.__shortDescription
-
-    @shortDescription.setter
-    def shortDescription(self, value: str):
-        self.__shortDescription = value
-        self._property_changed('shortDescription')        
-
-    @property
-    def vendor(self) -> str:
-        return self.__vendor
-
-    @vendor.setter
-    def vendor(self, value: str):
-        self.__vendor = value
-        self._property_changed('vendor')        
-
-    @property
-    def startDate(self) -> Union[datetime.date, str]:
-        """The start of this data set"""
-        return self.__startDate
-
-    @startDate.setter
-    def startDate(self, value: Union[datetime.date, str]):
-        self.__startDate = value
-        self._property_changed('startDate')        
-
-    @property
-    def mdapi(self) -> Union['MDAPI', str]:
-        """Defines MDAPI fields."""
-        return self.__mdapi
-
-    @mdapi.setter
-    def mdapi(self, value: Union['MDAPI', str]):
-        self.__mdapi = value
-        self._property_changed('mdapi')        
-
-    @property
-    def dataProduct(self) -> str:
-        """Product that dataset belongs to."""
-        return self.__dataProduct
-
-    @dataProduct.setter
-    def dataProduct(self, value: str):
-        self.__dataProduct = value
-        self._property_changed('dataProduct')        
-
-    @property
-    def entitlements(self) -> Union['Entitlements', str]:
-        """Defines the entitlements of a given resource"""
-        return self.__entitlements
-
-    @entitlements.setter
-    def entitlements(self, value: Union['Entitlements', str]):
-        self.__entitlements = value
-        self._property_changed('entitlements')        
-
-    @property
-    def queryProcessors(self) -> Union['ProcessorEntity', str]:
-        """Query processors for dataset."""
-        return self.__queryProcessors
-
-    @queryProcessors.setter
-    def queryProcessors(self, value: Union['ProcessorEntity', str]):
-        self.__queryProcessors = value
-        self._property_changed('queryProcessors')        
-
-    @property
-    def parameters(self) -> Union['DataSetParameters', str]:
-        """Dataset parameters."""
-        return self.__parameters
-
-    @parameters.setter
-    def parameters(self, value: Union['DataSetParameters', str]):
-        self.__parameters = value
-        self._property_changed('parameters')        
-
-    @property
-    def dimensions(self) -> Union['DataSetDimensions', str]:
-        """Dataset dimensions."""
-        return self.__dimensions
-
-    @dimensions.setter
-    def dimensions(self, value: Union['DataSetDimensions', str]):
-        self.__dimensions = value
-        self._property_changed('dimensions')        
-
-    @property
-    def defaults(self) -> Union['DataSetDefaults', str]:
-        """Default settings."""
-        return self.__defaults
-
-    @defaults.setter
-    def defaults(self, value: Union['DataSetDefaults', str]):
-        self.__defaults = value
-        self._property_changed('defaults')        
-
-    @property
-    def filters(self) -> Union['DataSetFilters', str]:
-        """Filters to restrict the set of data returned."""
-        return self.__filters
-
-    @filters.setter
-    def filters(self, value: Union['DataSetFilters', str]):
-        self.__filters = value
-        self._property_changed('filters')        
-
-    @property
-    def createdById(self) -> Union[str, str]:
-        """Unique identifier of user who created the object"""
-        return self.__createdById
-
-    @createdById.setter
-    def createdById(self, value: Union[str, str]):
-        self.__createdById = value
-        self._property_changed('createdById')        
-
-    @property
-    def createdTime(self) -> Union[datetime.datetime, str]:
-        """Time created. ISO 8601 formatted string"""
-        return self.__createdTime
-
-    @createdTime.setter
-    def createdTime(self, value: Union[datetime.datetime, str]):
-        self.__createdTime = value
-        self._property_changed('createdTime')        
-
-    @property
-    def lastUpdatedById(self) -> Union[str, str]:
-        """Unique identifier of user who last updated the object"""
-        return self.__lastUpdatedById
-
-    @lastUpdatedById.setter
-    def lastUpdatedById(self, value: Union[str, str]):
-        self.__lastUpdatedById = value
-        self._property_changed('lastUpdatedById')        
-
-    @property
-    def lastUpdatedTime(self) -> Union[datetime.datetime, str]:
-        """Timestamp of when the object was last updated"""
-        return self.__lastUpdatedTime
-
-    @lastUpdatedTime.setter
-    def lastUpdatedTime(self, value: Union[datetime.datetime, str]):
-        self.__lastUpdatedTime = value
-        self._property_changed('lastUpdatedTime')        
-
-    @property
-    def tags(self) -> Iterable[str]:
-        """Tags associated with dataset."""
-        return self.__tags
-
-    @tags.setter
-    def tags(self, value: Iterable[str]):
-        self.__tags = value
-        self._property_changed('tags')        
-
-
-class DataSetFilters(Base):
+class DataFilter(Base):
         
-    """Filters to restrict the set of data returned."""
+    """Filter on specified field."""
        
-    def __init__(self, entityFilter: Union['EntityFilter', str] = None, rowFilters: Iterable['DataFilter'] = None, advancedFilters: Iterable['AdvancedFilter'] = None, historyFilter: Union['HistoryFilter', str] = None):
+    def __init__(self, field: str, values: Tuple[str, ...], column: str = None):
         super().__init__()
-        self.__entityFilter = entityFilter
-        self.__rowFilters = rowFilters
-        self.__advancedFilters = advancedFilters
-        self.__historyFilter = historyFilter
+        self.__field = field
+        self.__column = column
+        self.__values = values
 
     @property
-    def entityFilter(self) -> Union['EntityFilter', str]:
-        """Filter on entities."""
-        return self.__entityFilter
+    def field(self) -> str:
+        """Field to filter on."""
+        return self.__field
 
-    @entityFilter.setter
-    def entityFilter(self, value: Union['EntityFilter', str]):
-        self.__entityFilter = value
-        self._property_changed('entityFilter')        
-
-    @property
-    def rowFilters(self) -> Iterable['DataFilter']:
-        """Filters on database rows."""
-        return self.__rowFilters
-
-    @rowFilters.setter
-    def rowFilters(self, value: Iterable['DataFilter']):
-        self.__rowFilters = value
-        self._property_changed('rowFilters')        
+    @field.setter
+    def field(self, value: str):
+        self.__field = value
+        self._property_changed('field')        
 
     @property
-    def advancedFilters(self) -> Iterable['AdvancedFilter']:
-        return self.__advancedFilters
+    def column(self) -> str:
+        """Database column name."""
+        return self.__column
 
-    @advancedFilters.setter
-    def advancedFilters(self, value: Iterable['AdvancedFilter']):
-        self.__advancedFilters = value
-        self._property_changed('advancedFilters')        
+    @column.setter
+    def column(self, value: str):
+        self.__column = value
+        self._property_changed('column')        
 
     @property
-    def historyFilter(self) -> Union['HistoryFilter', str]:
-        """Restricts queries against dataset to an absolute or relative range."""
-        return self.__historyFilter
+    def values(self) -> Tuple[str, ...]:
+        """Value(s) to match."""
+        return self.__values
 
-    @historyFilter.setter
-    def historyFilter(self, value: Union['HistoryFilter', str]):
-        self.__historyFilter = value
-        self._property_changed('historyFilter')        
+    @values.setter
+    def values(self, value: Tuple[str, ...]):
+        self.__values = value
+        self._property_changed('values')        
+
+
+class DataGroup(Base):
+        
+    """Dataset grouped by context (key dimensions)"""
+       
+    def __init__(self, context: FieldValueMap = None, data: Tuple[FieldValueMap, ...] = None):
+        super().__init__()
+        self.__context = context
+        self.__data = data
+
+    @property
+    def context(self) -> FieldValueMap:
+        """Context map for the grouped data (key dimensions)"""
+        return self.__context
+
+    @context.setter
+    def context(self, value: FieldValueMap):
+        self.__context = value
+        self._property_changed('context')        
+
+    @property
+    def data(self) -> Tuple[FieldValueMap, ...]:
+        """Array of grouped data objects"""
+        return self.__data
+
+    @data.setter
+    def data(self, value: Tuple[FieldValueMap, ...]):
+        self.__data = value
+        self._property_changed('data')        
 
 
 class HistoryFilter(Base):
         
     """Restricts queries against dataset to an absolute or relative range."""
        
-    def __init__(self, absoluteStart: Union[datetime.datetime, str] = None, absoluteEnd: Union[datetime.datetime, str] = None, relativeStartSeconds: float = None, relativeEndSeconds: float = None):
+    def __init__(self, absoluteStart: datetime.datetime = None, absoluteEnd: datetime.datetime = None, relativeStartSeconds: float = None, relativeEndSeconds: float = None):
         super().__init__()
         self.__absoluteStart = absoluteStart
         self.__absoluteEnd = absoluteEnd
@@ -307,22 +103,22 @@ class HistoryFilter(Base):
         self.__relativeEndSeconds = relativeEndSeconds
 
     @property
-    def absoluteStart(self) -> Union[datetime.datetime, str]:
+    def absoluteStart(self) -> datetime.datetime:
         """ISO 8601-formatted timestamp"""
         return self.__absoluteStart
 
     @absoluteStart.setter
-    def absoluteStart(self, value: Union[datetime.datetime, str]):
+    def absoluteStart(self, value: datetime.datetime):
         self.__absoluteStart = value
         self._property_changed('absoluteStart')        
 
     @property
-    def absoluteEnd(self) -> Union[datetime.datetime, str]:
+    def absoluteEnd(self) -> datetime.datetime:
         """ISO 8601-formatted timestamp"""
         return self.__absoluteEnd
 
     @absoluteEnd.setter
-    def absoluteEnd(self, value: Union[datetime.datetime, str]):
+    def absoluteEnd(self, value: datetime.datetime):
         self.__absoluteEnd = value
         self._property_changed('absoluteEnd')        
 
@@ -345,6 +141,116 @@ class HistoryFilter(Base):
     def relativeEndSeconds(self, value: float):
         self.__relativeEndSeconds = value
         self._property_changed('relativeEndSeconds')        
+
+
+class FieldColumnPair(Base):
+        
+    """Map from fields to database columns."""
+       
+    def __init__(self, field: str = None, column: str = None, fieldDescription: str = None):
+        super().__init__()
+        self.__field = field
+        self.__column = column
+        self.__fieldDescription = fieldDescription
+
+    @property
+    def field(self) -> str:
+        """Field name."""
+        return self.__field
+
+    @field.setter
+    def field(self, value: str):
+        self.__field = value
+        self._property_changed('field')        
+
+    @property
+    def column(self) -> str:
+        """Database column name."""
+        return self.__column
+
+    @column.setter
+    def column(self, value: str):
+        self.__column = value
+        self._property_changed('column')        
+
+    @property
+    def fieldDescription(self) -> str:
+        """Custom description (overrides field default)."""
+        return self.__fieldDescription
+
+    @fieldDescription.setter
+    def fieldDescription(self, value: str):
+        self.__fieldDescription = value
+        self._property_changed('fieldDescription')        
+
+
+class ParserEntity(Base):
+        
+    """Settings for a parser processor"""
+       
+    def __init__(self, onlyNormalizedFields: bool = None, quotes: bool = None, trades: bool = None):
+        super().__init__()
+        self.__onlyNormalizedFields = onlyNormalizedFields
+        self.__quotes = quotes
+        self.__trades = trades
+
+    @property
+    def onlyNormalizedFields(self) -> bool:
+        """Setting for onlyNormalizedFields."""
+        return self.__onlyNormalizedFields
+
+    @onlyNormalizedFields.setter
+    def onlyNormalizedFields(self, value: bool):
+        self.__onlyNormalizedFields = value
+        self._property_changed('onlyNormalizedFields')        
+
+    @property
+    def quotes(self) -> bool:
+        """Setting for quotes."""
+        return self.__quotes
+
+    @quotes.setter
+    def quotes(self, value: bool):
+        self.__quotes = value
+        self._property_changed('quotes')        
+
+    @property
+    def trades(self) -> bool:
+        """Setting for trades."""
+        return self.__trades
+
+    @trades.setter
+    def trades(self, value: bool):
+        self.__trades = value
+        self._property_changed('trades')        
+
+
+class Adjustments(Base):
+        
+    """Corporate action adjustments."""
+       
+    def __init__(self, priceColumns: Tuple[str, ...], adjustedSuffix: str):
+        super().__init__()
+        self.__priceColumns = priceColumns
+        self.__adjustedSuffix = adjustedSuffix
+
+    @property
+    def priceColumns(self) -> Tuple[str, ...]:
+        return self.__priceColumns
+
+    @priceColumns.setter
+    def priceColumns(self, value: Tuple[str, ...]):
+        self.__priceColumns = value
+        self._property_changed('priceColumns')        
+
+    @property
+    def adjustedSuffix(self) -> str:
+        return self.__adjustedSuffix
+
+    @adjustedSuffix.setter
+    def adjustedSuffix(self, value: str):
+        self.__adjustedSuffix = value
+        self._property_changed('adjustedSuffix')        
 
 
 class AdvancedFilter(Base):
@@ -388,111 +294,280 @@ class AdvancedFilter(Base):
         self._property_changed('operator')        
 
 
-class DataFilter(Base):
-        
-    """Filter on specified field."""
-       
-    def __init__(self, field: str, values: Iterable[str], column: Union[str, str] = None):
+class DataQuery(Base):
+               
+    def __init__(self, id: str = None, dataSetId: str = None, format: Union[Format, str] = None, marketDataCoordinates: Tuple[MarketDataCoordinate, ...] = None, where: FieldFilterMap = None, vendor: str = None, startDate: datetime.date = None, endDate: datetime.date = None, startTime: datetime.datetime = None, endTime: datetime.datetime = None, asOfTime: datetime.datetime = None, idAsOfDate: datetime.date = None, since: datetime.datetime = None, dates: Tuple[datetime.date, ...] = None, times: Tuple[datetime.datetime, ...] = None, delay: int = None, intervals: int = None, pollingInterval: int = None, groupBy: Tuple[Union[Field, str], ...] = None, grouped: bool = None, fields: Tuple[dict, ...] = None):
         super().__init__()
-        self.__field = field
-        self.__column = column
-        self.__values = values
+        self.__id = id
+        self.__dataSetId = dataSetId
+        self.__format = format if isinstance(format, Format) else get_enum_value(Format, format)
+        self.__marketDataCoordinates = marketDataCoordinates
+        self.__where = where
+        self.__vendor = vendor
+        self.__startDate = startDate
+        self.__endDate = endDate
+        self.__startTime = startTime
+        self.__endTime = endTime
+        self.__asOfTime = asOfTime
+        self.__idAsOfDate = idAsOfDate
+        self.__since = since
+        self.__dates = dates
+        self.__times = times
+        self.__delay = delay
+        self.__intervals = intervals
+        self.__pollingInterval = pollingInterval
+        self.__groupBy = groupBy
+        self.__grouped = grouped
+        self.__fields = fields
 
     @property
-    def field(self) -> str:
-        """Field to filter on."""
-        return self.__field
+    def id(self) -> str:
+        """Marquee unique identifier"""
+        return self.__id
 
-    @field.setter
-    def field(self, value: str):
-        self.__field = value
-        self._property_changed('field')        
-
-    @property
-    def column(self) -> Union[str, str]:
-        """Database column name."""
-        return self.__column
-
-    @column.setter
-    def column(self, value: Union[str, str]):
-        self.__column = value
-        self._property_changed('column')        
+    @id.setter
+    def id(self, value: str):
+        self.__id = value
+        self._property_changed('id')        
 
     @property
-    def values(self) -> Iterable[str]:
-        """Value(s) to match."""
-        return self.__values
+    def dataSetId(self) -> str:
+        """Marquee unique identifier"""
+        return self.__dataSetId
 
-    @values.setter
-    def values(self, value: Iterable[str]):
-        self.__values = value
-        self._property_changed('values')        
+    @dataSetId.setter
+    def dataSetId(self, value: str):
+        self.__dataSetId = value
+        self._property_changed('dataSetId')        
+
+    @property
+    def format(self) -> Union[Format, str]:
+        """Alternative format for data to be returned in"""
+        return self.__format
+
+    @format.setter
+    def format(self, value: Union[Format, str]):
+        self.__format = value if isinstance(value, Format) else get_enum_value(Format, value)
+        self._property_changed('format')        
+
+    @property
+    def marketDataCoordinates(self) -> Tuple[MarketDataCoordinate, ...]:
+        return self.__marketDataCoordinates
+
+    @marketDataCoordinates.setter
+    def marketDataCoordinates(self, value: Tuple[MarketDataCoordinate, ...]):
+        self.__marketDataCoordinates = value
+        self._property_changed('marketDataCoordinates')        
+
+    @property
+    def where(self) -> FieldFilterMap:
+        """Filters on data fields."""
+        return self.__where
+
+    @where.setter
+    def where(self, value: FieldFilterMap):
+        self.__where = value
+        self._property_changed('where')        
+
+    @property
+    def vendor(self) -> str:
+        return self.__vendor
+
+    @vendor.setter
+    def vendor(self, value: str):
+        self.__vendor = value
+        self._property_changed('vendor')        
+
+    @property
+    def startDate(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__startDate
+
+    @startDate.setter
+    def startDate(self, value: datetime.date):
+        self.__startDate = value
+        self._property_changed('startDate')        
+
+    @property
+    def endDate(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__endDate
+
+    @endDate.setter
+    def endDate(self, value: datetime.date):
+        self.__endDate = value
+        self._property_changed('endDate')        
+
+    @property
+    def startTime(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
+        return self.__startTime
+
+    @startTime.setter
+    def startTime(self, value: datetime.datetime):
+        self.__startTime = value
+        self._property_changed('startTime')        
+
+    @property
+    def endTime(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
+        return self.__endTime
+
+    @endTime.setter
+    def endTime(self, value: datetime.datetime):
+        self.__endTime = value
+        self._property_changed('endTime')        
+
+    @property
+    def asOfTime(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
+        return self.__asOfTime
+
+    @asOfTime.setter
+    def asOfTime(self, value: datetime.datetime):
+        self.__asOfTime = value
+        self._property_changed('asOfTime')        
+
+    @property
+    def idAsOfDate(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__idAsOfDate
+
+    @idAsOfDate.setter
+    def idAsOfDate(self, value: datetime.date):
+        self.__idAsOfDate = value
+        self._property_changed('idAsOfDate')        
+
+    @property
+    def since(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
+        return self.__since
+
+    @since.setter
+    def since(self, value: datetime.datetime):
+        self.__since = value
+        self._property_changed('since')        
+
+    @property
+    def dates(self) -> Tuple[datetime.date, ...]:
+        """Select and return specific dates from dataset query results."""
+        return self.__dates
+
+    @dates.setter
+    def dates(self, value: Tuple[datetime.date, ...]):
+        self.__dates = value
+        self._property_changed('dates')        
+
+    @property
+    def times(self) -> Tuple[datetime.datetime, ...]:
+        """Select and return specific times from dataset query results."""
+        return self.__times
+
+    @times.setter
+    def times(self, value: Tuple[datetime.datetime, ...]):
+        self.__times = value
+        self._property_changed('times')        
+
+    @property
+    def delay(self) -> int:
+        """Number of minutes to delay returning data."""
+        return self.__delay
+
+    @delay.setter
+    def delay(self, value: int):
+        self.__delay = value
+        self._property_changed('delay')        
+
+    @property
+    def intervals(self) -> int:
+        """Number of intervals for which to return output times, for example if 10, it will return 10 data points evenly spaced over the time/date range."""
+        return self.__intervals
+
+    @intervals.setter
+    def intervals(self, value: int):
+        self.__intervals = value
+        self._property_changed('intervals')        
+
+    @property
+    def pollingInterval(self) -> int:
+        """When streaming, wait for this number of seconds between poll attempts."""
+        return self.__pollingInterval
+
+    @pollingInterval.setter
+    def pollingInterval(self, value: int):
+        self.__pollingInterval = value
+        self._property_changed('pollingInterval')        
+
+    @property
+    def groupBy(self) -> Tuple[Union[Field, str], ...]:
+        """Fields that determine grouping of results. Defaults to the dimensions of the dataset."""
+        return self.__groupBy
+
+    @groupBy.setter
+    def groupBy(self, value: Tuple[Union[Field, str], ...]):
+        self.__groupBy = value
+        self._property_changed('groupBy')        
+
+    @property
+    def grouped(self) -> bool:
+        """Set to true to return results grouped by a given context (set of dimensions)."""
+        return self.__grouped
+
+    @grouped.setter
+    def grouped(self, value: bool):
+        self.__grouped = value
+        self._property_changed('grouped')        
+
+    @property
+    def fields(self) -> Tuple[dict, ...]:
+        """Fields to be returned."""
+        return self.__fields
+
+    @fields.setter
+    def fields(self, value: Tuple[dict, ...]):
+        self.__fields = value
+        self._property_changed('fields')        
 
 
-class EntityFilter(Base):
+class MDAPI(Base):
         
-    """Filter on entities."""
+    """Defines MDAPI fields."""
        
-    def __init__(self, operator: str = None, simpleFilters: Iterable['DataFilter'] = None, complexFilters: Iterable['ComplexFilter'] = None):
+    def __init__(self, type: str, quotingStyles: Tuple[dict, ...], class_: str = None):
         super().__init__()
-        self.__operator = operator
-        self.__simpleFilters = simpleFilters
-        self.__complexFilters = complexFilters
+        self.__class = class_
+        self.__type = type
+        self.__quotingStyles = quotingStyles
 
     @property
-    def operator(self) -> str:
-        return self.__operator
+    def class_(self) -> str:
+        """MDAPI Class."""
+        return self.__class
 
-    @operator.setter
-    def operator(self, value: str):
-        self.__operator = value
-        self._property_changed('operator')        
-
-    @property
-    def simpleFilters(self) -> Iterable['DataFilter']:
-        return self.__simpleFilters
-
-    @simpleFilters.setter
-    def simpleFilters(self, value: Iterable['DataFilter']):
-        self.__simpleFilters = value
-        self._property_changed('simpleFilters')        
+    @class_.setter
+    def class_(self, value: str):
+        self.__class = value
+        self._property_changed('class')        
 
     @property
-    def complexFilters(self) -> Iterable['ComplexFilter']:
-        return self.__complexFilters
+    def type(self) -> str:
+        """The MDAPI Type field (private)"""
+        return self.__type
 
-    @complexFilters.setter
-    def complexFilters(self, value: Iterable['ComplexFilter']):
-        self.__complexFilters = value
-        self._property_changed('complexFilters')        
-
-
-class ComplexFilter(Base):
-        
-    """A compound filter for data requests."""
-       
-    def __init__(self, operator: str, simpleFilters: Iterable['DataFilter']):
-        super().__init__()
-        self.__operator = operator
-        self.__simpleFilters = simpleFilters
+    @type.setter
+    def type(self, value: str):
+        self.__type = value
+        self._property_changed('type')        
 
     @property
-    def operator(self) -> str:
-        return self.__operator
+    def quotingStyles(self) -> Tuple[dict, ...]:
+        """Map from MDAPI QuotingStyles to database columns"""
+        return self.__quotingStyles
 
-    @operator.setter
-    def operator(self, value: str):
-        self.__operator = value
-        self._property_changed('operator')        
-
-    @property
-    def simpleFilters(self) -> Iterable['DataFilter']:
-        return self.__simpleFilters
-
-    @simpleFilters.setter
-    def simpleFilters(self, value: Iterable['DataFilter']):
-        self.__simpleFilters = value
-        self._property_changed('simpleFilters')        
+    @quotingStyles.setter
+    def quotingStyles(self, value: Tuple[dict, ...]):
+        self.__quotingStyles = value
+        self._property_changed('quotingStyles')        
 
 
 class DataSetDefaults(Base):
@@ -536,163 +611,11 @@ class DataSetDefaults(Base):
         self._property_changed('delaySeconds')        
 
 
-class DataSetDimensions(Base):
-        
-    """Dataset dimensions."""
-       
-    def __init__(self, timeField: str, transactionTimeField: str = None, symbolDimensions: Iterable[str] = None, nonSymbolDimensions: Iterable['FieldColumnPair'] = None, keyDimensions: Iterable[str] = None, measures: Iterable['FieldColumnPair'] = None, entityDimension: str = None):
-        super().__init__()
-        self.__timeField = timeField
-        self.__transactionTimeField = transactionTimeField
-        self.__symbolDimensions = symbolDimensions
-        self.__nonSymbolDimensions = nonSymbolDimensions
-        self.__keyDimensions = keyDimensions
-        self.__measures = measures
-        self.__entityDimension = entityDimension
-
-    @property
-    def timeField(self) -> str:
-        return self.__timeField
-
-    @timeField.setter
-    def timeField(self, value: str):
-        self.__timeField = value
-        self._property_changed('timeField')        
-
-    @property
-    def transactionTimeField(self) -> str:
-        """For bi-temporal datasets, field for capturing the time at which a data point was updated."""
-        return self.__transactionTimeField
-
-    @transactionTimeField.setter
-    def transactionTimeField(self, value: str):
-        self.__transactionTimeField = value
-        self._property_changed('transactionTimeField')        
-
-    @property
-    def symbolDimensions(self) -> Iterable[str]:
-        """Set of fields that determine database table name."""
-        return self.__symbolDimensions
-
-    @symbolDimensions.setter
-    def symbolDimensions(self, value: Iterable[str]):
-        self.__symbolDimensions = value
-        self._property_changed('symbolDimensions')        
-
-    @property
-    def nonSymbolDimensions(self) -> Iterable['FieldColumnPair']:
-        """Fields that are not nullable."""
-        return self.__nonSymbolDimensions
-
-    @nonSymbolDimensions.setter
-    def nonSymbolDimensions(self, value: Iterable['FieldColumnPair']):
-        self.__nonSymbolDimensions = value
-        self._property_changed('nonSymbolDimensions')        
-
-    @property
-    def keyDimensions(self) -> Iterable[str]:
-        return self.__keyDimensions
-
-    @keyDimensions.setter
-    def keyDimensions(self, value: Iterable[str]):
-        self.__keyDimensions = value
-        self._property_changed('keyDimensions')        
-
-    @property
-    def measures(self) -> Iterable['FieldColumnPair']:
-        """Fields that are nullable."""
-        return self.__measures
-
-    @measures.setter
-    def measures(self, value: Iterable['FieldColumnPair']):
-        self.__measures = value
-        self._property_changed('measures')        
-
-    @property
-    def entityDimension(self) -> str:
-        """Symbol dimension corresponding to an entity e.g. asset or report."""
-        return self.__entityDimension
-
-    @entityDimension.setter
-    def entityDimension(self, value: str):
-        self.__entityDimension = value
-        self._property_changed('entityDimension')        
-
-
-class Adjustments(Base):
-        
-    """Corporate action adjustments."""
-       
-    def __init__(self, priceColumns: Iterable[str], adjustedSuffix: str):
-        super().__init__()
-        self.__priceColumns = priceColumns
-        self.__adjustedSuffix = adjustedSuffix
-
-    @property
-    def priceColumns(self) -> Iterable[str]:
-        return self.__priceColumns
-
-    @priceColumns.setter
-    def priceColumns(self, value: Iterable[str]):
-        self.__priceColumns = value
-        self._property_changed('priceColumns')        
-
-    @property
-    def adjustedSuffix(self) -> str:
-        return self.__adjustedSuffix
-
-    @adjustedSuffix.setter
-    def adjustedSuffix(self, value: str):
-        self.__adjustedSuffix = value
-        self._property_changed('adjustedSuffix')        
-
-
-class FieldColumnPair(Base):
-        
-    """Map from fields to database columns."""
-       
-    def __init__(self, field: str = None, column: Union[str, str] = None, fieldDescription: str = None):
-        super().__init__()
-        self.__field = field
-        self.__column = column
-        self.__fieldDescription = fieldDescription
-
-    @property
-    def field(self) -> str:
-        """Field name."""
-        return self.__field
-
-    @field.setter
-    def field(self, value: str):
-        self.__field = value
-        self._property_changed('field')        
-
-    @property
-    def column(self) -> Union[str, str]:
-        """Database column name."""
-        return self.__column
-
-    @column.setter
-    def column(self, value: Union[str, str]):
-        self.__column = value
-        self._property_changed('column')        
-
-    @property
-    def fieldDescription(self) -> str:
-        """Custom description (overrides field default)."""
-        return self.__fieldDescription
-
-    @fieldDescription.setter
-    def fieldDescription(self, value: str):
-        self.__fieldDescription = value
-        self._property_changed('fieldDescription')        
-
-
 class DataSetParameters(Base):
         
     """Dataset parameters."""
        
-    def __init__(self, uploadDataPolicy: str, logicalDb: str, symbolStrategy: str, applyMarketDataEntitlements: bool, coverage: str, frequency: str, methodology: str, history: str, category: str = None, subCategory: str = None, assetClass: Union['AssetClass', str] = None, ownerIds: Iterable[str] = None, approverIds: Iterable[str] = None, supportIds: Iterable[str] = None, identifierMapperName: str = None, constantSymbols: Iterable[str] = None, underlyingDataSetId: str = None, immutable: bool = None, includeInCatalog: bool = None, overrideQueryColumnIds: Iterable[str] = None):
+    def __init__(self, uploadDataPolicy: str, logicalDb: str, symbolStrategy: str, applyMarketDataEntitlements: bool, coverage: str, frequency: str, methodology: str, history: str, category: str = None, subCategory: str = None, assetClass: Union[AssetClass, str] = None, ownerIds: Tuple[str, ...] = None, approverIds: Tuple[str, ...] = None, supportIds: Tuple[str, ...] = None, identifierMapperName: str = None, constantSymbols: Tuple[str, ...] = None, underlyingDataSetId: str = None, immutable: bool = None, includeInCatalog: bool = None, overrideQueryColumnIds: Tuple[str, ...] = None):
         super().__init__()
         self.__category = category
         self.__subCategory = subCategory
@@ -700,7 +623,7 @@ class DataSetParameters(Base):
         self.__coverage = coverage
         self.__history = history
         self.__frequency = frequency
-        self.__assetClass = assetClass
+        self.__assetClass = assetClass if isinstance(assetClass, AssetClass) else get_enum_value(AssetClass, assetClass)
         self.__ownerIds = ownerIds
         self.__approverIds = approverIds
         self.__supportIds = supportIds
@@ -776,42 +699,42 @@ class DataSetParameters(Base):
         self._property_changed('frequency')        
 
     @property
-    def assetClass(self) -> Union['AssetClass', str]:
+    def assetClass(self) -> Union[AssetClass, str]:
         """Asset classification of security. Assets are classified into broad groups which exhibit similar characteristics and behave in a consistent way under different market conditions"""
         return self.__assetClass
 
     @assetClass.setter
-    def assetClass(self, value: Union['AssetClass', str]):
-        self.__assetClass = value
+    def assetClass(self, value: Union[AssetClass, str]):
+        self.__assetClass = value if isinstance(value, AssetClass) else get_enum_value(AssetClass, value)
         self._property_changed('assetClass')        
 
     @property
-    def ownerIds(self) -> Iterable[str]:
+    def ownerIds(self) -> Tuple[str, ...]:
         """Users who own dataset."""
         return self.__ownerIds
 
     @ownerIds.setter
-    def ownerIds(self, value: Iterable[str]):
+    def ownerIds(self, value: Tuple[str, ...]):
         self.__ownerIds = value
         self._property_changed('ownerIds')        
 
     @property
-    def approverIds(self) -> Iterable[str]:
+    def approverIds(self) -> Tuple[str, ...]:
         """Users who can grant access to dataset."""
         return self.__approverIds
 
     @approverIds.setter
-    def approverIds(self, value: Iterable[str]):
+    def approverIds(self, value: Tuple[str, ...]):
         self.__approverIds = value
         self._property_changed('approverIds')        
 
     @property
-    def supportIds(self) -> Iterable[str]:
+    def supportIds(self) -> Tuple[str, ...]:
         """Users who support dataset."""
         return self.__supportIds
 
     @supportIds.setter
-    def supportIds(self, value: Iterable[str]):
+    def supportIds(self, value: Tuple[str, ...]):
         self.__supportIds = value
         self._property_changed('supportIds')        
 
@@ -871,11 +794,11 @@ class DataSetParameters(Base):
         self._property_changed('symbolStrategy')        
 
     @property
-    def constantSymbols(self) -> Iterable[str]:
+    def constantSymbols(self) -> Tuple[str, ...]:
         return self.__constantSymbols
 
     @constantSymbols.setter
-    def constantSymbols(self, value: Iterable[str]):
+    def constantSymbols(self, value: Tuple[str, ...]):
         self.__constantSymbols = value
         self._property_changed('constantSymbols')        
 
@@ -910,12 +833,12 @@ class DataSetParameters(Base):
         self._property_changed('includeInCatalog')        
 
     @property
-    def overrideQueryColumnIds(self) -> Iterable[str]:
+    def overrideQueryColumnIds(self) -> Tuple[str, ...]:
         """Explicit set of database columns to query for, regardless of fields specified in request."""
         return self.__overrideQueryColumnIds
 
     @overrideQueryColumnIds.setter
-    def overrideQueryColumnIds(self, value: Iterable[str]):
+    def overrideQueryColumnIds(self, value: Tuple[str, ...]):
         self.__overrideQueryColumnIds = value
         self._property_changed('overrideQueryColumnIds')        
 
@@ -924,268 +847,356 @@ class ProcessorEntity(Base):
         
     """Query processors for dataset."""
        
-    def __init__(self, filters: Iterable[str] = None, parsers: Iterable['ParserEntity'] = None, deduplicate: Iterable[str] = None):
+    def __init__(self, filters: Tuple[str, ...] = None, parsers: Tuple[ParserEntity, ...] = None, deduplicate: Tuple[str, ...] = None):
         super().__init__()
         self.__filters = filters
         self.__parsers = parsers
         self.__deduplicate = deduplicate
 
     @property
-    def filters(self) -> Iterable[str]:
+    def filters(self) -> Tuple[str, ...]:
         """List of filter processors."""
         return self.__filters
 
     @filters.setter
-    def filters(self, value: Iterable[str]):
+    def filters(self, value: Tuple[str, ...]):
         self.__filters = value
         self._property_changed('filters')        
 
     @property
-    def parsers(self) -> Iterable['ParserEntity']:
+    def parsers(self) -> Tuple[ParserEntity, ...]:
         """List of parser processors."""
         return self.__parsers
 
     @parsers.setter
-    def parsers(self, value: Iterable['ParserEntity']):
+    def parsers(self, value: Tuple[ParserEntity, ...]):
         self.__parsers = value
         self._property_changed('parsers')        
 
     @property
-    def deduplicate(self) -> Iterable[str]:
+    def deduplicate(self) -> Tuple[str, ...]:
         """Columns on which a deduplication processor should be run."""
         return self.__deduplicate
 
     @deduplicate.setter
-    def deduplicate(self, value: Iterable[str]):
+    def deduplicate(self, value: Tuple[str, ...]):
         self.__deduplicate = value
         self._property_changed('deduplicate')        
 
 
-class ParserEntity(Base):
-        
-    """Settings for a parser processor"""
-       
-    def __init__(self, onlyNormalizedFields: bool = None, quotes: bool = None, trades: bool = None):
-        super().__init__()
-        self.__onlyNormalizedFields = onlyNormalizedFields
-        self.__quotes = quotes
-        self.__trades = trades
-
-    @property
-    def onlyNormalizedFields(self) -> bool:
-        """Setting for onlyNormalizedFields."""
-        return self.__onlyNormalizedFields
-
-    @onlyNormalizedFields.setter
-    def onlyNormalizedFields(self, value: bool):
-        self.__onlyNormalizedFields = value
-        self._property_changed('onlyNormalizedFields')        
-
-    @property
-    def quotes(self) -> bool:
-        """Setting for quotes."""
-        return self.__quotes
-
-    @quotes.setter
-    def quotes(self, value: bool):
-        self.__quotes = value
-        self._property_changed('quotes')        
-
-    @property
-    def trades(self) -> bool:
-        """Setting for trades."""
-        return self.__trades
-
-    @trades.setter
-    def trades(self, value: bool):
-        self.__trades = value
-        self._property_changed('trades')        
-
-
-class MDAPI(Base):
-        
-    """Defines MDAPI fields."""
-       
-    def __init__(self, type: str, quotingStyles: Iterable[Any], class_: str = None):
-        super().__init__()
-        self.__class = class_
-        self.__type = type
-        self.__quotingStyles = quotingStyles
-
-    @property
-    def class_(self) -> str:
-        """MDAPI Class."""
-        return self.__class
-
-    @class_.setter
-    def class_(self, value: str):
-        self.__class = value
-        self._property_changed('class')        
-
-    @property
-    def type(self) -> str:
-        """The MDAPI Type field (private)"""
-        return self.__type
-
-    @type.setter
-    def type(self, value: str):
-        self.__type = value
-        self._property_changed('type')        
-
-    @property
-    def quotingStyles(self) -> Iterable[Any]:
-        """Map from MDAPI QuotingStyles to database columns"""
-        return self.__quotingStyles
-
-    @quotingStyles.setter
-    def quotingStyles(self, value: Iterable[Any]):
-        self.__quotingStyles = value
-        self._property_changed('quotingStyles')        
-
-
 class DataQueryResponse(Base):
                
-    def __init__(self, requestId: Union[str, str] = None, data: Iterable['FieldValueMap'] = None, groups: Iterable['DataGroup'] = None):
+    def __init__(self, requestId: str = None, data: Tuple[FieldValueMap, ...] = None, groups: Tuple[DataGroup, ...] = None):
         super().__init__()
         self.__requestId = requestId
         self.__data = data
         self.__groups = groups
 
     @property
-    def requestId(self) -> Union[str, str]:
+    def requestId(self) -> str:
         """Marquee unique identifier"""
         return self.__requestId
 
     @requestId.setter
-    def requestId(self, value: Union[str, str]):
+    def requestId(self, value: str):
         self.__requestId = value
         self._property_changed('requestId')        
 
     @property
-    def data(self) -> Iterable['FieldValueMap']:
+    def data(self) -> Tuple[FieldValueMap, ...]:
         """Array of data elements from dataset"""
         return self.__data
 
     @data.setter
-    def data(self, value: Iterable['FieldValueMap']):
+    def data(self, value: Tuple[FieldValueMap, ...]):
         self.__data = value
         self._property_changed('data')        
 
     @property
-    def groups(self) -> Iterable['DataGroup']:
+    def groups(self) -> Tuple[DataGroup, ...]:
         """If the data is requested in grouped mode, will return data group object"""
         return self.__groups
 
     @groups.setter
-    def groups(self, value: Iterable['DataGroup']):
+    def groups(self, value: Tuple[DataGroup, ...]):
         self.__groups = value
         self._property_changed('groups')        
 
 
-class DataGroup(Base):
+class DataSetDimensions(Base):
         
-    """Dataset grouped by context (key dimensions)"""
+    """Dataset dimensions."""
        
-    def __init__(self, context: Union['FieldValueMap', str] = None, data: Iterable['FieldValueMap'] = None):
+    def __init__(self, timeField: str, transactionTimeField: str = None, symbolDimensions: Tuple[str, ...] = None, nonSymbolDimensions: Tuple[FieldColumnPair, ...] = None, keyDimensions: Tuple[str, ...] = None, measures: Tuple[FieldColumnPair, ...] = None, entityDimension: str = None):
         super().__init__()
-        self.__context = context
-        self.__data = data
+        self.__timeField = timeField
+        self.__transactionTimeField = transactionTimeField
+        self.__symbolDimensions = symbolDimensions
+        self.__nonSymbolDimensions = nonSymbolDimensions
+        self.__keyDimensions = keyDimensions
+        self.__measures = measures
+        self.__entityDimension = entityDimension
 
     @property
-    def context(self) -> Union['FieldValueMap', str]:
-        """Context map for the grouped data (key dimensions)"""
-        return self.__context
+    def timeField(self) -> str:
+        return self.__timeField
 
-    @context.setter
-    def context(self, value: Union['FieldValueMap', str]):
-        self.__context = value
-        self._property_changed('context')        
+    @timeField.setter
+    def timeField(self, value: str):
+        self.__timeField = value
+        self._property_changed('timeField')        
 
     @property
-    def data(self) -> Iterable['FieldValueMap']:
-        """Array of grouped data objects"""
-        return self.__data
+    def transactionTimeField(self) -> str:
+        """For bi-temporal datasets, field for capturing the time at which a data point was updated."""
+        return self.__transactionTimeField
 
-    @data.setter
-    def data(self, value: Iterable['FieldValueMap']):
-        self.__data = value
-        self._property_changed('data')        
+    @transactionTimeField.setter
+    def transactionTimeField(self, value: str):
+        self.__transactionTimeField = value
+        self._property_changed('transactionTimeField')        
+
+    @property
+    def symbolDimensions(self) -> Tuple[str, ...]:
+        """Set of fields that determine database table name."""
+        return self.__symbolDimensions
+
+    @symbolDimensions.setter
+    def symbolDimensions(self, value: Tuple[str, ...]):
+        self.__symbolDimensions = value
+        self._property_changed('symbolDimensions')        
+
+    @property
+    def nonSymbolDimensions(self) -> Tuple[FieldColumnPair, ...]:
+        """Fields that are not nullable."""
+        return self.__nonSymbolDimensions
+
+    @nonSymbolDimensions.setter
+    def nonSymbolDimensions(self, value: Tuple[FieldColumnPair, ...]):
+        self.__nonSymbolDimensions = value
+        self._property_changed('nonSymbolDimensions')        
+
+    @property
+    def keyDimensions(self) -> Tuple[str, ...]:
+        return self.__keyDimensions
+
+    @keyDimensions.setter
+    def keyDimensions(self, value: Tuple[str, ...]):
+        self.__keyDimensions = value
+        self._property_changed('keyDimensions')        
+
+    @property
+    def measures(self) -> Tuple[FieldColumnPair, ...]:
+        """Fields that are nullable."""
+        return self.__measures
+
+    @measures.setter
+    def measures(self, value: Tuple[FieldColumnPair, ...]):
+        self.__measures = value
+        self._property_changed('measures')        
+
+    @property
+    def entityDimension(self) -> str:
+        """Symbol dimension corresponding to an entity e.g. asset or report."""
+        return self.__entityDimension
+
+    @entityDimension.setter
+    def entityDimension(self, value: str):
+        self.__entityDimension = value
+        self._property_changed('entityDimension')        
 
 
-class DataQuery(Base):
+class ComplexFilter(Base):
+        
+    """A compound filter for data requests."""
+       
+    def __init__(self, operator: str, simpleFilters: Tuple[DataFilter, ...]):
+        super().__init__()
+        self.__operator = operator
+        self.__simpleFilters = simpleFilters
+
+    @property
+    def operator(self) -> str:
+        return self.__operator
+
+    @operator.setter
+    def operator(self, value: str):
+        self.__operator = value
+        self._property_changed('operator')        
+
+    @property
+    def simpleFilters(self) -> Tuple[DataFilter, ...]:
+        return self.__simpleFilters
+
+    @simpleFilters.setter
+    def simpleFilters(self, value: Tuple[DataFilter, ...]):
+        self.__simpleFilters = value
+        self._property_changed('simpleFilters')        
+
+
+class EntityFilter(Base):
+        
+    """Filter on entities."""
+       
+    def __init__(self, operator: str = None, simpleFilters: Tuple[DataFilter, ...] = None, complexFilters: Tuple[ComplexFilter, ...] = None):
+        super().__init__()
+        self.__operator = operator
+        self.__simpleFilters = simpleFilters
+        self.__complexFilters = complexFilters
+
+    @property
+    def operator(self) -> str:
+        return self.__operator
+
+    @operator.setter
+    def operator(self, value: str):
+        self.__operator = value
+        self._property_changed('operator')        
+
+    @property
+    def simpleFilters(self) -> Tuple[DataFilter, ...]:
+        return self.__simpleFilters
+
+    @simpleFilters.setter
+    def simpleFilters(self, value: Tuple[DataFilter, ...]):
+        self.__simpleFilters = value
+        self._property_changed('simpleFilters')        
+
+    @property
+    def complexFilters(self) -> Tuple[ComplexFilter, ...]:
+        return self.__complexFilters
+
+    @complexFilters.setter
+    def complexFilters(self, value: Tuple[ComplexFilter, ...]):
+        self.__complexFilters = value
+        self._property_changed('complexFilters')        
+
+
+class DataSetFilters(Base):
+        
+    """Filters to restrict the set of data returned."""
+       
+    def __init__(self, entityFilter: EntityFilter = None, rowFilters: Tuple[DataFilter, ...] = None, advancedFilters: Tuple[AdvancedFilter, ...] = None, historyFilter: HistoryFilter = None):
+        super().__init__()
+        self.__entityFilter = entityFilter
+        self.__rowFilters = rowFilters
+        self.__advancedFilters = advancedFilters
+        self.__historyFilter = historyFilter
+
+    @property
+    def entityFilter(self) -> EntityFilter:
+        """Filter on entities."""
+        return self.__entityFilter
+
+    @entityFilter.setter
+    def entityFilter(self, value: EntityFilter):
+        self.__entityFilter = value
+        self._property_changed('entityFilter')        
+
+    @property
+    def rowFilters(self) -> Tuple[DataFilter, ...]:
+        """Filters on database rows."""
+        return self.__rowFilters
+
+    @rowFilters.setter
+    def rowFilters(self, value: Tuple[DataFilter, ...]):
+        self.__rowFilters = value
+        self._property_changed('rowFilters')        
+
+    @property
+    def advancedFilters(self) -> Tuple[AdvancedFilter, ...]:
+        return self.__advancedFilters
+
+    @advancedFilters.setter
+    def advancedFilters(self, value: Tuple[AdvancedFilter, ...]):
+        self.__advancedFilters = value
+        self._property_changed('advancedFilters')        
+
+    @property
+    def historyFilter(self) -> HistoryFilter:
+        """Restricts queries against dataset to an absolute or relative range."""
+        return self.__historyFilter
+
+    @historyFilter.setter
+    def historyFilter(self, value: HistoryFilter):
+        self.__historyFilter = value
+        self._property_changed('historyFilter')        
+
+
+class DataSetEntity(Base):
                
-    def __init__(self, id: Union[str, str] = None, dataSetId: Union[str, str] = None, format: Union['Format', str] = None, marketDataCoordinates: Iterable['MarketDataCoordinate'] = None, where: Union['FieldFilterMap', str] = None, vendor: str = None, startDate: Union[datetime.date, str] = None, endDate: Union[datetime.date, str] = None, startTime: Union[datetime.datetime, str] = None, endTime: Union[datetime.datetime, str] = None, asOfTime: Union[datetime.datetime, str] = None, idAsOfDate: Union[datetime.date, str] = None, since: Union[datetime.datetime, str] = None, dates=None, times=None, delay: int = None, intervals: int = None, pollingInterval: int = None, groupBy: Iterable['Field'] = None, grouped: bool = None, fields: Iterable['Selector'] = None):
+    def __init__(self, id: str, name: str, description: str, shortDescription: str, vendor: str, dataProduct: str, parameters: DataSetParameters, dimensions: DataSetDimensions, ownerId: str = None, startDate: datetime.date = None, mdapi: MDAPI = None, entitlements: Entitlements = None, queryProcessors: ProcessorEntity = None, defaults: DataSetDefaults = None, filters: DataSetFilters = None, createdById: str = None, createdTime: datetime.datetime = None, lastUpdatedById: str = None, lastUpdatedTime: datetime.datetime = None, tags: Tuple[str, ...] = None):
         super().__init__()
+        self.__ownerId = ownerId
         self.__id = id
-        self.__dataSetId = dataSetId
-        self.__format = format
-        self.__marketDataCoordinates = marketDataCoordinates
-        self.__where = where
+        self.__name = name
+        self.__description = description
+        self.__shortDescription = shortDescription
         self.__vendor = vendor
         self.__startDate = startDate
-        self.__endDate = endDate
-        self.__startTime = startTime
-        self.__endTime = endTime
-        self.__asOfTime = asOfTime
-        self.__idAsOfDate = idAsOfDate
-        self.__since = since
-        self.__dates = dates
-        self.__times = times
-        self.__delay = delay
-        self.__intervals = intervals
-        self.__pollingInterval = pollingInterval
-        self.__groupBy = groupBy
-        self.__grouped = grouped
-        self.__fields = fields
+        self.__mdapi = mdapi
+        self.__dataProduct = dataProduct
+        self.__entitlements = entitlements
+        self.__queryProcessors = queryProcessors
+        self.__parameters = parameters
+        self.__dimensions = dimensions
+        self.__defaults = defaults
+        self.__filters = filters
+        self.__createdById = createdById
+        self.__createdTime = createdTime
+        self.__lastUpdatedById = lastUpdatedById
+        self.__lastUpdatedTime = lastUpdatedTime
+        self.__tags = tags
 
     @property
-    def id(self) -> Union[str, str]:
-        """Marquee unique identifier"""
+    def ownerId(self) -> str:
+        """Marquee unique identifier for user who owns the object."""
+        return self.__ownerId
+
+    @ownerId.setter
+    def ownerId(self, value: str):
+        self.__ownerId = value
+        self._property_changed('ownerId')        
+
+    @property
+    def id(self) -> str:
+        """Unique id of dataset."""
         return self.__id
 
     @id.setter
-    def id(self, value: Union[str, str]):
+    def id(self, value: str):
         self.__id = value
         self._property_changed('id')        
 
     @property
-    def dataSetId(self) -> Union[str, str]:
-        """Marquee unique identifier"""
-        return self.__dataSetId
+    def name(self) -> str:
+        """Name of dataset."""
+        return self.__name
 
-    @dataSetId.setter
-    def dataSetId(self, value: Union[str, str]):
-        self.__dataSetId = value
-        self._property_changed('dataSetId')        
-
-    @property
-    def format(self) -> Union['Format', str]:
-        """Alternative format for data to be returned in"""
-        return self.__format
-
-    @format.setter
-    def format(self, value: Union['Format', str]):
-        self.__format = value
-        self._property_changed('format')        
+    @name.setter
+    def name(self, value: str):
+        self.__name = value
+        self._property_changed('name')        
 
     @property
-    def marketDataCoordinates(self) -> Iterable['MarketDataCoordinate']:
-        return self.__marketDataCoordinates
+    def description(self) -> str:
+        """Description of dataset."""
+        return self.__description
 
-    @marketDataCoordinates.setter
-    def marketDataCoordinates(self, value: Iterable['MarketDataCoordinate']):
-        self.__marketDataCoordinates = value
-        self._property_changed('marketDataCoordinates')        
+    @description.setter
+    def description(self, value: str):
+        self.__description = value
+        self._property_changed('description')        
 
     @property
-    def where(self) -> Union['FieldFilterMap', str]:
-        """Filters on data fields."""
-        return self.__where
+    def shortDescription(self) -> str:
+        """Short description of dataset."""
+        return self.__shortDescription
 
-    @where.setter
-    def where(self, value: Union['FieldFilterMap', str]):
-        self.__where = value
-        self._property_changed('where')        
+    @shortDescription.setter
+    def shortDescription(self, value: str):
+        self.__shortDescription = value
+        self._property_changed('shortDescription')        
 
     @property
     def vendor(self) -> str:
@@ -1197,151 +1208,141 @@ class DataQuery(Base):
         self._property_changed('vendor')        
 
     @property
-    def startDate(self) -> Union[datetime.date, str]:
-        """ISO 8601-formatted date"""
+    def startDate(self) -> datetime.date:
+        """The start of this data set"""
         return self.__startDate
 
     @startDate.setter
-    def startDate(self, value: Union[datetime.date, str]):
+    def startDate(self, value: datetime.date):
         self.__startDate = value
         self._property_changed('startDate')        
 
     @property
-    def endDate(self) -> Union[datetime.date, str]:
-        """ISO 8601-formatted date"""
-        return self.__endDate
+    def mdapi(self) -> MDAPI:
+        """Defines MDAPI fields."""
+        return self.__mdapi
 
-    @endDate.setter
-    def endDate(self, value: Union[datetime.date, str]):
-        self.__endDate = value
-        self._property_changed('endDate')        
-
-    @property
-    def startTime(self) -> Union[datetime.datetime, str]:
-        """ISO 8601-formatted timestamp"""
-        return self.__startTime
-
-    @startTime.setter
-    def startTime(self, value: Union[datetime.datetime, str]):
-        self.__startTime = value
-        self._property_changed('startTime')        
+    @mdapi.setter
+    def mdapi(self, value: MDAPI):
+        self.__mdapi = value
+        self._property_changed('mdapi')        
 
     @property
-    def endTime(self) -> Union[datetime.datetime, str]:
-        """ISO 8601-formatted timestamp"""
-        return self.__endTime
+    def dataProduct(self) -> str:
+        """Product that dataset belongs to."""
+        return self.__dataProduct
 
-    @endTime.setter
-    def endTime(self, value: Union[datetime.datetime, str]):
-        self.__endTime = value
-        self._property_changed('endTime')        
-
-    @property
-    def asOfTime(self) -> Union[datetime.datetime, str]:
-        """ISO 8601-formatted timestamp"""
-        return self.__asOfTime
-
-    @asOfTime.setter
-    def asOfTime(self, value: Union[datetime.datetime, str]):
-        self.__asOfTime = value
-        self._property_changed('asOfTime')        
+    @dataProduct.setter
+    def dataProduct(self, value: str):
+        self.__dataProduct = value
+        self._property_changed('dataProduct')        
 
     @property
-    def idAsOfDate(self) -> Union[datetime.date, str]:
-        """ISO 8601-formatted date"""
-        return self.__idAsOfDate
+    def entitlements(self) -> Entitlements:
+        """Defines the entitlements of a given resource"""
+        return self.__entitlements
 
-    @idAsOfDate.setter
-    def idAsOfDate(self, value: Union[datetime.date, str]):
-        self.__idAsOfDate = value
-        self._property_changed('idAsOfDate')        
-
-    @property
-    def since(self) -> Union[datetime.datetime, str]:
-        """ISO 8601-formatted timestamp"""
-        return self.__since
-
-    @since.setter
-    def since(self, value: Union[datetime.datetime, str]):
-        self.__since = value
-        self._property_changed('since')        
+    @entitlements.setter
+    def entitlements(self, value: Entitlements):
+        self.__entitlements = value
+        self._property_changed('entitlements')        
 
     @property
-    def dates(self):
-        """Select and return specific dates from dataset query results."""
-        return self.__dates
+    def queryProcessors(self) -> ProcessorEntity:
+        """Query processors for dataset."""
+        return self.__queryProcessors
 
-    @dates.setter
-    def dates(self, value):
-        self.__dates = value
-        self._property_changed('dates')        
-
-    @property
-    def times(self):
-        """Select and return specific times from dataset query results."""
-        return self.__times
-
-    @times.setter
-    def times(self, value):
-        self.__times = value
-        self._property_changed('times')        
+    @queryProcessors.setter
+    def queryProcessors(self, value: ProcessorEntity):
+        self.__queryProcessors = value
+        self._property_changed('queryProcessors')        
 
     @property
-    def delay(self) -> int:
-        """Number of minutes to delay returning data."""
-        return self.__delay
+    def parameters(self) -> DataSetParameters:
+        """Dataset parameters."""
+        return self.__parameters
 
-    @delay.setter
-    def delay(self, value: int):
-        self.__delay = value
-        self._property_changed('delay')        
-
-    @property
-    def intervals(self) -> int:
-        """Number of intervals for which to return output times, for example if 10, it will return 10 data points evenly spaced over the time/date range."""
-        return self.__intervals
-
-    @intervals.setter
-    def intervals(self, value: int):
-        self.__intervals = value
-        self._property_changed('intervals')        
+    @parameters.setter
+    def parameters(self, value: DataSetParameters):
+        self.__parameters = value
+        self._property_changed('parameters')        
 
     @property
-    def pollingInterval(self) -> int:
-        """When streaming, wait for this number of seconds between poll attempts."""
-        return self.__pollingInterval
+    def dimensions(self) -> DataSetDimensions:
+        """Dataset dimensions."""
+        return self.__dimensions
 
-    @pollingInterval.setter
-    def pollingInterval(self, value: int):
-        self.__pollingInterval = value
-        self._property_changed('pollingInterval')        
-
-    @property
-    def groupBy(self) -> Iterable['Field']:
-        """Fields that determine grouping of results. Defaults to the dimensions of the dataset."""
-        return self.__groupBy
-
-    @groupBy.setter
-    def groupBy(self, value: Iterable['Field']):
-        self.__groupBy = value
-        self._property_changed('groupBy')        
+    @dimensions.setter
+    def dimensions(self, value: DataSetDimensions):
+        self.__dimensions = value
+        self._property_changed('dimensions')        
 
     @property
-    def grouped(self) -> bool:
-        """Set to true to return results grouped by a given context (set of dimensions)."""
-        return self.__grouped
+    def defaults(self) -> DataSetDefaults:
+        """Default settings."""
+        return self.__defaults
 
-    @grouped.setter
-    def grouped(self, value: bool):
-        self.__grouped = value
-        self._property_changed('grouped')        
+    @defaults.setter
+    def defaults(self, value: DataSetDefaults):
+        self.__defaults = value
+        self._property_changed('defaults')        
 
     @property
-    def fields(self) -> Iterable['Selector']:
-        """Fields to be returned."""
-        return self.__fields
+    def filters(self) -> DataSetFilters:
+        """Filters to restrict the set of data returned."""
+        return self.__filters
 
-    @fields.setter
-    def fields(self, value: Iterable['Selector']):
-        self.__fields = value
-        self._property_changed('fields')        
+    @filters.setter
+    def filters(self, value: DataSetFilters):
+        self.__filters = value
+        self._property_changed('filters')        
+
+    @property
+    def createdById(self) -> str:
+        """Unique identifier of user who created the object"""
+        return self.__createdById
+
+    @createdById.setter
+    def createdById(self, value: str):
+        self.__createdById = value
+        self._property_changed('createdById')        
+
+    @property
+    def createdTime(self) -> datetime.datetime:
+        """Time created. ISO 8601 formatted string"""
+        return self.__createdTime
+
+    @createdTime.setter
+    def createdTime(self, value: datetime.datetime):
+        self.__createdTime = value
+        self._property_changed('createdTime')        
+
+    @property
+    def lastUpdatedById(self) -> str:
+        """Unique identifier of user who last updated the object"""
+        return self.__lastUpdatedById
+
+    @lastUpdatedById.setter
+    def lastUpdatedById(self, value: str):
+        self.__lastUpdatedById = value
+        self._property_changed('lastUpdatedById')        
+
+    @property
+    def lastUpdatedTime(self) -> datetime.datetime:
+        """Timestamp of when the object was last updated"""
+        return self.__lastUpdatedTime
+
+    @lastUpdatedTime.setter
+    def lastUpdatedTime(self, value: datetime.datetime):
+        self.__lastUpdatedTime = value
+        self._property_changed('lastUpdatedTime')        
+
+    @property
+    def tags(self) -> Tuple[str, ...]:
+        """Tags associated with dataset."""
+        return self.__tags
+
+    @tags.setter
+    def tags(self, value: Tuple[str, ...]):
+        self.__tags = value
+        self._property_changed('tags')        

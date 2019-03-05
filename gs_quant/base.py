@@ -14,8 +14,12 @@ specific language governing permissions and limitations
 under the License.
 """
 from concurrent.futures import Future
+from enum import EnumMeta
+import logging
 import pandas as pd
 from typing import Union
+
+_logger = logging.getLogger(__name__)
 
 
 class EnumBase:
@@ -92,3 +96,15 @@ class Priceable(Base):
 
 class Instrument(Priceable):
     pass
+
+
+def get_enum_value(enum_type: EnumMeta, value: str):
+    if value is None:
+        return None
+
+    enum_value = next((i for i in enum_type if i.value == value), None)
+    if enum_value is None:
+        _logger.warning('Setting value to {}, which is not a valid entry in {}'.format(value, enum_type))
+        enum_value = value
+
+    return enum_value

@@ -26,18 +26,6 @@ diffs, lags, volatilities and other numerical operations which are generally fin
 """
 
 
-# Return types
-
-class Returns(Enum):
-    SIMPLE = "simple"
-    LOGARITHMIC = "log"
-
-
-class SeriesType(Enum):
-    PRICES = "prices"
-    RETURNS = "returns"
-
-
 class AnnualizationFactor(IntEnum):
     DAILY = 252
     WEEKLY = 52
