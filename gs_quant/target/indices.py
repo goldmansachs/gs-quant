@@ -18,35 +18,13 @@ from gs_quant.target.common import *
 import datetime
 from typing import Tuple, Union
 from enum import Enum
-from gs_quant.base import EnumBase, Base, get_enum_value
+from gs_quant.base import EnumBase, get_enum_value, Base
 
 
 class OptionStrikeType(EnumBase, Enum):    
     
     Relative = 'Relative'
     Delta = 'Delta'
-    
-    def __repr__(self):
-        return self.value
-
-
-class MarketDataVendor(EnumBase, Enum):    
-    
-    Goldman_Sachs = 'Goldman Sachs'
-    Thomson_Reuters = 'Thomson Reuters'
-    Solactive = 'Solactive'
-    WM = 'WM'
-    
-    def __repr__(self):
-        return self.value
-
-
-class TradeType(EnumBase, Enum):    
-    
-    """Direction"""
-
-    Buy = 'Buy'
-    Sell = 'Sell'
     
     def __repr__(self):
         return self.value
@@ -83,6 +61,101 @@ class IndicesCurrency(EnumBase, Enum):
     
     def __repr__(self):
         return self.value
+
+
+class TradeType(EnumBase, Enum):    
+    
+    """Direction"""
+
+    Buy = 'Buy'
+    Sell = 'Sell'
+    
+    def __repr__(self):
+        return self.value
+
+
+class ISelectSeries(Base):
+               
+    def __init__(self, __TYPE: str = None, data: tuple = None, identifier: str = None, identifierType: str = None, name: str = None):
+        super().__init__()
+        self.____TYPE = __TYPE
+        self.__data = data
+        self.__identifier = identifier
+        self.__identifierType = identifierType
+        self.__name = name
+
+    @property
+    def __TYPE(self) -> str:
+        return self.____TYPE
+
+    @__TYPE.setter
+    def __TYPE(self, value: str):
+        self.____TYPE = value
+        self._property_changed('__TYPE')        
+
+    @property
+    def data(self) -> tuple:
+        return self.__data
+
+    @data.setter
+    def data(self, value: tuple):
+        self.__data = value
+        self._property_changed('data')        
+
+    @property
+    def identifier(self) -> str:
+        return self.__identifier
+
+    @identifier.setter
+    def identifier(self, value: str):
+        self.__identifier = value
+        self._property_changed('identifier')        
+
+    @property
+    def identifierType(self) -> str:
+        return self.__identifierType
+
+    @identifierType.setter
+    def identifierType(self, value: str):
+        self.__identifierType = value
+        self._property_changed('identifierType')        
+
+    @property
+    def name(self) -> str:
+        return self.__name
+
+    @name.setter
+    def name(self, value: str):
+        self.__name = value
+        self._property_changed('name')        
+
+
+class ApprovalAction(Base):
+        
+    """Comments for the approval action"""
+       
+    def __init__(self, comment: str = None, actionType: str = None):
+        super().__init__()
+        self.__comment = comment
+        self.__actionType = actionType
+
+    @property
+    def comment(self) -> str:
+        return self.__comment
+
+    @comment.setter
+    def comment(self, value: str):
+        self.__comment = value
+        self._property_changed('comment')        
+
+    @property
+    def actionType(self) -> str:
+        return self.__actionType
+
+    @actionType.setter
+    def actionType(self, value: str):
+        self.__actionType = value
+        self._property_changed('actionType')        
 
 
 class ISelectConstituentColumn(Base):
@@ -231,155 +304,6 @@ class ISelectConstituentColumn(Base):
         self._property_changed('tooltip')        
 
 
-class ISelectNewUnit(Base):
-               
-    def __init__(self, id: str, newUnits: float = None):
-        super().__init__()
-        self.__id = id
-        self.__newUnits = newUnits
-
-    @property
-    def id(self) -> str:
-        return self.__id
-
-    @id.setter
-    def id(self, value: str):
-        self.__id = value
-        self._property_changed('id')        
-
-    @property
-    def newUnits(self) -> float:
-        return self.__newUnits
-
-    @newUnits.setter
-    def newUnits(self, value: float):
-        self.__newUnits = value
-        self._property_changed('newUnits')        
-
-
-class ISelectSeries(Base):
-               
-    def __init__(self, __TYPE: str = None, data: tuple = None, identifier: str = None, identifierType: str = None, name: str = None):
-        super().__init__()
-        self.____TYPE = __TYPE
-        self.__data = data
-        self.__identifier = identifier
-        self.__identifierType = identifierType
-        self.__name = name
-
-    @property
-    def __TYPE(self) -> str:
-        return self.____TYPE
-
-    @__TYPE.setter
-    def __TYPE(self, value: str):
-        self.____TYPE = value
-        self._property_changed('__TYPE')        
-
-    @property
-    def data(self) -> tuple:
-        return self.__data
-
-    @data.setter
-    def data(self, value: tuple):
-        self.__data = value
-        self._property_changed('data')        
-
-    @property
-    def identifier(self) -> str:
-        return self.__identifier
-
-    @identifier.setter
-    def identifier(self, value: str):
-        self.__identifier = value
-        self._property_changed('identifier')        
-
-    @property
-    def identifierType(self) -> str:
-        return self.__identifierType
-
-    @identifierType.setter
-    def identifierType(self, value: str):
-        self.__identifierType = value
-        self._property_changed('identifierType')        
-
-    @property
-    def name(self) -> str:
-        return self.__name
-
-    @name.setter
-    def name(self, value: str):
-        self.__name = value
-        self._property_changed('name')        
-
-
-class ISelectNewWeight(Base):
-               
-    def __init__(self, id: str, newWeight: float = None):
-        super().__init__()
-        self.__id = id
-        self.__newWeight = newWeight
-
-    @property
-    def id(self) -> str:
-        return self.__id
-
-    @id.setter
-    def id(self, value: str):
-        self.__id = value
-        self._property_changed('id')        
-
-    @property
-    def newWeight(self) -> float:
-        return self.__newWeight
-
-    @newWeight.setter
-    def newWeight(self, value: float):
-        self.__newWeight = value
-        self._property_changed('newWeight')        
-
-
-class PublishParameters(Base):
-        
-    """Publishing parameters to determine where and how to publish indices, default all to false"""
-       
-    def __init__(self, publishToReuters: bool, publishToBloomberg: bool, includePriceHistory: bool):
-        super().__init__()
-        self.__includePriceHistory = includePriceHistory
-        self.__publishToBloomberg = publishToBloomberg
-        self.__publishToReuters = publishToReuters
-
-    @property
-    def includePriceHistory(self) -> bool:
-        """Include full price history, default to false"""
-        return self.__includePriceHistory
-
-    @includePriceHistory.setter
-    def includePriceHistory(self, value: bool):
-        self.__includePriceHistory = value
-        self._property_changed('includePriceHistory')        
-
-    @property
-    def publishToBloomberg(self) -> bool:
-        """Publish Basket to Bloomberg, default to false"""
-        return self.__publishToBloomberg
-
-    @publishToBloomberg.setter
-    def publishToBloomberg(self, value: bool):
-        self.__publishToBloomberg = value
-        self._property_changed('publishToBloomberg')        
-
-    @property
-    def publishToReuters(self) -> bool:
-        """Publish Basket to Reuters, default to false"""
-        return self.__publishToReuters
-
-    @publishToReuters.setter
-    def publishToReuters(self, value: bool):
-        self.__publishToReuters = value
-        self._property_changed('publishToReuters')        
-
-
 class CustomBasketsResponse(Base):
         
     """Rebalance custom basket response"""
@@ -432,58 +356,30 @@ class CustomBasketsResponse(Base):
         self._property_changed('assetId')        
 
 
-class ISelectIndexParameters(Base):
+class ISelectNewUnit(Base):
                
-    def __init__(self, name: str = None, value: float = None):
+    def __init__(self, id: str, newUnits: float = None):
         super().__init__()
-        self.__name = name
-        self.__value = value
+        self.__id = id
+        self.__newUnits = newUnits
 
     @property
-    def name(self) -> str:
-        return self.__name
+    def id(self) -> str:
+        return self.__id
 
-    @name.setter
-    def name(self, value: str):
-        self.__name = value
-        self._property_changed('name')        
-
-    @property
-    def value(self) -> float:
-        return self.__value
-
-    @value.setter
-    def value(self, value: float):
-        self.__value = value
-        self._property_changed('value')        
-
-
-class ApprovalAction(Base):
-        
-    """Comments for the approval action"""
-       
-    def __init__(self, comment: str = None, actionType: str = None):
-        super().__init__()
-        self.__comment = comment
-        self.__actionType = actionType
+    @id.setter
+    def id(self, value: str):
+        self.__id = value
+        self._property_changed('id')        
 
     @property
-    def comment(self) -> str:
-        return self.__comment
+    def newUnits(self) -> float:
+        return self.__newUnits
 
-    @comment.setter
-    def comment(self, value: str):
-        self.__comment = value
-        self._property_changed('comment')        
-
-    @property
-    def actionType(self) -> str:
-        return self.__actionType
-
-    @actionType.setter
-    def actionType(self, value: str):
-        self.__actionType = value
-        self._property_changed('actionType')        
+    @newUnits.setter
+    def newUnits(self, value: float):
+        self.__newUnits = value
+        self._property_changed('newUnits')        
 
 
 class PositionPriceInput(Base):
@@ -534,6 +430,360 @@ class PositionPriceInput(Base):
     def notional(self, value: float):
         self.__notional = value
         self._property_changed('notional')        
+
+
+class PublishParameters(Base):
+        
+    """Publishing parameters to determine where and how to publish indices, default all to false"""
+       
+    def __init__(self, publishToReuters: bool, publishToBloomberg: bool, includePriceHistory: bool):
+        super().__init__()
+        self.__includePriceHistory = includePriceHistory
+        self.__publishToBloomberg = publishToBloomberg
+        self.__publishToReuters = publishToReuters
+
+    @property
+    def includePriceHistory(self) -> bool:
+        """Include full price history, default to false"""
+        return self.__includePriceHistory
+
+    @includePriceHistory.setter
+    def includePriceHistory(self, value: bool):
+        self.__includePriceHistory = value
+        self._property_changed('includePriceHistory')        
+
+    @property
+    def publishToBloomberg(self) -> bool:
+        """Publish Basket to Bloomberg, default to false"""
+        return self.__publishToBloomberg
+
+    @publishToBloomberg.setter
+    def publishToBloomberg(self, value: bool):
+        self.__publishToBloomberg = value
+        self._property_changed('publishToBloomberg')        
+
+    @property
+    def publishToReuters(self) -> bool:
+        """Publish Basket to Reuters, default to false"""
+        return self.__publishToReuters
+
+    @publishToReuters.setter
+    def publishToReuters(self, value: bool):
+        self.__publishToReuters = value
+        self._property_changed('publishToReuters')        
+
+
+class ISelectIndexParameters(Base):
+               
+    def __init__(self, name: str = None, value: float = None):
+        super().__init__()
+        self.__name = name
+        self.__value = value
+
+    @property
+    def name(self) -> str:
+        return self.__name
+
+    @name.setter
+    def name(self, value: str):
+        self.__name = value
+        self._property_changed('name')        
+
+    @property
+    def value(self) -> float:
+        return self.__value
+
+    @value.setter
+    def value(self, value: float):
+        self.__value = value
+        self._property_changed('value')        
+
+
+class ISelectNewWeight(Base):
+               
+    def __init__(self, id: str, newWeight: float = None):
+        super().__init__()
+        self.__id = id
+        self.__newWeight = newWeight
+
+    @property
+    def id(self) -> str:
+        return self.__id
+
+    @id.setter
+    def id(self, value: str):
+        self.__id = value
+        self._property_changed('id')        
+
+    @property
+    def newWeight(self) -> float:
+        return self.__newWeight
+
+    @newWeight.setter
+    def newWeight(self, value: float):
+        self.__newWeight = value
+        self._property_changed('newWeight')        
+
+
+class ISelectNewParameter(Base):
+               
+    def __init__(self, earlyUnwindAfter: float = None, earlyUnwindApplicable: str = None, expiryDateRule: str = None, optionTargetExpiryParameter: float = None, optionEarlyUnwindDays: float = None, inAlpha: bool = None, isFSRTargetFactor: bool = None, fsrMaxRatio: float = None, fsrMinRatio: float = None, moduleEnabled: bool = None, moduleName: str = None, bloombergId: dict = None, stockId: dict = None, newWeight: float = None, notional: float = None, optionType: Union[OptionType, str] = None, optionStrikeType: Union[OptionStrikeType, str] = None, strikeRelative: float = None, tradeType: Union[TradeType, str] = None, signal: float = None, newSignal: float = None, newMinWeight: float = None, newMaxWeight: float = None, minWeight: float = None, maxWeight: float = None):
+        super().__init__()
+        self.__earlyUnwindAfter = earlyUnwindAfter
+        self.__earlyUnwindApplicable = earlyUnwindApplicable
+        self.__expiryDateRule = expiryDateRule
+        self.__optionTargetExpiryParameter = optionTargetExpiryParameter
+        self.__optionEarlyUnwindDays = optionEarlyUnwindDays
+        self.__inAlpha = inAlpha
+        self.__isFSRTargetFactor = isFSRTargetFactor
+        self.__fsrMaxRatio = fsrMaxRatio
+        self.__fsrMinRatio = fsrMinRatio
+        self.__moduleEnabled = moduleEnabled
+        self.__moduleName = moduleName
+        self.__bloombergId = bloombergId
+        self.__stockId = stockId
+        self.__newWeight = newWeight
+        self.__notional = notional
+        self.__optionType = optionType if isinstance(optionType, OptionType) else get_enum_value(OptionType, optionType)
+        self.__optionStrikeType = optionStrikeType if isinstance(optionStrikeType, OptionStrikeType) else get_enum_value(OptionStrikeType, optionStrikeType)
+        self.__strikeRelative = strikeRelative
+        self.__tradeType = tradeType if isinstance(tradeType, TradeType) else get_enum_value(TradeType, tradeType)
+        self.__signal = signal
+        self.__newSignal = newSignal
+        self.__newMinWeight = newMinWeight
+        self.__newMaxWeight = newMaxWeight
+        self.__minWeight = minWeight
+        self.__maxWeight = maxWeight
+
+    @property
+    def earlyUnwindAfter(self) -> float:
+        return self.__earlyUnwindAfter
+
+    @earlyUnwindAfter.setter
+    def earlyUnwindAfter(self, value: float):
+        self.__earlyUnwindAfter = value
+        self._property_changed('earlyUnwindAfter')        
+
+    @property
+    def earlyUnwindApplicable(self) -> str:
+        """Indicates whether the module can be unwinded early"""
+        return self.__earlyUnwindApplicable
+
+    @earlyUnwindApplicable.setter
+    def earlyUnwindApplicable(self, value: str):
+        self.__earlyUnwindApplicable = value
+        self._property_changed('earlyUnwindApplicable')        
+
+    @property
+    def expiryDateRule(self) -> str:
+        """Free text description of asset. Description provided will be indexed in the search service for free text relevance match"""
+        return self.__expiryDateRule
+
+    @expiryDateRule.setter
+    def expiryDateRule(self, value: str):
+        self.__expiryDateRule = value
+        self._property_changed('expiryDateRule')        
+
+    @property
+    def optionTargetExpiryParameter(self) -> float:
+        return self.__optionTargetExpiryParameter
+
+    @optionTargetExpiryParameter.setter
+    def optionTargetExpiryParameter(self, value: float):
+        self.__optionTargetExpiryParameter = value
+        self._property_changed('optionTargetExpiryParameter')        
+
+    @property
+    def optionEarlyUnwindDays(self) -> float:
+        return self.__optionEarlyUnwindDays
+
+    @optionEarlyUnwindDays.setter
+    def optionEarlyUnwindDays(self, value: float):
+        self.__optionEarlyUnwindDays = value
+        self._property_changed('optionEarlyUnwindDays')        
+
+    @property
+    def inAlpha(self) -> bool:
+        return self.__inAlpha
+
+    @inAlpha.setter
+    def inAlpha(self, value: bool):
+        self.__inAlpha = value
+        self._property_changed('inAlpha')        
+
+    @property
+    def isFSRTargetFactor(self) -> bool:
+        return self.__isFSRTargetFactor
+
+    @isFSRTargetFactor.setter
+    def isFSRTargetFactor(self, value: bool):
+        self.__isFSRTargetFactor = value
+        self._property_changed('isFSRTargetFactor')        
+
+    @property
+    def fsrMaxRatio(self) -> float:
+        return self.__fsrMaxRatio
+
+    @fsrMaxRatio.setter
+    def fsrMaxRatio(self, value: float):
+        self.__fsrMaxRatio = value
+        self._property_changed('fsrMaxRatio')        
+
+    @property
+    def fsrMinRatio(self) -> float:
+        return self.__fsrMinRatio
+
+    @fsrMinRatio.setter
+    def fsrMinRatio(self, value: float):
+        self.__fsrMinRatio = value
+        self._property_changed('fsrMinRatio')        
+
+    @property
+    def moduleEnabled(self) -> bool:
+        """Enable to disable the module"""
+        return self.__moduleEnabled
+
+    @moduleEnabled.setter
+    def moduleEnabled(self, value: bool):
+        self.__moduleEnabled = value
+        self._property_changed('moduleEnabled')        
+
+    @property
+    def moduleName(self) -> str:
+        """Free text description of asset. Description provided will be indexed in the search service for free text relevance match"""
+        return self.__moduleName
+
+    @moduleName.setter
+    def moduleName(self, value: str):
+        self.__moduleName = value
+        self._property_changed('moduleName')        
+
+    @property
+    def bloombergId(self) -> dict:
+        return self.__bloombergId
+
+    @bloombergId.setter
+    def bloombergId(self, value: dict):
+        self.__bloombergId = value
+        self._property_changed('bloombergId')        
+
+    @property
+    def stockId(self) -> dict:
+        return self.__stockId
+
+    @stockId.setter
+    def stockId(self, value: dict):
+        self.__stockId = value
+        self._property_changed('stockId')        
+
+    @property
+    def newWeight(self) -> float:
+        return self.__newWeight
+
+    @newWeight.setter
+    def newWeight(self, value: float):
+        self.__newWeight = value
+        self._property_changed('newWeight')        
+
+    @property
+    def notional(self) -> float:
+        return self.__notional
+
+    @notional.setter
+    def notional(self, value: float):
+        self.__notional = value
+        self._property_changed('notional')        
+
+    @property
+    def optionType(self) -> Union[OptionType, str]:
+        return self.__optionType
+
+    @optionType.setter
+    def optionType(self, value: Union[OptionType, str]):
+        self.__optionType = value if isinstance(value, OptionType) else get_enum_value(OptionType, value)
+        self._property_changed('optionType')        
+
+    @property
+    def optionStrikeType(self) -> Union[OptionStrikeType, str]:
+        return self.__optionStrikeType
+
+    @optionStrikeType.setter
+    def optionStrikeType(self, value: Union[OptionStrikeType, str]):
+        self.__optionStrikeType = value if isinstance(value, OptionStrikeType) else get_enum_value(OptionStrikeType, value)
+        self._property_changed('optionStrikeType')        
+
+    @property
+    def strikeRelative(self) -> float:
+        return self.__strikeRelative
+
+    @strikeRelative.setter
+    def strikeRelative(self, value: float):
+        self.__strikeRelative = value
+        self._property_changed('strikeRelative')        
+
+    @property
+    def tradeType(self) -> Union[TradeType, str]:
+        """Direction"""
+        return self.__tradeType
+
+    @tradeType.setter
+    def tradeType(self, value: Union[TradeType, str]):
+        self.__tradeType = value if isinstance(value, TradeType) else get_enum_value(TradeType, value)
+        self._property_changed('tradeType')        
+
+    @property
+    def signal(self) -> float:
+        return self.__signal
+
+    @signal.setter
+    def signal(self, value: float):
+        self.__signal = value
+        self._property_changed('signal')        
+
+    @property
+    def newSignal(self) -> float:
+        return self.__newSignal
+
+    @newSignal.setter
+    def newSignal(self, value: float):
+        self.__newSignal = value
+        self._property_changed('newSignal')        
+
+    @property
+    def newMinWeight(self) -> float:
+        return self.__newMinWeight
+
+    @newMinWeight.setter
+    def newMinWeight(self, value: float):
+        self.__newMinWeight = value
+        self._property_changed('newMinWeight')        
+
+    @property
+    def newMaxWeight(self) -> float:
+        return self.__newMaxWeight
+
+    @newMaxWeight.setter
+    def newMaxWeight(self, value: float):
+        self.__newMaxWeight = value
+        self._property_changed('newMaxWeight')        
+
+    @property
+    def minWeight(self) -> float:
+        return self.__minWeight
+
+    @minWeight.setter
+    def minWeight(self, value: float):
+        self.__minWeight = value
+        self._property_changed('minWeight')        
+
+    @property
+    def maxWeight(self) -> float:
+        return self.__maxWeight
+
+    @maxWeight.setter
+    def maxWeight(self, value: float):
+        self.__maxWeight = value
+        self._property_changed('maxWeight')        
 
 
 class IndicesPriceParameters(Base):
@@ -920,306 +1170,54 @@ class ISelectResponse(Base):
         self._property_changed('validationMessages')        
 
 
-class ISelectNewParameter(Base):
+class ISelectRebalance(Base):
                
-    def __init__(self, earlyUnwindAfter: float = None, earlyUnwindApplicable: str = None, expiryDateRule: str = None, optionTargetExpiryParameter: float = None, optionEarlyUnwindDays: float = None, inAlpha: bool = None, isFSRTargetFactor: bool = None, fsrMaxRatio: float = None, fsrMinRatio: float = None, moduleEnabled: bool = None, moduleName: str = None, bloombergId: dict = None, stockId: dict = None, newWeight: float = None, notional: float = None, optionType: Union[OptionType, str] = None, optionStrikeType: Union[OptionStrikeType, str] = None, strikeRelative: float = None, tradeType: Union[TradeType, str] = None, signal: float = None, newSignal: float = None, newMinWeight: float = None, newMaxWeight: float = None, minWeight: float = None, maxWeight: float = None):
+    def __init__(self, newWeights: Tuple[ISelectNewWeight, ...] = None, rebalanceDate: str = None, newParameters: Tuple[ISelectNewParameter, ...] = None, indexParameters: Tuple[ISelectIndexParameters, ...] = None):
         super().__init__()
-        self.__earlyUnwindAfter = earlyUnwindAfter
-        self.__earlyUnwindApplicable = earlyUnwindApplicable
-        self.__expiryDateRule = expiryDateRule
-        self.__optionTargetExpiryParameter = optionTargetExpiryParameter
-        self.__optionEarlyUnwindDays = optionEarlyUnwindDays
-        self.__inAlpha = inAlpha
-        self.__isFSRTargetFactor = isFSRTargetFactor
-        self.__fsrMaxRatio = fsrMaxRatio
-        self.__fsrMinRatio = fsrMinRatio
-        self.__moduleEnabled = moduleEnabled
-        self.__moduleName = moduleName
-        self.__bloombergId = bloombergId
-        self.__stockId = stockId
-        self.__newWeight = newWeight
-        self.__notional = notional
-        self.__optionType = optionType if isinstance(optionType, OptionType) else get_enum_value(OptionType, optionType)
-        self.__optionStrikeType = optionStrikeType if isinstance(optionStrikeType, OptionStrikeType) else get_enum_value(OptionStrikeType, optionStrikeType)
-        self.__strikeRelative = strikeRelative
-        self.__tradeType = tradeType if isinstance(tradeType, TradeType) else get_enum_value(TradeType, tradeType)
-        self.__signal = signal
-        self.__newSignal = newSignal
-        self.__newMinWeight = newMinWeight
-        self.__newMaxWeight = newMaxWeight
-        self.__minWeight = minWeight
-        self.__maxWeight = maxWeight
+        self.__newWeights = newWeights
+        self.__rebalanceDate = rebalanceDate
+        self.__newParameters = newParameters
+        self.__indexParameters = indexParameters
 
     @property
-    def earlyUnwindAfter(self) -> float:
-        return self.__earlyUnwindAfter
+    def newWeights(self) -> Tuple[ISelectNewWeight, ...]:
+        """New Weight array to be updated"""
+        return self.__newWeights
 
-    @earlyUnwindAfter.setter
-    def earlyUnwindAfter(self, value: float):
-        self.__earlyUnwindAfter = value
-        self._property_changed('earlyUnwindAfter')        
-
-    @property
-    def earlyUnwindApplicable(self) -> str:
-        """Indicates whether the module can be unwinded early"""
-        return self.__earlyUnwindApplicable
-
-    @earlyUnwindApplicable.setter
-    def earlyUnwindApplicable(self, value: str):
-        self.__earlyUnwindApplicable = value
-        self._property_changed('earlyUnwindApplicable')        
+    @newWeights.setter
+    def newWeights(self, value: Tuple[ISelectNewWeight, ...]):
+        self.__newWeights = value
+        self._property_changed('newWeights')        
 
     @property
-    def expiryDateRule(self) -> str:
-        """Free text description of asset. Description provided will be indexed in the search service for free text relevance match"""
-        return self.__expiryDateRule
+    def rebalanceDate(self) -> str:
+        """Date the rebalance will occur"""
+        return self.__rebalanceDate
 
-    @expiryDateRule.setter
-    def expiryDateRule(self, value: str):
-        self.__expiryDateRule = value
-        self._property_changed('expiryDateRule')        
-
-    @property
-    def optionTargetExpiryParameter(self) -> float:
-        return self.__optionTargetExpiryParameter
-
-    @optionTargetExpiryParameter.setter
-    def optionTargetExpiryParameter(self, value: float):
-        self.__optionTargetExpiryParameter = value
-        self._property_changed('optionTargetExpiryParameter')        
+    @rebalanceDate.setter
+    def rebalanceDate(self, value: str):
+        self.__rebalanceDate = value
+        self._property_changed('rebalanceDate')        
 
     @property
-    def optionEarlyUnwindDays(self) -> float:
-        return self.__optionEarlyUnwindDays
+    def newParameters(self) -> Tuple[ISelectNewParameter, ...]:
+        """New parameters to be updated"""
+        return self.__newParameters
 
-    @optionEarlyUnwindDays.setter
-    def optionEarlyUnwindDays(self, value: float):
-        self.__optionEarlyUnwindDays = value
-        self._property_changed('optionEarlyUnwindDays')        
-
-    @property
-    def inAlpha(self) -> bool:
-        return self.__inAlpha
-
-    @inAlpha.setter
-    def inAlpha(self, value: bool):
-        self.__inAlpha = value
-        self._property_changed('inAlpha')        
+    @newParameters.setter
+    def newParameters(self, value: Tuple[ISelectNewParameter, ...]):
+        self.__newParameters = value
+        self._property_changed('newParameters')        
 
     @property
-    def isFSRTargetFactor(self) -> bool:
-        return self.__isFSRTargetFactor
+    def indexParameters(self) -> Tuple[ISelectIndexParameters, ...]:
+        """Index parameters to be updated"""
+        return self.__indexParameters
 
-    @isFSRTargetFactor.setter
-    def isFSRTargetFactor(self, value: bool):
-        self.__isFSRTargetFactor = value
-        self._property_changed('isFSRTargetFactor')        
-
-    @property
-    def fsrMaxRatio(self) -> float:
-        return self.__fsrMaxRatio
-
-    @fsrMaxRatio.setter
-    def fsrMaxRatio(self, value: float):
-        self.__fsrMaxRatio = value
-        self._property_changed('fsrMaxRatio')        
-
-    @property
-    def fsrMinRatio(self) -> float:
-        return self.__fsrMinRatio
-
-    @fsrMinRatio.setter
-    def fsrMinRatio(self, value: float):
-        self.__fsrMinRatio = value
-        self._property_changed('fsrMinRatio')        
-
-    @property
-    def moduleEnabled(self) -> bool:
-        """Enable to disable the module"""
-        return self.__moduleEnabled
-
-    @moduleEnabled.setter
-    def moduleEnabled(self, value: bool):
-        self.__moduleEnabled = value
-        self._property_changed('moduleEnabled')        
-
-    @property
-    def moduleName(self) -> str:
-        """Free text description of asset. Description provided will be indexed in the search service for free text relevance match"""
-        return self.__moduleName
-
-    @moduleName.setter
-    def moduleName(self, value: str):
-        self.__moduleName = value
-        self._property_changed('moduleName')        
-
-    @property
-    def bloombergId(self) -> dict:
-        return self.__bloombergId
-
-    @bloombergId.setter
-    def bloombergId(self, value: dict):
-        self.__bloombergId = value
-        self._property_changed('bloombergId')        
-
-    @property
-    def stockId(self) -> dict:
-        return self.__stockId
-
-    @stockId.setter
-    def stockId(self, value: dict):
-        self.__stockId = value
-        self._property_changed('stockId')        
-
-    @property
-    def newWeight(self) -> float:
-        return self.__newWeight
-
-    @newWeight.setter
-    def newWeight(self, value: float):
-        self.__newWeight = value
-        self._property_changed('newWeight')        
-
-    @property
-    def notional(self) -> float:
-        return self.__notional
-
-    @notional.setter
-    def notional(self, value: float):
-        self.__notional = value
-        self._property_changed('notional')        
-
-    @property
-    def optionType(self) -> Union[OptionType, str]:
-        return self.__optionType
-
-    @optionType.setter
-    def optionType(self, value: Union[OptionType, str]):
-        self.__optionType = value if isinstance(value, OptionType) else get_enum_value(OptionType, value)
-        self._property_changed('optionType')        
-
-    @property
-    def optionStrikeType(self) -> Union[OptionStrikeType, str]:
-        return self.__optionStrikeType
-
-    @optionStrikeType.setter
-    def optionStrikeType(self, value: Union[OptionStrikeType, str]):
-        self.__optionStrikeType = value if isinstance(value, OptionStrikeType) else get_enum_value(OptionStrikeType, value)
-        self._property_changed('optionStrikeType')        
-
-    @property
-    def strikeRelative(self) -> float:
-        return self.__strikeRelative
-
-    @strikeRelative.setter
-    def strikeRelative(self, value: float):
-        self.__strikeRelative = value
-        self._property_changed('strikeRelative')        
-
-    @property
-    def tradeType(self) -> Union[TradeType, str]:
-        """Direction"""
-        return self.__tradeType
-
-    @tradeType.setter
-    def tradeType(self, value: Union[TradeType, str]):
-        self.__tradeType = value if isinstance(value, TradeType) else get_enum_value(TradeType, value)
-        self._property_changed('tradeType')        
-
-    @property
-    def signal(self) -> float:
-        return self.__signal
-
-    @signal.setter
-    def signal(self, value: float):
-        self.__signal = value
-        self._property_changed('signal')        
-
-    @property
-    def newSignal(self) -> float:
-        return self.__newSignal
-
-    @newSignal.setter
-    def newSignal(self, value: float):
-        self.__newSignal = value
-        self._property_changed('newSignal')        
-
-    @property
-    def newMinWeight(self) -> float:
-        return self.__newMinWeight
-
-    @newMinWeight.setter
-    def newMinWeight(self, value: float):
-        self.__newMinWeight = value
-        self._property_changed('newMinWeight')        
-
-    @property
-    def newMaxWeight(self) -> float:
-        return self.__newMaxWeight
-
-    @newMaxWeight.setter
-    def newMaxWeight(self, value: float):
-        self.__newMaxWeight = value
-        self._property_changed('newMaxWeight')        
-
-    @property
-    def minWeight(self) -> float:
-        return self.__minWeight
-
-    @minWeight.setter
-    def minWeight(self, value: float):
-        self.__minWeight = value
-        self._property_changed('minWeight')        
-
-    @property
-    def maxWeight(self) -> float:
-        return self.__maxWeight
-
-    @maxWeight.setter
-    def maxWeight(self, value: float):
-        self.__maxWeight = value
-        self._property_changed('maxWeight')        
-
-
-class CustomBasketsRebalanceInputs(Base):
-        
-    """Inputs used to rebalance a custom basket"""
-       
-    def __init__(self, positionSet: Tuple[PositionPriceInput, ...] = None, publishParameters: PublishParameters = None, pricingParameters: IndicesPriceParameters = None):
-        super().__init__()
-        self.__positionSet = positionSet
-        self.__publishParameters = publishParameters
-        self.__pricingParameters = pricingParameters
-
-    @property
-    def positionSet(self) -> Tuple[PositionPriceInput, ...]:
-        """Information of constituents associated with the rebalance."""
-        return self.__positionSet
-
-    @positionSet.setter
-    def positionSet(self, value: Tuple[PositionPriceInput, ...]):
-        self.__positionSet = value
-        self._property_changed('positionSet')        
-
-    @property
-    def publishParameters(self) -> PublishParameters:
-        """Publishing parameters to determine where and how to publish indices, default all to false"""
-        return self.__publishParameters
-
-    @publishParameters.setter
-    def publishParameters(self, value: PublishParameters):
-        self.__publishParameters = value
-        self._property_changed('publishParameters')        
-
-    @property
-    def pricingParameters(self) -> IndicesPriceParameters:
-        """Parameters for pricing indices"""
-        return self.__pricingParameters
-
-    @pricingParameters.setter
-    def pricingParameters(self, value: IndicesPriceParameters):
-        self.__pricingParameters = value
-        self._property_changed('pricingParameters')        
+    @indexParameters.setter
+    def indexParameters(self, value: Tuple[ISelectIndexParameters, ...]):
+        self.__indexParameters = value
+        self._property_changed('indexParameters')        
 
 
 class IndicesCreateInputs(Base):
@@ -1329,54 +1327,45 @@ class IndicesCreateInputs(Base):
         self._property_changed('pricingParameters')        
 
 
-class ISelectRebalance(Base):
-               
-    def __init__(self, newWeights: Tuple[ISelectNewWeight, ...] = None, rebalanceDate: str = None, newParameters: Tuple[ISelectNewParameter, ...] = None, indexParameters: Tuple[ISelectIndexParameters, ...] = None):
+class CustomBasketsRebalanceInputs(Base):
+        
+    """Inputs used to rebalance a custom basket"""
+       
+    def __init__(self, positionSet: Tuple[PositionPriceInput, ...] = None, publishParameters: PublishParameters = None, pricingParameters: IndicesPriceParameters = None):
         super().__init__()
-        self.__newWeights = newWeights
-        self.__rebalanceDate = rebalanceDate
-        self.__newParameters = newParameters
-        self.__indexParameters = indexParameters
+        self.__positionSet = positionSet
+        self.__publishParameters = publishParameters
+        self.__pricingParameters = pricingParameters
 
     @property
-    def newWeights(self) -> Tuple[ISelectNewWeight, ...]:
-        """New Weight array to be updated"""
-        return self.__newWeights
+    def positionSet(self) -> Tuple[PositionPriceInput, ...]:
+        """Information of constituents associated with the rebalance."""
+        return self.__positionSet
 
-    @newWeights.setter
-    def newWeights(self, value: Tuple[ISelectNewWeight, ...]):
-        self.__newWeights = value
-        self._property_changed('newWeights')        
-
-    @property
-    def rebalanceDate(self) -> str:
-        """Date the rebalance will occur"""
-        return self.__rebalanceDate
-
-    @rebalanceDate.setter
-    def rebalanceDate(self, value: str):
-        self.__rebalanceDate = value
-        self._property_changed('rebalanceDate')        
+    @positionSet.setter
+    def positionSet(self, value: Tuple[PositionPriceInput, ...]):
+        self.__positionSet = value
+        self._property_changed('positionSet')        
 
     @property
-    def newParameters(self) -> Tuple[ISelectNewParameter, ...]:
-        """New parameters to be updated"""
-        return self.__newParameters
+    def publishParameters(self) -> PublishParameters:
+        """Publishing parameters to determine where and how to publish indices, default all to false"""
+        return self.__publishParameters
 
-    @newParameters.setter
-    def newParameters(self, value: Tuple[ISelectNewParameter, ...]):
-        self.__newParameters = value
-        self._property_changed('newParameters')        
+    @publishParameters.setter
+    def publishParameters(self, value: PublishParameters):
+        self.__publishParameters = value
+        self._property_changed('publishParameters')        
 
     @property
-    def indexParameters(self) -> Tuple[ISelectIndexParameters, ...]:
-        """Index parameters to be updated"""
-        return self.__indexParameters
+    def pricingParameters(self) -> IndicesPriceParameters:
+        """Parameters for pricing indices"""
+        return self.__pricingParameters
 
-    @indexParameters.setter
-    def indexParameters(self, value: Tuple[ISelectIndexParameters, ...]):
-        self.__indexParameters = value
-        self._property_changed('indexParameters')        
+    @pricingParameters.setter
+    def pricingParameters(self, value: IndicesPriceParameters):
+        self.__pricingParameters = value
+        self._property_changed('pricingParameters')        
 
 
 class IndicesRebalanceInputs(Base):

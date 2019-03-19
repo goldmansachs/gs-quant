@@ -17,7 +17,7 @@ under the License.
 import pandas as pd
 import pytest
 from pandas.util.testing import assert_series_equal
-from ..timeseries.datetime import *
+from gs_quant.timeseries.datetime import *
 from datetime import date
 
 
@@ -171,3 +171,36 @@ def test_interpolate():
 
     with pytest.raises(MqValueError):
         interpolate(x, x, "None")
+
+
+def test_value():
+
+    dates = [
+        date(2019, 1, 2),
+        date(2019, 1, 3),
+        date(2019, 1, 5),
+        date(2019, 1, 7),
+    ]
+
+    x = pd.Series([2.0, 3.0, 5.0, 7.0], index=dates)
+
+    result = value(x, date(2019, 1, 3))
+    assert result == 3.0
+
+    result = value(x, date(2019, 1, 5))
+    assert result == 5.0
+
+    result = value(x, date(2019, 1, 4))
+    assert result == 3.0
+
+    result = value(x, date(2019, 1, 4), Interpolate.INTERSECT)
+    assert result is None
+
+    result = value(x, date(2019, 1, 4), Interpolate.STEP)
+    assert result == 3.0
+
+    result = value(x, date(2019, 1, 4), Interpolate.ZERO)
+    assert result == 0.0
+
+    result = value(x, date(2019, 1, 4), Interpolate.NAN)
+    assert np.isnan(result)

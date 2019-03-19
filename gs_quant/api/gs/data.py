@@ -146,7 +146,7 @@ class GsDataApi(DataApi):
             if not row:
                 continue
 
-            value = row[row['field']]
+            value = row[row['quotingStyle']] if 'field' not in row.keys() else row[row['field']]
             ret[coordinates[idx]] = value
 
         if as_dataframe:

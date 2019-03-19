@@ -16,7 +16,7 @@ under the License.
 
 from pandas.util.testing import assert_series_equal
 import numpy as np
-from ..timeseries import *
+from gs_quant.timeseries import *
 from datetime import date
 
 
@@ -168,7 +168,7 @@ def test_divide():
     assert_series_equal(result, expected, obj="Divide intersect left")
 
     result = algebra.divide(y, x, Interpolate.INTERSECT)
-    expected = pd.Series([2.0, 0.5, 2/3], index=dates2)
+    expected = pd.Series([2.0, 0.5, 2 / 3], index=dates2)
     assert_series_equal(result, expected, obj="Divide intersect right")
 
     result = algebra.divide(x, y, Interpolate.NAN)
@@ -176,7 +176,7 @@ def test_divide():
     assert_series_equal(result, expected, obj="Divide NaN left")
 
     result = algebra.divide(y, x, Interpolate.NAN)
-    expected = pd.Series([2.0, 0.5, 2/3, np.nan], index=dates1)
+    expected = pd.Series([2.0, 0.5, 2 / 3, np.nan], index=dates1)
     assert_series_equal(result, expected, obj="Divide NaN right")
 
     result = algebra.divide(x, y, Interpolate.ZERO)
@@ -189,7 +189,6 @@ def test_divide():
 
 
 def test_exp():
-
     dates = [
         date(2019, 1, 1),
         date(2019, 1, 2),
@@ -204,7 +203,6 @@ def test_exp():
 
 
 def test_log():
-
     dates = [
         date(2019, 1, 1),
         date(2019, 1, 2),
@@ -219,7 +217,6 @@ def test_log():
 
 
 def test_power():
-
     dates = [
         date(2019, 1, 1),
         date(2019, 1, 2),
@@ -234,7 +231,6 @@ def test_power():
 
 
 def test_sqrt():
-
     dates = [
         date(2019, 1, 1),
         date(2019, 1, 2),
@@ -247,9 +243,14 @@ def test_sqrt():
     expected = pd.Series([1.0, 2.0, 3.0], index=dates)
     assert_series_equal(result, expected, obj="Sqrt")
 
+    actual = algebra.sqrt(9)
+    assert type(actual) == int
+    assert 3 == actual
+
+    assert math.sqrt(10) == algebra.sqrt(10)
+
 
 def test_abs():
-
     dates = [
         date(2019, 1, 1),
         date(2019, 1, 2),
@@ -264,7 +265,6 @@ def test_abs():
 
 
 def test_floor():
-
     dates = [
         date(2019, 1, 1),
         date(2019, 1, 2),
@@ -279,7 +279,6 @@ def test_floor():
 
 
 def test_ceil():
-
     dates = [
         date(2019, 1, 1),
         date(2019, 1, 2),

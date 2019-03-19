@@ -19,6 +19,8 @@ import inspect
 import itertools
 import json
 import os
+
+import msgpack
 import requests
 
 from abc import abstractmethod
@@ -91,45 +93,7 @@ class GsSession(ContextBase):
             self._session.headers.update({'X-Application': self.application})
             self._authenticate()
 
-    @classmethod
-    def __json_dict_to_object(cls, typ: type, values: dict) -> object:
-        if issubclass(typ, Base):
-            args = [k for k, v in signature(typ.__init__).parameters.items() if v.default == Parameter.empty][1:]
-            obj = typ(**{a: values.get(a) for a in args})
-
-            for prop in obj.properties():
-                if prop in values:
-                    prop_value = values[prop]
-                    return_hints = get_type_hints(getattr(obj.__class__, prop).fget).get('return')
-                    if hasattr(return_hints, '__origin__'):
-                        prop_type = return_hints.__origin__
-                    else:
-                        prop_type = return_hints
-
-                    if prop_type == Union:
-                        prop_type = next((a for a in return_hints.__args__ if issubclass(a, (Base, EnumBase))), None)
-
-                    if issubclass(prop_type, dt.datetime):
-                        setattr(obj, prop, dt.datetime.fromisoformat(prop_value[:-1]))
-                    elif issubclass(prop_type, EnumBase):
-                        setattr(obj, prop, get_enum_value(prop_type, prop_value))
-                    elif issubclass(prop_type, Base):
-                        setattr(obj, prop, cls.__json_dict_to_object(prop_type, prop_value))
-                    elif issubclass(prop_type, tuple):
-                        item_type = return_hints.__args__[0]
-                        if issubclass(item_type, (Base, EnumBase)):
-                            item_values = tuple(cls.__json_dict_to_object(item_type, v) for v in prop_value)
-                        else:
-                            item_values = tuple(prop_value)
-                        setattr(obj, prop, item_values)
-                    else:
-                        setattr(obj, prop, prop_value)
-
-            return obj
-        else:
-            return typ(**values)
-
-    def __request(self, method: str, path: str, payload: Optional[Union[dict, str, Base, pd.DataFrame]]=None, cls: Optional[type]=None, try_auth=True) -> Union[Base, list, dict]:
+    def __request(self, method: str, path: str, payload: Optional[Union[dict, str, Base, pd.DataFrame]]=None, cls: Optional[type]=None, try_auth=True) -> Union[Base, tuple, dict]:
         is_dataframe = isinstance(payload, pd.DataFrame)
         if not is_dataframe:
             payload = payload or {}
@@ -157,22 +121,37 @@ class GsSession(ContextBase):
             return self.__request(method, path, payload=payload, cls=cls, try_auth=False)
         elif not 199 < response.status_code < 300:
             raise MqRequestError(response.status_code, response.text, context='{} {}'.format(method, url))
+        elif 'application/x-msgpack' in response.headers['content-type']:
+            return msgpack.unpackb(response.content, raw=False)
         elif 'application/json' in response.headers['content-type']:
-            dct = json.loads(response.text)
-            return self.__json_dict_to_object(cls, dct) if cls else dct
+            res = json.loads(response.text)
+
+            if cls:
+                if isinstance(cls, Base):
+                    if isinstance(res, list):
+                        return tuple(cls.from_dict(r) for r in res)
+                    else:
+                        return cls.from_dict(res)
+                else:
+                    if isinstance(res, list):
+                        return tuple(cls(**r) for r in res)
+                    else:
+                        return cls(**res)
+            else:
+                return res
         else:
             return {'raw': response}
 
-    def _get(self, path: str, payload: Optional[Union[dict, Base]]=None, cls: Optional[type]=None) -> Union[dict, str]:
+    def _get(self, path: str, payload: Optional[Union[dict, Base]]=None, cls: Optional[type]=None) -> Union[Base, tuple, dict]:
         return self.__request('GET', path, payload=payload, cls=cls)
 
-    def _post(self, path: str, payload: Optional[Union[dict, Base, pd.DataFrame]]=None, cls: Optional[type]=None) -> Union[dict, str]:
+    def _post(self, path: str, payload: Optional[Union[dict, Base, pd.DataFrame]]=None, cls: Optional[type]=None) -> Union[Base, tuple, dict]:
         return self.__request('POST', path, payload=payload, cls=cls)
 
-    def _delete(self, path: str, payload: Optional[Union[dict, Base]]=None, cls: Optional[type]=None) -> Union[dict, str]:
+    def _delete(self, path: str, payload: Optional[Union[dict, Base]]=None, cls: Optional[type]=None) -> Union[Base, tuple, dict]:
         return self.__request('DELETE', path, payload=payload, cls=cls)
 
-    def _put(self, path: str, payload: Optional[Union[dict, Base]]=None, cls: Optional[type]=None) -> Union[dict, str]:
+    def _put(self, path: str, payload: Optional[Union[dict, Base]]=None, cls: Optional[type]=None) -> Union[Base, tuple, dict]:
         return self.__request('PUT', path, payload=payload, cls=cls)
 
     @classmethod

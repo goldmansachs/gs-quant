@@ -14,10 +14,13 @@ specific language governing permissions and limitations
 under the License.
 """
 from concurrent.futures import Future
+import datetime as dt
+import dateutil
 from enum import EnumMeta
+from inspect import signature, Parameter
 import logging
 import pandas as pd
-from typing import Union
+from typing import Union, get_type_hints
 
 _logger = logging.getLogger(__name__)
 
@@ -27,6 +30,8 @@ class EnumBase:
 
 
 class Base:
+
+    """The base class for all generated classes"""
 
     def __init__(self):
         self.__calced_hash = None
@@ -56,21 +61,71 @@ class Base:
 
     @classmethod
     def properties(cls) -> set:
-        """The public properties of this class"""
+        """The public property names of this class"""
         return set(i for i in dir(cls) if isinstance(getattr(cls, i), property))
 
     def as_dict(self) -> dict:
-        """Dictionary of the public non-null properties and values"""
+        """Dictionary of the public, non-null properties and values"""
         properties = self.properties()
         values = [getattr(self, p) for p in properties]
         return dict((p, v) for p, v in zip(properties, values) if v is not None)
 
+    def __from_dict(self, values: dict):
+        for prop in self.properties():
+            if prop in values:
+                prop_value = values[prop]
+                return_hints = get_type_hints(getattr(self.__class__, prop).fget).get('return')
+                if hasattr(return_hints, '__origin__'):
+                    prop_type = return_hints.__origin__
+                else:
+                    prop_type = return_hints
+
+                if prop_type == Union:
+                    prop_type = next((a for a in return_hints.__args__ if issubclass(a, (Base, EnumBase))), None)
+
+                if issubclass(prop_type, dt.datetime):
+                    setattr(self, prop, dateutil.parser.isoparse(prop_value))
+                elif issubclass(prop_type, dt.date):
+                    setattr(self, prop, dateutil.parser.isoparse(prop_value).date())
+                elif issubclass(prop_type, EnumBase):
+                    setattr(self, prop, get_enum_value(prop_type, prop_value))
+                elif issubclass(prop_type, Base):
+                    setattr(self, prop, prop_type.from_dict(prop_value))
+                elif issubclass(prop_type, (list, tuple)):
+                    item_type = return_hints.__args__[0]
+                    if issubclass(item_type, (Base, EnumBase)):
+                        item_values = tuple(item_type.from_dict(v) for v in prop_value)
+                    else:
+                        item_values = tuple(prop_value)
+                    setattr(self, prop, item_values)
+                else:
+                    setattr(self, prop, prop_value)
+
+    @classmethod
+    def from_dict(cls, values: dict) -> 'Base':
+        """
+        Construct an instance of this type from a dictionary
+
+        :param values: a dictionary (potentitally nested)
+        :return: an instance of this type, populated with values
+        """
+        args = [k for k, v in signature(cls.__init__).parameters.items() if v.default == Parameter.empty][1:]
+        required = {a: values.get(a) for a in args}
+        instance = cls(**required)
+        instance.__from_dict(values)
+        return instance
+
 
 class Priceable(Base):
+
+    """A priceable, such as a derivative instrument"""
 
     PROVIDER = None
 
     def provider(self) -> 'RiskApi':
+        """
+        The risk provider - defaults to GsRiskApi
+        """
         if self.PROVIDER is None:
             from gs_quant.api.gs.risk import GsRiskApi
             self.PROVIDER = GsRiskApi
@@ -78,20 +133,86 @@ class Priceable(Base):
         return self.PROVIDER
 
     def resolve(self):
+        """
+        Resolve non-supplied properties of an instrument
+
+        **Examples**
+
+        >>> irs = IRSwap('Pay', '10y', 'USD')
+        >>> r = irs.fixedRate
+
+        r is None
+
+        >>> r.resolve()
+
+        r will now be the solved fixed rate
+        """
         from gs_quant.risk import PricingContext
         PricingContext.current.resolve_fields(self)
 
     def dollar_price(self) -> Union[float, Future]:
+        """
+        Present value in USD
+
+        :return:  a float or a future, depending on whether the current PricingContext is async, or has been entered
+
+        **Examples**
+
+        >>> p = inst.dollar_price()
+
+        p is a float
+
+        >>> with PricingContext():
+        >>>     f1 = inst1.dollar_price()
+        >>>     f2 = inst2.dollar_price()
+        >>>
+        >>> p1 = f1.result()
+        >>> p2 = f2.result()
+
+        f1 and f2 are futures, p1 and p2 are floats
+        """
+
         from gs_quant.risk import DollarPrice
         return self.calc(DollarPrice)
 
     def price(self) -> Union[float, Future]:
+        """
+        Present value in local currency. Note that this is not yet supported on all instruments
+        """
         from gs_quant.risk import Price
         return self.calc(Price)
 
-    def calc(self, risk_measure: 'RiskMeasure') -> Union[pd.DataFrame, Future]:
-        from gs_quant.risk import PricingContext
-        return PricingContext.current.calc(self, risk_measure)
+    def calc(self, risk_measure: 'RiskMeasure') -> Union[float, pd.DataFrame, Future]:
+        """
+        Calculate the value of the risk_measure
+
+        :return: a float or dataframe, depending on whether the value is scalar or structured, or a future thereof (depending on how PricingContext is being used)
+
+        **Examples**
+
+        >>> d = inst.calc(gs_quant.risk.IRDelta)
+
+        d is a dataframe
+
+        >>> d = inst.calc(gs_quant.risk.EqDelta)
+
+        d is a float
+
+        >>> with PricingContext():
+        >>>     v1 = inst1.calc(gs_quant.risk.IRDelta)
+        >>>     v2 = inst2.dollar_price(gs_quant.risk.IRDelta)
+        >>>
+        >>> d1 = f1.result()
+        >>> d2 = f2.result()
+
+        f1 and f2 are futures, d1 and d2 are dataframes
+        """
+        from gs_quant.risk import PricingContext, get_specific_risk_measure
+        specific_risk_measure = get_specific_risk_measure(risk_measure, self)
+        if specific_risk_measure is None:
+            raise ValueError('Unsupported risk measure')
+
+        return PricingContext.current.calc(self, specific_risk_measure)
 
 
 class Instrument(Priceable):

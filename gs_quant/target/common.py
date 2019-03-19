@@ -17,29 +17,7 @@ under the License.
 import datetime
 from typing import Tuple, Union
 from enum import Enum
-from gs_quant.base import Priceable, EnumBase, Base, get_enum_value
-
-
-class OptionType(EnumBase, Enum):    
-    
-    Call = 'Call'
-    Put = 'Put'
-    
-    def __repr__(self):
-        return self.value
-
-
-class Format(EnumBase, Enum):    
-    
-    """Alternative format for data to be returned in"""
-
-    Json = 'Json'
-    Excel = 'Excel'
-    MessagePack = 'MessagePack'
-    Pdf = 'Pdf'
-    
-    def __repr__(self):
-        return self.value
+from gs_quant.base import Priceable, Base, EnumBase, get_enum_value
 
 
 class PayReceive(EnumBase, Enum):    
@@ -53,27 +31,61 @@ class PayReceive(EnumBase, Enum):
         return self.value
 
 
-class Frequency(EnumBase, Enum):    
+class Region(EnumBase, Enum):    
     
-    """Payment frequency"""
+    """Regional classification for the asset"""
 
-    Daily = 'Daily'
-    Weekly = 'Weekly'
-    Monthly = 'Monthly'
-    Quarterly = 'Quarterly'
-    Annually = 'Annually'
+    _ = ''
+    Americas = 'Americas'
+    Asia = 'Asia'
+    EM = 'EM'
+    Europe = 'Europe'
+    Global = 'Global'
     
     def __repr__(self):
         return self.value
 
 
-class OptionStyle(EnumBase, Enum):    
+class SwapClearingHouse(EnumBase, Enum):    
     
-    """Option Style"""
+    """Swap Clearing House"""
 
-    European = 'European'
-    American = 'American'
-    Bermudan = 'Bermudan'
+    LCH = 'LCH'
+    EUREX = 'EUREX'
+    JSCC = 'JSCC'
+    CME = 'CME'
+    
+    def __repr__(self):
+        return self.value
+
+
+class AssetClass(EnumBase, Enum):    
+    
+    """Asset classification of security. Assets are classified into broad groups which exhibit similar characteristics and behave in a consistent way under different market conditions"""
+
+    Cash = 'Cash'
+    Commod = 'Commod'
+    Credit = 'Credit'
+    Cross_Asset = 'Cross Asset'
+    Equity = 'Equity'
+    Fund = 'Fund'
+    FX = 'FX'
+    Mortgage = 'Mortgage'
+    Rates = 'Rates'
+    Loan = 'Loan'
+    
+    def __repr__(self):
+        return self.value
+
+
+class BusinessDayConvention(EnumBase, Enum):    
+    
+    """Business Day Convention."""
+
+    Following = 'Following'
+    Modified_Following = 'Modified Following'
+    Previous = 'Previous'
+    Unadjusted = 'Unadjusted'
     
     def __repr__(self):
         return self.value
@@ -402,6 +414,45 @@ class Currency(EnumBase, Enum):
         return self.value
 
 
+class Format(EnumBase, Enum):    
+    
+    """Alternative format for data to be returned in"""
+
+    Json = 'Json'
+    Excel = 'Excel'
+    MessagePack = 'MessagePack'
+    Pdf = 'Pdf'
+    
+    def __repr__(self):
+        return self.value
+
+
+class OptionStyle(EnumBase, Enum):    
+    
+    """Option Style"""
+
+    European = 'European'
+    American = 'American'
+    Bermudan = 'Bermudan'
+    
+    def __repr__(self):
+        return self.value
+
+
+class Frequency(EnumBase, Enum):    
+    
+    """Payment frequency"""
+
+    Daily = 'Daily'
+    Weekly = 'Weekly'
+    Monthly = 'Monthly'
+    Quarterly = 'Quarterly'
+    Annually = 'Annually'
+    
+    def __repr__(self):
+        return self.value
+
+
 class Field(EnumBase, Enum):    
     
     """Field to be returned"""
@@ -474,6 +525,7 @@ class Field(EnumBase, Enum):
     performanceContribution = 'performanceContribution'
     targetNotional = 'targetNotional'
     fillLegId = 'fillLegId'
+    delisted = 'delisted'
     rationale = 'rationale'
     regionalFocus = 'regionalFocus'
     volumePrimary = 'volumePrimary'
@@ -522,6 +574,7 @@ class Field(EnumBase, Enum):
     tradePrice = 'tradePrice'
     esPolicyScore = 'esPolicyScore'
     cid = 'cid'
+    liquidityScore = 'liquidityScore'
     importance = 'importance'
     sourceDateSpan = 'sourceDateSpan'
     assetClassificationsGicsSector = 'assetClassificationsGicsSector'
@@ -561,6 +614,7 @@ class Field(EnumBase, Enum):
     realm = 'realm'
     bid = 'bid'
     dataDescription = 'dataDescription'
+    composite22DayAdv = 'composite22DayAdv'
     gsn = 'gsn'
     isAggressive = 'isAggressive'
     orderId = 'orderId'
@@ -714,6 +768,7 @@ class Field(EnumBase, Enum):
     pbClientId = 'pbClientId'
     ownerId = 'ownerId'
     secDB = 'secDB'
+    composite10DayAdv = 'composite10DayAdv'
     objective = 'objective'
     navPrice = 'navPrice'
     ideaActivityType = 'ideaActivityType'
@@ -838,6 +893,7 @@ class Field(EnumBase, Enum):
     multipleScore = 'multipleScore'
     sourceOriginalCategory = 'sourceOriginalCategory'
     betaAdjustedExposure = 'betaAdjustedExposure'
+    composite5DayAdv = 'composite5DayAdv'
     latestExecutionTime = 'latestExecutionTime'
     dividendPoints = 'dividendPoints'
     newIdeasWtd = 'newIdeasWtd'
@@ -1045,48 +1101,25 @@ class Field(EnumBase, Enum):
         return self.value
 
 
-class DayCountFraction(EnumBase, Enum):    
+class MarketDataVendor(EnumBase, Enum):    
     
-    """Day Count Fraction."""
-
-    ACT_OVER_360 = 'ACT/360'
-    ACT_OVER_365_Fixed = 'ACT/365 (Fixed)'
-    ACT_OVER_365_ISDA = 'ACT/365 ISDA'
-    ACT_OVER_ACT_ISDA = 'ACT/ACT ISDA'
-    _30_OVER_360 = '30/360'
-    _30E_OVER_360 = '30E/360'
+    Goldman_Sachs = 'Goldman Sachs'
+    Thomson_Reuters = 'Thomson Reuters'
+    Solactive = 'Solactive'
+    WM = 'WM'
     
     def __repr__(self):
         return self.value
 
 
-class BusinessDayConvention(EnumBase, Enum):    
+class PricingLocation(EnumBase, Enum):    
     
-    """Business Day Convention."""
+    """Based on the location of the exchange. Called 'Native Region' in SecDB"""
 
-    Following = 'Following'
-    Modified_Following = 'Modified Following'
-    Previous = 'Previous'
-    Unadjusted = 'Unadjusted'
-    
-    def __repr__(self):
-        return self.value
-
-
-class AssetClass(EnumBase, Enum):    
-    
-    """Asset classification of security. Assets are classified into broad groups which exhibit similar characteristics and behave in a consistent way under different market conditions"""
-
-    Cash = 'Cash'
-    Commod = 'Commod'
-    Credit = 'Credit'
-    Cross_Asset = 'Cross Asset'
-    Equity = 'Equity'
-    Fund = 'Fund'
-    FX = 'FX'
-    Mortgage = 'Mortgage'
-    Rates = 'Rates'
-    Loan = 'Loan'
+    NYC = 'NYC'
+    LDN = 'LDN'
+    TKO = 'TKO'
+    HKG = 'HKG'
     
     def __repr__(self):
         return self.value
@@ -1152,6 +1185,30 @@ class AssetType(EnumBase, Enum):
         return self.value
 
 
+class DayCountFraction(EnumBase, Enum):    
+    
+    """Day Count Fraction."""
+
+    ACT_OVER_360 = 'ACT/360'
+    ACT_OVER_365_Fixed = 'ACT/365 (Fixed)'
+    ACT_OVER_365_ISDA = 'ACT/365 ISDA'
+    ACT_OVER_ACT_ISDA = 'ACT/ACT ISDA'
+    _30_OVER_360 = '30/360'
+    _30E_OVER_360 = '30E/360'
+    
+    def __repr__(self):
+        return self.value
+
+
+class OptionType(EnumBase, Enum):    
+    
+    Call = 'Call'
+    Put = 'Put'
+    
+    def __repr__(self):
+        return self.value
+
+
 class Commodities(EnumBase, Enum):    
     
     """Commodity asset"""
@@ -1203,130 +1260,45 @@ class Commodities(EnumBase, Enum):
         return self.value
 
 
-class Entitlements(Base):
-        
-    """Defines the entitlements of a given resource"""
-       
-    def __init__(self, view: Tuple[str, ...] = None, edit: Tuple[str, ...] = None, admin: Tuple[str, ...] = None, rebalance: Tuple[str, ...] = None, trade: Tuple[str, ...] = None, upload: Tuple[str, ...] = None, query: Tuple[str, ...] = None, performanceDetails: Tuple[str, ...] = None):
+class SwapSettlement(EnumBase, Enum):    
+    
+    """Swap Settlement Type"""
+
+    Phys_CLEARED = 'Phys.CLEARED'
+    Physical = 'Physical'
+    Cash_CollatCash = 'Cash.CollatCash'
+    Cash_PYU = 'Cash.PYU'
+    
+    def __repr__(self):
+        return self.value
+
+
+class Position(Base):
+               
+    def __init__(self, assetId: str = None, quantity: float = None):
         super().__init__()
-        self.__view = view
-        self.__edit = edit
-        self.__admin = admin
-        self.__rebalance = rebalance
-        self.__trade = trade
-        self.__upload = upload
-        self.__query = query
-        self.__performanceDetails = performanceDetails
+        self.__assetId = assetId
+        self.__quantity = quantity
 
     @property
-    def view(self) -> Tuple[str, ...]:
-        """Permission to view the resource and its contents"""
-        return self.__view
+    def assetId(self) -> str:
+        """Marquee unique asset identifier."""
+        return self.__assetId
 
-    @view.setter
-    def view(self, value: Tuple[str, ...]):
-        self.__view = value
-        self._property_changed('view')        
-
-    @property
-    def edit(self) -> Tuple[str, ...]:
-        """Permission to edit details about the resource content, excluding entitlements. Can also delete the resource"""
-        return self.__edit
-
-    @edit.setter
-    def edit(self, value: Tuple[str, ...]):
-        self.__edit = value
-        self._property_changed('edit')        
+    @assetId.setter
+    def assetId(self, value: str):
+        self.__assetId = value
+        self._property_changed('assetId')        
 
     @property
-    def admin(self) -> Tuple[str, ...]:
-        """Permission to edit all details of the resource, including entitlements. Can also delete the resource"""
-        return self.__admin
+    def quantity(self) -> float:
+        """Quantity of position"""
+        return self.__quantity
 
-    @admin.setter
-    def admin(self, value: Tuple[str, ...]):
-        self.__admin = value
-        self._property_changed('admin')        
-
-    @property
-    def rebalance(self) -> Tuple[str, ...]:
-        """Permission to rebalance the constituent weights of the resource"""
-        return self.__rebalance
-
-    @rebalance.setter
-    def rebalance(self, value: Tuple[str, ...]):
-        self.__rebalance = value
-        self._property_changed('rebalance')        
-
-    @property
-    def trade(self) -> Tuple[str, ...]:
-        """Permission to trade the resource"""
-        return self.__trade
-
-    @trade.setter
-    def trade(self, value: Tuple[str, ...]):
-        self.__trade = value
-        self._property_changed('trade')        
-
-    @property
-    def upload(self) -> Tuple[str, ...]:
-        """Permission to upload data to the given resource"""
-        return self.__upload
-
-    @upload.setter
-    def upload(self, value: Tuple[str, ...]):
-        self.__upload = value
-        self._property_changed('upload')        
-
-    @property
-    def query(self) -> Tuple[str, ...]:
-        """Permission to query data from the give resource"""
-        return self.__query
-
-    @query.setter
-    def query(self, value: Tuple[str, ...]):
-        self.__query = value
-        self._property_changed('query')        
-
-    @property
-    def performanceDetails(self) -> Tuple[str, ...]:
-        """Permission to view the resource, it's entire contents, and related data"""
-        return self.__performanceDetails
-
-    @performanceDetails.setter
-    def performanceDetails(self, value: Tuple[str, ...]):
-        self.__performanceDetails = value
-        self._property_changed('performanceDetails')        
-
-
-class Link(Base):
-        
-    """Hyperlink"""
-       
-    def __init__(self, title: str = None, source: str = None):
-        super().__init__()
-        self.__title = title
-        self.__source = source
-
-    @property
-    def title(self) -> str:
-        """display text"""
-        return self.__title
-
-    @title.setter
-    def title(self, value: str):
-        self.__title = value
-        self._property_changed('title')        
-
-    @property
-    def source(self) -> str:
-        """link"""
-        return self.__source
-
-    @source.setter
-    def source(self, value: str):
-        self.__source = value
-        self._property_changed('source')        
+    @quantity.setter
+    def quantity(self, value: float):
+        self.__quantity = value
+        self._property_changed('quantity')        
 
 
 class FieldFilterMap(Base):
@@ -1401,6 +1373,7 @@ class FieldFilterMap(Base):
         self.__performanceContribution = kwargs.get('performanceContribution')
         self.__targetNotional = kwargs.get('targetNotional')
         self.__fillLegId = kwargs.get('fillLegId')
+        self.__delisted = kwargs.get('delisted')
         self.__rationale = kwargs.get('rationale')
         self.__regionalFocus = kwargs.get('regionalFocus')
         self.__volumePrimary = kwargs.get('volumePrimary')
@@ -1448,6 +1421,7 @@ class FieldFilterMap(Base):
         self.__tradePrice = kwargs.get('tradePrice')
         self.__esPolicyScore = kwargs.get('esPolicyScore')
         self.__cid = kwargs.get('cid')
+        self.__liquidityScore = kwargs.get('liquidityScore')
         self.__importance = kwargs.get('importance')
         self.__sourceDateSpan = kwargs.get('sourceDateSpan')
         self.__assetClassificationsGicsSector = kwargs.get('assetClassificationsGicsSector')
@@ -1487,6 +1461,7 @@ class FieldFilterMap(Base):
         self.__realm = kwargs.get('realm')
         self.__bid = kwargs.get('bid')
         self.__dataDescription = kwargs.get('dataDescription')
+        self.__composite22DayAdv = kwargs.get('composite22DayAdv')
         self.__gsn = kwargs.get('gsn')
         self.__isAggressive = kwargs.get('isAggressive')
         self.__orderId = kwargs.get('orderId')
@@ -1634,6 +1609,7 @@ class FieldFilterMap(Base):
         self.__pbClientId = kwargs.get('pbClientId')
         self.__ownerId = kwargs.get('ownerId')
         self.__secDB = kwargs.get('secDB')
+        self.__composite10DayAdv = kwargs.get('composite10DayAdv')
         self.__objective = kwargs.get('objective')
         self.__navPrice = kwargs.get('navPrice')
         self.__ideaActivityType = kwargs.get('ideaActivityType')
@@ -1753,6 +1729,7 @@ class FieldFilterMap(Base):
         self.__multipleScore = kwargs.get('multipleScore')
         self.__sourceOriginalCategory = kwargs.get('sourceOriginalCategory')
         self.__betaAdjustedExposure = kwargs.get('betaAdjustedExposure')
+        self.__composite5DayAdv = kwargs.get('composite5DayAdv')
         self.__dividendPoints = kwargs.get('dividendPoints')
         self.__newIdeasWtd = kwargs.get('newIdeasWtd')
         self.__short = kwargs.get('short')
@@ -2491,6 +2468,15 @@ class FieldFilterMap(Base):
         self._property_changed('fillLegId')        
 
     @property
+    def delisted(self) -> tuple:
+        return self.__delisted
+
+    @delisted.setter
+    def delisted(self, value: tuple):
+        self.__delisted = value
+        self._property_changed('delisted')        
+
+    @property
     def rationale(self) -> tuple:
         return self.__rationale
 
@@ -2914,6 +2900,15 @@ class FieldFilterMap(Base):
         self._property_changed('cid')        
 
     @property
+    def liquidityScore(self) -> tuple:
+        return self.__liquidityScore
+
+    @liquidityScore.setter
+    def liquidityScore(self, value: tuple):
+        self.__liquidityScore = value
+        self._property_changed('liquidityScore')        
+
+    @property
     def importance(self) -> tuple:
         return self.__importance
 
@@ -3263,6 +3258,15 @@ class FieldFilterMap(Base):
     def dataDescription(self, value: tuple):
         self.__dataDescription = value
         self._property_changed('dataDescription')        
+
+    @property
+    def composite22DayAdv(self) -> tuple:
+        return self.__composite22DayAdv
+
+    @composite22DayAdv.setter
+    def composite22DayAdv(self, value: tuple):
+        self.__composite22DayAdv = value
+        self._property_changed('composite22DayAdv')        
 
     @property
     def gsn(self) -> tuple:
@@ -4588,6 +4592,15 @@ class FieldFilterMap(Base):
         self._property_changed('secDB')        
 
     @property
+    def composite10DayAdv(self) -> tuple:
+        return self.__composite10DayAdv
+
+    @composite10DayAdv.setter
+    def composite10DayAdv(self, value: tuple):
+        self.__composite10DayAdv = value
+        self._property_changed('composite10DayAdv')        
+
+    @property
     def objective(self) -> tuple:
         return self.__objective
 
@@ -5657,6 +5670,15 @@ class FieldFilterMap(Base):
     def betaAdjustedExposure(self, value: tuple):
         self.__betaAdjustedExposure = value
         self._property_changed('betaAdjustedExposure')        
+
+    @property
+    def composite5DayAdv(self) -> tuple:
+        return self.__composite5DayAdv
+
+    @composite5DayAdv.setter
+    def composite5DayAdv(self, value: tuple):
+        self.__composite5DayAdv = value
+        self._property_changed('composite5DayAdv')        
 
     @property
     def dividendPoints(self) -> tuple:
@@ -6775,76 +6797,111 @@ class FieldFilterMap(Base):
         self._property_changed('methodology')        
 
 
-class MarketDataCoordinate(Base):
+class Entitlements(Base):
         
-    """Object representation of a market data coordinate"""
+    """Defines the entitlements of a given resource"""
        
-    def __init__(self, marketDataType: str, assetId: str = None, marketDataAsset: str = None, pointClass: str = None, marketDataPoint: Tuple[str, ...] = None, field: str = None):
+    def __init__(self, view: Tuple[str, ...] = None, edit: Tuple[str, ...] = None, admin: Tuple[str, ...] = None, rebalance: Tuple[str, ...] = None, trade: Tuple[str, ...] = None, upload: Tuple[str, ...] = None, query: Tuple[str, ...] = None, performanceDetails: Tuple[str, ...] = None, plot: Tuple[str, ...] = None):
         super().__init__()
-        self.__marketDataType = marketDataType
-        self.__assetId = assetId
-        self.__marketDataAsset = marketDataAsset
-        self.__pointClass = pointClass
-        self.__marketDataPoint = marketDataPoint
-        self.__field = field
+        self.__view = view
+        self.__edit = edit
+        self.__admin = admin
+        self.__rebalance = rebalance
+        self.__trade = trade
+        self.__upload = upload
+        self.__query = query
+        self.__performanceDetails = performanceDetails
+        self.__plot = plot
 
     @property
-    def marketDataType(self) -> str:
-        """The Market Data Type, e.g. IR, IR_BASIS, FX, FX_Vol"""
-        return self.__marketDataType
+    def view(self) -> Tuple[str, ...]:
+        """Permission to view the resource and its contents"""
+        return self.__view
 
-    @marketDataType.setter
-    def marketDataType(self, value: str):
-        self.__marketDataType = value
-        self._property_changed('marketDataType')        
-
-    @property
-    def assetId(self) -> str:
-        """Marquee unique asset identifier."""
-        return self.__assetId
-
-    @assetId.setter
-    def assetId(self, value: str):
-        self.__assetId = value
-        self._property_changed('assetId')        
+    @view.setter
+    def view(self, value: Tuple[str, ...]):
+        self.__view = value
+        self._property_changed('view')        
 
     @property
-    def marketDataAsset(self) -> str:
-        return self.__marketDataAsset
+    def edit(self) -> Tuple[str, ...]:
+        """Permission to edit details about the resource content, excluding entitlements. Can also delete the resource"""
+        return self.__edit
 
-    @marketDataAsset.setter
-    def marketDataAsset(self, value: str):
-        self.__marketDataAsset = value
-        self._property_changed('marketDataAsset')        
-
-    @property
-    def pointClass(self) -> str:
-        return self.__pointClass
-
-    @pointClass.setter
-    def pointClass(self, value: str):
-        self.__pointClass = value
-        self._property_changed('pointClass')        
+    @edit.setter
+    def edit(self, value: Tuple[str, ...]):
+        self.__edit = value
+        self._property_changed('edit')        
 
     @property
-    def marketDataPoint(self) -> Tuple[str, ...]:
-        """The specific point, e.g. 3m, 10y, 11y, Dec19"""
-        return self.__marketDataPoint
+    def admin(self) -> Tuple[str, ...]:
+        """Permission to edit all details of the resource, including entitlements. Can also delete the resource"""
+        return self.__admin
 
-    @marketDataPoint.setter
-    def marketDataPoint(self, value: Tuple[str, ...]):
-        self.__marketDataPoint = value
-        self._property_changed('marketDataPoint')        
+    @admin.setter
+    def admin(self, value: Tuple[str, ...]):
+        self.__admin = value
+        self._property_changed('admin')        
 
     @property
-    def field(self) -> str:
-        """The specific field: bid, mid, rate etc"""
-        return self.__field
+    def rebalance(self) -> Tuple[str, ...]:
+        """Permission to rebalance the constituent weights of the resource"""
+        return self.__rebalance
 
-    @field.setter
-    def field(self, value: str):
-        self.__field = value
-        self._property_changed('field')        
+    @rebalance.setter
+    def rebalance(self, value: Tuple[str, ...]):
+        self.__rebalance = value
+        self._property_changed('rebalance')        
+
+    @property
+    def trade(self) -> Tuple[str, ...]:
+        """Permission to trade the resource"""
+        return self.__trade
+
+    @trade.setter
+    def trade(self, value: Tuple[str, ...]):
+        self.__trade = value
+        self._property_changed('trade')        
+
+    @property
+    def upload(self) -> Tuple[str, ...]:
+        """Permission to upload data to the given resource"""
+        return self.__upload
+
+    @upload.setter
+    def upload(self, value: Tuple[str, ...]):
+        self.__upload = value
+        self._property_changed('upload')        
+
+    @property
+    def query(self) -> Tuple[str, ...]:
+        """Permission to query data from the given resource"""
+        return self.__query
+
+    @query.setter
+    def query(self, value: Tuple[str, ...]):
+        self.__query = value
+        self._property_changed('query')        
+
+    @property
+    def performanceDetails(self) -> Tuple[str, ...]:
+        """Permission to view the resource, it's entire contents, and related data"""
+        return self.__performanceDetails
+
+    @performanceDetails.setter
+    def performanceDetails(self, value: Tuple[str, ...]):
+        self.__performanceDetails = value
+        self._property_changed('performanceDetails')        
+
+    @property
+    def plot(self) -> Tuple[str, ...]:
+        """Permission to plot data from the given resource"""
+        return self.__plot
+
+    @plot.setter
+    def plot(self, value: Tuple[str, ...]):
+        self.__plot = value
+        self._property_changed('plot')        
 
 
 class FieldValueMap(Base):
@@ -6919,6 +6976,7 @@ class FieldValueMap(Base):
         self.__performanceContribution = kwargs.get('performanceContribution')
         self.__targetNotional = kwargs.get('targetNotional')
         self.__fillLegId = kwargs.get('fillLegId')
+        self.__delisted = kwargs.get('delisted')
         self.__rationale = kwargs.get('rationale')
         self.__regionalFocus = kwargs.get('regionalFocus')
         self.__volumePrimary = kwargs.get('volumePrimary')
@@ -6967,6 +7025,7 @@ class FieldValueMap(Base):
         self.__tradePrice = kwargs.get('tradePrice')
         self.__esPolicyScore = kwargs.get('esPolicyScore')
         self.__cid = kwargs.get('cid')
+        self.__liquidityScore = kwargs.get('liquidityScore')
         self.__importance = kwargs.get('importance')
         self.__sourceDateSpan = kwargs.get('sourceDateSpan')
         self.__assetClassificationsGicsSector = kwargs.get('assetClassificationsGicsSector')
@@ -7006,6 +7065,7 @@ class FieldValueMap(Base):
         self.__realm = kwargs.get('realm')
         self.__bid = kwargs.get('bid')
         self.__dataDescription = kwargs.get('dataDescription')
+        self.__composite22DayAdv = kwargs.get('composite22DayAdv')
         self.__gsn = kwargs.get('gsn')
         self.__isAggressive = kwargs.get('isAggressive')
         self.__orderId = kwargs.get('orderId')
@@ -7159,6 +7219,7 @@ class FieldValueMap(Base):
         self.__pbClientId = kwargs.get('pbClientId')
         self.__ownerId = kwargs.get('ownerId')
         self.__secDB = kwargs.get('secDB')
+        self.__composite10DayAdv = kwargs.get('composite10DayAdv')
         self.__objective = kwargs.get('objective')
         self.__navPrice = kwargs.get('navPrice')
         self.__ideaActivityType = kwargs.get('ideaActivityType')
@@ -7283,6 +7344,7 @@ class FieldValueMap(Base):
         self.__multipleScore = kwargs.get('multipleScore')
         self.__sourceOriginalCategory = kwargs.get('sourceOriginalCategory')
         self.__betaAdjustedExposure = kwargs.get('betaAdjustedExposure')
+        self.__composite5DayAdv = kwargs.get('composite5DayAdv')
         self.__latestExecutionTime = kwargs.get('latestExecutionTime')
         self.__dividendPoints = kwargs.get('dividendPoints')
         self.__newIdeasWtd = kwargs.get('newIdeasWtd')
@@ -8029,6 +8091,15 @@ class FieldValueMap(Base):
         self._property_changed('fillLegId')        
 
     @property
+    def delisted(self):
+        return self.__delisted
+
+    @delisted.setter
+    def delisted(self, value):
+        self.__delisted = value
+        self._property_changed('delisted')        
+
+    @property
     def rationale(self):
         return self.__rationale
 
@@ -8461,6 +8532,15 @@ class FieldValueMap(Base):
         self._property_changed('cid')        
 
     @property
+    def liquidityScore(self):
+        return self.__liquidityScore
+
+    @liquidityScore.setter
+    def liquidityScore(self, value):
+        self.__liquidityScore = value
+        self._property_changed('liquidityScore')        
+
+    @property
     def importance(self):
         return self.__importance
 
@@ -8810,6 +8890,15 @@ class FieldValueMap(Base):
     def dataDescription(self, value):
         self.__dataDescription = value
         self._property_changed('dataDescription')        
+
+    @property
+    def composite22DayAdv(self):
+        return self.__composite22DayAdv
+
+    @composite22DayAdv.setter
+    def composite22DayAdv(self, value):
+        self.__composite22DayAdv = value
+        self._property_changed('composite22DayAdv')        
 
     @property
     def gsn(self):
@@ -10189,6 +10278,15 @@ class FieldValueMap(Base):
         self._property_changed('secDB')        
 
     @property
+    def composite10DayAdv(self):
+        return self.__composite10DayAdv
+
+    @composite10DayAdv.setter
+    def composite10DayAdv(self, value):
+        self.__composite10DayAdv = value
+        self._property_changed('composite10DayAdv')        
+
+    @property
     def objective(self):
         return self.__objective
 
@@ -11303,6 +11401,15 @@ class FieldValueMap(Base):
     def betaAdjustedExposure(self, value):
         self.__betaAdjustedExposure = value
         self._property_changed('betaAdjustedExposure')        
+
+    @property
+    def composite5DayAdv(self):
+        return self.__composite5DayAdv
+
+    @composite5DayAdv.setter
+    def composite5DayAdv(self, value):
+        self.__composite5DayAdv = value
+        self._property_changed('composite5DayAdv')        
 
     @property
     def latestExecutionTime(self):
@@ -12495,7 +12602,7 @@ class FieldValueMap(Base):
 
 class XRef(Priceable):
                
-    def __init__(self, ric: str = None, rcic: str = None, eid: str = None, gsideid: str = None, gsid: str = None, cid: str = None, bbid: str = None, bcid: str = None, bbidEquivalent: str = None, cusip: str = None, gss: str = None, isin: str = None, jsn: str = None, primeId: str = None, sedol: str = None, ticker: str = None, valoren: str = None, wpk: str = None, gsn: str = None, secName: str = None, cross: str = None, simonId: str = None, emId: str = None, cmId: str = None, lmsId: str = None, mdapi: str = None, mic: str = None, sfId: str = None, dollarCross: str = None):
+    def __init__(self, ric: str = None, rcic: str = None, eid: str = None, gsideid: str = None, gsid: str = None, cid: str = None, bbid: str = None, bcid: str = None, delisted: str = None, bbidEquivalent: str = None, cusip: str = None, gss: str = None, isin: str = None, jsn: str = None, primeId: str = None, sedol: str = None, ticker: str = None, valoren: str = None, wpk: str = None, gsn: str = None, secName: str = None, cross: str = None, simonId: str = None, emId: str = None, cmId: str = None, lmsId: str = None, mdapi: str = None, mic: str = None, sfId: str = None, dollarCross: str = None):
         super().__init__()
         self.__ric = ric
         self.__rcic = rcic
@@ -12505,6 +12612,7 @@ class XRef(Priceable):
         self.__cid = cid
         self.__bbid = bbid
         self.__bcid = bcid
+        self.__delisted = delisted
         self.__bbidEquivalent = bbidEquivalent
         self.__cusip = cusip
         self.__gss = gss
@@ -12606,6 +12714,16 @@ class XRef(Priceable):
     def bcid(self, value: str):
         self.__bcid = value
         self._property_changed('bcid')        
+
+    @property
+    def delisted(self) -> str:
+        """Whether an asset has been delisted"""
+        return self.__delisted
+
+    @delisted.setter
+    def delisted(self, value: str):
+        self.__delisted = value
+        self._property_changed('delisted')        
 
     @property
     def bbidEquivalent(self) -> str:
@@ -12816,6 +12934,120 @@ class XRef(Priceable):
     def dollarCross(self, value: str):
         self.__dollarCross = value
         self._property_changed('dollarCross')        
+
+
+class MarketDataCoordinate(Base):
+        
+    """Object representation of a market data coordinate"""
+       
+    def __init__(self, marketDataType: str, assetId: str = None, marketDataAsset: str = None, pointClass: str = None, marketDataPoint: Tuple[str, ...] = None, field: str = None, quotingStyle: str = None):
+        super().__init__()
+        self.__marketDataType = marketDataType
+        self.__assetId = assetId
+        self.__marketDataAsset = marketDataAsset
+        self.__pointClass = pointClass
+        self.__marketDataPoint = marketDataPoint
+        self.__field = field
+        self.__quotingStyle = quotingStyle
+
+    @property
+    def marketDataType(self) -> str:
+        """The Market Data Type, e.g. IR, IR_BASIS, FX, FX_Vol"""
+        return self.__marketDataType
+
+    @marketDataType.setter
+    def marketDataType(self, value: str):
+        self.__marketDataType = value
+        self._property_changed('marketDataType')        
+
+    @property
+    def assetId(self) -> str:
+        """Marquee unique asset identifier."""
+        return self.__assetId
+
+    @assetId.setter
+    def assetId(self, value: str):
+        self.__assetId = value
+        self._property_changed('assetId')        
+
+    @property
+    def marketDataAsset(self) -> str:
+        """The specific point, e.g. 3m, 10y, 11y, Dec19"""
+        return self.__marketDataAsset
+
+    @marketDataAsset.setter
+    def marketDataAsset(self, value: str):
+        self.__marketDataAsset = value
+        self._property_changed('marketDataAsset')        
+
+    @property
+    def pointClass(self) -> str:
+        """The market data pointClass, e.g. Swap, Cash."""
+        return self.__pointClass
+
+    @pointClass.setter
+    def pointClass(self, value: str):
+        self.__pointClass = value
+        self._property_changed('pointClass')        
+
+    @property
+    def marketDataPoint(self) -> Tuple[str, ...]:
+        """The specific point, e.g. 3m, 10y, 11y, Dec19"""
+        return self.__marketDataPoint
+
+    @marketDataPoint.setter
+    def marketDataPoint(self, value: Tuple[str, ...]):
+        self.__marketDataPoint = value
+        self._property_changed('marketDataPoint')        
+
+    @property
+    def field(self) -> str:
+        """The specific field: bid, mid, rate etc"""
+        return self.__field
+
+    @field.setter
+    def field(self, value: str):
+        self.__field = value
+        self._property_changed('field')        
+
+    @property
+    def quotingStyle(self) -> str:
+        return self.__quotingStyle
+
+    @quotingStyle.setter
+    def quotingStyle(self, value: str):
+        self.__quotingStyle = value
+        self._property_changed('quotingStyle')        
+
+
+class Link(Base):
+        
+    """Hyperlink"""
+       
+    def __init__(self, title: str = None, source: str = None):
+        super().__init__()
+        self.__title = title
+        self.__source = source
+
+    @property
+    def title(self) -> str:
+        """display text"""
+        return self.__title
+
+    @title.setter
+    def title(self, value: str):
+        self.__title = value
+        self._property_changed('title')        
+
+    @property
+    def source(self) -> str:
+        """link"""
+        return self.__source
+
+    @source.setter
+    def source(self, value: str):
+        self.__source = value
+        self._property_changed('source')        
 
 
 class GIRDomain(Base):

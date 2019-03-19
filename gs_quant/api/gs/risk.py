@@ -17,30 +17,45 @@ from gs_quant.api.risk import RiskFutureMapping, RiskApi
 from gs_quant.base import Priceable
 from gs_quant.markets.core import MarketDataCoordinate
 from gs_quant.session import GsSession
-from gs_quant.risk import CoordinatesRequest, Formatters, RiskRequest, PricingContext
-import asyncio
+from gs_quant.risk import CoordinatesRequest, Formatters, RiskRequest, PricingContext, LiquidityRequest, \
+    LiquidityResponse, RiskModelRequest
+from threading import Thread
+import time
 from typing import Iterable, Tuple
 
 
 class GsRiskApi(RiskApi):
 
     @classmethod
+    def liquidity(cls, request: LiquidityRequest) -> LiquidityResponse:
+        # Pick a risk model based on positions if not provided
+        if request.riskModel is None:
+            position_ids = [p['assetId'] for p in request.positions]
+            request.riskModel = cls._suggest_risk_model(RiskModelRequest(position_ids))
+
+        return GsSession.current._post(r'/risk/liquidity', request)
+
+    @classmethod
+    def risk_models(cls, request: RiskModelRequest):
+        return GsSession.current._post(r'/risk/models', request)
+
+    @classmethod
     def calc(cls, request: RiskRequest, futures: RiskFutureMapping, is_async: bool, is_batch: bool):
         if is_batch:
             request.waitForResults = False
             response = cls._exec(request)
-
-            if is_async:
-                asyncio.create_task(cls.__wait_for_results(response['reportId'], request, futures))
-            else:
-                asyncio.run(cls.__wait_for_results(response['reportId'], request, futures))
-        elif is_async:
-            request.waitForResults = True
-            asyncio.create_task(cls.__run_async(request, futures))
+            func = cls.__wait_for_results
+            args = (response['reportId'], request, tuple(futures.items()))
         else:
             request.waitForResults = True
-            results = cls._exec(request)
-            cls.__complete_futures(request, results, futures)
+            func = cls.__exec
+            args = (request, tuple(futures.items()))
+
+        if is_async:
+            thread = Thread(target=func, args=args, daemon=True)
+            thread.start()
+        else:
+            func(*args)
 
     @classmethod
     def coordinates(cls, priceables: Iterable[Priceable]) -> Tuple[MarketDataCoordinate, ...]:
@@ -52,7 +67,7 @@ class GsRiskApi(RiskApi):
             assetId=r.get('assetId'),
             pointClass=r.get('pointClass'),
             marketDataPoint=tuple(r.get('marketDataPoint', r.get('point', '')).split('_')),
-            field=r.get('field'))
+            quotingStyle=r.get('field', r.get('quotingStyle')))  # TODO use 'quotingStyle' after changing risk definition in slang
             for r in response
         )
 
@@ -61,9 +76,9 @@ class GsRiskApi(RiskApi):
         return GsSession.current._post(r'/risk/calculate', request)
 
     @classmethod
-    async def __run_async(cls, request: RiskRequest, futures: RiskFutureMapping):
+    def __exec(cls, request: RiskRequest, futures: tuple):
         results = cls._exec(request)
-        cls.__complete_futures(request, results, futures)
+        cls.__complete_futures(request, results, dict(futures))
 
     @classmethod
     def __complete_futures(cls, request: RiskRequest, results: Iterable, futures: RiskFutureMapping):
@@ -74,12 +89,21 @@ class GsRiskApi(RiskApi):
                 futures[request.measures[measure_idx]][request.positions[position_idx].instrument].set_result(result)
 
     @classmethod
-    async def __wait_for_results(cls, results_id: str, request: RiskRequest, futures: RiskFutureMapping):
+    def __wait_for_results(cls, results_id: str, request: RiskRequest, futures: tuple):
         session = GsSession.current
-        results = session._get(r'/risk/calculate/{}'.format(results_id))
+        url = '/risk/calculate/{}/results'.format(results_id)
+        results = session._get(url)
 
         while not isinstance(results, list):
-            await asyncio.sleep(1)
-            results = session._get(r'/risk/calculate/{}'.format(results_id))
+            time.sleep(1)
+            results = session._get(url)
 
-        cls.__complete_futures(request, results, futures)
+        cls.__complete_futures(request, results, dict(futures))
+
+    @classmethod
+    def _suggest_risk_model(cls, request: RiskModelRequest):
+        models = GsRiskApi.risk_models(request)['results']
+        if len(models) > 0:
+            return models[0]['model']
+        else:
+            raise ValueError('There are no valid risk models for the set of assets provided.')

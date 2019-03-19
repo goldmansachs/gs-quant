@@ -35,13 +35,8 @@ class DataSet:
         EDRVS_INDEX_SHORT = 'EDRVS_INDEX_SHORT'
         EDRVS_INDEX_LONG = 'EDRVS_INDEX_LONG'
 
-
     def __init__(self, dataset_id: Union[str, Ids], provider: DataApi=None):
-
-        dataset_id_str = self._get_dataset_id_str(dataset_id)
-
-        self.__id = dataset_id_str
-
+        self.__id = self._get_dataset_id_str(dataset_id)
         self.__provider = provider
 
     def _get_dataset_id_str(self, dataset_id):

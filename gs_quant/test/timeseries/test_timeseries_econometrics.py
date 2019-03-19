@@ -18,7 +18,7 @@ import pytest
 import numpy as np
 import pandas as pd
 from pandas.util.testing import assert_series_equal
-from ..timeseries import *
+from gs_quant.timeseries import *
 from datetime import date
 
 

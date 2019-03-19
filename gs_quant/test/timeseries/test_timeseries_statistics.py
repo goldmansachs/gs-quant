@@ -15,7 +15,7 @@ under the License.
 """
 
 from pandas.util.testing import assert_series_equal
-from ..timeseries import *
+from gs_quant.timeseries import *
 from datetime import date
 
 
