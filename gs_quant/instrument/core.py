@@ -14,4 +14,10 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.target.common import BusinessDayConvention, Currency, DayCountFraction, AssetClass, Currency, OptionStyle, OptionType, PayReceive, XRef
+from gs_quant.common import XRef
+from gs_quant.target.instrument import *
+
+
+class Security(XRef):
+    pass
+

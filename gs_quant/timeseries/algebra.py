@@ -19,7 +19,7 @@
 import math
 from .datetime import *
 from ..errors import *
-from numbers import Number
+from numbers import Real
 
 """
 Algebra library contains basic numerical and algebraic operations, including addition, division, multiplication, 
@@ -27,7 +27,7 @@ division and other functions on timeseries
 """
 
 
-def add(x: pd.Series, y: pd.Series, method: Interpolate=Interpolate.STEP) -> pd.Series:
+def add(x: pd.Series, y: pd.Series, method: Interpolate = Interpolate.STEP) -> pd.Series:
     """
     Add two series or scalars
 
@@ -77,7 +77,7 @@ def add(x: pd.Series, y: pd.Series, method: Interpolate=Interpolate.STEP) -> pd.
     return x_align.add(y_align)
 
 
-def subtract(x: pd.Series, y: pd.Series, method: Interpolate=Interpolate.STEP) -> pd.Series:
+def subtract(x: pd.Series, y: pd.Series, method: Interpolate = Interpolate.STEP) -> pd.Series:
     """
     Add two series or scalars
 
@@ -121,7 +121,7 @@ def subtract(x: pd.Series, y: pd.Series, method: Interpolate=Interpolate.STEP) -
     return x_align.subtract(y_align)
 
 
-def multiply(x: pd.Series, y: pd.Series, method: Interpolate=Interpolate.STEP) -> pd.Series:
+def multiply(x: pd.Series, y: pd.Series, method: Interpolate = Interpolate.STEP) -> pd.Series:
     """
     Multiply two series or scalars
 
@@ -171,7 +171,7 @@ def multiply(x: pd.Series, y: pd.Series, method: Interpolate=Interpolate.STEP) -
     return x_align.multiply(y_align)
 
 
-def divide(x: pd.Series, y: pd.Series, method: Interpolate=Interpolate.STEP) -> pd.Series:
+def divide(x: pd.Series, y: pd.Series, method: Interpolate = Interpolate.STEP) -> pd.Series:
     """
     Divide two series or scalars
 
@@ -281,7 +281,7 @@ def log(x: pd.Series) -> pd.Series:
     return np.log(x)
 
 
-def power(x: pd.Series, y: float=1) -> pd.Series:
+def power(x: pd.Series, y: float = 1) -> pd.Series:
     """
     Raise each element in series to power
 
@@ -310,12 +310,12 @@ def power(x: pd.Series, y: float=1) -> pd.Series:
     return np.power(x, y)
 
 
-def sqrt(x: Union[Number, pd.Series]) -> pd.Series:
+def sqrt(x: Union[Real, pd.Series]) -> Union[Real, pd.Series]:
     """
-    Square root of (a) each element in a series or (b) a number
+    Square root of (a) each element in a series or (b) a real number
 
-    :param x: either (a) date-based time series of prices or (b) a number
-    :return: either (a) date-based time series of square roots or (b) square root of given number
+    :param x: date-based time series of prices or real number
+    :return: date-based time series of square roots or square root of given number
 
     **Usage**
 
@@ -335,7 +335,12 @@ def sqrt(x: Union[Number, pd.Series]) -> pd.Series:
     :func:`pow`
 
     """
-    return np.sqrt(x) if isinstance(x, pd.Series) else math.sqrt(x)
+    if isinstance(x, pd.Series):
+        return np.sqrt(x)
+
+    result = math.sqrt(x)
+    # return int if result is integral (should work for values up to 2**53)
+    return round(result) if round(result) == result else result
 
 
 def abs_(x: pd.Series) -> pd.Series:
@@ -369,7 +374,7 @@ def abs_(x: pd.Series) -> pd.Series:
     return abs(x)
 
 
-def floor(x: pd.Series, value: float=0) -> pd.Series:
+def floor(x: pd.Series, value: float = 0) -> pd.Series:
     """
     Floor series at minimum value
 
@@ -401,7 +406,7 @@ def floor(x: pd.Series, value: float=0) -> pd.Series:
     return x.apply(lambda y: max(y, value))
 
 
-def ceil(x: pd.Series, value: float=0) -> pd.Series:
+def ceil(x: pd.Series, value: float = 0) -> pd.Series:
     """
     Cap series at maximum value
 

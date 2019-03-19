@@ -14,7 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from ..timeseries import *
+from gs_quant.timeseries import *
 import inspect
 import pytest
 import re

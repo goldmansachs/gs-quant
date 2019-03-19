@@ -17,22 +17,63 @@ under the License.
 from gs_quant.target.common import *
 import datetime
 from typing import Tuple, Union
-from gs_quant.base import Base, get_enum_value
+from gs_quant.base import get_enum_value, Base
 
 
-class DataFilter(Base):
+class MDAPI(Base):
         
-    """Filter on specified field."""
+    """Defines MDAPI fields."""
        
-    def __init__(self, field: str, values: Tuple[str, ...], column: str = None):
+    def __init__(self, type: str, quotingStyles: Tuple[dict, ...], class_: str = None):
+        super().__init__()
+        self.__class = class_
+        self.__type = type
+        self.__quotingStyles = quotingStyles
+
+    @property
+    def class_(self) -> str:
+        """MDAPI Class."""
+        return self.__class
+
+    @class_.setter
+    def class_(self, value: str):
+        self.__class = value
+        self._property_changed('class')        
+
+    @property
+    def type(self) -> str:
+        """The MDAPI Type field (private)"""
+        return self.__type
+
+    @type.setter
+    def type(self, value: str):
+        self.__type = value
+        self._property_changed('type')        
+
+    @property
+    def quotingStyles(self) -> Tuple[dict, ...]:
+        """Map from MDAPI QuotingStyles to database columns"""
+        return self.__quotingStyles
+
+    @quotingStyles.setter
+    def quotingStyles(self, value: Tuple[dict, ...]):
+        self.__quotingStyles = value
+        self._property_changed('quotingStyles')        
+
+
+class FieldColumnPair(Base):
+        
+    """Map from fields to database columns."""
+       
+    def __init__(self, field: str = None, column: str = None, fieldDescription: str = None):
         super().__init__()
         self.__field = field
         self.__column = column
-        self.__values = values
+        self.__fieldDescription = fieldDescription
 
     @property
     def field(self) -> str:
-        """Field to filter on."""
+        """Field name."""
         return self.__field
 
     @field.setter
@@ -51,14 +92,14 @@ class DataFilter(Base):
         self._property_changed('column')        
 
     @property
-    def values(self) -> Tuple[str, ...]:
-        """Value(s) to match."""
-        return self.__values
+    def fieldDescription(self) -> str:
+        """Custom description (overrides field default)."""
+        return self.__fieldDescription
 
-    @values.setter
-    def values(self, value: Tuple[str, ...]):
-        self.__values = value
-        self._property_changed('values')        
+    @fieldDescription.setter
+    def fieldDescription(self, value: str):
+        self.__fieldDescription = value
+        self._property_changed('fieldDescription')        
 
 
 class DataGroup(Base):
@@ -143,19 +184,19 @@ class HistoryFilter(Base):
         self._property_changed('relativeEndSeconds')        
 
 
-class FieldColumnPair(Base):
+class DataFilter(Base):
         
-    """Map from fields to database columns."""
+    """Filter on specified field."""
        
-    def __init__(self, field: str = None, column: str = None, fieldDescription: str = None):
+    def __init__(self, field: str, values: Tuple[str, ...], column: str = None):
         super().__init__()
         self.__field = field
         self.__column = column
-        self.__fieldDescription = fieldDescription
+        self.__values = values
 
     @property
     def field(self) -> str:
-        """Field name."""
+        """Field to filter on."""
         return self.__field
 
     @field.setter
@@ -174,124 +215,257 @@ class FieldColumnPair(Base):
         self._property_changed('column')        
 
     @property
-    def fieldDescription(self) -> str:
-        """Custom description (overrides field default)."""
-        return self.__fieldDescription
+    def values(self) -> Tuple[str, ...]:
+        """Value(s) to match."""
+        return self.__values
 
-    @fieldDescription.setter
-    def fieldDescription(self, value: str):
-        self.__fieldDescription = value
-        self._property_changed('fieldDescription')        
+    @values.setter
+    def values(self, value: Tuple[str, ...]):
+        self.__values = value
+        self._property_changed('values')        
 
 
-class ParserEntity(Base):
+class DataSetParameters(Base):
         
-    """Settings for a parser processor"""
+    """Dataset parameters."""
        
-    def __init__(self, onlyNormalizedFields: bool = None, quotes: bool = None, trades: bool = None):
+    def __init__(self, uploadDataPolicy: str, logicalDb: str, symbolStrategy: str, applyMarketDataEntitlements: bool, coverage: str, frequency: str, methodology: str, history: str, category: str = None, subCategory: str = None, assetClass: Union[AssetClass, str] = None, ownerIds: Tuple[str, ...] = None, approverIds: Tuple[str, ...] = None, supportIds: Tuple[str, ...] = None, identifierMapperName: str = None, constantSymbols: Tuple[str, ...] = None, underlyingDataSetId: str = None, immutable: bool = None, includeInCatalog: bool = None, overrideQueryColumnIds: Tuple[str, ...] = None, plot: bool = None):
         super().__init__()
-        self.__onlyNormalizedFields = onlyNormalizedFields
-        self.__quotes = quotes
-        self.__trades = trades
+        self.__category = category
+        self.__subCategory = subCategory
+        self.__methodology = methodology
+        self.__coverage = coverage
+        self.__history = history
+        self.__frequency = frequency
+        self.__assetClass = assetClass if isinstance(assetClass, AssetClass) else get_enum_value(AssetClass, assetClass)
+        self.__ownerIds = ownerIds
+        self.__approverIds = approverIds
+        self.__supportIds = supportIds
+        self.__applyMarketDataEntitlements = applyMarketDataEntitlements
+        self.__uploadDataPolicy = uploadDataPolicy
+        self.__identifierMapperName = identifierMapperName
+        self.__logicalDb = logicalDb
+        self.__symbolStrategy = symbolStrategy
+        self.__constantSymbols = constantSymbols
+        self.__underlyingDataSetId = underlyingDataSetId
+        self.__immutable = immutable
+        self.__includeInCatalog = includeInCatalog
+        self.__overrideQueryColumnIds = overrideQueryColumnIds
+        self.__plot = plot
 
     @property
-    def onlyNormalizedFields(self) -> bool:
-        """Setting for onlyNormalizedFields."""
-        return self.__onlyNormalizedFields
+    def category(self) -> str:
+        """Top level grouping."""
+        return self.__category
 
-    @onlyNormalizedFields.setter
-    def onlyNormalizedFields(self, value: bool):
-        self.__onlyNormalizedFields = value
-        self._property_changed('onlyNormalizedFields')        
-
-    @property
-    def quotes(self) -> bool:
-        """Setting for quotes."""
-        return self.__quotes
-
-    @quotes.setter
-    def quotes(self, value: bool):
-        self.__quotes = value
-        self._property_changed('quotes')        
+    @category.setter
+    def category(self, value: str):
+        self.__category = value
+        self._property_changed('category')        
 
     @property
-    def trades(self) -> bool:
-        """Setting for trades."""
-        return self.__trades
+    def subCategory(self) -> str:
+        """Second level grouping."""
+        return self.__subCategory
 
-    @trades.setter
-    def trades(self, value: bool):
-        self.__trades = value
-        self._property_changed('trades')        
-
-
-class Adjustments(Base):
-        
-    """Corporate action adjustments."""
-       
-    def __init__(self, priceColumns: Tuple[str, ...], adjustedSuffix: str):
-        super().__init__()
-        self.__priceColumns = priceColumns
-        self.__adjustedSuffix = adjustedSuffix
+    @subCategory.setter
+    def subCategory(self, value: str):
+        self.__subCategory = value
+        self._property_changed('subCategory')        
 
     @property
-    def priceColumns(self) -> Tuple[str, ...]:
-        return self.__priceColumns
+    def methodology(self) -> str:
+        """Methodology of dataset."""
+        return self.__methodology
 
-    @priceColumns.setter
-    def priceColumns(self, value: Tuple[str, ...]):
-        self.__priceColumns = value
-        self._property_changed('priceColumns')        
-
-    @property
-    def adjustedSuffix(self) -> str:
-        return self.__adjustedSuffix
-
-    @adjustedSuffix.setter
-    def adjustedSuffix(self, value: str):
-        self.__adjustedSuffix = value
-        self._property_changed('adjustedSuffix')        
-
-
-class AdvancedFilter(Base):
-        
-    """Advanced filter for numeric fields."""
-       
-    def __init__(self, column: str, value: float, operator: str):
-        super().__init__()
-        self.__column = column
-        self.__value = value
-        self.__operator = operator
+    @methodology.setter
+    def methodology(self, value: str):
+        self.__methodology = value
+        self._property_changed('methodology')        
 
     @property
-    def column(self) -> str:
-        """Database column to filter on."""
-        return self.__column
+    def coverage(self) -> str:
+        """Coverage of dataset."""
+        return self.__coverage
 
-    @column.setter
-    def column(self, value: str):
-        self.__column = value
-        self._property_changed('column')        
-
-    @property
-    def value(self) -> float:
-        """Value to compare against."""
-        return self.__value
-
-    @value.setter
-    def value(self, value: float):
-        self.__value = value
-        self._property_changed('value')        
+    @coverage.setter
+    def coverage(self, value: str):
+        self.__coverage = value
+        self._property_changed('coverage')        
 
     @property
-    def operator(self) -> str:
-        """Comparison operator."""
-        return self.__operator
+    def history(self) -> str:
+        """Period of time covered by dataset."""
+        return self.__history
 
-    @operator.setter
-    def operator(self, value: str):
-        self.__operator = value
-        self._property_changed('operator')        
+    @history.setter
+    def history(self, value: str):
+        self.__history = value
+        self._property_changed('history')        
+
+    @property
+    def frequency(self) -> str:
+        """Frequency of updates to dataset."""
+        return self.__frequency
+
+    @frequency.setter
+    def frequency(self, value: str):
+        self.__frequency = value
+        self._property_changed('frequency')        
+
+    @property
+    def assetClass(self) -> Union[AssetClass, str]:
+        """Asset classification of security. Assets are classified into broad groups which exhibit similar characteristics and behave in a consistent way under different market conditions"""
+        return self.__assetClass
+
+    @assetClass.setter
+    def assetClass(self, value: Union[AssetClass, str]):
+        self.__assetClass = value if isinstance(value, AssetClass) else get_enum_value(AssetClass, value)
+        self._property_changed('assetClass')        
+
+    @property
+    def ownerIds(self) -> Tuple[str, ...]:
+        """Users who own dataset."""
+        return self.__ownerIds
+
+    @ownerIds.setter
+    def ownerIds(self, value: Tuple[str, ...]):
+        self.__ownerIds = value
+        self._property_changed('ownerIds')        
+
+    @property
+    def approverIds(self) -> Tuple[str, ...]:
+        """Users who can grant access to dataset."""
+        return self.__approverIds
+
+    @approverIds.setter
+    def approverIds(self, value: Tuple[str, ...]):
+        self.__approverIds = value
+        self._property_changed('approverIds')        
+
+    @property
+    def supportIds(self) -> Tuple[str, ...]:
+        """Users who support dataset."""
+        return self.__supportIds
+
+    @supportIds.setter
+    def supportIds(self, value: Tuple[str, ...]):
+        self.__supportIds = value
+        self._property_changed('supportIds')        
+
+    @property
+    def applyMarketDataEntitlements(self) -> bool:
+        """Whether market data entitlements are checked."""
+        return self.__applyMarketDataEntitlements
+
+    @applyMarketDataEntitlements.setter
+    def applyMarketDataEntitlements(self, value: bool):
+        self.__applyMarketDataEntitlements = value
+        self._property_changed('applyMarketDataEntitlements')        
+
+    @property
+    def uploadDataPolicy(self) -> str:
+        """Policy governing uploads."""
+        return self.__uploadDataPolicy
+
+    @uploadDataPolicy.setter
+    def uploadDataPolicy(self, value: str):
+        self.__uploadDataPolicy = value
+        self._property_changed('uploadDataPolicy')        
+
+    @property
+    def identifierMapperName(self) -> str:
+        """Identifier mapper associated with dataset."""
+        return self.__identifierMapperName
+
+    @identifierMapperName.setter
+    def identifierMapperName(self, value: str):
+        self.__identifierMapperName = value
+        self._property_changed('identifierMapperName')        
+
+    @property
+    def identifierUpdaterName(self) -> str:
+        """Identifier updater associated with dataset."""
+        return 'REPORT_IDENTIFIER_UPDATER'        
+
+    @property
+    def logicalDb(self) -> str:
+        """Database where contents are (to be) stored."""
+        return self.__logicalDb
+
+    @logicalDb.setter
+    def logicalDb(self, value: str):
+        self.__logicalDb = value
+        self._property_changed('logicalDb')        
+
+    @property
+    def symbolStrategy(self) -> str:
+        """Method for looking up database table name."""
+        return self.__symbolStrategy
+
+    @symbolStrategy.setter
+    def symbolStrategy(self, value: str):
+        self.__symbolStrategy = value
+        self._property_changed('symbolStrategy')        
+
+    @property
+    def constantSymbols(self) -> Tuple[str, ...]:
+        return self.__constantSymbols
+
+    @constantSymbols.setter
+    def constantSymbols(self, value: Tuple[str, ...]):
+        self.__constantSymbols = value
+        self._property_changed('constantSymbols')        
+
+    @property
+    def underlyingDataSetId(self) -> str:
+        """Dataset on which this (virtual) dataset is based."""
+        return self.__underlyingDataSetId
+
+    @underlyingDataSetId.setter
+    def underlyingDataSetId(self, value: str):
+        self.__underlyingDataSetId = value
+        self._property_changed('underlyingDataSetId')        
+
+    @property
+    def immutable(self) -> bool:
+        """Whether dataset is immutable (i.e. not writable through data service)."""
+        return self.__immutable
+
+    @immutable.setter
+    def immutable(self, value: bool):
+        self.__immutable = value
+        self._property_changed('immutable')        
+
+    @property
+    def includeInCatalog(self) -> bool:
+        """Whether dataset should be in the catalog."""
+        return self.__includeInCatalog
+
+    @includeInCatalog.setter
+    def includeInCatalog(self, value: bool):
+        self.__includeInCatalog = value
+        self._property_changed('includeInCatalog')        
+
+    @property
+    def overrideQueryColumnIds(self) -> Tuple[str, ...]:
+        """Explicit set of database columns to query for, regardless of fields specified in request."""
+        return self.__overrideQueryColumnIds
+
+    @overrideQueryColumnIds.setter
+    def overrideQueryColumnIds(self, value: Tuple[str, ...]):
+        self.__overrideQueryColumnIds = value
+        self._property_changed('overrideQueryColumnIds')        
+
+    @property
+    def plot(self) -> bool:
+        """Whether dataset is intended for use in Plottool."""
+        return self.__plot
+
+    @plot.setter
+    def plot(self, value: bool):
+        self.__plot = value
+        self._property_changed('plot')        
 
 
 class DataQuery(Base):
@@ -529,45 +703,73 @@ class DataQuery(Base):
         self._property_changed('fields')        
 
 
-class MDAPI(Base):
+class Adjustments(Base):
         
-    """Defines MDAPI fields."""
+    """Corporate action adjustments."""
        
-    def __init__(self, type: str, quotingStyles: Tuple[dict, ...], class_: str = None):
+    def __init__(self, priceColumns: Tuple[str, ...], adjustedSuffix: str):
         super().__init__()
-        self.__class = class_
-        self.__type = type
-        self.__quotingStyles = quotingStyles
+        self.__priceColumns = priceColumns
+        self.__adjustedSuffix = adjustedSuffix
 
     @property
-    def class_(self) -> str:
-        """MDAPI Class."""
-        return self.__class
+    def priceColumns(self) -> Tuple[str, ...]:
+        return self.__priceColumns
 
-    @class_.setter
-    def class_(self, value: str):
-        self.__class = value
-        self._property_changed('class')        
-
-    @property
-    def type(self) -> str:
-        """The MDAPI Type field (private)"""
-        return self.__type
-
-    @type.setter
-    def type(self, value: str):
-        self.__type = value
-        self._property_changed('type')        
+    @priceColumns.setter
+    def priceColumns(self, value: Tuple[str, ...]):
+        self.__priceColumns = value
+        self._property_changed('priceColumns')        
 
     @property
-    def quotingStyles(self) -> Tuple[dict, ...]:
-        """Map from MDAPI QuotingStyles to database columns"""
-        return self.__quotingStyles
+    def adjustedSuffix(self) -> str:
+        return self.__adjustedSuffix
 
-    @quotingStyles.setter
-    def quotingStyles(self, value: Tuple[dict, ...]):
-        self.__quotingStyles = value
-        self._property_changed('quotingStyles')        
+    @adjustedSuffix.setter
+    def adjustedSuffix(self, value: str):
+        self.__adjustedSuffix = value
+        self._property_changed('adjustedSuffix')        
+
+
+class AdvancedFilter(Base):
+        
+    """Advanced filter for numeric fields."""
+       
+    def __init__(self, column: str, value: float, operator: str):
+        super().__init__()
+        self.__column = column
+        self.__value = value
+        self.__operator = operator
+
+    @property
+    def column(self) -> str:
+        """Database column to filter on."""
+        return self.__column
+
+    @column.setter
+    def column(self, value: str):
+        self.__column = value
+        self._property_changed('column')        
+
+    @property
+    def value(self) -> float:
+        """Value to compare against."""
+        return self.__value
+
+    @value.setter
+    def value(self, value: float):
+        self.__value = value
+        self._property_changed('value')        
+
+    @property
+    def operator(self) -> str:
+        """Comparison operator."""
+        return self.__operator
+
+    @operator.setter
+    def operator(self, value: str):
+        self.__operator = value
+        self._property_changed('operator')        
 
 
 class DataSetDefaults(Base):
@@ -611,236 +813,45 @@ class DataSetDefaults(Base):
         self._property_changed('delaySeconds')        
 
 
-class DataSetParameters(Base):
+class ParserEntity(Base):
         
-    """Dataset parameters."""
+    """Settings for a parser processor"""
        
-    def __init__(self, uploadDataPolicy: str, logicalDb: str, symbolStrategy: str, applyMarketDataEntitlements: bool, coverage: str, frequency: str, methodology: str, history: str, category: str = None, subCategory: str = None, assetClass: Union[AssetClass, str] = None, ownerIds: Tuple[str, ...] = None, approverIds: Tuple[str, ...] = None, supportIds: Tuple[str, ...] = None, identifierMapperName: str = None, constantSymbols: Tuple[str, ...] = None, underlyingDataSetId: str = None, immutable: bool = None, includeInCatalog: bool = None, overrideQueryColumnIds: Tuple[str, ...] = None):
+    def __init__(self, onlyNormalizedFields: bool = None, quotes: bool = None, trades: bool = None):
         super().__init__()
-        self.__category = category
-        self.__subCategory = subCategory
-        self.__methodology = methodology
-        self.__coverage = coverage
-        self.__history = history
-        self.__frequency = frequency
-        self.__assetClass = assetClass if isinstance(assetClass, AssetClass) else get_enum_value(AssetClass, assetClass)
-        self.__ownerIds = ownerIds
-        self.__approverIds = approverIds
-        self.__supportIds = supportIds
-        self.__applyMarketDataEntitlements = applyMarketDataEntitlements
-        self.__uploadDataPolicy = uploadDataPolicy
-        self.__identifierMapperName = identifierMapperName
-        self.__logicalDb = logicalDb
-        self.__symbolStrategy = symbolStrategy
-        self.__constantSymbols = constantSymbols
-        self.__underlyingDataSetId = underlyingDataSetId
-        self.__immutable = immutable
-        self.__includeInCatalog = includeInCatalog
-        self.__overrideQueryColumnIds = overrideQueryColumnIds
+        self.__onlyNormalizedFields = onlyNormalizedFields
+        self.__quotes = quotes
+        self.__trades = trades
 
     @property
-    def category(self) -> str:
-        """Top level grouping."""
-        return self.__category
+    def onlyNormalizedFields(self) -> bool:
+        """Setting for onlyNormalizedFields."""
+        return self.__onlyNormalizedFields
 
-    @category.setter
-    def category(self, value: str):
-        self.__category = value
-        self._property_changed('category')        
-
-    @property
-    def subCategory(self) -> str:
-        """Second level grouping."""
-        return self.__subCategory
-
-    @subCategory.setter
-    def subCategory(self, value: str):
-        self.__subCategory = value
-        self._property_changed('subCategory')        
+    @onlyNormalizedFields.setter
+    def onlyNormalizedFields(self, value: bool):
+        self.__onlyNormalizedFields = value
+        self._property_changed('onlyNormalizedFields')        
 
     @property
-    def methodology(self) -> str:
-        """Methodology of dataset."""
-        return self.__methodology
+    def quotes(self) -> bool:
+        """Setting for quotes."""
+        return self.__quotes
 
-    @methodology.setter
-    def methodology(self, value: str):
-        self.__methodology = value
-        self._property_changed('methodology')        
-
-    @property
-    def coverage(self) -> str:
-        """Coverage of dataset."""
-        return self.__coverage
-
-    @coverage.setter
-    def coverage(self, value: str):
-        self.__coverage = value
-        self._property_changed('coverage')        
+    @quotes.setter
+    def quotes(self, value: bool):
+        self.__quotes = value
+        self._property_changed('quotes')        
 
     @property
-    def history(self) -> str:
-        """Period of time covered by dataset."""
-        return self.__history
+    def trades(self) -> bool:
+        """Setting for trades."""
+        return self.__trades
 
-    @history.setter
-    def history(self, value: str):
-        self.__history = value
-        self._property_changed('history')        
-
-    @property
-    def frequency(self) -> str:
-        """Frequency of updates to dataset."""
-        return self.__frequency
-
-    @frequency.setter
-    def frequency(self, value: str):
-        self.__frequency = value
-        self._property_changed('frequency')        
-
-    @property
-    def assetClass(self) -> Union[AssetClass, str]:
-        """Asset classification of security. Assets are classified into broad groups which exhibit similar characteristics and behave in a consistent way under different market conditions"""
-        return self.__assetClass
-
-    @assetClass.setter
-    def assetClass(self, value: Union[AssetClass, str]):
-        self.__assetClass = value if isinstance(value, AssetClass) else get_enum_value(AssetClass, value)
-        self._property_changed('assetClass')        
-
-    @property
-    def ownerIds(self) -> Tuple[str, ...]:
-        """Users who own dataset."""
-        return self.__ownerIds
-
-    @ownerIds.setter
-    def ownerIds(self, value: Tuple[str, ...]):
-        self.__ownerIds = value
-        self._property_changed('ownerIds')        
-
-    @property
-    def approverIds(self) -> Tuple[str, ...]:
-        """Users who can grant access to dataset."""
-        return self.__approverIds
-
-    @approverIds.setter
-    def approverIds(self, value: Tuple[str, ...]):
-        self.__approverIds = value
-        self._property_changed('approverIds')        
-
-    @property
-    def supportIds(self) -> Tuple[str, ...]:
-        """Users who support dataset."""
-        return self.__supportIds
-
-    @supportIds.setter
-    def supportIds(self, value: Tuple[str, ...]):
-        self.__supportIds = value
-        self._property_changed('supportIds')        
-
-    @property
-    def applyMarketDataEntitlements(self) -> bool:
-        """Whether market data entitlements are checked."""
-        return self.__applyMarketDataEntitlements
-
-    @applyMarketDataEntitlements.setter
-    def applyMarketDataEntitlements(self, value: bool):
-        self.__applyMarketDataEntitlements = value
-        self._property_changed('applyMarketDataEntitlements')        
-
-    @property
-    def uploadDataPolicy(self) -> str:
-        """Policy governing uploads."""
-        return self.__uploadDataPolicy
-
-    @uploadDataPolicy.setter
-    def uploadDataPolicy(self, value: str):
-        self.__uploadDataPolicy = value
-        self._property_changed('uploadDataPolicy')        
-
-    @property
-    def identifierMapperName(self) -> str:
-        """Identifier mapper associated with dataset."""
-        return self.__identifierMapperName
-
-    @identifierMapperName.setter
-    def identifierMapperName(self, value: str):
-        self.__identifierMapperName = value
-        self._property_changed('identifierMapperName')        
-
-    @property
-    def identifierUpdaterName(self) -> str:
-        """Identifier updater associated with dataset."""
-        return 'REPORT_IDENTIFIER_UPDATER'        
-
-    @property
-    def logicalDb(self) -> str:
-        """Database where contents are (to be) stored."""
-        return self.__logicalDb
-
-    @logicalDb.setter
-    def logicalDb(self, value: str):
-        self.__logicalDb = value
-        self._property_changed('logicalDb')        
-
-    @property
-    def symbolStrategy(self) -> str:
-        """Method for looking up database table name."""
-        return self.__symbolStrategy
-
-    @symbolStrategy.setter
-    def symbolStrategy(self, value: str):
-        self.__symbolStrategy = value
-        self._property_changed('symbolStrategy')        
-
-    @property
-    def constantSymbols(self) -> Tuple[str, ...]:
-        return self.__constantSymbols
-
-    @constantSymbols.setter
-    def constantSymbols(self, value: Tuple[str, ...]):
-        self.__constantSymbols = value
-        self._property_changed('constantSymbols')        
-
-    @property
-    def underlyingDataSetId(self) -> str:
-        """Dataset on which this (virtual) dataset is based."""
-        return self.__underlyingDataSetId
-
-    @underlyingDataSetId.setter
-    def underlyingDataSetId(self, value: str):
-        self.__underlyingDataSetId = value
-        self._property_changed('underlyingDataSetId')        
-
-    @property
-    def immutable(self) -> bool:
-        """Whether dataset is immutable (i.e. not writable through data service)."""
-        return self.__immutable
-
-    @immutable.setter
-    def immutable(self, value: bool):
-        self.__immutable = value
-        self._property_changed('immutable')        
-
-    @property
-    def includeInCatalog(self) -> bool:
-        """Whether dataset should be in the catalog."""
-        return self.__includeInCatalog
-
-    @includeInCatalog.setter
-    def includeInCatalog(self, value: bool):
-        self.__includeInCatalog = value
-        self._property_changed('includeInCatalog')        
-
-    @property
-    def overrideQueryColumnIds(self) -> Tuple[str, ...]:
-        """Explicit set of database columns to query for, regardless of fields specified in request."""
-        return self.__overrideQueryColumnIds
-
-    @overrideQueryColumnIds.setter
-    def overrideQueryColumnIds(self, value: Tuple[str, ...]):
-        self.__overrideQueryColumnIds = value
-        self._property_changed('overrideQueryColumnIds')        
+    @trades.setter
+    def trades(self, value: bool):
+        self.__trades = value
+        self._property_changed('trades')        
 
 
 class ProcessorEntity(Base):
@@ -882,6 +893,34 @@ class ProcessorEntity(Base):
     def deduplicate(self, value: Tuple[str, ...]):
         self.__deduplicate = value
         self._property_changed('deduplicate')        
+
+
+class ComplexFilter(Base):
+        
+    """A compound filter for data requests."""
+       
+    def __init__(self, operator: str, simpleFilters: Tuple[DataFilter, ...]):
+        super().__init__()
+        self.__operator = operator
+        self.__simpleFilters = simpleFilters
+
+    @property
+    def operator(self) -> str:
+        return self.__operator
+
+    @operator.setter
+    def operator(self, value: str):
+        self.__operator = value
+        self._property_changed('operator')        
+
+    @property
+    def simpleFilters(self) -> Tuple[DataFilter, ...]:
+        return self.__simpleFilters
+
+    @simpleFilters.setter
+    def simpleFilters(self, value: Tuple[DataFilter, ...]):
+        self.__simpleFilters = value
+        self._property_changed('simpleFilters')        
 
 
 class DataQueryResponse(Base):
@@ -1004,34 +1043,6 @@ class DataSetDimensions(Base):
     def entityDimension(self, value: str):
         self.__entityDimension = value
         self._property_changed('entityDimension')        
-
-
-class ComplexFilter(Base):
-        
-    """A compound filter for data requests."""
-       
-    def __init__(self, operator: str, simpleFilters: Tuple[DataFilter, ...]):
-        super().__init__()
-        self.__operator = operator
-        self.__simpleFilters = simpleFilters
-
-    @property
-    def operator(self) -> str:
-        return self.__operator
-
-    @operator.setter
-    def operator(self, value: str):
-        self.__operator = value
-        self._property_changed('operator')        
-
-    @property
-    def simpleFilters(self) -> Tuple[DataFilter, ...]:
-        return self.__simpleFilters
-
-    @simpleFilters.setter
-    def simpleFilters(self, value: Tuple[DataFilter, ...]):
-        self.__simpleFilters = value
-        self._property_changed('simpleFilters')        
 
 
 class EntityFilter(Base):

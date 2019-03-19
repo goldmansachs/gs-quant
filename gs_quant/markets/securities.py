@@ -17,9 +17,23 @@ under the License.
 from typing import Union
 from enum import Enum
 import datetime as dt
+import pytz
 from abc import ABCMeta, abstractmethod
-from gs_quant.api.gs.assets import GsAssetApi, GsAsset, AssetClass, AssetType as GsAssetType
+from gs_quant.api.gs.assets import GsAssetApi, GsAsset, AssetClass, AssetType as GsAssetType, PositionSet
+from gs_quant.base import get_enum_value
 from gs_quant.markets.core import MarketDataContext
+from typing import Tuple
+
+
+class ExchangeCode(Enum):
+    """Exchange enumeration
+    
+    Exchange codes representing global venues where Securities are listed and traded
+    
+    """
+
+    NASDAQ = "NASD" # Nasdaq Global Stock Market
+    NYSE = "NYSE"   # New York Stock Exchange
 
 
 class AssetType(Enum):
@@ -69,12 +83,11 @@ class AssetIdentifier(Enum):
 class Asset(metaclass=ABCMeta):
 
     def __init__(self, id_: str, asset_class: AssetClass, name: str):
-
         self.__id = id_
         self.asset_class = asset_class
         self.name = name
 
-    def get_identifiers(self, as_of: dt.date=None):
+    def get_identifiers(self, as_of: dt.date=None) -> dict:
         """
         Get asset identifiers
 
@@ -100,8 +113,7 @@ class Asset(metaclass=ABCMeta):
 
         Use MarketDataContext to determine as of date:
 
-        >>> ctx = MarketDataContext(date(2018,1,1))
-        >>> with(ctx):
+        >>> with MarketDataContext(date(2018,1,1)) as ctx:
         >>>     gs.get_identifiers()
 
         **See also**
@@ -117,7 +129,7 @@ class Asset(metaclass=ABCMeta):
                 as_of = as_of.date()
 
         valid_ids = set(item.value for item in AssetIdentifier)
-        xrefs = GsAssetApi.get_asset_xrefs(self.__id)['xrefs']
+        xrefs = GsAssetApi.get_asset_xrefs(self.__id)
         identifiers = {}
 
         for xref in xrefs:
@@ -125,12 +137,51 @@ class Asset(metaclass=ABCMeta):
             end_date = xref.endDate
 
             if start_date <= as_of <= end_date:
-                identifiers = {k.upper(): v for k, v in xref.identifiers.items() if k.upper() in valid_ids}
+                identifiers = {k.upper(): v for k, v in xref.identifiers.as_dict().items() if k.upper() in valid_ids}
 
         return identifiers
 
+    def get_identifier(self, id_type: AssetIdentifier, as_of: dt.date=None):
+        """
+        Get asset identifier
+
+        :param as_of: As of date for query
+        :param id_type: requested id type
+        :return: identifier value
+
+        **Usage**
+
+        Get asset identifier as of a given date. Where the identifiers are temporal (and can change over time), this
+        function will return the identifier as of that point in time. If no date is provided as a parameter, will use
+        the current MarketDataContext.
+
+        **Examples**
+
+        Get current SEDOL:
+
+        >>> gs = SecurityMaster.get_asset("GS", AssetIdentifier.TICKER)
+        >>> gs.get_identifier(AssetIdentifier.SEDOL)
+
+        Get SEDOL as of 1Jan18:
+
+        >>> gs.get_identifier(AssetIdentifier.SEDOL, as_of=date(2018,1,1))
+
+        Use MarketDataContext to determine as of date:
+
+        >>> with ctx = MarketDataContext(date(2018,1,1)) as ctx:
+        >>>     gs.get_identifier(AssetIdentifier.SEDOL)
+
+        **See also**
+
+        :class:`AssetIdentifier`
+        :func:`get_asset_identifiers`
+
+        """
+        ids = self.get_identifiers(as_of=as_of)
+        return ids.get(id_type.value)
+
     @abstractmethod
-    def get_type(self):
+    def get_type(self) -> AssetType:
         """Overridden by sub-classes to return security type"""
 
 
@@ -145,8 +196,26 @@ class Stock(Asset):
     def __init__(self, id_: str, name: str):
         Asset.__init__(self, id_, AssetClass.Equity, name)
 
-    def get_type(self):
+    def get_type(self) -> AssetType:
         return AssetType.STOCK
+
+
+class Future(Asset):
+    """Future Security Type
+
+    Represents a standardized listed contract which provides delivery of an asset at a pre-defined forward date and can
+    be settled in cash or physical form
+
+    """
+
+    def __init__(self, id_: str, asset_class: Union[AssetClass, str], name: str):
+        if isinstance(asset_class, str):
+            asset_class = get_enum_value(AssetClass, asset_class)
+
+        Asset.__init__(self, id_, asset_class, name)
+
+    def get_type(self) -> AssetType:
+        return AssetType.FUTURE
 
 
 class PositionType(Enum):
@@ -165,7 +234,7 @@ class IndexConstituentProvider(metaclass=ABCMeta):
     def __init__(self, id_: str):
         self.__id = id_
 
-    def get_constituents(self, as_of: dt.date=None, position_type: PositionType=PositionType.CLOSE) -> list:
+    def get_constituents(self, as_of: dt.date=None, position_type: PositionType=PositionType.CLOSE) -> Tuple[PositionSet, ...]:
         """
         Get asset constituents
 
@@ -191,8 +260,7 @@ class IndexConstituentProvider(metaclass=ABCMeta):
 
         Use MarketDataContext to determine as of date:
 
-        >>> ctx = MarketDataContext(date(2018,1,1))
-        >>> with(ctx):
+        >>> with MarketDataContext(date(2018,1,1)) as ctx:
         >>>     gs.get_constituents()
 
         **See also**
@@ -207,12 +275,7 @@ class IndexConstituentProvider(metaclass=ABCMeta):
             if type(as_of) is dt.datetime:
                 as_of = as_of.date()
 
-        positions = GsAssetApi.get_asset_positions_for_date(self.__id, as_of, position_type.value)
-
-        if len(positions['results']) == 1:
-            return positions['results'][0].positions
-
-        return list
+        return GsAssetApi.get_asset_positions_for_date(self.__id, as_of, position_type.value)
 
 
 class Index(Asset, IndexConstituentProvider):
@@ -225,7 +288,7 @@ class Index(Asset, IndexConstituentProvider):
         Asset.__init__(self, id_, asset_class, name)
         IndexConstituentProvider.__init__(self, id_)
 
-    def get_type(self):
+    def get_type(self) -> AssetType:
         return AssetType.INDEX
 
 
@@ -238,7 +301,7 @@ class ETF(Asset, IndexConstituentProvider):
         Asset.__init__(self, id_, asset_class, name)
         IndexConstituentProvider.__init__(self, id_)
 
-    def get_type(self):
+    def get_type(self) -> AssetType:
         return AssetType.ETF
 
 
@@ -251,7 +314,7 @@ class Basket(Asset, IndexConstituentProvider):
         Asset.__init__(self, id_, asset_class, name)
         IndexConstituentProvider.__init__(self, id_)
 
-    def get_type(self):
+    def get_type(self) -> AssetType:
         return AssetType.BASKET
 
 
@@ -272,32 +335,53 @@ class SecurityMaster:
 
     @classmethod
     def __gs_asset_to_asset(cls, gs_asset: GsAsset) -> Asset:
-
-        if gs_asset.type.value in [GsAssetType.Single_Stock.value]:
+        if gs_asset.type.value in (GsAssetType.Single_Stock.value,):
             return Stock(gs_asset.id, gs_asset.name)
 
-        if gs_asset.type.value in [GsAssetType.ETF.value]:
+        if gs_asset.type.value in (GsAssetType.ETF.value,):
             return ETF(gs_asset.id, gs_asset.assetClass, gs_asset.name)
 
-        if gs_asset.type.value in [
+        if gs_asset.type.value in (
                 GsAssetType.Index.value,
                 GsAssetType.Risk_Premia.value,
                 GsAssetType.Access.value,
-                GsAssetType.Multi_Asset_Allocation.value]:
+                GsAssetType.Multi_Asset_Allocation.value):
             return Index(gs_asset.id, gs_asset.assetClass, gs_asset.name)
 
-        if gs_asset.type.value in [
+        if gs_asset.type.value in (
                 GsAssetType.Custom_Basket.value,
-                GsAssetType.Research_Basket.value]:
+                GsAssetType.Research_Basket.value):
             return Basket(gs_asset.id, gs_asset.assetClass, gs_asset.name)
 
+        if gs_asset.type.value in (GsAssetType.Future.value,):
+            return Future(gs_asset.id, gs_asset.assetClass, gs_asset.name)
+
     @classmethod
-    def get_asset(cls, id_value: str, id_type: AssetIdentifier, as_of: dt.date=None) -> Union[Asset, None]:
+    def __asset_type_to_gs_types(cls, asset_type: AssetType) -> Tuple[GsAssetType, ...]:
+        asset_map = {
+            AssetType.STOCK: (GsAssetType.Single_Stock,),
+            AssetType.INDEX: (GsAssetType.Index, GsAssetType.Multi_Asset_Allocation, GsAssetType.Risk_Premia, GsAssetType.Access),
+            AssetType.ETF: (GsAssetType.ETF, GsAssetType.ETN),
+            AssetType.BASKET: (GsAssetType.Custom_Basket, GsAssetType.Research_Basket),
+            AssetType.FUTURE: (GsAssetType.Future,),
+        }
+
+        return asset_map.get(asset_type)
+
+    @classmethod
+    def get_asset(cls,
+                  id_value: str,
+                  id_type: AssetIdentifier,
+                  as_of: Union[dt.date, dt.datetime]=None,
+                  exchange_code: ExchangeCode=None,
+                  asset_type: AssetType=None) -> Asset:
         """
         Get an asset by identifier and identifier type
 
         :param id_value: identifier value
         :param id_type: identifier type
+        :param exchange_code: exchange code
+        :param asset_type: asset type
         :param as_of: As of date for query
         :return: Asset object or None
 
@@ -308,9 +392,17 @@ class SecurityMaster:
 
         **Examples**
 
-        Get asset by ticker
+        Get asset by bloomberg id:
 
-        >>> gs = SecurityMaster.get_asset("GS", AssetIdentifier.TICKER)
+        >>> gs = SecurityMaster.get_asset("GS UN", AssetIdentifier.BLOOMBERG_ID)
+
+        Get asset by ticker and exchange code:
+
+        >>> gs = SecurityMaster.get_asset("GS", AssetIdentifier.TICKER, exchange_code=ExchangeCode.NYSE)
+
+        Get asset by ticker and asset type:
+
+        >>> spx = SecurityMaster.get_asset("SPX", AssetIdentifier.TICKER, asset_type=AssetType.INDEX)
 
         **See also**
 
@@ -319,15 +411,27 @@ class SecurityMaster:
 
         """
 
-        if id_type is AssetIdentifier.MARQUEE_ID:
+        if not as_of:
+            as_of = MarketDataContext.current.as_of
 
+        if type(as_of) is dt.date:
+            as_of = dt.datetime.combine(as_of, dt.time(0, 0), pytz.utc)
+
+        if id_type is AssetIdentifier.MARQUEE_ID:
             gs_asset = GsAssetApi.get_asset(id_value)
             return cls.__gs_asset_to_asset(gs_asset)
 
         query = {id_type.value.lower(): id_value}
 
-        results = GsAssetApi.get_many_assets(as_of=as_of, **query)
-        if results['totalResults'] == 1:
-            return cls.__gs_asset_to_asset(results['results'][0])
+        if exchange_code is not None:
+            query['exchange'] = exchange_code.value
 
-        return None
+        if asset_type is not None:
+            query['type'] = [t.value for t in cls.__asset_type_to_gs_types(asset_type)]
+
+        results = GsAssetApi.get_many_assets(as_of=as_of, **query)
+        result = next(iter(results), None)
+
+        if result:
+            return cls.__gs_asset_to_asset(result)
+

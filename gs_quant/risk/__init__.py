@@ -14,4 +14,6 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.target.common import BusinessDayConvention, Currency, DayCountFraction, AssetClass, Currency, OptionStyle, OptionType, PayReceive, XRef
+from .core import *
+from .risk_measure_mappings import get_specific_risk_measure
+from gs_quant.target.risk import CoordinatesRequest, LiquidityRequest, LiquidityResponse, RiskModelRequest

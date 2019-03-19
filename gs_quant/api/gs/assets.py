@@ -14,15 +14,13 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime as dt
-import dateutil.parser as dup
 import logging
 from enum import auto, Enum
 from typing import List, Tuple, Union
-from gs_quant.target.common import FieldFilterMap, AssetClass
-from gs_quant.target.assets import Asset as __Asset, AssetType, TemporalXRef, PositionSet, EntityQuery
+from gs_quant.target.common import FieldFilterMap
+from gs_quant.target.assets import Asset as __Asset, AssetClass, AssetType, TemporalXRef, PositionSet, EntityQuery, PositionSet
 from gs_quant.errors import MqValueError
 from gs_quant.session import GsSession
-from gs_quant.target.assets import Asset as __Asset, Asset
 
 _logger = logging.getLogger(__name__)
 IdList = Union[Tuple[str, ...], List]
@@ -44,16 +42,12 @@ class GsIdType(Enum):
 
 class GsAsset(__Asset):
     """GS Asset API object model for an asset object"""
+    pass
 
-    @classmethod
-    def from_dict(cls, dct: dict):
-        properties = cls.properties()
-        dct = {k: v for k, v in dct.items() if k in properties}
-        return cls(**dct)
 
 class GsTemporalXRef(TemporalXRef):
-
     pass
+
 
 class GsAssetApi:
     """GS Asset API client implementation"""
@@ -81,7 +75,6 @@ class GsAssetApi:
             limit=limit
         )
 
-
     @classmethod
     def get_many_assets(
             cls,
@@ -89,18 +82,10 @@ class GsAssetApi:
             as_of: dt.datetime = None,
             limit: int = 100,
             **kwargs
-    ) -> List[GsAsset]:
+    ) -> Tuple[GsAsset, ...]:
 
         query = cls.__create_query(fields, as_of, limit, **kwargs)
-        response = GsSession.current._post('/assets/query', payload=query)
-
-        results = []
-        for result in response.get('results', ()):
-            results.append(GsAsset.from_dict(result))
-
-        response['results'] = results
-
-        return response
+        return GsSession.current._post('/assets/query', payload=query, cls=GsAsset)
 
     @classmethod
     def get_many_assets_data(
@@ -111,70 +96,36 @@ class GsAssetApi:
             **kwargs
     ) -> dict:
         query = cls.__create_query(fields, as_of, limit, **kwargs)
-        response = GsSession.current._post('/assets/data/query', payload=query)
-
-        return response
+        return GsSession.current._post('/assets/data/query', payload=query)
 
     @classmethod
     def get_asset_xrefs(
             cls,
             asset_id: str
-    ) -> List[GsTemporalXRef]:
-        response = GsSession.current._get('/assets/{id}/xrefs'.format(id=asset_id))
-
-        xrefs = [GsTemporalXRef(**xref) for xref in response['xrefs']]
-        return xrefs
+    ) -> Tuple[GsTemporalXRef, ...]:
+        return GsSession.current._get('/assets/{id}/xrefs'.format(id=asset_id), cls=GsTemporalXRef)
 
     @classmethod
     def get_asset(
             cls,
             asset_id: str,
     ) -> GsAsset:
-        response = GsSession.current._get('/assets/{id}'.format(id=asset_id), cls=GsAsset)
-
-        return response
-
-    @staticmethod
-    def get_asset_xrefs(
-            asset_id: str,
-    ) -> dict:
-        response = GsSession.current._get('/assets/{id}/xrefs'.format(id=asset_id))
-
-        xrefs = list(map(lambda x: TemporalXRef(
-            dup.parse(x['startDate']).date(),
-            dup.parse(x['endDate']).date(),
-            x['identifiers'],
-        ), response['xrefs']))
-
-        return {'xrefs': xrefs}
+        return GsSession.current._get('/assets/{id}'.format(id=asset_id), cls=GsAsset)
 
     @staticmethod
     def get_asset_positions_for_date(
             asset_id: str,
             position_date: dt.date,
             position_type: str=None,
-    ) -> List[PositionSet]:
-
+    ) -> Tuple[PositionSet, ...]:
         position_date_str = position_date.isoformat()
 
         url = '/assets/{id}/positions/{date}'.format(id=asset_id, date=position_date_str)
 
         if position_type is None:
-            response = GsSession.current._get(url)
+            return GsSession.current._get(url, cls=PositionSet)
         else:
-            response = GsSession.current._get(url + '?type=' + position_type)
-
-        position_sets = [PositionSet(
-            dup.parse(x['positionDate']).date(),
-            dup.parse(x['lastUpdateTime']),
-            x['positions'],
-            x.get('type'),
-            x.get('divisor')
-        ) for x in response['results']]
-
-        response['results'] = position_sets
-
-        return response
+            return GsSession.current._get(url + '?type=' + position_type, cls=PositionSet)
 
     @classmethod
     def map_identifiers(

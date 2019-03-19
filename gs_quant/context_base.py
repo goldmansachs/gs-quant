@@ -16,6 +16,9 @@ class ContextMeta(type, metaclass=ABCMeta):
 
     @property
     def current(cls) -> 'ContextBase':
+        """
+        The current instance of this context
+        """
         current = cls.__current or cls.default
         if current is None:
             raise MqUninitialisedError('{} is not initialised'.format(cls.__name__))
