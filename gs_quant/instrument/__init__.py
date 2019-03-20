@@ -14,5 +14,6 @@ specific language governing permissions and limitations
 under the License.
 """
 from .core import *
+from gs_quant.target.common import SwapClearingHouse, SwapSettlement
 
 name = "instrument"
