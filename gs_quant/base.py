@@ -220,7 +220,7 @@ class Instrument(Priceable):
 
 
 def get_enum_value(enum_type: EnumMeta, value: str):
-    if value is None:
+    if value in (None, 'None'):
         return None
 
     enum_value = next((i for i in enum_type if i.value == value), None)

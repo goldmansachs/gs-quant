@@ -38,7 +38,7 @@ def structured_formatter(result: List) -> pd.DataFrame:
     return pd.DataFrame(result)
 
 
-def aggregate_risk(results: Iterable[Union[pd.DataFrame, Future]], threshold: Optional[float]) -> pd.DataFrame:
+def aggregate_risk(results: Iterable[Union[pd.DataFrame, Future]], threshold: Optional[float]=None) -> pd.DataFrame:
     """
     Combine the results of multiple Instrument.calc() calls, into a single result
 
@@ -116,7 +116,8 @@ Formatters = {
     IRGamma: structured_formatter,
     IRVega: structured_formatter,
     IRAnnualImpliedVol: scalar_formatter,
-    IRDailyImpliedVol: scalar_formatter
+    IRDailyImpliedVol: scalar_formatter,
+    IRAnnualATMImpliedVol: scalar_formatter
 }
 
 
@@ -159,7 +160,7 @@ class PricingContext(ContextBaseWithDefault):
         super().__init__()
         self.__is_async = is_async
         self.__is_batch = is_batch
-        self.__pricing_date = dt.date.today()
+        self.__pricing_date = pricing_date or dt.date.today()
         self.__risk_measures_by_provider_and_priceable = {}
         self.__futures = {}
 
@@ -171,7 +172,13 @@ class PricingContext(ContextBaseWithDefault):
                     positions_by_risk_measures.setdefault(tuple(risk_measures), []).append(priceable)
 
                 for risk_measures, priceables in positions_by_risk_measures.items():
-                    risk_request = RiskRequest([RiskPosition(p, 1) for p in priceables], risk_measures, self.pricing_date)
+                    risk_request = RiskRequest(
+                        tuple(RiskPosition(p, 1) for p in priceables),
+                        risk_measures,
+                        self.pricing_date,
+                        marketDataAsOf=MarketDataContext.current.as_of,
+                        pricingLocation=MarketDataContext.current.location
+                    )
                     provider.calc(risk_request, self.__futures, self.__is_async, self.__is_batch)
 
             self.__risk_measures_by_provider_and_priceable.clear()
@@ -208,8 +215,9 @@ class PricingContext(ContextBaseWithDefault):
             priceable.provider().calc(risk_request, futures, False, False)
             return future.result()
         else:
-            future = Future()
-            if not self.__futures.get(risk_measure, {}).get(priceable):
+            future = self.__futures.get(risk_measure, {}).get(priceable)
+            if future is None:
+                future = Future()
                 self.__risk_measures_by_provider_and_priceable.setdefault(priceable.provider(), {}).setdefault(priceable, set()).add(risk_measure)
                 self.__futures.setdefault(risk_measure, {})[priceable] = future
             return future
