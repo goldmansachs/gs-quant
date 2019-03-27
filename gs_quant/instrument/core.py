@@ -13,11 +13,21 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-
-from gs_quant.common import XRef
 from gs_quant.target.instrument import *
+from gs_quant.common import XRef
 
 
 class Security(XRef):
-    pass
 
+    def __init__(self, ticker: str=None, bbid: str=None, isin: str=None, cusip: str=None, primeId: int=None, quantity: float=1):
+        if len(tuple(filter(None, (f is not None for f in (ticker, bbid, isin, cusip, primeId))))) > 1:
+            raise ValueError('Only specify one identifier')
+
+        super().__init__(ticker=ticker, bbid=bbid, isin=isin, cusip=cusip, primeId=primeId)
+        self.quantity = quantity
+
+    def get_quantity(self) -> float:
+        """
+        Quantity of the security
+        """
+        return self.quantity

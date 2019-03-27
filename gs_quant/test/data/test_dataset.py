@@ -16,7 +16,7 @@ under the License.
 from abc import ABCMeta
 
 from gs_quant.api.gs.data import GsDataApi
-from gs_quant.data import DataSet
+from gs_quant.data import Dataset
 
 import datetime as dt
 import pandas as pd
@@ -132,7 +132,7 @@ test_coverage_data = { 'results': [{ 'gsid': 'gsid1' }] }
 @mock.patch.object(GsDataApi, 'query_data')
 def test_query_data(mocker):
     mocker.return_value = test_data
-    dataset = DataSet(DataSet.Ids.TREOD)
+    dataset = Dataset(Dataset.TR.TREOD)
     data = dataset.get_data(dt.date(2019, 1, 2), dt.date(2019, 1, 9), assetId='MA4B66MW5E27U8P32SB')
     assert data.equals(pd.DataFrame(test_data))
 
@@ -140,7 +140,7 @@ def test_query_data(mocker):
 @mock.patch.object(GsDataApi, 'last_data')
 def test_last_data(mocker):
     mocker.return_value = [test_data[-1]]
-    dataset = DataSet(DataSet.Ids.TREOD)
+    dataset = Dataset(Dataset.TR.TREOD)
     data = dataset.get_data_last(dt.date(2019, 1, 9), assetId='MA4B66MW5E27U8P32SB')
     assert data.equals(pd.DataFrame([test_data[-1]]))
 
@@ -150,7 +150,7 @@ def test_get_data_series(mocker):
     mocker.patch.object(GsDataApi, 'symbol_dimensions', return_value=('assetId',))
     mocker.patch.object(GsDataApi, 'time_field', return_value='date')
 
-    dataset = DataSet(DataSet.Ids.TREOD)
+    dataset = Dataset(Dataset.TR.TREOD)
     series = dataset.get_data_series('tradePrice', dt.date(2019, 1, 2), dt.date(2019, 1, 9), assetId='MA4B66MW5E27U8P32SB')
 
     df = pd.DataFrame(test_data)
@@ -163,7 +163,7 @@ def test_get_data_series(mocker):
 @mock.patch.object(GsDataApi, 'get_coverage')
 def test_get_coverage(mocker):
     mocker.return_value = test_coverage_data
-    data = DataSet(DataSet.Ids.TREOD).get_coverage()
+    data = Dataset(Dataset.TR.TREOD).get_coverage()
 
     assert data.equals(pd.DataFrame(test_coverage_data))
 

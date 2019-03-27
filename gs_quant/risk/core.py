@@ -49,13 +49,14 @@ def aggregate_risk(results: Iterable[Union[pd.DataFrame, Future]], threshold: Op
     **Examples**
 
     >>> with PricingContext():
-    >>>     # delta_f and vega_f will be lists of futures, where the result will be a Dataframe
     >>>     delta_f = [inst.calc(risk.IRDelta) for inst in instruments]
     >>>     vega_f = [inst.calc(risk.IRVega) for inst in instruments]
     >>>
-    >>> # delta and vega will be Dataframes, representing the merged risk of the individual instruments
     >>> delta = aggregate_risk(delta_f, threshold=0.1)
     >>> vega = aggregate_risk(vega_f)
+
+    delta_f and vega_f are lists of futures, where the result will be a Dataframe
+    delta and vega are Dataframes, representing the merged risk of the individual instruments
     """
     dfs = [r.result() if isinstance(r, Future) else r for r in results]
     result = pd.concat(dfs)
@@ -131,6 +132,8 @@ class PricingContext(ContextBaseWithDefault):
         """
         Construct a context to control the pricing date, async behaviour etc
 
+        The methods on this class should not be called directly. Instead, use the methods on the instruments, as per the examples
+
         :param is_async: if True, return (a future) immediately. If False, block
         :param is_batch: use for calculations expected to run longer than 3 mins, to avoid timeouts. It can be used with is_aync=True|False
         :param pricing_date: the date for pricing calculations. Default is today
@@ -139,22 +142,27 @@ class PricingContext(ContextBaseWithDefault):
 
         To change the behaviour of the default context:
 
+        >>> from gs_quant.risk import PricingContext
         >>> import datetime as dt
+        >>>
         >>> PricingContext.current = PricingContext(pricing_date=dt.today())
 
         For a blocking, synchronous request:
 
-        >>> with PricingContext():
-        >>>     f = inst.dollar_price()
+        >>> from gs_quant.instrument import IRCap
+        >>> cap = IRCap('5y', 'GBP')
         >>>
-        >>> p = f.result()
+        >>> with PricingContext():
+        >>>     price_f = cap.dollar_price()
+        >>>
+        >>> price = price_f.result()
 
         For an asynchronous request:
 
         >>> with PricingContext(is_async=True):
-        >>>     f = inst.dollar_price()
+        >>>     price_f = inst.dollar_price()
         >>>
-        >>> while not f.done():
+        >>> while not price_f.done():
         >>>     ...
         """
         super().__init__()
@@ -173,7 +181,7 @@ class PricingContext(ContextBaseWithDefault):
 
                 for risk_measures, priceables in positions_by_risk_measures.items():
                     risk_request = RiskRequest(
-                        tuple(RiskPosition(p, 1) for p in priceables),
+                        tuple(RiskPosition(p, p.get_quantity()) for p in priceables),
                         risk_measures,
                         self.pricing_date,
                         marketDataAsOf=MarketDataContext.current.as_of,
@@ -199,14 +207,17 @@ class PricingContext(ContextBaseWithDefault):
 
         **Examples**
 
-        >>> irs = IRSwap('Pay', '10y', 'USD', fixedRate=0.03)
-        >>> d = irs.calc(gs_quant.risk.IRDelta)
+        >>> from gs_quant.instrument import IRSwap
+        >>> from gs_quant.risk import IRDelta
+        >>>
+        >>> swap = IRSwap('Pay', '10y', 'USD', fixedRate=0.03)
+        >>> delta = swap.calc(IRDelta)
         """
         if not self._is_entered and not self.__is_async:
             future = Future()
             futures = {risk_measure: {priceable: future}}
             risk_request = RiskRequest(
-                (RiskPosition(priceable, 1),),
+                (RiskPosition(priceable, priceable.get_quantity()),),
                 (risk_measure,),
                 self.pricing_date,
                 marketDataAsOf=MarketDataContext.current.as_of,
@@ -230,15 +241,17 @@ class PricingContext(ContextBaseWithDefault):
 
         **Examples**
 
-        >>> irs = IRSwap('Pay', '10y', 'USD')
-        >>> rate = irs.fixedRate
+        >>> from gs_quant.instrument import IRSwap
+        >>>
+        >>> swap = IRSwap('Pay', '10y', 'USD')
+        >>> rate = swap.fixedRate
 
         fixedRate is None
 
-        >>> irs.resolve()
-        >>> rate = irs.fixedRate
+        >>> swap.resolve()
+        >>> rate = swap.fixedRate
 
-        fixedRate will be the solved value
+        fixedRate is now the solved value
         """
         # TODO Handle these correctly in the risk service
         invalid_defaults = ('-- N/A --',)

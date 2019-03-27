@@ -16,7 +16,6 @@ under the License.
 
 import backoff
 import inspect
-import itertools
 import json
 import os
 
@@ -25,13 +24,11 @@ import requests
 
 from abc import abstractmethod
 from configparser import ConfigParser
-import datetime as dt
 from enum import Enum, auto, unique
-from inspect import signature, Parameter
 import pandas as pd
-from typing import List, Optional, Tuple, Union, get_type_hints
+from typing import List, Optional, Tuple, Union
 
-from gs_quant.base import Base, EnumBase, get_enum_value
+from gs_quant.base import Base
 from gs_quant.context_base import ContextBase
 from gs_quant.errors import MqError, MqRequestError, MqAuthenticationError, MqUninitialisedError
 from gs_quant.json_encoder import JSONEncoder
@@ -51,13 +48,13 @@ class GsSession(ContextBase):
 
     __config = None
 
-    def __init__(self, domain: str, api_version: str=API_VERSION, application: str=DEFAULT_APPLICATION):
+    def __init__(self, domain: str, api_version: str=API_VERSION, application: str=DEFAULT_APPLICATION, verify=True):
         super().__init__()
         self._session = None
         self.domain = domain
         self.api_version = api_version
         self.application = application
-        self.verify = True
+        self.verify = verify
 
     @backoff.on_exception(lambda: backoff.expo(factor=2),
                           (requests.exceptions.HTTPError, requests.exceptions.Timeout),
@@ -67,7 +64,7 @@ class GsSession(ContextBase):
                           max_tries=5)
     @abstractmethod
     def _authenticate(self):
-        raise NotImplementedError("Must implement __authenticate")
+        raise NotImplementedError("Must implement _authenticate")
 
     @abstractmethod
     def endpoints_and_definitions(self, service):
@@ -93,12 +90,19 @@ class GsSession(ContextBase):
             self._session.headers.update({'X-Application': self.application})
             self._authenticate()
 
-    def __request(self, method: str, path: str, payload: Optional[Union[dict, str, Base, pd.DataFrame]]=None, cls: Optional[type]=None, try_auth=True) -> Union[Base, tuple, dict]:
+    def __request(
+            self,
+            method: str,
+            path: str,
+            payload: Optional[Union[dict, str, Base, pd.DataFrame]]=None,
+            cls: Optional[type]=None,
+            try_auth=True,
+            include_version: bool = True) -> Union[Base, tuple, dict]:
         is_dataframe = isinstance(payload, pd.DataFrame)
         if not is_dataframe:
             payload = payload or {}
 
-        url = '{}{}{}'.format(self.domain, '/' + self.api_version, path)
+        url = '{}{}{}'.format(self.domain, '/' + self.api_version if include_version else '', path)
 
         kwargs = {}
         if method in ['GET', 'DELETE']:
@@ -125,9 +129,11 @@ class GsSession(ContextBase):
             return msgpack.unpackb(response.content, raw=False)
         elif 'application/json' in response.headers['content-type']:
             res = json.loads(response.text)
+            if isinstance(res, dict) and 'results' in res:
+                res = res['results']
 
             if cls:
-                if isinstance(cls, Base):
+                if issubclass(cls, Base):
                     if isinstance(res, list):
                         return tuple(cls.from_dict(r) for r in res)
                     else:
@@ -142,17 +148,17 @@ class GsSession(ContextBase):
         else:
             return {'raw': response}
 
-    def _get(self, path: str, payload: Optional[Union[dict, Base]]=None, cls: Optional[type]=None) -> Union[Base, tuple, dict]:
-        return self.__request('GET', path, payload=payload, cls=cls)
+    def _get(self, path: str, payload: Optional[Union[dict, Base]]=None, cls: Optional[type]=None, include_version: bool=True) -> Union[Base, tuple, dict]:
+        return self.__request('GET', path, payload=payload, cls=cls, include_version=include_version)
 
-    def _post(self, path: str, payload: Optional[Union[dict, Base, pd.DataFrame]]=None, cls: Optional[type]=None) -> Union[Base, tuple, dict]:
-        return self.__request('POST', path, payload=payload, cls=cls)
+    def _post(self, path: str, payload: Optional[Union[dict, Base, pd.DataFrame]]=None, cls: Optional[type]=None, include_version: bool=True) -> Union[Base, tuple, dict]:
+        return self.__request('POST', path, payload=payload, cls=cls, include_version=include_version)
 
-    def _delete(self, path: str, payload: Optional[Union[dict, Base]]=None, cls: Optional[type]=None) -> Union[Base, tuple, dict]:
-        return self.__request('DELETE', path, payload=payload, cls=cls)
+    def _delete(self, path: str, payload: Optional[Union[dict, Base]]=None, cls: Optional[type]=None, include_version: bool=True) -> Union[Base, tuple, dict]:
+        return self.__request('DELETE', path, payload=payload, cls=cls, include_version=include_version)
 
-    def _put(self, path: str, payload: Optional[Union[dict, Base]]=None, cls: Optional[type]=None) -> Union[Base, tuple, dict]:
-        return self.__request('PUT', path, payload=payload, cls=cls)
+    def _put(self, path: str, payload: Optional[Union[dict, Base]]=None, cls: Optional[type]=None, include_version: bool=True) -> Union[Base, tuple, dict]:
+        return self.__request('PUT', path, payload=payload, cls=cls, include_version=include_version)
 
     @classmethod
     def _config_for_environment(cls, environment):
@@ -206,11 +212,9 @@ class GsSession(ContextBase):
             return OAuth2Session(environment_or_domain, client_id, client_secret, scopes, api_version=api_version, application=application)
         else:
             try:
-                from gs_quant.kerberos.session_kerberos import KerberosSession
-            except ModuleNotFoundError:
+                return KerberosSession(environment_or_domain, api_version=api_version)
+            except NameError:
                 raise MqUninitialisedError('Must specify client_id and client_secret')
-
-            return KerberosSession(environment_or_domain, api_version=api_version, application=application)
 
 
 class OAuth2Session(GsSession):
@@ -243,19 +247,27 @@ class OAuth2Session(GsSession):
         response = json.loads(reply.text)
         self._session.headers.update({'Authorization': 'Bearer {}'.format(response['access_token'])})
 
-    def endpoints_and_definitions(self, service):
-        url = '{}/developer/{}/docs/service/{}-service'.format(self.domain, self.api_version, service)
-        response = self._session.get(url)
-        service_definition = json.loads(response.text)['definition']
 
-        endpoints = []
-        for endpoint in service_definition['endpoints']:
-            endpoint['path'] = endpoint.get('path', '').replace('/{}/{}'.format(self.api_version, service), '')
-            endpoints.append(endpoint)
+try:
+    import importlib
+    from collections import namedtuple
 
-        return endpoints, service_definition['definitions']
+    mod = importlib.import_module('gs_quant_internal.kerberos.session_kerberos')
+    KerberosSessionMixin = getattr(mod, 'KerberosSessionMixin')
 
-    def request_response_gen(self, endpoint_definition):
-        return filter(None, itertools.chain(
-            (endpoint_definition.get('requestBody', {}),),
-            endpoint_definition.get('responseBody', ())))
+    # TODO REMOVE THIS ONCE A NEW VERSION OF gs-quant-internal is released
+    # KerberosGetReponse = namedtuple('KerberosGetReponse', ('text',))
+
+    class KerberosSession(KerberosSessionMixin, GsSession):
+
+        def __init__(self, environment_or_domain: str, api_version: str=API_VERSION, application: str=DEFAULT_APPLICATION):
+            domain, verify = KerberosSessionMixin.domain_and_verify(environment_or_domain)
+            GsSession.__init__(self, domain, api_version=api_version, application=application, verify=verify)
+
+        # TODO REMOVE THIS ONCE A NEW VERSION OF gs-quant-internal is released
+        # def get(self, path: str, payload: Optional[Union[dict, Base]]=None, cls: Optional[type]=None, include_version: bool=True) -> Union[Base, tuple, dict]:
+        #     ret = self._get(path, payload=payload, cls=cls, include_version=include_version)
+        #     return KerberosGetReponse(text=json.dumps(ret))
+
+except ModuleNotFoundError:
+    pass

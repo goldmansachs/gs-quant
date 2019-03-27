@@ -15,6 +15,7 @@ under the License.
 """
 
 
-from .dataset import *
+from .dataset import Dataset
+from .dataset import Fields
 
 __name__ = 'data'

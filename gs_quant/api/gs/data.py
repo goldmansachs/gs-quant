@@ -13,10 +13,11 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+from copy import copy
 import datetime as dt
 from itertools import chain
 import pandas as pd
-from typing import List, Optional, Tuple, Union
+from typing import Iterable, List, Optional, Tuple, Union
 from gs_quant.api.data import DataApi
 from gs_quant.target.data import DataQuery
 from gs_quant.errors import MqValueError
@@ -53,13 +54,13 @@ class GsDataApi(DataApi):
     def symbol_dimensions(cls, dataset_id: str) -> tuple:
         definition = cls.get_definition(dataset_id)
         # TODO Sort out proper JSON decoding
-        return tuple(definition.dimensions.symbolDimensions)
+        return tuple(definition.dimensions.get('symbolDimensions'))
 
     @classmethod
     def time_field(cls, dataset_id: str) -> str:
         definition = cls.get_definition(dataset_id)
         # TODO Sort out proper JSON decoding
-        return definition.dimensions.timeField
+        return definition.dimensions.get('timeField')
 
     # GS-specific functionality
 
@@ -126,6 +127,20 @@ class GsDataApi(DataApi):
         return definition
 
     @classmethod
+    def __normalise_coordinate_data(cls, data: Iterable[dict]) -> list:
+        ret = []
+
+        for row in data:
+            if not row:
+                continue
+
+            value_field = row['quotingStyle'] if 'field' not in row.keys() else row['field']
+            row['value'] = row.pop(value_field)
+            ret.append(row)
+
+        return ret
+
+    @classmethod
     def coordinates_last(
         cls,
         coordinates: Union[List, Tuple],
@@ -142,12 +157,8 @@ class GsDataApi(DataApi):
 
         data = cls.last_data(query)
 
-        for idx, row in enumerate(data):
-            if not row:
-                continue
-
-            value = row[row['quotingStyle']] if 'field' not in row.keys() else row[row['field']]
-            ret[coordinates[idx]] = value
+        for idx, row in enumerate(cls.__normalise_coordinate_data(data)):
+            ret[coordinates[idx]] = row['value']
 
         if as_dataframe:
             data = [dict(chain(c.as_dict().items(), (('value', v),))) for c, v in ret.items()]
@@ -174,6 +185,25 @@ class GsDataApi(DataApi):
             since=since
         )
 
-        return pd.DataFrame(cls.query_data(query))
+        return pd.DataFrame(cls.__normalise_coordinate_data(cls.query_data(query)))
 
+    @classmethod
+    def coordinates_data_series(
+            cls,
+            coordinates: Union[List, Tuple],
+            start: Optional[Union[dt.date, dt.datetime]] = None,
+            end: Optional[Union[dt.date, dt.datetime]] = None,
+            vendor: str = 'Goldman Sachs',
+            as_of: Optional[dt.datetime] = None,
+            since: Optional[dt.datetime] = None
+    ) -> pd.Series:
+        df = cls.coordinates_data(
+            coordinates,
+            start=start,
+            end=end,
+            vendor=vendor,
+            as_of=as_of,
+            since=since)
 
+        index_field = 'time' if 'time' in df.columns else 'date'
+        return pd.Series(index=pd.to_datetime(df.loc[:, index_field].values), data=df.value.values)
