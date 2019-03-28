@@ -45,7 +45,7 @@ class DataApi(metaclass=ABCMeta):
         since: Optional[dt.datetime] = None,
         **kwargs
     ):
-        from gs_quant.data import DataQuery
+        from gs_quant.api.gs.data import DataQuery
 
         end_is_time = isinstance(end, dt.datetime)
         start_is_time = isinstance(start, dt.datetime)
@@ -62,7 +62,8 @@ class DataApi(metaclass=ABCMeta):
             endDate=end if not end_is_time else None,
             endTime=end if end_is_time else None,
             asOfTime=as_of,
-            since=since
+            since=since,
+            format="MessagePack"
         )
 
         where = FieldFilterMap()

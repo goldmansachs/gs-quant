@@ -83,7 +83,6 @@ class GsAssetApi:
             limit: int = 100,
             **kwargs
     ) -> Tuple[GsAsset, ...]:
-
         query = cls.__create_query(fields, as_of, limit, **kwargs)
         return GsSession.current._post('/assets/query', payload=query, cls=GsAsset)
 

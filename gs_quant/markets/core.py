@@ -16,7 +16,7 @@ under the License.
 
 
 import datetime as dt
-from typing import Optional, Union, Mapping
+from typing import Optional, Union
 
 from gs_quant.context_base import ContextBaseWithDefault
 from gs_quant.datetime.date import business_day_offset
@@ -45,9 +45,41 @@ class MarketDataCoordinate(__MarketDataCoordinate):
 
 class MarketDataContext(ContextBaseWithDefault):
 
-    """A context containing markets data parameters, such as as_of date/time and overrides"""
+    """A context for controlling market data source"""
 
     def __init__(self, as_of: Optional[Union[dt.date, dt.datetime]]=None, location: Optional[str]=None):
+        """
+        A context for controlling the source of market data used in calculations
+
+        :param as_of: The date or datetime to source market data (N.B., only date is currently supported). Defaults to the previous business day.
+        :param location: The location of the market data (LDN, NYC, HKG). Defaults to NYC
+
+        **Examples**
+
+        Set the default market data context:
+
+        >>> import datetime as dt
+        >>> MarketDataContext.current = MarketDataContext(as_of=dt.date.today(), location='NYC')
+
+        Use a temporary market data context in conjunction with a PricingContext:
+
+        >>> from gs_quant.instrument import IRCap, IRSwap
+        >>> from gs_quant.datetime.date import business_day_offset
+        >>> from gs_quant.markets import MarketDataContext
+        >>> from gs_quant.risk import PricingContext
+        >>> import datetime as dt
+        >>>
+        >>> swap = IRSwap('Pay', '10y', 'USD')
+        >>> cap = IRCap('1y', 'EUR')
+        >>> as_of = business_day_offset(dt.date.today(), -2, roll='preceding')
+        >>>
+        >>> with PricingContext(), MarketDataContext(as_of=as_of, location='LDN'):
+        >>>     swap_price_f = swap.price()
+        >>>     cap_price_f = cap.price()
+        >>>
+        >>> swap_price = swap_price_f.result()
+        >>> cap_price = cap_price_f.result()
+        """
         super().__init__()
         self.__as_of = as_of or business_day_offset(dt.date.today(), -1, roll='preceding')
         self.__location = location or 'NYC'
@@ -55,7 +87,7 @@ class MarketDataContext(ContextBaseWithDefault):
     @property
     def as_of(self) -> Union[dt.date, dt.datetime]:
         """
-        As of date/time for market data
+        As of date/datetime for market data
         """
         return self.__as_of
 

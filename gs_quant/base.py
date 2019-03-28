@@ -122,6 +122,12 @@ class Priceable(Base):
 
     PROVIDER = None
 
+    def get_quantity(self) -> float:
+        """
+        Quantity of the instrument
+        """
+        return 1
+
     def provider(self) -> 'RiskApi':
         """
         The risk provider - defaults to GsRiskApi
@@ -138,14 +144,17 @@ class Priceable(Base):
 
         **Examples**
 
-        >>> irs = IRSwap('Pay', '10y', 'USD')
-        >>> r = irs.fixedRate
+        >>> from gs_quant.instrument import IRSwap
+        >>>
+        >>> swap = IRSwap('Pay', '10y', 'USD')
+        >>> rate = swap.fixedRate
 
-        r is None
+        rate is None
 
-        >>> r.resolve()
+        >>> swap.resolve()
+        >>> rate = swap.fixedRate
 
-        r will now be the solved fixed rate
+        rates is now the solved fixed rate
         """
         from gs_quant.risk import PricingContext
         PricingContext.current.resolve_fields(self)
@@ -158,18 +167,26 @@ class Priceable(Base):
 
         **Examples**
 
-        >>> p = inst.dollar_price()
-
-        p is a float
-
-        >>> with PricingContext():
-        >>>     f1 = inst1.dollar_price()
-        >>>     f2 = inst2.dollar_price()
+        >>> from gs_quant.instrument import IRCap
         >>>
-        >>> p1 = f1.result()
-        >>> p2 = f2.result()
+        >>> cap = IRCap('1y', 'EUR')
+        >>> price = cap.dollar_price()
 
-        f1 and f2 are futures, p1 and p2 are floats
+        price is the present value in USD (a float)
+
+        >>> cap_usd = IRCap('1y', 'USD')
+        >>> cap_eur = IRCap('1y', 'EUR')
+        >>>
+        >>> from gs_quant.risk import PricingContext
+        >>>
+        >>> with PricingContext():
+        >>>     price_usd_f = cap_usd.dollar_price()
+        >>>     price_eur_f = cap_eur.dollar_price()
+        >>>
+        >>> price_usd = price_usd_f.result()
+        >>> price_eur = price_eur_f.result()
+
+        price_usd_f and price_eur_f are futures, price_usd and price_eur are floats
         """
 
         from gs_quant.risk import DollarPrice
@@ -178,6 +195,15 @@ class Priceable(Base):
     def price(self) -> Union[float, Future]:
         """
         Present value in local currency. Note that this is not yet supported on all instruments
+
+        ***Examples**
+
+        >>> from gs_quant.instrument import IRSwap
+        >>>
+        >>> swap = IRSwap('Pay', '10y', 'EUR')
+        >>> price = swap.price()
+
+        price is the present value in EUR (a float)
         """
         from gs_quant.risk import Price
         return self.calc(Price)
@@ -186,26 +212,40 @@ class Priceable(Base):
         """
         Calculate the value of the risk_measure
 
+        :param risk_measure: the risk measure to compute, e.g. IRDelta (from gs_quant.risk)
         :return: a float or dataframe, depending on whether the value is scalar or structured, or a future thereof (depending on how PricingContext is being used)
 
         **Examples**
 
-        >>> d = inst.calc(gs_quant.risk.IRDelta)
+        >>> from gs_quant.instrument import IRCap
+        >>> from gs_quant.risk import IRDelta
+        >>>
+        >>> cap = IRCap('1y', 'USD')
+        >>> delta = cap.calc(IRDelta)
 
-        d is a dataframe
+        delta is a dataframe
 
-        >>> d = inst.calc(gs_quant.risk.EqDelta)
+        >>> from gs_quant.instrument import EqOption
+        >>> from gs_quant.risk import EqDelta
+        >>>
+        >>> option = EqOption('.SPX', '3m', 'ATMF', 'Call', 'European')
+        >>> delta = option.calc(EqDelta)
 
-        d is a float
+        delta is a float
+
+        >>> from gs_quant.risk import PricingContext
+        >>>
+        >>> cap_usd = IRCap('1y', 'USD')
+        >>> cap_eur = IRCap('1y', 'EUR')
 
         >>> with PricingContext():
-        >>>     v1 = inst1.calc(gs_quant.risk.IRDelta)
-        >>>     v2 = inst2.dollar_price(gs_quant.risk.IRDelta)
+        >>>     usd_delta_f = cap_usd.calc(IRDelta)
+        >>>     eur_delta_f = cap_eur.calc(IRDelta)
         >>>
-        >>> d1 = f1.result()
-        >>> d2 = f2.result()
+        >>> usd_delta = usd_delta_f.result()
+        >>> eur_delta = eur_delta_f.result()
 
-        f1 and f2 are futures, d1 and d2 are dataframes
+        usd_delta_f and eur_delta_f are futures, usd_delta and eur_delta are dataframes
         """
         from gs_quant.risk import PricingContext, get_specific_risk_measure
         specific_risk_measure = get_specific_risk_measure(risk_measure, self)
