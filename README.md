@@ -32,7 +32,7 @@ with GsSession.get(Environment.PROD, <client_id>, <client_secret>, scopes=('read
     # calculate vol for a time series
     range = pd.date_range('1/1/2005', periods=3650, freq='D')
     series = pd.Series(np.random.rand(len(range)), index=range)  # randomly generated
-    vol = volatility(series, 252)
+    vol = volatility(series, 63)
     vol.plot()  # requires matplotlib
     
     # Non-GS users: the below functionality requires extra permissions
