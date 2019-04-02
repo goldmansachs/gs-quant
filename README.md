@@ -2,6 +2,7 @@
 
 ## Installation
 pip install gs-quant
+
 GS users: pip install gs-quant internal --user
 
 ## Dependencies
