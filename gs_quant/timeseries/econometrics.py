@@ -35,6 +35,7 @@ class AnnualizationFactor(IntEnum):
     ANNUALLY = 1
 
 
+@plot_function
 def returns(series: pd.Series, type: Returns = Returns.SIMPLE) -> pd.Series:
     """
     Calculate returns from price series
@@ -96,6 +97,7 @@ def returns(series: pd.Series, type: Returns = Returns.SIMPLE) -> pd.Series:
     return ret_series
 
 
+@plot_function
 def prices(series: pd.Series, initial: int = 1, type: Returns = Returns.SIMPLE) -> pd.Series:
     """
     Calculate price levels from returns series
@@ -155,6 +157,7 @@ def prices(series: pd.Series, initial: int = 1, type: Returns = Returns.SIMPLE) 
         raise MqValueError('Unknown returns type (use simple / log)')
 
 
+@plot_function
 def index(x: pd.Series, initial: int = 1) -> pd.Series:
     """
     Geometric series normalization
@@ -187,6 +190,7 @@ def index(x: pd.Series, initial: int = 1) -> pd.Series:
     return pd.Series() if i is None else initial * x / x[i]
 
 
+@plot_function
 def change(x: pd.Series) -> pd.Series:
     """
     Arithmetic series normalization
@@ -246,6 +250,7 @@ def _get_annualization_factor(x):
     return factor
 
 
+@plot_function
 def annualize(x: pd.Series) -> pd.Series:
     """
     Annualize series based on sample observation frequency
@@ -289,6 +294,7 @@ def annualize(x: pd.Series) -> pd.Series:
     return x * math.sqrt(factor)
 
 
+@plot_function
 def volatility(x: pd.Series, w: int = 0) -> pd.Series:
     """
     Realized volatility of price series
@@ -335,6 +341,7 @@ def volatility(x: pd.Series, w: int = 0) -> pd.Series:
     return annualize(std(returns(x), w)) * 100
 
 
+@plot_function
 def correlation(x: pd.Series, y: pd.Series, w: int = 0, type_: SeriesType = SeriesType.PRICES) -> pd.Series:
     """
     Rolling correlation of two price series
@@ -397,6 +404,7 @@ def correlation(x: pd.Series, y: pd.Series, w: int = 0, type_: SeriesType = Seri
     return interpolate(corr, x, Interpolate.NAN)
 
 
+@plot_function
 def beta(x: pd.Series, b: pd.Series, w: int = 0, prices: bool = True) -> pd.Series:
     """
     Rolling beta of price series and benchmark
@@ -459,6 +467,7 @@ def beta(x: pd.Series, b: pd.Series, w: int = 0, prices: bool = True) -> pd.Seri
     return interpolate(result, x, Interpolate.NAN)
 
 
+@plot_function
 def max_drawdown(x: pd.Series, w: int = 0) -> pd.Series:
     """
     Compute the maximum peak to trough drawdown over a rolling window.

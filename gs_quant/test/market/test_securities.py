@@ -75,9 +75,9 @@ def test_get_asset(mocker):
     assert asset.name == "Test Asset"
     assert asset.get_type() == AssetType.BASKET
 
-    mock_response = (
-        GsAsset(id=marquee_id, assetClass='Equity', type='Single Stock', name='Test 1'),
-    )
+    mock_response = {
+        'results': (GsAsset(id=marquee_id, assetClass='Equity', type='Single Stock', name='Test 1'),),
+    }
 
     mocker.patch.object(GsSession.current, '_post', return_value=mock_response)
     asset = SecurityMaster.get_asset('GS.N', AssetIdentifier.REUTERS_ID)
@@ -92,7 +92,7 @@ def test_get_asset(mocker):
     assert asset.name == "Test 1"
     assert asset.get_type() == AssetType.STOCK
 
-    mocker.patch.object(GsSession.current, '_post', return_value=())
+    mocker.patch.object(GsSession.current, '_post', return_value={'results':()})
     asset = SecurityMaster.get_asset(marquee_id, AssetIdentifier.REUTERS_ID)
     assert asset is None
 
@@ -106,8 +106,8 @@ def test_asset_identifiers(mocker):
 
     asset = SecurityMaster.get_asset(marquee_id, AssetIdentifier.MARQUEE_ID)
 
-    mock_response = (
-        GsTemporalXRef.from_dict({
+    mock_response = {'xrefs': (
+       {
             'startDate': '1952-01-01',
             'endDate': '2018-12-31',
             'identifiers': {
@@ -116,8 +116,8 @@ def test_asset_identifiers(mocker):
                 'cusip': '9EQ24FOLD',
                 'ticker': 'GSTHHOLD'
             }
-        }),
-        GsTemporalXRef.from_dict({
+        },
+        {
             'startDate': '2019-01-01',
             'endDate': '2952-12-31',
             'identifiers': {
@@ -126,8 +126,8 @@ def test_asset_identifiers(mocker):
                 'cusip': '9EQ24FPE5',
                 'ticker': 'GSTHHVIP',
             }
-        })
-    )
+        }
+    )}
 
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
@@ -143,7 +143,7 @@ def test_asset_identifiers(mocker):
     assert asset.get_identifier(AssetIdentifier.CUSIP, as_of=dt.date.today()) == '9EQ24FPE5'
     assert asset.get_identifier(AssetIdentifier.TICKER, as_of=dt.date.today()) == 'GSTHHVIP'
 
-    market = MarketDataContext(dt.datetime(2018, 3, 1, 0, 0, 0))
+    market = PricingContext(dt.date(2018, 3, 1))
 
     with market:
         identifiers = asset.get_identifiers()
@@ -153,7 +153,7 @@ def test_asset_identifiers(mocker):
     assert identifiers[AssetIdentifier.CUSIP.value] == '9EQ24FOLD'
     assert identifiers[AssetIdentifier.TICKER.value] == 'GSTHHOLD'
 
-    market = MarketDataContext(dt.date(2018, 3, 1))
+    market = PricingContext(dt.date(2018, 3, 1))
 
     with market:
         identifiers = asset.get_identifiers()

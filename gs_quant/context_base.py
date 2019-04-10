@@ -1,14 +1,13 @@
 from abc import ABCMeta
+import threading
 
 from gs_quant.errors import MqUninitialisedError
 
 
-class ContextMeta(type, metaclass=ABCMeta):
+thread_local = threading.local()
 
-    def __init__(cls, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        cls.__current = None
-        cls.__default = None
+
+class ContextMeta(type, metaclass=ABCMeta):
 
     @classmethod
     def has_default(mcs) -> bool:
@@ -19,7 +18,7 @@ class ContextMeta(type, metaclass=ABCMeta):
         """
         The current instance of this context
         """
-        current = cls.__current or cls.default
+        current = getattr(thread_local, '{}_current'.format(cls.__name__), None) or cls.default
         if current is None:
             raise MqUninitialisedError('{} is not initialised'.format(cls.__name__))
 
@@ -27,35 +26,39 @@ class ContextMeta(type, metaclass=ABCMeta):
 
     @current.setter
     def current(cls, current: 'ContextBase'):
-        cls.__current = current
+        setattr(thread_local, '{}_current'.format(cls.__name__), current)
 
     @property
     def default(cls) -> 'ContextBase':
-        if cls.__default is None and cls.has_default():
-            cls.__default = cls()
+        attr_name = '{}_default'.format(cls.__name__)
+        default = getattr(thread_local, attr_name, None)
+        if (not cls.default_is_set) and cls.has_default():
+            default = cls()
+            setattr(thread_local, attr_name, default)
 
-        return cls.__default
+        return default
+
+    @property
+    def default_is_set(cls) -> bool:
+        return getattr(thread_local, '{}_default'.format(cls.__name__), None) is not None
 
     @default.setter
     def default(cls, default: 'ContextBase'):
-        cls.__default = default
+        setattr(thread_local, '{}_default'.format(cls.__name__), default)
 
 
 class ContextBase(metaclass=ContextMeta):
-
-    def __init__(self):
-        self.__previous = None
-        self.__entered = False
-
+    
     def __enter__(self):
         clz = self._cls
 
         try:
-            self.__previous = clz.current
+            current = clz.current
+            setattr(thread_local, '{}_previous'.format(clz.__name__), current)
         except MqUninitialisedError:
             pass
 
-        self.__entered = True
+        setattr(thread_local, '{}_entered'.format(clz.__name__), True)
         clz.current = self
         self._on_enter()
         return self
@@ -64,17 +67,19 @@ class ContextBase(metaclass=ContextMeta):
         try:
             self._on_exit(exc_type, exc_val, exc_tb)
         finally:
-            self._cls.current = self.__previous
-            self.__previous = None
-            self.__entered = False
+            clz = self._cls
+            clz.current = getattr(thread_local, '{}_previous'.format(clz.__name__), None)
+            setattr(thread_local, '{}_previous'.format(clz.__name__), None)
+            setattr(thread_local, '{}_entered'.format(clz.__name__), False)
 
     @property
     def _cls(self) -> ContextMeta:
-        return next(b for b in self.__class__.__bases__ if issubclass(b, ContextBase))
+        cls = next(b for b in self.__class__.__bases__ if issubclass(b, ContextBase))
+        return self.__class__ if cls.__name__ in ('ContextBase', 'ContextBaseWithDefault') else cls
 
     @property
     def _is_entered(self) -> bool:
-        return self.__entered
+        return getattr(thread_local, '{}_entered'.format(self._cls.__name__), False)
 
     def _on_enter(self):
         pass
@@ -85,11 +90,6 @@ class ContextBase(metaclass=ContextMeta):
 
 class ContextBaseWithDefault(ContextBase):
 
-    @property
-    def _cls(self) -> ContextMeta:
-        return self.__class__
-
     @classmethod
     def has_default(cls) -> bool:
         return True
-

@@ -24,7 +24,8 @@ statistical properties of trading activity, such as price movement and volume ch
 """
 
 
-def moving_average(x: pd.Series, w: int=22) -> pd.Series:
+@plot_function
+def moving_average(x: pd.Series, w: int = 22) -> pd.Series:
     """
     Moving average over specified window
 
@@ -61,7 +62,8 @@ def moving_average(x: pd.Series, w: int=22) -> pd.Series:
     return mean(x, w)
 
 
-def bollinger_bands(x: pd.Series, w: int=20, k: float=2) -> pd.DataFrame:
+@plot_function
+def bollinger_bands(x: pd.Series, w: int = 20, k: float = 2) -> pd.DataFrame:
     """
     Bollinger bands with given window and width
 

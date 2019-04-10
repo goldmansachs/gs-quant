@@ -18,7 +18,8 @@ import logging
 from enum import auto, Enum
 from typing import List, Tuple, Union
 from gs_quant.target.common import FieldFilterMap
-from gs_quant.target.assets import Asset as __Asset, AssetClass, AssetType, TemporalXRef, PositionSet, EntityQuery, PositionSet
+from gs_quant.target.assets import Asset as __Asset, AssetClass, AssetType, TemporalXRef, PositionSet, EntityQuery, \
+    PositionSet
 from gs_quant.errors import MqValueError
 from gs_quant.session import GsSession
 
@@ -54,11 +55,11 @@ class GsAssetApi:
 
     @classmethod
     def __create_query(
-        cls,
-        fields: Union[List, Tuple]=None,
-        as_of: dt.datetime=None,
-        limit: int=None,
-        **kwargs
+            cls,
+            fields: Union[List, Tuple] = None,
+            as_of: dt.datetime = None,
+            limit: int = None,
+            **kwargs
     ) -> EntityQuery:
         keys = set(kwargs.keys())
         valid = keys.intersection(i for i in dir(FieldFilterMap) if isinstance(getattr(FieldFilterMap, i), property))
@@ -84,7 +85,8 @@ class GsAssetApi:
             **kwargs
     ) -> Tuple[GsAsset, ...]:
         query = cls.__create_query(fields, as_of, limit, **kwargs)
-        return GsSession.current._post('/assets/query', payload=query, cls=GsAsset)
+        response = GsSession.current._post('/assets/query', payload=query, cls=GsAsset)
+        return response['results']
 
     @classmethod
     def get_many_assets_data(
@@ -95,14 +97,16 @@ class GsAssetApi:
             **kwargs
     ) -> dict:
         query = cls.__create_query(fields, as_of, limit, **kwargs)
-        return GsSession.current._post('/assets/data/query', payload=query)
+        response = GsSession.current._post('/assets/data/query', payload=query)
+        return response['results']
 
     @classmethod
     def get_asset_xrefs(
             cls,
             asset_id: str
     ) -> Tuple[GsTemporalXRef, ...]:
-        return GsSession.current._get('/assets/{id}/xrefs'.format(id=asset_id), cls=GsTemporalXRef)
+        response = GsSession.current._get('/assets/{id}/xrefs'.format(id=asset_id))
+        return tuple(GsTemporalXRef.from_dict(x) for x in response.get('xrefs', ()))
 
     @classmethod
     def get_asset(
@@ -115,14 +119,13 @@ class GsAssetApi:
     def get_asset_positions_for_date(
             asset_id: str,
             position_date: dt.date,
-            position_type: str=None,
+            position_type: str = None,
     ) -> Tuple[PositionSet, ...]:
         position_date_str = position_date.isoformat()
-
         url = '/assets/{id}/positions/{date}'.format(id=asset_id, date=position_date_str)
 
         if position_type is None:
-            return GsSession.current._get(url, cls=PositionSet)
+            return GsSession.current._get(url, cls=PositionSet)['results']
         else:
             return GsSession.current._get(url + '?type=' + position_type, cls=PositionSet)
 
@@ -150,15 +153,14 @@ class GsAssetApi:
         the_args = kwargs
         the_args[input_type] = ids
 
+        limit = limit or 4 * len(ids)
         query = cls.__create_query((input_type, output_type), as_of, limit, **the_args)
-        response = GsSession.current._post('/assets/data/query', payload=query)
-
-        results = response['results']
-        if response['totalResults'] > len(results):
-            raise MqValueError('number of results exceeded capacity')
+        results = GsSession.current._post('/assets/data/query', payload=query)
+        if len(results) >= query.limit:
+            raise MqValueError('number of results may have exceeded capacity')
 
         out = {}
-        for entry in response['results']:
+        for entry in results:
             key = entry.get(input_type)
             value = entry.get(output_type)
             if multimap:

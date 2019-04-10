@@ -20,6 +20,7 @@ import numpy as np
 import pandas as pd
 from gs_quant.timeseries.datetime import *
 from ..errors import *
+from .helper import plot_function
 
 """
 Timeseries analysis library contains functions used to analyze properties of timeseries, including laging, differencing,
@@ -27,6 +28,7 @@ autocorrelation, co-integration and other operations
 """
 
 
+@plot_function
 def first(x: pd.Series) -> pd.Series:
     """
     First value of series
@@ -57,6 +59,7 @@ def first(x: pd.Series) -> pd.Series:
     return pd.Series(x[0], x.index)
 
 
+@plot_function
 def last(x: pd.Series) -> pd.Series:
     """
     Last value of series
@@ -87,6 +90,7 @@ def last(x: pd.Series) -> pd.Series:
     return pd.Series(x[-1], x.index)
 
 
+@plot_function
 def diff(x: pd.Series, obs: int=1) -> pd.Series:
     """
     Diff observations with given lag
@@ -124,6 +128,7 @@ def diff(x: pd.Series, obs: int=1) -> pd.Series:
     return ret_series
 
 
+@plot_function
 def lag(x: pd.Series, obs: int=1) -> pd.Series:
     """
     Lag timeseries by a specified number of observations

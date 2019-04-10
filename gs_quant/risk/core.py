@@ -14,28 +14,42 @@ specific language governing permissions and limitations
 under the License.
 """
 from concurrent.futures import Future
-import datetime as dt
+import dateutil
 import pandas as pd
-from typing import Iterable, List, Mapping, Union
+from typing import Iterable, List, Union
 from gs_quant.target.risk import RiskMeasure, RiskMeasureType, RiskMeasureUnit, RiskPosition, RiskRequest
-from gs_quant.base import Priceable
 from gs_quant.common import AssetClass
-from gs_quant.markets.core import MarketDataCoordinate
-from gs_quant.context_base import ContextBaseWithDefault
-from gs_quant.markets import MarketDataContext
+from gs_quant.datetime import point_sort_order
+from gs_quant.markets.core import PricingContext
 from typing import Optional
+
+
+__field_sort_fns = {
+    'point': point_sort_order
+}
+__field_order = ('date', 'marketDataType', 'assetId', 'pointClass', 'point', 'value')
 
 
 def sum_formatter(result: List) -> float:
     return sum(r.get('value', result[0].get('Val')) for r in result)
 
 
-def scalar_formatter(result: List) -> float:
-    return result[0].get('value', result[0].get('Val'))
+def scalar_formatter(result: List) -> Optional[Union[float, pd.Series]]:
+    if not result:
+        return None
+
+    if 'date' in result[0]:
+        series = pd.Series(
+            data=[r.get('value', r.get('Val')) for r in result],
+            index=[dateutil.parser.isoparse(r['date']).date() for r in result]
+        )
+        return series.sort_index()
+    else:
+        return result[0].get('value', result[0].get('Val'))
 
 
 def structured_formatter(result: List) -> pd.DataFrame:
-    return pd.DataFrame(result)
+    return sort_risk(pd.DataFrame(result))
 
 
 def aggregate_risk(results: Iterable[Union[pd.DataFrame, Future]], threshold: Optional[float]=None) -> pd.DataFrame:
@@ -66,7 +80,25 @@ def aggregate_risk(results: Iterable[Union[pd.DataFrame, Future]], threshold: Op
     if threshold is not None:
         result = result[result.value.abs() > threshold]
 
-    return result
+    return sort_risk(result)
+
+
+def sort_risk(df: pd.DataFrame, by=('date', 'marketDataType', 'assetId', 'point')):
+    """
+    Sort bucketed risk
+    :param df: Input Dataframe
+    :param by: Columns to sort by
+    :return: A sorted Dataframe
+    """
+    columns = tuple(df.columns)
+    indices = [columns.index(c) if c in columns else -1 for c in by]
+    fns = [__field_sort_fns.get(c) for c in columns]
+
+    def cmp(row) -> tuple:
+        return tuple(fns[i](row[i]) if fns[i] else row[i] for i in indices if i != -1)
+
+    data = sorted((tuple(r)[1:] for r in df.to_records()), key=cmp)
+    return pd.DataFrame.from_records(data, columns=columns)[[f for f in __field_order if f in columns]]
 
 
 def __risk_measure_with_doc_string(doc: str, measureType: RiskMeasureType, assetClass: AssetClass=None, unit: RiskMeasureUnit=None) -> RiskMeasure:
@@ -95,7 +127,7 @@ IRGamma = __risk_measure_with_doc_string('Interest Rate', RiskMeasureType.Gamma,
 IRVega = __risk_measure_with_doc_string('Interest Rate', RiskMeasureType.Vega, assetClass=AssetClass.Rates)
 IRAnnualImpliedVol = __risk_measure_with_doc_string('Interest Rate Annual Implied Volatility (%)', RiskMeasureType.Annual_Implied_Volatility, assetClass=AssetClass.Rates, unit=RiskMeasureUnit.Percent)
 IRAnnualATMImpliedVol = __risk_measure_with_doc_string('Interest Rate Annual Implied At-The-Money Volatility (%)', RiskMeasureType.Annual_ATMF_Implied_Volatility, assetClass=AssetClass.Rates, unit=RiskMeasureUnit.Percent)
-IRDailyImpliedVol = __risk_measure_with_doc_string('Interest Rate Daily Implied Volatility (bps)', RiskMeasureType.Annual_ATMF_Implied_Volatility, assetClass=AssetClass.Rates, unit=RiskMeasureUnit.Percent)
+IRDailyImpliedVol = __risk_measure_with_doc_string('Interest Rate Daily Implied Volatility (bps)', RiskMeasureType.Annual_ATMF_Implied_Volatility, assetClass=AssetClass.Rates, unit=RiskMeasureUnit.BPS)
 
 Formatters = {
     DollarPrice: scalar_formatter,
@@ -121,171 +153,3 @@ Formatters = {
     IRAnnualATMImpliedVol: scalar_formatter
 }
 
-
-class PricingContext(ContextBaseWithDefault):
-
-    """
-    A context controlling pricing and risk calculation behaviour
-    """
-
-    def __init__(self, is_async: bool=False, is_batch: bool=False, pricing_date: dt.date=None):
-        """
-        Construct a context to control the pricing date, async behaviour etc
-
-        The methods on this class should not be called directly. Instead, use the methods on the instruments, as per the examples
-
-        :param is_async: if True, return (a future) immediately. If False, block
-        :param is_batch: use for calculations expected to run longer than 3 mins, to avoid timeouts. It can be used with is_aync=True|False
-        :param pricing_date: the date for pricing calculations. Default is today
-
-        **Examples**
-
-        To change the behaviour of the default context:
-
-        >>> from gs_quant.risk import PricingContext
-        >>> import datetime as dt
-        >>>
-        >>> PricingContext.current = PricingContext(pricing_date=dt.today())
-
-        For a blocking, synchronous request:
-
-        >>> from gs_quant.instrument import IRCap
-        >>> cap = IRCap('5y', 'GBP')
-        >>>
-        >>> with PricingContext():
-        >>>     price_f = cap.dollar_price()
-        >>>
-        >>> price = price_f.result()
-
-        For an asynchronous request:
-
-        >>> with PricingContext(is_async=True):
-        >>>     price_f = inst.dollar_price()
-        >>>
-        >>> while not price_f.done():
-        >>>     ...
-        """
-        super().__init__()
-        self.__is_async = is_async
-        self.__is_batch = is_batch
-        self.__pricing_date = pricing_date or dt.date.today()
-        self.__risk_measures_by_provider_and_priceable = {}
-        self.__futures = {}
-
-    def _on_exit(self, exc_type, exc_val, exc_tb):
-        if self.__risk_measures_by_provider_and_priceable:
-            for provider, risk_measures_by_priceable in self.__risk_measures_by_provider_and_priceable.items():
-                positions_by_risk_measures = {}
-                for priceable, risk_measures in risk_measures_by_priceable.items():
-                    positions_by_risk_measures.setdefault(tuple(risk_measures), []).append(priceable)
-
-                for risk_measures, priceables in positions_by_risk_measures.items():
-                    risk_request = RiskRequest(
-                        tuple(RiskPosition(p, p.get_quantity()) for p in priceables),
-                        risk_measures,
-                        self.pricing_date,
-                        marketDataAsOf=MarketDataContext.current.as_of,
-                        pricingLocation=MarketDataContext.current.location
-                    )
-                    provider.calc(risk_request, self.__futures, self.__is_async, self.__is_batch)
-
-            self.__risk_measures_by_provider_and_priceable.clear()
-            self.__futures.clear()
-
-    @property
-    def pricing_date(self) -> dt.date:
-        """Pricing date"""
-        return self.__pricing_date
-
-    def calc(self, priceable: Priceable, risk_measure: RiskMeasure) -> Union[dict, Future]:
-        """
-        Calculate the risk measure for the priceable instrument. Do not use directly, use via instruments
-
-        :param priceable: The priceable (e.g. instrument)
-        :param risk_measure: The measure we wish to calculate
-        :return: A dict or Future (depending on is_async or whether the context is entered). Formatters may choose to convert to e.g. a float or Dataframe
-
-        **Examples**
-
-        >>> from gs_quant.instrument import IRSwap
-        >>> from gs_quant.risk import IRDelta
-        >>>
-        >>> swap = IRSwap('Pay', '10y', 'USD', fixedRate=0.03)
-        >>> delta = swap.calc(IRDelta)
-        """
-        if not self._is_entered and not self.__is_async:
-            future = Future()
-            futures = {risk_measure: {priceable: future}}
-            risk_request = RiskRequest(
-                (RiskPosition(priceable, priceable.get_quantity()),),
-                (risk_measure,),
-                self.pricing_date,
-                marketDataAsOf=MarketDataContext.current.as_of,
-                pricingLocation=MarketDataContext.current.location
-            )
-            priceable.provider().calc(risk_request, futures, False, False)
-            return future.result()
-        else:
-            future = self.__futures.get(risk_measure, {}).get(priceable)
-            if future is None:
-                future = Future()
-                self.__risk_measures_by_provider_and_priceable.setdefault(priceable.provider(), {}).setdefault(priceable, set()).add(risk_measure)
-                self.__futures.setdefault(risk_measure, {})[priceable] = future
-            return future
-
-    def resolve_fields(self, priceable: Priceable):
-        """
-        Resolve fields on the priceable which were not supplied. Do not use directly, use via instruments
-
-        :param priceable:  The priceable (e.g. instrument)
-
-        **Examples**
-
-        >>> from gs_quant.instrument import IRSwap
-        >>>
-        >>> swap = IRSwap('Pay', '10y', 'USD')
-        >>> rate = swap.fixedRate
-
-        fixedRate is None
-
-        >>> swap.resolve()
-        >>> rate = swap.fixedRate
-
-        fixedRate is now the solved value
-        """
-        # TODO Handle these correctly in the risk service
-        invalid_defaults = ('-- N/A --',)
-        value_mappings = {'Payer': 'Pay', 'Receiver': 'Receive'}
-
-        def set_field_values(field_values):
-            if isinstance(res, Future):
-                field_values = field_values.result()
-
-            for field, value in field_values.items():
-                value = value_mappings.get(value, value)
-                if field in priceable.properties() and value not in invalid_defaults:
-                    setattr(priceable, field, value)
-
-        res = self.calc(priceable, RiskMeasure(measureType='Resolved Instrument Values'))
-        if isinstance(res, Future):
-            res.add_done_callback(set_field_values)
-        else:
-            set_field_values(res)
-
-
-class ScenarioContext(ContextBaseWithDefault):
-
-    """A context containing scenario parameters, such as shocks"""
-
-    def __init__(self, subtract_base: bool=True, shocks: Mapping[MarketDataCoordinate, float]=None):
-        super().__init__()
-        self.__subtract_base = subtract_base
-        self.__shocks = shocks or {}
-
-    @property
-    def subtract_base(self):
-        return self.__subtract_base
-
-    @property
-    def shocks(self):
-        return self.__shocks

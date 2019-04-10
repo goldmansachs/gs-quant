@@ -1111,7 +1111,7 @@ class IndicesPriceParameters(Base):
         
     """Parameters for pricing indices"""
        
-    def __init__(self, currency: Union[IndicesCurrency, str] = None, divisor: float = None, initialPrice: float = None, targetNotional: float = None, weightingStrategy: str = None):
+    def __init__(self, currency: Union[IndicesCurrency, str] = 'USD', divisor: float = None, initialPrice: float = None, targetNotional: float = None, weightingStrategy: str = None):
         super().__init__()
         self.__currency = currency if isinstance(currency, IndicesCurrency) else get_enum_value(IndicesCurrency, currency)
         self.__divisor = divisor
@@ -1370,16 +1370,16 @@ class IndicesCreateInputs(Base):
 
 class IndicesRebalanceInputs(Base):
                
-    def __init__(self, parameters):
+    def __init__(self, parameters: dict):
         super().__init__()
         self.__parameters = parameters
 
     @property
-    def parameters(self):
+    def parameters(self) -> dict:
         """The inputs used to rebalance an index."""
         return self.__parameters
 
     @parameters.setter
-    def parameters(self, value):
+    def parameters(self, value: dict):
         self.__parameters = value
         self._property_changed('parameters')        

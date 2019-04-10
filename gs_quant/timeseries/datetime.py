@@ -47,6 +47,7 @@ def __interpolate_step(x: pd.Series, dates: Iterable[float] = None) -> pd.Series
     return curve
 
 
+@plot_function
 def align(x: pd.Series, y: pd.Series, method: Interpolate = Interpolate.INTERSECT) -> List[pd.Series]:
     """
     Align dates of two series
@@ -124,6 +125,7 @@ def align(x: pd.Series, y: pd.Series, method: Interpolate = Interpolate.INTERSEC
         raise MqValueError('Unknown intersection type: ' + method)
 
 
+@plot_function
 def interpolate(x: pd.Series, dates: Union[List[date], List[time], pd.Series] = None,
                 method: Interpolate = Interpolate.INTERSECT) -> pd.Series:
     """
@@ -190,6 +192,7 @@ def interpolate(x: pd.Series, dates: Union[List[date], List[time], pd.Series] = 
         raise MqValueError('Unknown intersection type: ' + method)
 
 
+@plot_function
 def value(x: pd.Series, date: Union[date, time], method: Interpolate = Interpolate.STEP) -> pd.Series:
     """
     Value at specified date or time

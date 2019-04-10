@@ -15,7 +15,9 @@ under the License.
 """
 
 from enum import Enum, IntEnum
-from gs_quant.timeseries.helper import _create_int_enum  # TODO test the instance of IntEnum when we have any.
+from gs_quant.timeseries.helper import _create_int_enum, plot_function, plot_measure
+
+# TODO test the instance of IntEnum when we have any.
 
 WeekDay = _create_int_enum('WeekDay', {'SUNDAY': 1, 'Monday': 2, 'TUESDAY': 3,
                                        'WEDNESDAY': 4, 'THURSDAY': 5, 'Friday': 6, 'SATURDAY': 7})
@@ -33,3 +35,20 @@ def test_int_enum():
         assert isinstance(e, IntEnum)
         assert e.name == weekday
         assert e.value == i
+
+
+@plot_function
+def pf():
+    pass
+
+
+@plot_measure(asset_type=('abc',))
+def pm():
+    pass
+
+
+def test_decorators():
+    assert pf.plot_function
+    assert pm.plot_measure
+    assert pm.asset_class is None
+    assert pm.asset_type == ('abc',)

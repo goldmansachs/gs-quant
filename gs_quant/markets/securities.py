@@ -21,7 +21,7 @@ import pytz
 from abc import ABCMeta, abstractmethod
 from gs_quant.api.gs.assets import GsAssetApi, GsAsset, AssetClass, AssetType as GsAssetType, PositionSet
 from gs_quant.base import get_enum_value
-from gs_quant.markets.core import MarketDataContext
+from gs_quant.markets import PricingContext
 from typing import Tuple
 
 
@@ -62,6 +62,9 @@ class AssetType(Enum):
     #: settled in cash or physical form
     FUTURE = "Future"
 
+    #: FX cross or currency pair
+    CROSS = "Cross"
+
 
 class AssetIdentifier(Enum):
     """Asset type enumeration
@@ -87,6 +90,9 @@ class Asset(metaclass=ABCMeta):
         self.asset_class = asset_class
         self.name = name
 
+    def get_marquee_id(self):
+        return self.__id
+
     def get_identifiers(self, as_of: dt.date=None) -> dict:
         """
         Get asset identifiers
@@ -98,7 +104,7 @@ class Asset(metaclass=ABCMeta):
 
         Get asset identifiers as of a given date. Where the identifiers are temporal (and can change over time), this
         function will return the identifiers as of that point in time. If no date is provided as a parameter, will use
-        the current MarketDataContext.
+        the current PricingContext.
 
         **Examples**
 
@@ -111,9 +117,9 @@ class Asset(metaclass=ABCMeta):
 
         >>> gs.get_identifiers(date(2018,1,1))
 
-        Use MarketDataContext to determine as of date:
+        Use PricingContext to determine as of date:
 
-        >>> with MarketDataContext(date(2018,1,1)) as ctx:
+        >>> with PricingContext(date(2018,1,1)) as ctx:
         >>>     gs.get_identifiers()
 
         **See also**
@@ -123,7 +129,7 @@ class Asset(metaclass=ABCMeta):
 
         """
         if not as_of:
-            as_of = MarketDataContext.current.as_of
+            as_of = PricingContext.current.pricing_date
 
             if type(as_of) is dt.datetime:
                 as_of = as_of.date()
@@ -153,7 +159,7 @@ class Asset(metaclass=ABCMeta):
 
         Get asset identifier as of a given date. Where the identifiers are temporal (and can change over time), this
         function will return the identifier as of that point in time. If no date is provided as a parameter, will use
-        the current MarketDataContext.
+        the current PricingContext.
 
         **Examples**
 
@@ -166,9 +172,9 @@ class Asset(metaclass=ABCMeta):
 
         >>> gs.get_identifier(AssetIdentifier.SEDOL, as_of=date(2018,1,1))
 
-        Use MarketDataContext to determine as of date:
+        Use PricingContext to determine as of date:
 
-        >>> with ctx = MarketDataContext(date(2018,1,1)) as ctx:
+        >>> with PricingContext(date(2018,1,1)) as ctx:
         >>>     gs.get_identifier(AssetIdentifier.SEDOL)
 
         **See also**
@@ -198,6 +204,21 @@ class Stock(Asset):
 
     def get_type(self) -> AssetType:
         return AssetType.STOCK
+
+
+class Cross(Asset):
+    """Base Security Type
+
+    Represents a financial asset which can be held in a portfolio, or has an observable price fixing which can be
+    referenced in a derivative transaction
+
+    """
+
+    def __init__(self, id_: str, name: str):
+        Asset.__init__(self, id_, AssetClass.FX, name)
+
+    def get_type(self) -> AssetType:
+        return AssetType.CROSS
 
 
 class Future(Asset):
@@ -245,7 +266,7 @@ class IndexConstituentProvider(metaclass=ABCMeta):
         **Usage**
 
         Get index constituents as of a given date. If no date is provided as a parameter, will use the current
-        MarketDataContext.
+        PricingContext.
 
         **Examples**
 
@@ -258,9 +279,9 @@ class IndexConstituentProvider(metaclass=ABCMeta):
 
         >>> gs.get_constituents(date(2018,1,3), PositionType.OPEN)
 
-        Use MarketDataContext to determine as of date:
+        Use PricingContext to determine as of date:
 
-        >>> with MarketDataContext(date(2018,1,1)) as ctx:
+        >>> with PricingContext(date(2018,1,1)) as ctx:
         >>>     gs.get_constituents()
 
         **See also**
@@ -270,7 +291,7 @@ class IndexConstituentProvider(metaclass=ABCMeta):
 
         """
         if not as_of:
-            as_of = MarketDataContext.current.as_of
+            as_of = PricingContext.current.pricing_date
 
             if type(as_of) is dt.datetime:
                 as_of = as_of.date()
@@ -324,7 +345,7 @@ class SecurityMaster:
      The SecurityMaster class provides an interface to security lookup functions. This allows querying and retrieval of
      different security types (assets) based on a variety of different identifiers through point-in-time lookups.
 
-     Uses the current MarketDataContext to provide as of dates if optional arguments are not provided. Will return
+     Uses the current PricingContext to provide as of dates if optional arguments are not provided. Will return
      the relevant asset subclass depending on the type of the security
 
     **See also**
@@ -335,26 +356,33 @@ class SecurityMaster:
 
     @classmethod
     def __gs_asset_to_asset(cls, gs_asset: GsAsset) -> Asset:
-        if gs_asset.type.value in (GsAssetType.Single_Stock.value,):
+        asset_type = gs_asset.type.value
+
+        if asset_type in (GsAssetType.Single_Stock.value,):
             return Stock(gs_asset.id, gs_asset.name)
 
-        if gs_asset.type.value in (GsAssetType.ETF.value,):
+        if asset_type in (GsAssetType.ETF.value,):
             return ETF(gs_asset.id, gs_asset.assetClass, gs_asset.name)
 
-        if gs_asset.type.value in (
+        if asset_type in (
                 GsAssetType.Index.value,
                 GsAssetType.Risk_Premia.value,
                 GsAssetType.Access.value,
                 GsAssetType.Multi_Asset_Allocation.value):
             return Index(gs_asset.id, gs_asset.assetClass, gs_asset.name)
 
-        if gs_asset.type.value in (
+        if asset_type in (
                 GsAssetType.Custom_Basket.value,
                 GsAssetType.Research_Basket.value):
             return Basket(gs_asset.id, gs_asset.assetClass, gs_asset.name)
 
-        if gs_asset.type.value in (GsAssetType.Future.value,):
+        if asset_type in (GsAssetType.Future.value,):
             return Future(gs_asset.id, gs_asset.assetClass, gs_asset.name)
+
+        if asset_type in (GsAssetType.Cross.value,):
+            return Cross(gs_asset.id, gs_asset.name)
+
+        raise TypeError(f'unsupported asset type {asset_type}')
 
     @classmethod
     def __asset_type_to_gs_types(cls, asset_type: AssetType) -> Tuple[GsAssetType, ...]:
@@ -412,7 +440,7 @@ class SecurityMaster:
         """
 
         if not as_of:
-            as_of = MarketDataContext.current.as_of
+            as_of = PricingContext.current.pricing_date
 
         if type(as_of) is dt.date:
             as_of = dt.datetime.combine(as_of, dt.time(0, 0), pytz.utc)
