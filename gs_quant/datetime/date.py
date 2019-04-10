@@ -22,7 +22,7 @@ from gs_quant.datetime.gscalendar import GsCalendar
 DateOrDates = Union[dt.date, Iterable[dt.date]]
 
 
-def is_business_day(dates: DateOrDates, calendars: Union[str, Tuple]=(), week_mask: Optional[str]=None) -> Union[bool, Tuple[bool]]:
+def is_business_day(dates: DateOrDates, calendars: Union[str, Tuple[str, ...]]=(), week_mask: Optional[str]=None) -> Union[bool, Tuple[bool]]:
     """
     Determine whether each date in dates is a business day
 
@@ -35,13 +35,15 @@ def is_business_day(dates: DateOrDates, calendars: Union[str, Tuple]=(), week_ma
 
     >>> import datetime as dt
     >>> is_bus_date = is_business_day(dt.date.today())
+    >>>
+    >>> is_bus_date = is_business_day(dt.date(2019, 7, 4), calendars=('NYSE',))
     """
     calendar = GsCalendar.get(calendars)
     res = np.is_busday(dates, busdaycal=calendar.business_day_calendar(week_mask))
     return tuple(res) if isinstance(res, np.ndarray) else res
 
 
-def business_day_offset(dates: DateOrDates, offsets: Union[int, Iterable[int]], roll: str= 'raise', calendars: Union[str, Tuple]=(), week_mask: Optional[str]=None) -> DateOrDates:
+def business_day_offset(dates: DateOrDates, offsets: Union[int, Iterable[int]], roll: str= 'raise', calendars: Union[str, Tuple[str, ...]]=(), week_mask: Optional[str]=None) -> DateOrDates:
     """
     Apply offsets to the dates and move to the nearest business date
 
@@ -62,7 +64,7 @@ def business_day_offset(dates: DateOrDates, offsets: Union[int, Iterable[int]], 
     return tuple(res) if isinstance(res, np.ndarray) else res
 
 
-def business_day_count(begin_dates: DateOrDates, end_dates: DateOrDates, calendars: Union[str, Tuple]=(), week_mask: Optional[str]=None) -> Union[int, Tuple[int]]:
+def business_day_count(begin_dates: DateOrDates, end_dates: DateOrDates, calendars: Union[str, Tuple[str, ...]]=(), week_mask: Optional[str]=None) -> Union[int, Tuple[int]]:
     """
     Determine the number of business days between begin_dates and end_dates
 
@@ -82,4 +84,42 @@ def business_day_count(begin_dates: DateOrDates, end_dates: DateOrDates, calenda
     res = np.busday_count(begin_dates, end_dates, busdaycal=calendar.business_day_calendar(week_mask))
     return tuple(res) if isinstance(res, np.ndarray) else res
 
+
+def date_range(begin: Union[int, dt.date], end: Union[int, dt.date], calendars: Union[str, Tuple[str, ...]]=(), week_mask: Optional[str]=None) -> Iterable[dt.date]:
+    """
+    Construct a range of dates
+
+    :param begin: Beginning date or int. An int will be interpreted as the number of business days before end (which must be a date)
+    :param end: End date or int. An int will be interpreted as the number of business days after begin (which must be a date)
+    :param calendars: Calendars to use for holidays
+    :param week_mask: Which days are considered weekends (defaults to Saturday and Sunday)
+    :return: A generator of dates
+
+    >>> import datetime as dt
+    >>> today = dt.date.today()
+    >>> dates = tuple(date_range(5, today))
+    >>>
+    >>> for date in date_range(dt.date(2019, 1, 1), dt.date(2019, 2, 1)):
+    >>>     print(date)
+    """
+    if isinstance(begin, dt.date):
+        if isinstance(end, dt.date):
+            def f():
+                prev = begin
+                while prev <= end:
+                    yield prev
+                    prev = business_day_offset(prev, 1, calendars=calendars, week_mask=week_mask)
+
+            return (d for d in f())
+        elif isinstance(end, int):
+            return (business_day_offset(begin, i, calendars=calendars, week_mask=week_mask) for i in range(end))
+        else:
+            raise ValueError('end must be a date or int')
+    elif isinstance(begin, int):
+        if isinstance(end, dt.date):
+            return (business_day_offset(end, -i, roll='preceding', calendars=calendars, week_mask=week_mask) for i in range(begin))
+        else:
+            raise ValueError('end must be a date if begin is an int')
+    else:
+        raise ValueError('begin must be a date or int')
 

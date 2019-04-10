@@ -15,18 +15,18 @@ under the License.
 """
 from abc import ABCMeta
 import datetime as dt
-from typing import Optional, Union
+import pandas as pd
+from typing import Optional, Union, List
 from gs_quant.target.common import FieldFilterMap
 
 
 class DataApi(metaclass=ABCMeta):
-
     @classmethod
-    def query_data(cls, query: 'DataQuery', dataset_id: str=None) -> Union[list, tuple]:
+    def query_data(cls, query: 'DataQuery', dataset_id: str = None) -> Union[list, tuple]:
         raise NotImplementedError('Must implement get_data')
 
     @classmethod
-    def last_data(cls, query: 'DataQuery', dataset_id: str=None) -> Union[list, tuple]:
+    def last_data(cls, query: 'DataQuery', dataset_id: str = None) -> Union[list, tuple]:
         raise NotImplementedError('Must implement last_data')
 
     @classmethod
@@ -39,11 +39,11 @@ class DataApi(metaclass=ABCMeta):
 
     @staticmethod
     def build_query(
-        start: Optional[Union[dt.date, dt.datetime]] = None,
-        end: Optional[Union[dt.date, dt.datetime]] = None,
-        as_of: Optional[dt.datetime] = None,
-        since: Optional[dt.datetime] = None,
-        **kwargs
+            start: Optional[Union[dt.date, dt.datetime]] = None,
+            end: Optional[Union[dt.date, dt.datetime]] = None,
+            as_of: Optional[dt.datetime] = None,
+            since: Optional[dt.datetime] = None,
+            **kwargs
     ):
         from gs_quant.api.gs.data import DataQuery
 

@@ -16,11 +16,13 @@ under the License.
 
 import backoff
 import inspect
+import itertools
 import json
 import os
 
 import msgpack
 import requests
+import requests.cookies
 
 from abc import abstractmethod
 from configparser import ConfigParser
@@ -45,7 +47,6 @@ class Environment(Enum):
 
 
 class GsSession(ContextBase):
-
     __config = None
 
     def __init__(self, domain: str, api_version: str=API_VERSION, application: str=DEFAULT_APPLICATION, verify=True):
@@ -90,6 +91,18 @@ class GsSession(ContextBase):
             self._session.headers.update({'X-Application': self.application})
             self._authenticate()
 
+    def __unpack(self, results: Union[dict, list], cls: type) -> Union[Base, tuple, dict]:
+        if issubclass(cls, Base):
+            if isinstance(results, list):
+                return tuple(cls.from_dict(r) for r in results)
+            else:
+                return cls.from_dict(results)
+        else:
+            if isinstance(results, list):
+                return tuple(cls(**r) for r in results)
+            else:
+                return cls(**results)
+
     def __request(
             self,
             method: str,
@@ -126,25 +139,25 @@ class GsSession(ContextBase):
         elif not 199 < response.status_code < 300:
             raise MqRequestError(response.status_code, response.text, context='{} {}'.format(method, url))
         elif 'application/x-msgpack' in response.headers['content-type']:
-            return msgpack.unpackb(response.content, raw=False)
-        elif 'application/json' in response.headers['content-type']:
-            res = json.loads(response.text)
-            if isinstance(res, dict) and 'results' in res:
-                res = res['results']
+            res = msgpack.unpackb(response.content, raw=False)
 
             if cls:
-                if issubclass(cls, Base):
-                    if isinstance(res, list):
-                        return tuple(cls.from_dict(r) for r in res)
-                    else:
-                        return cls.from_dict(res)
+                if isinstance(res, dict) and 'results' in res:
+                    res['results'] = self.__unpack(res['results'], cls)
                 else:
-                    if isinstance(res, list):
-                        return tuple(cls(**r) for r in res)
-                    else:
-                        return cls(**res)
-            else:
-                return res
+                    res = self.__unpack(res, cls)
+
+            return res
+        elif 'application/json' in response.headers['content-type']:
+            res = json.loads(response.text)
+
+            if cls:
+                if isinstance(res, dict) and 'results' in res:
+                    res['results'] = self.__unpack(res['results'], cls)
+                else:
+                    res = self.__unpack(res, cls)
+
+            return res
         else:
             return {'raw': response}
 
@@ -178,7 +191,8 @@ class GsSession(ContextBase):
             api_version: str = API_VERSION,
             application: str = DEFAULT_APPLICATION
     ) -> None:
-        environment_or_domain = environment_or_domain.name if isinstance(environment_or_domain, Environment) else environment_or_domain
+        environment_or_domain = environment_or_domain.name if isinstance(environment_or_domain,
+                                                                         Environment) else environment_or_domain
         session = cls.get(
             environment_or_domain,
             client_id=client_id,
@@ -198,18 +212,25 @@ class GsSession(ContextBase):
             client_id: Optional[str] = None,
             client_secret: Optional[str] = None,
             scopes: Optional[Union[Tuple, List]] = (),
+            token: str = '',
+            is_gssso: bool = False,
             api_version: str = API_VERSION,
             application: str = DEFAULT_APPLICATION
     ) -> 'GsSession':
         """ Return an instance of the appropriate session type for the given credentials"""
 
-        environment_or_domain = environment_or_domain.name if isinstance(environment_or_domain, Environment) else environment_or_domain
+        environment_or_domain = environment_or_domain.name if isinstance(environment_or_domain,
+                                                                         Environment) else environment_or_domain
 
         if client_id is not None:
             if environment_or_domain not in (Environment.PROD.name, Environment.QA.name, Environment.DEV.name):
                 raise MqUninitialisedError('Only PROD, QA and DEV are valid environments')
 
-            return OAuth2Session(environment_or_domain, client_id, client_secret, scopes, api_version=api_version, application=application)
+            return OAuth2Session(environment_or_domain, client_id, client_secret, scopes, api_version=api_version,
+                                 application=application)
+        elif token:
+            return PassThroughSession(environment_or_domain, token, is_gssso, api_version=api_version,
+                                      application=application)
         else:
             try:
                 return KerberosSession(environment_or_domain, api_version=api_version)
@@ -218,8 +239,8 @@ class GsSession(ContextBase):
 
 
 class OAuth2Session(GsSession):
-
-    def __init__(self, environment, client_id, client_secret, scopes, api_version=API_VERSION, application=DEFAULT_APPLICATION):
+    def __init__(self, environment, client_id, client_secret, scopes, api_version=API_VERSION,
+                 application=DEFAULT_APPLICATION):
         env_config = self._config_for_environment(environment)
 
         super().__init__(env_config['AppDomain'], api_version=api_version, application=application)
@@ -247,6 +268,44 @@ class OAuth2Session(GsSession):
         response = json.loads(reply.text)
         self._session.headers.update({'Authorization': 'Bearer {}'.format(response['access_token'])})
 
+    def request_response_gen(self, endpoint_definition):
+        return filter(None, itertools.chain(
+            (endpoint_definition.get('requestBody', {}),),
+            endpoint_definition.get('responseBody', ())))
+
+
+class PassThroughSession(GsSession):
+    def __init__(self, environment: str, token, is_gssso=True, api_version=API_VERSION,
+                 application=DEFAULT_APPLICATION):
+        if is_gssso:
+            domain, verify = KerberosSessionMixin.domain_and_verify(environment)
+        else:
+            domain = self._config_for_environment(environment)['AppDomain']
+            verify = True
+
+        super().__init__(domain, api_version=api_version, application=application, verify=verify)
+        self.token = token
+        self.is_gssso = is_gssso
+
+        if environment == Environment.DEV.name:
+            import urllib3
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            self.verify = False
+
+    def _authenticate(self):
+        self._session: requests.Session
+        if self.is_gssso:
+            co = requests.cookies.create_cookie(domain='.gs.com', name='GSSSO', value=self.token)
+            self._session.cookies.set_cookie(co)
+        else:
+            self._session.headers.update({'Authorization': 'Bearer {}'.format(self.token)})
+
+    def endpoints_and_definitions(self, service):
+        raise NotImplementedError('Not supported for this type of session')
+
+    def request_response_gen(self, endpoint_definition):
+        raise NotImplementedError('Not supported for this type of session')
+
 
 try:
     import importlib
@@ -255,19 +314,11 @@ try:
     mod = importlib.import_module('gs_quant_internal.kerberos.session_kerberos')
     KerberosSessionMixin = getattr(mod, 'KerberosSessionMixin')
 
-    # TODO REMOVE THIS ONCE A NEW VERSION OF gs-quant-internal is released
-    # KerberosGetReponse = namedtuple('KerberosGetReponse', ('text',))
-
     class KerberosSession(KerberosSessionMixin, GsSession):
 
         def __init__(self, environment_or_domain: str, api_version: str=API_VERSION, application: str=DEFAULT_APPLICATION):
             domain, verify = KerberosSessionMixin.domain_and_verify(environment_or_domain)
             GsSession.__init__(self, domain, api_version=api_version, application=application, verify=verify)
-
-        # TODO REMOVE THIS ONCE A NEW VERSION OF gs-quant-internal is released
-        # def get(self, path: str, payload: Optional[Union[dict, Base]]=None, cls: Optional[type]=None, include_version: bool=True) -> Union[Base, tuple, dict]:
-        #     ret = self._get(path, payload=payload, cls=cls, include_version=include_version)
-        #     return KerberosGetReponse(text=json.dumps(ret))
 
 except ModuleNotFoundError:
     pass

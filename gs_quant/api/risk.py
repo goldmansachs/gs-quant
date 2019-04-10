@@ -14,17 +14,32 @@ specific language governing permissions and limitations
 under the License.
 """
 from abc import ABCMeta, abstractmethod
-from concurrent.futures import Future
-from typing import Mapping
-from gs_quant.base import Priceable
-from gs_quant.risk import RiskMeasure, RiskRequest
-
-RiskFutureMapping = Mapping[RiskMeasure, Mapping[Priceable, Future]]
+from typing import Iterable, Union
+from gs_quant.risk import Formatters, RiskRequest
 
 
 class RiskApi(metaclass=ABCMeta):
 
     @classmethod
     @abstractmethod
-    def calc(cls, request: RiskRequest, futures: RiskFutureMapping, is_async: bool, is_batch: bool):
+    def calc(cls, request: RiskRequest) -> Union[Iterable, str]:
         raise NotImplementedError('Must implement calc')
+
+    @classmethod
+    @abstractmethod
+    def get_results(cls, risk_request: RiskRequest, result_id: str) -> dict:
+        raise NotImplementedError('Must implement get_results')
+
+    @classmethod
+    def _handle_results(cls, request: RiskRequest, results: Iterable) -> dict:
+        formatted_results = {}
+
+        for measure_idx, position_results in enumerate(results):
+            risk_measure = request.measures[measure_idx]
+            formatter = Formatters.get(risk_measure)
+            for position_idx, result in enumerate(position_results):
+                position = request.positions[position_idx]
+                result = formatter(result) if formatter else result
+                formatted_results.setdefault(risk_measure, {})[position] = result
+
+        return formatted_results

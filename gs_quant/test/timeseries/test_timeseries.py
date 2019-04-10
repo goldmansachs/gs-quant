@@ -14,12 +14,13 @@ specific language governing permissions and limitations
 under the License.
 """
 
+from gs_quant.markets.securities import Asset
 from gs_quant.timeseries import *
 import inspect
 import pytest
 import re
 import types
-from pandas.testing import *
+
 
 dummy_series = pd.Series([191.63, 184.31, 184.09, 179.67, 178.83, 176.8,  176.7,  175.92, 172.77, 168.01,
  171.5,  169.25, 168.41, 160.05, 156.35, 162.93, 165.41, 163.03, 167.05, 172.03,
@@ -35,7 +36,7 @@ dummy_series2 = pd.Series([2790.37, 2700.06, 2695.95, 2633.08, 2637.72, 2636.78,
 @pytest.fixture(scope='module')
 def ts_map():
     return {k: v for k, v in globals().items() if isinstance(v, types.FunctionType)
-            and v.__module__.startswith('gs_quant.timeseries') and not k.startswith('_')}
+            and (getattr(v, 'plot_function', False) or getattr(v, 'plot_measure', False))}
 
 
 def test_have_docstrings(ts_map):
@@ -75,3 +76,12 @@ def test_annotations(ts_map):
         assert 'return' in annotations, 'specifies return type'
         assert set(inspect.signature(v).parameters.keys()) | {'return'} == set(annotations.keys()), \
             'specifies parameter types'
+
+
+def test_measures(ts_map):
+    for k, v in ts_map.items():
+        if not hasattr(v, 'plot_measure'):
+            continue
+        param = inspect.signature(v).parameters.copy().popitem(last=False)
+        assert param[1].name == 'asset'
+        assert param[1].annotation == Asset

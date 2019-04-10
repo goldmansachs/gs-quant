@@ -81,6 +81,20 @@ class CommodityFamily(EnumBase, Enum):
         return self.value
 
 
+class CommoditySector(EnumBase, Enum):    
+    
+    """The sector of the commodity"""
+
+    Base_metals = 'Base metals'
+    Precious_metals = 'Precious metals'
+    Energy = 'Energy'
+    Agriculturals = 'Agriculturals'
+    Power = 'Power'
+    
+    def __repr__(self):
+        return self.value
+
+
 class CommoditySubFamily(EnumBase, Enum):    
     
     """Commodity SubFamily"""
@@ -89,264 +103,6 @@ class CommoditySubFamily(EnumBase, Enum):
     Fuel = 'Fuel'
     Heat = 'Heat'
     NG = 'NG'
-    
-    def __repr__(self):
-        return self.value
-
-
-class CountryCode(EnumBase, Enum):    
-    
-    """ISO Country code"""
-
-    AU = 'AU'
-    CX = 'CX'
-    CC = 'CC'
-    HM = 'HM'
-    NF = 'NF'
-    NZ = 'NZ'
-    CK = 'CK'
-    NU = 'NU'
-    TK = 'TK'
-    JP = 'JP'
-    JN = 'JN'
-    EU = 'EU'
-    ER = 'ER'
-    EZ = 'EZ'
-    AT = 'AT'
-    BE = 'BE'
-    FI = 'FI'
-    FR = 'FR'
-    GF = 'GF'
-    PF = 'PF'
-    TF = 'TF'
-    GP = 'GP'
-    MQ = 'MQ'
-    YT = 'YT'
-    NC = 'NC'
-    RE = 'RE'
-    SH = 'SH'
-    PM = 'PM'
-    WF = 'WF'
-    DE = 'DE'
-    GE = 'GE'
-    GR = 'GR'
-    IE = 'IE'
-    IT = 'IT'
-    LU = 'LU'
-    NL = 'NL'
-    AW = 'AW'
-    AN = 'AN'
-    PT = 'PT'
-    ES = 'ES'
-    BY = 'BY'
-    CH = 'CH'
-    SE = 'SE'
-    SW = 'SW'
-    DK = 'DK'
-    FO = 'FO'
-    NO = 'NO'
-    BV = 'BV'
-    SJ = 'SJ'
-    LI = 'LI'
-    GB = 'GB'
-    UK = 'UK'
-    AI = 'AI'
-    IO = 'IO'
-    KY = 'KY'
-    FK = 'FK'
-    GI = 'GI'
-    MS = 'MS'
-    PN = 'PN'
-    GS = 'GS'
-    TC = 'TC'
-    VG = 'VG'
-    JE = 'JE'
-    _02 = '02'
-    US = 'US'
-    AS = 'AS'
-    GU = 'GU'
-    MP = 'MP'
-    PR = 'PR'
-    UM = 'UM'
-    VI = 'VI'
-    CA = 'CA'
-    AR = 'AR'
-    BA = 'BA'
-    BD = 'BD'
-    BG = 'BG'
-    BS = 'BS'
-    BM = 'BM'
-    BO = 'BO'
-    BR = 'BR'
-    CL = 'CL'
-    CN = 'CN'
-    CO = 'CO'
-    CR = 'CR'
-    CZ = 'CZ'
-    DO = 'DO'
-    EC = 'EC'
-    EG = 'EG'
-    GA = 'GA'
-    GT = 'GT'
-    HK = 'HK'
-    HR = 'HR'
-    HU = 'HU'
-    IL = 'IL'
-    IM = 'IM'
-    IR = 'IR'
-    IS = 'IS'
-    JO = 'JO'
-    KE = 'KE'
-    KR = 'KR'
-    KZ = 'KZ'
-    LB = 'LB'
-    LK = 'LK'
-    LT = 'LT'
-    MA = 'MA'
-    MH = 'MH'
-    ML = 'ML'
-    MO = 'MO'
-    MT = 'MT'
-    MX = 'MX'
-    MY = 'MY'
-    NI = 'NI'
-    OM = 'OM'
-    PA = 'PA'
-    PD = 'PD'
-    PE = 'PE'
-    PH = 'PH'
-    PK = 'PK'
-    PL = 'PL'
-    QA = 'QA'
-    RO = 'RO'
-    RU = 'RU'
-    SA = 'SA'
-    SG = 'SG'
-    SI = 'SI'
-    SK = 'SK'
-    SV = 'SV'
-    TH = 'TH'
-    TN = 'TN'
-    TP = 'TP'
-    TR = 'TR'
-    TW = 'TW'
-    UA = 'UA'
-    UY = 'UY'
-    VE = 'VE'
-    VN = 'VN'
-    ZA = 'ZA'
-    BH = 'BH'
-    EE = 'EE'
-    GH = 'GH'
-    ME = 'ME'
-    RS = 'RS'
-    ZM = 'ZM'
-    ZW = 'ZW'
-    TT = 'TT'
-    AE = 'AE'
-    KW = 'KW'
-    BB = 'BB'
-    LV = 'LV'
-    GG = 'GG'
-    CY = 'CY'
-    CI = 'CI'
-    MU = 'MU'
-    PY = 'PY'
-    HN = 'HN'
-    BZ = 'BZ'
-    NA = 'NA'
-    FJ = 'FJ'
-    BW = 'BW'
-    DZ = 'DZ'
-    MN = 'MN'
-    SN = 'SN'
-    TZ = 'TZ'
-    AD = 'AD'
-    AG = 'AG'
-    AL = 'AL'
-    AM = 'AM'
-    AO = 'AO'
-    AZ = 'AZ'
-    BF = 'BF'
-    BI = 'BI'
-    BJ = 'BJ'
-    BN = 'BN'
-    BT = 'BT'
-    CD = 'CD'
-    CF = 'CF'
-    CG = 'CG'
-    CM = 'CM'
-    CU = 'CU'
-    CV = 'CV'
-    CS = 'CS'
-    DJ = 'DJ'
-    DM = 'DM'
-    EH = 'EH'
-    ET = 'ET'
-    FM = 'FM'
-    GD = 'GD'
-    GL = 'GL'
-    GM = 'GM'
-    GN = 'GN'
-    GQ = 'GQ'
-    GW = 'GW'
-    GY = 'GY'
-    HT = 'HT'
-    ID = 'ID'
-    IN = 'IN'
-    IQ = 'IQ'
-    JM = 'JM'
-    KG = 'KG'
-    KH = 'KH'
-    KI = 'KI'
-    KM = 'KM'
-    KN = 'KN'
-    KP = 'KP'
-    LA = 'LA'
-    LC = 'LC'
-    LR = 'LR'
-    LS = 'LS'
-    LY = 'LY'
-    MC = 'MC'
-    MD = 'MD'
-    MG = 'MG'
-    MK = 'MK'
-    MM = 'MM'
-    MR = 'MR'
-    MV = 'MV'
-    MW = 'MW'
-    MZ = 'MZ'
-    NE = 'NE'
-    NG = 'NG'
-    NP = 'NP'
-    NR = 'NR'
-    PG = 'PG'
-    PW = 'PW'
-    RW = 'RW'
-    SB = 'SB'
-    SC = 'SC'
-    SD = 'SD'
-    SL = 'SL'
-    SM = 'SM'
-    SO = 'SO'
-    SR = 'SR'
-    ST = 'ST'
-    SY = 'SY'
-    SZ = 'SZ'
-    TD = 'TD'
-    TG = 'TG'
-    TJ = 'TJ'
-    TL = 'TL'
-    TM = 'TM'
-    TO = 'TO'
-    TV = 'TV'
-    UG = 'UG'
-    UZ = 'UZ'
-    VA = 'VA'
-    VC = 'VC'
-    VU = 'VU'
-    WS = 'WS'
-    YE = 'YE'
     
     def __repr__(self):
         return self.value
@@ -460,8 +216,10 @@ class SupraStrategy(EnumBase, Enum):
 
 class AssetClassifications(Base):
                
-    def __init__(self, countryName: str = None, countryCode: str = None, isPrimary: bool = None, gicsSector: str = None, gicsIndustryGroup: str = None, gicsIndustry: str = None, gicsSubIndustry: str = None, commodTemplate: str = None):
+    def __init__(self, riskCountryName: str = None, riskCountryCode: str = None, countryName: str = None, countryCode: str = None, isPrimary: bool = None, gicsSector: str = None, gicsIndustryGroup: str = None, gicsIndustry: str = None, gicsSubIndustry: str = None, commodTemplate: str = None):
         super().__init__()
+        self.__riskCountryName = riskCountryName
+        self.__riskCountryCode = riskCountryCode
         self.__countryName = countryName
         self.__countryCode = countryCode
         self.__isPrimary = isPrimary
@@ -470,6 +228,26 @@ class AssetClassifications(Base):
         self.__gicsIndustry = gicsIndustry
         self.__gicsSubIndustry = gicsSubIndustry
         self.__commodTemplate = commodTemplate
+
+    @property
+    def riskCountryName(self) -> str:
+        """Risk Country"""
+        return self.__riskCountryName
+
+    @riskCountryName.setter
+    def riskCountryName(self, value: str):
+        self.__riskCountryName = value
+        self._property_changed('riskCountryName')        
+
+    @property
+    def riskCountryCode(self) -> str:
+        """Risk Country code (ISO 3166)."""
+        return self.__riskCountryCode
+
+    @riskCountryCode.setter
+    def riskCountryCode(self, value: str):
+        self.__riskCountryCode = value
+        self._property_changed('riskCountryCode')        
 
     @property
     def countryName(self) -> str:
@@ -1637,7 +1415,7 @@ class AssetParameters(Base):
         
     """Parameters specific to the asset type"""
        
-    def __init__(self, basketType: str = None, constituents: Tuple[IndexConstituent, ...] = None, style: str = None, indexCalculationType: str = None, indexReturnType: str = None, indexDivisor: float = None, currency: Union[Currency, str] = None, quoteCurrency: Union[Currency, str] = None, indexInitialPrice: float = None, initialPricingDate: datetime.date = None, expirationDate: datetime.date = None, expirationLocation: str = None, optionStyle: str = None, optionType: Union[OptionType, str] = None, settlementDate: datetime.date = None, settlementType: str = None, strikePrice: float = None, putCurrency: Union[Currency, str] = None, putAmount: float = None, automaticExercise: bool = None, callAmount: float = None, callCurrency: Union[Currency, str] = None, exerciseTime: str = None, multiplier: float = None, premiumPaymentDate: datetime.date = None, premium: float = None, premiumCurrency: Union[Currency, str] = None, callable: bool = None, puttable: bool = None, perpetual: bool = None, seniority: str = None, couponType: str = None, index: str = None, indexTerm: str = None, indexMargin: float = None, coupon: float = None, issueDate: datetime.date = None, issuer: str = None, issuerCountryCode: str = None, issuerType: str = None, issueSize: float = None, commoditySector: str = None, pricingLocation: Union[PricingLocation, str] = None, contractMonths: Tuple[str, ...] = None, g10Currency: bool = None, hedgeId: str = None, ultimateTicker: str = None, strategy: Union[Strategy, str] = None, supraStrategy: Union[SupraStrategy, str] = None, exchangeCurrency: Union[Currency, str] = None, region: str = None, deliveryPoint: str = None, pricingIndex: str = None, contractMonth: str = None, loadType: str = None, contractUnit: str = None, indexCreateSource: str = None, indexApprovalIds: Tuple[str, ...] = None, isPairBasket: bool = None, fixedRateDayCountFraction: Union[DayCountFraction, str] = None, floatingRateDayCountFraction: Union[DayCountFraction, str] = None, payDayCountFraction: Union[DayCountFraction, str] = None, receiveDayCountFraction: Union[DayCountFraction, str] = None, payFrequency: str = None, receiveFrequency: str = None, resettableLeg: Union[PayReceive, str] = None, inflationLag: str = None, fxIndex: str = None, indexNotes: str = None, indexNotTradingReasons: str = None):
+    def __init__(self, basketType: str = None, constituents: Tuple[IndexConstituent, ...] = None, style: str = None, indexCalculationType: str = None, indexReturnType: str = None, indexDivisor: float = None, currency: Union[Currency, str] = None, quoteCurrency: Union[Currency, str] = None, indexInitialPrice: float = None, initialPricingDate: datetime.date = None, expirationDate: datetime.date = None, expirationLocation: str = None, optionStyle: str = None, optionType: Union[OptionType, str] = None, settlementDate: datetime.date = None, settlementType: str = None, strikePrice: float = None, putCurrency: Union[Currency, str] = None, putAmount: float = None, automaticExercise: bool = None, callAmount: float = None, callCurrency: Union[Currency, str] = None, exerciseTime: str = None, multiplier: float = None, premiumPaymentDate: datetime.date = None, premium: float = None, premiumCurrency: Union[Currency, str] = None, callable: bool = None, puttable: bool = None, perpetual: bool = None, seniority: str = None, couponType: str = None, index: str = None, indexTerm: str = None, indexMargin: float = None, coupon: float = None, issueDate: datetime.date = None, issuer: str = None, issuerCountryCode: str = None, issuerType: str = None, issueSize: float = None, commoditySector: Union[CommoditySector, str] = None, pricingLocation: Union[PricingLocation, str] = None, contractMonths: Tuple[str, ...] = None, g10Currency: bool = None, hedgeId: str = None, ultimateTicker: str = None, strategy: Union[Strategy, str] = None, supraStrategy: Union[SupraStrategy, str] = None, exchangeCurrency: Union[Currency, str] = None, region: str = None, deliveryPoint: str = None, pricingIndex: str = None, contractMonth: str = None, loadType: str = None, contractUnit: str = None, indexCreateSource: str = None, indexApprovalIds: Tuple[str, ...] = None, isPairBasket: bool = None, fixedRateDayCountFraction: Union[DayCountFraction, str] = None, floatingRateDayCountFraction: Union[DayCountFraction, str] = None, payDayCountFraction: Union[DayCountFraction, str] = None, receiveDayCountFraction: Union[DayCountFraction, str] = None, payFrequency: str = None, receiveFrequency: str = None, resettableLeg: Union[PayReceive, str] = None, inflationLag: str = None, fxIndex: str = None, indexNotes: str = None, indexNotTradingReasons: str = None):
         super().__init__()
         self.__basketType = basketType
         self.__constituents = constituents
@@ -1680,7 +1458,7 @@ class AssetParameters(Base):
         self.__issuerCountryCode = issuerCountryCode
         self.__issuerType = issuerType
         self.__issueSize = issueSize
-        self.__commoditySector = commoditySector
+        self.__commoditySector = commoditySector if isinstance(commoditySector, CommoditySector) else get_enum_value(CommoditySector, commoditySector)
         self.__pricingLocation = pricingLocation if isinstance(pricingLocation, PricingLocation) else get_enum_value(PricingLocation, pricingLocation)
         self.__contractMonths = contractMonths
         self.__g10Currency = g10Currency
@@ -2117,13 +1895,13 @@ class AssetParameters(Base):
         self._property_changed('issueSize')        
 
     @property
-    def commoditySector(self) -> str:
+    def commoditySector(self) -> Union[CommoditySector, str]:
         """The sector of the commodity"""
         return self.__commoditySector
 
     @commoditySector.setter
-    def commoditySector(self, value: str):
-        self.__commoditySector = value
+    def commoditySector(self, value: Union[CommoditySector, str]):
+        self.__commoditySector = value if isinstance(value, CommoditySector) else get_enum_value(CommoditySector, value)
         self._property_changed('commoditySector')        
 
     @property
@@ -3257,7 +3035,7 @@ class Asset(Base):
         
     """A security or instrument which can be held in a trading book (for example a stock or a bond) or a publically identifiable object with observable market data fixings which can be referenced in derivative transations (for example the SPX Index)"""
        
-    def __init__(self, assetClass: Union[AssetClass, str], type: Union[AssetType, str], name: str, createdById: str = None, createdTime: datetime.datetime = None, currency: Union[Currency, str] = None, description: str = None, domains: Domains = None, entitlements: Entitlements = None, exchange: str = None, id: str = None, identifiers: Tuple[Identifier, ...] = None, lastUpdatedById: str = None, lastUpdatedTime: datetime.datetime = None, listed: bool = None, liveDate: datetime.date = None, ownerId: str = None, parameters=None, assetStats: Tuple[AssetStats, ...] = None, people: People = None, region: Union[Region, str] = None, reportIds: Tuple[str, ...] = None, shortName: str = None, styles: Tuple[str, ...] = None, tags: Tuple[str, ...] = None, underlyingAssetIds: Tuple[str, ...] = None):
+    def __init__(self, assetClass: Union[AssetClass, str], type: Union[AssetType, str], name: str, createdById: str = None, createdTime: datetime.datetime = None, currency: Union[Currency, str] = None, description: str = None, domains: Domains = None, entitlements: Entitlements = None, exchange: str = None, id: str = None, identifiers: Tuple[Identifier, ...] = None, lastUpdatedById: str = None, lastUpdatedTime: datetime.datetime = None, listed: bool = None, liveDate: datetime.date = None, ownerId: str = None, parameters: dict = None, assetStats: Tuple[AssetStats, ...] = None, people: People = None, region: Union[Region, str] = None, reportIds: Tuple[str, ...] = None, shortName: str = None, styles: Tuple[str, ...] = None, tags: Tuple[str, ...] = None, underlyingAssetIds: Tuple[str, ...] = None):
         super().__init__()
         self.__assetClass = assetClass if isinstance(assetClass, AssetClass) else get_enum_value(AssetClass, assetClass)
         self.__createdById = createdById
@@ -3447,11 +3225,11 @@ class Asset(Base):
         self._property_changed('ownerId')        
 
     @property
-    def parameters(self):
+    def parameters(self) -> dict:
         return self.__parameters
 
     @parameters.setter
-    def parameters(self, value):
+    def parameters(self, value: dict):
         self.__parameters = value
         self._property_changed('parameters')        
 

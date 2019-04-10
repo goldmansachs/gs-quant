@@ -163,6 +163,264 @@ class Commodities(EnumBase, Enum):
         return self.value
 
 
+class CountryCode(EnumBase, Enum):    
+    
+    """ISO Country code"""
+
+    AU = 'AU'
+    CX = 'CX'
+    CC = 'CC'
+    HM = 'HM'
+    NF = 'NF'
+    NZ = 'NZ'
+    CK = 'CK'
+    NU = 'NU'
+    TK = 'TK'
+    JP = 'JP'
+    JN = 'JN'
+    EU = 'EU'
+    ER = 'ER'
+    EZ = 'EZ'
+    AT = 'AT'
+    BE = 'BE'
+    FI = 'FI'
+    FR = 'FR'
+    GF = 'GF'
+    PF = 'PF'
+    TF = 'TF'
+    GP = 'GP'
+    MQ = 'MQ'
+    YT = 'YT'
+    NC = 'NC'
+    RE = 'RE'
+    SH = 'SH'
+    PM = 'PM'
+    WF = 'WF'
+    DE = 'DE'
+    GE = 'GE'
+    GR = 'GR'
+    IE = 'IE'
+    IT = 'IT'
+    LU = 'LU'
+    NL = 'NL'
+    AW = 'AW'
+    AN = 'AN'
+    PT = 'PT'
+    ES = 'ES'
+    BY = 'BY'
+    CH = 'CH'
+    SE = 'SE'
+    SW = 'SW'
+    DK = 'DK'
+    FO = 'FO'
+    NO = 'NO'
+    BV = 'BV'
+    SJ = 'SJ'
+    LI = 'LI'
+    GB = 'GB'
+    UK = 'UK'
+    AI = 'AI'
+    IO = 'IO'
+    KY = 'KY'
+    FK = 'FK'
+    GI = 'GI'
+    MS = 'MS'
+    PN = 'PN'
+    GS = 'GS'
+    TC = 'TC'
+    VG = 'VG'
+    JE = 'JE'
+    _02 = '02'
+    US = 'US'
+    AS = 'AS'
+    GU = 'GU'
+    MP = 'MP'
+    PR = 'PR'
+    UM = 'UM'
+    VI = 'VI'
+    CA = 'CA'
+    AR = 'AR'
+    BA = 'BA'
+    BD = 'BD'
+    BG = 'BG'
+    BS = 'BS'
+    BM = 'BM'
+    BO = 'BO'
+    BR = 'BR'
+    CL = 'CL'
+    CN = 'CN'
+    CO = 'CO'
+    CR = 'CR'
+    CZ = 'CZ'
+    DO = 'DO'
+    EC = 'EC'
+    EG = 'EG'
+    GA = 'GA'
+    GT = 'GT'
+    HK = 'HK'
+    HR = 'HR'
+    HU = 'HU'
+    IL = 'IL'
+    IM = 'IM'
+    IR = 'IR'
+    IS = 'IS'
+    JO = 'JO'
+    KE = 'KE'
+    KR = 'KR'
+    KZ = 'KZ'
+    LB = 'LB'
+    LK = 'LK'
+    LT = 'LT'
+    MA = 'MA'
+    MH = 'MH'
+    ML = 'ML'
+    MO = 'MO'
+    MT = 'MT'
+    MX = 'MX'
+    MY = 'MY'
+    NI = 'NI'
+    OM = 'OM'
+    PA = 'PA'
+    PD = 'PD'
+    PE = 'PE'
+    PH = 'PH'
+    PK = 'PK'
+    PL = 'PL'
+    QA = 'QA'
+    RO = 'RO'
+    RU = 'RU'
+    SA = 'SA'
+    SG = 'SG'
+    SI = 'SI'
+    SK = 'SK'
+    SV = 'SV'
+    TH = 'TH'
+    TN = 'TN'
+    TP = 'TP'
+    TR = 'TR'
+    TW = 'TW'
+    UA = 'UA'
+    UY = 'UY'
+    VE = 'VE'
+    VN = 'VN'
+    ZA = 'ZA'
+    BH = 'BH'
+    EE = 'EE'
+    GH = 'GH'
+    ME = 'ME'
+    RS = 'RS'
+    ZM = 'ZM'
+    ZW = 'ZW'
+    TT = 'TT'
+    AE = 'AE'
+    KW = 'KW'
+    BB = 'BB'
+    LV = 'LV'
+    GG = 'GG'
+    CY = 'CY'
+    CI = 'CI'
+    MU = 'MU'
+    PY = 'PY'
+    HN = 'HN'
+    BZ = 'BZ'
+    NA = 'NA'
+    FJ = 'FJ'
+    BW = 'BW'
+    DZ = 'DZ'
+    MN = 'MN'
+    SN = 'SN'
+    TZ = 'TZ'
+    AD = 'AD'
+    AG = 'AG'
+    AL = 'AL'
+    AM = 'AM'
+    AO = 'AO'
+    AZ = 'AZ'
+    BF = 'BF'
+    BI = 'BI'
+    BJ = 'BJ'
+    BN = 'BN'
+    BT = 'BT'
+    CD = 'CD'
+    CF = 'CF'
+    CG = 'CG'
+    CM = 'CM'
+    CU = 'CU'
+    CV = 'CV'
+    CS = 'CS'
+    DJ = 'DJ'
+    DM = 'DM'
+    EH = 'EH'
+    ET = 'ET'
+    FM = 'FM'
+    GD = 'GD'
+    GL = 'GL'
+    GM = 'GM'
+    GN = 'GN'
+    GQ = 'GQ'
+    GW = 'GW'
+    GY = 'GY'
+    HT = 'HT'
+    ID = 'ID'
+    IN = 'IN'
+    IQ = 'IQ'
+    JM = 'JM'
+    KG = 'KG'
+    KH = 'KH'
+    KI = 'KI'
+    KM = 'KM'
+    KN = 'KN'
+    KP = 'KP'
+    LA = 'LA'
+    LC = 'LC'
+    LR = 'LR'
+    LS = 'LS'
+    LY = 'LY'
+    MC = 'MC'
+    MD = 'MD'
+    MG = 'MG'
+    MK = 'MK'
+    MM = 'MM'
+    MR = 'MR'
+    MV = 'MV'
+    MW = 'MW'
+    MZ = 'MZ'
+    NE = 'NE'
+    NG = 'NG'
+    NP = 'NP'
+    NR = 'NR'
+    PG = 'PG'
+    PW = 'PW'
+    RW = 'RW'
+    SB = 'SB'
+    SC = 'SC'
+    SD = 'SD'
+    SL = 'SL'
+    SM = 'SM'
+    SO = 'SO'
+    SR = 'SR'
+    ST = 'ST'
+    SY = 'SY'
+    SZ = 'SZ'
+    TD = 'TD'
+    TG = 'TG'
+    TJ = 'TJ'
+    TL = 'TL'
+    TM = 'TM'
+    TO = 'TO'
+    TV = 'TV'
+    UG = 'UG'
+    UZ = 'UZ'
+    VA = 'VA'
+    VC = 'VC'
+    VU = 'VU'
+    WS = 'WS'
+    YE = 'YE'
+    
+    def __repr__(self):
+        return self.value
+
+
 class Currency(EnumBase, Enum):    
     
     """Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)"""
@@ -453,6 +711,10 @@ class Currency(EnumBase, Enum):
     VUV = 'VUV'
     WST = 'WST'
     XAF = 'XAF'
+    XAG = 'XAG'
+    XAU = 'XAU'
+    XPD = 'XPD'
+    XPT = 'XPT'
     XCD = 'XCD'
     XDR = 'XDR'
     XEU = 'XEU'
@@ -621,6 +883,7 @@ class Field(EnumBase, Enum):
     expiration = 'expiration'
     tradePrice = 'tradePrice'
     esPolicyScore = 'esPolicyScore'
+    loanId = 'loanId'
     cid = 'cid'
     liquidityScore = 'liquidityScore'
     importance = 'importance'
@@ -668,6 +931,7 @@ class Field(EnumBase, Enum):
     orderId = 'orderId'
     gss = 'gss'
     percentOfMediandv1m = 'percentOfMediandv1m'
+    lendables = 'lendables'
     assetClass = 'assetClass'
     gsideid = 'gsideid'
     bosInTicksLabel = 'bosInTicksLabel'
@@ -735,6 +999,7 @@ class Field(EnumBase, Enum):
     dewPoint = 'dewPoint'
     researchCommission = 'researchCommission'
     bbid = 'bbid'
+    assetClassificationsRiskCountryCode = 'assetClassificationsRiskCountryCode'
     eventStatus = 'eventStatus'
     effectiveDate = 'effectiveDate'
     _return = 'return'
@@ -770,6 +1035,7 @@ class Field(EnumBase, Enum):
     netWeight = 'netWeight'
     hedgeId = 'hedgeId'
     portfolioManagers = 'portfolioManagers'
+    assetParametersCommoditySector = 'assetParametersCommoditySector'
     bosInTicks = 'bosInTicks'
     tcmCostHorizon8Day = 'tcmCostHorizon8Day'
     supraStrategy = 'supraStrategy'
@@ -784,6 +1050,8 @@ class Field(EnumBase, Enum):
     groupCategory = 'groupCategory'
     kpiId = 'kpiId'
     relativeReturnWtd = 'relativeReturnWtd'
+    bidPlusAsk = 'bidPlusAsk'
+    assetClassificationsRiskCountryName = 'assetClassificationsRiskCountryName'
     total = 'total'
     riskModel = 'riskModel'
     assetId = 'assetId'
@@ -803,6 +1071,7 @@ class Field(EnumBase, Enum):
     rebateRate = 'rebateRate'
     ideaStatus = 'ideaStatus'
     participationRate = 'participationRate'
+    obfr = 'obfr'
     fxForecast = 'fxForecast'
     fixingTimeLabel = 'fixingTimeLabel'
     fillId = 'fillId'
@@ -830,6 +1099,7 @@ class Field(EnumBase, Enum):
     tradingPnl = 'tradingPnl'
     strikePercentage = 'strikePercentage'
     excessReturnPrice = 'excessReturnPrice'
+    givenPlusPaid = 'givenPlusPaid'
     shortConvictionSmall = 'shortConvictionSmall'
     prevCloseBid = 'prevCloseBid'
     fxPnl = 'fxPnl'
@@ -841,6 +1111,7 @@ class Field(EnumBase, Enum):
     tcmCostHorizon4Day = 'tcmCostHorizon4Day'
     assetClassificationsIsPrimary = 'assetClassificationsIsPrimary'
     styles = 'styles'
+    lendingSecId = 'lendingSecId'
     shortName = 'shortName'
     equityTheta = 'equityTheta'
     averageFillPrice = 'averageFillPrice'
@@ -891,6 +1162,7 @@ class Field(EnumBase, Enum):
     strikeReference = 'strikeReference'
     details = 'details'
     assetCount = 'assetCount'
+    given = 'given'
     absoluteValue = 'absoluteValue'
     delistingDate = 'delistingDate'
     longTenor = 'longTenor'
@@ -940,12 +1212,14 @@ class Field(EnumBase, Enum):
     gScore = 'gScore'
     marketValue = 'marketValue'
     multipleScore = 'multipleScore'
+    lendingFundNav = 'lendingFundNav'
     sourceOriginalCategory = 'sourceOriginalCategory'
     betaAdjustedExposure = 'betaAdjustedExposure'
     composite5DayAdv = 'composite5DayAdv'
     latestExecutionTime = 'latestExecutionTime'
     dividendPoints = 'dividendPoints'
     newIdeasWtd = 'newIdeasWtd'
+    paid = 'paid'
     short = 'short'
     location = 'location'
     comment = 'comment'
@@ -985,6 +1259,7 @@ class Field(EnumBase, Enum):
     portfolioId = 'portfolioId'
     gsid = 'gsid'
     esPercentile = 'esPercentile'
+    lendingFund = 'lendingFund'
     tcmCostParticipationRate15Pct = 'tcmCostParticipationRate15Pct'
     sensitivity = 'sensitivity'
     fiscalYear = 'fiscalYear'
@@ -1059,6 +1334,7 @@ class Field(EnumBase, Enum):
     relativeStrike = 'relativeStrike'
     amount = 'amount'
     quantity = 'quantity'
+    lendingFundAcct = 'lendingFundAcct'
     reportId = 'reportId'
     indexWeight = 'indexWeight'
     rebate = 'rebate'
@@ -1448,7 +1724,7 @@ class MarketDataCoordinate(Base):
 
     @property
     def marketDataAsset(self) -> str:
-        """The specific point, e.g. 3m, 10y, 11y, Dec19"""
+        """The specific aaset, e.g. USD, EUR-EURIBOR-Telerate, WTI"""
         return self.__marketDataAsset
 
     @marketDataAsset.setter
@@ -2048,6 +2324,7 @@ class FieldFilterMap(Base):
         self.__expiration = kwargs.get('expiration')
         self.__tradePrice = kwargs.get('tradePrice')
         self.__esPolicyScore = kwargs.get('esPolicyScore')
+        self.__loanId = kwargs.get('loanId')
         self.__cid = kwargs.get('cid')
         self.__liquidityScore = kwargs.get('liquidityScore')
         self.__importance = kwargs.get('importance')
@@ -2095,6 +2372,7 @@ class FieldFilterMap(Base):
         self.__orderId = kwargs.get('orderId')
         self.__gss = kwargs.get('gss')
         self.__percentOfMediandv1m = kwargs.get('percentOfMediandv1m')
+        self.__lendables = kwargs.get('lendables')
         self.__assetClass = kwargs.get('assetClass')
         self.__gsideid = kwargs.get('gsideid')
         self.__bosInTicksLabel = kwargs.get('bosInTicksLabel')
@@ -2159,6 +2437,7 @@ class FieldFilterMap(Base):
         self.__dewPoint = kwargs.get('dewPoint')
         self.__researchCommission = kwargs.get('researchCommission')
         self.__bbid = kwargs.get('bbid')
+        self.__assetClassificationsRiskCountryCode = kwargs.get('assetClassificationsRiskCountryCode')
         self.__eventStatus = kwargs.get('eventStatus')
         self.__return = kwargs.get('return_')
         self.__maxTemperature = kwargs.get('maxTemperature')
@@ -2193,6 +2472,7 @@ class FieldFilterMap(Base):
         self.__netWeight = kwargs.get('netWeight')
         self.__hedgeId = kwargs.get('hedgeId')
         self.__portfolioManagers = kwargs.get('portfolioManagers')
+        self.__assetParametersCommoditySector = kwargs.get('assetParametersCommoditySector')
         self.__bosInTicks = kwargs.get('bosInTicks')
         self.__tcmCostHorizon8Day = kwargs.get('tcmCostHorizon8Day')
         self.__supraStrategy = kwargs.get('supraStrategy')
@@ -2207,6 +2487,8 @@ class FieldFilterMap(Base):
         self.__groupCategory = kwargs.get('groupCategory')
         self.__kpiId = kwargs.get('kpiId')
         self.__relativeReturnWtd = kwargs.get('relativeReturnWtd')
+        self.__bidPlusAsk = kwargs.get('bidPlusAsk')
+        self.__assetClassificationsRiskCountryName = kwargs.get('assetClassificationsRiskCountryName')
         self.__total = kwargs.get('total')
         self.__riskModel = kwargs.get('riskModel')
         self.__assetId = kwargs.get('assetId')
@@ -2224,6 +2506,7 @@ class FieldFilterMap(Base):
         self.__rebateRate = kwargs.get('rebateRate')
         self.__ideaStatus = kwargs.get('ideaStatus')
         self.__participationRate = kwargs.get('participationRate')
+        self.__obfr = kwargs.get('obfr')
         self.__fxForecast = kwargs.get('fxForecast')
         self.__fixingTimeLabel = kwargs.get('fixingTimeLabel')
         self.__fillId = kwargs.get('fillId')
@@ -2251,6 +2534,7 @@ class FieldFilterMap(Base):
         self.__tradingPnl = kwargs.get('tradingPnl')
         self.__strikePercentage = kwargs.get('strikePercentage')
         self.__excessReturnPrice = kwargs.get('excessReturnPrice')
+        self.__givenPlusPaid = kwargs.get('givenPlusPaid')
         self.__shortConvictionSmall = kwargs.get('shortConvictionSmall')
         self.__prevCloseBid = kwargs.get('prevCloseBid')
         self.__fxPnl = kwargs.get('fxPnl')
@@ -2262,6 +2546,7 @@ class FieldFilterMap(Base):
         self.__tcmCostHorizon4Day = kwargs.get('tcmCostHorizon4Day')
         self.__assetClassificationsIsPrimary = kwargs.get('assetClassificationsIsPrimary')
         self.__styles = kwargs.get('styles')
+        self.__lendingSecId = kwargs.get('lendingSecId')
         self.__shortName = kwargs.get('shortName')
         self.__equityTheta = kwargs.get('equityTheta')
         self.__averageFillPrice = kwargs.get('averageFillPrice')
@@ -2310,6 +2595,7 @@ class FieldFilterMap(Base):
         self.__strikeReference = kwargs.get('strikeReference')
         self.__details = kwargs.get('details')
         self.__assetCount = kwargs.get('assetCount')
+        self.__given = kwargs.get('given')
         self.__absoluteValue = kwargs.get('absoluteValue')
         self.__delistingDate = kwargs.get('delistingDate')
         self.__longTenor = kwargs.get('longTenor')
@@ -2356,11 +2642,13 @@ class FieldFilterMap(Base):
         self.__gScore = kwargs.get('gScore')
         self.__marketValue = kwargs.get('marketValue')
         self.__multipleScore = kwargs.get('multipleScore')
+        self.__lendingFundNav = kwargs.get('lendingFundNav')
         self.__sourceOriginalCategory = kwargs.get('sourceOriginalCategory')
         self.__betaAdjustedExposure = kwargs.get('betaAdjustedExposure')
         self.__composite5DayAdv = kwargs.get('composite5DayAdv')
         self.__dividendPoints = kwargs.get('dividendPoints')
         self.__newIdeasWtd = kwargs.get('newIdeasWtd')
+        self.__paid = kwargs.get('paid')
         self.__short = kwargs.get('short')
         self.__location = kwargs.get('location')
         self.__comment = kwargs.get('comment')
@@ -2398,6 +2686,7 @@ class FieldFilterMap(Base):
         self.__portfolioId = kwargs.get('portfolioId')
         self.__gsid = kwargs.get('gsid')
         self.__esPercentile = kwargs.get('esPercentile')
+        self.__lendingFund = kwargs.get('lendingFund')
         self.__tcmCostParticipationRate15Pct = kwargs.get('tcmCostParticipationRate15Pct')
         self.__sensitivity = kwargs.get('sensitivity')
         self.__fiscalYear = kwargs.get('fiscalYear')
@@ -2467,6 +2756,7 @@ class FieldFilterMap(Base):
         self.__relativeStrike = kwargs.get('relativeStrike')
         self.__amount = kwargs.get('amount')
         self.__quantity = kwargs.get('quantity')
+        self.__lendingFundAcct = kwargs.get('lendingFundAcct')
         self.__reportId = kwargs.get('reportId')
         self.__indexWeight = kwargs.get('indexWeight')
         self.__rebate = kwargs.get('rebate')
@@ -2495,164 +2785,164 @@ class FieldFilterMap(Base):
         self._property_changed('queueClockTimeLabel')        
 
     @property
-    def marketPnl(self):
+    def marketPnl(self) -> dict:
         return self.__marketPnl
 
     @marketPnl.setter
-    def marketPnl(self, value):
+    def marketPnl(self, value: dict):
         self.__marketPnl = value
         self._property_changed('marketPnl')        
 
     @property
-    def year(self):
+    def year(self) -> dict:
         return self.__year
 
     @year.setter
-    def year(self, value):
+    def year(self, value: dict):
         self.__year = value
         self._property_changed('year')        
 
     @property
-    def sustainAsiaExJapan(self):
+    def sustainAsiaExJapan(self) -> dict:
         return self.__sustainAsiaExJapan
 
     @sustainAsiaExJapan.setter
-    def sustainAsiaExJapan(self, value):
+    def sustainAsiaExJapan(self, value: dict):
         self.__sustainAsiaExJapan = value
         self._property_changed('sustainAsiaExJapan')        
 
     @property
-    def investmentRate(self):
+    def investmentRate(self) -> dict:
         return self.__investmentRate
 
     @investmentRate.setter
-    def investmentRate(self, value):
+    def investmentRate(self, value: dict):
         self.__investmentRate = value
         self._property_changed('investmentRate')        
 
     @property
-    def assetClassificationsGicsSubIndustry(self):
+    def assetClassificationsGicsSubIndustry(self) -> dict:
         return self.__assetClassificationsGicsSubIndustry
 
     @assetClassificationsGicsSubIndustry.setter
-    def assetClassificationsGicsSubIndustry(self, value):
+    def assetClassificationsGicsSubIndustry(self, value: dict):
         self.__assetClassificationsGicsSubIndustry = value
         self._property_changed('assetClassificationsGicsSubIndustry')        
 
     @property
-    def bidUnadjusted(self):
+    def bidUnadjusted(self) -> dict:
         return self.__bidUnadjusted
 
     @bidUnadjusted.setter
-    def bidUnadjusted(self, value):
+    def bidUnadjusted(self, value: dict):
         self.__bidUnadjusted = value
         self._property_changed('bidUnadjusted')        
 
     @property
-    def economicTermsHash(self):
+    def economicTermsHash(self) -> dict:
         return self.__economicTermsHash
 
     @economicTermsHash.setter
-    def economicTermsHash(self, value):
+    def economicTermsHash(self, value: dict):
         self.__economicTermsHash = value
         self._property_changed('economicTermsHash')        
 
     @property
-    def neighbourAssetId(self):
+    def neighbourAssetId(self) -> dict:
         return self.__neighbourAssetId
 
     @neighbourAssetId.setter
-    def neighbourAssetId(self, value):
+    def neighbourAssetId(self, value: dict):
         self.__neighbourAssetId = value
         self._property_changed('neighbourAssetId')        
 
     @property
-    def simonIntlAssetTags(self):
+    def simonIntlAssetTags(self) -> dict:
         return self.__simonIntlAssetTags
 
     @simonIntlAssetTags.setter
-    def simonIntlAssetTags(self, value):
+    def simonIntlAssetTags(self, value: dict):
         self.__simonIntlAssetTags = value
         self._property_changed('simonIntlAssetTags')        
 
     @property
-    def path(self):
+    def path(self) -> dict:
         return self.__path
 
     @path.setter
-    def path(self, value):
+    def path(self, value: dict):
         self.__path = value
         self._property_changed('path')        
 
     @property
-    def availableInventory(self):
+    def availableInventory(self) -> dict:
         return self.__availableInventory
 
     @availableInventory.setter
-    def availableInventory(self, value):
+    def availableInventory(self, value: dict):
         self.__availableInventory = value
         self._property_changed('availableInventory')        
 
     @property
-    def clientContact(self):
+    def clientContact(self) -> dict:
         return self.__clientContact
 
     @clientContact.setter
-    def clientContact(self, value):
+    def clientContact(self, value: dict):
         self.__clientContact = value
         self._property_changed('clientContact')        
 
     @property
-    def est1DayCompletePct(self):
+    def est1DayCompletePct(self) -> dict:
         return self.__est1DayCompletePct
 
     @est1DayCompletePct.setter
-    def est1DayCompletePct(self, value):
+    def est1DayCompletePct(self, value: dict):
         self.__est1DayCompletePct = value
         self._property_changed('est1DayCompletePct')        
 
     @property
-    def rank(self):
+    def rank(self) -> dict:
         return self.__rank
 
     @rank.setter
-    def rank(self, value):
+    def rank(self, value: dict):
         self.__rank = value
         self._property_changed('rank')        
 
     @property
-    def dataSetCategory(self):
+    def dataSetCategory(self) -> dict:
         return self.__dataSetCategory
 
     @dataSetCategory.setter
-    def dataSetCategory(self, value):
+    def dataSetCategory(self, value: dict):
         self.__dataSetCategory = value
         self._property_changed('dataSetCategory')        
 
     @property
-    def createdById(self):
+    def createdById(self) -> dict:
         return self.__createdById
 
     @createdById.setter
-    def createdById(self, value):
+    def createdById(self, value: dict):
         self.__createdById = value
         self._property_changed('createdById')        
 
     @property
-    def vehicleType(self):
+    def vehicleType(self) -> dict:
         return self.__vehicleType
 
     @vehicleType.setter
-    def vehicleType(self, value):
+    def vehicleType(self, value: dict):
         self.__vehicleType = value
         self._property_changed('vehicleType')        
 
     @property
-    def dailyRisk(self):
+    def dailyRisk(self) -> dict:
         return self.__dailyRisk
 
     @dailyRisk.setter
-    def dailyRisk(self, value):
+    def dailyRisk(self, value: dict):
         self.__dailyRisk = value
         self._property_changed('dailyRisk')        
 
@@ -2666,1082 +2956,1091 @@ class FieldFilterMap(Base):
         self._property_changed('bosInBpsLabel')        
 
     @property
-    def marketDataType(self):
+    def marketDataType(self) -> dict:
         return self.__marketDataType
 
     @marketDataType.setter
-    def marketDataType(self, value):
+    def marketDataType(self, value: dict):
         self.__marketDataType = value
         self._property_changed('marketDataType')        
 
     @property
-    def sentimentScore(self):
+    def sentimentScore(self) -> dict:
         return self.__sentimentScore
 
     @sentimentScore.setter
-    def sentimentScore(self, value):
+    def sentimentScore(self, value: dict):
         self.__sentimentScore = value
         self._property_changed('sentimentScore')        
 
     @property
-    def bosInBps(self):
+    def bosInBps(self) -> dict:
         return self.__bosInBps
 
     @bosInBps.setter
-    def bosInBps(self, value):
+    def bosInBps(self, value: dict):
         self.__bosInBps = value
         self._property_changed('bosInBps')        
 
     @property
-    def pointClass(self):
+    def pointClass(self) -> dict:
         return self.__pointClass
 
     @pointClass.setter
-    def pointClass(self, value):
+    def pointClass(self, value: dict):
         self.__pointClass = value
         self._property_changed('pointClass')        
 
     @property
-    def fxSpot(self):
+    def fxSpot(self) -> dict:
         return self.__fxSpot
 
     @fxSpot.setter
-    def fxSpot(self, value):
+    def fxSpot(self, value: dict):
         self.__fxSpot = value
         self._property_changed('fxSpot')        
 
     @property
-    def bidLow(self):
+    def bidLow(self) -> dict:
         return self.__bidLow
 
     @bidLow.setter
-    def bidLow(self, value):
+    def bidLow(self, value: dict):
         self.__bidLow = value
         self._property_changed('bidLow')        
 
     @property
-    def valuePrevious(self):
+    def valuePrevious(self) -> dict:
         return self.__valuePrevious
 
     @valuePrevious.setter
-    def valuePrevious(self, value):
+    def valuePrevious(self, value: dict):
         self.__valuePrevious = value
         self._property_changed('valuePrevious')        
 
     @property
-    def fairVarianceVolatility(self):
+    def fairVarianceVolatility(self) -> dict:
         return self.__fairVarianceVolatility
 
     @fairVarianceVolatility.setter
-    def fairVarianceVolatility(self, value):
+    def fairVarianceVolatility(self, value: dict):
         self.__fairVarianceVolatility = value
         self._property_changed('fairVarianceVolatility')        
 
     @property
-    def avgTradeRate(self):
+    def avgTradeRate(self) -> dict:
         return self.__avgTradeRate
 
     @avgTradeRate.setter
-    def avgTradeRate(self, value):
+    def avgTradeRate(self, value: dict):
         self.__avgTradeRate = value
         self._property_changed('avgTradeRate')        
 
     @property
-    def shortLevel(self):
+    def shortLevel(self) -> dict:
         return self.__shortLevel
 
     @shortLevel.setter
-    def shortLevel(self, value):
+    def shortLevel(self, value: dict):
         self.__shortLevel = value
         self._property_changed('shortLevel')        
 
     @property
-    def hedgeVolatility(self):
+    def hedgeVolatility(self) -> dict:
         return self.__hedgeVolatility
 
     @hedgeVolatility.setter
-    def hedgeVolatility(self, value):
+    def hedgeVolatility(self, value: dict):
         self.__hedgeVolatility = value
         self._property_changed('hedgeVolatility')        
 
     @property
-    def version(self):
+    def version(self) -> dict:
         return self.__version
 
     @version.setter
-    def version(self, value):
+    def version(self, value: dict):
         self.__version = value
         self._property_changed('version')        
 
     @property
-    def tags(self):
+    def tags(self) -> dict:
         return self.__tags
 
     @tags.setter
-    def tags(self, value):
+    def tags(self, value: dict):
         self.__tags = value
         self._property_changed('tags')        
 
     @property
-    def underlyingAssetId(self):
+    def underlyingAssetId(self) -> dict:
         return self.__underlyingAssetId
 
     @underlyingAssetId.setter
-    def underlyingAssetId(self, value):
+    def underlyingAssetId(self, value: dict):
         self.__underlyingAssetId = value
         self._property_changed('underlyingAssetId')        
 
     @property
-    def clientExposure(self):
+    def clientExposure(self) -> dict:
         return self.__clientExposure
 
     @clientExposure.setter
-    def clientExposure(self, value):
+    def clientExposure(self, value: dict):
         self.__clientExposure = value
         self._property_changed('clientExposure')        
 
     @property
-    def correlation(self):
+    def correlation(self) -> dict:
         return self.__correlation
 
     @correlation.setter
-    def correlation(self, value):
+    def correlation(self, value: dict):
         self.__correlation = value
         self._property_changed('correlation')        
 
     @property
-    def exposure(self):
+    def exposure(self) -> dict:
         return self.__exposure
 
     @exposure.setter
-    def exposure(self, value):
+    def exposure(self, value: dict):
         self.__exposure = value
         self._property_changed('exposure')        
 
     @property
-    def gsSustainSubSector(self):
+    def gsSustainSubSector(self) -> dict:
         return self.__gsSustainSubSector
 
     @gsSustainSubSector.setter
-    def gsSustainSubSector(self, value):
+    def gsSustainSubSector(self, value: dict):
         self.__gsSustainSubSector = value
         self._property_changed('gsSustainSubSector')        
 
     @property
-    def domain(self):
+    def domain(self) -> dict:
         return self.__domain
 
     @domain.setter
-    def domain(self, value):
+    def domain(self, value: dict):
         self.__domain = value
         self._property_changed('domain')        
 
     @property
-    def marketDataAsset(self):
+    def marketDataAsset(self) -> dict:
         return self.__marketDataAsset
 
     @marketDataAsset.setter
-    def marketDataAsset(self, value):
+    def marketDataAsset(self, value: dict):
         self.__marketDataAsset = value
         self._property_changed('marketDataAsset')        
 
     @property
-    def forwardTenor(self):
+    def forwardTenor(self) -> dict:
         return self.__forwardTenor
 
     @forwardTenor.setter
-    def forwardTenor(self, value):
+    def forwardTenor(self, value: dict):
         self.__forwardTenor = value
         self._property_changed('forwardTenor')        
 
     @property
-    def unadjustedHigh(self):
+    def unadjustedHigh(self) -> dict:
         return self.__unadjustedHigh
 
     @unadjustedHigh.setter
-    def unadjustedHigh(self, value):
+    def unadjustedHigh(self, value: dict):
         self.__unadjustedHigh = value
         self._property_changed('unadjustedHigh')        
 
     @property
-    def sourceImportance(self):
+    def sourceImportance(self) -> dict:
         return self.__sourceImportance
 
     @sourceImportance.setter
-    def sourceImportance(self, value):
+    def sourceImportance(self, value: dict):
         self.__sourceImportance = value
         self._property_changed('sourceImportance')        
 
     @property
-    def eid(self):
+    def eid(self) -> dict:
         return self.__eid
 
     @eid.setter
-    def eid(self, value):
+    def eid(self, value: dict):
         self.__eid = value
         self._property_changed('eid')        
 
     @property
-    def jsn(self):
+    def jsn(self) -> dict:
         return self.__jsn
 
     @jsn.setter
-    def jsn(self, value):
+    def jsn(self, value: dict):
         self.__jsn = value
         self._property_changed('jsn')        
 
     @property
-    def relativeReturnQtd(self):
+    def relativeReturnQtd(self) -> dict:
         return self.__relativeReturnQtd
 
     @relativeReturnQtd.setter
-    def relativeReturnQtd(self, value):
+    def relativeReturnQtd(self, value: dict):
         self.__relativeReturnQtd = value
         self._property_changed('relativeReturnQtd')        
 
     @property
-    def displayName(self):
+    def displayName(self) -> dict:
         return self.__displayName
 
     @displayName.setter
-    def displayName(self, value):
+    def displayName(self, value: dict):
         self.__displayName = value
         self._property_changed('displayName')        
 
     @property
-    def minutesToTrade100Pct(self):
+    def minutesToTrade100Pct(self) -> dict:
         return self.__minutesToTrade100Pct
 
     @minutesToTrade100Pct.setter
-    def minutesToTrade100Pct(self, value):
+    def minutesToTrade100Pct(self, value: dict):
         self.__minutesToTrade100Pct = value
         self._property_changed('minutesToTrade100Pct')        
 
     @property
-    def marketModelId(self):
+    def marketModelId(self) -> dict:
         return self.__marketModelId
 
     @marketModelId.setter
-    def marketModelId(self, value):
+    def marketModelId(self, value: dict):
         self.__marketModelId = value
         self._property_changed('marketModelId')        
 
     @property
-    def quoteType(self):
+    def quoteType(self) -> dict:
         return self.__quoteType
 
     @quoteType.setter
-    def quoteType(self, value):
+    def quoteType(self, value: dict):
         self.__quoteType = value
         self._property_changed('quoteType')        
 
     @property
-    def tenor(self):
+    def tenor(self) -> dict:
         return self.__tenor
 
     @tenor.setter
-    def tenor(self, value):
+    def tenor(self, value: dict):
         self.__tenor = value
         self._property_changed('tenor')        
 
     @property
-    def esPolicyPercentile(self):
+    def esPolicyPercentile(self) -> dict:
         return self.__esPolicyPercentile
 
     @esPolicyPercentile.setter
-    def esPolicyPercentile(self, value):
+    def esPolicyPercentile(self, value: dict):
         self.__esPolicyPercentile = value
         self._property_changed('esPolicyPercentile')        
 
     @property
-    def tcmCostParticipationRate75Pct(self):
+    def tcmCostParticipationRate75Pct(self) -> dict:
         return self.__tcmCostParticipationRate75Pct
 
     @tcmCostParticipationRate75Pct.setter
-    def tcmCostParticipationRate75Pct(self, value):
+    def tcmCostParticipationRate75Pct(self, value: dict):
         self.__tcmCostParticipationRate75Pct = value
         self._property_changed('tcmCostParticipationRate75Pct')        
 
     @property
-    def close(self):
+    def close(self) -> dict:
         return self.__close
 
     @close.setter
-    def close(self, value):
+    def close(self, value: dict):
         self.__close = value
         self._property_changed('close')        
 
     @property
-    def tcmCostParticipationRate100Pct(self):
+    def tcmCostParticipationRate100Pct(self) -> dict:
         return self.__tcmCostParticipationRate100Pct
 
     @tcmCostParticipationRate100Pct.setter
-    def tcmCostParticipationRate100Pct(self, value):
+    def tcmCostParticipationRate100Pct(self, value: dict):
         self.__tcmCostParticipationRate100Pct = value
         self._property_changed('tcmCostParticipationRate100Pct')        
 
     @property
-    def disclaimer(self):
+    def disclaimer(self) -> dict:
         return self.__disclaimer
 
     @disclaimer.setter
-    def disclaimer(self, value):
+    def disclaimer(self, value: dict):
         self.__disclaimer = value
         self._property_changed('disclaimer')        
 
     @property
-    def measureIdx(self):
+    def measureIdx(self) -> dict:
         return self.__measureIdx
 
     @measureIdx.setter
-    def measureIdx(self, value):
+    def measureIdx(self, value: dict):
         self.__measureIdx = value
         self._property_changed('measureIdx')        
 
     @property
-    def a(self):
+    def a(self) -> dict:
         return self.__a
 
     @a.setter
-    def a(self, value):
+    def a(self, value: dict):
         self.__a = value
         self._property_changed('a')        
 
     @property
-    def b(self):
+    def b(self) -> dict:
         return self.__b
 
     @b.setter
-    def b(self, value):
+    def b(self, value: dict):
         self.__b = value
         self._property_changed('b')        
 
     @property
-    def loanFee(self):
+    def loanFee(self) -> dict:
         return self.__loanFee
 
     @loanFee.setter
-    def loanFee(self, value):
+    def loanFee(self, value: dict):
         self.__loanFee = value
         self._property_changed('loanFee')        
 
     @property
-    def c(self):
+    def c(self) -> dict:
         return self.__c
 
     @c.setter
-    def c(self, value):
+    def c(self, value: dict):
         self.__c = value
         self._property_changed('c')        
 
     @property
-    def equityVega(self):
+    def equityVega(self) -> dict:
         return self.__equityVega
 
     @equityVega.setter
-    def equityVega(self, value):
+    def equityVega(self, value: dict):
         self.__equityVega = value
         self._property_changed('equityVega')        
 
     @property
-    def deploymentVersion(self):
+    def deploymentVersion(self) -> dict:
         return self.__deploymentVersion
 
     @deploymentVersion.setter
-    def deploymentVersion(self, value):
+    def deploymentVersion(self, value: dict):
         self.__deploymentVersion = value
         self._property_changed('deploymentVersion')        
 
     @property
-    def fiveDayMove(self):
+    def fiveDayMove(self) -> dict:
         return self.__fiveDayMove
 
     @fiveDayMove.setter
-    def fiveDayMove(self, value):
+    def fiveDayMove(self, value: dict):
         self.__fiveDayMove = value
         self._property_changed('fiveDayMove')        
 
     @property
-    def borrower(self):
+    def borrower(self) -> dict:
         return self.__borrower
 
     @borrower.setter
-    def borrower(self, value):
+    def borrower(self, value: dict):
         self.__borrower = value
         self._property_changed('borrower')        
 
     @property
-    def performanceContribution(self):
+    def performanceContribution(self) -> dict:
         return self.__performanceContribution
 
     @performanceContribution.setter
-    def performanceContribution(self, value):
+    def performanceContribution(self, value: dict):
         self.__performanceContribution = value
         self._property_changed('performanceContribution')        
 
     @property
-    def targetNotional(self):
+    def targetNotional(self) -> dict:
         return self.__targetNotional
 
     @targetNotional.setter
-    def targetNotional(self, value):
+    def targetNotional(self, value: dict):
         self.__targetNotional = value
         self._property_changed('targetNotional')        
 
     @property
-    def fillLegId(self):
+    def fillLegId(self) -> dict:
         return self.__fillLegId
 
     @fillLegId.setter
-    def fillLegId(self, value):
+    def fillLegId(self, value: dict):
         self.__fillLegId = value
         self._property_changed('fillLegId')        
 
     @property
-    def delisted(self):
+    def delisted(self) -> dict:
         return self.__delisted
 
     @delisted.setter
-    def delisted(self, value):
+    def delisted(self, value: dict):
         self.__delisted = value
         self._property_changed('delisted')        
 
     @property
-    def rationale(self):
+    def rationale(self) -> dict:
         return self.__rationale
 
     @rationale.setter
-    def rationale(self, value):
+    def rationale(self, value: dict):
         self.__rationale = value
         self._property_changed('rationale')        
 
     @property
-    def regionalFocus(self):
+    def regionalFocus(self) -> dict:
         return self.__regionalFocus
 
     @regionalFocus.setter
-    def regionalFocus(self, value):
+    def regionalFocus(self, value: dict):
         self.__regionalFocus = value
         self._property_changed('regionalFocus')        
 
     @property
-    def volumePrimary(self):
+    def volumePrimary(self) -> dict:
         return self.__volumePrimary
 
     @volumePrimary.setter
-    def volumePrimary(self, value):
+    def volumePrimary(self, value: dict):
         self.__volumePrimary = value
         self._property_changed('volumePrimary')        
 
     @property
-    def series(self):
+    def series(self) -> dict:
         return self.__series
 
     @series.setter
-    def series(self, value):
+    def series(self, value: dict):
         self.__series = value
         self._property_changed('series')        
 
     @property
-    def simonId(self):
+    def simonId(self) -> dict:
         return self.__simonId
 
     @simonId.setter
-    def simonId(self, value):
+    def simonId(self, value: dict):
         self.__simonId = value
         self._property_changed('simonId')        
 
     @property
-    def newIdeasQtd(self):
+    def newIdeasQtd(self) -> dict:
         return self.__newIdeasQtd
 
     @newIdeasQtd.setter
-    def newIdeasQtd(self, value):
+    def newIdeasQtd(self, value: dict):
         self.__newIdeasQtd = value
         self._property_changed('newIdeasQtd')        
 
     @property
-    def adjustedAskPrice(self):
+    def adjustedAskPrice(self) -> dict:
         return self.__adjustedAskPrice
 
     @adjustedAskPrice.setter
-    def adjustedAskPrice(self, value):
+    def adjustedAskPrice(self, value: dict):
         self.__adjustedAskPrice = value
         self._property_changed('adjustedAskPrice')        
 
     @property
-    def quarter(self):
+    def quarter(self) -> dict:
         return self.__quarter
 
     @quarter.setter
-    def quarter(self, value):
+    def quarter(self, value: dict):
         self.__quarter = value
         self._property_changed('quarter')        
 
     @property
-    def factorUniverse(self):
+    def factorUniverse(self) -> dict:
         return self.__factorUniverse
 
     @factorUniverse.setter
-    def factorUniverse(self, value):
+    def factorUniverse(self, value: dict):
         self.__factorUniverse = value
         self._property_changed('factorUniverse')        
 
     @property
-    def eventCategory(self):
+    def eventCategory(self) -> dict:
         return self.__eventCategory
 
     @eventCategory.setter
-    def eventCategory(self, value):
+    def eventCategory(self, value: dict):
         self.__eventCategory = value
         self._property_changed('eventCategory')        
 
     @property
-    def impliedNormalVolatility(self):
+    def impliedNormalVolatility(self) -> dict:
         return self.__impliedNormalVolatility
 
     @impliedNormalVolatility.setter
-    def impliedNormalVolatility(self, value):
+    def impliedNormalVolatility(self, value: dict):
         self.__impliedNormalVolatility = value
         self._property_changed('impliedNormalVolatility')        
 
     @property
-    def unadjustedOpen(self):
+    def unadjustedOpen(self) -> dict:
         return self.__unadjustedOpen
 
     @unadjustedOpen.setter
-    def unadjustedOpen(self, value):
+    def unadjustedOpen(self, value: dict):
         self.__unadjustedOpen = value
         self._property_changed('unadjustedOpen')        
 
     @property
-    def arrivalRt(self):
+    def arrivalRt(self) -> dict:
         return self.__arrivalRt
 
     @arrivalRt.setter
-    def arrivalRt(self, value):
+    def arrivalRt(self, value: dict):
         self.__arrivalRt = value
         self._property_changed('arrivalRt')        
 
     @property
-    def transactionCost(self):
+    def transactionCost(self) -> dict:
         return self.__transactionCost
 
     @transactionCost.setter
-    def transactionCost(self, value):
+    def transactionCost(self, value: dict):
         self.__transactionCost = value
         self._property_changed('transactionCost')        
 
     @property
-    def servicingCostShortPnl(self):
+    def servicingCostShortPnl(self) -> dict:
         return self.__servicingCostShortPnl
 
     @servicingCostShortPnl.setter
-    def servicingCostShortPnl(self, value):
+    def servicingCostShortPnl(self, value: dict):
         self.__servicingCostShortPnl = value
         self._property_changed('servicingCostShortPnl')        
 
     @property
-    def bidAskSpread(self):
+    def bidAskSpread(self) -> dict:
         return self.__bidAskSpread
 
     @bidAskSpread.setter
-    def bidAskSpread(self, value):
+    def bidAskSpread(self, value: dict):
         self.__bidAskSpread = value
         self._property_changed('bidAskSpread')        
 
     @property
-    def optionType(self):
+    def optionType(self) -> dict:
         return self.__optionType
 
     @optionType.setter
-    def optionType(self, value):
+    def optionType(self, value: dict):
         self.__optionType = value
         self._property_changed('optionType')        
 
     @property
-    def tcmCostHorizon3Hour(self):
+    def tcmCostHorizon3Hour(self) -> dict:
         return self.__tcmCostHorizon3Hour
 
     @tcmCostHorizon3Hour.setter
-    def tcmCostHorizon3Hour(self, value):
+    def tcmCostHorizon3Hour(self, value: dict):
         self.__tcmCostHorizon3Hour = value
         self._property_changed('tcmCostHorizon3Hour')        
 
     @property
-    def clusterDescription(self):
+    def clusterDescription(self) -> dict:
         return self.__clusterDescription
 
     @clusterDescription.setter
-    def clusterDescription(self, value):
+    def clusterDescription(self, value: dict):
         self.__clusterDescription = value
         self._property_changed('clusterDescription')        
 
     @property
-    def positionAmount(self):
+    def positionAmount(self) -> dict:
         return self.__positionAmount
 
     @positionAmount.setter
-    def positionAmount(self, value):
+    def positionAmount(self, value: dict):
         self.__positionAmount = value
         self._property_changed('positionAmount')        
 
     @property
-    def numberOfPositions(self):
+    def numberOfPositions(self) -> dict:
         return self.__numberOfPositions
 
     @numberOfPositions.setter
-    def numberOfPositions(self, value):
+    def numberOfPositions(self, value: dict):
         self.__numberOfPositions = value
         self._property_changed('numberOfPositions')        
 
     @property
-    def windSpeed(self):
+    def windSpeed(self) -> dict:
         return self.__windSpeed
 
     @windSpeed.setter
-    def windSpeed(self, value):
+    def windSpeed(self, value: dict):
         self.__windSpeed = value
         self._property_changed('windSpeed')        
 
     @property
-    def openUnadjusted(self):
+    def openUnadjusted(self) -> dict:
         return self.__openUnadjusted
 
     @openUnadjusted.setter
-    def openUnadjusted(self, value):
+    def openUnadjusted(self, value: dict):
         self.__openUnadjusted = value
         self._property_changed('openUnadjusted')        
 
     @property
-    def maRank(self):
+    def maRank(self) -> dict:
         return self.__maRank
 
     @maRank.setter
-    def maRank(self, value):
+    def maRank(self, value: dict):
         self.__maRank = value
         self._property_changed('maRank')        
 
     @property
-    def askPrice(self):
+    def askPrice(self) -> dict:
         return self.__askPrice
 
     @askPrice.setter
-    def askPrice(self, value):
+    def askPrice(self, value: dict):
         self.__askPrice = value
         self._property_changed('askPrice')        
 
     @property
-    def eventId(self):
+    def eventId(self) -> dict:
         return self.__eventId
 
     @eventId.setter
-    def eventId(self, value):
+    def eventId(self, value: dict):
         self.__eventId = value
         self._property_changed('eventId')        
 
     @property
-    def dataProduct(self):
+    def dataProduct(self) -> dict:
         return self.__dataProduct
 
     @dataProduct.setter
-    def dataProduct(self, value):
+    def dataProduct(self, value: dict):
         self.__dataProduct = value
         self._property_changed('dataProduct')        
 
     @property
-    def sectors(self):
+    def sectors(self) -> dict:
         return self.__sectors
 
     @sectors.setter
-    def sectors(self, value):
+    def sectors(self, value: dict):
         self.__sectors = value
         self._property_changed('sectors')        
 
     @property
-    def annualizedTrackingError(self):
+    def annualizedTrackingError(self) -> dict:
         return self.__annualizedTrackingError
 
     @annualizedTrackingError.setter
-    def annualizedTrackingError(self, value):
+    def annualizedTrackingError(self, value: dict):
         self.__annualizedTrackingError = value
         self._property_changed('annualizedTrackingError')        
 
     @property
-    def volSwap(self):
+    def volSwap(self) -> dict:
         return self.__volSwap
 
     @volSwap.setter
-    def volSwap(self, value):
+    def volSwap(self, value: dict):
         self.__volSwap = value
         self._property_changed('volSwap')        
 
     @property
-    def annualizedRisk(self):
+    def annualizedRisk(self) -> dict:
         return self.__annualizedRisk
 
     @annualizedRisk.setter
-    def annualizedRisk(self, value):
+    def annualizedRisk(self, value: dict):
         self.__annualizedRisk = value
         self._property_changed('annualizedRisk')        
 
     @property
-    def corporateAction(self):
+    def corporateAction(self) -> dict:
         return self.__corporateAction
 
     @corporateAction.setter
-    def corporateAction(self, value):
+    def corporateAction(self, value: dict):
         self.__corporateAction = value
         self._property_changed('corporateAction')        
 
     @property
-    def conviction(self):
+    def conviction(self) -> dict:
         return self.__conviction
 
     @conviction.setter
-    def conviction(self, value):
+    def conviction(self, value: dict):
         self.__conviction = value
         self._property_changed('conviction')        
 
     @property
-    def grossExposure(self):
+    def grossExposure(self) -> dict:
         return self.__grossExposure
 
     @grossExposure.setter
-    def grossExposure(self, value):
+    def grossExposure(self, value: dict):
         self.__grossExposure = value
         self._property_changed('grossExposure')        
 
     @property
-    def benchmarkMaturity(self):
+    def benchmarkMaturity(self) -> dict:
         return self.__benchmarkMaturity
 
     @benchmarkMaturity.setter
-    def benchmarkMaturity(self, value):
+    def benchmarkMaturity(self, value: dict):
         self.__benchmarkMaturity = value
         self._property_changed('benchmarkMaturity')        
 
     @property
-    def volumeComposite(self):
+    def volumeComposite(self) -> dict:
         return self.__volumeComposite
 
     @volumeComposite.setter
-    def volumeComposite(self, value):
+    def volumeComposite(self, value: dict):
         self.__volumeComposite = value
         self._property_changed('volumeComposite')        
 
     @property
-    def volume(self):
+    def volume(self) -> dict:
         return self.__volume
 
     @volume.setter
-    def volume(self, value):
+    def volume(self, value: dict):
         self.__volume = value
         self._property_changed('volume')        
 
     @property
-    def adv(self):
+    def adv(self) -> dict:
         return self.__adv
 
     @adv.setter
-    def adv(self, value):
+    def adv(self, value: dict):
         self.__adv = value
         self._property_changed('adv')        
 
     @property
-    def stsFxCurrency(self):
+    def stsFxCurrency(self) -> dict:
         return self.__stsFxCurrency
 
     @stsFxCurrency.setter
-    def stsFxCurrency(self, value):
+    def stsFxCurrency(self, value: dict):
         self.__stsFxCurrency = value
         self._property_changed('stsFxCurrency')        
 
     @property
-    def wpk(self):
+    def wpk(self) -> dict:
         return self.__wpk
 
     @wpk.setter
-    def wpk(self, value):
+    def wpk(self, value: dict):
         self.__wpk = value
         self._property_changed('wpk')        
 
     @property
-    def shortConvictionMedium(self):
+    def shortConvictionMedium(self) -> dict:
         return self.__shortConvictionMedium
 
     @shortConvictionMedium.setter
-    def shortConvictionMedium(self, value):
+    def shortConvictionMedium(self, value: dict):
         self.__shortConvictionMedium = value
         self._property_changed('shortConvictionMedium')        
 
     @property
-    def bidChange(self):
+    def bidChange(self) -> dict:
         return self.__bidChange
 
     @bidChange.setter
-    def bidChange(self, value):
+    def bidChange(self, value: dict):
         self.__bidChange = value
         self._property_changed('bidChange')        
 
     @property
-    def exchange(self):
+    def exchange(self) -> dict:
         return self.__exchange
 
     @exchange.setter
-    def exchange(self, value):
+    def exchange(self, value: dict):
         self.__exchange = value
         self._property_changed('exchange')        
 
     @property
-    def expiration(self):
+    def expiration(self) -> dict:
         return self.__expiration
 
     @expiration.setter
-    def expiration(self, value):
+    def expiration(self, value: dict):
         self.__expiration = value
         self._property_changed('expiration')        
 
     @property
-    def tradePrice(self):
+    def tradePrice(self) -> dict:
         return self.__tradePrice
 
     @tradePrice.setter
-    def tradePrice(self, value):
+    def tradePrice(self, value: dict):
         self.__tradePrice = value
         self._property_changed('tradePrice')        
 
     @property
-    def esPolicyScore(self):
+    def esPolicyScore(self) -> dict:
         return self.__esPolicyScore
 
     @esPolicyScore.setter
-    def esPolicyScore(self, value):
+    def esPolicyScore(self, value: dict):
         self.__esPolicyScore = value
         self._property_changed('esPolicyScore')        
 
     @property
-    def cid(self):
+    def loanId(self) -> dict:
+        return self.__loanId
+
+    @loanId.setter
+    def loanId(self, value: dict):
+        self.__loanId = value
+        self._property_changed('loanId')        
+
+    @property
+    def cid(self) -> dict:
         return self.__cid
 
     @cid.setter
-    def cid(self, value):
+    def cid(self, value: dict):
         self.__cid = value
         self._property_changed('cid')        
 
     @property
-    def liquidityScore(self):
+    def liquidityScore(self) -> dict:
         return self.__liquidityScore
 
     @liquidityScore.setter
-    def liquidityScore(self, value):
+    def liquidityScore(self, value: dict):
         self.__liquidityScore = value
         self._property_changed('liquidityScore')        
 
     @property
-    def importance(self):
+    def importance(self) -> dict:
         return self.__importance
 
     @importance.setter
-    def importance(self, value):
+    def importance(self, value: dict):
         self.__importance = value
         self._property_changed('importance')        
 
     @property
-    def sourceDateSpan(self):
+    def sourceDateSpan(self) -> dict:
         return self.__sourceDateSpan
 
     @sourceDateSpan.setter
-    def sourceDateSpan(self, value):
+    def sourceDateSpan(self, value: dict):
         self.__sourceDateSpan = value
         self._property_changed('sourceDateSpan')        
 
     @property
-    def assetClassificationsGicsSector(self):
+    def assetClassificationsGicsSector(self) -> dict:
         return self.__assetClassificationsGicsSector
 
     @assetClassificationsGicsSector.setter
-    def assetClassificationsGicsSector(self, value):
+    def assetClassificationsGicsSector(self, value: dict):
         self.__assetClassificationsGicsSector = value
         self._property_changed('assetClassificationsGicsSector')        
 
     @property
-    def underlyingDataSetId(self):
+    def underlyingDataSetId(self) -> dict:
         return self.__underlyingDataSetId
 
     @underlyingDataSetId.setter
-    def underlyingDataSetId(self, value):
+    def underlyingDataSetId(self, value: dict):
         self.__underlyingDataSetId = value
         self._property_changed('underlyingDataSetId')        
 
     @property
-    def stsAssetName(self):
+    def stsAssetName(self) -> dict:
         return self.__stsAssetName
 
     @stsAssetName.setter
-    def stsAssetName(self, value):
+    def stsAssetName(self, value: dict):
         self.__stsAssetName = value
         self._property_changed('stsAssetName')        
 
     @property
-    def closeUnadjusted(self):
+    def closeUnadjusted(self) -> dict:
         return self.__closeUnadjusted
 
     @closeUnadjusted.setter
-    def closeUnadjusted(self, value):
+    def closeUnadjusted(self, value: dict):
         self.__closeUnadjusted = value
         self._property_changed('closeUnadjusted')        
 
     @property
-    def valueUnit(self):
+    def valueUnit(self) -> dict:
         return self.__valueUnit
 
     @valueUnit.setter
-    def valueUnit(self, value):
+    def valueUnit(self, value: dict):
         self.__valueUnit = value
         self._property_changed('valueUnit')        
 
     @property
-    def bidHigh(self):
+    def bidHigh(self) -> dict:
         return self.__bidHigh
 
     @bidHigh.setter
-    def bidHigh(self, value):
+    def bidHigh(self, value: dict):
         self.__bidHigh = value
         self._property_changed('bidHigh')        
 
     @property
-    def adjustedLowPrice(self):
+    def adjustedLowPrice(self) -> dict:
         return self.__adjustedLowPrice
 
     @adjustedLowPrice.setter
-    def adjustedLowPrice(self, value):
+    def adjustedLowPrice(self, value: dict):
         self.__adjustedLowPrice = value
         self._property_changed('adjustedLowPrice')        
 
     @property
-    def netExposureClassification(self):
+    def netExposureClassification(self) -> dict:
         return self.__netExposureClassification
 
     @netExposureClassification.setter
-    def netExposureClassification(self, value):
+    def netExposureClassification(self, value: dict):
         self.__netExposureClassification = value
         self._property_changed('netExposureClassification')        
 
     @property
-    def longConvictionLarge(self):
+    def longConvictionLarge(self) -> dict:
         return self.__longConvictionLarge
 
     @longConvictionLarge.setter
-    def longConvictionLarge(self, value):
+    def longConvictionLarge(self, value: dict):
         self.__longConvictionLarge = value
         self._property_changed('longConvictionLarge')        
 
     @property
-    def fairVariance(self):
+    def fairVariance(self) -> dict:
         return self.__fairVariance
 
     @fairVariance.setter
-    def fairVariance(self, value):
+    def fairVariance(self, value: dict):
         self.__fairVariance = value
         self._property_changed('fairVariance')        
 
     @property
-    def hitRateWtd(self):
+    def hitRateWtd(self) -> dict:
         return self.__hitRateWtd
 
     @hitRateWtd.setter
-    def hitRateWtd(self, value):
+    def hitRateWtd(self, value: dict):
         self.__hitRateWtd = value
         self._property_changed('hitRateWtd')        
 
     @property
-    def oad(self):
+    def oad(self) -> dict:
         return self.__oad
 
     @oad.setter
-    def oad(self, value):
+    def oad(self, value: dict):
         self.__oad = value
         self._property_changed('oad')        
 
     @property
-    def bosInBpsDescription(self):
+    def bosInBpsDescription(self) -> dict:
         return self.__bosInBpsDescription
 
     @bosInBpsDescription.setter
-    def bosInBpsDescription(self, value):
+    def bosInBpsDescription(self, value: dict):
         self.__bosInBpsDescription = value
         self._property_changed('bosInBpsDescription')        
 
     @property
-    def lowPrice(self):
+    def lowPrice(self) -> dict:
         return self.__lowPrice
 
     @lowPrice.setter
-    def lowPrice(self, value):
+    def lowPrice(self, value: dict):
         self.__lowPrice = value
         self._property_changed('lowPrice')        
 
     @property
-    def realizedVolatility(self):
+    def realizedVolatility(self) -> dict:
         return self.__realizedVolatility
 
     @realizedVolatility.setter
-    def realizedVolatility(self, value):
+    def realizedVolatility(self, value: dict):
         self.__realizedVolatility = value
         self._property_changed('realizedVolatility')        
 
     @property
-    def rate(self):
+    def rate(self) -> dict:
         return self.__rate
 
     @rate.setter
-    def rate(self, value):
+    def rate(self, value: dict):
         self.__rate = value
         self._property_changed('rate')        
 
     @property
-    def adv22DayPct(self):
+    def adv22DayPct(self) -> dict:
         return self.__adv22DayPct
 
     @adv22DayPct.setter
-    def adv22DayPct(self, value):
+    def adv22DayPct(self, value: dict):
         self.__adv22DayPct = value
         self._property_changed('adv22DayPct')        
 
     @property
-    def alpha(self):
+    def alpha(self) -> dict:
         return self.__alpha
 
     @alpha.setter
-    def alpha(self, value):
+    def alpha(self, value: dict):
         self.__alpha = value
         self._property_changed('alpha')        
 
     @property
-    def client(self):
+    def client(self) -> dict:
         return self.__client
 
     @client.setter
-    def client(self, value):
+    def client(self, value: dict):
         self.__client = value
         self._property_changed('client')        
 
     @property
-    def company(self):
+    def company(self) -> dict:
         return self.__company
 
     @company.setter
-    def company(self, value):
+    def company(self, value: dict):
         self.__company = value
         self._property_changed('company')        
 
     @property
-    def convictionList(self):
+    def convictionList(self) -> dict:
         return self.__convictionList
 
     @convictionList.setter
-    def convictionList(self, value):
+    def convictionList(self, value: dict):
         self.__convictionList = value
         self._property_changed('convictionList')        
 
@@ -3755,209 +4054,218 @@ class FieldFilterMap(Base):
         self._property_changed('priceRangeInTicksLabel')        
 
     @property
-    def ticker(self):
+    def ticker(self) -> dict:
         return self.__ticker
 
     @ticker.setter
-    def ticker(self, value):
+    def ticker(self, value: dict):
         self.__ticker = value
         self._property_changed('ticker')        
 
     @property
-    def inRiskModel(self):
+    def inRiskModel(self) -> dict:
         return self.__inRiskModel
 
     @inRiskModel.setter
-    def inRiskModel(self, value):
+    def inRiskModel(self, value: dict):
         self.__inRiskModel = value
         self._property_changed('inRiskModel')        
 
     @property
-    def tcmCostHorizon1Day(self):
+    def tcmCostHorizon1Day(self) -> dict:
         return self.__tcmCostHorizon1Day
 
     @tcmCostHorizon1Day.setter
-    def tcmCostHorizon1Day(self, value):
+    def tcmCostHorizon1Day(self, value: dict):
         self.__tcmCostHorizon1Day = value
         self._property_changed('tcmCostHorizon1Day')        
 
     @property
-    def servicingCostLongPnl(self):
+    def servicingCostLongPnl(self) -> dict:
         return self.__servicingCostLongPnl
 
     @servicingCostLongPnl.setter
-    def servicingCostLongPnl(self, value):
+    def servicingCostLongPnl(self, value: dict):
         self.__servicingCostLongPnl = value
         self._property_changed('servicingCostLongPnl')        
 
     @property
-    def stsRatesCountry(self):
+    def stsRatesCountry(self) -> dict:
         return self.__stsRatesCountry
 
     @stsRatesCountry.setter
-    def stsRatesCountry(self, value):
+    def stsRatesCountry(self, value: dict):
         self.__stsRatesCountry = value
         self._property_changed('stsRatesCountry')        
 
     @property
-    def meetingNumber(self):
+    def meetingNumber(self) -> dict:
         return self.__meetingNumber
 
     @meetingNumber.setter
-    def meetingNumber(self, value):
+    def meetingNumber(self, value: dict):
         self.__meetingNumber = value
         self._property_changed('meetingNumber')        
 
     @property
-    def exchangeId(self):
+    def exchangeId(self) -> dict:
         return self.__exchangeId
 
     @exchangeId.setter
-    def exchangeId(self, value):
+    def exchangeId(self, value: dict):
         self.__exchangeId = value
         self._property_changed('exchangeId')        
 
     @property
-    def horizon(self):
+    def horizon(self) -> dict:
         return self.__horizon
 
     @horizon.setter
-    def horizon(self, value):
+    def horizon(self, value: dict):
         self.__horizon = value
         self._property_changed('horizon')        
 
     @property
-    def tcmCostHorizon20Day(self):
+    def tcmCostHorizon20Day(self) -> dict:
         return self.__tcmCostHorizon20Day
 
     @tcmCostHorizon20Day.setter
-    def tcmCostHorizon20Day(self, value):
+    def tcmCostHorizon20Day(self, value: dict):
         self.__tcmCostHorizon20Day = value
         self._property_changed('tcmCostHorizon20Day')        
 
     @property
-    def longLevel(self):
+    def longLevel(self) -> dict:
         return self.__longLevel
 
     @longLevel.setter
-    def longLevel(self, value):
+    def longLevel(self, value: dict):
         self.__longLevel = value
         self._property_changed('longLevel')        
 
     @property
-    def sourceValueForecast(self):
+    def sourceValueForecast(self) -> dict:
         return self.__sourceValueForecast
 
     @sourceValueForecast.setter
-    def sourceValueForecast(self, value):
+    def sourceValueForecast(self, value: dict):
         self.__sourceValueForecast = value
         self._property_changed('sourceValueForecast')        
 
     @property
-    def shortConvictionLarge(self):
+    def shortConvictionLarge(self) -> dict:
         return self.__shortConvictionLarge
 
     @shortConvictionLarge.setter
-    def shortConvictionLarge(self, value):
+    def shortConvictionLarge(self, value: dict):
         self.__shortConvictionLarge = value
         self._property_changed('shortConvictionLarge')        
 
     @property
-    def realm(self):
+    def realm(self) -> dict:
         return self.__realm
 
     @realm.setter
-    def realm(self, value):
+    def realm(self, value: dict):
         self.__realm = value
         self._property_changed('realm')        
 
     @property
-    def bid(self):
+    def bid(self) -> dict:
         return self.__bid
 
     @bid.setter
-    def bid(self, value):
+    def bid(self, value: dict):
         self.__bid = value
         self._property_changed('bid')        
 
     @property
-    def dataDescription(self):
+    def dataDescription(self) -> dict:
         return self.__dataDescription
 
     @dataDescription.setter
-    def dataDescription(self, value):
+    def dataDescription(self, value: dict):
         self.__dataDescription = value
         self._property_changed('dataDescription')        
 
     @property
-    def composite22DayAdv(self):
+    def composite22DayAdv(self) -> dict:
         return self.__composite22DayAdv
 
     @composite22DayAdv.setter
-    def composite22DayAdv(self, value):
+    def composite22DayAdv(self, value: dict):
         self.__composite22DayAdv = value
         self._property_changed('composite22DayAdv')        
 
     @property
-    def gsn(self):
+    def gsn(self) -> dict:
         return self.__gsn
 
     @gsn.setter
-    def gsn(self, value):
+    def gsn(self, value: dict):
         self.__gsn = value
         self._property_changed('gsn')        
 
     @property
-    def isAggressive(self):
+    def isAggressive(self) -> dict:
         return self.__isAggressive
 
     @isAggressive.setter
-    def isAggressive(self, value):
+    def isAggressive(self, value: dict):
         self.__isAggressive = value
         self._property_changed('isAggressive')        
 
     @property
-    def orderId(self):
+    def orderId(self) -> dict:
         return self.__orderId
 
     @orderId.setter
-    def orderId(self, value):
+    def orderId(self, value: dict):
         self.__orderId = value
         self._property_changed('orderId')        
 
     @property
-    def gss(self):
+    def gss(self) -> dict:
         return self.__gss
 
     @gss.setter
-    def gss(self, value):
+    def gss(self, value: dict):
         self.__gss = value
         self._property_changed('gss')        
 
     @property
-    def percentOfMediandv1m(self):
+    def percentOfMediandv1m(self) -> dict:
         return self.__percentOfMediandv1m
 
     @percentOfMediandv1m.setter
-    def percentOfMediandv1m(self, value):
+    def percentOfMediandv1m(self, value: dict):
         self.__percentOfMediandv1m = value
         self._property_changed('percentOfMediandv1m')        
 
     @property
-    def assetClass(self):
+    def lendables(self) -> dict:
+        return self.__lendables
+
+    @lendables.setter
+    def lendables(self, value: dict):
+        self.__lendables = value
+        self._property_changed('lendables')        
+
+    @property
+    def assetClass(self) -> dict:
         return self.__assetClass
 
     @assetClass.setter
-    def assetClass(self, value):
+    def assetClass(self, value: dict):
         self.__assetClass = value
         self._property_changed('assetClass')        
 
     @property
-    def gsideid(self):
+    def gsideid(self) -> dict:
         return self.__gsideid
 
     @gsideid.setter
-    def gsideid(self, value):
+    def gsideid(self, value: dict):
         self.__gsideid = value
         self._property_changed('gsideid')        
 
@@ -3971,677 +4279,686 @@ class FieldFilterMap(Base):
         self._property_changed('bosInTicksLabel')        
 
     @property
-    def ric(self):
+    def ric(self) -> dict:
         return self.__ric
 
     @ric.setter
-    def ric(self, value):
+    def ric(self, value: dict):
         self.__ric = value
         self._property_changed('ric')        
 
     @property
-    def positionSourceId(self):
+    def positionSourceId(self) -> dict:
         return self.__positionSourceId
 
     @positionSourceId.setter
-    def positionSourceId(self, value):
+    def positionSourceId(self, value: dict):
         self.__positionSourceId = value
         self._property_changed('positionSourceId')        
 
     @property
-    def division(self):
+    def division(self) -> dict:
         return self.__division
 
     @division.setter
-    def division(self, value):
+    def division(self, value: dict):
         self.__division = value
         self._property_changed('division')        
 
     @property
-    def marketCapUSD(self):
+    def marketCapUSD(self) -> dict:
         return self.__marketCapUSD
 
     @marketCapUSD.setter
-    def marketCapUSD(self, value):
+    def marketCapUSD(self, value: dict):
         self.__marketCapUSD = value
         self._property_changed('marketCapUSD')        
 
     @property
-    def deploymentId(self):
+    def deploymentId(self) -> dict:
         return self.__deploymentId
 
     @deploymentId.setter
-    def deploymentId(self, value):
+    def deploymentId(self, value: dict):
         self.__deploymentId = value
         self._property_changed('deploymentId')        
 
     @property
-    def highPrice(self):
+    def highPrice(self) -> dict:
         return self.__highPrice
 
     @highPrice.setter
-    def highPrice(self, value):
+    def highPrice(self, value: dict):
         self.__highPrice = value
         self._property_changed('highPrice')        
 
     @property
-    def shortWeight(self):
+    def shortWeight(self) -> dict:
         return self.__shortWeight
 
     @shortWeight.setter
-    def shortWeight(self, value):
+    def shortWeight(self, value: dict):
         self.__shortWeight = value
         self._property_changed('shortWeight')        
 
     @property
-    def absoluteShares(self):
+    def absoluteShares(self) -> dict:
         return self.__absoluteShares
 
     @absoluteShares.setter
-    def absoluteShares(self, value):
+    def absoluteShares(self, value: dict):
         self.__absoluteShares = value
         self._property_changed('absoluteShares')        
 
     @property
-    def action(self):
+    def action(self) -> dict:
         return self.__action
 
     @action.setter
-    def action(self, value):
+    def action(self, value: dict):
         self.__action = value
         self._property_changed('action')        
 
     @property
-    def model(self):
+    def model(self) -> dict:
         return self.__model
 
     @model.setter
-    def model(self, value):
+    def model(self, value: dict):
         self.__model = value
         self._property_changed('model')        
 
     @property
-    def id(self):
+    def id(self) -> dict:
         return self.__id
 
     @id.setter
-    def id(self, value):
+    def id(self, value: dict):
         self.__id = value
         self._property_changed('id')        
 
     @property
-    def arrivalHaircutVwapNormalized(self):
+    def arrivalHaircutVwapNormalized(self) -> dict:
         return self.__arrivalHaircutVwapNormalized
 
     @arrivalHaircutVwapNormalized.setter
-    def arrivalHaircutVwapNormalized(self, value):
+    def arrivalHaircutVwapNormalized(self, value: dict):
         self.__arrivalHaircutVwapNormalized = value
         self._property_changed('arrivalHaircutVwapNormalized')        
 
     @property
-    def queueClockTimeDescription(self):
+    def queueClockTimeDescription(self) -> dict:
         return self.__queueClockTimeDescription
 
     @queueClockTimeDescription.setter
-    def queueClockTimeDescription(self, value):
+    def queueClockTimeDescription(self, value: dict):
         self.__queueClockTimeDescription = value
         self._property_changed('queueClockTimeDescription')        
 
     @property
-    def period(self):
+    def period(self) -> dict:
         return self.__period
 
     @period.setter
-    def period(self, value):
+    def period(self, value: dict):
         self.__period = value
         self._property_changed('period')        
 
     @property
-    def indexCreateSource(self):
+    def indexCreateSource(self) -> dict:
         return self.__indexCreateSource
 
     @indexCreateSource.setter
-    def indexCreateSource(self, value):
+    def indexCreateSource(self, value: dict):
         self.__indexCreateSource = value
         self._property_changed('indexCreateSource')        
 
     @property
-    def fiscalQuarter(self):
+    def fiscalQuarter(self) -> dict:
         return self.__fiscalQuarter
 
     @fiscalQuarter.setter
-    def fiscalQuarter(self, value):
+    def fiscalQuarter(self, value: dict):
         self.__fiscalQuarter = value
         self._property_changed('fiscalQuarter')        
 
     @property
-    def deltaStrike(self):
+    def deltaStrike(self) -> dict:
         return self.__deltaStrike
 
     @deltaStrike.setter
-    def deltaStrike(self, value):
+    def deltaStrike(self, value: dict):
         self.__deltaStrike = value
         self._property_changed('deltaStrike')        
 
     @property
-    def marketImpact(self):
+    def marketImpact(self) -> dict:
         return self.__marketImpact
 
     @marketImpact.setter
-    def marketImpact(self, value):
+    def marketImpact(self, value: dict):
         self.__marketImpact = value
         self._property_changed('marketImpact')        
 
     @property
-    def eventType(self):
+    def eventType(self) -> dict:
         return self.__eventType
 
     @eventType.setter
-    def eventType(self, value):
+    def eventType(self, value: dict):
         self.__eventType = value
         self._property_changed('eventType')        
 
     @property
-    def assetCountLong(self):
+    def assetCountLong(self) -> dict:
         return self.__assetCountLong
 
     @assetCountLong.setter
-    def assetCountLong(self, value):
+    def assetCountLong(self, value: dict):
         self.__assetCountLong = value
         self._property_changed('assetCountLong')        
 
     @property
-    def valueActual(self):
+    def valueActual(self) -> dict:
         return self.__valueActual
 
     @valueActual.setter
-    def valueActual(self, value):
+    def valueActual(self, value: dict):
         self.__valueActual = value
         self._property_changed('valueActual')        
 
     @property
-    def bcid(self):
+    def bcid(self) -> dict:
         return self.__bcid
 
     @bcid.setter
-    def bcid(self, value):
+    def bcid(self, value: dict):
         self.__bcid = value
         self._property_changed('bcid')        
 
     @property
-    def originalCountry(self):
+    def originalCountry(self) -> dict:
         return self.__originalCountry
 
     @originalCountry.setter
-    def originalCountry(self, value):
+    def originalCountry(self, value: dict):
         self.__originalCountry = value
         self._property_changed('originalCountry')        
 
     @property
-    def touchLiquidityScore(self):
+    def touchLiquidityScore(self) -> dict:
         return self.__touchLiquidityScore
 
     @touchLiquidityScore.setter
-    def touchLiquidityScore(self, value):
+    def touchLiquidityScore(self, value: dict):
         self.__touchLiquidityScore = value
         self._property_changed('touchLiquidityScore')        
 
     @property
-    def field(self):
+    def field(self) -> dict:
         return self.__field
 
     @field.setter
-    def field(self, value):
+    def field(self, value: dict):
         self.__field = value
         self._property_changed('field')        
 
     @property
-    def spot(self):
+    def spot(self) -> dict:
         return self.__spot
 
     @spot.setter
-    def spot(self, value):
+    def spot(self, value: dict):
         self.__spot = value
         self._property_changed('spot')        
 
     @property
-    def expectedCompletionDate(self):
+    def expectedCompletionDate(self) -> dict:
         return self.__expectedCompletionDate
 
     @expectedCompletionDate.setter
-    def expectedCompletionDate(self, value):
+    def expectedCompletionDate(self, value: dict):
         self.__expectedCompletionDate = value
         self._property_changed('expectedCompletionDate')        
 
     @property
-    def loanValue(self):
+    def loanValue(self) -> dict:
         return self.__loanValue
 
     @loanValue.setter
-    def loanValue(self, value):
+    def loanValue(self, value: dict):
         self.__loanValue = value
         self._property_changed('loanValue')        
 
     @property
-    def skew(self):
+    def skew(self) -> dict:
         return self.__skew
 
     @skew.setter
-    def skew(self, value):
+    def skew(self, value: dict):
         self.__skew = value
         self._property_changed('skew')        
 
     @property
-    def status(self):
+    def status(self) -> dict:
         return self.__status
 
     @status.setter
-    def status(self, value):
+    def status(self, value: dict):
         self.__status = value
         self._property_changed('status')        
 
     @property
-    def sustainEmergingMarkets(self):
+    def sustainEmergingMarkets(self) -> dict:
         return self.__sustainEmergingMarkets
 
     @sustainEmergingMarkets.setter
-    def sustainEmergingMarkets(self, value):
+    def sustainEmergingMarkets(self, value: dict):
         self.__sustainEmergingMarkets = value
         self._property_changed('sustainEmergingMarkets')        
 
     @property
-    def totalReturnPrice(self):
+    def totalReturnPrice(self) -> dict:
         return self.__totalReturnPrice
 
     @totalReturnPrice.setter
-    def totalReturnPrice(self, value):
+    def totalReturnPrice(self, value: dict):
         self.__totalReturnPrice = value
         self._property_changed('totalReturnPrice')        
 
     @property
-    def city(self):
+    def city(self) -> dict:
         return self.__city
 
     @city.setter
-    def city(self, value):
+    def city(self, value: dict):
         self.__city = value
         self._property_changed('city')        
 
     @property
-    def eventSource(self):
+    def eventSource(self) -> dict:
         return self.__eventSource
 
     @eventSource.setter
-    def eventSource(self, value):
+    def eventSource(self, value: dict):
         self.__eventSource = value
         self._property_changed('eventSource')        
 
     @property
-    def qisPermNo(self):
+    def qisPermNo(self) -> dict:
         return self.__qisPermNo
 
     @qisPermNo.setter
-    def qisPermNo(self, value):
+    def qisPermNo(self, value: dict):
         self.__qisPermNo = value
         self._property_changed('qisPermNo')        
 
     @property
-    def hitRateYtd(self):
+    def hitRateYtd(self) -> dict:
         return self.__hitRateYtd
 
     @hitRateYtd.setter
-    def hitRateYtd(self, value):
+    def hitRateYtd(self, value: dict):
         self.__hitRateYtd = value
         self._property_changed('hitRateYtd')        
 
     @property
-    def stsCommodity(self):
+    def stsCommodity(self) -> dict:
         return self.__stsCommodity
 
     @stsCommodity.setter
-    def stsCommodity(self, value):
+    def stsCommodity(self, value: dict):
         self.__stsCommodity = value
         self._property_changed('stsCommodity')        
 
     @property
-    def stsCommoditySector(self):
+    def stsCommoditySector(self) -> dict:
         return self.__stsCommoditySector
 
     @stsCommoditySector.setter
-    def stsCommoditySector(self, value):
+    def stsCommoditySector(self, value: dict):
         self.__stsCommoditySector = value
         self._property_changed('stsCommoditySector')        
 
     @property
-    def salesCoverage(self):
+    def salesCoverage(self) -> dict:
         return self.__salesCoverage
 
     @salesCoverage.setter
-    def salesCoverage(self, value):
+    def salesCoverage(self, value: dict):
         self.__salesCoverage = value
         self._property_changed('salesCoverage')        
 
     @property
-    def shortExposure(self):
+    def shortExposure(self) -> dict:
         return self.__shortExposure
 
     @shortExposure.setter
-    def shortExposure(self, value):
+    def shortExposure(self, value: dict):
         self.__shortExposure = value
         self._property_changed('shortExposure')        
 
     @property
-    def esScore(self):
+    def esScore(self) -> dict:
         return self.__esScore
 
     @esScore.setter
-    def esScore(self, value):
+    def esScore(self, value: dict):
         self.__esScore = value
         self._property_changed('esScore')        
 
     @property
-    def tcmCostParticipationRate10Pct(self):
+    def tcmCostParticipationRate10Pct(self) -> dict:
         return self.__tcmCostParticipationRate10Pct
 
     @tcmCostParticipationRate10Pct.setter
-    def tcmCostParticipationRate10Pct(self, value):
+    def tcmCostParticipationRate10Pct(self, value: dict):
         self.__tcmCostParticipationRate10Pct = value
         self._property_changed('tcmCostParticipationRate10Pct')        
 
     @property
-    def eventTime(self):
+    def eventTime(self) -> dict:
         return self.__eventTime
 
     @eventTime.setter
-    def eventTime(self, value):
+    def eventTime(self, value: dict):
         self.__eventTime = value
         self._property_changed('eventTime')        
 
     @property
-    def positionSourceName(self):
+    def positionSourceName(self) -> dict:
         return self.__positionSourceName
 
     @positionSourceName.setter
-    def positionSourceName(self, value):
+    def positionSourceName(self, value: dict):
         self.__positionSourceName = value
         self._property_changed('positionSourceName')        
 
     @property
-    def priceRangeInTicks(self):
+    def priceRangeInTicks(self) -> dict:
         return self.__priceRangeInTicks
 
     @priceRangeInTicks.setter
-    def priceRangeInTicks(self, value):
+    def priceRangeInTicks(self, value: dict):
         self.__priceRangeInTicks = value
         self._property_changed('priceRangeInTicks')        
 
     @property
-    def arrivalHaircutVwap(self):
+    def arrivalHaircutVwap(self) -> dict:
         return self.__arrivalHaircutVwap
 
     @arrivalHaircutVwap.setter
-    def arrivalHaircutVwap(self, value):
+    def arrivalHaircutVwap(self, value: dict):
         self.__arrivalHaircutVwap = value
         self._property_changed('arrivalHaircutVwap')        
 
     @property
-    def interestRate(self):
+    def interestRate(self) -> dict:
         return self.__interestRate
 
     @interestRate.setter
-    def interestRate(self, value):
+    def interestRate(self, value: dict):
         self.__interestRate = value
         self._property_changed('interestRate')        
 
     @property
-    def executionDays(self):
+    def executionDays(self) -> dict:
         return self.__executionDays
 
     @executionDays.setter
-    def executionDays(self, value):
+    def executionDays(self, value: dict):
         self.__executionDays = value
         self._property_changed('executionDays')        
 
     @property
-    def pctChange(self):
+    def pctChange(self) -> dict:
         return self.__pctChange
 
     @pctChange.setter
-    def pctChange(self, value):
+    def pctChange(self, value: dict):
         self.__pctChange = value
         self._property_changed('pctChange')        
 
     @property
-    def side(self):
+    def side(self) -> dict:
         return self.__side
 
     @side.setter
-    def side(self, value):
+    def side(self, value: dict):
         self.__side = value
         self._property_changed('side')        
 
     @property
-    def numberOfRolls(self):
+    def numberOfRolls(self) -> dict:
         return self.__numberOfRolls
 
     @numberOfRolls.setter
-    def numberOfRolls(self, value):
+    def numberOfRolls(self, value: dict):
         self.__numberOfRolls = value
         self._property_changed('numberOfRolls')        
 
     @property
-    def agentLenderFee(self):
+    def agentLenderFee(self) -> dict:
         return self.__agentLenderFee
 
     @agentLenderFee.setter
-    def agentLenderFee(self, value):
+    def agentLenderFee(self, value: dict):
         self.__agentLenderFee = value
         self._property_changed('agentLenderFee')        
 
     @property
-    def complianceRestrictedStatus(self):
+    def complianceRestrictedStatus(self) -> dict:
         return self.__complianceRestrictedStatus
 
     @complianceRestrictedStatus.setter
-    def complianceRestrictedStatus(self, value):
+    def complianceRestrictedStatus(self, value: dict):
         self.__complianceRestrictedStatus = value
         self._property_changed('complianceRestrictedStatus')        
 
     @property
-    def forward(self):
+    def forward(self) -> dict:
         return self.__forward
 
     @forward.setter
-    def forward(self, value):
+    def forward(self, value: dict):
         self.__forward = value
         self._property_changed('forward')        
 
     @property
-    def borrowFee(self):
+    def borrowFee(self) -> dict:
         return self.__borrowFee
 
     @borrowFee.setter
-    def borrowFee(self, value):
+    def borrowFee(self, value: dict):
         self.__borrowFee = value
         self._property_changed('borrowFee')        
 
     @property
-    def strike(self):
+    def strike(self) -> dict:
         return self.__strike
 
     @strike.setter
-    def strike(self, value):
+    def strike(self, value: dict):
         self.__strike = value
         self._property_changed('strike')        
 
     @property
-    def loanSpread(self):
+    def loanSpread(self) -> dict:
         return self.__loanSpread
 
     @loanSpread.setter
-    def loanSpread(self, value):
+    def loanSpread(self, value: dict):
         self.__loanSpread = value
         self._property_changed('loanSpread')        
 
     @property
-    def tcmCostHorizon12Hour(self):
+    def tcmCostHorizon12Hour(self) -> dict:
         return self.__tcmCostHorizon12Hour
 
     @tcmCostHorizon12Hour.setter
-    def tcmCostHorizon12Hour(self, value):
+    def tcmCostHorizon12Hour(self, value: dict):
         self.__tcmCostHorizon12Hour = value
         self._property_changed('tcmCostHorizon12Hour')        
 
     @property
-    def dewPoint(self):
+    def dewPoint(self) -> dict:
         return self.__dewPoint
 
     @dewPoint.setter
-    def dewPoint(self, value):
+    def dewPoint(self, value: dict):
         self.__dewPoint = value
         self._property_changed('dewPoint')        
 
     @property
-    def researchCommission(self):
+    def researchCommission(self) -> dict:
         return self.__researchCommission
 
     @researchCommission.setter
-    def researchCommission(self, value):
+    def researchCommission(self, value: dict):
         self.__researchCommission = value
         self._property_changed('researchCommission')        
 
     @property
-    def bbid(self):
+    def bbid(self) -> dict:
         return self.__bbid
 
     @bbid.setter
-    def bbid(self, value):
+    def bbid(self, value: dict):
         self.__bbid = value
         self._property_changed('bbid')        
 
     @property
-    def eventStatus(self):
+    def assetClassificationsRiskCountryCode(self) -> dict:
+        return self.__assetClassificationsRiskCountryCode
+
+    @assetClassificationsRiskCountryCode.setter
+    def assetClassificationsRiskCountryCode(self, value: dict):
+        self.__assetClassificationsRiskCountryCode = value
+        self._property_changed('assetClassificationsRiskCountryCode')        
+
+    @property
+    def eventStatus(self) -> dict:
         return self.__eventStatus
 
     @eventStatus.setter
-    def eventStatus(self, value):
+    def eventStatus(self, value: dict):
         self.__eventStatus = value
         self._property_changed('eventStatus')        
 
     @property
-    def return_(self):
+    def return_(self) -> dict:
         return self.__return
 
     @return_.setter
-    def return_(self, value):
+    def return_(self, value: dict):
         self.__return = value
         self._property_changed('return')        
 
     @property
-    def maxTemperature(self):
+    def maxTemperature(self) -> dict:
         return self.__maxTemperature
 
     @maxTemperature.setter
-    def maxTemperature(self, value):
+    def maxTemperature(self, value: dict):
         self.__maxTemperature = value
         self._property_changed('maxTemperature')        
 
     @property
-    def acquirerShareholderMeetingDate(self):
+    def acquirerShareholderMeetingDate(self) -> dict:
         return self.__acquirerShareholderMeetingDate
 
     @acquirerShareholderMeetingDate.setter
-    def acquirerShareholderMeetingDate(self, value):
+    def acquirerShareholderMeetingDate(self, value: dict):
         self.__acquirerShareholderMeetingDate = value
         self._property_changed('acquirerShareholderMeetingDate')        
 
     @property
-    def arrivalMidNormalized(self):
+    def arrivalMidNormalized(self) -> dict:
         return self.__arrivalMidNormalized
 
     @arrivalMidNormalized.setter
-    def arrivalMidNormalized(self, value):
+    def arrivalMidNormalized(self, value: dict):
         self.__arrivalMidNormalized = value
         self._property_changed('arrivalMidNormalized')        
 
     @property
-    def rating(self):
+    def rating(self) -> dict:
         return self.__rating
 
     @rating.setter
-    def rating(self, value):
+    def rating(self, value: dict):
         self.__rating = value
         self._property_changed('rating')        
 
     @property
-    def arrivalRtNormalized(self):
+    def arrivalRtNormalized(self) -> dict:
         return self.__arrivalRtNormalized
 
     @arrivalRtNormalized.setter
-    def arrivalRtNormalized(self, value):
+    def arrivalRtNormalized(self, value: dict):
         self.__arrivalRtNormalized = value
         self._property_changed('arrivalRtNormalized')        
 
     @property
-    def performanceFee(self):
+    def performanceFee(self) -> dict:
         return self.__performanceFee
 
     @performanceFee.setter
-    def performanceFee(self, value):
+    def performanceFee(self, value: dict):
         self.__performanceFee = value
         self._property_changed('performanceFee')        
 
     @property
-    def reportType(self):
+    def reportType(self) -> dict:
         return self.__reportType
 
     @reportType.setter
-    def reportType(self, value):
+    def reportType(self, value: dict):
         self.__reportType = value
         self._property_changed('reportType')        
 
     @property
-    def sourceURL(self):
+    def sourceURL(self) -> dict:
         return self.__sourceURL
 
     @sourceURL.setter
-    def sourceURL(self, value):
+    def sourceURL(self, value: dict):
         self.__sourceURL = value
         self._property_changed('sourceURL')        
 
     @property
-    def estimatedReturn(self):
+    def estimatedReturn(self) -> dict:
         return self.__estimatedReturn
 
     @estimatedReturn.setter
-    def estimatedReturn(self, value):
+    def estimatedReturn(self, value: dict):
         self.__estimatedReturn = value
         self._property_changed('estimatedReturn')        
 
     @property
-    def underlyingAssetIds(self):
+    def underlyingAssetIds(self) -> dict:
         return self.__underlyingAssetIds
 
     @underlyingAssetIds.setter
-    def underlyingAssetIds(self, value):
+    def underlyingAssetIds(self, value: dict):
         self.__underlyingAssetIds = value
         self._property_changed('underlyingAssetIds')        
 
     @property
-    def high(self):
+    def high(self) -> dict:
         return self.__high
 
     @high.setter
-    def high(self, value):
+    def high(self, value: dict):
         self.__high = value
         self._property_changed('high')        
 
     @property
-    def sourceLastUpdate(self):
+    def sourceLastUpdate(self) -> dict:
         return self.__sourceLastUpdate
 
     @sourceLastUpdate.setter
-    def sourceLastUpdate(self, value):
+    def sourceLastUpdate(self, value: dict):
         self.__sourceLastUpdate = value
         self._property_changed('sourceLastUpdate')        
 
@@ -4655,74 +4972,74 @@ class FieldFilterMap(Base):
         self._property_changed('queueInLotsLabel')        
 
     @property
-    def adv10DayPct(self):
+    def adv10DayPct(self) -> dict:
         return self.__adv10DayPct
 
     @adv10DayPct.setter
-    def adv10DayPct(self, value):
+    def adv10DayPct(self, value: dict):
         self.__adv10DayPct = value
         self._property_changed('adv10DayPct')        
 
     @property
-    def longConvictionMedium(self):
+    def longConvictionMedium(self) -> dict:
         return self.__longConvictionMedium
 
     @longConvictionMedium.setter
-    def longConvictionMedium(self, value):
+    def longConvictionMedium(self, value: dict):
         self.__longConvictionMedium = value
         self._property_changed('longConvictionMedium')        
 
     @property
-    def eventName(self):
+    def eventName(self) -> dict:
         return self.__eventName
 
     @eventName.setter
-    def eventName(self, value):
+    def eventName(self, value: dict):
         self.__eventName = value
         self._property_changed('eventName')        
 
     @property
-    def annualRisk(self):
+    def annualRisk(self) -> dict:
         return self.__annualRisk
 
     @annualRisk.setter
-    def annualRisk(self, value):
+    def annualRisk(self, value: dict):
         self.__annualRisk = value
         self._property_changed('annualRisk')        
 
     @property
-    def dailyTrackingError(self):
+    def dailyTrackingError(self) -> dict:
         return self.__dailyTrackingError
 
     @dailyTrackingError.setter
-    def dailyTrackingError(self, value):
+    def dailyTrackingError(self, value: dict):
         self.__dailyTrackingError = value
         self._property_changed('dailyTrackingError')        
 
     @property
-    def unadjustedBid(self):
+    def unadjustedBid(self) -> dict:
         return self.__unadjustedBid
 
     @unadjustedBid.setter
-    def unadjustedBid(self, value):
+    def unadjustedBid(self, value: dict):
         self.__unadjustedBid = value
         self._property_changed('unadjustedBid')        
 
     @property
-    def gsdeer(self):
+    def gsdeer(self) -> dict:
         return self.__gsdeer
 
     @gsdeer.setter
-    def gsdeer(self, value):
+    def gsdeer(self, value: dict):
         self.__gsdeer = value
         self._property_changed('gsdeer')        
 
     @property
-    def marketCap(self):
+    def marketCap(self) -> dict:
         return self.__marketCap
 
     @marketCap.setter
-    def marketCap(self, value):
+    def marketCap(self, value: dict):
         self.__marketCap = value
         self._property_changed('marketCap')        
 
@@ -4736,2252 +5053,2342 @@ class FieldFilterMap(Base):
         self._property_changed('clusterRegion')        
 
     @property
-    def bbidEquivalent(self):
+    def bbidEquivalent(self) -> dict:
         return self.__bbidEquivalent
 
     @bbidEquivalent.setter
-    def bbidEquivalent(self, value):
+    def bbidEquivalent(self, value: dict):
         self.__bbidEquivalent = value
         self._property_changed('bbidEquivalent')        
 
     @property
-    def prevCloseAsk(self):
+    def prevCloseAsk(self) -> dict:
         return self.__prevCloseAsk
 
     @prevCloseAsk.setter
-    def prevCloseAsk(self, value):
+    def prevCloseAsk(self, value: dict):
         self.__prevCloseAsk = value
         self._property_changed('prevCloseAsk')        
 
     @property
-    def level(self):
+    def level(self) -> dict:
         return self.__level
 
     @level.setter
-    def level(self, value):
+    def level(self, value: dict):
         self.__level = value
         self._property_changed('level')        
 
     @property
-    def valoren(self):
+    def valoren(self) -> dict:
         return self.__valoren
 
     @valoren.setter
-    def valoren(self, value):
+    def valoren(self, value: dict):
         self.__valoren = value
         self._property_changed('valoren')        
 
     @property
-    def pressure(self):
+    def pressure(self) -> dict:
         return self.__pressure
 
     @pressure.setter
-    def pressure(self, value):
+    def pressure(self, value: dict):
         self.__pressure = value
         self._property_changed('pressure')        
 
     @property
-    def shortDescription(self):
+    def shortDescription(self) -> dict:
         return self.__shortDescription
 
     @shortDescription.setter
-    def shortDescription(self, value):
+    def shortDescription(self, value: dict):
         self.__shortDescription = value
         self._property_changed('shortDescription')        
 
     @property
-    def basis(self):
+    def basis(self) -> dict:
         return self.__basis
 
     @basis.setter
-    def basis(self, value):
+    def basis(self, value: dict):
         self.__basis = value
         self._property_changed('basis')        
 
     @property
-    def netWeight(self):
+    def netWeight(self) -> dict:
         return self.__netWeight
 
     @netWeight.setter
-    def netWeight(self, value):
+    def netWeight(self, value: dict):
         self.__netWeight = value
         self._property_changed('netWeight')        
 
     @property
-    def hedgeId(self):
+    def hedgeId(self) -> dict:
         return self.__hedgeId
 
     @hedgeId.setter
-    def hedgeId(self, value):
+    def hedgeId(self, value: dict):
         self.__hedgeId = value
         self._property_changed('hedgeId')        
 
     @property
-    def portfolioManagers(self):
+    def portfolioManagers(self) -> dict:
         return self.__portfolioManagers
 
     @portfolioManagers.setter
-    def portfolioManagers(self, value):
+    def portfolioManagers(self, value: dict):
         self.__portfolioManagers = value
         self._property_changed('portfolioManagers')        
 
     @property
-    def bosInTicks(self):
+    def assetParametersCommoditySector(self) -> dict:
+        return self.__assetParametersCommoditySector
+
+    @assetParametersCommoditySector.setter
+    def assetParametersCommoditySector(self, value: dict):
+        self.__assetParametersCommoditySector = value
+        self._property_changed('assetParametersCommoditySector')        
+
+    @property
+    def bosInTicks(self) -> dict:
         return self.__bosInTicks
 
     @bosInTicks.setter
-    def bosInTicks(self, value):
+    def bosInTicks(self, value: dict):
         self.__bosInTicks = value
         self._property_changed('bosInTicks')        
 
     @property
-    def tcmCostHorizon8Day(self):
+    def tcmCostHorizon8Day(self) -> dict:
         return self.__tcmCostHorizon8Day
 
     @tcmCostHorizon8Day.setter
-    def tcmCostHorizon8Day(self, value):
+    def tcmCostHorizon8Day(self, value: dict):
         self.__tcmCostHorizon8Day = value
         self._property_changed('tcmCostHorizon8Day')        
 
     @property
-    def supraStrategy(self):
+    def supraStrategy(self) -> dict:
         return self.__supraStrategy
 
     @supraStrategy.setter
-    def supraStrategy(self, value):
+    def supraStrategy(self, value: dict):
         self.__supraStrategy = value
         self._property_changed('supraStrategy')        
 
     @property
-    def adv5DayPct(self):
+    def adv5DayPct(self) -> dict:
         return self.__adv5DayPct
 
     @adv5DayPct.setter
-    def adv5DayPct(self, value):
+    def adv5DayPct(self, value: dict):
         self.__adv5DayPct = value
         self._property_changed('adv5DayPct')        
 
     @property
-    def factorSource(self):
+    def factorSource(self) -> dict:
         return self.__factorSource
 
     @factorSource.setter
-    def factorSource(self, value):
+    def factorSource(self, value: dict):
         self.__factorSource = value
         self._property_changed('factorSource')        
 
     @property
-    def leverage(self):
+    def leverage(self) -> dict:
         return self.__leverage
 
     @leverage.setter
-    def leverage(self, value):
+    def leverage(self, value: dict):
         self.__leverage = value
         self._property_changed('leverage')        
 
     @property
-    def submitter(self):
+    def submitter(self) -> dict:
         return self.__submitter
 
     @submitter.setter
-    def submitter(self, value):
+    def submitter(self, value: dict):
         self.__submitter = value
         self._property_changed('submitter')        
 
     @property
-    def notional(self):
+    def notional(self) -> dict:
         return self.__notional
 
     @notional.setter
-    def notional(self, value):
+    def notional(self, value: dict):
         self.__notional = value
         self._property_changed('notional')        
 
     @property
-    def esDisclosurePercentage(self):
+    def esDisclosurePercentage(self) -> dict:
         return self.__esDisclosurePercentage
 
     @esDisclosurePercentage.setter
-    def esDisclosurePercentage(self, value):
+    def esDisclosurePercentage(self, value: dict):
         self.__esDisclosurePercentage = value
         self._property_changed('esDisclosurePercentage')        
 
     @property
-    def clientShortName(self):
+    def clientShortName(self) -> dict:
         return self.__clientShortName
 
     @clientShortName.setter
-    def clientShortName(self, value):
+    def clientShortName(self, value: dict):
         self.__clientShortName = value
         self._property_changed('clientShortName')        
 
     @property
-    def fwdPoints(self):
+    def fwdPoints(self) -> dict:
         return self.__fwdPoints
 
     @fwdPoints.setter
-    def fwdPoints(self, value):
+    def fwdPoints(self, value: dict):
         self.__fwdPoints = value
         self._property_changed('fwdPoints')        
 
     @property
-    def groupCategory(self):
+    def groupCategory(self) -> dict:
         return self.__groupCategory
 
     @groupCategory.setter
-    def groupCategory(self, value):
+    def groupCategory(self, value: dict):
         self.__groupCategory = value
         self._property_changed('groupCategory')        
 
     @property
-    def kpiId(self):
+    def kpiId(self) -> dict:
         return self.__kpiId
 
     @kpiId.setter
-    def kpiId(self, value):
+    def kpiId(self, value: dict):
         self.__kpiId = value
         self._property_changed('kpiId')        
 
     @property
-    def relativeReturnWtd(self):
+    def relativeReturnWtd(self) -> dict:
         return self.__relativeReturnWtd
 
     @relativeReturnWtd.setter
-    def relativeReturnWtd(self, value):
+    def relativeReturnWtd(self, value: dict):
         self.__relativeReturnWtd = value
         self._property_changed('relativeReturnWtd')        
 
     @property
-    def total(self):
+    def bidPlusAsk(self) -> dict:
+        return self.__bidPlusAsk
+
+    @bidPlusAsk.setter
+    def bidPlusAsk(self, value: dict):
+        self.__bidPlusAsk = value
+        self._property_changed('bidPlusAsk')        
+
+    @property
+    def assetClassificationsRiskCountryName(self) -> dict:
+        return self.__assetClassificationsRiskCountryName
+
+    @assetClassificationsRiskCountryName.setter
+    def assetClassificationsRiskCountryName(self, value: dict):
+        self.__assetClassificationsRiskCountryName = value
+        self._property_changed('assetClassificationsRiskCountryName')        
+
+    @property
+    def total(self) -> dict:
         return self.__total
 
     @total.setter
-    def total(self, value):
+    def total(self, value: dict):
         self.__total = value
         self._property_changed('total')        
 
     @property
-    def riskModel(self):
+    def riskModel(self) -> dict:
         return self.__riskModel
 
     @riskModel.setter
-    def riskModel(self, value):
+    def riskModel(self, value: dict):
         self.__riskModel = value
         self._property_changed('riskModel')        
 
     @property
-    def assetId(self):
+    def assetId(self) -> dict:
         return self.__assetId
 
     @assetId.setter
-    def assetId(self, value):
+    def assetId(self, value: dict):
         self.__assetId = value
         self._property_changed('assetId')        
 
     @property
-    def fairValue(self):
+    def fairValue(self) -> dict:
         return self.__fairValue
 
     @fairValue.setter
-    def fairValue(self, value):
+    def fairValue(self, value: dict):
         self.__fairValue = value
         self._property_changed('fairValue')        
 
     @property
-    def adjustedHighPrice(self):
+    def adjustedHighPrice(self) -> dict:
         return self.__adjustedHighPrice
 
     @adjustedHighPrice.setter
-    def adjustedHighPrice(self, value):
+    def adjustedHighPrice(self, value: dict):
         self.__adjustedHighPrice = value
         self._property_changed('adjustedHighPrice')        
 
     @property
-    def beta(self):
+    def beta(self) -> dict:
         return self.__beta
 
     @beta.setter
-    def beta(self, value):
+    def beta(self, value: dict):
         self.__beta = value
         self._property_changed('beta')        
 
     @property
-    def direction(self):
+    def direction(self) -> dict:
         return self.__direction
 
     @direction.setter
-    def direction(self, value):
+    def direction(self, value: dict):
         self.__direction = value
         self._property_changed('direction')        
 
     @property
-    def valueForecast(self):
+    def valueForecast(self) -> dict:
         return self.__valueForecast
 
     @valueForecast.setter
-    def valueForecast(self, value):
+    def valueForecast(self, value: dict):
         self.__valueForecast = value
         self._property_changed('valueForecast')        
 
     @property
-    def longExposure(self):
+    def longExposure(self) -> dict:
         return self.__longExposure
 
     @longExposure.setter
-    def longExposure(self, value):
+    def longExposure(self, value: dict):
         self.__longExposure = value
         self._property_changed('longExposure')        
 
     @property
-    def positionSourceType(self):
+    def positionSourceType(self) -> dict:
         return self.__positionSourceType
 
     @positionSourceType.setter
-    def positionSourceType(self, value):
+    def positionSourceType(self, value: dict):
         self.__positionSourceType = value
         self._property_changed('positionSourceType')        
 
     @property
-    def tcmCostParticipationRate20Pct(self):
+    def tcmCostParticipationRate20Pct(self) -> dict:
         return self.__tcmCostParticipationRate20Pct
 
     @tcmCostParticipationRate20Pct.setter
-    def tcmCostParticipationRate20Pct(self, value):
+    def tcmCostParticipationRate20Pct(self, value: dict):
         self.__tcmCostParticipationRate20Pct = value
         self._property_changed('tcmCostParticipationRate20Pct')        
 
     @property
-    def adjustedClosePrice(self):
+    def adjustedClosePrice(self) -> dict:
         return self.__adjustedClosePrice
 
     @adjustedClosePrice.setter
-    def adjustedClosePrice(self, value):
+    def adjustedClosePrice(self, value: dict):
         self.__adjustedClosePrice = value
         self._property_changed('adjustedClosePrice')        
 
     @property
-    def cross(self):
+    def cross(self) -> dict:
         return self.__cross
 
     @cross.setter
-    def cross(self, value):
+    def cross(self, value: dict):
         self.__cross = value
         self._property_changed('cross')        
 
     @property
-    def lmsId(self):
+    def lmsId(self) -> dict:
         return self.__lmsId
 
     @lmsId.setter
-    def lmsId(self, value):
+    def lmsId(self, value: dict):
         self.__lmsId = value
         self._property_changed('lmsId')        
 
     @property
-    def rebateRate(self):
+    def rebateRate(self) -> dict:
         return self.__rebateRate
 
     @rebateRate.setter
-    def rebateRate(self, value):
+    def rebateRate(self, value: dict):
         self.__rebateRate = value
         self._property_changed('rebateRate')        
 
     @property
-    def ideaStatus(self):
+    def ideaStatus(self) -> dict:
         return self.__ideaStatus
 
     @ideaStatus.setter
-    def ideaStatus(self, value):
+    def ideaStatus(self, value: dict):
         self.__ideaStatus = value
         self._property_changed('ideaStatus')        
 
     @property
-    def participationRate(self):
+    def participationRate(self) -> dict:
         return self.__participationRate
 
     @participationRate.setter
-    def participationRate(self, value):
+    def participationRate(self, value: dict):
         self.__participationRate = value
         self._property_changed('participationRate')        
 
     @property
-    def fxForecast(self):
+    def obfr(self) -> dict:
+        return self.__obfr
+
+    @obfr.setter
+    def obfr(self, value: dict):
+        self.__obfr = value
+        self._property_changed('obfr')        
+
+    @property
+    def fxForecast(self) -> dict:
         return self.__fxForecast
 
     @fxForecast.setter
-    def fxForecast(self, value):
+    def fxForecast(self, value: dict):
         self.__fxForecast = value
         self._property_changed('fxForecast')        
 
     @property
-    def fixingTimeLabel(self):
+    def fixingTimeLabel(self) -> dict:
         return self.__fixingTimeLabel
 
     @fixingTimeLabel.setter
-    def fixingTimeLabel(self, value):
+    def fixingTimeLabel(self, value: dict):
         self.__fixingTimeLabel = value
         self._property_changed('fixingTimeLabel')        
 
     @property
-    def fillId(self):
+    def fillId(self) -> dict:
         return self.__fillId
 
     @fillId.setter
-    def fillId(self, value):
+    def fillId(self, value: dict):
         self.__fillId = value
         self._property_changed('fillId')        
 
     @property
-    def esNumericScore(self):
+    def esNumericScore(self) -> dict:
         return self.__esNumericScore
 
     @esNumericScore.setter
-    def esNumericScore(self, value):
+    def esNumericScore(self, value: dict):
         self.__esNumericScore = value
         self._property_changed('esNumericScore')        
 
     @property
-    def inBenchmark(self):
+    def inBenchmark(self) -> dict:
         return self.__inBenchmark
 
     @inBenchmark.setter
-    def inBenchmark(self, value):
+    def inBenchmark(self, value: dict):
         self.__inBenchmark = value
         self._property_changed('inBenchmark')        
 
     @property
-    def strategy(self):
+    def strategy(self) -> dict:
         return self.__strategy
 
     @strategy.setter
-    def strategy(self, value):
+    def strategy(self, value: dict):
         self.__strategy = value
         self._property_changed('strategy')        
 
     @property
-    def shortInterest(self):
+    def shortInterest(self) -> dict:
         return self.__shortInterest
 
     @shortInterest.setter
-    def shortInterest(self, value):
+    def shortInterest(self, value: dict):
         self.__shortInterest = value
         self._property_changed('shortInterest')        
 
     @property
-    def referencePeriod(self):
+    def referencePeriod(self) -> dict:
         return self.__referencePeriod
 
     @referencePeriod.setter
-    def referencePeriod(self, value):
+    def referencePeriod(self, value: dict):
         self.__referencePeriod = value
         self._property_changed('referencePeriod')        
 
     @property
-    def adjustedVolume(self):
+    def adjustedVolume(self) -> dict:
         return self.__adjustedVolume
 
     @adjustedVolume.setter
-    def adjustedVolume(self, value):
+    def adjustedVolume(self, value: dict):
         self.__adjustedVolume = value
         self._property_changed('adjustedVolume')        
 
     @property
-    def queueInLotsDescription(self):
+    def queueInLotsDescription(self) -> dict:
         return self.__queueInLotsDescription
 
     @queueInLotsDescription.setter
-    def queueInLotsDescription(self, value):
+    def queueInLotsDescription(self, value: dict):
         self.__queueInLotsDescription = value
         self._property_changed('queueInLotsDescription')        
 
     @property
-    def pbClientId(self):
+    def pbClientId(self) -> dict:
         return self.__pbClientId
 
     @pbClientId.setter
-    def pbClientId(self, value):
+    def pbClientId(self, value: dict):
         self.__pbClientId = value
         self._property_changed('pbClientId')        
 
     @property
-    def ownerId(self):
+    def ownerId(self) -> dict:
         return self.__ownerId
 
     @ownerId.setter
-    def ownerId(self, value):
+    def ownerId(self, value: dict):
         self.__ownerId = value
         self._property_changed('ownerId')        
 
     @property
-    def secDB(self):
+    def secDB(self) -> dict:
         return self.__secDB
 
     @secDB.setter
-    def secDB(self, value):
+    def secDB(self, value: dict):
         self.__secDB = value
         self._property_changed('secDB')        
 
     @property
-    def composite10DayAdv(self):
+    def composite10DayAdv(self) -> dict:
         return self.__composite10DayAdv
 
     @composite10DayAdv.setter
-    def composite10DayAdv(self, value):
+    def composite10DayAdv(self, value: dict):
         self.__composite10DayAdv = value
         self._property_changed('composite10DayAdv')        
 
     @property
-    def objective(self):
+    def objective(self) -> dict:
         return self.__objective
 
     @objective.setter
-    def objective(self, value):
+    def objective(self, value: dict):
         self.__objective = value
         self._property_changed('objective')        
 
     @property
-    def navPrice(self):
+    def navPrice(self) -> dict:
         return self.__navPrice
 
     @navPrice.setter
-    def navPrice(self, value):
+    def navPrice(self, value: dict):
         self.__navPrice = value
         self._property_changed('navPrice')        
 
     @property
-    def ideaActivityType(self):
+    def ideaActivityType(self) -> dict:
         return self.__ideaActivityType
 
     @ideaActivityType.setter
-    def ideaActivityType(self, value):
+    def ideaActivityType(self, value: dict):
         self.__ideaActivityType = value
         self._property_changed('ideaActivityType')        
 
     @property
-    def precipitation(self):
+    def precipitation(self) -> dict:
         return self.__precipitation
 
     @precipitation.setter
-    def precipitation(self, value):
+    def precipitation(self, value: dict):
         self.__precipitation = value
         self._property_changed('precipitation')        
 
     @property
-    def ideaSource(self):
+    def ideaSource(self) -> dict:
         return self.__ideaSource
 
     @ideaSource.setter
-    def ideaSource(self, value):
+    def ideaSource(self, value: dict):
         self.__ideaSource = value
         self._property_changed('ideaSource')        
 
     @property
-    def hedgeNotional(self):
+    def hedgeNotional(self) -> dict:
         return self.__hedgeNotional
 
     @hedgeNotional.setter
-    def hedgeNotional(self, value):
+    def hedgeNotional(self, value: dict):
         self.__hedgeNotional = value
         self._property_changed('hedgeNotional')        
 
     @property
-    def askLow(self):
+    def askLow(self) -> dict:
         return self.__askLow
 
     @askLow.setter
-    def askLow(self, value):
+    def askLow(self, value: dict):
         self.__askLow = value
         self._property_changed('askLow')        
 
     @property
-    def unadjustedAsk(self):
+    def unadjustedAsk(self) -> dict:
         return self.__unadjustedAsk
 
     @unadjustedAsk.setter
-    def unadjustedAsk(self, value):
+    def unadjustedAsk(self, value: dict):
         self.__unadjustedAsk = value
         self._property_changed('unadjustedAsk')        
 
     @property
-    def betaAdjustedNetExposure(self):
+    def betaAdjustedNetExposure(self) -> dict:
         return self.__betaAdjustedNetExposure
 
     @betaAdjustedNetExposure.setter
-    def betaAdjustedNetExposure(self, value):
+    def betaAdjustedNetExposure(self, value: dict):
         self.__betaAdjustedNetExposure = value
         self._property_changed('betaAdjustedNetExposure')        
 
     @property
-    def expiry(self):
+    def expiry(self) -> dict:
         return self.__expiry
 
     @expiry.setter
-    def expiry(self, value):
+    def expiry(self, value: dict):
         self.__expiry = value
         self._property_changed('expiry')        
 
     @property
-    def tradingPnl(self):
+    def tradingPnl(self) -> dict:
         return self.__tradingPnl
 
     @tradingPnl.setter
-    def tradingPnl(self, value):
+    def tradingPnl(self, value: dict):
         self.__tradingPnl = value
         self._property_changed('tradingPnl')        
 
     @property
-    def strikePercentage(self):
+    def strikePercentage(self) -> dict:
         return self.__strikePercentage
 
     @strikePercentage.setter
-    def strikePercentage(self, value):
+    def strikePercentage(self, value: dict):
         self.__strikePercentage = value
         self._property_changed('strikePercentage')        
 
     @property
-    def excessReturnPrice(self):
+    def excessReturnPrice(self) -> dict:
         return self.__excessReturnPrice
 
     @excessReturnPrice.setter
-    def excessReturnPrice(self, value):
+    def excessReturnPrice(self, value: dict):
         self.__excessReturnPrice = value
         self._property_changed('excessReturnPrice')        
 
     @property
-    def shortConvictionSmall(self):
+    def givenPlusPaid(self) -> dict:
+        return self.__givenPlusPaid
+
+    @givenPlusPaid.setter
+    def givenPlusPaid(self, value: dict):
+        self.__givenPlusPaid = value
+        self._property_changed('givenPlusPaid')        
+
+    @property
+    def shortConvictionSmall(self) -> dict:
         return self.__shortConvictionSmall
 
     @shortConvictionSmall.setter
-    def shortConvictionSmall(self, value):
+    def shortConvictionSmall(self, value: dict):
         self.__shortConvictionSmall = value
         self._property_changed('shortConvictionSmall')        
 
     @property
-    def prevCloseBid(self):
+    def prevCloseBid(self) -> dict:
         return self.__prevCloseBid
 
     @prevCloseBid.setter
-    def prevCloseBid(self, value):
+    def prevCloseBid(self, value: dict):
         self.__prevCloseBid = value
         self._property_changed('prevCloseBid')        
 
     @property
-    def fxPnl(self):
+    def fxPnl(self) -> dict:
         return self.__fxPnl
 
     @fxPnl.setter
-    def fxPnl(self, value):
+    def fxPnl(self, value: dict):
         self.__fxPnl = value
         self._property_changed('fxPnl')        
 
     @property
-    def forecast(self):
+    def forecast(self) -> dict:
         return self.__forecast
 
     @forecast.setter
-    def forecast(self, value):
+    def forecast(self, value: dict):
         self.__forecast = value
         self._property_changed('forecast')        
 
     @property
-    def tcmCostHorizon16Day(self):
+    def tcmCostHorizon16Day(self) -> dict:
         return self.__tcmCostHorizon16Day
 
     @tcmCostHorizon16Day.setter
-    def tcmCostHorizon16Day(self, value):
+    def tcmCostHorizon16Day(self, value: dict):
         self.__tcmCostHorizon16Day = value
         self._property_changed('tcmCostHorizon16Day')        
 
     @property
-    def pnl(self):
+    def pnl(self) -> dict:
         return self.__pnl
 
     @pnl.setter
-    def pnl(self, value):
+    def pnl(self, value: dict):
         self.__pnl = value
         self._property_changed('pnl')        
 
     @property
-    def assetClassificationsGicsIndustryGroup(self):
+    def assetClassificationsGicsIndustryGroup(self) -> dict:
         return self.__assetClassificationsGicsIndustryGroup
 
     @assetClassificationsGicsIndustryGroup.setter
-    def assetClassificationsGicsIndustryGroup(self, value):
+    def assetClassificationsGicsIndustryGroup(self, value: dict):
         self.__assetClassificationsGicsIndustryGroup = value
         self._property_changed('assetClassificationsGicsIndustryGroup')        
 
     @property
-    def unadjustedClose(self):
+    def unadjustedClose(self) -> dict:
         return self.__unadjustedClose
 
     @unadjustedClose.setter
-    def unadjustedClose(self, value):
+    def unadjustedClose(self, value: dict):
         self.__unadjustedClose = value
         self._property_changed('unadjustedClose')        
 
     @property
-    def tcmCostHorizon4Day(self):
+    def tcmCostHorizon4Day(self) -> dict:
         return self.__tcmCostHorizon4Day
 
     @tcmCostHorizon4Day.setter
-    def tcmCostHorizon4Day(self, value):
+    def tcmCostHorizon4Day(self, value: dict):
         self.__tcmCostHorizon4Day = value
         self._property_changed('tcmCostHorizon4Day')        
 
     @property
-    def assetClassificationsIsPrimary(self):
+    def assetClassificationsIsPrimary(self) -> dict:
         return self.__assetClassificationsIsPrimary
 
     @assetClassificationsIsPrimary.setter
-    def assetClassificationsIsPrimary(self, value):
+    def assetClassificationsIsPrimary(self, value: dict):
         self.__assetClassificationsIsPrimary = value
         self._property_changed('assetClassificationsIsPrimary')        
 
     @property
-    def styles(self):
+    def styles(self) -> dict:
         return self.__styles
 
     @styles.setter
-    def styles(self, value):
+    def styles(self, value: dict):
         self.__styles = value
         self._property_changed('styles')        
 
     @property
-    def shortName(self):
+    def lendingSecId(self) -> dict:
+        return self.__lendingSecId
+
+    @lendingSecId.setter
+    def lendingSecId(self, value: dict):
+        self.__lendingSecId = value
+        self._property_changed('lendingSecId')        
+
+    @property
+    def shortName(self) -> dict:
         return self.__shortName
 
     @shortName.setter
-    def shortName(self, value):
+    def shortName(self, value: dict):
         self.__shortName = value
         self._property_changed('shortName')        
 
     @property
-    def equityTheta(self):
+    def equityTheta(self) -> dict:
         return self.__equityTheta
 
     @equityTheta.setter
-    def equityTheta(self, value):
+    def equityTheta(self, value: dict):
         self.__equityTheta = value
         self._property_changed('equityTheta')        
 
     @property
-    def averageFillPrice(self):
+    def averageFillPrice(self) -> dict:
         return self.__averageFillPrice
 
     @averageFillPrice.setter
-    def averageFillPrice(self, value):
+    def averageFillPrice(self, value: dict):
         self.__averageFillPrice = value
         self._property_changed('averageFillPrice')        
 
     @property
-    def snowfall(self):
+    def snowfall(self) -> dict:
         return self.__snowfall
 
     @snowfall.setter
-    def snowfall(self, value):
+    def snowfall(self, value: dict):
         self.__snowfall = value
         self._property_changed('snowfall')        
 
     @property
-    def mic(self):
+    def mic(self) -> dict:
         return self.__mic
 
     @mic.setter
-    def mic(self, value):
+    def mic(self, value: dict):
         self.__mic = value
         self._property_changed('mic')        
 
     @property
-    def openPrice(self):
+    def openPrice(self) -> dict:
         return self.__openPrice
 
     @openPrice.setter
-    def openPrice(self, value):
+    def openPrice(self, value: dict):
         self.__openPrice = value
         self._property_changed('openPrice')        
 
     @property
-    def autoExecState(self):
+    def autoExecState(self) -> dict:
         return self.__autoExecState
 
     @autoExecState.setter
-    def autoExecState(self, value):
+    def autoExecState(self, value: dict):
         self.__autoExecState = value
         self._property_changed('autoExecState')        
 
     @property
-    def depthSpreadScore(self):
+    def depthSpreadScore(self) -> dict:
         return self.__depthSpreadScore
 
     @depthSpreadScore.setter
-    def depthSpreadScore(self, value):
+    def depthSpreadScore(self, value: dict):
         self.__depthSpreadScore = value
         self._property_changed('depthSpreadScore')        
 
     @property
-    def relativeReturnYtd(self):
+    def relativeReturnYtd(self) -> dict:
         return self.__relativeReturnYtd
 
     @relativeReturnYtd.setter
-    def relativeReturnYtd(self, value):
+    def relativeReturnYtd(self, value: dict):
         self.__relativeReturnYtd = value
         self._property_changed('relativeReturnYtd')        
 
     @property
-    def long(self):
+    def long(self) -> dict:
         return self.__long
 
     @long.setter
-    def long(self, value):
+    def long(self, value: dict):
         self.__long = value
         self._property_changed('long')        
 
     @property
-    def fairVolatility(self):
+    def fairVolatility(self) -> dict:
         return self.__fairVolatility
 
     @fairVolatility.setter
-    def fairVolatility(self, value):
+    def fairVolatility(self, value: dict):
         self.__fairVolatility = value
         self._property_changed('fairVolatility')        
 
     @property
-    def dollarCross(self):
+    def dollarCross(self) -> dict:
         return self.__dollarCross
 
     @dollarCross.setter
-    def dollarCross(self, value):
+    def dollarCross(self, value: dict):
         self.__dollarCross = value
         self._property_changed('dollarCross')        
 
     @property
-    def longWeight(self):
+    def longWeight(self) -> dict:
         return self.__longWeight
 
     @longWeight.setter
-    def longWeight(self, value):
+    def longWeight(self, value: dict):
         self.__longWeight = value
         self._property_changed('longWeight')        
 
     @property
-    def vendor(self):
+    def vendor(self) -> dict:
         return self.__vendor
 
     @vendor.setter
-    def vendor(self, value):
+    def vendor(self, value: dict):
         self.__vendor = value
         self._property_changed('vendor')        
 
     @property
-    def currency(self):
+    def currency(self) -> dict:
         return self.__currency
 
     @currency.setter
-    def currency(self, value):
+    def currency(self, value: dict):
         self.__currency = value
         self._property_changed('currency')        
 
     @property
-    def clusterClass(self):
+    def clusterClass(self) -> dict:
         return self.__clusterClass
 
     @clusterClass.setter
-    def clusterClass(self, value):
+    def clusterClass(self, value: dict):
         self.__clusterClass = value
         self._property_changed('clusterClass')        
 
     @property
-    def financialReturnsScore(self):
+    def financialReturnsScore(self) -> dict:
         return self.__financialReturnsScore
 
     @financialReturnsScore.setter
-    def financialReturnsScore(self, value):
+    def financialReturnsScore(self, value: dict):
         self.__financialReturnsScore = value
         self._property_changed('financialReturnsScore')        
 
     @property
-    def netChange(self):
+    def netChange(self) -> dict:
         return self.__netChange
 
     @netChange.setter
-    def netChange(self, value):
+    def netChange(self, value: dict):
         self.__netChange = value
         self._property_changed('netChange')        
 
     @property
-    def nonSymbolDimensions(self):
+    def nonSymbolDimensions(self) -> dict:
         return self.__nonSymbolDimensions
 
     @nonSymbolDimensions.setter
-    def nonSymbolDimensions(self, value):
+    def nonSymbolDimensions(self, value: dict):
         self.__nonSymbolDimensions = value
         self._property_changed('nonSymbolDimensions')        
 
     @property
-    def bidSize(self):
+    def bidSize(self) -> dict:
         return self.__bidSize
 
     @bidSize.setter
-    def bidSize(self, value):
+    def bidSize(self, value: dict):
         self.__bidSize = value
         self._property_changed('bidSize')        
 
     @property
-    def arrivalMid(self):
+    def arrivalMid(self) -> dict:
         return self.__arrivalMid
 
     @arrivalMid.setter
-    def arrivalMid(self, value):
+    def arrivalMid(self, value: dict):
         self.__arrivalMid = value
         self._property_changed('arrivalMid')        
 
     @property
-    def assetParametersExchangeCurrency(self):
+    def assetParametersExchangeCurrency(self) -> dict:
         return self.__assetParametersExchangeCurrency
 
     @assetParametersExchangeCurrency.setter
-    def assetParametersExchangeCurrency(self, value):
+    def assetParametersExchangeCurrency(self, value: dict):
         self.__assetParametersExchangeCurrency = value
         self._property_changed('assetParametersExchangeCurrency')        
 
     @property
-    def unexplained(self):
+    def unexplained(self) -> dict:
         return self.__unexplained
 
     @unexplained.setter
-    def unexplained(self, value):
+    def unexplained(self, value: dict):
         self.__unexplained = value
         self._property_changed('unexplained')        
 
     @property
-    def assetClassificationsCountryName(self):
+    def assetClassificationsCountryName(self) -> dict:
         return self.__assetClassificationsCountryName
 
     @assetClassificationsCountryName.setter
-    def assetClassificationsCountryName(self, value):
+    def assetClassificationsCountryName(self, value: dict):
         self.__assetClassificationsCountryName = value
         self._property_changed('assetClassificationsCountryName')        
 
     @property
-    def metric(self):
+    def metric(self) -> dict:
         return self.__metric
 
     @metric.setter
-    def metric(self, value):
+    def metric(self, value: dict):
         self.__metric = value
         self._property_changed('metric')        
 
     @property
-    def newIdeasYtd(self):
+    def newIdeasYtd(self) -> dict:
         return self.__newIdeasYtd
 
     @newIdeasYtd.setter
-    def newIdeasYtd(self, value):
+    def newIdeasYtd(self, value: dict):
         self.__newIdeasYtd = value
         self._property_changed('newIdeasYtd')        
 
     @property
-    def managementFee(self):
+    def managementFee(self) -> dict:
         return self.__managementFee
 
     @managementFee.setter
-    def managementFee(self, value):
+    def managementFee(self, value: dict):
         self.__managementFee = value
         self._property_changed('managementFee')        
 
     @property
-    def ask(self):
+    def ask(self) -> dict:
         return self.__ask
 
     @ask.setter
-    def ask(self, value):
+    def ask(self, value: dict):
         self.__ask = value
         self._property_changed('ask')        
 
     @property
-    def impliedLognormalVolatility(self):
+    def impliedLognormalVolatility(self) -> dict:
         return self.__impliedLognormalVolatility
 
     @impliedLognormalVolatility.setter
-    def impliedLognormalVolatility(self, value):
+    def impliedLognormalVolatility(self, value: dict):
         self.__impliedLognormalVolatility = value
         self._property_changed('impliedLognormalVolatility')        
 
     @property
-    def closePrice(self):
+    def closePrice(self) -> dict:
         return self.__closePrice
 
     @closePrice.setter
-    def closePrice(self, value):
+    def closePrice(self, value: dict):
         self.__closePrice = value
         self._property_changed('closePrice')        
 
     @property
-    def open(self):
+    def open(self) -> dict:
         return self.__open
 
     @open.setter
-    def open(self, value):
+    def open(self, value: dict):
         self.__open = value
         self._property_changed('open')        
 
     @property
-    def sourceId(self):
+    def sourceId(self) -> dict:
         return self.__sourceId
 
     @sourceId.setter
-    def sourceId(self, value):
+    def sourceId(self, value: dict):
         self.__sourceId = value
         self._property_changed('sourceId')        
 
     @property
-    def country(self):
+    def country(self) -> dict:
         return self.__country
 
     @country.setter
-    def country(self, value):
+    def country(self, value: dict):
         self.__country = value
         self._property_changed('country')        
 
     @property
-    def cusip(self):
+    def cusip(self) -> dict:
         return self.__cusip
 
     @cusip.setter
-    def cusip(self, value):
+    def cusip(self, value: dict):
         self.__cusip = value
         self._property_changed('cusip')        
 
     @property
-    def touchSpreadScore(self):
+    def touchSpreadScore(self) -> dict:
         return self.__touchSpreadScore
 
     @touchSpreadScore.setter
-    def touchSpreadScore(self, value):
+    def touchSpreadScore(self, value: dict):
         self.__touchSpreadScore = value
         self._property_changed('touchSpreadScore')        
 
     @property
-    def absoluteStrike(self):
+    def absoluteStrike(self) -> dict:
         return self.__absoluteStrike
 
     @absoluteStrike.setter
-    def absoluteStrike(self, value):
+    def absoluteStrike(self, value: dict):
         self.__absoluteStrike = value
         self._property_changed('absoluteStrike')        
 
     @property
-    def netExposure(self):
+    def netExposure(self) -> dict:
         return self.__netExposure
 
     @netExposure.setter
-    def netExposure(self, value):
+    def netExposure(self, value: dict):
         self.__netExposure = value
         self._property_changed('netExposure')        
 
     @property
-    def source(self):
+    def source(self) -> dict:
         return self.__source
 
     @source.setter
-    def source(self, value):
+    def source(self, value: dict):
         self.__source = value
         self._property_changed('source')        
 
     @property
-    def assetClassificationsCountryCode(self):
+    def assetClassificationsCountryCode(self) -> dict:
         return self.__assetClassificationsCountryCode
 
     @assetClassificationsCountryCode.setter
-    def assetClassificationsCountryCode(self, value):
+    def assetClassificationsCountryCode(self, value: dict):
         self.__assetClassificationsCountryCode = value
         self._property_changed('assetClassificationsCountryCode')        
 
     @property
-    def frequency(self):
+    def frequency(self) -> dict:
         return self.__frequency
 
     @frequency.setter
-    def frequency(self, value):
+    def frequency(self, value: dict):
         self.__frequency = value
         self._property_changed('frequency')        
 
     @property
-    def activityId(self):
+    def activityId(self) -> dict:
         return self.__activityId
 
     @activityId.setter
-    def activityId(self, value):
+    def activityId(self, value: dict):
         self.__activityId = value
         self._property_changed('activityId')        
 
     @property
-    def estimatedImpact(self):
+    def estimatedImpact(self) -> dict:
         return self.__estimatedImpact
 
     @estimatedImpact.setter
-    def estimatedImpact(self, value):
+    def estimatedImpact(self, value: dict):
         self.__estimatedImpact = value
         self._property_changed('estimatedImpact')        
 
     @property
-    def dataSetSubCategory(self):
+    def dataSetSubCategory(self) -> dict:
         return self.__dataSetSubCategory
 
     @dataSetSubCategory.setter
-    def dataSetSubCategory(self, value):
+    def dataSetSubCategory(self, value: dict):
         self.__dataSetSubCategory = value
         self._property_changed('dataSetSubCategory')        
 
     @property
-    def assetParametersPricingLocation(self):
+    def assetParametersPricingLocation(self) -> dict:
         return self.__assetParametersPricingLocation
 
     @assetParametersPricingLocation.setter
-    def assetParametersPricingLocation(self, value):
+    def assetParametersPricingLocation(self, value: dict):
         self.__assetParametersPricingLocation = value
         self._property_changed('assetParametersPricingLocation')        
 
     @property
-    def eventDescription(self):
+    def eventDescription(self) -> dict:
         return self.__eventDescription
 
     @eventDescription.setter
-    def eventDescription(self, value):
+    def eventDescription(self, value: dict):
         self.__eventDescription = value
         self._property_changed('eventDescription')        
 
     @property
-    def strikeReference(self):
+    def strikeReference(self) -> dict:
         return self.__strikeReference
 
     @strikeReference.setter
-    def strikeReference(self, value):
+    def strikeReference(self, value: dict):
         self.__strikeReference = value
         self._property_changed('strikeReference')        
 
     @property
-    def details(self):
+    def details(self) -> dict:
         return self.__details
 
     @details.setter
-    def details(self, value):
+    def details(self, value: dict):
         self.__details = value
         self._property_changed('details')        
 
     @property
-    def assetCount(self):
+    def assetCount(self) -> dict:
         return self.__assetCount
 
     @assetCount.setter
-    def assetCount(self, value):
+    def assetCount(self, value: dict):
         self.__assetCount = value
         self._property_changed('assetCount')        
 
     @property
-    def absoluteValue(self):
+    def given(self) -> dict:
+        return self.__given
+
+    @given.setter
+    def given(self, value: dict):
+        self.__given = value
+        self._property_changed('given')        
+
+    @property
+    def absoluteValue(self) -> dict:
         return self.__absoluteValue
 
     @absoluteValue.setter
-    def absoluteValue(self, value):
+    def absoluteValue(self, value: dict):
         self.__absoluteValue = value
         self._property_changed('absoluteValue')        
 
     @property
-    def delistingDate(self):
+    def delistingDate(self) -> dict:
         return self.__delistingDate
 
     @delistingDate.setter
-    def delistingDate(self, value):
+    def delistingDate(self, value: dict):
         self.__delistingDate = value
         self._property_changed('delistingDate')        
 
     @property
-    def longTenor(self):
+    def longTenor(self) -> dict:
         return self.__longTenor
 
     @longTenor.setter
-    def longTenor(self, value):
+    def longTenor(self, value: dict):
         self.__longTenor = value
         self._property_changed('longTenor')        
 
     @property
-    def mctr(self):
+    def mctr(self) -> dict:
         return self.__mctr
 
     @mctr.setter
-    def mctr(self, value):
+    def mctr(self, value: dict):
         self.__mctr = value
         self._property_changed('mctr')        
 
     @property
-    def weight(self):
+    def weight(self) -> dict:
         return self.__weight
 
     @weight.setter
-    def weight(self, value):
+    def weight(self, value: dict):
         self.__weight = value
         self._property_changed('weight')        
 
     @property
-    def historicalClose(self):
+    def historicalClose(self) -> dict:
         return self.__historicalClose
 
     @historicalClose.setter
-    def historicalClose(self, value):
+    def historicalClose(self, value: dict):
         self.__historicalClose = value
         self._property_changed('historicalClose')        
 
     @property
-    def assetCountPriced(self):
+    def assetCountPriced(self) -> dict:
         return self.__assetCountPriced
 
     @assetCountPriced.setter
-    def assetCountPriced(self, value):
+    def assetCountPriced(self, value: dict):
         self.__assetCountPriced = value
         self._property_changed('assetCountPriced')        
 
     @property
-    def marketDataPoint(self):
+    def marketDataPoint(self) -> dict:
         return self.__marketDataPoint
 
     @marketDataPoint.setter
-    def marketDataPoint(self, value):
+    def marketDataPoint(self, value: dict):
         self.__marketDataPoint = value
         self._property_changed('marketDataPoint')        
 
     @property
-    def ideaId(self):
+    def ideaId(self) -> dict:
         return self.__ideaId
 
     @ideaId.setter
-    def ideaId(self, value):
+    def ideaId(self, value: dict):
         self.__ideaId = value
         self._property_changed('ideaId')        
 
     @property
-    def commentStatus(self):
+    def commentStatus(self) -> dict:
         return self.__commentStatus
 
     @commentStatus.setter
-    def commentStatus(self, value):
+    def commentStatus(self, value: dict):
         self.__commentStatus = value
         self._property_changed('commentStatus')        
 
     @property
-    def marginalCost(self):
+    def marginalCost(self) -> dict:
         return self.__marginalCost
 
     @marginalCost.setter
-    def marginalCost(self, value):
+    def marginalCost(self, value: dict):
         self.__marginalCost = value
         self._property_changed('marginalCost')        
 
     @property
-    def absoluteWeight(self):
+    def absoluteWeight(self) -> dict:
         return self.__absoluteWeight
 
     @absoluteWeight.setter
-    def absoluteWeight(self, value):
+    def absoluteWeight(self, value: dict):
         self.__absoluteWeight = value
         self._property_changed('absoluteWeight')        
 
     @property
-    def measure(self):
+    def measure(self) -> dict:
         return self.__measure
 
     @measure.setter
-    def measure(self, value):
+    def measure(self, value: dict):
         self.__measure = value
         self._property_changed('measure')        
 
     @property
-    def clientWeight(self):
+    def clientWeight(self) -> dict:
         return self.__clientWeight
 
     @clientWeight.setter
-    def clientWeight(self, value):
+    def clientWeight(self, value: dict):
         self.__clientWeight = value
         self._property_changed('clientWeight')        
 
     @property
-    def hedgeAnnualizedVolatility(self):
+    def hedgeAnnualizedVolatility(self) -> dict:
         return self.__hedgeAnnualizedVolatility
 
     @hedgeAnnualizedVolatility.setter
-    def hedgeAnnualizedVolatility(self, value):
+    def hedgeAnnualizedVolatility(self, value: dict):
         self.__hedgeAnnualizedVolatility = value
         self._property_changed('hedgeAnnualizedVolatility')        
 
     @property
-    def benchmarkCurrency(self):
+    def benchmarkCurrency(self) -> dict:
         return self.__benchmarkCurrency
 
     @benchmarkCurrency.setter
-    def benchmarkCurrency(self, value):
+    def benchmarkCurrency(self, value: dict):
         self.__benchmarkCurrency = value
         self._property_changed('benchmarkCurrency')        
 
     @property
-    def name(self):
+    def name(self) -> dict:
         return self.__name
 
     @name.setter
-    def name(self, value):
+    def name(self, value: dict):
         self.__name = value
         self._property_changed('name')        
 
     @property
-    def aum(self):
+    def aum(self) -> dict:
         return self.__aum
 
     @aum.setter
-    def aum(self, value):
+    def aum(self, value: dict):
         self.__aum = value
         self._property_changed('aum')        
 
     @property
-    def folderName(self):
+    def folderName(self) -> dict:
         return self.__folderName
 
     @folderName.setter
-    def folderName(self, value):
+    def folderName(self, value: dict):
         self.__folderName = value
         self._property_changed('folderName')        
 
     @property
-    def lendingPartnerFee(self):
+    def lendingPartnerFee(self) -> dict:
         return self.__lendingPartnerFee
 
     @lendingPartnerFee.setter
-    def lendingPartnerFee(self, value):
+    def lendingPartnerFee(self, value: dict):
         self.__lendingPartnerFee = value
         self._property_changed('lendingPartnerFee')        
 
     @property
-    def region(self):
+    def region(self) -> dict:
         return self.__region
 
     @region.setter
-    def region(self, value):
+    def region(self, value: dict):
         self.__region = value
         self._property_changed('region')        
 
     @property
-    def liveDate(self):
+    def liveDate(self) -> dict:
         return self.__liveDate
 
     @liveDate.setter
-    def liveDate(self, value):
+    def liveDate(self, value: dict):
         self.__liveDate = value
         self._property_changed('liveDate')        
 
     @property
-    def askHigh(self):
+    def askHigh(self) -> dict:
         return self.__askHigh
 
     @askHigh.setter
-    def askHigh(self, value):
+    def askHigh(self, value: dict):
         self.__askHigh = value
         self._property_changed('askHigh')        
 
     @property
-    def corporateActionType(self):
+    def corporateActionType(self) -> dict:
         return self.__corporateActionType
 
     @corporateActionType.setter
-    def corporateActionType(self, value):
+    def corporateActionType(self, value: dict):
         self.__corporateActionType = value
         self._property_changed('corporateActionType')        
 
     @property
-    def primeId(self):
+    def primeId(self) -> dict:
         return self.__primeId
 
     @primeId.setter
-    def primeId(self, value):
+    def primeId(self, value: dict):
         self.__primeId = value
         self._property_changed('primeId')        
 
     @property
-    def tenor2(self):
+    def tenor2(self) -> dict:
         return self.__tenor2
 
     @tenor2.setter
-    def tenor2(self, value):
+    def tenor2(self, value: dict):
         self.__tenor2 = value
         self._property_changed('tenor2')        
 
     @property
-    def description(self):
+    def description(self) -> dict:
         return self.__description
 
     @description.setter
-    def description(self, value):
+    def description(self, value: dict):
         self.__description = value
         self._property_changed('description')        
 
     @property
-    def valueRevised(self):
+    def valueRevised(self) -> dict:
         return self.__valueRevised
 
     @valueRevised.setter
-    def valueRevised(self, value):
+    def valueRevised(self, value: dict):
         self.__valueRevised = value
         self._property_changed('valueRevised')        
 
     @property
-    def ownerName(self):
+    def ownerName(self) -> dict:
         return self.__ownerName
 
     @ownerName.setter
-    def ownerName(self, value):
+    def ownerName(self, value: dict):
         self.__ownerName = value
         self._property_changed('ownerName')        
 
     @property
-    def adjustedTradePrice(self):
+    def adjustedTradePrice(self) -> dict:
         return self.__adjustedTradePrice
 
     @adjustedTradePrice.setter
-    def adjustedTradePrice(self, value):
+    def adjustedTradePrice(self, value: dict):
         self.__adjustedTradePrice = value
         self._property_changed('adjustedTradePrice')        
 
     @property
-    def lastUpdatedById(self):
+    def lastUpdatedById(self) -> dict:
         return self.__lastUpdatedById
 
     @lastUpdatedById.setter
-    def lastUpdatedById(self, value):
+    def lastUpdatedById(self, value: dict):
         self.__lastUpdatedById = value
         self._property_changed('lastUpdatedById')        
 
     @property
-    def zScore(self):
+    def zScore(self) -> dict:
         return self.__zScore
 
     @zScore.setter
-    def zScore(self, value):
+    def zScore(self, value: dict):
         self.__zScore = value
         self._property_changed('zScore')        
 
     @property
-    def targetShareholderMeetingDate(self):
+    def targetShareholderMeetingDate(self) -> dict:
         return self.__targetShareholderMeetingDate
 
     @targetShareholderMeetingDate.setter
-    def targetShareholderMeetingDate(self, value):
+    def targetShareholderMeetingDate(self, value: dict):
         self.__targetShareholderMeetingDate = value
         self._property_changed('targetShareholderMeetingDate')        
 
     @property
-    def isADR(self):
+    def isADR(self) -> dict:
         return self.__isADR
 
     @isADR.setter
-    def isADR(self, value):
+    def isADR(self, value: dict):
         self.__isADR = value
         self._property_changed('isADR')        
 
     @property
-    def eventStartTime(self):
+    def eventStartTime(self) -> dict:
         return self.__eventStartTime
 
     @eventStartTime.setter
-    def eventStartTime(self, value):
+    def eventStartTime(self, value: dict):
         self.__eventStartTime = value
         self._property_changed('eventStartTime')        
 
     @property
-    def factor(self):
+    def factor(self) -> dict:
         return self.__factor
 
     @factor.setter
-    def factor(self, value):
+    def factor(self, value: dict):
         self.__factor = value
         self._property_changed('factor')        
 
     @property
-    def longConvictionSmall(self):
+    def longConvictionSmall(self) -> dict:
         return self.__longConvictionSmall
 
     @longConvictionSmall.setter
-    def longConvictionSmall(self, value):
+    def longConvictionSmall(self, value: dict):
         self.__longConvictionSmall = value
         self._property_changed('longConvictionSmall')        
 
     @property
-    def serviceId(self):
+    def serviceId(self) -> dict:
         return self.__serviceId
 
     @serviceId.setter
-    def serviceId(self, value):
+    def serviceId(self, value: dict):
         self.__serviceId = value
         self._property_changed('serviceId')        
 
     @property
-    def turnover(self):
+    def turnover(self) -> dict:
         return self.__turnover
 
     @turnover.setter
-    def turnover(self, value):
+    def turnover(self, value: dict):
         self.__turnover = value
         self._property_changed('turnover')        
 
     @property
-    def gsfeer(self):
+    def gsfeer(self) -> dict:
         return self.__gsfeer
 
     @gsfeer.setter
-    def gsfeer(self, value):
+    def gsfeer(self, value: dict):
         self.__gsfeer = value
         self._property_changed('gsfeer')        
 
     @property
-    def coverage(self):
+    def coverage(self) -> dict:
         return self.__coverage
 
     @coverage.setter
-    def coverage(self, value):
+    def coverage(self, value: dict):
         self.__coverage = value
         self._property_changed('coverage')        
 
     @property
-    def backtestId(self):
+    def backtestId(self) -> dict:
         return self.__backtestId
 
     @backtestId.setter
-    def backtestId(self, value):
+    def backtestId(self, value: dict):
         self.__backtestId = value
         self._property_changed('backtestId')        
 
     @property
-    def gPercentile(self):
+    def gPercentile(self) -> dict:
         return self.__gPercentile
 
     @gPercentile.setter
-    def gPercentile(self, value):
+    def gPercentile(self, value: dict):
         self.__gPercentile = value
         self._property_changed('gPercentile')        
 
     @property
-    def gScore(self):
+    def gScore(self) -> dict:
         return self.__gScore
 
     @gScore.setter
-    def gScore(self, value):
+    def gScore(self, value: dict):
         self.__gScore = value
         self._property_changed('gScore')        
 
     @property
-    def marketValue(self):
+    def marketValue(self) -> dict:
         return self.__marketValue
 
     @marketValue.setter
-    def marketValue(self, value):
+    def marketValue(self, value: dict):
         self.__marketValue = value
         self._property_changed('marketValue')        
 
     @property
-    def multipleScore(self):
+    def multipleScore(self) -> dict:
         return self.__multipleScore
 
     @multipleScore.setter
-    def multipleScore(self, value):
+    def multipleScore(self, value: dict):
         self.__multipleScore = value
         self._property_changed('multipleScore')        
 
     @property
-    def sourceOriginalCategory(self):
+    def lendingFundNav(self) -> dict:
+        return self.__lendingFundNav
+
+    @lendingFundNav.setter
+    def lendingFundNav(self, value: dict):
+        self.__lendingFundNav = value
+        self._property_changed('lendingFundNav')        
+
+    @property
+    def sourceOriginalCategory(self) -> dict:
         return self.__sourceOriginalCategory
 
     @sourceOriginalCategory.setter
-    def sourceOriginalCategory(self, value):
+    def sourceOriginalCategory(self, value: dict):
         self.__sourceOriginalCategory = value
         self._property_changed('sourceOriginalCategory')        
 
     @property
-    def betaAdjustedExposure(self):
+    def betaAdjustedExposure(self) -> dict:
         return self.__betaAdjustedExposure
 
     @betaAdjustedExposure.setter
-    def betaAdjustedExposure(self, value):
+    def betaAdjustedExposure(self, value: dict):
         self.__betaAdjustedExposure = value
         self._property_changed('betaAdjustedExposure')        
 
     @property
-    def composite5DayAdv(self):
+    def composite5DayAdv(self) -> dict:
         return self.__composite5DayAdv
 
     @composite5DayAdv.setter
-    def composite5DayAdv(self, value):
+    def composite5DayAdv(self, value: dict):
         self.__composite5DayAdv = value
         self._property_changed('composite5DayAdv')        
 
     @property
-    def dividendPoints(self):
+    def dividendPoints(self) -> dict:
         return self.__dividendPoints
 
     @dividendPoints.setter
-    def dividendPoints(self, value):
+    def dividendPoints(self, value: dict):
         self.__dividendPoints = value
         self._property_changed('dividendPoints')        
 
     @property
-    def newIdeasWtd(self):
+    def newIdeasWtd(self) -> dict:
         return self.__newIdeasWtd
 
     @newIdeasWtd.setter
-    def newIdeasWtd(self, value):
+    def newIdeasWtd(self, value: dict):
         self.__newIdeasWtd = value
         self._property_changed('newIdeasWtd')        
 
     @property
-    def short(self):
+    def paid(self) -> dict:
+        return self.__paid
+
+    @paid.setter
+    def paid(self, value: dict):
+        self.__paid = value
+        self._property_changed('paid')        
+
+    @property
+    def short(self) -> dict:
         return self.__short
 
     @short.setter
-    def short(self, value):
+    def short(self, value: dict):
         self.__short = value
         self._property_changed('short')        
 
     @property
-    def location(self):
+    def location(self) -> dict:
         return self.__location
 
     @location.setter
-    def location(self, value):
+    def location(self, value: dict):
         self.__location = value
         self._property_changed('location')        
 
     @property
-    def comment(self):
+    def comment(self) -> dict:
         return self.__comment
 
     @comment.setter
-    def comment(self, value):
+    def comment(self, value: dict):
         self.__comment = value
         self._property_changed('comment')        
 
     @property
-    def bosInTicksDescription(self):
+    def bosInTicksDescription(self) -> dict:
         return self.__bosInTicksDescription
 
     @bosInTicksDescription.setter
-    def bosInTicksDescription(self, value):
+    def bosInTicksDescription(self, value: dict):
         self.__bosInTicksDescription = value
         self._property_changed('bosInTicksDescription')        
 
     @property
-    def sourceSymbol(self):
+    def sourceSymbol(self) -> dict:
         return self.__sourceSymbol
 
     @sourceSymbol.setter
-    def sourceSymbol(self, value):
+    def sourceSymbol(self, value: dict):
         self.__sourceSymbol = value
         self._property_changed('sourceSymbol')        
 
     @property
-    def scenarioId(self):
+    def scenarioId(self) -> dict:
         return self.__scenarioId
 
     @scenarioId.setter
-    def scenarioId(self, value):
+    def scenarioId(self, value: dict):
         self.__scenarioId = value
         self._property_changed('scenarioId')        
 
     @property
-    def askUnadjusted(self):
+    def askUnadjusted(self) -> dict:
         return self.__askUnadjusted
 
     @askUnadjusted.setter
-    def askUnadjusted(self, value):
+    def askUnadjusted(self, value: dict):
         self.__askUnadjusted = value
         self._property_changed('askUnadjusted')        
 
     @property
-    def queueClockTime(self):
+    def queueClockTime(self) -> dict:
         return self.__queueClockTime
 
     @queueClockTime.setter
-    def queueClockTime(self, value):
+    def queueClockTime(self, value: dict):
         self.__queueClockTime = value
         self._property_changed('queueClockTime')        
 
     @property
-    def askChange(self):
+    def askChange(self) -> dict:
         return self.__askChange
 
     @askChange.setter
-    def askChange(self, value):
+    def askChange(self, value: dict):
         self.__askChange = value
         self._property_changed('askChange')        
 
     @property
-    def tcmCostParticipationRate50Pct(self):
+    def tcmCostParticipationRate50Pct(self) -> dict:
         return self.__tcmCostParticipationRate50Pct
 
     @tcmCostParticipationRate50Pct.setter
-    def tcmCostParticipationRate50Pct(self, value):
+    def tcmCostParticipationRate50Pct(self, value: dict):
         self.__tcmCostParticipationRate50Pct = value
         self._property_changed('tcmCostParticipationRate50Pct')        
 
     @property
-    def normalizedPerformance(self):
+    def normalizedPerformance(self) -> dict:
         return self.__normalizedPerformance
 
     @normalizedPerformance.setter
-    def normalizedPerformance(self, value):
+    def normalizedPerformance(self, value: dict):
         self.__normalizedPerformance = value
         self._property_changed('normalizedPerformance')        
 
     @property
-    def cmId(self):
+    def cmId(self) -> dict:
         return self.__cmId
 
     @cmId.setter
-    def cmId(self, value):
+    def cmId(self, value: dict):
         self.__cmId = value
         self._property_changed('cmId')        
 
     @property
-    def type(self):
+    def type(self) -> dict:
         return self.__type
 
     @type.setter
-    def type(self, value):
+    def type(self, value: dict):
         self.__type = value
         self._property_changed('type')        
 
     @property
-    def mdapi(self):
+    def mdapi(self) -> dict:
         return self.__mdapi
 
     @mdapi.setter
-    def mdapi(self, value):
+    def mdapi(self, value: dict):
         self.__mdapi = value
         self._property_changed('mdapi')        
 
     @property
-    def dividendYield(self):
+    def dividendYield(self) -> dict:
         return self.__dividendYield
 
     @dividendYield.setter
-    def dividendYield(self, value):
+    def dividendYield(self, value: dict):
         self.__dividendYield = value
         self._property_changed('dividendYield')        
 
     @property
-    def cumulativePnl(self):
+    def cumulativePnl(self) -> dict:
         return self.__cumulativePnl
 
     @cumulativePnl.setter
-    def cumulativePnl(self, value):
+    def cumulativePnl(self, value: dict):
         self.__cumulativePnl = value
         self._property_changed('cumulativePnl')        
 
     @property
-    def sourceOrigin(self):
+    def sourceOrigin(self) -> dict:
         return self.__sourceOrigin
 
     @sourceOrigin.setter
-    def sourceOrigin(self, value):
+    def sourceOrigin(self, value: dict):
         self.__sourceOrigin = value
         self._property_changed('sourceOrigin')        
 
     @property
-    def shortTenor(self):
+    def shortTenor(self) -> dict:
         return self.__shortTenor
 
     @shortTenor.setter
-    def shortTenor(self, value):
+    def shortTenor(self, value: dict):
         self.__shortTenor = value
         self._property_changed('shortTenor')        
 
     @property
-    def unadjustedVolume(self):
+    def unadjustedVolume(self) -> dict:
         return self.__unadjustedVolume
 
     @unadjustedVolume.setter
-    def unadjustedVolume(self, value):
+    def unadjustedVolume(self, value: dict):
         self.__unadjustedVolume = value
         self._property_changed('unadjustedVolume')        
 
     @property
-    def measures(self):
+    def measures(self) -> dict:
         return self.__measures
 
     @measures.setter
-    def measures(self, value):
+    def measures(self, value: dict):
         self.__measures = value
         self._property_changed('measures')        
 
     @property
-    def tradingCostPnl(self):
+    def tradingCostPnl(self) -> dict:
         return self.__tradingCostPnl
 
     @tradingCostPnl.setter
-    def tradingCostPnl(self, value):
+    def tradingCostPnl(self, value: dict):
         self.__tradingCostPnl = value
         self._property_changed('tradingCostPnl')        
 
     @property
-    def internalUser(self):
+    def internalUser(self) -> dict:
         return self.__internalUser
 
     @internalUser.setter
-    def internalUser(self, value):
+    def internalUser(self, value: dict):
         self.__internalUser = value
         self._property_changed('internalUser')        
 
     @property
-    def price(self):
+    def price(self) -> dict:
         return self.__price
 
     @price.setter
-    def price(self, value):
+    def price(self, value: dict):
         self.__price = value
         self._property_changed('price')        
 
     @property
-    def paymentQuantity(self):
+    def paymentQuantity(self) -> dict:
         return self.__paymentQuantity
 
     @paymentQuantity.setter
-    def paymentQuantity(self, value):
+    def paymentQuantity(self, value: dict):
         self.__paymentQuantity = value
         self._property_changed('paymentQuantity')        
 
     @property
-    def underlyer(self):
+    def underlyer(self) -> dict:
         return self.__underlyer
 
     @underlyer.setter
-    def underlyer(self, value):
+    def underlyer(self, value: dict):
         self.__underlyer = value
         self._property_changed('underlyer')        
 
     @property
-    def positionIdx(self):
+    def positionIdx(self) -> dict:
         return self.__positionIdx
 
     @positionIdx.setter
-    def positionIdx(self, value):
+    def positionIdx(self, value: dict):
         self.__positionIdx = value
         self._property_changed('positionIdx')        
 
     @property
-    def secName(self):
+    def secName(self) -> dict:
         return self.__secName
 
     @secName.setter
-    def secName(self, value):
+    def secName(self, value: dict):
         self.__secName = value
         self._property_changed('secName')        
 
     @property
-    def percentADV(self):
+    def percentADV(self) -> dict:
         return self.__percentADV
 
     @percentADV.setter
-    def percentADV(self, value):
+    def percentADV(self, value: dict):
         self.__percentADV = value
         self._property_changed('percentADV')        
 
     @property
-    def unadjustedLow(self):
+    def unadjustedLow(self) -> dict:
         return self.__unadjustedLow
 
     @unadjustedLow.setter
-    def unadjustedLow(self, value):
+    def unadjustedLow(self, value: dict):
         self.__unadjustedLow = value
         self._property_changed('unadjustedLow')        
 
     @property
-    def contract(self):
+    def contract(self) -> dict:
         return self.__contract
 
     @contract.setter
-    def contract(self, value):
+    def contract(self, value: dict):
         self.__contract = value
         self._property_changed('contract')        
 
     @property
-    def sedol(self):
+    def sedol(self) -> dict:
         return self.__sedol
 
     @sedol.setter
-    def sedol(self, value):
+    def sedol(self, value: dict):
         self.__sedol = value
         self._property_changed('sedol')        
 
     @property
-    def roundingCostPnl(self):
+    def roundingCostPnl(self) -> dict:
         return self.__roundingCostPnl
 
     @roundingCostPnl.setter
-    def roundingCostPnl(self, value):
+    def roundingCostPnl(self, value: dict):
         self.__roundingCostPnl = value
         self._property_changed('roundingCostPnl')        
 
     @property
-    def sustainGlobal(self):
+    def sustainGlobal(self) -> dict:
         return self.__sustainGlobal
 
     @sustainGlobal.setter
-    def sustainGlobal(self, value):
+    def sustainGlobal(self, value: dict):
         self.__sustainGlobal = value
         self._property_changed('sustainGlobal')        
 
     @property
-    def sourceTicker(self):
+    def sourceTicker(self) -> dict:
         return self.__sourceTicker
 
     @sourceTicker.setter
-    def sourceTicker(self, value):
+    def sourceTicker(self, value: dict):
         self.__sourceTicker = value
         self._property_changed('sourceTicker')        
 
     @property
-    def portfolioId(self):
+    def portfolioId(self) -> dict:
         return self.__portfolioId
 
     @portfolioId.setter
-    def portfolioId(self, value):
+    def portfolioId(self, value: dict):
         self.__portfolioId = value
         self._property_changed('portfolioId')        
 
     @property
-    def gsid(self):
+    def gsid(self) -> dict:
         return self.__gsid
 
     @gsid.setter
-    def gsid(self, value):
+    def gsid(self, value: dict):
         self.__gsid = value
         self._property_changed('gsid')        
 
     @property
-    def esPercentile(self):
+    def esPercentile(self) -> dict:
         return self.__esPercentile
 
     @esPercentile.setter
-    def esPercentile(self, value):
+    def esPercentile(self, value: dict):
         self.__esPercentile = value
         self._property_changed('esPercentile')        
 
     @property
-    def tcmCostParticipationRate15Pct(self):
+    def lendingFund(self) -> dict:
+        return self.__lendingFund
+
+    @lendingFund.setter
+    def lendingFund(self, value: dict):
+        self.__lendingFund = value
+        self._property_changed('lendingFund')        
+
+    @property
+    def tcmCostParticipationRate15Pct(self) -> dict:
         return self.__tcmCostParticipationRate15Pct
 
     @tcmCostParticipationRate15Pct.setter
-    def tcmCostParticipationRate15Pct(self, value):
+    def tcmCostParticipationRate15Pct(self, value: dict):
         self.__tcmCostParticipationRate15Pct = value
         self._property_changed('tcmCostParticipationRate15Pct')        
 
     @property
-    def sensitivity(self):
+    def sensitivity(self) -> dict:
         return self.__sensitivity
 
     @sensitivity.setter
-    def sensitivity(self, value):
+    def sensitivity(self, value: dict):
         self.__sensitivity = value
         self._property_changed('sensitivity')        
 
     @property
-    def fiscalYear(self):
+    def fiscalYear(self) -> dict:
         return self.__fiscalYear
 
     @fiscalYear.setter
-    def fiscalYear(self, value):
+    def fiscalYear(self, value: dict):
         self.__fiscalYear = value
         self._property_changed('fiscalYear')        
 
     @property
-    def rcic(self):
+    def rcic(self) -> dict:
         return self.__rcic
 
     @rcic.setter
-    def rcic(self, value):
+    def rcic(self, value: dict):
         self.__rcic = value
         self._property_changed('rcic')        
 
     @property
-    def simonAssetTags(self):
+    def simonAssetTags(self) -> dict:
         return self.__simonAssetTags
 
     @simonAssetTags.setter
-    def simonAssetTags(self, value):
+    def simonAssetTags(self, value: dict):
         self.__simonAssetTags = value
         self._property_changed('simonAssetTags')        
 
     @property
-    def internal(self):
+    def internal(self) -> dict:
         return self.__internal
 
     @internal.setter
-    def internal(self, value):
+    def internal(self, value: dict):
         self.__internal = value
         self._property_changed('internal')        
 
     @property
-    def forwardPoint(self):
+    def forwardPoint(self) -> dict:
         return self.__forwardPoint
 
     @forwardPoint.setter
-    def forwardPoint(self, value):
+    def forwardPoint(self, value: dict):
         self.__forwardPoint = value
         self._property_changed('forwardPoint')        
 
     @property
-    def assetClassificationsGicsIndustry(self):
+    def assetClassificationsGicsIndustry(self) -> dict:
         return self.__assetClassificationsGicsIndustry
 
     @assetClassificationsGicsIndustry.setter
-    def assetClassificationsGicsIndustry(self, value):
+    def assetClassificationsGicsIndustry(self, value: dict):
         self.__assetClassificationsGicsIndustry = value
         self._property_changed('assetClassificationsGicsIndustry')        
 
     @property
-    def adjustedBidPrice(self):
+    def adjustedBidPrice(self) -> dict:
         return self.__adjustedBidPrice
 
     @adjustedBidPrice.setter
-    def adjustedBidPrice(self, value):
+    def adjustedBidPrice(self, value: dict):
         self.__adjustedBidPrice = value
         self._property_changed('adjustedBidPrice')        
 
     @property
-    def hitRateQtd(self):
+    def hitRateQtd(self) -> dict:
         return self.__hitRateQtd
 
     @hitRateQtd.setter
-    def hitRateQtd(self, value):
+    def hitRateQtd(self, value: dict):
         self.__hitRateQtd = value
         self._property_changed('hitRateQtd')        
 
     @property
-    def varSwap(self):
+    def varSwap(self) -> dict:
         return self.__varSwap
 
     @varSwap.setter
-    def varSwap(self, value):
+    def varSwap(self, value: dict):
         self.__varSwap = value
         self._property_changed('varSwap')        
 
     @property
-    def lowUnadjusted(self):
+    def lowUnadjusted(self) -> dict:
         return self.__lowUnadjusted
 
     @lowUnadjusted.setter
-    def lowUnadjusted(self, value):
+    def lowUnadjusted(self, value: dict):
         self.__lowUnadjusted = value
         self._property_changed('lowUnadjusted')        
 
     @property
-    def sectorsRaw(self):
+    def sectorsRaw(self) -> dict:
         return self.__sectorsRaw
 
     @sectorsRaw.setter
-    def sectorsRaw(self, value):
+    def sectorsRaw(self, value: dict):
         self.__sectorsRaw = value
         self._property_changed('sectorsRaw')        
 
     @property
-    def low(self):
+    def low(self) -> dict:
         return self.__low
 
     @low.setter
-    def low(self, value):
+    def low(self, value: dict):
         self.__low = value
         self._property_changed('low')        
 
     @property
-    def crossGroup(self):
+    def crossGroup(self) -> dict:
         return self.__crossGroup
 
     @crossGroup.setter
-    def crossGroup(self, value):
+    def crossGroup(self, value: dict):
         self.__crossGroup = value
         self._property_changed('crossGroup')        
 
     @property
-    def integratedScore(self):
+    def integratedScore(self) -> dict:
         return self.__integratedScore
 
     @integratedScore.setter
-    def integratedScore(self, value):
+    def integratedScore(self, value: dict):
         self.__integratedScore = value
         self._property_changed('integratedScore')        
 
     @property
-    def fiveDayPriceChangeBps(self):
+    def fiveDayPriceChangeBps(self) -> dict:
         return self.__fiveDayPriceChangeBps
 
     @fiveDayPriceChangeBps.setter
-    def fiveDayPriceChangeBps(self, value):
+    def fiveDayPriceChangeBps(self, value: dict):
         self.__fiveDayPriceChangeBps = value
         self._property_changed('fiveDayPriceChangeBps')        
 
     @property
-    def tradeSize(self):
+    def tradeSize(self) -> dict:
         return self.__tradeSize
 
     @tradeSize.setter
-    def tradeSize(self, value):
+    def tradeSize(self, value: dict):
         self.__tradeSize = value
         self._property_changed('tradeSize')        
 
     @property
-    def symbolDimensions(self):
+    def symbolDimensions(self) -> dict:
         return self.__symbolDimensions
 
     @symbolDimensions.setter
-    def symbolDimensions(self, value):
+    def symbolDimensions(self, value: dict):
         self.__symbolDimensions = value
         self._property_changed('symbolDimensions')        
 
     @property
-    def quotingStyle(self):
+    def quotingStyle(self) -> dict:
         return self.__quotingStyle
 
     @quotingStyle.setter
-    def quotingStyle(self, value):
+    def quotingStyle(self, value: dict):
         self.__quotingStyle = value
         self._property_changed('quotingStyle')        
 
     @property
-    def scenarioGroupId(self):
+    def scenarioGroupId(self) -> dict:
         return self.__scenarioGroupId
 
     @scenarioGroupId.setter
-    def scenarioGroupId(self, value):
+    def scenarioGroupId(self, value: dict):
         self.__scenarioGroupId = value
         self._property_changed('scenarioGroupId')        
 
     @property
-    def errorMessage(self):
+    def errorMessage(self) -> dict:
         return self.__errorMessage
 
     @errorMessage.setter
-    def errorMessage(self, value):
+    def errorMessage(self, value: dict):
         self.__errorMessage = value
         self._property_changed('errorMessage')        
 
     @property
-    def avgTradeRateDescription(self):
+    def avgTradeRateDescription(self) -> dict:
         return self.__avgTradeRateDescription
 
     @avgTradeRateDescription.setter
-    def avgTradeRateDescription(self, value):
+    def avgTradeRateDescription(self, value: dict):
         self.__avgTradeRateDescription = value
         self._property_changed('avgTradeRateDescription')        
 
     @property
-    def midPrice(self):
+    def midPrice(self) -> dict:
         return self.__midPrice
 
     @midPrice.setter
-    def midPrice(self, value):
+    def midPrice(self, value: dict):
         self.__midPrice = value
         self._property_changed('midPrice')        
 
     @property
-    def fraction(self):
+    def fraction(self) -> dict:
         return self.__fraction
 
     @fraction.setter
-    def fraction(self, value):
+    def fraction(self, value: dict):
         self.__fraction = value
         self._property_changed('fraction')        
 
     @property
-    def stsCreditMarket(self):
+    def stsCreditMarket(self) -> dict:
         return self.__stsCreditMarket
 
     @stsCreditMarket.setter
-    def stsCreditMarket(self, value):
+    def stsCreditMarket(self, value: dict):
         self.__stsCreditMarket = value
         self._property_changed('stsCreditMarket')        
 
     @property
-    def assetCountShort(self):
+    def assetCountShort(self) -> dict:
         return self.__assetCountShort
 
     @assetCountShort.setter
-    def assetCountShort(self, value):
+    def assetCountShort(self, value: dict):
         self.__assetCountShort = value
         self._property_changed('assetCountShort')        
 
     @property
-    def stsEmDm(self):
+    def stsEmDm(self) -> dict:
         return self.__stsEmDm
 
     @stsEmDm.setter
-    def stsEmDm(self, value):
+    def stsEmDm(self, value: dict):
         self.__stsEmDm = value
         self._property_changed('stsEmDm')        
 
     @property
-    def tcmCostHorizon2Day(self):
+    def tcmCostHorizon2Day(self) -> dict:
         return self.__tcmCostHorizon2Day
 
     @tcmCostHorizon2Day.setter
-    def tcmCostHorizon2Day(self, value):
+    def tcmCostHorizon2Day(self, value: dict):
         self.__tcmCostHorizon2Day = value
         self._property_changed('tcmCostHorizon2Day')        
 
     @property
-    def queueInLots(self):
+    def queueInLots(self) -> dict:
         return self.__queueInLots
 
     @queueInLots.setter
-    def queueInLots(self, value):
+    def queueInLots(self, value: dict):
         self.__queueInLots = value
         self._property_changed('queueInLots')        
 
     @property
-    def priceRangeInTicksDescription(self):
+    def priceRangeInTicksDescription(self) -> dict:
         return self.__priceRangeInTicksDescription
 
     @priceRangeInTicksDescription.setter
-    def priceRangeInTicksDescription(self, value):
+    def priceRangeInTicksDescription(self, value: dict):
         self.__priceRangeInTicksDescription = value
         self._property_changed('priceRangeInTicksDescription')        
 
     @property
-    def tenderOfferExpirationDate(self):
+    def tenderOfferExpirationDate(self) -> dict:
         return self.__tenderOfferExpirationDate
 
     @tenderOfferExpirationDate.setter
-    def tenderOfferExpirationDate(self, value):
+    def tenderOfferExpirationDate(self, value: dict):
         self.__tenderOfferExpirationDate = value
         self._property_changed('tenderOfferExpirationDate')        
 
     @property
-    def highUnadjusted(self):
+    def highUnadjusted(self) -> dict:
         return self.__highUnadjusted
 
     @highUnadjusted.setter
-    def highUnadjusted(self, value):
+    def highUnadjusted(self, value: dict):
         self.__highUnadjusted = value
         self._property_changed('highUnadjusted')        
 
     @property
-    def sourceCategory(self):
+    def sourceCategory(self) -> dict:
         return self.__sourceCategory
 
     @sourceCategory.setter
-    def sourceCategory(self, value):
+    def sourceCategory(self, value: dict):
         self.__sourceCategory = value
         self._property_changed('sourceCategory')        
 
     @property
-    def volumeUnadjusted(self):
+    def volumeUnadjusted(self) -> dict:
         return self.__volumeUnadjusted
 
     @volumeUnadjusted.setter
-    def volumeUnadjusted(self, value):
+    def volumeUnadjusted(self, value: dict):
         self.__volumeUnadjusted = value
         self._property_changed('volumeUnadjusted')        
 
@@ -6995,452 +7402,461 @@ class FieldFilterMap(Base):
         self._property_changed('avgTradeRateLabel')        
 
     @property
-    def tcmCostParticipationRate5Pct(self):
+    def tcmCostParticipationRate5Pct(self) -> dict:
         return self.__tcmCostParticipationRate5Pct
 
     @tcmCostParticipationRate5Pct.setter
-    def tcmCostParticipationRate5Pct(self, value):
+    def tcmCostParticipationRate5Pct(self, value: dict):
         self.__tcmCostParticipationRate5Pct = value
         self._property_changed('tcmCostParticipationRate5Pct')        
 
     @property
-    def isActive(self):
+    def isActive(self) -> dict:
         return self.__isActive
 
     @isActive.setter
-    def isActive(self, value):
+    def isActive(self, value: dict):
         self.__isActive = value
         self._property_changed('isActive')        
 
     @property
-    def growthScore(self):
+    def growthScore(self) -> dict:
         return self.__growthScore
 
     @growthScore.setter
-    def growthScore(self, value):
+    def growthScore(self, value: dict):
         self.__growthScore = value
         self._property_changed('growthScore')        
 
     @property
-    def encodedStats(self):
+    def encodedStats(self) -> dict:
         return self.__encodedStats
 
     @encodedStats.setter
-    def encodedStats(self, value):
+    def encodedStats(self, value: dict):
         self.__encodedStats = value
         self._property_changed('encodedStats')        
 
     @property
-    def adjustedShortInterest(self):
+    def adjustedShortInterest(self) -> dict:
         return self.__adjustedShortInterest
 
     @adjustedShortInterest.setter
-    def adjustedShortInterest(self, value):
+    def adjustedShortInterest(self, value: dict):
         self.__adjustedShortInterest = value
         self._property_changed('adjustedShortInterest')        
 
     @property
-    def askSize(self):
+    def askSize(self) -> dict:
         return self.__askSize
 
     @askSize.setter
-    def askSize(self, value):
+    def askSize(self, value: dict):
         self.__askSize = value
         self._property_changed('askSize')        
 
     @property
-    def mdapiType(self):
+    def mdapiType(self) -> dict:
         return self.__mdapiType
 
     @mdapiType.setter
-    def mdapiType(self, value):
+    def mdapiType(self, value: dict):
         self.__mdapiType = value
         self._property_changed('mdapiType')        
 
     @property
-    def group(self):
+    def group(self) -> dict:
         return self.__group
 
     @group.setter
-    def group(self, value):
+    def group(self, value: dict):
         self.__group = value
         self._property_changed('group')        
 
     @property
-    def estimatedSpread(self):
+    def estimatedSpread(self) -> dict:
         return self.__estimatedSpread
 
     @estimatedSpread.setter
-    def estimatedSpread(self, value):
+    def estimatedSpread(self, value: dict):
         self.__estimatedSpread = value
         self._property_changed('estimatedSpread')        
 
     @property
-    def resource(self):
+    def resource(self) -> dict:
         return self.__resource
 
     @resource.setter
-    def resource(self, value):
+    def resource(self, value: dict):
         self.__resource = value
         self._property_changed('resource')        
 
     @property
-    def tcmCost(self):
+    def tcmCost(self) -> dict:
         return self.__tcmCost
 
     @tcmCost.setter
-    def tcmCost(self, value):
+    def tcmCost(self, value: dict):
         self.__tcmCost = value
         self._property_changed('tcmCost')        
 
     @property
-    def sustainJapan(self):
+    def sustainJapan(self) -> dict:
         return self.__sustainJapan
 
     @sustainJapan.setter
-    def sustainJapan(self, value):
+    def sustainJapan(self, value: dict):
         self.__sustainJapan = value
         self._property_changed('sustainJapan')        
 
     @property
-    def navSpread(self):
+    def navSpread(self) -> dict:
         return self.__navSpread
 
     @navSpread.setter
-    def navSpread(self, value):
+    def navSpread(self, value: dict):
         self.__navSpread = value
         self._property_changed('navSpread')        
 
     @property
-    def bidPrice(self):
+    def bidPrice(self) -> dict:
         return self.__bidPrice
 
     @bidPrice.setter
-    def bidPrice(self, value):
+    def bidPrice(self, value: dict):
         self.__bidPrice = value
         self._property_changed('bidPrice')        
 
     @property
-    def hedgeTrackingError(self):
+    def hedgeTrackingError(self) -> dict:
         return self.__hedgeTrackingError
 
     @hedgeTrackingError.setter
-    def hedgeTrackingError(self, value):
+    def hedgeTrackingError(self, value: dict):
         self.__hedgeTrackingError = value
         self._property_changed('hedgeTrackingError')        
 
     @property
-    def marketCapCategory(self):
+    def marketCapCategory(self) -> dict:
         return self.__marketCapCategory
 
     @marketCapCategory.setter
-    def marketCapCategory(self, value):
+    def marketCapCategory(self, value: dict):
         self.__marketCapCategory = value
         self._property_changed('marketCapCategory')        
 
     @property
-    def historicalVolume(self):
+    def historicalVolume(self) -> dict:
         return self.__historicalVolume
 
     @historicalVolume.setter
-    def historicalVolume(self, value):
+    def historicalVolume(self, value: dict):
         self.__historicalVolume = value
         self._property_changed('historicalVolume')        
 
     @property
-    def esNumericPercentile(self):
+    def esNumericPercentile(self) -> dict:
         return self.__esNumericPercentile
 
     @esNumericPercentile.setter
-    def esNumericPercentile(self, value):
+    def esNumericPercentile(self, value: dict):
         self.__esNumericPercentile = value
         self._property_changed('esNumericPercentile')        
 
     @property
-    def strikePrice(self):
+    def strikePrice(self) -> dict:
         return self.__strikePrice
 
     @strikePrice.setter
-    def strikePrice(self, value):
+    def strikePrice(self, value: dict):
         self.__strikePrice = value
         self._property_changed('strikePrice')        
 
     @property
-    def calSpreadMisPricing(self):
+    def calSpreadMisPricing(self) -> dict:
         return self.__calSpreadMisPricing
 
     @calSpreadMisPricing.setter
-    def calSpreadMisPricing(self, value):
+    def calSpreadMisPricing(self, value: dict):
         self.__calSpreadMisPricing = value
         self._property_changed('calSpreadMisPricing')        
 
     @property
-    def equityGamma(self):
+    def equityGamma(self) -> dict:
         return self.__equityGamma
 
     @equityGamma.setter
-    def equityGamma(self, value):
+    def equityGamma(self, value: dict):
         self.__equityGamma = value
         self._property_changed('equityGamma')        
 
     @property
-    def grossIncome(self):
+    def grossIncome(self) -> dict:
         return self.__grossIncome
 
     @grossIncome.setter
-    def grossIncome(self, value):
+    def grossIncome(self, value: dict):
         self.__grossIncome = value
         self._property_changed('grossIncome')        
 
     @property
-    def emId(self):
+    def emId(self) -> dict:
         return self.__emId
 
     @emId.setter
-    def emId(self, value):
+    def emId(self, value: dict):
         self.__emId = value
         self._property_changed('emId')        
 
     @property
-    def adjustedOpenPrice(self):
+    def adjustedOpenPrice(self) -> dict:
         return self.__adjustedOpenPrice
 
     @adjustedOpenPrice.setter
-    def adjustedOpenPrice(self, value):
+    def adjustedOpenPrice(self, value: dict):
         self.__adjustedOpenPrice = value
         self._property_changed('adjustedOpenPrice')        
 
     @property
-    def assetCountInModel(self):
+    def assetCountInModel(self) -> dict:
         return self.__assetCountInModel
 
     @assetCountInModel.setter
-    def assetCountInModel(self, value):
+    def assetCountInModel(self, value: dict):
         self.__assetCountInModel = value
         self._property_changed('assetCountInModel')        
 
     @property
-    def stsCreditRegion(self):
+    def stsCreditRegion(self) -> dict:
         return self.__stsCreditRegion
 
     @stsCreditRegion.setter
-    def stsCreditRegion(self, value):
+    def stsCreditRegion(self, value: dict):
         self.__stsCreditRegion = value
         self._property_changed('stsCreditRegion')        
 
     @property
-    def point(self):
+    def point(self) -> dict:
         return self.__point
 
     @point.setter
-    def point(self, value):
+    def point(self, value: dict):
         self.__point = value
         self._property_changed('point')        
 
     @property
-    def lender(self):
+    def lender(self) -> dict:
         return self.__lender
 
     @lender.setter
-    def lender(self, value):
+    def lender(self, value: dict):
         self.__lender = value
         self._property_changed('lender')        
 
     @property
-    def minTemperature(self):
+    def minTemperature(self) -> dict:
         return self.__minTemperature
 
     @minTemperature.setter
-    def minTemperature(self, value):
+    def minTemperature(self, value: dict):
         self.__minTemperature = value
         self._property_changed('minTemperature')        
 
     @property
-    def value(self):
+    def value(self) -> dict:
         return self.__value
 
     @value.setter
-    def value(self, value):
+    def value(self, value: dict):
         self.__value = value
         self._property_changed('value')        
 
     @property
-    def relativeStrike(self):
+    def relativeStrike(self) -> dict:
         return self.__relativeStrike
 
     @relativeStrike.setter
-    def relativeStrike(self, value):
+    def relativeStrike(self, value: dict):
         self.__relativeStrike = value
         self._property_changed('relativeStrike')        
 
     @property
-    def amount(self):
+    def amount(self) -> dict:
         return self.__amount
 
     @amount.setter
-    def amount(self, value):
+    def amount(self, value: dict):
         self.__amount = value
         self._property_changed('amount')        
 
     @property
-    def quantity(self):
+    def quantity(self) -> dict:
         return self.__quantity
 
     @quantity.setter
-    def quantity(self, value):
+    def quantity(self, value: dict):
         self.__quantity = value
         self._property_changed('quantity')        
 
     @property
-    def reportId(self):
+    def lendingFundAcct(self) -> dict:
+        return self.__lendingFundAcct
+
+    @lendingFundAcct.setter
+    def lendingFundAcct(self, value: dict):
+        self.__lendingFundAcct = value
+        self._property_changed('lendingFundAcct')        
+
+    @property
+    def reportId(self) -> dict:
         return self.__reportId
 
     @reportId.setter
-    def reportId(self, value):
+    def reportId(self, value: dict):
         self.__reportId = value
         self._property_changed('reportId')        
 
     @property
-    def indexWeight(self):
+    def indexWeight(self) -> dict:
         return self.__indexWeight
 
     @indexWeight.setter
-    def indexWeight(self, value):
+    def indexWeight(self, value: dict):
         self.__indexWeight = value
         self._property_changed('indexWeight')        
 
     @property
-    def rebate(self):
+    def rebate(self) -> dict:
         return self.__rebate
 
     @rebate.setter
-    def rebate(self, value):
+    def rebate(self, value: dict):
         self.__rebate = value
         self._property_changed('rebate')        
 
     @property
-    def trader(self):
+    def trader(self) -> dict:
         return self.__trader
 
     @trader.setter
-    def trader(self, value):
+    def trader(self, value: dict):
         self.__trader = value
         self._property_changed('trader')        
 
     @property
-    def factorCategory(self):
+    def factorCategory(self) -> dict:
         return self.__factorCategory
 
     @factorCategory.setter
-    def factorCategory(self, value):
+    def factorCategory(self, value: dict):
         self.__factorCategory = value
         self._property_changed('factorCategory')        
 
     @property
-    def impliedVolatility(self):
+    def impliedVolatility(self) -> dict:
         return self.__impliedVolatility
 
     @impliedVolatility.setter
-    def impliedVolatility(self, value):
+    def impliedVolatility(self, value: dict):
         self.__impliedVolatility = value
         self._property_changed('impliedVolatility')        
 
     @property
-    def spread(self):
+    def spread(self) -> dict:
         return self.__spread
 
     @spread.setter
-    def spread(self, value):
+    def spread(self, value: dict):
         self.__spread = value
         self._property_changed('spread')        
 
     @property
-    def stsRatesMaturity(self):
+    def stsRatesMaturity(self) -> dict:
         return self.__stsRatesMaturity
 
     @stsRatesMaturity.setter
-    def stsRatesMaturity(self, value):
+    def stsRatesMaturity(self, value: dict):
         self.__stsRatesMaturity = value
         self._property_changed('stsRatesMaturity')        
 
     @property
-    def equityDelta(self):
+    def equityDelta(self) -> dict:
         return self.__equityDelta
 
     @equityDelta.setter
-    def equityDelta(self, value):
+    def equityDelta(self, value: dict):
         self.__equityDelta = value
         self._property_changed('equityDelta')        
 
     @property
-    def grossWeight(self):
+    def grossWeight(self) -> dict:
         return self.__grossWeight
 
     @grossWeight.setter
-    def grossWeight(self, value):
+    def grossWeight(self, value: dict):
         self.__grossWeight = value
         self._property_changed('grossWeight')        
 
     @property
-    def listed(self):
+    def listed(self) -> dict:
         return self.__listed
 
     @listed.setter
-    def listed(self, value):
+    def listed(self, value: dict):
         self.__listed = value
         self._property_changed('listed')        
 
     @property
-    def tcmCostHorizon6Hour(self):
+    def tcmCostHorizon6Hour(self) -> dict:
         return self.__tcmCostHorizon6Hour
 
     @tcmCostHorizon6Hour.setter
-    def tcmCostHorizon6Hour(self, value):
+    def tcmCostHorizon6Hour(self, value: dict):
         self.__tcmCostHorizon6Hour = value
         self._property_changed('tcmCostHorizon6Hour')        
 
     @property
-    def g10Currency(self):
+    def g10Currency(self) -> dict:
         return self.__g10Currency
 
     @g10Currency.setter
-    def g10Currency(self, value):
+    def g10Currency(self, value: dict):
         self.__g10Currency = value
         self._property_changed('g10Currency')        
 
     @property
-    def shockStyle(self):
+    def shockStyle(self) -> dict:
         return self.__shockStyle
 
     @shockStyle.setter
-    def shockStyle(self, value):
+    def shockStyle(self, value: dict):
         self.__shockStyle = value
         self._property_changed('shockStyle')        
 
     @property
-    def relativePeriod(self):
+    def relativePeriod(self) -> dict:
         return self.__relativePeriod
 
     @relativePeriod.setter
-    def relativePeriod(self, value):
+    def relativePeriod(self, value: dict):
         self.__relativePeriod = value
         self._property_changed('relativePeriod')        
 
     @property
-    def isin(self):
+    def isin(self) -> dict:
         return self.__isin
 
     @isin.setter
-    def isin(self, value):
+    def isin(self, value: dict):
         self.__isin = value
         self._property_changed('isin')        
 
     @property
-    def methodology(self):
+    def methodology(self) -> dict:
         return self.__methodology
 
     @methodology.setter
-    def methodology(self, value):
+    def methodology(self, value: dict):
         self.__methodology = value
         self._property_changed('methodology')        
 
@@ -7565,6 +7981,7 @@ class FieldValueMap(Base):
         self.__expiration = kwargs.get('expiration')
         self.__tradePrice = kwargs.get('tradePrice')
         self.__esPolicyScore = kwargs.get('esPolicyScore')
+        self.__loanId = kwargs.get('loanId')
         self.__cid = kwargs.get('cid')
         self.__liquidityScore = kwargs.get('liquidityScore')
         self.__importance = kwargs.get('importance')
@@ -7612,6 +8029,7 @@ class FieldValueMap(Base):
         self.__orderId = kwargs.get('orderId')
         self.__gss = kwargs.get('gss')
         self.__percentOfMediandv1m = kwargs.get('percentOfMediandv1m')
+        self.__lendables = kwargs.get('lendables')
         self.__assetClass = kwargs.get('assetClass')
         self.__gsideid = kwargs.get('gsideid')
         self.__bosInTicksLabel = kwargs.get('bosInTicksLabel')
@@ -7679,6 +8097,7 @@ class FieldValueMap(Base):
         self.__dewPoint = kwargs.get('dewPoint')
         self.__researchCommission = kwargs.get('researchCommission')
         self.__bbid = kwargs.get('bbid')
+        self.__assetClassificationsRiskCountryCode = kwargs.get('assetClassificationsRiskCountryCode')
         self.__eventStatus = kwargs.get('eventStatus')
         self.__effectiveDate = kwargs.get('effectiveDate')
         self.__return = kwargs.get('return_')
@@ -7714,6 +8133,7 @@ class FieldValueMap(Base):
         self.__netWeight = kwargs.get('netWeight')
         self.__hedgeId = kwargs.get('hedgeId')
         self.__portfolioManagers = kwargs.get('portfolioManagers')
+        self.__assetParametersCommoditySector = kwargs.get('assetParametersCommoditySector')
         self.__bosInTicks = kwargs.get('bosInTicks')
         self.__tcmCostHorizon8Day = kwargs.get('tcmCostHorizon8Day')
         self.__supraStrategy = kwargs.get('supraStrategy')
@@ -7728,6 +8148,8 @@ class FieldValueMap(Base):
         self.__groupCategory = kwargs.get('groupCategory')
         self.__kpiId = kwargs.get('kpiId')
         self.__relativeReturnWtd = kwargs.get('relativeReturnWtd')
+        self.__bidPlusAsk = kwargs.get('bidPlusAsk')
+        self.__assetClassificationsRiskCountryName = kwargs.get('assetClassificationsRiskCountryName')
         self.__total = kwargs.get('total')
         self.__riskModel = kwargs.get('riskModel')
         self.__assetId = kwargs.get('assetId')
@@ -7747,6 +8169,7 @@ class FieldValueMap(Base):
         self.__rebateRate = kwargs.get('rebateRate')
         self.__ideaStatus = kwargs.get('ideaStatus')
         self.__participationRate = kwargs.get('participationRate')
+        self.__obfr = kwargs.get('obfr')
         self.__fxForecast = kwargs.get('fxForecast')
         self.__fixingTimeLabel = kwargs.get('fixingTimeLabel')
         self.__fillId = kwargs.get('fillId')
@@ -7774,6 +8197,7 @@ class FieldValueMap(Base):
         self.__tradingPnl = kwargs.get('tradingPnl')
         self.__strikePercentage = kwargs.get('strikePercentage')
         self.__excessReturnPrice = kwargs.get('excessReturnPrice')
+        self.__givenPlusPaid = kwargs.get('givenPlusPaid')
         self.__shortConvictionSmall = kwargs.get('shortConvictionSmall')
         self.__prevCloseBid = kwargs.get('prevCloseBid')
         self.__fxPnl = kwargs.get('fxPnl')
@@ -7785,6 +8209,7 @@ class FieldValueMap(Base):
         self.__tcmCostHorizon4Day = kwargs.get('tcmCostHorizon4Day')
         self.__assetClassificationsIsPrimary = kwargs.get('assetClassificationsIsPrimary')
         self.__styles = kwargs.get('styles')
+        self.__lendingSecId = kwargs.get('lendingSecId')
         self.__shortName = kwargs.get('shortName')
         self.__equityTheta = kwargs.get('equityTheta')
         self.__averageFillPrice = kwargs.get('averageFillPrice')
@@ -7835,6 +8260,7 @@ class FieldValueMap(Base):
         self.__strikeReference = kwargs.get('strikeReference')
         self.__details = kwargs.get('details')
         self.__assetCount = kwargs.get('assetCount')
+        self.__given = kwargs.get('given')
         self.__absoluteValue = kwargs.get('absoluteValue')
         self.__delistingDate = kwargs.get('delistingDate')
         self.__longTenor = kwargs.get('longTenor')
@@ -7884,12 +8310,14 @@ class FieldValueMap(Base):
         self.__gScore = kwargs.get('gScore')
         self.__marketValue = kwargs.get('marketValue')
         self.__multipleScore = kwargs.get('multipleScore')
+        self.__lendingFundNav = kwargs.get('lendingFundNav')
         self.__sourceOriginalCategory = kwargs.get('sourceOriginalCategory')
         self.__betaAdjustedExposure = kwargs.get('betaAdjustedExposure')
         self.__composite5DayAdv = kwargs.get('composite5DayAdv')
         self.__latestExecutionTime = kwargs.get('latestExecutionTime')
         self.__dividendPoints = kwargs.get('dividendPoints')
         self.__newIdeasWtd = kwargs.get('newIdeasWtd')
+        self.__paid = kwargs.get('paid')
         self.__short = kwargs.get('short')
         self.__location = kwargs.get('location')
         self.__comment = kwargs.get('comment')
@@ -7929,6 +8357,7 @@ class FieldValueMap(Base):
         self.__portfolioId = kwargs.get('portfolioId')
         self.__gsid = kwargs.get('gsid')
         self.__esPercentile = kwargs.get('esPercentile')
+        self.__lendingFund = kwargs.get('lendingFund')
         self.__tcmCostParticipationRate15Pct = kwargs.get('tcmCostParticipationRate15Pct')
         self.__sensitivity = kwargs.get('sensitivity')
         self.__fiscalYear = kwargs.get('fiscalYear')
@@ -8003,6 +8432,7 @@ class FieldValueMap(Base):
         self.__relativeStrike = kwargs.get('relativeStrike')
         self.__amount = kwargs.get('amount')
         self.__quantity = kwargs.get('quantity')
+        self.__lendingFundAcct = kwargs.get('lendingFundAcct')
         self.__reportId = kwargs.get('reportId')
         self.__indexWeight = kwargs.get('indexWeight')
         self.__rebate = kwargs.get('rebate')
@@ -9066,6 +9496,15 @@ class FieldValueMap(Base):
         self._property_changed('esPolicyScore')        
 
     @property
+    def loanId(self) -> str:
+        return self.__loanId
+
+    @loanId.setter
+    def loanId(self, value: str):
+        self.__loanId = value
+        self._property_changed('loanId')        
+
+    @property
     def cid(self) -> str:
         return self.__cid
 
@@ -9487,6 +9926,15 @@ class FieldValueMap(Base):
     def percentOfMediandv1m(self, value: float):
         self.__percentOfMediandv1m = value
         self._property_changed('percentOfMediandv1m')        
+
+    @property
+    def lendables(self) -> float:
+        return self.__lendables
+
+    @lendables.setter
+    def lendables(self, value: float):
+        self.__lendables = value
+        self._property_changed('lendables')        
 
     @property
     def assetClass(self) -> str:
@@ -10092,6 +10540,15 @@ class FieldValueMap(Base):
         self._property_changed('bbid')        
 
     @property
+    def assetClassificationsRiskCountryCode(self) -> str:
+        return self.__assetClassificationsRiskCountryCode
+
+    @assetClassificationsRiskCountryCode.setter
+    def assetClassificationsRiskCountryCode(self, value: str):
+        self.__assetClassificationsRiskCountryCode = value
+        self._property_changed('assetClassificationsRiskCountryCode')        
+
+    @property
     def eventStatus(self) -> str:
         return self.__eventStatus
 
@@ -10164,11 +10621,11 @@ class FieldValueMap(Base):
         self._property_changed('arrivalRtNormalized')        
 
     @property
-    def performanceFee(self) -> Union[Op, float]:
+    def performanceFee(self) -> Union[float, Op]:
         return self.__performanceFee
 
     @performanceFee.setter
-    def performanceFee(self, value: Union[Op, float]):
+    def performanceFee(self, value: Union[float, Op]):
         self.__performanceFee = value
         self._property_changed('performanceFee')        
 
@@ -10407,6 +10864,15 @@ class FieldValueMap(Base):
         self._property_changed('portfolioManagers')        
 
     @property
+    def assetParametersCommoditySector(self) -> str:
+        return self.__assetParametersCommoditySector
+
+    @assetParametersCommoditySector.setter
+    def assetParametersCommoditySector(self, value: str):
+        self.__assetParametersCommoditySector = value
+        self._property_changed('assetParametersCommoditySector')        
+
+    @property
     def bosInTicks(self) -> float:
         return self.__bosInTicks
 
@@ -10531,6 +10997,24 @@ class FieldValueMap(Base):
     def relativeReturnWtd(self, value: float):
         self.__relativeReturnWtd = value
         self._property_changed('relativeReturnWtd')        
+
+    @property
+    def bidPlusAsk(self) -> float:
+        return self.__bidPlusAsk
+
+    @bidPlusAsk.setter
+    def bidPlusAsk(self, value: float):
+        self.__bidPlusAsk = value
+        self._property_changed('bidPlusAsk')        
+
+    @property
+    def assetClassificationsRiskCountryName(self) -> str:
+        return self.__assetClassificationsRiskCountryName
+
+    @assetClassificationsRiskCountryName.setter
+    def assetClassificationsRiskCountryName(self, value: str):
+        self.__assetClassificationsRiskCountryName = value
+        self._property_changed('assetClassificationsRiskCountryName')        
 
     @property
     def total(self) -> float:
@@ -10702,6 +11186,15 @@ class FieldValueMap(Base):
     def participationRate(self, value: float):
         self.__participationRate = value
         self._property_changed('participationRate')        
+
+    @property
+    def obfr(self) -> float:
+        return self.__obfr
+
+    @obfr.setter
+    def obfr(self, value: float):
+        self.__obfr = value
+        self._property_changed('obfr')        
 
     @property
     def fxForecast(self) -> float:
@@ -10947,6 +11440,15 @@ class FieldValueMap(Base):
         self._property_changed('excessReturnPrice')        
 
     @property
+    def givenPlusPaid(self) -> float:
+        return self.__givenPlusPaid
+
+    @givenPlusPaid.setter
+    def givenPlusPaid(self, value: float):
+        self.__givenPlusPaid = value
+        self._property_changed('givenPlusPaid')        
+
+    @property
     def shortConvictionSmall(self) -> float:
         return self.__shortConvictionSmall
 
@@ -11044,6 +11546,15 @@ class FieldValueMap(Base):
     def styles(self, value: Tuple[Tuple[str, ...], ...]):
         self.__styles = value
         self._property_changed('styles')        
+
+    @property
+    def lendingSecId(self) -> str:
+        return self.__lendingSecId
+
+    @lendingSecId.setter
+    def lendingSecId(self, value: str):
+        self.__lendingSecId = value
+        self._property_changed('lendingSecId')        
 
     @property
     def shortName(self) -> str:
@@ -11280,11 +11791,11 @@ class FieldValueMap(Base):
         self._property_changed('newIdeasYtd')        
 
     @property
-    def managementFee(self) -> Union[Op, float]:
+    def managementFee(self) -> Union[float, Op]:
         return self.__managementFee
 
     @managementFee.setter
-    def managementFee(self, value: Union[Op, float]):
+    def managementFee(self, value: Union[float, Op]):
         self.__managementFee = value
         self._property_changed('managementFee')        
 
@@ -11496,6 +12007,15 @@ class FieldValueMap(Base):
         self._property_changed('assetCount')        
 
     @property
+    def given(self) -> float:
+        return self.__given
+
+    @given.setter
+    def given(self, value: float):
+        self.__given = value
+        self._property_changed('given')        
+
+    @property
     def absoluteValue(self) -> float:
         return self.__absoluteValue
 
@@ -11658,11 +12178,11 @@ class FieldValueMap(Base):
         self._property_changed('name')        
 
     @property
-    def aum(self) -> Union[Op, float]:
+    def aum(self) -> Union[float, Op]:
         return self.__aum
 
     @aum.setter
-    def aum(self, value: Union[Op, float]):
+    def aum(self, value: Union[float, Op]):
         self.__aum = value
         self._property_changed('aum')        
 
@@ -11694,11 +12214,11 @@ class FieldValueMap(Base):
         self._property_changed('region')        
 
     @property
-    def liveDate(self) -> Union[Op, datetime.date]:
+    def liveDate(self) -> Union[datetime.date, Op]:
         return self.__liveDate
 
     @liveDate.setter
-    def liveDate(self, value: Union[Op, datetime.date]):
+    def liveDate(self, value: Union[datetime.date, Op]):
         self.__liveDate = value
         self._property_changed('liveDate')        
 
@@ -11937,6 +12457,15 @@ class FieldValueMap(Base):
         self._property_changed('multipleScore')        
 
     @property
+    def lendingFundNav(self) -> float:
+        return self.__lendingFundNav
+
+    @lendingFundNav.setter
+    def lendingFundNav(self, value: float):
+        self.__lendingFundNav = value
+        self._property_changed('lendingFundNav')        
+
+    @property
     def sourceOriginalCategory(self) -> str:
         return self.__sourceOriginalCategory
 
@@ -11989,6 +12518,15 @@ class FieldValueMap(Base):
     def newIdeasWtd(self, value: float):
         self.__newIdeasWtd = value
         self._property_changed('newIdeasWtd')        
+
+    @property
+    def paid(self) -> float:
+        return self.__paid
+
+    @paid.setter
+    def paid(self, value: float):
+        self.__paid = value
+        self._property_changed('paid')        
 
     @property
     def short(self) -> float:
@@ -12340,6 +12878,15 @@ class FieldValueMap(Base):
     def esPercentile(self, value: float):
         self.__esPercentile = value
         self._property_changed('esPercentile')        
+
+    @property
+    def lendingFund(self) -> str:
+        return self.__lendingFund
+
+    @lendingFund.setter
+    def lendingFund(self, value: str):
+        self.__lendingFund = value
+        self._property_changed('lendingFund')        
 
     @property
     def tcmCostParticipationRate15Pct(self) -> float:
@@ -13006,6 +13553,15 @@ class FieldValueMap(Base):
     def quantity(self, value: float):
         self.__quantity = value
         self._property_changed('quantity')        
+
+    @property
+    def lendingFundAcct(self) -> str:
+        return self.__lendingFundAcct
+
+    @lendingFundAcct.setter
+    def lendingFundAcct(self, value: str):
+        self.__lendingFundAcct = value
+        self._property_changed('lendingFundAcct')        
 
     @property
     def reportId(self) -> str:

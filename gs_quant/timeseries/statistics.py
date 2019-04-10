@@ -28,7 +28,8 @@ Generally not finance-specific routines.
 """
 
 
-def min_(x: pd.Series, w: int=0) -> pd.Series:
+@plot_function
+def min_(x: pd.Series, w: int = 0) -> pd.Series:
     """
     Minimum value of series over given window
 
@@ -62,7 +63,8 @@ def min_(x: pd.Series, w: int=0) -> pd.Series:
     return x.rolling(w, 0).min()
 
 
-def max_(x: pd.Series, w: int=0) -> pd.Series:
+@plot_function
+def max_(x: pd.Series, w: int = 0) -> pd.Series:
     """
     Maximum value of series over given window
 
@@ -96,7 +98,8 @@ def max_(x: pd.Series, w: int=0) -> pd.Series:
     return x.rolling(w, 0).max()
 
 
-def range_(x: pd.Series, w: int=0) -> pd.Series:
+@plot_function
+def range_(x: pd.Series, w: int = 0) -> pd.Series:
     """
     Range of series over given window
 
@@ -134,7 +137,8 @@ def range_(x: pd.Series, w: int=0) -> pd.Series:
     return max - min
 
 
-def mean(x: pd.Series, w: int=0) -> pd.Series:
+@plot_function
+def mean(x: pd.Series, w: int = 0) -> pd.Series:
     """
     Arithmetic mean of series over given window
 
@@ -169,7 +173,8 @@ def mean(x: pd.Series, w: int=0) -> pd.Series:
     return x.rolling(w, 0).mean()
 
 
-def median(x: pd.Series, w: int=0) -> pd.Series:
+@plot_function
+def median(x: pd.Series, w: int = 0) -> pd.Series:
     """
     Median value of series over given window
 
@@ -206,7 +211,8 @@ def median(x: pd.Series, w: int=0) -> pd.Series:
     return x.rolling(w, 0).median()
 
 
-def mode(x: pd.Series, w: int=0) -> pd.Series:
+@plot_function
+def mode(x: pd.Series, w: int = 0) -> pd.Series:
     """
     Most common value in series over given window
 
@@ -238,7 +244,8 @@ def mode(x: pd.Series, w: int=0) -> pd.Series:
     return x.rolling(w, 0).apply(lambda y: stats.mode(y).mode, raw=True)
 
 
-def sum_(x: pd.Series, w: int=0) -> pd.Series:
+@plot_function
+def sum_(x: pd.Series, w: int = 0) -> pd.Series:
     """
     Rolling sum of series over given window
 
@@ -272,7 +279,8 @@ def sum_(x: pd.Series, w: int=0) -> pd.Series:
     return x.rolling(w, 0).sum()
 
 
-def product(x: pd.Series, w: int=0) -> pd.Series:
+@plot_function
+def product(x: pd.Series, w: int = 0) -> pd.Series:
     """
     Rolling product of series over given window
 
@@ -305,7 +313,8 @@ def product(x: pd.Series, w: int=0) -> pd.Series:
     return x.rolling(w, 0).agg(pd.Series.prod)
 
 
-def std(x: pd.Series, w: int=0) -> pd.Series:
+@plot_function
+def std(x: pd.Series, w: int = 0) -> pd.Series:
     """
     Rolling standard deviation of series over given window
 
@@ -344,7 +353,8 @@ def std(x: pd.Series, w: int=0) -> pd.Series:
     return x.rolling(w, 0).std()
 
 
-def var(x: pd.Series, w: int=0) -> pd.Series:
+@plot_function
+def var(x: pd.Series, w: int = 0) -> pd.Series:
     """
     Rolling variance of series over given window
 
@@ -383,7 +393,8 @@ def var(x: pd.Series, w: int=0) -> pd.Series:
     return x.rolling(w, 0).var()
 
 
-def cov(x: pd.Series, y: pd.Series, w: int=0) -> pd.Series:
+@plot_function
+def cov(x: pd.Series, y: pd.Series, w: int = 0) -> pd.Series:
     """
     Rolling co-variance of series over given window
 
@@ -425,14 +436,14 @@ def cov(x: pd.Series, y: pd.Series, w: int=0) -> pd.Series:
 
 
 def _zscore(x):
-
     if x.size == 1:
         return 0
 
     return stats.zscore(x, ddof=1)[-1]
 
 
-def zscores(x: pd.Series, w: int=0) -> pd.Series:
+@plot_function
+def zscores(x: pd.Series, w: int = 0) -> pd.Series:
     """
     Rolling z-scores over a given window
 
@@ -479,7 +490,8 @@ def zscores(x: pd.Series, w: int=0) -> pd.Series:
     return x.rolling(w, 0).apply(_zscore, raw=False)
 
 
-def winsorize(x: pd.Series, limit: float=2.5, w: int=0) -> pd.Series:
+@plot_function
+def winsorize(x: pd.Series, limit: float = 2.5, w: int = 0) -> pd.Series:
     """
     Limit extreme values in series
 
@@ -537,6 +549,7 @@ def winsorize(x: pd.Series, limit: float=2.5, w: int=0) -> pd.Series:
     return ret
 
 
+@plot_function
 def generate_series(length: int) -> pd.Series:
     """
     Generate sample timeseries
@@ -577,4 +590,3 @@ def generate_series(length: int) -> pd.Series:
         dates.append(datetime.date.fromordinal(dates[i].toordinal() + 1))
 
     return pd.Series(data=levels, index=dates)
-

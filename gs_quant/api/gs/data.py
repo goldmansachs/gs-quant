@@ -13,12 +13,13 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from copy import copy
 import datetime as dt
-from itertools import chain
 import pandas as pd
+from itertools import chain
 from typing import Iterable, List, Optional, Tuple, Union
 from gs_quant.api.data import DataApi
+from gs_quant.data.core import DataContext
+from gs_quant.target.common import FieldFilterMap
 from gs_quant.target.data import DataQuery
 from gs_quant.errors import MqValueError
 from gs_quant.session import GsSession
@@ -26,14 +27,13 @@ from gs_quant.target.data import DataSetEntity
 
 
 class GsDataApi(DataApi):
-
     __definitions = {}
     DEFAULT_SCROLL = '30s'
 
     # DataApi interface
 
     @classmethod
-    def query_data(cls, query: DataQuery, dataset_id: str=None) -> Union[list, tuple]:
+    def query_data(cls, query: DataQuery, dataset_id: str = None) -> Union[list, tuple]:
         if query.marketDataCoordinates:
             result = GsSession.current._post('/data/coordinates/query', payload=query)
         else:
@@ -42,7 +42,7 @@ class GsDataApi(DataApi):
         return result.get('data', ())
 
     @classmethod
-    def last_data(cls, query: DataQuery, dataset_id: str=None) -> Union[list, tuple]:
+    def last_data(cls, query: DataQuery, dataset_id: str = None) -> Union[list, tuple]:
         if query.marketDataCoordinates:
             result = GsSession.current._post('/data/coordinates/query/last', payload=query)
         else:
@@ -94,8 +94,8 @@ class GsDataApi(DataApi):
         body = GsSession.current._get('/data/{}/coverage'.format(dataset_id), payload=params)
         results = body['results']
         if len(results) > 0 and 'scrollId' in body:
-
-            return results + cls.get_coverage(dataset_id, scroll_id=body['scrollId'], scroll=GsDataApi.DEFAULT_SCROLL, limit=limit)
+            return results + cls.get_coverage(dataset_id, scroll_id=body['scrollId'], scroll=GsDataApi.DEFAULT_SCROLL,
+                                              limit=limit)
         else:
             return results
 
@@ -126,6 +126,40 @@ class GsDataApi(DataApi):
 
         return definition
 
+    @staticmethod
+    def build_market_data_query(asset_ids: List[str], query_type: str, where: Union[FieldFilterMap] = None,
+                                source: Union[str] = None):
+        return {
+            'queries': [
+                {
+                    'assetIds': asset_ids,
+                    'queryType': query_type,
+                    'where': where or {},
+                    'source': source or 'any',
+                    'frequency': 'End Of Day',
+                    'measures': [
+                        'Curve'
+                    ],
+                    'startDate': DataContext.current.start_date,
+                    'endDate': DataContext.current.end_date
+                }
+            ]
+        }
+
+    @classmethod
+    def get_market_data(cls, query) -> pd.DataFrame:
+        GsSession.current: GsSession
+        body = GsSession.current._post('/data/markets', payload=query)
+        container = body['responses'][0]['queryResponse'][0]
+        if 'errorMessages' in container:
+            raise MqValueError(container['errorMessages'])
+        if 'response' not in container:
+            return pd.DataFrame()
+        df = pd.DataFrame(container['response']['data'])
+        df.set_index('date', inplace=True)
+        df.index = pd.to_datetime(df.index)
+        return df
+
     @classmethod
     def __normalise_coordinate_data(cls, data: Iterable[dict]) -> list:
         ret = []
@@ -142,11 +176,11 @@ class GsDataApi(DataApi):
 
     @classmethod
     def coordinates_last(
-        cls,
-        coordinates: Union[List, Tuple],
-        as_of: Union[dt.date, dt.datetime],
-        vendor: str = 'Goldman Sachs',
-        as_dataframe: bool = False,
+            cls,
+            coordinates: Union[List, Tuple],
+            as_of: Union[dt.date, dt.datetime],
+            vendor: str = 'Goldman Sachs',
+            as_dataframe: bool = False,
     ) -> Union[dict, pd.DataFrame]:
         ret = {coordinate: None for coordinate in coordinates}
         query = cls.build_query(
@@ -168,13 +202,13 @@ class GsDataApi(DataApi):
 
     @classmethod
     def coordinates_data(
-        cls,
-        coordinates: Union[List, Tuple],
-        start: Optional[Union[dt.date, dt.datetime]] = None,
-        end: Optional[Union[dt.date, dt.datetime]] = None,
-        vendor: str = 'Goldman Sachs',
-        as_of: Optional[dt.datetime] = None,
-        since: Optional[dt.datetime] = None
+            cls,
+            coordinates: Union[List, Tuple],
+            start: Optional[Union[dt.date, dt.datetime]] = None,
+            end: Optional[Union[dt.date, dt.datetime]] = None,
+            vendor: str = 'Goldman Sachs',
+            as_of: Optional[dt.datetime] = None,
+            since: Optional[dt.datetime] = None
     ) -> pd.DataFrame:
         query = cls.build_query(
             marketDataCoordinates=coordinates,

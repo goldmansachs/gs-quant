@@ -14,7 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 
-import datetime
+import datetime as dt
 import numpy as np
 
 from gs_quant.errors import *
@@ -43,16 +43,16 @@ class Timer:
         self.label = label
 
     def __enter__(self):
-        self.start = datetime.datetime.now()
+        self.start = dt.datetime.now()
 
     def __exit__(self, *args):
-        self.elapsed = datetime.datetime.now() - self.start
+        self.elapsed = dt.datetime.now() - self.start
 
         if self.print_on_exit:
             print("{} took {} seconds".format(self.label, self.elapsed.seconds + self.elapsed.microseconds / 1000000))
 
 
-def to_zulu_string(time:datetime.datetime):
+def to_zulu_string(time: dt.datetime):
     return time.isoformat()[:-3] + 'Z'
 
 

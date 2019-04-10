@@ -13,49 +13,41 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from gs_quant.api.risk import RiskFutureMapping, RiskApi
+from gs_quant.api.risk import RiskApi
 from gs_quant.base import Priceable
 from gs_quant.markets.core import MarketDataCoordinate
 from gs_quant.session import GsSession
-from gs_quant.risk import CoordinatesRequest, Formatters, RiskRequest, PricingContext, LiquidityRequest, \
-    LiquidityResponse, RiskModelRequest
-from threading import Thread
+from gs_quant.risk import CoordinatesRequest, RiskRequest, PricingContext, LiquidityRequest, LiquidityResponse, RiskModelRequest
 import time
-from typing import Iterable, Tuple
+from typing import Iterable, Tuple, Union
 
 
 class GsRiskApi(RiskApi):
 
     @classmethod
-    def liquidity(cls, request: LiquidityRequest) -> LiquidityResponse:
-        # Pick a risk model based on positions if not provided
-        if request.riskModel is None:
-            position_ids = [p['assetId'] for p in request.positions]
-            request.riskModel = cls._suggest_risk_model(RiskModelRequest(position_ids))
-
-        return GsSession.current._post(r'/risk/liquidity', request)
+    def calc(cls, request: RiskRequest) -> Union[Iterable, str]:
+        result = cls._exec(request)
+        return cls._handle_results(request, result) if request.waitForResults else result['reportId']
 
     @classmethod
-    def risk_models(cls, request: RiskModelRequest):
-        return GsSession.current._post(r'/risk/models', request)
+    def _exec(cls, request: RiskRequest) -> Union[Iterable, dict]:
+        return GsSession.current._post(r'/risk/calculate', request)
 
     @classmethod
-    def calc(cls, request: RiskRequest, futures: RiskFutureMapping, is_async: bool, is_batch: bool):
-        if is_batch:
-            request.waitForResults = False
-            response = cls._exec(request)
-            func = cls.__wait_for_results
-            args = (response['reportId'], request, tuple(futures.items()))
-        else:
-            request.waitForResults = True
-            func = cls.__exec
-            args = (request, tuple(futures.items()))
+    def get_results(cls, risk_request: RiskRequest, result_id: str) -> dict:
+        session = GsSession.current
+        url = '/risk/calculate/{}/results'.format(result_id)
+        results = {}
 
-        if is_async:
-            thread = Thread(target=func, args=args, daemon=True)
-            thread.start()
-        else:
-            func(*args)
+        while not results:
+            result = session._get(url)
+
+            if isinstance(result, list):
+                results = cls._handle_results(risk_request, result)
+            else:
+                time.sleep(1)
+
+        return results
 
     @classmethod
     def coordinates(cls, priceables: Iterable[Priceable]) -> Tuple[MarketDataCoordinate, ...]:
@@ -72,33 +64,17 @@ class GsRiskApi(RiskApi):
         )
 
     @classmethod
-    def _exec(cls, request: RiskRequest):
-        return GsSession.current._post(r'/risk/calculate', request)
+    def liquidity(cls, request: LiquidityRequest) -> LiquidityResponse:
+        # Pick a risk model based on positions if not provided
+        if request.riskModel is None:
+            position_ids = tuple(p['assetId'] for p in request.positions)
+            request.riskModel = cls._suggest_risk_model(RiskModelRequest(position_ids))
+
+        return GsSession.current._post(r'/risk/liquidity', request)
 
     @classmethod
-    def __exec(cls, request: RiskRequest, futures: tuple):
-        results = cls._exec(request)
-        cls.__complete_futures(request, results, dict(futures))
-
-    @classmethod
-    def __complete_futures(cls, request: RiskRequest, results: Iterable, futures: RiskFutureMapping):
-        for measure_idx, position_results in enumerate(results):
-            formatter = Formatters.get(request.measures[measure_idx])
-            for position_idx, result in enumerate(position_results):
-                result = formatter(result) if formatter else result
-                futures[request.measures[measure_idx]][request.positions[position_idx].instrument].set_result(result)
-
-    @classmethod
-    def __wait_for_results(cls, results_id: str, request: RiskRequest, futures: tuple):
-        session = GsSession.current
-        url = '/risk/calculate/{}/results'.format(results_id)
-        results = session._get(url)
-
-        while not isinstance(results, list):
-            time.sleep(1)
-            results = session._get(url)
-
-        cls.__complete_futures(request, results, dict(futures))
+    def risk_models(cls, request: RiskModelRequest):
+        return GsSession.current._post(r'/risk/models', request)
 
     @classmethod
     def _suggest_risk_model(cls, request: RiskModelRequest):

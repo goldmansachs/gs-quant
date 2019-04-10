@@ -17,5 +17,6 @@ under the License.
 
 from .dataset import Dataset
 from .dataset import Fields
+from .core import DataContext
 
 __name__ = 'data'

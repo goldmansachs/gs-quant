@@ -21,11 +21,59 @@ from typing import Tuple, Union
 import datetime
 
 
+class LiquidityMeasure(EnumBase, Enum):    
+    
+    """A list of the different liquidity measures to choose from."""
+
+    Summary = 'Summary'
+    Constituents = 'Constituents'
+    Largest_Holdings_By_Weight = 'Largest Holdings By Weight'
+    Least_Liquid_Holdings = 'Least Liquid Holdings'
+    ADV_Percent_Buckets = 'ADV Percent Buckets'
+    Market_Cap_Buckets = 'Market Cap Buckets'
+    Region_Buckets = 'Region Buckets'
+    Country_Buckets = 'Country Buckets'
+    Sector_Buckets = 'Sector Buckets'
+    Industry_Buckets = 'Industry Buckets'
+    Risk_Buckets = 'Risk Buckets'
+    Factor_Risk_Buckets = 'Factor Risk Buckets'
+    Exposure_Buckets = 'Exposure Buckets'
+    Factor_Exposure_Buckets = 'Factor Exposure Buckets'
+    Percent_Of_Trade_Complete_Over_Time = 'Percent Of Trade Complete Over Time'
+    Execution_Cost_With_Different_Time_Horizons = 'Execution Cost With Different Time Horizons'
+    Participation_Rate_With_Different_Time_Horizons = 'Participation Rate With Different Time Horizons'
+    Risk_With_Different_Time_Horizons = 'Risk With Different Time Horizons'
+    Historical_ADV_Percent_Curve = 'Historical ADV Percent Curve'
+    Time_Series_Data = 'Time Series Data'
+    
+    def __repr__(self):
+        return self.value
+
+
+class MarketDataShockType(EnumBase, Enum):    
+    
+    """Market data shock type"""
+
+    Absolute = 'Absolute'
+    Proportional = 'Proportional'
+    Invalid = 'Invalid'
+    Override = 'Override'
+    StdDev = 'StdDev'
+    AutoDefault = 'AutoDefault'
+    CSWFFR = 'CSWFFR'
+    StdVolFactor = 'StdVolFactor'
+    StdVolFactorProportional = 'StdVolFactorProportional'
+    
+    def __repr__(self):
+        return self.value
+
+
 class RiskMeasureType(EnumBase, Enum):    
     
     """The type of measure to perform risk on. e.g. Greeks"""
 
     Delta = 'Delta'
+    DeltaLocalCcy = 'DeltaLocalCcy'
     Dollar_Price = 'Dollar Price'
     Forward_Price = 'Forward Price'
     Price = 'Price'
@@ -38,6 +86,7 @@ class RiskMeasureType(EnumBase, Enum):
     Theta = 'Theta'
     Vanna = 'Vanna'
     Vega = 'Vega'
+    VegaLocalCcy = 'VegaLocalCcy'
     Volga = 'Volga'
     Annual_Implied_Volatility = 'Annual Implied Volatility'
     Annual_ATMF_Implied_Volatility = 'Annual ATMF Implied Volatility'
@@ -166,6 +215,74 @@ class CoordinatesResponse(Base):
     def results(self, value: Tuple[MarketDataCoordinate, ...]):
         self.__results = value
         self._property_changed('results')        
+
+
+class CurveScenario(Base):
+        
+    """A scenario to manipulate curve shape"""
+       
+    def __init__(self, marketDataAssets: Tuple[str, ...] = None, annualisedParallelShiftSize: float = None, annualisedSlopeShiftSize: float = None, pivotPoint: float = None, cutoff: float = None):
+        super().__init__()
+        self.__marketDataAssets = marketDataAssets
+        self.__annualisedParallelShiftSize = annualisedParallelShiftSize
+        self.__annualisedSlopeShiftSize = annualisedSlopeShiftSize
+        self.__pivotPoint = pivotPoint
+        self.__cutoff = cutoff
+
+    @property
+    def scenarioType(self) -> str:
+        """CurveScenario"""
+        return 'CurveScenario'        
+
+    @property
+    def marketDataAssets(self) -> Tuple[str, ...]:
+        """Assets (currencies, indices etc) to which this scenario applies"""
+        return self.__marketDataAssets
+
+    @marketDataAssets.setter
+    def marketDataAssets(self, value: Tuple[str, ...]):
+        self.__marketDataAssets = value
+        self._property_changed('marketDataAssets')        
+
+    @property
+    def annualisedParallelShiftSize(self) -> float:
+        """Size of the parallel shift (in bps)"""
+        return self.__annualisedParallelShiftSize
+
+    @annualisedParallelShiftSize.setter
+    def annualisedParallelShiftSize(self, value: float):
+        self.__annualisedParallelShiftSize = value
+        self._property_changed('annualisedParallelShiftSize')        
+
+    @property
+    def annualisedSlopeShiftSize(self) -> float:
+        """Size of the slope shift (in bps)"""
+        return self.__annualisedSlopeShiftSize
+
+    @annualisedSlopeShiftSize.setter
+    def annualisedSlopeShiftSize(self, value: float):
+        self.__annualisedSlopeShiftSize = value
+        self._property_changed('annualisedSlopeShiftSize')        
+
+    @property
+    def pivotPoint(self) -> float:
+        """Pivot point"""
+        return self.__pivotPoint
+
+    @pivotPoint.setter
+    def pivotPoint(self, value: float):
+        self.__pivotPoint = value
+        self._property_changed('pivotPoint')        
+
+    @property
+    def cutoff(self) -> float:
+        """The cutoff point (in years)"""
+        return self.__cutoff
+
+    @cutoff.setter
+    def cutoff(self, value: float):
+        self.__cutoff = value
+        self._property_changed('cutoff')        
 
 
 class ExecutionCostForHorizon(Base):
@@ -1295,6 +1412,156 @@ class LiquidityTimeSeriesItem(Base):
         self._property_changed('cumulativePnl')        
 
 
+class MarketDataPattern(Base):
+        
+    """A pattern used to match market coordinates"""
+       
+    def __init__(self, marketDataType: str = None, marketDataAsset: str = None, pointClass: str = None, marketDataPoint: Tuple[str, ...] = None, quotingStyle: str = None, isActive: bool = None, isInvestmentGrade: bool = None, currency: Union[Currency, str] = None, countryCode: Union[CountryCode, str] = None, gicsSector: str = None, gicsIndustryGroup: str = None, gicsIndustry: str = None, gicsSubIndustry: str = None):
+        super().__init__()
+        self.__marketDataType = marketDataType
+        self.__marketDataAsset = marketDataAsset
+        self.__pointClass = pointClass
+        self.__marketDataPoint = marketDataPoint
+        self.__quotingStyle = quotingStyle
+        self.__isActive = isActive
+        self.__isInvestmentGrade = isInvestmentGrade
+        self.__currency = currency if isinstance(currency, Currency) else get_enum_value(Currency, currency)
+        self.__countryCode = countryCode if isinstance(countryCode, CountryCode) else get_enum_value(CountryCode, countryCode)
+        self.__gicsSector = gicsSector
+        self.__gicsIndustryGroup = gicsIndustryGroup
+        self.__gicsIndustry = gicsIndustry
+        self.__gicsSubIndustry = gicsSubIndustry
+
+    @property
+    def marketDataType(self) -> str:
+        """The Market Data Type, e.g. IR, IR_BASIS, FX, FX_Vol"""
+        return self.__marketDataType
+
+    @marketDataType.setter
+    def marketDataType(self, value: str):
+        self.__marketDataType = value
+        self._property_changed('marketDataType')        
+
+    @property
+    def marketDataAsset(self) -> str:
+        """The specific point, e.g. 3m, 10y, 11y, Dec19"""
+        return self.__marketDataAsset
+
+    @marketDataAsset.setter
+    def marketDataAsset(self, value: str):
+        self.__marketDataAsset = value
+        self._property_changed('marketDataAsset')        
+
+    @property
+    def pointClass(self) -> str:
+        """The market data pointClass, e.g. Swap, Cash."""
+        return self.__pointClass
+
+    @pointClass.setter
+    def pointClass(self, value: str):
+        self.__pointClass = value
+        self._property_changed('pointClass')        
+
+    @property
+    def marketDataPoint(self) -> Tuple[str, ...]:
+        """The specific point, e.g. 3m, 10y, 11y, Dec19"""
+        return self.__marketDataPoint
+
+    @marketDataPoint.setter
+    def marketDataPoint(self, value: Tuple[str, ...]):
+        self.__marketDataPoint = value
+        self._property_changed('marketDataPoint')        
+
+    @property
+    def quotingStyle(self) -> str:
+        return self.__quotingStyle
+
+    @quotingStyle.setter
+    def quotingStyle(self, value: str):
+        self.__quotingStyle = value
+        self._property_changed('quotingStyle')        
+
+    @property
+    def isActive(self) -> bool:
+        """Is the asset active"""
+        return self.__isActive
+
+    @isActive.setter
+    def isActive(self, value: bool):
+        self.__isActive = value
+        self._property_changed('isActive')        
+
+    @property
+    def isInvestmentGrade(self) -> bool:
+        """Is the asset investment grade"""
+        return self.__isInvestmentGrade
+
+    @isInvestmentGrade.setter
+    def isInvestmentGrade(self, value: bool):
+        self.__isInvestmentGrade = value
+        self._property_changed('isInvestmentGrade')        
+
+    @property
+    def currency(self) -> Union[Currency, str]:
+        """Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)"""
+        return self.__currency
+
+    @currency.setter
+    def currency(self, value: Union[Currency, str]):
+        self.__currency = value if isinstance(value, Currency) else get_enum_value(Currency, value)
+        self._property_changed('currency')        
+
+    @property
+    def countryCode(self) -> Union[CountryCode, str]:
+        """ISO Country code"""
+        return self.__countryCode
+
+    @countryCode.setter
+    def countryCode(self, value: Union[CountryCode, str]):
+        self.__countryCode = value if isinstance(value, CountryCode) else get_enum_value(CountryCode, value)
+        self._property_changed('countryCode')        
+
+    @property
+    def gicsSector(self) -> str:
+        """GICS Sector classification (level 1)"""
+        return self.__gicsSector
+
+    @gicsSector.setter
+    def gicsSector(self, value: str):
+        self.__gicsSector = value
+        self._property_changed('gicsSector')        
+
+    @property
+    def gicsIndustryGroup(self) -> str:
+        """GICS Industry Group classification (level 2)"""
+        return self.__gicsIndustryGroup
+
+    @gicsIndustryGroup.setter
+    def gicsIndustryGroup(self, value: str):
+        self.__gicsIndustryGroup = value
+        self._property_changed('gicsIndustryGroup')        
+
+    @property
+    def gicsIndustry(self) -> str:
+        """GICS Industry classification (level 3)"""
+        return self.__gicsIndustry
+
+    @gicsIndustry.setter
+    def gicsIndustry(self, value: str):
+        self.__gicsIndustry = value
+        self._property_changed('gicsIndustry')        
+
+    @property
+    def gicsSubIndustry(self) -> str:
+        """GICS Sub Industry classification (level 4)"""
+        return self.__gicsSubIndustry
+
+    @gicsSubIndustry.setter
+    def gicsSubIndustry(self, value: str):
+        self.__gicsSubIndustry = value
+        self._property_changed('gicsSubIndustry')        
+
+
 class PRateForHorizon(Base):
                
     def __init__(self, minutesExpired: int = None, participationRate: float = None, participationRateLong: float = None, participationRateShort: float = None):
@@ -1343,6 +1610,36 @@ class PRateForHorizon(Base):
     def participationRateShort(self, value: float):
         self.__participationRateShort = value
         self._property_changed('participationRateShort')        
+
+
+class PricingDateAndMarketDataAsOf(Base):
+        
+    """Pricing date and market data as of (date or time)"""
+       
+    def __init__(self, pricingDate: datetime.date, marketDataAsOf: Union[datetime.date, datetime.datetime]):
+        super().__init__()
+        self.__pricingDate = pricingDate
+        self.__marketDataAsOf = marketDataAsOf
+
+    @property
+    def pricingDate(self) -> datetime.date:
+        """The date for which to perform the calculation"""
+        return self.__pricingDate
+
+    @pricingDate.setter
+    def pricingDate(self, value: datetime.date):
+        self.__pricingDate = value
+        self._property_changed('pricingDate')        
+
+    @property
+    def marketDataAsOf(self) -> Union[datetime.date, datetime.datetime]:
+        """The date or time to source market data"""
+        return self.__marketDataAsOf
+
+    @marketDataAsOf.setter
+    def marketDataAsOf(self, value: Union[datetime.date, datetime.datetime]):
+        self.__marketDataAsOf = value
+        self._property_changed('marketDataAsOf')        
 
 
 class RiskAtHorizon(Base):
@@ -1583,6 +1880,91 @@ class LiquiditySummary(Base):
         self._property_changed('longVsShort')        
 
 
+class MarketDataShock(Base):
+        
+    """A shock to apply to market coordinate values"""
+       
+    def __init__(self, shockType: Union[MarketDataShockType, str], value: float, precision: float = None, cap: float = None, floor: float = None, coordinateCap: float = None, coordinateFloor: float = None):
+        super().__init__()
+        self.__shockType = shockType if isinstance(shockType, MarketDataShockType) else get_enum_value(MarketDataShockType, shockType)
+        self.__value = value
+        self.__precision = precision
+        self.__cap = cap
+        self.__floor = floor
+        self.__coordinateCap = coordinateCap
+        self.__coordinateFloor = coordinateFloor
+
+    @property
+    def shockType(self) -> Union[MarketDataShockType, str]:
+        """Market data shock type"""
+        return self.__shockType
+
+    @shockType.setter
+    def shockType(self, value: Union[MarketDataShockType, str]):
+        self.__shockType = value if isinstance(value, MarketDataShockType) else get_enum_value(MarketDataShockType, value)
+        self._property_changed('shockType')        
+
+    @property
+    def value(self) -> float:
+        """The amount by which to shock matching coordinates"""
+        return self.__value
+
+    @value.setter
+    def value(self, value: float):
+        self.__value = value
+        self._property_changed('value')        
+
+    @property
+    def precision(self) -> float:
+        """The precision to which the shock will be rounded"""
+        return self.__precision
+
+    @precision.setter
+    def precision(self, value: float):
+        self.__precision = value
+        self._property_changed('precision')        
+
+    @property
+    def cap(self) -> float:
+        """Upper bound on the shocked value"""
+        return self.__cap
+
+    @cap.setter
+    def cap(self, value: float):
+        self.__cap = value
+        self._property_changed('cap')        
+
+    @property
+    def floor(self) -> float:
+        """Lower bound on the shocked value"""
+        return self.__floor
+
+    @floor.setter
+    def floor(self, value: float):
+        self.__floor = value
+        self._property_changed('floor')        
+
+    @property
+    def coordinateCap(self) -> float:
+        """Upper bound on the pre-shocked value of matching coordinates"""
+        return self.__coordinateCap
+
+    @coordinateCap.setter
+    def coordinateCap(self, value: float):
+        self.__coordinateCap = value
+        self._property_changed('coordinateCap')        
+
+    @property
+    def coordinateFloor(self) -> float:
+        """Lower bound on the pre-shocked value of matching coordinates"""
+        return self.__coordinateFloor
+
+    @coordinateFloor.setter
+    def coordinateFloor(self, value: float):
+        self.__coordinateFloor = value
+        self._property_changed('coordinateFloor')        
+
+
 class RiskMeasure(Base):
         
     """The measure to perform risk on. Each risk measure consists of an asset class, a measure type, and a unit."""
@@ -1669,7 +2051,7 @@ class LiquidityRequest(Base):
         
     """Required parameters in order to get liquidity information on a set of positions"""
        
-    def __init__(self, positions, notional: float = None, riskModel: Union[RiskModel, str] = None, date: datetime.date = None, currency: Union[Currency, str] = None, participationRate: float = None, benchmarkId: str = None, measures: Tuple[str, ...] = None, timeSeriesBenchmarkIds: Tuple[str, ...] = None, timeSeriesStartDate: datetime.date = None, timeSeriesEndDate: datetime.date = None, format: Union[Format, str] = None):
+    def __init__(self, positions: dict, notional: float = None, riskModel: Union[RiskModel, str] = None, date: datetime.date = None, currency: Union[Currency, str] = None, participationRate: float = None, benchmarkId: str = None, measures: Tuple[Union[LiquidityMeasure, str], ...] = None, timeSeriesBenchmarkIds: Tuple[str, ...] = None, timeSeriesStartDate: datetime.date = None, timeSeriesEndDate: datetime.date = None, format: Union[Format, str] = None):
         super().__init__()
         self.__notional = notional
         self.__positions = positions
@@ -1695,12 +2077,12 @@ class LiquidityRequest(Base):
         self._property_changed('notional')        
 
     @property
-    def positions(self):
+    def positions(self) -> dict:
         """A set of quantity or weighted positions."""
         return self.__positions
 
     @positions.setter
-    def positions(self, value):
+    def positions(self, value: dict):
         self.__positions = value
         self._property_changed('positions')        
 
@@ -1754,11 +2136,11 @@ class LiquidityRequest(Base):
         self._property_changed('benchmarkId')        
 
     @property
-    def measures(self) -> Tuple[str, ...]:
+    def measures(self) -> Tuple[Union[LiquidityMeasure, str], ...]:
         return self.__measures
 
     @measures.setter
-    def measures(self, value: Tuple[str, ...]):
+    def measures(self, value: Tuple[Union[LiquidityMeasure, str], ...]):
         self.__measures = value
         self._property_changed('measures')        
 
@@ -1807,11 +2189,13 @@ class LiquidityResponse(Base):
         
     """Liquidity information for a set of weighted positions."""
        
-    def __init__(self, assetsNotInRiskModel: Tuple[str, ...] = None, assetsNotInCostPredictModel: Tuple[str, ...] = None, asOfDate: datetime.date = None, report: str = None, summary: LiquiditySummary = None, constituents: Tuple[LiquidityConstituent, ...] = None, largestHoldingsByWeight: Tuple[LiquidityTableRow, ...] = None, leastLiquidHoldings: Tuple[LiquidityTableRow, ...] = None, advBuckets: Tuple[LiquidityBucket, ...] = None, regionBuckets: Tuple[LiquidityBucket, ...] = None, countryBuckets: Tuple[LiquidityBucket, ...] = None, sectorBuckets: Tuple[LiquidityBucket, ...] = None, industryBuckets: Tuple[LiquidityBucket, ...] = None, marketCapBuckets: Tuple[LiquidityBucket, ...] = None, executionCostsWithDifferentTimeHorizons: Tuple[ExecutionCostForHorizon, ...] = None, timeToTradeWithDifferentParticipationRates: Tuple[PRateForHorizon, ...] = None, riskOverTime: Tuple[RiskAtHorizon, ...] = None, tradeCompletePercentOverTime: Tuple[TradeCompleteAtHorizon, ...] = None, advPercentOverTime: Tuple[AdvCurveTick, ...] = None, riskBuckets: Tuple[LiquidityFactor, ...] = None, factorRiskBuckets: Tuple[LiquidityFactorCategory, ...] = None, exposureBuckets: Tuple[LiquidityFactor, ...] = None, factorExposureBuckets: Tuple[LiquidityFactorCategory, ...] = None, timeseriesData: Tuple[LiquidityTimeSeriesItem, ...] = None, errorMessage: str = None):
+    def __init__(self, assetsNotInRiskModel: Tuple[str, ...] = None, assetsNotInCostPredictModel: Tuple[str, ...] = None, asOfDate: datetime.date = None, riskModel: Union[RiskModel, str] = None, currency: Union[Currency, str] = None, report: str = None, summary: LiquiditySummary = None, constituents: Tuple[LiquidityConstituent, ...] = None, largestHoldingsByWeight: Tuple[LiquidityTableRow, ...] = None, leastLiquidHoldings: Tuple[LiquidityTableRow, ...] = None, advBuckets: Tuple[LiquidityBucket, ...] = None, regionBuckets: Tuple[LiquidityBucket, ...] = None, countryBuckets: Tuple[LiquidityBucket, ...] = None, sectorBuckets: Tuple[LiquidityBucket, ...] = None, industryBuckets: Tuple[LiquidityBucket, ...] = None, marketCapBuckets: Tuple[LiquidityBucket, ...] = None, executionCostsWithDifferentTimeHorizons: Tuple[ExecutionCostForHorizon, ...] = None, timeToTradeWithDifferentParticipationRates: Tuple[PRateForHorizon, ...] = None, riskOverTime: Tuple[RiskAtHorizon, ...] = None, tradeCompletePercentOverTime: Tuple[TradeCompleteAtHorizon, ...] = None, advPercentOverTime: Tuple[AdvCurveTick, ...] = None, riskBuckets: Tuple[LiquidityFactor, ...] = None, factorRiskBuckets: Tuple[LiquidityFactorCategory, ...] = None, exposureBuckets: Tuple[LiquidityFactor, ...] = None, factorExposureBuckets: Tuple[LiquidityFactorCategory, ...] = None, timeseriesData: Tuple[LiquidityTimeSeriesItem, ...] = None, errorMessage: str = None):
         super().__init__()
         self.__assetsNotInRiskModel = assetsNotInRiskModel
         self.__assetsNotInCostPredictModel = assetsNotInCostPredictModel
         self.__asOfDate = asOfDate
+        self.__riskModel = riskModel if isinstance(riskModel, RiskModel) else get_enum_value(RiskModel, riskModel)
+        self.__currency = currency if isinstance(currency, Currency) else get_enum_value(Currency, currency)
         self.__report = report
         self.__summary = summary
         self.__constituents = constituents
@@ -1864,6 +2248,26 @@ class LiquidityResponse(Base):
     def asOfDate(self, value: datetime.date):
         self.__asOfDate = value
         self._property_changed('asOfDate')        
+
+    @property
+    def riskModel(self) -> Union[RiskModel, str]:
+        """Axioma risk model identifier."""
+        return self.__riskModel
+
+    @riskModel.setter
+    def riskModel(self, value: Union[RiskModel, str]):
+        self.__riskModel = value if isinstance(value, RiskModel) else get_enum_value(RiskModel, value)
+        self._property_changed('riskModel')        
+
+    @property
+    def currency(self) -> Union[Currency, str]:
+        """Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)"""
+        return self.__currency
+
+    @currency.setter
+    def currency(self, value: Union[Currency, str]):
+        self.__currency = value if isinstance(value, Currency) else get_enum_value(Currency, value)
+        self._property_changed('currency')        
 
     @property
     def report(self) -> str:
@@ -2085,19 +2489,104 @@ class LiquidityResponse(Base):
         self._property_changed('errorMessage')        
 
 
+class MarketDataPatternAndShock(Base):
+        
+    """A shock to apply to market coordinate values matching the supplied pattern"""
+       
+    def __init__(self, pattern: MarketDataPattern, shock: MarketDataShock):
+        super().__init__()
+        self.__pattern = pattern
+        self.__shock = shock
+
+    @property
+    def pattern(self) -> MarketDataPattern:
+        """A pattern used to match market coordinates"""
+        return self.__pattern
+
+    @pattern.setter
+    def pattern(self, value: MarketDataPattern):
+        self.__pattern = value
+        self._property_changed('pattern')        
+
+    @property
+    def shock(self) -> MarketDataShock:
+        """A shock to apply to market coordinate values"""
+        return self.__shock
+
+    @shock.setter
+    def shock(self, value: MarketDataShock):
+        self.__shock = value
+        self._property_changed('shock')        
+
+
+class MarketDataShockBasedScenario(Base):
+        
+    """A scenario comprised of user-defined market data shocks"""
+       
+    def __init__(self, shocks: Tuple[MarketDataPatternAndShock, ...]):
+        super().__init__()
+        self.__shocks = shocks
+
+    @property
+    def scenarioType(self) -> str:
+        """MarketDataShockBasedScenario"""
+        return 'MarketDataShockBasedScenario'        
+
+    @property
+    def shocks(self) -> Tuple[MarketDataPatternAndShock, ...]:
+        return self.__shocks
+
+    @shocks.setter
+    def shocks(self, value: Tuple[MarketDataPatternAndShock, ...]):
+        self.__shocks = value
+        self._property_changed('shocks')        
+
+
+class MarketDataScenario(Base):
+        
+    """A market data scenario to apply to the calculation"""
+       
+    def __init__(self, scenario: Union[CurveScenario, MarketDataShockBasedScenario], subtractBase: bool = False):
+        super().__init__()
+        self.__scenario = scenario
+        self.__subtractBase = subtractBase
+
+    @property
+    def scenario(self) -> Union[CurveScenario, MarketDataShockBasedScenario]:
+        """Market data scenarios"""
+        return self.__scenario
+
+    @scenario.setter
+    def scenario(self, value: Union[CurveScenario, MarketDataShockBasedScenario]):
+        self.__scenario = value
+        self._property_changed('scenario')        
+
+    @property
+    def subtractBase(self) -> bool:
+        """Subtract values computed under the base market data state, to return a diff, if true"""
+        return self.__subtractBase
+
+    @subtractBase.setter
+    def subtractBase(self, value: bool):
+        self.__subtractBase = value
+        self._property_changed('subtractBase')        
+
+
 class RiskRequest(Base):
         
     """Object representation of a risk calculation request"""
        
-    def __init__(self, positions: Tuple[RiskPosition, ...], measures: Tuple[RiskMeasure, ...], asOf: Union[datetime.date, datetime.datetime], pricingLocation: Union[PricingLocation, str] = 'NYC', marketDataAsOf: Union[datetime.date, datetime.datetime] = None, marketDataVendor: Union[MarketDataVendor, str] = 'Goldman Sachs', waitForResults: bool = False):
+    def __init__(self, positions: Tuple[RiskPosition, ...], measures: Tuple[RiskMeasure, ...], asOf: datetime.date = None, marketDataAsOf: Union[datetime.date, datetime.datetime] = None, pricingAndMarketDataAsOf: Tuple[PricingDateAndMarketDataAsOf, ...] = None, pricingLocation: Union[PricingLocation, str] = 'NYC', marketDataVendor: Union[MarketDataVendor, str] = 'Goldman Sachs', waitForResults: bool = False, scenario: MarketDataScenario = None):
         super().__init__()
         self.__positions = positions
         self.__measures = measures
         self.__asOf = asOf
-        self.__pricingLocation = pricingLocation if isinstance(pricingLocation, PricingLocation) else get_enum_value(PricingLocation, pricingLocation)
         self.__marketDataAsOf = marketDataAsOf
+        self.__pricingAndMarketDataAsOf = pricingAndMarketDataAsOf
+        self.__pricingLocation = pricingLocation if isinstance(pricingLocation, PricingLocation) else get_enum_value(PricingLocation, pricingLocation)
         self.__marketDataVendor = marketDataVendor if isinstance(marketDataVendor, MarketDataVendor) else get_enum_value(MarketDataVendor, marketDataVendor)
         self.__waitForResults = waitForResults
+        self.__scenario = scenario
 
     @property
     def positions(self) -> Tuple[RiskPosition, ...]:
@@ -2120,14 +2609,33 @@ class RiskRequest(Base):
         self._property_changed('measures')        
 
     @property
-    def asOf(self) -> Union[datetime.date, datetime.datetime]:
-        """The date or time for which to run the calculation and snap market data"""
+    def asOf(self) -> datetime.date:
+        """DEPRECATED: The date(s) for which to run the calculation and date(s) or time(s) for which to snap market data"""
         return self.__asOf
 
     @asOf.setter
-    def asOf(self, value: Union[datetime.date, datetime.datetime]):
+    def asOf(self, value: datetime.date):
         self.__asOf = value
         self._property_changed('asOf')        
+
+    @property
+    def marketDataAsOf(self) -> Union[datetime.date, datetime.datetime]:
+        """DEPRECATED: The date or time to source market data"""
+        return self.__marketDataAsOf
+
+    @marketDataAsOf.setter
+    def marketDataAsOf(self, value: Union[datetime.date, datetime.datetime]):
+        self.__marketDataAsOf = value
+        self._property_changed('marketDataAsOf')        
+
+    @property
+    def pricingAndMarketDataAsOf(self) -> Tuple[PricingDateAndMarketDataAsOf, ...]:
+        return self.__pricingAndMarketDataAsOf
+
+    @pricingAndMarketDataAsOf.setter
+    def pricingAndMarketDataAsOf(self, value: Tuple[PricingDateAndMarketDataAsOf, ...]):
+        self.__pricingAndMarketDataAsOf = value
+        self._property_changed('pricingAndMarketDataAsOf')        
 
     @property
     def pricingLocation(self) -> Union[PricingLocation, str]:
@@ -2138,16 +2646,6 @@ class RiskRequest(Base):
     def pricingLocation(self, value: Union[PricingLocation, str]):
         self.__pricingLocation = value if isinstance(value, PricingLocation) else get_enum_value(PricingLocation, value)
         self._property_changed('pricingLocation')        
-
-    @property
-    def marketDataAsOf(self) -> Union[datetime.date, datetime.datetime]:
-        """The date or time to source market data"""
-        return self.__marketDataAsOf
-
-    @marketDataAsOf.setter
-    def marketDataAsOf(self, value: Union[datetime.date, datetime.datetime]):
-        self.__marketDataAsOf = value
-        self._property_changed('marketDataAsOf')        
 
     @property
     def marketDataVendor(self) -> Union[MarketDataVendor, str]:
@@ -2168,3 +2666,13 @@ class RiskRequest(Base):
     def waitForResults(self, value: bool):
         self.__waitForResults = value
         self._property_changed('waitForResults')        
+
+    @property
+    def scenario(self) -> MarketDataScenario:
+        """A market data scenario to apply to the calculation"""
+        return self.__scenario
+
+    @scenario.setter
+    def scenario(self, value: MarketDataScenario):
+        self.__scenario = value
+        self._property_changed('scenario')        

@@ -14,10 +14,31 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.base import Base, get_enum_value
+from enum import Enum
+from gs_quant.base import Base, EnumBase, get_enum_value
 from gs_quant.target.common import *
 from typing import Tuple, Union
 import datetime
+
+
+class MarketDataFrequency(EnumBase, Enum):    
+    
+    Real_Time = 'Real Time'
+    End_Of_Day = 'End Of Day'
+    
+    def __repr__(self):
+        return self.value
+
+
+class MarketDataMeasure(EnumBase, Enum):    
+    
+    Last = 'Last'
+    Curve = 'Curve'
+    Close_Change = 'Close Change'
+    Previous_Close = 'Previous Close'
+    
+    def __repr__(self):
+        return self.value
 
 
 class Adjustments(Base):
@@ -440,7 +461,7 @@ class DataSetParameters(Base):
         
     """Dataset parameters."""
        
-    def __init__(self, uploadDataPolicy: str, logicalDb: str, symbolStrategy: str, applyMarketDataEntitlements: bool, coverage: str, frequency: str, methodology: str, history: str, category: str = None, subCategory: str = None, assetClass: Union[AssetClass, str] = None, ownerIds: Tuple[str, ...] = None, approverIds: Tuple[str, ...] = None, supportIds: Tuple[str, ...] = None, identifierMapperName: str = None, constantSymbols: Tuple[str, ...] = None, underlyingDataSetId: str = None, immutable: bool = None, includeInCatalog: bool = None, overrideQueryColumnIds: Tuple[str, ...] = None, plot: bool = None):
+    def __init__(self, uploadDataPolicy: str, logicalDb: str, symbolStrategy: str, applyMarketDataEntitlements: bool, coverage: str, frequency: str, methodology: str, history: str, category: str = None, subCategory: str = None, assetClass: Union[AssetClass, str] = None, ownerIds: Tuple[str, ...] = None, approverIds: Tuple[str, ...] = None, supportIds: Tuple[str, ...] = None, identifierMapperName: str = None, constantSymbols: Tuple[str, ...] = None, underlyingDataSetId: str = None, immutable: bool = None, includeInCatalog: bool = None, overrideQueryColumnIds: Tuple[str, ...] = None, plot: bool = None, coverageEnabled: bool = True):
         super().__init__()
         self.__category = category
         self.__subCategory = subCategory
@@ -463,6 +484,7 @@ class DataSetParameters(Base):
         self.__includeInCatalog = includeInCatalog
         self.__overrideQueryColumnIds = overrideQueryColumnIds
         self.__plot = plot
+        self.__coverageEnabled = coverageEnabled
 
     @property
     def category(self) -> str:
@@ -678,6 +700,16 @@ class DataSetParameters(Base):
         self.__plot = value
         self._property_changed('plot')        
 
+    @property
+    def coverageEnabled(self) -> bool:
+        """Whether coverage requests are available for the DataSet"""
+        return self.__coverageEnabled
+
+    @coverageEnabled.setter
+    def coverageEnabled(self, value: bool):
+        self.__coverageEnabled = value
+        self._property_changed('coverageEnabled')        
+
 
 class FieldColumnPair(Base):
         
@@ -811,6 +843,93 @@ class MDAPI(Base):
     def quotingStyles(self, value: Tuple[dict, ...]):
         self.__quotingStyles = value
         self._property_changed('quotingStyles')        
+
+
+class MarketDataField(Base):
+               
+    def __init__(self, name: str = None, mapping: str = None):
+        super().__init__()
+        self.__name = name
+        self.__mapping = mapping
+
+    @property
+    def name(self) -> str:
+        return self.__name
+
+    @name.setter
+    def name(self, value: str):
+        self.__name = value
+        self._property_changed('name')        
+
+    @property
+    def mapping(self) -> str:
+        return self.__mapping
+
+    @mapping.setter
+    def mapping(self, value: str):
+        self.__mapping = value
+        self._property_changed('mapping')        
+
+
+class MarketDataFilteredField(Base):
+               
+    def __init__(self, field: str = None, defaultValue: str = None, defaultNumericalValue: float = None, numericalValues: Tuple[float, ...] = None, values: Tuple[str, ...] = None):
+        super().__init__()
+        self.__field = field
+        self.__defaultValue = defaultValue
+        self.__defaultNumericalValue = defaultNumericalValue
+        self.__numericalValues = numericalValues
+        self.__values = values
+
+    @property
+    def field(self) -> str:
+        """Filtered field name"""
+        return self.__field
+
+    @field.setter
+    def field(self, value: str):
+        self.__field = value
+        self._property_changed('field')        
+
+    @property
+    def defaultValue(self) -> str:
+        """Default filtered field"""
+        return self.__defaultValue
+
+    @defaultValue.setter
+    def defaultValue(self, value: str):
+        self.__defaultValue = value
+        self._property_changed('defaultValue')        
+
+    @property
+    def defaultNumericalValue(self) -> float:
+        """Default numerical filtered field"""
+        return self.__defaultNumericalValue
+
+    @defaultNumericalValue.setter
+    def defaultNumericalValue(self, value: float):
+        self.__defaultNumericalValue = value
+        self._property_changed('defaultNumericalValue')        
+
+    @property
+    def numericalValues(self) -> Tuple[float, ...]:
+        """Array of numerical filtered fields"""
+        return self.__numericalValues
+
+    @numericalValues.setter
+    def numericalValues(self, value: Tuple[float, ...]):
+        self.__numericalValues = value
+        self._property_changed('numericalValues')        
+
+    @property
+    def values(self) -> Tuple[str, ...]:
+        """Array of filtered fields"""
+        return self.__values
+
+    @values.setter
+    def values(self, value: Tuple[str, ...]):
+        self.__values = value
+        self._property_changed('values')        
 
 
 class ParserEntity(Base):
@@ -1004,6 +1123,137 @@ class DataSetDimensions(Base):
         self._property_changed('entityDimension')        
 
 
+class MarketDataMapping(Base):
+               
+    def __init__(self, assetClass: Union[AssetClass, str] = None, queryType: str = None, description: str = None, scale: float = None, frequency: Union[MarketDataFrequency, str] = None, measures: Tuple[Union[MarketDataMeasure, str], ...] = None, dataSet: str = None, vendor: Union[MarketDataVendor, str] = None, fields: Tuple[MarketDataField, ...] = None, rank: float = 1000, filteredFields: Tuple[MarketDataFilteredField, ...] = None, assetTypes: Tuple[Union[AssetType, str], ...] = None):
+        super().__init__()
+        self.__assetClass = assetClass if isinstance(assetClass, AssetClass) else get_enum_value(AssetClass, assetClass)
+        self.__queryType = queryType
+        self.__description = description
+        self.__scale = scale
+        self.__frequency = frequency if isinstance(frequency, MarketDataFrequency) else get_enum_value(MarketDataFrequency, frequency)
+        self.__measures = measures
+        self.__dataSet = dataSet
+        self.__vendor = vendor if isinstance(vendor, MarketDataVendor) else get_enum_value(MarketDataVendor, vendor)
+        self.__fields = fields
+        self.__rank = rank
+        self.__filteredFields = filteredFields
+        self.__assetTypes = assetTypes
+
+    @property
+    def assetClass(self) -> Union[AssetClass, str]:
+        """Deprecated. To be removed once fully switched to market driven by datasets mappings."""
+        return self.__assetClass
+
+    @assetClass.setter
+    def assetClass(self, value: Union[AssetClass, str]):
+        self.__assetClass = value if isinstance(value, AssetClass) else get_enum_value(AssetClass, value)
+        self._property_changed('assetClass')        
+
+    @property
+    def queryType(self) -> str:
+        """Market data query type."""
+        return self.__queryType
+
+    @queryType.setter
+    def queryType(self, value: str):
+        self.__queryType = value
+        self._property_changed('queryType')        
+
+    @property
+    def description(self) -> str:
+        """Query type description"""
+        return self.__description
+
+    @description.setter
+    def description(self, value: str):
+        self.__description = value
+        self._property_changed('description')        
+
+    @property
+    def scale(self) -> float:
+        """Scale multiplier for time series"""
+        return self.__scale
+
+    @scale.setter
+    def scale(self, value: float):
+        self.__scale = value
+        self._property_changed('scale')        
+
+    @property
+    def frequency(self) -> Union[MarketDataFrequency, str]:
+        return self.__frequency
+
+    @frequency.setter
+    def frequency(self, value: Union[MarketDataFrequency, str]):
+        self.__frequency = value if isinstance(value, MarketDataFrequency) else get_enum_value(MarketDataFrequency, value)
+        self._property_changed('frequency')        
+
+    @property
+    def measures(self) -> Tuple[Union[MarketDataMeasure, str], ...]:
+        return self.__measures
+
+    @measures.setter
+    def measures(self, value: Tuple[Union[MarketDataMeasure, str], ...]):
+        self.__measures = value
+        self._property_changed('measures')        
+
+    @property
+    def dataSet(self) -> str:
+        """Marquee unique identifier"""
+        return self.__dataSet
+
+    @dataSet.setter
+    def dataSet(self, value: str):
+        self.__dataSet = value
+        self._property_changed('dataSet')        
+
+    @property
+    def vendor(self) -> Union[MarketDataVendor, str]:
+        return self.__vendor
+
+    @vendor.setter
+    def vendor(self, value: Union[MarketDataVendor, str]):
+        self.__vendor = value if isinstance(value, MarketDataVendor) else get_enum_value(MarketDataVendor, value)
+        self._property_changed('vendor')        
+
+    @property
+    def fields(self) -> Tuple[MarketDataField, ...]:
+        return self.__fields
+
+    @fields.setter
+    def fields(self, value: Tuple[MarketDataField, ...]):
+        self.__fields = value
+        self._property_changed('fields')        
+
+    @property
+    def rank(self) -> float:
+        return self.__rank
+
+    @rank.setter
+    def rank(self, value: float):
+        self.__rank = value
+        self._property_changed('rank')        
+
+    @property
+    def filteredFields(self) -> Tuple[MarketDataFilteredField, ...]:
+        return self.__filteredFields
+
+    @filteredFields.setter
+    def filteredFields(self, value: Tuple[MarketDataFilteredField, ...]):
+        self.__filteredFields = value
+        self._property_changed('filteredFields')        
+
+    @property
+    def assetTypes(self) -> Tuple[Union[AssetType, str], ...]:
+        return self.__assetTypes
+
+    @assetTypes.setter
+    def assetTypes(self, value: Tuple[Union[AssetType, str], ...]):
+        self.__assetTypes = value
+        self._property_changed('assetTypes')        
+
+
 class ProcessorEntity(Base):
         
     """Query processors for dataset."""
@@ -1043,6 +1293,34 @@ class ProcessorEntity(Base):
     def deduplicate(self, value: Tuple[str, ...]):
         self.__deduplicate = value
         self._property_changed('deduplicate')        
+
+
+class DataBatchResponse(Base):
+               
+    def __init__(self, requestId: str = None, responses: Tuple[DataQueryResponse, ...] = None):
+        super().__init__()
+        self.__requestId = requestId
+        self.__responses = responses
+
+    @property
+    def requestId(self) -> str:
+        """Marquee unique identifier"""
+        return self.__requestId
+
+    @requestId.setter
+    def requestId(self, value: str):
+        self.__requestId = value
+        self._property_changed('requestId')        
+
+    @property
+    def responses(self) -> Tuple[DataQueryResponse, ...]:
+        """Data query responses"""
+        return self.__responses
+
+    @responses.setter
+    def responses(self, value: Tuple[DataQueryResponse, ...]):
+        self.__responses = value
+        self._property_changed('responses')        
 
 
 class EntityFilter(Base):
@@ -1136,13 +1414,14 @@ class DataSetFilters(Base):
 
 class DataSetEntity(Base):
                
-    def __init__(self, id: str, name: str, description: str, shortDescription: str, vendor: str, dataProduct: str, parameters: DataSetParameters, dimensions: DataSetDimensions, ownerId: str = None, startDate: datetime.date = None, mdapi: MDAPI = None, entitlements: Entitlements = None, queryProcessors: ProcessorEntity = None, defaults: DataSetDefaults = None, filters: DataSetFilters = None, createdById: str = None, createdTime: datetime.datetime = None, lastUpdatedById: str = None, lastUpdatedTime: datetime.datetime = None, tags: Tuple[str, ...] = None):
+    def __init__(self, id: str, name: str, description: str, shortDescription: str, vendor: str, dataProduct: str, parameters: DataSetParameters, dimensions: DataSetDimensions, ownerId: str = None, mappings: Tuple[MarketDataMapping, ...] = None, startDate: datetime.date = None, mdapi: MDAPI = None, entitlements: Entitlements = None, queryProcessors: ProcessorEntity = None, defaults: DataSetDefaults = None, filters: DataSetFilters = None, createdById: str = None, createdTime: datetime.datetime = None, lastUpdatedById: str = None, lastUpdatedTime: datetime.datetime = None, tags: Tuple[str, ...] = None):
         super().__init__()
         self.__ownerId = ownerId
         self.__id = id
         self.__name = name
         self.__description = description
         self.__shortDescription = shortDescription
+        self.__mappings = mappings
         self.__vendor = vendor
         self.__startDate = startDate
         self.__mdapi = mdapi
@@ -1208,6 +1487,16 @@ class DataSetEntity(Base):
     def shortDescription(self, value: str):
         self.__shortDescription = value
         self._property_changed('shortDescription')        
+
+    @property
+    def mappings(self) -> Tuple[MarketDataMapping, ...]:
+        """Market data mappings."""
+        return self.__mappings
+
+    @mappings.setter
+    def mappings(self, value: Tuple[MarketDataMapping, ...]):
+        self.__mappings = value
+        self._property_changed('mappings')        
 
     @property
     def vendor(self) -> str:

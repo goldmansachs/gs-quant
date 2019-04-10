@@ -12,7 +12,7 @@ class GsCalendar:
     DATE_HIGH_LIMIT = dt.date(2052, 12, 31)
     DEFAULT_WEEK_MASK = '1111100'  # Default to Sat, Sun weekend days
 
-    def __init__(self, calendars: Union[str, Tuple]=()):
+    def __init__(self, calendars: Union[str, Tuple[str, ...]]=()):
         if isinstance(calendars, str):
             calendars = (calendars,)
 

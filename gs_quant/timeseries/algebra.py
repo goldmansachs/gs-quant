@@ -18,6 +18,7 @@
 
 import math
 from .datetime import *
+from .helper import plot_function
 from ..errors import *
 from numbers import Real
 
@@ -27,6 +28,7 @@ division and other functions on timeseries
 """
 
 
+@plot_function
 def add(x: pd.Series, y: pd.Series, method: Interpolate = Interpolate.STEP) -> pd.Series:
     """
     Add two series or scalars
@@ -77,6 +79,7 @@ def add(x: pd.Series, y: pd.Series, method: Interpolate = Interpolate.STEP) -> p
     return x_align.add(y_align)
 
 
+@plot_function
 def subtract(x: pd.Series, y: pd.Series, method: Interpolate = Interpolate.STEP) -> pd.Series:
     """
     Add two series or scalars
@@ -121,6 +124,7 @@ def subtract(x: pd.Series, y: pd.Series, method: Interpolate = Interpolate.STEP)
     return x_align.subtract(y_align)
 
 
+@plot_function
 def multiply(x: pd.Series, y: pd.Series, method: Interpolate = Interpolate.STEP) -> pd.Series:
     """
     Multiply two series or scalars
@@ -171,6 +175,7 @@ def multiply(x: pd.Series, y: pd.Series, method: Interpolate = Interpolate.STEP)
     return x_align.multiply(y_align)
 
 
+@plot_function
 def divide(x: pd.Series, y: pd.Series, method: Interpolate = Interpolate.STEP) -> pd.Series:
     """
     Divide two series or scalars
@@ -221,6 +226,7 @@ def divide(x: pd.Series, y: pd.Series, method: Interpolate = Interpolate.STEP) -
     return x_align.divide(y_align)
 
 
+@plot_function
 def exp(x: pd.Series) -> pd.Series:
     """
     Exponential of series
@@ -249,6 +255,7 @@ def exp(x: pd.Series) -> pd.Series:
     return np.exp(x)
 
 
+@plot_function
 def log(x: pd.Series) -> pd.Series:
     """
     Natural logarithm of series
@@ -281,6 +288,7 @@ def log(x: pd.Series) -> pd.Series:
     return np.log(x)
 
 
+@plot_function
 def power(x: pd.Series, y: float = 1) -> pd.Series:
     """
     Raise each element in series to power
@@ -310,6 +318,7 @@ def power(x: pd.Series, y: float = 1) -> pd.Series:
     return np.power(x, y)
 
 
+@plot_function
 def sqrt(x: Union[Real, pd.Series]) -> Union[Real, pd.Series]:
     """
     Square root of (a) each element in a series or (b) a real number
@@ -343,6 +352,7 @@ def sqrt(x: Union[Real, pd.Series]) -> Union[Real, pd.Series]:
     return round(result) if round(result) == result else result
 
 
+@plot_function
 def abs_(x: pd.Series) -> pd.Series:
     """
     Absolute value of each element in series
@@ -374,6 +384,7 @@ def abs_(x: pd.Series) -> pd.Series:
     return abs(x)
 
 
+@plot_function
 def floor(x: pd.Series, value: float = 0) -> pd.Series:
     """
     Floor series at minimum value
@@ -406,6 +417,7 @@ def floor(x: pd.Series, value: float = 0) -> pd.Series:
     return x.apply(lambda y: max(y, value))
 
 
+@plot_function
 def ceil(x: pd.Series, value: float = 0) -> pd.Series:
     """
     Cap series at maximum value

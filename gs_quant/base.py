@@ -62,7 +62,7 @@ class Base:
     @classmethod
     def properties(cls) -> set:
         """The public property names of this class"""
-        return set(i for i in dir(cls) if isinstance(getattr(cls, i), property))
+        return set(i for i in dir(cls) if isinstance(getattr(cls, i), property) and not i.startswith('_'))
 
     def as_dict(self) -> dict:
         """Dictionary of the public, non-null properties and values"""
@@ -83,7 +83,10 @@ class Base:
                 if prop_type == Union:
                     prop_type = next((a for a in return_hints.__args__ if issubclass(a, (Base, EnumBase))), None)
 
-                if issubclass(prop_type, dt.datetime):
+                if prop_type is None:
+                    # This shouldn't happen
+                    setattr(self, prop, prop_value)
+                elif issubclass(prop_type, dt.datetime):
                     setattr(self, prop, dateutil.parser.isoparse(prop_value))
                 elif issubclass(prop_type, dt.date):
                     setattr(self, prop, dateutil.parser.isoparse(prop_value).date())
@@ -106,7 +109,7 @@ class Base:
         """
         Construct an instance of this type from a dictionary
 
-        :param values: a dictionary (potentitally nested)
+        :param values: a dictionary (potentially nested)
         :return: an instance of this type, populated with values
         """
         args = [k for k, v in signature(cls.__init__).parameters.items() if v.default == Parameter.empty][1:]
@@ -263,8 +266,9 @@ def get_enum_value(enum_type: EnumMeta, value: str):
     if value in (None, 'None'):
         return None
 
-    enum_value = next((i for i in enum_type if i.value == value), None)
-    if enum_value is None:
+    try:
+        enum_value = enum_type(value)
+    except ValueError:
         _logger.warning('Setting value to {}, which is not a valid entry in {}'.format(value, enum_type))
         enum_value = value
 

@@ -18,7 +18,7 @@ from gs_quant.api.gs.risk import GsRiskApi, RiskModelRequest
 from gs_quant.base import Priceable
 from gs_quant.common import AssetClass
 from gs_quant.instrument import CommodSwap, EqForward, EqOption, FXOption, IRBasisSwap, IRSwap, IRSwaption, IRCap, IRFloor
-from gs_quant.markets import MarketDataContext
+from gs_quant.markets import PricingContext
 import gs_quant.risk as risk
 from gs_quant.session import Environment, GsSession
 
@@ -40,47 +40,53 @@ priceables = (
 
 def structured_calc(mocker, priceable: Priceable, measure: risk.RiskMeasure):
     values = [
-        {'mktDataClass': 'IR', 'marketDataAsset': 'USD', 'pointClass': 'Swap', 'point': '1y', 'value': 0.01},
-        {'mktDataClass': 'IR', 'marketDataAsset': 'USD', 'pointClass': 'Swap', 'point': '2y', 'value': 0.015}
+        {'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap', 'point': '1y', 'value': 0.01},
+        {'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap', 'point': '2y', 'value': 0.015}
     ]
     mocker.return_value = [[values]]
+    GsSession.default = GsSession.get(Environment.QA, 'client_id', 'secret')
+
     result = priceable.calc(measure)
-    expected = pd.DataFrame(values)
+    expected = risk.sort_risk(pd.DataFrame(values))
     assert result.equals(expected)
     risk_request = risk.RiskRequest(
         positions=(risk.RiskPosition(priceable, 1),),
         measures=(measure,),
-        asOf=risk.PricingContext.current.pricing_date,
-        marketDataAsOf=MarketDataContext.current.as_of,
-        pricingLocation=MarketDataContext.current.location,
+        asOf=PricingContext.current.pricing_date,
+        pricingLocation=PricingContext.current.market_data_location,
+        pricingAndMarketDataAsOf=PricingContext.current._pricing_market_data_as_of,
         waitForResults=True)
     mocker.assert_called_with(risk_request)
 
 
 def scalar_calc(mocker, priceable: Priceable, measure: risk.RiskMeasure):
     mocker.return_value = [[[{'value': 0.01}]]]
+    GsSession.default = GsSession.get(Environment.QA, 'client_id', 'secret')
+
     result = priceable.calc(measure)
     assert result == 0.01
     risk_request = risk.RiskRequest(
         positions=(risk.RiskPosition(priceable, 1),),
         measures=(measure,),
-        asOf=risk.PricingContext.current.pricing_date,
-        marketDataAsOf=MarketDataContext.current.as_of,
-        pricingLocation=MarketDataContext.current.location,
+        asOf=PricingContext.current.pricing_date,
+        pricingLocation=PricingContext.current.market_data_location,
+        pricingAndMarketDataAsOf=PricingContext.current._pricing_market_data_as_of,
         waitForResults=True)
     mocker.assert_called_with(risk_request)
 
 
 def price(mocker, priceable: Priceable):
     mocker.return_value = [[[{'value': 0.01}]]]
+    GsSession.default = GsSession.get(Environment.QA, 'client_id', 'secret')
+
     result = priceable.dollar_price()
     assert result == 0.01
     risk_request = risk.RiskRequest(
         positions=(risk.RiskPosition(priceable, 1),),
         measures=(risk.DollarPrice,),
-        asOf=risk.PricingContext.current.pricing_date,
-        marketDataAsOf=MarketDataContext.current.as_of,
-        pricingLocation=MarketDataContext.current.location,
+        asOf=PricingContext.current.pricing_date,
+        pricingLocation=PricingContext.current.market_data_location,
+        pricingAndMarketDataAsOf=PricingContext.current._pricing_market_data_as_of,
         waitForResults=True)
     mocker.assert_called_with(risk_request)
 
@@ -129,10 +135,11 @@ def test_structured_calc(mocker):
                 structured_calc(mocker, priceable, measure)
 
     values = [
-        {'mktDataClass': 'IR', 'marketDataAsset': 'USD', 'pointClass': 'Swap', 'point': '1y', 'value': 0.01},
-        {'mktDataClass': 'IR', 'marketDataAsset': 'USD', 'pointClass': 'Swap', 'point': '2y', 'value': 0.015}
+        {'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap', 'point': '1y', 'value': 0.01},
+        {'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap', 'point': '2y', 'value': 0.015}
     ]
 
+    GsSession.default = GsSession.get(Environment.QA, 'client_id', 'secret')
     mocker.return_value = [[values] * len(priceables)]
 
     with risk.PricingContext():
@@ -154,6 +161,7 @@ def test_scalar_calc(mocker):
 @mock.patch.object(GsRiskApi, '_exec')
 def test_async_calc(mocker):
     results = [[{'value': 0.01 * idx}] for idx in range(len(priceables))]
+    GsSession.default = GsSession.get(Environment.QA, 'client_id', 'secret')
     mocker.return_value = [results]
 
     with risk.PricingContext():

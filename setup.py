@@ -40,7 +40,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="gs_quant",
-    version="0.7.4",
+    version="0.8.4",
     author="Goldman Sachs",
     author_email="developer@gs.com",
     description="Goldman Sachs Quant",
@@ -50,6 +50,7 @@ setuptools.setup(
     license="http://www.apache.org/licenses/LICENSE-2.0",
     packages=setuptools.find_packages(),
     include_package_data=True,
+    # TODO: remove compatibility packages (configparser, future, six) now that we only support 3.6+
     install_requires=[
         "backoff",
         "cachetools",
@@ -65,7 +66,7 @@ setuptools.setup(
         "typing;python_version<'3.7'"
     ],
     extras_require={
-        "internal": ["gs_quant_internal", "sphinx", "sphinx_rtd_theme", "sphinx_autodoc_typehints", "pytest", "pytest-cov", "pytest-mock", "testfixtures", "jupyter", "matplotlib~=2.1.0", "pprint"],
+        "internal": ["gs_quant_internal", "requests_kerberos", "jupyter", "pprint"],
         "notebook": ["jupyter", "matplotlib~=2.1.0", "pprint"],
         "test": ["pytest", "pytest-cov", "pytest-mock", "testfixtures"],
         "develop": ["sphinx", "sphinx_rtd_theme", "sphinx_autodoc_typehints", "pytest", "pytest-cov", "pytest-mock", "testfixtures"]

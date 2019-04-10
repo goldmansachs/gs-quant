@@ -19,7 +19,19 @@ from gs_quant.common import XRef
 
 class Security(XRef):
 
-    def __init__(self, ticker: str=None, bbid: str=None, isin: str=None, cusip: str=None, primeId: int=None, quantity: float=1):
+    """A security, specified by a well-known identifier"""
+
+    def __init__(self, ticker: str=None, bbid: str=None, isin: str=None, cusip: str=None, primeId: str=None, quantity: float=1):
+        """
+        Create a security by passing one identifier only and, optionally, a quantity
+
+        :param ticker: Exchange ticker
+        :param bbid: Bloomberg identifier
+        :param isin: Internlational Security Number
+        :param cusip: CUSIP
+        :param primeId: Prime (GS internal) identifier
+        :param quantity: Quantity (number of contracts for exchange-traded instruments, notional for bonds)
+        """
         if len(tuple(filter(None, (f is not None for f in (ticker, bbid, isin, cusip, primeId))))) > 1:
             raise ValueError('Only specify one identifier')
 
