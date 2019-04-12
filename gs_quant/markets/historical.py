@@ -73,4 +73,4 @@ class HistoricalPricingContext(PricingContext):
 
     @property
     def _pricing_market_data_as_of(self) -> Tuple[PricingDateAndMarketDataAsOf, ...]:
-        return tuple(PricingDateAndMarketDataAsOf(d, business_day_offset(d, -1, roll='preceding')) for d in self.__date_range)
+        return tuple(PricingDateAndMarketDataAsOf(d, business_day_offset(d, -1, roll='preceding') if d == dt.date.today() else d) for d in self.__date_range)

@@ -188,7 +188,12 @@ class PricingContext(ContextBaseWithDefault):
     @property
     def market_data_as_of(self) -> Union[dt.date, dt.datetime]:
         """Market data as of"""
-        return self.__market_data_as_of or business_day_offset(self.pricing_date, -1, roll='preceding')
+        if self.__market_data_as_of:
+            return self.__market_data_as_of
+        elif self.pricing_date == dt.date.today():
+            return business_day_offset(self.pricing_date, -1, roll='preceding')
+        else:
+            return self.pricing_date
 
     @property
     def market_data_location(self) -> str:
