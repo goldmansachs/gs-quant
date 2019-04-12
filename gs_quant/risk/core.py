@@ -21,7 +21,7 @@ from gs_quant.target.risk import RiskMeasure, RiskMeasureType, RiskMeasureUnit, 
 from gs_quant.common import AssetClass
 from gs_quant.datetime import point_sort_order
 from gs_quant.markets.core import PricingContext
-from typing import Optional
+from typing import Optional, Tuple
 
 
 __field_sort_fns = {
@@ -83,9 +83,10 @@ def aggregate_risk(results: Iterable[Union[pd.DataFrame, Future]], threshold: Op
     return sort_risk(result)
 
 
-def sort_risk(df: pd.DataFrame, by=('date', 'marketDataType', 'assetId', 'point')):
+def sort_risk(df: pd.DataFrame, by: Tuple[str]=('date', 'marketDataType', 'assetId', 'point')):
     """
     Sort bucketed risk
+
     :param df: Input Dataframe
     :param by: Columns to sort by
     :return: A sorted Dataframe
@@ -123,8 +124,10 @@ FXGamma = __risk_measure_with_doc_string('FX Gamma', RiskMeasureType.Gamma, asse
 FXVega = __risk_measure_with_doc_string('FX Vega', RiskMeasureType.Vega, assetClass=AssetClass.FX)
 FXSpot = __risk_measure_with_doc_string('FX Spot Rate', RiskMeasureType.Spot, assetClass=AssetClass.FX)
 IRDelta = __risk_measure_with_doc_string('Interest Rate Delta', RiskMeasureType.Delta, assetClass=AssetClass.Rates)
-IRGamma = __risk_measure_with_doc_string('Interest Rate', RiskMeasureType.Gamma, assetClass=AssetClass.Rates)
-IRVega = __risk_measure_with_doc_string('Interest Rate', RiskMeasureType.Vega, assetClass=AssetClass.Rates)
+IRDeltaLocalCcy = __risk_measure_with_doc_string('Interest Rate Delta (Local Ccy)', RiskMeasureType.DeltaLocalCcy, assetClass=AssetClass.Rates)
+IRGamma = __risk_measure_with_doc_string('Interest Rate Gamma', RiskMeasureType.Gamma, assetClass=AssetClass.Rates)
+IRVega = __risk_measure_with_doc_string('Interest Rate Vega', RiskMeasureType.Vega, assetClass=AssetClass.Rates)
+IRVegaLocalCcy = __risk_measure_with_doc_string('Interest Rate Vega (Local Ccy)', RiskMeasureType.VegaLocalCcy, assetClass=AssetClass.Rates)
 IRAnnualImpliedVol = __risk_measure_with_doc_string('Interest Rate Annual Implied Volatility (%)', RiskMeasureType.Annual_Implied_Volatility, assetClass=AssetClass.Rates, unit=RiskMeasureUnit.Percent)
 IRAnnualATMImpliedVol = __risk_measure_with_doc_string('Interest Rate Annual Implied At-The-Money Volatility (%)', RiskMeasureType.Annual_ATMF_Implied_Volatility, assetClass=AssetClass.Rates, unit=RiskMeasureUnit.Percent)
 IRDailyImpliedVol = __risk_measure_with_doc_string('Interest Rate Daily Implied Volatility (bps)', RiskMeasureType.Annual_ATMF_Implied_Volatility, assetClass=AssetClass.Rates, unit=RiskMeasureUnit.BPS)
@@ -146,8 +149,10 @@ Formatters = {
     FXVega: structured_formatter,
     FXSpot: scalar_formatter,
     IRDelta: structured_formatter,
+    IRDeltaLocalCcy: structured_formatter,
     IRGamma: structured_formatter,
     IRVega: structured_formatter,
+    IRVegaLocalCcy: structured_formatter,
     IRAnnualImpliedVol: scalar_formatter,
     IRDailyImpliedVol: scalar_formatter,
     IRAnnualATMImpliedVol: scalar_formatter
