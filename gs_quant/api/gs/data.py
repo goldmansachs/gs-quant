@@ -53,14 +53,12 @@ class GsDataApi(DataApi):
     @classmethod
     def symbol_dimensions(cls, dataset_id: str) -> tuple:
         definition = cls.get_definition(dataset_id)
-        # TODO Sort out proper JSON decoding
-        return tuple(definition.dimensions.get('symbolDimensions'))
+        return definition.dimensions.symbolDimensions
 
     @classmethod
     def time_field(cls, dataset_id: str) -> str:
         definition = cls.get_definition(dataset_id)
-        # TODO Sort out proper JSON decoding
-        return definition.dimensions.get('timeField')
+        return definition.dimensions.timeField
 
     # GS-specific functionality
 
@@ -128,22 +126,25 @@ class GsDataApi(DataApi):
 
     @staticmethod
     def build_market_data_query(asset_ids: List[str], query_type: str, where: Union[FieldFilterMap] = None,
-                                source: Union[str] = None):
-        return {
-            'queries': [
-                {
-                    'assetIds': asset_ids,
-                    'queryType': query_type,
-                    'where': where or {},
-                    'source': source or 'any',
-                    'frequency': 'End Of Day',
-                    'measures': [
-                        'Curve'
-                    ],
-                    'startDate': DataContext.current.start_date,
-                    'endDate': DataContext.current.end_date
-                }
+                                source: Union[str] = None, real_time: bool = False):
+        inner = {
+            'assetIds': asset_ids,
+            'queryType': query_type,
+            'where': where or {},
+            'source': source or 'any',
+            'frequency': 'Real Time' if real_time else 'End Of Day',
+            'measures': [
+                'Curve'
             ]
+        }
+        if real_time:
+            inner['startTime'] = DataContext.current.start_time
+            inner['endTime'] = DataContext.current.end_time
+        else:
+            inner['startDate'] = DataContext.current.start_date
+            inner['endDate'] = DataContext.current.end_date
+        return {
+            'queries': [inner]
         }
 
     @classmethod

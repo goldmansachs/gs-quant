@@ -38,13 +38,20 @@ priceables = (
 )
 
 
+def set_session():
+    from gs_quant.session import OAuth2Session
+    OAuth2Session.init = mock.MagicMock(return_value=None)
+    GsSession.use(Environment.QA, 'client_id', 'secret')
+
+
 def structured_calc(mocker, priceable: Priceable, measure: risk.RiskMeasure):
+    set_session()
+
     values = [
         {'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap', 'point': '1y', 'value': 0.01},
         {'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap', 'point': '2y', 'value': 0.015}
     ]
     mocker.return_value = [[values]]
-    GsSession.default = GsSession.get(Environment.QA, 'client_id', 'secret')
 
     result = priceable.calc(measure)
     expected = risk.sort_risk(pd.DataFrame(values))
@@ -60,8 +67,8 @@ def structured_calc(mocker, priceable: Priceable, measure: risk.RiskMeasure):
 
 
 def scalar_calc(mocker, priceable: Priceable, measure: risk.RiskMeasure):
+    set_session()
     mocker.return_value = [[[{'value': 0.01}]]]
-    GsSession.default = GsSession.get(Environment.QA, 'client_id', 'secret')
 
     result = priceable.calc(measure)
     assert result == 0.01
@@ -76,8 +83,8 @@ def scalar_calc(mocker, priceable: Priceable, measure: risk.RiskMeasure):
 
 
 def price(mocker, priceable: Priceable):
+    set_session()
     mocker.return_value = [[[{'value': 0.01}]]]
-    GsSession.default = GsSession.get(Environment.QA, 'client_id', 'secret')
 
     result = priceable.dollar_price()
     assert result == 0.01
@@ -92,6 +99,8 @@ def price(mocker, priceable: Priceable):
 
 
 def test_suggest_risk_model(mocker):
+    set_session()
+
     marquee_id_1 = 'MQA1234567890'
     marquee_id_2 = 'MQA4567890123'
 
@@ -105,7 +114,6 @@ def test_suggest_risk_model(mocker):
     expected_response = 'AXUS4S'
 
     # mock GsSession
-    mocker.patch.object(GsSession.__class__, 'current', return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
     mocker.patch.object(GsSession.current, '_post', return_value=mock_response)
     GsSession.current._post.risk_models('/risk/models', payload=inputs)
 
@@ -123,6 +131,8 @@ def test_price(mocker):
 
 @mock.patch.object(GsRiskApi, '_exec')
 def test_structured_calc(mocker):
+    set_session()
+
     for priceable in priceables:
         if priceable.assetClass == AssetClass.Rates:
             for measure in (risk.IRDelta, risk.IRGamma, risk.IRVega):
@@ -139,7 +149,6 @@ def test_structured_calc(mocker):
         {'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap', 'point': '2y', 'value': 0.015}
     ]
 
-    GsSession.default = GsSession.get(Environment.QA, 'client_id', 'secret')
     mocker.return_value = [[values] * len(priceables)]
 
     with risk.PricingContext():
@@ -160,8 +169,9 @@ def test_scalar_calc(mocker):
 
 @mock.patch.object(GsRiskApi, '_exec')
 def test_async_calc(mocker):
+    set_session()
+
     results = [[{'value': 0.01 * idx}] for idx in range(len(priceables))]
-    GsSession.default = GsSession.get(Environment.QA, 'client_id', 'secret')
     mocker.return_value = [results]
 
     with risk.PricingContext():

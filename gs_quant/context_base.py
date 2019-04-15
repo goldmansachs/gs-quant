@@ -29,6 +29,10 @@ class ContextMeta(type, metaclass=ABCMeta):
         setattr(thread_local, '{}_current'.format(cls.__name__), current)
 
     @property
+    def current_is_set(cls) -> bool:
+        return getattr(thread_local, '{}_current'.format(cls.__name__), None) is not None
+
+    @property
     def default(cls) -> 'ContextBase':
         attr_name = '{}_default'.format(cls.__name__)
         default = getattr(thread_local, attr_name, None)

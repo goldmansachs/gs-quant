@@ -37,7 +37,7 @@ class VolReference(Enum):
 
 @plot_measure((AssetClass.FX, AssetClass.Equity), None)
 def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Real, *, location: str = 'NYC',
-         source: str = None) -> Series:
+         source: str = None, real_time: bool = False) -> Series:
     """
     Difference in implied volatility of equidistant out-of-the-money put and call options.
 
@@ -47,8 +47,12 @@ def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Re
     :param distance: distance from at-the-money option
     :param location: location at which a price fixing has been taken (for FX assets)
     :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
     :return: skew curve
     """
+    if real_time:
+        raise MqValueError('real-time skew not supported')
+
     if strike_reference in (SkewReference.DELTA, None):
         b = 50
     elif strike_reference == SkewReference.NORMALIZED:
@@ -90,7 +94,7 @@ def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Re
 
 @plot_measure((AssetClass.Equity,), None)
 def implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference, relative_strike: Real, *,
-                       source: str = None) -> Series:
+                       source: str = None, real_time: bool = False) -> Series:
     """
     Volatility of an asset implied by observations of market prices.
 
@@ -99,11 +103,12 @@ def implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference,
     :param strike_reference: reference for strike level
     :param relative_strike: strike relative to reference
     :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
     :return: implied volatility curve
     """
     # reading straight from data service, for now
     if asset.asset_class != AssetClass.Equity:
-        raise NotImplementedError('implied volatility only implemented for equities')
+        raise MqValueError('implied volatility only implemented for equities')
 
     if strike_reference == VolReference.DELTA_PUT:
         relative_strike = abs(100 - relative_strike)
@@ -112,6 +117,7 @@ def implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference,
     ref_string = "delta" if strike_reference in (VolReference.DELTA_CALL,
                                                  VolReference.DELTA_PUT) else strike_reference.value
     where = FieldFilterMap(tenor=tenor, strikeReference=ref_string, relativeStrike=relative_strike)
-    q = GsDataApi.build_market_data_query([asset.get_marquee_id()], 'Implied Volatility', where=where, source=source)
+    q = GsDataApi.build_market_data_query([asset.get_marquee_id()], 'Implied Volatility', where=where, source=source,
+                                          real_time=real_time)
     df = GsDataApi.get_market_data(q)
     return Series() if df.empty else df['impliedVolatility']
