@@ -17,16 +17,65 @@ import datetime
 from gs_quant.context_base import ContextBaseWithDefault
 
 
+def _now():
+    return datetime.datetime.now(datetime.timezone.utc)
+
+
 class DataContext(ContextBaseWithDefault):
     def __init__(self, start=None, end=None):
         super().__init__()
         self.__start = start
         self.__end = end
 
+    @staticmethod
+    def _get_date(o, default):
+        if o is None:
+            return default
+        elif isinstance(o, datetime.datetime):
+            # note that datetime objects are also instances of date
+            return o.date()
+        elif isinstance(o, datetime.date):
+            return o
+        elif isinstance(o, str):
+            return datetime.datetime.strptime(o[:o.find('T')], '%Y-%m-%d').date()
+        else:
+            raise ValueError(f'{o} is not a valid date')
+
+    @staticmethod
+    def _get_datetime(o, default):
+        if o is None:
+            return default
+        elif isinstance(o, datetime.datetime):
+            return o
+        elif isinstance(o, datetime.date):
+            return datetime.datetime.combine(o, datetime.time(tzinfo=datetime.timezone.utc))
+        elif isinstance(o, str):
+            tmp = datetime.datetime.strptime(o, '%Y-%m-%dT%H:%M:%SZ')
+            return tmp.replace(tzinfo=datetime.timezone.utc)
+        else:
+            raise ValueError(f'{o} is not a valid date')
+
     @property
     def start_date(self):
-        return self.__start or (datetime.date.today() - datetime.timedelta(days=30))
+        return self._get_date(self.__start, datetime.date.today() - datetime.timedelta(days=30))
 
     @property
     def end_date(self):
-        return self.__end or datetime.date.today()
+        return self._get_date(self.__end, datetime.date.today())
+
+    @property
+    def start_time(self):
+        return self._get_datetime(self.__start, _now() - datetime.timedelta(days=1))
+
+    @property
+    def end_time(self):
+        return self._get_datetime(self.__end, _now())
+
+
+if __name__ == '__main__':
+    with DataContext(datetime.date(2019, 1, 1), datetime.datetime(2019, 2, 1, tzinfo=datetime.timezone.utc)) as dc:
+        print(f'{dc.start_date}, {dc.end_date}')
+        print(f'{dc.start_time}, {dc.end_time}')
+    with DataContext(None, '2019-01-01T00:00:00Z') as dc2:
+        print(f'{dc2.start_date}, {dc2.end_date}')
+        print(f'{dc2.start_time}, {dc2.end_time}')

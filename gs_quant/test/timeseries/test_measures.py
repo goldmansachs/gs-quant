@@ -76,6 +76,9 @@ def test_skew():
     with pytest.raises(MqError):
         skew(mock_spx, '1m', None, 25)
 
+    with pytest.raises(MqError):
+        skew(mock_spx, '1m', SkewReference.SPOT, 25, real_time=True)
+
 
 def test_vol():
     replace = Replacer()
@@ -87,7 +90,7 @@ def test_vol():
     assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='impliedVolatility'), actual)
     replace.restore()
 
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(MqError):
         implied_volatility(Cross('ABC', 'DEF'), '1m', VolReference.DELTA_CALL, 25)
 
 

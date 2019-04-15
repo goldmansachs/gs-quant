@@ -116,6 +116,7 @@ EqDelta = __risk_measure_with_doc_string('Equity Delta', RiskMeasureType.Delta, 
 EqGamma = __risk_measure_with_doc_string('Equity Gamma', RiskMeasureType.Gamma, assetClass=AssetClass.Equity)
 EqVega = __risk_measure_with_doc_string('Equity Vega', RiskMeasureType.Vega, assetClass=AssetClass.Equity)
 EqSpot = __risk_measure_with_doc_string('Equity Spot Level', RiskMeasureType.Spot, assetClass=AssetClass.Equity)
+EqAnnualImpliedVol = __risk_measure_with_doc_string('Equity Annual Implied Volatility (%)', RiskMeasureType.Annual_Implied_Volatility, assetClass=AssetClass.Equity, unit=RiskMeasureUnit.Percent)
 CommodDelta = __risk_measure_with_doc_string('Commodity Delta', RiskMeasureType.Delta, assetClass=AssetClass.Commod)
 CommodTheta = __risk_measure_with_doc_string('Commodity Theta', RiskMeasureType.Theta, assetClass=AssetClass.Commod)
 CommodVega = __risk_measure_with_doc_string('Commodity Vega', RiskMeasureType.Vega, assetClass=AssetClass.Commod)
@@ -141,6 +142,7 @@ Formatters = {
     EqGamma: scalar_formatter,
     EqVega: sum_formatter,
     EqSpot: scalar_formatter,
+    EqAnnualImpliedVol: scalar_formatter,
     CommodDelta: structured_formatter,
     CommodVega: structured_formatter,
     CommodTheta: structured_formatter,

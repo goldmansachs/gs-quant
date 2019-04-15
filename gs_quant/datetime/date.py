@@ -106,6 +106,9 @@ def date_range(begin: Union[int, dt.date], end: Union[int, dt.date], calendars: 
         if isinstance(end, dt.date):
             def f():
                 prev = begin
+                if prev > end:
+                    raise ValueError('begin must be <= end')
+
                 while prev <= end:
                     yield prev
                     prev = business_day_offset(prev, 1, calendars=calendars, week_mask=week_mask)

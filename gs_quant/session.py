@@ -203,7 +203,11 @@ class GsSession(ContextBase):
         )
 
         session.init()
-        cls.default = session
+
+        if cls.current_is_set:
+            cls.current = session
+        else:
+            cls.default = session
 
     @classmethod
     def get(

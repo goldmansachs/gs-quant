@@ -82,6 +82,9 @@ def test_measures(ts_map):
     for k, v in ts_map.items():
         if not hasattr(v, 'plot_measure'):
             continue
-        param = inspect.signature(v).parameters.copy().popitem(last=False)
+        params = inspect.signature(v).parameters.copy()
+        param = params.popitem(last=False)
         assert param[1].name == 'asset'
         assert param[1].annotation == Asset
+        assert 'source' in params
+        assert 'real_time' in params

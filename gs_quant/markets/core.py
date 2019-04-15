@@ -113,8 +113,8 @@ class PricingContext(ContextBaseWithDefault):
             calc_result = {}
 
             try:
-                GsSession.current = session
-                calc_result = provider.calc(request)
+                with session:
+                    calc_result = provider.calc(request)
             except Exception as e:
                 for risk_measure in request.measures:
                     measure_results = {}
@@ -126,8 +126,8 @@ class PricingContext(ContextBaseWithDefault):
                 self._handle_results(calc_result)
 
         def get_batch_results(request: RiskRequest, session: GsSession, batch_provider: 'RiskApi', batch_result_id: str):
-            GsSession.current = session
-            results = batch_provider.get_results(request, batch_result_id)
+            with session:
+                results = batch_provider.get_results(request, batch_result_id)
             self._handle_results(results)
 
         batch_results = []
