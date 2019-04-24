@@ -169,8 +169,16 @@ def test_interpolate():
     expected = pd.Series([np.nan, np.nan, np.nan, 5.0, 5.0, 7.0, 7.0], index=select_dates)
     assert_series_equal(result, expected, obj="Interpolate flat nan start")
 
-    with pytest.raises(MqValueError):
+    x = pd.Series([2.0, 3.0, 5.0, 7.0], index=pd.DatetimeIndex(dates))
+    result = interpolate(x, select_dates, Interpolate.STEP)
+    expected = pd.Series([2.0, 2.0, 2.0, 5.0, 5.0, 7.0, 7.0], index=pd.DatetimeIndex(select_dates))
+    assert_series_equal(result, expected, obj="Interpolate step dates to series with timestamps")
+
+    with pytest.raises(MqValueError, message="Unknown intersection type: None"):
         interpolate(x, x, "None")
+
+    with pytest.raises(MqValueError, message="Cannot perform step interpolation on an empty series"):
+        interpolate(pd.Series(), select_dates, Interpolate.STEP)
 
 
 def test_value():

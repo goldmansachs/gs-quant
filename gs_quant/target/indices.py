@@ -1111,17 +1111,18 @@ class IndicesPriceParameters(Base):
         
     """Parameters for pricing indices"""
        
-    def __init__(self, currency: Union[IndicesCurrency, str] = 'USD', divisor: float = None, initialPrice: float = None, targetNotional: float = None, weightingStrategy: str = None):
+    def __init__(self, currency: Union[IndicesCurrency, str] = None, divisor: float = None, initialPrice: float = None, targetNotional: float = None, weightingStrategy: str = None, reweight: bool = False):
         super().__init__()
         self.__currency = currency if isinstance(currency, IndicesCurrency) else get_enum_value(IndicesCurrency, currency)
         self.__divisor = divisor
         self.__initialPrice = initialPrice
         self.__targetNotional = targetNotional
         self.__weightingStrategy = weightingStrategy
+        self.__reweight = reweight
 
     @property
     def currency(self) -> Union[IndicesCurrency, str]:
-        """Currencies supported for Indices, default to USD"""
+        """Currencies supported for Indices Create, default to USD during create. During rebalance, cannot change basket currency hence the input value will be discarded."""
         return self.__currency
 
     @currency.setter
@@ -1168,6 +1169,16 @@ class IndicesPriceParameters(Base):
     def weightingStrategy(self, value: str):
         self.__weightingStrategy = value
         self._property_changed('weightingStrategy')        
+
+    @property
+    def reweight(self) -> bool:
+        """To reweight positions if input weights don't add up to 1, default to false"""
+        return self.__reweight
+
+    @reweight.setter
+    def reweight(self, value: bool):
+        self.__reweight = value
+        self._property_changed('reweight')        
 
 
 class CustomBasketsRebalanceInputs(Base):

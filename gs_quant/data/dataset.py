@@ -80,6 +80,7 @@ class Dataset:
         as_of: Optional[dt.datetime] = None,
         since: Optional[dt.datetime] = None,
         fields: Optional[Iterable[Union[str, Fields]]] = None,
+        asset_id_type: str = None,
         **kwargs
     ) -> pd.DataFrame:
         """
@@ -112,7 +113,7 @@ class Dataset:
             fields=field_names,
             **kwargs
         )
-        data = self.provider.query_data(query, self.id)
+        data = self.provider.query_data(query, self.id, asset_id_type=asset_id_type)
         return pd.DataFrame(data)
 
     def get_data_series(

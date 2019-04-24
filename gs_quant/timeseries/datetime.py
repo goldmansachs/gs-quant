@@ -19,7 +19,7 @@ from datetime import date, time
 import numpy as np
 import pandas as pd
 from ..errors import *
-from typing import Iterable, List, Union
+from typing import List, Union
 from .helper import *
 
 """
@@ -28,9 +28,11 @@ interpolation operations. Includes sampling operations based on daif dates[0]te 
 """
 
 
-def __interpolate_step(x: pd.Series, dates: Iterable[float] = None) -> pd.Series:
+def __interpolate_step(x: pd.Series, dates: pd.Series = None) -> pd.Series:
+    if x.empty:
+        raise MqValueError('Cannot perform step interpolation on an empty series')
 
-    first_date =  dates.index[0] if type(dates) is pd.Series else dates[0]
+    first_date = pd.Timestamp(dates.index[0]) if isinstance(x.index[0], pd.Timestamp) else dates.index[0]
 
     # locate previous valid date or take first value from series
     prev = x.index[0] if first_date < x.index[0] else x.index[x.index.get_loc(first_date, 'pad')]
@@ -174,7 +176,7 @@ def interpolate(x: pd.Series, dates: Union[List[date], List[time], pd.Series] = 
     if dates is None:
         dates = x
 
-    if type(dates) is pd.Series:
+    if isinstance(dates, pd.Series):
         align_series = dates
     else:
         align_series = pd.Series(np.nan, dates)

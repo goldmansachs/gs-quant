@@ -17,9 +17,10 @@ import datetime as dt
 import pandas as pd
 from itertools import chain
 from typing import Iterable, List, Optional, Tuple, Union
+from .assets import GsAssetApi, GsIdType
 from gs_quant.api.data import DataApi
 from gs_quant.data.core import DataContext
-from gs_quant.target.common import FieldFilterMap
+from gs_quant.target.common import FieldFilterMap, XRef
 from gs_quant.target.data import DataQuery
 from gs_quant.errors import MqValueError
 from gs_quant.session import GsSession
@@ -33,13 +34,51 @@ class GsDataApi(DataApi):
     # DataApi interface
 
     @classmethod
-    def query_data(cls, query: DataQuery, dataset_id: str = None) -> Union[list, tuple]:
-        if query.marketDataCoordinates:
-            result = GsSession.current._post('/data/coordinates/query', payload=query)
-        else:
-            result = GsSession.current._post('/data/{}/query'.format(dataset_id), payload=query)
+    def query_data(cls, query: DataQuery, dataset_id: str = None, asset_id_type: Union[GsIdType, str] = None) -> tuple:
+        if query.where:
+            where = query.where.as_dict()
+            xref_keys = set(where.keys()).intersection(XRef.properties())
+            if xref_keys:
+                # Check that assetId is a symbol dimension of this data set. If not, we need to do a separate query
+                # to resolve xref --> assetId
+                if len(xref_keys) > 1:
+                    raise MqValueError('Cannot not specify more than one type of asset identifier')
 
-        return result.get('data', ())
+                if 'assetId' not in cls.symbol_dimensions(dataset_id):
+                    xref_type = min(xref_keys)
+                    if asset_id_type is None:
+                        asset_id_type = xref_type
+
+                    xref_values = where[asset_id_type]
+                    xref_values = (xref_values,) if isinstance(xref_values, str) else xref_values
+                    asset_id_map = GsAssetApi.map_identifiers(xref_type, GsIdType.id, xref_values)
+
+                    if len(asset_id_map) != len(xref_values):
+                        raise MqValueError('Not all {} were resolved to asset Ids'.format(asset_id_type))
+
+                    setattr(query.where, xref_type, None)
+                    query.where.assetId = [asset_id_map[x] for x in xref_values]
+
+        if query.marketDataCoordinates:
+            results = GsSession.current._post('/data/coordinates/query', payload=query)
+        else:
+            results = GsSession.current._post('/data/{}/query'.format(dataset_id), payload=query)
+
+        results = results.get('data', ())
+        asset_id_type = GsIdType.id if asset_id_type is None else asset_id_type
+
+        if asset_id_type != GsIdType.id:
+            asset_ids = tuple(set(filter(None, (r.get('assetId') for r in results))))
+            if asset_ids:
+                xref_map = GsAssetApi.map_identifiers(GsIdType.id, asset_id_type, asset_ids)
+
+                if len(xref_map) != len(asset_ids):
+                    raise MqValueError('Not all asset Ids were resolved to {}'.format(asset_id_type))
+
+                for result in results:
+                    result[asset_id_type] = xref_map[result['assetId']]
+
+        return results
 
     @classmethod
     def last_data(cls, query: DataQuery, dataset_id: str = None) -> Union[list, tuple]:
@@ -157,7 +196,7 @@ class GsDataApi(DataApi):
         if 'response' not in container:
             return pd.DataFrame()
         df = pd.DataFrame(container['response']['data'])
-        df.set_index('date', inplace=True)
+        df.set_index('date' if 'date' in df.columns else 'time', inplace=True)
         df.index = pd.to_datetime(df.index)
         return df
 

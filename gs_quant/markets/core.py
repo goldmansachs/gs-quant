@@ -97,7 +97,7 @@ class PricingContext(ContextBaseWithDefault):
         super().__init__()
         self.__pricing_date = pricing_date or dt.date.today()
         self.__market_data_as_of = market_data_as_of
-        self.__market_data_location = market_data_location or self.__class__.current.market_data_location if self.__class__.default_is_set else 'NYC'
+        self.__market_data_location = market_data_location or (self.__class__.current.market_data_location if self.__class__.default_is_set else 'LDN')
         self.__is_async = is_async
         self.__is_batch = is_batch
         self.__risk_measures_by_provider_and_position = {}

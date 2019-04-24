@@ -159,6 +159,9 @@ class GsAssetApi:
         if len(results) >= query.limit:
             raise MqValueError('number of results may have exceeded capacity')
 
+        if 'results' in results:
+            results = results['results']
+
         out = {}
         for entry in results:
             key = entry.get(input_type)
