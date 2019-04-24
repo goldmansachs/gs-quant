@@ -2050,6 +2050,7 @@ class AssetParameters(Base):
 
     @property
     def indexApprovalIds(self) -> Tuple[str, ...]:
+        """Array of approval identifiers related to the object"""
         return self.__indexApprovalIds
 
     @indexApprovalIds.setter
@@ -2158,6 +2159,7 @@ class AssetParameters(Base):
 
     @property
     def indexNotes(self) -> str:
+        """Notes for the index"""
         return self.__indexNotes
 
     @indexNotes.setter
@@ -2167,6 +2169,7 @@ class AssetParameters(Base):
 
     @property
     def indexNotTradingReasons(self) -> str:
+        """Reasons the index was not traded"""
         return self.__indexNotTradingReasons
 
     @indexNotTradingReasons.setter
@@ -2348,11 +2351,12 @@ class HedgeFundParameters(Base):
         
     """Asset parameters specific to hedge funds"""
        
-    def __init__(self, aum: float = None, strategyAum: float = None, aumRange: NumberRange = None, disclaimers: str = None, marketCapCategory: Tuple[str, ...] = None, marketingStatus: str = None, preferences: dict = None, regionalFocus: Tuple[str, ...] = None, riskTakingModel: str = None, strategy: Union[Strategy, str] = None, supraStrategy: Union[SupraStrategy, str] = None, strategyDescription: str = None, targetedGrossExposure: NumberRange = None, targetedNetExposure: NumberRange = None, targetedNumOfPositionsShort: NumberRange = None, targetedNumOfPositionsLong: NumberRange = None, turnover: str = None, vehicleType: str = None, netExposureClassification: Union[NetExposureClassification, str] = None):
+    def __init__(self, aum: float = None, strategyAum: float = None, aumRange: NumberRange = None, strategyAumRange: NumberRange = None, disclaimers: str = None, marketCapCategory: Tuple[str, ...] = None, marketingStatus: str = None, preferences: dict = None, regionalFocus: Tuple[str, ...] = None, riskTakingModel: str = None, strategy: Union[Strategy, str] = None, supraStrategy: Union[SupraStrategy, str] = None, strategyDescription: str = None, targetedGrossExposure: NumberRange = None, targetedNetExposure: NumberRange = None, targetedNumOfPositionsShort: NumberRange = None, targetedNumOfPositionsLong: NumberRange = None, turnover: str = None, vehicleType: str = None, netExposureClassification: Union[NetExposureClassification, str] = None):
         super().__init__()
         self.__aum = aum
         self.__strategyAum = strategyAum
         self.__aumRange = aumRange
+        self.__strategyAumRange = strategyAumRange
         self.__disclaimers = disclaimers
         self.__marketCapCategory = marketCapCategory
         self.__marketingStatus = marketingStatus
@@ -2399,6 +2403,16 @@ class HedgeFundParameters(Base):
     def aumRange(self, value: NumberRange):
         self.__aumRange = value
         self._property_changed('aumRange')        
+
+    @property
+    def strategyAumRange(self) -> NumberRange:
+        """Range in which assets under management for this strategy fall. Same view permissions as the asset."""
+        return self.__strategyAumRange
+
+    @strategyAumRange.setter
+    def strategyAumRange(self, value: NumberRange):
+        self.__strategyAumRange = value
+        self._property_changed('strategyAumRange')        
 
     @property
     def disclaimers(self) -> str:

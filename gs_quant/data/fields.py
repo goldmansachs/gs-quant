@@ -13,9 +13,11 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+from enum import Enum
+from typing import Optional
 
 
-class Fields:
+class Fields(Enum):
     """Data field definitions
 
     Enumeration of fields available through data APIs
@@ -40,9 +42,7 @@ class Fields:
     ADJUSTED_VOLUME = 'adjustedVolume'
     UPDATE_TIME = 'updateTime'
 
-    def __init__(self, field_id: str):
-        self.__id = field_id
-
     @property
-    def id(self):
-        return self.__id
+    def unit(self) -> Optional[str]:
+        # TODO: Define units and look up appropriate unit for self
+        return None

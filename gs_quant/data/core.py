@@ -37,7 +37,9 @@ class DataContext(ContextBaseWithDefault):
         elif isinstance(o, datetime.date):
             return o
         elif isinstance(o, str):
-            return datetime.datetime.strptime(o[:o.find('T')], '%Y-%m-%d').date()
+            loc = o.find('T')
+            ds = o[:loc] if loc != -1 else o
+            return datetime.datetime.strptime(ds, '%Y-%m-%d').date()
         else:
             raise ValueError(f'{o} is not a valid date')
 

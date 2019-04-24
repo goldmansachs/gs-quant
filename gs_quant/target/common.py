@@ -8453,6 +8453,7 @@ class FieldValueMap(Base):
 
     @property
     def queueClockTimeLabel(self):
+        """Label of the Stock's Queue Clock Time  on the particular date."""
         return self.__queueClockTimeLabel
 
     @queueClockTimeLabel.setter
@@ -8462,6 +8463,7 @@ class FieldValueMap(Base):
 
     @property
     def marketPnl(self) -> float:
+        """Market Profit and Loss (PNL)."""
         return self.__marketPnl
 
     @marketPnl.setter
@@ -8471,6 +8473,7 @@ class FieldValueMap(Base):
 
     @property
     def year(self) -> str:
+        """Year of forecast."""
         return self.__year
 
     @year.setter
@@ -8480,6 +8483,7 @@ class FieldValueMap(Base):
 
     @property
     def sustainAsiaExJapan(self) -> bool:
+        """True if the stock is on the SUSTAIN Asia Ex Japan list as of the corresponding date. False if the stock is removed from the SUSTAIN Asia Ex Japan list on the corresponding date."""
         return self.__sustainAsiaExJapan
 
     @sustainAsiaExJapan.setter
@@ -8489,6 +8493,7 @@ class FieldValueMap(Base):
 
     @property
     def investmentRate(self) -> float:
+        """The rate of return on an investment.  In the context of securities lending, it is the rate being earned on the reinvested collateral received from the borrower."""
         return self.__investmentRate
 
     @investmentRate.setter
@@ -8498,6 +8503,7 @@ class FieldValueMap(Base):
 
     @property
     def assetClassificationsGicsSubIndustry(self) -> str:
+        """GICS Sub Industry classification (level 4)."""
         return self.__assetClassificationsGicsSubIndustry
 
     @assetClassificationsGicsSubIndustry.setter
@@ -8507,6 +8513,7 @@ class FieldValueMap(Base):
 
     @property
     def bidUnadjusted(self) -> float:
+        """Unadjusted bid level of an asset based on official exchange fixing or calculation agent marked level."""
         return self.__bidUnadjusted
 
     @bidUnadjusted.setter
@@ -8516,6 +8523,7 @@ class FieldValueMap(Base):
 
     @property
     def economicTermsHash(self) -> str:
+        """Hash code for an asset."""
         return self.__economicTermsHash
 
     @economicTermsHash.setter
@@ -8525,6 +8533,7 @@ class FieldValueMap(Base):
 
     @property
     def neighbourAssetId(self) -> str:
+        """Marquee identifier for the corresponding neighbour."""
         return self.__neighbourAssetId
 
     @neighbourAssetId.setter
@@ -8543,6 +8552,7 @@ class FieldValueMap(Base):
 
     @property
     def path(self) -> str:
+        """Path to value."""
         return self.__path
 
     @path.setter
@@ -8552,6 +8562,7 @@ class FieldValueMap(Base):
 
     @property
     def availableInventory(self) -> float:
+        """An estimated indication of the share quantity potentially available to borrow in the relevant asset."""
         return self.__availableInventory
 
     @availableInventory.setter
@@ -8561,6 +8572,7 @@ class FieldValueMap(Base):
 
     @property
     def clientContact(self) -> str:
+        """Name of client(s) requesting data."""
         return self.__clientContact
 
     @clientContact.setter
@@ -8570,6 +8582,7 @@ class FieldValueMap(Base):
 
     @property
     def est1DayCompletePct(self) -> float:
+        """Estimated 1 day completion percentage."""
         return self.__est1DayCompletePct
 
     @est1DayCompletePct.setter
@@ -8579,6 +8592,7 @@ class FieldValueMap(Base):
 
     @property
     def rank(self) -> float:
+        """Rank to determine most relevant asset."""
         return self.__rank
 
     @rank.setter
@@ -8588,6 +8602,7 @@ class FieldValueMap(Base):
 
     @property
     def dataSetCategory(self) -> str:
+        """Top level grouping of dataset."""
         return self.__dataSetCategory
 
     @dataSetCategory.setter
@@ -8597,6 +8612,7 @@ class FieldValueMap(Base):
 
     @property
     def createdById(self) -> str:
+        """Unique identifier of user who created the object"""
         return self.__createdById
 
     @createdById.setter
@@ -8606,6 +8622,7 @@ class FieldValueMap(Base):
 
     @property
     def vehicleType(self) -> str:
+        """Type of investment vehicle. Only viewable after having been granted additional access to asset information."""
         return self.__vehicleType
 
     @vehicleType.setter
@@ -8615,6 +8632,7 @@ class FieldValueMap(Base):
 
     @property
     def dailyRisk(self) -> float:
+        """Daily Risk Value."""
         return self.__dailyRisk
 
     @dailyRisk.setter
@@ -8624,6 +8642,7 @@ class FieldValueMap(Base):
 
     @property
     def bosInBpsLabel(self):
+        """Label of the Stock's Bid-Offer Spread in Basis points on the particular date."""
         return self.__bosInBpsLabel
 
     @bosInBpsLabel.setter
@@ -8633,6 +8652,7 @@ class FieldValueMap(Base):
 
     @property
     def marketDataType(self) -> str:
+        """The market data type (e.g. IR_BASIS, FX_Vol). This can be resolved into a dataset when combined with vendor and intraday=true/false."""
         return self.__marketDataType
 
     @marketDataType.setter
@@ -8642,6 +8662,7 @@ class FieldValueMap(Base):
 
     @property
     def sentimentScore(self) -> float:
+        """A value representing a sentiment indicator."""
         return self.__sentimentScore
 
     @sentimentScore.setter
@@ -8651,6 +8672,7 @@ class FieldValueMap(Base):
 
     @property
     def bosInBps(self) -> float:
+        """The Bid-Offer Spread of the stock in Basis points on the particular date."""
         return self.__bosInBps
 
     @bosInBps.setter
@@ -8660,6 +8682,7 @@ class FieldValueMap(Base):
 
     @property
     def pointClass(self) -> str:
+        """MDAPI Class."""
         return self.__pointClass
 
     @pointClass.setter
@@ -8669,6 +8692,7 @@ class FieldValueMap(Base):
 
     @property
     def fxSpot(self) -> float:
+        """FX spot rate as determined by fixing source."""
         return self.__fxSpot
 
     @fxSpot.setter
@@ -8678,6 +8702,7 @@ class FieldValueMap(Base):
 
     @property
     def bidLow(self) -> float:
+        """Lowest Bid Price (price willing to buy)."""
         return self.__bidLow
 
     @bidLow.setter
@@ -8687,6 +8712,7 @@ class FieldValueMap(Base):
 
     @property
     def valuePrevious(self) -> str:
+        """Value for the previous period after the revision (if revision is applicable)."""
         return self.__valuePrevious
 
     @valuePrevious.setter
@@ -8696,6 +8722,7 @@ class FieldValueMap(Base):
 
     @property
     def fairVarianceVolatility(self) -> float:
+        """The strike in volatility terms, calculated as square root of fair variance."""
         return self.__fairVarianceVolatility
 
     @fairVarianceVolatility.setter
@@ -8705,6 +8732,7 @@ class FieldValueMap(Base):
 
     @property
     def avgTradeRate(self) -> float:
+        """The Average Trading Rate of the stock on the particular date."""
         return self.__avgTradeRate
 
     @avgTradeRate.setter
@@ -8714,6 +8742,7 @@ class FieldValueMap(Base):
 
     @property
     def shortLevel(self) -> float:
+        """Level of the 5-day normalized flow for short selling/covering."""
         return self.__shortLevel
 
     @shortLevel.setter
@@ -8723,6 +8752,7 @@ class FieldValueMap(Base):
 
     @property
     def hedgeVolatility(self) -> float:
+        """Standard deviation of the annualized returns."""
         return self.__hedgeVolatility
 
     @hedgeVolatility.setter
@@ -8732,6 +8762,7 @@ class FieldValueMap(Base):
 
     @property
     def version(self) -> float:
+        """Version number."""
         return self.__version
 
     @version.setter
@@ -8750,6 +8781,7 @@ class FieldValueMap(Base):
 
     @property
     def underlyingAssetId(self) -> str:
+        """Marquee identifier for constituents of an index or portfolio."""
         return self.__underlyingAssetId
 
     @underlyingAssetId.setter
@@ -8759,6 +8791,7 @@ class FieldValueMap(Base):
 
     @property
     def clientExposure(self) -> float:
+        """Exposure of client positions to the factor in percent of equity."""
         return self.__clientExposure
 
     @clientExposure.setter
@@ -8768,6 +8801,7 @@ class FieldValueMap(Base):
 
     @property
     def correlation(self) -> float:
+        """Market implied correlation between two tenors."""
         return self.__correlation
 
     @correlation.setter
@@ -8777,6 +8811,7 @@ class FieldValueMap(Base):
 
     @property
     def exposure(self) -> float:
+        """Exposure of a given asset or portfolio in the denominated currency of the asset or portfolio."""
         return self.__exposure
 
     @exposure.setter
@@ -8786,6 +8821,7 @@ class FieldValueMap(Base):
 
     @property
     def gsSustainSubSector(self) -> str:
+        """GS SUSTAIN sector."""
         return self.__gsSustainSubSector
 
     @gsSustainSubSector.setter
@@ -8795,6 +8831,7 @@ class FieldValueMap(Base):
 
     @property
     def domain(self) -> str:
+        """Domain that request came from."""
         return self.__domain
 
     @domain.setter
@@ -8804,6 +8841,7 @@ class FieldValueMap(Base):
 
     @property
     def marketDataAsset(self) -> str:
+        """The market data asset (e.g. USD, USD/EUR)."""
         return self.__marketDataAsset
 
     @marketDataAsset.setter
@@ -8813,6 +8851,7 @@ class FieldValueMap(Base):
 
     @property
     def forwardTenor(self) -> str:
+        """Start of swap after option expiry."""
         return self.__forwardTenor
 
     @forwardTenor.setter
@@ -8822,6 +8861,7 @@ class FieldValueMap(Base):
 
     @property
     def unadjustedHigh(self) -> float:
+        """Unadjusted high level of an asset based on official exchange fixing or calculation agent marked level."""
         return self.__unadjustedHigh
 
     @unadjustedHigh.setter
@@ -8831,6 +8871,7 @@ class FieldValueMap(Base):
 
     @property
     def sourceImportance(self) -> float:
+        """Source importance."""
         return self.__sourceImportance
 
     @sourceImportance.setter
@@ -8840,6 +8881,7 @@ class FieldValueMap(Base):
 
     @property
     def eid(self) -> str:
+        """Goldman Sachs internal exchange identifier."""
         return self.__eid
 
     @eid.setter
@@ -8849,6 +8891,7 @@ class FieldValueMap(Base):
 
     @property
     def jsn(self) -> str:
+        """Japan security number (subject to licensing)."""
         return self.__jsn
 
     @jsn.setter
@@ -8858,6 +8901,7 @@ class FieldValueMap(Base):
 
     @property
     def relativeReturnQtd(self) -> float:
+        """Relative Return Quarter to Date."""
         return self.__relativeReturnQtd
 
     @relativeReturnQtd.setter
@@ -8867,6 +8911,7 @@ class FieldValueMap(Base):
 
     @property
     def displayName(self) -> str:
+        """Display Name."""
         return self.__displayName
 
     @displayName.setter
@@ -8876,6 +8921,7 @@ class FieldValueMap(Base):
 
     @property
     def minutesToTrade100Pct(self) -> float:
+        """Minutes to trade 100 percent."""
         return self.__minutesToTrade100Pct
 
     @minutesToTrade100Pct.setter
@@ -8885,6 +8931,7 @@ class FieldValueMap(Base):
 
     @property
     def marketModelId(self) -> str:
+        """Marquee unique market model identifier"""
         return self.__marketModelId
 
     @marketModelId.setter
@@ -8894,6 +8941,7 @@ class FieldValueMap(Base):
 
     @property
     def quoteType(self) -> str:
+        """Quote Type."""
         return self.__quoteType
 
     @quoteType.setter
@@ -8903,6 +8951,7 @@ class FieldValueMap(Base):
 
     @property
     def tenor(self) -> str:
+        """Tenor of instrument."""
         return self.__tenor
 
     @tenor.setter
@@ -8912,6 +8961,7 @@ class FieldValueMap(Base):
 
     @property
     def esPolicyPercentile(self) -> float:
+        """Sector relative percentile based on E&S policy score."""
         return self.__esPolicyPercentile
 
     @esPolicyPercentile.setter
@@ -8921,6 +8971,7 @@ class FieldValueMap(Base):
 
     @property
     def tcmCostParticipationRate75Pct(self) -> float:
+        """TCM cost with a 75 percent participation rate."""
         return self.__tcmCostParticipationRate75Pct
 
     @tcmCostParticipationRate75Pct.setter
@@ -8930,6 +8981,7 @@ class FieldValueMap(Base):
 
     @property
     def close(self) -> float:
+        """Closing level of an asset based on official exchange fixing or calculation agent marked level."""
         return self.__close
 
     @close.setter
@@ -8939,6 +8991,7 @@ class FieldValueMap(Base):
 
     @property
     def tcmCostParticipationRate100Pct(self) -> float:
+        """TCM cost with a 100 percent participation rate."""
         return self.__tcmCostParticipationRate100Pct
 
     @tcmCostParticipationRate100Pct.setter
@@ -8948,6 +9001,7 @@ class FieldValueMap(Base):
 
     @property
     def disclaimer(self) -> str:
+        """The legal disclaimer associated with the record."""
         return self.__disclaimer
 
     @disclaimer.setter
@@ -8957,6 +9011,7 @@ class FieldValueMap(Base):
 
     @property
     def measureIdx(self) -> int:
+        """The index of the corresponding measure in the risk request."""
         return self.__measureIdx
 
     @measureIdx.setter
@@ -8966,6 +9021,7 @@ class FieldValueMap(Base):
 
     @property
     def a(self) -> float:
+        """Stock specific coefficient."""
         return self.__a
 
     @a.setter
@@ -8975,6 +9031,7 @@ class FieldValueMap(Base):
 
     @property
     def b(self) -> float:
+        """Stock specific coefficient."""
         return self.__b
 
     @b.setter
@@ -8984,6 +9041,7 @@ class FieldValueMap(Base):
 
     @property
     def loanFee(self) -> float:
+        """Fee earned by the Lender for the loan of securities to a borrower where loanFee = grossIncome - agentLenderFee - rebateAmount - partnerFee."""
         return self.__loanFee
 
     @loanFee.setter
@@ -8993,6 +9051,7 @@ class FieldValueMap(Base):
 
     @property
     def c(self) -> float:
+        """Stock specific coefficient."""
         return self.__c
 
     @c.setter
@@ -9002,6 +9061,7 @@ class FieldValueMap(Base):
 
     @property
     def equityVega(self) -> float:
+        """Vega exposure to equity products."""
         return self.__equityVega
 
     @equityVega.setter
@@ -9011,6 +9071,7 @@ class FieldValueMap(Base):
 
     @property
     def deploymentVersion(self) -> str:
+        """Deployment version."""
         return self.__deploymentVersion
 
     @deploymentVersion.setter
@@ -9020,6 +9081,7 @@ class FieldValueMap(Base):
 
     @property
     def fiveDayMove(self) -> float:
+        """Five day move in the price."""
         return self.__fiveDayMove
 
     @fiveDayMove.setter
@@ -9029,6 +9091,7 @@ class FieldValueMap(Base):
 
     @property
     def borrower(self) -> str:
+        """Name of the borrowing entity on a securities lending agreement."""
         return self.__borrower
 
     @borrower.setter
@@ -9038,6 +9101,7 @@ class FieldValueMap(Base):
 
     @property
     def performanceContribution(self) -> float:
+        """The contribution of an underlying asset to the overall performance."""
         return self.__performanceContribution
 
     @performanceContribution.setter
@@ -9047,6 +9111,7 @@ class FieldValueMap(Base):
 
     @property
     def targetNotional(self) -> float:
+        """Notional value of the hedge target."""
         return self.__targetNotional
 
     @targetNotional.setter
@@ -9056,6 +9121,7 @@ class FieldValueMap(Base):
 
     @property
     def fillLegId(self) -> str:
+        """Unique identifier for the leg on which the fill executed."""
         return self.__fillLegId
 
     @fillLegId.setter
@@ -9065,6 +9131,7 @@ class FieldValueMap(Base):
 
     @property
     def delisted(self) -> str:
+        """Whether the security has been delisted."""
         return self.__delisted
 
     @delisted.setter
@@ -9074,6 +9141,7 @@ class FieldValueMap(Base):
 
     @property
     def rationale(self) -> str:
+        """Reason for changing the status of a trade idea."""
         return self.__rationale
 
     @rationale.setter
@@ -9083,6 +9151,7 @@ class FieldValueMap(Base):
 
     @property
     def regionalFocus(self) -> str:
+        """Section of the world a fund is focused on from an investment perspective. Same view permissions as the asset."""
         return self.__regionalFocus
 
     @regionalFocus.setter
@@ -9092,6 +9161,7 @@ class FieldValueMap(Base):
 
     @property
     def volumePrimary(self) -> float:
+        """Accumulated number of shares, lots or contracts traded according to the market convention at the primary exchange."""
         return self.__volumePrimary
 
     @volumePrimary.setter
@@ -9101,6 +9171,7 @@ class FieldValueMap(Base):
 
     @property
     def series(self) -> str:
+        """Series."""
         return self.__series
 
     @series.setter
@@ -9110,6 +9181,7 @@ class FieldValueMap(Base):
 
     @property
     def simonId(self) -> str:
+        """SIMON application asset identifier."""
         return self.__simonId
 
     @simonId.setter
@@ -9119,6 +9191,7 @@ class FieldValueMap(Base):
 
     @property
     def newIdeasQtd(self) -> float:
+        """Ideas received by clients Quarter to date."""
         return self.__newIdeasQtd
 
     @newIdeasQtd.setter
@@ -9128,6 +9201,7 @@ class FieldValueMap(Base):
 
     @property
     def adjustedAskPrice(self) -> float:
+        """Latest Ask Price (price offering to sell) adjusted for corporate actions."""
         return self.__adjustedAskPrice
 
     @adjustedAskPrice.setter
@@ -9137,6 +9211,7 @@ class FieldValueMap(Base):
 
     @property
     def quarter(self) -> str:
+        """Quarter of forecast."""
         return self.__quarter
 
     @quarter.setter
@@ -9146,6 +9221,7 @@ class FieldValueMap(Base):
 
     @property
     def factorUniverse(self) -> str:
+        """Factor universe."""
         return self.__factorUniverse
 
     @factorUniverse.setter
@@ -9155,6 +9231,7 @@ class FieldValueMap(Base):
 
     @property
     def eventCategory(self) -> str:
+        """Category."""
         return self.__eventCategory
 
     @eventCategory.setter
@@ -9164,6 +9241,7 @@ class FieldValueMap(Base):
 
     @property
     def impliedNormalVolatility(self) -> float:
+        """Market implied volatility measured using a normal model in bps/day."""
         return self.__impliedNormalVolatility
 
     @impliedNormalVolatility.setter
@@ -9173,6 +9251,7 @@ class FieldValueMap(Base):
 
     @property
     def unadjustedOpen(self) -> float:
+        """Unadjusted open level of an asset based on official exchange fixing or calculation agent marked level."""
         return self.__unadjustedOpen
 
     @unadjustedOpen.setter
@@ -9182,6 +9261,7 @@ class FieldValueMap(Base):
 
     @property
     def arrivalRt(self) -> float:
+        """Arrival Realtime."""
         return self.__arrivalRt
 
     @arrivalRt.setter
@@ -9191,6 +9271,7 @@ class FieldValueMap(Base):
 
     @property
     def transactionCost(self) -> float:
+        """Transaction cost."""
         return self.__transactionCost
 
     @transactionCost.setter
@@ -9200,6 +9281,7 @@ class FieldValueMap(Base):
 
     @property
     def servicingCostShortPnl(self) -> float:
+        """Servicing Cost Short Profit and Loss."""
         return self.__servicingCostShortPnl
 
     @servicingCostShortPnl.setter
@@ -9209,6 +9291,7 @@ class FieldValueMap(Base):
 
     @property
     def bidAskSpread(self) -> float:
+        """Bid ask spread."""
         return self.__bidAskSpread
 
     @bidAskSpread.setter
@@ -9227,6 +9310,7 @@ class FieldValueMap(Base):
 
     @property
     def tcmCostHorizon3Hour(self) -> float:
+        """TCM cost with a 3 hour time horizon."""
         return self.__tcmCostHorizon3Hour
 
     @tcmCostHorizon3Hour.setter
@@ -9236,6 +9320,7 @@ class FieldValueMap(Base):
 
     @property
     def clusterDescription(self) -> str:
+        """Description of the Cluster characteristics."""
         return self.__clusterDescription
 
     @clusterDescription.setter
@@ -9245,6 +9330,7 @@ class FieldValueMap(Base):
 
     @property
     def positionAmount(self) -> float:
+        """Corporate actions amount * shares."""
         return self.__positionAmount
 
     @positionAmount.setter
@@ -9254,6 +9340,7 @@ class FieldValueMap(Base):
 
     @property
     def numberOfPositions(self) -> float:
+        """Number of positions."""
         return self.__numberOfPositions
 
     @numberOfPositions.setter
@@ -9263,6 +9350,7 @@ class FieldValueMap(Base):
 
     @property
     def windSpeed(self) -> float:
+        """Average wind speed in knots."""
         return self.__windSpeed
 
     @windSpeed.setter
@@ -9272,6 +9360,7 @@ class FieldValueMap(Base):
 
     @property
     def openUnadjusted(self) -> float:
+        """Unadjusted open level of an asset based on official exchange fixing or calculation agent marked level."""
         return self.__openUnadjusted
 
     @openUnadjusted.setter
@@ -9281,6 +9370,7 @@ class FieldValueMap(Base):
 
     @property
     def maRank(self) -> float:
+        """M&A Rank, which may take on the following values: 1 represents high (at least 30%, but less than 50%) probability of the company becoming an acquisition target, 2 represents medium (at least 15%, but less than 30%) probability and 3 represents low (less than 15%) probability."""
         return self.__maRank
 
     @maRank.setter
@@ -9290,6 +9380,7 @@ class FieldValueMap(Base):
 
     @property
     def eventStartDateTime(self) -> datetime.datetime:
+        """The start time of the event if the event occurs during a time window and the event has a specific start time, using UTC convention (optional)."""
         return self.__eventStartDateTime
 
     @eventStartDateTime.setter
@@ -9299,6 +9390,7 @@ class FieldValueMap(Base):
 
     @property
     def askPrice(self) -> float:
+        """Latest Ask Price (price offering to sell)."""
         return self.__askPrice
 
     @askPrice.setter
@@ -9308,6 +9400,7 @@ class FieldValueMap(Base):
 
     @property
     def eventId(self) -> str:
+        """Goldman Sachs internal event identifier."""
         return self.__eventId
 
     @eventId.setter
@@ -9317,6 +9410,7 @@ class FieldValueMap(Base):
 
     @property
     def dataProduct(self) -> str:
+        """Product that dataset belongs to."""
         return self.__dataProduct
 
     @dataProduct.setter
@@ -9335,6 +9429,7 @@ class FieldValueMap(Base):
 
     @property
     def annualizedTrackingError(self) -> float:
+        """Annualized tracking error."""
         return self.__annualizedTrackingError
 
     @annualizedTrackingError.setter
@@ -9344,6 +9439,7 @@ class FieldValueMap(Base):
 
     @property
     def volSwap(self) -> float:
+        """The strike in volatility terms, calculated as square root of fair variance."""
         return self.__volSwap
 
     @volSwap.setter
@@ -9353,6 +9449,7 @@ class FieldValueMap(Base):
 
     @property
     def annualizedRisk(self) -> float:
+        """Annualized risk."""
         return self.__annualizedRisk
 
     @annualizedRisk.setter
@@ -9362,6 +9459,7 @@ class FieldValueMap(Base):
 
     @property
     def corporateAction(self) -> bool:
+        """Whether or not it is a corporate action."""
         return self.__corporateAction
 
     @corporateAction.setter
@@ -9371,6 +9469,7 @@ class FieldValueMap(Base):
 
     @property
     def conviction(self) -> str:
+        """Confidence level in the trade idea."""
         return self.__conviction
 
     @conviction.setter
@@ -9380,6 +9479,7 @@ class FieldValueMap(Base):
 
     @property
     def grossExposure(self) -> float:
+        """Sum of absolute long and short exposures in the portfolio. If you are $60 short and $40 long, then the grossExposure would be $100 (60+40)."""
         return self.__grossExposure
 
     @grossExposure.setter
@@ -9389,6 +9489,7 @@ class FieldValueMap(Base):
 
     @property
     def benchmarkMaturity(self) -> str:
+        """The benchmark tenor."""
         return self.__benchmarkMaturity
 
     @benchmarkMaturity.setter
@@ -9398,6 +9499,7 @@ class FieldValueMap(Base):
 
     @property
     def volumeComposite(self) -> float:
+        """Accumulated number of shares, lots or contracts traded according to the market convention at all exchanges."""
         return self.__volumeComposite
 
     @volumeComposite.setter
@@ -9407,6 +9509,7 @@ class FieldValueMap(Base):
 
     @property
     def volume(self) -> float:
+        """Accumulated number of shares, lots or contracts traded according to the market convention."""
         return self.__volume
 
     @volume.setter
@@ -9416,6 +9519,7 @@ class FieldValueMap(Base):
 
     @property
     def adv(self) -> float:
+        """Average number of shares or units of a given asset traded over a defined period."""
         return self.__adv
 
     @adv.setter
@@ -9425,6 +9529,7 @@ class FieldValueMap(Base):
 
     @property
     def stsFxCurrency(self) -> str:
+        """Currency of underlying FX risk for STS assets."""
         return self.__stsFxCurrency
 
     @stsFxCurrency.setter
@@ -9434,6 +9539,7 @@ class FieldValueMap(Base):
 
     @property
     def wpk(self) -> str:
+        """Wertpapierkennnummer (WKN, WPKN, Wert), German security identifier code (subject to licensing)."""
         return self.__wpk
 
     @wpk.setter
@@ -9443,6 +9549,7 @@ class FieldValueMap(Base):
 
     @property
     def shortConvictionMedium(self) -> float:
+        """The count of short ideas with medium conviction."""
         return self.__shortConvictionMedium
 
     @shortConvictionMedium.setter
@@ -9452,6 +9559,7 @@ class FieldValueMap(Base):
 
     @property
     def bidChange(self) -> float:
+        """Change in BID price."""
         return self.__bidChange
 
     @bidChange.setter
@@ -9461,6 +9569,7 @@ class FieldValueMap(Base):
 
     @property
     def exchange(self) -> str:
+        """Name of marketplace where security, derivative or other instrument is traded"""
         return self.__exchange
 
     @exchange.setter
@@ -9470,6 +9579,7 @@ class FieldValueMap(Base):
 
     @property
     def expiration(self) -> str:
+        """The expiration date of the associated contract and the last date it trades."""
         return self.__expiration
 
     @expiration.setter
@@ -9479,6 +9589,7 @@ class FieldValueMap(Base):
 
     @property
     def tradePrice(self) -> float:
+        """Last trade price or value."""
         return self.__tradePrice
 
     @tradePrice.setter
@@ -9488,6 +9599,7 @@ class FieldValueMap(Base):
 
     @property
     def esPolicyScore(self) -> float:
+        """Score for E&S policy metrics."""
         return self.__esPolicyScore
 
     @esPolicyScore.setter
@@ -9497,6 +9609,7 @@ class FieldValueMap(Base):
 
     @property
     def loanId(self) -> str:
+        """Loan reference for a securities lending loan."""
         return self.__loanId
 
     @loanId.setter
@@ -9506,6 +9619,7 @@ class FieldValueMap(Base):
 
     @property
     def cid(self) -> str:
+        """Goldman Sachs internal company identifier."""
         return self.__cid
 
     @cid.setter
@@ -9515,6 +9629,7 @@ class FieldValueMap(Base):
 
     @property
     def liquidityScore(self) -> float:
+        """Liquidity conditions in the aggregate market, calculated as the average of touch liquidity score, touch spread score, and depth spread score."""
         return self.__liquidityScore
 
     @liquidityScore.setter
@@ -9524,6 +9639,7 @@ class FieldValueMap(Base):
 
     @property
     def importance(self) -> float:
+        """Importance."""
         return self.__importance
 
     @importance.setter
@@ -9533,6 +9649,7 @@ class FieldValueMap(Base):
 
     @property
     def sourceDateSpan(self) -> float:
+        """Date span for event in days."""
         return self.__sourceDateSpan
 
     @sourceDateSpan.setter
@@ -9542,6 +9659,7 @@ class FieldValueMap(Base):
 
     @property
     def assetClassificationsGicsSector(self) -> str:
+        """GICS Sector classification (level 1)."""
         return self.__assetClassificationsGicsSector
 
     @assetClassificationsGicsSector.setter
@@ -9551,6 +9669,7 @@ class FieldValueMap(Base):
 
     @property
     def underlyingDataSetId(self) -> str:
+        """Dataset on which this (virtual) dataset is based."""
         return self.__underlyingDataSetId
 
     @underlyingDataSetId.setter
@@ -9560,6 +9679,7 @@ class FieldValueMap(Base):
 
     @property
     def stsAssetName(self) -> str:
+        """Name of risk asset for STS underliers."""
         return self.__stsAssetName
 
     @stsAssetName.setter
@@ -9569,6 +9689,7 @@ class FieldValueMap(Base):
 
     @property
     def closeUnadjusted(self) -> float:
+        """Unadjusted Close level of an asset based on official exchange fixing or calculation agent marked level."""
         return self.__closeUnadjusted
 
     @closeUnadjusted.setter
@@ -9578,6 +9699,7 @@ class FieldValueMap(Base):
 
     @property
     def valueUnit(self) -> str:
+        """Value unit."""
         return self.__valueUnit
 
     @valueUnit.setter
@@ -9587,6 +9709,7 @@ class FieldValueMap(Base):
 
     @property
     def bidHigh(self) -> float:
+        """The highest bid (price willing to buy)."""
         return self.__bidHigh
 
     @bidHigh.setter
@@ -9596,6 +9719,7 @@ class FieldValueMap(Base):
 
     @property
     def adjustedLowPrice(self) -> float:
+        """Adjusted low level of an asset based on official exchange fixing or calculation agent marked level."""
         return self.__adjustedLowPrice
 
     @adjustedLowPrice.setter
@@ -9605,6 +9729,7 @@ class FieldValueMap(Base):
 
     @property
     def netExposureClassification(self) -> str:
+        """Classification for net exposure of fund."""
         return self.__netExposureClassification
 
     @netExposureClassification.setter
@@ -9614,6 +9739,7 @@ class FieldValueMap(Base):
 
     @property
     def longConvictionLarge(self) -> float:
+        """The count of long ideas with large conviction."""
         return self.__longConvictionLarge
 
     @longConvictionLarge.setter
@@ -9623,6 +9749,7 @@ class FieldValueMap(Base):
 
     @property
     def fairVariance(self) -> float:
+        """Strike such that the price of an uncapped variance swap on the underlying index is zero at inception."""
         return self.__fairVariance
 
     @fairVariance.setter
@@ -9632,6 +9759,7 @@ class FieldValueMap(Base):
 
     @property
     def hitRateWtd(self) -> float:
+        """Hit Rate Ratio Week to Date."""
         return self.__hitRateWtd
 
     @hitRateWtd.setter
@@ -9641,6 +9769,7 @@ class FieldValueMap(Base):
 
     @property
     def oad(self) -> float:
+        """Option-adjusted duration."""
         return self.__oad
 
     @oad.setter
@@ -9650,6 +9779,7 @@ class FieldValueMap(Base):
 
     @property
     def bosInBpsDescription(self) -> str:
+        """Description of the Stock's Bid-Offer Spread in Basis points on the particular date."""
         return self.__bosInBpsDescription
 
     @bosInBpsDescription.setter
@@ -9659,6 +9789,7 @@ class FieldValueMap(Base):
 
     @property
     def lowPrice(self) -> float:
+        """Low level of an asset based on official exchange fixing or calculation agent marked level."""
         return self.__lowPrice
 
     @lowPrice.setter
@@ -9668,6 +9799,7 @@ class FieldValueMap(Base):
 
     @property
     def realizedVolatility(self) -> float:
+        """Volatility of an asset realized by observations of market prices."""
         return self.__realizedVolatility
 
     @realizedVolatility.setter
@@ -9677,6 +9809,7 @@ class FieldValueMap(Base):
 
     @property
     def rate(self) -> float:
+        """Rate of the asset for the time period in percent."""
         return self.__rate
 
     @rate.setter
@@ -9686,6 +9819,7 @@ class FieldValueMap(Base):
 
     @property
     def adv22DayPct(self) -> float:
+        """Median number of shares or units of a given asset traded over a 21 day period."""
         return self.__adv22DayPct
 
     @adv22DayPct.setter
@@ -9695,6 +9829,7 @@ class FieldValueMap(Base):
 
     @property
     def alpha(self) -> float:
+        """Alpha."""
         return self.__alpha
 
     @alpha.setter
@@ -9704,6 +9839,7 @@ class FieldValueMap(Base):
 
     @property
     def client(self) -> str:
+        """Entity name."""
         return self.__client
 
     @client.setter
@@ -9713,6 +9849,7 @@ class FieldValueMap(Base):
 
     @property
     def company(self) -> str:
+        """Activity user company."""
         return self.__company
 
     @company.setter
@@ -9722,6 +9859,7 @@ class FieldValueMap(Base):
 
     @property
     def convictionList(self) -> bool:
+        """Conviction List, which is true if the security is on the Conviction Buy List or false otherwise. Securities with a convictionList value equal to true are by definition a subset of the securities with a rating equal to Buy."""
         return self.__convictionList
 
     @convictionList.setter
@@ -9731,6 +9869,7 @@ class FieldValueMap(Base):
 
     @property
     def priceRangeInTicksLabel(self):
+        """Label of the Stock's Price Range in Ticks on the particular date."""
         return self.__priceRangeInTicksLabel
 
     @priceRangeInTicksLabel.setter
@@ -9740,6 +9879,7 @@ class FieldValueMap(Base):
 
     @property
     def ticker(self) -> str:
+        """Ticker."""
         return self.__ticker
 
     @ticker.setter
@@ -9749,6 +9889,7 @@ class FieldValueMap(Base):
 
     @property
     def inRiskModel(self) -> bool:
+        """Whether or not the asset is in the risk model universe."""
         return self.__inRiskModel
 
     @inRiskModel.setter
@@ -9758,6 +9899,7 @@ class FieldValueMap(Base):
 
     @property
     def tcmCostHorizon1Day(self) -> float:
+        """TCM cost with a 1 day time horizon."""
         return self.__tcmCostHorizon1Day
 
     @tcmCostHorizon1Day.setter
@@ -9767,6 +9909,7 @@ class FieldValueMap(Base):
 
     @property
     def servicingCostLongPnl(self) -> float:
+        """Servicing Cost Long Profit and Loss."""
         return self.__servicingCostLongPnl
 
     @servicingCostLongPnl.setter
@@ -9776,6 +9919,7 @@ class FieldValueMap(Base):
 
     @property
     def stsRatesCountry(self) -> str:
+        """Country of interest rate risk for STS assets."""
         return self.__stsRatesCountry
 
     @stsRatesCountry.setter
@@ -9785,6 +9929,7 @@ class FieldValueMap(Base):
 
     @property
     def meetingNumber(self) -> int:
+        """Central bank meeting number."""
         return self.__meetingNumber
 
     @meetingNumber.setter
@@ -9794,6 +9939,7 @@ class FieldValueMap(Base):
 
     @property
     def exchangeId(self) -> str:
+        """Unique identifier for an exchange."""
         return self.__exchangeId
 
     @exchangeId.setter
@@ -9803,6 +9949,7 @@ class FieldValueMap(Base):
 
     @property
     def horizon(self) -> str:
+        """Time period indicating the validity of the idea. Eg. 2d (2 days), 1w (1 week), 3m (3 months), 1y (1 year)."""
         return self.__horizon
 
     @horizon.setter
@@ -9812,6 +9959,7 @@ class FieldValueMap(Base):
 
     @property
     def tcmCostHorizon20Day(self) -> float:
+        """TCM cost with a 20 day time horizon."""
         return self.__tcmCostHorizon20Day
 
     @tcmCostHorizon20Day.setter
@@ -9821,6 +9969,7 @@ class FieldValueMap(Base):
 
     @property
     def longLevel(self) -> float:
+        """Level of the 5-day normalized flow for long selling/buying."""
         return self.__longLevel
 
     @longLevel.setter
@@ -9830,6 +9979,7 @@ class FieldValueMap(Base):
 
     @property
     def sourceValueForecast(self) -> str:
+        """TE own projections."""
         return self.__sourceValueForecast
 
     @sourceValueForecast.setter
@@ -9839,6 +9989,7 @@ class FieldValueMap(Base):
 
     @property
     def shortConvictionLarge(self) -> float:
+        """The count of short ideas with large conviction."""
         return self.__shortConvictionLarge
 
     @shortConvictionLarge.setter
@@ -9848,6 +9999,7 @@ class FieldValueMap(Base):
 
     @property
     def realm(self) -> str:
+        """Realm."""
         return self.__realm
 
     @realm.setter
@@ -9857,6 +10009,7 @@ class FieldValueMap(Base):
 
     @property
     def bid(self) -> float:
+        """Latest Bid Price (price willing to buy)."""
         return self.__bid
 
     @bid.setter
@@ -9866,6 +10019,7 @@ class FieldValueMap(Base):
 
     @property
     def dataDescription(self) -> str:
+        """Description of data that client is requesting."""
         return self.__dataDescription
 
     @dataDescription.setter
@@ -9875,6 +10029,7 @@ class FieldValueMap(Base):
 
     @property
     def composite22DayAdv(self) -> float:
+        """Composite 22 day ADV."""
         return self.__composite22DayAdv
 
     @composite22DayAdv.setter
@@ -9884,6 +10039,7 @@ class FieldValueMap(Base):
 
     @property
     def gsn(self) -> str:
+        """Goldman Sachs internal product number."""
         return self.__gsn
 
     @gsn.setter
@@ -9893,6 +10049,7 @@ class FieldValueMap(Base):
 
     @property
     def isAggressive(self) -> float:
+        """Indicates if the fill was aggressive or passive."""
         return self.__isAggressive
 
     @isAggressive.setter
@@ -9902,6 +10059,7 @@ class FieldValueMap(Base):
 
     @property
     def orderId(self) -> str:
+        """The unique ID of the order."""
         return self.__orderId
 
     @orderId.setter
@@ -9911,6 +10069,7 @@ class FieldValueMap(Base):
 
     @property
     def gss(self) -> str:
+        """Goldman Sachs internal product symbol."""
         return self.__gss
 
     @gss.setter
@@ -9920,6 +10079,7 @@ class FieldValueMap(Base):
 
     @property
     def percentOfMediandv1m(self) -> float:
+        """Percentage of median daily volume calculated using 1 month period (last 22 trading days)."""
         return self.__percentOfMediandv1m
 
     @percentOfMediandv1m.setter
@@ -9929,6 +10089,7 @@ class FieldValueMap(Base):
 
     @property
     def lendables(self) -> float:
+        """Market value of holdings available to a securities lending program for lending."""
         return self.__lendables
 
     @lendables.setter
@@ -9938,6 +10099,7 @@ class FieldValueMap(Base):
 
     @property
     def assetClass(self) -> str:
+        """Asset classification of security. Assets are classified into broad groups which exhibit similar characteristics and behave in a consistent way under different market conditions"""
         return self.__assetClass
 
     @assetClass.setter
@@ -9947,6 +10109,7 @@ class FieldValueMap(Base):
 
     @property
     def gsideid(self) -> str:
+        """Goldman Sachs internal composite equity and exchange identifier."""
         return self.__gsideid
 
     @gsideid.setter
@@ -9956,6 +10119,7 @@ class FieldValueMap(Base):
 
     @property
     def bosInTicksLabel(self):
+        """Label of the Stock's Bid-Offer Spread in Ticks on the particular date."""
         return self.__bosInTicksLabel
 
     @bosInTicksLabel.setter
@@ -9965,6 +10129,7 @@ class FieldValueMap(Base):
 
     @property
     def ric(self) -> str:
+        """Reuters instrument code (subject to licensing)."""
         return self.__ric
 
     @ric.setter
@@ -9974,6 +10139,7 @@ class FieldValueMap(Base):
 
     @property
     def positionSourceId(self) -> str:
+        """Marquee unique identifier"""
         return self.__positionSourceId
 
     @positionSourceId.setter
@@ -9983,6 +10149,7 @@ class FieldValueMap(Base):
 
     @property
     def division(self) -> str:
+        """Division that owns the data."""
         return self.__division
 
     @division.setter
@@ -9992,6 +10159,7 @@ class FieldValueMap(Base):
 
     @property
     def marketCapUSD(self) -> float:
+        """Market capitalization of a given asset denominated in USD."""
         return self.__marketCapUSD
 
     @marketCapUSD.setter
@@ -10001,6 +10169,7 @@ class FieldValueMap(Base):
 
     @property
     def deploymentId(self) -> float:
+        """Deployment ID."""
         return self.__deploymentId
 
     @deploymentId.setter
@@ -10010,6 +10179,7 @@ class FieldValueMap(Base):
 
     @property
     def highPrice(self) -> float:
+        """High level of an asset based on official exchange fixing or calculation agent marked level."""
         return self.__highPrice
 
     @highPrice.setter
@@ -10019,6 +10189,7 @@ class FieldValueMap(Base):
 
     @property
     def shortWeight(self) -> float:
+        """Short weight of a position in a given portfolio. Equivalent to position short exposure / total short exposure. If you have a position with a shortExposure of $20, and your portfolio shortExposure is $100, then your asset shortWeight would be 0.2 (20/100)."""
         return self.__shortWeight
 
     @shortWeight.setter
@@ -10028,6 +10199,7 @@ class FieldValueMap(Base):
 
     @property
     def absoluteShares(self) -> float:
+        """The number of shares without adjusting for side."""
         return self.__absoluteShares
 
     @absoluteShares.setter
@@ -10037,6 +10209,7 @@ class FieldValueMap(Base):
 
     @property
     def action(self) -> str:
+        """The activity action. For example: Viewed"""
         return self.__action
 
     @action.setter
@@ -10046,6 +10219,7 @@ class FieldValueMap(Base):
 
     @property
     def model(self) -> str:
+        """Model."""
         return self.__model
 
     @model.setter
@@ -10055,6 +10229,7 @@ class FieldValueMap(Base):
 
     @property
     def id(self) -> str:
+        """Marquee unique identifier"""
         return self.__id
 
     @id.setter
@@ -10064,6 +10239,7 @@ class FieldValueMap(Base):
 
     @property
     def arrivalHaircutVwapNormalized(self) -> float:
+        """Performance against Benchmark in pip."""
         return self.__arrivalHaircutVwapNormalized
 
     @arrivalHaircutVwapNormalized.setter
@@ -10073,6 +10249,7 @@ class FieldValueMap(Base):
 
     @property
     def queueClockTimeDescription(self) -> str:
+        """Description of the Stock's Queue Clock Time on the particular date."""
         return self.__queueClockTimeDescription
 
     @queueClockTimeDescription.setter
@@ -10082,6 +10259,7 @@ class FieldValueMap(Base):
 
     @property
     def period(self) -> str:
+        """Period for the relevant metric, such as 12MF (12 Months Forward)."""
         return self.__period
 
     @period.setter
@@ -10091,6 +10269,7 @@ class FieldValueMap(Base):
 
     @property
     def indexCreateSource(self) -> str:
+        """Source of basket create."""
         return self.__indexCreateSource
 
     @indexCreateSource.setter
@@ -10100,6 +10279,7 @@ class FieldValueMap(Base):
 
     @property
     def fiscalQuarter(self) -> str:
+        """One of the four three-month periods that make up the fiscal year."""
         return self.__fiscalQuarter
 
     @fiscalQuarter.setter
@@ -10109,6 +10289,7 @@ class FieldValueMap(Base):
 
     @property
     def deltaStrike(self) -> str:
+        """Option strike price expressed in terms of delta * 100."""
         return self.__deltaStrike
 
     @deltaStrike.setter
@@ -10118,6 +10299,7 @@ class FieldValueMap(Base):
 
     @property
     def marketImpact(self) -> float:
+        """Market impact is based on the Goldman Sachs Shortfall Model where available alongside best estimates from the desk."""
         return self.__marketImpact
 
     @marketImpact.setter
@@ -10127,6 +10309,7 @@ class FieldValueMap(Base):
 
     @property
     def eventType(self) -> str:
+        """Equals Analyst Meeting if the event indicates an analyst meeting. Equals Earnings Release if the event indicates an earnings release. Equals Sales Release when the event indicates a sales release. Indicates Drug Data when the event indicates an event related to drugs data. Equals Other for any other events."""
         return self.__eventType
 
     @eventType.setter
@@ -10136,6 +10319,7 @@ class FieldValueMap(Base):
 
     @property
     def assetCountLong(self) -> float:
+        """Number of assets in a portfolio with long exposure."""
         return self.__assetCountLong
 
     @assetCountLong.setter
@@ -10145,6 +10329,7 @@ class FieldValueMap(Base):
 
     @property
     def valueActual(self) -> str:
+        """Latest released value."""
         return self.__valueActual
 
     @valueActual.setter
@@ -10154,6 +10339,7 @@ class FieldValueMap(Base):
 
     @property
     def bcid(self) -> str:
+        """Bloomberg composite identifier (ticker and country code)."""
         return self.__bcid
 
     @bcid.setter
@@ -10163,6 +10349,7 @@ class FieldValueMap(Base):
 
     @property
     def originalCountry(self) -> str:
+        """Country in source dataset."""
         return self.__originalCountry
 
     @originalCountry.setter
@@ -10172,6 +10359,7 @@ class FieldValueMap(Base):
 
     @property
     def touchLiquidityScore(self) -> float:
+        """Z-score of the amount available to trade at the top of the aggregated order book."""
         return self.__touchLiquidityScore
 
     @touchLiquidityScore.setter
@@ -10181,6 +10369,7 @@ class FieldValueMap(Base):
 
     @property
     def field(self) -> str:
+        """The market data field (e.g. rate, price). This can be resolved into a dataset when combined with vendor and intraday=true/false."""
         return self.__field
 
     @field.setter
@@ -10190,6 +10379,7 @@ class FieldValueMap(Base):
 
     @property
     def spot(self) -> float:
+        """Spot price."""
         return self.__spot
 
     @spot.setter
@@ -10199,6 +10389,7 @@ class FieldValueMap(Base):
 
     @property
     def expectedCompletionDate(self) -> str:
+        """Expected day of acquisition completion."""
         return self.__expectedCompletionDate
 
     @expectedCompletionDate.setter
@@ -10217,6 +10408,7 @@ class FieldValueMap(Base):
 
     @property
     def skew(self) -> float:
+        """Volatility skew."""
         return self.__skew
 
     @skew.setter
@@ -10226,6 +10418,7 @@ class FieldValueMap(Base):
 
     @property
     def status(self) -> str:
+        """Status of report run"""
         return self.__status
 
     @status.setter
@@ -10235,6 +10428,7 @@ class FieldValueMap(Base):
 
     @property
     def sustainEmergingMarkets(self) -> bool:
+        """True if the stock is on the SUSTAIN Emerging Markets list as of the corresponding date. False if the stock is removed from the SUSTAIN Emerging Markets list on the corresponding date."""
         return self.__sustainEmergingMarkets
 
     @sustainEmergingMarkets.setter
@@ -10244,6 +10438,7 @@ class FieldValueMap(Base):
 
     @property
     def eventDateTime(self) -> datetime.datetime:
+        """The time of the event if the event has a specific time, using UTC convention, or the end time of the event if the event occurs during a time window (optional)."""
         return self.__eventDateTime
 
     @eventDateTime.setter
@@ -10253,6 +10448,7 @@ class FieldValueMap(Base):
 
     @property
     def totalReturnPrice(self) -> float:
+        """The total return price of an instrument."""
         return self.__totalReturnPrice
 
     @totalReturnPrice.setter
@@ -10262,6 +10458,7 @@ class FieldValueMap(Base):
 
     @property
     def city(self) -> str:
+        """City for which the weather data was gathered."""
         return self.__city
 
     @city.setter
@@ -10271,6 +10468,7 @@ class FieldValueMap(Base):
 
     @property
     def eventSource(self) -> str:
+        """Equals GS if the event is sourced from Goldman Sachs Global Investment Research analysts. Equals TR if the event is sourced from Refinitive StreetEvents."""
         return self.__eventSource
 
     @eventSource.setter
@@ -10280,6 +10478,7 @@ class FieldValueMap(Base):
 
     @property
     def qisPermNo(self) -> str:
+        """QIS Permanent Security Number."""
         return self.__qisPermNo
 
     @qisPermNo.setter
@@ -10289,6 +10488,7 @@ class FieldValueMap(Base):
 
     @property
     def hitRateYtd(self) -> float:
+        """Hit Rate Ratio Year to Date."""
         return self.__hitRateYtd
 
     @hitRateYtd.setter
@@ -10298,6 +10498,7 @@ class FieldValueMap(Base):
 
     @property
     def stsCommodity(self) -> str:
+        """Commodity name for STS assets."""
         return self.__stsCommodity
 
     @stsCommodity.setter
@@ -10307,6 +10508,7 @@ class FieldValueMap(Base):
 
     @property
     def stsCommoditySector(self) -> str:
+        """Commodity sector for STS assets."""
         return self.__stsCommoditySector
 
     @stsCommoditySector.setter
@@ -10316,6 +10518,7 @@ class FieldValueMap(Base):
 
     @property
     def salesCoverage(self) -> str:
+        """Primary or secondary sales coverage."""
         return self.__salesCoverage
 
     @salesCoverage.setter
@@ -10325,6 +10528,7 @@ class FieldValueMap(Base):
 
     @property
     def shortExposure(self) -> float:
+        """Exposure of a given portfolio to securities which are short in direction. If you are $60 short and $40 long, shortExposure would be $60."""
         return self.__shortExposure
 
     @shortExposure.setter
@@ -10334,6 +10538,7 @@ class FieldValueMap(Base):
 
     @property
     def esScore(self) -> float:
+        """E&S numeric score + E&S policy score."""
         return self.__esScore
 
     @esScore.setter
@@ -10343,6 +10548,7 @@ class FieldValueMap(Base):
 
     @property
     def tcmCostParticipationRate10Pct(self) -> float:
+        """TCM cost with a 10 percent participation rate."""
         return self.__tcmCostParticipationRate10Pct
 
     @tcmCostParticipationRate10Pct.setter
@@ -10352,6 +10558,7 @@ class FieldValueMap(Base):
 
     @property
     def eventTime(self) -> str:
+        """The time of the event if the event has a specific time or the end time of the event if the event occurs during a time window (optional). It is represented in HH:MM 24 hour format in the time zone of the exchange where the company is listed."""
         return self.__eventTime
 
     @eventTime.setter
@@ -10361,6 +10568,7 @@ class FieldValueMap(Base):
 
     @property
     def positionSourceName(self) -> str:
+        """Position source name for quick access."""
         return self.__positionSourceName
 
     @positionSourceName.setter
@@ -10370,6 +10578,7 @@ class FieldValueMap(Base):
 
     @property
     def priceRangeInTicks(self) -> float:
+        """The Price Range of the stock in Ticks on the particular date."""
         return self.__priceRangeInTicks
 
     @priceRangeInTicks.setter
@@ -10379,6 +10588,7 @@ class FieldValueMap(Base):
 
     @property
     def deliveryDate(self) -> datetime.date:
+        """The final date by which the underlying commodity for a futures contract must be delivered in order for the terms of the contract to be fulfilled."""
         return self.__deliveryDate
 
     @deliveryDate.setter
@@ -10388,6 +10598,7 @@ class FieldValueMap(Base):
 
     @property
     def arrivalHaircutVwap(self) -> float:
+        """Arrival Haircut VWAP."""
         return self.__arrivalHaircutVwap
 
     @arrivalHaircutVwap.setter
@@ -10397,6 +10608,7 @@ class FieldValueMap(Base):
 
     @property
     def interestRate(self) -> float:
+        """Interest rate."""
         return self.__interestRate
 
     @interestRate.setter
@@ -10406,6 +10618,7 @@ class FieldValueMap(Base):
 
     @property
     def executionDays(self) -> float:
+        """Number of days to used to execute."""
         return self.__executionDays
 
     @executionDays.setter
@@ -10415,6 +10628,7 @@ class FieldValueMap(Base):
 
     @property
     def pctChange(self) -> float:
+        """Percentage change of the latest trade price or value from the adjusted historical close."""
         return self.__pctChange
 
     @pctChange.setter
@@ -10424,6 +10638,7 @@ class FieldValueMap(Base):
 
     @property
     def side(self) -> str:
+        """Long or short."""
         return self.__side
 
     @side.setter
@@ -10433,6 +10648,7 @@ class FieldValueMap(Base):
 
     @property
     def numberOfRolls(self) -> int:
+        """Contract's number of rolls per year."""
         return self.__numberOfRolls
 
     @numberOfRolls.setter
@@ -10442,6 +10658,7 @@ class FieldValueMap(Base):
 
     @property
     def agentLenderFee(self) -> float:
+        """Fee earned by the Agent Lender for facilitating a securities lending agreement where agentLenderFee = grossIncome - loanFee - rebateAmount - partnerFee."""
         return self.__agentLenderFee
 
     @agentLenderFee.setter
@@ -10451,6 +10668,7 @@ class FieldValueMap(Base):
 
     @property
     def complianceRestrictedStatus(self) -> str:
+        """Restricted status as set by compliance."""
         return self.__complianceRestrictedStatus
 
     @complianceRestrictedStatus.setter
@@ -10460,6 +10678,7 @@ class FieldValueMap(Base):
 
     @property
     def forward(self) -> float:
+        """Forward value."""
         return self.__forward
 
     @forward.setter
@@ -10469,6 +10688,7 @@ class FieldValueMap(Base):
 
     @property
     def borrowFee(self) -> float:
+        """An indication of the rate one would be charged for borrowing/shorting the relevant asset on that day, expressed in annualized percent terms. Rates may change daily."""
         return self.__borrowFee
 
     @borrowFee.setter
@@ -10478,6 +10698,7 @@ class FieldValueMap(Base):
 
     @property
     def strike(self) -> float:
+        """Strike level relative to at the money in basis points."""
         return self.__strike
 
     @strike.setter
@@ -10487,6 +10708,7 @@ class FieldValueMap(Base):
 
     @property
     def updateTime(self) -> datetime.datetime:
+        """Update time of the data element, which allows historical as-of query."""
         return self.__updateTime
 
     @updateTime.setter
@@ -10496,6 +10718,7 @@ class FieldValueMap(Base):
 
     @property
     def loanSpread(self) -> float:
+        """The difference between the investment rate on cash collateral and the rebate rate of a loan."""
         return self.__loanSpread
 
     @loanSpread.setter
@@ -10505,6 +10728,7 @@ class FieldValueMap(Base):
 
     @property
     def tcmCostHorizon12Hour(self) -> float:
+        """TCM cost with a 12 hour time horizon."""
         return self.__tcmCostHorizon12Hour
 
     @tcmCostHorizon12Hour.setter
@@ -10514,6 +10738,7 @@ class FieldValueMap(Base):
 
     @property
     def dewPoint(self) -> float:
+        """Temperature in fahrenheit below which water condenses."""
         return self.__dewPoint
 
     @dewPoint.setter
@@ -10523,6 +10748,7 @@ class FieldValueMap(Base):
 
     @property
     def researchCommission(self) -> float:
+        """The dollar amount of commissions received from clients."""
         return self.__researchCommission
 
     @researchCommission.setter
@@ -10532,6 +10758,7 @@ class FieldValueMap(Base):
 
     @property
     def bbid(self) -> str:
+        """Bloomberg identifier (ticker and exchange code)."""
         return self.__bbid
 
     @bbid.setter
@@ -10541,6 +10768,7 @@ class FieldValueMap(Base):
 
     @property
     def assetClassificationsRiskCountryCode(self) -> str:
+        """Risk Country code (ISO 3166)."""
         return self.__assetClassificationsRiskCountryCode
 
     @assetClassificationsRiskCountryCode.setter
@@ -10550,6 +10778,7 @@ class FieldValueMap(Base):
 
     @property
     def eventStatus(self) -> str:
+        """Included if there is additional information about an event, such as the event being cancelled."""
         return self.__eventStatus
 
     @eventStatus.setter
@@ -10559,6 +10788,7 @@ class FieldValueMap(Base):
 
     @property
     def effectiveDate(self) -> datetime.date:
+        """The date at which the measure becomes effective."""
         return self.__effectiveDate
 
     @effectiveDate.setter
@@ -10568,6 +10798,7 @@ class FieldValueMap(Base):
 
     @property
     def return_(self) -> float:
+        """Return of asset over a given period (e.g. close-to-close)."""
         return self.__return
 
     @return_.setter
@@ -10577,6 +10808,7 @@ class FieldValueMap(Base):
 
     @property
     def maxTemperature(self) -> float:
+        """Maximum temperature observed on a given day in fahrenheit."""
         return self.__maxTemperature
 
     @maxTemperature.setter
@@ -10586,6 +10818,7 @@ class FieldValueMap(Base):
 
     @property
     def acquirerShareholderMeetingDate(self) -> str:
+        """Shareholders meeting date for acquiring entity."""
         return self.__acquirerShareholderMeetingDate
 
     @acquirerShareholderMeetingDate.setter
@@ -10595,6 +10828,7 @@ class FieldValueMap(Base):
 
     @property
     def arrivalMidNormalized(self) -> float:
+        """Performance against Benchmark in pip."""
         return self.__arrivalMidNormalized
 
     @arrivalMidNormalized.setter
@@ -10604,6 +10838,7 @@ class FieldValueMap(Base):
 
     @property
     def rating(self) -> str:
+        """Analyst Rating, which may take on the following values."""
         return self.__rating
 
     @rating.setter
@@ -10613,6 +10848,7 @@ class FieldValueMap(Base):
 
     @property
     def arrivalRtNormalized(self) -> float:
+        """Performance against Benchmark in pip."""
         return self.__arrivalRtNormalized
 
     @arrivalRtNormalized.setter
@@ -10631,6 +10867,7 @@ class FieldValueMap(Base):
 
     @property
     def reportType(self) -> str:
+        """Type of report to execute"""
         return self.__reportType
 
     @reportType.setter
@@ -10640,6 +10877,7 @@ class FieldValueMap(Base):
 
     @property
     def sourceURL(self) -> str:
+        """Source URL."""
         return self.__sourceURL
 
     @sourceURL.setter
@@ -10649,6 +10887,7 @@ class FieldValueMap(Base):
 
     @property
     def estimatedReturn(self) -> float:
+        """Estimated return of asset over a given period (e.g. close-to-close)."""
         return self.__estimatedReturn
 
     @estimatedReturn.setter
@@ -10667,6 +10906,7 @@ class FieldValueMap(Base):
 
     @property
     def high(self) -> float:
+        """High level of an asset based on official exchange fixing or calculation agent marked level."""
         return self.__high
 
     @high.setter
@@ -10676,6 +10916,7 @@ class FieldValueMap(Base):
 
     @property
     def sourceLastUpdate(self) -> str:
+        """Source last update."""
         return self.__sourceLastUpdate
 
     @sourceLastUpdate.setter
@@ -10685,6 +10926,7 @@ class FieldValueMap(Base):
 
     @property
     def queueInLotsLabel(self):
+        """Label of the Stock's Queue size in Lots (if applicable) on the particular date."""
         return self.__queueInLotsLabel
 
     @queueInLotsLabel.setter
@@ -10694,6 +10936,7 @@ class FieldValueMap(Base):
 
     @property
     def adv10DayPct(self) -> float:
+        """Median number of shares or units of a given asset traded over a 10 day period."""
         return self.__adv10DayPct
 
     @adv10DayPct.setter
@@ -10703,6 +10946,7 @@ class FieldValueMap(Base):
 
     @property
     def longConvictionMedium(self) -> float:
+        """The count of long ideas with medium conviction."""
         return self.__longConvictionMedium
 
     @longConvictionMedium.setter
@@ -10712,6 +10956,7 @@ class FieldValueMap(Base):
 
     @property
     def eventName(self) -> str:
+        """Event name."""
         return self.__eventName
 
     @eventName.setter
@@ -10721,6 +10966,7 @@ class FieldValueMap(Base):
 
     @property
     def annualRisk(self) -> float:
+        """Annualized risk of a given portfolio, position or asset. Generally computed as annualized daily standard deviation of returns."""
         return self.__annualRisk
 
     @annualRisk.setter
@@ -10730,6 +10976,7 @@ class FieldValueMap(Base):
 
     @property
     def dailyTrackingError(self) -> float:
+        """Daily tracking error."""
         return self.__dailyTrackingError
 
     @dailyTrackingError.setter
@@ -10739,6 +10986,7 @@ class FieldValueMap(Base):
 
     @property
     def unadjustedBid(self) -> float:
+        """Unadjusted bid level of an asset based on official exchange fixing or calculation agent marked level."""
         return self.__unadjustedBid
 
     @unadjustedBid.setter
@@ -10748,6 +10996,7 @@ class FieldValueMap(Base):
 
     @property
     def gsdeer(self) -> float:
+        """Goldman Sachs Dynamic Equilibrium Exchange Rate."""
         return self.__gsdeer
 
     @gsdeer.setter
@@ -10757,6 +11006,7 @@ class FieldValueMap(Base):
 
     @property
     def marketCap(self) -> float:
+        """Market capitalization of a given asset in denominated currency."""
         return self.__marketCap
 
     @marketCap.setter
@@ -10766,6 +11016,7 @@ class FieldValueMap(Base):
 
     @property
     def clusterRegion(self):
+        """The cluster region the stock belongs to."""
         return self.__clusterRegion
 
     @clusterRegion.setter
@@ -10775,6 +11026,7 @@ class FieldValueMap(Base):
 
     @property
     def bbidEquivalent(self) -> str:
+        """Bloomberg identifier (ticker and country code) equivalent - i.e. for OTCs options, the equivalent BBID on exchange."""
         return self.__bbidEquivalent
 
     @bbidEquivalent.setter
@@ -10784,6 +11036,7 @@ class FieldValueMap(Base):
 
     @property
     def prevCloseAsk(self) -> float:
+        """Previous business day's close ask price."""
         return self.__prevCloseAsk
 
     @prevCloseAsk.setter
@@ -10793,6 +11046,7 @@ class FieldValueMap(Base):
 
     @property
     def level(self) -> float:
+        """Level of the 5-day normalized flow in a given factor."""
         return self.__level
 
     @level.setter
@@ -10802,6 +11056,7 @@ class FieldValueMap(Base):
 
     @property
     def valoren(self) -> str:
+        """Valoren or VALOR number, Swiss primary security identifier (subject to licensing)."""
         return self.__valoren
 
     @valoren.setter
@@ -10811,6 +11066,7 @@ class FieldValueMap(Base):
 
     @property
     def pressure(self) -> float:
+        """Average barometric pressure on a given day in inches of mercury."""
         return self.__pressure
 
     @pressure.setter
@@ -10820,6 +11076,7 @@ class FieldValueMap(Base):
 
     @property
     def shortDescription(self) -> str:
+        """Short description of dataset."""
         return self.__shortDescription
 
     @shortDescription.setter
@@ -10829,6 +11086,7 @@ class FieldValueMap(Base):
 
     @property
     def basis(self) -> float:
+        """Spread to be added to the shorter tenor leg for the swap to be ATM."""
         return self.__basis
 
     @basis.setter
@@ -10838,6 +11096,7 @@ class FieldValueMap(Base):
 
     @property
     def netWeight(self) -> float:
+        """Difference between the longWeight and shortWeight. If you have IBM stock with shortWeight 0.2 and also IBM stock with longWeight 0.4, then the netWeight would be 0.2 (-0.2+0.4)."""
         return self.__netWeight
 
     @netWeight.setter
@@ -10847,6 +11106,7 @@ class FieldValueMap(Base):
 
     @property
     def hedgeId(self) -> str:
+        """Marquee unique identifier for a hedge."""
         return self.__hedgeId
 
     @hedgeId.setter
@@ -10865,6 +11125,7 @@ class FieldValueMap(Base):
 
     @property
     def assetParametersCommoditySector(self) -> str:
+        """The sector of the commodity"""
         return self.__assetParametersCommoditySector
 
     @assetParametersCommoditySector.setter
@@ -10874,6 +11135,7 @@ class FieldValueMap(Base):
 
     @property
     def bosInTicks(self) -> float:
+        """The Bid-Offer Spread of the stock in Ticks on the particular date."""
         return self.__bosInTicks
 
     @bosInTicks.setter
@@ -10883,6 +11145,7 @@ class FieldValueMap(Base):
 
     @property
     def tcmCostHorizon8Day(self) -> float:
+        """TCM cost with a 8 day time horizon."""
         return self.__tcmCostHorizon8Day
 
     @tcmCostHorizon8Day.setter
@@ -10892,6 +11155,7 @@ class FieldValueMap(Base):
 
     @property
     def supraStrategy(self) -> str:
+        """Broad descriptor of a fund's investment approach. Same view permissions as the asset"""
         return self.__supraStrategy
 
     @supraStrategy.setter
@@ -10901,6 +11165,7 @@ class FieldValueMap(Base):
 
     @property
     def adv5DayPct(self) -> float:
+        """Median number of shares or units of a given asset traded over a 5 day period."""
         return self.__adv5DayPct
 
     @adv5DayPct.setter
@@ -10910,6 +11175,7 @@ class FieldValueMap(Base):
 
     @property
     def factorSource(self) -> str:
+        """Factor source. One of: Axioma, Prime."""
         return self.__factorSource
 
     @factorSource.setter
@@ -10919,6 +11185,7 @@ class FieldValueMap(Base):
 
     @property
     def leverage(self) -> float:
+        """Leverage."""
         return self.__leverage
 
     @leverage.setter
@@ -10928,6 +11195,7 @@ class FieldValueMap(Base):
 
     @property
     def submitter(self) -> str:
+        """Name of person submitting request."""
         return self.__submitter
 
     @submitter.setter
@@ -10937,6 +11205,7 @@ class FieldValueMap(Base):
 
     @property
     def notional(self) -> float:
+        """Notional."""
         return self.__notional
 
     @notional.setter
@@ -10946,6 +11215,7 @@ class FieldValueMap(Base):
 
     @property
     def esDisclosurePercentage(self) -> float:
+        """Percentage of E&S metrics disclosed by the company."""
         return self.__esDisclosurePercentage
 
     @esDisclosurePercentage.setter
@@ -10955,6 +11225,7 @@ class FieldValueMap(Base):
 
     @property
     def clientShortName(self) -> str:
+        """The short name of a client."""
         return self.__clientShortName
 
     @clientShortName.setter
@@ -10964,6 +11235,7 @@ class FieldValueMap(Base):
 
     @property
     def fwdPoints(self) -> float:
+        """Forward points."""
         return self.__fwdPoints
 
     @fwdPoints.setter
@@ -10973,6 +11245,7 @@ class FieldValueMap(Base):
 
     @property
     def groupCategory(self) -> str:
+        """The type of group: region or sector."""
         return self.__groupCategory
 
     @groupCategory.setter
@@ -10982,6 +11255,7 @@ class FieldValueMap(Base):
 
     @property
     def kpiId(self) -> str:
+        """Marquee unique KPI identifier."""
         return self.__kpiId
 
     @kpiId.setter
@@ -10991,6 +11265,7 @@ class FieldValueMap(Base):
 
     @property
     def relativeReturnWtd(self) -> float:
+        """Relative Return Week to Date."""
         return self.__relativeReturnWtd
 
     @relativeReturnWtd.setter
@@ -11000,6 +11275,7 @@ class FieldValueMap(Base):
 
     @property
     def bidPlusAsk(self) -> float:
+        """Sum of bid & ask."""
         return self.__bidPlusAsk
 
     @bidPlusAsk.setter
@@ -11009,6 +11285,7 @@ class FieldValueMap(Base):
 
     @property
     def assetClassificationsRiskCountryName(self) -> str:
+        """Risk country."""
         return self.__assetClassificationsRiskCountryName
 
     @assetClassificationsRiskCountryName.setter
@@ -11018,6 +11295,7 @@ class FieldValueMap(Base):
 
     @property
     def total(self) -> float:
+        """Total exposure."""
         return self.__total
 
     @total.setter
@@ -11027,6 +11305,7 @@ class FieldValueMap(Base):
 
     @property
     def riskModel(self) -> str:
+        """Model used to compute risk or performance attribution. Defines universe, factors, calibration period etc."""
         return self.__riskModel
 
     @riskModel.setter
@@ -11036,6 +11315,7 @@ class FieldValueMap(Base):
 
     @property
     def assetId(self) -> str:
+        """Marquee unique asset identifier."""
         return self.__assetId
 
     @assetId.setter
@@ -11045,6 +11325,7 @@ class FieldValueMap(Base):
 
     @property
     def lastUpdatedTime(self) -> datetime.datetime:
+        """Timestamp of when the object was last updated"""
         return self.__lastUpdatedTime
 
     @lastUpdatedTime.setter
@@ -11054,6 +11335,7 @@ class FieldValueMap(Base):
 
     @property
     def fairValue(self) -> float:
+        """Fair Value."""
         return self.__fairValue
 
     @fairValue.setter
@@ -11063,6 +11345,7 @@ class FieldValueMap(Base):
 
     @property
     def adjustedHighPrice(self) -> float:
+        """Adjusted high level of an asset based on official exchange fixing or calculation agent marked level."""
         return self.__adjustedHighPrice
 
     @adjustedHighPrice.setter
@@ -11072,6 +11355,7 @@ class FieldValueMap(Base):
 
     @property
     def openTime(self) -> datetime.datetime:
+        """Time opened. ISO 8601 formatted string."""
         return self.__openTime
 
     @openTime.setter
@@ -11081,6 +11365,7 @@ class FieldValueMap(Base):
 
     @property
     def beta(self) -> float:
+        """Beta."""
         return self.__beta
 
     @beta.setter
@@ -11090,6 +11375,7 @@ class FieldValueMap(Base):
 
     @property
     def direction(self) -> str:
+        """Indicates whether exposure of a given position is long or short."""
         return self.__direction
 
     @direction.setter
@@ -11099,6 +11385,7 @@ class FieldValueMap(Base):
 
     @property
     def valueForecast(self) -> str:
+        """Average forecast among a representative group of economists."""
         return self.__valueForecast
 
     @valueForecast.setter
@@ -11108,6 +11395,7 @@ class FieldValueMap(Base):
 
     @property
     def longExposure(self) -> float:
+        """Exposure of a given portfolio to securities which are long in direction. If you are $60 short and $40 long, longExposure would be $40."""
         return self.__longExposure
 
     @longExposure.setter
@@ -11117,6 +11405,7 @@ class FieldValueMap(Base):
 
     @property
     def positionSourceType(self) -> str:
+        """Source object for position data"""
         return self.__positionSourceType
 
     @positionSourceType.setter
@@ -11126,6 +11415,7 @@ class FieldValueMap(Base):
 
     @property
     def tcmCostParticipationRate20Pct(self) -> float:
+        """TCM cost with a 20 percent participation rate."""
         return self.__tcmCostParticipationRate20Pct
 
     @tcmCostParticipationRate20Pct.setter
@@ -11135,6 +11425,7 @@ class FieldValueMap(Base):
 
     @property
     def adjustedClosePrice(self) -> float:
+        """Closing Price adjusted for corporate actions."""
         return self.__adjustedClosePrice
 
     @adjustedClosePrice.setter
@@ -11144,6 +11435,7 @@ class FieldValueMap(Base):
 
     @property
     def cross(self) -> str:
+        """FX cross symbol."""
         return self.__cross
 
     @cross.setter
@@ -11153,6 +11445,7 @@ class FieldValueMap(Base):
 
     @property
     def lmsId(self) -> str:
+        """Market identifier code."""
         return self.__lmsId
 
     @lmsId.setter
@@ -11162,6 +11455,7 @@ class FieldValueMap(Base):
 
     @property
     def rebateRate(self) -> float:
+        """Defines the rate of the cash-back payment to an investor who puts up collateral in borrowing a stock. A rebate rate of interest implies a fee for the loan of securities."""
         return self.__rebateRate
 
     @rebateRate.setter
@@ -11171,6 +11465,7 @@ class FieldValueMap(Base):
 
     @property
     def ideaStatus(self) -> str:
+        """The activity status of the idea."""
         return self.__ideaStatus
 
     @ideaStatus.setter
@@ -11180,6 +11475,7 @@ class FieldValueMap(Base):
 
     @property
     def participationRate(self) -> float:
+        """Executed quantity over market volume (e.g. 5, 10, 20)."""
         return self.__participationRate
 
     @participationRate.setter
@@ -11189,6 +11485,7 @@ class FieldValueMap(Base):
 
     @property
     def obfr(self) -> float:
+        """The overnight bank funding rate."""
         return self.__obfr
 
     @obfr.setter
@@ -11198,6 +11495,7 @@ class FieldValueMap(Base):
 
     @property
     def fxForecast(self) -> float:
+        """FX forecast value for the relative period."""
         return self.__fxForecast
 
     @fxForecast.setter
@@ -11207,6 +11505,7 @@ class FieldValueMap(Base):
 
     @property
     def fixingTimeLabel(self) -> str:
+        """Time at which the fixing was taken."""
         return self.__fixingTimeLabel
 
     @fixingTimeLabel.setter
@@ -11216,6 +11515,7 @@ class FieldValueMap(Base):
 
     @property
     def fillId(self) -> str:
+        """Unique identifier for a fill."""
         return self.__fillId
 
     @fillId.setter
@@ -11225,6 +11525,7 @@ class FieldValueMap(Base):
 
     @property
     def esNumericScore(self) -> float:
+        """Score for E&S numeric metrics."""
         return self.__esNumericScore
 
     @esNumericScore.setter
@@ -11234,6 +11535,7 @@ class FieldValueMap(Base):
 
     @property
     def inBenchmark(self) -> bool:
+        """Whether or not the asset is in the benchmark."""
         return self.__inBenchmark
 
     @inBenchmark.setter
@@ -11243,6 +11545,7 @@ class FieldValueMap(Base):
 
     @property
     def strategy(self) -> str:
+        """More specific descriptor of a fund's investment approach. Same view permissions as the asset."""
         return self.__strategy
 
     @strategy.setter
@@ -11252,6 +11555,7 @@ class FieldValueMap(Base):
 
     @property
     def shortInterest(self) -> float:
+        """Short interest value."""
         return self.__shortInterest
 
     @shortInterest.setter
@@ -11261,6 +11565,7 @@ class FieldValueMap(Base):
 
     @property
     def referencePeriod(self) -> str:
+        """The period for which released data refers to."""
         return self.__referencePeriod
 
     @referencePeriod.setter
@@ -11270,6 +11575,7 @@ class FieldValueMap(Base):
 
     @property
     def adjustedVolume(self) -> float:
+        """Accumulated number of shares, lots or contracts traded according to the market convention adjusted for corporate actions."""
         return self.__adjustedVolume
 
     @adjustedVolume.setter
@@ -11279,6 +11585,7 @@ class FieldValueMap(Base):
 
     @property
     def queueInLotsDescription(self) -> str:
+        """Description of the Stock's Queue size in Lots (if applicable) on the particular date."""
         return self.__queueInLotsDescription
 
     @queueInLotsDescription.setter
@@ -11288,6 +11595,7 @@ class FieldValueMap(Base):
 
     @property
     def pbClientId(self) -> str:
+        """Prime Brokerage client identifier."""
         return self.__pbClientId
 
     @pbClientId.setter
@@ -11297,6 +11605,7 @@ class FieldValueMap(Base):
 
     @property
     def ownerId(self) -> str:
+        """Marquee unique identifier for user who owns the object."""
         return self.__ownerId
 
     @ownerId.setter
@@ -11306,6 +11615,7 @@ class FieldValueMap(Base):
 
     @property
     def secDB(self) -> str:
+        """Internal Goldman Sachs security database location for the asset."""
         return self.__secDB
 
     @secDB.setter
@@ -11315,6 +11625,7 @@ class FieldValueMap(Base):
 
     @property
     def composite10DayAdv(self) -> float:
+        """Composite 10 day ADV."""
         return self.__composite10DayAdv
 
     @composite10DayAdv.setter
@@ -11324,6 +11635,7 @@ class FieldValueMap(Base):
 
     @property
     def objective(self) -> str:
+        """The objective of the hedge."""
         return self.__objective
 
     @objective.setter
@@ -11333,6 +11645,7 @@ class FieldValueMap(Base):
 
     @property
     def navPrice(self) -> float:
+        """Net asset value price. Quoted price (mid, 100 ??? Upfront) of the underlying basket of single name CDS. (Theoretical Index value). In percent."""
         return self.__navPrice
 
     @navPrice.setter
@@ -11342,6 +11655,7 @@ class FieldValueMap(Base):
 
     @property
     def ideaActivityType(self) -> str:
+        """Equals CorporateAction if the activity originates as a result of a corporate action. Equals GovernanceAction if the activity originates as a result of a control measure. Equals UserAction if the activity is user driven."""
         return self.__ideaActivityType
 
     @ideaActivityType.setter
@@ -11351,6 +11665,7 @@ class FieldValueMap(Base):
 
     @property
     def precipitation(self) -> float:
+        """Amount of rainfall in inches."""
         return self.__precipitation
 
     @precipitation.setter
@@ -11360,6 +11675,7 @@ class FieldValueMap(Base):
 
     @property
     def ideaSource(self) -> str:
+        """Equals User if the idea activity originates from a sales person. Equals System if the idea activity is system generated."""
         return self.__ideaSource
 
     @ideaSource.setter
@@ -11369,6 +11685,7 @@ class FieldValueMap(Base):
 
     @property
     def hedgeNotional(self) -> float:
+        """Notional value of the hedge."""
         return self.__hedgeNotional
 
     @hedgeNotional.setter
@@ -11378,6 +11695,7 @@ class FieldValueMap(Base):
 
     @property
     def askLow(self) -> float:
+        """The lowest ask Price (price offering to sell)."""
         return self.__askLow
 
     @askLow.setter
@@ -11387,6 +11705,7 @@ class FieldValueMap(Base):
 
     @property
     def unadjustedAsk(self) -> float:
+        """Unadjusted ask level of an asset based on official exchange fixing or calculation agent marked level."""
         return self.__unadjustedAsk
 
     @unadjustedAsk.setter
@@ -11396,6 +11715,7 @@ class FieldValueMap(Base):
 
     @property
     def betaAdjustedNetExposure(self) -> float:
+        """Beta adjusted net exposure."""
         return self.__betaAdjustedNetExposure
 
     @betaAdjustedNetExposure.setter
@@ -11405,6 +11725,7 @@ class FieldValueMap(Base):
 
     @property
     def expiry(self) -> str:
+        """The time period before the option expires."""
         return self.__expiry
 
     @expiry.setter
@@ -11414,6 +11735,7 @@ class FieldValueMap(Base):
 
     @property
     def tradingPnl(self) -> float:
+        """Trading Profit and Loss (PNL)."""
         return self.__tradingPnl
 
     @tradingPnl.setter
@@ -11423,6 +11745,7 @@ class FieldValueMap(Base):
 
     @property
     def strikePercentage(self) -> float:
+        """Strike compared to market value."""
         return self.__strikePercentage
 
     @strikePercentage.setter
@@ -11432,6 +11755,7 @@ class FieldValueMap(Base):
 
     @property
     def excessReturnPrice(self) -> float:
+        """The excess return price of an instrument."""
         return self.__excessReturnPrice
 
     @excessReturnPrice.setter
@@ -11441,6 +11765,7 @@ class FieldValueMap(Base):
 
     @property
     def givenPlusPaid(self) -> float:
+        """Total of given & paid."""
         return self.__givenPlusPaid
 
     @givenPlusPaid.setter
@@ -11450,6 +11775,7 @@ class FieldValueMap(Base):
 
     @property
     def shortConvictionSmall(self) -> float:
+        """The count of short ideas with small conviction."""
         return self.__shortConvictionSmall
 
     @shortConvictionSmall.setter
@@ -11459,6 +11785,7 @@ class FieldValueMap(Base):
 
     @property
     def prevCloseBid(self) -> float:
+        """Previous close BID price."""
         return self.__prevCloseBid
 
     @prevCloseBid.setter
@@ -11468,6 +11795,7 @@ class FieldValueMap(Base):
 
     @property
     def fxPnl(self) -> float:
+        """Foreign Exchange Profit and Loss (PNL)."""
         return self.__fxPnl
 
     @fxPnl.setter
@@ -11477,6 +11805,7 @@ class FieldValueMap(Base):
 
     @property
     def forecast(self) -> float:
+        """Forward FX forecast."""
         return self.__forecast
 
     @forecast.setter
@@ -11486,6 +11815,7 @@ class FieldValueMap(Base):
 
     @property
     def tcmCostHorizon16Day(self) -> float:
+        """TCM cost with a 16 day time horizon."""
         return self.__tcmCostHorizon16Day
 
     @tcmCostHorizon16Day.setter
@@ -11495,6 +11825,7 @@ class FieldValueMap(Base):
 
     @property
     def pnl(self) -> float:
+        """Profit and Loss."""
         return self.__pnl
 
     @pnl.setter
@@ -11504,6 +11835,7 @@ class FieldValueMap(Base):
 
     @property
     def assetClassificationsGicsIndustryGroup(self) -> str:
+        """GICS Industry Group classification (level 2)."""
         return self.__assetClassificationsGicsIndustryGroup
 
     @assetClassificationsGicsIndustryGroup.setter
@@ -11513,6 +11845,7 @@ class FieldValueMap(Base):
 
     @property
     def unadjustedClose(self) -> float:
+        """Unadjusted Close level of an asset based on official exchange fixing or calculation agent marked level."""
         return self.__unadjustedClose
 
     @unadjustedClose.setter
@@ -11522,6 +11855,7 @@ class FieldValueMap(Base):
 
     @property
     def tcmCostHorizon4Day(self) -> float:
+        """TCM cost with a 4 day time horizon."""
         return self.__tcmCostHorizon4Day
 
     @tcmCostHorizon4Day.setter
@@ -11531,6 +11865,7 @@ class FieldValueMap(Base):
 
     @property
     def assetClassificationsIsPrimary(self) -> bool:
+        """Whether or not it is the primary exchange asset."""
         return self.__assetClassificationsIsPrimary
 
     @assetClassificationsIsPrimary.setter
@@ -11549,6 +11884,7 @@ class FieldValueMap(Base):
 
     @property
     def lendingSecId(self) -> str:
+        """Securities lending identifiter for the security on loan."""
         return self.__lendingSecId
 
     @lendingSecId.setter
@@ -11558,6 +11894,7 @@ class FieldValueMap(Base):
 
     @property
     def shortName(self) -> str:
+        """Short name."""
         return self.__shortName
 
     @shortName.setter
@@ -11567,6 +11904,7 @@ class FieldValueMap(Base):
 
     @property
     def equityTheta(self) -> float:
+        """Theta exposure to equity products."""
         return self.__equityTheta
 
     @equityTheta.setter
@@ -11576,6 +11914,7 @@ class FieldValueMap(Base):
 
     @property
     def averageFillPrice(self) -> float:
+        """Average fill price for the order since it started."""
         return self.__averageFillPrice
 
     @averageFillPrice.setter
@@ -11585,6 +11924,7 @@ class FieldValueMap(Base):
 
     @property
     def snowfall(self) -> float:
+        """Amount of snowfall in inches."""
         return self.__snowfall
 
     @snowfall.setter
@@ -11594,6 +11934,7 @@ class FieldValueMap(Base):
 
     @property
     def mic(self) -> str:
+        """Market identifier code."""
         return self.__mic
 
     @mic.setter
@@ -11603,6 +11944,7 @@ class FieldValueMap(Base):
 
     @property
     def openPrice(self) -> float:
+        """Opening level of an asset based on official exchange fixing or calculation agent marked level."""
         return self.__openPrice
 
     @openPrice.setter
@@ -11612,6 +11954,7 @@ class FieldValueMap(Base):
 
     @property
     def autoExecState(self) -> str:
+        """Auto Execution State."""
         return self.__autoExecState
 
     @autoExecState.setter
@@ -11621,6 +11964,7 @@ class FieldValueMap(Base):
 
     @property
     def depthSpreadScore(self) -> float:
+        """Z-score of the difference between the mid price and the best price an order to buy or sell a specific notional can be filled at."""
         return self.__depthSpreadScore
 
     @depthSpreadScore.setter
@@ -11630,6 +11974,7 @@ class FieldValueMap(Base):
 
     @property
     def relativeReturnYtd(self) -> float:
+        """Relative Return Year to Date."""
         return self.__relativeReturnYtd
 
     @relativeReturnYtd.setter
@@ -11639,6 +11984,7 @@ class FieldValueMap(Base):
 
     @property
     def long(self) -> float:
+        """Long exposure."""
         return self.__long
 
     @long.setter
@@ -11648,6 +11994,7 @@ class FieldValueMap(Base):
 
     @property
     def fairVolatility(self) -> float:
+        """Strike in volatility terms, calculated as square root of fair variance."""
         return self.__fairVolatility
 
     @fairVolatility.setter
@@ -11657,6 +12004,7 @@ class FieldValueMap(Base):
 
     @property
     def dollarCross(self) -> str:
+        """USD cross symbol for a particular currency."""
         return self.__dollarCross
 
     @dollarCross.setter
@@ -11666,6 +12014,7 @@ class FieldValueMap(Base):
 
     @property
     def longWeight(self) -> float:
+        """Long weight of a position in a given portfolio. Equivalent to position long exposure / total long exposure. If you have a position with a longExposure of $20, and your portfolio longExposure is $100, longWeight would be 0.2 (20/100)."""
         return self.__longWeight
 
     @longWeight.setter
@@ -11675,6 +12024,7 @@ class FieldValueMap(Base):
 
     @property
     def vendor(self) -> str:
+        """Vendor of dataset."""
         return self.__vendor
 
     @vendor.setter
@@ -11684,6 +12034,7 @@ class FieldValueMap(Base):
 
     @property
     def currency(self) -> str:
+        """Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)"""
         return self.__currency
 
     @currency.setter
@@ -11693,6 +12044,7 @@ class FieldValueMap(Base):
 
     @property
     def clusterClass(self) -> str:
+        """The Cluster the stock belongs on the particular date. The cluster class will be assigned to a value between 1 and 13 (inclusive)."""
         return self.__clusterClass
 
     @clusterClass.setter
@@ -11702,6 +12054,7 @@ class FieldValueMap(Base):
 
     @property
     def financialReturnsScore(self) -> float:
+        """Financial Returns percentile relative to Americas coverage universe (a higher score means stronger financial returns)."""
         return self.__financialReturnsScore
 
     @financialReturnsScore.setter
@@ -11711,6 +12064,7 @@ class FieldValueMap(Base):
 
     @property
     def netChange(self) -> float:
+        """Difference between the lastest trading price or value and the adjusted historical closing value or settlement price."""
         return self.__netChange
 
     @netChange.setter
@@ -11729,6 +12083,7 @@ class FieldValueMap(Base):
 
     @property
     def bidSize(self) -> float:
+        """The number of shares, lots, or contracts willing to buy at the Bid price."""
         return self.__bidSize
 
     @bidSize.setter
@@ -11738,6 +12093,7 @@ class FieldValueMap(Base):
 
     @property
     def arrivalMid(self) -> float:
+        """Arrival Mid Price."""
         return self.__arrivalMid
 
     @arrivalMid.setter
@@ -11747,6 +12103,7 @@ class FieldValueMap(Base):
 
     @property
     def assetParametersExchangeCurrency(self) -> str:
+        """Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)"""
         return self.__assetParametersExchangeCurrency
 
     @assetParametersExchangeCurrency.setter
@@ -11756,6 +12113,7 @@ class FieldValueMap(Base):
 
     @property
     def unexplained(self) -> float:
+        """PNL unexplained by risk model."""
         return self.__unexplained
 
     @unexplained.setter
@@ -11765,6 +12123,7 @@ class FieldValueMap(Base):
 
     @property
     def assetClassificationsCountryName(self) -> str:
+        """Country name of asset."""
         return self.__assetClassificationsCountryName
 
     @assetClassificationsCountryName.setter
@@ -11774,6 +12133,7 @@ class FieldValueMap(Base):
 
     @property
     def metric(self) -> str:
+        """Metric for the associated asset."""
         return self.__metric
 
     @metric.setter
@@ -11783,6 +12143,7 @@ class FieldValueMap(Base):
 
     @property
     def newIdeasYtd(self) -> float:
+        """Ideas received by clients Year to date."""
         return self.__newIdeasYtd
 
     @newIdeasYtd.setter
@@ -11801,6 +12162,7 @@ class FieldValueMap(Base):
 
     @property
     def ask(self) -> float:
+        """Latest Ask Price (price offering to sell)."""
         return self.__ask
 
     @ask.setter
@@ -11810,6 +12172,7 @@ class FieldValueMap(Base):
 
     @property
     def impliedLognormalVolatility(self) -> float:
+        """Market implied volatility measured using a lognormal model in percent/year."""
         return self.__impliedLognormalVolatility
 
     @impliedLognormalVolatility.setter
@@ -11819,6 +12182,7 @@ class FieldValueMap(Base):
 
     @property
     def closePrice(self) -> float:
+        """Closing level of an asset based on official exchange fixing or calculation agent marked level."""
         return self.__closePrice
 
     @closePrice.setter
@@ -11828,6 +12192,7 @@ class FieldValueMap(Base):
 
     @property
     def endTime(self) -> datetime.datetime:
+        """End time."""
         return self.__endTime
 
     @endTime.setter
@@ -11837,6 +12202,7 @@ class FieldValueMap(Base):
 
     @property
     def open(self) -> float:
+        """Opening level of an asset based on official exchange fixing or calculation agent marked level."""
         return self.__open
 
     @open.setter
@@ -11846,6 +12212,7 @@ class FieldValueMap(Base):
 
     @property
     def sourceId(self) -> str:
+        """Unique id of data provider."""
         return self.__sourceId
 
     @sourceId.setter
@@ -11855,6 +12222,7 @@ class FieldValueMap(Base):
 
     @property
     def country(self) -> str:
+        """Country of incorporation of asset."""
         return self.__country
 
     @country.setter
@@ -11864,6 +12232,7 @@ class FieldValueMap(Base):
 
     @property
     def cusip(self) -> str:
+        """CUSIP - Committee on Uniform Securities Identification Procedures number (subject to licensing)."""
         return self.__cusip
 
     @cusip.setter
@@ -11873,6 +12242,7 @@ class FieldValueMap(Base):
 
     @property
     def ideaActivityTime(self) -> datetime.datetime:
+        """The time the idea activity took place. If ideaStatus is open, the time reflects the Idea creation time. If ideaStatus is closed, the time reflects the time the idea was closed."""
         return self.__ideaActivityTime
 
     @ideaActivityTime.setter
@@ -11882,6 +12252,7 @@ class FieldValueMap(Base):
 
     @property
     def touchSpreadScore(self) -> float:
+        """Z-score of the difference between highest bid and lowest offer."""
         return self.__touchSpreadScore
 
     @touchSpreadScore.setter
@@ -11891,6 +12262,7 @@ class FieldValueMap(Base):
 
     @property
     def absoluteStrike(self) -> float:
+        """Spot * relative strike in local currency."""
         return self.__absoluteStrike
 
     @absoluteStrike.setter
@@ -11900,6 +12272,7 @@ class FieldValueMap(Base):
 
     @property
     def netExposure(self) -> float:
+        """The difference between long and short exposure in the portfolio. If you are $60 short and $40 long, then the netExposure would be -$20 (-60+40)."""
         return self.__netExposure
 
     @netExposure.setter
@@ -11909,6 +12282,7 @@ class FieldValueMap(Base):
 
     @property
     def source(self) -> str:
+        """Source of data."""
         return self.__source
 
     @source.setter
@@ -11918,6 +12292,7 @@ class FieldValueMap(Base):
 
     @property
     def assetClassificationsCountryCode(self) -> str:
+        """Country code (ISO 3166)."""
         return self.__assetClassificationsCountryCode
 
     @assetClassificationsCountryCode.setter
@@ -11927,6 +12302,7 @@ class FieldValueMap(Base):
 
     @property
     def frequency(self) -> str:
+        """Requested frequency of data delivery."""
         return self.__frequency
 
     @frequency.setter
@@ -11936,6 +12312,7 @@ class FieldValueMap(Base):
 
     @property
     def activityId(self) -> str:
+        """Marquee unique Activity identifier."""
         return self.__activityId
 
     @activityId.setter
@@ -11945,6 +12322,7 @@ class FieldValueMap(Base):
 
     @property
     def estimatedImpact(self) -> float:
+        """Likely impact of a proposed trade on the price of an asset (bps). The model's shortfall estimates reflect how much it cost to execute similar trades in the past, as opposed to providing a hypothetical cost derived using tick data."""
         return self.__estimatedImpact
 
     @estimatedImpact.setter
@@ -11954,6 +12332,7 @@ class FieldValueMap(Base):
 
     @property
     def dataSetSubCategory(self) -> str:
+        """Second level grouping of dataset."""
         return self.__dataSetSubCategory
 
     @dataSetSubCategory.setter
@@ -11963,6 +12342,7 @@ class FieldValueMap(Base):
 
     @property
     def assetParametersPricingLocation(self) -> str:
+        """The location in which the asset was priced."""
         return self.__assetParametersPricingLocation
 
     @assetParametersPricingLocation.setter
@@ -11972,6 +12352,7 @@ class FieldValueMap(Base):
 
     @property
     def eventDescription(self) -> str:
+        """Short description of the event, providing additional information beyond eventType."""
         return self.__eventDescription
 
     @eventDescription.setter
@@ -11981,6 +12362,7 @@ class FieldValueMap(Base):
 
     @property
     def strikeReference(self) -> str:
+        """Reference for strike level (enum: spot, forward)."""
         return self.__strikeReference
 
     @strikeReference.setter
@@ -11990,6 +12372,7 @@ class FieldValueMap(Base):
 
     @property
     def details(self) -> str:
+        """Corporate action details."""
         return self.__details
 
     @details.setter
@@ -11999,6 +12382,7 @@ class FieldValueMap(Base):
 
     @property
     def assetCount(self) -> float:
+        """Number of assets in a portfolio or index."""
         return self.__assetCount
 
     @assetCount.setter
@@ -12008,6 +12392,7 @@ class FieldValueMap(Base):
 
     @property
     def given(self) -> float:
+        """Number of trades given."""
         return self.__given
 
     @given.setter
@@ -12017,6 +12402,7 @@ class FieldValueMap(Base):
 
     @property
     def absoluteValue(self) -> float:
+        """The notional value of the asset."""
         return self.__absoluteValue
 
     @absoluteValue.setter
@@ -12026,6 +12412,7 @@ class FieldValueMap(Base):
 
     @property
     def delistingDate(self) -> str:
+        """Date at which the entity is delisted."""
         return self.__delistingDate
 
     @delistingDate.setter
@@ -12035,6 +12422,7 @@ class FieldValueMap(Base):
 
     @property
     def longTenor(self) -> str:
+        """Tenor of instrument."""
         return self.__longTenor
 
     @longTenor.setter
@@ -12044,6 +12432,7 @@ class FieldValueMap(Base):
 
     @property
     def mctr(self) -> float:
+        """Marginal contribution of a given asset to portfolio variance, is dependent on covariance matrix."""
         return self.__mctr
 
     @mctr.setter
@@ -12053,6 +12442,7 @@ class FieldValueMap(Base):
 
     @property
     def weight(self) -> float:
+        """Weight of a given position within a portfolio, by default calcualted as netWeight."""
         return self.__weight
 
     @weight.setter
@@ -12062,6 +12452,7 @@ class FieldValueMap(Base):
 
     @property
     def historicalClose(self) -> float:
+        """Historical Close Price."""
         return self.__historicalClose
 
     @historicalClose.setter
@@ -12071,6 +12462,7 @@ class FieldValueMap(Base):
 
     @property
     def assetCountPriced(self) -> float:
+        """Number of assets in a portfolio which could be priced."""
         return self.__assetCountPriced
 
     @assetCountPriced.setter
@@ -12089,6 +12481,7 @@ class FieldValueMap(Base):
 
     @property
     def ideaId(self) -> str:
+        """Marquee unique asset identifier."""
         return self.__ideaId
 
     @ideaId.setter
@@ -12098,6 +12491,7 @@ class FieldValueMap(Base):
 
     @property
     def commentStatus(self) -> str:
+        """Corporate action comment status."""
         return self.__commentStatus
 
     @commentStatus.setter
@@ -12107,6 +12501,7 @@ class FieldValueMap(Base):
 
     @property
     def marginalCost(self) -> float:
+        """Marginal cost."""
         return self.__marginalCost
 
     @marginalCost.setter
@@ -12116,6 +12511,7 @@ class FieldValueMap(Base):
 
     @property
     def absoluteWeight(self) -> float:
+        """Weight in terms of absolute notional."""
         return self.__absoluteWeight
 
     @absoluteWeight.setter
@@ -12125,6 +12521,7 @@ class FieldValueMap(Base):
 
     @property
     def tradeTime(self) -> datetime.datetime:
+        """Trade Time."""
         return self.__tradeTime
 
     @tradeTime.setter
@@ -12134,6 +12531,7 @@ class FieldValueMap(Base):
 
     @property
     def measure(self) -> str:
+        """A calculated metric in the risk scenario."""
         return self.__measure
 
     @measure.setter
@@ -12143,6 +12541,7 @@ class FieldValueMap(Base):
 
     @property
     def clientWeight(self) -> float:
+        """Weight of client positions in the region or sector (%)."""
         return self.__clientWeight
 
     @clientWeight.setter
@@ -12152,6 +12551,7 @@ class FieldValueMap(Base):
 
     @property
     def hedgeAnnualizedVolatility(self) -> float:
+        """Standard deviation of the annualized returns."""
         return self.__hedgeAnnualizedVolatility
 
     @hedgeAnnualizedVolatility.setter
@@ -12161,6 +12561,7 @@ class FieldValueMap(Base):
 
     @property
     def benchmarkCurrency(self) -> str:
+        """Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)"""
         return self.__benchmarkCurrency
 
     @benchmarkCurrency.setter
@@ -12170,6 +12571,7 @@ class FieldValueMap(Base):
 
     @property
     def name(self) -> str:
+        """Legal or published name for the asset."""
         return self.__name
 
     @name.setter
@@ -12188,6 +12590,7 @@ class FieldValueMap(Base):
 
     @property
     def folderName(self) -> str:
+        """Folder Name of a chart."""
         return self.__folderName
 
     @folderName.setter
@@ -12197,6 +12600,7 @@ class FieldValueMap(Base):
 
     @property
     def lendingPartnerFee(self) -> float:
+        """Fee earned by the Lending Partner in a securities lending agreement where partnerFee = grossIncome - loanFee - rebateAmount - agentLenderFee."""
         return self.__lendingPartnerFee
 
     @lendingPartnerFee.setter
@@ -12206,6 +12610,7 @@ class FieldValueMap(Base):
 
     @property
     def region(self) -> str:
+        """Regional classification for the asset"""
         return self.__region
 
     @region.setter
@@ -12224,6 +12629,7 @@ class FieldValueMap(Base):
 
     @property
     def askHigh(self) -> float:
+        """The highest Ask Price (price offering to sell)."""
         return self.__askHigh
 
     @askHigh.setter
@@ -12233,6 +12639,7 @@ class FieldValueMap(Base):
 
     @property
     def corporateActionType(self) -> str:
+        """Different types of corporate actions from solactive"""
         return self.__corporateActionType
 
     @corporateActionType.setter
@@ -12242,6 +12649,7 @@ class FieldValueMap(Base):
 
     @property
     def primeId(self) -> str:
+        """Prime Id."""
         return self.__primeId
 
     @primeId.setter
@@ -12251,6 +12659,7 @@ class FieldValueMap(Base):
 
     @property
     def tenor2(self) -> str:
+        """Tenor of instrument."""
         return self.__tenor2
 
     @tenor2.setter
@@ -12260,6 +12669,7 @@ class FieldValueMap(Base):
 
     @property
     def description(self) -> str:
+        """Description of asset."""
         return self.__description
 
     @description.setter
@@ -12269,6 +12679,7 @@ class FieldValueMap(Base):
 
     @property
     def valueRevised(self) -> str:
+        """Revised value."""
         return self.__valueRevised
 
     @valueRevised.setter
@@ -12278,6 +12689,7 @@ class FieldValueMap(Base):
 
     @property
     def ownerName(self) -> str:
+        """Name of person submitting request."""
         return self.__ownerName
 
     @ownerName.setter
@@ -12287,6 +12699,7 @@ class FieldValueMap(Base):
 
     @property
     def adjustedTradePrice(self) -> float:
+        """Last trade price or value adjusted for corporate actions."""
         return self.__adjustedTradePrice
 
     @adjustedTradePrice.setter
@@ -12296,6 +12709,7 @@ class FieldValueMap(Base):
 
     @property
     def lastUpdatedById(self) -> str:
+        """Unique identifier of user who last updated the object"""
         return self.__lastUpdatedById
 
     @lastUpdatedById.setter
@@ -12305,6 +12719,7 @@ class FieldValueMap(Base):
 
     @property
     def zScore(self) -> float:
+        """Z Score."""
         return self.__zScore
 
     @zScore.setter
@@ -12314,6 +12729,7 @@ class FieldValueMap(Base):
 
     @property
     def targetShareholderMeetingDate(self) -> str:
+        """Target acquisition entity shareholder meeting date."""
         return self.__targetShareholderMeetingDate
 
     @targetShareholderMeetingDate.setter
@@ -12323,6 +12739,7 @@ class FieldValueMap(Base):
 
     @property
     def isADR(self) -> bool:
+        """Is ADR or not."""
         return self.__isADR
 
     @isADR.setter
@@ -12332,6 +12749,7 @@ class FieldValueMap(Base):
 
     @property
     def eventStartTime(self) -> str:
+        """The start time of the event if the event occurs during a time window and the event has a specific start time. It is represented in HH:MM 24 hour format in the time zone of the exchange where the company is listed."""
         return self.__eventStartTime
 
     @eventStartTime.setter
@@ -12341,6 +12759,7 @@ class FieldValueMap(Base):
 
     @property
     def factor(self) -> str:
+        """For Axioma, one of: Exchange Rate Sensitivity, Growth, Leverage, Medium-Term Momentum, Short-Term Momentum, Size, Value, Volatility. For Prime, one of: Long Concentration, Short Concentration, Long Crowdedness, Short Crowdedness, Crowdedness momentum, Short Conviction."""
         return self.__factor
 
     @factor.setter
@@ -12350,6 +12769,7 @@ class FieldValueMap(Base):
 
     @property
     def longConvictionSmall(self) -> float:
+        """The count of long ideas with small conviction."""
         return self.__longConvictionSmall
 
     @longConvictionSmall.setter
@@ -12359,6 +12779,7 @@ class FieldValueMap(Base):
 
     @property
     def serviceId(self) -> str:
+        """Service ID."""
         return self.__serviceId
 
     @serviceId.setter
@@ -12368,6 +12789,7 @@ class FieldValueMap(Base):
 
     @property
     def turnover(self) -> float:
+        """Turnover."""
         return self.__turnover
 
     @turnover.setter
@@ -12377,6 +12799,7 @@ class FieldValueMap(Base):
 
     @property
     def complianceEffectiveTime(self) -> datetime.datetime:
+        """Time that the compliance status became effective."""
         return self.__complianceEffectiveTime
 
     @complianceEffectiveTime.setter
@@ -12386,6 +12809,7 @@ class FieldValueMap(Base):
 
     @property
     def expirationDate(self) -> datetime.date:
+        """The expiration date of the associated contract and the last date it trades."""
         return self.__expirationDate
 
     @expirationDate.setter
@@ -12395,6 +12819,7 @@ class FieldValueMap(Base):
 
     @property
     def gsfeer(self) -> float:
+        """Goldman Sachs Fundamental Equilibrium Exchange Rate."""
         return self.__gsfeer
 
     @gsfeer.setter
@@ -12404,6 +12829,7 @@ class FieldValueMap(Base):
 
     @property
     def coverage(self) -> str:
+        """Coverage of dataset."""
         return self.__coverage
 
     @coverage.setter
@@ -12413,6 +12839,7 @@ class FieldValueMap(Base):
 
     @property
     def backtestId(self) -> str:
+        """Marquee unique backtest identifier."""
         return self.__backtestId
 
     @backtestId.setter
@@ -12422,6 +12849,7 @@ class FieldValueMap(Base):
 
     @property
     def gPercentile(self) -> float:
+        """Percentile based on G score."""
         return self.__gPercentile
 
     @gPercentile.setter
@@ -12431,6 +12859,7 @@ class FieldValueMap(Base):
 
     @property
     def gScore(self) -> float:
+        """Score for governance metrics."""
         return self.__gScore
 
     @gScore.setter
@@ -12440,6 +12869,7 @@ class FieldValueMap(Base):
 
     @property
     def marketValue(self) -> float:
+        """Marketable value of a given position, generally the market price for a given date."""
         return self.__marketValue
 
     @marketValue.setter
@@ -12449,6 +12879,7 @@ class FieldValueMap(Base):
 
     @property
     def multipleScore(self) -> float:
+        """Multiple percentile relative to Americas coverage universe (a higher score means more expensive)."""
         return self.__multipleScore
 
     @multipleScore.setter
@@ -12458,6 +12889,7 @@ class FieldValueMap(Base):
 
     @property
     def lendingFundNav(self) -> float:
+        """Net Asset Value of a securities lending fund."""
         return self.__lendingFundNav
 
     @lendingFundNav.setter
@@ -12467,6 +12899,7 @@ class FieldValueMap(Base):
 
     @property
     def sourceOriginalCategory(self) -> str:
+        """Source category's original name."""
         return self.__sourceOriginalCategory
 
     @sourceOriginalCategory.setter
@@ -12476,6 +12909,7 @@ class FieldValueMap(Base):
 
     @property
     def betaAdjustedExposure(self) -> float:
+        """Beta adjusted exposure."""
         return self.__betaAdjustedExposure
 
     @betaAdjustedExposure.setter
@@ -12485,6 +12919,7 @@ class FieldValueMap(Base):
 
     @property
     def composite5DayAdv(self) -> float:
+        """Composite 5 day ADV."""
         return self.__composite5DayAdv
 
     @composite5DayAdv.setter
@@ -12494,6 +12929,7 @@ class FieldValueMap(Base):
 
     @property
     def latestExecutionTime(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
         return self.__latestExecutionTime
 
     @latestExecutionTime.setter
@@ -12503,6 +12939,7 @@ class FieldValueMap(Base):
 
     @property
     def dividendPoints(self) -> float:
+        """Expected Dividend in index points."""
         return self.__dividendPoints
 
     @dividendPoints.setter
@@ -12512,6 +12949,7 @@ class FieldValueMap(Base):
 
     @property
     def newIdeasWtd(self) -> float:
+        """Ideas received by clients Week to date."""
         return self.__newIdeasWtd
 
     @newIdeasWtd.setter
@@ -12521,6 +12959,7 @@ class FieldValueMap(Base):
 
     @property
     def paid(self) -> float:
+        """Number of trades paid."""
         return self.__paid
 
     @paid.setter
@@ -12530,6 +12969,7 @@ class FieldValueMap(Base):
 
     @property
     def short(self) -> float:
+        """Short exposure."""
         return self.__short
 
     @short.setter
@@ -12539,6 +12979,7 @@ class FieldValueMap(Base):
 
     @property
     def location(self) -> str:
+        """The location at which a price fixing has been taken."""
         return self.__location
 
     @location.setter
@@ -12548,6 +12989,7 @@ class FieldValueMap(Base):
 
     @property
     def comment(self) -> str:
+        """The comment associated with the trade idea in URL encoded format."""
         return self.__comment
 
     @comment.setter
@@ -12557,6 +12999,7 @@ class FieldValueMap(Base):
 
     @property
     def bosInTicksDescription(self) -> str:
+        """Description of the Stock's Bid-Offer Spread in Ticks on the particular date."""
         return self.__bosInTicksDescription
 
     @bosInTicksDescription.setter
@@ -12566,6 +13009,7 @@ class FieldValueMap(Base):
 
     @property
     def sourceSymbol(self) -> str:
+        """Source symbol."""
         return self.__sourceSymbol
 
     @sourceSymbol.setter
@@ -12575,6 +13019,7 @@ class FieldValueMap(Base):
 
     @property
     def time(self) -> datetime.datetime:
+        """ISO 8601 formatted date and time."""
         return self.__time
 
     @time.setter
@@ -12584,6 +13029,7 @@ class FieldValueMap(Base):
 
     @property
     def scenarioId(self) -> str:
+        """Marquee unique scenario identifier"""
         return self.__scenarioId
 
     @scenarioId.setter
@@ -12593,6 +13039,7 @@ class FieldValueMap(Base):
 
     @property
     def askUnadjusted(self) -> float:
+        """Unadjusted ask level of an asset based on official exchange fixing or calculation agent marked level."""
         return self.__askUnadjusted
 
     @askUnadjusted.setter
@@ -12602,6 +13049,7 @@ class FieldValueMap(Base):
 
     @property
     def queueClockTime(self) -> float:
+        """The Queue Clock Time of the stock  on the particular date."""
         return self.__queueClockTime
 
     @queueClockTime.setter
@@ -12611,6 +13059,7 @@ class FieldValueMap(Base):
 
     @property
     def askChange(self) -> float:
+        """Change in the ask price."""
         return self.__askChange
 
     @askChange.setter
@@ -12620,6 +13069,7 @@ class FieldValueMap(Base):
 
     @property
     def tcmCostParticipationRate50Pct(self) -> float:
+        """TCM cost with a 50 percent participation rate."""
         return self.__tcmCostParticipationRate50Pct
 
     @tcmCostParticipationRate50Pct.setter
@@ -12629,6 +13079,7 @@ class FieldValueMap(Base):
 
     @property
     def normalizedPerformance(self) -> float:
+        """Performance that is normalized to 1."""
         return self.__normalizedPerformance
 
     @normalizedPerformance.setter
@@ -12638,6 +13089,7 @@ class FieldValueMap(Base):
 
     @property
     def cmId(self) -> str:
+        """Prime Client Master Party Id."""
         return self.__cmId
 
     @cmId.setter
@@ -12647,6 +13099,7 @@ class FieldValueMap(Base):
 
     @property
     def type(self) -> str:
+        """Asset type differentiates the product categorization or contract type"""
         return self.__type
 
     @type.setter
@@ -12656,6 +13109,7 @@ class FieldValueMap(Base):
 
     @property
     def mdapi(self) -> str:
+        """MDAPI Asset."""
         return self.__mdapi
 
     @mdapi.setter
@@ -12665,6 +13119,7 @@ class FieldValueMap(Base):
 
     @property
     def dividendYield(self) -> float:
+        """Annualized Dividend Yield."""
         return self.__dividendYield
 
     @dividendYield.setter
@@ -12674,6 +13129,7 @@ class FieldValueMap(Base):
 
     @property
     def cumulativePnl(self) -> float:
+        """Cumulative PnL from the start date to the current date."""
         return self.__cumulativePnl
 
     @cumulativePnl.setter
@@ -12683,6 +13139,7 @@ class FieldValueMap(Base):
 
     @property
     def sourceOrigin(self) -> str:
+        """Source origin."""
         return self.__sourceOrigin
 
     @sourceOrigin.setter
@@ -12692,6 +13149,7 @@ class FieldValueMap(Base):
 
     @property
     def shortTenor(self) -> str:
+        """Tenor of instrument."""
         return self.__shortTenor
 
     @shortTenor.setter
@@ -12701,6 +13159,7 @@ class FieldValueMap(Base):
 
     @property
     def unadjustedVolume(self) -> float:
+        """Unadjusted volume traded."""
         return self.__unadjustedVolume
 
     @unadjustedVolume.setter
@@ -12719,6 +13178,7 @@ class FieldValueMap(Base):
 
     @property
     def tradingCostPnl(self) -> float:
+        """Trading cost profit and loss (PNL)."""
         return self.__tradingCostPnl
 
     @tradingCostPnl.setter
@@ -12728,6 +13188,7 @@ class FieldValueMap(Base):
 
     @property
     def internalUser(self) -> bool:
+        """Whether user is internal or not."""
         return self.__internalUser
 
     @internalUser.setter
@@ -12737,6 +13198,7 @@ class FieldValueMap(Base):
 
     @property
     def price(self) -> float:
+        """Price of instrument."""
         return self.__price
 
     @price.setter
@@ -12746,6 +13208,7 @@ class FieldValueMap(Base):
 
     @property
     def paymentQuantity(self) -> float:
+        """Quantity in the payment currency."""
         return self.__paymentQuantity
 
     @paymentQuantity.setter
@@ -12755,6 +13218,7 @@ class FieldValueMap(Base):
 
     @property
     def underlyer(self) -> str:
+        """The underlyer of the security. The cross for FX forwards, for example."""
         return self.__underlyer
 
     @underlyer.setter
@@ -12764,6 +13228,7 @@ class FieldValueMap(Base):
 
     @property
     def createdTime(self) -> datetime.datetime:
+        """Time created. ISO 8601 formatted string"""
         return self.__createdTime
 
     @createdTime.setter
@@ -12773,6 +13238,7 @@ class FieldValueMap(Base):
 
     @property
     def positionIdx(self) -> int:
+        """The index of the corresponding position in the risk request."""
         return self.__positionIdx
 
     @positionIdx.setter
@@ -12782,6 +13248,7 @@ class FieldValueMap(Base):
 
     @property
     def secName(self) -> str:
+        """Internal Goldman Sachs security name."""
         return self.__secName
 
     @secName.setter
@@ -12791,6 +13258,7 @@ class FieldValueMap(Base):
 
     @property
     def percentADV(self) -> float:
+        """Size of trade as percentage of average daily volume (e.g. .05, 1, 2, ..., 20)."""
         return self.__percentADV
 
     @percentADV.setter
@@ -12800,6 +13268,7 @@ class FieldValueMap(Base):
 
     @property
     def unadjustedLow(self) -> float:
+        """Unadjusted low level of an asset based on official exchange fixing or calculation agent marked level."""
         return self.__unadjustedLow
 
     @unadjustedLow.setter
@@ -12809,6 +13278,7 @@ class FieldValueMap(Base):
 
     @property
     def contract(self) -> str:
+        """Contract month code and year (e.g. F18)."""
         return self.__contract
 
     @contract.setter
@@ -12818,6 +13288,7 @@ class FieldValueMap(Base):
 
     @property
     def sedol(self) -> str:
+        """SEDOL - Stock Exchange Daily Official List (subject to licensing)."""
         return self.__sedol
 
     @sedol.setter
@@ -12827,6 +13298,7 @@ class FieldValueMap(Base):
 
     @property
     def roundingCostPnl(self) -> float:
+        """Rounding Cost Profit and Loss."""
         return self.__roundingCostPnl
 
     @roundingCostPnl.setter
@@ -12836,6 +13308,7 @@ class FieldValueMap(Base):
 
     @property
     def sustainGlobal(self) -> bool:
+        """True if the stock is on the SUSTAIN (Global) 50 list as of the corresponding date. False if the stock is removed from the SUSTAIN (Global) 50 list on the corresponding date."""
         return self.__sustainGlobal
 
     @sustainGlobal.setter
@@ -12845,6 +13318,7 @@ class FieldValueMap(Base):
 
     @property
     def sourceTicker(self) -> str:
+        """Source ticker."""
         return self.__sourceTicker
 
     @sourceTicker.setter
@@ -12854,6 +13328,7 @@ class FieldValueMap(Base):
 
     @property
     def portfolioId(self) -> str:
+        """Marquee unique identifier for a portfolio."""
         return self.__portfolioId
 
     @portfolioId.setter
@@ -12863,6 +13338,7 @@ class FieldValueMap(Base):
 
     @property
     def gsid(self) -> str:
+        """Goldman Sachs internal equity identifier."""
         return self.__gsid
 
     @gsid.setter
@@ -12872,6 +13348,7 @@ class FieldValueMap(Base):
 
     @property
     def esPercentile(self) -> float:
+        """Sector relative percentile based on E&S score."""
         return self.__esPercentile
 
     @esPercentile.setter
@@ -12881,6 +13358,7 @@ class FieldValueMap(Base):
 
     @property
     def lendingFund(self) -> str:
+        """Name of the lending fund on a securities lending agreement."""
         return self.__lendingFund
 
     @lendingFund.setter
@@ -12890,6 +13368,7 @@ class FieldValueMap(Base):
 
     @property
     def tcmCostParticipationRate15Pct(self) -> float:
+        """TCM cost with a 15 percent participation rate."""
         return self.__tcmCostParticipationRate15Pct
 
     @tcmCostParticipationRate15Pct.setter
@@ -12899,6 +13378,7 @@ class FieldValueMap(Base):
 
     @property
     def sensitivity(self) -> float:
+        """Sensitivity."""
         return self.__sensitivity
 
     @sensitivity.setter
@@ -12908,6 +13388,7 @@ class FieldValueMap(Base):
 
     @property
     def fiscalYear(self) -> str:
+        """The Calendar Year."""
         return self.__fiscalYear
 
     @fiscalYear.setter
@@ -12917,6 +13398,7 @@ class FieldValueMap(Base):
 
     @property
     def rcic(self) -> str:
+        """Reuters composite instrument code (subject to licensing)."""
         return self.__rcic
 
     @rcic.setter
@@ -12935,6 +13417,7 @@ class FieldValueMap(Base):
 
     @property
     def internal(self) -> bool:
+        """Whether request came from internal or external."""
         return self.__internal
 
     @internal.setter
@@ -12944,6 +13427,7 @@ class FieldValueMap(Base):
 
     @property
     def forwardPoint(self) -> float:
+        """Outright forward minus spot."""
         return self.__forwardPoint
 
     @forwardPoint.setter
@@ -12953,6 +13437,7 @@ class FieldValueMap(Base):
 
     @property
     def assetClassificationsGicsIndustry(self) -> str:
+        """GICS Industry classification (level 3)."""
         return self.__assetClassificationsGicsIndustry
 
     @assetClassificationsGicsIndustry.setter
@@ -12962,6 +13447,7 @@ class FieldValueMap(Base):
 
     @property
     def adjustedBidPrice(self) -> float:
+        """Latest Bid Price (price willing to buy) adjusted for corporate actions."""
         return self.__adjustedBidPrice
 
     @adjustedBidPrice.setter
@@ -12971,6 +13457,7 @@ class FieldValueMap(Base):
 
     @property
     def hitRateQtd(self) -> float:
+        """Hit Rate Ratio Quarter to Date."""
         return self.__hitRateQtd
 
     @hitRateQtd.setter
@@ -12980,6 +13467,7 @@ class FieldValueMap(Base):
 
     @property
     def varSwap(self) -> float:
+        """Strike such that the price of an uncapped variance swap on the underlying index is zero at inception."""
         return self.__varSwap
 
     @varSwap.setter
@@ -12989,6 +13477,7 @@ class FieldValueMap(Base):
 
     @property
     def lowUnadjusted(self) -> float:
+        """Unadjusted low level of an asset based on official exchange fixing or calculation agent marked level."""
         return self.__lowUnadjusted
 
     @lowUnadjusted.setter
@@ -13007,6 +13496,7 @@ class FieldValueMap(Base):
 
     @property
     def low(self) -> float:
+        """Low level of an asset based on official exchange fixing or calculation agent marked level."""
         return self.__low
 
     @low.setter
@@ -13016,6 +13506,7 @@ class FieldValueMap(Base):
 
     @property
     def crossGroup(self) -> str:
+        """Economic cross groupings."""
         return self.__crossGroup
 
     @crossGroup.setter
@@ -13025,6 +13516,7 @@ class FieldValueMap(Base):
 
     @property
     def integratedScore(self) -> float:
+        """Average of the Growth, Financial Returns and (1-Multiple) percentile (a higher score means more attractive)."""
         return self.__integratedScore
 
     @integratedScore.setter
@@ -13034,6 +13526,7 @@ class FieldValueMap(Base):
 
     @property
     def reportRunTime(self) -> datetime.datetime:
+        """Time that the report was run."""
         return self.__reportRunTime
 
     @reportRunTime.setter
@@ -13043,6 +13536,7 @@ class FieldValueMap(Base):
 
     @property
     def fiveDayPriceChangeBps(self) -> float:
+        """The five day movement in price measured in basis points."""
         return self.__fiveDayPriceChangeBps
 
     @fiveDayPriceChangeBps.setter
@@ -13052,6 +13546,7 @@ class FieldValueMap(Base):
 
     @property
     def tradeSize(self) -> float:
+        """Size of trade ($mm)."""
         return self.__tradeSize
 
     @tradeSize.setter
@@ -13079,6 +13574,7 @@ class FieldValueMap(Base):
 
     @property
     def scenarioGroupId(self) -> str:
+        """Marquee unique scenario group identifier"""
         return self.__scenarioGroupId
 
     @scenarioGroupId.setter
@@ -13088,6 +13584,7 @@ class FieldValueMap(Base):
 
     @property
     def errorMessage(self) -> str:
+        """Error message to correspond to error in factor field."""
         return self.__errorMessage
 
     @errorMessage.setter
@@ -13097,6 +13594,7 @@ class FieldValueMap(Base):
 
     @property
     def avgTradeRateDescription(self) -> str:
+        """Description of the Stock's Average Trading Rate on the particular date."""
         return self.__avgTradeRateDescription
 
     @avgTradeRateDescription.setter
@@ -13106,6 +13604,7 @@ class FieldValueMap(Base):
 
     @property
     def midPrice(self) -> float:
+        """The mid price."""
         return self.__midPrice
 
     @midPrice.setter
@@ -13115,6 +13614,7 @@ class FieldValueMap(Base):
 
     @property
     def fraction(self) -> float:
+        """Fraction."""
         return self.__fraction
 
     @fraction.setter
@@ -13124,6 +13624,7 @@ class FieldValueMap(Base):
 
     @property
     def stsCreditMarket(self) -> str:
+        """Credit risk market."""
         return self.__stsCreditMarket
 
     @stsCreditMarket.setter
@@ -13133,6 +13634,7 @@ class FieldValueMap(Base):
 
     @property
     def assetCountShort(self) -> float:
+        """Number of assets in a portfolio with short exposure."""
         return self.__assetCountShort
 
     @assetCountShort.setter
@@ -13142,6 +13644,7 @@ class FieldValueMap(Base):
 
     @property
     def stsEmDm(self) -> str:
+        """Emerging or developed market classification."""
         return self.__stsEmDm
 
     @stsEmDm.setter
@@ -13151,6 +13654,7 @@ class FieldValueMap(Base):
 
     @property
     def tcmCostHorizon2Day(self) -> float:
+        """TCM cost with a 2 day time horizon."""
         return self.__tcmCostHorizon2Day
 
     @tcmCostHorizon2Day.setter
@@ -13160,6 +13664,7 @@ class FieldValueMap(Base):
 
     @property
     def queueInLots(self) -> float:
+        """The Queue size in Lots (if applicable) of the stock  on the particular date."""
         return self.__queueInLots
 
     @queueInLots.setter
@@ -13169,6 +13674,7 @@ class FieldValueMap(Base):
 
     @property
     def priceRangeInTicksDescription(self) -> str:
+        """Description of the Stock's Price Range in Ticks on the particular date."""
         return self.__priceRangeInTicksDescription
 
     @priceRangeInTicksDescription.setter
@@ -13178,6 +13684,7 @@ class FieldValueMap(Base):
 
     @property
     def date(self) -> datetime.date:
+        """ISO 8601 formatted date."""
         return self.__date
 
     @date.setter
@@ -13187,6 +13694,7 @@ class FieldValueMap(Base):
 
     @property
     def tenderOfferExpirationDate(self) -> str:
+        """Expiration date of the tender offer."""
         return self.__tenderOfferExpirationDate
 
     @tenderOfferExpirationDate.setter
@@ -13196,6 +13704,7 @@ class FieldValueMap(Base):
 
     @property
     def highUnadjusted(self) -> float:
+        """Unadjusted high level of an asset based on official exchange fixing or calculation agent marked level."""
         return self.__highUnadjusted
 
     @highUnadjusted.setter
@@ -13205,6 +13714,7 @@ class FieldValueMap(Base):
 
     @property
     def sourceCategory(self) -> str:
+        """Source category of event."""
         return self.__sourceCategory
 
     @sourceCategory.setter
@@ -13214,6 +13724,7 @@ class FieldValueMap(Base):
 
     @property
     def volumeUnadjusted(self) -> float:
+        """Unadjusted volume traded."""
         return self.__volumeUnadjusted
 
     @volumeUnadjusted.setter
@@ -13223,6 +13734,7 @@ class FieldValueMap(Base):
 
     @property
     def avgTradeRateLabel(self):
+        """Label of the Stock's Average Trading Rate on the particular date."""
         return self.__avgTradeRateLabel
 
     @avgTradeRateLabel.setter
@@ -13232,6 +13744,7 @@ class FieldValueMap(Base):
 
     @property
     def tcmCostParticipationRate5Pct(self) -> float:
+        """TCM cost with a 5 percent participation rate."""
         return self.__tcmCostParticipationRate5Pct
 
     @tcmCostParticipationRate5Pct.setter
@@ -13241,6 +13754,7 @@ class FieldValueMap(Base):
 
     @property
     def isActive(self) -> bool:
+        """Whether this entry is active."""
         return self.__isActive
 
     @isActive.setter
@@ -13250,6 +13764,7 @@ class FieldValueMap(Base):
 
     @property
     def growthScore(self) -> float:
+        """Growth percentile relative to Americas coverage universe (a higher score means faster growth)."""
         return self.__growthScore
 
     @growthScore.setter
@@ -13259,6 +13774,7 @@ class FieldValueMap(Base):
 
     @property
     def encodedStats(self) -> str:
+        """Asset stats object in json format."""
         return self.__encodedStats
 
     @encodedStats.setter
@@ -13268,6 +13784,7 @@ class FieldValueMap(Base):
 
     @property
     def adjustedShortInterest(self) -> float:
+        """Adjusted Short Interest rate."""
         return self.__adjustedShortInterest
 
     @adjustedShortInterest.setter
@@ -13277,6 +13794,7 @@ class FieldValueMap(Base):
 
     @property
     def askSize(self) -> float:
+        """The number of shares, lots, or contracts willing to sell at the Ask price."""
         return self.__askSize
 
     @askSize.setter
@@ -13286,6 +13804,7 @@ class FieldValueMap(Base):
 
     @property
     def mdapiType(self) -> str:
+        """The MDAPI data type - DEPRECATED."""
         return self.__mdapiType
 
     @mdapiType.setter
@@ -13295,6 +13814,7 @@ class FieldValueMap(Base):
 
     @property
     def group(self) -> str:
+        """Region or sector following the MSCI Global Industry Classification Standard (GICS)."""
         return self.__group
 
     @group.setter
@@ -13304,6 +13824,7 @@ class FieldValueMap(Base):
 
     @property
     def estimatedSpread(self) -> float:
+        """Average bid-ask quoted spread of the stock (bps) over the execution horizon (1 day)."""
         return self.__estimatedSpread
 
     @estimatedSpread.setter
@@ -13313,6 +13834,7 @@ class FieldValueMap(Base):
 
     @property
     def resource(self) -> str:
+        """The event resource. For example: Asset"""
         return self.__resource
 
     @resource.setter
@@ -13322,6 +13844,7 @@ class FieldValueMap(Base):
 
     @property
     def created(self) -> datetime.datetime:
+        """Created time."""
         return self.__created
 
     @created.setter
@@ -13331,6 +13854,7 @@ class FieldValueMap(Base):
 
     @property
     def tcmCost(self) -> float:
+        """Pretrade computation of trading out cost."""
         return self.__tcmCost
 
     @tcmCost.setter
@@ -13340,6 +13864,7 @@ class FieldValueMap(Base):
 
     @property
     def sustainJapan(self) -> bool:
+        """True if the stock is on the SUSTAIN Japan list as of the corresponding date. False if the stock is removed from the SUSTAIN Japan list on the corresponding date."""
         return self.__sustainJapan
 
     @sustainJapan.setter
@@ -13349,6 +13874,7 @@ class FieldValueMap(Base):
 
     @property
     def navSpread(self) -> float:
+        """Net asset value spread. Quoted (running) spread (mid) of the underlying basket of single name CDS. (Theoretical Index value). In basis points."""
         return self.__navSpread
 
     @navSpread.setter
@@ -13358,6 +13884,7 @@ class FieldValueMap(Base):
 
     @property
     def bidPrice(self) -> float:
+        """Latest Bid Price (price willing to buy)."""
         return self.__bidPrice
 
     @bidPrice.setter
@@ -13367,6 +13894,7 @@ class FieldValueMap(Base):
 
     @property
     def hedgeTrackingError(self) -> float:
+        """Standard deviation of the difference in the portfolio and benchmark returns over time."""
         return self.__hedgeTrackingError
 
     @hedgeTrackingError.setter
@@ -13376,6 +13904,7 @@ class FieldValueMap(Base):
 
     @property
     def marketCapCategory(self) -> str:
+        """Category of market capitalizations a fund is focused on from an investment perspective. Same view permissions as the asset."""
         return self.__marketCapCategory
 
     @marketCapCategory.setter
@@ -13385,6 +13914,7 @@ class FieldValueMap(Base):
 
     @property
     def historicalVolume(self) -> float:
+        """One month rolling average."""
         return self.__historicalVolume
 
     @historicalVolume.setter
@@ -13394,6 +13924,7 @@ class FieldValueMap(Base):
 
     @property
     def esNumericPercentile(self) -> float:
+        """Sector relative percentile based on E&S numeric score."""
         return self.__esNumericPercentile
 
     @esNumericPercentile.setter
@@ -13403,6 +13934,7 @@ class FieldValueMap(Base):
 
     @property
     def strikePrice(self) -> float:
+        """Strike price."""
         return self.__strikePrice
 
     @strikePrice.setter
@@ -13412,6 +13944,7 @@ class FieldValueMap(Base):
 
     @property
     def eventStartDate(self) -> datetime.date:
+        """The start date of the event if the event occurs during a time window, in the time zone of the exchange where the company is listed (optional)."""
         return self.__eventStartDate
 
     @eventStartDate.setter
@@ -13421,6 +13954,7 @@ class FieldValueMap(Base):
 
     @property
     def calSpreadMisPricing(self) -> float:
+        """Futures implied funding rate relative to interest rate benchmark (usually Libor-based). Represents dividend-adjusted rate at which investor is borrowing (lending) when long (short) future."""
         return self.__calSpreadMisPricing
 
     @calSpreadMisPricing.setter
@@ -13430,6 +13964,7 @@ class FieldValueMap(Base):
 
     @property
     def equityGamma(self) -> float:
+        """Gamma exposure to equity products."""
         return self.__equityGamma
 
     @equityGamma.setter
@@ -13448,6 +13983,7 @@ class FieldValueMap(Base):
 
     @property
     def emId(self) -> str:
+        """Entity Master identifier."""
         return self.__emId
 
     @emId.setter
@@ -13457,6 +13993,7 @@ class FieldValueMap(Base):
 
     @property
     def adjustedOpenPrice(self) -> float:
+        """Opening level of an asset based on official exchange fixing or calculation agent marked level adjusted for corporate actions."""
         return self.__adjustedOpenPrice
 
     @adjustedOpenPrice.setter
@@ -13466,6 +14003,7 @@ class FieldValueMap(Base):
 
     @property
     def assetCountInModel(self) -> float:
+        """Number of assets in a portfolio in a given risk model."""
         return self.__assetCountInModel
 
     @assetCountInModel.setter
@@ -13475,6 +14013,7 @@ class FieldValueMap(Base):
 
     @property
     def stsCreditRegion(self) -> str:
+        """Credit risk region."""
         return self.__stsCreditRegion
 
     @stsCreditRegion.setter
@@ -13484,6 +14023,7 @@ class FieldValueMap(Base):
 
     @property
     def point(self) -> str:
+        """MDAPI point."""
         return self.__point
 
     @point.setter
@@ -13493,6 +14033,7 @@ class FieldValueMap(Base):
 
     @property
     def lender(self) -> str:
+        """Name of the lending entity on a securities lending agreement."""
         return self.__lender
 
     @lender.setter
@@ -13502,6 +14043,7 @@ class FieldValueMap(Base):
 
     @property
     def minTemperature(self) -> float:
+        """Minimum temperature observed on a given day in fahrenheit."""
         return self.__minTemperature
 
     @minTemperature.setter
@@ -13511,6 +14053,7 @@ class FieldValueMap(Base):
 
     @property
     def closeTime(self) -> datetime.datetime:
+        """Time closed. ISO 8601 formatted string."""
         return self.__closeTime
 
     @closeTime.setter
@@ -13520,6 +14063,7 @@ class FieldValueMap(Base):
 
     @property
     def value(self) -> float:
+        """The given value."""
         return self.__value
 
     @value.setter
@@ -13529,6 +14073,7 @@ class FieldValueMap(Base):
 
     @property
     def relativeStrike(self) -> float:
+        """Strike relative to spot or forward level in terms of percent of either spot or forward level."""
         return self.__relativeStrike
 
     @relativeStrike.setter
@@ -13538,6 +14083,7 @@ class FieldValueMap(Base):
 
     @property
     def amount(self) -> float:
+        """Amount corporate actions pay out."""
         return self.__amount
 
     @amount.setter
@@ -13547,6 +14093,7 @@ class FieldValueMap(Base):
 
     @property
     def quantity(self) -> float:
+        """Number of units of a given asset held within a portfolio."""
         return self.__quantity
 
     @quantity.setter
@@ -13556,6 +14103,7 @@ class FieldValueMap(Base):
 
     @property
     def lendingFundAcct(self) -> str:
+        """Account associated with the securities lending fund."""
         return self.__lendingFundAcct
 
     @lendingFundAcct.setter
@@ -13565,6 +14113,7 @@ class FieldValueMap(Base):
 
     @property
     def reportId(self) -> str:
+        """Report Identifier."""
         return self.__reportId
 
     @reportId.setter
@@ -13574,6 +14123,7 @@ class FieldValueMap(Base):
 
     @property
     def indexWeight(self) -> float:
+        """Weight of MSCI World positions in the region or sector (%)."""
         return self.__indexWeight
 
     @indexWeight.setter
@@ -13583,6 +14133,7 @@ class FieldValueMap(Base):
 
     @property
     def rebate(self) -> float:
+        """Amount of the payment to an investor who puts up collateral in borrowing a stock."""
         return self.__rebate
 
     @rebate.setter
@@ -13592,6 +14143,7 @@ class FieldValueMap(Base):
 
     @property
     def trader(self) -> str:
+        """Trader name."""
         return self.__trader
 
     @trader.setter
@@ -13601,6 +14153,7 @@ class FieldValueMap(Base):
 
     @property
     def factorCategory(self) -> str:
+        """Factor category."""
         return self.__factorCategory
 
     @factorCategory.setter
@@ -13610,6 +14163,7 @@ class FieldValueMap(Base):
 
     @property
     def impliedVolatility(self) -> float:
+        """Volatility of an asset implied by observations of market prices."""
         return self.__impliedVolatility
 
     @impliedVolatility.setter
@@ -13619,6 +14173,7 @@ class FieldValueMap(Base):
 
     @property
     def spread(self) -> float:
+        """Quoted (running) spread (mid) of buying / selling protection on an index. (Equally weighted CDS basket). In basis points."""
         return self.__spread
 
     @spread.setter
@@ -13628,6 +14183,7 @@ class FieldValueMap(Base):
 
     @property
     def stsRatesMaturity(self) -> str:
+        """Risk maturity bucket for STS assets."""
         return self.__stsRatesMaturity
 
     @stsRatesMaturity.setter
@@ -13637,6 +14193,7 @@ class FieldValueMap(Base):
 
     @property
     def equityDelta(self) -> float:
+        """Delta exposure to equity products."""
         return self.__equityDelta
 
     @equityDelta.setter
@@ -13646,6 +14203,7 @@ class FieldValueMap(Base):
 
     @property
     def grossWeight(self) -> float:
+        """Sum of the absolute weight values, which equals the sum of absolute long and short weights. If you have IBM stock with shortWeight 0.2 and also IBM stock with longWeight 0.4, then the grossWeight would be 0.6 (0.2+0.4)."""
         return self.__grossWeight
 
     @grossWeight.setter
@@ -13655,6 +14213,7 @@ class FieldValueMap(Base):
 
     @property
     def listed(self) -> bool:
+        """Whether the asset is listed or not."""
         return self.__listed
 
     @listed.setter
@@ -13664,6 +14223,7 @@ class FieldValueMap(Base):
 
     @property
     def tcmCostHorizon6Hour(self) -> float:
+        """TCM cost with a 6 hour time horizon."""
         return self.__tcmCostHorizon6Hour
 
     @tcmCostHorizon6Hour.setter
@@ -13673,6 +14233,7 @@ class FieldValueMap(Base):
 
     @property
     def g10Currency(self) -> bool:
+        """Is a G10 asset."""
         return self.__g10Currency
 
     @g10Currency.setter
@@ -13682,6 +14243,7 @@ class FieldValueMap(Base):
 
     @property
     def shockStyle(self) -> str:
+        """Style of shocks to be used."""
         return self.__shockStyle
 
     @shockStyle.setter
@@ -13691,6 +14253,7 @@ class FieldValueMap(Base):
 
     @property
     def relativePeriod(self) -> str:
+        """The relative period forward for which the forecast is available."""
         return self.__relativePeriod
 
     @relativePeriod.setter
@@ -13700,6 +14263,7 @@ class FieldValueMap(Base):
 
     @property
     def isin(self) -> str:
+        """ISIN - International securities identifier number (subect to licensing)."""
         return self.__isin
 
     @isin.setter
@@ -13709,6 +14273,7 @@ class FieldValueMap(Base):
 
     @property
     def methodology(self) -> str:
+        """Methodology of dataset."""
         return self.__methodology
 
     @methodology.setter
