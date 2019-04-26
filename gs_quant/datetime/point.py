@@ -125,6 +125,9 @@ def point_sort_order(point: str, ref_date: dt.date=dt.date.today()) -> float:
     >>> days = point_sort_order(point = 'Dec20', ref_date=dt.date.today())
     """
 
+    if not point:
+        return 0
+
     const_value = ConstPoints.get(point.upper())
     if const_value is not None:
         return const_value

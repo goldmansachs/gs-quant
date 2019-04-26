@@ -96,8 +96,14 @@ class Base:
                     setattr(self, prop, prop_type.from_dict(prop_value))
                 elif issubclass(prop_type, (list, tuple)):
                     item_type = return_hints.__args__[0]
-                    if issubclass(item_type, (Base, EnumBase)):
+                    item_args = getattr(item_type, '__args__', None)
+                    if item_args:
+                        item_type = next((a for a in item_args if issubclass(a, (Base, EnumBase))), item_args[-1])
+
+                    if issubclass(item_type, Base):
                         item_values = tuple(item_type.from_dict(v) for v in prop_value)
+                    elif issubclass(item_type, EnumBase):
+                        item_values = tuple(get_enum_value(item_type, v) for v in prop_value)
                     else:
                         item_values = tuple(prop_value)
                     setattr(self, prop, item_values)

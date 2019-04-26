@@ -174,10 +174,10 @@ def test_interpolate():
     expected = pd.Series([2.0, 2.0, 2.0, 5.0, 5.0, 7.0, 7.0], index=pd.DatetimeIndex(select_dates))
     assert_series_equal(result, expected, obj="Interpolate step dates to series with timestamps")
 
-    with pytest.raises(MqValueError, message="Unknown intersection type: None"):
+    with pytest.raises(MqValueError, match="Unknown intersection type: None"):
         interpolate(x, x, "None")
 
-    with pytest.raises(MqValueError, message="Cannot perform step interpolation on an empty series"):
+    with pytest.raises(MqValueError, match="Cannot perform step interpolation on an empty series"):
         interpolate(pd.Series(), select_dates, Interpolate.STEP)
 
 
