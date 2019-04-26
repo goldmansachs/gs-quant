@@ -7,7 +7,6 @@ GS users: pip install gs-quant[internal] --user
 
 ## Dependencies
 Python 3.6 or 3.7  
-Package dependencies can be installed by pip.
 
 ## Example
 ```python
