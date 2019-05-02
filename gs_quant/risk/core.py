@@ -16,12 +16,11 @@ under the License.
 from concurrent.futures import Future
 import dateutil
 import pandas as pd
-from typing import Iterable, List, Union
+from typing import Iterable, List, Optional, Tuple, Union
 from gs_quant.target.risk import RiskMeasure, RiskMeasureType, RiskMeasureUnit, RiskPosition, RiskRequest
 from gs_quant.common import AssetClass
 from gs_quant.datetime import point_sort_order
 from gs_quant.markets.core import PricingContext
-from typing import Optional, Tuple
 
 
 __field_sort_fns = {
@@ -49,7 +48,17 @@ def scalar_formatter(result: List) -> Optional[Union[float, pd.Series]]:
 
 
 def structured_formatter(result: List) -> pd.DataFrame:
-    return sort_risk(pd.DataFrame(result))
+    def flatten(item: Union[List, Tuple]):
+        rows = []
+        for elem in item:
+            if isinstance(elem, (list, tuple)):
+                rows.extend(flatten(elem))
+            else:
+                rows.append(elem)
+
+        return rows
+
+    return sort_risk(pd.DataFrame.from_records(flatten(result)))
 
 
 def aggregate_risk(results: Iterable[Union[pd.DataFrame, Future]], threshold: Optional[float]=None) -> pd.DataFrame:
