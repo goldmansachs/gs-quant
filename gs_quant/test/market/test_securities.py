@@ -16,7 +16,7 @@ under the License.
 
 from gs_quant.session import *
 from gs_quant.api.gs.assets import GsTemporalXRef
-from ...markets.securities import *
+from gs_quant.markets.securities import *
 
 
 def test_get_asset(mocker):

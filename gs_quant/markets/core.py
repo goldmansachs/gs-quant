@@ -28,22 +28,8 @@ from gs_quant.target.risk import PricingDateAndMarketDataAsOf, RiskMeasure, Risk
 
 class MarketDataCoordinate(__MarketDataCoordinate):
 
-    def __init__(self, *args, **kwargs):
-        self.__quotingStyle = kwargs.pop('quotingStyle', None)
-        super().__init__(*args, **kwargs)
-
     def __str__(self):
         return "|".join(f or '' for f in (self.marketDataType, self.marketDataAsset or self.assetId, self.pointClass, '_'.join(self.marketDataPoint), self.field or self.quotingStyle))
-
-    @property
-    def quotingStyle(self) -> str:
-        """The specific field: bid, mid, rate etc"""
-        return self.__quotingStyle
-
-    @quotingStyle.setter
-    def quotingStyle(self, value: str):
-        self.__quotingStyle = value
-        self._property_changed('quotingStyle')
 
 
 class PricingContext(ContextBaseWithDefault):
@@ -251,7 +237,7 @@ class PricingContext(ContextBaseWithDefault):
         """
         # TODO Handle these correctly in the risk service
         invalid_defaults = ('-- N/A --',)
-        value_mappings = {'Payer': 'Pay', 'Rec': 'Receive', 'Receiver': 'Receive'}
+        value_mappings = {'Payer': 'Pay', 'Rec': 'Receive', 'Receiver': 'Receive', 'Act/365 (Fixed)': 'ACT/365 (Fixed)'}
 
         def set_field_values(field_values):
             if isinstance(res, Future):

@@ -14,8 +14,8 @@
 # Chart Service will attempt to make public functions (not prefixed with _) from this module available. Such functions
 # should be fully documented: docstrings should describe parameters and the return value, and provide a 1-line
 # description. Type annotations should be provided for parameters.
-from datetime import date, time
 
+from datetime import date, time
 import numpy as np
 import pandas as pd
 from ..errors import *
@@ -240,3 +240,158 @@ def value(x: pd.Series, date: Union[date, time], method: Interpolate = Interpola
 
     values = interpolate(x, [date], method)
     return values.get(0)
+
+
+@plot_function
+def day(x: pd.Series) -> pd.Series:
+    """
+    Day of each value in series
+
+    :param x: time series
+    :return: day of observations
+
+    **Usage**
+
+    Returns the day as a numeric value for each observation in the series:
+
+    :math:`Y_t = day(t)`
+
+    Day of the time or date is the integer day number within the month, e.g. 1-31
+
+    **Examples**
+
+    Day for observations in series:
+
+    >>> series = generate_series(100)
+    >>> days = day(series)
+
+    **See also**
+
+    :func:`month` :func:`year`
+
+    """
+    return pd.to_datetime(x.index.to_series()).dt.day
+
+
+@plot_function
+def month(x: pd.Series) -> pd.Series:
+    """
+    Month of each value in series
+
+    :param x: time series
+    :return: month of observations
+
+    **Usage**
+
+    Returns the month as a numeric value for each observation in the series:
+
+    :math:`Y_t = month(t)`
+
+    Month of the time or date is the integer month number, e.g. 1-12
+
+    **Examples**
+
+    Day for observations in series:
+
+    >>> series = generate_series(100)
+    >>> days = month(series)
+
+    **See also**
+
+    :func:`day` :func:`year`
+
+    """
+    return pd.to_datetime(x.index.to_series()).dt.month
+
+
+@plot_function
+def year(x: pd.Series) -> pd.Series:
+    """
+    Year of each value in series
+
+    :param x: time series
+    :return: year of observations
+
+    **Usage**
+
+    Returns the year as a numeric value for each observation in the series:
+
+    :math:`Y_t = year(t)`
+
+    Year of the time or date is the integer year number, e.g. 2019, 2020
+
+    **Examples**
+
+    Year for observations in series:
+
+    >>> series = generate_series(100)
+    >>> days = year(series)
+
+    **See also**
+
+    :func:`day` :func:`month`
+
+    """
+    return pd.to_datetime(x.index.to_series()).dt.year
+
+
+@plot_function
+def quarter(x: pd.Series) -> pd.Series:
+    """
+    Quarter of each value in series
+
+    :param x: time series
+    :return: quarter of observations
+
+    **Usage**
+
+    Returns the quarter as a numeric value for each observation in the series:
+
+    :math:`Y_t = quarter(t)`
+
+    Quarter of the time or date is the integer quarter number, e.g. 1, 2, 3, 4
+
+    **Examples**
+
+    Quarter for observations in series:
+
+    >>> series = generate_series(100)
+    >>> days = quarter(series)
+
+    **See also**
+
+    :func:`day` :func:`month`
+
+    """
+    return pd.to_datetime(x.index.to_series()).dt.quarter
+
+
+@plot_function
+def weekday(x: pd.Series) -> pd.Series:
+    """
+    Weekday of each value in series
+
+    :param x: time series
+    :return: weekday of observations
+
+    **Usage**
+
+    Returns the weekday as a numeric value for each observation in the series:
+
+    :math:`Y_t = weekday(t)`
+
+    Weekday of the time or date is the integer day of the week, e.g. 0-6, where 0 represents Monday
+
+    **Examples**
+
+    Weekday for observations in series:
+
+    >>> series = generate_series(100)
+    >>> days = weekday(series)
+
+    **See also**
+
+    :func:`day` :func:`month`
+
+    """
+    return pd.to_datetime(x.index.to_series()).dt.weekday
