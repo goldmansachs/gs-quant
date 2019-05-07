@@ -20,6 +20,7 @@ import string
 ConstPoints = {
     "O/N": 0,
     "T/N": 0.1,
+    "OIS FIX": 1,
     "CASH STUB": 1.1,
     "CASHSTUB": 1.1,
     "DEFAULT": 0,

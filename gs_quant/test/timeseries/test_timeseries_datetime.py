@@ -212,3 +212,86 @@ def test_value():
 
     result = value(x, date(2019, 1, 4), Interpolate.NAN)
     assert np.isnan(result)
+
+
+def test_day():
+
+    dates = [
+        date(2019, 1, 1),
+        date(2019, 1, 2),
+        date(2019, 1, 3),
+        date(2019, 1, 4),
+    ]
+
+    x = pd.Series([1.0, 2.0, 3.0, 4.0], index=dates)
+
+    result = day(x)
+    expected = pd.Series([1, 2, 3, 4], index=dates)
+    assert_series_equal(result, expected, obj="Day")
+
+
+def test_weekday():
+
+    dates = [
+        date(2019, 1, 7),
+        date(2019, 1, 8),
+        date(2019, 1, 9),
+        date(2019, 1, 10),
+        date(2019, 1, 11),
+        date(2019, 1, 12),
+        date(2019, 1, 13),
+    ]
+
+    x = pd.Series([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0], index=dates)
+
+    result = weekday(x)
+    expected = pd.Series([0, 1, 2, 3, 4, 5, 6], index=dates)
+    assert_series_equal(result, expected, obj="Weekday")
+
+
+def test_month():
+
+    dates = [
+        date(2019, 1, 1),
+        date(2019, 2, 1),
+        date(2019, 3, 1),
+        date(2019, 4, 1),
+    ]
+
+    x = pd.Series([1.0, 2.0, 3.0, 4.0], index=dates)
+
+    result = month(x)
+    expected = pd.Series([1, 2, 3, 4], index=dates)
+    assert_series_equal(result, expected, obj="Month")
+
+
+def test_year():
+
+    dates = [
+        date(2019, 1, 1),
+        date(2020, 1, 2),
+        date(2021, 1, 3),
+        date(2022, 1, 4),
+    ]
+
+    x = pd.Series([1.0, 2.0, 3.0, 4.0], index=dates)
+
+    result = year(x)
+    expected = pd.Series([2019, 2020, 2021, 2022], index=dates)
+    assert_series_equal(result, expected, obj="Year")
+
+
+def test_quarter():
+
+    dates = [
+        date(2019, 1, 1),
+        date(2019, 4, 1),
+        date(2019, 7, 1),
+        date(2019, 10, 1),
+    ]
+
+    x = pd.Series([1.0, 2.0, 3.0, 4.0], index=dates)
+
+    result = quarter(x)
+    expected = pd.Series([1, 2, 3, 4], index=dates)
+    assert_series_equal(result, expected, obj="Quarter")

@@ -44,7 +44,9 @@ class GsDataApi(DataApi):
                 if len(xref_keys) > 1:
                     raise MqValueError('Cannot not specify more than one type of asset identifier')
 
-                if 'assetId' not in cls.symbol_dimensions(dataset_id):
+                definition = cls.get_definition(dataset_id)
+
+                if definition.parameters.symbolStrategy == 'MDAPI' or 'assetId' not in definition.dimensions.symbolDimensions:
                     xref_type = min(xref_keys)
                     if asset_id_type is None:
                         asset_id_type = xref_type
@@ -64,7 +66,11 @@ class GsDataApi(DataApi):
         else:
             results = GsSession.current._post('/data/{}/query'.format(dataset_id), payload=query)
 
-        results = results.get('data', ())
+        if 'responses' in results:
+            results = results.get('responses', [{}])[0].get('data', ())
+        else:
+            results = results.get('data', ())
+
         asset_id_type = GsIdType.id if asset_id_type is None else asset_id_type
 
         if asset_id_type != GsIdType.id:
@@ -264,7 +270,7 @@ class GsDataApi(DataApi):
     @classmethod
     def coordinates_data_series(
             cls,
-            coordinates: Union[List, Tuple],
+            coordinate: 'MarketDataCoordinate',
             start: Optional[Union[dt.date, dt.datetime]] = None,
             end: Optional[Union[dt.date, dt.datetime]] = None,
             vendor: str = 'Goldman Sachs',
@@ -272,7 +278,7 @@ class GsDataApi(DataApi):
             since: Optional[dt.datetime] = None
     ) -> pd.Series:
         df = cls.coordinates_data(
-            coordinates,
+            (coordinate,),
             start=start,
             end=end,
             vendor=vendor,

@@ -27,7 +27,7 @@ class Security(XRef):
 
         :param ticker: Exchange ticker
         :param bbid: Bloomberg identifier
-        :param isin: Internlational Security Number
+        :param isin: International Security Number
         :param cusip: CUSIP
         :param primeId: Prime (GS internal) identifier
         :param quantity: Quantity (number of contracts for exchange-traded instruments, notional for bonds)

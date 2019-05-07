@@ -15,3 +15,4 @@ under the License.
 """
 
 from gs_quant.target.common import BusinessDayConvention, Currency, DayCountFraction, AssetClass, Currency, OptionStyle, OptionType, PayReceive, XRef
+from gs_quant.target.risk import CountryCode

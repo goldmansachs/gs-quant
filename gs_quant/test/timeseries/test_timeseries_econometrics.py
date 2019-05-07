@@ -41,16 +41,24 @@ def test_returns():
     expected = pd.Series([np.nan, 0.01, 0.02, -0.02, 0.0, 0.02], index=dates)
     assert_series_equal(result, expected, obj="Simple returns default")
 
-    result = returns(x, Returns.SIMPLE)
+    result = returns(x, 1, Returns.SIMPLE)
     expected = pd.Series([np.nan, 0.01, 0.02, -0.02, 0.0, 0.02], index=dates)
     assert_series_equal(result, expected, obj="Simple returns", check_less_precise=True)
 
-    result = returns(x, Returns.LOGARITHMIC)
+    result = returns(x, 2, Returns.SIMPLE)
+    expected = pd.Series([np.nan, np.nan, 0.0302, -0.0004, -0.0200, 0.0200], index=dates)
+    assert_series_equal(result, expected, obj="Simple returns", check_less_precise=True)
+
+    result = returns(x, 1, Returns.LOGARITHMIC)
     expected = pd.Series([np.nan, 0.009950, 0.019803, -0.020203, 0.0, 0.019803], index=dates)
     assert_series_equal(result, expected, obj="Logarithmic returns", check_less_precise=True)
 
+    result = returns(x, 2, Returns.LOGARITHMIC)
+    expected = pd.Series([np.nan, np.nan, 0.029753, -0.0004, -0.020203, 0.019803], index=dates)
+    assert_series_equal(result, expected, obj="Logarithmic returns", check_less_precise=True)
+
     with pytest.raises(MqValueError):
-        returns(x, "None")
+        returns(x, 1, "None")
 
 
 def test_prices():

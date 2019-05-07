@@ -91,6 +91,41 @@ def last(x: pd.Series) -> pd.Series:
 
 
 @plot_function
+def count(x: pd.Series) -> pd.Series:
+    """
+    Count observations in series
+
+    :param x: time series
+    :return: number of observations
+
+    **Usage**
+
+    Count the number of valid observations in a series:
+
+    :math:`R_t = R_{t-1} + 1`
+
+    if :math:`X_t` is not NaN, and
+
+    :math:`R_t = R_{t-1} + 0`
+
+    if :math:`X_t` is NaN
+
+    **Examples**
+
+    Count observations in series:
+
+    >>> series = generate_series(100)
+    >>> count = count(series)
+
+    **See also**
+
+    :func:`sum`
+
+    """
+    return x.rolling(x.size, 0).count()
+
+
+@plot_function
 def diff(x: pd.Series, obs: int=1) -> pd.Series:
     """
     Diff observations with given lag

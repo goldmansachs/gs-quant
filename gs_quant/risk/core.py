@@ -14,6 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 from concurrent.futures import Future
+from copy import copy
 import dateutil
 import pandas as pd
 from typing import Iterable, List, Optional, Tuple, Union
@@ -90,6 +91,31 @@ def aggregate_risk(results: Iterable[Union[pd.DataFrame, Future]], threshold: Op
         result = result[result.value.abs() > threshold]
 
     return sort_risk(result)
+
+
+def subtract_risk(left: pd.DataFrame, right: pd.DataFrame) -> pd.DataFrame:
+    """Subtract bucketed risk. Dimensions must be identical
+
+    :param left: Results to substract from
+    :param right: Results to substract
+
+    **Examples**
+
+    >>> ir_swap = IRSwap('Pay', '10y', 'USD')
+    >>> delta_today = ir_swap.calc(risk.IRDelta)
+    >>>
+    >>> with PricingContext(pricing_date=business_day_offset(datetime.date.today(), -1, roll='preceding')):
+    >>>     delta_yday_f = ir_swap.calc(risk.IRDelta)
+    >>>
+    >>> delta_diff = subtract_risk(delta_today, delta_yday_f.result())
+    """
+    assert(left.columns.names == right.columns.names)
+    assert('value' in left.columns.names)
+
+    right_negated = copy(right)
+    right_negated.value *= -1
+
+    return aggregate_risk((left, right_negated))
 
 
 def sort_risk(df: pd.DataFrame, by: Tuple[str]=('date', 'marketDataType', 'assetId', 'point')):

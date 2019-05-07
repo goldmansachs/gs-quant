@@ -36,11 +36,12 @@ class AnnualizationFactor(IntEnum):
 
 
 @plot_function
-def returns(series: pd.Series, type: Returns = Returns.SIMPLE) -> pd.Series:
+def returns(series: pd.Series, obs: int = 1, type: Returns = Returns.SIMPLE) -> pd.Series:
     """
     Calculate returns from price series
 
     :param series: time series of prices
+    :param obs: number of observations
     :param type: returns type
     :return: date-based time series of return
 
@@ -59,7 +60,7 @@ def returns(series: pd.Series, type: Returns = Returns.SIMPLE) -> pd.Series:
 
     Simple geometric change in asset prices, which can be aggregated across assets
 
-    :math:`Y_t = \\frac{X_t}{X_{t-1}} - 1`
+    :math:`Y_t = \\frac{X_t}{X_{t-obs}} - 1`
 
     where :math:`X_t` is the asset price at time :math:`t`
 
@@ -67,7 +68,7 @@ def returns(series: pd.Series, type: Returns = Returns.SIMPLE) -> pd.Series:
 
     Natural logarithm of asset price changes, which can be aggregated through time
 
-    :math:`Y_t = log(X_t) - log(X_{t-1})`
+    :math:`Y_t = log(X_t) - log(X_{t-obs})`
 
     where :math:`X_t` is the asset price at time :math:`t`
 
@@ -87,10 +88,10 @@ def returns(series: pd.Series, type: Returns = Returns.SIMPLE) -> pd.Series:
         return series
 
     if type == Returns.SIMPLE:
-        ret_series = series / series.shift(1) - 1
+        ret_series = series / series.shift(obs) - 1
     elif type == Returns.LOGARITHMIC:
         log_s = series.apply(math.log)
-        ret_series = log_s - log_s.shift(1)
+        ret_series = log_s - log_s.shift(obs)
     else:
         raise MqValueError('Unknown returns type (use simple / log)')
 

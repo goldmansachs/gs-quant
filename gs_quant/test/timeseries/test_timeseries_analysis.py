@@ -52,6 +52,22 @@ def test_last():
     assert_series_equal(result, expected, obj="First")
 
 
+def test_count():
+
+    dates = [
+        date(2019, 1, 1),
+        date(2019, 1, 2),
+        date(2019, 1, 3),
+        date(2019, 1, 4),
+    ]
+
+    x = pd.Series([1.0, 2.0, 3.0, 4.0], index=dates)
+
+    result = count(x)
+    expected = pd.Series([1.0, 2.0, 3.0, 4.0], index=dates)
+    assert_series_equal(result, expected, obj="Count")
+
+
 def test_diff():
 
     dates = [
