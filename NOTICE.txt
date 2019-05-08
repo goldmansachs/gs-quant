@@ -1,0 +1,3 @@
+gs-quant
+Copyright 2018-2019 Goldman Sachs
+This product contains code copyright Scott Weinstein, licensed under Apache 2.0 license
