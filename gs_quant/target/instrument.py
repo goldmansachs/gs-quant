@@ -113,6 +113,166 @@ class CommodSwap(Instrument):
         self._property_changed('calculationPeriodFrequency')        
 
 
+class EqCliquet(Instrument):
+        
+    """Object representation of an Equity Cliquet"""
+       
+    def __init__(self, asset: str, expirationDate: Union[datetime.date, str], strikePrice: float, currency: Union[Currency, str] = None, firstValuationDate: datetime.date = None, globalFloor: float = -1000000, globalCap: float = 1000000, lastValuationDate: datetime.date = None, notionalAmount: float = 1000000, paymentFrequency: str = 'Maturity', returnStyle: str = 'Rate of Return', returnType: str = 'Sum', valuationPeriod: str = None):
+        super().__init__()
+        self.__asset = asset
+        self.__currency = currency if isinstance(currency, Currency) else get_enum_value(Currency, currency)
+        self.__expirationDate = expirationDate
+        self.__firstValuationDate = firstValuationDate
+        self.__globalFloor = globalFloor
+        self.__globalCap = globalCap
+        self.__lastValuationDate = lastValuationDate
+        self.__notionalAmount = notionalAmount
+        self.__paymentFrequency = paymentFrequency
+        self.__returnStyle = returnStyle
+        self.__returnType = returnType
+        self.__strikePrice = strikePrice
+        self.__valuationPeriod = valuationPeriod
+
+    @property
+    def assetClass(self) -> AssetClass:
+        """Equity"""
+        return AssetClass.Equity        
+
+    @property
+    def type(self) -> AssetType:
+        """Cliquet"""
+        return AssetType.Cliquet        
+
+    @property
+    def asset(self) -> str:
+        """Ticker of the underlying stock or index"""
+        return self.__asset
+
+    @asset.setter
+    def asset(self, value: str):
+        self.__asset = value
+        self._property_changed('asset')        
+
+    @property
+    def currency(self) -> Union[Currency, str]:
+        """Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)"""
+        return self.__currency
+
+    @currency.setter
+    def currency(self, value: Union[Currency, str]):
+        self.__currency = value if isinstance(value, Currency) else get_enum_value(Currency, value)
+        self._property_changed('currency')        
+
+    @property
+    def expirationDate(self) -> Union[datetime.date, str]:
+        """Date or tenor, e.g. 2018-09-03, 3m"""
+        return self.__expirationDate
+
+    @expirationDate.setter
+    def expirationDate(self, value: Union[datetime.date, str]):
+        self.__expirationDate = value
+        self._property_changed('expirationDate')        
+
+    @property
+    def firstValuationDate(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__firstValuationDate
+
+    @firstValuationDate.setter
+    def firstValuationDate(self, value: datetime.date):
+        self.__firstValuationDate = value
+        self._property_changed('firstValuationDate')        
+
+    @property
+    def globalFloor(self) -> float:
+        """Global Floor of return, relevant only if paying at maturity"""
+        return self.__globalFloor
+
+    @globalFloor.setter
+    def globalFloor(self, value: float):
+        self.__globalFloor = value
+        self._property_changed('globalFloor')        
+
+    @property
+    def globalCap(self) -> float:
+        """Global Cap of return, relevant only if paying at maturity"""
+        return self.__globalCap
+
+    @globalCap.setter
+    def globalCap(self, value: float):
+        self.__globalCap = value
+        self._property_changed('globalCap')        
+
+    @property
+    def lastValuationDate(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__lastValuationDate
+
+    @lastValuationDate.setter
+    def lastValuationDate(self, value: datetime.date):
+        self.__lastValuationDate = value
+        self._property_changed('lastValuationDate')        
+
+    @property
+    def notionalAmount(self) -> float:
+        """Notional of this position"""
+        return self.__notionalAmount
+
+    @notionalAmount.setter
+    def notionalAmount(self, value: float):
+        self.__notionalAmount = value
+        self._property_changed('notionalAmount')        
+
+    @property
+    def paymentFrequency(self) -> str:
+        return self.__paymentFrequency
+
+    @paymentFrequency.setter
+    def paymentFrequency(self, value: str):
+        self.__paymentFrequency = value
+        self._property_changed('paymentFrequency')        
+
+    @property
+    def returnStyle(self) -> str:
+        """Return calculation style"""
+        return self.__returnStyle
+
+    @returnStyle.setter
+    def returnStyle(self, value: str):
+        self.__returnStyle = value
+        self._property_changed('returnStyle')        
+
+    @property
+    def returnType(self) -> str:
+        """Sum or Product of periodic return, relevant only if paying at maturity"""
+        return self.__returnType
+
+    @returnType.setter
+    def returnType(self, value: str):
+        self.__returnType = value
+        self._property_changed('returnType')        
+
+    @property
+    def strikePrice(self) -> float:
+        """Strike price as value"""
+        return self.__strikePrice
+
+    @strikePrice.setter
+    def strikePrice(self, value: float):
+        self.__strikePrice = value
+        self._property_changed('strikePrice')        
+
+    @property
+    def valuationPeriod(self) -> str:
+        """Tenor"""
+        return self.__valuationPeriod
+
+    @valuationPeriod.setter
+    def valuationPeriod(self, value: str):
+        self.__valuationPeriod = value
+        self._property_changed('valuationPeriod')        
+
+
 class EqForward(Instrument):
         
     """Object representation of an equity forward"""

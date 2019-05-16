@@ -404,34 +404,6 @@ class DataDomain(Base):
         self._property_changed('arcticSymbols')        
 
 
-class Identifier(Base):
-               
-    def __init__(self, type: str = None, value: str = None):
-        super().__init__()
-        self.__type = type
-        self.__value = value
-
-    @property
-    def type(self) -> str:
-        """Identifier type code"""
-        return self.__type
-
-    @type.setter
-    def type(self, value: str):
-        self.__type = value
-        self._property_changed('type')        
-
-    @property
-    def value(self) -> str:
-        """Identifier value"""
-        return self.__value
-
-    @value.setter
-    def value(self, value: str):
-        self.__value = value
-        self._property_changed('value')        
-
-
 class IndexConstituent(Base):
                
     def __init__(self, assetId: str = None, weight: float = None):
@@ -976,67 +948,6 @@ class PerformanceStatsRequest(Base):
         self._property_changed('averageReturn')        
 
 
-class PositionSet(Base):
-               
-    def __init__(self, positionDate: datetime.date = None, lastUpdateTime: datetime.datetime = None, positions: Tuple[Position, ...] = None, type: str = None, divisor: float = None):
-        super().__init__()
-        self.__positionDate = positionDate
-        self.__lastUpdateTime = lastUpdateTime
-        self.__positions = positions
-        self.__type = type
-        self.__divisor = divisor
-
-    @property
-    def positionDate(self) -> datetime.date:
-        """ISO 8601-formatted date"""
-        return self.__positionDate
-
-    @positionDate.setter
-    def positionDate(self, value: datetime.date):
-        self.__positionDate = value
-        self._property_changed('positionDate')        
-
-    @property
-    def lastUpdateTime(self) -> datetime.datetime:
-        """ISO 8601-formatted timestamp"""
-        return self.__lastUpdateTime
-
-    @lastUpdateTime.setter
-    def lastUpdateTime(self, value: datetime.datetime):
-        self.__lastUpdateTime = value
-        self._property_changed('lastUpdateTime')        
-
-    @property
-    def positions(self) -> Tuple[Position, ...]:
-        """Array of quantity position objects."""
-        return self.__positions
-
-    @positions.setter
-    def positions(self, value: Tuple[Position, ...]):
-        self.__positions = value
-        self._property_changed('positions')        
-
-    @property
-    def type(self) -> str:
-        """The composition type of a Portfolio"""
-        return self.__type
-
-    @type.setter
-    def type(self, value: str):
-        self.__type = value
-        self._property_changed('type')        
-
-    @property
-    def divisor(self) -> float:
-        """optional index divisor for a position set"""
-        return self.__divisor
-
-    @divisor.setter
-    def divisor(self, value: float):
-        self.__divisor = value
-        self._property_changed('divisor')        
-
-
 class RTL(Base):
                
     def __init__(self, restrictionType: str = None, effectiveTime: datetime.datetime = None, deactivationTime: datetime.datetime = None, updateTime: datetime.datetime = None, restrictionId: float = None, restrictionCode: str = None):
@@ -1415,7 +1326,7 @@ class AssetParameters(Base):
         
     """Parameters specific to the asset type"""
        
-    def __init__(self, basketType: str = None, constituents: Tuple[IndexConstituent, ...] = None, style: str = None, indexCalculationType: str = None, indexReturnType: str = None, indexDivisor: float = None, currency: Union[Currency, str] = None, quoteCurrency: Union[Currency, str] = None, indexInitialPrice: float = None, initialPricingDate: datetime.date = None, expirationDate: datetime.date = None, expirationLocation: str = None, optionStyle: str = None, optionType: Union[OptionType, str] = None, settlementDate: datetime.date = None, settlementType: str = None, strikePrice: float = None, putCurrency: Union[Currency, str] = None, putAmount: float = None, automaticExercise: bool = None, callAmount: float = None, callCurrency: Union[Currency, str] = None, exerciseTime: str = None, multiplier: float = None, premiumPaymentDate: datetime.date = None, premium: float = None, premiumCurrency: Union[Currency, str] = None, callable: bool = None, puttable: bool = None, perpetual: bool = None, seniority: str = None, couponType: str = None, index: str = None, indexTerm: str = None, indexMargin: float = None, coupon: float = None, issueDate: datetime.date = None, issuer: str = None, issuerCountryCode: str = None, issuerType: str = None, issueSize: float = None, commoditySector: Union[CommoditySector, str] = None, pricingLocation: Union[PricingLocation, str] = None, contractMonths: Tuple[str, ...] = None, g10Currency: bool = None, hedgeId: str = None, ultimateTicker: str = None, strategy: Union[Strategy, str] = None, supraStrategy: Union[SupraStrategy, str] = None, exchangeCurrency: Union[Currency, str] = None, region: str = None, deliveryPoint: str = None, pricingIndex: str = None, contractMonth: str = None, loadType: str = None, contractUnit: str = None, indexCreateSource: str = None, indexApprovalIds: Tuple[str, ...] = None, isPairBasket: bool = None, fixedRateDayCountFraction: Union[DayCountFraction, str] = None, floatingRateDayCountFraction: Union[DayCountFraction, str] = None, payDayCountFraction: Union[DayCountFraction, str] = None, receiveDayCountFraction: Union[DayCountFraction, str] = None, payFrequency: str = None, receiveFrequency: str = None, resettableLeg: Union[PayReceive, str] = None, inflationLag: str = None, fxIndex: str = None, indexNotes: str = None, indexNotTradingReasons: str = None):
+    def __init__(self, basketType: str = None, constituents: Tuple[IndexConstituent, ...] = None, style: str = None, indexCalculationType: str = None, indexReturnType: str = None, indexDivisor: float = None, currency: Union[Currency, str] = None, quoteCurrency: Union[Currency, str] = None, indexInitialPrice: float = None, initialPricingDate: datetime.date = None, expirationDate: datetime.date = None, expirationLocation: str = None, optionStyle: str = None, optionType: Union[OptionType, str] = None, settlementDate: datetime.date = None, settlementType: str = None, strikePrice: float = None, putCurrency: Union[Currency, str] = None, putAmount: float = None, automaticExercise: bool = None, callAmount: float = None, callCurrency: Union[Currency, str] = None, exerciseTime: str = None, multiplier: float = None, premiumPaymentDate: datetime.date = None, premium: float = None, premiumCurrency: Union[Currency, str] = None, callable: bool = None, puttable: bool = None, perpetual: bool = None, seniority: str = None, couponType: str = None, index: str = None, indexTerm: str = None, indexMargin: float = None, coupon: float = None, issueDate: datetime.date = None, issuer: str = None, issuerCountryCode: str = None, issuerType: str = None, issueSize: float = None, commoditySector: Union[CommoditySector, str] = None, pricingLocation: Union[PricingLocation, str] = None, contractMonths: Tuple[str, ...] = None, g10Currency: bool = None, hedgeId: str = None, ultimateTicker: str = None, strategy: Union[Strategy, str] = None, supraStrategy: Union[SupraStrategy, str] = None, exchangeCurrency: Union[Currency, str] = None, region: str = None, deliveryPoint: str = None, pricingIndex: str = None, contractMonth: str = None, loadType: str = None, contractUnit: str = None, indexCreateSource: Union[IndexCreateSource, str] = None, indexApprovalIds: Tuple[str, ...] = None, isPairBasket: bool = None, fixedRateDayCountFraction: Union[DayCountFraction, str] = None, floatingRateDayCountFraction: Union[DayCountFraction, str] = None, payDayCountFraction: Union[DayCountFraction, str] = None, receiveDayCountFraction: Union[DayCountFraction, str] = None, payFrequency: str = None, receiveFrequency: str = None, resettableLeg: Union[PayReceive, str] = None, inflationLag: str = None, fxIndex: str = None, indexNotes: str = None, indexNotTradingReasons: Union[IndexNotTradingReasons, str] = None, tradeAs: str = None, cloneParentId: str = None):
         super().__init__()
         self.__basketType = basketType
         self.__constituents = constituents
@@ -1473,7 +1384,7 @@ class AssetParameters(Base):
         self.__contractMonth = contractMonth
         self.__loadType = loadType
         self.__contractUnit = contractUnit
-        self.__indexCreateSource = indexCreateSource
+        self.__indexCreateSource = indexCreateSource if isinstance(indexCreateSource, IndexCreateSource) else get_enum_value(IndexCreateSource, indexCreateSource)
         self.__indexApprovalIds = indexApprovalIds
         self.__isPairBasket = isPairBasket
         self.__fixedRateDayCountFraction = fixedRateDayCountFraction if isinstance(fixedRateDayCountFraction, DayCountFraction) else get_enum_value(DayCountFraction, fixedRateDayCountFraction)
@@ -1486,7 +1397,9 @@ class AssetParameters(Base):
         self.__inflationLag = inflationLag
         self.__fxIndex = fxIndex
         self.__indexNotes = indexNotes
-        self.__indexNotTradingReasons = indexNotTradingReasons
+        self.__indexNotTradingReasons = indexNotTradingReasons if isinstance(indexNotTradingReasons, IndexNotTradingReasons) else get_enum_value(IndexNotTradingReasons, indexNotTradingReasons)
+        self.__tradeAs = tradeAs
+        self.__cloneParentId = cloneParentId
 
     @property
     def basketType(self) -> str:
@@ -2039,13 +1952,13 @@ class AssetParameters(Base):
         self._property_changed('contractUnit')        
 
     @property
-    def indexCreateSource(self) -> str:
+    def indexCreateSource(self) -> Union[IndexCreateSource, str]:
         """Source of basket create"""
         return self.__indexCreateSource
 
     @indexCreateSource.setter
-    def indexCreateSource(self, value: str):
-        self.__indexCreateSource = value
+    def indexCreateSource(self, value: Union[IndexCreateSource, str]):
+        self.__indexCreateSource = value if isinstance(value, IndexCreateSource) else get_enum_value(IndexCreateSource, value)
         self._property_changed('indexCreateSource')        
 
     @property
@@ -2168,14 +2081,34 @@ class AssetParameters(Base):
         self._property_changed('indexNotes')        
 
     @property
-    def indexNotTradingReasons(self) -> str:
+    def indexNotTradingReasons(self) -> Union[IndexNotTradingReasons, str]:
         """Reasons the index was not traded"""
         return self.__indexNotTradingReasons
 
     @indexNotTradingReasons.setter
-    def indexNotTradingReasons(self, value: str):
-        self.__indexNotTradingReasons = value
+    def indexNotTradingReasons(self, value: Union[IndexNotTradingReasons, str]):
+        self.__indexNotTradingReasons = value if isinstance(value, IndexNotTradingReasons) else get_enum_value(IndexNotTradingReasons, value)
         self._property_changed('indexNotTradingReasons')        
+
+    @property
+    def tradeAs(self) -> str:
+        """How to trade the Option."""
+        return self.__tradeAs
+
+    @tradeAs.setter
+    def tradeAs(self, value: str):
+        self.__tradeAs = value
+        self._property_changed('tradeAs')        
+
+    @property
+    def cloneParentId(self) -> str:
+        """Marquee unique identifier"""
+        return self.__cloneParentId
+
+    @cloneParentId.setter
+    def cloneParentId(self, value: str):
+        self.__cloneParentId = value
+        self._property_changed('cloneParentId')        
 
 
 class AssetStats(Base):

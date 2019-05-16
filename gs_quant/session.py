@@ -91,6 +91,11 @@ class GsSession(ContextBase):
             self._session.headers.update({'X-Application': self.application})
             self._authenticate()
 
+    def close(self):
+        self._session: requests.Session
+        self._session.close()
+        self._session = None
+
     def __unpack(self, results: Union[dict, list], cls: type) -> Union[Base, tuple, dict]:
         if issubclass(cls, Base):
             if isinstance(results, list):

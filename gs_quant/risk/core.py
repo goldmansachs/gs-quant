@@ -167,6 +167,8 @@ IRVegaLocalCcy = __risk_measure_with_doc_string('Interest Rate Vega (Local Ccy)'
 IRAnnualImpliedVol = __risk_measure_with_doc_string('Interest Rate Annual Implied Volatility (%)', RiskMeasureType.Annual_Implied_Volatility, assetClass=AssetClass.Rates, unit=RiskMeasureUnit.Percent)
 IRAnnualATMImpliedVol = __risk_measure_with_doc_string('Interest Rate Annual Implied At-The-Money Volatility (%)', RiskMeasureType.Annual_ATMF_Implied_Volatility, assetClass=AssetClass.Rates, unit=RiskMeasureUnit.Percent)
 IRDailyImpliedVol = __risk_measure_with_doc_string('Interest Rate Daily Implied Volatility (bps)', RiskMeasureType.Annual_ATMF_Implied_Volatility, assetClass=AssetClass.Rates, unit=RiskMeasureUnit.BPS)
+IRSpotRate = __risk_measure_with_doc_string('At-The-Money Spot Rate (%)', RiskMeasureType.Spot_Rate, assetClass=AssetClass.Rates, unit=RiskMeasureUnit.Percent)
+IRFwdRate = __risk_measure_with_doc_string('Par Rate (%)', RiskMeasureType.Forward_Rate, assetClass=AssetClass.Rates, unit=RiskMeasureUnit.Percent)
 
 Formatters = {
     DollarPrice: scalar_formatter,
@@ -192,6 +194,8 @@ Formatters = {
     IRVegaLocalCcy: structured_formatter,
     IRAnnualImpliedVol: scalar_formatter,
     IRDailyImpliedVol: scalar_formatter,
-    IRAnnualATMImpliedVol: scalar_formatter
+    IRAnnualATMImpliedVol: scalar_formatter,
+    IRSpotRate: scalar_formatter,
+    IRFwdRate: scalar_formatter
 }
 

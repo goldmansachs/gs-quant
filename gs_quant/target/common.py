@@ -54,6 +54,7 @@ class AssetType(EnumBase, Enum):
     Cash = 'Cash'
     Certificate = 'Certificate'
     CD = 'CD'
+    Cliquet = 'Cliquet'
     Commodity = 'Commodity'
     Company = 'Company'
     Convertible = 'Convertible'
@@ -819,6 +820,7 @@ class Field(EnumBase, Enum):
     quoteType = 'quoteType'
     tenor = 'tenor'
     esPolicyPercentile = 'esPolicyPercentile'
+    atmFwdRate = 'atmFwdRate'
     tcmCostParticipationRate75Pct = 'tcmCostParticipationRate75Pct'
     close = 'close'
     tcmCostParticipationRate100Pct = 'tcmCostParticipationRate100Pct'
@@ -832,6 +834,7 @@ class Field(EnumBase, Enum):
     deploymentVersion = 'deploymentVersion'
     fiveDayMove = 'fiveDayMove'
     borrower = 'borrower'
+    valueFormat = 'valueFormat'
     performanceContribution = 'performanceContribution'
     targetNotional = 'targetNotional'
     fillLegId = 'fillLegId'
@@ -849,6 +852,7 @@ class Field(EnumBase, Enum):
     impliedNormalVolatility = 'impliedNormalVolatility'
     unadjustedOpen = 'unadjustedOpen'
     arrivalRt = 'arrivalRt'
+    criticality = 'criticality'
     transactionCost = 'transactionCost'
     servicingCostShortPnl = 'servicingCostShortPnl'
     bidAskSpread = 'bidAskSpread'
@@ -863,17 +867,20 @@ class Field(EnumBase, Enum):
     eventStartDateTime = 'eventStartDateTime'
     askPrice = 'askPrice'
     eventId = 'eventId'
+    borrowerId = 'borrowerId'
     dataProduct = 'dataProduct'
     sectors = 'sectors'
     annualizedTrackingError = 'annualizedTrackingError'
     volSwap = 'volSwap'
     annualizedRisk = 'annualizedRisk'
+    bmPrimeId = 'bmPrimeId'
     corporateAction = 'corporateAction'
     conviction = 'conviction'
     grossExposure = 'grossExposure'
     benchmarkMaturity = 'benchmarkMaturity'
     volumeComposite = 'volumeComposite'
     volume = 'volume'
+    hardToBorrow = 'hardToBorrow'
     adv = 'adv'
     stsFxCurrency = 'stsFxCurrency'
     wpk = 'wpk'
@@ -884,7 +891,9 @@ class Field(EnumBase, Enum):
     tradePrice = 'tradePrice'
     esPolicyScore = 'esPolicyScore'
     loanId = 'loanId'
+    primeIdNumeric = 'primeIdNumeric'
     cid = 'cid'
+    onboarded = 'onboarded'
     liquidityScore = 'liquidityScore'
     importance = 'importance'
     sourceDateSpan = 'sourceDateSpan'
@@ -918,6 +927,7 @@ class Field(EnumBase, Enum):
     meetingNumber = 'meetingNumber'
     exchangeId = 'exchangeId'
     horizon = 'horizon'
+    midGspread = 'midGspread'
     tcmCostHorizon20Day = 'tcmCostHorizon20Day'
     longLevel = 'longLevel'
     sourceValueForecast = 'sourceValueForecast'
@@ -948,6 +958,7 @@ class Field(EnumBase, Enum):
     id = 'id'
     arrivalHaircutVwapNormalized = 'arrivalHaircutVwapNormalized'
     queueClockTimeDescription = 'queueClockTimeDescription'
+    loanRebate = 'loanRebate'
     period = 'period'
     indexCreateSource = 'indexCreateSource'
     fiscalQuarter = 'fiscalQuarter'
@@ -972,6 +983,7 @@ class Field(EnumBase, Enum):
     eventSource = 'eventSource'
     qisPermNo = 'qisPermNo'
     hitRateYtd = 'hitRateYtd'
+    valid = 'valid'
     stsCommodity = 'stsCommodity'
     stsCommoditySector = 'stsCommoditySector'
     salesCoverage = 'salesCoverage'
@@ -1020,10 +1032,12 @@ class Field(EnumBase, Enum):
     longConvictionMedium = 'longConvictionMedium'
     eventName = 'eventName'
     annualRisk = 'annualRisk'
+    eti = 'eti'
     dailyTrackingError = 'dailyTrackingError'
     unadjustedBid = 'unadjustedBid'
     gsdeer = 'gsdeer'
     marketCap = 'marketCap'
+    oeId = 'oeId'
     clusterRegion = 'clusterRegion'
     bbidEquivalent = 'bbidEquivalent'
     prevCloseAsk = 'prevCloseAsk'
@@ -1045,12 +1059,14 @@ class Field(EnumBase, Enum):
     submitter = 'submitter'
     notional = 'notional'
     esDisclosurePercentage = 'esDisclosurePercentage'
+    investmentIncome = 'investmentIncome'
     clientShortName = 'clientShortName'
     fwdPoints = 'fwdPoints'
     groupCategory = 'groupCategory'
     kpiId = 'kpiId'
     relativeReturnWtd = 'relativeReturnWtd'
     bidPlusAsk = 'bidPlusAsk'
+    borrowCost = 'borrowCost'
     assetClassificationsRiskCountryName = 'assetClassificationsRiskCountryName'
     total = 'total'
     riskModel = 'riskModel'
@@ -1074,10 +1090,13 @@ class Field(EnumBase, Enum):
     obfr = 'obfr'
     fxForecast = 'fxForecast'
     fixingTimeLabel = 'fixingTimeLabel'
+    implementationId = 'implementationId'
     fillId = 'fillId'
     esNumericScore = 'esNumericScore'
     inBenchmark = 'inBenchmark'
     strategy = 'strategy'
+    positionType = 'positionType'
+    lenderIncome = 'lenderIncome'
     shortInterest = 'shortInterest'
     referencePeriod = 'referencePeriod'
     adjustedVolume = 'adjustedVolume'
@@ -1087,6 +1106,7 @@ class Field(EnumBase, Enum):
     secDB = 'secDB'
     composite10DayAdv = 'composite10DayAdv'
     objective = 'objective'
+    bpeQualityStars = 'bpeQualityStars'
     navPrice = 'navPrice'
     ideaActivityType = 'ideaActivityType'
     precipitation = 'precipitation'
@@ -1110,6 +1130,7 @@ class Field(EnumBase, Enum):
     unadjustedClose = 'unadjustedClose'
     tcmCostHorizon4Day = 'tcmCostHorizon4Day'
     assetClassificationsIsPrimary = 'assetClassificationsIsPrimary'
+    loanDate = 'loanDate'
     styles = 'styles'
     lendingSecId = 'lendingSecId'
     shortName = 'shortName'
@@ -1117,11 +1138,14 @@ class Field(EnumBase, Enum):
     averageFillPrice = 'averageFillPrice'
     snowfall = 'snowfall'
     mic = 'mic'
+    bidGspread = 'bidGspread'
     openPrice = 'openPrice'
+    mid = 'mid'
     autoExecState = 'autoExecState'
     depthSpreadScore = 'depthSpreadScore'
     relativeReturnYtd = 'relativeReturnYtd'
     long = 'long'
+    subAccount = 'subAccount'
     fairVolatility = 'fairVolatility'
     dollarCross = 'dollarCross'
     longWeight = 'longWeight'
@@ -1132,6 +1156,7 @@ class Field(EnumBase, Enum):
     netChange = 'netChange'
     nonSymbolDimensions = 'nonSymbolDimensions'
     bidSize = 'bidSize'
+    swapType = 'swapType'
     arrivalMid = 'arrivalMid'
     assetParametersExchangeCurrency = 'assetParametersExchangeCurrency'
     unexplained = 'unexplained'
@@ -1157,11 +1182,13 @@ class Field(EnumBase, Enum):
     activityId = 'activityId'
     estimatedImpact = 'estimatedImpact'
     dataSetSubCategory = 'dataSetSubCategory'
+    loanSpreadBucket = 'loanSpreadBucket'
     assetParametersPricingLocation = 'assetParametersPricingLocation'
     eventDescription = 'eventDescription'
     strikeReference = 'strikeReference'
     details = 'details'
     assetCount = 'assetCount'
+    oeName = 'oeName'
     given = 'given'
     absoluteValue = 'absoluteValue'
     delistingDate = 'delistingDate'
@@ -1263,6 +1290,7 @@ class Field(EnumBase, Enum):
     tcmCostParticipationRate15Pct = 'tcmCostParticipationRate15Pct'
     sensitivity = 'sensitivity'
     fiscalYear = 'fiscalYear'
+    recallDate = 'recallDate'
     rcic = 'rcic'
     simonAssetTags = 'simonAssetTags'
     internal = 'internal'
@@ -1319,6 +1347,7 @@ class Field(EnumBase, Enum):
     esNumericPercentile = 'esNumericPercentile'
     strikePrice = 'strikePrice'
     eventStartDate = 'eventStartDate'
+    askGspread = 'askGspread'
     calSpreadMisPricing = 'calSpreadMisPricing'
     equityGamma = 'equityGamma'
     grossIncome = 'grossIncome'
@@ -1454,12 +1483,106 @@ class Frequency(EnumBase, Enum):
         return self.value
 
 
+class IndexCreateSource(EnumBase, Enum):    
+    
+    """Source of basket create"""
+
+    API = 'API'
+    CUBE = 'CUBE'
+    Hedger = 'Hedger'
+    Pretrade = 'Pretrade'
+    Marquee_UI = 'Marquee UI'
+    Clone = 'Clone'
+    
+    def __repr__(self):
+        return self.value
+
+
+class IndexNotTradingReasons(EnumBase, Enum):    
+    
+    """Reasons the index was not traded"""
+
+    Cost = 'Cost'
+    Client_does_not_like_the_construction = 'Client does not like the construction'
+    Basket_created_prematurely = 'Basket created prematurely'
+    Economics_of_the_basket_changed_client_no_longer_interested_in_trading = 'Economics of the basket changed: client no longer interested in trading'
+    GS_booking_OVER_operational_issues = 'GS booking/operational issues'
+    _ = ''
+    
+    def __repr__(self):
+        return self.value
+
+
+class LiquidityMeasure(EnumBase, Enum):    
+    
+    """A list of the different liquidity measures to choose from."""
+
+    Summary = 'Summary'
+    Constituents = 'Constituents'
+    Largest_Holdings_By_Weight = 'Largest Holdings By Weight'
+    Least_Liquid_Holdings = 'Least Liquid Holdings'
+    ADV_Percent_Buckets = 'ADV Percent Buckets'
+    Market_Cap_Buckets = 'Market Cap Buckets'
+    Region_Buckets = 'Region Buckets'
+    Country_Buckets = 'Country Buckets'
+    Sector_Buckets = 'Sector Buckets'
+    Industry_Buckets = 'Industry Buckets'
+    Risk_Buckets = 'Risk Buckets'
+    Factor_Risk_Buckets = 'Factor Risk Buckets'
+    Exposure_Buckets = 'Exposure Buckets'
+    Factor_Exposure_Buckets = 'Factor Exposure Buckets'
+    Percent_Of_Trade_Complete_Over_Time = 'Percent Of Trade Complete Over Time'
+    Execution_Cost_With_Different_Time_Horizons = 'Execution Cost With Different Time Horizons'
+    Participation_Rate_With_Different_Time_Horizons = 'Participation Rate With Different Time Horizons'
+    Risk_With_Different_Time_Horizons = 'Risk With Different Time Horizons'
+    Historical_ADV_Percent_Curve = 'Historical ADV Percent Curve'
+    Time_Series_Data = 'Time Series Data'
+    
+    def __repr__(self):
+        return self.value
+
+
+class MarketDataShockType(EnumBase, Enum):    
+    
+    """Market data shock type"""
+
+    Absolute = 'Absolute'
+    Proportional = 'Proportional'
+    Invalid = 'Invalid'
+    Override = 'Override'
+    StdDev = 'StdDev'
+    AutoDefault = 'AutoDefault'
+    CSWFFR = 'CSWFFR'
+    StdVolFactor = 'StdVolFactor'
+    StdVolFactorProportional = 'StdVolFactorProportional'
+    
+    def __repr__(self):
+        return self.value
+
+
 class MarketDataVendor(EnumBase, Enum):    
     
     Goldman_Sachs = 'Goldman Sachs'
     Thomson_Reuters = 'Thomson Reuters'
     Solactive = 'Solactive'
+    Bloomberg = 'Bloomberg'
+    Axioma = 'Axioma'
+    Goldman_Sachs_Prime_Services = 'Goldman Sachs Prime Services'
+    Goldman_Sachs_Global_Investment_Research = 'Goldman Sachs Global Investment Research'
+    National_Weather_Service = 'National Weather Service'
     WM = 'WM'
+    Hedge_Fund_Research_Inc_ = 'Hedge Fund Research, Inc.'
+    London_Stock_Exchange = 'London Stock Exchange'
+    Goldman_Sachs_MDFarm = 'Goldman Sachs MDFarm'
+    
+    def __repr__(self):
+        return self.value
+
+
+class OptionStrikeType(EnumBase, Enum):    
+    
+    Relative = 'Relative'
+    Delta = 'Delta'
     
     def __repr__(self):
         return self.value
@@ -1525,6 +1648,77 @@ class Region(EnumBase, Enum):
         return self.value
 
 
+class RiskMeasureType(EnumBase, Enum):    
+    
+    """The type of measure to perform risk on. e.g. Greeks"""
+
+    Delta = 'Delta'
+    DeltaLocalCcy = 'DeltaLocalCcy'
+    Dollar_Price = 'Dollar Price'
+    Forward_Price = 'Forward Price'
+    Forward_Rate = 'Forward Rate'
+    Price = 'Price'
+    DV01 = 'DV01'
+    Gamma = 'Gamma'
+    OAS = 'OAS'
+    PNL = 'PNL'
+    PV = 'PV'
+    Spot = 'Spot'
+    Spot_Rate = 'Spot Rate'
+    Theta = 'Theta'
+    Vanna = 'Vanna'
+    Vega = 'Vega'
+    VegaLocalCcy = 'VegaLocalCcy'
+    Volga = 'Volga'
+    Annual_Implied_Volatility = 'Annual Implied Volatility'
+    Annual_ATMF_Implied_Volatility = 'Annual ATMF Implied Volatility'
+    Daily_Implied_Volatility = 'Daily Implied Volatility'
+    Resolved_Instrument_Values = 'Resolved Instrument Values'
+    
+    def __repr__(self):
+        return self.value
+
+
+class RiskMeasureUnit(EnumBase, Enum):    
+    
+    """The unit of change of underlying in the risk computation."""
+
+    Percent = 'Percent'
+    Dollar = 'Dollar'
+    BPS = 'BPS'
+    
+    def __repr__(self):
+        return self.value
+
+
+class RiskModel(EnumBase, Enum):    
+    
+    """Axioma risk model identifier."""
+
+    AXUS2M = 'AXUS2M'
+    AXWW21M = 'AXWW21M'
+    AXWW4M = 'AXWW4M'
+    AXUS3M = 'AXUS3M'
+    AXUS3MMACRO = 'AXUS3MMACRO'
+    AXUS4M = 'AXUS4M'
+    AXUS4S = 'AXUS4S'
+    AXEU21M = 'AXEU21M'
+    STSWWFR = 'STSWWFR'
+    AXWW21S = 'AXWW21S'
+    AXCNM = 'AXCNM'
+    AXEM21M = 'AXEM21M'
+    AXJP2M = 'AXJP2M'
+    AXAPxJP21M = 'AXAPxJP21M'
+    AXAP21M = 'AXAP21M'
+    AXAP21S = 'AXAP21S'
+    AXAU4M = 'AXAU4M'
+    AXJP4M = 'AXJP4M'
+    AXTWM = 'AXTWM'
+    
+    def __repr__(self):
+        return self.value
+
+
 class SwapClearingHouse(EnumBase, Enum):    
     
     """Swap Clearing House"""
@@ -1549,6 +1743,85 @@ class SwapSettlement(EnumBase, Enum):
     
     def __repr__(self):
         return self.value
+
+
+class TradeType(EnumBase, Enum):    
+    
+    """Direction"""
+
+    Buy = 'Buy'
+    Sell = 'Sell'
+    
+    def __repr__(self):
+        return self.value
+
+
+class CurveScenario(Base):
+        
+    """A scenario to manipulate curve shape"""
+       
+    def __init__(self, marketDataAssets: Tuple[str, ...] = None, annualisedParallelShiftSize: float = None, annualisedSlopeShiftSize: float = None, pivotPoint: float = None, cutoff: float = None):
+        super().__init__()
+        self.__marketDataAssets = marketDataAssets
+        self.__annualisedParallelShiftSize = annualisedParallelShiftSize
+        self.__annualisedSlopeShiftSize = annualisedSlopeShiftSize
+        self.__pivotPoint = pivotPoint
+        self.__cutoff = cutoff
+
+    @property
+    def scenarioType(self) -> str:
+        """CurveScenario"""
+        return 'CurveScenario'        
+
+    @property
+    def marketDataAssets(self) -> Tuple[str, ...]:
+        """Assets (currencies, indices etc) to which this scenario applies"""
+        return self.__marketDataAssets
+
+    @marketDataAssets.setter
+    def marketDataAssets(self, value: Tuple[str, ...]):
+        self.__marketDataAssets = value
+        self._property_changed('marketDataAssets')        
+
+    @property
+    def annualisedParallelShiftSize(self) -> float:
+        """Size of the parallel shift (in bps)"""
+        return self.__annualisedParallelShiftSize
+
+    @annualisedParallelShiftSize.setter
+    def annualisedParallelShiftSize(self, value: float):
+        self.__annualisedParallelShiftSize = value
+        self._property_changed('annualisedParallelShiftSize')        
+
+    @property
+    def annualisedSlopeShiftSize(self) -> float:
+        """Size of the slope shift (in bps)"""
+        return self.__annualisedSlopeShiftSize
+
+    @annualisedSlopeShiftSize.setter
+    def annualisedSlopeShiftSize(self, value: float):
+        self.__annualisedSlopeShiftSize = value
+        self._property_changed('annualisedSlopeShiftSize')        
+
+    @property
+    def pivotPoint(self) -> float:
+        """Pivot point"""
+        return self.__pivotPoint
+
+    @pivotPoint.setter
+    def pivotPoint(self, value: float):
+        self.__pivotPoint = value
+        self._property_changed('pivotPoint')        
+
+    @property
+    def cutoff(self) -> float:
+        """The cutoff point (in years)"""
+        return self.__cutoff
+
+    @cutoff.setter
+    def cutoff(self, value: float):
+        self.__cutoff = value
+        self._property_changed('cutoff')        
 
 
 class Entitlements(Base):
@@ -1656,6 +1929,86 @@ class Entitlements(Base):
     def plot(self, value: Tuple[str, ...]):
         self.__plot = value
         self._property_changed('plot')        
+
+
+class ISelectNewUnit(Base):
+               
+    def __init__(self, id: str, newUnits: float = None):
+        super().__init__()
+        self.__id = id
+        self.__newUnits = newUnits
+
+    @property
+    def id(self) -> str:
+        return self.__id
+
+    @id.setter
+    def id(self, value: str):
+        self.__id = value
+        self._property_changed('id')        
+
+    @property
+    def newUnits(self) -> float:
+        return self.__newUnits
+
+    @newUnits.setter
+    def newUnits(self, value: float):
+        self.__newUnits = value
+        self._property_changed('newUnits')        
+
+
+class ISelectNewWeight(Base):
+               
+    def __init__(self, id: str, newWeight: float = None):
+        super().__init__()
+        self.__id = id
+        self.__newWeight = newWeight
+
+    @property
+    def id(self) -> str:
+        return self.__id
+
+    @id.setter
+    def id(self, value: str):
+        self.__id = value
+        self._property_changed('id')        
+
+    @property
+    def newWeight(self) -> float:
+        return self.__newWeight
+
+    @newWeight.setter
+    def newWeight(self, value: float):
+        self.__newWeight = value
+        self._property_changed('newWeight')        
+
+
+class Identifier(Base):
+               
+    def __init__(self, type: str = None, value: str = None):
+        super().__init__()
+        self.__type = type
+        self.__value = value
+
+    @property
+    def type(self) -> str:
+        """Identifier type code"""
+        return self.__type
+
+    @type.setter
+    def type(self, value: str):
+        self.__type = value
+        self._property_changed('type')        
+
+    @property
+    def value(self) -> str:
+        """Identifier value"""
+        return self.__value
+
+    @value.setter
+    def value(self, value: str):
+        self.__value = value
+        self._property_changed('value')        
 
 
 class Link(Base):
@@ -1850,6 +2203,64 @@ class Position(Base):
     def quantity(self, value: float):
         self.__quantity = value
         self._property_changed('quantity')        
+
+
+class PricingDateAndMarketDataAsOf(Base):
+        
+    """Pricing date and market data as of (date or time)"""
+       
+    def __init__(self, pricingDate: datetime.date, marketDataAsOf: Union[datetime.date, datetime.datetime]):
+        super().__init__()
+        self.__pricingDate = pricingDate
+        self.__marketDataAsOf = marketDataAsOf
+
+    @property
+    def pricingDate(self) -> datetime.date:
+        """The date for which to perform the calculation"""
+        return self.__pricingDate
+
+    @pricingDate.setter
+    def pricingDate(self, value: datetime.date):
+        self.__pricingDate = value
+        self._property_changed('pricingDate')        
+
+    @property
+    def marketDataAsOf(self) -> Union[datetime.date, datetime.datetime]:
+        """The date or time to source market data"""
+        return self.__marketDataAsOf
+
+    @marketDataAsOf.setter
+    def marketDataAsOf(self, value: Union[datetime.date, datetime.datetime]):
+        self.__marketDataAsOf = value
+        self._property_changed('marketDataAsOf')        
+
+
+class WeightedPosition(Base):
+               
+    def __init__(self, assetId: str, weight: float):
+        super().__init__()
+        self.__assetId = assetId
+        self.__weight = weight
+
+    @property
+    def assetId(self) -> str:
+        """Marquee unique identifier"""
+        return self.__assetId
+
+    @assetId.setter
+    def assetId(self, value: str):
+        self.__assetId = value
+        self._property_changed('assetId')        
+
+    @property
+    def weight(self) -> float:
+        """Relative net weight of the given position"""
+        return self.__weight
+
+    @weight.setter
+    def weight(self, value: float):
+        self.__weight = value
+        self._property_changed('weight')        
 
 
 class XRef(Priceable):
@@ -2205,6 +2616,543 @@ class GIRDomain(Base):
         self._property_changed('documentLinks')        
 
 
+class ISelectNewParameter(Base):
+               
+    def __init__(self, earlyUnwindAfter: float = None, earlyUnwindApplicable: str = None, expiryDateRule: str = None, optionTargetExpiryParameter: float = None, optionEarlyUnwindDays: float = None, inAlpha: bool = None, isFSRTargetFactor: bool = None, fsrMaxRatio: float = None, fsrMinRatio: float = None, moduleEnabled: bool = None, moduleName: str = None, bloombergId: str = None, stockId: str = None, newWeight: float = None, notional: float = None, optionType: Union[OptionType, str] = None, optionStrikeType: Union[OptionStrikeType, str] = None, strikeRelative: float = None, tradeType: Union[TradeType, str] = None, signal: float = None, newSignal: float = None, newMinWeight: float = None, newMaxWeight: float = None, minWeight: float = None, maxWeight: float = None):
+        super().__init__()
+        self.__earlyUnwindAfter = earlyUnwindAfter
+        self.__earlyUnwindApplicable = earlyUnwindApplicable
+        self.__expiryDateRule = expiryDateRule
+        self.__optionTargetExpiryParameter = optionTargetExpiryParameter
+        self.__optionEarlyUnwindDays = optionEarlyUnwindDays
+        self.__inAlpha = inAlpha
+        self.__isFSRTargetFactor = isFSRTargetFactor
+        self.__fsrMaxRatio = fsrMaxRatio
+        self.__fsrMinRatio = fsrMinRatio
+        self.__moduleEnabled = moduleEnabled
+        self.__moduleName = moduleName
+        self.__bloombergId = bloombergId
+        self.__stockId = stockId
+        self.__newWeight = newWeight
+        self.__notional = notional
+        self.__optionType = optionType if isinstance(optionType, OptionType) else get_enum_value(OptionType, optionType)
+        self.__optionStrikeType = optionStrikeType if isinstance(optionStrikeType, OptionStrikeType) else get_enum_value(OptionStrikeType, optionStrikeType)
+        self.__strikeRelative = strikeRelative
+        self.__tradeType = tradeType if isinstance(tradeType, TradeType) else get_enum_value(TradeType, tradeType)
+        self.__signal = signal
+        self.__newSignal = newSignal
+        self.__newMinWeight = newMinWeight
+        self.__newMaxWeight = newMaxWeight
+        self.__minWeight = minWeight
+        self.__maxWeight = maxWeight
+
+    @property
+    def earlyUnwindAfter(self) -> float:
+        return self.__earlyUnwindAfter
+
+    @earlyUnwindAfter.setter
+    def earlyUnwindAfter(self, value: float):
+        self.__earlyUnwindAfter = value
+        self._property_changed('earlyUnwindAfter')        
+
+    @property
+    def earlyUnwindApplicable(self) -> str:
+        """Indicates whether the module can be unwinded early"""
+        return self.__earlyUnwindApplicable
+
+    @earlyUnwindApplicable.setter
+    def earlyUnwindApplicable(self, value: str):
+        self.__earlyUnwindApplicable = value
+        self._property_changed('earlyUnwindApplicable')        
+
+    @property
+    def expiryDateRule(self) -> str:
+        """Free text description of asset. Description provided will be indexed in the search service for free text relevance match"""
+        return self.__expiryDateRule
+
+    @expiryDateRule.setter
+    def expiryDateRule(self, value: str):
+        self.__expiryDateRule = value
+        self._property_changed('expiryDateRule')        
+
+    @property
+    def optionTargetExpiryParameter(self) -> float:
+        return self.__optionTargetExpiryParameter
+
+    @optionTargetExpiryParameter.setter
+    def optionTargetExpiryParameter(self, value: float):
+        self.__optionTargetExpiryParameter = value
+        self._property_changed('optionTargetExpiryParameter')        
+
+    @property
+    def optionEarlyUnwindDays(self) -> float:
+        return self.__optionEarlyUnwindDays
+
+    @optionEarlyUnwindDays.setter
+    def optionEarlyUnwindDays(self, value: float):
+        self.__optionEarlyUnwindDays = value
+        self._property_changed('optionEarlyUnwindDays')        
+
+    @property
+    def inAlpha(self) -> bool:
+        return self.__inAlpha
+
+    @inAlpha.setter
+    def inAlpha(self, value: bool):
+        self.__inAlpha = value
+        self._property_changed('inAlpha')        
+
+    @property
+    def isFSRTargetFactor(self) -> bool:
+        return self.__isFSRTargetFactor
+
+    @isFSRTargetFactor.setter
+    def isFSRTargetFactor(self, value: bool):
+        self.__isFSRTargetFactor = value
+        self._property_changed('isFSRTargetFactor')        
+
+    @property
+    def fsrMaxRatio(self) -> float:
+        return self.__fsrMaxRatio
+
+    @fsrMaxRatio.setter
+    def fsrMaxRatio(self, value: float):
+        self.__fsrMaxRatio = value
+        self._property_changed('fsrMaxRatio')        
+
+    @property
+    def fsrMinRatio(self) -> float:
+        return self.__fsrMinRatio
+
+    @fsrMinRatio.setter
+    def fsrMinRatio(self, value: float):
+        self.__fsrMinRatio = value
+        self._property_changed('fsrMinRatio')        
+
+    @property
+    def moduleEnabled(self) -> bool:
+        """Enable to disable the module"""
+        return self.__moduleEnabled
+
+    @moduleEnabled.setter
+    def moduleEnabled(self, value: bool):
+        self.__moduleEnabled = value
+        self._property_changed('moduleEnabled')        
+
+    @property
+    def moduleName(self) -> str:
+        """Free text description of asset. Description provided will be indexed in the search service for free text relevance match"""
+        return self.__moduleName
+
+    @moduleName.setter
+    def moduleName(self, value: str):
+        self.__moduleName = value
+        self._property_changed('moduleName')        
+
+    @property
+    def bloombergId(self) -> str:
+        return self.__bloombergId
+
+    @bloombergId.setter
+    def bloombergId(self, value: str):
+        self.__bloombergId = value
+        self._property_changed('bloombergId')        
+
+    @property
+    def stockId(self) -> str:
+        return self.__stockId
+
+    @stockId.setter
+    def stockId(self, value: str):
+        self.__stockId = value
+        self._property_changed('stockId')        
+
+    @property
+    def newWeight(self) -> float:
+        return self.__newWeight
+
+    @newWeight.setter
+    def newWeight(self, value: float):
+        self.__newWeight = value
+        self._property_changed('newWeight')        
+
+    @property
+    def notional(self) -> float:
+        return self.__notional
+
+    @notional.setter
+    def notional(self, value: float):
+        self.__notional = value
+        self._property_changed('notional')        
+
+    @property
+    def optionType(self) -> Union[OptionType, str]:
+        return self.__optionType
+
+    @optionType.setter
+    def optionType(self, value: Union[OptionType, str]):
+        self.__optionType = value if isinstance(value, OptionType) else get_enum_value(OptionType, value)
+        self._property_changed('optionType')        
+
+    @property
+    def optionStrikeType(self) -> Union[OptionStrikeType, str]:
+        return self.__optionStrikeType
+
+    @optionStrikeType.setter
+    def optionStrikeType(self, value: Union[OptionStrikeType, str]):
+        self.__optionStrikeType = value if isinstance(value, OptionStrikeType) else get_enum_value(OptionStrikeType, value)
+        self._property_changed('optionStrikeType')        
+
+    @property
+    def strikeRelative(self) -> float:
+        return self.__strikeRelative
+
+    @strikeRelative.setter
+    def strikeRelative(self, value: float):
+        self.__strikeRelative = value
+        self._property_changed('strikeRelative')        
+
+    @property
+    def tradeType(self) -> Union[TradeType, str]:
+        """Direction"""
+        return self.__tradeType
+
+    @tradeType.setter
+    def tradeType(self, value: Union[TradeType, str]):
+        self.__tradeType = value if isinstance(value, TradeType) else get_enum_value(TradeType, value)
+        self._property_changed('tradeType')        
+
+    @property
+    def signal(self) -> float:
+        return self.__signal
+
+    @signal.setter
+    def signal(self, value: float):
+        self.__signal = value
+        self._property_changed('signal')        
+
+    @property
+    def newSignal(self) -> float:
+        return self.__newSignal
+
+    @newSignal.setter
+    def newSignal(self, value: float):
+        self.__newSignal = value
+        self._property_changed('newSignal')        
+
+    @property
+    def newMinWeight(self) -> float:
+        return self.__newMinWeight
+
+    @newMinWeight.setter
+    def newMinWeight(self, value: float):
+        self.__newMinWeight = value
+        self._property_changed('newMinWeight')        
+
+    @property
+    def newMaxWeight(self) -> float:
+        return self.__newMaxWeight
+
+    @newMaxWeight.setter
+    def newMaxWeight(self, value: float):
+        self.__newMaxWeight = value
+        self._property_changed('newMaxWeight')        
+
+    @property
+    def minWeight(self) -> float:
+        return self.__minWeight
+
+    @minWeight.setter
+    def minWeight(self, value: float):
+        self.__minWeight = value
+        self._property_changed('minWeight')        
+
+    @property
+    def maxWeight(self) -> float:
+        return self.__maxWeight
+
+    @maxWeight.setter
+    def maxWeight(self, value: float):
+        self.__maxWeight = value
+        self._property_changed('maxWeight')        
+
+
+class MarketDataPattern(Base):
+        
+    """A pattern used to match market coordinates"""
+       
+    def __init__(self, marketDataType: str = None, marketDataAsset: str = None, pointClass: str = None, marketDataPoint: Tuple[str, ...] = None, quotingStyle: str = None, isActive: bool = None, isInvestmentGrade: bool = None, currency: Union[Currency, str] = None, countryCode: Union[CountryCode, str] = None, gicsSector: str = None, gicsIndustryGroup: str = None, gicsIndustry: str = None, gicsSubIndustry: str = None):
+        super().__init__()
+        self.__marketDataType = marketDataType
+        self.__marketDataAsset = marketDataAsset
+        self.__pointClass = pointClass
+        self.__marketDataPoint = marketDataPoint
+        self.__quotingStyle = quotingStyle
+        self.__isActive = isActive
+        self.__isInvestmentGrade = isInvestmentGrade
+        self.__currency = currency if isinstance(currency, Currency) else get_enum_value(Currency, currency)
+        self.__countryCode = countryCode if isinstance(countryCode, CountryCode) else get_enum_value(CountryCode, countryCode)
+        self.__gicsSector = gicsSector
+        self.__gicsIndustryGroup = gicsIndustryGroup
+        self.__gicsIndustry = gicsIndustry
+        self.__gicsSubIndustry = gicsSubIndustry
+
+    @property
+    def marketDataType(self) -> str:
+        """The Market Data Type, e.g. IR, IR_BASIS, FX, FX_Vol"""
+        return self.__marketDataType
+
+    @marketDataType.setter
+    def marketDataType(self, value: str):
+        self.__marketDataType = value
+        self._property_changed('marketDataType')        
+
+    @property
+    def marketDataAsset(self) -> str:
+        """The specific point, e.g. 3m, 10y, 11y, Dec19"""
+        return self.__marketDataAsset
+
+    @marketDataAsset.setter
+    def marketDataAsset(self, value: str):
+        self.__marketDataAsset = value
+        self._property_changed('marketDataAsset')        
+
+    @property
+    def pointClass(self) -> str:
+        """The market data pointClass, e.g. Swap, Cash."""
+        return self.__pointClass
+
+    @pointClass.setter
+    def pointClass(self, value: str):
+        self.__pointClass = value
+        self._property_changed('pointClass')        
+
+    @property
+    def marketDataPoint(self) -> Tuple[str, ...]:
+        """The specific point, e.g. 3m, 10y, 11y, Dec19"""
+        return self.__marketDataPoint
+
+    @marketDataPoint.setter
+    def marketDataPoint(self, value: Tuple[str, ...]):
+        self.__marketDataPoint = value
+        self._property_changed('marketDataPoint')        
+
+    @property
+    def quotingStyle(self) -> str:
+        return self.__quotingStyle
+
+    @quotingStyle.setter
+    def quotingStyle(self, value: str):
+        self.__quotingStyle = value
+        self._property_changed('quotingStyle')        
+
+    @property
+    def isActive(self) -> bool:
+        """Is the asset active"""
+        return self.__isActive
+
+    @isActive.setter
+    def isActive(self, value: bool):
+        self.__isActive = value
+        self._property_changed('isActive')        
+
+    @property
+    def isInvestmentGrade(self) -> bool:
+        """Is the asset investment grade"""
+        return self.__isInvestmentGrade
+
+    @isInvestmentGrade.setter
+    def isInvestmentGrade(self, value: bool):
+        self.__isInvestmentGrade = value
+        self._property_changed('isInvestmentGrade')        
+
+    @property
+    def currency(self) -> Union[Currency, str]:
+        """Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)"""
+        return self.__currency
+
+    @currency.setter
+    def currency(self, value: Union[Currency, str]):
+        self.__currency = value if isinstance(value, Currency) else get_enum_value(Currency, value)
+        self._property_changed('currency')        
+
+    @property
+    def countryCode(self) -> Union[CountryCode, str]:
+        """ISO Country code"""
+        return self.__countryCode
+
+    @countryCode.setter
+    def countryCode(self, value: Union[CountryCode, str]):
+        self.__countryCode = value if isinstance(value, CountryCode) else get_enum_value(CountryCode, value)
+        self._property_changed('countryCode')        
+
+    @property
+    def gicsSector(self) -> str:
+        """GICS Sector classification (level 1)"""
+        return self.__gicsSector
+
+    @gicsSector.setter
+    def gicsSector(self, value: str):
+        self.__gicsSector = value
+        self._property_changed('gicsSector')        
+
+    @property
+    def gicsIndustryGroup(self) -> str:
+        """GICS Industry Group classification (level 2)"""
+        return self.__gicsIndustryGroup
+
+    @gicsIndustryGroup.setter
+    def gicsIndustryGroup(self, value: str):
+        self.__gicsIndustryGroup = value
+        self._property_changed('gicsIndustryGroup')        
+
+    @property
+    def gicsIndustry(self) -> str:
+        """GICS Industry classification (level 3)"""
+        return self.__gicsIndustry
+
+    @gicsIndustry.setter
+    def gicsIndustry(self, value: str):
+        self.__gicsIndustry = value
+        self._property_changed('gicsIndustry')        
+
+    @property
+    def gicsSubIndustry(self) -> str:
+        """GICS Sub Industry classification (level 4)"""
+        return self.__gicsSubIndustry
+
+    @gicsSubIndustry.setter
+    def gicsSubIndustry(self, value: str):
+        self.__gicsSubIndustry = value
+        self._property_changed('gicsSubIndustry')        
+
+
+class MarketDataShock(Base):
+        
+    """A shock to apply to market coordinate values"""
+       
+    def __init__(self, shockType: Union[MarketDataShockType, str], value: float, precision: float = None, cap: float = None, floor: float = None, coordinateCap: float = None, coordinateFloor: float = None):
+        super().__init__()
+        self.__shockType = shockType if isinstance(shockType, MarketDataShockType) else get_enum_value(MarketDataShockType, shockType)
+        self.__value = value
+        self.__precision = precision
+        self.__cap = cap
+        self.__floor = floor
+        self.__coordinateCap = coordinateCap
+        self.__coordinateFloor = coordinateFloor
+
+    @property
+    def shockType(self) -> Union[MarketDataShockType, str]:
+        """Market data shock type"""
+        return self.__shockType
+
+    @shockType.setter
+    def shockType(self, value: Union[MarketDataShockType, str]):
+        self.__shockType = value if isinstance(value, MarketDataShockType) else get_enum_value(MarketDataShockType, value)
+        self._property_changed('shockType')        
+
+    @property
+    def value(self) -> float:
+        """The amount by which to shock matching coordinates"""
+        return self.__value
+
+    @value.setter
+    def value(self, value: float):
+        self.__value = value
+        self._property_changed('value')        
+
+    @property
+    def precision(self) -> float:
+        """The precision to which the shock will be rounded"""
+        return self.__precision
+
+    @precision.setter
+    def precision(self, value: float):
+        self.__precision = value
+        self._property_changed('precision')        
+
+    @property
+    def cap(self) -> float:
+        """Upper bound on the shocked value"""
+        return self.__cap
+
+    @cap.setter
+    def cap(self, value: float):
+        self.__cap = value
+        self._property_changed('cap')        
+
+    @property
+    def floor(self) -> float:
+        """Lower bound on the shocked value"""
+        return self.__floor
+
+    @floor.setter
+    def floor(self, value: float):
+        self.__floor = value
+        self._property_changed('floor')        
+
+    @property
+    def coordinateCap(self) -> float:
+        """Upper bound on the pre-shocked value of matching coordinates"""
+        return self.__coordinateCap
+
+    @coordinateCap.setter
+    def coordinateCap(self, value: float):
+        self.__coordinateCap = value
+        self._property_changed('coordinateCap')        
+
+    @property
+    def coordinateFloor(self) -> float:
+        """Lower bound on the pre-shocked value of matching coordinates"""
+        return self.__coordinateFloor
+
+    @coordinateFloor.setter
+    def coordinateFloor(self, value: float):
+        self.__coordinateFloor = value
+        self._property_changed('coordinateFloor')        
+
+
+class RiskMeasure(Base):
+        
+    """The measure to perform risk on. Each risk measure consists of an asset class, a measure type, and a unit."""
+       
+    def __init__(self, assetClass: Union[AssetClass, str] = None, measureType: Union[RiskMeasureType, str] = None, unit: Union[RiskMeasureUnit, str] = None):
+        super().__init__()
+        self.__assetClass = assetClass if isinstance(assetClass, AssetClass) else get_enum_value(AssetClass, assetClass)
+        self.__measureType = measureType if isinstance(measureType, RiskMeasureType) else get_enum_value(RiskMeasureType, measureType)
+        self.__unit = unit if isinstance(unit, RiskMeasureUnit) else get_enum_value(RiskMeasureUnit, unit)
+
+    @property
+    def assetClass(self) -> Union[AssetClass, str]:
+        """Asset classification of security. Assets are classified into broad groups which exhibit similar characteristics and behave in a consistent way under different market conditions"""
+        return self.__assetClass
+
+    @assetClass.setter
+    def assetClass(self, value: Union[AssetClass, str]):
+        self.__assetClass = value if isinstance(value, AssetClass) else get_enum_value(AssetClass, value)
+        self._property_changed('assetClass')        
+
+    @property
+    def measureType(self) -> Union[RiskMeasureType, str]:
+        """The type of measure to perform risk on. e.g. Greeks"""
+        return self.__measureType
+
+    @measureType.setter
+    def measureType(self, value: Union[RiskMeasureType, str]):
+        self.__measureType = value if isinstance(value, RiskMeasureType) else get_enum_value(RiskMeasureType, value)
+        self._property_changed('measureType')        
+
+    @property
+    def unit(self) -> Union[RiskMeasureUnit, str]:
+        """The unit of change of underlying in the risk computation."""
+        return self.__unit
+
+    @unit.setter
+    def unit(self, value: Union[RiskMeasureUnit, str]):
+        self.__unit = value if isinstance(value, RiskMeasureUnit) else get_enum_value(RiskMeasureUnit, value)
+        self._property_changed('unit')        
+
+
 class FieldFilterMap(Base):
                
     def __init__(self, **kwargs):
@@ -2261,6 +3209,7 @@ class FieldFilterMap(Base):
         self.__quoteType = kwargs.get('quoteType')
         self.__tenor = kwargs.get('tenor')
         self.__esPolicyPercentile = kwargs.get('esPolicyPercentile')
+        self.__atmFwdRate = kwargs.get('atmFwdRate')
         self.__tcmCostParticipationRate75Pct = kwargs.get('tcmCostParticipationRate75Pct')
         self.__close = kwargs.get('close')
         self.__tcmCostParticipationRate100Pct = kwargs.get('tcmCostParticipationRate100Pct')
@@ -2274,6 +3223,7 @@ class FieldFilterMap(Base):
         self.__deploymentVersion = kwargs.get('deploymentVersion')
         self.__fiveDayMove = kwargs.get('fiveDayMove')
         self.__borrower = kwargs.get('borrower')
+        self.__valueFormat = kwargs.get('valueFormat')
         self.__performanceContribution = kwargs.get('performanceContribution')
         self.__targetNotional = kwargs.get('targetNotional')
         self.__fillLegId = kwargs.get('fillLegId')
@@ -2291,6 +3241,7 @@ class FieldFilterMap(Base):
         self.__impliedNormalVolatility = kwargs.get('impliedNormalVolatility')
         self.__unadjustedOpen = kwargs.get('unadjustedOpen')
         self.__arrivalRt = kwargs.get('arrivalRt')
+        self.__criticality = kwargs.get('criticality')
         self.__transactionCost = kwargs.get('transactionCost')
         self.__servicingCostShortPnl = kwargs.get('servicingCostShortPnl')
         self.__bidAskSpread = kwargs.get('bidAskSpread')
@@ -2304,17 +3255,20 @@ class FieldFilterMap(Base):
         self.__maRank = kwargs.get('maRank')
         self.__askPrice = kwargs.get('askPrice')
         self.__eventId = kwargs.get('eventId')
+        self.__borrowerId = kwargs.get('borrowerId')
         self.__dataProduct = kwargs.get('dataProduct')
         self.__sectors = kwargs.get('sectors')
         self.__annualizedTrackingError = kwargs.get('annualizedTrackingError')
         self.__volSwap = kwargs.get('volSwap')
         self.__annualizedRisk = kwargs.get('annualizedRisk')
+        self.__bmPrimeId = kwargs.get('bmPrimeId')
         self.__corporateAction = kwargs.get('corporateAction')
         self.__conviction = kwargs.get('conviction')
         self.__grossExposure = kwargs.get('grossExposure')
         self.__benchmarkMaturity = kwargs.get('benchmarkMaturity')
         self.__volumeComposite = kwargs.get('volumeComposite')
         self.__volume = kwargs.get('volume')
+        self.__hardToBorrow = kwargs.get('hardToBorrow')
         self.__adv = kwargs.get('adv')
         self.__stsFxCurrency = kwargs.get('stsFxCurrency')
         self.__wpk = kwargs.get('wpk')
@@ -2325,7 +3279,9 @@ class FieldFilterMap(Base):
         self.__tradePrice = kwargs.get('tradePrice')
         self.__esPolicyScore = kwargs.get('esPolicyScore')
         self.__loanId = kwargs.get('loanId')
+        self.__primeIdNumeric = kwargs.get('primeIdNumeric')
         self.__cid = kwargs.get('cid')
+        self.__onboarded = kwargs.get('onboarded')
         self.__liquidityScore = kwargs.get('liquidityScore')
         self.__importance = kwargs.get('importance')
         self.__sourceDateSpan = kwargs.get('sourceDateSpan')
@@ -2359,6 +3315,7 @@ class FieldFilterMap(Base):
         self.__meetingNumber = kwargs.get('meetingNumber')
         self.__exchangeId = kwargs.get('exchangeId')
         self.__horizon = kwargs.get('horizon')
+        self.__midGspread = kwargs.get('midGspread')
         self.__tcmCostHorizon20Day = kwargs.get('tcmCostHorizon20Day')
         self.__longLevel = kwargs.get('longLevel')
         self.__sourceValueForecast = kwargs.get('sourceValueForecast')
@@ -2389,6 +3346,7 @@ class FieldFilterMap(Base):
         self.__id = kwargs.get('id')
         self.__arrivalHaircutVwapNormalized = kwargs.get('arrivalHaircutVwapNormalized')
         self.__queueClockTimeDescription = kwargs.get('queueClockTimeDescription')
+        self.__loanRebate = kwargs.get('loanRebate')
         self.__period = kwargs.get('period')
         self.__indexCreateSource = kwargs.get('indexCreateSource')
         self.__fiscalQuarter = kwargs.get('fiscalQuarter')
@@ -2412,6 +3370,7 @@ class FieldFilterMap(Base):
         self.__eventSource = kwargs.get('eventSource')
         self.__qisPermNo = kwargs.get('qisPermNo')
         self.__hitRateYtd = kwargs.get('hitRateYtd')
+        self.__valid = kwargs.get('valid')
         self.__stsCommodity = kwargs.get('stsCommodity')
         self.__stsCommoditySector = kwargs.get('stsCommoditySector')
         self.__salesCoverage = kwargs.get('salesCoverage')
@@ -2457,10 +3416,12 @@ class FieldFilterMap(Base):
         self.__longConvictionMedium = kwargs.get('longConvictionMedium')
         self.__eventName = kwargs.get('eventName')
         self.__annualRisk = kwargs.get('annualRisk')
+        self.__eti = kwargs.get('eti')
         self.__dailyTrackingError = kwargs.get('dailyTrackingError')
         self.__unadjustedBid = kwargs.get('unadjustedBid')
         self.__gsdeer = kwargs.get('gsdeer')
         self.__marketCap = kwargs.get('marketCap')
+        self.__oeId = kwargs.get('oeId')
         self.__clusterRegion = kwargs.get('clusterRegion')
         self.__bbidEquivalent = kwargs.get('bbidEquivalent')
         self.__prevCloseAsk = kwargs.get('prevCloseAsk')
@@ -2482,12 +3443,14 @@ class FieldFilterMap(Base):
         self.__submitter = kwargs.get('submitter')
         self.__notional = kwargs.get('notional')
         self.__esDisclosurePercentage = kwargs.get('esDisclosurePercentage')
+        self.__investmentIncome = kwargs.get('investmentIncome')
         self.__clientShortName = kwargs.get('clientShortName')
         self.__fwdPoints = kwargs.get('fwdPoints')
         self.__groupCategory = kwargs.get('groupCategory')
         self.__kpiId = kwargs.get('kpiId')
         self.__relativeReturnWtd = kwargs.get('relativeReturnWtd')
         self.__bidPlusAsk = kwargs.get('bidPlusAsk')
+        self.__borrowCost = kwargs.get('borrowCost')
         self.__assetClassificationsRiskCountryName = kwargs.get('assetClassificationsRiskCountryName')
         self.__total = kwargs.get('total')
         self.__riskModel = kwargs.get('riskModel')
@@ -2509,10 +3472,13 @@ class FieldFilterMap(Base):
         self.__obfr = kwargs.get('obfr')
         self.__fxForecast = kwargs.get('fxForecast')
         self.__fixingTimeLabel = kwargs.get('fixingTimeLabel')
+        self.__implementationId = kwargs.get('implementationId')
         self.__fillId = kwargs.get('fillId')
         self.__esNumericScore = kwargs.get('esNumericScore')
         self.__inBenchmark = kwargs.get('inBenchmark')
         self.__strategy = kwargs.get('strategy')
+        self.__positionType = kwargs.get('positionType')
+        self.__lenderIncome = kwargs.get('lenderIncome')
         self.__shortInterest = kwargs.get('shortInterest')
         self.__referencePeriod = kwargs.get('referencePeriod')
         self.__adjustedVolume = kwargs.get('adjustedVolume')
@@ -2522,6 +3488,7 @@ class FieldFilterMap(Base):
         self.__secDB = kwargs.get('secDB')
         self.__composite10DayAdv = kwargs.get('composite10DayAdv')
         self.__objective = kwargs.get('objective')
+        self.__bpeQualityStars = kwargs.get('bpeQualityStars')
         self.__navPrice = kwargs.get('navPrice')
         self.__ideaActivityType = kwargs.get('ideaActivityType')
         self.__precipitation = kwargs.get('precipitation')
@@ -2552,11 +3519,14 @@ class FieldFilterMap(Base):
         self.__averageFillPrice = kwargs.get('averageFillPrice')
         self.__snowfall = kwargs.get('snowfall')
         self.__mic = kwargs.get('mic')
+        self.__bidGspread = kwargs.get('bidGspread')
         self.__openPrice = kwargs.get('openPrice')
+        self.__mid = kwargs.get('mid')
         self.__autoExecState = kwargs.get('autoExecState')
         self.__depthSpreadScore = kwargs.get('depthSpreadScore')
         self.__relativeReturnYtd = kwargs.get('relativeReturnYtd')
         self.__long = kwargs.get('long')
+        self.__subAccount = kwargs.get('subAccount')
         self.__fairVolatility = kwargs.get('fairVolatility')
         self.__dollarCross = kwargs.get('dollarCross')
         self.__longWeight = kwargs.get('longWeight')
@@ -2567,6 +3537,7 @@ class FieldFilterMap(Base):
         self.__netChange = kwargs.get('netChange')
         self.__nonSymbolDimensions = kwargs.get('nonSymbolDimensions')
         self.__bidSize = kwargs.get('bidSize')
+        self.__swapType = kwargs.get('swapType')
         self.__arrivalMid = kwargs.get('arrivalMid')
         self.__assetParametersExchangeCurrency = kwargs.get('assetParametersExchangeCurrency')
         self.__unexplained = kwargs.get('unexplained')
@@ -2590,11 +3561,13 @@ class FieldFilterMap(Base):
         self.__activityId = kwargs.get('activityId')
         self.__estimatedImpact = kwargs.get('estimatedImpact')
         self.__dataSetSubCategory = kwargs.get('dataSetSubCategory')
+        self.__loanSpreadBucket = kwargs.get('loanSpreadBucket')
         self.__assetParametersPricingLocation = kwargs.get('assetParametersPricingLocation')
         self.__eventDescription = kwargs.get('eventDescription')
         self.__strikeReference = kwargs.get('strikeReference')
         self.__details = kwargs.get('details')
         self.__assetCount = kwargs.get('assetCount')
+        self.__oeName = kwargs.get('oeName')
         self.__given = kwargs.get('given')
         self.__absoluteValue = kwargs.get('absoluteValue')
         self.__delistingDate = kwargs.get('delistingDate')
@@ -2742,6 +3715,7 @@ class FieldFilterMap(Base):
         self.__historicalVolume = kwargs.get('historicalVolume')
         self.__esNumericPercentile = kwargs.get('esNumericPercentile')
         self.__strikePrice = kwargs.get('strikePrice')
+        self.__askGspread = kwargs.get('askGspread')
         self.__calSpreadMisPricing = kwargs.get('calSpreadMisPricing')
         self.__equityGamma = kwargs.get('equityGamma')
         self.__grossIncome = kwargs.get('grossIncome')
@@ -3244,6 +4218,15 @@ class FieldFilterMap(Base):
         self._property_changed('esPolicyPercentile')        
 
     @property
+    def atmFwdRate(self) -> dict:
+        return self.__atmFwdRate
+
+    @atmFwdRate.setter
+    def atmFwdRate(self, value: dict):
+        self.__atmFwdRate = value
+        self._property_changed('atmFwdRate')        
+
+    @property
     def tcmCostParticipationRate75Pct(self) -> dict:
         return self.__tcmCostParticipationRate75Pct
 
@@ -3359,6 +4342,15 @@ class FieldFilterMap(Base):
     def borrower(self, value: dict):
         self.__borrower = value
         self._property_changed('borrower')        
+
+    @property
+    def valueFormat(self) -> dict:
+        return self.__valueFormat
+
+    @valueFormat.setter
+    def valueFormat(self, value: dict):
+        self.__valueFormat = value
+        self._property_changed('valueFormat')        
 
     @property
     def performanceContribution(self) -> dict:
@@ -3514,6 +4506,15 @@ class FieldFilterMap(Base):
         self._property_changed('arrivalRt')        
 
     @property
+    def criticality(self) -> dict:
+        return self.__criticality
+
+    @criticality.setter
+    def criticality(self, value: dict):
+        self.__criticality = value
+        self._property_changed('criticality')        
+
+    @property
     def transactionCost(self) -> dict:
         return self.__transactionCost
 
@@ -3631,6 +4632,15 @@ class FieldFilterMap(Base):
         self._property_changed('eventId')        
 
     @property
+    def borrowerId(self) -> dict:
+        return self.__borrowerId
+
+    @borrowerId.setter
+    def borrowerId(self, value: dict):
+        self.__borrowerId = value
+        self._property_changed('borrowerId')        
+
+    @property
     def dataProduct(self) -> dict:
         return self.__dataProduct
 
@@ -3674,6 +4684,15 @@ class FieldFilterMap(Base):
     def annualizedRisk(self, value: dict):
         self.__annualizedRisk = value
         self._property_changed('annualizedRisk')        
+
+    @property
+    def bmPrimeId(self) -> dict:
+        return self.__bmPrimeId
+
+    @bmPrimeId.setter
+    def bmPrimeId(self, value: dict):
+        self.__bmPrimeId = value
+        self._property_changed('bmPrimeId')        
 
     @property
     def corporateAction(self) -> dict:
@@ -3728,6 +4747,15 @@ class FieldFilterMap(Base):
     def volume(self, value: dict):
         self.__volume = value
         self._property_changed('volume')        
+
+    @property
+    def hardToBorrow(self) -> dict:
+        return self.__hardToBorrow
+
+    @hardToBorrow.setter
+    def hardToBorrow(self, value: dict):
+        self.__hardToBorrow = value
+        self._property_changed('hardToBorrow')        
 
     @property
     def adv(self) -> dict:
@@ -3820,6 +4848,15 @@ class FieldFilterMap(Base):
         self._property_changed('loanId')        
 
     @property
+    def primeIdNumeric(self) -> dict:
+        return self.__primeIdNumeric
+
+    @primeIdNumeric.setter
+    def primeIdNumeric(self, value: dict):
+        self.__primeIdNumeric = value
+        self._property_changed('primeIdNumeric')        
+
+    @property
     def cid(self) -> dict:
         return self.__cid
 
@@ -3827,6 +4864,15 @@ class FieldFilterMap(Base):
     def cid(self, value: dict):
         self.__cid = value
         self._property_changed('cid')        
+
+    @property
+    def onboarded(self) -> dict:
+        return self.__onboarded
+
+    @onboarded.setter
+    def onboarded(self, value: dict):
+        self.__onboarded = value
+        self._property_changed('onboarded')        
 
     @property
     def liquidityScore(self) -> dict:
@@ -4126,6 +5172,15 @@ class FieldFilterMap(Base):
         self._property_changed('horizon')        
 
     @property
+    def midGspread(self) -> dict:
+        return self.__midGspread
+
+    @midGspread.setter
+    def midGspread(self, value: dict):
+        self.__midGspread = value
+        self._property_changed('midGspread')        
+
+    @property
     def tcmCostHorizon20Day(self) -> dict:
         return self.__tcmCostHorizon20Day
 
@@ -4396,6 +5451,15 @@ class FieldFilterMap(Base):
         self._property_changed('queueClockTimeDescription')        
 
     @property
+    def loanRebate(self) -> dict:
+        return self.__loanRebate
+
+    @loanRebate.setter
+    def loanRebate(self, value: dict):
+        self.__loanRebate = value
+        self._property_changed('loanRebate')        
+
+    @property
     def period(self) -> dict:
         return self.__period
 
@@ -4601,6 +5665,15 @@ class FieldFilterMap(Base):
     def hitRateYtd(self, value: dict):
         self.__hitRateYtd = value
         self._property_changed('hitRateYtd')        
+
+    @property
+    def valid(self) -> dict:
+        return self.__valid
+
+    @valid.setter
+    def valid(self, value: dict):
+        self.__valid = value
+        self._property_changed('valid')        
 
     @property
     def stsCommodity(self) -> dict:
@@ -5008,6 +6081,15 @@ class FieldFilterMap(Base):
         self._property_changed('annualRisk')        
 
     @property
+    def eti(self) -> dict:
+        return self.__eti
+
+    @eti.setter
+    def eti(self, value: dict):
+        self.__eti = value
+        self._property_changed('eti')        
+
+    @property
     def dailyTrackingError(self) -> dict:
         return self.__dailyTrackingError
 
@@ -5042,6 +6124,15 @@ class FieldFilterMap(Base):
     def marketCap(self, value: dict):
         self.__marketCap = value
         self._property_changed('marketCap')        
+
+    @property
+    def oeId(self) -> dict:
+        return self.__oeId
+
+    @oeId.setter
+    def oeId(self, value: dict):
+        self.__oeId = value
+        self._property_changed('oeId')        
 
     @property
     def clusterRegion(self) -> tuple:
@@ -5233,6 +6324,15 @@ class FieldFilterMap(Base):
         self._property_changed('esDisclosurePercentage')        
 
     @property
+    def investmentIncome(self) -> dict:
+        return self.__investmentIncome
+
+    @investmentIncome.setter
+    def investmentIncome(self, value: dict):
+        self.__investmentIncome = value
+        self._property_changed('investmentIncome')        
+
+    @property
     def clientShortName(self) -> dict:
         return self.__clientShortName
 
@@ -5285,6 +6385,15 @@ class FieldFilterMap(Base):
     def bidPlusAsk(self, value: dict):
         self.__bidPlusAsk = value
         self._property_changed('bidPlusAsk')        
+
+    @property
+    def borrowCost(self) -> dict:
+        return self.__borrowCost
+
+    @borrowCost.setter
+    def borrowCost(self, value: dict):
+        self.__borrowCost = value
+        self._property_changed('borrowCost')        
 
     @property
     def assetClassificationsRiskCountryName(self) -> dict:
@@ -5476,6 +6585,15 @@ class FieldFilterMap(Base):
         self._property_changed('fixingTimeLabel')        
 
     @property
+    def implementationId(self) -> dict:
+        return self.__implementationId
+
+    @implementationId.setter
+    def implementationId(self, value: dict):
+        self.__implementationId = value
+        self._property_changed('implementationId')        
+
+    @property
     def fillId(self) -> dict:
         return self.__fillId
 
@@ -5510,6 +6628,24 @@ class FieldFilterMap(Base):
     def strategy(self, value: dict):
         self.__strategy = value
         self._property_changed('strategy')        
+
+    @property
+    def positionType(self) -> dict:
+        return self.__positionType
+
+    @positionType.setter
+    def positionType(self, value: dict):
+        self.__positionType = value
+        self._property_changed('positionType')        
+
+    @property
+    def lenderIncome(self) -> dict:
+        return self.__lenderIncome
+
+    @lenderIncome.setter
+    def lenderIncome(self, value: dict):
+        self.__lenderIncome = value
+        self._property_changed('lenderIncome')        
 
     @property
     def shortInterest(self) -> dict:
@@ -5591,6 +6727,15 @@ class FieldFilterMap(Base):
     def objective(self, value: dict):
         self.__objective = value
         self._property_changed('objective')        
+
+    @property
+    def bpeQualityStars(self) -> dict:
+        return self.__bpeQualityStars
+
+    @bpeQualityStars.setter
+    def bpeQualityStars(self, value: dict):
+        self.__bpeQualityStars = value
+        self._property_changed('bpeQualityStars')        
 
     @property
     def navPrice(self) -> dict:
@@ -5863,6 +7008,15 @@ class FieldFilterMap(Base):
         self._property_changed('mic')        
 
     @property
+    def bidGspread(self) -> dict:
+        return self.__bidGspread
+
+    @bidGspread.setter
+    def bidGspread(self, value: dict):
+        self.__bidGspread = value
+        self._property_changed('bidGspread')        
+
+    @property
     def openPrice(self) -> dict:
         return self.__openPrice
 
@@ -5870,6 +7024,15 @@ class FieldFilterMap(Base):
     def openPrice(self, value: dict):
         self.__openPrice = value
         self._property_changed('openPrice')        
+
+    @property
+    def mid(self) -> dict:
+        return self.__mid
+
+    @mid.setter
+    def mid(self, value: dict):
+        self.__mid = value
+        self._property_changed('mid')        
 
     @property
     def autoExecState(self) -> dict:
@@ -5906,6 +7069,15 @@ class FieldFilterMap(Base):
     def long(self, value: dict):
         self.__long = value
         self._property_changed('long')        
+
+    @property
+    def subAccount(self) -> dict:
+        return self.__subAccount
+
+    @subAccount.setter
+    def subAccount(self, value: dict):
+        self.__subAccount = value
+        self._property_changed('subAccount')        
 
     @property
     def fairVolatility(self) -> dict:
@@ -5996,6 +7168,15 @@ class FieldFilterMap(Base):
     def bidSize(self, value: dict):
         self.__bidSize = value
         self._property_changed('bidSize')        
+
+    @property
+    def swapType(self) -> dict:
+        return self.__swapType
+
+    @swapType.setter
+    def swapType(self, value: dict):
+        self.__swapType = value
+        self._property_changed('swapType')        
 
     @property
     def arrivalMid(self) -> dict:
@@ -6205,6 +7386,15 @@ class FieldFilterMap(Base):
         self._property_changed('dataSetSubCategory')        
 
     @property
+    def loanSpreadBucket(self) -> dict:
+        return self.__loanSpreadBucket
+
+    @loanSpreadBucket.setter
+    def loanSpreadBucket(self, value: dict):
+        self.__loanSpreadBucket = value
+        self._property_changed('loanSpreadBucket')        
+
+    @property
     def assetParametersPricingLocation(self) -> dict:
         return self.__assetParametersPricingLocation
 
@@ -6248,6 +7438,15 @@ class FieldFilterMap(Base):
     def assetCount(self, value: dict):
         self.__assetCount = value
         self._property_changed('assetCount')        
+
+    @property
+    def oeName(self) -> dict:
+        return self.__oeName
+
+    @oeName.setter
+    def oeName(self, value: dict):
+        self.__oeName = value
+        self._property_changed('oeName')        
 
     @property
     def given(self) -> dict:
@@ -7573,6 +8772,15 @@ class FieldFilterMap(Base):
         self._property_changed('strikePrice')        
 
     @property
+    def askGspread(self) -> dict:
+        return self.__askGspread
+
+    @askGspread.setter
+    def askGspread(self, value: dict):
+        self.__askGspread = value
+        self._property_changed('askGspread')        
+
+    @property
     def calSpreadMisPricing(self) -> dict:
         return self.__calSpreadMisPricing
 
@@ -7917,6 +9125,7 @@ class FieldValueMap(Base):
         self.__quoteType = kwargs.get('quoteType')
         self.__tenor = kwargs.get('tenor')
         self.__esPolicyPercentile = kwargs.get('esPolicyPercentile')
+        self.__atmFwdRate = kwargs.get('atmFwdRate')
         self.__tcmCostParticipationRate75Pct = kwargs.get('tcmCostParticipationRate75Pct')
         self.__close = kwargs.get('close')
         self.__tcmCostParticipationRate100Pct = kwargs.get('tcmCostParticipationRate100Pct')
@@ -7930,6 +9139,7 @@ class FieldValueMap(Base):
         self.__deploymentVersion = kwargs.get('deploymentVersion')
         self.__fiveDayMove = kwargs.get('fiveDayMove')
         self.__borrower = kwargs.get('borrower')
+        self.__valueFormat = kwargs.get('valueFormat')
         self.__performanceContribution = kwargs.get('performanceContribution')
         self.__targetNotional = kwargs.get('targetNotional')
         self.__fillLegId = kwargs.get('fillLegId')
@@ -7947,6 +9157,7 @@ class FieldValueMap(Base):
         self.__impliedNormalVolatility = kwargs.get('impliedNormalVolatility')
         self.__unadjustedOpen = kwargs.get('unadjustedOpen')
         self.__arrivalRt = kwargs.get('arrivalRt')
+        self.__criticality = kwargs.get('criticality')
         self.__transactionCost = kwargs.get('transactionCost')
         self.__servicingCostShortPnl = kwargs.get('servicingCostShortPnl')
         self.__bidAskSpread = kwargs.get('bidAskSpread')
@@ -7961,17 +9172,20 @@ class FieldValueMap(Base):
         self.__eventStartDateTime = kwargs.get('eventStartDateTime')
         self.__askPrice = kwargs.get('askPrice')
         self.__eventId = kwargs.get('eventId')
+        self.__borrowerId = kwargs.get('borrowerId')
         self.__dataProduct = kwargs.get('dataProduct')
         self.__sectors = kwargs.get('sectors')
         self.__annualizedTrackingError = kwargs.get('annualizedTrackingError')
         self.__volSwap = kwargs.get('volSwap')
         self.__annualizedRisk = kwargs.get('annualizedRisk')
+        self.__bmPrimeId = kwargs.get('bmPrimeId')
         self.__corporateAction = kwargs.get('corporateAction')
         self.__conviction = kwargs.get('conviction')
         self.__grossExposure = kwargs.get('grossExposure')
         self.__benchmarkMaturity = kwargs.get('benchmarkMaturity')
         self.__volumeComposite = kwargs.get('volumeComposite')
         self.__volume = kwargs.get('volume')
+        self.__hardToBorrow = kwargs.get('hardToBorrow')
         self.__adv = kwargs.get('adv')
         self.__stsFxCurrency = kwargs.get('stsFxCurrency')
         self.__wpk = kwargs.get('wpk')
@@ -7982,7 +9196,9 @@ class FieldValueMap(Base):
         self.__tradePrice = kwargs.get('tradePrice')
         self.__esPolicyScore = kwargs.get('esPolicyScore')
         self.__loanId = kwargs.get('loanId')
+        self.__primeIdNumeric = kwargs.get('primeIdNumeric')
         self.__cid = kwargs.get('cid')
+        self.__onboarded = kwargs.get('onboarded')
         self.__liquidityScore = kwargs.get('liquidityScore')
         self.__importance = kwargs.get('importance')
         self.__sourceDateSpan = kwargs.get('sourceDateSpan')
@@ -8016,6 +9232,7 @@ class FieldValueMap(Base):
         self.__meetingNumber = kwargs.get('meetingNumber')
         self.__exchangeId = kwargs.get('exchangeId')
         self.__horizon = kwargs.get('horizon')
+        self.__midGspread = kwargs.get('midGspread')
         self.__tcmCostHorizon20Day = kwargs.get('tcmCostHorizon20Day')
         self.__longLevel = kwargs.get('longLevel')
         self.__sourceValueForecast = kwargs.get('sourceValueForecast')
@@ -8046,6 +9263,7 @@ class FieldValueMap(Base):
         self.__id = kwargs.get('id')
         self.__arrivalHaircutVwapNormalized = kwargs.get('arrivalHaircutVwapNormalized')
         self.__queueClockTimeDescription = kwargs.get('queueClockTimeDescription')
+        self.__loanRebate = kwargs.get('loanRebate')
         self.__period = kwargs.get('period')
         self.__indexCreateSource = kwargs.get('indexCreateSource')
         self.__fiscalQuarter = kwargs.get('fiscalQuarter')
@@ -8070,6 +9288,7 @@ class FieldValueMap(Base):
         self.__eventSource = kwargs.get('eventSource')
         self.__qisPermNo = kwargs.get('qisPermNo')
         self.__hitRateYtd = kwargs.get('hitRateYtd')
+        self.__valid = kwargs.get('valid')
         self.__stsCommodity = kwargs.get('stsCommodity')
         self.__stsCommoditySector = kwargs.get('stsCommoditySector')
         self.__salesCoverage = kwargs.get('salesCoverage')
@@ -8118,10 +9337,12 @@ class FieldValueMap(Base):
         self.__longConvictionMedium = kwargs.get('longConvictionMedium')
         self.__eventName = kwargs.get('eventName')
         self.__annualRisk = kwargs.get('annualRisk')
+        self.__eti = kwargs.get('eti')
         self.__dailyTrackingError = kwargs.get('dailyTrackingError')
         self.__unadjustedBid = kwargs.get('unadjustedBid')
         self.__gsdeer = kwargs.get('gsdeer')
         self.__marketCap = kwargs.get('marketCap')
+        self.__oeId = kwargs.get('oeId')
         self.__clusterRegion = kwargs.get('clusterRegion')
         self.__bbidEquivalent = kwargs.get('bbidEquivalent')
         self.__prevCloseAsk = kwargs.get('prevCloseAsk')
@@ -8143,12 +9364,14 @@ class FieldValueMap(Base):
         self.__submitter = kwargs.get('submitter')
         self.__notional = kwargs.get('notional')
         self.__esDisclosurePercentage = kwargs.get('esDisclosurePercentage')
+        self.__investmentIncome = kwargs.get('investmentIncome')
         self.__clientShortName = kwargs.get('clientShortName')
         self.__fwdPoints = kwargs.get('fwdPoints')
         self.__groupCategory = kwargs.get('groupCategory')
         self.__kpiId = kwargs.get('kpiId')
         self.__relativeReturnWtd = kwargs.get('relativeReturnWtd')
         self.__bidPlusAsk = kwargs.get('bidPlusAsk')
+        self.__borrowCost = kwargs.get('borrowCost')
         self.__assetClassificationsRiskCountryName = kwargs.get('assetClassificationsRiskCountryName')
         self.__total = kwargs.get('total')
         self.__riskModel = kwargs.get('riskModel')
@@ -8172,10 +9395,13 @@ class FieldValueMap(Base):
         self.__obfr = kwargs.get('obfr')
         self.__fxForecast = kwargs.get('fxForecast')
         self.__fixingTimeLabel = kwargs.get('fixingTimeLabel')
+        self.__implementationId = kwargs.get('implementationId')
         self.__fillId = kwargs.get('fillId')
         self.__esNumericScore = kwargs.get('esNumericScore')
         self.__inBenchmark = kwargs.get('inBenchmark')
         self.__strategy = kwargs.get('strategy')
+        self.__positionType = kwargs.get('positionType')
+        self.__lenderIncome = kwargs.get('lenderIncome')
         self.__shortInterest = kwargs.get('shortInterest')
         self.__referencePeriod = kwargs.get('referencePeriod')
         self.__adjustedVolume = kwargs.get('adjustedVolume')
@@ -8185,6 +9411,7 @@ class FieldValueMap(Base):
         self.__secDB = kwargs.get('secDB')
         self.__composite10DayAdv = kwargs.get('composite10DayAdv')
         self.__objective = kwargs.get('objective')
+        self.__bpeQualityStars = kwargs.get('bpeQualityStars')
         self.__navPrice = kwargs.get('navPrice')
         self.__ideaActivityType = kwargs.get('ideaActivityType')
         self.__precipitation = kwargs.get('precipitation')
@@ -8208,6 +9435,7 @@ class FieldValueMap(Base):
         self.__unadjustedClose = kwargs.get('unadjustedClose')
         self.__tcmCostHorizon4Day = kwargs.get('tcmCostHorizon4Day')
         self.__assetClassificationsIsPrimary = kwargs.get('assetClassificationsIsPrimary')
+        self.__loanDate = kwargs.get('loanDate')
         self.__styles = kwargs.get('styles')
         self.__lendingSecId = kwargs.get('lendingSecId')
         self.__shortName = kwargs.get('shortName')
@@ -8215,11 +9443,14 @@ class FieldValueMap(Base):
         self.__averageFillPrice = kwargs.get('averageFillPrice')
         self.__snowfall = kwargs.get('snowfall')
         self.__mic = kwargs.get('mic')
+        self.__bidGspread = kwargs.get('bidGspread')
         self.__openPrice = kwargs.get('openPrice')
+        self.__mid = kwargs.get('mid')
         self.__autoExecState = kwargs.get('autoExecState')
         self.__depthSpreadScore = kwargs.get('depthSpreadScore')
         self.__relativeReturnYtd = kwargs.get('relativeReturnYtd')
         self.__long = kwargs.get('long')
+        self.__subAccount = kwargs.get('subAccount')
         self.__fairVolatility = kwargs.get('fairVolatility')
         self.__dollarCross = kwargs.get('dollarCross')
         self.__longWeight = kwargs.get('longWeight')
@@ -8230,6 +9461,7 @@ class FieldValueMap(Base):
         self.__netChange = kwargs.get('netChange')
         self.__nonSymbolDimensions = kwargs.get('nonSymbolDimensions')
         self.__bidSize = kwargs.get('bidSize')
+        self.__swapType = kwargs.get('swapType')
         self.__arrivalMid = kwargs.get('arrivalMid')
         self.__assetParametersExchangeCurrency = kwargs.get('assetParametersExchangeCurrency')
         self.__unexplained = kwargs.get('unexplained')
@@ -8255,11 +9487,13 @@ class FieldValueMap(Base):
         self.__activityId = kwargs.get('activityId')
         self.__estimatedImpact = kwargs.get('estimatedImpact')
         self.__dataSetSubCategory = kwargs.get('dataSetSubCategory')
+        self.__loanSpreadBucket = kwargs.get('loanSpreadBucket')
         self.__assetParametersPricingLocation = kwargs.get('assetParametersPricingLocation')
         self.__eventDescription = kwargs.get('eventDescription')
         self.__strikeReference = kwargs.get('strikeReference')
         self.__details = kwargs.get('details')
         self.__assetCount = kwargs.get('assetCount')
+        self.__oeName = kwargs.get('oeName')
         self.__given = kwargs.get('given')
         self.__absoluteValue = kwargs.get('absoluteValue')
         self.__delistingDate = kwargs.get('delistingDate')
@@ -8361,6 +9595,7 @@ class FieldValueMap(Base):
         self.__tcmCostParticipationRate15Pct = kwargs.get('tcmCostParticipationRate15Pct')
         self.__sensitivity = kwargs.get('sensitivity')
         self.__fiscalYear = kwargs.get('fiscalYear')
+        self.__recallDate = kwargs.get('recallDate')
         self.__rcic = kwargs.get('rcic')
         self.__simonAssetTags = kwargs.get('simonAssetTags')
         self.__internal = kwargs.get('internal')
@@ -8417,6 +9652,7 @@ class FieldValueMap(Base):
         self.__esNumericPercentile = kwargs.get('esNumericPercentile')
         self.__strikePrice = kwargs.get('strikePrice')
         self.__eventStartDate = kwargs.get('eventStartDate')
+        self.__askGspread = kwargs.get('askGspread')
         self.__calSpreadMisPricing = kwargs.get('calSpreadMisPricing')
         self.__equityGamma = kwargs.get('equityGamma')
         self.__grossIncome = kwargs.get('grossIncome')
@@ -8970,6 +10206,16 @@ class FieldValueMap(Base):
         self._property_changed('esPolicyPercentile')        
 
     @property
+    def atmFwdRate(self) -> float:
+        """ATM forward rate."""
+        return self.__atmFwdRate
+
+    @atmFwdRate.setter
+    def atmFwdRate(self, value: float):
+        self.__atmFwdRate = value
+        self._property_changed('atmFwdRate')        
+
+    @property
     def tcmCostParticipationRate75Pct(self) -> float:
         """TCM cost with a 75 percent participation rate."""
         return self.__tcmCostParticipationRate75Pct
@@ -9041,7 +10287,7 @@ class FieldValueMap(Base):
 
     @property
     def loanFee(self) -> float:
-        """Fee earned by the Lender for the loan of securities to a borrower where loanFee = grossIncome - agentLenderFee - rebateAmount - partnerFee."""
+        """Fee charged for the loan of securities to a borrower in a securities lending agreement."""
         return self.__loanFee
 
     @loanFee.setter
@@ -9098,6 +10344,16 @@ class FieldValueMap(Base):
     def borrower(self, value: str):
         self.__borrower = value
         self._property_changed('borrower')        
+
+    @property
+    def valueFormat(self) -> float:
+        """Value format."""
+        return self.__valueFormat
+
+    @valueFormat.setter
+    def valueFormat(self, value: float):
+        self.__valueFormat = value
+        self._property_changed('valueFormat')        
 
     @property
     def performanceContribution(self) -> float:
@@ -9270,6 +10526,16 @@ class FieldValueMap(Base):
         self._property_changed('arrivalRt')        
 
     @property
+    def criticality(self) -> float:
+        """The upgrade criticality of a deployment."""
+        return self.__criticality
+
+    @criticality.setter
+    def criticality(self, value: float):
+        self.__criticality = value
+        self._property_changed('criticality')        
+
+    @property
     def transactionCost(self) -> float:
         """Transaction cost."""
         return self.__transactionCost
@@ -9409,6 +10675,16 @@ class FieldValueMap(Base):
         self._property_changed('eventId')        
 
     @property
+    def borrowerId(self) -> str:
+        """Id of the borrowing entity on a securities lending agreement."""
+        return self.__borrowerId
+
+    @borrowerId.setter
+    def borrowerId(self, value: str):
+        self.__borrowerId = value
+        self._property_changed('borrowerId')        
+
+    @property
     def dataProduct(self) -> str:
         """Product that dataset belongs to."""
         return self.__dataProduct
@@ -9456,6 +10732,16 @@ class FieldValueMap(Base):
     def annualizedRisk(self, value: float):
         self.__annualizedRisk = value
         self._property_changed('annualizedRisk')        
+
+    @property
+    def bmPrimeId(self) -> float:
+        """Benchmark prime ID of the treasury."""
+        return self.__bmPrimeId
+
+    @bmPrimeId.setter
+    def bmPrimeId(self, value: float):
+        self.__bmPrimeId = value
+        self._property_changed('bmPrimeId')        
 
     @property
     def corporateAction(self) -> bool:
@@ -9516,6 +10802,16 @@ class FieldValueMap(Base):
     def volume(self, value: float):
         self.__volume = value
         self._property_changed('volume')        
+
+    @property
+    def hardToBorrow(self) -> bool:
+        """Whether or not an asset is hard to borrow."""
+        return self.__hardToBorrow
+
+    @hardToBorrow.setter
+    def hardToBorrow(self, value: bool):
+        self.__hardToBorrow = value
+        self._property_changed('hardToBorrow')        
 
     @property
     def adv(self) -> float:
@@ -9618,6 +10914,16 @@ class FieldValueMap(Base):
         self._property_changed('loanId')        
 
     @property
+    def primeIdNumeric(self) -> float:
+        """Prime ID as a number."""
+        return self.__primeIdNumeric
+
+    @primeIdNumeric.setter
+    def primeIdNumeric(self, value: float):
+        self.__primeIdNumeric = value
+        self._property_changed('primeIdNumeric')        
+
+    @property
     def cid(self) -> str:
         """Goldman Sachs internal company identifier."""
         return self.__cid
@@ -9626,6 +10932,16 @@ class FieldValueMap(Base):
     def cid(self, value: str):
         self.__cid = value
         self._property_changed('cid')        
+
+    @property
+    def onboarded(self) -> bool:
+        """Whether or not social domain has been onboarded."""
+        return self.__onboarded
+
+    @onboarded.setter
+    def onboarded(self, value: bool):
+        self.__onboarded = value
+        self._property_changed('onboarded')        
 
     @property
     def liquidityScore(self) -> float:
@@ -9958,6 +11274,16 @@ class FieldValueMap(Base):
         self._property_changed('horizon')        
 
     @property
+    def midGspread(self) -> float:
+        """Mid G spread."""
+        return self.__midGspread
+
+    @midGspread.setter
+    def midGspread(self, value: float):
+        self.__midGspread = value
+        self._property_changed('midGspread')        
+
+    @property
     def tcmCostHorizon20Day(self) -> float:
         """TCM cost with a 20 day time horizon."""
         return self.__tcmCostHorizon20Day
@@ -10258,6 +11584,16 @@ class FieldValueMap(Base):
         self._property_changed('queueClockTimeDescription')        
 
     @property
+    def loanRebate(self) -> float:
+        """Rebate paid back to a securities lending borrower."""
+        return self.__loanRebate
+
+    @loanRebate.setter
+    def loanRebate(self, value: float):
+        self.__loanRebate = value
+        self._property_changed('loanRebate')        
+
+    @property
     def period(self) -> str:
         """Period for the relevant metric, such as 12MF (12 Months Forward)."""
         return self.__period
@@ -10269,7 +11605,7 @@ class FieldValueMap(Base):
 
     @property
     def indexCreateSource(self) -> str:
-        """Source of basket create."""
+        """Source of basket create"""
         return self.__indexCreateSource
 
     @indexCreateSource.setter
@@ -10497,6 +11833,16 @@ class FieldValueMap(Base):
         self._property_changed('hitRateYtd')        
 
     @property
+    def valid(self) -> float:
+        """Valid."""
+        return self.__valid
+
+    @valid.setter
+    def valid(self, value: float):
+        self.__valid = value
+        self._property_changed('valid')        
+
+    @property
     def stsCommodity(self) -> str:
         """Commodity name for STS assets."""
         return self.__stsCommodity
@@ -10658,7 +12004,7 @@ class FieldValueMap(Base):
 
     @property
     def agentLenderFee(self) -> float:
-        """Fee earned by the Agent Lender for facilitating a securities lending agreement where agentLenderFee = grossIncome - loanFee - rebateAmount - partnerFee."""
+        """Fee earned by the Agent Lender for facilitating a securities lending agreement."""
         return self.__agentLenderFee
 
     @agentLenderFee.setter
@@ -10975,6 +12321,16 @@ class FieldValueMap(Base):
         self._property_changed('annualRisk')        
 
     @property
+    def eti(self) -> str:
+        """External Trade Identifier."""
+        return self.__eti
+
+    @eti.setter
+    def eti(self, value: str):
+        self.__eti = value
+        self._property_changed('eti')        
+
+    @property
     def dailyTrackingError(self) -> float:
         """Daily tracking error."""
         return self.__dailyTrackingError
@@ -11013,6 +12369,16 @@ class FieldValueMap(Base):
     def marketCap(self, value: float):
         self.__marketCap = value
         self._property_changed('marketCap')        
+
+    @property
+    def oeId(self) -> str:
+        """Marquee unique identifier"""
+        return self.__oeId
+
+    @oeId.setter
+    def oeId(self, value: str):
+        self.__oeId = value
+        self._property_changed('oeId')        
 
     @property
     def clusterRegion(self):
@@ -11224,6 +12590,15 @@ class FieldValueMap(Base):
         self._property_changed('esDisclosurePercentage')        
 
     @property
+    def investmentIncome(self) -> float:
+        return self.__investmentIncome
+
+    @investmentIncome.setter
+    def investmentIncome(self, value: float):
+        self.__investmentIncome = value
+        self._property_changed('investmentIncome')        
+
+    @property
     def clientShortName(self) -> str:
         """The short name of a client."""
         return self.__clientShortName
@@ -11282,6 +12657,16 @@ class FieldValueMap(Base):
     def bidPlusAsk(self, value: float):
         self.__bidPlusAsk = value
         self._property_changed('bidPlusAsk')        
+
+    @property
+    def borrowCost(self) -> float:
+        """An indication of the rate one would be charged for borrowing/shorting the relevant asset on that day, expressed in bps. Rates may change daily."""
+        return self.__borrowCost
+
+    @borrowCost.setter
+    def borrowCost(self, value: float):
+        self.__borrowCost = value
+        self._property_changed('borrowCost')        
 
     @property
     def assetClassificationsRiskCountryName(self) -> str:
@@ -11514,6 +12899,16 @@ class FieldValueMap(Base):
         self._property_changed('fixingTimeLabel')        
 
     @property
+    def implementationId(self) -> str:
+        """Marquee unique Implementation identifier."""
+        return self.__implementationId
+
+    @implementationId.setter
+    def implementationId(self, value: str):
+        self.__implementationId = value
+        self._property_changed('implementationId')        
+
+    @property
     def fillId(self) -> str:
         """Unique identifier for a fill."""
         return self.__fillId
@@ -11552,6 +12947,26 @@ class FieldValueMap(Base):
     def strategy(self, value: str):
         self.__strategy = value
         self._property_changed('strategy')        
+
+    @property
+    def positionType(self) -> str:
+        """Type of positions."""
+        return self.__positionType
+
+    @positionType.setter
+    def positionType(self, value: str):
+        self.__positionType = value
+        self._property_changed('positionType')        
+
+    @property
+    def lenderIncome(self) -> float:
+        """Income earned by the Lender for the loan of securities to a borrower."""
+        return self.__lenderIncome
+
+    @lenderIncome.setter
+    def lenderIncome(self, value: float):
+        self.__lenderIncome = value
+        self._property_changed('lenderIncome')        
 
     @property
     def shortInterest(self) -> float:
@@ -11642,6 +13057,16 @@ class FieldValueMap(Base):
     def objective(self, value: str):
         self.__objective = value
         self._property_changed('objective')        
+
+    @property
+    def bpeQualityStars(self) -> float:
+        """Confidence in the BPE."""
+        return self.__bpeQualityStars
+
+    @bpeQualityStars.setter
+    def bpeQualityStars(self, value: float):
+        self.__bpeQualityStars = value
+        self._property_changed('bpeQualityStars')        
 
     @property
     def navPrice(self) -> float:
@@ -11874,6 +13299,16 @@ class FieldValueMap(Base):
         self._property_changed('assetClassificationsIsPrimary')        
 
     @property
+    def loanDate(self) -> datetime.date:
+        """The date at which the securities loan was enacted."""
+        return self.__loanDate
+
+    @loanDate.setter
+    def loanDate(self, value: datetime.date):
+        self.__loanDate = value
+        self._property_changed('loanDate')        
+
+    @property
     def styles(self) -> Tuple[Tuple[str, ...], ...]:
         return self.__styles
 
@@ -11943,6 +13378,16 @@ class FieldValueMap(Base):
         self._property_changed('mic')        
 
     @property
+    def bidGspread(self) -> float:
+        """Bid G spread."""
+        return self.__bidGspread
+
+    @bidGspread.setter
+    def bidGspread(self, value: float):
+        self.__bidGspread = value
+        self._property_changed('bidGspread')        
+
+    @property
     def openPrice(self) -> float:
         """Opening level of an asset based on official exchange fixing or calculation agent marked level."""
         return self.__openPrice
@@ -11951,6 +13396,16 @@ class FieldValueMap(Base):
     def openPrice(self, value: float):
         self.__openPrice = value
         self._property_changed('openPrice')        
+
+    @property
+    def mid(self) -> float:
+        """Mid."""
+        return self.__mid
+
+    @mid.setter
+    def mid(self, value: float):
+        self.__mid = value
+        self._property_changed('mid')        
 
     @property
     def autoExecState(self) -> str:
@@ -11991,6 +13446,16 @@ class FieldValueMap(Base):
     def long(self, value: float):
         self.__long = value
         self._property_changed('long')        
+
+    @property
+    def subAccount(self) -> str:
+        """Subaccount."""
+        return self.__subAccount
+
+    @subAccount.setter
+    def subAccount(self, value: str):
+        self.__subAccount = value
+        self._property_changed('subAccount')        
 
     @property
     def fairVolatility(self) -> float:
@@ -12090,6 +13555,16 @@ class FieldValueMap(Base):
     def bidSize(self, value: float):
         self.__bidSize = value
         self._property_changed('bidSize')        
+
+    @property
+    def swapType(self) -> str:
+        """Swap type of position."""
+        return self.__swapType
+
+    @swapType.setter
+    def swapType(self, value: str):
+        self.__swapType = value
+        self._property_changed('swapType')        
 
     @property
     def arrivalMid(self) -> float:
@@ -12341,6 +13816,16 @@ class FieldValueMap(Base):
         self._property_changed('dataSetSubCategory')        
 
     @property
+    def loanSpreadBucket(self) -> str:
+        """The difference between the investment rate on cash collateral and the rebate rate of a loan."""
+        return self.__loanSpreadBucket
+
+    @loanSpreadBucket.setter
+    def loanSpreadBucket(self, value: str):
+        self.__loanSpreadBucket = value
+        self._property_changed('loanSpreadBucket')        
+
+    @property
     def assetParametersPricingLocation(self) -> str:
         """The location in which the asset was priced."""
         return self.__assetParametersPricingLocation
@@ -12389,6 +13874,16 @@ class FieldValueMap(Base):
     def assetCount(self, value: float):
         self.__assetCount = value
         self._property_changed('assetCount')        
+
+    @property
+    def oeName(self) -> str:
+        """Name of user's organization."""
+        return self.__oeName
+
+    @oeName.setter
+    def oeName(self, value: str):
+        self.__oeName = value
+        self._property_changed('oeName')        
 
     @property
     def given(self) -> float:
@@ -12600,7 +14095,7 @@ class FieldValueMap(Base):
 
     @property
     def lendingPartnerFee(self) -> float:
-        """Fee earned by the Lending Partner in a securities lending agreement where partnerFee = grossIncome - loanFee - rebateAmount - agentLenderFee."""
+        """Fee earned by the Lending Partner in a securities lending agreement."""
         return self.__lendingPartnerFee
 
     @lendingPartnerFee.setter
@@ -12619,11 +14114,11 @@ class FieldValueMap(Base):
         self._property_changed('region')        
 
     @property
-    def liveDate(self) -> Union[datetime.date, Op]:
+    def liveDate(self) -> Union[Op, datetime.date]:
         return self.__liveDate
 
     @liveDate.setter
-    def liveDate(self, value: Union[datetime.date, Op]):
+    def liveDate(self, value: Union[Op, datetime.date]):
         self.__liveDate = value
         self._property_changed('liveDate')        
 
@@ -13397,6 +14892,16 @@ class FieldValueMap(Base):
         self._property_changed('fiscalYear')        
 
     @property
+    def recallDate(self) -> datetime.date:
+        """The date at which the securities on loan were recalled."""
+        return self.__recallDate
+
+    @recallDate.setter
+    def recallDate(self, value: datetime.date):
+        self.__recallDate = value
+        self._property_changed('recallDate')        
+
+    @property
     def rcic(self) -> str:
         """Reuters composite instrument code (subject to licensing)."""
         return self.__rcic
@@ -13953,6 +15458,16 @@ class FieldValueMap(Base):
         self._property_changed('eventStartDate')        
 
     @property
+    def askGspread(self) -> float:
+        """Ask G spread."""
+        return self.__askGspread
+
+    @askGspread.setter
+    def askGspread(self, value: float):
+        self.__askGspread = value
+        self._property_changed('askGspread')        
+
+    @property
     def calSpreadMisPricing(self) -> float:
         """Futures implied funding rate relative to interest rate benchmark (usually Libor-based). Represents dividend-adjusted rate at which investor is borrowing (lending) when long (short) future."""
         return self.__calSpreadMisPricing
@@ -14280,3 +15795,465 @@ class FieldValueMap(Base):
     def methodology(self, value: str):
         self.__methodology = value
         self._property_changed('methodology')        
+
+
+class LiquidityRequest(Base):
+        
+    """Required parameters in order to get liquidity information on a set of positions"""
+       
+    def __init__(self, notional: float = None, positions: dict = None, riskModel: Union[RiskModel, str] = None, date: datetime.date = None, currency: Union[Currency, str] = None, participationRate: float = None, executionHorizon: float = None, executionStartTime: datetime.datetime = None, executionEndTime: datetime.datetime = None, benchmarkId: str = None, measures: Tuple[Union[LiquidityMeasure, str], ...] = None, timeSeriesBenchmarkIds: Tuple[str, ...] = None, timeSeriesStartDate: datetime.date = None, timeSeriesEndDate: datetime.date = None, format: Union[Format, str] = None):
+        super().__init__()
+        self.__notional = notional
+        self.__positions = positions
+        self.__riskModel = riskModel if isinstance(riskModel, RiskModel) else get_enum_value(RiskModel, riskModel)
+        self.__date = date
+        self.__currency = currency if isinstance(currency, Currency) else get_enum_value(Currency, currency)
+        self.__participationRate = participationRate
+        self.__executionHorizon = executionHorizon
+        self.__executionStartTime = executionStartTime
+        self.__executionEndTime = executionEndTime
+        self.__benchmarkId = benchmarkId
+        self.__measures = measures
+        self.__timeSeriesBenchmarkIds = timeSeriesBenchmarkIds
+        self.__timeSeriesStartDate = timeSeriesStartDate
+        self.__timeSeriesEndDate = timeSeriesEndDate
+        self.__format = format if isinstance(format, Format) else get_enum_value(Format, format)
+
+    @property
+    def notional(self) -> float:
+        """Notional value of the positions."""
+        return self.__notional
+
+    @notional.setter
+    def notional(self, value: float):
+        self.__notional = value
+        self._property_changed('notional')        
+
+    @property
+    def positions(self) -> dict:
+        """A set of quantity or weighted positions."""
+        return self.__positions
+
+    @positions.setter
+    def positions(self, value: dict):
+        self.__positions = value
+        self._property_changed('positions')        
+
+    @property
+    def riskModel(self) -> Union[RiskModel, str]:
+        """Axioma risk model identifier."""
+        return self.__riskModel
+
+    @riskModel.setter
+    def riskModel(self, value: Union[RiskModel, str]):
+        self.__riskModel = value if isinstance(value, RiskModel) else get_enum_value(RiskModel, value)
+        self._property_changed('riskModel')        
+
+    @property
+    def date(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__date
+
+    @date.setter
+    def date(self, value: datetime.date):
+        self.__date = value
+        self._property_changed('date')        
+
+    @property
+    def currency(self) -> Union[Currency, str]:
+        """Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)"""
+        return self.__currency
+
+    @currency.setter
+    def currency(self, value: Union[Currency, str]):
+        self.__currency = value if isinstance(value, Currency) else get_enum_value(Currency, value)
+        self._property_changed('currency')        
+
+    @property
+    def participationRate(self) -> float:
+        return self.__participationRate
+
+    @participationRate.setter
+    def participationRate(self, value: float):
+        self.__participationRate = value
+        self._property_changed('participationRate')        
+
+    @property
+    def executionHorizon(self) -> float:
+        return self.__executionHorizon
+
+    @executionHorizon.setter
+    def executionHorizon(self, value: float):
+        self.__executionHorizon = value
+        self._property_changed('executionHorizon')        
+
+    @property
+    def executionStartTime(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
+        return self.__executionStartTime
+
+    @executionStartTime.setter
+    def executionStartTime(self, value: datetime.datetime):
+        self.__executionStartTime = value
+        self._property_changed('executionStartTime')        
+
+    @property
+    def executionEndTime(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
+        return self.__executionEndTime
+
+    @executionEndTime.setter
+    def executionEndTime(self, value: datetime.datetime):
+        self.__executionEndTime = value
+        self._property_changed('executionEndTime')        
+
+    @property
+    def benchmarkId(self) -> str:
+        """Marquee unique asset identifier of the benchmark."""
+        return self.__benchmarkId
+
+    @benchmarkId.setter
+    def benchmarkId(self, value: str):
+        self.__benchmarkId = value
+        self._property_changed('benchmarkId')        
+
+    @property
+    def measures(self) -> Tuple[Union[LiquidityMeasure, str], ...]:
+        return self.__measures
+
+    @measures.setter
+    def measures(self, value: Tuple[Union[LiquidityMeasure, str], ...]):
+        self.__measures = value
+        self._property_changed('measures')        
+
+    @property
+    def timeSeriesBenchmarkIds(self) -> Tuple[str, ...]:
+        """Marquee unique identifiers of assets to be used as benchmarks."""
+        return self.__timeSeriesBenchmarkIds
+
+    @timeSeriesBenchmarkIds.setter
+    def timeSeriesBenchmarkIds(self, value: Tuple[str, ...]):
+        self.__timeSeriesBenchmarkIds = value
+        self._property_changed('timeSeriesBenchmarkIds')        
+
+    @property
+    def timeSeriesStartDate(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__timeSeriesStartDate
+
+    @timeSeriesStartDate.setter
+    def timeSeriesStartDate(self, value: datetime.date):
+        self.__timeSeriesStartDate = value
+        self._property_changed('timeSeriesStartDate')        
+
+    @property
+    def timeSeriesEndDate(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__timeSeriesEndDate
+
+    @timeSeriesEndDate.setter
+    def timeSeriesEndDate(self, value: datetime.date):
+        self.__timeSeriesEndDate = value
+        self._property_changed('timeSeriesEndDate')        
+
+    @property
+    def format(self) -> Union[Format, str]:
+        """Alternative format for data to be returned in"""
+        return self.__format
+
+    @format.setter
+    def format(self, value: Union[Format, str]):
+        self.__format = value if isinstance(value, Format) else get_enum_value(Format, value)
+        self._property_changed('format')        
+
+
+class MarketDataPatternAndShock(Base):
+        
+    """A shock to apply to market coordinate values matching the supplied pattern"""
+       
+    def __init__(self, pattern: MarketDataPattern, shock: MarketDataShock):
+        super().__init__()
+        self.__pattern = pattern
+        self.__shock = shock
+
+    @property
+    def pattern(self) -> MarketDataPattern:
+        """A pattern used to match market coordinates"""
+        return self.__pattern
+
+    @pattern.setter
+    def pattern(self, value: MarketDataPattern):
+        self.__pattern = value
+        self._property_changed('pattern')        
+
+    @property
+    def shock(self) -> MarketDataShock:
+        """A shock to apply to market coordinate values"""
+        return self.__shock
+
+    @shock.setter
+    def shock(self, value: MarketDataShock):
+        self.__shock = value
+        self._property_changed('shock')        
+
+
+class PositionSet(Base):
+               
+    def __init__(self, id: str = None, positionDate: datetime.date = None, lastUpdateTime: datetime.datetime = None, positions: Tuple[Position, ...] = None, type: str = None, divisor: float = None):
+        super().__init__()
+        self.__id = id
+        self.__positionDate = positionDate
+        self.__lastUpdateTime = lastUpdateTime
+        self.__positions = positions
+        self.__type = type
+        self.__divisor = divisor
+
+    @property
+    def id(self) -> str:
+        """Unique identifier"""
+        return self.__id
+
+    @id.setter
+    def id(self, value: str):
+        self.__id = value
+        self._property_changed('id')        
+
+    @property
+    def positionDate(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__positionDate
+
+    @positionDate.setter
+    def positionDate(self, value: datetime.date):
+        self.__positionDate = value
+        self._property_changed('positionDate')        
+
+    @property
+    def lastUpdateTime(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
+        return self.__lastUpdateTime
+
+    @lastUpdateTime.setter
+    def lastUpdateTime(self, value: datetime.datetime):
+        self.__lastUpdateTime = value
+        self._property_changed('lastUpdateTime')        
+
+    @property
+    def positions(self) -> Tuple[Position, ...]:
+        """Array of quantity position objects."""
+        return self.__positions
+
+    @positions.setter
+    def positions(self, value: Tuple[Position, ...]):
+        self.__positions = value
+        self._property_changed('positions')        
+
+    @property
+    def type(self) -> str:
+        """The composition type of a Portfolio"""
+        return self.__type
+
+    @type.setter
+    def type(self, value: str):
+        self.__type = value
+        self._property_changed('type')        
+
+    @property
+    def divisor(self) -> float:
+        """optional index divisor for a position set"""
+        return self.__divisor
+
+    @divisor.setter
+    def divisor(self, value: float):
+        self.__divisor = value
+        self._property_changed('divisor')        
+
+
+class MarketDataShockBasedScenario(Base):
+        
+    """A scenario comprised of user-defined market data shocks"""
+       
+    def __init__(self, shocks: Tuple[MarketDataPatternAndShock, ...]):
+        super().__init__()
+        self.__shocks = shocks
+
+    @property
+    def scenarioType(self) -> str:
+        """MarketDataShockBasedScenario"""
+        return 'MarketDataShockBasedScenario'        
+
+    @property
+    def shocks(self) -> Tuple[MarketDataPatternAndShock, ...]:
+        return self.__shocks
+
+    @shocks.setter
+    def shocks(self, value: Tuple[MarketDataPatternAndShock, ...]):
+        self.__shocks = value
+        self._property_changed('shocks')        
+
+
+class RiskPosition(Base):
+               
+    def __init__(self, instrument: Priceable, quantity: float):
+        super().__init__()
+        self.__instrument = instrument
+        self.__quantity = quantity
+
+    @property
+    def instrument(self) -> Priceable:
+        """Instrument or Id  
+To specify a Marquee asset use the asset Id.
+For listed products use an XRef, e.g. { 'bid': 'NGZ19 Comdty' }, { 'isin': 'US912810SD19' }.
+To specify an instrument use one of the listed types"""
+        return self.__instrument
+
+    @instrument.setter
+    def instrument(self, value: Priceable):
+        self.__instrument = value
+        self._property_changed('instrument')        
+
+    @property
+    def quantity(self) -> float:
+        """Quantity of instrument"""
+        return self.__quantity
+
+    @quantity.setter
+    def quantity(self, value: float):
+        self.__quantity = value
+        self._property_changed('quantity')        
+
+
+class MarketDataScenario(Base):
+        
+    """A market data scenario to apply to the calculation"""
+       
+    def __init__(self, scenario: Union[CurveScenario, MarketDataShockBasedScenario], subtractBase: bool = False):
+        super().__init__()
+        self.__scenario = scenario
+        self.__subtractBase = subtractBase
+
+    @property
+    def scenario(self) -> Union[CurveScenario, MarketDataShockBasedScenario]:
+        """Market data scenarios"""
+        return self.__scenario
+
+    @scenario.setter
+    def scenario(self, value: Union[CurveScenario, MarketDataShockBasedScenario]):
+        self.__scenario = value
+        self._property_changed('scenario')        
+
+    @property
+    def subtractBase(self) -> bool:
+        """Subtract values computed under the base market data state, to return a diff, if true"""
+        return self.__subtractBase
+
+    @subtractBase.setter
+    def subtractBase(self, value: bool):
+        self.__subtractBase = value
+        self._property_changed('subtractBase')        
+
+
+class RiskRequest(Base):
+        
+    """Object representation of a risk calculation request"""
+       
+    def __init__(self, positions: Tuple[RiskPosition, ...], measures: Tuple[RiskMeasure, ...], asOf: datetime.date = None, marketDataAsOf: Union[datetime.date, datetime.datetime] = None, pricingAndMarketDataAsOf: Tuple[PricingDateAndMarketDataAsOf, ...] = None, pricingLocation: Union[PricingLocation, str] = 'NYC', marketDataVendor: Union[MarketDataVendor, str] = 'Goldman Sachs', waitForResults: bool = False, scenario: MarketDataScenario = None):
+        super().__init__()
+        self.__positions = positions
+        self.__measures = measures
+        self.__asOf = asOf
+        self.__marketDataAsOf = marketDataAsOf
+        self.__pricingAndMarketDataAsOf = pricingAndMarketDataAsOf
+        self.__pricingLocation = pricingLocation if isinstance(pricingLocation, PricingLocation) else get_enum_value(PricingLocation, pricingLocation)
+        self.__marketDataVendor = marketDataVendor if isinstance(marketDataVendor, MarketDataVendor) else get_enum_value(MarketDataVendor, marketDataVendor)
+        self.__waitForResults = waitForResults
+        self.__scenario = scenario
+
+    @property
+    def positions(self) -> Tuple[RiskPosition, ...]:
+        """The positions on which to run the risk calculation"""
+        return self.__positions
+
+    @positions.setter
+    def positions(self, value: Tuple[RiskPosition, ...]):
+        self.__positions = value
+        self._property_changed('positions')        
+
+    @property
+    def measures(self) -> Tuple[RiskMeasure, ...]:
+        """A collection of risk measures to compute. E.g. { 'measureType': 'Delta', 'assetClass': 'Equity'"""
+        return self.__measures
+
+    @measures.setter
+    def measures(self, value: Tuple[RiskMeasure, ...]):
+        self.__measures = value
+        self._property_changed('measures')        
+
+    @property
+    def asOf(self) -> datetime.date:
+        """DEPRECATED: The date(s) for which to run the calculation and date(s) or time(s) for which to snap market data"""
+        return self.__asOf
+
+    @asOf.setter
+    def asOf(self, value: datetime.date):
+        self.__asOf = value
+        self._property_changed('asOf')        
+
+    @property
+    def marketDataAsOf(self) -> Union[datetime.date, datetime.datetime]:
+        """DEPRECATED: The date or time to source market data"""
+        return self.__marketDataAsOf
+
+    @marketDataAsOf.setter
+    def marketDataAsOf(self, value: Union[datetime.date, datetime.datetime]):
+        self.__marketDataAsOf = value
+        self._property_changed('marketDataAsOf')        
+
+    @property
+    def pricingAndMarketDataAsOf(self) -> Tuple[PricingDateAndMarketDataAsOf, ...]:
+        return self.__pricingAndMarketDataAsOf
+
+    @pricingAndMarketDataAsOf.setter
+    def pricingAndMarketDataAsOf(self, value: Tuple[PricingDateAndMarketDataAsOf, ...]):
+        self.__pricingAndMarketDataAsOf = value
+        self._property_changed('pricingAndMarketDataAsOf')        
+
+    @property
+    def pricingLocation(self) -> Union[PricingLocation, str]:
+        """The location for pricing and market data"""
+        return self.__pricingLocation
+
+    @pricingLocation.setter
+    def pricingLocation(self, value: Union[PricingLocation, str]):
+        self.__pricingLocation = value if isinstance(value, PricingLocation) else get_enum_value(PricingLocation, value)
+        self._property_changed('pricingLocation')        
+
+    @property
+    def marketDataVendor(self) -> Union[MarketDataVendor, str]:
+        """The market data provider"""
+        return self.__marketDataVendor
+
+    @marketDataVendor.setter
+    def marketDataVendor(self, value: Union[MarketDataVendor, str]):
+        self.__marketDataVendor = value if isinstance(value, MarketDataVendor) else get_enum_value(MarketDataVendor, value)
+        self._property_changed('marketDataVendor')        
+
+    @property
+    def waitForResults(self) -> bool:
+        """For short-running requests this may be set to true and the results will be returned directly. If false, the response will contain the Id to retrieve the results"""
+        return self.__waitForResults
+
+    @waitForResults.setter
+    def waitForResults(self, value: bool):
+        self.__waitForResults = value
+        self._property_changed('waitForResults')        
+
+    @property
+    def scenario(self) -> MarketDataScenario:
+        """A market data scenario to apply to the calculation"""
+        return self.__scenario
+
+    @scenario.setter
+    def scenario(self, value: MarketDataScenario):
+        self.__scenario = value
+        self._property_changed('scenario')        
