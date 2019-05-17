@@ -10,11 +10,10 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-#
-# Chart Service will attempt to make public functions (not prefixed with _) from this module available. Such functions
-# should be fully documented: docstrings should describe parameters and the return value, and provide a 1-line
-# description. Type annotations should be provided for parameters.
+# Plot Service will make use of appropriately decorated functions in this module.
 
+import logging
+import time
 from enum import Enum
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.markets.securities import Asset
@@ -23,6 +22,8 @@ from gs_quant.timeseries.helper import plot_measure
 from gs_quant.errors import MqTypeError, MqValueError
 from numbers import Real
 from pandas import Series
+
+_logger = logging.getLogger(__name__)
 
 
 def _to_fx_strikes(strikes):
@@ -50,6 +51,13 @@ class VolReference(Enum):
     NORMALIZED = 'normalized'
     SPOT = 'spot'
     FORWARD = 'forward'
+
+
+def _market_data_timed(q):
+    start = time.perf_counter()
+    df = GsDataApi.get_market_data(q)
+    _logger.debug('market data query ran in %.3f ms', (time.perf_counter() - start) * 1000)
+    return df
 
 
 @plot_measure((AssetClass.FX, AssetClass.Equity), None)
@@ -98,9 +106,11 @@ def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Re
         column = 'relativeStrike'
 
     kwargs[column] = q_strikes
+    _logger.info('where tenor=%s and %s', tenor, kwargs)
     where = FieldFilterMap(tenor=tenor, **kwargs)
     q = GsDataApi.build_market_data_query([asset.get_marquee_id()], 'Implied Volatility', where=where, source=source)
-    df = GsDataApi.get_market_data(q)
+    _logger.info('q %s', q)
+    df = _market_data_timed(q)
 
     curves = {k: v for k, v in df.groupby(column)}
     if len(curves) < 3:
@@ -133,8 +143,10 @@ def implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference,
     relative_strike = relative_strike if strike_reference == VolReference.NORMALIZED else relative_strike / 100
     ref_string = "delta" if strike_reference in (VolReference.DELTA_CALL,
                                                  VolReference.DELTA_PUT) else strike_reference.value
+    _logger.info('where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, ref_string, relative_strike)
     where = FieldFilterMap(tenor=tenor, strikeReference=ref_string, relativeStrike=relative_strike)
     q = GsDataApi.build_market_data_query([asset.get_marquee_id()], 'Implied Volatility', where=where, source=source,
                                           real_time=real_time)
-    df = GsDataApi.get_market_data(q)
+    _logger.info('q %s', q)
+    df = _market_data_timed(q)
     return Series() if df.empty else df['impliedVolatility']

@@ -1125,7 +1125,7 @@ class DataSetDimensions(Base):
 
 class MarketDataMapping(Base):
                
-    def __init__(self, assetClass: Union[AssetClass, str] = None, queryType: str = None, description: str = None, scale: float = None, frequency: Union[MarketDataFrequency, str] = None, measures: Tuple[Union[MarketDataMeasure, str], ...] = None, dataSet: str = None, vendor: Union[MarketDataVendor, str] = None, fields: Tuple[MarketDataField, ...] = None, rank: float = 1000, filteredFields: Tuple[MarketDataFilteredField, ...] = None, assetTypes: Tuple[Union[AssetType, str], ...] = None):
+    def __init__(self, assetClass: Union[AssetClass, str] = None, queryType: str = None, description: str = None, scale: float = None, frequency: Union[MarketDataFrequency, str] = None, measures: Tuple[Union[MarketDataMeasure, str], ...] = None, dataSet: str = None, vendor: Union[MarketDataVendor, str] = None, fields: Tuple[MarketDataField, ...] = None, rank: float = None, filteredFields: Tuple[MarketDataFilteredField, ...] = None, assetTypes: Tuple[Union[AssetType, str], ...] = None):
         super().__init__()
         self.__assetClass = assetClass if isinstance(assetClass, AssetClass) else get_enum_value(AssetClass, assetClass)
         self.__queryType = queryType
@@ -1142,7 +1142,7 @@ class MarketDataMapping(Base):
 
     @property
     def assetClass(self) -> Union[AssetClass, str]:
-        """Deprecated. To be removed once fully switched to market driven by datasets mappings."""
+        """Asset class that is applicable for mapping."""
         return self.__assetClass
 
     @assetClass.setter

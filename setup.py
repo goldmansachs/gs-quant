@@ -40,7 +40,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="gs_quant",
-    version="0.8.17",
+    version="0.8.18",
     author="Goldman Sachs",
     author_email="developer@gs.com",
     description="Goldman Sachs Quant",
@@ -60,6 +60,7 @@ setuptools.setup(
         "inflection",
         "msgpack",
         "pandas",
+        "python-dateutil>=2.7.0",
         "requests",
         "scipy",
         "six",

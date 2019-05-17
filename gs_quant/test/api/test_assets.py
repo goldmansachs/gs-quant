@@ -134,9 +134,9 @@ def test_get_asset_positions_for_date(mocker):
     marquee_id = 'MQA1234567890'
     position_date = dt.date(2019, 2, 19)
 
-
     mock_response = {'results': (
         PositionSet.from_dict({
+            'id': 'mock1',
             'positionDate': '2019-02-19',
             'lastUpdateTime': '2019-02-19T12:10:32.401Z',
             'positions': [
@@ -147,6 +147,7 @@ def test_get_asset_positions_for_date(mocker):
             'divisor': 100
         }),
         PositionSet.from_dict({
+            'id': 'mock2',
             'positionDate': '2019-02-19',
             'lastUpdateTime': '2019-02-20T05:04:32.981Z',
             'positions': [
@@ -159,11 +160,11 @@ def test_get_asset_positions_for_date(mocker):
     )}
 
     expected_response = (
-        PositionSet(dt.date(2019, 2, 19), dup.parse('2019-02-19T12:10:32.401Z'), (
+        PositionSet('mock1', dt.date(2019, 2, 19), dup.parse('2019-02-19T12:10:32.401Z'), (
             Position(assetId='MQA123', quantity=0.3),
             Position(assetId='MQA456', quantity=0.7)
         ), 'open', 100),
-        PositionSet(dt.date(2019, 2, 19), dup.parse('2019-02-20T05:04:32.981Z'), (
+        PositionSet('mock2', dt.date(2019, 2, 19), dup.parse('2019-02-20T05:04:32.981Z'), (
             Position(assetId='MQA123', quantity=0.4),
             Position(assetId='MQA456', quantity=0.6)
         ), 'close', 120)
@@ -183,6 +184,7 @@ def test_get_asset_positions_for_date(mocker):
     testfixtures.compare(response, expected_response)
 
     mock_response = (PositionSet.from_dict({
+        'id': 'mock',
         'positionDate': '2019-02-19',
         'lastUpdateTime': '2019-02-20T05:04:32.981Z',
         'positions': [
@@ -195,7 +197,7 @@ def test_get_asset_positions_for_date(mocker):
     )
 
     expected_response = (
-        PositionSet(dt.date(2019, 2, 19), dup.parse('2019-02-20T05:04:32.981Z'), (
+        PositionSet('mock', dt.date(2019, 2, 19), dup.parse('2019-02-20T05:04:32.981Z'), (
             Position(assetId='MQA123', quantity=0.4),
             Position(assetId='MQA456', quantity=0.6)
         ), 'close', 120)

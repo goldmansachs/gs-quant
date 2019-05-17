@@ -13,7 +13,6 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from gs_quant.target.assets import AssetType
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.session import *
 from gs_quant.target.indices import *
@@ -81,3 +80,21 @@ class GsIndexApi:
 
         url = "/indices/{id}/rebalance/cancel".format(id=self.marquee_id)
         GsSession.current._post(url, payload=inputs)
+
+    def edit(
+            self,
+            inputs: IndicesEditInputs,
+    ) -> CustomBasketsResponse:
+        """
+        Edit indices
+
+        :param inputs: parameters used to edit the index
+        :return: a response object containing status of edit, reportId and assetId
+        """
+
+        if self.marquee_id is None:
+            raise ValueError('Missing Asset Id of target index at initialization')
+
+        url = "/indices/{id}/edit".format(id=self.marquee_id)
+        response = GsSession.current._post(url, payload=inputs, cls=CustomBasketsResponse)
+        return response
