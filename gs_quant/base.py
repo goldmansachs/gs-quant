@@ -87,7 +87,10 @@ class Base:
                     # This shouldn't happen
                     setattr(self, prop, prop_value)
                 elif issubclass(prop_type, dt.datetime):
-                    setattr(self, prop, dateutil.parser.isoparse(prop_value))
+                    if isinstance(prop_value, int):
+                        setattr(self, prop, dt.datetime.fromtimestamp(prop_value / 1000).isoformat())
+                    else:
+                        setattr(self, prop, dateutil.parser.isoparse(prop_value))
                 elif issubclass(prop_type, dt.date):
                     setattr(self, prop, dateutil.parser.isoparse(prop_value).date())
                 elif issubclass(prop_type, EnumBase):

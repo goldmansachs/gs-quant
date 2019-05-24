@@ -14,7 +14,6 @@ specific language governing permissions and limitations
 under the License.
 """
 
-import pandas as pd
 import pytest
 from pandas.util.testing import assert_series_equal
 from gs_quant.timeseries.datetime import *
@@ -92,6 +91,18 @@ def test_align():
     result = align(y, x, Interpolate.STEP)
     assert_series_equal(result[0], expected2, obj="Align step left")
     assert_series_equal(result[1], expected1, obj="Align step left")
+
+    result = align(x, 3)
+    assert_series_equal(result[0], x, obj="Align scalar left")
+    assert_series_equal(result[1], pd.Series(3, index=dates1), obj="Align scalar left")
+
+    result = align(3, x)
+    assert_series_equal(result[0], pd.Series(3, index=dates1), obj="Align scalar left")
+    assert_series_equal(result[1], x, obj="Align scalar right")
+
+    result = align(1, 2)
+    assert result[0] == 1
+    assert result[1] == 2
 
     with pytest.raises(MqValueError):
         align(x, x, "None")

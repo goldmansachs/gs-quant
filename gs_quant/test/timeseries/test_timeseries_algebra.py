@@ -13,9 +13,8 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-
+import pytest
 from pandas.util.testing import assert_series_equal
-import numpy as np
 from gs_quant.timeseries import *
 from datetime import date
 
@@ -61,6 +60,16 @@ def test_add():
     expected = pd.Series([2.0, 2.0, 2.0, 2.0], index=dates1)
     assert_series_equal(result, expected, obj="Add step right")
 
+    result = algebra.add(x, 1)
+    expected = pd.Series([2.0, 2.0, 2.0, 2.0], index=dates1)
+    assert_series_equal(result, expected, obj="Add scalar left")
+
+    result = algebra.add(1, x)
+    expected = pd.Series([2.0, 2.0, 2.0, 2.0], index=dates1)
+    assert_series_equal(result, expected, obj="Add scalar right")
+
+    assert algebra.add(1, 2) == 3
+
 
 def test_subtract():
     dates1 = [
@@ -102,6 +111,16 @@ def test_subtract():
     result = algebra.subtract(x, y, Interpolate.STEP)
     expected = pd.Series([0.0, 0.0, 0.0, 0.0], index=dates1)
     assert_series_equal(result, expected, obj="Subtract step right")
+
+    result = algebra.subtract(x, 1)
+    expected = pd.Series([0.0, 0.0, 0.0, 0.0], index=dates1)
+    assert_series_equal(result, expected, obj="Subtract scalar left")
+
+    result = algebra.subtract(1, x)
+    expected = pd.Series([0.0, 0.0, 0.0, 0.0], index=dates1)
+    assert_series_equal(result, expected, obj="Subtract scalar right")
+
+    assert algebra.subtract(1, 2) == -1
 
 
 def test_multiply():
@@ -145,6 +164,16 @@ def test_multiply():
     expected = pd.Series([2.0, 3.0, 6.0, 8.0], index=dates1)
     assert_series_equal(result, expected, obj="Multiply step left")
 
+    result = algebra.multiply(x, 2.0)
+    expected = pd.Series([2.0, 4.0, 6.0, 8.0], index=dates1)
+    assert_series_equal(result, expected, obj="Multiply scalar left")
+
+    result = algebra.multiply(2.0, x)
+    expected = pd.Series([2.0, 4.0, 6.0, 8.0], index=dates1)
+    assert_series_equal(result, expected, obj="Multiply scalar right")
+
+    assert algebra.multiply(1, 2) == 2
+
 
 def test_divide():
     dates1 = [
@@ -186,6 +215,74 @@ def test_divide():
     result = algebra.divide(x, y, Interpolate.STEP)
     expected = pd.Series([0.5, 2.0, 1.5, 2.0], index=dates1)
     assert_series_equal(result, expected, obj="Divide step left")
+
+    result = algebra.divide(x, 2)
+    expected = pd.Series([0.5, 1.0, 1.5, 2.0], index=dates1)
+    assert_series_equal(result, expected, obj="Divide scalar left")
+
+    result = algebra.divide(2, x)
+    expected = pd.Series([2.0, 1.0, 2/3, 0.5], index=dates1)
+    assert_series_equal(result, expected, obj="Divide scalar right")
+
+    assert algebra.divide(1, 2) == 0.5
+
+    with pytest.raises(ZeroDivisionError):
+        algebra.divide(1, 0)
+
+
+def test_floordiv():
+    dates1 = [
+        date(2019, 1, 1),
+        date(2019, 1, 2),
+        date(2019, 1, 3),
+        date(2019, 1, 4),
+    ]
+
+    dates2 = [
+        date(2019, 1, 1),
+        date(2019, 1, 2),
+        date(2019, 1, 3),
+    ]
+
+    x = pd.Series([1.0, 2.0, 3.0, 4.0], index=dates1)
+    y = pd.Series([2.0, 1.0, 2.0], index=dates2)
+
+    result = algebra.floordiv(x, y, Interpolate.INTERSECT)
+    expected = pd.Series([0.0, 2.0, 1.0], index=dates2)
+    assert_series_equal(result, expected, obj="Floor divide intersect left")
+
+    result = algebra.floordiv(y, x, Interpolate.INTERSECT)
+    expected = pd.Series([2.0, 0.0, 0.0], index=dates2)
+    assert_series_equal(result, expected, obj="Floor divide intersect right")
+
+    result = algebra.floordiv(x, y, Interpolate.NAN)
+    expected = pd.Series([0.0, 2.0, 1.0, np.nan], index=dates1)
+    assert_series_equal(result, expected, obj="Floor divide NaN left")
+
+    result = algebra.floordiv(y, x, Interpolate.NAN)
+    expected = pd.Series([2.0, 0.0, 0.0, np.nan], index=dates1)
+    assert_series_equal(result, expected, obj="Floor divide NaN right")
+
+    result = algebra.floordiv(x, y, Interpolate.ZERO)
+    expected = pd.Series([0.0, 2.0, 1.0, np.nan], index=dates1)
+    assert_series_equal(result, expected, obj="Floor divide zero left")
+
+    result = algebra.floordiv(x, y, Interpolate.STEP)
+    expected = pd.Series([0.0, 2.0, 1.0, 2.0], index=dates1)
+    assert_series_equal(result, expected, obj="Floor divide step left")
+
+    result = algebra.floordiv(x, 2, Interpolate.STEP)
+    expected = pd.Series([0.0, 1.0, 1.0, 2.0], index=dates1)
+    assert_series_equal(result, expected, obj="Floor divide scalar left")
+
+    result = algebra.floordiv(2, x, Interpolate.STEP)
+    expected = pd.Series([2.0, 1.0, 0.0, 0.0], index=dates1)
+    assert_series_equal(result, expected, obj="Floor divide scalar right")
+
+    assert algebra.floordiv(3, 2) == 1.0
+
+    with pytest.raises(ZeroDivisionError):
+        algebra.floordiv(1, 0)
 
 
 def test_exp():

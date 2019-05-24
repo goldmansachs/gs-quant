@@ -202,10 +202,10 @@ class PricingContext(ContextBaseWithDefault):
         >>> swap = IRSwap('Pay', '10y', 'USD', fixedRate=0.03)
         >>> delta = swap.calc(IRDelta)
         """
-        future = self.__futures.get(risk_measure, {}).get(priceable)
+        position = RiskPosition(priceable, priceable.get_quantity())
+        future = self.__futures.get(risk_measure, {}).get(position)
         if future is None:
             future = Future()
-            position = RiskPosition(priceable, priceable.get_quantity())
             self.__risk_measures_by_provider_and_position.setdefault(priceable.provider(), {}).setdefault(position, set()).add(risk_measure)
             self.__futures.setdefault(risk_measure, {})[position] = future
 
