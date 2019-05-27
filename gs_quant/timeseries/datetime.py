@@ -16,6 +16,8 @@
 # description. Type annotations should be provided for parameters.
 
 from datetime import date, time
+from numbers import Real
+
 import numpy as np
 import pandas as pd
 from ..errors import *
@@ -50,14 +52,15 @@ def __interpolate_step(x: pd.Series, dates: pd.Series = None) -> pd.Series:
 
 
 @plot_function
-def align(x: pd.Series, y: pd.Series, method: Interpolate = Interpolate.INTERSECT) -> List[pd.Series]:
+def align(x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Interpolate = Interpolate.INTERSECT) -> \
+        Union[List[pd.Series], List[Real]]:
     """
-    Align dates of two series
+    Align dates of two series or scalars
 
-    :param x: first timeseries
-    :param y: second timeseries
-    :param method: interpolation method (default: intersect)
-    :return: timeseries with specified dates
+    :param x: first timeseries or scalar
+    :param y: second timeseries or scalar
+    :param method: interpolation method (default: intersect). Only used when both x and y are timeseries
+    :return: timeseries with specified dates or two scalars from the input
 
     **Usage**
 
@@ -93,6 +96,12 @@ def align(x: pd.Series, y: pd.Series, method: Interpolate = Interpolate.INTERSEC
 
     :func:`sub`
     """
+    if isinstance(x, Real) and isinstance(y, Real):
+        return [x, y]
+    if isinstance(x, Real):
+        return [pd.Series(x, index=y.index), y]
+    if isinstance(y, Real):
+        return [x, pd.Series(y, index=x.index)]
 
     if method == Interpolate.INTERSECT:
         return x.align(y, 'inner')

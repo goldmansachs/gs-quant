@@ -19,7 +19,6 @@
 import math
 from .datetime import *
 from .helper import plot_function
-from ..errors import *
 from numbers import Real
 
 """
@@ -29,14 +28,15 @@ division and other functions on timeseries
 
 
 @plot_function
-def add(x: pd.Series, y: pd.Series, method: Interpolate = Interpolate.STEP) -> pd.Series:
+def add(x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Interpolate = Interpolate.STEP)\
+        -> Union[pd.Series, Real]:
     """
     Add two series or scalars
 
     :param x: timeseries or scalar
     :param y: timeseries or scalar
-    :param method: interpolation method (default: step)
-    :return: timeseries of x + y
+    :param method: interpolation method (default: step). Only used when both x and y are timeseries
+    :return: timeseries of x + y or sum of the given real numbers
 
     **Usage**
 
@@ -75,19 +75,23 @@ def add(x: pd.Series, y: pd.Series, method: Interpolate = Interpolate.STEP) -> p
     :func:`subtract`
     """
 
+    if isinstance(x, Real) and isinstance(y, Real):
+        return x + y
+
     [x_align, y_align] = align(x, y, method)
     return x_align.add(y_align)
 
 
 @plot_function
-def subtract(x: pd.Series, y: pd.Series, method: Interpolate = Interpolate.STEP) -> pd.Series:
+def subtract(x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Interpolate = Interpolate.STEP) \
+        -> Union[pd.Series, Real]:
     """
     Add two series or scalars
 
     :param x: timeseries or scalar
     :param y: timeseries or scalar
-    :param method: index alignment operator (default: intersect)
-    :return: timeseries of x - y
+    :param method: index alignment operator (default: intersect). Only used when both x and y are timeseries
+    :return: timeseries of x - y or difference between the given real numbers
 
     **Usage**
 
@@ -120,19 +124,23 @@ def subtract(x: pd.Series, y: pd.Series, method: Interpolate = Interpolate.STEP)
 
     # Determine how we want to handle observations prior to start date
 
+    if isinstance(x, Real) and isinstance(y, Real):
+        return x - y
+
     [x_align, y_align] = align(x, y, method)
     return x_align.subtract(y_align)
 
 
 @plot_function
-def multiply(x: pd.Series, y: pd.Series, method: Interpolate = Interpolate.STEP) -> pd.Series:
+def multiply(x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Interpolate = Interpolate.STEP) \
+        -> Union[pd.Series, Real]:
     """
     Multiply two series or scalars
 
     :param x: timeseries or scalar
     :param y: timeseries or scalar
-    :param method: interpolation method (default: step)
-    :return: timeseries of x * y
+    :param method: interpolation method (default: step). Only used when both x and y are timeseries
+    :return: timeseries of x * y or product of the given real numbers
 
     **Usage**
 
@@ -171,19 +179,23 @@ def multiply(x: pd.Series, y: pd.Series, method: Interpolate = Interpolate.STEP)
     :func:`divide`
     """
 
+    if isinstance(x, Real) and isinstance(y, Real):
+        return x * y
+
     [x_align, y_align] = align(x, y, method)
     return x_align.multiply(y_align)
 
 
 @plot_function
-def divide(x: pd.Series, y: pd.Series, method: Interpolate = Interpolate.STEP) -> pd.Series:
+def divide(x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Interpolate = Interpolate.STEP) \
+        -> Union[pd.Series, Real]:
     """
     Divide two series or scalars
 
     :param x: timeseries or scalar
     :param y: timeseries or scalar
-    :param method: interpolation method (default: step)
-    :return: timeseries of x / y
+    :param method: interpolation method (default: step). Only used when both x and y are timeseries
+    :return: timeseries of x / y or quotient of the given real numbers
 
     **Usage**
 
@@ -222,8 +234,66 @@ def divide(x: pd.Series, y: pd.Series, method: Interpolate = Interpolate.STEP) -
     :func:`multiply`
     """
 
+    if isinstance(x, Real) and isinstance(y, Real):
+        return x / y
+
     [x_align, y_align] = align(x, y, method)
     return x_align.divide(y_align)
+
+
+@plot_function
+def floordiv(x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Interpolate = Interpolate.STEP) \
+        -> Union[pd.Series, Real]:
+    """
+    Floor divide two series or scalars
+
+    :param x: timeseries or scalar
+    :param y: timeseries or scalar
+    :param method: interpolation method (default: step). Only used for operating two series
+    :return: timeseries of x // y or quotient of the floor division of the given real numbers
+
+    **Usage**
+
+    Divide two series or scalar variables applying the given interpolation method
+
+    :math:`R_t =  X_t / Y_t`
+
+    Alignment operators:
+
+    =========   ========================================================================
+    Method      Behavior
+    =========   ========================================================================
+    intersect   Resultant series only has values on the intersection of dates.
+                Values for dates present in only one series will be ignored
+    nan         Resultant series has values on the union of dates in both series. Values
+                for dates only available in one series will be treated as nan in the
+                other series, and therefore in the resultant series
+    zero        Resultant series has values on the union of dates in both series. Values
+                for dates only available in one series will be treated as zero in the
+                other series
+    step        Resultant series has values on the union of dates in both series. Values
+                for dates only available in one series will be interpolated via step
+                function in the other series
+    =========   ========================================================================
+
+    **Examples**
+
+    Floor divide two series:
+
+    >>> a = generate_series(100)
+    >>> b = generate_series(100)
+    >>> floordiv(a, b, Interpolate.STEP)
+
+    **See also**
+
+    :func:`divide`
+    """
+
+    if isinstance(x, Real) and isinstance(y, Real):
+        return x // y
+
+    [x_align, y_align] = align(x, y, method)
+    return x_align.floordiv(y_align)
 
 
 @plot_function
