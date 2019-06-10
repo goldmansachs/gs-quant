@@ -22,18 +22,18 @@ from abc import ABCMeta, abstractmethod
 from gs_quant.api.gs.assets import GsAssetApi, GsAsset, AssetClass, AssetType as GsAssetType, PositionSet
 from gs_quant.base import get_enum_value
 from gs_quant.markets import PricingContext
-from typing import Tuple
+from typing import Tuple, Optional
 
 
 class ExchangeCode(Enum):
     """Exchange enumeration
-    
+
     Exchange codes representing global venues where Securities are listed and traded
-    
+
     """
 
-    NASDAQ = "NASD" # Nasdaq Global Stock Market
-    NYSE = "NYSE"   # New York Stock Exchange
+    NASDAQ = "NASD"  # Nasdaq Global Stock Market
+    NYSE = "NYSE"  # New York Stock Exchange
 
 
 class AssetType(Enum):
@@ -73,27 +73,27 @@ class AssetIdentifier(Enum):
 
     """
 
-    MARQUEE_ID = "MQID"                 #: Goldman Sachs Marquee identifier code (MA4B66MW5E27UAHKG34)
-    REUTERS_ID = "RIC"                  #: Thompson Reuters Instrument Code (RIC), (GS.N)
-    BLOOMBERG_ID = "BBID"               #: Bloomberg identifier and exchange code (GS UN)
-    BLOOMBERG_COMPOSITE_ID = "BCID"     #: Bloomberg composite identifier and exchange code (GS US)
-    CUSIP = "CUSIP"                     #: Committee on Uniform Security Identification Procedures code (38141G104)
-    ISIN = "ISIN"                       #: International Securities Identification Number (US38141G1040)
-    SEDOL = "SEDOL"                     #: LSE Stock Exchange Daily Official List code (2407966)
-    TICKER = "TICKER"                   #: Exchange ticker (GS)
+    MARQUEE_ID = "MQID"  #: Goldman Sachs Marquee identifier code (MA4B66MW5E27UAHKG34)
+    REUTERS_ID = "RIC"  #: Thompson Reuters Instrument Code (RIC), (GS.N)
+    BLOOMBERG_ID = "BBID"  #: Bloomberg identifier and exchange code (GS UN)
+    BLOOMBERG_COMPOSITE_ID = "BCID"  #: Bloomberg composite identifier and exchange code (GS US)
+    CUSIP = "CUSIP"  #: Committee on Uniform Security Identification Procedures code (38141G104)
+    ISIN = "ISIN"  #: International Securities Identification Number (US38141G1040)
+    SEDOL = "SEDOL"  #: LSE Stock Exchange Daily Official List code (2407966)
+    TICKER = "TICKER"  #: Exchange ticker (GS)
 
 
 class Asset(metaclass=ABCMeta):
-
-    def __init__(self, id_: str, asset_class: AssetClass, name: str):
+    def __init__(self, id_: str, asset_class: AssetClass, name: str, exchange: Optional[str] = None):
         self.__id = id_
         self.asset_class = asset_class
         self.name = name
+        self.exchange = exchange
 
     def get_marquee_id(self):
         return self.__id
 
-    def get_identifiers(self, as_of: dt.date=None) -> dict:
+    def get_identifiers(self, as_of: dt.date = None) -> dict:
         """
         Get asset identifiers
 
@@ -147,7 +147,7 @@ class Asset(metaclass=ABCMeta):
 
         return identifiers
 
-    def get_identifier(self, id_type: AssetIdentifier, as_of: dt.date=None):
+    def get_identifier(self, id_type: AssetIdentifier, as_of: dt.date = None):
         """
         Get asset identifier
 
@@ -199,8 +199,8 @@ class Stock(Asset):
 
     """
 
-    def __init__(self, id_: str, name: str):
-        Asset.__init__(self, id_, AssetClass.Equity, name)
+    def __init__(self, id_: str, name: str, exchange=None):
+        Asset.__init__(self, id_, AssetClass.Equity, name, exchange)
 
     def get_type(self) -> AssetType:
         return AssetType.STOCK
@@ -246,16 +246,16 @@ class PositionType(Enum):
 
     """
 
-    OPEN = "open"           #: Open positions (corporate action adjusted)
-    CLOSE = "close"         #: Close positions (reflect trading activity on the close)
+    OPEN = "open"  #: Open positions (corporate action adjusted)
+    CLOSE = "close"  #: Close positions (reflect trading activity on the close)
 
 
 class IndexConstituentProvider(metaclass=ABCMeta):
-
     def __init__(self, id_: str):
         self.__id = id_
 
-    def get_constituents(self, as_of: dt.date=None, position_type: PositionType=PositionType.CLOSE) -> Tuple[PositionSet, ...]:
+    def get_constituents(self, as_of: dt.date = None, position_type: PositionType = PositionType.CLOSE) -> Tuple[
+        PositionSet, ...]:
         """
         Get asset constituents
 
@@ -305,8 +305,8 @@ class Index(Asset, IndexConstituentProvider):
     Index which tracks an evolving portfolio of securities, and can be traded through cash or derivatives markets
     """
 
-    def __init__(self, id_: str, asset_class: AssetClass, name: str):
-        Asset.__init__(self, id_, asset_class, name)
+    def __init__(self, id_: str, asset_class: AssetClass, name: str, exchange=None):
+        Asset.__init__(self, id_, asset_class, name, exchange)
         IndexConstituentProvider.__init__(self, id_)
 
     def get_type(self) -> AssetType:
@@ -318,8 +318,9 @@ class ETF(Asset, IndexConstituentProvider):
 
     ETF which tracks an evolving portfolio of securities, and can be traded on exchange
     """
-    def __init__(self, id_: str, asset_class: AssetClass,  name: str):
-        Asset.__init__(self, id_, asset_class, name)
+
+    def __init__(self, id_: str, asset_class: AssetClass, name: str, exchange=None):
+        Asset.__init__(self, id_, asset_class, name, exchange)
         IndexConstituentProvider.__init__(self, id_)
 
     def get_type(self) -> AssetType:
@@ -331,7 +332,8 @@ class Basket(Asset, IndexConstituentProvider):
 
     Basket which tracks an evolving portfolio of securities, and can be traded through cash or derivatives markets
     """
-    def __init__(self, id_: str, asset_class: AssetClass,  name: str):
+
+    def __init__(self, id_: str, asset_class: AssetClass, name: str):
         Asset.__init__(self, id_, asset_class, name)
         IndexConstituentProvider.__init__(self, id_)
 
@@ -359,17 +361,17 @@ class SecurityMaster:
         asset_type = gs_asset.type.value
 
         if asset_type in (GsAssetType.Single_Stock.value,):
-            return Stock(gs_asset.id, gs_asset.name)
+            return Stock(gs_asset.id, gs_asset.name, gs_asset.exchange)
 
         if asset_type in (GsAssetType.ETF.value,):
-            return ETF(gs_asset.id, gs_asset.assetClass, gs_asset.name)
+            return ETF(gs_asset.id, gs_asset.assetClass, gs_asset.name, gs_asset.exchange)
 
         if asset_type in (
                 GsAssetType.Index.value,
                 GsAssetType.Risk_Premia.value,
                 GsAssetType.Access.value,
                 GsAssetType.Multi_Asset_Allocation.value):
-            return Index(gs_asset.id, gs_asset.assetClass, gs_asset.name)
+            return Index(gs_asset.id, gs_asset.assetClass, gs_asset.name, gs_asset.exchange)
 
         if asset_type in (
                 GsAssetType.Custom_Basket.value,
@@ -388,7 +390,8 @@ class SecurityMaster:
     def __asset_type_to_gs_types(cls, asset_type: AssetType) -> Tuple[GsAssetType, ...]:
         asset_map = {
             AssetType.STOCK: (GsAssetType.Single_Stock,),
-            AssetType.INDEX: (GsAssetType.Index, GsAssetType.Multi_Asset_Allocation, GsAssetType.Risk_Premia, GsAssetType.Access),
+            AssetType.INDEX: (
+                GsAssetType.Index, GsAssetType.Multi_Asset_Allocation, GsAssetType.Risk_Premia, GsAssetType.Access),
             AssetType.ETF: (GsAssetType.ETF, GsAssetType.ETN),
             AssetType.BASKET: (GsAssetType.Custom_Basket, GsAssetType.Research_Basket),
             AssetType.FUTURE: (GsAssetType.Future,),
@@ -400,9 +403,9 @@ class SecurityMaster:
     def get_asset(cls,
                   id_value: str,
                   id_type: AssetIdentifier,
-                  as_of: Union[dt.date, dt.datetime]=None,
-                  exchange_code: ExchangeCode=None,
-                  asset_type: AssetType=None) -> Asset:
+                  as_of: Union[dt.date, dt.datetime] = None,
+                  exchange_code: ExchangeCode = None,
+                  asset_type: AssetType = None) -> Asset:
         """
         Get an asset by identifier and identifier type
 
@@ -462,4 +465,3 @@ class SecurityMaster:
 
         if result:
             return cls.__gs_asset_to_asset(result)
-

@@ -28,7 +28,6 @@ def test_generate_series():
     assert(x[0] == 100)
 
 
-
 def test_min():
 
     dates = [
@@ -295,6 +294,7 @@ def test_cov():
     expected = pd.Series([np.nan, 0.5, 0.5, 2.0, 2.0, 4.5], index=dates)
     assert_series_equal(result, expected, obj="var window 2", check_less_precise=True)
 
+
 def test_zscores():
 
     assert_series_equal(zscores(pd.Series()), pd.Series())
@@ -363,3 +363,29 @@ def test_winsorize():
 
     assert(True not in wr.ge(b_upper).values)
     assert(True not in wr.le(b_lower).values)
+
+
+def test_percentile():
+    dates = [
+        date(2019, 1, 1),
+        date(2019, 1, 2),
+        date(2019, 1, 3),
+        date(2019, 1, 4),
+        date(2019, 1, 5),
+        date(2019, 1, 6),
+    ]
+
+    x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
+    y = pd.Series([3.5, 1.8, 2.9, 1.2, 3.1, 6.0], index=dates)
+
+    assert_series_equal(percentile(pd.Series(), y), pd.Series())
+    assert_series_equal(percentile(x, pd.Series()), pd.Series())
+    assert_series_equal(percentile(x, y, 7), pd.Series())
+
+    result = percentile(x, y, 2)
+    expected = pd.Series([0.0, 50.0, 50.0, 100.0, 75.0], index=dates[1:])
+    assert_series_equal(result, expected, obj="percentile with window 2")
+
+    result = percentile(x, y)
+    expected = pd.Series([100.0, 0.0, 33.333, 25.0, 100.0, 91.667], index=dates)
+    assert_series_equal(result, expected, obj="percentile without window length", check_less_precise=True)

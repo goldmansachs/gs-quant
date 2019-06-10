@@ -450,9 +450,11 @@ class ReportParameters(Base):
 
 class Report(Base):
                
-    def __init__(self, positionSourceId: str, positionSourceType: Union[PositionSourceType, str], type: Union[ReportType, str], parameters: ReportParameters, calculationTime: float = None, createdById: str = None, createdTime: datetime.datetime = None, entitlements: Entitlements = None, id: str = None, lastUpdatedById: str = None, lastUpdatedTime: datetime.datetime = None, measures: Tuple[Union[ReportMeasures, str], ...] = None, name: str = None, ownerId: str = None, status: Union[ReportStatus, str] = None, latestExecutionTime: datetime.datetime = None, latestEndDate: datetime.date = None, percentageComplete: float = None):
+    def __init__(self, positionSourceId: str, positionSourceType: Union[PositionSourceType, str], type: Union[ReportType, str], parameters: ReportParameters, calculationTime: float = None, dataSetId: str = None, assetId: str = None, createdById: str = None, createdTime: datetime.datetime = None, entitlements: Entitlements = None, id: str = None, lastUpdatedById: str = None, lastUpdatedTime: datetime.datetime = None, measures: Tuple[Union[ReportMeasures, str], ...] = None, name: str = None, ownerId: str = None, status: Union[ReportStatus, str] = None, latestExecutionTime: datetime.datetime = None, latestEndDate: datetime.date = None, percentageComplete: float = None):
         super().__init__()
         self.__calculationTime = calculationTime
+        self.__dataSetId = dataSetId
+        self.__assetId = assetId
         self.__createdById = createdById
         self.__createdTime = createdTime
         self.__entitlements = entitlements
@@ -480,6 +482,26 @@ class Report(Base):
     def calculationTime(self, value: float):
         self.__calculationTime = value
         self._property_changed('calculationTime')        
+
+    @property
+    def dataSetId(self) -> str:
+        """Unique id of dataset."""
+        return self.__dataSetId
+
+    @dataSetId.setter
+    def dataSetId(self, value: str):
+        self.__dataSetId = value
+        self._property_changed('dataSetId')        
+
+    @property
+    def assetId(self) -> str:
+        """Marquee unique asset identifier."""
+        return self.__assetId
+
+    @assetId.setter
+    def assetId(self, value: str):
+        self.__assetId = value
+        self._property_changed('assetId')        
 
     @property
     def createdById(self) -> str:

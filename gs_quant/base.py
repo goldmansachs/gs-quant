@@ -14,13 +14,14 @@ specific language governing permissions and limitations
 under the License.
 """
 from concurrent.futures import Future
+import copy
 import datetime as dt
 import dateutil
 from enum import EnumMeta
 from inspect import signature, Parameter
 import logging
 import pandas as pd
-from typing import Union, get_type_hints
+from typing import Mapping, Optional, Tuple, Union, get_type_hints
 
 _logger = logging.getLogger(__name__)
 
@@ -70,18 +71,29 @@ class Base:
         values = [getattr(self, p) for p in properties]
         return dict((p, v) for p, v in zip(properties, values) if v is not None)
 
+    @classmethod
+    def prop_type(cls, prop: str) -> type:
+        return_hints = get_type_hints(getattr(cls, prop).fget).get('return')
+        if hasattr(return_hints, '__origin__'):
+            prop_type = return_hints.__origin__
+        else:
+            prop_type = return_hints
+
+        if prop_type == Union:
+            prop_type = next((a for a in return_hints.__args__ if issubclass(a, (Base, EnumBase))), None)
+
+        return prop_type
+
+    @classmethod
+    def prop_item_type(cls, prop: str) -> type:
+        return_hints = get_type_hints(getattr(cls, prop).fget).get('return')
+        return return_hints.__args__[0]
+
     def __from_dict(self, values: dict):
         for prop in self.properties():
             if prop in values:
                 prop_value = values[prop]
-                return_hints = get_type_hints(getattr(self.__class__, prop).fget).get('return')
-                if hasattr(return_hints, '__origin__'):
-                    prop_type = return_hints.__origin__
-                else:
-                    prop_type = return_hints
-
-                if prop_type == Union:
-                    prop_type = next((a for a in return_hints.__args__ if issubclass(a, (Base, EnumBase))), None)
+                prop_type = self.prop_type(prop)
 
                 if prop_type is None:
                     # This shouldn't happen
@@ -98,7 +110,7 @@ class Base:
                 elif issubclass(prop_type, Base):
                     setattr(self, prop, prop_type.from_dict(prop_value))
                 elif issubclass(prop_type, (list, tuple)):
-                    item_type = return_hints.__args__[0]
+                    item_type = self.prop_item_type(prop)
                     item_args = getattr(item_type, '__args__', None)
                     if item_args:
                         item_type = next((a for a in item_args if issubclass(a, (Base, EnumBase))), item_args[-1])
@@ -114,6 +126,27 @@ class Base:
                     setattr(self, prop, prop_value)
 
     @classmethod
+    def _from_dict(cls, values: dict) -> 'Base':
+        args = [k for k, v in signature(cls.__init__).parameters.items() if v.default == Parameter.empty][1:]
+
+        required = {}
+        for arg in args:
+            prop_type = cls.prop_type(arg)
+            value = values.pop(arg, None)
+
+            if prop_type:
+                if issubclass(prop_type, Base):
+                    value = prop_type.from_dict(value)
+                elif issubclass(prop_type, EnumBase):
+                    value = get_enum_value(prop_type, value)
+
+            required[arg] = value
+
+        instance = cls(**required)
+        instance.__from_dict(values)
+        return instance
+
+    @classmethod
     def from_dict(cls, values: dict) -> 'Base':
         """
         Construct an instance of this type from a dictionary
@@ -121,11 +154,16 @@ class Base:
         :param values: a dictionary (potentially nested)
         :return: an instance of this type, populated with values
         """
+        return cls._from_dict(values)
+
+    @classmethod
+    def default_instance(cls) -> 'Base':
+        """
+        Construct a default instance of this type
+        """
         args = [k for k, v in signature(cls.__init__).parameters.items() if v.default == Parameter.empty][1:]
-        required = {a: values.get(a) for a in args}
-        instance = cls(**required)
-        instance.__from_dict(values)
-        return instance
+        required = {a: None for a in args}
+        return cls(**required)
 
 
 class Priceable(Base):
@@ -268,7 +306,37 @@ class Priceable(Base):
 
 
 class Instrument(Priceable):
-    pass
+
+    __asset_class_and_type_to_instrument = {}
+
+    @classmethod
+    def asset_class_and_type_to_instrument(cls) -> Mapping[Tuple[str, str], 'Instrument']:
+        if not cls.__asset_class_and_type_to_instrument:
+            import gs_quant.target.instrument as instrument
+            import inspect
+            instrument_classes = [c for _, c in inspect.getmembers(instrument, inspect.isclass) if
+                                  issubclass(c, Instrument) and c is not Instrument]
+
+            cls.__asset_class_and_type_to_instrument[('Cash', 'Currency')] = instrument.Forward
+
+            for clazz in instrument_classes:
+                instrument = clazz.default_instance()
+                cls.__asset_class_and_type_to_instrument[(instrument.assetClass.value, instrument.type.value)] = clazz
+
+        return cls.__asset_class_and_type_to_instrument
+
+    @classmethod
+    def from_dict(cls, values: dict) -> Optional[Union['Instrument', 'Security']]:
+        if not values:
+            return None
+
+        if 'assetClass' in values:
+            values = copy.copy(values)
+            instrument_type = cls.asset_class_and_type_to_instrument()[(values.pop('assetClass'), values.pop('type'))]
+            return instrument_type._from_dict(values)
+        else:
+            from gs_quant.instrument import Security
+            return Security.from_dict(values)
 
 
 def get_enum_value(enum_type: EnumMeta, value: str):

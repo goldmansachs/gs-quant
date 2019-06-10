@@ -27,7 +27,7 @@ from gs_quant.markets.core import PricingContext
 __field_sort_fns = {
     'point': point_sort_order
 }
-__field_order = ('date', 'marketDataType', 'assetId', 'pointClass', 'point', 'value')
+__field_order = ('date', 'time', 'marketDataType', 'assetId', 'pointClass', 'point')
 
 
 def sum_formatter(result: List) -> float:
@@ -38,7 +38,7 @@ def scalar_formatter(result: List) -> Optional[Union[float, pd.Series]]:
     if not result:
         return None
 
-    if 'date' in result[0]:
+    if len(result) > 1 and 'date' in result[0]:
         series = pd.Series(
             data=[r.get('value', r.get('Val')) for r in result],
             index=[dateutil.parser.isoparse(r['date']).date() for r in result]
@@ -118,7 +118,7 @@ def subtract_risk(left: pd.DataFrame, right: pd.DataFrame) -> pd.DataFrame:
     return aggregate_risk((left, right_negated))
 
 
-def sort_risk(df: pd.DataFrame, by: Tuple[str]=('date', 'marketDataType', 'assetId', 'point')):
+def sort_risk(df: pd.DataFrame, by: Tuple[str]=('date', 'time', 'marketDataType', 'assetId', 'point')):
     """
     Sort bucketed risk
 
@@ -134,7 +134,10 @@ def sort_risk(df: pd.DataFrame, by: Tuple[str]=('date', 'marketDataType', 'asset
         return tuple(fns[i](row[i]) if fns[i] else row[i] for i in indices if i != -1)
 
     data = sorted((tuple(r)[1:] for r in df.to_records()), key=cmp)
-    return pd.DataFrame.from_records(data, columns=columns)[[f for f in __field_order if f in columns]]
+    fields = [f for f in __field_order if f in columns]
+    fields.extend(f for f in columns if f not in fields)
+
+    return pd.DataFrame.from_records(data, columns=columns)[fields]
 
 
 def __risk_measure_with_doc_string(doc: str, measureType: RiskMeasureType, assetClass: AssetClass=None, unit: RiskMeasureUnit=None) -> RiskMeasure:

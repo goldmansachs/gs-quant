@@ -296,12 +296,13 @@ def annualize(x: pd.Series) -> pd.Series:
 
 
 @plot_function
-def volatility(x: pd.Series, w: int = 0) -> pd.Series:
+def volatility(x: pd.Series, w: int = 0, returns_type: Returns = Returns.SIMPLE) -> pd.Series:
     """
     Realized volatility of price series
 
     :param x: time series of prices
     :param w: window: number of observations to use (defaults to length of series)
+    :param returns_type: returns type
     :return: date-based time series of return
 
     **Usage**
@@ -339,7 +340,7 @@ def volatility(x: pd.Series, w: int = 0) -> pd.Series:
     if x.size < 1:
         return x
 
-    return annualize(std(returns(x), w)) * 100
+    return annualize(std(returns(x, type=returns_type), w)).mul(100)
 
 
 @plot_function

@@ -129,7 +129,6 @@ class PricingContext(ContextBaseWithDefault):
                 risk_request = RiskRequest(
                     tuple(positions),
                     risk_measures,
-                    self.pricing_date,
                     waitForResults=not self.__is_batch,
                     pricingLocation=self.market_data_location,
                     scenario=ScenarioContext.current if ScenarioContext.current.scenario is not None else None,

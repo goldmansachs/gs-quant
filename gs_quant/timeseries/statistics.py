@@ -19,6 +19,8 @@ import numpy
 import pandas as pd
 import datetime
 import scipy.stats.mstats as stats
+from scipy.stats import percentileofscore
+
 from .algebra import *
 
 """
@@ -590,3 +592,52 @@ def generate_series(length: int) -> pd.Series:
         dates.append(datetime.date.fromordinal(dates[i].toordinal() + 1))
 
     return pd.Series(data=levels, index=dates)
+
+
+@plot_function
+def percentile(x: pd.Series, y: pd.Series, w: int = 0) -> pd.Series:
+    """
+    Rolling percentile over given window
+
+    :param x: value series
+    :param y: distribution series
+    :param w: window: number of observations
+    :return: timeseries of percentile
+
+    **Usage**
+
+    Calculate `percentile rank <https://en.wikipedia.org/wiki/Percentile_rank>`_of :math:`y` in the sample distribution
+    of :math:`x` over a rolling window of length :math:`w`:
+
+    :math:`R_t = \\frac{\sum_{i=t-N+1}^{t}{[X_i<{Y_t}]}+0.5\sum_{i=t-N+1}^{t}{[X_i={Y_t}]}}{N}\\times100\%`
+
+    Where :math:`N` is the number of observations in a rolling window. If window length :math:'w' is not provided, uses
+    an ever-growing history of values. If :math:'w' is greater than the available data size, returns empty.
+
+    **Examples**
+
+    Compute percentile ranks of a series in the sample distribution of a second series over :math:`22` observations
+
+    >>> a = generate_series(100)
+    >>> b = generate_series(100)
+    >>> percentile(a, b, 22)
+
+    **See also**
+
+    :func:`zscores`
+
+    """
+    if x.empty:
+        return x
+
+    res = pd.Series()
+    for idx, val in y.iteritems():
+        sample = x[x.index <= idx]
+        if w:
+            if len(sample) < w:
+                continue
+            sample = sample[-w:]
+
+        res.loc[idx] = percentileofscore(sample, val, kind='mean')
+
+    return res

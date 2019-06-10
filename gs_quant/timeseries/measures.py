@@ -12,17 +12,25 @@
 #
 # Plot Service will make use of appropriately decorated functions in this module.
 
+import cachetools
+import datetime
 import logging
+import pandas as pd
 import time
 from enum import Enum
 from gs_quant.api.gs.data import GsDataApi
+from gs_quant.data.core import DataContext
+from gs_quant.data.dataset import Dataset
+from gs_quant.datetime.gscalendar import GsCalendar
 from gs_quant.markets.securities import Asset
-from gs_quant.target.common import AssetClass, FieldFilterMap
+from gs_quant.target.common import AssetClass, AssetType, FieldFilterMap
 from gs_quant.timeseries.helper import plot_measure
 from gs_quant.errors import MqTypeError, MqValueError
 from numbers import Real
 from pandas import Series
+from typing import Optional
 
+TD_ONE = datetime.timedelta(days=1)
 _logger = logging.getLogger(__name__)
 
 
@@ -106,10 +114,10 @@ def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Re
         column = 'relativeStrike'
 
     kwargs[column] = q_strikes
-    _logger.info('where tenor=%s and %s', tenor, kwargs)
+    _logger.debug('where tenor=%s and %s', tenor, kwargs)
     where = FieldFilterMap(tenor=tenor, **kwargs)
     q = GsDataApi.build_market_data_query([asset.get_marquee_id()], 'Implied Volatility', where=where, source=source)
-    _logger.info('q %s', q)
+    _logger.debug('q %s', q)
     df = _market_data_timed(q)
 
     curves = {k: v for k, v in df.groupby(column)}
@@ -119,7 +127,7 @@ def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Re
     return (series[0] - series[1]) / series[2]
 
 
-@plot_measure((AssetClass.Equity,), None)
+@plot_measure((AssetClass.Equity, AssetClass.Commod), None)
 def implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference, relative_strike: Real, *,
                        source: str = None, real_time: bool = False) -> Series:
     """
@@ -133,20 +141,138 @@ def implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference,
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: implied volatility curve
     """
-    # reading straight from data service, for now
-    if asset.asset_class != AssetClass.Equity:
-        raise MqValueError('implied volatility only implemented for equities')
-
     if strike_reference == VolReference.DELTA_PUT:
         relative_strike = abs(100 - relative_strike)
 
     relative_strike = relative_strike if strike_reference == VolReference.NORMALIZED else relative_strike / 100
     ref_string = "delta" if strike_reference in (VolReference.DELTA_CALL,
                                                  VolReference.DELTA_PUT) else strike_reference.value
-    _logger.info('where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, ref_string, relative_strike)
+    _logger.debug('where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, ref_string, relative_strike)
     where = FieldFilterMap(tenor=tenor, strikeReference=ref_string, relativeStrike=relative_strike)
     q = GsDataApi.build_market_data_query([asset.get_marquee_id()], 'Implied Volatility', where=where, source=source,
                                           real_time=real_time)
-    _logger.info('q %s', q)
+    _logger.debug('q %s', q)
     df = _market_data_timed(q)
     return Series() if df.empty else df['impliedVolatility']
+
+
+@cachetools.cached(cachetools.TTLCache(16, 3600))
+def _get_custom_bd(exchange):
+    # TODO: support custom weekmasks
+    from pandas.tseries.offsets import CustomBusinessDay
+    calendar = GsCalendar.get(exchange).business_day_calendar()
+    return CustomBusinessDay(calendar=calendar)
+
+
+def _range_from_pricing_date(exchange, pricing_date: Optional[datetime.date] = None):
+    if pricing_date:
+        end = pricing_date
+        start = pricing_date
+    else:
+        end = datetime.date.today()
+        start = end - _get_custom_bd(exchange)
+        _logger.debug('trying pricing dates %s to %s', start, end)
+    return start, end
+
+
+def _to_offset(tenor: str) -> pd.DateOffset:
+    import re
+    matcher = re.fullmatch('(\\d+)([dwmy])', tenor)
+    if not matcher:
+        raise ValueError('invalid tenor ' + tenor)
+
+    # TODO: determine desired handling of months
+    ab = matcher.group(2)
+    if ab == 'd':
+        name = 'days'
+    elif ab == 'w':
+        name = 'weeks'
+    elif ab == 'm':
+        name = 'months'
+    else:
+        assert ab == 'y'
+        name = 'years'
+
+    kwarg = {name: int(matcher.group(1))}
+    return pd.DateOffset(**kwarg)
+
+
+@plot_measure((AssetClass.Equity,), None)
+def vol_term(asset: Asset, strike_reference: SkewReference, relative_strike: Real,
+             pricing_date: Optional[datetime.date] = None, *, source: str = None, real_time: bool = False) -> pd.Series:
+    """
+    Volatility term structure.
+
+    :param asset: asset object loaded from security master
+    :param strike_reference: reference for strike level
+    :param relative_strike: strike relative to reference
+    :param pricing_date: pricing date (defaults to latest available)
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: volatility term structure
+    """
+    if real_time:
+        raise NotImplementedError('realtime forward term not implemented')  # TODO
+
+    if strike_reference != SkewReference.NORMALIZED:
+        relative_strike /= 100
+
+    start, end = _range_from_pricing_date(asset.exchange, pricing_date)
+    with DataContext(start, end):
+        _logger.debug('where strikeReference=%s, relativeStrike=%s', strike_reference.value, relative_strike)
+        where = FieldFilterMap(strikeReference=strike_reference.value, relativeStrike=relative_strike)
+        q = GsDataApi.build_market_data_query([asset.get_marquee_id()], 'Implied Volatility', where=where,
+                                              source=source,
+                                              real_time=real_time)
+        _logger.debug('q %s', q)
+        df = _market_data_timed(q)
+
+    if df.empty:
+        return pd.Series()
+
+    earliest = df.index.min()
+    _logger.info('selected pricing date %s', earliest)
+    df = df.loc[earliest]
+    cbd = _get_custom_bd(asset.exchange)
+    df = df.assign(expirationDate=df.index + df['tenor'].map(_to_offset) + cbd - cbd)
+    df = df.set_index('expirationDate')
+    df.sort_index(inplace=True)
+    df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
+    return df['impliedVolatility'] if not df.empty else pd.Series()
+
+
+@plot_measure((AssetClass.Equity,), None)
+def fwd_term(asset: Asset, pricing_date: Optional[datetime.date] = None, *, source: str = None,
+             real_time: bool = False) -> pd.Series:
+    """
+    Forward term structure.
+
+    :param asset: asset object loaded from security master
+    :param pricing_date: pricing date (defaults to latest available)
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: forward term structure
+    """
+    if real_time:
+        raise NotImplementedError('realtime forward term not implemented')  # TODO
+
+    start, end = _range_from_pricing_date(asset.exchange, pricing_date)
+    with DataContext(start, end):
+        where = FieldFilterMap(strikeReference='forward', relativeStrike=1)
+        q = GsDataApi.build_market_data_query([asset.get_marquee_id()], 'Forward', where=where, source=source,
+                                              real_time=real_time)
+        _logger.debug('q %s', q)
+        df = _market_data_timed(q)
+
+    if df.empty:
+        return pd.Series()
+
+    earliest = df.index.min()
+    _logger.info('selected pricing date %s', earliest)
+    df = df.loc[earliest]
+    cbd = _get_custom_bd(asset.exchange)
+    df.loc[:, 'expirationDate'] = df.index + df['tenor'].map(_to_offset) + cbd - cbd
+    df = df.set_index('expirationDate')
+    df.sort_index(inplace=True)
+    df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
+    return df['forward'] if not df.empty else pd.Series()
