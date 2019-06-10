@@ -339,7 +339,7 @@ class EqOption(Instrument):
         
     """Object representation of an equity option"""
        
-    def __init__(self, asset: str, expirationDate: Union[datetime.date, str], strikePrice: Union[float, str], optionType: Union[OptionType, str], optionStyle: Union[OptionStyle, str], numberOfOptions: int = 1, exchange: str = None, multiplier: float = None, settlementDate: Union[datetime.date, str] = None, currency: Union[Currency, str] = None, premium: float = 0):
+    def __init__(self, asset: str, expirationDate: Union[datetime.date, str], strikePrice: Union[float, str], optionType: Union[OptionType, str], optionStyle: Union[OptionStyle, str], numberOfOptions: float = 1, exchange: str = None, multiplier: float = None, settlementDate: Union[datetime.date, str] = None, currency: Union[Currency, str] = None, premium: float = 0):
         super().__init__()
         self.__numberOfOptions = numberOfOptions
         self.__asset = asset
@@ -364,12 +364,12 @@ class EqOption(Instrument):
         return AssetType.Option        
 
     @property
-    def numberOfOptions(self) -> int:
+    def numberOfOptions(self) -> float:
         """Number of options"""
         return self.__numberOfOptions
 
     @numberOfOptions.setter
-    def numberOfOptions(self, value: int):
+    def numberOfOptions(self, value: float):
         self.__numberOfOptions = value
         self._property_changed('numberOfOptions')        
 
@@ -477,12 +477,12 @@ class FXForward(Instrument):
         
     """Object representation of an FX forward"""
        
-    def __init__(self, pair: str = None, settlementDate: Union[datetime.date, str] = None, forwardRate: float = None, notional: float = None):
+    def __init__(self, pair: str = None, settlementDate: Union[datetime.date, str] = None, forwardRate: float = None, notionalAmount: float = None):
         super().__init__()
         self.__pair = pair
         self.__settlementDate = settlementDate
         self.__forwardRate = forwardRate
-        self.__notional = notional
+        self.__notionalAmount = notionalAmount
 
     @property
     def assetClass(self) -> AssetClass:
@@ -525,21 +525,21 @@ class FXForward(Instrument):
         self._property_changed('forwardRate')        
 
     @property
-    def notional(self) -> float:
+    def notionalAmount(self) -> float:
         """Notional amount"""
-        return self.__notional
+        return self.__notionalAmount
 
-    @notional.setter
-    def notional(self, value: float):
-        self.__notional = value
-        self._property_changed('notional')        
+    @notionalAmount.setter
+    def notionalAmount(self, value: float):
+        self.__notionalAmount = value
+        self._property_changed('notionalAmount')        
 
 
 class FXOption(Instrument):
         
     """Object representation of a FX option"""
        
-    def __init__(self, callCurrency: Union[Currency, str], putCurrency: Union[Currency, str], expirationDate: Union[datetime.date, str], optionType: Union[OptionType, str], callAmount: float = 1000000.0, putAmount: float = 1000000.0, strike: Union[float, str] = None, premium: float = 0):
+    def __init__(self, callCurrency: Union[Currency, str], putCurrency: Union[Currency, str], expirationDate: Union[datetime.date, str], optionType: Union[OptionType, str], callAmount: float = 1000000.0, putAmount: float = 1000000.0, strike: Union[float, str] = None, premium: float = 0, pair: str = None):
         super().__init__()
         self.__callCurrency = callCurrency if isinstance(callCurrency, Currency) else get_enum_value(Currency, callCurrency)
         self.__putCurrency = putCurrency if isinstance(putCurrency, Currency) else get_enum_value(Currency, putCurrency)
@@ -549,6 +549,7 @@ class FXOption(Instrument):
         self.__expirationDate = expirationDate
         self.__optionType = optionType if isinstance(optionType, OptionType) else get_enum_value(OptionType, optionType)
         self.__premium = premium
+        self.__pair = pair
 
     @property
     def assetClass(self) -> AssetClass:
@@ -639,15 +640,26 @@ class FXOption(Instrument):
         self.__premium = value
         self._property_changed('premium')        
 
+    @property
+    def pair(self) -> str:
+        """Currency pair"""
+        return self.__pair
+
+    @pair.setter
+    def pair(self, value: str):
+        self.__pair = value
+        self._property_changed('pair')        
+
 
 class Forward(Instrument):
         
     """Object representation of a forward"""
        
-    def __init__(self, currency: Union[Currency, str], expirationDate: Union[datetime.date, str]):
+    def __init__(self, currency: Union[Currency, str], expirationDate: Union[datetime.date, str], notionalAmount: float = None):
         super().__init__()
         self.__currency = currency if isinstance(currency, Currency) else get_enum_value(Currency, currency)
         self.__expirationDate = expirationDate
+        self.__notionalAmount = notionalAmount
 
     @property
     def assetClass(self) -> AssetClass:
@@ -678,6 +690,16 @@ class Forward(Instrument):
     def expirationDate(self, value: Union[datetime.date, str]):
         self.__expirationDate = value
         self._property_changed('expirationDate')        
+
+    @property
+    def notionalAmount(self) -> float:
+        """Notional amount"""
+        return self.__notionalAmount
+
+    @notionalAmount.setter
+    def notionalAmount(self, value: float):
+        self.__notionalAmount = value
+        self._property_changed('notionalAmount')        
 
 
 class IRBasisSwap(Instrument):

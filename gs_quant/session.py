@@ -99,9 +99,9 @@ class GsSession(ContextBase):
     def __unpack(self, results: Union[dict, list], cls: type) -> Union[Base, tuple, dict]:
         if issubclass(cls, Base):
             if isinstance(results, list):
-                return tuple(cls.from_dict(r) for r in results)
+                return tuple(None if r is None else cls.from_dict(r) for r in results)
             else:
-                return cls.from_dict(results)
+                return None if results is None else cls.from_dict(results)
         else:
             if isinstance(results, list):
                 return tuple(cls(**r) for r in results)
@@ -113,6 +113,7 @@ class GsSession(ContextBase):
             method: str,
             path: str,
             payload: Optional[Union[dict, str, Base, pd.DataFrame]]=None,
+            request_headers: Optional[dict]=None,
             cls: Optional[type]=None,
             try_auth=True,
             include_version: bool = True) -> Union[Base, tuple, dict]:
@@ -127,7 +128,10 @@ class GsSession(ContextBase):
             kwargs['params'] = payload
         elif method in ['POST', 'PUT']:
             headers = self._session.headers.copy()
-            headers.update({'Content-Type': 'application/json'})
+            if request_headers:
+                headers.update({**{'Content-Type': 'application/json'}, **request_headers})
+            else:
+                headers.update({'Content-Type': 'application/json'})
             kwargs['headers'] = headers
             if is_dataframe or payload:
                 kwargs['data'] = payload if isinstance(payload, str) else json.dumps(payload, cls=JSONEncoder)
@@ -166,17 +170,17 @@ class GsSession(ContextBase):
         else:
             return {'raw': response}
 
-    def _get(self, path: str, payload: Optional[Union[dict, Base]]=None, cls: Optional[type]=None, include_version: bool=True) -> Union[Base, tuple, dict]:
-        return self.__request('GET', path, payload=payload, cls=cls, include_version=include_version)
+    def _get(self, path: str, payload: Optional[Union[dict, Base]]=None, request_headers: Optional[dict]=None, cls: Optional[type]=None, include_version: bool=True) -> Union[Base, tuple, dict]:
+        return self.__request('GET', path, payload=payload, request_headers=request_headers, cls=cls, include_version=include_version)
 
-    def _post(self, path: str, payload: Optional[Union[dict, Base, pd.DataFrame]]=None, cls: Optional[type]=None, include_version: bool=True) -> Union[Base, tuple, dict]:
-        return self.__request('POST', path, payload=payload, cls=cls, include_version=include_version)
+    def _post(self, path: str, payload: Optional[Union[dict, Base, pd.DataFrame]]=None, request_headers: Optional[dict]=None, cls: Optional[type]=None, include_version: bool=True) -> Union[Base, tuple, dict]:
+        return self.__request('POST', path, payload=payload, request_headers=request_headers, cls=cls, include_version=include_version)
 
-    def _delete(self, path: str, payload: Optional[Union[dict, Base]]=None, cls: Optional[type]=None, include_version: bool=True) -> Union[Base, tuple, dict]:
-        return self.__request('DELETE', path, payload=payload, cls=cls, include_version=include_version)
+    def _delete(self, path: str, payload: Optional[Union[dict, Base]]=None, request_headers: Optional[dict]=None, cls: Optional[type]=None, include_version: bool=True) -> Union[Base, tuple, dict]:
+        return self.__request('DELETE', path, payload=payload, request_headers=request_headers, cls=cls, include_version=include_version)
 
-    def _put(self, path: str, payload: Optional[Union[dict, Base]]=None, cls: Optional[type]=None, include_version: bool=True) -> Union[Base, tuple, dict]:
-        return self.__request('PUT', path, payload=payload, cls=cls, include_version=include_version)
+    def _put(self, path: str, payload: Optional[Union[dict, Base]]=None, request_headers: Optional[dict]=None, cls: Optional[type]=None, include_version: bool=True) -> Union[Base, tuple, dict]:
+        return self.__request('PUT', path, payload=payload, request_headers=request_headers, cls=cls, include_version=include_version)
 
     @classmethod
     def _config_for_environment(cls, environment):

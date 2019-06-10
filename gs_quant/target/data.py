@@ -41,6 +41,18 @@ class MarketDataMeasure(EnumBase, Enum):
         return self.value
 
 
+class MeasureEntityType(EnumBase, Enum):    
+    
+    """Entity type associated with a measure."""
+
+    ASSET = 'ASSET'
+    BACKTEST = 'BACKTEST'
+    KPI = 'KPI'
+    
+    def __repr__(self):
+        return self.value
+
+
 class Adjustments(Base):
         
     """Corporate action adjustments."""
@@ -461,7 +473,7 @@ class DataSetParameters(Base):
         
     """Dataset parameters."""
        
-    def __init__(self, uploadDataPolicy: str, logicalDb: str, symbolStrategy: str, applyMarketDataEntitlements: bool, coverage: str, frequency: str, methodology: str, history: str, category: str = None, subCategory: str = None, assetClass: Union[AssetClass, str] = None, ownerIds: Tuple[str, ...] = None, approverIds: Tuple[str, ...] = None, supportIds: Tuple[str, ...] = None, identifierMapperName: str = None, constantSymbols: Tuple[str, ...] = None, underlyingDataSetId: str = None, immutable: bool = None, includeInCatalog: bool = None, overrideQueryColumnIds: Tuple[str, ...] = None, plot: bool = None, coverageEnabled: bool = True):
+    def __init__(self, uploadDataPolicy: str, logicalDb: str, symbolStrategy: str, applyMarketDataEntitlements: bool, coverage: str, frequency: str, methodology: str, history: str, category: str = None, subCategory: str = None, assetClass: Union[AssetClass, str] = None, ownerIds: Tuple[str, ...] = None, approverIds: Tuple[str, ...] = None, supportIds: Tuple[str, ...] = None, supportDistributionList: Tuple[str, ...] = None, identifierMapperName: str = None, constantSymbols: Tuple[str, ...] = None, underlyingDataSetId: str = None, immutable: bool = None, includeInCatalog: bool = None, overrideQueryColumnIds: Tuple[str, ...] = None, plot: bool = None, coverageEnabled: bool = True):
         super().__init__()
         self.__category = category
         self.__subCategory = subCategory
@@ -473,6 +485,7 @@ class DataSetParameters(Base):
         self.__ownerIds = ownerIds
         self.__approverIds = approverIds
         self.__supportIds = supportIds
+        self.__supportDistributionList = supportDistributionList
         self.__applyMarketDataEntitlements = applyMarketDataEntitlements
         self.__uploadDataPolicy = uploadDataPolicy
         self.__identifierMapperName = identifierMapperName
@@ -585,6 +598,16 @@ class DataSetParameters(Base):
     def supportIds(self, value: Tuple[str, ...]):
         self.__supportIds = value
         self._property_changed('supportIds')        
+
+    @property
+    def supportDistributionList(self) -> Tuple[str, ...]:
+        """Distribution list who support dataset."""
+        return self.__supportDistributionList
+
+    @supportDistributionList.setter
+    def supportDistributionList(self, value: Tuple[str, ...]):
+        self.__supportDistributionList = value
+        self._property_changed('supportDistributionList')        
 
     @property
     def applyMarketDataEntitlements(self) -> bool:
@@ -932,6 +955,24 @@ class MarketDataFilteredField(Base):
         self._property_changed('values')        
 
 
+class MeasureBacktest(Base):
+        
+    """Describes backtests that should be associated with a measure."""
+       
+    def __init__(self, ):
+        super().__init__()
+        
+
+
+class MeasureKpi(Base):
+        
+    """Describes KPIs that should be associated with a measure."""
+       
+    def __init__(self, ):
+        super().__init__()
+        
+
+
 class ParserEntity(Base):
         
     """Settings for a parser processor"""
@@ -1125,7 +1166,7 @@ class DataSetDimensions(Base):
 
 class MarketDataMapping(Base):
                
-    def __init__(self, assetClass: Union[AssetClass, str] = None, queryType: str = None, description: str = None, scale: float = None, frequency: Union[MarketDataFrequency, str] = None, measures: Tuple[Union[MarketDataMeasure, str], ...] = None, dataSet: str = None, vendor: Union[MarketDataVendor, str] = None, fields: Tuple[MarketDataField, ...] = None, rank: float = None, filteredFields: Tuple[MarketDataFilteredField, ...] = None, assetTypes: Tuple[Union[AssetType, str], ...] = None):
+    def __init__(self, assetClass: Union[AssetClass, str] = None, queryType: str = None, description: str = None, scale: float = None, frequency: Union[MarketDataFrequency, str] = None, measures: Tuple[Union[MarketDataMeasure, str], ...] = None, dataSet: str = None, vendor: Union[MarketDataVendor, str] = None, fields: Tuple[MarketDataField, ...] = None, rank: float = None, filteredFields: Tuple[MarketDataFilteredField, ...] = None, assetTypes: Tuple[Union[AssetType, str], ...] = None, entityType: Union[MeasureEntityType, str] = None, backtestEntity: MeasureBacktest = None, kpiEntity: MeasureKpi = None):
         super().__init__()
         self.__assetClass = assetClass if isinstance(assetClass, AssetClass) else get_enum_value(AssetClass, assetClass)
         self.__queryType = queryType
@@ -1139,6 +1180,9 @@ class MarketDataMapping(Base):
         self.__rank = rank
         self.__filteredFields = filteredFields
         self.__assetTypes = assetTypes
+        self.__entityType = entityType if isinstance(entityType, MeasureEntityType) else get_enum_value(MeasureEntityType, entityType)
+        self.__backtestEntity = backtestEntity
+        self.__kpiEntity = kpiEntity
 
     @property
     def assetClass(self) -> Union[AssetClass, str]:
@@ -1252,6 +1296,36 @@ class MarketDataMapping(Base):
     def assetTypes(self, value: Tuple[Union[AssetType, str], ...]):
         self.__assetTypes = value
         self._property_changed('assetTypes')        
+
+    @property
+    def entityType(self) -> Union[MeasureEntityType, str]:
+        """Entity type associated with a measure."""
+        return self.__entityType
+
+    @entityType.setter
+    def entityType(self, value: Union[MeasureEntityType, str]):
+        self.__entityType = value if isinstance(value, MeasureEntityType) else get_enum_value(MeasureEntityType, value)
+        self._property_changed('entityType')        
+
+    @property
+    def backtestEntity(self) -> MeasureBacktest:
+        """Describes backtests that should be associated with a measure."""
+        return self.__backtestEntity
+
+    @backtestEntity.setter
+    def backtestEntity(self, value: MeasureBacktest):
+        self.__backtestEntity = value
+        self._property_changed('backtestEntity')        
+
+    @property
+    def kpiEntity(self) -> MeasureKpi:
+        """Describes KPIs that should be associated with a measure."""
+        return self.__kpiEntity
+
+    @kpiEntity.setter
+    def kpiEntity(self, value: MeasureKpi):
+        self.__kpiEntity = value
+        self._property_changed('kpiEntity')        
 
 
 class ProcessorEntity(Base):

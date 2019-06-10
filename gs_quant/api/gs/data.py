@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import copy
 import datetime as dt
 import pandas as pd
 from itertools import chain
@@ -20,7 +21,7 @@ from typing import Iterable, List, Optional, Tuple, Union
 from .assets import GsAssetApi, GsIdType
 from gs_quant.api.data import DataApi
 from gs_quant.data.core import DataContext
-from gs_quant.target.common import FieldFilterMap, XRef
+from gs_quant.target.common import FieldFilterMap, XRef, MarketDataCoordinate
 from gs_quant.target.data import DataQuery
 from gs_quant.errors import MqValueError
 from gs_quant.session import GsSession
@@ -34,7 +35,11 @@ class GsDataApi(DataApi):
     # DataApi interface
 
     @classmethod
-    def query_data(cls, query: DataQuery, dataset_id: str = None, asset_id_type: Union[GsIdType, str] = None) -> tuple:
+    def query_data(cls, query: DataQuery, dataset_id: str = None, asset_id_type: Union[GsIdType, str] = None) \
+            -> Union[list, tuple]:
+        if query.marketDataCoordinates:
+            results = GsSession.current._post('/data/coordinates/query', payload=query)
+            return results.get('responses', ())
         if query.where:
             where = query.where.as_dict()
             xref_keys = set(where.keys()).intersection(XRef.properties())
@@ -61,19 +66,10 @@ class GsDataApi(DataApi):
                     setattr(query.where, xref_type, None)
                     query.where.assetId = [asset_id_map[x] for x in xref_values]
 
-        if query.marketDataCoordinates:
-            results = GsSession.current._post('/data/coordinates/query', payload=query)
-        else:
-            results = GsSession.current._post('/data/{}/query'.format(dataset_id), payload=query)
+        results = GsSession.current._post('/data/{}/query'.format(dataset_id), payload=query)
+        results = results.get('data', ())
 
-        if 'responses' in results:
-            results = results.get('responses', [{}])[0].get('data', ())
-        else:
-            results = results.get('data', ())
-
-        asset_id_type = GsIdType.id if asset_id_type is None else asset_id_type
-
-        if asset_id_type != GsIdType.id:
+        if asset_id_type not in {GsIdType.id, None}:
             asset_ids = tuple(set(filter(None, (r.get('assetId') for r in results))))
             if asset_ids:
                 xref_map = GsAssetApi.map_identifiers(GsIdType.id, asset_id_type, asset_ids)
@@ -90,10 +86,10 @@ class GsDataApi(DataApi):
     def last_data(cls, query: DataQuery, dataset_id: str = None) -> Union[list, tuple]:
         if query.marketDataCoordinates:
             result = GsSession.current._post('/data/coordinates/query/last', payload=query)
+            return result.get('responses', ())
         else:
             result = GsSession.current._post('/data/{}/last/query'.format(dataset_id), payload=query)
-
-        return result.get('data', ())
+            return result.get('data', ())
 
     @classmethod
     def symbol_dimensions(cls, dataset_id: str) -> tuple:
@@ -207,18 +203,41 @@ class GsDataApi(DataApi):
         return df
 
     @classmethod
-    def __normalise_coordinate_data(cls, data: Iterable[dict]) -> list:
+    def __normalise_coordinate_data(
+            cls,
+            data: Iterable[dict]
+    ) -> Iterable[Iterable[dict]]:
         ret = []
+        for idx, row in enumerate(data):
+            coord_data = []
+            for pt in copy.deepcopy(row.get('data', [])):
+                if not pt:
+                    continue
 
-        for row in data:
-            if not row:
-                continue
+                value_field = pt['quotingStyle'] if 'field' not in pt.keys() else pt['field']
+                pt['value'] = pt.pop(value_field)
 
-            value_field = row['quotingStyle'] if 'field' not in row.keys() else row['field']
-            row['value'] = row.pop(value_field)
-            ret.append(row)
+                for time_field in ('date', 'time'):
+                    if time_field in pt:
+                        pt[time_field] = pd.to_datetime(pt.pop(time_field))
 
+                coord_data.append(pt)
+            ret.append(coord_data)
         return ret
+
+    @classmethod
+    def __df_from_coordinate_data(
+            cls,
+            data: Iterable[dict]
+    ) -> pd.DataFrame:
+        from gs_quant.risk import sort_risk
+
+        df = sort_risk(pd.DataFrame.from_records(data))
+        index_field = next((f for f in ('time', 'date') if f in df.columns), None)
+        if index_field:
+            df = df.set_index(pd.DatetimeIndex(df.loc[:, index_field].values))
+
+        return df
 
     @classmethod
     def coordinates_last(
@@ -238,52 +257,58 @@ class GsDataApi(DataApi):
         data = cls.last_data(query)
 
         for idx, row in enumerate(cls.__normalise_coordinate_data(data)):
-            ret[coordinates[idx]] = row['value']
+            try:
+                ret[coordinates[idx]] = row[0]['value']
+            except IndexError:
+                ret[coordinates[idx]] = None
 
         if as_dataframe:
             data = [dict(chain(c.as_dict().items(), (('value', v),))) for c, v in ret.items()]
-            return pd.DataFrame(data)
+            return cls.__df_from_coordinate_data(data)
 
         return ret
 
     @classmethod
     def coordinates_data(
             cls,
-            coordinates: Union[List, Tuple],
+            coordinates: Union[MarketDataCoordinate, Iterable[MarketDataCoordinate]],
             start: Optional[Union[dt.date, dt.datetime]] = None,
             end: Optional[Union[dt.date, dt.datetime]] = None,
             vendor: str = 'Goldman Sachs',
-            as_of: Optional[dt.datetime] = None,
-            since: Optional[dt.datetime] = None
-    ) -> pd.DataFrame:
+            as_multiple_dataframes: bool = False
+    ) -> Union[pd.DataFrame, Tuple[pd.DataFrame]]:
+        multiple_coordinates = not isinstance(coordinates, MarketDataCoordinate)
         query = cls.build_query(
-            marketDataCoordinates=coordinates,
+            marketDataCoordinates=coordinates if multiple_coordinates else (coordinates,),
             vendor=vendor,
             start=start,
-            end=end,
-            asOfTime=as_of,
-            since=since
+            end=end
         )
 
-        return pd.DataFrame(cls.__normalise_coordinate_data(cls.query_data(query)))
+        results = cls.__normalise_coordinate_data(cls.query_data(query))
+
+        if as_multiple_dataframes:
+            return tuple(GsDataApi.__df_from_coordinate_data(r) for r in results)
+        else:
+            return cls.__df_from_coordinate_data(chain.from_iterable(results))
 
     @classmethod
     def coordinates_data_series(
             cls,
-            coordinate: 'MarketDataCoordinate',
+            coordinates: Union[MarketDataCoordinate, Iterable[MarketDataCoordinate]],
             start: Optional[Union[dt.date, dt.datetime]] = None,
             end: Optional[Union[dt.date, dt.datetime]] = None,
             vendor: str = 'Goldman Sachs',
-            as_of: Optional[dt.datetime] = None,
-            since: Optional[dt.datetime] = None
-    ) -> pd.Series:
-        df = cls.coordinates_data(
-            (coordinate,),
+    ) -> Union[pd.Series, Tuple[pd.Series]]:
+        dfs = cls.coordinates_data(
+            coordinates,
             start=start,
             end=end,
             vendor=vendor,
-            as_of=as_of,
-            since=since)
+            as_multiple_dataframes=True)
 
-        index_field = 'time' if 'time' in df.columns else 'date'
-        return pd.Series(index=pd.to_datetime(df.loc[:, index_field].values), data=df.value.values)
+        ret = tuple(pd.Series() if df.empty else pd.Series(index=df.index, data=df.value.values) for df in dfs)
+        if isinstance(coordinates, MarketDataCoordinate):
+            return ret[0]
+        else:
+            return ret

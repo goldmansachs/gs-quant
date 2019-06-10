@@ -13,8 +13,13 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+from gs_quant.target.common import RiskPosition
 from gs_quant.target.instrument import *
 from gs_quant.common import XRef
+
+from typing import Iterable, Mapping, Union
+
+__asset_class_and_type_to_instrument = {}
 
 
 class Security(XRef):

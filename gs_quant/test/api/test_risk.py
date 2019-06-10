@@ -59,7 +59,6 @@ def structured_calc(mocker, priceable: Priceable, measure: risk.RiskMeasure):
     risk_request = risk.RiskRequest(
         positions=(risk.RiskPosition(priceable, 1),),
         measures=(measure,),
-        asOf=PricingContext.current.pricing_date,
         pricingLocation=PricingContext.current.market_data_location,
         pricingAndMarketDataAsOf=PricingContext.current._pricing_market_data_as_of,
         waitForResults=True)
@@ -75,7 +74,6 @@ def scalar_calc(mocker, priceable: Priceable, measure: risk.RiskMeasure):
     risk_request = risk.RiskRequest(
         positions=(risk.RiskPosition(priceable, 1),),
         measures=(measure,),
-        asOf=PricingContext.current.pricing_date,
         pricingLocation=PricingContext.current.market_data_location,
         pricingAndMarketDataAsOf=PricingContext.current._pricing_market_data_as_of,
         waitForResults=True)
@@ -91,7 +89,6 @@ def price(mocker, priceable: Priceable):
     risk_request = risk.RiskRequest(
         positions=(risk.RiskPosition(priceable, 1),),
         measures=(risk.DollarPrice,),
-        asOf=PricingContext.current.pricing_date,
         pricingLocation=PricingContext.current.market_data_location,
         pricingAndMarketDataAsOf=PricingContext.current._pricing_market_data_as_of,
         waitForResults=True)

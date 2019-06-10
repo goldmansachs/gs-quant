@@ -16,11 +16,12 @@ under the License.
 import datetime as dt
 import logging
 from enum import auto, Enum
-from typing import List, Tuple, Union
+from typing import Iterable, List, Tuple, Optional, Union
+from gs_quant.target.assets import Asset as __Asset, AssetClass, AssetType, AssetToInstrumentResponse, TemporalXRef,\
+    Position, PositionSet, EntityQuery, PositionSet
 from gs_quant.target.common import FieldFilterMap
-from gs_quant.target.assets import Asset as __Asset, AssetClass, AssetType, TemporalXRef, PositionSet, EntityQuery, \
-    PositionSet
 from gs_quant.errors import MqValueError
+from gs_quant.instrument import Instrument, Security
 from gs_quant.session import GsSession
 
 _logger = logging.getLogger(__name__)
@@ -128,6 +129,34 @@ class GsAssetApi:
             return GsSession.current._get(url, cls=PositionSet)['results']
         else:
             return GsSession.current._get(url + '?type=' + position_type, cls=PositionSet)
+
+    @staticmethod
+    def get_instruments_for_asset_ids(
+            asset_ids: Tuple[str]
+    ) -> Tuple[Optional[Union[Instrument, Security]]]:
+        instrument_infos = GsSession.current._post('/assets/instruments', asset_ids, cls=AssetToInstrumentResponse)
+        instrument_lookup = {i.assetId: i.instrument for i in instrument_infos if i}
+        return tuple(instrument_lookup.get(a) for a in asset_ids)
+
+    @staticmethod
+    def get_instruments_for_positions(
+            positions: Iterable[Position]
+    ) -> Tuple[Optional[Union[Instrument, Security]]]:
+        instrument_infos = GsSession.current._post('/assets/instruments', [p.assetId for p in positions], cls=AssetToInstrumentResponse)
+        instrument_lookup = {i.assetId: (i.instrument, i.sizeField) for i in instrument_infos if i}
+        ret = []
+
+        for position in positions:
+            instrument_info = instrument_lookup.get(position.assetId)
+            if instrument_info:
+                instrument, sizeField = instrument_info
+                if instrument is not None:
+                    setattr(instrument, sizeField, position.quantity)
+                ret.append(instrument)
+            else:
+                ret.append(None)
+
+        return tuple(ret)
 
     @classmethod
     def map_identifiers(

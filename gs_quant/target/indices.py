@@ -1028,7 +1028,7 @@ class IndicesCreateInputs(Base):
         
     """Inputs used to create an index"""
        
-    def __init__(self, ticker: str, name: str, pricingParameters: IndicesPriceParameters, positionSet: Tuple[PositionPriceInput, ...], description: str = None, styles: Tuple[str, ...] = None, relatedContent: GIRDomain = None, indexCreateSource: Union[IndexCreateSource, str] = None, returnType: str = 'Price Return', publishParameters: PublishParameters = None, indexNotes: str = None):
+    def __init__(self, ticker: str, name: str, pricingParameters: IndicesPriceParameters, positionSet: Tuple[PositionPriceInput, ...], description: str = None, styles: Tuple[str, ...] = None, relatedContent: GIRDomain = None, indexCreateSource: Union[IndexCreateSource, str] = None, returnType: str = 'Price Return', publishParameters: PublishParameters = None, indexNotes: str = None, onBehalfOf: str = None):
         super().__init__()
         self.__ticker = ticker
         self.__name = name
@@ -1041,6 +1041,7 @@ class IndicesCreateInputs(Base):
         self.__publishParameters = publishParameters
         self.__pricingParameters = pricingParameters
         self.__indexNotes = indexNotes
+        self.__onBehalfOf = onBehalfOf
 
     @property
     def ticker(self) -> str:
@@ -1151,6 +1152,16 @@ class IndicesCreateInputs(Base):
     def indexNotes(self, value: str):
         self.__indexNotes = value
         self._property_changed('indexNotes')        
+
+    @property
+    def onBehalfOf(self) -> str:
+        """Marquee unique identifier"""
+        return self.__onBehalfOf
+
+    @onBehalfOf.setter
+    def onBehalfOf(self, value: str):
+        self.__onBehalfOf = value
+        self._property_changed('onBehalfOf')        
 
 
 class IndicesEditInputs(Base):
