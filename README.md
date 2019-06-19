@@ -1,12 +1,20 @@
 # GS Quant
 
+**GS Quant** is a python toolkit for quantitative finance, which provides access to an extensive set of derivatives pricing data through the Goldman Sachs Marquee developer APIs. Libraries are provided for timeseries analytics, portfolio manipulation, risk and scenario analytics and backtesting. Can be used to interact with the Marquee platform programmatically, or as a standalone software package for quantitiative analytics.
+
+Created and maintained by quantitative developers (quants) at Goldman Sachs to enable development of trading strategies and analysis of derivative products. Can be used to facilitate derivative structuring and trading, or as statistical packages for a variety of timeseries analytics applications.
+
+See also Getting Started notebook in the gs_quant folder or package.
+
 ## Installation
 pip install gs-quant
 
 GS users: pip install gs-quant[internal] --user
 
 ## Dependencies
-Python 3.6 or 3.7  
+
+Python 3.6 or 3.7 \
+Package dependencies can be installed by pip. 
 
 ## Example
 ```python
@@ -25,7 +33,7 @@ from gs_quant.timeseries import volatility
 with GsSession.get(Environment.PROD, <client_id>, <client_secret>, scopes=('read_product_data','run_analytics')):
     # get coverage for a dataset; run a query
     weather = Dataset('WEATHER')
-    coverage = weather.get_coverage(weather) # GS-specific functionality
+    coverage = weather.get_coverage() # GS-specific functionality
     df = weather.get_data(datetime.date(2016, 1, 15), datetime.date(2016, 1, 16), city=['Boston', 'Austin'])
 
     # calculate vol for a time series

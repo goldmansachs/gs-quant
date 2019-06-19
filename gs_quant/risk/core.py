@@ -22,6 +22,7 @@ from gs_quant.target.risk import RiskMeasure, RiskMeasureType, RiskMeasureUnit, 
 from gs_quant.common import AssetClass
 from gs_quant.datetime import point_sort_order
 from gs_quant.markets.core import PricingContext
+from gs_quant.markets.historical import HistoricalPricingContext
 
 
 __field_sort_fns = {
@@ -34,9 +35,30 @@ def sum_formatter(result: List) -> float:
     return sum(r.get('value', result[0].get('Val')) for r in result)
 
 
+def __flatten_result(item: Union[List, Tuple]):
+    rows = []
+    for elem in item:
+        if isinstance(elem, (list, tuple)):
+            rows.extend(__flatten_result(elem))
+        else:
+            excluded_fields = ['calculationTime', 'queueingTime']
+            if not issubclass(PricingContext.current.__class__, HistoricalPricingContext):
+                excluded_fields.append('date')
+
+            for field in excluded_fields:
+                if field in elem:
+                    elem.pop(field)
+
+            rows.append(elem)
+
+    return rows
+
+
 def scalar_formatter(result: List) -> Optional[Union[float, pd.Series]]:
     if not result:
         return None
+
+    result = __flatten_result(result)
 
     if len(result) > 1 and 'date' in result[0]:
         series = pd.Series(
@@ -48,18 +70,11 @@ def scalar_formatter(result: List) -> Optional[Union[float, pd.Series]]:
         return result[0].get('value', result[0].get('Val'))
 
 
-def structured_formatter(result: List) -> pd.DataFrame:
-    def flatten(item: Union[List, Tuple]):
-        rows = []
-        for elem in item:
-            if isinstance(elem, (list, tuple)):
-                rows.extend(flatten(elem))
-            else:
-                rows.append(elem)
+def structured_formatter(result: List) -> Optional[pd.DataFrame]:
+    if not result:
+        return None
 
-        return rows
-
-    return sort_risk(pd.DataFrame.from_records(flatten(result)))
+    return sort_risk(pd.DataFrame.from_records(__flatten_result(result)))
 
 
 def aggregate_risk(results: Iterable[Union[pd.DataFrame, Future]], threshold: Optional[float]=None) -> pd.DataFrame:

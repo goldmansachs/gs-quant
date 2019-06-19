@@ -49,6 +49,26 @@ class Environment(Enum):
 class GsSession(ContextBase):
     __config = None
 
+    class Scopes(Enum):
+        READ_CONTENT = 'read_content'
+        READ_FINANCIAL_DATA = 'read_financial_data'
+        READ_PRODUCT_DATA = 'read_product_data'
+        READ_USER_PROFILE = 'read_user_profile'
+        MODIFY_CONTENT = 'modify_content'
+        MODIFY_FINANCIAL_DATA = 'modify_financial_data'
+        MODIFY_PRODUCT_DATA = 'modify_product_data'
+        MODIFY_USER_PROFILE = 'modify_user_profile'
+        RUN_ANALYTICS = 'run_analytics'
+        EXECUTE_TRADES = 'execute_trades'
+
+        @classmethod
+        def get_default(cls):
+            return [
+                cls.READ_CONTENT.value,
+                cls.READ_PRODUCT_DATA.value,
+                cls.READ_FINANCIAL_DATA.value
+            ]
+
     def __init__(self, domain: str, api_version: str=API_VERSION, application: str=DEFAULT_APPLICATION, verify=True):
         super().__init__()
         self._session = None
@@ -221,7 +241,7 @@ class GsSession(ContextBase):
     @classmethod
     def get(
             cls,
-            environment_or_domain: Union[Environment, str],
+            environment_or_domain: Union[Environment, str] = Environment.PROD,
             client_id: Optional[str] = None,
             client_secret: Optional[str] = None,
             scopes: Optional[Union[Tuple, List]] = (),
