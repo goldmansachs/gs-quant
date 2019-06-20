@@ -14,6 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 from .core import PricingContext
+from gs_quant.base import Priceable
 from gs_quant.datetime.date import business_day_offset, date_range
 from gs_quant.target.risk import PricingDateAndMarketDataAsOf
 
@@ -70,6 +71,9 @@ class HistoricalPricingContext(PricingContext):
             self.__date_range = tuple(dates)
         else:
             raise ValueError('Must supply start or dates')
+
+    def resolve_fields(self, priceable: Priceable):
+        raise RuntimeError('Cannot call resolve in HistoricalPricingContext')
 
     @property
     def _pricing_market_data_as_of(self) -> Tuple[PricingDateAndMarketDataAsOf, ...]:

@@ -1,15 +1,30 @@
 import gs_quant.timeseries.measures as tm
 import pandas as pd
 import pytest
+import datetime
 import unittest.mock
 from pandas.testing import assert_series_equal
+import numpy.testing as npt
+from gs_quant.markets.securities import Asset, AssetIdentifier, SecurityMaster
 from gs_quant.data.core import DataContext
 from gs_quant.errors import MqError
 from gs_quant.markets.securities import AssetClass, Cross, Index
+from gs_quant.session import Environment, GsSession
 from testfixtures import Replacer
 from testfixtures.mock import Mock
+import numpy.testing as npt
+from pandas import Timestamp
 
 _index = [pd.Timestamp('2019-01-01')]
+
+
+def mock_commod(_cls, _q):
+    d = {
+        'price': [35.929686, 35.636039, 27.307498, 23.23177, 19.020833, 18.827291, 17.823749, 17.393958, 17.824999,
+                  20.307603, 24.311249, 25.160103, 25.245728, 25.736873, 28.425206, 28.779789, 30.519996, 34.896348,
+                  33.966973, 33.95489, 33.686348, 34.840307, 32.674163, 30.261665]
+    }
+    return pd.DataFrame(data=d, index=pd.date_range('2019-05-01', periods=24, freq='H'))
 
 
 def mock_fx(_cls, _q):
@@ -23,7 +38,10 @@ def mock_fx(_cls, _q):
 def mock_eq(_cls, _q):
     d = {
         'relativeStrike': [0.75, 0.25, 0.5],
-        'impliedVolatility': [5, 1, 2]
+        'impliedVolatility': [5, 1, 2],
+        'impliedCorrelation': [5, 1, 2],
+        'averageImpliedVolatility': [5, 1, 2],
+        'averageImpliedVariance': [5, 1, 2]
     }
     return pd.DataFrame(data=d, index=_index * 3)
 
@@ -71,6 +89,10 @@ def test_skew():
     actual = tm.skew(mock_spx, '1m', tm.SkewReference.SPOT, 25)
     assert_series_equal(pd.Series([2.0], index=_index, name='impliedVolatility'), actual)
 
+    mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    mock.return_value = pd.DataFrame()
+    assert tm.skew(mock_spx, '1m', tm.SkewReference.SPOT, 25).empty
+
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_inc)
     with pytest.raises(MqError):
         tm.skew(mock_spx, '1m', tm.SkewReference.DELTA, 25)
@@ -91,6 +113,39 @@ def test_vol():
     assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='impliedVolatility'), actual)
     actual = tm.implied_volatility(mock_spx, '1m', tm.VolReference.DELTA_PUT, 75)
     assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='impliedVolatility'), actual)
+    replace.restore()
+
+
+def test_impl_corr():
+    replace = Replacer()
+    mock_spx = Index('MA890', AssetClass.Equity, 'SPX')
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_eq)
+    actual = tm.implied_correlation(mock_spx, '1m', tm.EdrDataReference.DELTA_CALL, 25)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='impliedCorrelation'), actual)
+    actual = tm.implied_correlation(mock_spx, '1m', tm.EdrDataReference.DELTA_PUT, 75)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='impliedCorrelation'), actual)
+    replace.restore()
+
+
+def test_avg_impl_vol():
+    replace = Replacer()
+    mock_spx = Index('MA890', AssetClass.Equity, 'SPX')
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_eq)
+    actual = tm.average_implied_volatility(mock_spx, '1m', tm.EdrDataReference.DELTA_CALL, 25)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='averageImpliedVolatility'), actual)
+    actual = tm.average_implied_volatility(mock_spx, '1m', tm.EdrDataReference.DELTA_PUT, 75)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='averageImpliedVolatility'), actual)
+    replace.restore()
+
+
+def test_avg_impl_var():
+    replace = Replacer()
+    mock_spx = Index('MA890', AssetClass.Equity, 'SPX')
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_eq)
+    actual = tm.average_implied_variance(mock_spx, '1m', tm.EdrDataReference.DELTA_CALL, 25)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='averageImpliedVariance'), actual)
+    actual = tm.average_implied_variance(mock_spx, '1m', tm.EdrDataReference.DELTA_PUT, 75)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='averageImpliedVariance'), actual)
     replace.restore()
 
 
@@ -118,17 +173,28 @@ def test_pricing_range():
         def today(cls):
             return cls(2019, 5, 25)
 
+    # mock
     replace = Replacer()
     cbd = replace('gs_quant.timeseries.measures._get_custom_bd', Mock())
     cbd.return_value = pd.tseries.offsets.BusinessDay()
-
+    today = replace('gs_quant.timeseries.measures.pd.Timestamp.today', Mock())
+    today.return_value = pd.Timestamp(2019, 5, 25)
     gold = datetime.date
     datetime.date = MockDate
+
+    # cases
     s, e = tm._range_from_pricing_date('ANY')
-    assert s.year == 2019
-    assert s.month == 5
-    assert s.day == 24
-    assert e == datetime.date(2019, 5, 25)
+    assert s == pd.Timestamp(2019, 5, 24)
+    assert e == pd.Timestamp(2019, 5, 25)
+
+    s, e = tm._range_from_pricing_date('ANY', '3m')
+    assert s == pd.Timestamp(2019, 2, 22)
+    assert e == pd.Timestamp(2019, 2, 24)
+
+    s, e = tm._range_from_pricing_date('ANY', '3b')
+    assert s == e == pd.Timestamp(2019, 5, 22)
+
+    # restore
     datetime.date = gold
     replace.restore()
 
@@ -233,6 +299,60 @@ def test_fwd_term():
         assert out.empty
     with pytest.raises(NotImplementedError):
         tm.fwd_term(..., real_time=True)
+
+
+def test_bucketize():
+    target = {
+        'base': [27.323461],
+        'offpeak': [26.004816],
+        'peak': [27.982783],
+        '7x8': [26.004816],
+        'monthly': [27.323461]
+    }
+
+    replace = Replacer()
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_commod)
+    mock_pjm = Index('MA001', AssetClass.Commod, 'PJM')
+
+    with DataContext(datetime.date(2019, 5, 1), datetime.date(2019, 5, 1)):
+
+        actual = tm.bucketize(mock_pjm, 'LMP', 'totalPrice', bucket='base')
+        assert_series_equal(pd.Series(target['base'],
+                                      index=[pd.Timestamp('2019-05-01')],
+                                      name='price'),
+                            actual)
+
+        actual = tm.bucketize(mock_pjm, 'LMP', 'totalPrice', bucket='offpeak')
+        assert_series_equal(pd.Series(target['offpeak'],
+                                      index=[pd.Timestamp('2019-05-01')],
+                                      name='price'),
+                            actual)
+
+        actual = tm.bucketize(mock_pjm, 'LMP', 'totalPrice', bucket='peak')
+        assert_series_equal(pd.Series(target['peak'],
+                                      index=[pd.Timestamp('2019-05-01')],
+                                      name='price'),
+                            actual)
+
+        actual = tm.bucketize(mock_pjm, 'LMP', 'totalPrice', bucket='7x8')
+        assert_series_equal(pd.Series(target['7x8'],
+                                      index=[pd.Timestamp('2019-05-01')],
+                                      name='price'),
+                            actual)
+
+        actual = tm.bucketize(mock_pjm, 'LMP', 'totalPrice', granularity='m', bucket='base')
+        assert_series_equal(pd.Series(target['monthly'],
+                                      index=[pd.Timestamp('2019-05-31')],
+                                      name='price'),
+                            actual)
+
+    with pytest.raises(ValueError):
+        tm.bucketize(mock_pjm, bucket='weekday')
+
+    with pytest.raises(ValueError):
+        tm.bucketize(mock_pjm, granularity='yearly')
+
+    replace.restore()
 
 
 if __name__ == '__main__':

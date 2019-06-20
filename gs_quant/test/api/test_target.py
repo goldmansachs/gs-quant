@@ -33,7 +33,7 @@ def new_instance(typ: type) -> Base:
 
 
 def test_classes():
-    for module_name in ('assets', 'common', 'content', 'data', 'indices', 'instrument', 'portfolios', 'reports', 'risk', 'trades'):
+    for module_name in ('assets', 'backtests', 'common', 'content', 'data', 'indices', 'instrument', 'portfolios', 'reports', 'risk', 'trades'):
         for typ in classes(module_name):
             obj = new_instance(typ)
 
