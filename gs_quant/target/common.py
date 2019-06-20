@@ -1214,6 +1214,7 @@ class Field(EnumBase, Enum):
     assetParametersPricingLocation = 'assetParametersPricingLocation'
     eventDescription = 'eventDescription'
     strikeReference = 'strikeReference'
+
     details = 'details'
     assetCount = 'assetCount'
     oeName = 'oeName'
@@ -1342,6 +1343,7 @@ class Field(EnumBase, Enum):
     holdings = 'holdings'
     symbolDimensions = 'symbolDimensions'
     priceMethod = 'priceMethod'
+    priceComponent = 'priceComponent'
     quotingStyle = 'quotingStyle'
     scenarioGroupId = 'scenarioGroupId'
     errorMessage = 'errorMessage'
@@ -3221,543 +3223,6 @@ class RiskMeasure(Base):
         self._property_changed('unit')        
 
 
-class ISelectNewParameter(Base):
-               
-    def __init__(self, earlyUnwindAfter: float = None, earlyUnwindApplicable: str = None, expiryDateRule: str = None, optionTargetExpiryParameter: float = None, optionEarlyUnwindDays: float = None, inAlpha: bool = None, isFSRTargetFactor: bool = None, fsrMaxRatio: float = None, fsrMinRatio: float = None, moduleEnabled: bool = None, moduleName: str = None, bloombergId: str = None, stockId: str = None, newWeight: float = None, notional: float = None, optionType: Union[OptionType, str] = None, optionStrikeType: Union[OptionStrikeType, str] = None, strikeRelative: float = None, tradeType: Union[TradeType, str] = None, signal: float = None, newSignal: float = None, newMinWeight: float = None, newMaxWeight: float = None, minWeight: float = None, maxWeight: float = None):
-        super().__init__()
-        self.__earlyUnwindAfter = earlyUnwindAfter
-        self.__earlyUnwindApplicable = earlyUnwindApplicable
-        self.__expiryDateRule = expiryDateRule
-        self.__optionTargetExpiryParameter = optionTargetExpiryParameter
-        self.__optionEarlyUnwindDays = optionEarlyUnwindDays
-        self.__inAlpha = inAlpha
-        self.__isFSRTargetFactor = isFSRTargetFactor
-        self.__fsrMaxRatio = fsrMaxRatio
-        self.__fsrMinRatio = fsrMinRatio
-        self.__moduleEnabled = moduleEnabled
-        self.__moduleName = moduleName
-        self.__bloombergId = bloombergId
-        self.__stockId = stockId
-        self.__newWeight = newWeight
-        self.__notional = notional
-        self.__optionType = optionType if isinstance(optionType, OptionType) else get_enum_value(OptionType, optionType)
-        self.__optionStrikeType = optionStrikeType if isinstance(optionStrikeType, OptionStrikeType) else get_enum_value(OptionStrikeType, optionStrikeType)
-        self.__strikeRelative = strikeRelative
-        self.__tradeType = tradeType if isinstance(tradeType, TradeType) else get_enum_value(TradeType, tradeType)
-        self.__signal = signal
-        self.__newSignal = newSignal
-        self.__newMinWeight = newMinWeight
-        self.__newMaxWeight = newMaxWeight
-        self.__minWeight = minWeight
-        self.__maxWeight = maxWeight
-
-    @property
-    def earlyUnwindAfter(self) -> float:
-        return self.__earlyUnwindAfter
-
-    @earlyUnwindAfter.setter
-    def earlyUnwindAfter(self, value: float):
-        self.__earlyUnwindAfter = value
-        self._property_changed('earlyUnwindAfter')        
-
-    @property
-    def earlyUnwindApplicable(self) -> str:
-        """Indicates whether the module can be unwinded early"""
-        return self.__earlyUnwindApplicable
-
-    @earlyUnwindApplicable.setter
-    def earlyUnwindApplicable(self, value: str):
-        self.__earlyUnwindApplicable = value
-        self._property_changed('earlyUnwindApplicable')        
-
-    @property
-    def expiryDateRule(self) -> str:
-        """Free text description of asset. Description provided will be indexed in the search service for free text relevance match"""
-        return self.__expiryDateRule
-
-    @expiryDateRule.setter
-    def expiryDateRule(self, value: str):
-        self.__expiryDateRule = value
-        self._property_changed('expiryDateRule')        
-
-    @property
-    def optionTargetExpiryParameter(self) -> float:
-        return self.__optionTargetExpiryParameter
-
-    @optionTargetExpiryParameter.setter
-    def optionTargetExpiryParameter(self, value: float):
-        self.__optionTargetExpiryParameter = value
-        self._property_changed('optionTargetExpiryParameter')        
-
-    @property
-    def optionEarlyUnwindDays(self) -> float:
-        return self.__optionEarlyUnwindDays
-
-    @optionEarlyUnwindDays.setter
-    def optionEarlyUnwindDays(self, value: float):
-        self.__optionEarlyUnwindDays = value
-        self._property_changed('optionEarlyUnwindDays')        
-
-    @property
-    def inAlpha(self) -> bool:
-        return self.__inAlpha
-
-    @inAlpha.setter
-    def inAlpha(self, value: bool):
-        self.__inAlpha = value
-        self._property_changed('inAlpha')        
-
-    @property
-    def isFSRTargetFactor(self) -> bool:
-        return self.__isFSRTargetFactor
-
-    @isFSRTargetFactor.setter
-    def isFSRTargetFactor(self, value: bool):
-        self.__isFSRTargetFactor = value
-        self._property_changed('isFSRTargetFactor')        
-
-    @property
-    def fsrMaxRatio(self) -> float:
-        return self.__fsrMaxRatio
-
-    @fsrMaxRatio.setter
-    def fsrMaxRatio(self, value: float):
-        self.__fsrMaxRatio = value
-        self._property_changed('fsrMaxRatio')        
-
-    @property
-    def fsrMinRatio(self) -> float:
-        return self.__fsrMinRatio
-
-    @fsrMinRatio.setter
-    def fsrMinRatio(self, value: float):
-        self.__fsrMinRatio = value
-        self._property_changed('fsrMinRatio')        
-
-    @property
-    def moduleEnabled(self) -> bool:
-        """Enable to disable the module"""
-        return self.__moduleEnabled
-
-    @moduleEnabled.setter
-    def moduleEnabled(self, value: bool):
-        self.__moduleEnabled = value
-        self._property_changed('moduleEnabled')        
-
-    @property
-    def moduleName(self) -> str:
-        """Free text description of asset. Description provided will be indexed in the search service for free text relevance match"""
-        return self.__moduleName
-
-    @moduleName.setter
-    def moduleName(self, value: str):
-        self.__moduleName = value
-        self._property_changed('moduleName')        
-
-    @property
-    def bloombergId(self) -> str:
-        return self.__bloombergId
-
-    @bloombergId.setter
-    def bloombergId(self, value: str):
-        self.__bloombergId = value
-        self._property_changed('bloombergId')        
-
-    @property
-    def stockId(self) -> str:
-        return self.__stockId
-
-    @stockId.setter
-    def stockId(self, value: str):
-        self.__stockId = value
-        self._property_changed('stockId')        
-
-    @property
-    def newWeight(self) -> float:
-        return self.__newWeight
-
-    @newWeight.setter
-    def newWeight(self, value: float):
-        self.__newWeight = value
-        self._property_changed('newWeight')        
-
-    @property
-    def notional(self) -> float:
-        return self.__notional
-
-    @notional.setter
-    def notional(self, value: float):
-        self.__notional = value
-        self._property_changed('notional')        
-
-    @property
-    def optionType(self) -> Union[OptionType, str]:
-        return self.__optionType
-
-    @optionType.setter
-    def optionType(self, value: Union[OptionType, str]):
-        self.__optionType = value if isinstance(value, OptionType) else get_enum_value(OptionType, value)
-        self._property_changed('optionType')        
-
-    @property
-    def optionStrikeType(self) -> Union[OptionStrikeType, str]:
-        return self.__optionStrikeType
-
-    @optionStrikeType.setter
-    def optionStrikeType(self, value: Union[OptionStrikeType, str]):
-        self.__optionStrikeType = value if isinstance(value, OptionStrikeType) else get_enum_value(OptionStrikeType, value)
-        self._property_changed('optionStrikeType')        
-
-    @property
-    def strikeRelative(self) -> float:
-        return self.__strikeRelative
-
-    @strikeRelative.setter
-    def strikeRelative(self, value: float):
-        self.__strikeRelative = value
-        self._property_changed('strikeRelative')        
-
-    @property
-    def tradeType(self) -> Union[TradeType, str]:
-        """Direction"""
-        return self.__tradeType
-
-    @tradeType.setter
-    def tradeType(self, value: Union[TradeType, str]):
-        self.__tradeType = value if isinstance(value, TradeType) else get_enum_value(TradeType, value)
-        self._property_changed('tradeType')        
-
-    @property
-    def signal(self) -> float:
-        return self.__signal
-
-    @signal.setter
-    def signal(self, value: float):
-        self.__signal = value
-        self._property_changed('signal')        
-
-    @property
-    def newSignal(self) -> float:
-        return self.__newSignal
-
-    @newSignal.setter
-    def newSignal(self, value: float):
-        self.__newSignal = value
-        self._property_changed('newSignal')        
-
-    @property
-    def newMinWeight(self) -> float:
-        return self.__newMinWeight
-
-    @newMinWeight.setter
-    def newMinWeight(self, value: float):
-        self.__newMinWeight = value
-        self._property_changed('newMinWeight')        
-
-    @property
-    def newMaxWeight(self) -> float:
-        return self.__newMaxWeight
-
-    @newMaxWeight.setter
-    def newMaxWeight(self, value: float):
-        self.__newMaxWeight = value
-        self._property_changed('newMaxWeight')        
-
-    @property
-    def minWeight(self) -> float:
-        return self.__minWeight
-
-    @minWeight.setter
-    def minWeight(self, value: float):
-        self.__minWeight = value
-        self._property_changed('minWeight')        
-
-    @property
-    def maxWeight(self) -> float:
-        return self.__maxWeight
-
-    @maxWeight.setter
-    def maxWeight(self, value: float):
-        self.__maxWeight = value
-        self._property_changed('maxWeight')        
-
-
-class MarketDataPattern(Base):
-        
-    """A pattern used to match market coordinates"""
-       
-    def __init__(self, marketDataType: str = None, marketDataAsset: str = None, pointClass: str = None, marketDataPoint: Tuple[str, ...] = None, quotingStyle: str = None, isActive: bool = None, isInvestmentGrade: bool = None, currency: Union[Currency, str] = None, countryCode: Union[CountryCode, str] = None, gicsSector: str = None, gicsIndustryGroup: str = None, gicsIndustry: str = None, gicsSubIndustry: str = None):
-        super().__init__()
-        self.__marketDataType = marketDataType
-        self.__marketDataAsset = marketDataAsset
-        self.__pointClass = pointClass
-        self.__marketDataPoint = marketDataPoint
-        self.__quotingStyle = quotingStyle
-        self.__isActive = isActive
-        self.__isInvestmentGrade = isInvestmentGrade
-        self.__currency = currency if isinstance(currency, Currency) else get_enum_value(Currency, currency)
-        self.__countryCode = countryCode if isinstance(countryCode, CountryCode) else get_enum_value(CountryCode, countryCode)
-        self.__gicsSector = gicsSector
-        self.__gicsIndustryGroup = gicsIndustryGroup
-        self.__gicsIndustry = gicsIndustry
-        self.__gicsSubIndustry = gicsSubIndustry
-
-    @property
-    def marketDataType(self) -> str:
-        """The Market Data Type, e.g. IR, IR_BASIS, FX, FX_Vol"""
-        return self.__marketDataType
-
-    @marketDataType.setter
-    def marketDataType(self, value: str):
-        self.__marketDataType = value
-        self._property_changed('marketDataType')        
-
-    @property
-    def marketDataAsset(self) -> str:
-        """The specific point, e.g. 3m, 10y, 11y, Dec19"""
-        return self.__marketDataAsset
-
-    @marketDataAsset.setter
-    def marketDataAsset(self, value: str):
-        self.__marketDataAsset = value
-        self._property_changed('marketDataAsset')        
-
-    @property
-    def pointClass(self) -> str:
-        """The market data pointClass, e.g. Swap, Cash."""
-        return self.__pointClass
-
-    @pointClass.setter
-    def pointClass(self, value: str):
-        self.__pointClass = value
-        self._property_changed('pointClass')        
-
-    @property
-    def marketDataPoint(self) -> Tuple[str, ...]:
-        """The specific point, e.g. 3m, 10y, 11y, Dec19"""
-        return self.__marketDataPoint
-
-    @marketDataPoint.setter
-    def marketDataPoint(self, value: Tuple[str, ...]):
-        self.__marketDataPoint = value
-        self._property_changed('marketDataPoint')        
-
-    @property
-    def quotingStyle(self) -> str:
-        return self.__quotingStyle
-
-    @quotingStyle.setter
-    def quotingStyle(self, value: str):
-        self.__quotingStyle = value
-        self._property_changed('quotingStyle')        
-
-    @property
-    def isActive(self) -> bool:
-        """Is the asset active"""
-        return self.__isActive
-
-    @isActive.setter
-    def isActive(self, value: bool):
-        self.__isActive = value
-        self._property_changed('isActive')        
-
-    @property
-    def isInvestmentGrade(self) -> bool:
-        """Is the asset investment grade"""
-        return self.__isInvestmentGrade
-
-    @isInvestmentGrade.setter
-    def isInvestmentGrade(self, value: bool):
-        self.__isInvestmentGrade = value
-        self._property_changed('isInvestmentGrade')        
-
-    @property
-    def currency(self) -> Union[Currency, str]:
-        """Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)"""
-        return self.__currency
-
-    @currency.setter
-    def currency(self, value: Union[Currency, str]):
-        self.__currency = value if isinstance(value, Currency) else get_enum_value(Currency, value)
-        self._property_changed('currency')        
-
-    @property
-    def countryCode(self) -> Union[CountryCode, str]:
-        """ISO Country code"""
-        return self.__countryCode
-
-    @countryCode.setter
-    def countryCode(self, value: Union[CountryCode, str]):
-        self.__countryCode = value if isinstance(value, CountryCode) else get_enum_value(CountryCode, value)
-        self._property_changed('countryCode')        
-
-    @property
-    def gicsSector(self) -> str:
-        """GICS Sector classification (level 1)"""
-        return self.__gicsSector
-
-    @gicsSector.setter
-    def gicsSector(self, value: str):
-        self.__gicsSector = value
-        self._property_changed('gicsSector')        
-
-    @property
-    def gicsIndustryGroup(self) -> str:
-        """GICS Industry Group classification (level 2)"""
-        return self.__gicsIndustryGroup
-
-    @gicsIndustryGroup.setter
-    def gicsIndustryGroup(self, value: str):
-        self.__gicsIndustryGroup = value
-        self._property_changed('gicsIndustryGroup')        
-
-    @property
-    def gicsIndustry(self) -> str:
-        """GICS Industry classification (level 3)"""
-        return self.__gicsIndustry
-
-    @gicsIndustry.setter
-    def gicsIndustry(self, value: str):
-        self.__gicsIndustry = value
-        self._property_changed('gicsIndustry')        
-
-    @property
-    def gicsSubIndustry(self) -> str:
-        """GICS Sub Industry classification (level 4)"""
-        return self.__gicsSubIndustry
-
-    @gicsSubIndustry.setter
-    def gicsSubIndustry(self, value: str):
-        self.__gicsSubIndustry = value
-        self._property_changed('gicsSubIndustry')        
-
-
-class MarketDataShock(Base):
-        
-    """A shock to apply to market coordinate values"""
-       
-    def __init__(self, shockType: Union[MarketDataShockType, str], value: float, precision: float = None, cap: float = None, floor: float = None, coordinateCap: float = None, coordinateFloor: float = None):
-        super().__init__()
-        self.__shockType = shockType if isinstance(shockType, MarketDataShockType) else get_enum_value(MarketDataShockType, shockType)
-        self.__value = value
-        self.__precision = precision
-        self.__cap = cap
-        self.__floor = floor
-        self.__coordinateCap = coordinateCap
-        self.__coordinateFloor = coordinateFloor
-
-    @property
-    def shockType(self) -> Union[MarketDataShockType, str]:
-        """Market data shock type"""
-        return self.__shockType
-
-    @shockType.setter
-    def shockType(self, value: Union[MarketDataShockType, str]):
-        self.__shockType = value if isinstance(value, MarketDataShockType) else get_enum_value(MarketDataShockType, value)
-        self._property_changed('shockType')        
-
-    @property
-    def value(self) -> float:
-        """The amount by which to shock matching coordinates"""
-        return self.__value
-
-    @value.setter
-    def value(self, value: float):
-        self.__value = value
-        self._property_changed('value')        
-
-    @property
-    def precision(self) -> float:
-        """The precision to which the shock will be rounded"""
-        return self.__precision
-
-    @precision.setter
-    def precision(self, value: float):
-        self.__precision = value
-        self._property_changed('precision')        
-
-    @property
-    def cap(self) -> float:
-        """Upper bound on the shocked value"""
-        return self.__cap
-
-    @cap.setter
-    def cap(self, value: float):
-        self.__cap = value
-        self._property_changed('cap')        
-
-    @property
-    def floor(self) -> float:
-        """Lower bound on the shocked value"""
-        return self.__floor
-
-    @floor.setter
-    def floor(self, value: float):
-        self.__floor = value
-        self._property_changed('floor')        
-
-    @property
-    def coordinateCap(self) -> float:
-        """Upper bound on the pre-shocked value of matching coordinates"""
-        return self.__coordinateCap
-
-    @coordinateCap.setter
-    def coordinateCap(self, value: float):
-        self.__coordinateCap = value
-        self._property_changed('coordinateCap')        
-
-    @property
-    def coordinateFloor(self) -> float:
-        """Lower bound on the pre-shocked value of matching coordinates"""
-        return self.__coordinateFloor
-
-    @coordinateFloor.setter
-    def coordinateFloor(self, value: float):
-        self.__coordinateFloor = value
-        self._property_changed('coordinateFloor')        
-
-
-class RiskMeasure(Base):
-        
-    """The measure to perform risk on. Each risk measure consists of an asset class, a measure type, and a unit."""
-       
-    def __init__(self, assetClass: Union[AssetClass, str] = None, measureType: Union[RiskMeasureType, str] = None, unit: Union[RiskMeasureUnit, str] = None):
-        super().__init__()
-        self.__assetClass = assetClass if isinstance(assetClass, AssetClass) else get_enum_value(AssetClass, assetClass)
-        self.__measureType = measureType if isinstance(measureType, RiskMeasureType) else get_enum_value(RiskMeasureType, measureType)
-        self.__unit = unit if isinstance(unit, RiskMeasureUnit) else get_enum_value(RiskMeasureUnit, unit)
-
-    @property
-    def assetClass(self) -> Union[AssetClass, str]:
-        """Asset classification of security. Assets are classified into broad groups which exhibit similar characteristics and behave in a consistent way under different market conditions"""
-        return self.__assetClass
-
-    @assetClass.setter
-    def assetClass(self, value: Union[AssetClass, str]):
-        self.__assetClass = value if isinstance(value, AssetClass) else get_enum_value(AssetClass, value)
-        self._property_changed('assetClass')        
-
-    @property
-    def measureType(self) -> Union[RiskMeasureType, str]:
-        """The type of measure to perform risk on. e.g. Greeks"""
-        return self.__measureType
-
-    @measureType.setter
-    def measureType(self, value: Union[RiskMeasureType, str]):
-        self.__measureType = value if isinstance(value, RiskMeasureType) else get_enum_value(RiskMeasureType, value)
-        self._property_changed('measureType')        
-
-    @property
-    def unit(self) -> Union[RiskMeasureUnit, str]:
-        """The unit of change of underlying in the risk computation."""
-        return self.__unit
-
-    @unit.setter
-    def unit(self, value: Union[RiskMeasureUnit, str]):
-        self.__unit = value if isinstance(value, RiskMeasureUnit) else get_enum_value(RiskMeasureUnit, value)
-        self._property_changed('unit')        
-
-
 class DataSetFieldMap(Base):
         
     """The mapping between data set field and risk measure type"""
@@ -4364,6 +3829,7 @@ class FieldFilterMap(Base):
         self.__holdings = kwargs.get('holdings')
         self.__symbolDimensions = kwargs.get('symbolDimensions')
         self.__priceMethod = kwargs.get('priceMethod')
+        self.__priceComponent = kwargs.get('priceComponent')
         self.__quotingStyle = kwargs.get('quotingStyle')
         self.__scenarioGroupId = kwargs.get('scenarioGroupId')
         self.__errorMessage = kwargs.get('errorMessage')
@@ -9386,7 +8852,16 @@ class FieldFilterMap(Base):
     @priceMethod.setter
     def priceMethod(self, value: dict):
         self.__priceMethod = value
-        self._property_changed('priceMethod')        
+        self._property_changed('priceMethod')
+
+    @property
+    def priceComponent(self) -> dict:
+        return self.__priceComponent
+
+    @priceComponent.setter
+    def priceComponent(self, value: dict):
+        self.__priceComponent = value
+        self._property_changed('priceComponent')
 
     @property
     def quotingStyle(self) -> dict:
@@ -13388,11 +12863,11 @@ class FieldValueMap(Base):
         self._property_changed('arrivalRtNormalized')        
 
     @property
-    def performanceFee(self) -> Union[Op, float]:
+    def performanceFee(self) -> Union[float, Op]:
         return self.__performanceFee
 
     @performanceFee.setter
-    def performanceFee(self, value: Union[Op, float]):
+    def performanceFee(self, value: Union[float, Op]):
         self.__performanceFee = value
         self._property_changed('performanceFee')        
 
@@ -14921,11 +14396,11 @@ class FieldValueMap(Base):
         self._property_changed('newIdeasYtd')        
 
     @property
-    def managementFee(self) -> Union[Op, float]:
+    def managementFee(self) -> Union[float, Op]:
         return self.__managementFee
 
     @managementFee.setter
-    def managementFee(self, value: Union[Op, float]):
+    def managementFee(self, value: Union[float, Op]):
         self.__managementFee = value
         self._property_changed('managementFee')        
 
@@ -15369,11 +14844,11 @@ class FieldValueMap(Base):
         self._property_changed('name')        
 
     @property
-    def aum(self) -> Union[Op, float]:
+    def aum(self) -> Union[float, Op]:
         return self.__aum
 
     @aum.setter
-    def aum(self, value: Union[Op, float]):
+    def aum(self, value: Union[float, Op]):
         self.__aum = value
         self._property_changed('aum')        
 

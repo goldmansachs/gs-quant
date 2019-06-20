@@ -370,7 +370,8 @@ class SecurityMaster:
                 GsAssetType.Index.value,
                 GsAssetType.Risk_Premia.value,
                 GsAssetType.Access.value,
-                GsAssetType.Multi_Asset_Allocation.value):
+                GsAssetType.Multi_Asset_Allocation.value,
+                GsAssetType.Swap.value):
             return Index(gs_asset.id, gs_asset.assetClass, gs_asset.name, gs_asset.exchange)
 
         if asset_type in (

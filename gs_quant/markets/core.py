@@ -242,6 +242,9 @@ class PricingContext(ContextBaseWithDefault):
             if isinstance(res, Future):
                 field_values = field_values.result()
 
+            if isinstance(field_values, (list, tuple)):
+                field_values = field_values[0]
+
             for field, value in field_values.items():
                 value = value_mappings.get(value, value)
                 if field in priceable.properties() and value not in invalid_defaults:

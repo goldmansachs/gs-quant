@@ -88,6 +88,12 @@ def test_coordinates_data(mocker):
         }
     ]
 
+    bond_expected_df = sort_risk(pd.DataFrame(bond_expected_result))
+    bond_expected_df = bond_expected_df.set_index(pd.DatetimeIndex(bond_expected_df.time.values))
+
+    swap_expected_df = sort_risk(pd.DataFrame(swap_expected_result))
+    swap_expected_df = swap_expected_df.set_index(pd.DatetimeIndex(swap_expected_df.time.values))
+
     # mock GsSession
     mocker.patch.object(GsSession.__class__, 'current',
                         return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
@@ -98,14 +104,13 @@ def test_coordinates_data(mocker):
 
     coord_data_result = GsDataApi.coordinates_data(coordinates=test_coordinates[0], start=dt.datetime(2019, 1, 2, 1, 0),
                                                    end=dt.datetime(2019, 1, 2, 1, 10))
-    arse = sort_risk(pd.DataFrame(bond_expected_result))
-    assert_frame_equal(coord_data_result, sort_risk(pd.DataFrame(bond_expected_result)))
+    assert_frame_equal(coord_data_result, bond_expected_df)
 
     coords_data_result = GsDataApi.coordinates_data(coordinates=test_coordinates, start=dt.datetime(2019, 1, 2, 1, 0),
                                                     end=dt.datetime(2019, 1, 2, 1, 10), as_multiple_dataframes=True)
     assert len(coords_data_result) == 2
-    assert_frame_equal(coords_data_result[0], sort_risk(pd.DataFrame(bond_expected_result)))
-    assert_frame_equal(coords_data_result[1], sort_risk(pd.DataFrame(swap_expected_result)))
+    assert_frame_equal(coords_data_result[0], bond_expected_df)
+    assert_frame_equal(coords_data_result[1], swap_expected_df)
 
 
 def test_coordinate_last(mocker):
