@@ -13,14 +13,16 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from abc import ABCMeta
+import datetime as dt
+from unittest import mock
+
+import pandas as pd
+import pytest
 
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.data import Dataset
-
-import datetime as dt
-import pandas as pd
-from unittest import mock
+from gs_quant.data.utils import construct_dataframe_with_types
+from gs_quant.target.data import FieldValueMap
 
 test_data = [
     {
@@ -38,7 +40,7 @@ test_data = [
         'lowPrice': 2467.47,
         'adjustedHighPrice': 2519.49,
         'adjustedLowPrice': 2467.47,
-        'updateTime': '2019-01-03T00:53:00Z'
+        'updateTime': dt.datetime.strptime('2019-01-03T00:53:00Z', '%Y-%m-%dT%H:%M:%SZ')
     },
     {
         'date': dt.date(2019, 1, 3),
@@ -55,7 +57,7 @@ test_data = [
         'lowPrice': 2443.96,
         'adjustedHighPrice': 2493.14,
         'adjustedLowPrice': 2443.96,
-        'updateTime': '2019-01-04T00:14:00Z'
+        'updateTime': dt.datetime.strptime('2019-01-04T00:14:00Z', '%Y-%m-%dT%H:%M:%SZ')
     },
     {
         'date': dt.date(2019, 1, 4),
@@ -72,7 +74,7 @@ test_data = [
         'lowPrice': 2474.33,
         'adjustedHighPrice': 2538.07,
         'adjustedLowPrice': 2474.33,
-        'updateTime': '2019-01-08T00:31:00Z'
+        'updateTime': dt.datetime.strptime('2019-01-08T00:31:00Z', '%Y-%m-%dT%H:%M:%SZ')
     },
     {
         'date': dt.date(2019, 1, 7),
@@ -89,7 +91,7 @@ test_data = [
         'lowPrice': 2524.56,
         'adjustedHighPrice': 2566.16,
         'adjustedLowPrice': 2524.56,
-        'updateTime': '2019-01-08T00:31:00'
+        'updateTime': dt.datetime.strptime('2019-01-08T00:31:00Z', '%Y-%m-%dT%H:%M:%SZ')
     },
     {
         'date': dt.date(2019, 1, 8),
@@ -106,7 +108,7 @@ test_data = [
         'lowPrice': 2547.56,
         'adjustedHighPrice': 2579.82,
         'adjustedLowPrice': 2547.56,
-        'updateTime': '2019-01-09T00:50:00Z'
+        'updateTime': dt.datetime.strptime('2019-01-09T00:50:00Z', '%Y-%m-%dT%H:%M:%SZ')
     },
     {
         'date': dt.date(2019, 1, 9),
@@ -123,18 +125,28 @@ test_data = [
         'lowPrice': 2568.89,
         'adjustedHighPrice': 2595.32,
         'adjustedLowPrice': 2568.89,
-        'updateTime': '2019-01-10T00:44:00Z'
+        'updateTime': dt.datetime.strptime('2019-01-10T00:44:00Z', '%Y-%m-%dT%H:%M:%SZ')
     }
 ]
 
-test_coverage_data = { 'results': [{ 'gsid': 'gsid1' }] }
+test_coverage_data = {'results': [{'gsid': 'gsid1'}]}
+
 
 @mock.patch.object(GsDataApi, 'query_data')
 def test_query_data(mocker):
     mocker.return_value = test_data
     dataset = Dataset(Dataset.TR.TREOD)
     data = dataset.get_data(dt.date(2019, 1, 2), dt.date(2019, 1, 9), assetId='MA4B66MW5E27U8P32SB')
-    assert data.equals(pd.DataFrame(test_data))
+    assert data.equals(construct_dataframe_with_types(test_data))
+
+
+@mock.patch.object(GsDataApi, 'query_data')
+def test_query_data_types(mocker):
+    field_value_map_list = [FieldValueMap(**d) for d in test_data]
+    mocker.return_value = field_value_map_list
+    dataset = Dataset(Dataset.TR.TREOD)
+    data = dataset.get_data(dt.date(2019, 1, 2), dt.date(2019, 1, 9), assetId='MA4B66MW5E27U8P32SB')
+    assert data.equals(construct_dataframe_with_types(field_value_map_list))
 
 
 @mock.patch.object(GsDataApi, 'last_data')
@@ -142,22 +154,24 @@ def test_last_data(mocker):
     mocker.return_value = [test_data[-1]]
     dataset = Dataset(Dataset.TR.TREOD)
     data = dataset.get_data_last(dt.date(2019, 1, 9), assetId='MA4B66MW5E27U8P32SB')
-    assert data.equals(pd.DataFrame([test_data[-1]]))
+    assert data.equals(construct_dataframe_with_types(([test_data[-1]])))
 
 
 def test_get_data_series(mocker):
-    mocker.patch.object(GsDataApi, 'query_data', return_value=test_data)
+    field_value_maps = tuple([FieldValueMap(**d) for d in test_data])
+    mocker.patch.object(GsDataApi, 'query_data', return_value=field_value_maps)
     mocker.patch.object(GsDataApi, 'symbol_dimensions', return_value=('assetId',))
-    mocker.patch.object(GsDataApi, 'time_field', return_value='date')
 
     dataset = Dataset(Dataset.TR.TREOD)
-    series = dataset.get_data_series('tradePrice', dt.date(2019, 1, 2), dt.date(2019, 1, 9), assetId='MA4B66MW5E27U8P32SB')
+    series = dataset.get_data_series('tradePrice', dt.date(2019, 1, 2), dt.date(2019, 1, 9),
+                                     assetId='MA4B66MW5E27U8P32SB')
 
     df = pd.DataFrame(test_data)
     index = pd.to_datetime(df.loc[:, 'date'].values)
     expected = pd.Series(index=index, data=df.loc[:, 'tradePrice'].values)
+    expected = expected.rename_axis('date')
 
-    assert series.equals(pd.Series(expected))
+    pd.testing.assert_series_equal(series, expected)
 
 
 @mock.patch.object(GsDataApi, 'get_coverage')
@@ -165,5 +179,8 @@ def test_get_coverage(mocker):
     mocker.return_value = test_coverage_data
     data = Dataset(Dataset.TR.TREOD).get_coverage()
 
-    assert data.equals(pd.DataFrame(test_coverage_data))
+    assert data.equals(construct_dataframe_with_types(test_coverage_data))
 
+
+if __name__ == "__main__":
+    pytest.main(args=["test_dataset.py"])

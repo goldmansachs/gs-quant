@@ -78,6 +78,10 @@ class CoordinatesRequest(Base):
 
     @property
     def instruments(self) -> Tuple[Priceable, ...]:
+        """Instrument or Id  
+To specify a Marquee asset use the asset Id.
+For listed products use an XRef, e.g. { 'bid': 'NGZ19 Comdty' }, { 'isin': 'US912810SD19' }.
+To specify an instrument use one of the listed types"""
         return self.__instruments
 
     @instruments.setter
@@ -94,6 +98,7 @@ class CoordinatesResponse(Base):
 
     @property
     def results(self) -> Tuple[MarketDataCoordinate, ...]:
+        """Object representation of a market data coordinate"""
         return self.__results
 
     @results.setter

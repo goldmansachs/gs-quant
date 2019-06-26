@@ -458,15 +458,13 @@ class CustomBasketsEditInputs(Base):
         
     """parameters used to edit a basket"""
        
-    def __init__(self, name: str = None, description: str = None, styles: Tuple[str, ...] = None, relatedContent: GIRDomain = None, publishParameters: PublishParameters = None, indexNotes: str = None, indexNotTradingReasons: Union[IndexNotTradingReasons, str] = None):
+    def __init__(self, name: str = None, description: str = None, styles: Tuple[str, ...] = None, relatedContent: GIRDomain = None, publishParameters: PublishParameters = None):
         super().__init__()
         self.__name = name
         self.__description = description
         self.__styles = styles
         self.__relatedContent = relatedContent
         self.__publishParameters = publishParameters
-        self.__indexNotes = indexNotes
-        self.__indexNotTradingReasons = indexNotTradingReasons if isinstance(indexNotTradingReasons, IndexNotTradingReasons) else get_enum_value(IndexNotTradingReasons, indexNotTradingReasons)
 
     @property
     def name(self) -> str:
@@ -516,26 +514,6 @@ class CustomBasketsEditInputs(Base):
     def publishParameters(self, value: PublishParameters):
         self.__publishParameters = value
         self._property_changed('publishParameters')        
-
-    @property
-    def indexNotes(self) -> str:
-        """Notes for the index"""
-        return self.__indexNotes
-
-    @indexNotes.setter
-    def indexNotes(self, value: str):
-        self.__indexNotes = value
-        self._property_changed('indexNotes')        
-
-    @property
-    def indexNotTradingReasons(self) -> Union[IndexNotTradingReasons, str]:
-        """Reasons the index was not traded"""
-        return self.__indexNotTradingReasons
-
-    @indexNotTradingReasons.setter
-    def indexNotTradingReasons(self, value: Union[IndexNotTradingReasons, str]):
-        self.__indexNotTradingReasons = value if isinstance(value, IndexNotTradingReasons) else get_enum_value(IndexNotTradingReasons, value)
-        self._property_changed('indexNotTradingReasons')        
 
 
 class ISelectRebalance(Base):
@@ -1028,7 +1006,7 @@ class IndicesCreateInputs(Base):
         
     """Inputs used to create an index"""
        
-    def __init__(self, ticker: str, name: str, pricingParameters: IndicesPriceParameters, positionSet: Tuple[PositionPriceInput, ...], description: str = None, styles: Tuple[str, ...] = None, relatedContent: GIRDomain = None, indexCreateSource: Union[IndexCreateSource, str] = None, returnType: str = 'Price Return', publishParameters: PublishParameters = None, indexNotes: str = None, onBehalfOf: str = None):
+    def __init__(self, ticker: str, name: str, pricingParameters: IndicesPriceParameters, positionSet: Tuple[PositionPriceInput, ...], description: str = None, styles: Tuple[str, ...] = None, relatedContent: GIRDomain = None, indexCreateSource: Union[IndexCreateSource, str] = None, returnType: str = 'Price Return', publishParameters: PublishParameters = None, onBehalfOf: str = None):
         super().__init__()
         self.__ticker = ticker
         self.__name = name
@@ -1040,7 +1018,6 @@ class IndicesCreateInputs(Base):
         self.__positionSet = positionSet
         self.__publishParameters = publishParameters
         self.__pricingParameters = pricingParameters
-        self.__indexNotes = indexNotes
         self.__onBehalfOf = onBehalfOf
 
     @property
@@ -1142,16 +1119,6 @@ class IndicesCreateInputs(Base):
     def pricingParameters(self, value: IndicesPriceParameters):
         self.__pricingParameters = value
         self._property_changed('pricingParameters')        
-
-    @property
-    def indexNotes(self) -> str:
-        """Notes for the index"""
-        return self.__indexNotes
-
-    @indexNotes.setter
-    def indexNotes(self, value: str):
-        self.__indexNotes = value
-        self._property_changed('indexNotes')        
 
     @property
     def onBehalfOf(self) -> str:

@@ -1,2 +1,3 @@
 include gs_quant/config.ini
 include gs_quant/notebooks/*
+include gs_quant/docs/*

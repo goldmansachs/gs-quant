@@ -1,0 +1,32 @@
+
+Timeseries Package
+==================
+
+Statistics functions
+--------------------
+
+.. currentmodule:: gs_quant.timeseries.statistics
+
+.. autosummary::
+   :toctree: functions
+
+   generate_series
+
+
+Econometrics functions
+----------------------
+
+.. currentmodule:: gs_quant.timeseries.econometrics
+
+.. autosummary::
+   :toctree: functions
+
+   annualize
+   lag
+   returns
+   prices
+   diff
+   index
+   volatility
+   correlation
+   beta
