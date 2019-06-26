@@ -128,19 +128,20 @@ class Base:
     @classmethod
     def _from_dict(cls, values: dict) -> 'Base':
         args = [k for k, v in signature(cls.__init__).parameters.items() if v.default == Parameter.empty][1:]
-
         required = {}
-        for arg in args:
-            prop_type = cls.prop_type(arg)
-            value = values.pop(arg, None)
 
-            if prop_type:
-                if issubclass(prop_type, Base):
-                    value = prop_type.from_dict(value)
-                elif issubclass(prop_type, EnumBase):
-                    value = get_enum_value(prop_type, value)
+        if args != ['kwargs']:
+            for arg in args:
+                prop_type = cls.prop_type(arg)
+                value = values.pop(arg, None)
 
-            required[arg] = value
+                if prop_type:
+                    if issubclass(prop_type, Base):
+                        value = prop_type.from_dict(value)
+                    elif issubclass(prop_type, EnumBase):
+                        value = get_enum_value(prop_type, value)
+
+                required[arg] = value
 
         instance = cls(**required)
         instance.__from_dict(values)

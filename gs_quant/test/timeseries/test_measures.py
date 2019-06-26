@@ -12,8 +12,8 @@ from gs_quant.markets.securities import AssetClass, Cross, Index
 from gs_quant.session import Environment, GsSession
 from testfixtures import Replacer
 from testfixtures.mock import Mock
-import numpy.testing as npt
-from pandas import Timestamp
+from pytz import timezone
+
 
 _index = [pd.Timestamp('2019-01-01')]
 
@@ -24,7 +24,7 @@ def mock_commod(_cls, _q):
                   20.307603, 24.311249, 25.160103, 25.245728, 25.736873, 28.425206, 28.779789, 30.519996, 34.896348,
                   33.966973, 33.95489, 33.686348, 34.840307, 32.674163, 30.261665]
     }
-    return pd.DataFrame(data=d, index=pd.date_range('2019-05-01', periods=24, freq='H'))
+    return pd.DataFrame(data=d, index=pd.date_range('2019-05-01', periods=24, freq='H', tz=timezone('US/Eastern')))
 
 
 def mock_fx(_cls, _q):
@@ -302,6 +302,7 @@ def test_fwd_term():
 
 
 def test_bucketize():
+
     target = {
         'base': [27.323461],
         'offpeak': [26.004816],
@@ -314,35 +315,35 @@ def test_bucketize():
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_commod)
     mock_pjm = Index('MA001', AssetClass.Commod, 'PJM')
 
-    with DataContext(datetime.date(2019, 5, 1), datetime.date(2019, 5, 1)):
+    with DataContext(DataContext.current.start_date, DataContext.current.end_date):
 
         actual = tm.bucketize(mock_pjm, 'LMP', 'totalPrice', bucket='base')
         assert_series_equal(pd.Series(target['base'],
-                                      index=[pd.Timestamp('2019-05-01')],
+                                      index=[datetime.date(2019, 5, 1)],
                                       name='price'),
                             actual)
 
         actual = tm.bucketize(mock_pjm, 'LMP', 'totalPrice', bucket='offpeak')
         assert_series_equal(pd.Series(target['offpeak'],
-                                      index=[pd.Timestamp('2019-05-01')],
+                                      index=[datetime.date(2019, 5, 1)],
                                       name='price'),
                             actual)
 
         actual = tm.bucketize(mock_pjm, 'LMP', 'totalPrice', bucket='peak')
         assert_series_equal(pd.Series(target['peak'],
-                                      index=[pd.Timestamp('2019-05-01')],
+                                      index=[datetime.date(2019, 5, 1)],
                                       name='price'),
                             actual)
 
         actual = tm.bucketize(mock_pjm, 'LMP', 'totalPrice', bucket='7x8')
         assert_series_equal(pd.Series(target['7x8'],
-                                      index=[pd.Timestamp('2019-05-01')],
+                                      index=[datetime.date(2019, 5, 1)],
                                       name='price'),
                             actual)
 
         actual = tm.bucketize(mock_pjm, 'LMP', 'totalPrice', granularity='m', bucket='base')
         assert_series_equal(pd.Series(target['monthly'],
-                                      index=[pd.Timestamp('2019-05-31')],
+                                      index=[datetime.date(2019, 5, 31)],
                                       name='price'),
                             actual)
 

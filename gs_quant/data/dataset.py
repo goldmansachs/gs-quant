@@ -13,17 +13,20 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from gs_quant.api.data import DataApi
-from gs_quant.errors import MqValueError
-from .fields import Fields
 import datetime as dt
-import pandas as pd
 from enum import Enum
 from typing import Iterable, Optional, Union, List
 
+import pandas as pd
+
+from gs_quant.api.data import DataApi
+from gs_quant.data.fields import Fields
+from gs_quant.data.utils import construct_dataframe_with_types
+from gs_quant.errors import MqValueError
+
+
 
 class Dataset:
-
     """A collection of related data"""
 
     class Vendor(Enum):
@@ -31,21 +34,29 @@ class Dataset:
 
     class GS(Vendor):
         HOLIDAY = 'HOLIDAY'
-        EDRVOL_PERCENT_INTRADAY =  'EDRVOL_PERCENT_INTRADAY'
+        EDRVOL_PERCENT_INTRADAY = 'EDRVOL_PERCENT_INTRADAY'
         EDRVOL_PERCENT_SHORT = 'EDRVOL_PERCENT_SHORT'
         EDRVOL_PERCENT_LONG = 'EDRVOL_PERCENT_LONG'
         MA_RANK = 'MA_RANK'
         EDRVS_INDEX_SHORT = 'EDRVS_INDEX_SHORT'
         EDRVS_INDEX_LONG = 'EDRVS_INDEX_LONG'
+
+        # Baskets
         CBGSSI = 'CBGSSI'
+        CB = 'CB'
+
+        # STS
         STSLEVELS = 'STSLEVELS'
+
+        # Test Datasets
+        WEATHER = 'WEATHER'
 
     class TR(Vendor):
         TREOD = 'TREOD'
         TR = 'TR'
         TR_FXSPOT = 'TR_FXSPOT'
 
-    def __init__(self, dataset_id: Union[str, Vendor], provider: DataApi=None):
+    def __init__(self, dataset_id: Union[str, Vendor], provider: DataApi = None):
         """
 
         :param dataset_id: The dataset's identifier
@@ -74,14 +85,14 @@ class Dataset:
         return self.__provider or GsDataApi
 
     def get_data(
-        self,
-        start: Optional[Union[dt.date, dt.datetime]] = None,
-        end: Optional[Union[dt.date, dt.datetime]] = None,
-        as_of: Optional[dt.datetime] = None,
-        since: Optional[dt.datetime] = None,
-        fields: Optional[Iterable[Union[str, Fields]]] = None,
-        asset_id_type: str = None,
-        **kwargs
+            self,
+            start: Optional[Union[dt.date, dt.datetime]] = None,
+            end: Optional[Union[dt.date, dt.datetime]] = None,
+            as_of: Optional[dt.datetime] = None,
+            since: Optional[dt.datetime] = None,
+            fields: Optional[Iterable[Union[str, Fields]]] = None,
+            asset_id_type: str = None,
+            **kwargs
     ) -> pd.DataFrame:
         """
         Get data for the given range and parameters
@@ -114,7 +125,8 @@ class Dataset:
             **kwargs
         )
         data = self.provider.query_data(query, self.id, asset_id_type=asset_id_type)
-        return pd.DataFrame(data)
+
+        return construct_dataframe_with_types(data)
 
     def get_data_series(
             self,
@@ -161,23 +173,21 @@ class Dataset:
             raise MqValueError('get_data_series only valid for symbol_dimensions of length 1')
 
         symbol_dimension = symbol_dimensions[0]
-
-        df = pd.DataFrame(self.provider.query_data(query, self.id))
+        data = self.provider.query_data(query, self.id)
+        df = construct_dataframe_with_types(data)
 
         gb = df.groupby(symbol_dimension)
         if len(gb.groups) > 1:
             raise MqValueError('Not a series for a single {}'.format(symbol_dimension))
 
-        time_field = self.provider.time_field(self.id)
-        index = pd.to_datetime(df.loc[:, time_field].values)
-        return pd.Series(index=index, data=df.loc[:, field_value].values)
+        return pd.Series(index=df.index, data=df.loc[:, field_value].values)
 
     def get_data_last(
-        self,
-        as_of: Optional[Union[dt.date, dt.datetime]],
-        start: Optional[Union[dt.date, dt.datetime]] = None,
-        fields: Optional[Iterable[str]] = None,
-        **kwargs
+            self,
+            as_of: Optional[Union[dt.date, dt.datetime]],
+            start: Optional[Union[dt.date, dt.datetime]] = None,
+            fields: Optional[Iterable[str]] = None,
+            **kwargs
     ) -> pd.DataFrame:
         """
         Get the last point for this DataSet, at or before as_of
@@ -204,10 +214,10 @@ class Dataset:
         )
 
         data = self.provider.last_data(query, self.id)
-        return pd.DataFrame(data)
+        return construct_dataframe_with_types(data)
 
     def get_coverage(
-        self,
+            self,
             limit: int = None,
             offset: int = None,
             fields: List[str] = None
@@ -234,4 +244,4 @@ class Dataset:
             fields=fields
         )
 
-        return pd.DataFrame(coverage)
+        return construct_dataframe_with_types(coverage)

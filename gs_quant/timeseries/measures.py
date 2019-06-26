@@ -412,7 +412,7 @@ def fwd_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None, *, sourc
 
 @plot_measure((AssetClass.Commod,), None)
 def bucketize(asset: Asset, price_method: str = "LMP", price_component: str = "totalPrice", bucket: str = 'base',
-              granularity: str = 'daily',  *, source: str = None, real_time: bool = True) -> pd.Series:
+              granularity: str = 'daily', *, source: str = None, real_time: bool = True) -> pd.Series:
     """'
     Bucketized Elec Historical Clears
 
@@ -427,7 +427,7 @@ def bucketize(asset: Asset, price_method: str = "LMP", price_component: str = "t
     """
 
     # create granularity indicator for resample usage
-    if granularity.lower() in ['daily' or 'd']:
+    if granularity.lower() in ['daily', 'd']:
         resample = 'D'
     elif granularity.lower() in ['monthly', 'm']:
         resample = 'M'
@@ -443,13 +443,12 @@ def bucketize(asset: Asset, price_method: str = "LMP", price_component: str = "t
         _logger.debug('q %s', q)
 
     # convert timezone back to EST if needed
-    # df = df.tz_convert('US/Eastern')
+    # TODO: get timezone info from Asset
+    df = df.tz_convert('US/Eastern')
     dayofweek = df.index.dayofweek
     hour = df.index.hour
     date = df.index.date
-    holidays = NercCalendar().holidays(start=start, end=end)
-
-    print(list(df['price'].get_values()))
+    holidays = NercCalendar().holidays(start=start, end=end).date
 
     # TODO: get frequency definition from SecDB
     if bucket == 'base':
@@ -468,4 +467,6 @@ def bucketize(asset: Asset, price_method: str = "LMP", price_component: str = "t
     else:
         raise ValueError('Invalid bucket: ' + bucket + '. Expected Value: peak, offpeak, base, 7x8.')
 
-    return df['price'].resample(resample).mean()
+    df = df['price'].resample(resample).mean()
+    df.index = df.index.date
+    return df

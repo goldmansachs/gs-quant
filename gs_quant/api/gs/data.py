@@ -15,17 +15,19 @@ under the License.
 """
 import copy
 import datetime as dt
-import pandas as pd
 from itertools import chain
 from typing import Iterable, List, Optional, Tuple, Union
-from .assets import GsAssetApi, GsIdType
+
+import pandas as pd
+
 from gs_quant.api.data import DataApi
 from gs_quant.data.core import DataContext
-from gs_quant.target.common import FieldFilterMap, XRef, MarketDataCoordinate
-from gs_quant.target.data import DataQuery
 from gs_quant.errors import MqValueError
 from gs_quant.session import GsSession
+from gs_quant.target.common import FieldFilterMap, XRef, MarketDataCoordinate
+from gs_quant.target.data import DataQuery, MDAPIDataBatchResponse, DataQueryResponse
 from gs_quant.target.data import DataSetEntity
+from .assets import GsAssetApi, GsIdType
 
 
 class GsDataApi(DataApi):
@@ -36,10 +38,15 @@ class GsDataApi(DataApi):
 
     @classmethod
     def query_data(cls, query: DataQuery, dataset_id: str = None, asset_id_type: Union[GsIdType, str] = None) \
-            -> Union[list, tuple]:
+            -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple]:
         if query.marketDataCoordinates:
-            results = GsSession.current._post('/data/coordinates/query', payload=query)
-            return results.get('responses', ())
+            results: Union[MDAPIDataBatchResponse, dict] = GsSession.current._post('/data/coordinates/query',
+                                                                                   payload=query,
+                                                                                   cls=MDAPIDataBatchResponse)
+            if isinstance(results, dict):
+                return results.get('responses', ())
+            else:
+                return results.responses if results.responses is not None else ()
         if query.where:
             where = query.where.as_dict()
             xref_keys = set(where.keys()).intersection(XRef.properties())
@@ -66,8 +73,13 @@ class GsDataApi(DataApi):
                     setattr(query.where, xref_type, None)
                     query.where.assetId = [asset_id_map[x] for x in xref_values]
 
-        results = GsSession.current._post('/data/{}/query'.format(dataset_id), payload=query)
-        results = results.get('data', ())
+        results: Union[DataQueryResponse, dict] = GsSession.current._post('/data/{}/query'.format(dataset_id),
+                                                                          payload=query,
+                                                                          cls=DataQueryResponse)
+        if isinstance(results, dict):
+            results = results.get('data', ())
+        else:
+            results = results.data if results.data is not None else ()
 
         if asset_id_type not in {GsIdType.id, None}:
             asset_ids = tuple(set(filter(None, (r.get('assetId') for r in results))))

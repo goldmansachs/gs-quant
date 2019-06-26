@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import pytest
 from pandas.util.testing import assert_frame_equal
 
 from gs_quant.api.gs.data import GsDataApi
@@ -173,3 +174,6 @@ def test_get_coverage_api(mocker):
 
     assert [{'gsid': 'gsid1'}] == data
 
+
+if __name__ == "__main__":
+    pytest.main(args=["test_data.py"])
