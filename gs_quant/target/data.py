@@ -53,34 +53,6 @@ class MeasureEntityType(EnumBase, Enum):
         return self.value
 
 
-class Adjustments(Base):
-        
-    """Corporate action adjustments."""
-       
-    def __init__(self, priceColumns: Tuple[str, ...], adjustedSuffix: str):
-        super().__init__()
-        self.__priceColumns = priceColumns
-        self.__adjustedSuffix = adjustedSuffix
-
-    @property
-    def priceColumns(self) -> Tuple[str, ...]:
-        return self.__priceColumns
-
-    @priceColumns.setter
-    def priceColumns(self, value: Tuple[str, ...]):
-        self.__priceColumns = value
-        self._property_changed('priceColumns')        
-
-    @property
-    def adjustedSuffix(self) -> str:
-        return self.__adjustedSuffix
-
-    @adjustedSuffix.setter
-    def adjustedSuffix(self, value: str):
-        self.__adjustedSuffix = value
-        self._property_changed('adjustedSuffix')        
-
-
 class AdvancedFilter(Base):
         
     """Advanced filter for numeric fields."""
@@ -167,35 +139,14 @@ class DataGroup(Base):
         
     """Dataset grouped by context (key dimensions)"""
        
-    def __init__(self, context: FieldValueMap = None, data: Tuple[FieldValueMap, ...] = None):
+    def __init__(self, ):
         super().__init__()
-        self.__context = context
-        self.__data = data
-
-    @property
-    def context(self) -> FieldValueMap:
-        """Context map for the grouped data (key dimensions)"""
-        return self.__context
-
-    @context.setter
-    def context(self, value: FieldValueMap):
-        self.__context = value
-        self._property_changed('context')        
-
-    @property
-    def data(self) -> Tuple[FieldValueMap, ...]:
-        """Array of grouped data objects"""
-        return self.__data
-
-    @data.setter
-    def data(self, value: Tuple[FieldValueMap, ...]):
-        self.__data = value
-        self._property_changed('data')        
+        
 
 
 class DataQuery(Base):
                
-    def __init__(self, id: str = None, dataSetId: str = None, format: Union[Format, str] = None, marketDataCoordinates: Tuple[MarketDataCoordinate, ...] = None, where: FieldFilterMap = None, vendor: str = None, startDate: datetime.date = None, endDate: datetime.date = None, startTime: datetime.datetime = None, endTime: datetime.datetime = None, asOfTime: datetime.datetime = None, idAsOfDate: datetime.date = None, since: datetime.datetime = None, dates: Tuple[datetime.date, ...] = None, times: Tuple[datetime.datetime, ...] = None, delay: int = None, intervals: int = None, pollingInterval: int = None, groupBy: Tuple[Union[Field, str], ...] = None, grouped: bool = None, fields: Tuple[Union[dict, str], ...] = None):
+    def __init__(self, id: str = None, dataSetId: str = None, format: Union[Format, str] = None, marketDataCoordinates: Tuple[MarketDataCoordinate, ...] = None, where: FieldFilterMap = None, vendor: str = None, startDate: datetime.date = None, endDate: datetime.date = None, startTime: datetime.datetime = None, endTime: datetime.datetime = None, asOfTime: datetime.datetime = None, idAsOfDate: datetime.date = None, useTemporalXRef: bool = False, since: datetime.datetime = None, dates: Tuple[datetime.date, ...] = None, times: Tuple[datetime.datetime, ...] = None, delay: int = None, intervals: int = None, pollingInterval: int = None, grouped: bool = None, fields: Tuple[Union[dict, str], ...] = None):
         super().__init__()
         self.__id = id
         self.__dataSetId = dataSetId
@@ -209,13 +160,13 @@ class DataQuery(Base):
         self.__endTime = endTime
         self.__asOfTime = asOfTime
         self.__idAsOfDate = idAsOfDate
+        self.__useTemporalXRef = useTemporalXRef
         self.__since = since
         self.__dates = dates
         self.__times = times
         self.__delay = delay
         self.__intervals = intervals
         self.__pollingInterval = pollingInterval
-        self.__groupBy = groupBy
         self.__grouped = grouped
         self.__fields = fields
 
@@ -251,6 +202,7 @@ class DataQuery(Base):
 
     @property
     def marketDataCoordinates(self) -> Tuple[MarketDataCoordinate, ...]:
+        """Object representation of a market data coordinate"""
         return self.__marketDataCoordinates
 
     @marketDataCoordinates.setter
@@ -338,6 +290,16 @@ class DataQuery(Base):
         self._property_changed('idAsOfDate')        
 
     @property
+    def useTemporalXRef(self) -> bool:
+        """Set to true when xrefs provided in the query should be treated in a temporal way (e.g. get data points which had a certain BCID at some point in time, not which currently have it)."""
+        return self.__useTemporalXRef
+
+    @useTemporalXRef.setter
+    def useTemporalXRef(self, value: bool):
+        self.__useTemporalXRef = value
+        self._property_changed('useTemporalXRef')        
+
+    @property
     def since(self) -> datetime.datetime:
         """ISO 8601-formatted timestamp"""
         return self.__since
@@ -396,16 +358,6 @@ class DataQuery(Base):
     def pollingInterval(self, value: int):
         self.__pollingInterval = value
         self._property_changed('pollingInterval')        
-
-    @property
-    def groupBy(self) -> Tuple[Union[Field, str], ...]:
-        """Fields that determine grouping of results. Defaults to the dimensions of the dataset."""
-        return self.__groupBy
-
-    @groupBy.setter
-    def groupBy(self, value: Tuple[Union[Field, str], ...]):
-        self.__groupBy = value
-        self._property_changed('groupBy')        
 
     @property
     def grouped(self) -> bool:
@@ -868,6 +820,23 @@ class MDAPI(Base):
         self._property_changed('quotingStyles')        
 
 
+class MDAPIDataQueryResponse(Base):
+               
+    def __init__(self, data: Tuple[FieldValueMap, ...] = None):
+        super().__init__()
+        self.__data = data
+
+    @property
+    def data(self) -> Tuple[FieldValueMap, ...]:
+        """Array of data elements from dataset"""
+        return self.__data
+
+    @data.setter
+    def data(self, value: Tuple[FieldValueMap, ...]):
+        self.__data = value
+        self._property_changed('data')        
+
+
 class MarketDataField(Base):
                
     def __init__(self, name: str = None, mapping: str = None):
@@ -973,6 +942,47 @@ class MeasureKpi(Base):
         
 
 
+class MidPrice(Base):
+        
+    """Specification for a mid price column derived from bid and ask columns."""
+       
+    def __init__(self, bidColumn: str = None, askColumn: str = None, midColumn: str = None):
+        super().__init__()
+        self.__bidColumn = bidColumn
+        self.__askColumn = askColumn
+        self.__midColumn = midColumn
+
+    @property
+    def bidColumn(self) -> str:
+        """Database column name."""
+        return self.__bidColumn
+
+    @bidColumn.setter
+    def bidColumn(self, value: str):
+        self.__bidColumn = value
+        self._property_changed('bidColumn')        
+
+    @property
+    def askColumn(self) -> str:
+        """Database column name."""
+        return self.__askColumn
+
+    @askColumn.setter
+    def askColumn(self, value: str):
+        self.__askColumn = value
+        self._property_changed('askColumn')        
+
+    @property
+    def midColumn(self) -> str:
+        """Database column name."""
+        return self.__midColumn
+
+    @midColumn.setter
+    def midColumn(self, value: str):
+        self.__midColumn = value
+        self._property_changed('midColumn')        
+
+
 class ParserEntity(Base):
         
     """Settings for a parser processor"""
@@ -1034,6 +1044,7 @@ class ComplexFilter(Base):
 
     @property
     def simpleFilters(self) -> Tuple[DataFilter, ...]:
+        """Filter on specified field."""
         return self.__simpleFilters
 
     @simpleFilters.setter
@@ -1044,9 +1055,15 @@ class ComplexFilter(Base):
 
 class DataQueryResponse(Base):
                
-    def __init__(self, requestId: str = None, data: Tuple[FieldValueMap, ...] = None, groups: Tuple[DataGroup, ...] = None):
+    def __init__(self, type: str, requestId: str = None, errorMessage: str = None, id: str = None, dataSetId: str = None, entityType: Union[MeasureEntityType, str] = None, delay: int = None, data: Tuple[FieldValueMap, ...] = None, groups: Tuple[DataGroup, ...] = None):
         super().__init__()
         self.__requestId = requestId
+        self.__type = type
+        self.__errorMessage = errorMessage
+        self.__id = id
+        self.__dataSetId = dataSetId
+        self.__entityType = entityType if isinstance(entityType, MeasureEntityType) else get_enum_value(MeasureEntityType, entityType)
+        self.__delay = delay
         self.__data = data
         self.__groups = groups
 
@@ -1059,6 +1076,63 @@ class DataQueryResponse(Base):
     def requestId(self, value: str):
         self.__requestId = value
         self._property_changed('requestId')        
+
+    @property
+    def type(self) -> str:
+        return self.__type
+
+    @type.setter
+    def type(self, value: str):
+        self.__type = value
+        self._property_changed('type')        
+
+    @property
+    def errorMessage(self) -> str:
+        return self.__errorMessage
+
+    @errorMessage.setter
+    def errorMessage(self, value: str):
+        self.__errorMessage = value
+        self._property_changed('errorMessage')        
+
+    @property
+    def id(self) -> str:
+        """Marquee unique identifier"""
+        return self.__id
+
+    @id.setter
+    def id(self, value: str):
+        self.__id = value
+        self._property_changed('id')        
+
+    @property
+    def dataSetId(self) -> str:
+        """Unique id of dataset."""
+        return self.__dataSetId
+
+    @dataSetId.setter
+    def dataSetId(self, value: str):
+        self.__dataSetId = value
+        self._property_changed('dataSetId')        
+
+    @property
+    def entityType(self) -> Union[MeasureEntityType, str]:
+        """Entity type associated with a measure."""
+        return self.__entityType
+
+    @entityType.setter
+    def entityType(self, value: Union[MeasureEntityType, str]):
+        self.__entityType = value if isinstance(value, MeasureEntityType) else get_enum_value(MeasureEntityType, value)
+        self._property_changed('entityType')        
+
+    @property
+    def delay(self) -> int:
+        return self.__delay
+
+    @delay.setter
+    def delay(self, value: int):
+        self.__delay = value
+        self._property_changed('delay')        
 
     @property
     def data(self) -> Tuple[FieldValueMap, ...]:
@@ -1162,6 +1236,34 @@ class DataSetDimensions(Base):
     def entityDimension(self, value: str):
         self.__entityDimension = value
         self._property_changed('entityDimension')        
+
+
+class MDAPIDataBatchResponse(Base):
+               
+    def __init__(self, requestId: str = None, responses: Tuple[MDAPIDataQueryResponse, ...] = None):
+        super().__init__()
+        self.__requestId = requestId
+        self.__responses = responses
+
+    @property
+    def requestId(self) -> str:
+        """Marquee unique identifier"""
+        return self.__requestId
+
+    @requestId.setter
+    def requestId(self, value: str):
+        self.__requestId = value
+        self._property_changed('requestId')        
+
+    @property
+    def responses(self) -> Tuple[MDAPIDataQueryResponse, ...]:
+        """MDAPI Data query responses"""
+        return self.__responses
+
+    @responses.setter
+    def responses(self, value: Tuple[MDAPIDataQueryResponse, ...]):
+        self.__responses = value
+        self._property_changed('responses')        
 
 
 class MarketDataMapping(Base):
@@ -1290,6 +1392,7 @@ class MarketDataMapping(Base):
 
     @property
     def assetTypes(self) -> Tuple[Union[AssetType, str], ...]:
+        """Asset type differentiates the product categorization or contract type"""
         return self.__assetTypes
 
     @assetTypes.setter
@@ -1369,34 +1472,6 @@ class ProcessorEntity(Base):
         self._property_changed('deduplicate')        
 
 
-class DataBatchResponse(Base):
-               
-    def __init__(self, requestId: str = None, responses: Tuple[DataQueryResponse, ...] = None):
-        super().__init__()
-        self.__requestId = requestId
-        self.__responses = responses
-
-    @property
-    def requestId(self) -> str:
-        """Marquee unique identifier"""
-        return self.__requestId
-
-    @requestId.setter
-    def requestId(self, value: str):
-        self.__requestId = value
-        self._property_changed('requestId')        
-
-    @property
-    def responses(self) -> Tuple[DataQueryResponse, ...]:
-        """Data query responses"""
-        return self.__responses
-
-    @responses.setter
-    def responses(self, value: Tuple[DataQueryResponse, ...]):
-        self.__responses = value
-        self._property_changed('responses')        
-
-
 class EntityFilter(Base):
         
     """Filter on entities."""
@@ -1418,6 +1493,7 @@ class EntityFilter(Base):
 
     @property
     def simpleFilters(self) -> Tuple[DataFilter, ...]:
+        """Filter on specified field."""
         return self.__simpleFilters
 
     @simpleFilters.setter
@@ -1427,6 +1503,7 @@ class EntityFilter(Base):
 
     @property
     def complexFilters(self) -> Tuple[ComplexFilter, ...]:
+        """A compound filter for data requests."""
         return self.__complexFilters
 
     @complexFilters.setter
@@ -1468,6 +1545,7 @@ class DataSetFilters(Base):
 
     @property
     def advancedFilters(self) -> Tuple[AdvancedFilter, ...]:
+        """Advanced filter for numeric fields."""
         return self.__advancedFilters
 
     @advancedFilters.setter
@@ -1488,7 +1566,7 @@ class DataSetFilters(Base):
 
 class DataSetEntity(Base):
                
-    def __init__(self, id: str, name: str, description: str, shortDescription: str, vendor: str, dataProduct: str, parameters: DataSetParameters, dimensions: DataSetDimensions, ownerId: str = None, mappings: Tuple[MarketDataMapping, ...] = None, startDate: datetime.date = None, mdapi: MDAPI = None, entitlements: Entitlements = None, queryProcessors: ProcessorEntity = None, defaults: DataSetDefaults = None, filters: DataSetFilters = None, createdById: str = None, createdTime: datetime.datetime = None, lastUpdatedById: str = None, lastUpdatedTime: datetime.datetime = None, tags: Tuple[str, ...] = None):
+    def __init__(self, id: str, name: str, description: str, shortDescription: str, vendor: str, dataProduct: str, parameters: DataSetParameters, dimensions: DataSetDimensions, ownerId: str = None, mappings: Tuple[MarketDataMapping, ...] = None, startDate: datetime.date = None, mdapi: MDAPI = None, entitlements: Entitlements = None, entitlementExclusions: EntitlementExclusions = None, queryProcessors: ProcessorEntity = None, defaults: DataSetDefaults = None, filters: DataSetFilters = None, createdById: str = None, createdTime: datetime.datetime = None, lastUpdatedById: str = None, lastUpdatedTime: datetime.datetime = None, tags: Tuple[str, ...] = None):
         super().__init__()
         self.__ownerId = ownerId
         self.__id = id
@@ -1501,6 +1579,7 @@ class DataSetEntity(Base):
         self.__mdapi = mdapi
         self.__dataProduct = dataProduct
         self.__entitlements = entitlements
+        self.__entitlementExclusions = entitlementExclusions
         self.__queryProcessors = queryProcessors
         self.__parameters = parameters
         self.__dimensions = dimensions
@@ -1620,6 +1699,16 @@ class DataSetEntity(Base):
     def entitlements(self, value: Entitlements):
         self.__entitlements = value
         self._property_changed('entitlements')        
+
+    @property
+    def entitlementExclusions(self) -> EntitlementExclusions:
+        """Defines the exclusion entitlements of a given resource"""
+        return self.__entitlementExclusions
+
+    @entitlementExclusions.setter
+    def entitlementExclusions(self, value: EntitlementExclusions):
+        self.__entitlementExclusions = value
+        self._property_changed('entitlementExclusions')        
 
     @property
     def queryProcessors(self) -> ProcessorEntity:

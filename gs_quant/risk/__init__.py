@@ -19,5 +19,5 @@ from .risk_measure_mappings import get_specific_risk_measure
 from .scenarios import MarketDataShockBasedScenario, ScenarioContext
 from gs_quant.target.risk import CoordinatesRequest, CurveScenario, LiquidityRequest, LiquidityResponse, RiskMeasure,\
     RiskModelRequest, RiskPosition, RiskRequest, MarketDataPattern, MarketDataScenario, MarketDataShock,\
-    MarketDataShockType
+    MarketDataShockType, MarketDataTypeAndAsset
 

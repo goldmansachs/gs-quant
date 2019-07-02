@@ -125,10 +125,11 @@ class GsAssetApi:
         position_date_str = position_date.isoformat()
         url = '/assets/{id}/positions/{date}'.format(id=asset_id, date=position_date_str)
 
-        if position_type is None:
-            return GsSession.current._get(url, cls=PositionSet)['results']
-        else:
-            return GsSession.current._get(url + '?type=' + position_type, cls=PositionSet)
+        if position_type is not None:
+            url += '?type=' + position_type
+
+        results = GsSession.current._get(url)['results']
+        return tuple(PositionSet.from_dict(r) for r in results)
 
     @staticmethod
     def get_instruments_for_asset_ids(
@@ -136,7 +137,9 @@ class GsAssetApi:
     ) -> Tuple[Optional[Union[Instrument, Security]]]:
         instrument_infos = GsSession.current._post('/assets/instruments', asset_ids, cls=AssetToInstrumentResponse)
         instrument_lookup = {i.assetId: i.instrument for i in instrument_infos if i}
-        return tuple(instrument_lookup.get(a) for a in asset_ids)
+        ret: Tuple[Optional[Union[Instrument, Security]]] = tuple(instrument_lookup.get(a) for a in asset_ids)
+
+        return ret
 
     @staticmethod
     def get_instruments_for_positions(
@@ -144,17 +147,17 @@ class GsAssetApi:
     ) -> Tuple[Optional[Union[Instrument, Security]]]:
         instrument_infos = GsSession.current._post('/assets/instruments', [p.assetId for p in positions], cls=AssetToInstrumentResponse)
         instrument_lookup = {i.assetId: (i.instrument, i.sizeField) for i in instrument_infos if i}
-        ret = []
+        ret = ()
 
         for position in positions:
             instrument_info = instrument_lookup.get(position.assetId)
             if instrument_info:
-                instrument, sizeField = instrument_info
-                if instrument is not None:
-                    setattr(instrument, sizeField, position.quantity)
-                ret.append(instrument)
+                instrument, size_field = instrument_info
+                if instrument is not None and size_field is not None and getattr(instrument, size_field, None) is None:
+                    setattr(instrument, size_field, position.quantity)
+                ret += (instrument,)
             else:
-                ret.append(None)
+                ret += (None,)
 
         return tuple(ret)
 

@@ -13,19 +13,20 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-import copy
 import datetime as dt
-import pandas as pd
 from itertools import chain
 from typing import Iterable, List, Optional, Tuple, Union
-from .assets import GsAssetApi, GsIdType
+
+import pandas as pd
+
 from gs_quant.api.data import DataApi
 from gs_quant.data.core import DataContext
-from gs_quant.target.common import FieldFilterMap, XRef, MarketDataCoordinate
-from gs_quant.target.data import DataQuery
 from gs_quant.errors import MqValueError
 from gs_quant.session import GsSession
+from gs_quant.target.common import FieldFilterMap, XRef, MarketDataCoordinate
+from gs_quant.target.data import DataQuery, DataQueryResponse, MDAPIDataBatchResponse, MDAPIDataQueryResponse
 from gs_quant.target.data import DataSetEntity
+from .assets import GsAssetApi, GsIdType
 
 
 class GsDataApi(DataApi):
@@ -36,10 +37,14 @@ class GsDataApi(DataApi):
 
     @classmethod
     def query_data(cls, query: DataQuery, dataset_id: str = None, asset_id_type: Union[GsIdType, str] = None) \
-            -> Union[list, tuple]:
+            -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple]:
         if query.marketDataCoordinates:
-            results = GsSession.current._post('/data/coordinates/query', payload=query)
-            return results.get('responses', ())
+            # Don't use MDAPIDataBatchResponse for now - it doesn't handle quoting style correctly
+            results: Union[MDAPIDataBatchResponse, dict] = GsSession.current._post('/data/coordinates/query', payload=query)
+            if isinstance(results, dict):
+                return results.get('responses', ())
+            else:
+                return results.responses if results.responses is not None else ()
         if query.where:
             where = query.where.as_dict()
             xref_keys = set(where.keys()).intersection(XRef.properties())
@@ -66,8 +71,13 @@ class GsDataApi(DataApi):
                     setattr(query.where, xref_type, None)
                     query.where.assetId = [asset_id_map[x] for x in xref_values]
 
-        results = GsSession.current._post('/data/{}/query'.format(dataset_id), payload=query)
-        results = results.get('data', ())
+        results: Union[DataQueryResponse, dict] = GsSession.current._post('/data/{}/query'.format(dataset_id),
+                                                                          payload=query,
+                                                                          cls=DataQueryResponse)
+        if isinstance(results, dict):
+            results = results.get('data', ())
+        else:
+            results = results.data if results.data is not None else ()
 
         if asset_id_type not in {GsIdType.id, None}:
             asset_ids = tuple(set(filter(None, (r.get('assetId') for r in results))))
@@ -205,24 +215,24 @@ class GsDataApi(DataApi):
     @classmethod
     def __normalise_coordinate_data(
             cls,
-            data: Iterable[dict]
+            data: Iterable[Union[MDAPIDataQueryResponse, dict]]
     ) -> Iterable[Iterable[dict]]:
         ret = []
-        for idx, row in enumerate(data):
+        for response in data:
             coord_data = []
-            for pt in copy.deepcopy(row.get('data', [])):
+            rows = (r.as_dict() for r in response.data) if isinstance(response, MDAPIDataQueryResponse) else response.get('data', ())
+
+            for pt in rows:
                 if not pt:
                     continue
 
-                value_field = pt['quotingStyle'] if 'field' not in pt.keys() else pt['field']
-                pt['value'] = pt.pop(value_field)
-
-                for time_field in ('date', 'time'):
-                    if time_field in pt:
-                        pt[time_field] = pd.to_datetime(pt.pop(time_field))
+                if 'value' not in pt:
+                    value_field = pt['quotingStyle'] if 'field' not in pt else pt['field']
+                    pt['value'] = pt.pop(value_field)
 
                 coord_data.append(pt)
             ret.append(coord_data)
+
         return ret
 
     @classmethod

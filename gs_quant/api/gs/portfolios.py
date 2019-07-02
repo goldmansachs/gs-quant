@@ -52,12 +52,14 @@ class GsPortfolioApi:
 
     @classmethod
     def get_positions(cls, portfolio_id: str, start_date: dt.date = None, end_date: dt.date = None, position_type: str = 'close') -> Tuple[PositionSet, ...]:
-        url = '/portfolios/{id}/positions?type={positionType}'.format(id=portfolio_id,positionType=position_type)
+        url = '/portfolios/{id}/positions?type={positionType}'.format(id=portfolio_id, positionType=position_type)
         if start_date is not None:
             url += '&startDate={sd}'.format(sd=start_date.isoformat())
         if end_date is not None:
             url += '&endDate={sd}'.format(sd=end_date.isoformat())
-        return GsSession.current._get(url, cls=PositionSet)['positionSets']
+
+        res = GsSession.current._get(url)
+        return tuple(PositionSet.from_dict(v) for v in res.get('positionSets', ()))
 
     @classmethod
     def get_positions_for_date(cls, portfolio_id: str, position_date: dt.date, position_type: str = 'close') -> PositionSet:
