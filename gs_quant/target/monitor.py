@@ -20,87 +20,6 @@ from typing import Tuple, Union
 import datetime
 
 
-class RowResult(Base):
-    def __init__(self, entityId: str = None, data: dict = None):
-        super().__init__()
-        self.__entityId = entityId
-        self.__data = data
-
-    @property
-    def entityId(self) -> str:
-        """Entity Id"""
-        return self.__entityId
-
-    @entityId.setter
-    def entityId(self, value: str):
-        self.__entityId = value
-        self._property_changed('entityId')
-
-    @property
-    def data(self):
-        """Calculated Rows data"""
-        return self.__data
-
-    @data.setter
-    def data(self, value):
-        self.__data = value
-        self._property_changed('data')
-
-
-class MonitorResults(Base):
-    def __init__(self, groupName: str = None, rows: Tuple[dict, ...] = None):
-        super().__init__()
-        self.__groupName = groupName
-        self.__rows = rows
-
-    @property
-    def groupName(self) -> str:
-        """Row Group Name"""
-        return self.__groupName
-
-    @groupName.setter
-    def groupName(self, value: str):
-        self.__groupName = value
-        self._property_changed('groupName')
-
-    @property
-    def rows(self):
-        """Calculated Rows data"""
-        return self.__rows
-
-    @rows.setter
-    def rows(self, value):
-        self.__rows = value
-        self._property_changed('rows')
-
-
-class MonitorResponseData(Base):
-    def __init__(self, id: str = None, result: Tuple[MonitorResults, ...] = None):
-        super().__init__()
-        self.__id = id
-        self.__result = result
-
-    @property
-    def id(self) -> str:
-        """Monitor id"""
-        return self.__id
-
-    @id.setter
-    def id(self, value: str):
-        self.__id = value
-        self._property_changed('id')
-
-    @property
-    def result(self):
-        """Row result data"""
-        return self.__result
-
-    @result.setter
-    def result(self, value):
-        self.__result = value
-        self._property_changed('result')
-
-
 class ColumnFormat(Base):
         
     """Object used to specify the column formatting"""
@@ -142,25 +61,6 @@ class ColumnFormat(Base):
         self._property_changed('humanReadable')        
 
 
-class FunctionParameters(Base):
-        
-    """Function parameters to be passed"""
-       
-    def __init__(self, period=None):
-        super().__init__()
-        self.__period = period
-
-    @property
-    def period(self):
-        """Enum listing supported parameter periods"""
-        return self.__period
-
-    @period.setter
-    def period(self, value):
-        self.__period = value
-        self._property_changed('period')        
-
-
 class Historical(Base):
         
     """value and date for historical data"""
@@ -177,6 +77,63 @@ class Historical(Base):
     def value(self, value: Union[float, str]):
         self.__value = value
         self._property_changed('value')        
+
+
+class IntervalCount(Base):
+        
+    """Defines the interval in which data is returned"""
+       
+    def __init__(self, count: float = None):
+        super().__init__()
+        self.__count = count
+
+    @property
+    def count(self) -> float:
+        """Integer in the range from 0 to 10000"""
+        return self.__count
+
+    @count.setter
+    def count(self, value: float):
+        self.__count = value
+        self._property_changed('count')        
+
+
+class MaxDataPoints(Base):
+        
+    """Defines the max number of data points to be returned in equal intervals"""
+       
+    def __init__(self, maxDataPoints: float = None):
+        super().__init__()
+        self.__maxDataPoints = maxDataPoints
+
+    @property
+    def maxDataPoints(self) -> float:
+        """Integer in the range from 0 to 10000"""
+        return self.__maxDataPoints
+
+    @maxDataPoints.setter
+    def maxDataPoints(self, value: float):
+        self.__maxDataPoints = value
+        self._property_changed('maxDataPoints')        
+
+
+class Metadata(Base):
+        
+    """Entity metadata"""
+       
+    def __init__(self, tooltip: str = None):
+        super().__init__()
+        self.__tooltip = tooltip
+
+    @property
+    def tooltip(self) -> str:
+        """Required small string with a length from empty string to 50 characters"""
+        return self.__tooltip
+
+    @tooltip.setter
+    def tooltip(self, value: str):
+        self.__tooltip = value
+        self._property_changed('tooltip')        
 
 
 class Movers(Base):
@@ -261,34 +218,33 @@ class Sort(Base):
         self._property_changed('direction')        
 
 
-class Function(Base):
+class FunctionParameters(Base):
         
-    """Function to be applied"""
+    """Function parameters to be passed"""
        
-    def __init__(self, name, parameters: FunctionParameters = None):
+    def __init__(self, period=None, intervals: dict = None):
         super().__init__()
-        self.__name = name
-        self.__parameters = parameters
+        self.__period = period
+        self.__intervals = intervals
 
     @property
-    def name(self):
-        """Enum listing supported functions for monitor calculations"""
-        return self.__name
+    def period(self):
+        """Enum listing supported parameter periods"""
+        return self.__period
 
-    @name.setter
-    def name(self, value):
-        self.__name = value
-        self._property_changed('name')        
+    @period.setter
+    def period(self, value):
+        self.__period = value
+        self._property_changed('period')        
 
     @property
-    def parameters(self) -> FunctionParameters:
-        """Function parameters to be passed"""
-        return self.__parameters
+    def intervals(self) -> dict:
+        return self.__intervals
 
-    @parameters.setter
-    def parameters(self, value: FunctionParameters):
-        self.__parameters = value
-        self._property_changed('parameters')        
+    @intervals.setter
+    def intervals(self, value: dict):
+        self.__intervals = value
+        self._property_changed('intervals')        
 
 
 class RateRow(Base):
@@ -376,6 +332,25 @@ class RateRow(Base):
         self._property_changed('slope')        
 
 
+class RowData(Base):
+        
+    """Calculated row data for a particular asset"""
+       
+    def __init__(self, GENERATED_INVALID: dict = None):
+        super().__init__()
+        self.__GENERATED_INVALID = GENERATED_INVALID
+
+    @property
+    def GENERATED_INVALID(self) -> dict:
+        """timestamp and value for calculated field"""
+        return self.__GENERATED_INVALID
+
+    @GENERATED_INVALID.setter
+    def GENERATED_INVALID(self, value: dict):
+        self.__GENERATED_INVALID = value
+        self._property_changed('GENERATED_INVALID')        
+
+
 class RowGroup(Base):
         
     """Object specifying a group name and a list of assets to be calculated in a monitor"""
@@ -426,6 +401,117 @@ class RowGroup(Base):
     def sort(self, value: Sort):
         self.__sort = value
         self._property_changed('sort')        
+
+
+class Function(Base):
+        
+    """Function to be applied"""
+       
+    def __init__(self, name, parameters: FunctionParameters = None):
+        super().__init__()
+        self.__name = name
+        self.__parameters = parameters
+
+    @property
+    def name(self):
+        """Enum listing supported functions for monitor calculations"""
+        return self.__name
+
+    @name.setter
+    def name(self, value):
+        self.__name = value
+        self._property_changed('name')        
+
+    @property
+    def parameters(self) -> FunctionParameters:
+        """Function parameters to be passed"""
+        return self.__parameters
+
+    @parameters.setter
+    def parameters(self, value: FunctionParameters):
+        self.__parameters = value
+        self._property_changed('parameters')        
+
+
+class MonitorResponseData(Base):
+        
+    """Monitor calculated response data"""
+       
+    def __init__(self, id: str, result: dict):
+        super().__init__()
+        self.__id = id
+        self.__result = result
+
+    @property
+    def id(self) -> str:
+        """Marquee unique identifier"""
+        return self.__id
+
+    @id.setter
+    def id(self, value: str):
+        self.__id = value
+        self._property_changed('id')        
+
+    @property
+    def result(self) -> dict:
+        return self.__result
+
+    @result.setter
+    def result(self, value: dict):
+        self.__result = value
+        self._property_changed('result')        
+
+
+class RatesResponseData(Base):
+        
+    """Rates calculated response data"""
+       
+    def __init__(self, name, id: str, rows: Tuple[RateRow, ...], libor_id: str = None):
+        super().__init__()
+        self.__name = name
+        self.__id = id
+        self.__libor_id = libor_id
+        self.__rows = rows
+
+    @property
+    def name(self):
+        """Enum listing supported rate ids"""
+        return self.__name
+
+    @name.setter
+    def name(self, value):
+        self.__name = value
+        self._property_changed('name')        
+
+    @property
+    def id(self) -> str:
+        """Marquee unique identifier"""
+        return self.__id
+
+    @id.setter
+    def id(self, value: str):
+        self.__id = value
+        self._property_changed('id')        
+
+    @property
+    def libor_id(self) -> str:
+        """Marquee unique identifier"""
+        return self.__libor_id
+
+    @libor_id.setter
+    def libor_id(self, value: str):
+        self.__libor_id = value
+        self._property_changed('libor_id')        
+
+    @property
+    def rows(self) -> Tuple[RateRow, ...]:
+        """Calculated rows for given rate ID"""
+        return self.__rows
+
+    @rows.setter
+    def rows(self, value: Tuple[RateRow, ...]):
+        self.__rows = value
+        self._property_changed('rows')        
 
 
 class ColumnDefinition(Base):
@@ -511,58 +597,6 @@ class ColumnDefinition(Base):
     def width(self, value: float):
         self.__width = value
         self._property_changed('width')        
-
-
-class RatesResponseData(Base):
-        
-    """Rates calculated response data"""
-       
-    def __init__(self, name, id: str, rows: Tuple[RateRow, ...], libor_id: str = None):
-        super().__init__()
-        self.__name = name
-        self.__id = id
-        self.__libor_id = libor_id
-        self.__rows = rows
-
-    @property
-    def name(self):
-        """Enum listing supported rate ids"""
-        return self.__name
-
-    @name.setter
-    def name(self, value):
-        self.__name = value
-        self._property_changed('name')        
-
-    @property
-    def id(self) -> str:
-        """Marquee unique identifier"""
-        return self.__id
-
-    @id.setter
-    def id(self, value: str):
-        self.__id = value
-        self._property_changed('id')        
-
-    @property
-    def libor_id(self) -> str:
-        """Marquee unique identifier"""
-        return self.__libor_id
-
-    @libor_id.setter
-    def libor_id(self, value: str):
-        self.__libor_id = value
-        self._property_changed('libor_id')        
-
-    @property
-    def rows(self) -> Tuple[RateRow, ...]:
-        """Calculated rows for given rate ID"""
-        return self.__rows
-
-    @rows.setter
-    def rows(self, value: Tuple[RateRow, ...]):
-        self.__rows = value
-        self._property_changed('rows')        
 
 
 class MonitorParameters(Base):

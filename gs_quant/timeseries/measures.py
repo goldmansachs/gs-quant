@@ -438,7 +438,7 @@ def bucketize(asset: Asset, price_method: str = "LMP", price_component: str = "t
     where = FieldFilterMap(priceMethod=price_method, priceComponent=price_component)
     with DataContext(start, end):
         q = GsDataApi.build_market_data_query([asset.get_marquee_id()], 'Price', where=where, source=source,
-                                              real_time=real_time)
+                                              real_time=True)
         df = _market_data_timed(q)
         _logger.debug('q %s', q)
 

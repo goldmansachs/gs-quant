@@ -102,6 +102,7 @@ def test_delete_backtest(mocker):
     GsSession.current._delete.assert_called_with('/backtests/{id}'.format(id=id_1))
     assert response == mock_response
 
+
 def test_get_backtest_results(mocker):
     id_1 = 'BT1'
     start_date = dt.date(2019, 2, 18)
@@ -128,7 +129,7 @@ def test_get_backtest_results(mocker):
     response = GsBacktestApi.get_results(startDate=start_date, endDate=end_date, backtest_id=id_1)
 
     GsSession.current._get.assert_called_with('/backtests/results?ids={id}&limit=100&startDate={sd}&endDate={ed}'.format(
-        id=id_1, sd=start_date, ed=end_date), cls=BacktestResult)
+        id=id_1, sd=start_date, ed=end_date))
 
     assert response == expected_response
 

@@ -20,6 +20,244 @@ from typing import Tuple, Union
 import datetime
 
 
+class CSLPython(Instrument):
+        
+    """Object representation of an arbitrary payoff defined in Python"""
+       
+    def __init__(self, className: str = None, denominated: Union[Currency, str] = None, doubleParams: Tuple[CSLDouble, ...] = None, dateParams: Tuple[CSLDate, ...] = None, stringParams: Tuple[CSLString, ...] = None, simpleScheduleParams: Tuple[CSLSimpleSchedule, ...] = None, scheduleParams: Tuple[CSLSchedule, ...] = None, currencyParams: Tuple[CSLCurrency, ...] = None, stockParams: Tuple[CSLStock, ...] = None, indexParams: Tuple[CSLIndex, ...] = None, fXCrossParams: Tuple[CSLFXCross, ...] = None, doubleArrayParams: Tuple[CSLDoubleArray, ...] = None, dateArrayParams: Tuple[CSLDateArray, ...] = None, stringArrayParams: Tuple[CSLStringArray, ...] = None, simpleScheduleArrayParams: Tuple[CSLSimpleScheduleArray, ...] = None, scheduleArrayParams: Tuple[CSLScheduleArray, ...] = None, currencyArrayParams: Tuple[CSLCurrencyArray, ...] = None, stockArrayParams: Tuple[CSLStockArray, ...] = None, indexArrayParams: Tuple[CSLIndexArray, ...] = None, fXCrossArrayParams: Tuple[CSLFXCrossArray, ...] = None):
+        super().__init__()
+        self.__className = className
+        self.__denominated = denominated if isinstance(denominated, Currency) else get_enum_value(Currency, denominated)
+        self.__doubleParams = doubleParams
+        self.__dateParams = dateParams
+        self.__stringParams = stringParams
+        self.__simpleScheduleParams = simpleScheduleParams
+        self.__scheduleParams = scheduleParams
+        self.__currencyParams = currencyParams
+        self.__stockParams = stockParams
+        self.__indexParams = indexParams
+        self.__fXCrossParams = fXCrossParams
+        self.__doubleArrayParams = doubleArrayParams
+        self.__dateArrayParams = dateArrayParams
+        self.__stringArrayParams = stringArrayParams
+        self.__simpleScheduleArrayParams = simpleScheduleArrayParams
+        self.__scheduleArrayParams = scheduleArrayParams
+        self.__currencyArrayParams = currencyArrayParams
+        self.__stockArrayParams = stockArrayParams
+        self.__indexArrayParams = indexArrayParams
+        self.__fXCrossArrayParams = fXCrossArrayParams
+
+    @property
+    def assetClass(self) -> AssetClass:
+        """Cross Asset"""
+        return AssetClass.Cross_Asset        
+
+    @property
+    def type(self) -> AssetType:
+        """CSL"""
+        return AssetType.CSL        
+
+    @property
+    def className(self) -> str:
+        """A reference to the Python script defining this payoff class"""
+        return self.__className
+
+    @className.setter
+    def className(self, value: str):
+        self.__className = value
+        self._property_changed('className')        
+
+    @property
+    def denominated(self) -> Union[Currency, str]:
+        """Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)"""
+        return self.__denominated
+
+    @denominated.setter
+    def denominated(self, value: Union[Currency, str]):
+        self.__denominated = value if isinstance(value, Currency) else get_enum_value(Currency, value)
+        self._property_changed('denominated')        
+
+    @property
+    def doubleParams(self) -> Tuple[CSLDouble, ...]:
+        """A double"""
+        return self.__doubleParams
+
+    @doubleParams.setter
+    def doubleParams(self, value: Tuple[CSLDouble, ...]):
+        self.__doubleParams = value
+        self._property_changed('doubleParams')        
+
+    @property
+    def dateParams(self) -> Tuple[CSLDate, ...]:
+        """A date"""
+        return self.__dateParams
+
+    @dateParams.setter
+    def dateParams(self, value: Tuple[CSLDate, ...]):
+        self.__dateParams = value
+        self._property_changed('dateParams')        
+
+    @property
+    def stringParams(self) -> Tuple[CSLString, ...]:
+        """A string"""
+        return self.__stringParams
+
+    @stringParams.setter
+    def stringParams(self, value: Tuple[CSLString, ...]):
+        self.__stringParams = value
+        self._property_changed('stringParams')        
+
+    @property
+    def simpleScheduleParams(self) -> Tuple[CSLSimpleSchedule, ...]:
+        """A fixing date, settlement date pair"""
+        return self.__simpleScheduleParams
+
+    @simpleScheduleParams.setter
+    def simpleScheduleParams(self, value: Tuple[CSLSimpleSchedule, ...]):
+        self.__simpleScheduleParams = value
+        self._property_changed('simpleScheduleParams')        
+
+    @property
+    def scheduleParams(self) -> Tuple[CSLSchedule, ...]:
+        """A schedule"""
+        return self.__scheduleParams
+
+    @scheduleParams.setter
+    def scheduleParams(self, value: Tuple[CSLSchedule, ...]):
+        self.__scheduleParams = value
+        self._property_changed('scheduleParams')        
+
+    @property
+    def currencyParams(self) -> Tuple[CSLCurrency, ...]:
+        """A currency"""
+        return self.__currencyParams
+
+    @currencyParams.setter
+    def currencyParams(self, value: Tuple[CSLCurrency, ...]):
+        self.__currencyParams = value
+        self._property_changed('currencyParams')        
+
+    @property
+    def stockParams(self) -> Tuple[CSLStock, ...]:
+        """A stock"""
+        return self.__stockParams
+
+    @stockParams.setter
+    def stockParams(self, value: Tuple[CSLStock, ...]):
+        self.__stockParams = value
+        self._property_changed('stockParams')        
+
+    @property
+    def indexParams(self) -> Tuple[CSLIndex, ...]:
+        """An index"""
+        return self.__indexParams
+
+    @indexParams.setter
+    def indexParams(self, value: Tuple[CSLIndex, ...]):
+        self.__indexParams = value
+        self._property_changed('indexParams')        
+
+    @property
+    def fXCrossParams(self) -> Tuple[CSLFXCross, ...]:
+        """An FX cross"""
+        return self.__fXCrossParams
+
+    @fXCrossParams.setter
+    def fXCrossParams(self, value: Tuple[CSLFXCross, ...]):
+        self.__fXCrossParams = value
+        self._property_changed('fXCrossParams')        
+
+    @property
+    def doubleArrayParams(self) -> Tuple[CSLDoubleArray, ...]:
+        """An array of doubles"""
+        return self.__doubleArrayParams
+
+    @doubleArrayParams.setter
+    def doubleArrayParams(self, value: Tuple[CSLDoubleArray, ...]):
+        self.__doubleArrayParams = value
+        self._property_changed('doubleArrayParams')        
+
+    @property
+    def dateArrayParams(self) -> Tuple[CSLDateArray, ...]:
+        """An array of dates"""
+        return self.__dateArrayParams
+
+    @dateArrayParams.setter
+    def dateArrayParams(self, value: Tuple[CSLDateArray, ...]):
+        self.__dateArrayParams = value
+        self._property_changed('dateArrayParams')        
+
+    @property
+    def stringArrayParams(self) -> Tuple[CSLStringArray, ...]:
+        """An array of strings"""
+        return self.__stringArrayParams
+
+    @stringArrayParams.setter
+    def stringArrayParams(self, value: Tuple[CSLStringArray, ...]):
+        self.__stringArrayParams = value
+        self._property_changed('stringArrayParams')        
+
+    @property
+    def simpleScheduleArrayParams(self) -> Tuple[CSLSimpleScheduleArray, ...]:
+        """An array of simple schedules"""
+        return self.__simpleScheduleArrayParams
+
+    @simpleScheduleArrayParams.setter
+    def simpleScheduleArrayParams(self, value: Tuple[CSLSimpleScheduleArray, ...]):
+        self.__simpleScheduleArrayParams = value
+        self._property_changed('simpleScheduleArrayParams')        
+
+    @property
+    def scheduleArrayParams(self) -> Tuple[CSLScheduleArray, ...]:
+        """An array of schedules"""
+        return self.__scheduleArrayParams
+
+    @scheduleArrayParams.setter
+    def scheduleArrayParams(self, value: Tuple[CSLScheduleArray, ...]):
+        self.__scheduleArrayParams = value
+        self._property_changed('scheduleArrayParams')        
+
+    @property
+    def currencyArrayParams(self) -> Tuple[CSLCurrencyArray, ...]:
+        """An array of currencies"""
+        return self.__currencyArrayParams
+
+    @currencyArrayParams.setter
+    def currencyArrayParams(self, value: Tuple[CSLCurrencyArray, ...]):
+        self.__currencyArrayParams = value
+        self._property_changed('currencyArrayParams')        
+
+    @property
+    def stockArrayParams(self) -> Tuple[CSLStockArray, ...]:
+        """An array of stocks"""
+        return self.__stockArrayParams
+
+    @stockArrayParams.setter
+    def stockArrayParams(self, value: Tuple[CSLStockArray, ...]):
+        self.__stockArrayParams = value
+        self._property_changed('stockArrayParams')        
+
+    @property
+    def indexArrayParams(self) -> Tuple[CSLIndexArray, ...]:
+        """An array of indices"""
+        return self.__indexArrayParams
+
+    @indexArrayParams.setter
+    def indexArrayParams(self, value: Tuple[CSLIndexArray, ...]):
+        self.__indexArrayParams = value
+        self._property_changed('indexArrayParams')        
+
+    @property
+    def fXCrossArrayParams(self) -> Tuple[CSLFXCrossArray, ...]:
+        """An array of FX crosses"""
+        return self.__fXCrossArrayParams
+
+    @fXCrossArrayParams.setter
+    def fXCrossArrayParams(self, value: Tuple[CSLFXCrossArray, ...]):
+        self.__fXCrossArrayParams = value
+        self._property_changed('fXCrossArrayParams')        
+
+
 class CommodSwap(Instrument):
         
     """Object representation of a commodities swap"""
@@ -1438,7 +1676,7 @@ class IRSwaption(Instrument):
         
     """Object representation of a swaption"""
        
-    def __init__(self, payOrReceive: str, terminationDate: Union[datetime.date, str], notionalCurrency: Union[Currency, str], effectiveDate: Union[datetime.date, str] = None, notionalAmount: float = 1000000.0, expirationDate: Union[datetime.date, str] = None, floatingRateOption: str = None, floatingRateDesignatedMaturity: str = None, floatingRateSpread: float = None, floatingRateFrequency: str = None, floatingRateDayCountFraction: Union[DayCountFraction, str] = None, floatingRateBusinessDayConvention: Union[BusinessDayConvention, str] = None, fixedRateFrequency: str = None, fixedRateDayCountFraction: Union[DayCountFraction, str] = None, fixedRateBusinessDayConvention: Union[BusinessDayConvention, str] = None, strike: Union[float, str] = None, premium: float = 0, fee: float = 0, clearingHouse: Union[SwapClearingHouse, str] = None, settlement: Union[SwapSettlement, str] = None):
+    def __init__(self, payOrReceive: str, terminationDate: Union[datetime.date, str], notionalCurrency: Union[Currency, str], effectiveDate: Union[datetime.date, str] = None, notionalAmount: float = 1000000.0, expirationDate: Union[datetime.date, str] = None, floatingRateOption: str = None, floatingRateDesignatedMaturity: str = None, floatingRateSpread: float = None, floatingRateFrequency: str = None, floatingRateDayCountFraction: Union[DayCountFraction, str] = None, floatingRateBusinessDayConvention: Union[BusinessDayConvention, str] = None, fixedRateFrequency: str = None, fixedRateDayCountFraction: Union[DayCountFraction, str] = None, fixedRateBusinessDayConvention: Union[BusinessDayConvention, str] = None, strike: Union[float, str] = None, premium: float = 0, fee: float = 0, clearingHouse: Union[SwapClearingHouse, str] = None, settlement: Union[SwapSettlement, str] = None, premiumPaymentDate: Union[datetime.date, str] = None):
         super().__init__()
         self.__payOrReceive = payOrReceive
         self.__effectiveDate = effectiveDate
@@ -1460,6 +1698,7 @@ class IRSwaption(Instrument):
         self.__fee = fee
         self.__clearingHouse = clearingHouse if isinstance(clearingHouse, SwapClearingHouse) else get_enum_value(SwapClearingHouse, clearingHouse)
         self.__settlement = settlement if isinstance(settlement, SwapSettlement) else get_enum_value(SwapSettlement, settlement)
+        self.__premiumPaymentDate = premiumPaymentDate
 
     @property
     def assetClass(self) -> AssetClass:
@@ -1670,3 +1909,13 @@ class IRSwaption(Instrument):
     def settlement(self, value: Union[SwapSettlement, str]):
         self.__settlement = value if isinstance(value, SwapSettlement) else get_enum_value(SwapSettlement, value)
         self._property_changed('settlement')        
+
+    @property
+    def premiumPaymentDate(self) -> Union[datetime.date, str]:
+        """Date or tenor, e.g. 2018-09-03, 3m"""
+        return self.__premiumPaymentDate
+
+    @premiumPaymentDate.setter
+    def premiumPaymentDate(self, value: Union[datetime.date, str]):
+        self.__premiumPaymentDate = value
+        self._property_changed('premiumPaymentDate')        

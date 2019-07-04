@@ -54,10 +54,9 @@ class BacktestPerformanceDecomposition(Base):
         
     """Decomposition of backtest performance"""
        
-    def __init__(self, name: str = None, performance: Tuple[FieldValueMap, ...] = None, stats: PerformanceStats = None):
+    def __init__(self, name: str = None, stats: PerformanceStats = None):
         super().__init__()
         self.__name = name
-        self.__performance = performance
         self.__stats = stats
 
     @property
@@ -69,16 +68,6 @@ class BacktestPerformanceDecomposition(Base):
     def name(self, value: str):
         self.__name = value
         self._property_changed('name')        
-
-    @property
-    def performance(self) -> Tuple[FieldValueMap, ...]:
-        """Backtest performance curve."""
-        return self.__performance
-
-    @performance.setter
-    def performance(self, value: Tuple[FieldValueMap, ...]):
-        self.__performance = value
-        self._property_changed('performance')        
 
     @property
     def stats(self) -> PerformanceStats:
@@ -147,10 +136,9 @@ class BacktestRisk(Base):
         
     """Risks of the backtest portfolio"""
        
-    def __init__(self, name: str = None, timeseries: Tuple[FieldValueMap, ...] = None):
+    def __init__(self, name: str = None):
         super().__init__()
         self.__name = name
-        self.__timeseries = timeseries
 
     @property
     def name(self) -> str:
@@ -161,16 +149,6 @@ class BacktestRisk(Base):
     def name(self, value: str):
         self.__name = value
         self._property_changed('name')        
-
-    @property
-    def timeseries(self) -> Tuple[FieldValueMap, ...]:
-        """Backtest portfolio risk curve."""
-        return self.__timeseries
-
-    @timeseries.setter
-    def timeseries(self, value: Tuple[FieldValueMap, ...]):
-        self.__timeseries = value
-        self._property_changed('timeseries')        
 
 
 class BacktestTradingParameters(Base):
@@ -300,10 +278,9 @@ class ComparisonBacktestResult(Base):
         
     """Comparisons of backtest results"""
        
-    def __init__(self, stats: PerformanceStats = None, performance: Tuple[FieldValueMap, ...] = None, id: str = None):
+    def __init__(self, stats: PerformanceStats = None, id: str = None):
         super().__init__()
         self.__stats = stats
-        self.__performance = performance
         self.__id = id
 
     @property
@@ -315,16 +292,6 @@ class ComparisonBacktestResult(Base):
     def stats(self, value: PerformanceStats):
         self.__stats = value
         self._property_changed('stats')        
-
-    @property
-    def performance(self) -> Tuple[FieldValueMap, ...]:
-        """Performance for the comparison asset or backtest curve"""
-        return self.__performance
-
-    @performance.setter
-    def performance(self, value: Tuple[FieldValueMap, ...]):
-        self.__performance = value
-        self._property_changed('performance')        
 
     @property
     def id(self) -> str:
@@ -1250,6 +1217,7 @@ class BacktestResult(Base):
 
     @property
     def underlierCorrelation(self) -> Tuple[EntityCorrelation, ...]:
+        """entity correlation"""
         return self.__underlierCorrelation
 
     @underlierCorrelation.setter
@@ -1798,6 +1766,7 @@ class UnderlyingAssetIdRefData(Base):
 
     @property
     def data(self) -> Tuple[UnderlyingAssetIdDataRefData, ...]:
+        """Underlying asset id data reference data object."""
         return self.__data
 
     @data.setter

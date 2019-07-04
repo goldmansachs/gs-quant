@@ -112,7 +112,7 @@ def test_get_portfolio_positions(mocker):
     end_date = dt.date(2019, 2, 19)
 
     mock_response = {'positionSets': (
-        PositionSet.from_dict({
+        {
             'id': 'mock1',
             'positionDate': '2019-02-18',
             'lastUpdateTime': '2019-02-19T12:10:32.401Z',
@@ -120,8 +120,8 @@ def test_get_portfolio_positions(mocker):
                 {'assetId': 'MQA123', 'quantity': 0.3},
                 {'assetId': 'MQA456', 'quantity': 0.7}
             ]
-        }),
-        PositionSet.from_dict({
+        },
+        {
             'id': 'mock2',
             'positionDate': '2019-02-19',
             'lastUpdateTime': '2019-02-20T05:04:32.981Z',
@@ -129,7 +129,7 @@ def test_get_portfolio_positions(mocker):
                 {'assetId': 'MQA123', 'quantity': 0.4},
                 {'assetId': 'MQA456', 'quantity': 0.6}
             ]
-        })
+        }
     )}
 
     expected_response = (
@@ -151,7 +151,7 @@ def test_get_portfolio_positions(mocker):
     response = GsPortfolioApi.get_positions(id_1, start_date, end_date)
 
     GsSession.current._get.assert_called_with('/portfolios/{id}/positions?type=close&startDate={sd}&endDate={ed}'.format(
-        id=id_1, sd=start_date, ed=end_date), cls=PositionSet)
+        id=id_1, sd=start_date, ed=end_date))
 
     assert response == expected_response
 
