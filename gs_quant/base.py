@@ -34,6 +34,8 @@ class Base:
 
     """The base class for all generated classes"""
 
+    __properties = set()
+
     def __init__(self):
         self.__calced_hash = None
 
@@ -63,7 +65,9 @@ class Base:
     @classmethod
     def properties(cls) -> set:
         """The public property names of this class"""
-        return set(i for i in dir(cls) if isinstance(getattr(cls, i), property) and not i.startswith('_'))
+        if not cls.__properties:
+            cls.__properties = set(i for i in dir(cls) if isinstance(getattr(cls, i), property) and not i.startswith('_'))
+        return cls.__properties
 
     def as_dict(self) -> dict:
         """Dictionary of the public, non-null properties and values"""
@@ -102,6 +106,12 @@ class Base:
                     if isinstance(prop_value, int):
                         setattr(self, prop, dt.datetime.fromtimestamp(prop_value / 1000).isoformat())
                     else:
+                        import re
+                        matcher = re.search('\.([0-9]*)Z$', prop_value)
+                        if matcher:
+                            sub_seconds = matcher.group(1)
+                            if len(sub_seconds) > 6:
+                                prop_value = re.sub(matcher.re, '.{}Z'.format(sub_seconds[:6]), prop_value)
                         setattr(self, prop, dateutil.parser.isoparse(prop_value))
                 elif issubclass(prop_type, dt.date):
                     setattr(self, prop, dateutil.parser.isoparse(prop_value).date())
@@ -111,7 +121,7 @@ class Base:
                     setattr(self, prop, prop_type.from_dict(prop_value))
                 elif issubclass(prop_type, (list, tuple)):
                     item_type = self.prop_item_type(prop)
-                    item_args = getattr(item_type, '__args__', None)
+                    item_args = [i for i in getattr(item_type, '__args__', ()) if isinstance(i, type)]
                     if item_args:
                         item_type = next((a for a in item_args if issubclass(a, (Base, EnumBase))), item_args[-1])
 
@@ -331,9 +341,10 @@ class Instrument(Priceable):
         if not values:
             return None
 
-        if 'assetClass' in values:
-            values = copy.copy(values)
-            instrument_type = cls.asset_class_and_type_to_instrument()[(values.pop('assetClass'), values.pop('type'))]
+        values = copy.copy(values)
+        instrument_type = cls.asset_class_and_type_to_instrument().get((values.pop('assetClass'), values.pop('type')))
+
+        if instrument_type:
             return instrument_type._from_dict(values)
         else:
             from gs_quant.instrument import Security

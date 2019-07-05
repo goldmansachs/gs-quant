@@ -461,355 +461,6 @@ class People(Base):
         self._property_changed('portfolioManagers')        
 
 
-class PerformanceStats(Base):
-        
-    """Performance statistics."""
-       
-    def __init__(self, alpha: float = None, annualizedReturn: float = None, annualizedVolatility: float = None, averageReturn: float = None, averageValue: float = None, averageVolumeLastMonth: float = None, bestMonth: float = None, bestMonthDate: datetime.date = None, beta: float = None, closePrice: float = None, correlation: float = None, currentValue: float = None, drawdownOverReturn: float = None, high: float = None, highEod: float = None, lastChange: float = None, lastChangePct: float = None, lastDate: datetime.date = None, lastValue: float = None, low: float = None, lowEod: float = None, maxDrawDown: float = None, maxDrawDownDuration: int = None, openPrice: float = None, positiveMonths: float = None, sharpeRatio: float = None, sortinoRatio: float = None, worstMonth: float = None, worstMonthDate: datetime.date = None, totalReturn: float = None, volume: float = None):
-        super().__init__()
-        self.__alpha = alpha
-        self.__annualizedReturn = annualizedReturn
-        self.__annualizedVolatility = annualizedVolatility
-        self.__averageReturn = averageReturn
-        self.__averageValue = averageValue
-        self.__averageVolumeLastMonth = averageVolumeLastMonth
-        self.__bestMonth = bestMonth
-        self.__bestMonthDate = bestMonthDate
-        self.__beta = beta
-        self.__closePrice = closePrice
-        self.__correlation = correlation
-        self.__currentValue = currentValue
-        self.__drawdownOverReturn = drawdownOverReturn
-        self.__high = high
-        self.__highEod = highEod
-        self.__lastChange = lastChange
-        self.__lastChangePct = lastChangePct
-        self.__lastDate = lastDate
-        self.__lastValue = lastValue
-        self.__low = low
-        self.__lowEod = lowEod
-        self.__maxDrawDown = maxDrawDown
-        self.__maxDrawDownDuration = maxDrawDownDuration
-        self.__openPrice = openPrice
-        self.__positiveMonths = positiveMonths
-        self.__sharpeRatio = sharpeRatio
-        self.__sortinoRatio = sortinoRatio
-        self.__worstMonth = worstMonth
-        self.__worstMonthDate = worstMonthDate
-        self.__totalReturn = totalReturn
-        self.__volume = volume
-
-    @property
-    def alpha(self) -> float:
-        """Measure of performance compared to a market benchmark."""
-        return self.__alpha
-
-    @alpha.setter
-    def alpha(self, value: float):
-        self.__alpha = value
-        self._property_changed('alpha')        
-
-    @property
-    def annualizedReturn(self) -> float:
-        """Compounded Annual Growth Rate (CAGR)."""
-        return self.__annualizedReturn
-
-    @annualizedReturn.setter
-    def annualizedReturn(self, value: float):
-        self.__annualizedReturn = value
-        self._property_changed('annualizedReturn')        
-
-    @property
-    def annualizedVolatility(self) -> float:
-        """Standard deviation of daily returns, annualized."""
-        return self.__annualizedVolatility
-
-    @annualizedVolatility.setter
-    def annualizedVolatility(self, value: float):
-        self.__annualizedVolatility = value
-        self._property_changed('annualizedVolatility')        
-
-    @property
-    def averageReturn(self) -> float:
-        """Average of the performance returns."""
-        return self.__averageReturn
-
-    @averageReturn.setter
-    def averageReturn(self, value: float):
-        self.__averageReturn = value
-        self._property_changed('averageReturn')        
-
-    @property
-    def averageValue(self) -> float:
-        """Average value."""
-        return self.__averageValue
-
-    @averageValue.setter
-    def averageValue(self, value: float):
-        self.__averageValue = value
-        self._property_changed('averageValue')        
-
-    @property
-    def averageVolumeLastMonth(self) -> float:
-        """30 day average volume."""
-        return self.__averageVolumeLastMonth
-
-    @averageVolumeLastMonth.setter
-    def averageVolumeLastMonth(self, value: float):
-        self.__averageVolumeLastMonth = value
-        self._property_changed('averageVolumeLastMonth')        
-
-    @property
-    def bestMonth(self) -> float:
-        """Best monthly return (first to last day of month)."""
-        return self.__bestMonth
-
-    @bestMonth.setter
-    def bestMonth(self, value: float):
-        self.__bestMonth = value
-        self._property_changed('bestMonth')        
-
-    @property
-    def bestMonthDate(self) -> datetime.date:
-        """Best monthly return date (first to last day of month)."""
-        return self.__bestMonthDate
-
-    @bestMonthDate.setter
-    def bestMonthDate(self, value: datetime.date):
-        self.__bestMonthDate = value
-        self._property_changed('bestMonthDate')        
-
-    @property
-    def beta(self) -> float:
-        """Measure of volatility compared to a market benchmark."""
-        return self.__beta
-
-    @beta.setter
-    def beta(self, value: float):
-        self.__beta = value
-        self._property_changed('beta')        
-
-    @property
-    def closePrice(self) -> float:
-        """previous close price."""
-        return self.__closePrice
-
-    @closePrice.setter
-    def closePrice(self, value: float):
-        self.__closePrice = value
-        self._property_changed('closePrice')        
-
-    @property
-    def correlation(self) -> float:
-        """Pearson correlation."""
-        return self.__correlation
-
-    @correlation.setter
-    def correlation(self, value: float):
-        self.__correlation = value
-        self._property_changed('correlation')        
-
-    @property
-    def currentValue(self) -> float:
-        """Current value."""
-        return self.__currentValue
-
-    @currentValue.setter
-    def currentValue(self, value: float):
-        self.__currentValue = value
-        self._property_changed('currentValue')        
-
-    @property
-    def drawdownOverReturn(self) -> float:
-        """Maximum drawdown divided by annualized return."""
-        return self.__drawdownOverReturn
-
-    @drawdownOverReturn.setter
-    def drawdownOverReturn(self, value: float):
-        self.__drawdownOverReturn = value
-        self._property_changed('drawdownOverReturn')        
-
-    @property
-    def high(self) -> float:
-        """Highest real time price for the previous 24 hours."""
-        return self.__high
-
-    @high.setter
-    def high(self, value: float):
-        self.__high = value
-        self._property_changed('high')        
-
-    @property
-    def highEod(self) -> float:
-        """Highest end of day price."""
-        return self.__highEod
-
-    @highEod.setter
-    def highEod(self, value: float):
-        self.__highEod = value
-        self._property_changed('highEod')        
-
-    @property
-    def lastChange(self) -> float:
-        """Last published value."""
-        return self.__lastChange
-
-    @lastChange.setter
-    def lastChange(self, value: float):
-        self.__lastChange = value
-        self._property_changed('lastChange')        
-
-    @property
-    def lastChangePct(self) -> float:
-        """Last change in percent."""
-        return self.__lastChangePct
-
-    @lastChangePct.setter
-    def lastChangePct(self, value: float):
-        self.__lastChangePct = value
-        self._property_changed('lastChangePct')        
-
-    @property
-    def lastDate(self) -> datetime.date:
-        """Last publication date."""
-        return self.__lastDate
-
-    @lastDate.setter
-    def lastDate(self, value: datetime.date):
-        self.__lastDate = value
-        self._property_changed('lastDate')        
-
-    @property
-    def lastValue(self) -> float:
-        """Last published value."""
-        return self.__lastValue
-
-    @lastValue.setter
-    def lastValue(self, value: float):
-        self.__lastValue = value
-        self._property_changed('lastValue')        
-
-    @property
-    def low(self) -> float:
-        """Lowest real time price for the previous 24 hours."""
-        return self.__low
-
-    @low.setter
-    def low(self, value: float):
-        self.__low = value
-        self._property_changed('low')        
-
-    @property
-    def lowEod(self) -> float:
-        """Lowest end of day price."""
-        return self.__lowEod
-
-    @lowEod.setter
-    def lowEod(self, value: float):
-        self.__lowEod = value
-        self._property_changed('lowEod')        
-
-    @property
-    def maxDrawDown(self) -> float:
-        """Maximum peak to trough percentage drawdown."""
-        return self.__maxDrawDown
-
-    @maxDrawDown.setter
-    def maxDrawDown(self, value: float):
-        self.__maxDrawDown = value
-        self._property_changed('maxDrawDown')        
-
-    @property
-    def maxDrawDownDuration(self) -> int:
-        """Amount of time in days between beginning and end of drawdown."""
-        return self.__maxDrawDownDuration
-
-    @maxDrawDownDuration.setter
-    def maxDrawDownDuration(self, value: int):
-        self.__maxDrawDownDuration = value
-        self._property_changed('maxDrawDownDuration')        
-
-    @property
-    def openPrice(self) -> float:
-        """Open price."""
-        return self.__openPrice
-
-    @openPrice.setter
-    def openPrice(self, value: float):
-        self.__openPrice = value
-        self._property_changed('openPrice')        
-
-    @property
-    def positiveMonths(self) -> float:
-        """Percentage of months that performed positively."""
-        return self.__positiveMonths
-
-    @positiveMonths.setter
-    def positiveMonths(self, value: float):
-        self.__positiveMonths = value
-        self._property_changed('positiveMonths')        
-
-    @property
-    def sharpeRatio(self) -> float:
-        """Annualized return of the series minus risk free rate (accrued daily) divided by annual volatility."""
-        return self.__sharpeRatio
-
-    @sharpeRatio.setter
-    def sharpeRatio(self, value: float):
-        self.__sharpeRatio = value
-        self._property_changed('sharpeRatio')        
-
-    @property
-    def sortinoRatio(self) -> float:
-        """Annualized return of the series minus risk free rate (accrued daily) divided by annual volatility of negative returns."""
-        return self.__sortinoRatio
-
-    @sortinoRatio.setter
-    def sortinoRatio(self, value: float):
-        self.__sortinoRatio = value
-        self._property_changed('sortinoRatio')        
-
-    @property
-    def worstMonth(self) -> float:
-        """Worst monthly return (first to last day of month)."""
-        return self.__worstMonth
-
-    @worstMonth.setter
-    def worstMonth(self, value: float):
-        self.__worstMonth = value
-        self._property_changed('worstMonth')        
-
-    @property
-    def worstMonthDate(self) -> datetime.date:
-        """Worst monthly return date (first to last day of month)."""
-        return self.__worstMonthDate
-
-    @worstMonthDate.setter
-    def worstMonthDate(self, value: datetime.date):
-        self.__worstMonthDate = value
-        self._property_changed('worstMonthDate')        
-
-    @property
-    def totalReturn(self) -> float:
-        """Total return."""
-        return self.__totalReturn
-
-    @totalReturn.setter
-    def totalReturn(self, value: float):
-        self.__totalReturn = value
-        self._property_changed('totalReturn')        
-
-    @property
-    def volume(self) -> float:
-        """volume."""
-        return self.__volume
-
-    @volume.setter
-    def volume(self, value: float):
-        self.__volume = value
-        self._property_changed('volume')        
-
-
 class PerformanceStatsRequest(Base):
         
     """Performance statistics."""
@@ -1170,7 +821,7 @@ class AssetParameters(Base):
         
     """Parameters specific to the asset type"""
        
-    def __init__(self, basketType: str = None, style: str = None, indexCalculationType: str = None, indexReturnType: str = None, indexDivisor: float = None, currency: Union[Currency, str] = None, quoteCurrency: Union[Currency, str] = None, indexInitialPrice: float = None, initialPricingDate: datetime.date = None, expirationDate: datetime.date = None, expirationLocation: str = None, optionStyle: str = None, optionType: Union[OptionType, str] = None, settlementDate: datetime.date = None, settlementType: str = None, strikePrice: float = None, putCurrency: Union[Currency, str] = None, putAmount: float = None, automaticExercise: bool = None, callAmount: float = None, callCurrency: Union[Currency, str] = None, exerciseTime: str = None, multiplier: float = None, premiumPaymentDate: datetime.date = None, premium: float = None, premiumCurrency: Union[Currency, str] = None, callable: bool = None, puttable: bool = None, perpetual: bool = None, seniority: str = None, couponType: str = None, index: str = None, indexTerm: str = None, indexMargin: float = None, coupon: float = None, issueDate: datetime.date = None, issuer: str = None, issuerCountryCode: str = None, issuerType: str = None, issueSize: float = None, commoditySector: Union[CommoditySector, str] = None, pricingLocation: Union[PricingLocation, str] = None, contractMonths: Tuple[str, ...] = None, g10Currency: bool = None, hedgeId: str = None, ultimateTicker: str = None, strategy: Union[Strategy, str] = None, supraStrategy: Union[SupraStrategy, str] = None, exchangeCurrency: Union[Currency, str] = None, region: str = None, deliveryPoint: str = None, pricingIndex: str = None, contractMonth: str = None, loadType: str = None, contractUnit: str = None, indexCreateSource: Union[IndexCreateSource, str] = None, indexApprovalIds: Tuple[str, ...] = None, isPairBasket: bool = None, fixedRateDayCountFraction: Union[DayCountFraction, str] = None, floatingRateDayCountFraction: Union[DayCountFraction, str] = None, payDayCountFraction: Union[DayCountFraction, str] = None, receiveDayCountFraction: Union[DayCountFraction, str] = None, payFrequency: str = None, receiveFrequency: str = None, resettableLeg: Union[PayReceive, str] = None, inflationLag: str = None, fxIndex: str = None, tradeAs: str = None, cloneParentId: str = None, onBehalfOf: str = None):
+    def __init__(self, basketType: str = None, style: str = None, indexCalculationType: str = None, indexReturnType: str = None, indexDivisor: float = None, currency: Union[Currency, str] = None, quoteCurrency: Union[Currency, str] = None, indexInitialPrice: float = None, initialPricingDate: datetime.date = None, expirationDate: datetime.date = None, expirationLocation: str = None, optionStyle: str = None, optionType: Union[OptionType, str] = None, settlementDate: datetime.date = None, settlementType: str = None, strikePrice: float = None, putCurrency: Union[Currency, str] = None, putAmount: float = None, automaticExercise: bool = None, callAmount: float = None, callCurrency: Union[Currency, str] = None, exerciseTime: str = None, multiplier: float = None, premiumPaymentDate: datetime.date = None, premium: float = None, premiumCurrency: Union[Currency, str] = None, callable: bool = None, puttable: bool = None, perpetual: bool = None, seniority: str = None, couponType: str = None, index: str = None, indexTerm: str = None, indexMargin: float = None, coupon: float = None, issueDate: datetime.date = None, issuer: str = None, issuerCountryCode: str = None, issuerType: str = None, issueSize: float = None, commoditySector: Union[CommoditySector, str] = None, pricingLocation: Union[PricingLocation, str] = None, contractMonths: Tuple[str, ...] = None, g10Currency: bool = None, hedgeId: str = None, ultimateTicker: str = None, strategy: Union[Strategy, str] = None, supraStrategy: Union[SupraStrategy, str] = None, exchangeCurrency: Union[Currency, str] = None, region: str = None, deliveryPoint: str = None, pricingIndex: str = None, contractMonth: str = None, loadType: str = None, contractUnit: str = None, indexCreateSource: Union[IndexCreateSource, str] = None, indexApprovalIds: Tuple[str, ...] = None, isPairBasket: bool = None, fixedRateDayCountFraction: Union[DayCountFraction, str] = None, floatingRateDayCountFraction: Union[DayCountFraction, str] = None, payDayCountFraction: Union[DayCountFraction, str] = None, receiveDayCountFraction: Union[DayCountFraction, str] = None, payFrequency: str = None, receiveFrequency: str = None, resettableLeg: Union[PayReceive, str] = None, inflationLag: str = None, fxIndex: str = None, tradeAs: str = None, cloneParentId: str = None, onBehalfOf: str = None, indexCalculationAgent: str = None):
         super().__init__()
         self.__basketType = basketType
         self.__style = style
@@ -1242,6 +893,7 @@ class AssetParameters(Base):
         self.__tradeAs = tradeAs
         self.__cloneParentId = cloneParentId
         self.__onBehalfOf = onBehalfOf
+        self.__indexCalculationAgent = indexCalculationAgent
 
     @property
     def basketType(self) -> str:
@@ -1932,6 +1584,16 @@ class AssetParameters(Base):
         self.__onBehalfOf = value
         self._property_changed('onBehalfOf')        
 
+    @property
+    def indexCalculationAgent(self) -> str:
+        """Calculation agent of the index."""
+        return self.__indexCalculationAgent
+
+    @indexCalculationAgent.setter
+    def indexCalculationAgent(self, value: str):
+        self.__indexCalculationAgent = value
+        self._property_changed('indexCalculationAgent')        
+
 
 class AssetStats(Base):
         
@@ -2542,7 +2204,7 @@ class Asset(Base):
         
     """A security or instrument which can be held in a trading book (for example a stock or a bond) or a publically identifiable object with observable market data fixings which can be referenced in derivative transations (for example the SPX Index)"""
        
-    def __init__(self, assetClass: Union[AssetClass, str], type: Union[AssetType, str], name: str, createdById: str = None, createdTime: datetime.datetime = None, currency: Union[Currency, str] = None, description: str = None, entitlements: Entitlements = None, exchange: str = None, id: str = None, identifiers: Tuple[Identifier, ...] = None, lastUpdatedById: str = None, lastUpdatedTime: datetime.datetime = None, listed: bool = None, liveDate: datetime.date = None, ownerId: str = None, parameters: dict = None, assetStats: Tuple[AssetStats, ...] = None, people: People = None, region: Union[Region, str] = None, reportIds: Tuple[str, ...] = None, shortName: str = None, styles: Tuple[str, ...] = None, tags: Tuple[str, ...] = None, underlyingAssetIds: Tuple[str, ...] = None):
+    def __init__(self, assetClass: Union[AssetClass, str], type: Union[AssetType, str], name: str, createdById: str = None, createdTime: datetime.datetime = None, currency: Union[Currency, str] = None, description: str = None, entitlements: Entitlements = None, entitlementExclusions: EntitlementExclusions = None, exchange: str = None, id: str = None, identifiers: Tuple[Identifier, ...] = None, lastUpdatedById: str = None, lastUpdatedTime: datetime.datetime = None, listed: bool = None, liveDate: datetime.date = None, ownerId: str = None, parameters: dict = None, assetStats: Tuple[AssetStats, ...] = None, people: People = None, region: Union[Region, str] = None, reportIds: Tuple[str, ...] = None, shortName: str = None, styles: Tuple[str, ...] = None, tags: Tuple[str, ...] = None, underlyingAssetIds: Tuple[str, ...] = None):
         super().__init__()
         self.__assetClass = assetClass if isinstance(assetClass, AssetClass) else get_enum_value(AssetClass, assetClass)
         self.__createdById = createdById
@@ -2550,6 +2212,7 @@ class Asset(Base):
         self.__currency = currency if isinstance(currency, Currency) else get_enum_value(Currency, currency)
         self.__description = description
         self.__entitlements = entitlements
+        self.__entitlementExclusions = entitlementExclusions
         self.__exchange = exchange
         self.__id = id
         self.__identifiers = identifiers
@@ -2629,6 +2292,16 @@ class Asset(Base):
     def entitlements(self, value: Entitlements):
         self.__entitlements = value
         self._property_changed('entitlements')        
+
+    @property
+    def entitlementExclusions(self) -> EntitlementExclusions:
+        """Defines the exclusion entitlements of a given resource"""
+        return self.__entitlementExclusions
+
+    @entitlementExclusions.setter
+    def entitlementExclusions(self, value: EntitlementExclusions):
+        self.__entitlementExclusions = value
+        self._property_changed('entitlementExclusions')        
 
     @property
     def exchange(self) -> str:

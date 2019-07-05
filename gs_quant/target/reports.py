@@ -450,7 +450,7 @@ class ReportParameters(Base):
 
 class Report(Base):
                
-    def __init__(self, positionSourceId: str, positionSourceType: Union[PositionSourceType, str], type: Union[ReportType, str], parameters: ReportParameters, calculationTime: float = None, dataSetId: str = None, assetId: str = None, createdById: str = None, createdTime: datetime.datetime = None, entitlements: Entitlements = None, id: str = None, lastUpdatedById: str = None, lastUpdatedTime: datetime.datetime = None, measures: Tuple[Union[ReportMeasures, str], ...] = None, name: str = None, ownerId: str = None, status: Union[ReportStatus, str] = None, latestExecutionTime: datetime.datetime = None, latestEndDate: datetime.date = None, percentageComplete: float = None):
+    def __init__(self, positionSourceId: str, positionSourceType: Union[PositionSourceType, str], type: Union[ReportType, str], parameters: ReportParameters, calculationTime: float = None, dataSetId: str = None, assetId: str = None, createdById: str = None, createdTime: datetime.datetime = None, entitlements: Entitlements = None, entitlementExclusions: EntitlementExclusions = None, id: str = None, lastUpdatedById: str = None, lastUpdatedTime: datetime.datetime = None, measures: Tuple[Union[ReportMeasures, str], ...] = None, name: str = None, ownerId: str = None, status: Union[ReportStatus, str] = None, latestExecutionTime: datetime.datetime = None, latestEndDate: datetime.date = None, percentageComplete: float = None):
         super().__init__()
         self.__calculationTime = calculationTime
         self.__dataSetId = dataSetId
@@ -458,6 +458,7 @@ class Report(Base):
         self.__createdById = createdById
         self.__createdTime = createdTime
         self.__entitlements = entitlements
+        self.__entitlementExclusions = entitlementExclusions
         self.__id = id
         self.__lastUpdatedById = lastUpdatedById
         self.__lastUpdatedTime = lastUpdatedTime
@@ -532,6 +533,16 @@ class Report(Base):
     def entitlements(self, value: Entitlements):
         self.__entitlements = value
         self._property_changed('entitlements')        
+
+    @property
+    def entitlementExclusions(self) -> EntitlementExclusions:
+        """Defines the exclusion entitlements of a given resource"""
+        return self.__entitlementExclusions
+
+    @entitlementExclusions.setter
+    def entitlementExclusions(self, value: EntitlementExclusions):
+        self.__entitlementExclusions = value
+        self._property_changed('entitlementExclusions')        
 
     @property
     def id(self) -> str:

@@ -71,7 +71,7 @@ class GsBacktestApi:
                                              dict(ids=backtest_id, comparisonIds=comparison_id, ownerId=owner_id,
                                                   name=name, mqSymbol=mqSymbol, limit=limit,
                                                   startDate=startDate.isoformat(), endDate=endDate.isoformat()).items())))
-        return GsSession.current._get('/backtests/results?{query}'.format(query=query_string), cls=BacktestResult)['backtestResults']
+        return GsSession.current._get('/backtests/results?{query}'.format(query=query_string))['backtestResults']
 
     @classmethod
     def schedule_backtest(cls, backtest_id: str) -> dict:

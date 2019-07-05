@@ -62,13 +62,14 @@ class DateRange(Base):
 
 class Portfolio(Base):
                
-    def __init__(self, currency: Union[Currency, str], name: str, createdById: str = None, createdTime: datetime.datetime = None, description: str = None, entitlements: Entitlements = None, id: str = None, identifiers: Tuple[Identifier, ...] = None, lastUpdatedById: str = None, lastUpdatedTime: datetime.datetime = None, ownerId: str = None, reportIds: Tuple[str, ...] = None, shortName: str = None, underlyingPortfolioIds: Tuple[str, ...] = None, tags: Tuple[str, ...] = None, type: Union[PortfolioType, str] = None, parameters: LiquidityRequest = None):
+    def __init__(self, currency: Union[Currency, str], name: str, createdById: str = None, createdTime: datetime.datetime = None, description: str = None, entitlements: Entitlements = None, entitlementExclusions: EntitlementExclusions = None, id: str = None, identifiers: Tuple[Identifier, ...] = None, lastUpdatedById: str = None, lastUpdatedTime: datetime.datetime = None, ownerId: str = None, reportIds: Tuple[str, ...] = None, shortName: str = None, underlyingPortfolioIds: Tuple[str, ...] = None, tags: Tuple[str, ...] = None, type: Union[PortfolioType, str] = None, parameters: LiquidityRequest = None):
         super().__init__()
         self.__createdById = createdById
         self.__createdTime = createdTime
         self.__currency = currency if isinstance(currency, Currency) else get_enum_value(Currency, currency)
         self.__description = description
         self.__entitlements = entitlements
+        self.__entitlementExclusions = entitlementExclusions
         self.__id = id
         self.__identifiers = identifiers
         self.__lastUpdatedById = lastUpdatedById
@@ -131,6 +132,16 @@ class Portfolio(Base):
     def entitlements(self, value: Entitlements):
         self.__entitlements = value
         self._property_changed('entitlements')        
+
+    @property
+    def entitlementExclusions(self) -> EntitlementExclusions:
+        """Defines the exclusion entitlements of a given resource"""
+        return self.__entitlementExclusions
+
+    @entitlementExclusions.setter
+    def entitlementExclusions(self, value: EntitlementExclusions):
+        self.__entitlementExclusions = value
+        self._property_changed('entitlementExclusions')        
 
     @property
     def id(self) -> str:

@@ -15,9 +15,10 @@ under the License.
 """
 import logging
 from urllib.parse import urlencode
+from typing import Tuple
 
 from gs_quant.session import GsSession
-from gs_quant.target.monitor import Monitor, Tuple, MonitorResponseData
+from gs_quant.target.monitor import Monitor, MonitorResponseData
 
 _logger = logging.getLogger(__name__)
 

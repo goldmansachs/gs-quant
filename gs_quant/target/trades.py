@@ -29,6 +29,7 @@ class MqexsAssetClass(EnumBase, Enum):
     FX = 'FX'
     Equity = 'Equity'
     Earon = 'Earon'
+    FICC = 'FICC'
     
     def __repr__(self):
         return self.value

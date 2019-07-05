@@ -13,11 +13,9 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-import pytest
-
 from gs_quant.api.gs.monitor import GsMonitorApi
+from gs_quant.target.monitor import Monitor, MonitorResponseData
 from gs_quant.session import *
-from gs_quant.target.monitor import Monitor, MonitorResponseData, MonitorResults, RowResult
 
 
 def test_get_many_monitors(mocker):
@@ -138,9 +136,18 @@ def test_calculate_monitor(mocker):
         }
     }
 
-    mock_response = MonitorResponseData(id=monitor_id,
-                                        result=[MonitorResults(groupName='some name',
-                                                               rows=[RowResult(entityId='id', data=calc_data)])])
+    mock_response = MonitorResponseData(
+        id=monitor_id,
+        result={
+            'groupName': 'some name',
+            'rows': [
+                {
+                    'entityId': 'id',
+                    'data': calc_data
+                }
+            ]
+        }
+    )
 
     # mock GsSession
     mocker.patch.object(GsSession.__class__, 'current',
@@ -151,7 +158,3 @@ def test_calculate_monitor(mocker):
     response = GsMonitorApi.calculate_monitor(monitor_id)
     GsSession.current._get.assert_called_with('/monitors/{id}/data'.format(id=monitor_id), cls=MonitorResponseData)
     assert response == mock_response
-
-
-if __name__ == "__main__":
-    pytest.main(args=["test_monitor.py"])

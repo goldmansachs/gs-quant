@@ -135,7 +135,7 @@ def test_get_asset_positions_for_date(mocker):
     position_date = dt.date(2019, 2, 19)
 
     mock_response = {'results': (
-        PositionSet.from_dict({
+        {
             'id': 'mock1',
             'positionDate': '2019-02-19',
             'lastUpdateTime': '2019-02-19T12:10:32.401Z',
@@ -145,8 +145,8 @@ def test_get_asset_positions_for_date(mocker):
             ],
             'type': 'open',
             'divisor': 100
-        }),
-        PositionSet.from_dict({
+        },
+        {
             'id': 'mock2',
             'positionDate': '2019-02-19',
             'lastUpdateTime': '2019-02-20T05:04:32.981Z',
@@ -156,7 +156,7 @@ def test_get_asset_positions_for_date(mocker):
             ],
             'type': 'close',
             'divisor': 120
-        })
+        }
     )}
 
     expected_response = (
@@ -179,11 +179,11 @@ def test_get_asset_positions_for_date(mocker):
     response = GsAssetApi.get_asset_positions_for_date(marquee_id, position_date)
 
     GsSession.current._get.assert_called_with('/assets/{id}/positions/{date}'.format(
-        id=marquee_id, date=position_date), cls=PositionSet)
+        id=marquee_id, date=position_date))
 
     testfixtures.compare(response, expected_response)
 
-    mock_response = (PositionSet.from_dict({
+    mock_response = {'results': [{
         'id': 'mock',
         'positionDate': '2019-02-19',
         'lastUpdateTime': '2019-02-20T05:04:32.981Z',
@@ -193,14 +193,13 @@ def test_get_asset_positions_for_date(mocker):
         ],
         'type': 'close',
         'divisor': 120
-    })
-    )
+    }]}
 
     expected_response = (
         PositionSet('mock', dt.date(2019, 2, 19), dup.parse('2019-02-20T05:04:32.981Z'), (
             Position(assetId='MQA123', quantity=0.4),
             Position(assetId='MQA456', quantity=0.6)
-        ), 'close', 120)
+        ), 'close', 120),
     )
 
     # mock GsSession
@@ -209,9 +208,10 @@ def test_get_asset_positions_for_date(mocker):
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
     # run test
+
     response = GsAssetApi.get_asset_positions_for_date(marquee_id, position_date, "close")
 
     testfixtures.compare(response, expected_response)
 
     GsSession.current._get.assert_called_with('/assets/{id}/positions/{date}?type=close'.format(
-        id=marquee_id, date=position_date), cls=PositionSet)
+        id=marquee_id, date=position_date))
