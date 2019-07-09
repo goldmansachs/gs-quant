@@ -39,7 +39,7 @@ Finally, submit a pull request. In your pull requests:
 * If you're going to contribute code from other open source projects, commit that code first with `covered by: <license>`
 where `<license>` is license of the code being committed. Ensure the file retains its original copyright notice and add an appropriate line to
 NOTICE.txt in the same commit. You can then modify that code in subsequent commits with a reference to your DCO and copyright.
-
+* See the root [README.md](./README.md) for more information on acceptable licenses.
 
 # Coding Style
 Please see [PEP 8 - Style Guide for Python Code](https://www.python.org/dev/peps/pep-0008/).
