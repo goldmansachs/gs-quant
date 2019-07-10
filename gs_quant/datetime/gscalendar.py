@@ -41,7 +41,7 @@ class GsCalendar:
             for holiday_id in self.__calendars:
                 data = dataset.get_data(exchange=holiday_id, start=self.DATE_LOW_LIMIT, end=self.DATE_HIGH_LIMIT)
                 if not data.empty:
-                    self.__holidays.update(data['date'].values)
+                    self.__holidays.update(map(lambda x: np.datetime64(x, 'D'), data.index))
 
         return self.__holidays
 

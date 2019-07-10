@@ -315,7 +315,7 @@ def test_bucketize():
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_commod)
     mock_pjm = Index('MA001', AssetClass.Commod, 'PJM')
 
-    with DataContext(DataContext.current.start_date, DataContext.current.end_date):
+    with DataContext(datetime.date(2019, 5, 1), datetime.date(2019, 5, 1)):
 
         actual = tm.bucketize(mock_pjm, 'LMP', 'totalPrice', bucket='base')
         assert_series_equal(pd.Series(target['base'],

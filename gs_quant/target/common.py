@@ -813,6 +813,7 @@ class LiquidityMeasure(EnumBase, Enum):
     """A list of the different liquidity measures to choose from."""
 
     Summary = 'Summary'
+    Constituent_Transaction_Costs = 'Constituent Transaction Costs'
     Constituents = 'Constituents'
     Largest_Holdings_By_Weight = 'Largest Holdings By Weight'
     Least_Liquid_Holdings = 'Least Liquid Holdings'
@@ -14182,11 +14183,11 @@ class FieldValueMap(Base):
         self._property_changed('arrivalRtNormalized')        
 
     @property
-    def performanceFee(self) -> Union[Op, float]:
+    def performanceFee(self) -> Union[float, Op]:
         return self.__performanceFee
 
     @performanceFee.setter
-    def performanceFee(self, value: Union[Op, float]):
+    def performanceFee(self, value: Union[float, Op]):
         self.__performanceFee = value
         self._property_changed('performanceFee')        
 
@@ -15960,11 +15961,11 @@ class FieldValueMap(Base):
         self._property_changed('newIdeasYtd')        
 
     @property
-    def managementFee(self) -> Union[Op, float]:
+    def managementFee(self) -> Union[float, Op]:
         return self.__managementFee
 
     @managementFee.setter
-    def managementFee(self, value: Union[Op, float]):
+    def managementFee(self, value: Union[float, Op]):
         self.__managementFee = value
         self._property_changed('managementFee')        
 
@@ -16459,11 +16460,11 @@ class FieldValueMap(Base):
         self._property_changed('name')        
 
     @property
-    def aum(self) -> Union[Op, float]:
+    def aum(self) -> Union[float, Op]:
         return self.__aum
 
     @aum.setter
-    def aum(self, value: Union[Op, float]):
+    def aum(self, value: Union[float, Op]):
         self.__aum = value
         self._property_changed('aum')        
 
@@ -16508,11 +16509,11 @@ class FieldValueMap(Base):
         self._property_changed('optionExpirationDate')        
 
     @property
-    def liveDate(self) -> Union[datetime.date, Op]:
+    def liveDate(self) -> Union[Op, datetime.date]:
         return self.__liveDate
 
     @liveDate.setter
-    def liveDate(self, value: Union[datetime.date, Op]):
+    def liveDate(self, value: Union[Op, datetime.date]):
         self.__liveDate = value
         self._property_changed('liveDate')        
 

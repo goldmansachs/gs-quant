@@ -1563,7 +1563,7 @@ class LiquidityResponse(Base):
         
     """Liquidity information for a set of weighted positions."""
        
-    def __init__(self, assetsNotInRiskModel: Tuple[str, ...] = None, assetsNotInCostPredictModel: Tuple[str, ...] = None, asOfDate: datetime.date = None, riskModel: Union[RiskModel, str] = None, notional: float = None, currency: Union[Currency, str] = None, report: str = None, summary: LiquiditySummary = None, constituents: Tuple[LiquidityConstituent, ...] = None, largestHoldingsByWeight: Tuple[LiquidityTableRow, ...] = None, leastLiquidHoldings: Tuple[LiquidityTableRow, ...] = None, advBuckets: Tuple[LiquidityBucket, ...] = None, regionBuckets: Tuple[LiquidityBucket, ...] = None, countryBuckets: Tuple[LiquidityBucket, ...] = None, sectorBuckets: Tuple[LiquidityBucket, ...] = None, industryBuckets: Tuple[LiquidityBucket, ...] = None, marketCapBuckets: Tuple[LiquidityBucket, ...] = None, executionCostsWithDifferentTimeHorizons: Tuple[ExecutionCostForHorizon, ...] = None, timeToTradeWithDifferentParticipationRates: Tuple[PRateForHorizon, ...] = None, riskOverTime: Tuple[RiskAtHorizon, ...] = None, tradeCompletePercentOverTime: Tuple[TradeCompleteAtHorizon, ...] = None, advPercentOverTime: Tuple[AdvCurveTick, ...] = None, riskBuckets: Tuple[LiquidityFactor, ...] = None, factorRiskBuckets: Tuple[LiquidityFactorCategory, ...] = None, exposureBuckets: Tuple[LiquidityFactor, ...] = None, factorExposureBuckets: Tuple[LiquidityFactorCategory, ...] = None, timeseriesData: Tuple[LiquidityTimeSeriesItem, ...] = None, errorMessage: str = None):
+    def __init__(self, assetsNotInRiskModel: Tuple[str, ...] = None, assetsNotInCostPredictModel: Tuple[str, ...] = None, asOfDate: datetime.date = None, riskModel: Union[RiskModel, str] = None, notional: float = None, currency: Union[Currency, str] = None, report: str = None, summary: LiquiditySummary = None, constituentTransactionCosts: Tuple[LiquidityConstituent, ...] = None, constituents: Tuple[LiquidityConstituent, ...] = None, largestHoldingsByWeight: Tuple[LiquidityTableRow, ...] = None, leastLiquidHoldings: Tuple[LiquidityTableRow, ...] = None, advBuckets: Tuple[LiquidityBucket, ...] = None, regionBuckets: Tuple[LiquidityBucket, ...] = None, countryBuckets: Tuple[LiquidityBucket, ...] = None, sectorBuckets: Tuple[LiquidityBucket, ...] = None, industryBuckets: Tuple[LiquidityBucket, ...] = None, marketCapBuckets: Tuple[LiquidityBucket, ...] = None, executionCostsWithDifferentTimeHorizons: Tuple[ExecutionCostForHorizon, ...] = None, timeToTradeWithDifferentParticipationRates: Tuple[PRateForHorizon, ...] = None, riskOverTime: Tuple[RiskAtHorizon, ...] = None, tradeCompletePercentOverTime: Tuple[TradeCompleteAtHorizon, ...] = None, advPercentOverTime: Tuple[AdvCurveTick, ...] = None, riskBuckets: Tuple[LiquidityFactor, ...] = None, factorRiskBuckets: Tuple[LiquidityFactorCategory, ...] = None, exposureBuckets: Tuple[LiquidityFactor, ...] = None, factorExposureBuckets: Tuple[LiquidityFactorCategory, ...] = None, timeseriesData: Tuple[LiquidityTimeSeriesItem, ...] = None, errorMessage: str = None):
         super().__init__()
         self.__assetsNotInRiskModel = assetsNotInRiskModel
         self.__assetsNotInCostPredictModel = assetsNotInCostPredictModel
@@ -1573,6 +1573,7 @@ class LiquidityResponse(Base):
         self.__currency = currency if isinstance(currency, Currency) else get_enum_value(Currency, currency)
         self.__report = report
         self.__summary = summary
+        self.__constituentTransactionCosts = constituentTransactionCosts
         self.__constituents = constituents
         self.__largestHoldingsByWeight = largestHoldingsByWeight
         self.__leastLiquidHoldings = leastLiquidHoldings
@@ -1672,6 +1673,16 @@ class LiquidityResponse(Base):
     def summary(self, value: LiquiditySummary):
         self.__summary = value
         self._property_changed('summary')        
+
+    @property
+    def constituentTransactionCosts(self) -> Tuple[LiquidityConstituent, ...]:
+        """Constituents of the portfolio enriched with transaction cost information."""
+        return self.__constituentTransactionCosts
+
+    @constituentTransactionCosts.setter
+    def constituentTransactionCosts(self, value: Tuple[LiquidityConstituent, ...]):
+        self.__constituentTransactionCosts = value
+        self._property_changed('constituentTransactionCosts')        
 
     @property
     def constituents(self) -> Tuple[LiquidityConstituent, ...]:

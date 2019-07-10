@@ -86,7 +86,7 @@ DictDayRule = {
 }
 
 
-def relative_days_add(date_rule: str) -> float:
+def relative_days_add(date_rule: str, strict: bool = False) -> float:
     """Change the string in date rule format to the number of days. E.g 1d to 1, 1y to 365, 1m to 30, -1w to -7"""
     days = ''
 
@@ -109,6 +109,8 @@ def relative_days_add(date_rule: str) -> float:
         else:
             raise ValueError('There are no valid day rule for the point provided.')
 
+    if strict:
+        raise ValueError(f'invalid date rule {date_rule}')
     return 0
 
 
