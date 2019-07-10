@@ -27,7 +27,10 @@ _logger = logging.getLogger(__name__)
 
 
 class EnumBase:
-    pass
+
+    @classmethod
+    def _missing_(cls: EnumMeta, key):
+        return next((m for m in cls.__members__.values() if m.value.lower() == key.lower()), None)
 
 
 class Base:

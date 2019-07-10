@@ -236,7 +236,7 @@ class PricingContext(ContextBaseWithDefault):
         """
         # TODO Handle these correctly in the risk service
         invalid_defaults = ('-- N/A --',)
-        value_mappings = {'Payer': 'Pay', 'Rec': 'Receive', 'Receiver': 'Receive', 'Act/365 (Fixed)': 'ACT/365 (Fixed)'}
+        value_mappings = {'Payer': 'Pay', 'Rec': 'Receive', 'Receiver': 'Receive'}
 
         def set_field_values(field_values):
             if isinstance(res, Future):
@@ -244,6 +244,9 @@ class PricingContext(ContextBaseWithDefault):
 
             if isinstance(field_values, (list, tuple)):
                 field_values = field_values[0]
+
+            if isinstance(field_values, str):
+                raise RuntimeError(field_values)
 
             for field, value in field_values.items():
                 value = value_mappings.get(value, value)

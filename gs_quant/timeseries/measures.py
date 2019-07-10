@@ -303,7 +303,7 @@ def _range_from_pricing_date(exchange, pricing_date: Optional[GENERIC_DATE] = No
     if matcher:
         start = end = today - _get_custom_bd(exchange) * int(matcher.group(1))
     else:
-        end = today - datetime.timedelta(days=relative_days_add(pricing_date))
+        end = today - datetime.timedelta(days=relative_days_add(pricing_date, True))
         start = end - _get_custom_bd(exchange)
     return start, end
 
@@ -434,9 +434,9 @@ def bucketize(asset: Asset, price_method: str = "LMP", price_component: str = "t
     else:
         raise ValueError('Invalid granularity: ' + granularity + '. Expected Value: daily or monthly.')
 
-    start, end = DataContext.current.start_time, DataContext.current.end_time + datetime.timedelta(hours=23)
+    start, end = DataContext.current.start_date, DataContext.current.end_date
     where = FieldFilterMap(priceMethod=price_method, priceComponent=price_component)
-    with DataContext(start, end):
+    with DataContext(start, end + datetime.timedelta(days=2)):
         q = GsDataApi.build_market_data_query([asset.get_marquee_id()], 'Price', where=where, source=source,
                                               real_time=True)
         df = _market_data_timed(q)
@@ -448,7 +448,10 @@ def bucketize(asset: Asset, price_method: str = "LMP", price_component: str = "t
     dayofweek = df.index.dayofweek
     hour = df.index.hour
     date = df.index.date
-    holidays = NercCalendar().holidays(start=start, end=end).date
+    df = df.loc[(date >= start) & (date <= end)]
+
+    holidays = NercCalendar().holidays(start=datetime.datetime(start.year, start.month, start.day),
+                                       end=datetime.datetime(end.year, end.month, end.day)).date
 
     # TODO: get frequency definition from SecDB
     if bucket == 'base':
