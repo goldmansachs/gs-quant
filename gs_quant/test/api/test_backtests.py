@@ -112,24 +112,22 @@ def test_get_backtest_results(mocker):
         BacktestResult('BT1', performance=(
             FieldValueMap(date='2019-02-18', price=100),
             FieldValueMap(date='2019-02-19', price=99),
-        ), stats=None, history=[], backtestVersion=1)
+        ), stats=None, history=(), backtestVersion=1)
     )}
 
     expected_response = BacktestResult('BT1', performance=(
             FieldValueMap(date='2019-02-18', price=100),
             FieldValueMap(date='2019-02-19', price=99),
-        ), stats=None, history=[], backtestVersion=1)
-
+        ), stats=None, history=(), backtestVersion=1)
 
     # mock GsSession
     mocker.patch.object(GsSession.__class__, 'current', return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
     # run test
-    response = GsBacktestApi.get_results(startDate=start_date, endDate=end_date, backtest_id=id_1)
+    response = GsBacktestApi.get_results(backtest_id=id_1)
 
-    GsSession.current._get.assert_called_with('/backtests/results?ids={id}&limit=100&startDate={sd}&endDate={ed}'.format(
-        id=id_1, sd=start_date, ed=end_date))
+    GsSession.current._get.assert_called_with('/backtests/results?id={id}'.format(id=id_1))
 
     assert response == expected_response
 
