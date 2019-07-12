@@ -178,10 +178,14 @@ FXGamma = __risk_measure_with_doc_string('FX Gamma', RiskMeasureType.Gamma, asse
 FXVega = __risk_measure_with_doc_string('FX Vega', RiskMeasureType.Vega, assetClass=AssetClass.FX)
 FXSpot = __risk_measure_with_doc_string('FX Spot Rate', RiskMeasureType.Spot, assetClass=AssetClass.FX)
 IRDelta = __risk_measure_with_doc_string('Interest Rate Delta', RiskMeasureType.Delta, assetClass=AssetClass.Rates)
+IRDeltaParallel = __risk_measure_with_doc_string('Interest Rate Parallel Delta', RiskMeasureType.ParallelDelta, assetClass=AssetClass.Rates)
 IRDeltaLocalCcy = __risk_measure_with_doc_string('Interest Rate Delta (Local Ccy)', RiskMeasureType.DeltaLocalCcy, assetClass=AssetClass.Rates)
+IRDeltaParallelLocalCcy = __risk_measure_with_doc_string('Interest Rate Parallel Delta (Local Ccy)', RiskMeasureType.ParallelDeltaLocalCcy, assetClass=AssetClass.Rates)
 IRGamma = __risk_measure_with_doc_string('Interest Rate Gamma', RiskMeasureType.Gamma, assetClass=AssetClass.Rates)
 IRVega = __risk_measure_with_doc_string('Interest Rate Vega', RiskMeasureType.Vega, assetClass=AssetClass.Rates)
+IRVegaParallel = __risk_measure_with_doc_string('Interest Rate Parallel Vega', RiskMeasureType.ParallelVega, assetClass=AssetClass.Rates)
 IRVegaLocalCcy = __risk_measure_with_doc_string('Interest Rate Vega (Local Ccy)', RiskMeasureType.VegaLocalCcy, assetClass=AssetClass.Rates)
+IRVegaParallelLocalCcy = __risk_measure_with_doc_string('Interest Rate Parallel Vega (Local Ccy)', RiskMeasureType.ParallelVegaLocalCcy, assetClass=AssetClass.Rates)
 IRAnnualImpliedVol = __risk_measure_with_doc_string('Interest Rate Annual Implied Volatility (%)', RiskMeasureType.Annual_Implied_Volatility, assetClass=AssetClass.Rates, unit=RiskMeasureUnit.Percent)
 IRAnnualATMImpliedVol = __risk_measure_with_doc_string('Interest Rate Annual Implied At-The-Money Volatility (%)', RiskMeasureType.Annual_ATMF_Implied_Volatility, assetClass=AssetClass.Rates, unit=RiskMeasureUnit.Percent)
 IRDailyImpliedVol = __risk_measure_with_doc_string('Interest Rate Daily Implied Volatility (bps)', RiskMeasureType.Annual_ATMF_Implied_Volatility, assetClass=AssetClass.Rates, unit=RiskMeasureUnit.BPS)
@@ -206,10 +210,14 @@ Formatters = {
     FXVega: structured_formatter,
     FXSpot: scalar_formatter,
     IRDelta: structured_formatter,
+    IRDeltaParallel: scalar_formatter,
     IRDeltaLocalCcy: structured_formatter,
+    IRDeltaParallelLocalCcy: scalar_formatter,
     IRGamma: structured_formatter,
     IRVega: structured_formatter,
+    IRVegaParallel: scalar_formatter,
     IRVegaLocalCcy: structured_formatter,
+    IRVegaParallelLocalCcy: scalar_formatter,
     IRAnnualImpliedVol: scalar_formatter,
     IRDailyImpliedVol: scalar_formatter,
     IRAnnualATMImpliedVol: scalar_formatter,

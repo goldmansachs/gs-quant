@@ -129,7 +129,7 @@ class Base:
                         item_type = next((a for a in item_args if issubclass(a, (Base, EnumBase))), item_args[-1])
 
                     if issubclass(item_type, Base):
-                        item_values = tuple(item_type.from_dict(v) for v in prop_value)
+                        item_values = tuple(v if isinstance(v, (Base, EnumBase)) else item_type.from_dict(v) for v in prop_value)
                     elif issubclass(item_type, EnumBase):
                         item_values = tuple(get_enum_value(item_type, v) for v in prop_value)
                     else:
@@ -150,7 +150,8 @@ class Base:
 
                 if prop_type:
                     if issubclass(prop_type, Base):
-                        value = prop_type.from_dict(value)
+                        if isinstance(value, dict):
+                            value = prop_type.from_dict(value)
                     elif issubclass(prop_type, EnumBase):
                         value = get_enum_value(prop_type, value)
 
@@ -354,9 +355,12 @@ class Instrument(Priceable):
             return Security.from_dict(values)
 
 
-def get_enum_value(enum_type: EnumMeta, value: str):
+def get_enum_value(enum_type: EnumMeta, value: Union[EnumBase, str]):
     if value in (None, 'None'):
         return None
+
+    if isinstance(value, enum_type):
+        return value
 
     try:
         enum_value = enum_type(value)

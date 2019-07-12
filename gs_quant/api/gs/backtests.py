@@ -18,7 +18,7 @@ import logging
 from urllib.parse import urlencode
 
 from gs_quant.session import GsSession
-from gs_quant.target.backtests import Backtest, Tuple, BacktestResult, BacktestRefData
+from gs_quant.target.backtests import *
 
 _logger = logging.getLogger(__name__)
 
@@ -58,7 +58,11 @@ class GsBacktestApi:
         return GsSession.current._delete('/backtests/{id}'.format(id=backtest_id))
 
     @classmethod
-    def get_results(cls,
+    def get_results(cls,  backtest_id: str) -> Tuple[BacktestResult, ...]:
+        return GsSession.current._get('/backtests/results?id={id}'.format(id=backtest_id))['backtestResults']
+
+    @classmethod
+    def get_comparisonResults(cls,
                     limit: int = 100,
                     startDate: dt.date = None,
                     endDate: dt.date = None,
@@ -66,23 +70,35 @@ class GsBacktestApi:
                     comparison_id: str = None,
                     owner_id: str = None,
                     name: str = None,
-                    mqSymbol: str = None) -> Tuple[BacktestResult, ...]:
+                    mqSymbol: str = None) -> Tuple[Tuple[BacktestResult, ...], Tuple[ComparisonBacktestResult, ...]]:
         query_string = urlencode(dict(filter(lambda item: item[1] is not None,
-                                             dict(ids=backtest_id, comparisonIds=comparison_id, ownerId=owner_id,
+                                             dict(id=backtest_id, comparisonIds=comparison_id, ownerId=owner_id,
                                                   name=name, mqSymbol=mqSymbol, limit=limit,
-                                                  startDate=startDate.isoformat(), endDate=endDate.isoformat()).items())))
-        return GsSession.current._get('/backtests/results?{query}'.format(query=query_string))['backtestResults']
+                                                  startDate=startDate.isoformat(),
+                                                  endDate=endDate.isoformat()).items())))
+        result = GsSession.current._get('/backtests/results?{query}'.format(query=query_string))
+        return (result['backtestResults'], result['comparisonResults'])
 
     @classmethod
     def schedule_backtest(cls, backtest_id: str) -> dict:
         return GsSession.current._post('/backtests/{id}/schedule'.format(id=backtest_id))
 
     @classmethod
-    def get_refData(cls) -> BacktestRefData:
+    def run_backtest(cls, backtest: Backtest) -> BacktestResult:
+        request_headers = {'Content-Type': 'application/json;charset=utf-8'}
+        response = GsSession.current._post('/backtests/calculate', backtest, request_headers=request_headers)
+
+        # map the response to backtest result
+        backtestResult = BacktestResult(performance=response['Data'], risks=response['RiskData'])
+
+        return backtestResult
+
+    @classmethod
+    def get_ref_data(cls) -> BacktestRefData:
         return GsSession.current._get('/backtests/refData', cls=BacktestRefData)
 
     @classmethod
-    def update_refData(cls, backtestRefData: BacktestRefData):
+    def update_ref_data(cls, backtestRefData: BacktestRefData):
         request_headers = {'Content-Type': 'application/json;charset=utf-8'}
         return GsSession.current._put('/backtests/refData', backtestRefData,
                                       request_headers=request_headers,

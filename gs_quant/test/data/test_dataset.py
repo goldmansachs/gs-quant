@@ -22,8 +22,24 @@ import pytest
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.data import Dataset
 from gs_quant.data.utils import construct_dataframe_with_types
-from gs_quant.target.data import FieldValueMap
 
+test_types = {
+    'date': 'date',
+    'assetId': 'string',
+    'askPrice': 'number',
+    'adjustedAskPrice': 'number',
+    'bidPrice': 'number',
+    'adjustedBidPrice': 'number',
+    'tradePrice': 'number',
+    'adjustedTradePrice': 'number',
+    'openPrice': 'number',
+    'adjustedOpenPrice': 'number',
+    'highPrice': 'number',
+    'lowPrice': 'number',
+    'adjustedHighPrice': 'number',
+    'adjustedLowPrice': 'number',
+    'updateTime': 'date-time'
+}
 test_data = [
     {
         'date': dt.date(2019, 1, 2),
@@ -132,33 +148,39 @@ test_data = [
 test_coverage_data = {'results': [{'gsid': 'gsid1'}]}
 
 
+@mock.patch("gs_quant.data.utils.get_types")
 @mock.patch.object(GsDataApi, 'query_data')
-def test_query_data(mocker):
-    mocker.return_value = test_data
+def test_query_data(query_data, get_types):
+    query_data.return_value = test_data
+    get_types.return_value = test_types
     dataset = Dataset(Dataset.TR.TREOD)
     data = dataset.get_data(dt.date(2019, 1, 2), dt.date(2019, 1, 9), assetId='MA4B66MW5E27U8P32SB')
-    assert data.equals(construct_dataframe_with_types(test_data))
+    assert data.equals(construct_dataframe_with_types(str(Dataset.TR.TREOD), test_data))
 
 
+@mock.patch("gs_quant.data.utils.get_types")
 @mock.patch.object(GsDataApi, 'query_data')
-def test_query_data_types(mocker):
-    field_value_map_list = [FieldValueMap(**d) for d in test_data]
-    mocker.return_value = field_value_map_list
+def test_query_data_types(query_data, get_types):
+    query_data.return_value = test_data
+    get_types.return_value = test_types
     dataset = Dataset(Dataset.TR.TREOD)
     data = dataset.get_data(dt.date(2019, 1, 2), dt.date(2019, 1, 9), assetId='MA4B66MW5E27U8P32SB')
-    assert data.equals(construct_dataframe_with_types(field_value_map_list))
+    assert data.equals(construct_dataframe_with_types(str(Dataset.TR.TREOD), test_data))
 
 
+@mock.patch("gs_quant.data.utils.get_types")
 @mock.patch.object(GsDataApi, 'last_data')
-def test_last_data(mocker):
-    mocker.return_value = [test_data[-1]]
+def test_last_data(query_data, get_types):
+    query_data.return_value = [test_data[-1]]
+    get_types.return_value = test_types
     dataset = Dataset(Dataset.TR.TREOD)
     data = dataset.get_data_last(dt.date(2019, 1, 9), assetId='MA4B66MW5E27U8P32SB')
-    assert data.equals(construct_dataframe_with_types(([test_data[-1]])))
+    assert data.equals(construct_dataframe_with_types(str(Dataset.TR.TREOD), ([test_data[-1]])))
 
 
 def test_get_data_series(mocker):
-    field_value_maps = tuple([FieldValueMap(**d) for d in test_data])
+    field_value_maps = test_data
+    mocker.patch("gs_quant.data.utils.get_types", return_value=test_types)
     mocker.patch.object(GsDataApi, 'query_data', return_value=field_value_maps)
     mocker.patch.object(GsDataApi, 'symbol_dimensions', return_value=('assetId',))
 
@@ -174,12 +196,14 @@ def test_get_data_series(mocker):
     pd.testing.assert_series_equal(series, expected)
 
 
+@mock.patch("gs_quant.data.utils.get_types")
 @mock.patch.object(GsDataApi, 'get_coverage')
-def test_get_coverage(mocker):
-    mocker.return_value = test_coverage_data
+def test_get_coverage(get_coverage, get_types):
+    get_coverage.return_value = test_coverage_data
+    get_types.return_value = {'gsid': 'string'}
     data = Dataset(Dataset.TR.TREOD).get_coverage()
 
-    assert data.equals(construct_dataframe_with_types(test_coverage_data))
+    assert data.equals(construct_dataframe_with_types(str(Dataset.TR.TREOD), test_coverage_data))
 
 
 if __name__ == "__main__":
