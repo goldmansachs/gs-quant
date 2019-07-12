@@ -19,9 +19,9 @@ authors:
     github: francisg77
 links:
   - title: Previous - Financial Series
-    url: /docs/gsquant/tutorials/Data-Analytics/2-financial-series/
+    url: /gsquant/tutorials/Data-Analytics/2-financial-series/
   - title: Next - Charting Data
-    url: /docs/gsquant/tutorials/Data-Analytics/4-charting-data/
+    url: /gsquant/tutorials/Data-Analytics/4-charting-data/
 ---
 
 GS Quant allows for access to more complex market models and associated measures. These are functions which allow more
@@ -35,20 +35,20 @@ intuitive slicing of various market-model based datasets. Examples of this would
 
 ## Skew
 
-<note>Examples require an initialized GsSession and data subscription, please refer to
+<note>Examples require an initialized GsSession and data subscription, please refer to 
 <a href="/docs/gsquant/guides/Authentication/2-gs-session">Sessions</a> for details</note>
 
-The following example shows how to char historical skew level for SPX:
+The following example shows how to chart historical skew level for SPX:
 
 ```python
 from datetime import date
 from gs_quant.data import DataContext
-from gs_quant.markets.securities import SecurityMaster, AssetIdentifier
+from gs_quant.markets.securities import SecurityMaster, AssetIdentifier, ExchangeCode
 import matplotlib.pyplot as plt
 import gs_quant.timeseries as ts
 
 data_ctx = DataContext(start=date(2018, 1, 1), end=date(2018, 12, 31))  # Create a data context covering 2018
-spx = SecurityMaster.get_asset('SPX', AssetIdentifier.TICKER)           # Lookup S&P 500 Index via the Security Master
+spx = SecurityMaster.get_asset('SPX', AssetIdentifier.TICKER, exchange_code=ExchangeCode.NYSE) # Lookup S&P 500 Index via the Security Master
 
 with data_ctx:                                                          # Use the data context we setup
     skew = ts.skew(spx, '1m', ts.SkewReference.DELTA, 25)               # Get 25 delta skew
@@ -59,4 +59,4 @@ plt.show()                                                              # Plot o
 
 Should produce something like this:
 
-![SPX 25 Delta Skew](/gsquant/tutorials/images/spx_skew.png)
+![SPX 25 Delta Skew](/docs/gsquant/tutorials/images/spx_skew.png)

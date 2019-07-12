@@ -19,7 +19,7 @@ authors:
     github: robertoronderosjr
 links:
   - title: Next - Financial Series
-    url: /docs/gsquant/tutorials/Data-Analytics/2-financial-series/
+    url: /gsquant/tutorials/Data-Analytics/2-financial-series/
 ---
 
 
@@ -57,9 +57,9 @@ Out[1]:
 5       Chicago
 ```
 
-The [get_coverage](/docs/gsquant/api/classes/gs_quant.data.Dataset.html#gs_quant.data.Dataset.get_coverage) method on a 
+The [get_coverage](/gsquant/api/classes/gs_quant.data.Dataset.html#gs_quant.data.Dataset.get_coverage) method on a 
 dataset will tell you the asset coverage. For financial datasets, the assets will generally be securities or other 
-financial observables, as described in the [Assets Guide](/docs/gsquant/guides/Markets/assets/). In this case, the 
+financial observables, as described in the [Assets Guide](/gsquant/guides/Markets/assets/). In this case, the 
 dataset coverage is a set of US cities. 
 
 ## Querying Data
@@ -178,4 +178,4 @@ dtype: float64
 ```
 
 This allows us to interact with very large datasets in an efficient way. For more information on datasets, refer to the 
-[Datasets](/docs/gsquant/guides/Data/datasets/) guide. Next, we'll explore how to interact with asset price data.
+[Datasets](/gsquant/guides/Data/datasets/) guide. Next, we'll explore how to interact with asset price data.

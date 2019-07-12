@@ -1,11 +1,12 @@
 import datetime as dt
+from unittest import mock
 
 import pytest
 import numpy as np
 from numpy import int64, float64, object, datetime64
 
+from gs_quant.data import Dataset
 from gs_quant.data.utils import construct_dataframe_with_types
-from gs_quant.target.data import FieldValueMap
 
 test_data = [
     {
@@ -26,11 +27,29 @@ test_data = [
         'updateTime': dt.datetime.strptime('2019-01-03T00:53:00Z', '%Y-%m-%dT%H:%M:%SZ')
     }
 ]
+test_types = {
+    'date': 'date',
+    'assetId': 'string',
+    'askPrice': 'number',
+    'adjustedAskPrice': 'number',
+    'bidPrice': 'number',
+    'adjustedBidPrice': 'number',
+    'tradePrice': 'number',
+    'adjustedTradePrice': 'number',
+    'openPrice': 'number',
+    'adjustedOpenPrice': 'number',
+    'highPrice': 'number',
+    'lowPrice': 'number',
+    'adjustedHighPrice': 'number',
+    'adjustedLowPrice': 'number',
+    'updateTime': 'date-time'
+}
 
 
-def test_construct_dataframe_with_types():
-    field_value_map_list = [FieldValueMap(**d) for d in test_data]
-    df = construct_dataframe_with_types(field_value_map_list)
+@mock.patch("gs_quant.data.utils.get_types")
+def test_construct_dataframe_with_types(get_types):
+    get_types.return_value = test_types
+    df = construct_dataframe_with_types(str(Dataset.TR.TREOD), test_data)
     assert np.issubdtype(df.index.dtype, datetime64)
     assert df['adjustedAskPrice'].dtype == int64
     assert df['adjustedBidPrice'].dtype == float64

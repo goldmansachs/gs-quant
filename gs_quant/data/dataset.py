@@ -126,7 +126,7 @@ class Dataset:
         )
         data = self.provider.query_data(query, self.id, asset_id_type=asset_id_type)
 
-        return construct_dataframe_with_types(data)
+        return construct_dataframe_with_types(self.id, data)
 
     def get_data_series(
             self,
@@ -174,7 +174,7 @@ class Dataset:
 
         symbol_dimension = symbol_dimensions[0]
         data = self.provider.query_data(query, self.id)
-        df = construct_dataframe_with_types(data)
+        df = construct_dataframe_with_types(self.id, data)
 
         gb = df.groupby(symbol_dimension)
         if len(gb.groups) > 1:
@@ -214,7 +214,7 @@ class Dataset:
         )
 
         data = self.provider.last_data(query, self.id)
-        return construct_dataframe_with_types(data)
+        return construct_dataframe_with_types(self.id, data)
 
     def get_coverage(
             self,
@@ -244,4 +244,4 @@ class Dataset:
             fields=fields
         )
 
-        return construct_dataframe_with_types(coverage)
+        return construct_dataframe_with_types(self.id, coverage)

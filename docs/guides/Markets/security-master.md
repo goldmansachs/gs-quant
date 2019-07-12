@@ -47,7 +47,7 @@ identifiers can be proprietary to individual vendors or in the public domain.
 The `SecurityMaster` class can be used to perform lookups against different identifiers. For example, to look up an
 asset based on a SEDOL:
 
-<note>Examples require an initialized GsSession and relevant identifier licenses, please refer to <a href="/gsquant/guides/authentication/2-gs-session">
+<note>Examples require an initialized GsSession and relevant identifier licenses, please refer to <a href="/docs/gsquant/guides/Authentication/2-gs-session">
 Sessions</a> for details</note>
 
 ```python

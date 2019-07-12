@@ -22,7 +22,7 @@ links:
   - title: Goldman Sachs Developer
     url: https://developer.gs.com
   - title: Marquee Developer
-    url: https://marquee.gs.com/s/developer
+    url: https://marquee.gs.com/s/developer/home
 ---
 
 In order to access the full range of data, analytics, and other content offered by Goldman Sachs, gs-quant uses the

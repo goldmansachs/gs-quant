@@ -15,14 +15,12 @@ links:
   - title: XlsxWriter
     url: https://xlsxwriter.readthedocs.io/
   - title: Sessions
-    url: https://developer.gs.com/docs/gsquant/1-sessions
-  - title: Timeseries Functions
-    url: https://developer.gs.com/docs/gsquant/tutorials/Data%20Analytics/timeseries-functions/
+    url: /gsquant/guides/Authentication/1-sessions
   - title: Virtual Environments
     url: https://docs.python.org/3.6/tutorial/venv.html
 ---
 
-Structured risk in GS Quant is returned as Pandas Dataframes. These can easily be written to Excel, for use in presentations etc. Note that you will need [XlsxWriter](https://xlsxwriter.readthedocs.io/getting_started.html) installed for this to work.
+Risk in GS Quant is returned as Pandas Dataframes. These can easily be written to Excel, for use in presentations etc. Note that you will need [XlsxWriter](https://xlsxwriter.readthedocs.io/getting_started.html) installed for this to work.
 
 ## Get Dataframe
 

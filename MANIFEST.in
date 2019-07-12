@@ -1,3 +1,7 @@
 include gs_quant/config.ini
+include gs_quant/resources/asset-service.json
+include gs_quant/resources/data-service.json
+include gs_quant/resources/risk-service.json
+include gs_quant/resources/certificates/*
 include gs_quant/notebooks/*
 include gs_quant/docs/*

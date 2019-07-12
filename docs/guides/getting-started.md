@@ -16,7 +16,7 @@ authors:
     github: nick-young-gs
 ---
 
-![GS Quant Cube](/gsquant/guides/images/gs-quant-cube.svg)
+![GS Quant Cube](/docs/gsquant/guides/images/gs-quant-cube.svg)
 
 # Welcome to gs-quant!
 

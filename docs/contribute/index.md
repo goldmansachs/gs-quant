@@ -18,7 +18,7 @@ Learn more about contributing to GS Quant.
 
 [Adding Metadata](/gsquant/contribute/Documentation-Formatting/adding-metadata) — Learn best practices for working with our documentation format.
 
-[Markdown Guidelines](/gsquant/contribute/Documentation-Formatting/adding-metadata) — Learn how to work with Markdown.
+[Markdown Guidelines](/gsquant/contribute/Documentation-Formatting/markdown-guidelines) — Learn how to work with Markdown.
 
 [Writing Quality Documentation](/gsquant/contribute/Documentation-Formatting/how-to-write-quality-documentation) — Write docs like a pro.
 

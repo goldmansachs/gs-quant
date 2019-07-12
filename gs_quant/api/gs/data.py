@@ -72,8 +72,7 @@ class GsDataApi(DataApi):
                     query.where.assetId = [asset_id_map[x] for x in xref_values]
 
         results: Union[DataQueryResponse, dict] = GsSession.current._post('/data/{}/query'.format(dataset_id),
-                                                                          payload=query,
-                                                                          cls=DataQueryResponse)
+                                                                          payload=query)
         if isinstance(results, dict):
             results = results.get('data', ())
         else:

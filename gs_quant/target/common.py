@@ -911,7 +911,8 @@ class PayReceive(EnumBase, Enum):
 
     Pay = 'Pay'
     Receive = 'Receive'
-    
+    Straddle = 'Straddle'
+
     def __repr__(self):
         return self.value
 

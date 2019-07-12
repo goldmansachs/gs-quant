@@ -18,7 +18,7 @@ links:
   - title: Sessions
     url: /gsquant/guides/Authentication/1-sessions/
   - title: Marquee Developer
-    url: https://marquee.gs.com/s/developer
+    url: https://marquee.gs.com/s/developer/home
 ---
 
 ## GsSession
@@ -59,7 +59,7 @@ GsSession.use()
 ## Scopes
 
 GS Developer scopes provide access to different capabilities within gs-quant. These scopes can be requested through the
-[Marquee Developer Site](https://marquee.gs.com/developer). Scopes are linked to your registered application. You can
+[Marquee Developer Site](https://marquee.gs.com/s/developer/home). Scopes are linked to your registered application. You can
 create multiple applications with different scopes in order to protect your processes. For example, your trading
 application may require the `execute_trades` scope, but you wouldn't need other applications which only read data to
 have these elevated permissions. More information on the different scopes is available

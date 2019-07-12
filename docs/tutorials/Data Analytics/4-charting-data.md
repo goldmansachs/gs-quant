@@ -13,9 +13,9 @@ authors:
     github: andyphillipsgs
 links:
   - title: Previous - Financial Measures
-    url: /docs/gsquant/tutorials/Data-Analytics/3-financial-measures/
+    url: /gsquant/tutorials/Data-Analytics/3-financial-measures/
   - title: Next - Exporting Data
-    url: /docs/gsquant/tutorials/Data-Analytics/5-exporting-data/
+    url: /gsquant/tutorials/Data-Analytics/5-exporting-data/
 ---
 
 A simple way to chart data in GS Quant is by installing `matplotlib`. This plotting library can be used to easily
@@ -85,7 +85,7 @@ plt.show()
 
 Which will create a plot like this:
 
-![SPX 25 Delta Skew](/gsquant/tutorials/images/spx_implied_by_strike.JPG)
+![SPX 25 Delta Skew](/docs/gsquant/tutorials/images/spx_implied_by_strike.JPG)
 
 ### Implied Volatility By Tenor
 
@@ -93,6 +93,10 @@ Likewise we can use the same technique to chart the implied volatility by tenor:
 
 ```python
 vol_data = vol_dataset.get_data(market_date, market_date, ticker='SPX', relativeStrike=1.0, strikeReference='forward')
+# Create a new column converting relative dates to actual date times
+vol_data.loc[:, 'tenorDate'] = vol_data.index + vol_data['tenor'].map(_to_offset)
+# Sort the data frame by the newly created column
+vol_data = vol_data.sort_values(by=['tenorDate'])
 tenors = vol_data['tenor']
 vols = vol_data['impliedVolatility'] * 100
 plt.plot(tenors, vols, label='Implied Volatility by Tenor')
@@ -104,7 +108,7 @@ plt.show()
 
 Producing:
 
-![SPX 25 Delta Skew](/gsquant/tutorials/images/spx_implied_by_tenor2.JPG)
+![SPX 25 Delta Skew](/docs/gsquant/tutorials/images/spx_implied_by_tenor.JPG)
 
 ### Implied Volatility Area By Tenor And Strike
 
@@ -152,4 +156,4 @@ plt.show()
 
 The previous example should produce a 3D graphs similar to this:
 
-![SPX 25 Delta Skew](/gsquant/tutorials/images/spx_area.JPG)
+![SPX 25 Delta Skew](/docs/gsquant/tutorials/images/spx_area.JPG)

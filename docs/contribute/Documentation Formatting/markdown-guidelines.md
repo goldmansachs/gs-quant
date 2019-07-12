@@ -30,7 +30,7 @@ Use headings to define sections in a document. The relationship between headings
 ###### H6
 ```
 
-Avoid manually inserting `H1` headings. Goldman Sachs Developer automatically inserts and formats document titles [provided as metadata](./adding-metadata).
+Avoid manually inserting `H1` headings. Goldman Sachs Developer automatically inserts and formats document titles [provided as metadata](/gsquant/contribute/Documentation-Formatting/adding-metadata).
 
 ### Emphasis
 

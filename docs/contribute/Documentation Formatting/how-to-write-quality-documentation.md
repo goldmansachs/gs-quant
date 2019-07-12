@@ -21,7 +21,7 @@ authors:
 
 
 ## How to Write Quality Documentation for GS Quant
-This is a brief editorial guide for writing (developer documentation?) and technical content on developer.gs.com. These guidelines will help you to write in our voice and tone, and ensure consistency across language, grammar, and formatting. All Goldman Sachs Developer documentation is written in [Markdown](https://daringfireball.net/projects/markdown/) or [MDX](https://mdxjs.com/).
+This is a brief editorial guide for writing developer documentation and technical content on developer.gs.com. These guidelines will help you to write in our voice and tone, and ensure consistency across language, grammar, and formatting. All Goldman Sachs Developer documentation is written in [Markdown](https://daringfireball.net/projects/markdown/) or [MDX](https://mdxjs.com/).
 
 
 ### Best Practices
@@ -71,7 +71,7 @@ Be conversational, human, and friendly in your writing. Successful documentation
 
 ___
 ## Grammar, punctuation, and formatting
-All Goldman Sachs Developer documentation is written in [Markdown](https://daringfireball.net/projects/markdown/) or [MDX](https://mdxjs.com/). Avoid manually inserting `H1` headings. Goldman Sachs Developer automatically inserts and formats document titles [provided as metadata](../metadata).
+All Goldman Sachs Developer documentation is written in [Markdown](https://daringfireball.net/projects/markdown/) or [MDX](https://mdxjs.com/). Avoid manually inserting `H1` headings. Goldman Sachs Developer automatically inserts and formats document titles [provided as metadata](/gsquant/contribute/Documentation-Formatting/adding-metadata).
 
 ### Abbreviations
 - Use standard American abbreviations.

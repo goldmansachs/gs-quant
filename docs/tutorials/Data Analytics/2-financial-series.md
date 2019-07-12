@@ -17,9 +17,9 @@ authors:
     github: andyphillipsgs
 links:
   - title: Previous - Querying Data
-    url: /docs/gsquant/tutorials/Data-Analytics/1-querying-data/
-  - title: Next - Financial Series
-    url: /docs/gsquant/tutorials/Data-Analytics/2-financial-series/
+    url: /gsquant/tutorials/Data-Analytics/1-querying-data/
+  - title: Next - Financial Measures
+    url: /gsquant/tutorials/Data-Analytics/3-financial-measures/
 ---
 
 This tutorial provides an overview of how to interact with financial data series. We'll walk through some examples of
@@ -72,7 +72,7 @@ vip_px.plot()
 
 Output:
 
-![VIP Price](/gsquant/tutorials/images/vip_px.png)
+![VIP Price](/docs/gsquant/tutorials/images/vip_px.png)
 
 ## Comparing Performance
 
@@ -114,7 +114,7 @@ compare.plot()
 
 Output:
 
-![VIP vs VISP](/gsquant/tutorials/images/vip_visp.png)
+![VIP vs VISP](/docs/gsquant/tutorials/images/vip_visp.png)
 
 Looks like the VIP basket has outperformed, the VISP basket over the last 5 or so years. Next we'll analyze performance
 over a few key statistical dimensions.
@@ -125,11 +125,11 @@ There are a few basic properties of a financial series we would look at in order
 portfolio. We'll run a quick analysis of our two series to evaluate them against these dimensions. Here's a quick
 summary of what we are going to compute:
 
-| ----------------- | -------------------------------------------------------------------------------------------------|
-| Measure | Description |
-| Annual Volatility | Historical annualized realized volatility |
-| Max Drawdown | Maximum peak-to-trough percentage drawdown over a given period |
-| Correlation | Degree of linear relationship between the two assets |
+| Measure           | Description                                                    |
+| ----------------- | -------------------------------------------------------------- |
+| Annual Volatility | Historical annualized realized volatility                      |
+| Max Drawdown      | Maximum peak-to-trough percentage drawdown over a given period |
+| Correlation       | Degree of linear relationship between the two assets           |
 
 Use the gs-quant timeseries functions to calculate, and then plot results:
 
@@ -156,7 +156,7 @@ axs[2].plot(corr)
 
 Output:
 
-![VIP vs VISP Analytics](/gsquant/tutorials/images/vip_visp_analytics.png)
+![VIP vs VISP Analytics](/docs/gsquant/tutorials/images/vip_visp_analytics.png)
 
 A few quick takeaways, which were probably intuitive from the original price curves:
 
