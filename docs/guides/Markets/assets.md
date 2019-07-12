@@ -41,7 +41,7 @@ financial markets.
 
 Asset lookups can be performed through the `SecurityMaster` class.
 
-<note>Examples require an initialized GsSession and relevant identifier licenses, please refer to <a href="/gsquant/guides/authentication/2-gs-session">
+<note>Examples require an initialized GsSession and relevant identifier licenses, please refer to <a href="/docs/gsquant/guides/Authentication/2-gs-session">
 Sessions</a> for details</note>
 
 ```python

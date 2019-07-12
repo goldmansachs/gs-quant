@@ -81,7 +81,7 @@ with data_ctx_2018:
 
 The following example shows how to access historical implied volatility level for SPX using a `DataContext`:
 
-<note>Requires an initialized GsSession and data subscription, please refer to <a href="/gsquant/guides/authentication/2-gs-session">
+<note>Requires an initialized GsSession and data subscription, please refer to <a href="/docs/gsquant/guides/Authentication/2-gs-session">
 Sessions</a> for details</note>
 
 ```python

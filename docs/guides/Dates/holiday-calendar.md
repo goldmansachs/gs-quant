@@ -18,35 +18,35 @@ GS Quant allows users to easily work with dates taking into account exchange hol
 
 `is_business_day`: Determines whether each date passed to it is a business day. Returns a single boolean if a single date is passed. Otherwise, a tuple of booleans will be returned. Example:
 
-    ```python
-    import datetime as dt
-    from gs_quant.datetime import is_business_day
+```python
+import datetime as dt
+from gs_quant.datetime import is_business_day
 
-    is_today_a_business_day = is_business_day(dt.date.today(), calendars=('NYSE',)) # Returns single boolean, using NYSE exchange
+is_today_a_business_day = is_business_day(dt.date.today(), calendars=('NYSE',)) # Returns single boolean, using NYSE exchange
 
-    are_business_dates = is_business_day([dt.date(2019, 7, 4), dt.date(2019, 7, 5)], calendars=('NYSE',)) # Returns (False, True) for the given dates, using NYSE exchange holidays
-    ```
+are_business_dates = is_business_day([dt.date(2019, 7, 4), dt.date(2019, 7, 5)], calendars=('NYSE',)) # Returns (False, True) for the given dates, using NYSE exchange holidays
+```
 
 `business_day_offset`: Helpful if you are trying to apply an offset to the given date and move it to the nearest business date. Example:
 
-    ```python
-    import datetime as dt
+```python
+import datetime as dt
 
-    from gs_quant.datetime import business_day_offset
+from gs_quant.datetime import business_day_offset
 
-    prev_bus_date = business_day_offset(dt.date.today(), -1, roll='preceding')
-    ```
+prev_bus_date = business_day_offset(dt.date.today(), -1, roll='preceding')
+```
 
 `business_day_count`: Useful to determine the number of business days between the given dates. Example:
 
-    ```python
-    import datetime as dt
+```python
+import datetime as dt
 
-    from gs_quant.datetime import business_day_count
+from gs_quant.datetime import business_day_count
 
-    today = dt.date.today()
-    bus_days = business_day_count(today, today + dt.timedelta(days=7))
-    ```
+today = dt.date.today()
+bus_days = business_day_count(today, today + dt.timedelta(days=7))
+```
 
 If you need any other custom date calculations based on a holiday exchange calendar, you could use the GSCalendar class. This allows you to keep track of holiday dates for any given exchange. Example:
 
