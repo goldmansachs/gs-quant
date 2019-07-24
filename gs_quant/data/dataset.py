@@ -244,4 +244,4 @@ class Dataset:
             fields=fields
         )
 
-        return construct_dataframe_with_types(self.id, coverage)
+        return pd.DataFrame(coverage)

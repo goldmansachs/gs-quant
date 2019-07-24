@@ -187,6 +187,10 @@ class Priceable(Base):
 
     PROVIDER = None
 
+    def __init__(self):
+        super().__init__()
+        self._resolved = False
+
     def get_quantity(self) -> float:
         """
         Quantity of the instrument
@@ -203,7 +207,7 @@ class Priceable(Base):
 
         return self.PROVIDER
 
-    def resolve(self):
+    def resolve(self, in_place=True) -> Optional['Priceable']:
         """
         Resolve non-supplied properties of an instrument
 
@@ -222,7 +226,10 @@ class Priceable(Base):
         rates is now the solved fixed rate
         """
         from gs_quant.risk import PricingContext
-        PricingContext.current.resolve_fields(self)
+        if self._resolved:
+            raise RuntimeError('Already resolved')
+
+        return PricingContext.current.resolve_fields(self, in_place)
 
     def dollar_price(self) -> Union[float, Future]:
         """

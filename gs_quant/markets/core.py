@@ -15,6 +15,7 @@ under the License.
 """
 from concurrent.futures import Future, ThreadPoolExecutor
 import datetime as dt
+import functools
 import pandas as pd
 from typing import Optional, Tuple, Union
 
@@ -214,11 +215,12 @@ class PricingContext(ContextBaseWithDefault):
         else:
             return future
 
-    def resolve_fields(self, priceable: Priceable):
+    def resolve_fields(self, priceable: Priceable, in_place: bool) -> Optional[Union[Priceable, Future]]:
         """
         Resolve fields on the priceable which were not supplied. Do not use directly, use via instruments
 
         :param priceable:  The priceable (e.g. instrument)
+        :param in_place:   Resolve in place or return a new Priceable
 
         **Examples**
 
@@ -238,23 +240,44 @@ class PricingContext(ContextBaseWithDefault):
         invalid_defaults = ('-- N/A --',)
         value_mappings = {'Payer': 'Pay', 'Rec': 'Receive', 'Receiver': 'Receive'}
 
-        def set_field_values(field_values):
-            if isinstance(res, Future):
-                field_values = field_values.result()
-
-            if isinstance(field_values, (list, tuple)):
-                field_values = field_values[0]
-
+        def apply_field_values(
+                field_values: Union[dict, list, tuple, Future],
+                priceable_inst: Priceable,
+                future: Optional[Future] = None
+        ):
             if isinstance(field_values, str):
                 raise RuntimeError(field_values)
 
-            for field, value in field_values.items():
-                value = value_mappings.get(value, value)
-                if field in priceable.properties() and value not in invalid_defaults:
-                    setattr(priceable, field, value)
+            if isinstance(field_values, Future):
+                field_values = field_values.result()
+
+            if isinstance(field_values, (list, tuple)):
+                if len(field_values) == 1:
+                    field_values = field_values[0]
+                else:
+                    future.set_result({dt.date.fromtimestamp(fv['date'] / 1e9): apply_field_values(fv, priceable_inst) for fv in field_values})
+                    return
+
+            field_values = {field: value_mappings.get(value, value) for field, value in field_values.items()
+                            if field in priceable_inst.properties() and value not in invalid_defaults}
+
+            new_inst = priceable_inst._from_dict(field_values)
+            new_inst._resolved = True
+
+            if future:
+                future.set_result(new_inst)
+            elif in_place:
+                for field, value in field_values.items():
+                    setattr(priceable_inst, field, value)
+
+                priceable_inst._resolved = True
+            else:
+                return new_inst
 
         res = self.calc(priceable, RiskMeasure(measureType='Resolved Instrument Values'))
         if isinstance(res, Future):
-            res.add_done_callback(set_field_values)
+            ret = Future() if not in_place else None
+            res.add_done_callback(functools.partial(apply_field_values, priceable_inst=priceable, future=ret))
+            return ret
         else:
-            set_field_values(res)
+            return apply_field_values(res, priceable)

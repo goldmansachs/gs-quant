@@ -162,6 +162,9 @@ def test_coordinate_last(mocker):
 
     result = GsDataApi.coordinates_last(coordinates=test_coordinates, as_of=dt.datetime(2019, 1, 2, 1, 10),
                                         as_dataframe=True)
+
+    result.sort_index(axis=1, inplace=True)
+    expected_result.sort_index(axis=1, inplace=True)
     assert result.equals(expected_result)
 
 

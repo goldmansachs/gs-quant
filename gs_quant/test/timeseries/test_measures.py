@@ -4,15 +4,16 @@ import pytest
 import datetime
 import unittest.mock
 from pandas.testing import assert_series_equal
-import numpy.testing as npt
-from gs_quant.markets.securities import Asset, AssetIdentifier, SecurityMaster
 from gs_quant.data.core import DataContext
 from gs_quant.errors import MqError
-from gs_quant.markets.securities import AssetClass, Cross, Index
-from gs_quant.session import Environment, GsSession
+from gs_quant.markets.securities import AssetClass, Cross, Index, Currency
+from gs_quant.api.gs.assets import GsTemporalXRef
+from gs_quant.target.common import XRef
+from gs_quant.timeseries.measures import BenchmarkType
 from testfixtures import Replacer
 from testfixtures.mock import Mock
 from pytz import timezone
+import datetime as dt
 
 
 _index = [pd.Timestamp('2019-01-01')]
@@ -31,6 +32,13 @@ def mock_fx(_cls, _q):
     d = {
         'deltaStrike': ['25DP', '25DC', 'ATMS'],
         'impliedVolatility': [5, 1, 2]
+    }
+    return pd.DataFrame(data=d, index=_index * 3)
+
+
+def mock_curr(_cls, _q):
+    d = {
+        'swapRate': [1, 2, 3]
     }
     return pd.DataFrame(data=d, index=_index * 3)
 
@@ -146,6 +154,42 @@ def test_avg_impl_var():
     assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='averageImpliedVariance'), actual)
     actual = tm.average_implied_variance(mock_spx, '1m', tm.EdrDataReference.DELTA_PUT, 75)
     assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='averageImpliedVariance'), actual)
+    replace.restore()
+
+
+def test_swap_rate():
+    replace = Replacer()
+    mock_usd = Currency('MA890', 'USD')
+
+    xrefs = replace('gs_quant.timeseries.measures.GsAssetApi.get_asset_xrefs', Mock())
+    xrefs.return_value = [GsTemporalXRef(dt.date(2019, 1, 1), dt.date(2952, 12, 31), XRef(bbid='USD',))]
+    identifiers = replace('gs_quant.timeseries.measures.GsAssetApi.map_identifiers', Mock())
+    identifiers.return_value = {'USD-3m': 'MA123'}
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_curr)
+    actual = tm.swap_rate(mock_usd, '1y')
+    assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='swapRate'), actual)
+
+    identifiers = replace('gs_quant.timeseries.measures.GsAssetApi.map_identifiers', Mock())
+    identifiers.return_value = {'USD OIS': 'MA123'}
+    actual = tm.swap_rate(mock_usd, '1y', BenchmarkType.OIS)
+    assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='swapRate'), actual)
+
+    mock_eur = Currency('MA890', 'EUR')
+    xrefs = replace('gs_quant.timeseries.measures.GsAssetApi.get_asset_xrefs', Mock())
+    xrefs.return_value = [GsTemporalXRef(dt.date(2019, 1, 1), dt.date(2952, 12, 31), XRef(bbid='EUR',))]
+    identifiers = replace('gs_quant.timeseries.measures.GsAssetApi.map_identifiers', Mock())
+    identifiers.return_value = {'EUR-6m': 'MA123'}
+    actual = tm.swap_rate(mock_eur, '1y')
+    assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='swapRate'), actual)
+
+    mock_sek = Currency('MA890', 'SEK')
+    xrefs = replace('gs_quant.timeseries.measures.GsAssetApi.get_asset_xrefs', Mock())
+    xrefs.return_value = [GsTemporalXRef(dt.date(2019, 1, 1), dt.date(2952, 12, 31), XRef(bbid='SEK',))]
+    identifiers = replace('gs_quant.timeseries.measures.GsAssetApi.map_identifiers', Mock())
+    identifiers.return_value = {'SEK-6m': 'MA123'}
+    actual = tm.swap_rate(mock_sek, '1y')
+    assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='swapRate'), actual)
+
     replace.restore()
 
 
@@ -346,12 +390,15 @@ def test_bucketize():
                                       index=[datetime.date(2019, 5, 31)],
                                       name='price'),
                             actual)
+        with pytest.raises(ValueError):
+            tm.bucketize(mock_pjm, bucket='weekday')
 
-    with pytest.raises(ValueError):
-        tm.bucketize(mock_pjm, bucket='weekday')
+        with pytest.raises(ValueError):
+            tm.bucketize(mock_pjm, granularity='yearly')
 
-    with pytest.raises(ValueError):
-        tm.bucketize(mock_pjm, granularity='yearly')
+    with DataContext(datetime.date(2019, 5, 2), datetime.date(2019, 5, 2)):
+        with pytest.raises(ValueError):
+            tm.bucketize(mock_pjm, 'LMP', 'totalPrice')
 
     replace.restore()
 

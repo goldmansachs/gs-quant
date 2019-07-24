@@ -65,6 +65,9 @@ class AssetType(Enum):
     #: FX cross or currency pair
     CROSS = "Cross"
 
+    #: Currency
+    CURRENCY = "Currency"
+
 
 class AssetIdentifier(Enum):
     """Asset type enumeration
@@ -239,6 +242,21 @@ class Future(Asset):
         return AssetType.FUTURE
 
 
+class Currency(Asset):
+    """Base Security Type
+
+    Represents a financial asset which can be held in a portfolio, or has an observable price fixing which can be
+    referenced in a derivative transaction
+
+    """
+
+    def __init__(self, id_: str, name: str):
+        Asset.__init__(self, id_, AssetClass.Cash, name)
+
+    def get_type(self) -> AssetType:
+        return AssetType.CURRENCY
+
+
 class PositionType(Enum):
     """Position type enumeration
 
@@ -370,8 +388,7 @@ class SecurityMaster:
                 GsAssetType.Index.value,
                 GsAssetType.Risk_Premia.value,
                 GsAssetType.Access.value,
-                GsAssetType.Multi_Asset_Allocation.value,
-                GsAssetType.Swap.value):
+                GsAssetType.Multi_Asset_Allocation.value):
             return Index(gs_asset.id, gs_asset.assetClass, gs_asset.name, gs_asset.exchange)
 
         if asset_type in (
@@ -384,6 +401,9 @@ class SecurityMaster:
 
         if asset_type in (GsAssetType.Cross.value,):
             return Cross(gs_asset.id, gs_asset.name)
+
+        if asset_type in (GsAssetType.Currency.value,):
+            return Currency(gs_asset.id, gs_asset.name)
 
         raise TypeError(f'unsupported asset type {asset_type}')
 
