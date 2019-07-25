@@ -22,6 +22,7 @@ import os
 
 import msgpack
 import requests
+import requests.adapters
 import requests.cookies
 
 from abc import abstractmethod
@@ -69,13 +70,15 @@ class GsSession(ContextBase):
                 cls.READ_FINANCIAL_DATA.value
             ]
 
-    def __init__(self, domain: str, api_version: str=API_VERSION, application: str=DEFAULT_APPLICATION, verify=True):
+    def __init__(self, domain: str, api_version: str=API_VERSION, application: str=DEFAULT_APPLICATION, verify=True,
+                 http_adapter: requests.adapters.HTTPAdapter=None):
         super().__init__()
         self._session = None
         self.domain = domain
         self.api_version = api_version
         self.application = application
         self.verify = verify
+        self.http_adapter = http_adapter
 
     @backoff.on_exception(lambda: backoff.expo(factor=2),
                           (requests.exceptions.HTTPError, requests.exceptions.Timeout),
@@ -107,6 +110,8 @@ class GsSession(ContextBase):
     def init(self):
         if not self._session:
             self._session = requests.Session()
+            if self.http_adapter is not None:
+                self._session.mount('https://', self.http_adapter)
             self._session.verify = self.verify
             self._session.headers.update({'X-Application': self.application})
             self._authenticate()
@@ -218,7 +223,8 @@ class GsSession(ContextBase):
             client_secret: Optional[str] = None,
             scopes: Optional[Union[Tuple, List]] = (),
             api_version: str = API_VERSION,
-            application: str = DEFAULT_APPLICATION
+            application: str = DEFAULT_APPLICATION,
+            http_adapter: requests.adapters.HTTPAdapter = None
     ) -> None:
         environment_or_domain = environment_or_domain.name if isinstance(environment_or_domain,
                                                                          Environment) else environment_or_domain
@@ -228,7 +234,8 @@ class GsSession(ContextBase):
             client_secret=client_secret,
             scopes=scopes,
             api_version=api_version,
-            application=application
+            application=application,
+            http_adapter=http_adapter
         )
 
         session.init()
@@ -248,7 +255,8 @@ class GsSession(ContextBase):
             token: str = '',
             is_gssso: bool = False,
             api_version: str = API_VERSION,
-            application: str = DEFAULT_APPLICATION
+            application: str = DEFAULT_APPLICATION,
+            http_adapter: requests.adapters.HTTPAdapter = None
     ) -> 'GsSession':
         """ Return an instance of the appropriate session type for the given credentials"""
 
@@ -260,23 +268,24 @@ class GsSession(ContextBase):
                 raise MqUninitialisedError('Only PROD, QA and DEV are valid environments')
 
             return OAuth2Session(environment_or_domain, client_id, client_secret, scopes, api_version=api_version,
-                                 application=application)
+                                 application=application, http_adapter=http_adapter)
         elif token:
             return PassThroughSession(environment_or_domain, token, is_gssso, api_version=api_version,
-                                      application=application)
+                                      application=application, http_adapter=http_adapter)
         else:
             try:
-                return KerberosSession(environment_or_domain, api_version=api_version)
+                return KerberosSession(environment_or_domain, api_version=api_version, http_adapter=http_adapter)
             except NameError:
                 raise MqUninitialisedError('Must specify client_id and client_secret')
 
 
 class OAuth2Session(GsSession):
     def __init__(self, environment, client_id, client_secret, scopes, api_version=API_VERSION,
-                 application=DEFAULT_APPLICATION):
+                 application=DEFAULT_APPLICATION, http_adapter=None):
         env_config = self._config_for_environment(environment)
 
-        super().__init__(env_config['AppDomain'], api_version=api_version, application=application)
+        super().__init__(env_config['AppDomain'], api_version=api_version, application=application,
+                         http_adapter=http_adapter)
         self.auth_url = env_config['AuthURL']
         self.client_id = client_id
         self.client_secret = client_secret
@@ -294,7 +303,7 @@ class OAuth2Session(GsSession):
             'client_secret': self.client_secret,
             'scope': ' '.join(self.scopes)
         }
-        reply = requests.post(self.auth_url, data=auth_data, verify=self.verify)
+        reply = self._session.post(self.auth_url, data=auth_data, verify=self.verify)
         if reply.status_code != 200:
             raise MqAuthenticationError(reply.status_code, reply.text, context=self.auth_url)
 
@@ -309,14 +318,15 @@ class OAuth2Session(GsSession):
 
 class PassThroughSession(GsSession):
     def __init__(self, environment: str, token, is_gssso=True, api_version=API_VERSION,
-                 application=DEFAULT_APPLICATION):
+                 application=DEFAULT_APPLICATION, http_adapter=None):
         if is_gssso:
             domain, verify = KerberosSessionMixin.domain_and_verify(environment)
         else:
             domain = self._config_for_environment(environment)['AppDomain']
             verify = True
 
-        super().__init__(domain, api_version=api_version, application=application, verify=verify)
+        super().__init__(domain, api_version=api_version, application=application, verify=verify,
+                         http_adapter=http_adapter)
         self.token = token
         self.is_gssso = is_gssso
 
@@ -349,9 +359,11 @@ try:
 
     class KerberosSession(KerberosSessionMixin, GsSession):
 
-        def __init__(self, environment_or_domain: str, api_version: str=API_VERSION, application: str=DEFAULT_APPLICATION):
+        def __init__(self, environment_or_domain: str, api_version: str=API_VERSION,
+                     application: str=DEFAULT_APPLICATION, http_adapter: requests.adapters.HTTPAdapter=None):
             domain, verify = KerberosSessionMixin.domain_and_verify(environment_or_domain)
-            GsSession.__init__(self, domain, api_version=api_version, application=application, verify=verify)
+            GsSession.__init__(self, domain, api_version=api_version, application=application, verify=verify,
+                               http_adapter=http_adapter)
 
 except ModuleNotFoundError:
     pass

@@ -27,7 +27,7 @@ class EqSystematicStrategy:
     """Equity back testing systematic strategy"""
 
     def __init__(self,
-                 underliers: [EqOption, ...],
+                 underliers: [(EqOption, float), ...],
                  quantity: float = 1,
                  quantity_type: Union[QuantityType, str] = QuantityType.Notional,
                  backtest_type: Union[BacktestType, str] = BacktestType.VolatilityFlow,
@@ -58,15 +58,11 @@ class EqSystematicStrategy:
         for eq_option in underliers:
             # TODO: Only support option strike type "Absolute", need to support "Delta" and "Fwd Percentage" as well
             self.__underliers.append(BacktestStrategyUnderlier(
-                instrument=EqOptionBacktest(
-                    expiration=eq_option.expirationDate,
-                    optionType=eq_option.optionType,
-                    optionStrikeType="Absolute",
-                    strike=eq_option.strikePrice,
-                    underlyingAssetId=eq_option.asset,
-                    notionalPercentage=100),
+                instrument= eq_option[0],
+                notionalPercentage = eq_option[1],
                 hedge=BacktestStrategyUnderlierHedge(riskDetails=delta_hedge),
                 marketModel=get_enum_value(EquityMarketModel, market_model).value))
+
 
         backtest_parameters_class: Base = getattr(backtests, self.__backtest_type.name + 'BacktestParameters')
         backtest_parameter_args = {

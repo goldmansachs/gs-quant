@@ -12,27 +12,30 @@
 #
 # Plot Service will make use of appropriately decorated functions in this module.
 
-import cachetools
 import datetime
 import logging
-import pandas as pd
-import numpy as np
 import re
 import time
 from enum import Enum
+from numbers import Real
+from typing import Optional, Union
+
+import cachetools
+import numpy as np
+import pandas as pd
+from pandas import Series
+from pandas.tseries.holiday import Holiday, AbstractHolidayCalendar, USMemorialDay, USLaborDay, USThanksgivingDay, \
+    nearest_workday
+
+from gs_quant.api.gs.assets import GsAssetApi, GsIdType
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.data.core import DataContext
-from gs_quant.datetime.point import relative_days_add
 from gs_quant.datetime.gscalendar import GsCalendar
-from gs_quant.markets.securities import Asset
-from gs_quant.target.common import AssetClass, FieldFilterMap
-from gs_quant.timeseries.helper import log_return, plot_measure
+from gs_quant.datetime.point import relative_days_add
 from gs_quant.errors import MqTypeError, MqValueError
-from pandas.tseries.holiday import Holiday, AbstractHolidayCalendar, USMemorialDay, USLaborDay, USThanksgivingDay, nearest_workday
-from pytz import timezone
-from numbers import Real
-from pandas import Series
-from typing import Optional, Union
+from gs_quant.markets.securities import Asset, AssetIdentifier
+from gs_quant.target.common import AssetClass, FieldFilterMap, AssetType, Currency
+from gs_quant.timeseries.helper import log_return, plot_measure
 
 GENERIC_DATE = Union[datetime.date, str]
 TD_ONE = datetime.timedelta(days=1)
@@ -83,6 +86,19 @@ class EdrDataReference(Enum):
     DELTA_PUT = 'delta_put'
     FORWARD = 'forward'
 
+
+class FloatingIndex(Enum):
+    THREE_MONTH = '3m'
+    SIX_MONTH = '6m'
+    ONE_DAY = '1d'
+
+class BenchmarkType(Enum):
+    LIBOR = 'LIBOR'
+    EURIBOR = 'EURIBOR'
+    STIBOR = 'STIBOR'
+    OIS = 'OIS'
+    EONIA = 'EONIA'
+    SARON = 'SARON'
 
 
 def _market_data_timed(q):
@@ -183,7 +199,7 @@ def implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference,
     return Series() if df.empty else df['impliedVolatility']
 
 
-@plot_measure((AssetClass.Equity,), None)
+@plot_measure((AssetClass.Equity,), (AssetType.Index, AssetType.ETF,))
 def implied_correlation(asset: Asset, tenor: str, strike_reference: EdrDataReference, relative_strike: Real, *,
                         source: str = None, real_time: bool = False) -> Series:
     """
@@ -216,7 +232,7 @@ def implied_correlation(asset: Asset, tenor: str, strike_reference: EdrDataRefer
     return Series() if df.empty else df['impliedCorrelation']
 
 
-@plot_measure((AssetClass.Equity,), None)
+@plot_measure((AssetClass.Equity,), (AssetType.Index, AssetType.ETF,))
 def average_implied_volatility(asset: Asset, tenor: str, strike_reference: EdrDataReference, relative_strike: Real, *,
                         source: str = None, real_time: bool = False) -> Series:
     """
@@ -249,7 +265,7 @@ def average_implied_volatility(asset: Asset, tenor: str, strike_reference: EdrDa
     return Series() if df.empty else df['averageImpliedVolatility']
 
 
-@plot_measure((AssetClass.Equity,), None)
+@plot_measure((AssetClass.Equity,), (AssetType.Index, AssetType.ETF,))
 def average_implied_variance(asset: Asset, tenor: str, strike_reference: EdrDataReference, relative_strike: Real, *,
                         source: str = None, real_time: bool = False) -> Series:
     """
@@ -280,6 +296,66 @@ def average_implied_variance(asset: Asset, tenor: str, strike_reference: EdrData
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
     return Series() if df.empty else df['averageImpliedVariance']
+
+
+@plot_measure((AssetClass.Cash,), (AssetType.Currency,))
+def swap_rate(asset: Asset, tenor: str, benchmark_type: BenchmarkType = None, floating_index: str = None,
+              *, source: str = None, real_time: bool = False) -> Series:
+    """
+    GS end-of-day Fixed-Floating interest rate swap (IRS) curves across major currencies.
+
+    :param asset: asset object loaded from security master
+    :param tenor: relative date representation of expiration date e.g. 1m
+    :param benchmark_type: benchmark type e.g. LIBOR
+    :param floating_index: floating index rate
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: average implied variance curve
+    """
+
+    currency = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
+    currency = Currency(currency)
+
+    # default benchmark types
+    if benchmark_type is None:
+        if currency == Currency.EUR:
+            benchmark_type = BenchmarkType.EURIBOR
+        elif currency == Currency.SEK:
+            benchmark_type = BenchmarkType.STIBOR
+        else:
+            benchmark_type = BenchmarkType.LIBOR
+
+    over_nights = [BenchmarkType.OIS, BenchmarkType.EONIA, BenchmarkType.SARON]
+
+    # default floating index
+    if floating_index is None:
+        if benchmark_type in over_nights:
+            floating_index = '1d'
+        else:
+            if currency in [Currency.USD]:
+                floating_index = '3m'
+            elif currency in [Currency.GBP, Currency.EUR, Currency.CHF, Currency.SEK]:
+                floating_index = '6m'
+
+    mdapi_divider = " " if benchmark_type in over_nights else "-"
+    mdapi_floating_index = BenchmarkType.OIS.value if benchmark_type is BenchmarkType.OIS else floating_index
+    mdapi = currency.value + mdapi_divider + mdapi_floating_index
+
+    rate_mqid = GsAssetApi.map_identifiers(GsIdType.mdapi, GsIdType.id, [mdapi])[mdapi]
+
+    _logger.debug('where tenor=%s, floatingIndex=%s', tenor, floating_index)
+
+    q = GsDataApi.build_market_data_query(
+        [rate_mqid],
+        'Swap Rate',
+        where=FieldFilterMap(tenor=tenor),
+        source=source,
+        real_time=real_time
+    )
+
+    _logger.debug('q %s', q)
+    df = _market_data_timed(q)
+    return Series() if df.empty else df['swapRate']
 
 
 @cachetools.cached(cachetools.TTLCache(16, 3600))
@@ -417,8 +493,8 @@ def bucketize(asset: Asset, price_method: str = "LMP", price_component: str = "t
     Bucketized Elec Historical Clears
 
     :param asset: asset object loaded from security master
-    :param price_method: price method between LMP and MCP: Default value = Price
-    :param price_component: price type among totalPrice, energy, loss and congestion: Default value = Price
+    :param price_method: price method between LMP and MCP: Default value = LMP
+    :param price_component: price type among totalPrice, energy, loss and congestion: Default value = totalPrice
     :param bucket: bucket type among 'base, 'peak', 'offpeak' and '7x8': Default value = base
     :param granularity: daily or monthly: default value = daily
     :param source: name of function caller: default source = None
@@ -445,28 +521,32 @@ def bucketize(asset: Asset, price_method: str = "LMP", price_component: str = "t
     # convert timezone back to EST if needed
     # TODO: get timezone info from Asset
     df = df.tz_convert('US/Eastern')
-    dayofweek = df.index.dayofweek
-    hour = df.index.hour
-    date = df.index.date
-    df = df.loc[(date >= start) & (date <= end)]
-
-    holidays = NercCalendar().holidays(start=datetime.datetime(start.year, start.month, start.day),
-                                       end=datetime.datetime(end.year, end.month, end.day)).date
+    df['date'] = df.index.date
+    df['day'] = df.index.dayofweek
+    df['hour'] = df.index.hour
+    df = df.loc[(df['date'] >= start) & (df['date'] <= end)]
+    holidays = NercCalendar().holidays(start=datetime.date(start.year, start.month, start.day),
+                                       end=datetime.date(end.year, end.month, end.day)).date
+    # checking missing hours
+    ref_hour_range = pd.date_range(start, end, freq='1h', tz='US/Eastern')
+    missing_hours = ref_hour_range[~ref_hour_range.isin(df.index)]
+    if not missing_hours.empty:
+        raise ValueError('Missing Data Points for: ' + str(missing_hours.get_values()))
 
     # TODO: get frequency definition from SecDB
     if bucket == 'base':
         pass
     # off peak: 11pm-7am & weekend & holiday
     elif bucket == 'offpeak':
-        df = df.loc[np.in1d(date, holidays) | (~np.in1d(date, holidays)
-                    & (((dayofweek != 5) & (dayofweek != 6) & ((hour < 7) | (hour > 22)))
-                    | (dayofweek == 5) | (dayofweek == 6)))]
+        df = df.loc[df['date'].isin(holidays) |
+                    df['day'].isin([5, 6]) |
+                    (~df['date'].isin(holidays) & ~df['day'].isin([5, 6]) & ((df['hour'] < 7) | (df['hour'] > 22)))]
     # peak: 7am to 11pm on weekdays
     elif bucket == 'peak':
-        df = df.loc[(~np.in1d(date, holidays) & (dayofweek != 5) & (dayofweek != 6) & ((hour > 6) & (hour < 23)))]
+        df = df.loc[(~df['date'].isin(holidays)) & (~df['day'].isin([5, 6])) & (df['hour'] > 6) & (df['hour'] < 23)]
     # 7x8: 11pm to 7am
     elif bucket == '7x8':
-        df = df.loc[(hour < 7) | (hour > 22)]
+        df = df.loc[(df['hour'] < 7) | (df['hour'] > 22)]
     else:
         raise ValueError('Invalid bucket: ' + bucket + '. Expected Value: peak, offpeak, base, 7x8.')
 

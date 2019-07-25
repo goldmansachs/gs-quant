@@ -28,14 +28,14 @@ class GsBacktestApi:
 
     @classmethod
     def get_backtests(cls,
-                     limit: int = 100,
-                     backtest_id: str = None,
-                     owner_id: str = None,
-                     name: str = None,
-                     mqSymbol: str = None) -> Tuple[Backtest, ...]:
+                      limit: int = 100,
+                      backtest_id: str = None,
+                      owner_id: str = None,
+                      name: str = None,
+                      mq_symbol: str = None) -> Tuple[Backtest, ...]:
         query_string = urlencode(dict(filter(lambda item: item[1] is not None,
                                              dict(id=backtest_id, ownerId=owner_id, name=name,
-                                                  mqSymbol=mqSymbol, limit=limit).items())))
+                                                  mqSymbol=mq_symbol, limit=limit).items())))
         return GsSession.current._get('/backtests?{query}'.format(query=query_string), cls=Backtest)['results']
 
     @classmethod
@@ -50,7 +50,8 @@ class GsBacktestApi:
     @classmethod
     def update_backtest(cls, backtest: Backtest):
         request_headers = {'Content-Type': 'application/json;charset=utf-8'}
-        return GsSession.current._put('/backtests/{id}'.format(id=backtest.id), backtest, request_headers=request_headers,
+        return GsSession.current._put('/backtests/{id}'.format(id=backtest.id), backtest,
+                                      request_headers=request_headers,
                                       cls=Backtest)
 
     @classmethod
@@ -62,22 +63,23 @@ class GsBacktestApi:
         return GsSession.current._get('/backtests/results?id={id}'.format(id=backtest_id))['backtestResults']
 
     @classmethod
-    def get_comparisonResults(cls,
-                    limit: int = 100,
-                    startDate: dt.date = None,
-                    endDate: dt.date = None,
-                    backtest_id: str = None,
-                    comparison_id: str = None,
-                    owner_id: str = None,
-                    name: str = None,
-                    mqSymbol: str = None) -> Tuple[Tuple[BacktestResult, ...], Tuple[ComparisonBacktestResult, ...]]:
+    def get_comparison_results(cls,
+                               limit: int = 100,
+                               start_date: dt.date = None,
+                               end_date: dt.date = None,
+                               backtest_id: str = None,
+                               comparison_id: str = None,
+                               owner_id: str = None,
+                               name: str = None,
+                               mq_symbol: str = None) -> Tuple[
+        Tuple[BacktestResult, ...], Tuple[ComparisonBacktestResult, ...]]:
         query_string = urlencode(dict(filter(lambda item: item[1] is not None,
                                              dict(id=backtest_id, comparisonIds=comparison_id, ownerId=owner_id,
-                                                  name=name, mqSymbol=mqSymbol, limit=limit,
-                                                  startDate=startDate.isoformat(),
-                                                  endDate=endDate.isoformat()).items())))
+                                                  name=name, mqSymbol=mq_symbol, limit=limit,
+                                                  startDate=start_date.isoformat(),
+                                                  endDate=end_date.isoformat()).items())))
         result = GsSession.current._get('/backtests/results?{query}'.format(query=query_string))
-        return (result['backtestResults'], result['comparisonResults'])
+        return result['backtestResults'], result['comparisonResults']
 
     @classmethod
     def schedule_backtest(cls, backtest_id: str) -> dict:
@@ -98,8 +100,8 @@ class GsBacktestApi:
         return GsSession.current._get('/backtests/refData', cls=BacktestRefData)
 
     @classmethod
-    def update_ref_data(cls, backtestRefData: BacktestRefData):
+    def update_ref_data(cls, backtest_ref_data: BacktestRefData):
         request_headers = {'Content-Type': 'application/json;charset=utf-8'}
-        return GsSession.current._put('/backtests/refData', backtestRefData,
+        return GsSession.current._put('/backtests/refData', backtest_ref_data,
                                       request_headers=request_headers,
-                                      cls=backtestRefData)
+                                      cls=backtest_ref_data)

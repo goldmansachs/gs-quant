@@ -1,3 +1,19 @@
+"""
+Copyright 2019 Goldman Sachs.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+"""
+
 import logging
 from typing import Union
 
@@ -41,8 +57,8 @@ def construct_dataframe_with_types(dataset_id: str, data: Union[Base, list, tupl
         dataset_types = get_types(dataset_id)
         df = pd.DataFrame(data)
 
-        for field_name, type in dataset_types.items():
-            if type in ['date', 'date-time']:
+        for field_name, type_name in dataset_types.items():
+            if df.get(type_name) is not None and type_name in ('date', 'date-time'):
                 df = df.astype({field_name: numpy.datetime64})
 
         field_names = dataset_types.keys()
