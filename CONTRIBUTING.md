@@ -40,6 +40,17 @@ Finally, submit a pull request. In your pull requests:
 where `<license>` is license of the code being committed. Ensure the file retains its original copyright notice and add an appropriate line to
 NOTICE.txt in the same commit. You can then modify that code in subsequent commits with a reference to your DCO and copyright.
 
+# Licensing
+
+Please make sure that any new dependency licenses are listed in the following list of pre-approved licenses list:
+
+```
+MIT
+ASL (all versions)
+BSD
+BSD-like
+``` 
+
 
 # Coding Style
 Please see [PEP 8 - Style Guide for Python Code](https://www.python.org/dev/peps/pep-0008/).

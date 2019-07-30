@@ -16,6 +16,7 @@ under the License.
 
 from gs_quant.base import Base, get_enum_value
 from gs_quant.target.common import *
+from gs_quant.target.instrument import *
 from typing import Tuple, Union
 import datetime
 
@@ -54,9 +55,10 @@ class BacktestPerformanceDecomposition(Base):
         
     """Decomposition of backtest performance"""
        
-    def __init__(self, name: str = None, stats: PerformanceStats = None):
+    def __init__(self, name: str = None, performance: Tuple[FieldValueMap, ...] = None, stats: PerformanceStats = None):
         super().__init__()
         self.__name = name
+        self.__performance = performance
         self.__stats = stats
 
     @property
@@ -68,6 +70,16 @@ class BacktestPerformanceDecomposition(Base):
     def name(self, value: str):
         self.__name = value
         self._property_changed('name')        
+
+    @property
+    def performance(self) -> Tuple[FieldValueMap, ...]:
+        """Backtest performance curve."""
+        return self.__performance
+
+    @performance.setter
+    def performance(self, value: Tuple[FieldValueMap, ...]):
+        self.__performance = value
+        self._property_changed('performance')        
 
     @property
     def stats(self) -> PerformanceStats:
@@ -136,9 +148,10 @@ class BacktestRisk(Base):
         
     """Risks of the backtest portfolio"""
        
-    def __init__(self, name: str = None):
+    def __init__(self, name: str = None, timeseries: Tuple[FieldValueMap, ...] = None):
         super().__init__()
         self.__name = name
+        self.__timeseries = timeseries
 
     @property
     def name(self) -> str:
@@ -149,6 +162,16 @@ class BacktestRisk(Base):
     def name(self, value: str):
         self.__name = value
         self._property_changed('name')        
+
+    @property
+    def timeseries(self) -> Tuple[FieldValueMap, ...]:
+        """Backtest portfolio risk curve."""
+        return self.__timeseries
+
+    @timeseries.setter
+    def timeseries(self, value: Tuple[FieldValueMap, ...]):
+        self.__timeseries = value
+        self._property_changed('timeseries')        
 
 
 class BacktestTradingParameters(Base):
@@ -278,9 +301,10 @@ class ComparisonBacktestResult(Base):
         
     """Comparisons of backtest results"""
        
-    def __init__(self, stats: PerformanceStats = None, id: str = None):
+    def __init__(self, stats: PerformanceStats = None, performance: Tuple[FieldValueMap, ...] = None, id: str = None):
         super().__init__()
         self.__stats = stats
+        self.__performance = performance
         self.__id = id
 
     @property
@@ -292,6 +316,16 @@ class ComparisonBacktestResult(Base):
     def stats(self, value: PerformanceStats):
         self.__stats = value
         self._property_changed('stats')        
+
+    @property
+    def performance(self) -> Tuple[FieldValueMap, ...]:
+        """Performance for the comparison asset or backtest curve"""
+        return self.__performance
+
+    @performance.setter
+    def performance(self, value: Tuple[FieldValueMap, ...]):
+        self.__performance = value
+        self._property_changed('performance')        
 
     @property
     def id(self) -> str:
@@ -575,80 +609,6 @@ class EntityCorrelation(Base):
     def correlation(self, value: float):
         self.__correlation = value
         self._property_changed('correlation')        
-
-
-class EqOptionBacktest(Base):
-        
-    """Eq Option Backtest Instrument"""
-       
-    def __init__(self, expiration: str, optionType: str, optionStrikeType: str, strike: float, underlyingAssetId: str, notionalPercentage: float = None):
-        super().__init__()
-        self.__expiration = expiration
-        self.__notionalPercentage = notionalPercentage
-        self.__optionType = optionType
-        self.__optionStrikeType = optionStrikeType
-        self.__strike = strike
-        self.__underlyingAssetId = underlyingAssetId
-
-    @property
-    def expiration(self) -> str:
-        """Time until expiration."""
-        return self.__expiration
-
-    @expiration.setter
-    def expiration(self, value: str):
-        self.__expiration = value
-        self._property_changed('expiration')        
-
-    @property
-    def notionalPercentage(self) -> float:
-        """The notional percentage applied to the instrument"""
-        return self.__notionalPercentage
-
-    @notionalPercentage.setter
-    def notionalPercentage(self, value: float):
-        self.__notionalPercentage = value
-        self._property_changed('notionalPercentage')        
-
-    @property
-    def optionType(self) -> str:
-        """Type of option, i.e call."""
-        return self.__optionType
-
-    @optionType.setter
-    def optionType(self, value: str):
-        self.__optionType = value
-        self._property_changed('optionType')        
-
-    @property
-    def optionStrikeType(self) -> str:
-        """Type of option strike, i.e relative."""
-        return self.__optionStrikeType
-
-    @optionStrikeType.setter
-    def optionStrikeType(self, value: str):
-        self.__optionStrikeType = value
-        self._property_changed('optionStrikeType')        
-
-    @property
-    def strike(self) -> float:
-        """Strike percentage, either relative % or delta % depending on strike type."""
-        return self.__strike
-
-    @strike.setter
-    def strike(self, value: float):
-        self.__strike = value
-        self._property_changed('strike')        
-
-    @property
-    def underlyingAssetId(self) -> str:
-        """Marquee unique asset identifier."""
-        return self.__underlyingAssetId
-
-    @underlyingAssetId.setter
-    def underlyingAssetId(self, value: str):
-        self.__underlyingAssetId = value
-        self._property_changed('underlyingAssetId')        
 
 
 class ExpirationRefData(Base):
@@ -1217,7 +1177,6 @@ class BacktestResult(Base):
 
     @property
     def underlierCorrelation(self) -> Tuple[EntityCorrelation, ...]:
-        """entity correlation"""
         return self.__underlierCorrelation
 
     @underlierCorrelation.setter
@@ -1686,22 +1645,33 @@ class BacktestStrategyUnderlier(Base):
         
     """Backtest Strategy Undelier."""
        
-    def __init__(self, instrument: EqOptionBacktest, marketModel: str, name: str = None, hedge: BacktestStrategyUnderlierHedge = None):
+    def __init__(self, instrument: EqOption, marketModel: str, notionalPercentage: float = None, name: str = None, hedge: BacktestStrategyUnderlierHedge = None):
         super().__init__()
         self.__instrument = instrument
+        self.__notionalPercentage = notionalPercentage
         self.__marketModel = marketModel
         self.__name = name
         self.__hedge = hedge
 
     @property
-    def instrument(self) -> EqOptionBacktest:
+    def instrument(self) -> EqOption:
         """instrument that you are getting into"""
         return self.__instrument
 
     @instrument.setter
-    def instrument(self, value: EqOptionBacktest):
+    def instrument(self, value: EqOption):
         self.__instrument = value
         self._property_changed('instrument')        
+
+    @property
+    def notionalPercentage(self) -> float:
+        """The quantity of the underlier"""
+        return self.__notionalPercentage
+
+    @notionalPercentage.setter
+    def notionalPercentage(self, value: float):
+        self.__notionalPercentage = value
+        self._property_changed('notionalPercentage')        
 
     @property
     def marketModel(self) -> str:
@@ -1766,7 +1736,6 @@ class UnderlyingAssetIdRefData(Base):
 
     @property
     def data(self) -> Tuple[UnderlyingAssetIdDataRefData, ...]:
-        """Underlying asset id data reference data object."""
         return self.__data
 
     @data.setter

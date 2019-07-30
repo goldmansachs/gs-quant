@@ -29,7 +29,7 @@ in the `/docs` folder within the project.
 
 <note>Make sure you have Sphinx installed through the development version of the project</note>
 
-When you have finished writing your Python function, add it to the relevant section in the docs folder, by updating or creating a new [reStructuredText](http://docutils.sourceforge.net/rst.html) file (.rst). See example:
+When you have finished writing your Python function, add it to the relevant section in the docs folder, by updating _gs_quant/docs/timeseries.rst_ and updating or creating a new [reStructuredText](http://docutils.sourceforge.net/rst.html) file (.rst). See example:
 
 ```
 Title

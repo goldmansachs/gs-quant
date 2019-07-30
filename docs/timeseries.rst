@@ -92,6 +92,7 @@ Statistics
    median   
    min_
    mode
+   percentile
    product
    range_
    std

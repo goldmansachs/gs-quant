@@ -29,7 +29,7 @@ import datetime
 from gs_quant.data import Dataset
 
 weather_ds = Dataset(Dataset.GS.WEATHER)
-data_frame = weather_ds.get_data(datetime.date(2016, 1, 15), datetime.date(2016, 1, 16), city=['Boston', 'Austin'])
+panda_df = weather_ds.get_data(datetime.date(2016, 1, 15), datetime.date(2016, 1, 16), city=['Boston', 'Austin'])
 ```
 Output:
 ```python

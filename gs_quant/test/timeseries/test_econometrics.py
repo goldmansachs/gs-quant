@@ -14,12 +14,14 @@ specific language governing permissions and limitations
 under the License.
 """
 
-import pytest
+from datetime import date
+
 import numpy as np
 import pandas as pd
+import pytest
 from pandas.util.testing import assert_series_equal
+
 from gs_quant.timeseries import *
-from datetime import date
 
 
 def test_returns():
@@ -116,7 +118,6 @@ def test_index():
 
 
 def test_change():
-
     dates = [
         date(2019, 1, 1),
         date(2019, 1, 2),
@@ -134,7 +135,6 @@ def test_change():
 
 
 def test_annualize():
-
     daily_dates = [
         date(2019, 1, 1),
         date(2019, 1, 1),
@@ -246,7 +246,6 @@ def test_annualize():
 
 
 def test_volatility():
-
     x = pd.Series([])
     assert_series_equal(x, volatility(x))
 
@@ -266,11 +265,10 @@ def test_volatility():
 
     real_vol = volatility(x)
 
-    assert(real_vol[-1] == vol)
+    assert (real_vol[-1] == vol)
 
 
 def test_correlation():
-
     x = pd.Series([])
     assert_series_equal(pd.Series([]), correlation(x, x))
     assert_series_equal(pd.Series([]), correlation(x, x, 1))
@@ -299,22 +297,21 @@ def test_correlation():
 
     assert_series_equal(result, expected, check_less_precise=True)
 
-    result = correlation(x, y, 22)
-    expected = pd.Series([np.nan, np.nan, -1.0, 0.969025, 0.969254, 0.706042], index=daily_dates)
+    result = correlation(x, y, Window(2, 0))
+    expected = pd.Series([np.nan, np.nan, -1.0000000000000435, 1.0, 0.9999999999999994, -1.0000000000000007], index=daily_dates)
 
     assert_series_equal(result, expected, check_less_precise=True)
 
     ret_x = returns(x)
     ret_y = returns(y)
 
-    result = correlation(ret_x, ret_y, 22, False)
-    expected = pd.Series([np.nan, np.nan, -1.0, 0.969025, 0.969254, 0.706042], index=daily_dates)
+    result = correlation(ret_x, ret_y, Window(2, 0), False)
+    expected = pd.Series([np.nan, np.nan, -1.0000000000000435, 1.0, 0.9999999999999994, -1.0000000000000007], index=daily_dates)
 
     assert_series_equal(result, expected, check_less_precise=True)
 
 
 def test_beta():
-
     x = pd.Series([])
     assert_series_equal(pd.Series([]), beta(x, x))
     assert_series_equal(pd.Series([]), beta(x, x, 1))
@@ -343,26 +340,29 @@ def test_beta():
 
     assert_series_equal(result, expected, check_less_precise=True)
 
-    result = beta(x, y, 22)
-    expected = pd.Series([np.nan, np.nan, np.nan, 0.718146, 0.718919, 0.572201], index=daily_dates)
+    result = beta(x, y, Window(2, 0))
+    expected = pd.Series([np.nan, np.nan, np.nan, 0.8255252918287954, 0.7054398925453326, -2.24327163719368], index=daily_dates)
 
     assert_series_equal(result, expected, check_less_precise=True)
 
     ret_x = returns(x)
     ret_y = returns(y)
 
-    result = beta(ret_x, ret_y, 22, False)
-    expected = pd.Series([np.nan, np.nan, np.nan, 0.718146, 0.718919, 0.572201], index=daily_dates)
+    result = beta(ret_x, ret_y, Window(2, 0), False)
+    expected = pd.Series([np.nan, np.nan, np.nan, 0.8255252918287954, 0.7054398925453326, -2.24327163719368], index=daily_dates)
 
     assert_series_equal(result, expected, check_less_precise=True)
 
 
 def test_max_drawdown():
-
     series = pd.Series([1, 5, 5, 4, 4, 1])
 
     basic_output = max_drawdown(series)
     assert_series_equal(basic_output, pd.Series([0.0, 0.0, 0.0, -0.2, -0.2, -0.8]), obj="Max drawdown")
 
-    output_window = max_drawdown(series, 2)
+    output_window = max_drawdown(series, Window(2, 0))
     assert_series_equal(output_window, pd.Series([0.0, 0.0, 0.0, -0.2, -0.2, -0.75]), obj="Max drawdown window")
+
+
+if __name__ == "__main__":
+    pytest.main(args=["test_econometrics.py"])

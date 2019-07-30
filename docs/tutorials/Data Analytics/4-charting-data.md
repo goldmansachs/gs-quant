@@ -23,7 +23,7 @@ generate plots, histograms, power spectra, bar charts, error charts, scatter plo
 
 Let's use this library to chart calculated implied volatility from GS Quant.
 
-<note>Examples require an initialized GsSession and data subscription, please refer to
+<note>Examples require an initialized GsSession and data subscription, please refer to 
 <a href="/docs/gsquant/guides/Authentication/2-gs-session">Sessions</a> for details</note>
 
 ## Querying Data
@@ -33,6 +33,7 @@ First, let's retrieve S&P 500 end of day implied volatility for 1 month tenor wi
 ```python
 from gs_quant.data import Dataset
 from gs_quant.markets import PricingContext
+
 
 market_date = PricingContext.current.market_data_as_of  # Determine current market date
 
@@ -92,6 +93,8 @@ Which will create a plot like this:
 Likewise we can use the same technique to chart the implied volatility by tenor:
 
 ```python
+from gs_quant.timeseries.measures import _to_offset
+
 vol_data = vol_dataset.get_data(market_date, market_date, ticker='SPX', relativeStrike=1.0, strikeReference='forward')
 # Create a new column converting relative dates to actual date times
 vol_data.loc[:, 'tenorDate'] = vol_data.index + vol_data['tenor'].map(_to_offset)

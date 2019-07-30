@@ -19,6 +19,7 @@ from gs_quant.instrument import EqOption
 import gs_quant.target.backtests as backtests
 from gs_quant.target.backtests import *
 from gs_quant.api.gs.backtests import GsBacktestApi
+from gs_quant.errors import MqValueError
 
 _logger = logging.getLogger(__name__)
 
@@ -56,13 +57,21 @@ class EqSystematicStrategy:
         self.__underliers = []
 
         for eq_option in underliers:
+            if isinstance(eq_option, tuple):
+                instrument = eq_option[0]
+                notionalPercentage = eq_option[1]
+            elif isinstance(eq_option, EqOption):
+                instrument = eq_option
+                notionalPercentage = 100
+            else:
+                raise MqValueError('The format of the backtest asset is incorrect.')
+
             # TODO: Only support option strike type "Absolute", need to support "Delta" and "Fwd Percentage" as well
             self.__underliers.append(BacktestStrategyUnderlier(
-                instrument= eq_option[0],
-                notionalPercentage = eq_option[1],
+                instrument= instrument,
+                notionalPercentage = notionalPercentage,
                 hedge=BacktestStrategyUnderlierHedge(riskDetails=delta_hedge),
                 marketModel=get_enum_value(EquityMarketModel, market_model).value))
-
 
         backtest_parameters_class: Base = getattr(backtests, self.__backtest_type.name + 'BacktestParameters')
         backtest_parameter_args = {

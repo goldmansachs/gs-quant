@@ -24,4 +24,12 @@ The documents in this section provide tutorials for how to run popular functions
 
 [Exporting to Excel](/gsquant/tutorials/Data-Analytics/5-exporting-data) — Write Pandas Dataframes in Excel format for use in presentations.
 
+## Pricing and Risk
+
+[Creating an Instrument](/gsquant/tutorials/Pricing-and-Risk/1-creating-an-instrument) — Create an instrument and understand parameters.
+
+[Spot Pricing and Risk](/gsquant/tutorials/Pricing-and-Risk/2-spot-pricing-and-risk) — Price and calculate risk for an instrument.
+
+[Historical Pricing and Risk](/gsquant/tutorials/Pricing-and-Risk/3-historical-pricing-and-risk) — Price and calculate risk for an instrument historically.
+
 ---

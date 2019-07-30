@@ -28,4 +28,8 @@ Learn more about contributing to GS Quant.
 
 [Functions](/gsquant/contribute/Python-Docs/functions) — Read tips for writing Python functions.
 
+## Licensing
+
+[Approved Licenses](/gsquant/contribute/Licensing/approved-licenses) — List of approved licenses for GS Quant dependencies.
+
 ---

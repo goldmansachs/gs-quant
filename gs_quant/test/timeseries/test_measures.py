@@ -38,7 +38,9 @@ def mock_fx(_cls, _q):
 
 def mock_curr(_cls, _q):
     d = {
-        'swapRate': [1, 2, 3]
+        'swapRate': [1, 2, 3],
+        'impliedNormalVolatility': [1, 2, 3],
+        'atmFwdRate': [1, 2, 3],
     }
     return pd.DataFrame(data=d, index=_index * 3)
 
@@ -191,6 +193,34 @@ def test_swap_rate():
     assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='swapRate'), actual)
 
     replace.restore()
+
+
+def test_swaption_vol():
+    replace = Replacer()
+    mock_usd = Currency('MA890', 'USD')
+    xrefs = replace('gs_quant.timeseries.measures.GsAssetApi.get_asset_xrefs', Mock())
+    xrefs.return_value = [GsTemporalXRef(dt.date(2019, 1, 1), dt.date(2952, 12, 31), XRef(bbid='USD',))]
+    identifiers = replace('gs_quant.timeseries.measures.GsAssetApi.map_identifiers', Mock())
+    identifiers.return_value = {'USD-LIBOR-BBA': 'MA123'}
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_curr)
+    actual = tm.swaption_vol(mock_usd, '1y', '3m', 'ATM')
+    assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='impliedNormalVolatility'), actual)
+    actual = tm.swaption_vol(mock_usd, '1y', '3m', 'ATM-50')
+    assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='impliedNormalVolatility'), actual)
+    actual = tm.swaption_vol(mock_usd, '1y', '3m', 'ATM+50')
+    assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='impliedNormalVolatility'), actual)
+
+
+def test_atm_forward_rate():
+    replace = Replacer()
+    mock_usd = Currency('MA890', 'USD')
+    xrefs = replace('gs_quant.timeseries.measures.GsAssetApi.get_asset_xrefs', Mock())
+    xrefs.return_value = [GsTemporalXRef(dt.date(2019, 1, 1), dt.date(2952, 12, 31), XRef(bbid='USD',))]
+    identifiers = replace('gs_quant.timeseries.measures.GsAssetApi.map_identifiers', Mock())
+    identifiers.return_value = {'USD-LIBOR-BBA': 'MA123'}
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_curr)
+    actual = tm.atm_forward_rate(mock_usd, '1y', '3m')
+    assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='atmFwdRate'), actual)
 
 
 def test_td():

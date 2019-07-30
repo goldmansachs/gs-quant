@@ -33,7 +33,7 @@ First, let's get the prices of the Goldman Sachs Hedge Fund VIP Basket (Ticker: 
 This is a custom basket created by the Goldman Sachs Investment Research (GIR) group to track stocks which are widely
 held by the hedge fund community in the US, based on [13-F](https://en.wikipedia.org/wiki/Form_13F) filings.
 
-<note>Examples require an initialized GsSession and data subscription, please refer to
+<note>Examples require an initialized GsSession and data subscription, please refer to 
 <a href="/docs/gsquant/guides/Authentication/2-gs-session">Sessions</a> for details</note>
 
 We'll use the [GS Custom Basket Prices](https://marquee.gs.com/s/developer/datasets/CB) dataset, which contains prices

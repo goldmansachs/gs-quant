@@ -105,7 +105,7 @@ All Goldman Sachs Developer documentation is written in [Markdown](https://darin
 - Content will be translated into other languages, so it's important to keep these tips in mind:
     - Run articles through spell check before publishing to ensure no spelling, grammatical, or punctuation errors.
     - Aim for short and simple sentence construction. 
-    - Include all small prepositions, like "a", "the, and "is". 
+    - Include all small prepositions, like "a", "the", and "is". 
 
 ### Numbers
 - In general, spell out numbers 0-9 
@@ -140,11 +140,3 @@ All Goldman Sachs Developer documentation is written in [Markdown](https://darin
 - Use American English <br/> *Examples:*
     - <span style="color:#FA5343;">Incorrect:</span> localisation, colour
     - <span style="color:#03AB65;">Correct:</span> localization, color
-<br/><br/>
-___
-## Images and charts
-### Formats
-- 
-### Mermaid plugin for charts
-- 
-<br/><br/>
