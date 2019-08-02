@@ -41,6 +41,12 @@ GENERIC_DATE = Union[datetime.date, str]
 TD_ONE = datetime.timedelta(days=1)
 _logger = logging.getLogger(__name__)
 
+CURRENCY_TO_DEFAULT_RATE_BENCHMARK = {
+    Currency.USD: 'USD-LIBOR-BBA',
+    Currency.EUR: 'EUR-EURIBOR-TELERATE',
+    Currency.GBP: 'GBP-LIBOR-BBA',
+    Currency.JPY: 'JPY-LIBOR-BBA'
+}
 
 # TODO: get NERC Calendar from SecDB
 class NercCalendar(AbstractHolidayCalendar):
@@ -87,18 +93,11 @@ class EdrDataReference(Enum):
     FORWARD = 'forward'
 
 
-class FloatingIndex(Enum):
-    THREE_MONTH = '3m'
-    SIX_MONTH = '6m'
-    ONE_DAY = '1d'
-
 class BenchmarkType(Enum):
     LIBOR = 'LIBOR'
     EURIBOR = 'EURIBOR'
     STIBOR = 'STIBOR'
     OIS = 'OIS'
-    EONIA = 'EONIA'
-    SARON = 'SARON'
 
 
 def _market_data_timed(q):
@@ -325,7 +324,7 @@ def swap_rate(asset: Asset, tenor: str, benchmark_type: BenchmarkType = None, fl
         else:
             benchmark_type = BenchmarkType.LIBOR
 
-    over_nights = [BenchmarkType.OIS, BenchmarkType.EONIA, BenchmarkType.SARON]
+    over_nights = [BenchmarkType.OIS]
 
     # default floating index
     if floating_index is None:
@@ -356,6 +355,79 @@ def swap_rate(asset: Asset, tenor: str, benchmark_type: BenchmarkType = None, fl
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
     return Series() if df.empty else df['swapRate']
+
+
+@plot_measure((AssetClass.Cash,), (AssetType.Currency,))
+def swaption_vol(asset: Asset, termination_tenor: str, expiration_tenor: str, relative_strike: str = "ATM",
+                 *, source: str = None, real_time: bool = False) -> Series:
+    """
+    GS end-of-day implied normal volatility for swaption vol matrices.
+
+    :param asset: asset object loaded from security master
+    :param termination_tenor: relative date representation of the instrument's expiration date e.g. 1y
+    :param expiration_tenor: relative date representation of expiration date on the option e.g. 3m
+    :param relative_strike: strike level relative to at the money e.g. ATM+10
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: average implied variance curve
+    """
+
+    currency = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
+    currency = Currency(currency)
+
+    rate_benchmark = CURRENCY_TO_DEFAULT_RATE_BENCHMARK[currency]
+    rate_benchmark_mqid = GsAssetApi.map_identifiers(GsIdType.mdapi, GsIdType.id, [rate_benchmark])[rate_benchmark]
+
+    strike = 0 if relative_strike is "ATM" else relative_strike.split("+")[1] if "+" in relative_strike else relative_strike.split("ATM")[1]
+
+    _logger.debug('where tenor=%s, expiry=%s, strike=%s', termination_tenor, expiration_tenor, strike)
+
+    q = GsDataApi.build_market_data_query(
+        [rate_benchmark_mqid],
+        'Implied Normal Volatility',
+        where=FieldFilterMap(tenor=termination_tenor, expriy=expiration_tenor, strike=int(strike)),
+        source=source,
+        real_time=real_time
+    )
+
+    _logger.debug('q %s', q)
+    df = _market_data_timed(q)
+    return Series() if df.empty else df['impliedNormalVolatility']
+
+
+@plot_measure((AssetClass.Cash,), (AssetType.Currency,))
+def atm_forward_rate(asset: Asset, termination_tenor: str, expiration_tenor: str,
+                     *, source: str = None, real_time: bool = False) -> Series:
+    """
+    GS end-of-day at-the-money forward rate for swaption vol matrices.
+
+    :param asset: asset object loaded from security master
+    :param termination_tenor: relative date representation of the instrument's expiration date e.g. 1y
+    :param expiration_tenor: relative date representation of expiration date on the option e.g. 3m
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: average implied variance curve
+    """
+
+    currency = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
+    currency = Currency(currency)
+
+    rate_benchmark = CURRENCY_TO_DEFAULT_RATE_BENCHMARK[currency]
+    rate_benchmark_mqid = GsAssetApi.map_identifiers(GsIdType.mdapi, GsIdType.id, [rate_benchmark])[rate_benchmark]
+
+    _logger.debug('where tenor=%s, expiry=%s, strike=0', termination_tenor, expiration_tenor)
+
+    q = GsDataApi.build_market_data_query(
+        [rate_benchmark_mqid],
+        'Atm Fwd Rate',
+        where=FieldFilterMap(tenor=termination_tenor, expriy=expiration_tenor, strike=0),
+        source=source,
+        real_time=real_time
+    )
+
+    _logger.debug('q %s', q)
+    df = _market_data_timed(q)
+    return Series() if df.empty else df['atmFwdRate']
 
 
 @cachetools.cached(cachetools.TTLCache(16, 3600))

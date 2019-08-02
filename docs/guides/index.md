@@ -70,6 +70,17 @@ or vendor symbology
 ## Dates
 
 [Holiday Calendars](/gsquant/guides/Dates/holiday-calendar) — GS Quant allows users to easily work with dates taking
-into account trading calendars and holidays
+into account trading calendars and holidays  
 
 ---
+
+## Pricing and Risk
+
+[Instruments](/gsquant/guides/Pricing-and-Risk/1-instruments) — How to create an instrument to represent a priceable, such as a derivative 
+
+[Pricing and Risk](/gsquant/guides/Pricing-and-Risk/2-pricing-and-risk) — How to price and calculate risk on an instrument
+
+[Pricing Contexts](/gsquant/guides/Pricing-and-Risk/3-pricing-context) — Contexts for calculating risk and pricing including historical evaluation 
+
+[Advanced Pricing](/gsquant/guides/Pricing-and-Risk/4-advanced-pricing) — Use cases for pricing asynchronously and batching requests 
+

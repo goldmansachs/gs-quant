@@ -296,12 +296,12 @@ def annualize(x: pd.Series) -> pd.Series:
 
 
 @plot_function
-def volatility(x: pd.Series, w: int = 0, returns_type: Returns = Returns.SIMPLE) -> pd.Series:
+def volatility(x: pd.Series, w: Union[Window, int] = Window(None, 0), returns_type: Returns = Returns.SIMPLE) -> pd.Series:
     """
     Realized volatility of price series
 
     :param x: time series of prices
-    :param w: window: number of observations to use (defaults to length of series)
+    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size and 10 the ramp up value. Window size defaults to length of series.
     :param returns_type: returns type
     :return: date-based time series of return
 
@@ -329,28 +329,29 @@ def volatility(x: pd.Series, w: int = 0, returns_type: Returns = Returns.SIMPLE)
 
     >>> series = generate_series(100)
     >>> vol_series = volatility(series, 22)
+    >>> vol_series = volatility(series, Window(22, 30))
 
     **See also**
 
     :func:`std` :func:`annualize` :func:`returns`
 
     """
-    w = w or x.size
+    w = normalize_window(x, w)
 
     if x.size < 1:
         return x
 
-    return annualize(std(returns(x, type=returns_type), w)).mul(100)
+    return apply_ramp(annualize(std(returns(x, type=returns_type), w.w)).mul(100), w)
 
 
 @plot_function
-def correlation(x: pd.Series, y: pd.Series, w: int = 0, type_: SeriesType = SeriesType.PRICES) -> pd.Series:
+def correlation(x: pd.Series, y: pd.Series, w: Union[Window, int] = Window(None, 0), type_: SeriesType = SeriesType.PRICES) -> pd.Series:
     """
     Rolling correlation of two price series
 
     :param x: price series
     :param y: price series
-    :param w: window: number of observations to use (defaults to length of series)
+    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size and 10 the ramp up value. Window size defaults to length of series.
     :param type_: type of both input series
     :return: date-based time series of correlation
 
@@ -389,7 +390,7 @@ def correlation(x: pd.Series, y: pd.Series, w: int = 0, type_: SeriesType = Seri
     :func:`std` :func:`returns`
 
     """
-    w = w or x.size
+    w = normalize_window(x, w)
 
     if x.size < 1:
         return x
@@ -401,19 +402,19 @@ def correlation(x: pd.Series, y: pd.Series, w: int = 0, type_: SeriesType = Seri
     clean_ret1 = ret_1.dropna()
     clean_ret2 = ret_2.dropna()
 
-    corr = clean_ret1.rolling(w, 0).corr(clean_ret2)
+    corr = clean_ret1.rolling(w.w, 0).corr(clean_ret2)
 
-    return interpolate(corr, x, Interpolate.NAN)
+    return apply_ramp(interpolate(corr, x, Interpolate.NAN), w)
 
 
 @plot_function
-def beta(x: pd.Series, b: pd.Series, w: int = 0, prices: bool = True) -> pd.Series:
+def beta(x: pd.Series, b: pd.Series, w: Union[Window, int] = Window(None, 0), prices: bool = True) -> pd.Series:
     """
     Rolling beta of price series and benchmark
 
     :param x: time series of prices
     :param b: time series of benchmark prices
-    :param w: window: number of observations to use (defaults to length of series)
+    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size and 10 the ramp up value. Window size defaults to length of series.
     :param prices: True if input series are prices, False if they are returns
     :return: date-based time series of beta
 
@@ -454,28 +455,28 @@ def beta(x: pd.Series, b: pd.Series, w: int = 0, prices: bool = True) -> pd.Seri
 
     :func:`var` :func:`cov` :func:`correlation` :func:`returns`
     """
-    w = w or x.size
+    w = normalize_window(x, w)
 
     ret_series = returns(x) if prices else x
     ret_benchmark = returns(b) if prices else b
 
-    cov = ret_series.rolling(w, 0).cov(ret_benchmark.rolling(w, 0))
-    result = cov / ret_benchmark.rolling(w, 0).var()
+    cov = ret_series.rolling(w.w, 0).cov(ret_benchmark.rolling(w.w, 0))
+    result = cov / ret_benchmark.rolling(w.w, 0).var()
 
     # do not compute initial values as they may be extreme when sample size is small
 
     result[0:3] = np.nan
 
-    return interpolate(result, x, Interpolate.NAN)
+    return apply_ramp(interpolate(result, x, Interpolate.NAN), w)
 
 
 @plot_function
-def max_drawdown(x: pd.Series, w: int = 0) -> pd.Series:
+def max_drawdown(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     """
     Compute the maximum peak to trough drawdown over a rolling window.
 
     :param x: time series
-    :param w: window: number of observations to use (defaults to length of series)
+    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size and 10 the ramp up value. Window size defaults to length of series.
     :return: time series of rolling maximum drawdown
 
     **Examples**
@@ -490,8 +491,8 @@ def max_drawdown(x: pd.Series, w: int = 0) -> pd.Series:
     :func:`returns`
 
     """
-    w = w or x.size
+    w = normalize_window(x, w)
 
-    rolling_max = x.rolling(w, 0).max()
-    result = (x / rolling_max - 1).rolling(w, 0).min()
-    return result
+    rolling_max = x.rolling(w.w, 0).max()
+    result = (x / rolling_max - 1).rolling(w.w, 0).min()
+    return apply_ramp(result, w)

@@ -1,7 +1,10 @@
 import logging
+from collections import namedtuple
 from enum import Enum, IntEnum
 from functools import wraps
-from typing import Optional
+from typing import Optional, Union
+
+import pandas as pd
 
 
 def _create_enum(name, members):
@@ -15,6 +18,41 @@ def _create_int_enum(name, mappings):
 Interpolate = _create_enum('Interpolate', ['intersect', 'step', 'nan', 'zero'])
 Returns = _create_enum('Returns', ['simple', 'logarithmic'])
 SeriesType = _create_enum('SeriesType', ['prices', 'returns'])
+
+Window = namedtuple('Window', ['w', 'r'])
+
+
+def _check_window(x: pd.Series, window: Window):
+    if len(x) > 0:
+        if window.w <= 0:
+            raise ValueError('Window value must be greater than zero.')
+        if window.r > len(x) or window.r < 0:
+            raise ValueError('Ramp value must be less than the length of the series and greater than zero.')
+
+
+def apply_ramp(x: pd.Series, window: Window):
+    _check_window(x, window)
+    return x[window.r:] if window.w <= len(x) else pd.Series([])
+
+
+def normalize_window(x: pd.Series, window: Union[Window, int, None], default_window: int = None) -> Window:
+    if default_window is None:
+        default_window = x.size
+
+    if type(window) == int:
+        window = Window(w=window, r=window)
+    else:
+        if window is None:
+            window = Window(w=default_window, r=0)
+        else:
+            if window.w and window.r is None:
+                window_size = window.w
+                window = Window(w=window_size, r=window_size)
+            elif window.w is None and window.r >= 0:
+                window = Window(w=default_window, r=window.r)
+
+    _check_window(x, window)
+    return window
 
 
 def plot_function(fn):

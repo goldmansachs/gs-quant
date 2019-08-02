@@ -28,8 +28,14 @@ Measures
 .. autodata:: FXGamma
 .. autodata:: FXVega
 .. autodata:: IRDelta
+.. autodata:: IRDeltaParallel
+.. autodata:: IRDeltaLocalCcy
+.. autodata:: IRDeltaParallelLocalCcy
 .. autodata:: IRGamma
 .. autodata:: IRVega
+.. autodata:: IRVegaParallel
+.. autodata:: IRVegaLocalCcy
+.. autodata:: IRVegaParallelLocalCcy
 .. autodata:: IRAnnualImpliedVol
 .. autodata:: IRAnnualATMImpliedVol
 .. autodata:: IRDailyImpliedVol
