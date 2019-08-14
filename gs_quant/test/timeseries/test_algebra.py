@@ -387,3 +387,61 @@ def test_ceil():
     result = algebra.ceil(x, 2.0)
     expected = pd.Series([1.0, 2.0, 2.0], index=dates)
     assert_series_equal(result, expected, obj="Ceil")
+
+
+def test_filter():
+    dates1 = [
+        date(2019, 1, 1),
+        date(2019, 1, 2),
+        date(2019, 1, 3),
+        date(2019, 1, 4)
+    ]
+
+    all_pos = pd.Series([1.0, 1.0, 1.0, 1.0], index=dates1)
+    with_null = pd.Series([1.0, np.nan, 1.0, 1.0], index=dates1)
+    zero_neg_pos = pd.Series([-1.0, 0.0, 10.0, 1.0], index=dates1)
+
+    result = filter_(all_pos)
+    expected = all_pos
+    assert_series_equal(result, expected, obj="zap: remove nulls when no nulls are in TS")
+
+    result = filter_(all_pos, FilterOperator.EQUALS, 0)
+    expected = all_pos
+    assert_series_equal(result, expected, obj="zap: remove 0s when no 0s are in TS")
+
+    result = filter_(with_null)
+    expected = pd.Series([1.0, 1.0, 1.0],
+                         index=[date(2019, 1, 1),
+                                date(2019, 1, 3), date(2019, 1, 4)])
+    assert_series_equal(result, expected, obj="zap: remove nulls in TS")
+
+    result = filter_(zero_neg_pos, FilterOperator.EQUALS, 0)
+    expected = pd.Series([-1.0, 10.0, 1.0],
+                         index=[date(2019, 1, 1),
+                                date(2019, 1, 3), date(2019, 1, 4)])
+    assert_series_equal(result, expected, obj="zap: remove 0s in TS")
+
+    result = filter_(zero_neg_pos, FilterOperator.GREATER, 0)
+    expected = pd.Series([-1.0, 0.0], index=[date(2019, 1, 1), date(2019, 1, 2)])
+    assert_series_equal(result, expected, obj="zap: remove positive values in TS")
+
+    result = filter_(zero_neg_pos, FilterOperator.LESS, 0)
+    expected = pd.Series([0.0, 10.0, 1.0], index=[date(2019, 1, 2), date(2019, 1, 3), date(2019, 1, 4)])
+    assert_series_equal(result, expected, obj="zap: remove negative values in TS")
+
+    result = filter_(zero_neg_pos, FilterOperator.L_EQUALS, 0)
+    expected = pd.Series([10.0, 1.0], index=[date(2019, 1, 3), date(2019, 1, 4)])
+    assert_series_equal(result, expected, obj="zap: remove values less than or eq to 0 in TS")
+
+    result = filter_(zero_neg_pos, FilterOperator.G_EQUALS, 0)
+    expected = pd.Series([-1.0], index=[date(2019, 1, 1)])
+    assert_series_equal(result, expected, obj="zap: remove values greater than or eq to 0 in TS")
+
+    result = filter_(zero_neg_pos, FilterOperator.N_EQUALS, 0)
+    expected = pd.Series([0.0], index=[date(2019, 1, 2)])
+    assert_series_equal(result, expected, obj="zap: remove all values but 0 in TS")
+
+    with pytest.raises(MqValueError):
+        filter_(zero_neg_pos, 0, 0)
+    with pytest.raises(MqValueError):
+        filter_(zero_neg_pos, 0)

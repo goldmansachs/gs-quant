@@ -14,5 +14,5 @@ specific language governing permissions and limitations
 under the License.
 """
 from .core import *
-from .systematic_strategy import EqSystematicStrategy
+from .strategy_systematic import StrategySystematic
 from gs_quant.target.backtests import DeltaHedgeParameters
