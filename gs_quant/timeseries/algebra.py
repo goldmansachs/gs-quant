@@ -20,11 +20,22 @@ import math
 from .datetime import *
 from .helper import plot_function
 from numbers import Real
+from typing import Union, Optional
+
 
 """
 Algebra library contains basic numerical and algebraic operations, including addition, division, multiplication, 
 division and other functions on timeseries
 """
+
+
+class FilterOperator(Enum):
+    LESS = 'less_than'
+    GREATER = 'greater_than'
+    L_EQUALS = 'l_equals'
+    G_EQUALS = 'g_equals'
+    EQUALS = 'equals'
+    N_EQUALS = 'not_equals'
 
 
 @plot_function
@@ -518,3 +529,62 @@ def ceil(x: pd.Series, value: float = 0) -> pd.Series:
     """
     assert x.index.is_monotonic_increasing
     return x.apply(lambda y: min(y, value))
+
+
+@plot_function
+def filter_(x: pd.Series, operator: Optional[FilterOperator] = None, value: Optional[Real] = None) -> pd.Series:
+    """
+    Removes values where comparison with the operator and value combination results in true, defaults to removing
+    missing values from the series
+    :param x: timeseries
+    :param operator: FilterOperator describing logic for value removal, e.g 'less_than'
+    :param value: number indicating value(s) to remove from the series
+    :return: timeseries with specified values removed
+
+
+    **Usage**
+
+    Remove each value determined by operator and value from timeseries where that expression yields true
+
+    **Examples**
+
+    Remove 0 from time series
+
+    >>> prices = generate_series(100)
+    >>> filter_(prices, FilterOperator.EQUALS, 0)
+
+    Remove positive numbers from time series
+
+    >>> prices = generate_series(100)
+    >>> filter_(prices, FilterOperator.GREATER, 0)
+
+    Remove missing values from time series
+
+    >>> prices = generate_series(100)
+    >>> filter_(prices)
+
+    """
+
+    if value is None and operator is None:
+        x = x.dropna(axis=0, how='any')
+    elif value is None:
+        raise MqValueError('No value is specified for the operator')
+    else:
+        if operator == FilterOperator.EQUALS:
+            remove = x == value
+        elif operator == FilterOperator.GREATER:
+            remove = x > value
+        elif operator == FilterOperator.LESS:
+            remove = x < value
+        elif operator == FilterOperator.L_EQUALS:
+            remove = x <= value
+        elif operator == FilterOperator.G_EQUALS:
+            remove = x >= value
+        elif operator == FilterOperator.N_EQUALS:
+            remove = x != value
+        else:
+            if type(operator) is not str:
+                operator = str(operator)
+            raise MqValueError('Unexpected operator: ' + operator)
+        x = x.drop(x[remove].index)
+    return x

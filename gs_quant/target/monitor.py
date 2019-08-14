@@ -61,6 +61,47 @@ class ColumnFormat(Base):
         self._property_changed('humanReadable')        
 
 
+class Entitlements(Base):
+        
+    """Defines the entitlements of a given resource"""
+       
+    def __init__(self, view: Tuple[str, ...], edit: Tuple[str, ...], admin: Tuple[str, ...]):
+        super().__init__()
+        self.__view = view
+        self.__edit = edit
+        self.__admin = admin
+
+    @property
+    def view(self) -> Tuple[str, ...]:
+        """Permission to view the resource and its contents"""
+        return self.__view
+
+    @view.setter
+    def view(self, value: Tuple[str, ...]):
+        self.__view = value
+        self._property_changed('view')        
+
+    @property
+    def edit(self) -> Tuple[str, ...]:
+        """Permission to edit details about the resource content, excluding entitlements. Can also delete the resource"""
+        return self.__edit
+
+    @edit.setter
+    def edit(self, value: Tuple[str, ...]):
+        self.__edit = value
+        self._property_changed('edit')        
+
+    @property
+    def admin(self) -> Tuple[str, ...]:
+        """Permission to edit all details of the resource, including entitlements. Can also delete the resource"""
+        return self.__admin
+
+    @admin.setter
+    def admin(self, value: Tuple[str, ...]):
+        self.__admin = value
+        self._property_changed('admin')        
+
+
 class Historical(Base):
         
     """value and date for historical data"""
@@ -117,23 +158,33 @@ class MaxDataPoints(Base):
         self._property_changed('maxDataPoints')        
 
 
-class Metadata(Base):
+class MonitorResponseData(Base):
         
-    """Entity metadata"""
+    """Monitor calculated response data"""
        
-    def __init__(self, tooltip: str = None):
+    def __init__(self, id: str, result: dict):
         super().__init__()
-        self.__tooltip = tooltip
+        self.__id = id
+        self.__result = result
 
     @property
-    def tooltip(self) -> str:
-        """Required small string with a length from empty string to 50 characters"""
-        return self.__tooltip
+    def id(self) -> str:
+        """Marquee unique identifier"""
+        return self.__id
 
-    @tooltip.setter
-    def tooltip(self, value: str):
-        self.__tooltip = value
-        self._property_changed('tooltip')        
+    @id.setter
+    def id(self, value: str):
+        self.__id = value
+        self._property_changed('id')        
+
+    @property
+    def result(self) -> dict:
+        return self.__result
+
+    @result.setter
+    def result(self, value: dict):
+        self.__result = value
+        self._property_changed('result')        
 
 
 class Movers(Base):
@@ -332,25 +383,6 @@ class RateRow(Base):
         self._property_changed('slope')        
 
 
-class RowData(Base):
-        
-    """Calculated row data for a particular asset"""
-       
-    def __init__(self, GENERATED_INVALID: dict = None):
-        super().__init__()
-        self.__GENERATED_INVALID = GENERATED_INVALID
-
-    @property
-    def GENERATED_INVALID(self) -> dict:
-        """timestamp and value for calculated field"""
-        return self.__GENERATED_INVALID
-
-    @GENERATED_INVALID.setter
-    def GENERATED_INVALID(self, value: dict):
-        self.__GENERATED_INVALID = value
-        self._property_changed('GENERATED_INVALID')        
-
-
 class RowGroup(Base):
         
     """Object specifying a group name and a list of assets to be calculated in a monitor"""
@@ -433,38 +465,9 @@ class Function(Base):
         self._property_changed('parameters')        
 
 
-class MonitorResponseData(Base):
-        
-    """Monitor calculated response data"""
-       
-    def __init__(self, id: str, result: dict):
-        super().__init__()
-        self.__id = id
-        self.__result = result
-
-    @property
-    def id(self) -> str:
-        """Marquee unique identifier"""
-        return self.__id
-
-    @id.setter
-    def id(self, value: str):
-        self.__id = value
-        self._property_changed('id')        
-
-    @property
-    def result(self) -> dict:
-        return self.__result
-
-    @result.setter
-    def result(self, value: dict):
-        self.__result = value
-        self._property_changed('result')        
-
-
 class RatesResponseData(Base):
         
-    """Rates calculated response data"""
+    """Rates calculated response data."""
        
     def __init__(self, name, id: str, rows: Tuple[RateRow, ...], libor_id: str = None):
         super().__init__()

@@ -22,16 +22,6 @@ from typing import Tuple
 
 # TODO add these in Studio as a standalone JSON, so they will be generated
 
-class BacktestType(EnumBase, Enum):
-    Volatility = 'Volatility'
-    VolatilityFlow = 'Volatility Flow'
-
-
-class EquityMarketModel(EnumBase, Enum):
-    SFK = 'SFK'
-    SVR = 'SVR'
-
-
 class QuantityType(EnumBase, Enum):
     Notional = 'notional'
     Quantity = 'quantity'
@@ -39,7 +29,6 @@ class QuantityType(EnumBase, Enum):
 
 
 class TradeInMethod(EnumBase, Enum)  :
-    BackToBack = 'backToBack'
     FixedRoll = 'fixedRoll'
 
 

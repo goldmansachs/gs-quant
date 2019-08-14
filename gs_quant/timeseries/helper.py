@@ -2,10 +2,11 @@ import logging
 from collections import namedtuple
 from enum import Enum, IntEnum
 from functools import wraps
-from typing import Optional, Union
+from typing import Optional, Union, List
 
 import pandas as pd
 
+from gs_quant.api.gs.data import QueryType
 
 def _create_enum(name, members):
     return Enum(name, {n.upper(): n.lower() for n in members}, module=__name__)
@@ -15,7 +16,7 @@ def _create_int_enum(name, mappings):
     return IntEnum(name, {k.upper(): v for k, v in mappings.items()})
 
 
-Interpolate = _create_enum('Interpolate', ['intersect', 'step', 'nan', 'zero'])
+Interpolate = _create_enum('Interpolate', ['intersect', 'step', 'nan', 'zero', 'time'])
 Returns = _create_enum('Returns', ['simple', 'logarithmic'])
 SeriesType = _create_enum('SeriesType', ['prices', 'returns'])
 
@@ -61,7 +62,8 @@ def plot_function(fn):
     return fn
 
 
-def plot_measure(asset_class: Optional[tuple] = None, asset_type: Optional[tuple] = None):
+def plot_measure(asset_class: Optional[tuple] = None, asset_type: Optional[tuple] = None,
+                 dependencies: Optional[List[QueryType]] = []):
     # Indicates that fn should be exported to plottool as a member function / pseudo-measure.
     # Set category to None for no restrictions, else provide a tuple of allowed values.
     def decorator(fn):
@@ -71,6 +73,8 @@ def plot_measure(asset_class: Optional[tuple] = None, asset_type: Optional[tuple
         fn.plot_measure = True
         fn.asset_class = asset_class
         fn.asset_type = asset_type
+        fn.dependencies = dependencies
+
         return fn
 
     return decorator

@@ -237,7 +237,7 @@ class PricingContext(ContextBaseWithDefault):
         fixedRate is now the solved value
         """
         # TODO Handle these correctly in the risk service
-        invalid_defaults = ('-- N/A --',)
+        invalid_defaults = ('-- N/A --', 'NaN')
         value_mappings = {'Payer': 'Pay', 'Rec': 'Receive', 'Receiver': 'Receive'}
 
         def apply_field_values(
@@ -261,18 +261,19 @@ class PricingContext(ContextBaseWithDefault):
             field_values = {field: value_mappings.get(value, value) for field, value in field_values.items()
                             if field in priceable_inst.properties() and value not in invalid_defaults}
 
-            new_inst = priceable_inst._from_dict(field_values)
-            new_inst._resolved = True
-
-            if future:
-                future.set_result(new_inst)
-            elif in_place:
+            if in_place and not future:
                 for field, value in field_values.items():
                     setattr(priceable_inst, field, value)
 
                 priceable_inst._resolved = True
             else:
-                return new_inst
+                new_inst = priceable_inst._from_dict(field_values)
+                new_inst._resolved = True
+
+                if future:
+                    future.set_result(new_inst)
+                else:
+                    return new_inst
 
         res = self.calc(priceable, RiskMeasure(measureType='Resolved Instrument Values'))
         if isinstance(res, Future):

@@ -92,6 +92,31 @@ def test_align():
     assert_series_equal(result[0], expected2, obj="Align step left")
     assert_series_equal(result[1], expected1, obj="Align step left")
 
+    xp = x.copy()
+    yp = y.copy()
+    xp.index = pd.to_datetime(xp.index)
+    yp.index = pd.to_datetime(yp.index)
+    up = pd.to_datetime(union_dates)
+
+    expected1 = pd.Series([1.0, 2.0, 3.0, 4.0, 5.0, np.nan], index=up)
+    expected2 = pd.Series([np.nan, 20.0, 30.0, 40.0, 50.0, 60.0], index=up)
+
+    result = align(xp, yp, Interpolate.TIME)
+    assert_series_equal(result[0], expected1, obj="Align time left")
+    assert_series_equal(result[1], expected2, obj="Align time left")
+
+    result = align(yp, xp, Interpolate.TIME)
+    assert_series_equal(result[0], expected2, obj="Align time right")
+    assert_series_equal(result[1], expected1, obj="Align time right")
+
+    a = pd.Series([0, 100, 110], index=pd.DatetimeIndex(['2019-07-01', '2019-07-08', '2019-07-10']))
+    b = pd.Series([20, 60, 70], index=pd.DatetimeIndex(['2019-07-02', '2019-07-10', '2019-07-11']))
+    result = align(a, b, Interpolate.TIME)
+
+    u_index = a.index.union(b.index)
+    assert_series_equal(result[0], pd.Series([0, 100/7, 100, 110, np.nan], index=u_index))
+    assert_series_equal(result[1], pd.Series([np.nan, 20, 50, 60, 70], index=u_index))
+
     result = align(x, 3)
     assert_series_equal(result[0], x, obj="Align scalar left")
     assert_series_equal(result[1], pd.Series(3, index=dates1), obj="Align scalar left")

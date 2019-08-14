@@ -82,6 +82,9 @@ def align(x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Interpol
                 will use the value of the previous valid point if requested date does
                 not exist. Values prior to the first date will be equivalent to the
                 first available value
+    time        Resultant series have values on the union of dates / times. Missing
+                values surrounded by valid values will be interpolated given length of
+                interval. Input series must use DateTimeIndex.
     =========   ========================================================================
 
     **Examples**
@@ -109,28 +112,17 @@ def align(x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Interpol
         return x.align(y, 'outer')
     if method == Interpolate.ZERO:
         return x.align(y, 'outer', fill_value=0)
+    if method == Interpolate.TIME:
+        new_x, new_y = x.align(y, 'outer')
+        new_x.interpolate('time', limit_area='inside', inplace=True)
+        new_y.interpolate('time', limit_area='inside', inplace=True)
+        return [new_x, new_y]
     if method == Interpolate.STEP:
-
-        all_dates = x.align(y, 'outer')[0]
-
-        new_x = all_dates.copy()
-        new_y = all_dates.copy()
-
-        curr_x = x.get(0, np.nan)
-        curr_y = y.get(0, np.nan)
-
-        for knot in all_dates.iteritems():
-            date = knot[0]
-
-            xd = x.get(date, curr_x)
-            yd = y.get(date, curr_y)
-
-            curr_x = curr_x if xd is np.nan else xd
-            curr_y = curr_y if yd is np.nan else yd
-
-            new_x[date] = curr_x
-            new_y[date] = curr_y
-
+        new_x, new_y = x.align(y, 'outer')
+        new_x.fillna(method='ffill', inplace=True)
+        new_y.fillna(method='ffill', inplace=True)
+        new_x.fillna(method='bfill', inplace=True)
+        new_y.fillna(method='bfill', inplace=True)
         return [new_x, new_y]
     else:
         raise MqValueError('Unknown intersection type: ' + method)

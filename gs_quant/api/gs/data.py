@@ -16,7 +16,7 @@ under the License.
 import datetime as dt
 from itertools import chain
 from typing import Iterable, List, Optional, Tuple, Union
-
+from enum import Enum
 import pandas as pd
 
 from gs_quant.api.data import DataApi
@@ -27,6 +27,22 @@ from gs_quant.target.common import FieldFilterMap, XRef, MarketDataCoordinate
 from gs_quant.target.data import DataQuery, DataQueryResponse, MDAPIDataBatchResponse, MDAPIDataQueryResponse
 from gs_quant.target.data import DataSetEntity
 from .assets import GsAssetApi, GsIdType
+
+
+class QueryType(Enum):
+    IMPLIED_VOLATILITY = "Implied Volatility"
+    IMPLIED_CORRELATION = "Implied Correlation"
+    AVERAGE_IMPLIED_VOLATILITY = "Average Implied Volatility"
+    AVERAGE_IMPLIED_VARIANCE = "Average Implied Variance"
+    SWAP_RATE = "Swap Rate"
+    SWAPTION_VOL = "Swaption Vol"
+    MIDCURVE_VOL = "Midcurve Vol"
+    CAP_FLOOR_VOL = "Cap Floor Vol"
+    SPREAD_OPTION_VOL = "Spread Option Vol"
+    INFLATION_SWAP_RATE = "Inflation Swap Rate"
+    FORWARD = "Forward"
+    PRICE = "Price"
+    ATM_FWD_RATE = "Atm Fwd Rate"
 
 
 class GsDataApi(DataApi):
@@ -175,11 +191,11 @@ class GsDataApi(DataApi):
         return definition
 
     @staticmethod
-    def build_market_data_query(asset_ids: List[str], query_type: str, where: Union[FieldFilterMap] = None,
+    def build_market_data_query(asset_ids: List[str], query_type: QueryType, where: Union[FieldFilterMap] = None,
                                 source: Union[str] = None, real_time: bool = False):
         inner = {
             'assetIds': asset_ids,
-            'queryType': query_type,
+            'queryType': query_type.value,
             'where': where or {},
             'source': source or 'any',
             'frequency': 'Real Time' if real_time else 'End Of Day',
