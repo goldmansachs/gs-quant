@@ -595,24 +595,25 @@ def generate_series(length: int) -> pd.Series:
 
 
 @plot_function
-def percentile(x: pd.Series, y: pd.Series, w: int = 0) -> pd.Series:
+def percentiles(x: pd.Series, y: pd.Series = None, w: int = 0) -> pd.Series:
     """
-    Rolling percentile over given window
+    Rolling percentiles over given window
 
     :param x: value series
     :param y: distribution series
     :param w: window: number of observations
-    :return: timeseries of percentile
+    :return: timeseries of percentiles
 
     **Usage**
 
-    Calculate `percentile rank <https://en.wikipedia.org/wiki/Percentile_rank>`_of :math:`y` in the sample distribution
+    Calculate `percentile rank <https://en.wikipedia.org/wiki/Percentile_rank>`_ of :math:`y` in the sample distribution
     of :math:`x` over a rolling window of length :math:`w`:
 
     :math:`R_t = \\frac{\sum_{i=t-N+1}^{t}{[X_i<{Y_t}]}+0.5\sum_{i=t-N+1}^{t}{[X_i={Y_t}]}}{N}\\times100\%`
 
-    Where :math:`N` is the number of observations in a rolling window. If window length :math:'w' is not provided, uses
-    an ever-growing history of values. If :math:'w' is greater than the available data size, returns empty.
+    Where :math:`N` is the number of observations in a rolling window. If :math:`y` is not provided, calculates
+    percentiles of :math:`x` over its historical values. If window length :math:`w` is not provided, uses an
+    ever-growing history of values. If :math:`w` is greater than the available data size, returns empty.
 
     **Examples**
 
@@ -620,7 +621,7 @@ def percentile(x: pd.Series, y: pd.Series, w: int = 0) -> pd.Series:
 
     >>> a = generate_series(100)
     >>> b = generate_series(100)
-    >>> percentile(a, b, 22)
+    >>> percentiles(a, b, 22)
 
     **See also**
 
@@ -629,6 +630,9 @@ def percentile(x: pd.Series, y: pd.Series, w: int = 0) -> pd.Series:
     """
     if x.empty:
         return x
+
+    if y is None:
+        y = x.copy()
 
     res = pd.Series()
     for idx, val in y.iteritems():

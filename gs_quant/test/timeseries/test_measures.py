@@ -55,7 +55,23 @@ def map_identifiers_inflation_mocker(input_type: Union[GsIdType, str],
         return {"CPI-CPXTEMU": "MAK1FHKH5P5GJSHH"}
 
 
-def test_currency_converter_default_benchmark(mocker):
+def map_identifiers_cross_basis_mocker(input_type: Union[GsIdType, str],
+                           output_type: Union[GsIdType, str],
+                           ids: IdList,
+                           as_of: dt.datetime = None,
+                           multimap: bool = False,
+                           limit: int = None,
+                           **kwargs
+                           ) -> dict:
+    if "USD-3m/JPY-3m" in ids:
+        return {"USD-3m/JPY-3m": "MA99N6C1KF9078NM"}
+    elif "EUR-3m/USD-3m" in ids:
+        return {"EUR-3m/USD-3m": "MAXPKTXW2D4X6MFQ"}
+    elif "GBP-3m/USD-3m" in ids:
+        return {"GBP-3m/USD-3m": "MA8BZHQV3W32V63B"}
+
+
+def test_currency_to_default_benchmark_rate(mocker):
     mocker.patch.object(GsSession.__class__, 'current',
                         return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
     mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
@@ -67,21 +83,35 @@ def test_currency_converter_default_benchmark(mocker):
                        "MA4J1YB8XZP2BPT8", "MA4B66MW5E27U8P32SB"]
     with tm.PricingContext(dt.date.today()):
         for i in range(len(asset_id_list)):
-            correct_id = tm.currency_converter_default_benchmark(asset_id_list[i])
+            correct_id = tm.currency_to_default_benchmark_rate(asset_id_list[i])
             assert correct_id == correct_mapping[i]
 
 
-def test_currency_converter_inflation_benchmark(mocker):
+def test_currency_to_inflation_benchmark_rate(mocker):
     mocker.patch.object(GsSession.__class__, 'current',
                         return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
     mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
     mocker.patch.object(GsAssetApi, 'map_identifiers', side_effect=map_identifiers_inflation_mocker)
 
-    asset_id_list = ["MA66CZBQJST05XKG", "MAK1FHKH5P5GJSHH", "MA4J1YB8XZP2BPT8", "MA4B66MW5E27U8P32SB"]
-    correct_mapping = ["MAQ7ND0MBP2AVVQW", "MAK1FHKH5P5GJSHH", "MA4J1YB8XZP2BPT8", "MA4B66MW5E27U8P32SB"]
+    asset_id_list = ["MA66CZBQJST05XKG", "MAK1FHKH5P5GJSHH", "MA4J1YB8XZP2BPT8"]
+    correct_mapping = ["MAQ7ND0MBP2AVVQW", "MAK1FHKH5P5GJSHH", "MA4J1YB8XZP2BPT8"]
     with tm.PricingContext(dt.date.today()):
         for i in range(len(asset_id_list)):
-            correct_id = tm.currency_converter_inflation_benchmark(asset_id_list[i])
+            correct_id = tm.currency_to_inflation_benchmark_rate(asset_id_list[i])
+            assert correct_id == correct_mapping[i]
+
+
+def test_cross_to_basis(mocker):
+    mocker.patch.object(GsSession.__class__, 'current',
+                        return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
+    mocker.patch.object(GsAssetApi, 'map_identifiers', side_effect=map_identifiers_cross_basis_mocker)
+
+    asset_id_list = ["MAYJPCVVF2RWXCES", "MA4B66MW5E27U8P32SB", "nobbid"]
+    correct_mapping = ["MA99N6C1KF9078NM", "MA4B66MW5E27U8P32SB", "nobbid"]
+    with tm.PricingContext(dt.date.today()):
+        for i in range(len(asset_id_list)):
+            correct_id = tm.cross_to_basis(asset_id_list[i])
             assert correct_id == correct_mapping[i]
 
 
@@ -126,6 +156,13 @@ def mock_curr(_cls, _q):
         'capFloorVol': [1, 2, 3],
         'spreadOptionVol': [1, 2, 3],
         'inflationSwapRate': [1, 2, 3]
+    }
+    return pd.DataFrame(data=d, index=_index * 3)
+
+
+def mock_cross(_cls, _q):
+    d = {
+        'basis': [1, 2, 3],
     }
     return pd.DataFrame(data=d, index=_index * 3)
 
@@ -256,6 +293,8 @@ def test_vol_smile():
     actual = tm.vol_smile(mock_spx, '1m', tm.VolSmileReference.SPOT, '1d')
     assert actual.empty
     market_mock.assert_called_once()
+    with pytest.raises(NotImplementedError):
+        tm.vol_smile(mock_spx, '1m', tm.VolSmileReference.SPOT, '1d', real_time=True)
     replace.restore()
 
 
@@ -267,6 +306,8 @@ def test_impl_corr():
     assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='impliedCorrelation'), actual)
     actual = tm.implied_correlation(mock_spx, '1m', tm.EdrDataReference.DELTA_PUT, 75)
     assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='impliedCorrelation'), actual)
+    with pytest.raises(NotImplementedError):
+        tm.implied_correlation(..., '1m', tm.EdrDataReference.DELTA_PUT, 75, real_time=True)
     replace.restore()
 
 
@@ -278,6 +319,8 @@ def test_avg_impl_vol():
     assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='averageImpliedVolatility'), actual)
     actual = tm.average_implied_volatility(mock_spx, '1m', tm.EdrDataReference.DELTA_PUT, 75)
     assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='averageImpliedVolatility'), actual)
+    with pytest.raises(NotImplementedError):
+        tm.average_implied_volatility(..., '1m', tm.EdrDataReference.DELTA_PUT, 75, real_time=True)
     replace.restore()
 
 
@@ -289,6 +332,8 @@ def test_avg_impl_var():
     assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='averageImpliedVariance'), actual)
     actual = tm.average_implied_variance(mock_spx, '1m', tm.EdrDataReference.DELTA_PUT, 75)
     assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='averageImpliedVariance'), actual)
+    with pytest.raises(NotImplementedError):
+        tm.average_implied_variance(..., '1m', tm.EdrDataReference.DELTA_PUT, 75, real_time=True)
     replace.restore()
 
 
@@ -325,6 +370,9 @@ def test_swap_rate():
     actual = tm.swap_rate(mock_sek, '1y')
     assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='swapRate'), actual)
 
+    with pytest.raises(NotImplementedError):
+        tm.swap_rate(..., '1y', real_time=True)
+
     replace.restore()
 
 
@@ -342,6 +390,8 @@ def test_swaption_vol():
     assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='swaptionVol'), actual)
     actual = tm.swaption_vol(mock_usd, '3m', '1y', -50)
     assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='swaptionVol'), actual)
+    with pytest.raises(NotImplementedError):
+        tm.swaption_vol(..., '3m', '1y', 50, real_time=True)
     replace.restore()
 
 
@@ -355,6 +405,8 @@ def test_swaption_atm_forward_rate():
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_curr)
     actual = tm.swaption_atm_forward_rate(mock_usd, '3m', '1y')
     assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='atmFwdRate'), actual)
+    with pytest.raises(NotImplementedError):
+        tm.swaption_atm_forward_rate(..., '3m', '1y', real_time=True)
     replace.restore()
 
 
@@ -368,6 +420,8 @@ def test_midcurve_vol():
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_curr)
     actual = tm.midcurve_vol(mock_usd, '3m', '1y', '1y', 50)
     assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='midcurveVol'), actual)
+    with pytest.raises(NotImplementedError):
+        tm.midcurve_vol(..., '3m', '1y', '1y', 50, real_time=True)
     replace.restore()
 
 def test_cap_floor_vol():
@@ -380,6 +434,8 @@ def test_cap_floor_vol():
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_curr)
     actual = tm.cap_floor_vol(mock_usd, '5y', 50)
     assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='capFloorVol'), actual)
+    with pytest.raises(NotImplementedError):
+        tm.cap_floor_vol(..., '5y', 50, real_time=True)
     replace.restore()
 
 
@@ -393,6 +449,8 @@ def test_spread_option_vol():
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_curr)
     actual = tm.spread_option_vol(mock_usd, '3m', '10y', '5y', 50)
     assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='spreadOptionVol'), actual)
+    with pytest.raises(NotImplementedError):
+        tm.spread_option_vol(..., '3m', '10y', '5y', 50, real_time=True)
     replace.restore()
 
 
@@ -406,6 +464,23 @@ def test_zc_inflation_swap_rate():
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_curr)
     actual = tm.zc_inflation_swap_rate(mock_gbp, '1y')
     assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='inflationSwapRate'), actual)
+    with pytest.raises(NotImplementedError):
+        tm.zc_inflation_swap_rate(..., '1y', real_time=True)
+    replace.restore()
+
+
+def test_basis():
+    replace = Replacer()
+    mock_jpyusd = Cross('MA890', 'USD/JPY')
+    xrefs = replace('gs_quant.timeseries.measures.GsAssetApi.get_asset_xrefs', Mock())
+    xrefs.return_value = [GsTemporalXRef(dt.date(2019, 1, 1), dt.date(2952, 12, 31), XRef(bbid='JPYUSD', ))]
+    identifiers = replace('gs_quant.timeseries.measures.GsAssetApi.map_identifiers', Mock())
+    identifiers.return_value = {'USD-3m/JPY-3m': 'MA123'}
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_cross)
+    actual = tm.basis(mock_jpyusd, '1y')
+    assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='basis'), actual)
+    with pytest.raises(NotImplementedError):
+        tm.basis(..., '1y', real_time=True)
     replace.restore()
 
 

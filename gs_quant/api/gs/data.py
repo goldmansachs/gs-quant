@@ -43,6 +43,7 @@ class QueryType(Enum):
     FORWARD = "Forward"
     PRICE = "Price"
     ATM_FWD_RATE = "Atm Fwd Rate"
+    BASIS = "Basis"
 
 
 class GsDataApi(DataApi):

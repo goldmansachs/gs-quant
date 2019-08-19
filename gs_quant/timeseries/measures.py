@@ -47,26 +47,7 @@ GENERIC_DATE = Union[datetime.date, str]
 TD_ONE = datetime.timedelta(days=1)
 _logger = logging.getLogger(__name__)
 
-
-class RateBenchmarkType(Enum):
-    DEFAULT_BENCHMARK = auto()
-    INFLATION_BENCHMARK = auto()
-
-
-CURRENCY_TO_DEFAULT_RATE_BENCHMARK = {
-    Currency.USD: 'USD-LIBOR-BBA',
-    Currency.EUR: 'EUR-EURIBOR-TELERATE',
-    Currency.GBP: 'GBP-LIBOR-BBA',
-    Currency.JPY: 'JPY-LIBOR-BBA'
-}
-
-CURRENCY_TO_INFLATION_RATE_BENCHMARK = {
-    Currency.GBP: 'CPI-UKRPI',
-    Currency.EUR: 'CPI-CPXTEMU'
-}
-
 MeasureDependency: namedtuple = namedtuple("MeasureDependency", ["id_provider", "query_type"])
-
 
 # TODO: get NERC Calendar from SecDB
 class NercCalendar(AbstractHolidayCalendar):
@@ -129,6 +110,81 @@ class BenchmarkType(Enum):
     EURIBOR = 'EURIBOR'
     STIBOR = 'STIBOR'
     OIS = 'OIS'
+
+
+class RatesConversionType(Enum):
+    DEFAULT_BENCHMARK_RATE = auto()
+    INFLATION_BENCHMARK_RATE = auto()
+    CROSS_CURRENCY_BASIS = auto()
+
+
+CURRENCY_TO_DEFAULT_RATE_BENCHMARK = {
+    'USD': 'USD-LIBOR-BBA',
+    'EUR': 'EUR-EURIBOR-Telerate',
+    'GBP': 'GBP-LIBOR-BBA',
+    'JPY': 'JPY-LIBOR-BBA'
+}
+
+CURRENCY_TO_INFLATION_RATE_BENCHMARK = {
+    'GBP': 'CPI-UKRPI',
+    'EUR': 'CPI-CPXTEMU'
+}
+
+CROSS_TO_CROSS_CURRENCY_BASIS = {
+    'JPYUSD': 'USD-3m/JPY-3m',
+    'USDJPY': 'USD-3m/JPY-3m',
+    'USDEUR': 'EUR-3m/USD-3m',
+    'EURUSD': 'EUR-3m/USD-3m',
+    'USDGBP': 'GBP-3m/USD-3m',
+    'GBPUSD': 'GBP-3m/USD-3m'
+}
+
+
+def currency_to_default_benchmark_rate(asset_id: str) -> str:
+    try:
+        asset = SecurityMaster.get_asset(asset_id, AssetIdentifier.MARQUEE_ID)
+        result = convert_asset_for_rates_data_set(asset, RatesConversionType.DEFAULT_BENCHMARK_RATE)
+    except TypeError:
+        result = asset_id
+    return result
+
+
+def currency_to_inflation_benchmark_rate(asset_id: str) -> str:
+    try:
+        asset = SecurityMaster.get_asset(asset_id, AssetIdentifier.MARQUEE_ID)
+        result = convert_asset_for_rates_data_set(asset, RatesConversionType.INFLATION_BENCHMARK_RATE)
+    except TypeError:
+        result = asset_id
+    return result
+
+
+def cross_to_basis(asset_id: str) -> str:
+    try:
+        asset = SecurityMaster.get_asset(asset_id, AssetIdentifier.MARQUEE_ID)
+        result = convert_asset_for_rates_data_set(asset, RatesConversionType.CROSS_CURRENCY_BASIS)
+    except TypeError:
+        result = asset_id
+    return result
+
+
+def convert_asset_for_rates_data_set(from_asset: Asset, c_type: RatesConversionType) -> str:
+    try:
+        bbid = from_asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
+        if bbid is None:
+            return from_asset.get_marquee_id()
+
+        if c_type is RatesConversionType.DEFAULT_BENCHMARK_RATE:
+            to_asset = CURRENCY_TO_DEFAULT_RATE_BENCHMARK[bbid]
+        elif c_type is RatesConversionType.INFLATION_BENCHMARK_RATE:
+            to_asset = CURRENCY_TO_INFLATION_RATE_BENCHMARK[bbid]
+        else:
+            to_asset = CROSS_TO_CROSS_CURRENCY_BASIS[bbid]
+
+        return GsAssetApi.map_identifiers(GsIdType.mdapi, GsIdType.id, [to_asset])[to_asset]
+
+    except KeyError:
+        logging.info(f'Unsupported currency or cross ${bbid}')
+        raise from_asset.get_marquee_id()
 
 
 def _market_data_timed(q):
@@ -290,6 +346,9 @@ def implied_correlation(asset: Asset, tenor: str, strike_reference: EdrDataRefer
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: implied correlation curve
     """
+    if real_time:
+        raise NotImplementedError('realtime implied_correlation not implemented')
+
     if strike_reference == EdrDataReference.DELTA_PUT:
         relative_strike = abs(100 - relative_strike)
 
@@ -324,6 +383,9 @@ def average_implied_volatility(asset: Asset, tenor: str, strike_reference: EdrDa
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: average implied volatility curve
     """
+    if real_time:
+        raise NotImplementedError('realtime average_implied_volatility not implemented')
+
     if strike_reference == EdrDataReference.DELTA_PUT:
         relative_strike = abs(100 - relative_strike)
 
@@ -358,6 +420,9 @@ def average_implied_variance(asset: Asset, tenor: str, strike_reference: EdrData
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: average implied variance curve
     """
+    if real_time:
+        raise NotImplementedError('realtime average_implied_variance not implemented')
+
     if strike_reference == EdrDataReference.DELTA_PUT:
         relative_strike = abs(100 - relative_strike)
 
@@ -378,41 +443,6 @@ def average_implied_variance(asset: Asset, tenor: str, strike_reference: EdrData
     return Series() if df.empty else df['averageImpliedVariance']
 
 
-def currency_converter_default_benchmark(asset_id: str) -> str:
-    try:
-        asset = SecurityMaster.get_asset(asset_id, AssetIdentifier.MARQUEE_ID)
-        result = rate_benchmark_mqid(asset, RateBenchmarkType.DEFAULT_BENCHMARK)
-    except TypeError:
-        result = asset_id
-
-    return result
-
-
-def currency_converter_inflation_benchmark(asset_id: str) -> str:
-    try:
-        asset = SecurityMaster.get_asset(asset_id, AssetIdentifier.MARQUEE_ID)
-        result = rate_benchmark_mqid(asset, RateBenchmarkType.INFLATION_BENCHMARK)
-    except TypeError:
-        result = asset_id
-
-    return result
-
-
-def rate_benchmark_mqid(asset: Asset, rate_benchmark_type: RateBenchmarkType):
-    try:
-        currency = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
-        currency = Currency(currency)
-        if currency is None:
-            return asset.get_marquee_id()
-        rate_benchmark = CURRENCY_TO_DEFAULT_RATE_BENCHMARK[currency] \
-            if rate_benchmark_type is RateBenchmarkType.DEFAULT_BENCHMARK \
-            else CURRENCY_TO_INFLATION_RATE_BENCHMARK[currency]
-        return GsAssetApi.map_identifiers(GsIdType.mdapi, GsIdType.id, [rate_benchmark])[rate_benchmark]
-    except KeyError:
-        logging.info(f'Unsupported currency ${currency}')
-        raise asset.get_marquee_id()
-
-
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,), [QueryType.SWAP_RATE])
 def swap_rate(asset: Asset, tenor: str, benchmark_type: BenchmarkType = None, floating_index: str = None,
               *, source: str = None, real_time: bool = False) -> Series:
@@ -427,6 +457,8 @@ def swap_rate(asset: Asset, tenor: str, benchmark_type: BenchmarkType = None, fl
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: swap rate curve
     """
+    if real_time:
+        raise NotImplementedError('realtime swap_rate not implemented')
 
     currency = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
     currency = Currency(currency)
@@ -474,7 +506,7 @@ def swap_rate(asset: Asset, tenor: str, benchmark_type: BenchmarkType = None, fl
 
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
-              [MeasureDependency(id_provider=currency_converter_default_benchmark, query_type=QueryType.SWAPTION_VOL)])
+              [MeasureDependency(id_provider=currency_to_default_benchmark_rate, query_type=QueryType.SWAPTION_VOL)])
 def swaption_vol(asset: Asset, expiration_tenor: str, termination_tenor: str, relative_strike: float,
                  *, source: str = None, real_time: bool = False) -> Series:
     """
@@ -488,12 +520,10 @@ def swaption_vol(asset: Asset, expiration_tenor: str, termination_tenor: str, re
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: swaption implied normal volatility curve
     """
+    if real_time:
+        raise NotImplementedError('realtime swaption_vol not implemented')
 
-    currency = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
-    currency = Currency(currency)
-
-    rate_benchmark = CURRENCY_TO_DEFAULT_RATE_BENCHMARK[currency]
-    rate_benchmark_mqid = GsAssetApi.map_identifiers(GsIdType.mdapi, GsIdType.id, [rate_benchmark])[rate_benchmark]
+    rate_benchmark_mqid = convert_asset_for_rates_data_set(asset, RatesConversionType.DEFAULT_BENCHMARK_RATE)
 
     _logger.debug('where expiry=%s, tenor=%s, strike=%s', expiration_tenor, termination_tenor, relative_strike)
 
@@ -511,7 +541,7 @@ def swaption_vol(asset: Asset, expiration_tenor: str, termination_tenor: str, re
 
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
-              [MeasureDependency(id_provider=currency_converter_default_benchmark, query_type=QueryType.ATM_FWD_RATE)])
+              [MeasureDependency(id_provider=currency_to_default_benchmark_rate, query_type=QueryType.ATM_FWD_RATE)])
 def swaption_atm_forward_rate(asset: Asset, expiration_tenor: str, termination_tenor: str, *, source: str = None,
                               real_time: bool = False) -> Series:
     """
@@ -524,19 +554,17 @@ def swaption_atm_forward_rate(asset: Asset, expiration_tenor: str, termination_t
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: swaption at-the-money forward rate curve
     """
+    if real_time:
+        raise NotImplementedError('realtime swaption_atm_forward_rate not implemented')
 
-    currency = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
-    currency = Currency(currency)
-
-    rate_benchmark = CURRENCY_TO_DEFAULT_RATE_BENCHMARK[currency]
-    rate_benchmark_mqid = GsAssetApi.map_identifiers(GsIdType.mdapi, GsIdType.id, [rate_benchmark])[rate_benchmark]
+    rate_benchmark_mqid = convert_asset_for_rates_data_set(asset, RatesConversionType.DEFAULT_BENCHMARK_RATE)
 
     _logger.debug('where expiry=%s, tenor=%s', expiration_tenor, termination_tenor)
 
     q = GsDataApi.build_market_data_query(
         [rate_benchmark_mqid],
         QueryType.ATM_FWD_RATE,
-        where=FieldFilterMap(expriy=expiration_tenor, tenor=termination_tenor),
+        where=FieldFilterMap(expiry=expiration_tenor, tenor=termination_tenor, strike=0),
         source=source,
         real_time=real_time
     )
@@ -547,9 +575,8 @@ def swaption_atm_forward_rate(asset: Asset, expiration_tenor: str, termination_t
 
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
-              [MeasureDependency(id_provider=currency_converter_default_benchmark, query_type=QueryType.MIDCURVE_VOL)])
-def midcurve_vol(asset: Asset, expiration_tenor: str, forward_tenor: str, termination_tenor: str,
-                 relative_strike: float,
+              [MeasureDependency(id_provider=currency_to_default_benchmark_rate, query_type=QueryType.MIDCURVE_VOL)])
+def midcurve_vol(asset: Asset, expiration_tenor: str, forward_tenor: str, termination_tenor: str, relative_strike: float,
                  *, source: str = None, real_time: bool = False) -> Series:
     """
     GS end-of-day implied normal volatility for midcurve vol matrices.
@@ -563,11 +590,16 @@ def midcurve_vol(asset: Asset, expiration_tenor: str, forward_tenor: str, termin
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: midcurve implied normal volatility curve
     """
+    if real_time:
+        raise NotImplementedError('realtime midcurve_vol not implemented')
+
     _logger.debug('where expiry=%s, forwardTenor=%s, tenor=%s, strike=%s', expiration_tenor, forward_tenor,
                   termination_tenor, relative_strike)
 
+    rate_benchmark_mqid = convert_asset_for_rates_data_set(asset, RatesConversionType.DEFAULT_BENCHMARK_RATE)
+
     q = GsDataApi.build_market_data_query(
-        [rate_benchmark_mqid(asset, RateBenchmarkType.DEFAULT_BENCHMARK)],
+        [rate_benchmark_mqid],
         QueryType.MIDCURVE_VOL,
         where=FieldFilterMap(expriy=expiration_tenor, forward_tenor=forward_tenor, tenor=termination_tenor,
                              strike=relative_strike),
@@ -581,7 +613,7 @@ def midcurve_vol(asset: Asset, expiration_tenor: str, forward_tenor: str, termin
 
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
-              [MeasureDependency(id_provider=currency_converter_default_benchmark, query_type=QueryType.CAP_FLOOR_VOL)])
+              [MeasureDependency(id_provider=currency_to_default_benchmark_rate, query_type=QueryType.CAP_FLOOR_VOL)])
 def cap_floor_vol(asset: Asset, expiration_tenor: str, relative_strike: float, *, source: str = None,
                   real_time: bool = False) -> Series:
     """
@@ -594,12 +626,10 @@ def cap_floor_vol(asset: Asset, expiration_tenor: str, relative_strike: float, *
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: cap and floor implied normal volatility curve
     """
+    if real_time:
+        raise NotImplementedError('realtime cap_floor_vol not implemented')
 
-    currency = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
-    currency = Currency(currency)
-
-    rate_benchmark = CURRENCY_TO_DEFAULT_RATE_BENCHMARK[currency]
-    rate_benchmark_mqid = GsAssetApi.map_identifiers(GsIdType.mdapi, GsIdType.id, [rate_benchmark])[rate_benchmark]
+    rate_benchmark_mqid = convert_asset_for_rates_data_set(asset, RatesConversionType.DEFAULT_BENCHMARK_RATE)
 
     _logger.debug('where expiry=%s, strike=%s', expiration_tenor, relative_strike)
 
@@ -617,7 +647,7 @@ def cap_floor_vol(asset: Asset, expiration_tenor: str, relative_strike: float, *
 
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
-              [MeasureDependency(id_provider=currency_converter_default_benchmark,
+              [MeasureDependency(id_provider=currency_to_default_benchmark_rate,
                                  query_type=QueryType.SPREAD_OPTION_VOL)])
 def spread_option_vol(asset: Asset, expiration_tenor: str, long_tenor: str, short_tenor: str, relative_strike: float,
                       *, source: str = None, real_time: bool = False) -> Series:
@@ -633,12 +663,10 @@ def spread_option_vol(asset: Asset, expiration_tenor: str, long_tenor: str, shor
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: spread option implied normal volatility curve
     """
+    if real_time:
+        raise NotImplementedError('realtime spread_option_vol not implemented')
 
-    currency = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
-    currency = Currency(currency)
-
-    rate_benchmark = CURRENCY_TO_DEFAULT_RATE_BENCHMARK[currency]
-    rate_benchmark_mqid = GsAssetApi.map_identifiers(GsIdType.mdapi, GsIdType.id, [rate_benchmark])[rate_benchmark]
+    rate_benchmark_mqid = convert_asset_for_rates_data_set(asset, RatesConversionType.DEFAULT_BENCHMARK_RATE)
 
     _logger.debug('where expiry=%s, longTenor=%s, shortTenor=%s, strike=%s', long_tenor, short_tenor, expiration_tenor,
                   relative_strike)
@@ -658,7 +686,7 @@ def spread_option_vol(asset: Asset, expiration_tenor: str, long_tenor: str, shor
 
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
-              [MeasureDependency(id_provider=currency_converter_inflation_benchmark,
+              [MeasureDependency(id_provider=currency_to_inflation_benchmark_rate,
                                  query_type=QueryType.INFLATION_SWAP_RATE)])
 def zc_inflation_swap_rate(asset: Asset, termination_tenor: str, *, source: str = None,
                            real_time: bool = False) -> Series:
@@ -671,17 +699,15 @@ def zc_inflation_swap_rate(asset: Asset, termination_tenor: str, *, source: str 
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: zero coupon inflation swap break-even rate curve
     """
+    if real_time:
+        raise NotImplementedError('realtime zc_inflation_swap_rate not implemented')
 
-    currency = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
-    currency = Currency(currency)
-
-    rate_benchmark = CURRENCY_TO_INFLATION_RATE_BENCHMARK[currency]
-    rate_benchmark_mqid = GsAssetApi.map_identifiers(GsIdType.mdapi, GsIdType.id, [rate_benchmark])[rate_benchmark]
+    infl_rate_benchmark_mqid = convert_asset_for_rates_data_set(asset, RatesConversionType.INFLATION_BENCHMARK_RATE)
 
     _logger.debug('where tenor=%s', termination_tenor)
 
     q = GsDataApi.build_market_data_query(
-        [rate_benchmark_mqid],
+        [infl_rate_benchmark_mqid],
         QueryType.INFLATION_SWAP_RATE,
         where=FieldFilterMap(tenor=termination_tenor),
         source=source,
@@ -691,6 +717,37 @@ def zc_inflation_swap_rate(asset: Asset, termination_tenor: str, *, source: str 
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
     return Series() if df.empty else df['inflationSwapRate']
+
+
+@plot_measure((AssetClass.FX,), (AssetType.Cross,), [MeasureDependency(id_provider=cross_to_basis, query_type=QueryType.BASIS)])
+def basis(asset: Asset, termination_tenor: str, *, source: str = None, real_time: bool = False) -> Series:
+    """
+    GS end-of-day cross-currency basis swap spread.
+
+    :param asset: asset object loaded from security master
+    :param termination_tenor: relative date representation of the instrument's expiration date e.g. 1y
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: cross-currency basis swap spread curve
+    """
+    if real_time:
+        raise NotImplementedError('realtime basis not implemented')
+
+    basis_mqid = convert_asset_for_rates_data_set(asset, RatesConversionType.CROSS_CURRENCY_BASIS)
+
+    _logger.debug('where tenor=%s', termination_tenor)
+
+    q = GsDataApi.build_market_data_query(
+        [basis_mqid],
+        QueryType.BASIS,
+        where=FieldFilterMap(tenor=termination_tenor),
+        source=source,
+        real_time=real_time
+    )
+
+    _logger.debug('q %s', q)
+    df = _market_data_timed(q)
+    return Series() if df.empty else df['basis']
 
 
 def _get_custom_bd(exchange):
@@ -798,10 +855,13 @@ def vol_smile(asset: Asset, tenor: str, strike_reference: VolSmileReference, pri
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: implied volatility smile
     """
+    if real_time:
+        raise NotImplementedError('realtime vol_smile not implemented')
 
     mqid = asset.get_marquee_id()
 
     start, end = _range_from_pricing_date(asset.exchange, pricing_date)
+
     with DataContext(start, end):
         q = GsDataApi.build_market_data_query(
             [mqid],

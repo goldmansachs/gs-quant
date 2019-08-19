@@ -365,7 +365,7 @@ def test_winsorize():
     assert(True not in wr.le(b_lower).values)
 
 
-def test_percentile():
+def test_percentiles():
     dates = [
         date(2019, 1, 1),
         date(2019, 1, 2),
@@ -378,14 +378,18 @@ def test_percentile():
     x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
     y = pd.Series([3.5, 1.8, 2.9, 1.2, 3.1, 6.0], index=dates)
 
-    assert_series_equal(percentile(pd.Series(), y), pd.Series())
-    assert_series_equal(percentile(x, pd.Series()), pd.Series())
-    assert_series_equal(percentile(x, y, 7), pd.Series())
+    assert_series_equal(percentiles(pd.Series(), y), pd.Series())
+    assert_series_equal(percentiles(x, pd.Series()), pd.Series())
+    assert_series_equal(percentiles(x, y, 7), pd.Series())
 
-    result = percentile(x, y, 2)
+    result = percentiles(x, y, 2)
     expected = pd.Series([0.0, 50.0, 50.0, 100.0, 75.0], index=dates[1:])
-    assert_series_equal(result, expected, obj="percentile with window 2")
+    assert_series_equal(result, expected, obj="percentiles with window 2")
 
-    result = percentile(x, y)
+    result = percentiles(x)
+    expected = pd.Series([50.0, 25.0, 66.667, 12.500, 70.0, 91.667], index=dates)
+    assert_series_equal(result, expected, obj="percentiles over historical values", check_less_precise=True)
+
+    result = percentiles(x, y)
     expected = pd.Series([100.0, 0.0, 33.333, 25.0, 100.0, 91.667], index=dates)
-    assert_series_equal(result, expected, obj="percentile without window length", check_less_precise=True)
+    assert_series_equal(result, expected, obj="percentiles without window length", check_less_precise=True)
