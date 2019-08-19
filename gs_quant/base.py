@@ -332,28 +332,31 @@ class Instrument(Priceable):
     __asset_class_and_type_to_instrument = {}
 
     @classmethod
-    def asset_class_and_type_to_instrument(cls) -> Mapping[Tuple[str, str], 'Instrument']:
+    def asset_class_and_type_to_instrument(cls) -> Mapping[Tuple['AssetClass', 'AssetType'], 'Instrument']:
         if not cls.__asset_class_and_type_to_instrument:
             import gs_quant.target.instrument as instrument
             import inspect
             instrument_classes = [c for _, c in inspect.getmembers(instrument, inspect.isclass) if
                                   issubclass(c, Instrument) and c is not Instrument]
 
-            cls.__asset_class_and_type_to_instrument[('Cash', 'Currency')] = instrument.Forward
+            cls.__asset_class_and_type_to_instrument[(instrument.AssetClass.Cash, instrument.AssetType.Currency)] = instrument.Forward
 
             for clazz in instrument_classes:
                 instrument = clazz.default_instance()
-                cls.__asset_class_and_type_to_instrument[(instrument.assetClass.value, instrument.type.value)] = clazz
+                cls.__asset_class_and_type_to_instrument[(instrument.assetClass, instrument.type)] = clazz
 
         return cls.__asset_class_and_type_to_instrument
 
     @classmethod
     def from_dict(cls, values: dict) -> Optional[Union['Instrument', 'Security']]:
+        from gs_quant.target.instrument import AssetClass, AssetType
+
         if not values:
             return None
 
-        values = copy.copy(values)
-        instrument_type = cls.asset_class_and_type_to_instrument().get((values.pop('assetClass'), values.pop('type')))
+        instrument_type = cls.asset_class_and_type_to_instrument().get((
+            get_enum_value(AssetClass, values.pop('assetClass')),
+            get_enum_value(AssetType, values.pop('type'))))
 
         if instrument_type:
             return instrument_type._from_dict(values)
