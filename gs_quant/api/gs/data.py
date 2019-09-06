@@ -73,7 +73,8 @@ class GsDataApi(DataApi):
 
                 definition = cls.get_definition(dataset_id)
 
-                if definition.parameters.symbolStrategy == 'MDAPI' or 'assetId' not in definition.dimensions.symbolDimensions:
+                sd = definition.dimensions.symbolDimensions
+                if definition.parameters.symbolStrategy == 'MDAPI' or ('assetId' not in sd and 'gsid' not in sd):
                     xref_type = min(xref_keys)
                     if asset_id_type is None:
                         asset_id_type = xref_type
