@@ -19,10 +19,9 @@ from datetime import date, time
 from numbers import Real
 
 import numpy as np
-import pandas as pd
-from ..errors import *
-from typing import List, Union
+
 from .helper import *
+from ..errors import *
 
 """
 Date and time manipulation for timeseries, including date or time shifting, calendar operations, curve alignment and

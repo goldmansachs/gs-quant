@@ -14,9 +14,8 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.session import *
-from gs_quant.api.gs.assets import GsTemporalXRef
 from gs_quant.markets.securities import *
+from gs_quant.session import *
 
 
 def test_get_asset(mocker):
@@ -25,7 +24,13 @@ def test_get_asset(mocker):
     mock_response = GsAsset(AssetClass.Equity, GsAssetType.Single_Stock, 'Test Asset')
 
     # mock GsSession
-    mocker.patch.object(GsSession.__class__, 'current', return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(
+        GsSession.__class__,
+        'current',
+        return_value=GsSession.get(
+            Environment.QA,
+            'client_id',
+            'secret'))
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
     asset = SecurityMaster.get_asset(marquee_id, AssetIdentifier.MARQUEE_ID)
@@ -92,7 +97,7 @@ def test_get_asset(mocker):
     assert asset.name == "Test 1"
     assert asset.get_type() == AssetType.STOCK
 
-    mocker.patch.object(GsSession.current, '_post', return_value={'results':()})
+    mocker.patch.object(GsSession.current, '_post', return_value={'results': ()})
     asset = SecurityMaster.get_asset(marquee_id, AssetIdentifier.REUTERS_ID)
     assert asset is None
 
@@ -100,14 +105,20 @@ def test_get_asset(mocker):
 def test_asset_identifiers(mocker):
     marquee_id = 'MA1234567890'
 
-    mocker.patch.object(GsSession.__class__, 'current', return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(
+        GsSession.__class__,
+        'current',
+        return_value=GsSession.get(
+            Environment.QA,
+            'client_id',
+            'secret'))
     mock_response = GsAsset(AssetClass.Equity, GsAssetType.Custom_Basket, 'Test Asset')
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
     asset = SecurityMaster.get_asset(marquee_id, AssetIdentifier.MARQUEE_ID)
 
     mock_response = {'xrefs': (
-       {
+        {
             'startDate': '1952-01-01',
             'endDate': '2018-12-31',
             'identifiers': {

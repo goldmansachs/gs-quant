@@ -14,9 +14,10 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime as dt
+from enum import Enum
 from itertools import chain
 from typing import Iterable, List, Optional, Tuple, Union
-from enum import Enum
+
 import pandas as pd
 
 from gs_quant.api.data import DataApi
@@ -44,6 +45,11 @@ class QueryType(Enum):
     PRICE = "Price"
     ATM_FWD_RATE = "Atm Fwd Rate"
     BASIS = "Basis"
+    VAR_SWAP = "Var Swap"
+    MIDCURVE_ATM_FWD_RATE = "Midcurve Atm Fwd Rate"
+    CAP_FLOOR_ATM_FWD_RATE = "Cap Floor Atm Fwd Rate"
+    SPREAD_OPTION_ATM_FWD_RATE = "Spread Option Atm Fwd Rate"
+    FORECAST = "Forecast"
 
 
 class GsDataApi(DataApi):
@@ -57,7 +63,8 @@ class GsDataApi(DataApi):
             -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple]:
         if query.marketDataCoordinates:
             # Don't use MDAPIDataBatchResponse for now - it doesn't handle quoting style correctly
-            results: Union[MDAPIDataBatchResponse, dict] = GsSession.current._post('/data/coordinates/query', payload=query)
+            results: Union[MDAPIDataBatchResponse, dict] = GsSession.current._post(
+                '/data/coordinates/query', payload=query)
             if isinstance(results, dict):
                 return results.get('responses', ())
             else:
@@ -237,7 +244,12 @@ class GsDataApi(DataApi):
         ret = []
         for response in data:
             coord_data = []
-            rows = (r.as_dict() for r in response.data) if isinstance(response, MDAPIDataQueryResponse) else response.get('data', ())
+            rows = (
+                r.as_dict() for r in response.data) if isinstance(
+                response,
+                MDAPIDataQueryResponse) else response.get(
+                'data',
+                ())
 
             for pt in rows:
                 if not pt:
@@ -257,14 +269,25 @@ class GsDataApi(DataApi):
             cls,
             data: Iterable[dict]
     ) -> pd.DataFrame:
-        from gs_quant.risk import sort_risk
 
-        df = sort_risk(pd.DataFrame.from_records(data))
+        df = cls.__sort_coordinate_data(pd.DataFrame.from_records(data))
         index_field = next((f for f in ('time', 'date') if f in df.columns), None)
         if index_field:
             df = df.set_index(pd.DatetimeIndex(df.loc[:, index_field].values))
 
         return df
+
+    @classmethod
+    def __sort_coordinate_data(
+            cls,
+            df: pd.DataFrame,
+            by: Tuple[str] = ('date', 'time', 'marketDataType', 'marketDataAsset', 'pointClass', 'marketDataPoint',
+                              'quotingStyle', 'value')
+    ) -> pd.DataFrame:
+        columns = df.columns
+        field_order = [f for f in by if f in columns]
+        field_order.extend(f for f in columns if f not in field_order)
+        return df[field_order]
 
     @classmethod
     def coordinates_last(

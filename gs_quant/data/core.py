@@ -14,6 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime
+
 from gs_quant.context_base import ContextBaseWithDefault
 
 

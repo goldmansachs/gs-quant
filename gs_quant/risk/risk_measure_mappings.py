@@ -13,8 +13,8 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from gs_quant.risk import Price, RiskMeasure
 from gs_quant.instrument import Instrument, EqOption, FXOption
+from gs_quant.risk import Price, RiskMeasure
 
 __mappings = {
     Price: {

@@ -14,22 +14,21 @@ specific language governing permissions and limitations
 under the License.
 """
 
-import backoff
 import inspect
 import itertools
 import json
 import os
-
-import msgpack
-import requests
-import requests.adapters
-import requests.cookies
-
 from abc import abstractmethod
 from configparser import ConfigParser
 from enum import Enum, auto, unique
-import pandas as pd
 from typing import List, Optional, Tuple, Union
+
+import backoff
+import msgpack
+import pandas as pd
+import requests
+import requests.adapters
+import requests.cookies
 
 from gs_quant.base import Base
 from gs_quant.context_base import ContextBase
@@ -70,8 +69,8 @@ class GsSession(ContextBase):
                 cls.READ_FINANCIAL_DATA.value
             ]
 
-    def __init__(self, domain: str, api_version: str=API_VERSION, application: str=DEFAULT_APPLICATION, verify=True,
-                 http_adapter: requests.adapters.HTTPAdapter=None):
+    def __init__(self, domain: str, api_version: str = API_VERSION, application: str = DEFAULT_APPLICATION, verify=True,
+                 http_adapter: requests.adapters.HTTPAdapter = None):
         super().__init__()
         self._session = None
         self.domain = domain
@@ -118,7 +117,8 @@ class GsSession(ContextBase):
 
     def close(self):
         self._session: requests.Session
-        self._session.close()
+        if self.http_adapter is None:
+            self._session.close()
         self._session = None
 
     def __unpack(self, results: Union[dict, list], cls: type) -> Union[Base, tuple, dict]:
@@ -137,9 +137,9 @@ class GsSession(ContextBase):
             self,
             method: str,
             path: str,
-            payload: Optional[Union[dict, str, Base, pd.DataFrame]]=None,
-            request_headers: Optional[dict]=None,
-            cls: Optional[type]=None,
+            payload: Optional[Union[dict, str, Base, pd.DataFrame]] = None,
+            request_headers: Optional[dict] = None,
+            cls: Optional[type] = None,
             try_auth=True,
             include_version: bool = True) -> Union[Base, tuple, dict]:
         is_dataframe = isinstance(payload, pd.DataFrame)
@@ -195,17 +195,26 @@ class GsSession(ContextBase):
         else:
             return {'raw': response}
 
-    def _get(self, path: str, payload: Optional[Union[dict, Base]]=None, request_headers: Optional[dict]=None, cls: Optional[type]=None, include_version: bool=True) -> Union[Base, tuple, dict]:
-        return self.__request('GET', path, payload=payload, request_headers=request_headers, cls=cls, include_version=include_version)
+    def _get(self, path: str, payload: Optional[Union[dict, Base]] = None, request_headers: Optional[dict]
+             = None, cls: Optional[type] = None, include_version: bool = True) -> Union[Base, tuple, dict]:
+        return self.__request('GET', path, payload=payload, request_headers=request_headers,
+                              cls=cls, include_version=include_version)
 
-    def _post(self, path: str, payload: Optional[Union[dict, Base, pd.DataFrame]]=None, request_headers: Optional[dict]=None, cls: Optional[type]=None, include_version: bool=True) -> Union[Base, tuple, dict]:
-        return self.__request('POST', path, payload=payload, request_headers=request_headers, cls=cls, include_version=include_version)
+    def _post(self, path: str, payload: Optional[Union[dict, Base, pd.DataFrame]] = None,
+              request_headers: Optional[dict] = None, cls: Optional[type] = None,
+              include_version: bool = True) -> Union[Base, tuple, dict]:
+        return self.__request('POST', path, payload=payload, request_headers=request_headers,
+                              cls=cls, include_version=include_version)
 
-    def _delete(self, path: str, payload: Optional[Union[dict, Base]]=None, request_headers: Optional[dict]=None, cls: Optional[type]=None, include_version: bool=True) -> Union[Base, tuple, dict]:
-        return self.__request('DELETE', path, payload=payload, request_headers=request_headers, cls=cls, include_version=include_version)
+    def _delete(self, path: str, payload: Optional[Union[dict, Base]] = None, request_headers: Optional[dict]
+                = None, cls: Optional[type] = None, include_version: bool = True) -> Union[Base, tuple, dict]:
+        return self.__request('DELETE', path, payload=payload, request_headers=request_headers,
+                              cls=cls, include_version=include_version)
 
-    def _put(self, path: str, payload: Optional[Union[dict, Base]]=None, request_headers: Optional[dict]=None, cls: Optional[type]=None, include_version: bool=True) -> Union[Base, tuple, dict]:
-        return self.__request('PUT', path, payload=payload, request_headers=request_headers, cls=cls, include_version=include_version)
+    def _put(self, path: str, payload: Optional[Union[dict, Base]] = None, request_headers: Optional[dict]
+             = None, cls: Optional[type] = None, include_version: bool = True) -> Union[Base, tuple, dict]:
+        return self.__request('PUT', path, payload=payload, request_headers=request_headers,
+                              cls=cls, include_version=include_version)
 
     @classmethod
     def _config_for_environment(cls, environment):
@@ -352,15 +361,14 @@ class PassThroughSession(GsSession):
 
 try:
     import importlib
-    from collections import namedtuple
 
     mod = importlib.import_module('gs_quant_internal.kerberos.session_kerberos')
     KerberosSessionMixin = getattr(mod, 'KerberosSessionMixin')
 
     class KerberosSession(KerberosSessionMixin, GsSession):
 
-        def __init__(self, environment_or_domain: str, api_version: str=API_VERSION,
-                     application: str=DEFAULT_APPLICATION, http_adapter: requests.adapters.HTTPAdapter=None):
+        def __init__(self, environment_or_domain: str, api_version: str = API_VERSION,
+                     application: str = DEFAULT_APPLICATION, http_adapter: requests.adapters.HTTPAdapter = None):
             domain, verify = KerberosSessionMixin.domain_and_verify(environment_or_domain)
             GsSession.__init__(self, domain, api_version=api_version, application=application, verify=verify,
                                http_adapter=http_adapter)

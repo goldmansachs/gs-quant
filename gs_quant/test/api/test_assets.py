@@ -15,10 +15,12 @@ under the License.
 """
 
 import datetime as dt
+
 import dateutil.parser as dup
 import testfixtures
-from gs_quant.session import *
+
 from gs_quant.api.gs.assets import GsAssetApi, GsAsset, GsTemporalXRef
+from gs_quant.session import *
 from gs_quant.target.assets import Position, PositionSet, EntityQuery
 from gs_quant.target.common import FieldFilterMap, XRef
 

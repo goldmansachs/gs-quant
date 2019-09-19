@@ -15,6 +15,7 @@ under the License.
 """
 from abc import ABCMeta, abstractmethod
 from typing import Iterable, Union
+
 from gs_quant.risk import Formatters, RiskRequest
 
 

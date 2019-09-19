@@ -1,5 +1,5 @@
 """
-Copyright 2019 Goldman Sachs.
+Copyright 2018 Goldman Sachs.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -14,10 +14,11 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from .core import *
-from .risk_measure_mappings import get_specific_risk_measure
-from .scenarios import MarketDataShockBasedScenario, ScenarioContext
-from gs_quant.target.risk import CoordinatesRequest, CarryScenario, CurveScenario, LiquidityRequest, LiquidityResponse,\
-    RiskMeasure, RiskModelRequest, RiskPosition, RiskRequest, MarketDataPattern, MarketDataScenario, MarketDataShock,\
-    MarketDataShockType, MarketDataTypeAndAsset
+from gs_quant.instrument import Instrument, IRSwap
 
+
+def test_from_dict():
+    swap = IRSwap('Receive', '3m', 'USD', fixedRate=0, notionalAmount=1)
+    properties = swap.as_dict()
+    new_swap = Instrument.from_dict(properties)
+    assert swap == new_swap

@@ -19,25 +19,25 @@ from gs_quant.datetime import *
 
 def test_point_sort_order():
     check_map = {
-        'o/n': 0, #O/N
-        'Jan20': 379, #EuroOrFraReg
-        'JAN20': 379, #EuroOrFraReg
-        '1y': 365, #RDatePartReg
-        '1Y': 365, #RDatePartReg
-        '3m': 90, #RDatePartReg
-        '-1f XC': -30, #CashFXReg
-        '3x3': 90, #FRAxReg
-        'QE1-2020': 425, #SpikeQEReg
-        'JAN2021': 731, #MMMYYYYReg
-        '9JAN2021': 739, #DDMMMYYYYReg
-        '1.1y': 1.1*365, #FloatingYear
-        'K19': 120, #LYYReg
-        'JAN 20': 365, #MMMYYReg
-        'FFK9': 120, #FFFutReg
-        'ON GC': 0, #RepoGCReg
-        '1 Week GC': 7, #RepoGCReg
-        '1 week': 7, #RelativeReg
-        '01Jan20': 365, #DDMMMYYReg
+        'o/n': 0,  # O/N
+        'Jan20': 379,  # EuroOrFraReg
+        'JAN20': 379,  # EuroOrFraReg
+        '1y': 365,  # RDatePartReg
+        '1Y': 365,  # RDatePartReg
+        '3m': 90,  # RDatePartReg
+        '-1f XC': -30,  # CashFXReg
+        '3x3': 90,  # FRAxReg
+        'QE1-2020': 425,  # SpikeQEReg
+        'JAN2021': 731,  # MMMYYYYReg
+        '9JAN2021': 739,  # DDMMMYYYYReg
+        '1.1y': 1.1 * 365,  # FloatingYear
+        'K19': 120,  # LYYReg
+        'JAN 20': 365,  # MMMYYReg
+        'FFK9': 120,  # FFFutReg
+        'ON GC': 0,  # RepoGCReg
+        '1 Week GC': 7,  # RepoGCReg
+        '1 week': 7,  # RelativeReg
+        '01Jan20': 365,  # DDMMMYYReg
         '20Y;3M': 7300.0012328767125
     }
 

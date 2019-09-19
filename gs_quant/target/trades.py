@@ -385,6 +385,19 @@ class MqexsCurrencyExt(EnumBase, Enum):
         return self.value
 
 
+class MqexsErrorSeverity(EnumBase, Enum):    
+    
+    """The severity of the error, which can be a warning or a fatal error"""
+
+    Pass = 'Pass'
+    Warning = 'Warning'
+    Fatal = 'Fatal'
+    FatalException = 'FatalException'
+    
+    def __repr__(self):
+        return self.value
+
+
 class MqexsOtcSettlementType(EnumBase, Enum):    
     
     """OTC settlement type"""
@@ -403,6 +416,8 @@ class MqexsSide(EnumBase, Enum):
 
     Buy = 'Buy'
     Sell = 'Sell'
+    Above = 'Above'
+    Below = 'Below'
     _ = ''
     
     def __repr__(self):
@@ -413,10 +428,11 @@ class MqexsErrorInfo(Base):
         
     """Service specific error code and message returned as a server response"""
        
-    def __init__(self, errorCode: str, errorMsg: str, assetClass: Union[MqexsAssetClass, str] = None):
+    def __init__(self, errorCode: str, errorMsg: str, errorSeverity: Union[MqexsErrorSeverity, str] = None, assetClass: Union[MqexsAssetClass, str] = None):
         super().__init__()
         self.__errorCode = errorCode
         self.__errorMsg = errorMsg
+        self.__errorSeverity = errorSeverity if isinstance(errorSeverity, MqexsErrorSeverity) else get_enum_value(MqexsErrorSeverity, errorSeverity)
         self.__assetClass = assetClass if isinstance(assetClass, MqexsAssetClass) else get_enum_value(MqexsAssetClass, assetClass)
 
     @property
@@ -438,6 +454,16 @@ class MqexsErrorInfo(Base):
     def errorMsg(self, value: str):
         self.__errorMsg = value
         self._property_changed('errorMsg')        
+
+    @property
+    def errorSeverity(self) -> Union[MqexsErrorSeverity, str]:
+        """The severity of the error, which can be a warning or a fatal error"""
+        return self.__errorSeverity
+
+    @errorSeverity.setter
+    def errorSeverity(self, value: Union[MqexsErrorSeverity, str]):
+        self.__errorSeverity = value if isinstance(value, MqexsErrorSeverity) else get_enum_value(MqexsErrorSeverity, value)
+        self._property_changed('errorSeverity')        
 
     @property
     def assetClass(self) -> Union[MqexsAssetClass, str]:
@@ -681,3 +707,33 @@ class MqexsTradeExt(Base):
     def lastUpdatedById(self, value: str):
         self.__lastUpdatedById = value
         self._property_changed('lastUpdatedById')        
+
+
+class MqexsTradesWErrorExt(Base):
+        
+    """List of trade objects returned as a server response with specific error code and message in case of a server error."""
+       
+    def __init__(self, trades: Tuple[MqexsTradeExt, ...] = None, errors: Tuple[MqexsErrorInfo, ...] = None):
+        super().__init__()
+        self.__trades = trades
+        self.__errors = errors
+
+    @property
+    def trades(self) -> Tuple[MqexsTradeExt, ...]:
+        """The requested trades"""
+        return self.__trades
+
+    @trades.setter
+    def trades(self, value: Tuple[MqexsTradeExt, ...]):
+        self.__trades = value
+        self._property_changed('trades')        
+
+    @property
+    def errors(self) -> Tuple[MqexsErrorInfo, ...]:
+        """Errors encountered during request"""
+        return self.__errors
+
+    @errors.setter
+    def errors(self, value: Tuple[MqexsErrorInfo, ...]):
+        self.__errors = value
+        self._property_changed('errors')        

@@ -14,16 +14,18 @@ specific language governing permissions and limitations
 under the License.
 """
 
+from unittest import mock
+
+import pandas as pd
+
+import gs_quant.risk as risk
 from gs_quant.api.gs.risk import GsRiskApi, RiskModelRequest
 from gs_quant.base import Priceable
 from gs_quant.common import AssetClass
-from gs_quant.instrument import CommodSwap, EqForward, EqOption, FXOption, IRBasisSwap, IRSwap, IRSwaption, IRCap, IRFloor
+from gs_quant.instrument import CommodSwap, EqForward, EqOption, FXOption, IRBasisSwap, IRSwap, IRSwaption, IRCap, \
+    IRFloor
 from gs_quant.markets import PricingContext
-import gs_quant.risk as risk
 from gs_quant.session import Environment, GsSession
-
-import pandas as pd
-from unittest import mock
 
 priceables = (
     CommodSwap('Electricity', '1y'),
@@ -103,7 +105,7 @@ def test_suggest_risk_model(mocker):
 
     inputs = RiskModelRequest((marquee_id_1, marquee_id_2))
 
-    mock_response = {'results':[
+    mock_response = {'results': [
         {'model': 'AXUS4S', 'businessDate': '2019-03-04'},
         {'model': 'AXWW21M', 'businessDate': '2019-03-04'}
     ]}

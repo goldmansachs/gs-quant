@@ -14,15 +14,17 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from typing import Union
-from enum import Enum
 import datetime as dt
-import pytz
 from abc import ABCMeta, abstractmethod
+from enum import Enum
+from typing import Tuple, Optional
+from typing import Union
+
+import pytz
+
 from gs_quant.api.gs.assets import GsAssetApi, GsAsset, AssetClass, AssetType as GsAssetType, PositionSet
 from gs_quant.base import get_enum_value
 from gs_quant.markets import PricingContext
-from typing import Tuple, Optional
 
 
 class ExchangeCode(Enum):
@@ -134,7 +136,7 @@ class Asset(metaclass=ABCMeta):
         if not as_of:
             as_of = PricingContext.current.pricing_date
 
-            if type(as_of) is dt.datetime:
+            if isinstance(as_of, dt.datetime):
                 as_of = as_of.date()
 
         valid_ids = set(item.value for item in AssetIdentifier)
@@ -273,7 +275,7 @@ class IndexConstituentProvider(metaclass=ABCMeta):
         self.__id = id_
 
     def get_constituents(self, as_of: dt.date = None, position_type: PositionType = PositionType.CLOSE) -> Tuple[
-        PositionSet, ...]:
+            PositionSet, ...]:
         """
         Get asset constituents
 
@@ -311,7 +313,7 @@ class IndexConstituentProvider(metaclass=ABCMeta):
         if not as_of:
             as_of = PricingContext.current.pricing_date
 
-            if type(as_of) is dt.datetime:
+            if isinstance(as_of, dt.datetime):
                 as_of = as_of.date()
 
         return GsAssetApi.get_asset_positions_for_date(self.__id, as_of, position_type.value)
@@ -466,7 +468,7 @@ class SecurityMaster:
         if not as_of:
             as_of = PricingContext.current.pricing_date
 
-        if type(as_of) is dt.date:
+        if isinstance(as_of, dt.date):
             as_of = dt.datetime.combine(as_of, dt.time(0, 0), pytz.utc)
 
         if id_type is AssetIdentifier.MARQUEE_ID:

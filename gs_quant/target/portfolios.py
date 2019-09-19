@@ -32,34 +32,6 @@ class PortfolioType(EnumBase, Enum):
         return self.value
 
 
-class DateRange(Base):
-               
-    def __init__(self, endDate: datetime.date = None, startDate: datetime.date = None):
-        super().__init__()
-        self.__endDate = endDate
-        self.__startDate = startDate
-
-    @property
-    def endDate(self) -> datetime.date:
-        """ISO 8601-formatted date"""
-        return self.__endDate
-
-    @endDate.setter
-    def endDate(self, value: datetime.date):
-        self.__endDate = value
-        self._property_changed('endDate')        
-
-    @property
-    def startDate(self) -> datetime.date:
-        """ISO 8601-formatted date"""
-        return self.__startDate
-
-    @startDate.setter
-    def startDate(self, value: datetime.date):
-        self.__startDate = value
-        self._property_changed('startDate')        
-
-
 class Portfolio(Base):
                
     def __init__(self, currency: Union[Currency, str], name: str, createdById: str = None, createdTime: datetime.datetime = None, description: str = None, entitlements: Entitlements = None, entitlementExclusions: EntitlementExclusions = None, id: str = None, identifiers: Tuple[Identifier, ...] = None, lastUpdatedById: str = None, lastUpdatedTime: datetime.datetime = None, ownerId: str = None, reportIds: Tuple[str, ...] = None, shortName: str = None, underlyingPortfolioIds: Tuple[str, ...] = None, tags: Tuple[str, ...] = None, type: Union[PortfolioType, str] = None, parameters: LiquidityRequest = None):
@@ -105,7 +77,6 @@ class Portfolio(Base):
 
     @property
     def currency(self) -> Union[Currency, str]:
-        """Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)"""
         return self.__currency
 
     @currency.setter

@@ -25,7 +25,6 @@ from gs_quant.data.utils import construct_dataframe_with_types
 from gs_quant.errors import MqValueError
 
 
-
 class Dataset:
     """A collection of related data"""
 
@@ -114,7 +113,7 @@ class Dataset:
         >>> weather_data = weather.get_data(dt.date(2016, 1, 15), dt.date(2016, 1, 16), city=('Boston', 'Austin'))
         """
 
-        field_names = None if fields is None else list(map(lambda f: f if type(f) is str else f.value, fields))
+        field_names = None if fields is None else list(map(lambda f: f if isinstance(f, str) else f.value, fields))
 
         query = self.provider.build_query(
             start=start,
@@ -154,10 +153,11 @@ class Dataset:
         >>> import datetime as dt
         >>>
         >>> weather = Dataset('WEATHER')
-        >>> dew_point = weather.get_data_series('dewPoint', dt.date(2016, 1, 15), dt.date(2016, 1, 16), city=('Boston', 'Austin'))
+        >>> dew_point = weather
+        >>>>    .get_data_series('dewPoint', dt.date(2016, 1, 15), dt.date(2016, 1, 16), city=('Boston', 'Austin'))
         """
 
-        field_value = field if type(field) is str else field.value
+        field_value = field if isinstance(field, str) else field.value
 
         query = self.provider.build_query(
             start=start,

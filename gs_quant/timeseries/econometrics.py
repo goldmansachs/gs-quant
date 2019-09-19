@@ -15,9 +15,7 @@
 # should be fully documented: docstrings should describe parameters and the return value, and provide a 1-line
 # description. Type annotations should be provided for parameters.
 
-from enum import IntEnum
 from .statistics import *
-from .algebra import *
 from ..errors import *
 
 """
@@ -296,12 +294,14 @@ def annualize(x: pd.Series) -> pd.Series:
 
 
 @plot_function
-def volatility(x: pd.Series, w: Union[Window, int] = Window(None, 0), returns_type: Returns = Returns.SIMPLE) -> pd.Series:
+def volatility(x: pd.Series, w: Union[Window, int] = Window(None, 0),
+               returns_type: Returns = Returns.SIMPLE) -> pd.Series:
     """
     Realized volatility of price series
 
     :param x: time series of prices
-    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size and 10 the ramp up value. Window size defaults to length of series.
+    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+    and 10 the ramp up value. Window size defaults to length of series.
     :param returns_type: returns type
     :return: date-based time series of return
 
@@ -341,17 +341,19 @@ def volatility(x: pd.Series, w: Union[Window, int] = Window(None, 0), returns_ty
     if x.size < 1:
         return x
 
-    return apply_ramp(annualize(std(returns(x, type=returns_type), w.w)).mul(100), w)
+    return apply_ramp(annualize(std(returns(x, type=returns_type), Window(w.w, 0))).mul(100), w)
 
 
 @plot_function
-def correlation(x: pd.Series, y: pd.Series, w: Union[Window, int] = Window(None, 0), type_: SeriesType = SeriesType.PRICES) -> pd.Series:
+def correlation(x: pd.Series, y: pd.Series,
+                w: Union[Window, int] = Window(None, 0), type_: SeriesType = SeriesType.PRICES) -> pd.Series:
     """
     Rolling correlation of two price series
 
     :param x: price series
     :param y: price series
-    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size and 10 the ramp up value. Window size defaults to length of series.
+    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+    and 10 the ramp up value. Window size defaults to length of series.
     :param type_: type of both input series
     :return: date-based time series of correlation
 
@@ -414,7 +416,8 @@ def beta(x: pd.Series, b: pd.Series, w: Union[Window, int] = Window(None, 0), pr
 
     :param x: time series of prices
     :param b: time series of benchmark prices
-    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size and 10 the ramp up value. Window size defaults to length of series.
+    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+    and 10 the ramp up value. Window size defaults to length of series.
     :param prices: True if input series are prices, False if they are returns
     :return: date-based time series of beta
 
@@ -476,7 +479,8 @@ def max_drawdown(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Se
     Compute the maximum peak to trough drawdown over a rolling window.
 
     :param x: time series
-    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size and 10 the ramp up value. Window size defaults to length of series.
+    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+    and 10 the ramp up value. Window size defaults to length of series.
     :return: time series of rolling maximum drawdown
 
     **Examples**

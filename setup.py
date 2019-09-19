@@ -40,7 +40,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="gs_quant",
-    version="0.8.50.1",
+    version="0.8.61",
     author="Goldman Sachs",
     author_email="developer@gs.com",
     description="Goldman Sachs Quant",
@@ -70,7 +70,8 @@ setuptools.setup(
         "internal": ["gs_quant_internal", "requests_kerberos"],
         "notebook": ["jupyter", "matplotlib~=2.1.0", "pprint"],
         "test": ["pytest", "pytest-cov", "pytest-mock", "testfixtures"],
-        "develop": ["wheel", "sphinx", "sphinx_rtd_theme", "sphinx_autodoc_typehints", "pytest", "pytest-cov", "pytest-mock", "testfixtures"]
+        "develop": ["wheel", "sphinx", "sphinx_rtd_theme", "sphinx_autodoc_typehints", "pytest", "pytest-cov",
+                    "pytest-mock", "testfixtures"]
     },
     classifiers=[
         "Programming Language :: Python :: 3",

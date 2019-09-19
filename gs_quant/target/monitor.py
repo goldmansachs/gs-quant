@@ -61,47 +61,6 @@ class ColumnFormat(Base):
         self._property_changed('humanReadable')        
 
 
-class Entitlements(Base):
-        
-    """Defines the entitlements of a given resource"""
-       
-    def __init__(self, view: Tuple[str, ...], edit: Tuple[str, ...], admin: Tuple[str, ...]):
-        super().__init__()
-        self.__view = view
-        self.__edit = edit
-        self.__admin = admin
-
-    @property
-    def view(self) -> Tuple[str, ...]:
-        """Permission to view the resource and its contents"""
-        return self.__view
-
-    @view.setter
-    def view(self, value: Tuple[str, ...]):
-        self.__view = value
-        self._property_changed('view')        
-
-    @property
-    def edit(self) -> Tuple[str, ...]:
-        """Permission to edit details about the resource content, excluding entitlements. Can also delete the resource"""
-        return self.__edit
-
-    @edit.setter
-    def edit(self, value: Tuple[str, ...]):
-        self.__edit = value
-        self._property_changed('edit')        
-
-    @property
-    def admin(self) -> Tuple[str, ...]:
-        """Permission to edit all details of the resource, including entitlements. Can also delete the resource"""
-        return self.__admin
-
-    @admin.setter
-    def admin(self, value: Tuple[str, ...]):
-        self.__admin = value
-        self._property_changed('admin')        
-
-
 class Historical(Base):
         
     """value and date for historical data"""
@@ -267,6 +226,57 @@ class Sort(Base):
     def direction(self, value):
         self.__direction = value
         self._property_changed('direction')        
+
+
+class WipiRequestFilter(Base):
+        
+    """A filter used for transforming data"""
+       
+    def __init__(self, column: str, operation, value: Union[float, str], type=None):
+        super().__init__()
+        self.__column = column
+        self.__operation = operation
+        self.__value = value
+        self.__type = type
+
+    @property
+    def column(self) -> str:
+        """The column to perform the operation on."""
+        return self.__column
+
+    @column.setter
+    def column(self, value: str):
+        self.__column = value
+        self._property_changed('column')        
+
+    @property
+    def operation(self):
+        """Enum listing supported operations for wipi filters."""
+        return self.__operation
+
+    @operation.setter
+    def operation(self, value):
+        self.__operation = value
+        self._property_changed('operation')        
+
+    @property
+    def value(self) -> Union[float, str]:
+        return self.__value
+
+    @value.setter
+    def value(self, value: Union[float, str]):
+        self.__value = value
+        self._property_changed('value')        
+
+    @property
+    def type(self):
+        """Enum listing supported wipi filter types."""
+        return self.__type
+
+    @type.setter
+    def type(self, value):
+        self.__type = value
+        self._property_changed('type')        
 
 
 class FunctionParameters(Base):
@@ -606,10 +616,15 @@ class MonitorParameters(Base):
         
     """Parameters provided for a monitor"""
        
-    def __init__(self, columnDefinitions: Tuple[ColumnDefinition, ...], rowGroups: Tuple[RowGroup, ...]):
+    def __init__(self, columnDefinitions: Tuple[ColumnDefinition, ...], rowGroups: Tuple[RowGroup, ...], dataSetId: str = None, rebaseToSpot: bool = None, rebaseHistoricalCurve: bool = None, rebaseToEndOfYearSpot: bool = None, filters: Tuple[WipiRequestFilter, ...] = None):
         super().__init__()
         self.__columnDefinitions = columnDefinitions
         self.__rowGroups = rowGroups
+        self.__dataSetId = dataSetId
+        self.__rebaseToSpot = rebaseToSpot
+        self.__rebaseHistoricalCurve = rebaseHistoricalCurve
+        self.__rebaseToEndOfYearSpot = rebaseToEndOfYearSpot
+        self.__filters = filters
 
     @property
     def columnDefinitions(self) -> Tuple[ColumnDefinition, ...]:
@@ -630,6 +645,56 @@ class MonitorParameters(Base):
     def rowGroups(self, value: Tuple[RowGroup, ...]):
         self.__rowGroups = value
         self._property_changed('rowGroups')        
+
+    @property
+    def dataSetId(self) -> str:
+        """ID of the dataset in which the monitor fetches data."""
+        return self.__dataSetId
+
+    @dataSetId.setter
+    def dataSetId(self, value: str):
+        self.__dataSetId = value
+        self._property_changed('dataSetId')        
+
+    @property
+    def rebaseToSpot(self) -> bool:
+        """Whether to rebase the output to the first rows values"""
+        return self.__rebaseToSpot
+
+    @rebaseToSpot.setter
+    def rebaseToSpot(self, value: bool):
+        self.__rebaseToSpot = value
+        self._property_changed('rebaseToSpot')        
+
+    @property
+    def rebaseHistoricalCurve(self) -> bool:
+        """Whether to rebase the historical curve."""
+        return self.__rebaseHistoricalCurve
+
+    @rebaseHistoricalCurve.setter
+    def rebaseHistoricalCurve(self, value: bool):
+        self.__rebaseHistoricalCurve = value
+        self._property_changed('rebaseHistoricalCurve')        
+
+    @property
+    def rebaseToEndOfYearSpot(self) -> bool:
+        """Whether to rebase to the EOY Forward."""
+        return self.__rebaseToEndOfYearSpot
+
+    @rebaseToEndOfYearSpot.setter
+    def rebaseToEndOfYearSpot(self, value: bool):
+        self.__rebaseToEndOfYearSpot = value
+        self._property_changed('rebaseToEndOfYearSpot')        
+
+    @property
+    def filters(self) -> Tuple[WipiRequestFilter, ...]:
+        """Filters for the dataset before returning the data response."""
+        return self.__filters
+
+    @filters.setter
+    def filters(self, value: Tuple[WipiRequestFilter, ...]):
+        self.__filters = value
+        self._property_changed('filters')        
 
 
 class Monitor(Base):

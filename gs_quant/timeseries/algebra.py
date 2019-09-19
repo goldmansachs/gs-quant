@@ -17,14 +17,12 @@
 
 
 import math
+
 from .datetime import *
 from .helper import plot_function
-from numbers import Real
-from typing import Union, Optional
-
 
 """
-Algebra library contains basic numerical and algebraic operations, including addition, division, multiplication, 
+Algebra library contains basic numerical and algebraic operations, including addition, division, multiplication,
 division and other functions on timeseries
 """
 
@@ -583,7 +581,7 @@ def filter_(x: pd.Series, operator: Optional[FilterOperator] = None, value: Opti
         elif operator == FilterOperator.N_EQUALS:
             remove = x != value
         else:
-            if type(operator) is not str:
+            if not isinstance(operator, str):
                 operator = str(operator)
             raise MqValueError('Unexpected operator: ' + operator)
         x = x.drop(x[remove].index)

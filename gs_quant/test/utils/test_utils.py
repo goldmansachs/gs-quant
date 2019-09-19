@@ -1,3 +1,19 @@
+"""
+Copyright 2019 Goldman Sachs.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+"""
+
 import json
 import pathlib
 
@@ -27,7 +43,8 @@ def mock_request(method, path, payload, test_file_name):
         'assetsDataSPXWithId':
             '{"limit": 4, "fields": ["id", "ric"], "where": {"id": ["456123MW5E27U123456"]}}',
         'dataQueryRic':
-            '{"fields": ["adjustedTradePrice"], "format": "MessagePack", "where": {"assetId": ["123456MW5E27U123456"]}}',
+            '{"fields": ["adjustedTradePrice"],'
+            ' "format": "MessagePack", "where": {"assetId": ["123456MW5E27U123456"]}}',
         'dataQuerySPX':
             '{"fields": ["adjustedTradePrice"], "format": "MessagePack", "where": {"assetId": ["456123MW5E27U123456"]}}'
     }
@@ -49,4 +66,3 @@ def mock_request(method, path, payload, test_file_name):
             elif payload == _remove_unwanted(queries['dataQuerySPX']):
                 return load_json_from_resource(test_file_name, 'treod_query_response_spx.json')
     raise Exception(f'Unhandled request. Method: {method}, Path: {path}, payload: {payload} not recognized.')
-

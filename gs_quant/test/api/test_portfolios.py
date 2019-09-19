@@ -15,11 +15,11 @@ under the License.
 """
 
 import datetime as dt
+
 import dateutil.parser as dup
-import testfixtures
+
+from gs_quant.api.gs.portfolios import GsPortfolioApi, Portfolio, PositionSet
 from gs_quant.session import *
-from gs_quant.api.gs.portfolios import GsPortfolioApi, Portfolio, PositionSet, Report
-from gs_quant.target.reports import PositionSourceType, ReportStatus, ReportType, ReportParameters
 from gs_quant.target.common import Position
 
 
@@ -38,7 +38,13 @@ def test_get_many_portfolios(mocker):
     )
 
     # mock GsSession
-    mocker.patch.object(GsSession.__class__, 'current', return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(
+        GsSession.__class__,
+        'current',
+        return_value=GsSession.get(
+            Environment.QA,
+            'client_id',
+            'secret'))
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
     # run test
@@ -52,7 +58,13 @@ def test_get_portfolio(mocker):
     mock_response = Portfolio(id=id_1, currency='USD', name='Example Port')
 
     # mock GsSession
-    mocker.patch.object(GsSession.__class__, 'current', return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(
+        GsSession.__class__,
+        'current',
+        return_value=GsSession.get(
+            Environment.QA,
+            'client_id',
+            'secret'))
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
     # run test
@@ -67,7 +79,13 @@ def test_create_portfolio(mocker):
     portfolio = Portfolio(id=id_1, currency='USD', name='Example Port')
 
     # mock GsSession
-    mocker.patch.object(GsSession.__class__, 'current', return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(
+        GsSession.__class__,
+        'current',
+        return_value=GsSession.get(
+            Environment.QA,
+            'client_id',
+            'secret'))
     mocker.patch.object(GsSession.current, '_post', return_value=portfolio)
 
     # run test
@@ -82,7 +100,13 @@ def test_update_portfolio(mocker):
     portfolio = Portfolio(id=id_1, currency='USD', name='Example Port Renamed')
 
     # mock GsSession
-    mocker.patch.object(GsSession.__class__, 'current', return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(
+        GsSession.__class__,
+        'current',
+        return_value=GsSession.get(
+            Environment.QA,
+            'client_id',
+            'secret'))
     mocker.patch.object(GsSession.current, '_put', return_value=portfolio)
 
     # run test
@@ -97,7 +121,13 @@ def test_delete_portfolio(mocker):
     mock_response = "Successfully deleted portfolio."
 
     # mock GsSession
-    mocker.patch.object(GsSession.__class__, 'current', return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(
+        GsSession.__class__,
+        'current',
+        return_value=GsSession.get(
+            Environment.QA,
+            'client_id',
+            'secret'))
     mocker.patch.object(GsSession.current, '_delete', return_value=mock_response)
 
     # run test
@@ -144,14 +174,20 @@ def test_get_portfolio_positions(mocker):
     )
 
     # mock GsSession
-    mocker.patch.object(GsSession.__class__, 'current', return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(
+        GsSession.__class__,
+        'current',
+        return_value=GsSession.get(
+            Environment.QA,
+            'client_id',
+            'secret'))
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
     # run test
     response = GsPortfolioApi.get_positions(id_1, start_date, end_date)
 
-    GsSession.current._get.assert_called_with('/portfolios/{id}/positions?type=close&startDate={sd}&endDate={ed}'.format(
-        id=id_1, sd=start_date, ed=end_date))
+    GsSession.current._get.assert_called_with(
+        '/portfolios/{id}/positions?type=close&startDate={sd}&endDate={ed}'.format(id=id_1, sd=start_date, ed=end_date))
 
     assert response == expected_response
 
@@ -180,13 +216,21 @@ def test_get_portfolio_positions_for_date(mocker):
     )
 
     # mock GsSession
-    mocker.patch.object(GsSession.__class__, 'current', return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(
+        GsSession.__class__,
+        'current',
+        return_value=GsSession.get(
+            Environment.QA,
+            'client_id',
+            'secret'))
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
     # run test
     response = GsPortfolioApi.get_positions_for_date(id_1, date)
 
-    GsSession.current._get.assert_called_with('/portfolios/{id}/positions/{d}?type=close'.format(id=id_1, d=date), cls=PositionSet)
+    GsSession.current._get.assert_called_with(
+        '/portfolios/{id}/positions/{d}?type=close'.format(id=id_1, d=date),
+        cls=PositionSet)
 
     assert response == expected_response
 
@@ -215,13 +259,21 @@ def test_get_latest_portfolio_positions(mocker):
     )
 
     # mock GsSession
-    mocker.patch.object(GsSession.__class__, 'current', return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(
+        GsSession.__class__,
+        'current',
+        return_value=GsSession.get(
+            Environment.QA,
+            'client_id',
+            'secret'))
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
     # run test
     response = GsPortfolioApi.get_latest_positions(id_1)
 
-    GsSession.current._get.assert_called_with('/portfolios/{id}/positions/last?type=close'.format(id=id_1), cls=PositionSet)
+    GsSession.current._get.assert_called_with(
+        '/portfolios/{id}/positions/last?type=close'.format(id=id_1),
+        cls=PositionSet)
 
     assert response == expected_response
 
@@ -234,7 +286,13 @@ def test_get_portfolio_position_dates(mocker):
     expected_response = (dt.date(2019, 2, 18), dt.date(2019, 2, 19))
 
     # mock GsSession
-    mocker.patch.object(GsSession.__class__, 'current', return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(
+        GsSession.__class__,
+        'current',
+        return_value=GsSession.get(
+            Environment.QA,
+            'client_id',
+            'secret'))
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
     # run test

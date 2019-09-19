@@ -14,15 +14,16 @@ specific language governing permissions and limitations
 under the License.
 """
 import logging
-import datetime
 import re
-from gs_quant.backtests.core import Backtest, QuantityType, TradeInMethod
-from gs_quant.instrument import EqOption
-import gs_quant.target.backtests as backtests
-from gs_quant.target.backtests import *
-from gs_quant.api.gs.backtests import GsBacktestApi
-from gs_quant.errors import MqValueError
+from typing import Iterable
 
+import gs_quant.target.backtests as backtests
+from gs_quant.api.gs.backtests import GsBacktestApi
+from gs_quant.backtests.core import Backtest, QuantityType, TradeInMethod
+from gs_quant.backtests.flow_vol_backtest_measure import FlowVolBacktestMeasure
+from gs_quant.errors import MqValueError
+from gs_quant.instrument import EqOption
+from gs_quant.target.backtests import *
 
 _logger = logging.getLogger(__name__)
 
@@ -31,21 +32,23 @@ BACKTEST_TYPE_VALUE = 'Volatility Flow'
 EQ_MARKET_MODEL = 'SFK'
 ISO_FORMAT = r"^([0-9]{4})-([0-9]{2})-([0-9]{2})$"
 
+
 class StrategySystematic:
     """Equity back testing systematic strategy"""
 
     def __init__(self,
-                 underliers: [(EqOption, float), ...],
+                 underliers: Union[EqOption, Iterable[EqOption]],
                  quantity: float = 1,
                  quantity_type: Union[QuantityType, str] = QuantityType.Notional,
                  trade_in_method: Union[TradeInMethod, str] = TradeInMethod.FixedRoll,
                  roll_frequency: str = None,
                  scaling_method: str = None,
-                 index_initial_value: float = 0,
+                 index_initial_value: float = 0.0,
                  delta_hedge: DeltaHedgeParameters = None,
                  name: str = None,
                  cost_netting: bool = False,
-                 currency: Union[Currency, str] = Currency.USD):
+                 currency: Union[Currency, str] = Currency.USD,
+                 measures: Iterable[FlowVolBacktestMeasure] = (FlowVolBacktestMeasure.ALL_MEASURES,)):
         self.__cost_netting = cost_netting
         self.__currency = get_enum_value(Currency, currency)
         self.__name = name
@@ -61,28 +64,31 @@ class StrategySystematic:
 
         self.__underliers = []
 
-        for eq_option in underliers:
-            if isinstance(eq_option, tuple):
-                instrument = eq_option[0]
-                notionalPercentage = eq_option[1]
-            elif isinstance(eq_option, EqOption):
-                instrument = eq_option
-                notionalPercentage = 100
-            else:
-                raise MqValueError('The format of the backtest asset is incorrect.')
-
-            #TODO: Add validation for unsupport fields
-            if isinstance(eq_option.expirationDate, datetime.date):
-                raise MqValueError('Datetime.date format for expiration date field is not supported for backtest service')
-            elif re.search(ISO_FORMAT, eq_option.expirationDate) is not None:
-                if datetime.datetime.strptime(eq_option.expirationDate, "%Y-%m-%d"):
-                    raise MqValueError('Date format for expiration date field is not supported for backtest service')
-
+        if isinstance(underliers, EqOption):
+            instrument = underliers
+            notional_percentage = 100
+            self.check_underlier_fields(instrument)
             self.__underliers.append(BacktestStrategyUnderlier(
-                instrument= instrument,
-                notionalPercentage = notionalPercentage,
+                instrument=instrument,
+                notionalPercentage=notional_percentage,
                 hedge=BacktestStrategyUnderlierHedge(riskDetails=delta_hedge),
                 marketModel=EQ_MARKET_MODEL))
+        else:
+            for eq_option in underliers:
+                if isinstance(eq_option, tuple):
+                    instrument = eq_option[0]
+                    notional_percentage = eq_option[1]
+                elif isinstance(eq_option, EqOption):
+                    instrument = eq_option
+                    notional_percentage = 100
+                else:
+                    raise MqValueError('The format of the backtest asset is incorrect.')
+                self.check_underlier_fields(instrument)
+                self.__underliers.append(BacktestStrategyUnderlier(
+                    instrument=instrument,
+                    notionalPercentage=notional_percentage,
+                    hedge=BacktestStrategyUnderlierHedge(riskDetails=delta_hedge),
+                    marketModel=EQ_MARKET_MODEL))
 
         backtest_parameters_class: Base = getattr(backtests, self.__backtest_type + 'BacktestParameters')
         backtest_parameter_args = {
@@ -90,15 +96,28 @@ class StrategySystematic:
             'underliers': self.__underliers,
             'tradeInMethod': trade_in_method,
             'scalingMethod': scaling_method,
-            'indexInitialValue': index_initial_value
+            'indexInitialValue': index_initial_value,
+            'measures': [measure.str_value for measure in measures]
         }
-
         self.__backtest_parameters = backtest_parameters_class.from_dict(backtest_parameter_args)
+
+    def check_underlier_fields(
+            self,
+            underlier: EqOption) -> bool:
+
+        # validation for different fields
+        if isinstance(underlier.expirationDate, datetime.date):
+            raise MqValueError('Datetime.date format for expiration date field is not supported for backtest service')
+        elif re.search(ISO_FORMAT, underlier.expirationDate) is not None:
+            if datetime.datetime.strptime(underlier.expirationDate, "%Y-%m-%d"):
+                raise MqValueError('Date format for expiration date field is not supported for backtest service')
+
+        return True
 
     def backtest(
             self,
-            start: datetime.date,
-            end: datetime.date,
+            start: datetime.date = None,
+            end: datetime.date = datetime.date.today() - datetime.timedelta(days=1),
             is_async: bool = False) -> Union[Backtest, BacktestResult]:
 
         backtest = Backtest(name=self.__name,

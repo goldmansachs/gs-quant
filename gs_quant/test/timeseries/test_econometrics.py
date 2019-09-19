@@ -14,10 +14,6 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from datetime import date
-
-import numpy as np
-import pandas as pd
 import pytest
 from pandas.util.testing import assert_series_equal
 
@@ -298,7 +294,9 @@ def test_correlation():
     assert_series_equal(result, expected, check_less_precise=True)
 
     result = correlation(x, y, Window(2, 0))
-    expected = pd.Series([np.nan, np.nan, -1.0000000000000435, 1.0, 0.9999999999999994, -1.0000000000000007], index=daily_dates)
+    expected = pd.Series([np.nan, np.nan, -
+                          1.0000000000000435, 1.0, 0.9999999999999994, -
+                          1.0000000000000007], index=daily_dates)
 
     assert_series_equal(result, expected, check_less_precise=True)
 
@@ -306,7 +304,9 @@ def test_correlation():
     ret_y = returns(y)
 
     result = correlation(ret_x, ret_y, Window(2, 0), False)
-    expected = pd.Series([np.nan, np.nan, -1.0000000000000435, 1.0, 0.9999999999999994, -1.0000000000000007], index=daily_dates)
+    expected = pd.Series([np.nan, np.nan, -
+                          1.0000000000000435, 1.0, 0.9999999999999994, -
+                          1.0000000000000007], index=daily_dates)
 
     assert_series_equal(result, expected, check_less_precise=True)
 
@@ -341,7 +341,8 @@ def test_beta():
     assert_series_equal(result, expected, check_less_precise=True)
 
     result = beta(x, y, Window(2, 0))
-    expected = pd.Series([np.nan, np.nan, np.nan, 0.8255252918287954, 0.7054398925453326, -2.24327163719368], index=daily_dates)
+    expected = pd.Series([np.nan, np.nan, np.nan, 0.8255252918287954,
+                          0.7054398925453326, -2.24327163719368], index=daily_dates)
 
     assert_series_equal(result, expected, check_less_precise=True)
 
@@ -349,7 +350,8 @@ def test_beta():
     ret_y = returns(y)
 
     result = beta(ret_x, ret_y, Window(2, 0), False)
-    expected = pd.Series([np.nan, np.nan, np.nan, 0.8255252918287954, 0.7054398925453326, -2.24327163719368], index=daily_dates)
+    expected = pd.Series([np.nan, np.nan, np.nan, 0.8255252918287954,
+                          0.7054398925453326, -2.24327163719368], index=daily_dates)
 
     assert_series_equal(result, expected, check_less_precise=True)
 

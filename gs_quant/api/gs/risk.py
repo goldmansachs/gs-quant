@@ -13,13 +13,15 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import time
+from typing import Iterable, Tuple, Union
+
 from gs_quant.api.risk import RiskApi
 from gs_quant.base import Priceable
 from gs_quant.markets.core import MarketDataCoordinate
+from gs_quant.risk import CoordinatesRequest, RiskRequest, PricingContext, \
+    LiquidityRequest, LiquidityResponse, RiskModelRequest
 from gs_quant.session import GsSession
-from gs_quant.risk import CoordinatesRequest, RiskRequest, PricingContext, LiquidityRequest, LiquidityResponse, RiskModelRequest
-import time
-from typing import Iterable, Tuple, Union
 
 
 class GsRiskApi(RiskApi):
@@ -59,9 +61,8 @@ class GsRiskApi(RiskApi):
             assetId=r.get('assetId'),
             pointClass=r.get('pointClass'),
             marketDataPoint=tuple(r.get('marketDataPoint', r.get('point', '')).split('_')),
-            quotingStyle=r.get('field', r.get('quotingStyle')))  # TODO use 'quotingStyle' after changing risk definition in slang
-            for r in response
-        )
+            quotingStyle=r.get('field', r.get('quotingStyle')))
+            for r in response)  # TODO use 'quotingStyle' after changing risk definition in slang
 
     @classmethod
     def liquidity(cls, request: LiquidityRequest) -> LiquidityResponse:

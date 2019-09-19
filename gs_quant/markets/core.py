@@ -13,11 +13,12 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from concurrent.futures import Future, ThreadPoolExecutor
 import datetime as dt
 import functools
-import pandas as pd
+from concurrent.futures import Future, ThreadPoolExecutor
 from typing import Optional, Tuple, Union
+
+import pandas as pd
 
 from gs_quant.base import Priceable
 from gs_quant.context_base import ContextBaseWithDefault
@@ -30,7 +31,8 @@ from gs_quant.target.risk import PricingDateAndMarketDataAsOf, RiskMeasure, Risk
 class MarketDataCoordinate(__MarketDataCoordinate):
 
     def __str__(self):
-        return "|".join(f or '' for f in (self.marketDataType, self.marketDataAsset or self.assetId, self.pointClass, '_'.join(self.marketDataPoint), self.field or self.quotingStyle))
+        return "|".join(f or '' for f in (self.marketDataType, self.marketDataAsset or self.assetId,
+                                          self.pointClass, '_'.join(self.marketDataPoint), self.field or self.quotingStyle))
 
 
 class PricingContext(ContextBaseWithDefault):
@@ -43,8 +45,8 @@ class PricingContext(ContextBaseWithDefault):
                  pricing_date: Optional[dt.date] = None,
                  market_data_as_of: Optional[Union[dt.date, dt.datetime]] = None,
                  market_data_location: Optional[str] = None,
-                 is_async: bool=False,
-                 is_batch: bool=False):
+                 is_async: bool = False,
+                 is_batch: bool = False):
         """
         The methods on this class should not be called directly. Instead, use the methods on the instruments, as per the examples
 
@@ -84,7 +86,8 @@ class PricingContext(ContextBaseWithDefault):
         super().__init__()
         self.__pricing_date = pricing_date or dt.date.today()
         self.__market_data_as_of = market_data_as_of
-        self.__market_data_location = market_data_location or (self.__class__.current.market_data_location if self.__class__.default_is_set else 'LDN')
+        self.__market_data_location = market_data_location or (
+            self.__class__.current.market_data_location if self.__class__.default_is_set else 'LDN')
         self.__is_async = is_async
         self.__is_batch = is_batch
         self.__risk_measures_by_provider_and_position = {}
@@ -112,7 +115,10 @@ class PricingContext(ContextBaseWithDefault):
             finally:
                 self._handle_results(calc_result)
 
-        def get_batch_results(request: RiskRequest, session: GsSession, batch_provider: 'RiskApi', batch_result_id: str):
+        from gs_quant.api.risk import RiskApi
+
+        def get_batch_results(request: RiskRequest, session: GsSession,
+                              batch_provider: RiskApi, batch_result_id: str):
             with session:
                 results = batch_provider.get_results(request, batch_result_id)
             self._handle_results(results)
@@ -186,7 +192,8 @@ class PricingContext(ContextBaseWithDefault):
         """Market data location"""
         return self.__market_data_location
 
-    def calc(self, priceable: Priceable, risk_measure: RiskMeasure) -> Union[float, dict, pd.DataFrame, pd.Series, Future]:
+    def calc(self, priceable: Priceable,
+             risk_measure: RiskMeasure) -> Union[float, dict, pd.DataFrame, pd.Series, Future]:
         """
         Calculate the risk measure for the priceable instrument. Do not use directly, use via instruments
 
@@ -206,7 +213,9 @@ class PricingContext(ContextBaseWithDefault):
         future = self.__futures.get(risk_measure, {}).get(position)
         if future is None:
             future = Future()
-            self.__risk_measures_by_provider_and_position.setdefault(priceable.provider(), {}).setdefault(position, set()).add(risk_measure)
+            self.__risk_measures_by_provider_and_position.setdefault(
+                priceable.provider(), {}).setdefault(
+                position, set()).add(risk_measure)
             self.__futures.setdefault(risk_measure, {})[position] = future
 
         if not self._is_entered and not self.__is_async:
@@ -255,7 +264,9 @@ class PricingContext(ContextBaseWithDefault):
                 if len(field_values) == 1:
                     field_values = field_values[0]
                 else:
-                    future.set_result({dt.date.fromtimestamp(fv['date'] / 1e9): apply_field_values(fv, priceable_inst) for fv in field_values})
+                    future.set_result(
+                        {dt.date.fromtimestamp(fv['date'] / 1e9): apply_field_values(fv, priceable_inst)
+                         for fv in field_values})
                     return
 
             field_values = {field: value_mappings.get(value, value) for field, value in field_values.items()
