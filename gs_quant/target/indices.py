@@ -59,10 +59,9 @@ class ApprovalAction(Base):
         
     """Comments for the approval action"""
        
-    def __init__(self, comment: str = None, actionType: str = None):
+    def __init__(self, comment: str = None):
         super().__init__()
         self.__comment = comment
-        self.__actionType = actionType
 
     @property
     def comment(self) -> str:
@@ -72,15 +71,6 @@ class ApprovalAction(Base):
     def comment(self, value: str):
         self.__comment = value
         self._property_changed('comment')        
-
-    @property
-    def actionType(self) -> str:
-        return self.__actionType
-
-    @actionType.setter
-    def actionType(self, value: str):
-        self.__actionType = value
-        self._property_changed('actionType')        
 
 
 class CustomBasketsResponse(Base):

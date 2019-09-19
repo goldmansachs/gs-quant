@@ -59,7 +59,7 @@ class GsBacktestApi:
         return GsSession.current._delete('/backtests/{id}'.format(id=backtest_id))
 
     @classmethod
-    def get_results(cls,  backtest_id: str) -> Tuple[BacktestResult, ...]:
+    def get_results(cls, backtest_id: str) -> Tuple[BacktestResult, ...]:
         return GsSession.current._get('/backtests/results?id={id}'.format(id=backtest_id))['backtestResults']
 
     @classmethod
@@ -72,7 +72,7 @@ class GsBacktestApi:
                                owner_id: str = None,
                                name: str = None,
                                mq_symbol: str = None) -> Tuple[
-        Tuple[BacktestResult, ...], Tuple[ComparisonBacktestResult, ...]]:
+            Tuple[BacktestResult, ...], Tuple[ComparisonBacktestResult, ...]]:
         query_string = urlencode(dict(filter(lambda item: item[1] is not None,
                                              dict(id=backtest_id, comparisonIds=comparison_id, ownerId=owner_id,
                                                   name=name, mqSymbol=mq_symbol, limit=limit,

@@ -13,10 +13,12 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-
-from pandas.util.testing import assert_series_equal
-from gs_quant.timeseries import *
 from datetime import date
+
+import pytest
+from pandas.util.testing import assert_series_equal
+
+from gs_quant.timeseries import *
 
 
 def test_generate_series():
@@ -45,11 +47,11 @@ def test_min():
     expected = pd.Series([3.0, 2.0, 2.0, 1.0, 1.0, 1.0], index=dates)
     assert_series_equal(result, expected, obj="Minimum")
 
-    result = min_(x, 1)
+    result = min_(x, Window(1, 0))
     expected = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
     assert_series_equal(result, expected, obj="Minimum window 1")
 
-    result = min_(x, 2)
+    result = min_(x, Window(2, 0))
     expected = pd.Series([3.0, 2.0, 2.0, 1.0, 1.0, 3.0], index=dates)
     assert_series_equal(result, expected, obj="Minimum window 2")
 
@@ -71,11 +73,11 @@ def test_max():
     expected = pd.Series([3.0, 3.0, 3.0, 3.0, 3.0, 6.0], index=dates)
     assert_series_equal(result, expected, obj="Maximum")
 
-    result = max_(x, 1)
+    result = max_(x, Window(1, 0))
     expected = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
     assert_series_equal(result, expected, obj="Maximum window 1")
 
-    result = max_(x, 2)
+    result = max_(x, Window(2, 0))
     expected = pd.Series([3.0, 3.0, 3.0, 3.0, 3.0, 6.0], index=dates)
     assert_series_equal(result, expected, obj="Maximum window 2")
 
@@ -97,11 +99,11 @@ def test_range():
     expected = pd.Series([0.0, 1.0, 1.0, 2.0, 2.0, 5.0], index=dates)
     assert_series_equal(result, expected, obj="Range")
 
-    result = range_(x, 1)
+    result = range_(x, Window(1, 0))
     expected = pd.Series([0.0, 0.0, 0.0, 0.0, 0.0, 0.0], index=dates)
     assert_series_equal(result, expected, obj="Range window 1")
 
-    result = range_(x, 2)
+    result = range_(x, Window(2, 0))
     expected = pd.Series([0.0, 1.0, 1.0, 2.0, 2.0, 3.0], index=dates)
     assert_series_equal(result, expected, obj="Range window 2")
 
@@ -120,14 +122,14 @@ def test_mean():
     x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
 
     result = mean(x)
-    expected = pd.Series([3.0, 2.5, 8/3, 2.25, 2.4, 3.0], index=dates)
+    expected = pd.Series([3.0, 2.5, 8 / 3, 2.25, 2.4, 3.0], index=dates)
     assert_series_equal(result, expected, obj="Mean")
 
-    result = mean(x, 1)
+    result = mean(x, Window(1, 0))
     expected = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
     assert_series_equal(result, expected, obj="Mean window 1")
 
-    result = mean(x, 2)
+    result = mean(x, Window(2, 0))
     expected = pd.Series([3.0, 2.5, 2.5, 2.0, 2.0, 4.5], index=dates)
     assert_series_equal(result, expected, obj="Mean window 2")
 
@@ -149,11 +151,11 @@ def test_median():
     expected = pd.Series([3.0, 2.5, 3.0, 2.5, 3.0, 3.0], index=dates)
     assert_series_equal(result, expected, obj="Median")
 
-    result = median(x, 1)
+    result = median(x, Window(1, 0))
     expected = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
     assert_series_equal(result, expected, obj="Median window 1")
 
-    result = median(x, 2)
+    result = median(x, Window(2, 0))
     expected = pd.Series([3.0, 2.5, 2.5, 2.0, 2.0, 4.5], index=dates)
     assert_series_equal(result, expected, obj="Median window 2")
 
@@ -175,11 +177,11 @@ def test_mode():
     expected = pd.Series([3.0, 2.0, 3.0, 3.0, 3.0, 3.0], index=dates)
     assert_series_equal(result, expected, obj="mode")
 
-    result = mode(x, 1)
+    result = mode(x, Window(1, 0))
     expected = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
     assert_series_equal(result, expected, obj="mode window 1")
 
-    result = mode(x, 2)
+    result = mode(x, Window(2, 0))
     expected = pd.Series([3.0, 2.0, 2.0, 1.0, 1.0, 3.0], index=dates)
     assert_series_equal(result, expected, obj="mode window 2")
 
@@ -201,7 +203,7 @@ def test_sum():
     expected = pd.Series([1.0, 3.0, 6.0, 10, 15, 21], index=dates)
     assert_series_equal(result, expected, obj="Summation")
 
-    result = sum_(x, 2)
+    result = sum_(x, Window(2, 0))
     expected = pd.Series([1.0, 3.0, 5.0, 7.0, 9.0, 11.0], index=dates)
     assert_series_equal(result, expected, obj="Summation")
 
@@ -223,7 +225,7 @@ def test_product():
     expected = pd.Series([1.0, 2.0, 6.0, 24, 120, 720], index=dates)
     assert_series_equal(result, expected, obj="Product")
 
-    result = product(x, 2)
+    result = product(x, Window(2, 0))
     expected = pd.Series([1.0, 2.0, 6.0, 12.0, 20.0, 30.0], index=dates)
     assert_series_equal(result, expected, obj="Product")
 
@@ -245,7 +247,7 @@ def test_std():
     expected = pd.Series([np.nan, 0.707106, 0.577350, 0.957427, 0.894427, 1.673320], index=dates)
     assert_series_equal(result, expected, obj="std", check_less_precise=True)
 
-    result = std(x, 2)
+    result = std(x, Window(2, 0))
     expected = pd.Series([np.nan, 0.707106, 0.707106, 1.414214, 1.414214, 2.121320], index=dates)
     assert_series_equal(result, expected, obj="std window 2", check_less_precise=True)
 
@@ -267,7 +269,7 @@ def test_var():
     expected = pd.Series([np.nan, 0.500000, 0.333333, 0.916667, 0.800000, 2.800000], index=dates)
     assert_series_equal(result, expected, obj="var", check_less_precise=True)
 
-    result = var(x, 2)
+    result = var(x, Window(2, 0))
     expected = pd.Series([np.nan, 0.5, 0.5, 2.0, 2.0, 4.5], index=dates)
     assert_series_equal(result, expected, obj="var window 2", check_less_precise=True)
 
@@ -290,7 +292,7 @@ def test_cov():
     expected = pd.Series([np.nan, 0.850000, 0.466667, 0.950000, 0.825000, 2.700000], index=dates)
     assert_series_equal(result, expected, obj="cov", check_less_precise=True)
 
-    result = var(x, 2)
+    result = var(x, Window(2, 0))
     expected = pd.Series([np.nan, 0.5, 0.5, 2.0, 2.0, 4.5], index=dates)
     assert_series_equal(result, expected, obj="var window 2", check_less_precise=True)
 
@@ -301,7 +303,7 @@ def test_zscores():
     assert_series_equal(zscores(pd.Series(), 1), pd.Series())
 
     assert_series_equal(zscores(pd.Series([1])), pd.Series([0.0]))
-    assert_series_equal(zscores(pd.Series([1]), 1), pd.Series([0.0]))
+    assert_series_equal(zscores(pd.Series([1]), Window(1, 0)), pd.Series([0.0]))
 
     dates = [
         date(2019, 1, 1),
@@ -318,9 +320,9 @@ def test_zscores():
     expected = pd.Series([0.000000, -0.597614, 0.000000, -1.195229, 0.000000, 1.792843], index=dates)
     assert_series_equal(result, expected, obj="z-score", check_less_precise=True)
 
-    assert_series_equal(result, (x-x.mean()) / x.std(), obj="full series zscore")
+    assert_series_equal(result, (x - x.mean()) / x.std(), obj="full series zscore")
 
-    result = zscores(x, 2)
+    result = zscores(x, Window(2, 0))
     expected = pd.Series([0.0, -0.707107, 0.707107, -0.707107, 0.707107, 0.707107], index=dates)
     assert_series_equal(result, expected, obj="z-score window 2", check_less_precise=True)
 
@@ -378,11 +380,11 @@ def test_percentiles():
     x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
     y = pd.Series([3.5, 1.8, 2.9, 1.2, 3.1, 6.0], index=dates)
 
-    assert_series_equal(percentiles(pd.Series(), y), pd.Series())
-    assert_series_equal(percentiles(x, pd.Series()), pd.Series())
-    assert_series_equal(percentiles(x, y, 7), pd.Series())
+    assert_series_equal(percentiles(pd.Series([]), y), pd.Series([]))
+    assert_series_equal(percentiles(x, pd.Series([])), pd.Series([]))
+    assert_series_equal(percentiles(x, y, Window(7, 0)), pd.Series([]))
 
-    result = percentiles(x, y, 2)
+    result = percentiles(x, y, Window(2, 0))
     expected = pd.Series([0.0, 50.0, 50.0, 100.0, 75.0], index=dates[1:])
     assert_series_equal(result, expected, obj="percentiles with window 2")
 
@@ -393,3 +395,7 @@ def test_percentiles():
     result = percentiles(x, y)
     expected = pd.Series([100.0, 0.0, 33.333, 25.0, 100.0, 91.667], index=dates)
     assert_series_equal(result, expected, obj="percentiles without window length", check_less_precise=True)
+
+
+if __name__ == "__main__":
+    pytest.main(args=["test_statistics.py"])

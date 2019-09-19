@@ -16,9 +16,10 @@ under the License.
 import datetime as dt
 import logging
 from typing import Tuple
+
+from gs_quant.session import GsSession
 from gs_quant.target.portfolios import Portfolio, PositionSet
 from gs_quant.target.reports import Report
-from gs_quant.session import GsSession
 
 _logger = logging.getLogger(__name__)
 
@@ -51,7 +52,8 @@ class GsPortfolioApi:
     # manage portfolio positions
 
     @classmethod
-    def get_positions(cls, portfolio_id: str, start_date: dt.date = None, end_date: dt.date = None, position_type: str = 'close') -> Tuple[PositionSet, ...]:
+    def get_positions(cls, portfolio_id: str, start_date: dt.date = None, end_date: dt.date = None,
+                      position_type: str = 'close') -> Tuple[PositionSet, ...]:
         url = '/portfolios/{id}/positions?type={positionType}'.format(id=portfolio_id, positionType=position_type)
         if start_date is not None:
             url += '&startDate={sd}'.format(sd=start_date.isoformat())
@@ -62,8 +64,10 @@ class GsPortfolioApi:
         return tuple(PositionSet.from_dict(v) for v in res.get('positionSets', ()))
 
     @classmethod
-    def get_positions_for_date(cls, portfolio_id: str, position_date: dt.date, position_type: str = 'close') -> PositionSet:
-        url = '/portfolios/{id}/positions/{date}?type={ptype}'.format(id=portfolio_id, date=position_date.isoformat(), ptype=position_type)
+    def get_positions_for_date(cls, portfolio_id: str, position_date: dt.date,
+                               position_type: str = 'close') -> PositionSet:
+        url = '/portfolios/{id}/positions/{date}?type={ptype}'.format(
+            id=portfolio_id, date=position_date.isoformat(), ptype=position_type)
         position_sets = GsSession.current._get(url, cls=PositionSet)['results']
         return position_sets[0] if len(position_sets) > 0 else PositionSet()
 
@@ -75,7 +79,7 @@ class GsPortfolioApi:
 
     @classmethod
     def get_position_dates(cls, portfolio_id: str) -> Tuple[dt.date, ...]:
-        position_dates =  GsSession.current._get('/portfolios/{id}/positions/dates'.format(id=portfolio_id))['results']
+        position_dates = GsSession.current._get('/portfolios/{id}/positions/dates'.format(id=portfolio_id))['results']
         return tuple([dt.datetime.strptime(d, '%Y-%m-%d').date() for d in position_dates])
 
     @classmethod

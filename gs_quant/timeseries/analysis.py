@@ -16,10 +16,7 @@
 # description. Type annotations should be provided for parameters.
 
 
-import numpy as np
-import pandas as pd
 from gs_quant.timeseries.datetime import *
-from ..errors import *
 from .helper import plot_function
 
 """
@@ -126,7 +123,7 @@ def count(x: pd.Series) -> pd.Series:
 
 
 @plot_function
-def diff(x: pd.Series, obs: int=1) -> pd.Series:
+def diff(x: pd.Series, obs: int = 1) -> pd.Series:
     """
     Diff observations with given lag
 
@@ -164,7 +161,7 @@ def diff(x: pd.Series, obs: int=1) -> pd.Series:
 
 
 @plot_function
-def lag(x: pd.Series, obs: int=1) -> pd.Series:
+def lag(x: pd.Series, obs: int = 1) -> pd.Series:
     """
     Lag timeseries by a specified number of observations
 

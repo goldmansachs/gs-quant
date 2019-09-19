@@ -18,6 +18,7 @@ import copy
 import datetime as dt
 import dateutil
 from enum import EnumMeta
+import inflection
 from inspect import signature, Parameter
 import logging
 import pandas as pd
@@ -39,28 +40,46 @@ class Base:
 
     __properties = set()
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.__calced_hash = None
 
-    def _property_changed(self, prop):
+        for arg, value in kwargs.items():
+            setattr(self, arg, value)
+
+    def __getattr__(self, item):
+        snake_case_item = inflection.underscore(item)
+        attr = getattr(super().__getattribute__('__class__'), snake_case_item, None)
+        if attr and isinstance(attr, property):
+            return super().__getattribute__(snake_case_item)
+        else:
+            return super().__getattribute__(item)
+
+    def __setattr__(self, key, value):
+        snake_case_key = inflection.underscore(key)
+        attr = getattr(super().__getattribute__('__class__'), snake_case_key, None)
+        if attr and isinstance(attr, property):
+            return super().__setattr__(snake_case_key, value)
+        else:
+            return super().__setattr__(key, value)
+
+    def _property_changed(self, prop: str):
         self.__calced_hash = None
 
     def __hash__(self):
         if self.__calced_hash is None:
-            properties = (i for i in dir(self.__class__) if isinstance(getattr(self.__class__, i), property))
+            properties = iter(self.properties())
             prop = next(properties, None)
-            self.__calced_hash = hash(getattr(self, prop)) if prop else 1
+            self.__calced_hash = hash(super().__getattribute__(prop)) if prop else 1
             for prop in properties:
-                self.__calced_hash ^= hash(getattr(self, prop))
+                self.__calced_hash ^= hash(super().__getattribute__(prop))
 
         return self.__calced_hash
 
     def __eq__(self, other):
-        properties = (i for i in dir(self.__class__) if isinstance(getattr(self.__class__, i), property))
         return\
             type(self) == type(other) and\
             (self.__calced_hash is None or other.__calced_hash is None or self.__calced_hash == other.__calced_hash) and\
-            all(getattr(self, p) == getattr(other, p) for p in properties)
+            all(super(Base, self).__getattribute__(p) == super(Base, other).__getattribute__(p) for p in self.properties())
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -72,10 +91,11 @@ class Base:
             cls.__properties = set(i for i in dir(cls) if isinstance(getattr(cls, i), property) and not i.startswith('_'))
         return cls.__properties
 
-    def as_dict(self) -> dict:
+    def as_dict(self, as_camel_case: bool=False) -> dict:
         """Dictionary of the public, non-null properties and values"""
-        properties = self.properties()
-        values = [getattr(self, p) for p in properties]
+        raw_properties = self.properties()
+        properties = (inflection.camelize(p) for p in raw_properties) if as_camel_case else raw_properties
+        values = (super(Base, self).__getattribute__(p) for p in raw_properties)
         return dict((p, v) for p, v in zip(properties, values) if v is not None)
 
     @classmethod
@@ -187,8 +207,20 @@ class Priceable(Base):
 
     PROVIDER = None
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._resolved = False
+
+    def __getattribute__(self, name):
+        if not super().__getattribute__('_resolved'):
+            attr = getattr(super().__getattribute__('__class__'), name, None)
+            if attr and isinstance(attr, property) and super().__getattribute__(name) is None:
+                self.resolve()
+
+        return super().__getattribute__(name)
+
+    def _property_changed(self, prop: str):
+        super()._property_changed(prop)
         self._resolved = False
 
     def get_quantity(self) -> float:
@@ -207,7 +239,7 @@ class Priceable(Base):
 
         return self.PROVIDER
 
-    def resolve(self, in_place=True) -> Optional['Priceable']:
+    def resolve(self, in_place: bool=True) -> Optional['Priceable']:
         """
         Resolve non-supplied properties of an instrument
 

@@ -41,6 +41,9 @@ class Fields(Enum):
     ADJUSTED_TRADE_PRICE = 'adjustedTradePrice'
     ADJUSTED_VOLUME = 'adjustedVolume'
     UPDATE_TIME = 'updateTime'
+    EXPIRATION_DATE = 'expirationDate'
+    TENOR = 'tenor'
+    VAR_SWAP = 'varSwap'
 
     @property
     def unit(self) -> Optional[str]:

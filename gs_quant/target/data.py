@@ -146,7 +146,7 @@ class DataGroup(Base):
 
 class DataQuery(Base):
                
-    def __init__(self, id: str = None, dataSetId: str = None, format: Union[Format, str] = None, marketDataCoordinates: Tuple[MarketDataCoordinate, ...] = None, where: FieldFilterMap = None, vendor: str = None, startDate: datetime.date = None, endDate: datetime.date = None, startTime: datetime.datetime = None, endTime: datetime.datetime = None, asOfTime: datetime.datetime = None, idAsOfDate: datetime.date = None, useTemporalXRef: bool = False, since: datetime.datetime = None, dates: Tuple[datetime.date, ...] = None, times: Tuple[datetime.datetime, ...] = None, delay: int = None, intervals: int = None, pollingInterval: int = None, grouped: bool = None, fields: Tuple[Union[dict, str], ...] = None):
+    def __init__(self, id: str = None, dataSetId: str = None, format: Union[Format, str] = None, marketDataCoordinates: Tuple[MarketDataCoordinate, ...] = None, where: FieldFilterMap = None, vendor: str = None, startDate: datetime.date = None, endDate: datetime.date = None, startTime: datetime.datetime = None, endTime: datetime.datetime = None, asOfTime: datetime.datetime = None, idAsOfDate: datetime.date = None, useTemporalXRef: bool = False, since: datetime.datetime = None, dates: Tuple[datetime.date, ...] = None, times: Tuple[datetime.datetime, ...] = None, delay: int = None, intervals: int = None, samples: int = None, limit: int = None, pollingInterval: int = None, grouped: bool = None, fields: Tuple[Union[dict, str], ...] = None, restrictFields: bool = False):
         super().__init__()
         self.__id = id
         self.__dataSetId = dataSetId
@@ -166,9 +166,12 @@ class DataQuery(Base):
         self.__times = times
         self.__delay = delay
         self.__intervals = intervals
+        self.__samples = samples
+        self.__limit = limit
         self.__pollingInterval = pollingInterval
         self.__grouped = grouped
         self.__fields = fields
+        self.__restrictFields = restrictFields
 
     @property
     def id(self) -> str:
@@ -350,6 +353,26 @@ class DataQuery(Base):
         self._property_changed('intervals')        
 
     @property
+    def samples(self) -> int:
+        """Number of points to down sample the data, for example if 10, it will return at most 10 sample data points evenly spaced over the time/date range"""
+        return self.__samples
+
+    @samples.setter
+    def samples(self, value: int):
+        self.__samples = value
+        self._property_changed('samples')        
+
+    @property
+    def limit(self) -> int:
+        """Maximum number of rows for each asset to return."""
+        return self.__limit
+
+    @limit.setter
+    def limit(self, value: int):
+        self.__limit = value
+        self._property_changed('limit')        
+
+    @property
     def pollingInterval(self) -> int:
         """When streaming, wait for this number of seconds between poll attempts."""
         return self.__pollingInterval
@@ -378,6 +401,16 @@ class DataQuery(Base):
     def fields(self, value: Tuple[Union[dict, str], ...]):
         self.__fields = value
         self._property_changed('fields')        
+
+    @property
+    def restrictFields(self) -> bool:
+        """Whether to return only the fields which are requested and suppress every other field"""
+        return self.__restrictFields
+
+    @restrictFields.setter
+    def restrictFields(self, value: bool):
+        self.__restrictFields = value
+        self._property_changed('restrictFields')        
 
 
 class DataSetDefaults(Base):
@@ -421,17 +454,73 @@ class DataSetDefaults(Base):
         self._property_changed('delaySeconds')        
 
 
+class DataSetDelay(Base):
+        
+    """Specifies the delayed data properties."""
+       
+    def __init__(self, untilSeconds: float, atTimeZone: str, historyUpToSeconds: float = None, historyUpToTime: datetime.datetime = None):
+        super().__init__()
+        self.__untilSeconds = untilSeconds
+        self.__atTimeZone = atTimeZone
+        self.__historyUpToSeconds = historyUpToSeconds
+        self.__historyUpToTime = historyUpToTime
+
+    @property
+    def untilSeconds(self) -> float:
+        """Seconds from midnight until which the delay will be applicable."""
+        return self.__untilSeconds
+
+    @untilSeconds.setter
+    def untilSeconds(self, value: float):
+        self.__untilSeconds = value
+        self._property_changed('untilSeconds')        
+
+    @property
+    def atTimeZone(self) -> str:
+        """The time zone with respect to which the delay will be applied (must be a valid IANA TimeZone identifier)."""
+        return self.__atTimeZone
+
+    @atTimeZone.setter
+    def atTimeZone(self, value: str):
+        self.__atTimeZone = value
+        self._property_changed('atTimeZone')        
+
+    @property
+    def historyUpToSeconds(self) -> float:
+        """Relative seconds up to which the data history will be shown for the business day."""
+        return self.__historyUpToSeconds
+
+    @historyUpToSeconds.setter
+    def historyUpToSeconds(self, value: float):
+        self.__historyUpToSeconds = value
+        self._property_changed('historyUpToSeconds')        
+
+    @property
+    def historyUpToTime(self) -> datetime.datetime:
+        """Absolute time up to which the data history will be shown for the business day."""
+        return self.__historyUpToTime
+
+    @historyUpToTime.setter
+    def historyUpToTime(self, value: datetime.datetime):
+        self.__historyUpToTime = value
+        self._property_changed('historyUpToTime')        
+
+
 class DataSetParameters(Base):
         
     """Dataset parameters."""
        
-    def __init__(self, uploadDataPolicy: str, logicalDb: str, symbolStrategy: str, applyMarketDataEntitlements: bool, coverage: str, frequency: str, methodology: str, history: str, category: str = None, subCategory: str = None, assetClass: Union[AssetClass, str] = None, ownerIds: Tuple[str, ...] = None, approverIds: Tuple[str, ...] = None, supportIds: Tuple[str, ...] = None, supportDistributionList: Tuple[str, ...] = None, identifierMapperName: str = None, constantSymbols: Tuple[str, ...] = None, underlyingDataSetId: str = None, immutable: bool = None, includeInCatalog: bool = None, overrideQueryColumnIds: Tuple[str, ...] = None, plot: bool = None, coverageEnabled: bool = True):
+    def __init__(self, uploadDataPolicy: str, logicalDb: str, symbolStrategy: str, applyMarketDataEntitlements: bool, coverage: str, frequency: str, methodology: str, history: str, category: str = None, subCategory: str = None, sampleStart: datetime.datetime = None, sampleEnd: datetime.datetime = None, publishedDate: datetime.date = None, historyDate: datetime.date = None, assetClass: Union[AssetClass, str] = None, ownerIds: Tuple[str, ...] = None, approverIds: Tuple[str, ...] = None, supportIds: Tuple[str, ...] = None, supportDistributionList: Tuple[str, ...] = None, identifierMapperName: str = None, constantSymbols: Tuple[str, ...] = None, underlyingDataSetId: str = None, immutable: bool = None, includeInCatalog: bool = None, overrideQueryColumnIds: Tuple[str, ...] = None, plot: bool = None, coverageEnabled: bool = True):
         super().__init__()
         self.__category = category
         self.__subCategory = subCategory
         self.__methodology = methodology
         self.__coverage = coverage
         self.__history = history
+        self.__sampleStart = sampleStart
+        self.__sampleEnd = sampleEnd
+        self.__publishedDate = publishedDate
+        self.__historyDate = historyDate
         self.__frequency = frequency
         self.__assetClass = assetClass if isinstance(assetClass, AssetClass) else get_enum_value(AssetClass, assetClass)
         self.__ownerIds = ownerIds
@@ -500,6 +589,46 @@ class DataSetParameters(Base):
     def history(self, value: str):
         self.__history = value
         self._property_changed('history')        
+
+    @property
+    def sampleStart(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
+        return self.__sampleStart
+
+    @sampleStart.setter
+    def sampleStart(self, value: datetime.datetime):
+        self.__sampleStart = value
+        self._property_changed('sampleStart')        
+
+    @property
+    def sampleEnd(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
+        return self.__sampleEnd
+
+    @sampleEnd.setter
+    def sampleEnd(self, value: datetime.datetime):
+        self.__sampleEnd = value
+        self._property_changed('sampleEnd')        
+
+    @property
+    def publishedDate(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__publishedDate
+
+    @publishedDate.setter
+    def publishedDate(self, value: datetime.date):
+        self.__publishedDate = value
+        self._property_changed('publishedDate')        
+
+    @property
+    def historyDate(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__historyDate
+
+    @historyDate.setter
+    def historyDate(self, value: datetime.date):
+        self.__historyDate = value
+        self._property_changed('historyDate')        
 
     @property
     def frequency(self) -> str:
@@ -686,97 +815,39 @@ class DataSetParameters(Base):
         self._property_changed('coverageEnabled')        
 
 
-class FieldColumnPair(Base):
+class FieldLink(Base):
         
-    """Map from fields to database columns."""
+    """Link the dataset field to an entity to also fetch its fields."""
        
-    def __init__(self, field: str = None, column: str = None, fieldDescription: str = None):
+    def __init__(self, entityIdentifier: str = None, prefix: str = None):
         super().__init__()
-        self.__field = field
-        self.__column = column
-        self.__fieldDescription = fieldDescription
+        self.__entityIdentifier = entityIdentifier
+        self.__prefix = prefix
 
     @property
-    def field(self) -> str:
-        """Field name."""
-        return self.__field
-
-    @field.setter
-    def field(self, value: str):
-        self.__field = value
-        self._property_changed('field')        
+    def entityType(self) -> str:
+        """The type of the entity to lookup to."""
+        return 'Asset'        
 
     @property
-    def column(self) -> str:
-        """Database column name."""
-        return self.__column
+    def entityIdentifier(self) -> str:
+        """The identifier of the entity to link the dataset field to."""
+        return self.__entityIdentifier
 
-    @column.setter
-    def column(self, value: str):
-        self.__column = value
-        self._property_changed('column')        
-
-    @property
-    def fieldDescription(self) -> str:
-        """Custom description (overrides field default)."""
-        return self.__fieldDescription
-
-    @fieldDescription.setter
-    def fieldDescription(self, value: str):
-        self.__fieldDescription = value
-        self._property_changed('fieldDescription')        
-
-
-class HistoryFilter(Base):
-        
-    """Restricts queries against dataset to an absolute or relative range."""
-       
-    def __init__(self, absoluteStart: datetime.datetime = None, absoluteEnd: datetime.datetime = None, relativeStartSeconds: float = None, relativeEndSeconds: float = None):
-        super().__init__()
-        self.__absoluteStart = absoluteStart
-        self.__absoluteEnd = absoluteEnd
-        self.__relativeStartSeconds = relativeStartSeconds
-        self.__relativeEndSeconds = relativeEndSeconds
+    @entityIdentifier.setter
+    def entityIdentifier(self, value: str):
+        self.__entityIdentifier = value
+        self._property_changed('entityIdentifier')        
 
     @property
-    def absoluteStart(self) -> datetime.datetime:
-        """ISO 8601-formatted timestamp"""
-        return self.__absoluteStart
+    def prefix(self) -> str:
+        """Prefix to put before the fields fetched from the linked entity (must be unique for each dataset field)."""
+        return self.__prefix
 
-    @absoluteStart.setter
-    def absoluteStart(self, value: datetime.datetime):
-        self.__absoluteStart = value
-        self._property_changed('absoluteStart')        
-
-    @property
-    def absoluteEnd(self) -> datetime.datetime:
-        """ISO 8601-formatted timestamp"""
-        return self.__absoluteEnd
-
-    @absoluteEnd.setter
-    def absoluteEnd(self, value: datetime.datetime):
-        self.__absoluteEnd = value
-        self._property_changed('absoluteEnd')        
-
-    @property
-    def relativeStartSeconds(self) -> float:
-        """Earliest start time in seconds before current time."""
-        return self.__relativeStartSeconds
-
-    @relativeStartSeconds.setter
-    def relativeStartSeconds(self, value: float):
-        self.__relativeStartSeconds = value
-        self._property_changed('relativeStartSeconds')        
-
-    @property
-    def relativeEndSeconds(self) -> float:
-        """Latest end time in seconds before current time."""
-        return self.__relativeEndSeconds
-
-    @relativeEndSeconds.setter
-    def relativeEndSeconds(self, value: float):
-        self.__relativeEndSeconds = value
-        self._property_changed('relativeEndSeconds')        
+    @prefix.setter
+    def prefix(self, value: str):
+        self.__prefix = value
+        self._property_changed('prefix')        
 
 
 class MDAPI(Base):
@@ -1155,87 +1226,119 @@ class DataQueryResponse(Base):
         self._property_changed('groups')        
 
 
-class DataSetDimensions(Base):
+class FieldColumnPair(Base):
         
-    """Dataset dimensions."""
+    """Map from fields to database columns."""
        
-    def __init__(self, timeField: str, transactionTimeField: str = None, symbolDimensions: Tuple[str, ...] = None, nonSymbolDimensions: Tuple[FieldColumnPair, ...] = None, keyDimensions: Tuple[str, ...] = None, measures: Tuple[FieldColumnPair, ...] = None, entityDimension: str = None):
+    def __init__(self, field: str = None, column: str = None, fieldDescription: str = None, link: FieldLink = None):
         super().__init__()
-        self.__timeField = timeField
-        self.__transactionTimeField = transactionTimeField
-        self.__symbolDimensions = symbolDimensions
-        self.__nonSymbolDimensions = nonSymbolDimensions
-        self.__keyDimensions = keyDimensions
-        self.__measures = measures
-        self.__entityDimension = entityDimension
+        self.__field = field
+        self.__column = column
+        self.__fieldDescription = fieldDescription
+        self.__link = link
 
     @property
-    def timeField(self) -> str:
-        return self.__timeField
+    def field(self) -> str:
+        """Field name."""
+        return self.__field
 
-    @timeField.setter
-    def timeField(self, value: str):
-        self.__timeField = value
-        self._property_changed('timeField')        
-
-    @property
-    def transactionTimeField(self) -> str:
-        """For bi-temporal datasets, field for capturing the time at which a data point was updated."""
-        return self.__transactionTimeField
-
-    @transactionTimeField.setter
-    def transactionTimeField(self, value: str):
-        self.__transactionTimeField = value
-        self._property_changed('transactionTimeField')        
+    @field.setter
+    def field(self, value: str):
+        self.__field = value
+        self._property_changed('field')        
 
     @property
-    def symbolDimensions(self) -> Tuple[str, ...]:
-        """Set of fields that determine database table name."""
-        return self.__symbolDimensions
+    def column(self) -> str:
+        """Database column name."""
+        return self.__column
 
-    @symbolDimensions.setter
-    def symbolDimensions(self, value: Tuple[str, ...]):
-        self.__symbolDimensions = value
-        self._property_changed('symbolDimensions')        
-
-    @property
-    def nonSymbolDimensions(self) -> Tuple[FieldColumnPair, ...]:
-        """Fields that are not nullable."""
-        return self.__nonSymbolDimensions
-
-    @nonSymbolDimensions.setter
-    def nonSymbolDimensions(self, value: Tuple[FieldColumnPair, ...]):
-        self.__nonSymbolDimensions = value
-        self._property_changed('nonSymbolDimensions')        
+    @column.setter
+    def column(self, value: str):
+        self.__column = value
+        self._property_changed('column')        
 
     @property
-    def keyDimensions(self) -> Tuple[str, ...]:
-        return self.__keyDimensions
+    def fieldDescription(self) -> str:
+        """Custom description (overrides field default)."""
+        return self.__fieldDescription
 
-    @keyDimensions.setter
-    def keyDimensions(self, value: Tuple[str, ...]):
-        self.__keyDimensions = value
-        self._property_changed('keyDimensions')        
-
-    @property
-    def measures(self) -> Tuple[FieldColumnPair, ...]:
-        """Fields that are nullable."""
-        return self.__measures
-
-    @measures.setter
-    def measures(self, value: Tuple[FieldColumnPair, ...]):
-        self.__measures = value
-        self._property_changed('measures')        
+    @fieldDescription.setter
+    def fieldDescription(self, value: str):
+        self.__fieldDescription = value
+        self._property_changed('fieldDescription')        
 
     @property
-    def entityDimension(self) -> str:
-        """Symbol dimension corresponding to an entity e.g. asset or report."""
-        return self.__entityDimension
+    def link(self) -> FieldLink:
+        """Link the field with other entity to also fetch its fields."""
+        return self.__link
 
-    @entityDimension.setter
-    def entityDimension(self, value: str):
-        self.__entityDimension = value
-        self._property_changed('entityDimension')        
+    @link.setter
+    def link(self, value: FieldLink):
+        self.__link = value
+        self._property_changed('link')        
+
+
+class HistoryFilter(Base):
+        
+    """Restricts queries against dataset to a time range."""
+       
+    def __init__(self, absoluteStart: datetime.datetime = None, absoluteEnd: datetime.datetime = None, relativeStartSeconds: float = None, relativeEndSeconds: float = None, delay: DataSetDelay = None):
+        super().__init__()
+        self.__absoluteStart = absoluteStart
+        self.__absoluteEnd = absoluteEnd
+        self.__relativeStartSeconds = relativeStartSeconds
+        self.__relativeEndSeconds = relativeEndSeconds
+        self.__delay = delay
+
+    @property
+    def absoluteStart(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
+        return self.__absoluteStart
+
+    @absoluteStart.setter
+    def absoluteStart(self, value: datetime.datetime):
+        self.__absoluteStart = value
+        self._property_changed('absoluteStart')        
+
+    @property
+    def absoluteEnd(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
+        return self.__absoluteEnd
+
+    @absoluteEnd.setter
+    def absoluteEnd(self, value: datetime.datetime):
+        self.__absoluteEnd = value
+        self._property_changed('absoluteEnd')        
+
+    @property
+    def relativeStartSeconds(self) -> float:
+        """Earliest start time in seconds before current time."""
+        return self.__relativeStartSeconds
+
+    @relativeStartSeconds.setter
+    def relativeStartSeconds(self, value: float):
+        self.__relativeStartSeconds = value
+        self._property_changed('relativeStartSeconds')        
+
+    @property
+    def relativeEndSeconds(self) -> float:
+        """Latest end time in seconds before current time."""
+        return self.__relativeEndSeconds
+
+    @relativeEndSeconds.setter
+    def relativeEndSeconds(self, value: float):
+        self.__relativeEndSeconds = value
+        self._property_changed('relativeEndSeconds')        
+
+    @property
+    def delay(self) -> DataSetDelay:
+        """Specifies the delayed data properties."""
+        return self.__delay
+
+    @delay.setter
+    def delay(self, value: DataSetDelay):
+        self.__delay = value
+        self._property_changed('delay')        
 
 
 class MDAPIDataBatchResponse(Base):
@@ -1472,6 +1575,89 @@ class ProcessorEntity(Base):
         self._property_changed('deduplicate')        
 
 
+class DataSetDimensions(Base):
+        
+    """Dataset dimensions."""
+       
+    def __init__(self, timeField: str, transactionTimeField: str = None, symbolDimensions: Tuple[str, ...] = None, nonSymbolDimensions: Tuple[FieldColumnPair, ...] = None, keyDimensions: Tuple[str, ...] = None, measures: Tuple[FieldColumnPair, ...] = None, entityDimension: str = None):
+        super().__init__()
+        self.__timeField = timeField
+        self.__transactionTimeField = transactionTimeField
+        self.__symbolDimensions = symbolDimensions
+        self.__nonSymbolDimensions = nonSymbolDimensions
+        self.__keyDimensions = keyDimensions
+        self.__measures = measures
+        self.__entityDimension = entityDimension
+
+    @property
+    def timeField(self) -> str:
+        return self.__timeField
+
+    @timeField.setter
+    def timeField(self, value: str):
+        self.__timeField = value
+        self._property_changed('timeField')        
+
+    @property
+    def transactionTimeField(self) -> str:
+        """For bi-temporal datasets, field for capturing the time at which a data point was updated."""
+        return self.__transactionTimeField
+
+    @transactionTimeField.setter
+    def transactionTimeField(self, value: str):
+        self.__transactionTimeField = value
+        self._property_changed('transactionTimeField')        
+
+    @property
+    def symbolDimensions(self) -> Tuple[str, ...]:
+        """Set of fields that determine database table name."""
+        return self.__symbolDimensions
+
+    @symbolDimensions.setter
+    def symbolDimensions(self, value: Tuple[str, ...]):
+        self.__symbolDimensions = value
+        self._property_changed('symbolDimensions')        
+
+    @property
+    def nonSymbolDimensions(self) -> Tuple[FieldColumnPair, ...]:
+        """Fields that are not nullable."""
+        return self.__nonSymbolDimensions
+
+    @nonSymbolDimensions.setter
+    def nonSymbolDimensions(self, value: Tuple[FieldColumnPair, ...]):
+        self.__nonSymbolDimensions = value
+        self._property_changed('nonSymbolDimensions')        
+
+    @property
+    def keyDimensions(self) -> Tuple[str, ...]:
+        return self.__keyDimensions
+
+    @keyDimensions.setter
+    def keyDimensions(self, value: Tuple[str, ...]):
+        self.__keyDimensions = value
+        self._property_changed('keyDimensions')        
+
+    @property
+    def measures(self) -> Tuple[FieldColumnPair, ...]:
+        """Fields that are nullable."""
+        return self.__measures
+
+    @measures.setter
+    def measures(self, value: Tuple[FieldColumnPair, ...]):
+        self.__measures = value
+        self._property_changed('measures')        
+
+    @property
+    def entityDimension(self) -> str:
+        """Symbol dimension corresponding to an entity e.g. asset or report."""
+        return self.__entityDimension
+
+    @entityDimension.setter
+    def entityDimension(self, value: str):
+        self.__entityDimension = value
+        self._property_changed('entityDimension')        
+
+
 class EntityFilter(Base):
         
     """Filter on entities."""
@@ -1555,7 +1741,7 @@ class DataSetFilters(Base):
 
     @property
     def historyFilter(self) -> HistoryFilter:
-        """Restricts queries against dataset to an absolute or relative range."""
+        """Restricts queries against dataset to a time range."""
         return self.__historyFilter
 
     @historyFilter.setter

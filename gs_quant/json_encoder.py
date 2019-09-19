@@ -14,10 +14,12 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.base import Base, EnumBase
 import datetime
 import json
+
 import pandas as pd
+
+from gs_quant.base import Base, EnumBase
 
 
 class JSONEncoder(json.JSONEncoder):
@@ -30,7 +32,7 @@ class JSONEncoder(json.JSONEncoder):
         elif isinstance(o, EnumBase):
             return o.value
         elif isinstance(o, pd.DataFrame):
-            return o.to_json()
+            return o.to_json(as_camel_case=True)
         elif isinstance(o, Base):
             return o.as_dict()
         else:

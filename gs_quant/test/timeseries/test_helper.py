@@ -14,13 +14,13 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from enum import Enum, IntEnum
+from enum import IntEnum
 
 import pytest
 
+import gs_quant.timeseries as ts
 from gs_quant.timeseries.helper import _create_int_enum, plot_function, plot_measure, normalize_window, Window, \
     apply_ramp
-import gs_quant.timeseries as ts
 
 # TODO test the instance of IntEnum when we have any.
 

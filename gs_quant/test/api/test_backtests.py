@@ -14,8 +14,6 @@ specific language governing permissions and limitations
 under the License.
 """
 
-import datetime as dt
-
 from gs_quant.api.gs.backtests import GsBacktestApi, Backtest, BacktestResult
 from gs_quant.session import *
 from gs_quant.target.common import *
@@ -114,8 +112,6 @@ def test_delete_backtest(mocker):
 
 def test_get_backtest_results(mocker):
     id_1 = 'BT1'
-    start_date = dt.date(2019, 2, 18)
-    end_date = dt.date(2019, 2, 19)
 
     mock_response = {'backtestResults': (
         BacktestResult('BT1', performance=(

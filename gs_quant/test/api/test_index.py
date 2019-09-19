@@ -15,10 +15,12 @@ under the License.
 """
 
 import pytest
-from gs_quant.api.gs.indices import *
-from gs_quant.session import *
+
 from gs_quant.api.gs.assets import GsAssetApi, GsAsset
+from gs_quant.api.gs.indices import *
 from gs_quant.context_base import ContextMeta
+from gs_quant.session import *
+
 
 def test_create(mocker):
     # construct inputs
@@ -51,7 +53,10 @@ def test_rebalance(mocker):
     publish_parameters = PublishParameters(False, False, False)
     pricing_parameters = IndicesPriceParameters()
     pricing_parameters.initialPrice = 100
-    parameters = {'publishParameters': publish_parameters, 'pricingParameters': pricing_parameters, 'positionSet': position_set}
+    parameters = {
+        'publishParameters': publish_parameters,
+        'pricingParameters': pricing_parameters,
+        'positionSet': position_set}
     inputs = IndicesRebalanceInputs(parameters)
     # mock GsSession
     mock_asset = GsAsset('Equity', AssetType.Custom_Basket, 'Test Basket')
@@ -76,7 +81,10 @@ def test_rebalance_raises_exception(mocker):
     publish_parameters = PublishParameters(False, False, False)
     pricing_parameters = IndicesPriceParameters()
     pricing_parameters.initialPrice = 100
-    parameters = {'publishParameters': publish_parameters, 'pricingParameters': pricing_parameters, 'positionSet': position_set}
+    parameters = {
+        'publishParameters': publish_parameters,
+        'pricingParameters': pricing_parameters,
+        'positionSet': position_set}
     inputs = IndicesRebalanceInputs(parameters)
     # mock GsSession
     mock_asset = GsAsset('Equity', AssetType.Custom_Basket, 'Test Basket')
@@ -88,6 +96,7 @@ def test_rebalance_raises_exception(mocker):
     index = GsIndexApi()
     with pytest.raises(Exception):
         response = index.rebalance(inputs)
+        print(response)
 
 
 def test_rebalance_cancel(mocker):
@@ -113,4 +122,3 @@ def test_rebalance_cancel_raises_exception(mocker):
     index = GsIndexApi()
     with pytest.raises(Exception):
         index.cancel_rebalance(cancel_inputs)
-

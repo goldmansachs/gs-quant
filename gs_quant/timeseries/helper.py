@@ -1,3 +1,19 @@
+"""
+Copyright 2019 Goldman Sachs.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+"""
+
 import logging
 from collections import namedtuple
 from enum import Enum, IntEnum
@@ -7,6 +23,7 @@ from typing import Optional, Union, List
 import pandas as pd
 
 from gs_quant.api.gs.data import QueryType
+
 
 def _create_enum(name, members):
     return Enum(name, {n.upper(): n.lower() for n in members}, module=__name__)
@@ -31,7 +48,7 @@ def _check_window(x: pd.Series, window: Window):
             raise ValueError('Ramp value must be less than the length of the series and greater than zero.')
 
 
-def apply_ramp(x: pd.Series, window: Window):
+def apply_ramp(x: pd.Series, window: Window) -> pd.Series:
     _check_window(x, window)
     return x[window.r:] if window.w <= len(x) else pd.Series([])
 
@@ -40,7 +57,7 @@ def normalize_window(x: pd.Series, window: Union[Window, int, None], default_win
     if default_window is None:
         default_window = x.size
 
-    if type(window) == int:
+    if isinstance(window, int):
         window = Window(w=window, r=window)
     else:
         if window is None:

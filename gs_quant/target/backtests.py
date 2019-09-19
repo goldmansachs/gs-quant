@@ -14,11 +14,24 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.base import Base, get_enum_value
+from enum import Enum
+from gs_quant.base import Base, EnumBase, get_enum_value
 from gs_quant.target.common import *
-from gs_quant.target.instrument import *
 from typing import Tuple, Union
 import datetime
+
+
+class BacktestType(EnumBase, Enum):    
+    
+    """Backtest type differentiates the backtest type."""
+
+    Basket = 'Basket'
+    Volatility = 'Volatility'
+    Volatility_Flow = 'Volatility Flow'
+    Enhanced_Beta = 'Enhanced Beta'
+    
+    def __repr__(self):
+        return self.value
 
 
 class BacktestComparison(Base):
@@ -55,10 +68,9 @@ class BacktestPerformanceDecomposition(Base):
         
     """Decomposition of backtest performance"""
        
-    def __init__(self, name: str = None, performance: Tuple[FieldValueMap, ...] = None, stats: PerformanceStats = None):
+    def __init__(self, name: str = None, stats: PerformanceStats = None):
         super().__init__()
         self.__name = name
-        self.__performance = performance
         self.__stats = stats
 
     @property
@@ -70,16 +82,6 @@ class BacktestPerformanceDecomposition(Base):
     def name(self, value: str):
         self.__name = value
         self._property_changed('name')        
-
-    @property
-    def performance(self) -> Tuple[FieldValueMap, ...]:
-        """Backtest performance curve."""
-        return self.__performance
-
-    @performance.setter
-    def performance(self, value: Tuple[FieldValueMap, ...]):
-        self.__performance = value
-        self._property_changed('performance')        
 
     @property
     def stats(self) -> PerformanceStats:
@@ -148,10 +150,9 @@ class BacktestRisk(Base):
         
     """Risks of the backtest portfolio"""
        
-    def __init__(self, name: str = None, timeseries: Tuple[FieldValueMap, ...] = None):
+    def __init__(self, name: str = None):
         super().__init__()
         self.__name = name
-        self.__timeseries = timeseries
 
     @property
     def name(self) -> str:
@@ -162,16 +163,6 @@ class BacktestRisk(Base):
     def name(self, value: str):
         self.__name = value
         self._property_changed('name')        
-
-    @property
-    def timeseries(self) -> Tuple[FieldValueMap, ...]:
-        """Backtest portfolio risk curve."""
-        return self.__timeseries
-
-    @timeseries.setter
-    def timeseries(self, value: Tuple[FieldValueMap, ...]):
-        self.__timeseries = value
-        self._property_changed('timeseries')        
 
 
 class BacktestTradingParameters(Base):
@@ -301,10 +292,9 @@ class ComparisonBacktestResult(Base):
         
     """Comparisons of backtest results"""
        
-    def __init__(self, stats: PerformanceStats = None, performance: Tuple[FieldValueMap, ...] = None, id: str = None):
+    def __init__(self, stats: PerformanceStats = None, id: str = None):
         super().__init__()
         self.__stats = stats
-        self.__performance = performance
         self.__id = id
 
     @property
@@ -316,16 +306,6 @@ class ComparisonBacktestResult(Base):
     def stats(self, value: PerformanceStats):
         self.__stats = value
         self._property_changed('stats')        
-
-    @property
-    def performance(self) -> Tuple[FieldValueMap, ...]:
-        """Performance for the comparison asset or backtest curve"""
-        return self.__performance
-
-    @performance.setter
-    def performance(self, value: Tuple[FieldValueMap, ...]):
-        self.__performance = value
-        self._property_changed('performance')        
 
     @property
     def id(self) -> str:
@@ -1177,6 +1157,7 @@ class BacktestResult(Base):
 
     @property
     def underlierCorrelation(self) -> Tuple[EntityCorrelation, ...]:
+        """entity correlation"""
         return self.__underlierCorrelation
 
     @underlierCorrelation.setter
@@ -1645,7 +1626,7 @@ class BacktestStrategyUnderlier(Base):
         
     """Backtest Strategy Undelier."""
        
-    def __init__(self, instrument: EqOption, marketModel: str, notionalPercentage: float = None, name: str = None, hedge: BacktestStrategyUnderlierHedge = None):
+    def __init__(self, instrument: dict, marketModel: str, notionalPercentage: float = None, name: str = None, hedge: BacktestStrategyUnderlierHedge = None):
         super().__init__()
         self.__instrument = instrument
         self.__notionalPercentage = notionalPercentage
@@ -1654,12 +1635,12 @@ class BacktestStrategyUnderlier(Base):
         self.__hedge = hedge
 
     @property
-    def instrument(self) -> EqOption:
+    def instrument(self) -> dict:
         """instrument that you are getting into"""
         return self.__instrument
 
     @instrument.setter
-    def instrument(self, value: EqOption):
+    def instrument(self, value: dict):
         self.__instrument = value
         self._property_changed('instrument')        
 
@@ -1736,6 +1717,7 @@ class UnderlyingAssetIdRefData(Base):
 
     @property
     def data(self) -> Tuple[UnderlyingAssetIdDataRefData, ...]:
+        """Underlying asset id data reference data object."""
         return self.__data
 
     @data.setter
@@ -2003,7 +1985,7 @@ class Backtest(Base):
         
     """A backtest"""
        
-    def __init__(self, name: str, type: str, assetClass: Union[AssetClass, str], costNetting: bool = False, createdById: str = None, createdTime: datetime.datetime = None, currency: Union[Currency, str] = None, entitlements: Entitlements = None, entitlementExclusions: EntitlementExclusions = None, id: str = None, lastUpdatedById: str = None, lastUpdatedTime: datetime.datetime = None, mqSymbol: str = None, ownerId: str = None, reportIds: Tuple[str, ...] = None, parameters: dict = None, startDate: datetime.date = None, endDate: datetime.date = None, version: float = None):
+    def __init__(self, name: str, type: Union[BacktestType, str], assetClass: Union[AssetClass, str], costNetting: bool = False, createdById: str = None, createdTime: datetime.datetime = None, currency: Union[Currency, str] = None, entitlements: Entitlements = None, entitlementExclusions: EntitlementExclusions = None, id: str = None, lastUpdatedById: str = None, lastUpdatedTime: datetime.datetime = None, mqSymbol: str = None, ownerId: str = None, reportIds: Tuple[str, ...] = None, parameters: dict = None, startDate: datetime.date = None, endDate: datetime.date = None, version: float = None):
         super().__init__()
         self.__costNetting = costNetting
         self.__createdById = createdById
@@ -2021,7 +2003,7 @@ class Backtest(Base):
         self.__parameters = parameters
         self.__startDate = startDate
         self.__endDate = endDate
-        self.__type = type
+        self.__type = type if isinstance(type, BacktestType) else get_enum_value(BacktestType, type)
         self.__assetClass = assetClass if isinstance(assetClass, AssetClass) else get_enum_value(AssetClass, assetClass)
         self.__version = version
 
@@ -2185,13 +2167,13 @@ class Backtest(Base):
         self._property_changed('endDate')        
 
     @property
-    def type(self) -> str:
-        """Type of Backtest."""
+    def type(self) -> Union[BacktestType, str]:
+        """Backtest type differentiates the backtest type."""
         return self.__type
 
     @type.setter
-    def type(self, value: str):
-        self.__type = value
+    def type(self, value: Union[BacktestType, str]):
+        self.__type = value if isinstance(value, BacktestType) else get_enum_value(BacktestType, value)
         self._property_changed('type')        
 
     @property

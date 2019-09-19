@@ -68,6 +68,57 @@ class AssetStatsType(EnumBase, Enum):
         return self.value
 
 
+class Commodities(EnumBase, Enum):    
+    
+    """Commodity asset"""
+
+    Aluminium = 'Aluminium'
+    Aluminium_Alloy = 'Aluminium Alloy'
+    Chicago_Ethanol = 'Chicago Ethanol'
+    Coal = 'Coal'
+    Coffee = 'Coffee'
+    Copper = 'Copper'
+    Corn = 'Corn'
+    Cotton = 'Cotton'
+    Crude_Palm_Oil = 'Crude Palm Oil'
+    Diesel_Fuel = 'Diesel Fuel'
+    Electricity = 'Electricity'
+    Emissions = 'Emissions'
+    Ethylene = 'Ethylene'
+    Freight = 'Freight'
+    Fuel_Oil = 'Fuel Oil'
+    Gas_Oil = 'Gas Oil'
+    Gasoline = 'Gasoline'
+    Gold = 'Gold'
+    Heating_Oil = 'Heating Oil'
+    Iron_Ore = 'Iron Ore'
+    Jet_Fuel = 'Jet Fuel'
+    Lead = 'Lead'
+    Lean_Hogs = 'Lean Hogs'
+    NGL = 'NGL'
+    Naphtha = 'Naphtha'
+    Natural_Gas = 'Natural Gas'
+    Nickel = 'Nickel'
+    Oil = 'Oil'
+    Palladium = 'Palladium'
+    Platinum = 'Platinum'
+    Polypropylene = 'Polypropylene'
+    Primary_Aluminium = 'Primary Aluminium'
+    Silver = 'Silver'
+    Soybean_Meal = 'Soybean Meal'
+    Soybean_Oil = 'Soybean Oil'
+    Soybeans = 'Soybeans'
+    Sugar = 'Sugar'
+    Tin = 'Tin'
+    Ultra_Low_Sulphur_Diesel = 'Ultra Low Sulphur Diesel'
+    Wheat = 'Wheat'
+    White_Sugar = 'White Sugar'
+    Zinc = 'Zinc'
+    
+    def __repr__(self):
+        return self.value
+
+
 class CommodityFamily(EnumBase, Enum):    
     
     """Commodity Family"""
@@ -1020,6 +1071,7 @@ class AssetParameters(Base):
 
     @property
     def optionType(self) -> Union[OptionType, str]:
+        """Option Type"""
         return self.__optionType
 
     @optionType.setter
@@ -1650,7 +1702,7 @@ class AssetStatsRequest(Base):
         
     """Performance statistics."""
        
-    def __init__(self, lastUpdatedTime: datetime.datetime = None, period: Union[AssetStatsPeriod, str] = None, type: Union[AssetStatsType, str] = None, stats: PerformanceStatsRequest = None):
+    def __init__(self, lastUpdatedTime: DateRange = None, period: Union[AssetStatsPeriod, str] = None, type: Union[AssetStatsType, str] = None, stats: PerformanceStatsRequest = None):
         super().__init__()
         self.__lastUpdatedTime = lastUpdatedTime
         self.__period = period if isinstance(period, AssetStatsPeriod) else get_enum_value(AssetStatsPeriod, period)
@@ -1658,11 +1710,11 @@ class AssetStatsRequest(Base):
         self.__stats = stats
 
     @property
-    def lastUpdatedTime(self) -> datetime.datetime:
+    def lastUpdatedTime(self) -> DateRange:
         return self.__lastUpdatedTime
 
     @lastUpdatedTime.setter
-    def lastUpdatedTime(self, value: datetime.datetime):
+    def lastUpdatedTime(self, value: DateRange):
         self.__lastUpdatedTime = value
         self._property_changed('lastUpdatedTime')        
 
@@ -1957,26 +2009,48 @@ class ShareClassParameters(Base):
         
     """Attributes specific to share class assets"""
        
-    def __init__(self, additionalProvisions: str = None, benchmark: Benchmark = None, earlyRedemptionFee: float = None, gate: float = None, gateType: str = None, hurdle: float = None, hurdleType: str = None, lockup: float = None, lockupType: str = None, managementFee: float = None, minimumSubscription: float = None, name: str = None, performanceFee: float = None, redemptionNoticePeriod: float = None, redemptionPeriod: str = None, sidePocket: str = None, status: str = None, termType: str = None):
+    def __init__(self, activeLiquidityFee: float = None, additionalProvisions: str = None, benchmark: Benchmark = None, classFees: float = None, classType: str = None, earlyRedemptionFee: float = None, expenseRatioGross: float = None, expenseRatioNet: float = None, shareClassType: str = None, gate: float = None, gateType: str = None, hurdle: float = None, hurdleType: str = None, investmentManager: str = None, investmentType: str = None, institutionalShareClass: bool = None, lockup: float = None, lockupType: str = None, managementFee: float = None, minimumSubscription: float = None, name: str = None, numberOfShares: float = None, performanceFee: float = None, redemptionNoticePeriod: float = None, redemptionPeriod: str = None, shareClassCurrency: str = None, sidePocket: str = None, status: str = None, subCategory: str = None, termType: str = None):
         super().__init__()
+        self.__activeLiquidityFee = activeLiquidityFee
         self.__additionalProvisions = additionalProvisions
         self.__benchmark = benchmark
+        self.__classFees = classFees
+        self.__classType = classType
         self.__earlyRedemptionFee = earlyRedemptionFee
+        self.__expenseRatioGross = expenseRatioGross
+        self.__expenseRatioNet = expenseRatioNet
+        self.__shareClassType = shareClassType
         self.__gate = gate
         self.__gateType = gateType
         self.__hurdle = hurdle
         self.__hurdleType = hurdleType
+        self.__investmentManager = investmentManager
+        self.__investmentType = investmentType
+        self.__institutionalShareClass = institutionalShareClass
         self.__lockup = lockup
         self.__lockupType = lockupType
         self.__managementFee = managementFee
         self.__minimumSubscription = minimumSubscription
         self.__name = name
+        self.__numberOfShares = numberOfShares
         self.__performanceFee = performanceFee
         self.__redemptionNoticePeriod = redemptionNoticePeriod
         self.__redemptionPeriod = redemptionPeriod
+        self.__shareClassCurrency = shareClassCurrency
         self.__sidePocket = sidePocket
         self.__status = status
+        self.__subCategory = subCategory
         self.__termType = termType
+
+    @property
+    def activeLiquidityFee(self) -> float:
+        """Denotes percent active liquidity fee associated with this fund"""
+        return self.__activeLiquidityFee
+
+    @activeLiquidityFee.setter
+    def activeLiquidityFee(self, value: float):
+        self.__activeLiquidityFee = value
+        self._property_changed('activeLiquidityFee')        
 
     @property
     def additionalProvisions(self) -> str:
@@ -1999,6 +2073,26 @@ class ShareClassParameters(Base):
         self._property_changed('benchmark')        
 
     @property
+    def classFees(self) -> float:
+        """Annual cost of investing in specific shareclass, expressed in basis points"""
+        return self.__classFees
+
+    @classFees.setter
+    def classFees(self, value: float):
+        self.__classFees = value
+        self._property_changed('classFees')        
+
+    @property
+    def classType(self) -> str:
+        """For example: B, C, Offshore, Offshore - A, etc"""
+        return self.__classType
+
+    @classType.setter
+    def classType(self, value: str):
+        self.__classType = value
+        self._property_changed('classType')        
+
+    @property
     def earlyRedemptionFee(self) -> float:
         """Fee an investor pays to redeem before the expiry of a soft lock-up"""
         return self.__earlyRedemptionFee
@@ -2007,6 +2101,36 @@ class ShareClassParameters(Base):
     def earlyRedemptionFee(self, value: float):
         self.__earlyRedemptionFee = value
         self._property_changed('earlyRedemptionFee')        
+
+    @property
+    def expenseRatioGross(self) -> float:
+        """Gross expense ratio of the shareclass"""
+        return self.__expenseRatioGross
+
+    @expenseRatioGross.setter
+    def expenseRatioGross(self, value: float):
+        self.__expenseRatioGross = value
+        self._property_changed('expenseRatioGross')        
+
+    @property
+    def expenseRatioNet(self) -> float:
+        """Net expense ratio of the shareclass"""
+        return self.__expenseRatioNet
+
+    @expenseRatioNet.setter
+    def expenseRatioNet(self, value: float):
+        self.__expenseRatioNet = value
+        self._property_changed('expenseRatioNet')        
+
+    @property
+    def shareClassType(self) -> str:
+        """Must be Money Market, Equity, or Fixed Income"""
+        return self.__shareClassType
+
+    @shareClassType.setter
+    def shareClassType(self, value: str):
+        self.__shareClassType = value
+        self._property_changed('shareClassType')        
 
     @property
     def gate(self) -> float:
@@ -2047,6 +2171,36 @@ class ShareClassParameters(Base):
     def hurdleType(self, value: str):
         self.__hurdleType = value
         self._property_changed('hurdleType')        
+
+    @property
+    def investmentManager(self) -> str:
+        """Goldman Sachs, Blackrock Liquidity"""
+        return self.__investmentManager
+
+    @investmentManager.setter
+    def investmentManager(self, value: str):
+        self.__investmentManager = value
+        self._property_changed('investmentManager')        
+
+    @property
+    def investmentType(self) -> str:
+        """Government, Prime Institutional"""
+        return self.__investmentType
+
+    @investmentType.setter
+    def investmentType(self, value: str):
+        self.__investmentType = value
+        self._property_changed('investmentType')        
+
+    @property
+    def institutionalShareClass(self) -> bool:
+        """User to identify if this is the largest and cheapest share class"""
+        return self.__institutionalShareClass
+
+    @institutionalShareClass.setter
+    def institutionalShareClass(self, value: bool):
+        self.__institutionalShareClass = value
+        self._property_changed('institutionalShareClass')        
 
     @property
     def lockup(self) -> float:
@@ -2099,6 +2253,16 @@ class ShareClassParameters(Base):
         self._property_changed('name')        
 
     @property
+    def numberOfShares(self) -> float:
+        """Number of shares in the share class"""
+        return self.__numberOfShares
+
+    @numberOfShares.setter
+    def numberOfShares(self, value: float):
+        self.__numberOfShares = value
+        self._property_changed('numberOfShares')        
+
+    @property
     def performanceFee(self) -> float:
         """Fee paid by investor to compensate manager for generating positive returns or alpha"""
         return self.__performanceFee
@@ -2129,6 +2293,16 @@ class ShareClassParameters(Base):
         self._property_changed('redemptionPeriod')        
 
     @property
+    def shareClassCurrency(self) -> str:
+        """Currency of the share class"""
+        return self.__shareClassCurrency
+
+    @shareClassCurrency.setter
+    def shareClassCurrency(self, value: str):
+        self.__shareClassCurrency = value
+        self._property_changed('shareClassCurrency')        
+
+    @property
     def sidePocket(self) -> str:
         """Account utilized to separate illiquid assets from more liquid investments"""
         return self.__sidePocket
@@ -2147,6 +2321,16 @@ class ShareClassParameters(Base):
     def status(self, value: str):
         self.__status = value
         self._property_changed('status')        
+
+    @property
+    def subCategory(self) -> str:
+        """Subtype of what funds invest in within each SEC category """
+        return self.__subCategory
+
+    @subCategory.setter
+    def subCategory(self, value: str):
+        self.__subCategory = value
+        self._property_changed('subCategory')        
 
     @property
     def termType(self) -> str:
@@ -2495,11 +2679,12 @@ class Asset(Base):
 
 class EntityQuery(Base):
                
-    def __init__(self, format: Union[Format, str] = None, where: FieldFilterMap = None, asOfTime: datetime.datetime = None, date: datetime.date = None, time: datetime.datetime = None, delay: int = None, orderBy: Tuple[Union[dict, str], ...] = None, scroll: str = None, scrollId: str = None, fields: Tuple[Union[dict, str], ...] = None, limit: int = None, offset: int = None):
+    def __init__(self, format: Union[Format, str] = None, where: FieldFilterMap = None, asOfTime: datetime.datetime = None, lastUpdatedSince: datetime.datetime = None, date: datetime.date = None, time: datetime.datetime = None, delay: int = None, orderBy: Tuple[Union[dict, str], ...] = None, scroll: str = None, scrollId: str = None, fields: Tuple[Union[dict, str], ...] = None, limit: int = None, offset: int = None):
         super().__init__()
         self.__format = format if isinstance(format, Format) else get_enum_value(Format, format)
         self.__where = where
         self.__asOfTime = asOfTime
+        self.__lastUpdatedSince = lastUpdatedSince
         self.__date = date
         self.__time = time
         self.__delay = delay
@@ -2538,6 +2723,16 @@ class EntityQuery(Base):
     def asOfTime(self, value: datetime.datetime):
         self.__asOfTime = value
         self._property_changed('asOfTime')        
+
+    @property
+    def lastUpdatedSince(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
+        return self.__lastUpdatedSince
+
+    @lastUpdatedSince.setter
+    def lastUpdatedSince(self, value: datetime.datetime):
+        self.__lastUpdatedSince = value
+        self._property_changed('lastUpdatedSince')        
 
     @property
     def date(self) -> datetime.date:

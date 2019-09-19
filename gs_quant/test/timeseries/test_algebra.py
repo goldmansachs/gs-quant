@@ -13,10 +13,12 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+from datetime import date
+
 import pytest
 from pandas.util.testing import assert_series_equal
+
 from gs_quant.timeseries import *
-from datetime import date
 
 
 def test_add():
@@ -221,7 +223,7 @@ def test_divide():
     assert_series_equal(result, expected, obj="Divide scalar left")
 
     result = algebra.divide(2, x)
-    expected = pd.Series([2.0, 1.0, 2/3, 0.5], index=dates1)
+    expected = pd.Series([2.0, 1.0, 2 / 3, 0.5], index=dates1)
     assert_series_equal(result, expected, obj="Divide scalar right")
 
     assert algebra.divide(1, 2) == 0.5
@@ -341,7 +343,7 @@ def test_sqrt():
     assert_series_equal(result, expected, obj="Sqrt")
 
     actual = algebra.sqrt(9)
-    assert type(actual) == int
+    assert isinstance(actual, int)
     assert 3 == actual
 
     assert math.sqrt(10) == algebra.sqrt(10)

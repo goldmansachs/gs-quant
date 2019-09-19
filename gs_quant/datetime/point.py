@@ -13,8 +13,8 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-import re
 import datetime as dt
+import re
 import string
 
 ConstPoints = {
@@ -29,7 +29,8 @@ ConstPoints = {
 }
 
 # Regular expression for different types of market data coordinate points
-EuroOrFraReg = r"^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)+([0-9][0-9])$"
+EuroOrFraReg = \
+    r"^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)+([0-9][0-9])$"
 NumberReg = r"^([0-9]*)$"
 MMMYYYYReg = r"^([a-zA-Z]{3}[0-9]{4})$"
 DDMMMYYYYReg = r"^([1-3]*[0-9]{1}[a-zA-Z]{3}[0-9]{4})$"
@@ -47,7 +48,8 @@ MMMReg = r"^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)$"
 MMMYYReg = r"^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC) ([0-9]{2})"
 DatePairReg = r"^([0-9]{8})/([0-9]{8})$"
 DatePairReg2 = r"^([0-9]{8}) ([0-9]{8})$"
-FXVolAddonParmsReg = r"(Spread Addon|Spread Init|Spread Final|Rho Addon|Rho Init|Rho Final|Vol Addon|Vol Init|Vol Final|HL|Addon HL)"
+FXVolAddonParmsReg = \
+    r"(Spread Addon|Spread Init|Spread Final|Rho Addon|Rho Init|Rho Final|Vol Addon|Vol Init|Vol Final|HL|Addon HL)"
 CopulaReg = r"(Rho$|Rho Rate|Rho Vol|RR|BF|Alpha|Beta|KO$|K0=L|K0=S)"
 BondCoordReg = r"^[0-9]* ([0-9.]*) ([0-9]{2}/[0-9]{2}/[0-9]{4})$"
 BondFutReg = r"^[A-Z]{3}([FGHJKMNQUVXZ])([0-9])$"
@@ -103,7 +105,7 @@ def relative_days_add(date_rule: str, strict: bool = False) -> float:
         rule = date_str[-1:]
         if rule in DictDayRule:
             scale = DictDayRule[rule]
-            days = days+str(num * scale)
+            days = days + str(num * scale)
             d = float(days)
             return d
         else:
@@ -114,7 +116,7 @@ def relative_days_add(date_rule: str, strict: bool = False) -> float:
     return 0
 
 
-def point_sort_order(point: str, ref_date: dt.date=dt.date.today()) -> float:
+def point_sort_order(point: str, ref_date: dt.date = dt.date.today()) -> float:
     """
     Calculates a number that can be used to sort Mkt Points by it.
 
@@ -178,7 +180,8 @@ def point_sort_order(point: str, ref_date: dt.date=dt.date.today()) -> float:
         res = re.search(SeasonalFrontReg, point)
         if res.group(1) == 'Front':
             days = 0
-        else: days = 1
+        else:
+            days = 1
     elif re.search(MMMReg, point) is not None:
         # TODO: to confirm the behavior
         res = re.search(MMMReg, point)
@@ -187,7 +190,7 @@ def point_sort_order(point: str, ref_date: dt.date=dt.date.today()) -> float:
         days = (dt.datetime.strptime(date_str, format_str).date() - ref_date).days
     elif re.search(EuroOrFraReg, point) is not None:
         res = re.search(EuroOrFraReg, point)
-        date_str = '15' + res.group(1)+res.group(2)
+        date_str = '15' + res.group(1) + res.group(2)
         format_str = '%d%b%y'
         days = (dt.datetime.strptime(date_str, format_str).date() - ref_date).days
     elif re.search(RDatePartReg, point) is not None:
@@ -204,7 +207,7 @@ def point_sort_order(point: str, ref_date: dt.date=dt.date.today()) -> float:
         days = relative_days_add(date_str)
     elif re.search(FRAxReg, point) is not None:
         res = re.search(FRAxReg, point)
-        date_str = res.group(1)+'m'
+        date_str = res.group(1) + 'm'
         days = relative_days_add(date_str)
     elif re.search(SpikeQEReg, point) is not None:
         res = re.search(SpikeQEReg, point)
@@ -249,7 +252,7 @@ def point_sort_order(point: str, ref_date: dt.date=dt.date.today()) -> float:
         res = re.search(LYYReg, point)
         month = FutMonth.find(res.group(1)) + 1
         year = res.group(2)
-        date_str = year+'-'+str(month)+'-1'
+        date_str = year + '-' + str(month) + '-1'
         format_str = '%y-%m-%d'
         days = (dt.datetime.strptime(date_str, format_str).date() - ref_date).days
     elif re.search(DatePairReg, point) is not None:
@@ -278,8 +281,6 @@ def point_sort_order(point: str, ref_date: dt.date=dt.date.today()) -> float:
         # TODO: to confirm the behavior
         res = re.search(BondFutReg, point)
         month = FutMonth.find(res.group(1)) + 1
-        #year = float(res.group(2))
-        #days = 365 * year + 30 * month
         date_str = str(ref_date.year) + "-" + str(month) + "-1"
         format_str = '%Y-%m-%d'
         days = (dt.datetime.strptime(date_str, format_str).date() - ref_date).days
@@ -287,8 +288,6 @@ def point_sort_order(point: str, ref_date: dt.date=dt.date.today()) -> float:
         # TODO: to confirm the behavior
         res = re.search(FFFutReg, point)
         month = FutMonth.find(res.group(1)) + 1
-        #year = float(res.group(2))
-        #days = 365 * year + 30 * month
         date_str = str(ref_date.year) + "-" + str(month) + "-1"
         format_str = '%Y-%m-%d'
         days = (dt.datetime.strptime(date_str, format_str).date() - ref_date).days
@@ -317,4 +316,3 @@ def point_sort_order(point: str, ref_date: dt.date=dt.date.today()) -> float:
         format_str = '%d%b%y'
         days = (dt.datetime.strptime(date_str, format_str).date() - ref_date).days
     return days
-

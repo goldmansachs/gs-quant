@@ -14,10 +14,11 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from pandas.util.testing import assert_series_equal
-import numpy as np
-from gs_quant.timeseries import *
 from datetime import date
+
+from pandas.util.testing import assert_series_equal
+
+from gs_quant.timeseries import *
 
 
 def test_moving_average():
@@ -34,14 +35,14 @@ def test_moving_average():
     x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
 
     result = moving_average(x)
-    expected = pd.Series([3.0, 2.5, 8/3, 2.25, 2.4, 3.0], index=dates)
+    expected = pd.Series([3.0, 2.5, 8 / 3, 2.25, 2.4, 3.0], index=dates)
     assert_series_equal(result, expected, obj="Moving average")
 
-    result = moving_average(x, 1)
+    result = moving_average(x, Window(1, 0))
     expected = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
     assert_series_equal(result, expected, obj="Moving average window 1")
 
-    result = moving_average(x, 2)
+    result = moving_average(x, Window(2, 0))
     expected = pd.Series([3.0, 2.5, 2.5, 2.0, 2.0, 4.5], index=dates)
     assert_series_equal(result, expected, obj="Moving average window 2")
 
@@ -69,3 +70,7 @@ def test_bollinger_bands():
 
     assert_series_equal(low, expected_low, check_names=False, check_less_precise=True, obj="Bollinger bands low")
     assert_series_equal(high, expected_high, check_names=False, check_less_precise=True, obj="Bollinger bands high")
+
+
+if __name__ == "__main__":
+    pytest.main(args=["test_technicals.py"])

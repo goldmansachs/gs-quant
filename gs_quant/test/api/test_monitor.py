@@ -14,8 +14,8 @@ specific language governing permissions and limitations
 under the License.
 """
 from gs_quant.api.gs.monitors import GsMonitorsApi
-from gs_quant.target.monitor import Monitor, MonitorResponseData
 from gs_quant.session import *
+from gs_quant.target.monitor import Monitor, MonitorResponseData
 
 
 def test_get_many_monitors(mocker):

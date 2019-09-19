@@ -19,18 +19,19 @@ from .statistics import *
 
 """
 Technicals library is for technical analysis functions on timeseries, including moving averages,
-volatility indicators and and other numerical operations which are finance-oriented for analyzing 
+volatility indicators and and other numerical operations which are finance-oriented for analyzing
 statistical properties of trading activity, such as price movement and volume changes
 """
 
 
 @plot_function
-def moving_average(x: pd.Series, w: int = 22) -> pd.Series:
+def moving_average(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     """
     Moving average over specified window
 
     :param x: time series of prices
-    :param w: window: number of observations to use (defaults to length of series)
+    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+     and 10 the ramp up value. Window size defaults to length of series.
     :return: date-based time series of return
 
     **Usage**
@@ -58,17 +59,18 @@ def moving_average(x: pd.Series, w: int = 22) -> pd.Series:
     :func:`mean`
 
     """
-
-    return mean(x, w)
+    w = normalize_window(x, w)
+    return apply_ramp(mean(x, Window(w.w, 0)), w)
 
 
 @plot_function
-def bollinger_bands(x: pd.Series, w: int = 20, k: float = 2) -> pd.DataFrame:
+def bollinger_bands(x: pd.Series, w: Union[Window, int] = Window(None, 0), k: float = 2) -> pd.DataFrame:
     """
     Bollinger bands with given window and width
 
     :param x: time series of prices
-    :param w: window: number of observations to use (defaults to length of series)
+    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+    and 10 the ramp up value. Window size defaults to length of series.
     :param k: band width in standard deviations (default: 2)
     :return: date-based time series of return
 
@@ -98,7 +100,7 @@ def bollinger_bands(x: pd.Series, w: int = 20, k: float = 2) -> pd.DataFrame:
 
     :func:`moving_average` :func:`std`
     """
-
+    w = normalize_window(x, w)
     avg = moving_average(x, w)
     sigma_t = std(x, w)
 

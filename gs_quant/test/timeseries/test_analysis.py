@@ -14,10 +14,11 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from pandas.util.testing import assert_series_equal
-import numpy as np
-from gs_quant.timeseries import *
 from datetime import date
+
+from pandas.util.testing import assert_series_equal
+
+from gs_quant.timeseries import *
 
 
 def test_first():
@@ -89,8 +90,7 @@ def test_diff():
 
     empty = pd.Series([], index=[])
     result = diff(empty)
-    assert(len(result) == 0 )
-
+    assert(len(result) == 0)
 
 
 def test_lag():

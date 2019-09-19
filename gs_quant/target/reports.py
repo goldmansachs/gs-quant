@@ -125,7 +125,7 @@ class ReportParameters(Base):
         
     """Parameters specific to the report type"""
        
-    def __init__(self, assetClass: Union[AssetClass, str] = None, transactionCostModel: str = None, tradingCost: float = None, servicingCostLong: float = None, servicingCostShort: float = None, region: str = None, riskModel: Union[RiskModel, str] = None, fxHedged: bool = None, publishToBloomberg: bool = None, publishToReuters: bool = None, includePriceHistory: bool = None, indexUpdate: bool = None, indexRebalance: bool = None, basketAction: Union[BasketAction, str] = None, apiDomain: bool = None, initialPrice: float = None, stockLevelExposures: bool = None, explodePositions: bool = None, scenarioId: str = None, scenarioIds: Tuple[str, ...] = None, scenarioGroupId: str = None, scenarioType: Union[ScenarioType, str] = None, marketModelId: str = None, riskMeasures: Tuple[RiskMeasure, ...] = None, initialPricingDate: datetime.date = None, backcast: bool = None, riskRequest: RiskRequest = None, participationRate: float = None, approveRebalance: bool = None):
+    def __init__(self, assetClass: Union[AssetClass, str] = None, transactionCostModel: str = None, tradingCost: float = None, servicingCostLong: float = None, servicingCostShort: float = None, region: str = None, riskModel: str = None, fxHedged: bool = None, publishToBloomberg: bool = None, publishToReuters: bool = None, includePriceHistory: bool = None, indexUpdate: bool = None, indexRebalance: bool = None, basketAction: Union[BasketAction, str] = None, apiDomain: bool = None, initialPrice: float = None, stockLevelExposures: bool = None, explodePositions: bool = None, scenarioId: str = None, scenarioIds: Tuple[str, ...] = None, scenarioGroupId: str = None, scenarioType: Union[ScenarioType, str] = None, marketModelId: str = None, riskMeasures: Tuple[RiskMeasure, ...] = None, initialPricingDate: datetime.date = None, backcast: bool = None, riskRequest: RiskRequest = None, participationRate: float = None, approveRebalance: bool = None):
         super().__init__()
         self.__assetClass = assetClass if isinstance(assetClass, AssetClass) else get_enum_value(AssetClass, assetClass)
         self.__transactionCostModel = transactionCostModel
@@ -133,7 +133,7 @@ class ReportParameters(Base):
         self.__servicingCostLong = servicingCostLong
         self.__servicingCostShort = servicingCostShort
         self.__region = region
-        self.__riskModel = riskModel if isinstance(riskModel, RiskModel) else get_enum_value(RiskModel, riskModel)
+        self.__riskModel = riskModel
         self.__fxHedged = fxHedged
         self.__publishToBloomberg = publishToBloomberg
         self.__publishToReuters = publishToReuters
@@ -218,13 +218,13 @@ class ReportParameters(Base):
         self._property_changed('region')        
 
     @property
-    def riskModel(self) -> Union[RiskModel, str]:
-        """Axioma risk model identifier."""
+    def riskModel(self) -> str:
+        """Marquee unique risk model identifier"""
         return self.__riskModel
 
     @riskModel.setter
-    def riskModel(self, value: Union[RiskModel, str]):
-        self.__riskModel = value if isinstance(value, RiskModel) else get_enum_value(RiskModel, value)
+    def riskModel(self, value: str):
+        self.__riskModel = value
         self._property_changed('riskModel')        
 
     @property

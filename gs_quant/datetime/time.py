@@ -15,6 +15,7 @@ under the License.
 """
 
 import datetime as dt
+
 import numpy as np
 
 from gs_quant.errors import *

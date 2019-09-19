@@ -14,10 +14,11 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.target.backtests import Backtest as __Backtest, BacktestResult
-from gs_quant.base import EnumBase
 from enum import Enum
 from typing import Tuple
+
+from gs_quant.base import EnumBase
+from gs_quant.target.backtests import Backtest as __Backtest, BacktestResult
 
 
 # TODO add these in Studio as a standalone JSON, so they will be generated
@@ -28,7 +29,7 @@ class QuantityType(EnumBase, Enum):
     Vega = 'vega'
 
 
-class TradeInMethod(EnumBase, Enum)  :
+class TradeInMethod(EnumBase, Enum):
     FixedRoll = 'fixedRoll'
 
 

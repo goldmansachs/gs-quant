@@ -14,8 +14,8 @@ specific language governing permissions and limitations
 under the License.
 """
 import logging
-from urllib.parse import urlencode
 from typing import Tuple
+from urllib.parse import urlencode
 
 from gs_quant.session import GsSession
 from gs_quant.target.monitor import Monitor, MonitorResponseData

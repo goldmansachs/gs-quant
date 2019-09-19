@@ -14,10 +14,12 @@ specific language governing permissions and limitations
 under the License.
 """
 
+from datetime import date
+
 import pytest
 from pandas.util.testing import assert_series_equal
+
 from gs_quant.timeseries.datetime import *
-from datetime import date
 
 
 def test_align():
@@ -114,7 +116,7 @@ def test_align():
     result = align(a, b, Interpolate.TIME)
 
     u_index = a.index.union(b.index)
-    assert_series_equal(result[0], pd.Series([0, 100/7, 100, 110, np.nan], index=u_index))
+    assert_series_equal(result[0], pd.Series([0, 100 / 7, 100, 110, np.nan], index=u_index))
     assert_series_equal(result[1], pd.Series([np.nan, 20, 50, 60, 70], index=u_index))
 
     result = align(x, 3)

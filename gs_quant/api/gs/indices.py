@@ -13,10 +13,11 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+from typing import Union
+
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.session import *
 from gs_quant.target.indices import *
-from typing import Union
 
 
 class GsIndexApi:

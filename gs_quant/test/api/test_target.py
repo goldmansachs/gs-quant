@@ -28,16 +28,18 @@ def classes(module_name) -> list:
 
 
 def new_instance(typ: type) -> Base:
-    args = [k for k, v in inspect.signature(typ.__init__).parameters.items() if v.default == inspect.Parameter.empty][1:]
+    args = [k for k, v in inspect.signature(typ.__init__).parameters.items()
+            if v.default == inspect.Parameter.empty][1:]
     return typ(**{a: None for a in args})
 
 
 def test_classes():
-    for module_name in ('assets', 'backtests', 'common', 'content', 'data', 'indices', 'instrument', 'monitor', 'portfolios', 'reports', 'risk', 'trades'):
+    for module_name in ('assets', 'backtests', 'common', 'content', 'data', 'indices',
+                        'instrument', 'monitor', 'portfolios', 'reports', 'risk', 'trades'):
         for typ in classes(module_name):
             obj = new_instance(typ)
 
             for prop_name in obj.properties():
-                _ = getattr(obj, prop_name)
+                _ = object.__getattribute__(obj, prop_name)
                 if getattr(typ, prop_name).fset is not None:
                     setattr(obj, prop_name, None)

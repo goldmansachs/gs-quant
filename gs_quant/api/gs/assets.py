@@ -145,7 +145,9 @@ class GsAssetApi:
     def get_instruments_for_positions(
             positions: Iterable[Position]
     ) -> Tuple[Optional[Union[Instrument, Security]]]:
-        instrument_infos = GsSession.current._post('/assets/instruments', [p.assetId for p in positions], cls=AssetToInstrumentResponse)
+        instrument_infos = GsSession.current._post(
+            '/assets/instruments', [p.assetId for p in positions],
+            cls=AssetToInstrumentResponse)
         instrument_lookup = {i.assetId: (i.instrument, i.sizeField) for i in instrument_infos if i}
         ret = ()
 

@@ -13,14 +13,14 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from .core import PricingContext
+import datetime as dt
 from concurrent.futures import Future
+from typing import Iterable, Optional, Tuple, Union
+
 from gs_quant.base import Priceable
 from gs_quant.datetime.date import business_day_offset, date_range
 from gs_quant.target.risk import PricingDateAndMarketDataAsOf
-
-import datetime as dt
-from typing import Iterable, Optional, Tuple, Union
+from .core import PricingContext
 
 
 class HistoricalPricingContext(PricingContext):
@@ -31,10 +31,10 @@ class HistoricalPricingContext(PricingContext):
 
     def __init__(
             self,
-            start: Optional[Union[int, dt.date]]=None,
-            end: Optional[Union[int, dt.date]]=None,
+            start: Optional[Union[int, dt.date]] = None,
+            end: Optional[Union[int, dt.date]] = None,
             calendars: Union[str, Tuple] = (),
-            dates: Optional[Iterable[dt.date]]=None,
+            dates: Optional[Iterable[dt.date]] = None,
             is_async: bool = False,
             is_batch: bool = False
     ):
@@ -46,7 +46,8 @@ class HistoricalPricingContext(PricingContext):
         :param calendars: holiday calendars
         :param dates: a custom iterable of dates
         :param is_async: return immediately (True) or wait for results (False). Defaults to False
-        :param is_batch: use for calculations expected to run longer than 3 mins, to avoid timeouts. It can be used with is_aync=True|False
+        :param is_batch: use for calculations expected to run longer than 3 mins, to avoid timeouts. It can be used
+        with is_aync=True|False
 
         **Examples**
 
@@ -81,4 +82,7 @@ class HistoricalPricingContext(PricingContext):
 
     @property
     def _pricing_market_data_as_of(self) -> Tuple[PricingDateAndMarketDataAsOf, ...]:
-        return tuple(PricingDateAndMarketDataAsOf(d, business_day_offset(d, -1, roll='preceding') if d == dt.date.today() else d) for d in self.__date_range)
+        return tuple(
+            PricingDateAndMarketDataAsOf(
+                d, business_day_offset(d, -1, roll='preceding') if d == dt.date.today() else d)
+            for d in self.__date_range)
