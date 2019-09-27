@@ -34,46 +34,66 @@ class PortfolioType(EnumBase, Enum):
 
 class Portfolio(Base):
                
-    def __init__(self, currency: Union[Currency, str], name: str, createdById: str = None, createdTime: datetime.datetime = None, description: str = None, entitlements: Entitlements = None, entitlementExclusions: EntitlementExclusions = None, id: str = None, identifiers: Tuple[Identifier, ...] = None, lastUpdatedById: str = None, lastUpdatedTime: datetime.datetime = None, ownerId: str = None, reportIds: Tuple[str, ...] = None, shortName: str = None, underlyingPortfolioIds: Tuple[str, ...] = None, tags: Tuple[str, ...] = None, type: Union[PortfolioType, str] = None, parameters: LiquidityRequest = None):
+    def __init__(
+        self,
+        currency: Union[Currency, str],
+        name: str,
+        created_by_id: str = None,
+        created_time: datetime.datetime = None,
+        description: str = None,
+        entitlements: Entitlements = None,
+        entitlement_exclusions: EntitlementExclusions = None,
+        id: str = None,
+        identifiers: Tuple[Identifier, ...] = None,
+        last_updated_by_id: str = None,
+        last_updated_time: datetime.datetime = None,
+        owner_id: str = None,
+        report_ids: Tuple[str, ...] = None,
+        short_name: str = None,
+        underlying_portfolio_ids: Tuple[str, ...] = None,
+        tags: Tuple[str, ...] = None,
+        type: Union[PortfolioType, str] = None,
+        parameters: LiquidityRequest = None        
+    ):
         super().__init__()
-        self.__createdById = createdById
-        self.__createdTime = createdTime
-        self.__currency = currency if isinstance(currency, Currency) else get_enum_value(Currency, currency)
+        self.__created_by_id = created_by_id
+        self.__created_time = created_time
+        self.__currency = get_enum_value(Currency, currency)
         self.__description = description
         self.__entitlements = entitlements
-        self.__entitlementExclusions = entitlementExclusions
+        self.__entitlement_exclusions = entitlement_exclusions
         self.__id = id
         self.__identifiers = identifiers
-        self.__lastUpdatedById = lastUpdatedById
-        self.__lastUpdatedTime = lastUpdatedTime
+        self.__last_updated_by_id = last_updated_by_id
+        self.__last_updated_time = last_updated_time
         self.__name = name
-        self.__ownerId = ownerId
-        self.__reportIds = reportIds
-        self.__shortName = shortName
-        self.__underlyingPortfolioIds = underlyingPortfolioIds
+        self.__owner_id = owner_id
+        self.__report_ids = report_ids
+        self.__short_name = short_name
+        self.__underlying_portfolio_ids = underlying_portfolio_ids
         self.__tags = tags
-        self.__type = type if isinstance(type, PortfolioType) else get_enum_value(PortfolioType, type)
+        self.__type = get_enum_value(PortfolioType, type)
         self.__parameters = parameters
 
     @property
-    def createdById(self) -> str:
+    def created_by_id(self) -> str:
         """Unique identifier of user who created the object"""
-        return self.__createdById
+        return self.__created_by_id
 
-    @createdById.setter
-    def createdById(self, value: str):
-        self.__createdById = value
-        self._property_changed('createdById')        
+    @created_by_id.setter
+    def created_by_id(self, value: str):
+        self.__created_by_id = value
+        self._property_changed('created_by_id')        
 
     @property
-    def createdTime(self) -> datetime.datetime:
+    def created_time(self) -> datetime.datetime:
         """Time created. ISO 8601 formatted string"""
-        return self.__createdTime
+        return self.__created_time
 
-    @createdTime.setter
-    def createdTime(self, value: datetime.datetime):
-        self.__createdTime = value
-        self._property_changed('createdTime')        
+    @created_time.setter
+    def created_time(self, value: datetime.datetime):
+        self.__created_time = value
+        self._property_changed('created_time')        
 
     @property
     def currency(self) -> Union[Currency, str]:
@@ -105,14 +125,14 @@ class Portfolio(Base):
         self._property_changed('entitlements')        
 
     @property
-    def entitlementExclusions(self) -> EntitlementExclusions:
+    def entitlement_exclusions(self) -> EntitlementExclusions:
         """Defines the exclusion entitlements of a given resource"""
-        return self.__entitlementExclusions
+        return self.__entitlement_exclusions
 
-    @entitlementExclusions.setter
-    def entitlementExclusions(self, value: EntitlementExclusions):
-        self.__entitlementExclusions = value
-        self._property_changed('entitlementExclusions')        
+    @entitlement_exclusions.setter
+    def entitlement_exclusions(self, value: EntitlementExclusions):
+        self.__entitlement_exclusions = value
+        self._property_changed('entitlement_exclusions')        
 
     @property
     def id(self) -> str:
@@ -135,24 +155,24 @@ class Portfolio(Base):
         self._property_changed('identifiers')        
 
     @property
-    def lastUpdatedById(self) -> str:
+    def last_updated_by_id(self) -> str:
         """Unique identifier of user who last updated the object"""
-        return self.__lastUpdatedById
+        return self.__last_updated_by_id
 
-    @lastUpdatedById.setter
-    def lastUpdatedById(self, value: str):
-        self.__lastUpdatedById = value
-        self._property_changed('lastUpdatedById')        
+    @last_updated_by_id.setter
+    def last_updated_by_id(self, value: str):
+        self.__last_updated_by_id = value
+        self._property_changed('last_updated_by_id')        
 
     @property
-    def lastUpdatedTime(self) -> datetime.datetime:
+    def last_updated_time(self) -> datetime.datetime:
         """Timestamp of when the object was last updated"""
-        return self.__lastUpdatedTime
+        return self.__last_updated_time
 
-    @lastUpdatedTime.setter
-    def lastUpdatedTime(self, value: datetime.datetime):
-        self.__lastUpdatedTime = value
-        self._property_changed('lastUpdatedTime')        
+    @last_updated_time.setter
+    def last_updated_time(self, value: datetime.datetime):
+        self.__last_updated_time = value
+        self._property_changed('last_updated_time')        
 
     @property
     def name(self) -> str:
@@ -165,44 +185,44 @@ class Portfolio(Base):
         self._property_changed('name')        
 
     @property
-    def ownerId(self) -> str:
+    def owner_id(self) -> str:
         """Marquee unique identifier for user who owns the object."""
-        return self.__ownerId
+        return self.__owner_id
 
-    @ownerId.setter
-    def ownerId(self, value: str):
-        self.__ownerId = value
-        self._property_changed('ownerId')        
+    @owner_id.setter
+    def owner_id(self, value: str):
+        self.__owner_id = value
+        self._property_changed('owner_id')        
 
     @property
-    def reportIds(self) -> Tuple[str, ...]:
+    def report_ids(self) -> Tuple[str, ...]:
         """Array of report identifiers related to the object"""
-        return self.__reportIds
+        return self.__report_ids
 
-    @reportIds.setter
-    def reportIds(self, value: Tuple[str, ...]):
-        self.__reportIds = value
-        self._property_changed('reportIds')        
+    @report_ids.setter
+    def report_ids(self, value: Tuple[str, ...]):
+        self.__report_ids = value
+        self._property_changed('report_ids')        
 
     @property
-    def shortName(self) -> str:
+    def short_name(self) -> str:
         """Short name or alias for the portfolio"""
-        return self.__shortName
+        return self.__short_name
 
-    @shortName.setter
-    def shortName(self, value: str):
-        self.__shortName = value
-        self._property_changed('shortName')        
+    @short_name.setter
+    def short_name(self, value: str):
+        self.__short_name = value
+        self._property_changed('short_name')        
 
     @property
-    def underlyingPortfolioIds(self) -> Tuple[str, ...]:
+    def underlying_portfolio_ids(self) -> Tuple[str, ...]:
         """Underlying portfolio Ids"""
-        return self.__underlyingPortfolioIds
+        return self.__underlying_portfolio_ids
 
-    @underlyingPortfolioIds.setter
-    def underlyingPortfolioIds(self, value: Tuple[str, ...]):
-        self.__underlyingPortfolioIds = value
-        self._property_changed('underlyingPortfolioIds')        
+    @underlying_portfolio_ids.setter
+    def underlying_portfolio_ids(self, value: Tuple[str, ...]):
+        self.__underlying_portfolio_ids = value
+        self._property_changed('underlying_portfolio_ids')        
 
     @property
     def tags(self) -> Tuple[str, ...]:

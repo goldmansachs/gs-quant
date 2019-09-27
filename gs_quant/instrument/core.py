@@ -26,7 +26,7 @@ class Security(XRef):
 
     """A security, specified by a well-known identifier"""
 
-    def __init__(self, ticker: str=None, bbid: str=None, isin: str=None, cusip: str=None, primeId: str=None, quantity: float=1):
+    def __init__(self, ticker: str=None, bbid: str=None, isin: str=None, cusip: str=None, prime_id: str=None, quantity: float=1):
         """
         Create a security by passing one identifier only and, optionally, a quantity
 
@@ -34,13 +34,13 @@ class Security(XRef):
         :param bbid: Bloomberg identifier
         :param isin: International Security Number
         :param cusip: CUSIP
-        :param primeId: Prime (GS internal) identifier
+        :param prime_id: Prime (GS internal) identifier
         :param quantity: Quantity (number of contracts for exchange-traded instruments, notional for bonds)
         """
-        if len(tuple(filter(None, (f is not None for f in (ticker, bbid, isin, cusip, primeId))))) > 1:
+        if len(tuple(filter(None, (f is not None for f in (ticker, bbid, isin, cusip, prime_id))))) > 1:
             raise ValueError('Only specify one identifier')
 
-        super().__init__(ticker=ticker, bbid=bbid, isin=isin, cusip=cusip, primeId=primeId)
+        super().__init__(ticker=ticker, bbid=bbid, isin=isin, cusip=cusip, prime_id=prime_id)
         self.quantity = quantity
 
     def get_quantity(self) -> float:

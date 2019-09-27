@@ -14,7 +14,6 @@ specific language governing permissions and limitations
 under the License.
 """
 from concurrent.futures import Future
-import copy
 import datetime as dt
 import dateutil
 from enum import EnumMeta
@@ -23,6 +22,7 @@ from inspect import signature, Parameter
 import logging
 import pandas as pd
 from typing import Mapping, Optional, Tuple, Union, get_type_hints
+
 
 _logger = logging.getLogger(__name__)
 
@@ -34,17 +34,36 @@ class EnumBase:
         return next((m for m in cls.__members__.values() if m.value.lower() == key.lower()), None)
 
 
-class Base:
+class BaseMeta(type):
+
+    def __call__(cls, *args, **kwargs):
+        normalised_kwargs = {}
+        for arg, value in kwargs.items():
+            if not arg.isupper():
+                snake_case_arg = inflection.underscore(arg)
+                if snake_case_arg != arg:
+                    if snake_case_arg in kwargs:
+                        raise ValueError('{} and {} both specified'.format(arg, snake_case_arg))
+
+                    normalised_kwargs[snake_case_arg] = value
+                else:
+                    normalised_kwargs[arg] = value
+            else:
+                normalised_kwargs[arg] = value
+
+        obj = cls.__new__(cls, *args, **normalised_kwargs)
+        obj.__init__(*args, **normalised_kwargs)
+        return obj
+
+
+class Base(metaclass=BaseMeta):
 
     """The base class for all generated classes"""
 
     __properties = set()
 
-    def __init__(self, **kwargs):
+    def __init__(self):
         self.__calced_hash = None
-
-        for arg, value in kwargs.items():
-            setattr(self, arg, value)
 
     def __getattr__(self, item):
         snake_case_item = inflection.underscore(item)
@@ -94,7 +113,7 @@ class Base:
     def as_dict(self, as_camel_case: bool=False) -> dict:
         """Dictionary of the public, non-null properties and values"""
         raw_properties = self.properties()
-        properties = (inflection.camelize(p) for p in raw_properties) if as_camel_case else raw_properties
+        properties = (inflection.camelize(p, uppercase_first_letter=False) for p in raw_properties) if as_camel_case else raw_properties
         values = (super(Base, self).__getattribute__(p) for p in raw_properties)
         return dict((p, v) for p, v in zip(properties, values) if v is not None)
 
@@ -118,8 +137,9 @@ class Base:
 
     def __from_dict(self, values: dict):
         for prop in self.properties():
-            if prop in values:
-                prop_value = values[prop]
+            prop_value = values.get(prop, values.get(inflection.camelize(prop, uppercase_first_letter=False)))
+
+            if prop_value is not None:
                 prop_type = self.prop_type(prop)
 
                 if prop_type is None:
@@ -141,7 +161,10 @@ class Base:
                 elif issubclass(prop_type, EnumBase):
                     setattr(self, prop, get_enum_value(prop_type, prop_value))
                 elif issubclass(prop_type, Base):
-                    setattr(self, prop, prop_type.from_dict(prop_value))
+                    if isinstance(prop_value, Base):
+                        setattr(self, prop, prop_value)
+                    else:
+                        setattr(self, prop, prop_type.from_dict(prop_value))
                 elif issubclass(prop_type, (list, tuple)):
                     item_type = self.prop_item_type(prop)
                     item_args = [i for i in getattr(item_type, '__args__', ()) if isinstance(i, type)]
@@ -160,22 +183,21 @@ class Base:
 
     @classmethod
     def _from_dict(cls, values: dict) -> 'Base':
-        args = [k for k, v in signature(cls.__init__).parameters.items() if v.default == Parameter.empty][1:]
+        args = [k for k, v in signature(cls.__init__).parameters.items() if k != 'kwargs' and v.default == Parameter.empty][1:]
         required = {}
 
-        if args != ['kwargs']:
-            for arg in args:
-                prop_type = cls.prop_type(arg)
-                value = values.pop(arg, None)
+        for arg in args:
+            prop_type = cls.prop_type(arg)
+            value = values.pop(arg, None)
 
-                if prop_type:
-                    if issubclass(prop_type, Base):
-                        if isinstance(value, dict):
-                            value = prop_type.from_dict(value)
-                    elif issubclass(prop_type, EnumBase):
-                        value = get_enum_value(prop_type, value)
+            if prop_type:
+                if issubclass(prop_type, Base):
+                    if isinstance(value, dict):
+                        value = prop_type.from_dict(value)
+                elif issubclass(prop_type, EnumBase):
+                    value = get_enum_value(prop_type, value)
 
-                required[arg] = value
+            required[arg] = value
 
         instance = cls(**required)
         instance.__from_dict(values)
@@ -207,8 +229,8 @@ class Priceable(Base):
 
     PROVIDER = None
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self):
+        super().__init__()
         self._resolved = False
 
     def __getattribute__(self, name):
@@ -375,7 +397,7 @@ class Instrument(Priceable):
 
             for clazz in instrument_classes:
                 instrument = clazz.default_instance()
-                cls.__asset_class_and_type_to_instrument[(instrument.assetClass, instrument.type)] = clazz
+                cls.__asset_class_and_type_to_instrument[(instrument.asset_class, instrument.type)] = clazz
 
         return cls.__asset_class_and_type_to_instrument
 
@@ -387,7 +409,7 @@ class Instrument(Priceable):
             return None
 
         instrument_type = cls.asset_class_and_type_to_instrument().get((
-            get_enum_value(AssetClass, values.pop('assetClass')),
+            get_enum_value(AssetClass, values.pop('asset_class')),
             get_enum_value(AssetType, values.pop('type'))))
 
         if instrument_type:

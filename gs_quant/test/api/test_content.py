@@ -21,6 +21,7 @@ import pytest
 
 from gs_quant.api.gs.content import GsContentApi, OrderBy
 from gs_quant.session import GsSession, Environment
+from gs_quant.target.content import GetManyContentsResponse
 from gs_quant.test.fixtures.content import ContentFixtures
 
 
@@ -31,8 +32,8 @@ def set_session():
 
 
 @pytest.mark.parametrize(
-    "description, channels, assetIds, authorIds, tags, offset, limit, orderBy, expected_uri, expected_exception",
-    [("Limit is too large, expect exception", set(),
+    'description, channels, asset_ids, author_ids, tags, offset, limit, order_by, expected_uri, expected_exception',
+    [('Limit is too large, expect exception', set(),
       set(),
       set(),
       set(),
@@ -42,28 +43,28 @@ def set_session():
       set(),
       set(),
       -1, None, None, None, ValueError),
-     ("Default params (none specified)", None, None, None, None, None, None, None, '/content', None),
-     ("Normal case, multiple parameters", set(['channel-1', 'channel-2']),
-      set(['asset-id-1']),
-      set(['author-id-1']),
-      set(['tag-1']),
+     ('Default params (none specified)', None, None, None, None, None, None, None, '/content', None),
+     ('Normal case, multiple parameters', ('channel-1', 'channel-2'),
+      {'asset-id-1'},
+      {'author-id-1'},
+      {'tag-1'},
       None, None, None,
-      '/content?channel=channel-1&channel=channel-2&assetId=asset-id-1&authorId=author-id-1&tag=tag-1', None),
+      '/content?channel=channel-1&channel=channel-2&asset_id=asset-id-1&author_id=author-id-1&tag=tag-1', None),
      ("With offset, limit, and orderBy", set(),
       set(),
       set(),
       set(),
       2, 12, {'direction': OrderBy.ASC, 'field': 'some-field'},
-      '/content?offset=2&limit=12&orderBy=<some-field', None)])
+      '/content?offset=2&limit=12&order_by=<some-field', None)])
 def test_get_contents(
         description,
         channels,
-        assetIds,
-        authorIds,
+        asset_ids,
+        author_ids,
         tags,
         offset,
         limit,
-        orderBy,
+        order_by,
         expected_uri,
         expected_exception):
 
@@ -72,34 +73,31 @@ def test_get_contents(
 
     contents = ContentFixtures.get_many_contents_response()
     with mock.patch.object(GsSession, '_get', return_value=contents) as mock_method:
-
-        target = GsContentApi()
-
         # Act
         if expected_exception is not None:
             with pytest.raises(expected_exception):
-                actual = target.get_contents(
+                actual = GsContentApi.get_contents(
                     channels=channels,
-                    assetIds=assetIds,
-                    authorIds=authorIds,
+                    asset_ids=asset_ids,
+                    author_ids=author_ids,
                     tags=tags,
                     offset=offset,
                     limit=limit,
-                    orderBy=orderBy)
+                    order_by=order_by)
                 print(actual)
         else:
-            actual = target.get_contents(
+            actual = GsContentApi.get_contents(
                 channels=channels,
-                assetIds=assetIds,
-                authorIds=authorIds,
+                asset_ids=asset_ids,
+                author_ids=author_ids,
                 tags=tags,
                 offset=offset,
                 limit=limit,
-                orderBy=orderBy)
+                order_by=order_by)
             print(actual)
 
             # Assert
-            mock_method.assert_called_with(expected_uri, cls=mock.ANY)
+            mock_method.assert_called_with(expected_uri, cls=GetManyContentsResponse)
 
 
 def test_get_text():

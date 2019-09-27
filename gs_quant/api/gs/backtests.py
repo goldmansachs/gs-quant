@@ -96,6 +96,12 @@ class GsBacktestApi:
         return backtestResult
 
     @classmethod
+    def calculate_position_risk(cls, backtestRiskRequest: BacktestRiskRequest) -> dict:
+        request_headers = {'Content-Type': 'application/json;charset=utf-8'}
+        return GsSession.current._post('/backtests/calculate-position-risk', backtestRiskRequest,
+                                       request_headers=request_headers)
+
+    @classmethod
     def get_ref_data(cls) -> BacktestRefData:
         return GsSession.current._get('/backtests/refData', cls=BacktestRefData)
 

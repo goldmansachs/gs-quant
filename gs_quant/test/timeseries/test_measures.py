@@ -159,11 +159,11 @@ def test_cross_to_usd_based_cross_for_fx_forecast(mocker):
 
 def mock_commod(_cls, _q):
     d = {
-        'price': [35.929686, 35.636039, 27.307498, 23.23177, 19.020833, 18.827291, 17.823749, 17.393958, 17.824999,
-                  20.307603, 24.311249, 25.160103, 25.245728, 25.736873, 28.425206, 28.779789, 30.519996, 34.896348,
-                  33.966973, 33.95489, 33.686348, 34.840307, 32.674163, 30.261665]
+        'price': [30, 30, 30, 30, 35.929686, 35.636039, 27.307498, 23.23177, 19.020833, 18.827291, 17.823749, 17.393958,
+                  17.824999, 20.307603, 24.311249, 25.160103, 25.245728, 25.736873, 28.425206, 28.779789, 30.519996,
+                  34.896348, 33.966973, 33.95489, 33.686348, 34.840307, 32.674163, 30.261665, 30, 30, 30]
     }
-    return pd.DataFrame(data=d, index=pd.date_range('2019-05-01', periods=24, freq='H', tz=timezone('US/Eastern')))
+    return pd.DataFrame(data=d, index=pd.date_range('2019-05-01', periods=31, freq='H', tz=timezone('UTC')))
 
 
 def mock_fx(_cls, _q):
@@ -974,21 +974,44 @@ def test_bucketize_price():
         '7x8': [26.004816],
         '2x16h': [],
         'monthly': [],
-        'CAISO 7x24': [26.518563]
+        'CAISO 7x24': [26.953743375],
+        'CAISO peak': [30.153727375],
+        'MISO 7x24': [27.076390749999998],
+        'MISO offpeak': [25.263605624999997],
     }
 
     replace = Replacer()
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_commod)
     mock_pjm = Index('MA001', AssetClass.Commod, 'PJM')
-    mock_caiso = Index('MA001', AssetClass.Commod, 'CAISO')
-    # mock_miso = Index('MA001', AssetClass.Commod, 'MISO')
+    mock_caiso = Index('MA002', AssetClass.Commod, 'CAISO')
+    mock_miso = Index('MA003', AssetClass.Commod, 'MISO')
 
     with DataContext(datetime.date(2019, 5, 1), datetime.date(2019, 5, 1)):
         bbid_mock = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+        bbid_mock.return_value = 'MISO'
+
+        actual = tm.bucketize_price(mock_miso, 'LMP', bucket='7x24')
+        assert_series_equal(pd.Series(target['MISO 7x24'],
+                                      index=[datetime.date(2019, 5, 1)],
+                                      name='price'),
+                            actual)
+
+        actual = tm.bucketize_price(mock_miso, 'LMP', bucket='offpeak')
+        assert_series_equal(pd.Series(target['MISO offpeak'],
+                                      index=[datetime.date(2019, 5, 1)],
+                                      name='price'),
+                            actual)
+
         bbid_mock.return_value = 'CAISO'
 
         actual = tm.bucketize_price(mock_caiso, 'LMP', bucket='7x24')
         assert_series_equal(pd.Series(target['CAISO 7x24'],
+                                      index=[datetime.date(2019, 5, 1)],
+                                      name='price'),
+                            actual)
+
+        actual = tm.bucketize_price(mock_caiso, 'LMP', bucket='peak')
+        assert_series_equal(pd.Series(target['CAISO peak'],
                                       index=[datetime.date(2019, 5, 1)],
                                       name='price'),
                             actual)
@@ -1033,6 +1056,9 @@ def test_bucketize_price():
 
         with pytest.raises(ValueError):
             tm.bucketize_price(mock_pjm, 'LMP', bucket='weekday')
+
+        with pytest.raises(ValueError):
+            tm.bucketize_price(mock_caiso, 'LMP', bucket='weekday')
 
         with pytest.raises(ValueError):
             tm.bucketize_price(mock_pjm, 'LMP', granularity='yearly')

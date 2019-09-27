@@ -23,8 +23,9 @@ import pandas as pd
 from gs_quant.api.data import DataApi
 from gs_quant.data.core import DataContext
 from gs_quant.errors import MqValueError
+from gs_quant.markets import MarketDataCoordinate
 from gs_quant.session import GsSession
-from gs_quant.target.common import FieldFilterMap, XRef, MarketDataCoordinate
+from gs_quant.target.common import FieldFilterMap, XRef
 from gs_quant.target.data import DataQuery, DataQueryResponse, MDAPIDataBatchResponse, MDAPIDataQueryResponse
 from gs_quant.target.data import DataSetEntity
 from .assets import GsAssetApi, GsIdType
@@ -256,7 +257,7 @@ class GsDataApi(DataApi):
                     continue
 
                 if 'value' not in pt:
-                    value_field = pt['quotingStyle'] if 'field' not in pt else pt['field']
+                    value_field = pt['mktQuotingStyle']
                     pt['value'] = pt.pop(value_field)
 
                 coord_data.append(pt)
@@ -269,8 +270,7 @@ class GsDataApi(DataApi):
             cls,
             data: Iterable[dict]
     ) -> pd.DataFrame:
-
-        df = cls.__sort_coordinate_data(pd.DataFrame.from_records(data))
+        df = cls._sort_coordinate_data(pd.DataFrame.from_records(data))
         index_field = next((f for f in ('time', 'date') if f in df.columns), None)
         if index_field:
             df = df.set_index(pd.DatetimeIndex(df.loc[:, index_field].values))
@@ -278,11 +278,10 @@ class GsDataApi(DataApi):
         return df
 
     @classmethod
-    def __sort_coordinate_data(
+    def _sort_coordinate_data(
             cls,
             df: pd.DataFrame,
-            by: Tuple[str] = ('date', 'time', 'marketDataType', 'marketDataAsset', 'pointClass', 'marketDataPoint',
-                              'quotingStyle', 'value')
+            by: Tuple[str] = ('date', 'time', 'mktType', 'mktAsset', 'mktClass', 'mktPoint', 'mktQuotingStyle', 'value')
     ) -> pd.DataFrame:
         columns = df.columns
         field_order = [f for f in by if f in columns]
@@ -290,17 +289,39 @@ class GsDataApi(DataApi):
         return df[field_order]
 
     @classmethod
+    def _coordinate_from_str(cls, coordinate_str: str) -> MarketDataCoordinate:
+        tmp = coordinate_str.rsplit(".", 1)
+        dimensions = tmp[0].split("_")
+        if len(dimensions) < 2:
+            raise MqValueError('invalid coordinate ' + coordinate_str)
+
+        kwargs = {
+            'mkt_type': dimensions[0],
+            'mkt_asset': dimensions[1] or None,
+            'mkt_quoting_style': tmp[-1] if len(tmp) > 1 else None}
+
+        if len(dimensions) > 2:
+            kwargs['mkt_class'] = dimensions[2] or None
+
+        if len(dimensions) > 3:
+            kwargs['mkt_point'] = tuple(dimensions[3:]) or None
+
+        return MarketDataCoordinate(**kwargs)
+
+    @classmethod
     def coordinates_last(
             cls,
-            coordinates: Union[List, Tuple],
+            coordinates: Union[Iterable[str], Iterable[MarketDataCoordinate]],
             as_of: Union[dt.date, dt.datetime],
             vendor: str = 'Goldman Sachs',
             as_dataframe: bool = False,
     ) -> Union[dict, pd.DataFrame]:
-        ret = {coordinate: None for coordinate in coordinates}
+        market_data_coordinates = tuple(cls._coordinate_from_str(coord) if isinstance(coord, str) else coord
+                                        for coord in coordinates)
+        ret = {coordinate: None for coordinate in market_data_coordinates}
         query = cls.build_query(
             end=as_of,
-            marketDataCoordinates=coordinates,
+            market_data_coordinates=market_data_coordinates,
             vendor=vendor
         )
 
@@ -308,12 +329,12 @@ class GsDataApi(DataApi):
 
         for idx, row in enumerate(cls.__normalise_coordinate_data(data)):
             try:
-                ret[coordinates[idx]] = row[0]['value']
+                ret[market_data_coordinates[idx]] = row[0]['value']
             except IndexError:
-                ret[coordinates[idx]] = None
+                ret[market_data_coordinates[idx]] = None
 
         if as_dataframe:
-            data = [dict(chain(c.as_dict().items(), (('value', v),))) for c, v in ret.items()]
+            data = [dict(chain(c.as_dict(as_camel_case=True).items(), (('value', v),))) for c, v in ret.items()]
             return cls.__df_from_coordinate_data(data)
 
         return ret
@@ -321,15 +342,17 @@ class GsDataApi(DataApi):
     @classmethod
     def coordinates_data(
             cls,
-            coordinates: Union[MarketDataCoordinate, Iterable[MarketDataCoordinate]],
+            coordinates: Union[str, MarketDataCoordinate, Iterable[str], Iterable[MarketDataCoordinate]],
             start: Optional[Union[dt.date, dt.datetime]] = None,
             end: Optional[Union[dt.date, dt.datetime]] = None,
             vendor: str = 'Goldman Sachs',
             as_multiple_dataframes: bool = False
     ) -> Union[pd.DataFrame, Tuple[pd.DataFrame]]:
-        multiple_coordinates = not isinstance(coordinates, MarketDataCoordinate)
+        coordinates_iterable = (coordinates, ) if isinstance(coordinates, MarketDataCoordinate) \
+            or isinstance(coordinates, str) else coordinates
         query = cls.build_query(
-            marketDataCoordinates=coordinates if multiple_coordinates else (coordinates,),
+            market_data_coordinates=tuple(cls._coordinate_from_str(coord) if isinstance(coord, str) else coord
+                                          for coord in coordinates_iterable),
             vendor=vendor,
             start=start,
             end=end
@@ -345,7 +368,7 @@ class GsDataApi(DataApi):
     @classmethod
     def coordinates_data_series(
             cls,
-            coordinates: Union[MarketDataCoordinate, Iterable[MarketDataCoordinate]],
+            coordinates: Union[str, MarketDataCoordinate, Iterable[str], Iterable[MarketDataCoordinate]],
             start: Optional[Union[dt.date, dt.datetime]] = None,
             end: Optional[Union[dt.date, dt.datetime]] = None,
             vendor: str = 'Goldman Sachs',
@@ -358,7 +381,7 @@ class GsDataApi(DataApi):
             as_multiple_dataframes=True)
 
         ret = tuple(pd.Series() if df.empty else pd.Series(index=df.index, data=df.value.values) for df in dfs)
-        if isinstance(coordinates, MarketDataCoordinate):
+        if not isinstance(coordinates, Iterable):
             return ret[0]
         else:
             return ret
