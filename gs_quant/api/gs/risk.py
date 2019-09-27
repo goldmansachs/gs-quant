@@ -57,11 +57,10 @@ class GsRiskApi(RiskApi):
         response = GsSession.current._post(r'/risk/coordinates', coordinates_request)
 
         return tuple(MarketDataCoordinate(
-            marketDataType=r.get('marketDataType'),
-            assetId=r.get('assetId'),
-            pointClass=r.get('pointClass'),
-            marketDataPoint=tuple(r.get('marketDataPoint', r.get('point', '')).split('_')),
-            quotingStyle=r.get('field', r.get('quotingStyle')))
+            mkt_type=r.get('marketDataType'),
+            mkt_class=r.get('pointClass'),
+            mkt_point=tuple(r.get('marketDataPoint', r.get('point', '')).split('_')),
+            mkt_quoting_style=r.get('field', r.get('quotingStyle')))
             for r in response)  # TODO use 'quotingStyle' after changing risk definition in slang
 
     @classmethod

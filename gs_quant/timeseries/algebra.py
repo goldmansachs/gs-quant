@@ -37,7 +37,7 @@ class FilterOperator(Enum):
 
 
 @plot_function
-def add(x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Interpolate = Interpolate.STEP)\
+def add(x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Interpolate = Interpolate.STEP) \
         -> Union[pd.Series, Real]:
     """
     Add two series or scalars
@@ -69,6 +69,9 @@ def add(x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Interpolat
     step        Resultant series has values on the union of dates in both series. Values
                 for dates only available in one series will be interpolated via step
                 function in the other series
+    time        Resultant series have values on the union of dates / times. Missing
+                values surrounded by valid values will be interpolated given length of
+                interval. Input series must use DateTimeIndex.
     =========   ========================================================================
 
     **Examples**
@@ -113,9 +116,20 @@ def subtract(x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Inter
     =========   ========================================================================
     Method      Behavior
     =========   ========================================================================
-    intersect   Resultant series only has values on the intersection of dates
-    union       Resultant series has values on union of dates (default of zero where
-                date is not present)
+    intersect   Resultant series only has values on the intersection of dates.
+                Values for dates present in only one series will be ignored
+    nan         Resultant series has values on the union of dates in both series. Values
+                for dates only available in one series will be treated as nan in the
+                other series, and therefore in the resultant series
+    zero        Resultant series has values on the union of dates in both series. Values
+                for dates only available in one series will be treated as zero in the
+                other series
+    step        Resultant series has values on the union of dates in both series. Values
+                for dates only available in one series will be interpolated via step
+                function in the other series
+    time        Resultant series have values on the union of dates / times. Missing
+                values surrounded by valid values will be interpolated given length of
+                interval. Input series must use DateTimeIndex.
     =========   ========================================================================
 
     **Examples**
@@ -173,6 +187,9 @@ def multiply(x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Inter
     step        Resultant series has values on the union of dates in both series. Values
                 for dates only available in one series will be interpolated via step
                 function in the other series
+    time        Resultant series have values on the union of dates / times. Missing
+                values surrounded by valid values will be interpolated given length of
+                interval. Input series must use DateTimeIndex.
     =========   ========================================================================
 
     **Examples**
@@ -228,6 +245,9 @@ def divide(x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Interpo
     step        Resultant series has values on the union of dates in both series. Values
                 for dates only available in one series will be interpolated via step
                 function in the other series
+    time        Resultant series have values on the union of dates / times. Missing
+                values surrounded by valid values will be interpolated given length of
+                interval. Input series must use DateTimeIndex.
     =========   ========================================================================
 
     **Examples**

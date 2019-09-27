@@ -13,9 +13,10 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+from concurrent.futures import Future, ThreadPoolExecutor
 import datetime as dt
 import functools
-from concurrent.futures import Future, ThreadPoolExecutor
+import inflection
 from typing import Optional, Tuple, Union
 
 import pandas as pd
@@ -31,8 +32,8 @@ from gs_quant.target.risk import PricingDateAndMarketDataAsOf, RiskMeasure, Risk
 class MarketDataCoordinate(__MarketDataCoordinate):
 
     def __str__(self):
-        return "|".join(f or '' for f in (self.marketDataType, self.marketDataAsset or self.assetId,
-                                          self.pointClass, '_'.join(self.marketDataPoint), self.field or self.quotingStyle))
+        return "|".join(f or '' for f in (self.mkt_type, self.mkt_asset, self.mkt_class,
+                                          '_'.join(self.mkt_point or ()), self.mkt_quoting_style))
 
 
 class PricingContext(ContextBaseWithDefault):
@@ -136,10 +137,10 @@ class PricingContext(ContextBaseWithDefault):
                 risk_request = RiskRequest(
                     tuple(positions),
                     risk_measures,
-                    waitForResults=not self.__is_batch,
-                    pricingLocation=self.market_data_location,
+                    wait_for_results=not self.__is_batch,
+                    pricing_location=self.market_data_location,
                     scenario=ScenarioContext.current if ScenarioContext.current.scenario is not None else None,
-                    pricingAndMarketDataAsOf=self._pricing_market_data_as_of
+                    pricing_and_market_data_as_of=self._pricing_market_data_as_of
                 )
 
                 if self.__is_batch:
@@ -270,7 +271,7 @@ class PricingContext(ContextBaseWithDefault):
                     return
 
             field_values = {field: value_mappings.get(value, value) for field, value in field_values.items()
-                            if field in priceable_inst.properties() and value not in invalid_defaults}
+                            if inflection.underscore(field) in priceable_inst.properties() and value not in invalid_defaults}
 
             if in_place and not future:
                 for field, value in field_values.items():
@@ -286,7 +287,7 @@ class PricingContext(ContextBaseWithDefault):
                 else:
                     return new_inst
 
-        res = self.calc(priceable, RiskMeasure(measureType='Resolved Instrument Values'))
+        res = self.calc(priceable, RiskMeasure(measure_type='Resolved Instrument Values'))
         if isinstance(res, Future):
             ret = Future() if not in_place else None
             res.add_done_callback(functools.partial(apply_field_values, priceable_inst=priceable, future=ret))

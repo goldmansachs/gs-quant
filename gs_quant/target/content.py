@@ -24,7 +24,12 @@ class Author(Base):
         
     """Object containing author data"""
        
-    def __init__(self, id: str = None, name: str = None, division=None):
+    def __init__(
+        self,
+        id: str = None,
+        name: str = None,
+        division=None        
+    ):
         super().__init__()
         self.__id = id
         self.__name = name
@@ -62,7 +67,12 @@ class Author(Base):
 
 class BulkDeleteContentResponse(Base):
                
-    def __init__(self, status: int = None, message: str = None, data: Tuple[str, ...] = None):
+    def __init__(
+        self,
+        status: int = None,
+        message: str = None,
+        data: Tuple[str, ...] = None        
+    ):
         super().__init__()
         self.__status = status
         self.__message = message
@@ -103,10 +113,15 @@ class Content(Base):
         
     """Body of the content piece"""
        
-    def __init__(self, body: str, mimeType, encoding):
+    def __init__(
+        self,
+        body: str,
+        mime_type,
+        encoding        
+    ):
         super().__init__()
         self.__body = body
-        self.__mimeType = mimeType
+        self.__mime_type = mime_type
         self.__encoding = encoding
 
     @property
@@ -120,14 +135,14 @@ class Content(Base):
         self._property_changed('body')        
 
     @property
-    def mimeType(self):
+    def mime_type(self):
         """Allowed mime-types"""
-        return self.__mimeType
+        return self.__mime_type
 
-    @mimeType.setter
-    def mimeType(self, value):
-        self.__mimeType = value
-        self._property_changed('mimeType')        
+    @mime_type.setter
+    def mime_type(self, value):
+        self.__mime_type = value
+        self._property_changed('mime_type')        
 
     @property
     def encoding(self):
@@ -142,7 +157,12 @@ class Content(Base):
 
 class DeleteContentResponse(Base):
                
-    def __init__(self, status: int = None, message: str = None, data: str = None):
+    def __init__(
+        self,
+        status: int = None,
+        message: str = None,
+        data: str = None        
+    ):
         super().__init__()
         self.__status = status
         self.__message = message
@@ -183,7 +203,11 @@ class Disclaimer(Base):
         
     """Disclaimer associated with a content piece"""
        
-    def __init__(self, text: str = None, type=None):
+    def __init__(
+        self,
+        text: str = None,
+        type=None        
+    ):
         super().__init__()
         self.__text = text
         self.__type = type
@@ -209,7 +233,10 @@ class Disclaimer(Base):
 
 class Object(Base):
                
-    def __init__(self, ):
+    def __init__(
+        self,
+                
+    ):
         super().__init__()
         
 
@@ -218,24 +245,32 @@ class Certification(Base):
         
     """Field to store SEAL certification object"""
        
-    def __init__(self, submissionId: str, version: str, submissionState, allowedDistribution: Tuple[Object, ...], etaskProcessInstanceId: str = None, tags: Tuple[None, ...] = None):
+    def __init__(
+        self,
+        submission_id: str,
+        version: str,
+        submission_state,
+        allowed_distribution: Tuple[Object, ...],
+        etask_process_instance_id: str = None,
+        tags: Tuple[None, ...] = None        
+    ):
         super().__init__()
-        self.__submissionId = submissionId
+        self.__submission_id = submission_id
         self.__version = version
-        self.__submissionState = submissionState
-        self.__etaskProcessInstanceId = etaskProcessInstanceId
-        self.__allowedDistribution = allowedDistribution
+        self.__submission_state = submission_state
+        self.__etask_process_instance_id = etask_process_instance_id
+        self.__allowed_distribution = allowed_distribution
         self.__tags = tags
 
     @property
-    def submissionId(self) -> str:
+    def submission_id(self) -> str:
         """Submission ID assigned by SEAL"""
-        return self.__submissionId
+        return self.__submission_id
 
-    @submissionId.setter
-    def submissionId(self, value: str):
-        self.__submissionId = value
-        self._property_changed('submissionId')        
+    @submission_id.setter
+    def submission_id(self, value: str):
+        self.__submission_id = value
+        self._property_changed('submission_id')        
 
     @property
     def version(self) -> str:
@@ -248,34 +283,34 @@ class Certification(Base):
         self._property_changed('version')        
 
     @property
-    def submissionState(self):
+    def submission_state(self):
         """Current state of a submission as reported by SEAL"""
-        return self.__submissionState
+        return self.__submission_state
 
-    @submissionState.setter
-    def submissionState(self, value):
-        self.__submissionState = value
-        self._property_changed('submissionState')        
+    @submission_state.setter
+    def submission_state(self, value):
+        self.__submission_state = value
+        self._property_changed('submission_state')        
 
     @property
-    def etaskProcessInstanceId(self) -> str:
+    def etask_process_instance_id(self) -> str:
         """Field to store eTask ID associated with SEAL certification of content piece"""
-        return self.__etaskProcessInstanceId
+        return self.__etask_process_instance_id
 
-    @etaskProcessInstanceId.setter
-    def etaskProcessInstanceId(self, value: str):
-        self.__etaskProcessInstanceId = value
-        self._property_changed('etaskProcessInstanceId')        
+    @etask_process_instance_id.setter
+    def etask_process_instance_id(self, value: str):
+        self.__etask_process_instance_id = value
+        self._property_changed('etask_process_instance_id')        
 
     @property
-    def allowedDistribution(self) -> Tuple[Object, ...]:
+    def allowed_distribution(self) -> Tuple[Object, ...]:
         """A list of allowed distributions"""
-        return self.__allowedDistribution
+        return self.__allowed_distribution
 
-    @allowedDistribution.setter
-    def allowedDistribution(self, value: Tuple[Object, ...]):
-        self.__allowedDistribution = value
-        self._property_changed('allowedDistribution')        
+    @allowed_distribution.setter
+    def allowed_distribution(self, value: Tuple[Object, ...]):
+        self.__allowed_distribution = value
+        self._property_changed('allowed_distribution')        
 
     @property
     def tags(self) -> Tuple[None, ...]:
@@ -290,15 +325,26 @@ class Certification(Base):
 
 class ContentResponse(Base):
                
-    def __init__(self, id: str = None, version: str = None, name: str = None, entitlements: Entitlements = None, createdById: str = None, createdTime: datetime.datetime = None, lastUpdatedTime: datetime.datetime = None, channels: Tuple[str, ...] = None, content: Content = None):
+    def __init__(
+        self,
+        id: str = None,
+        version: str = None,
+        name: str = None,
+        entitlements: Entitlements = None,
+        created_by_id: str = None,
+        created_time: datetime.datetime = None,
+        last_updated_time: datetime.datetime = None,
+        channels: Tuple[str, ...] = None,
+        content: Content = None        
+    ):
         super().__init__()
         self.__id = id
         self.__version = version
         self.__name = name
         self.__entitlements = entitlements
-        self.__createdById = createdById
-        self.__createdTime = createdTime
-        self.__lastUpdatedTime = lastUpdatedTime
+        self.__created_by_id = created_by_id
+        self.__created_time = created_time
+        self.__last_updated_time = last_updated_time
         self.__channels = channels
         self.__content = content
 
@@ -343,34 +389,34 @@ class ContentResponse(Base):
         self._property_changed('entitlements')        
 
     @property
-    def createdById(self) -> str:
+    def created_by_id(self) -> str:
         """Original user GUID who created the content piece"""
-        return self.__createdById
+        return self.__created_by_id
 
-    @createdById.setter
-    def createdById(self, value: str):
-        self.__createdById = value
-        self._property_changed('createdById')        
-
-    @property
-    def createdTime(self) -> datetime.datetime:
-        """ISO 8601-formatted timestamp"""
-        return self.__createdTime
-
-    @createdTime.setter
-    def createdTime(self, value: datetime.datetime):
-        self.__createdTime = value
-        self._property_changed('createdTime')        
+    @created_by_id.setter
+    def created_by_id(self, value: str):
+        self.__created_by_id = value
+        self._property_changed('created_by_id')        
 
     @property
-    def lastUpdatedTime(self) -> datetime.datetime:
+    def created_time(self) -> datetime.datetime:
         """ISO 8601-formatted timestamp"""
-        return self.__lastUpdatedTime
+        return self.__created_time
 
-    @lastUpdatedTime.setter
-    def lastUpdatedTime(self, value: datetime.datetime):
-        self.__lastUpdatedTime = value
-        self._property_changed('lastUpdatedTime')        
+    @created_time.setter
+    def created_time(self, value: datetime.datetime):
+        self.__created_time = value
+        self._property_changed('created_time')        
+
+    @property
+    def last_updated_time(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
+        return self.__last_updated_time
+
+    @last_updated_time.setter
+    def last_updated_time(self, value: datetime.datetime):
+        self.__last_updated_time = value
+        self._property_changed('last_updated_time')        
 
     @property
     def channels(self) -> Tuple[str, ...]:
@@ -395,7 +441,12 @@ class ContentResponse(Base):
 
 class ContentUpdateRequest(Base):
                
-    def __init__(self, name: str = None, entitlements: Entitlements = None, content: Content = None):
+    def __init__(
+        self,
+        name: str = None,
+        entitlements: Entitlements = None,
+        content: Content = None        
+    ):
         super().__init__()
         self.__name = name
         self.__entitlements = entitlements
@@ -434,7 +485,11 @@ class ContentUpdateRequest(Base):
 
 class BulkContentUpdateRequestItem(Base):
                
-    def __init__(self, id: str = None, update: ContentUpdateRequest = None):
+    def __init__(
+        self,
+        id: str = None,
+        update: ContentUpdateRequest = None        
+    ):
         super().__init__()
         self.__id = id
         self.__update = update
@@ -461,16 +516,26 @@ class BulkContentUpdateRequestItem(Base):
 
 class ContentAuditFields(Base):
                
-    def __init__(self, id: str = None, version: str = None, name: str = None, entitlements: Entitlements = None, createdById: str = None, authors: Tuple[Author, ...] = None, createdTime: datetime.datetime = None, lastUpdatedTime: datetime.datetime = None):
+    def __init__(
+        self,
+        id: str = None,
+        version: str = None,
+        name: str = None,
+        entitlements: Entitlements = None,
+        created_by_id: str = None,
+        authors: Tuple[Author, ...] = None,
+        created_time: datetime.datetime = None,
+        last_updated_time: datetime.datetime = None        
+    ):
         super().__init__()
         self.__id = id
         self.__version = version
         self.__name = name
         self.__entitlements = entitlements
-        self.__createdById = createdById
+        self.__created_by_id = created_by_id
         self.__authors = authors
-        self.__createdTime = createdTime
-        self.__lastUpdatedTime = lastUpdatedTime
+        self.__created_time = created_time
+        self.__last_updated_time = last_updated_time
 
     @property
     def id(self) -> str:
@@ -513,14 +578,14 @@ class ContentAuditFields(Base):
         self._property_changed('entitlements')        
 
     @property
-    def createdById(self) -> str:
+    def created_by_id(self) -> str:
         """Original user GUID who created the content piece"""
-        return self.__createdById
+        return self.__created_by_id
 
-    @createdById.setter
-    def createdById(self, value: str):
-        self.__createdById = value
-        self._property_changed('createdById')        
+    @created_by_id.setter
+    def created_by_id(self, value: str):
+        self.__created_by_id = value
+        self._property_changed('created_by_id')        
 
     @property
     def authors(self) -> Tuple[Author, ...]:
@@ -533,40 +598,53 @@ class ContentAuditFields(Base):
         self._property_changed('authors')        
 
     @property
-    def createdTime(self) -> datetime.datetime:
+    def created_time(self) -> datetime.datetime:
         """ISO 8601-formatted timestamp"""
-        return self.__createdTime
+        return self.__created_time
 
-    @createdTime.setter
-    def createdTime(self, value: datetime.datetime):
-        self.__createdTime = value
-        self._property_changed('createdTime')        
+    @created_time.setter
+    def created_time(self, value: datetime.datetime):
+        self.__created_time = value
+        self._property_changed('created_time')        
 
     @property
-    def lastUpdatedTime(self) -> datetime.datetime:
+    def last_updated_time(self) -> datetime.datetime:
         """ISO 8601-formatted timestamp"""
-        return self.__lastUpdatedTime
+        return self.__last_updated_time
 
-    @lastUpdatedTime.setter
-    def lastUpdatedTime(self, value: datetime.datetime):
-        self.__lastUpdatedTime = value
-        self._property_changed('lastUpdatedTime')        
+    @last_updated_time.setter
+    def last_updated_time(self, value: datetime.datetime):
+        self.__last_updated_time = value
+        self._property_changed('last_updated_time')        
 
 
 class ContentParameters(Base):
         
     """Parameters of the content piece"""
        
-    def __init__(self, namespace: str, authorIds: Tuple[str, ...], language, status=None, tags: Tuple[str, ...] = None, slug: str = None, attachments: Tuple[Content, ...] = None, certification: Certification = None, assetIds: Tuple[str, ...] = None, origin=None, disclaimers: Tuple[Disclaimer, ...] = None):
+    def __init__(
+        self,
+        namespace: str,
+        author_ids: Tuple[str, ...],
+        language,
+        status=None,
+        tags: Tuple[str, ...] = None,
+        slug: str = None,
+        attachments: Tuple[Content, ...] = None,
+        certification: Certification = None,
+        asset_ids: Tuple[str, ...] = None,
+        origin=None,
+        disclaimers: Tuple[Disclaimer, ...] = None        
+    ):
         super().__init__()
         self.__status = status
         self.__namespace = namespace
         self.__tags = tags
         self.__slug = slug
-        self.__authorIds = authorIds
+        self.__author_ids = author_ids
         self.__attachments = attachments
         self.__certification = certification
-        self.__assetIds = assetIds
+        self.__asset_ids = asset_ids
         self.__origin = origin
         self.__disclaimers = disclaimers
         self.__language = language
@@ -612,14 +690,14 @@ class ContentParameters(Base):
         self._property_changed('slug')        
 
     @property
-    def authorIds(self) -> Tuple[str, ...]:
+    def author_ids(self) -> Tuple[str, ...]:
         """List of author GUIDs for the content piece"""
-        return self.__authorIds
+        return self.__author_ids
 
-    @authorIds.setter
-    def authorIds(self, value: Tuple[str, ...]):
-        self.__authorIds = value
-        self._property_changed('authorIds')        
+    @author_ids.setter
+    def author_ids(self, value: Tuple[str, ...]):
+        self.__author_ids = value
+        self._property_changed('author_ids')        
 
     @property
     def attachments(self) -> Tuple[Content, ...]:
@@ -642,14 +720,14 @@ class ContentParameters(Base):
         self._property_changed('certification')        
 
     @property
-    def assetIds(self) -> Tuple[str, ...]:
+    def asset_ids(self) -> Tuple[str, ...]:
         """Array of Marquee Asset Ids associated with the content piece"""
-        return self.__assetIds
+        return self.__asset_ids
 
-    @assetIds.setter
-    def assetIds(self, value: Tuple[str, ...]):
-        self.__assetIds = value
-        self._property_changed('assetIds')        
+    @asset_ids.setter
+    def asset_ids(self, value: Tuple[str, ...]):
+        self.__asset_ids = value
+        self._property_changed('asset_ids')        
 
     @property
     def origin(self):
@@ -684,7 +762,12 @@ class ContentParameters(Base):
 
 class GetManyContentsResponse(Base):
                
-    def __init__(self, status: int = None, message: str = None, data: Tuple[ContentResponse, ...] = None):
+    def __init__(
+        self,
+        status: int = None,
+        message: str = None,
+        data: Tuple[ContentResponse, ...] = None        
+    ):
         super().__init__()
         self.__status = status
         self.__message = message
@@ -723,7 +806,12 @@ class GetManyContentsResponse(Base):
 
 class BulkContentUpdateResponse(Base):
                
-    def __init__(self, status: int = None, message: str = None, data: Tuple[ContentAuditFields, ...] = None):
+    def __init__(
+        self,
+        status: int = None,
+        message: str = None,
+        data: Tuple[ContentAuditFields, ...] = None        
+    ):
         super().__init__()
         self.__status = status
         self.__message = message
@@ -762,7 +850,13 @@ class BulkContentUpdateResponse(Base):
 
 class ContentCreateRequest(Base):
                
-    def __init__(self, name: str, entitlements: Entitlements, content: Content, parameters: ContentParameters):
+    def __init__(
+        self,
+        name: str,
+        entitlements: Entitlements,
+        content: Content,
+        parameters: ContentParameters        
+    ):
         super().__init__()
         self.__name = name
         self.__entitlements = entitlements
@@ -812,7 +906,12 @@ class ContentCreateRequest(Base):
 
 class ContentCreateResponse(Base):
                
-    def __init__(self, status: int = None, message: str = None, data: ContentAuditFields = None):
+    def __init__(
+        self,
+        status: int = None,
+        message: str = None,
+        data: ContentAuditFields = None        
+    ):
         super().__init__()
         self.__status = status
         self.__message = message
@@ -850,7 +949,12 @@ class ContentCreateResponse(Base):
 
 class ContentUpdateResponse(Base):
                
-    def __init__(self, status: int = None, message: str = None, data: ContentAuditFields = None):
+    def __init__(
+        self,
+        status: int = None,
+        message: str = None,
+        data: ContentAuditFields = None        
+    ):
         super().__init__()
         self.__status = status
         self.__message = message

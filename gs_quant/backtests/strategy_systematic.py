@@ -20,10 +20,9 @@ from typing import Iterable
 import gs_quant.target.backtests as backtests
 from gs_quant.api.gs.backtests import GsBacktestApi
 from gs_quant.backtests.core import Backtest, QuantityType, TradeInMethod
-from gs_quant.backtests.flow_vol_backtest_measure import FlowVolBacktestMeasure
 from gs_quant.errors import MqValueError
-from gs_quant.instrument import EqOption
 from gs_quant.target.backtests import *
+from gs_quant.target.instrument import EqOption
 
 _logger = logging.getLogger(__name__)
 
@@ -47,8 +46,7 @@ class StrategySystematic:
                  delta_hedge: DeltaHedgeParameters = None,
                  name: str = None,
                  cost_netting: bool = False,
-                 currency: Union[Currency, str] = Currency.USD,
-                 measures: Iterable[FlowVolBacktestMeasure] = (FlowVolBacktestMeasure.ALL_MEASURES,)):
+                 currency: Union[Currency, str] = Currency.USD):
         self.__cost_netting = cost_netting
         self.__currency = get_enum_value(Currency, currency)
         self.__name = name
@@ -58,9 +56,9 @@ class StrategySystematic:
 
         self.__trading_parameters = BacktestTradingParameters(
             quantity=quantity,
-            quantityType=get_enum_value(QuantityType, quantity_type).value,
-            tradeInMethod=trade_in_method,
-            rollFrequency=roll_frequency)
+            quantity_type=get_enum_value(QuantityType, quantity_type).value,
+            trade_in_method=trade_in_method,
+            roll_frequency=roll_frequency)
 
         self.__underliers = []
 
@@ -69,10 +67,10 @@ class StrategySystematic:
             notional_percentage = 100
             self.check_underlier_fields(instrument)
             self.__underliers.append(BacktestStrategyUnderlier(
-                instrument=instrument,
-                notionalPercentage=notional_percentage,
-                hedge=BacktestStrategyUnderlierHedge(riskDetails=delta_hedge),
-                marketModel=EQ_MARKET_MODEL))
+                instrument=instrument.as_dict(),
+                notional_percentage=notional_percentage,
+                hedge=BacktestStrategyUnderlierHedge(risk_details=delta_hedge),
+                market_model=EQ_MARKET_MODEL))
         else:
             for eq_option in underliers:
                 if isinstance(eq_option, tuple):
@@ -85,31 +83,30 @@ class StrategySystematic:
                     raise MqValueError('The format of the backtest asset is incorrect.')
                 self.check_underlier_fields(instrument)
                 self.__underliers.append(BacktestStrategyUnderlier(
-                    instrument=instrument,
-                    notionalPercentage=notional_percentage,
-                    hedge=BacktestStrategyUnderlierHedge(riskDetails=delta_hedge),
-                    marketModel=EQ_MARKET_MODEL))
+                    instrument=instrument.as_dict(),
+                    notional_percentage=notional_percentage,
+                    hedge=BacktestStrategyUnderlierHedge(risk_details=delta_hedge),
+                    market_model=EQ_MARKET_MODEL))
 
         backtest_parameters_class: Base = getattr(backtests, self.__backtest_type + 'BacktestParameters')
         backtest_parameter_args = {
-            'tradingParameters': self.__trading_parameters,
+            'trading_parameters': self.__trading_parameters,
             'underliers': self.__underliers,
-            'tradeInMethod': trade_in_method,
-            'scalingMethod': scaling_method,
-            'indexInitialValue': index_initial_value,
-            'measures': [measure.str_value for measure in measures]
+            'trade_in_method': trade_in_method,
+            'scaling_method': scaling_method,
+            'index_initial_value': index_initial_value
         }
         self.__backtest_parameters = backtest_parameters_class.from_dict(backtest_parameter_args)
 
+    @staticmethod
     def check_underlier_fields(
-            self,
-            underlier: EqOption) -> bool:
-
+            underlier: EqOption
+    ) -> bool:
         # validation for different fields
-        if isinstance(underlier.expirationDate, datetime.date):
+        if isinstance(underlier.expiration_date, datetime.date):
             raise MqValueError('Datetime.date format for expiration date field is not supported for backtest service')
-        elif re.search(ISO_FORMAT, underlier.expirationDate) is not None:
-            if datetime.datetime.strptime(underlier.expirationDate, "%Y-%m-%d"):
+        elif re.search(ISO_FORMAT, underlier.expiration_date) is not None:
+            if datetime.datetime.strptime(underlier.expiration_date, "%Y-%m-%d"):
                 raise MqValueError('Date format for expiration date field is not supported for backtest service')
 
         return True
@@ -118,17 +115,22 @@ class StrategySystematic:
             self,
             start: datetime.date = None,
             end: datetime.date = datetime.date.today() - datetime.timedelta(days=1),
-            is_async: bool = False) -> Union[Backtest, BacktestResult]:
+            is_async: bool = False,
+            measures: Iterable[FlowVolBacktestMeasure] = (FlowVolBacktestMeasure.ALL_MEASURES,)
+    ) -> Union[Backtest, BacktestResult]:
+
+        params_dict = self.__backtest_parameters.as_dict()
+        params_dict['measures'] = [m.value for m in measures]
 
         backtest = Backtest(name=self.__name,
-                            mqSymbol=self.__name,
+                            mq_symbol=self.__name,
                             parameters=self.__backtest_parameters.as_dict(),
-                            startDate=start,
-                            endDate=end,
+                            start_date=start,
+                            end_date=end,
                             type=BACKTEST_TYPE_VALUE,
-                            assetClass=AssetClass.Equity,
+                            asset_class=AssetClass.Equity,
                             currency=self.__currency,
-                            costNetting=self.__cost_netting)
+                            cost_netting=self.__cost_netting)
 
         if is_async:
             # Create back test ...

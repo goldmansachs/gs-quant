@@ -42,31 +42,32 @@ class GsContentApi:
     def get_contents(
             cls,
             channels: set = None,
-            assetIds: set = None,
-            authorIds: set = None,
+            asset_ids: set = None,
+            author_ids: set = None,
             tags: set = None,
             offset: int = 0,
             limit: int = 10,
-            orderBy: dict = {'direction': OrderBy.DESC, 'field': 'createdTime'}
+            order_by: dict = {'direction': OrderBy.DESC, 'field': 'createdTime'}
     ) -> List[ContentResponse]:
         """
         Get contents for given parameters
 
         :param channels: Channels
-        :param assetIds: Marquee Asset Ids
-        :param authorIds: Marquee Author Guids
+        :param asset_ids: Marquee Asset Ids
+        :param author_ids: Marquee Author Guids
         :param tags: Tags
         :param limit: Limit (number of contents to return)
-        :param limit: Offset (offset of contents)
-        :param limit: OrderBy (dict for specifying how to sort contents)
+        :param offset: Offset (offset of contents)
+        :param order_by: OrderBy (dict for specifying how to sort contents)
         :return: A list of ContentResponse objects
 
         **Examples**
 
         >>> from gs_quant.api.gs.content import GsContentApi
+        >>> from gs_quant.session import GsSession
         >>>
-        >>> gs_content_api = GsContentApi()
-        >>> contents = gs_content_api.get_contents(channels=['G10'])
+        >>> GsSession.use()
+        >>> contents = GsContentApi.get_contents(channels=['G10'])
         """
 
         if limit and limit > 1000:
@@ -77,12 +78,12 @@ class GsContentApi:
 
         parameters_dict = cls._build_parameters_dict(
             channel=channels,
-            assetId=assetIds,
-            authorId=authorIds,
+            asset_id=asset_ids,
+            author_id=author_ids,
             tag=tags,
             offset=[offset] if offset else None,
             limit=[limit] if limit else None,
-            orderBy=[orderBy] if orderBy else None)
+            order_by=[order_by] if order_by else None)
 
         query_string = '' if not parameters_dict else cls._build_query_string(parameters_dict)
         contents = GsSession.current._get(f'/content{query_string}', cls=GetManyContentsResponse)
@@ -99,9 +100,10 @@ class GsContentApi:
         **Examples**
 
         >>> from gs_quant.api.gs.content import GsContentApi
+        >>> from gs_quant.session import GsSession
         >>>
-        >>> gs_content_api = GsContentApi()
-        >>> contents = gs_content_api.get_contents(channels=['G10'])
+        >>> GsSession.use()
+        >>> contents = GsContentApi.get_contents(channels=['G10'])
         >>> text = gs_content_api.get_text(contents)
         """
         return [(content.id, b64decode(content.content.body)) for content in contents]
@@ -141,7 +143,7 @@ class GsContentApi:
             name, value = parameter_tuple
             value = quote(value.encode()) if isinstance(value, str) else value
 
-            if name == 'orderBy':
+            if name == 'order_by':
                 value = cls._convert_order_by(value)
 
             query_string += f'{name}={value}' if index == 0 else f'&{name}={value}'
@@ -149,20 +151,16 @@ class GsContentApi:
         return query_string
 
     @classmethod
-    def _convert_order_by(cls, orderBy: dict) -> str:
+    def _convert_order_by(cls, order_by: dict) -> str:
         """
         Converts an orderByDirection and orderByField to an acceptable query parameter format
         expected by the Content API
         """
-        orderByParameter = ''
-
-        direction = orderBy['direction']
-        field = orderBy['field']
+        direction = order_by['direction']
 
         if direction == OrderBy.DESC:
-            orderByParameter = '>'
+            order_by_parameter = '>'
         else:
-            orderByParameter = '<'
+            order_by_parameter = '<'
 
-        orderByParameter += field
-        return orderByParameter
+        return order_by_parameter + order_by['field']

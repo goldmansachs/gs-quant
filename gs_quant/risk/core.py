@@ -156,9 +156,13 @@ def sort_risk(df: pd.DataFrame, by: Tuple[str] = ('date', 'time', 'marketDataTyp
     return pd.DataFrame.from_records(data, columns=columns)[fields]
 
 
-def __risk_measure_with_doc_string(doc: str, measureType: RiskMeasureType,
-                                   assetClass: AssetClass = None, unit: RiskMeasureUnit = None) -> RiskMeasure:
-    measure = RiskMeasure(measureType=measureType, assetClass=assetClass, unit=unit)
+def __risk_measure_with_doc_string(
+    doc: str,
+    measure_type: RiskMeasureType,
+    asset_class: Optional[AssetClass] = None,
+    unit: Optional[RiskMeasureUnit] = None
+) -> RiskMeasure:
+    measure = RiskMeasure(measure_type=measure_type, asset_class=asset_class, unit=unit)
     measure.__doc__ = doc
     return measure
 
@@ -167,74 +171,77 @@ DollarPrice = __risk_measure_with_doc_string('Present value in USD', RiskMeasure
 Price = __risk_measure_with_doc_string('Present value in local currency', RiskMeasureType.PV)
 ForwardPrice = __risk_measure_with_doc_string('Forward price', RiskMeasureType.Forward_Price, unit=RiskMeasureUnit.BPS)
 Theta = __risk_measure_with_doc_string('1 day Theta', RiskMeasureType.Theta)
-EqDelta = __risk_measure_with_doc_string('Equity Delta', RiskMeasureType.Delta, assetClass=AssetClass.Equity)
-EqGamma = __risk_measure_with_doc_string('Equity Gamma', RiskMeasureType.Gamma, assetClass=AssetClass.Equity)
-EqVega = __risk_measure_with_doc_string('Equity Vega', RiskMeasureType.Vega, assetClass=AssetClass.Equity)
-EqSpot = __risk_measure_with_doc_string('Equity Spot Level', RiskMeasureType.Spot, assetClass=AssetClass.Equity)
+EqDelta = __risk_measure_with_doc_string('Equity Delta', RiskMeasureType.Delta, asset_class=AssetClass.Equity)
+EqGamma = __risk_measure_with_doc_string('Equity Gamma', RiskMeasureType.Gamma, asset_class=AssetClass.Equity)
+EqVega = __risk_measure_with_doc_string('Equity Vega', RiskMeasureType.Vega, asset_class=AssetClass.Equity)
+EqSpot = __risk_measure_with_doc_string('Equity Spot Level', RiskMeasureType.Spot, asset_class=AssetClass.Equity)
 EqAnnualImpliedVol = __risk_measure_with_doc_string(
     'Equity Annual Implied Volatility (%)',
     RiskMeasureType.Annual_Implied_Volatility,
-    assetClass=AssetClass.Equity,
+    asset_class=AssetClass.Equity,
     unit=RiskMeasureUnit.Percent)
-CommodDelta = __risk_measure_with_doc_string('Commodity Delta', RiskMeasureType.Delta, assetClass=AssetClass.Commod)
-CommodTheta = __risk_measure_with_doc_string('Commodity Theta', RiskMeasureType.Theta, assetClass=AssetClass.Commod)
-CommodVega = __risk_measure_with_doc_string('Commodity Vega', RiskMeasureType.Vega, assetClass=AssetClass.Commod)
-FXDelta = __risk_measure_with_doc_string('FX Delta', RiskMeasureType.Delta, assetClass=AssetClass.FX)
-FXGamma = __risk_measure_with_doc_string('FX Gamma', RiskMeasureType.Gamma, assetClass=AssetClass.FX)
-FXVega = __risk_measure_with_doc_string('FX Vega', RiskMeasureType.Vega, assetClass=AssetClass.FX)
-FXSpot = __risk_measure_with_doc_string('FX Spot Rate', RiskMeasureType.Spot, assetClass=AssetClass.FX)
-IRDelta = __risk_measure_with_doc_string('Interest Rate Delta', RiskMeasureType.Delta, assetClass=AssetClass.Rates)
+CommodDelta = __risk_measure_with_doc_string('Commodity Delta', RiskMeasureType.Delta, asset_class=AssetClass.Commod)
+CommodTheta = __risk_measure_with_doc_string('Commodity Theta', RiskMeasureType.Theta, asset_class=AssetClass.Commod)
+CommodVega = __risk_measure_with_doc_string('Commodity Vega', RiskMeasureType.Vega, asset_class=AssetClass.Commod)
+FXDelta = __risk_measure_with_doc_string('FX Delta', RiskMeasureType.Delta, asset_class=AssetClass.FX)
+FXGamma = __risk_measure_with_doc_string('FX Gamma', RiskMeasureType.Gamma, asset_class=AssetClass.FX)
+FXVega = __risk_measure_with_doc_string('FX Vega', RiskMeasureType.Vega, asset_class=AssetClass.FX)
+FXSpot = __risk_measure_with_doc_string('FX Spot Rate', RiskMeasureType.Spot, asset_class=AssetClass.FX)
+IRDelta = __risk_measure_with_doc_string('Interest Rate Delta', RiskMeasureType.Delta, asset_class=AssetClass.Rates)
 IRDeltaParallel = __risk_measure_with_doc_string(
     'Interest Rate Parallel Delta',
     RiskMeasureType.ParallelDelta,
-    assetClass=AssetClass.Rates)
+    asset_class=AssetClass.Rates)
 IRDeltaLocalCcy = __risk_measure_with_doc_string(
     'Interest Rate Delta (Local Ccy)',
     RiskMeasureType.DeltaLocalCcy,
-    assetClass=AssetClass.Rates)
+    asset_class=AssetClass.Rates)
 IRDeltaParallelLocalCcy = __risk_measure_with_doc_string(
     'Interest Rate Parallel Delta (Local Ccy)',
     RiskMeasureType.ParallelDeltaLocalCcy,
-    assetClass=AssetClass.Rates)
-IRGamma = __risk_measure_with_doc_string('Interest Rate Gamma', RiskMeasureType.Gamma, assetClass=AssetClass.Rates)
-IRVega = __risk_measure_with_doc_string('Interest Rate Vega', RiskMeasureType.Vega, assetClass=AssetClass.Rates)
+    asset_class=AssetClass.Rates)
+IRGamma = __risk_measure_with_doc_string('Interest Rate Gamma', RiskMeasureType.Gamma, asset_class=AssetClass.Rates)
+IRVega = __risk_measure_with_doc_string('Interest Rate Vega', RiskMeasureType.Vega, asset_class=AssetClass.Rates)
 IRVegaParallel = __risk_measure_with_doc_string(
     'Interest Rate Parallel Vega',
     RiskMeasureType.ParallelVega,
-    assetClass=AssetClass.Rates)
+    asset_class=AssetClass.Rates)
 IRVegaLocalCcy = __risk_measure_with_doc_string(
     'Interest Rate Vega (Local Ccy)',
     RiskMeasureType.VegaLocalCcy,
-    assetClass=AssetClass.Rates)
+    asset_class=AssetClass.Rates)
 IRVegaParallelLocalCcy = __risk_measure_with_doc_string(
     'Interest Rate Parallel Vega (Local Ccy)',
     RiskMeasureType.ParallelVegaLocalCcy,
-    assetClass=AssetClass.Rates)
+    asset_class=AssetClass.Rates)
 IRAnnualImpliedVol = __risk_measure_with_doc_string(
     'Interest Rate Annual Implied Volatility (%)',
     RiskMeasureType.Annual_Implied_Volatility,
-    assetClass=AssetClass.Rates,
+    asset_class=AssetClass.Rates,
     unit=RiskMeasureUnit.Percent)
 IRAnnualATMImpliedVol = __risk_measure_with_doc_string(
     'Interest Rate Annual Implied At-The-Money Volatility (%)',
     RiskMeasureType.Annual_ATMF_Implied_Volatility,
-    assetClass=AssetClass.Rates,
+    asset_class=AssetClass.Rates,
     unit=RiskMeasureUnit.Percent)
 IRDailyImpliedVol = __risk_measure_with_doc_string(
     'Interest Rate Daily Implied Volatility (bps)',
     RiskMeasureType.Annual_ATMF_Implied_Volatility,
-    assetClass=AssetClass.Rates,
+    asset_class=AssetClass.Rates,
     unit=RiskMeasureUnit.BPS)
 IRSpotRate = __risk_measure_with_doc_string(
     'At-The-Money Spot Rate (%)',
     RiskMeasureType.Spot_Rate,
-    assetClass=AssetClass.Rates,
+    asset_class=AssetClass.Rates,
     unit=RiskMeasureUnit.Percent)
 IRFwdRate = __risk_measure_with_doc_string(
     'Par Rate (%)',
     RiskMeasureType.Forward_Rate,
-    assetClass=AssetClass.Rates,
+    asset_class=AssetClass.Rates,
     unit=RiskMeasureUnit.Percent)
+CRIFIRCurve = __risk_measure_with_doc_string(
+    'CRIF IR Curve',
+    RiskMeasureType.CRIF_IRCurve)
 
 Formatters = {
     DollarPrice: scalar_formatter,
@@ -246,9 +253,9 @@ Formatters = {
     EqVega: sum_formatter,
     EqSpot: scalar_formatter,
     EqAnnualImpliedVol: scalar_formatter,
-    CommodDelta: structured_formatter,
-    CommodVega: structured_formatter,
-    CommodTheta: structured_formatter,
+    CommodDelta: scalar_formatter,
+    CommodVega: scalar_formatter,
+    CommodTheta: scalar_formatter,
     FXDelta: structured_formatter,
     FXGamma: structured_formatter,
     FXVega: structured_formatter,
@@ -266,5 +273,6 @@ Formatters = {
     IRDailyImpliedVol: scalar_formatter,
     IRAnnualATMImpliedVol: scalar_formatter,
     IRSpotRate: scalar_formatter,
-    IRFwdRate: scalar_formatter
+    IRFwdRate: scalar_formatter,
+    CRIFIRCurve: structured_formatter
 }

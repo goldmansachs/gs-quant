@@ -416,6 +416,8 @@ class MqexsSide(EnumBase, Enum):
 
     Buy = 'Buy'
     Sell = 'Sell'
+    BuySell = 'BuySell'
+    SellBuy = 'SellBuy'
     Above = 'Above'
     Below = 'Below'
     _ = ''
@@ -428,74 +430,86 @@ class MqexsErrorInfo(Base):
         
     """Service specific error code and message returned as a server response"""
        
-    def __init__(self, errorCode: str, errorMsg: str, errorSeverity: Union[MqexsErrorSeverity, str] = None, assetClass: Union[MqexsAssetClass, str] = None):
+    def __init__(
+        self,
+        error_code: str,
+        error_msg: str,
+        error_severity: Union[MqexsErrorSeverity, str] = None,
+        asset_class: Union[MqexsAssetClass, str] = None        
+    ):
         super().__init__()
-        self.__errorCode = errorCode
-        self.__errorMsg = errorMsg
-        self.__errorSeverity = errorSeverity if isinstance(errorSeverity, MqexsErrorSeverity) else get_enum_value(MqexsErrorSeverity, errorSeverity)
-        self.__assetClass = assetClass if isinstance(assetClass, MqexsAssetClass) else get_enum_value(MqexsAssetClass, assetClass)
+        self.__error_code = error_code
+        self.__error_msg = error_msg
+        self.__error_severity = get_enum_value(MqexsErrorSeverity, error_severity)
+        self.__asset_class = get_enum_value(MqexsAssetClass, asset_class)
 
     @property
-    def errorCode(self) -> str:
+    def error_code(self) -> str:
         """specific error code in the server response indicating an order processing error."""
-        return self.__errorCode
+        return self.__error_code
 
-    @errorCode.setter
-    def errorCode(self, value: str):
-        self.__errorCode = value
-        self._property_changed('errorCode')        
+    @error_code.setter
+    def error_code(self, value: str):
+        self.__error_code = value
+        self._property_changed('error_code')        
 
     @property
-    def errorMsg(self) -> str:
+    def error_msg(self) -> str:
         """specific error message in the server response indicating an order processing error."""
-        return self.__errorMsg
+        return self.__error_msg
 
-    @errorMsg.setter
-    def errorMsg(self, value: str):
-        self.__errorMsg = value
-        self._property_changed('errorMsg')        
+    @error_msg.setter
+    def error_msg(self, value: str):
+        self.__error_msg = value
+        self._property_changed('error_msg')        
 
     @property
-    def errorSeverity(self) -> Union[MqexsErrorSeverity, str]:
+    def error_severity(self) -> Union[MqexsErrorSeverity, str]:
         """The severity of the error, which can be a warning or a fatal error"""
-        return self.__errorSeverity
+        return self.__error_severity
 
-    @errorSeverity.setter
-    def errorSeverity(self, value: Union[MqexsErrorSeverity, str]):
-        self.__errorSeverity = value if isinstance(value, MqexsErrorSeverity) else get_enum_value(MqexsErrorSeverity, value)
-        self._property_changed('errorSeverity')        
+    @error_severity.setter
+    def error_severity(self, value: Union[MqexsErrorSeverity, str]):
+        self.__error_severity = value if isinstance(value, MqexsErrorSeverity) else get_enum_value(MqexsErrorSeverity, value)
+        self._property_changed('error_severity')        
 
     @property
-    def assetClass(self) -> Union[MqexsAssetClass, str]:
+    def asset_class(self) -> Union[MqexsAssetClass, str]:
         """Asset classification of security. Assets are classified into broad groups which exhibit similar characteristics and behave in a consistent way under different market conditions"""
-        return self.__assetClass
+        return self.__asset_class
 
-    @assetClass.setter
-    def assetClass(self, value: Union[MqexsAssetClass, str]):
-        self.__assetClass = value if isinstance(value, MqexsAssetClass) else get_enum_value(MqexsAssetClass, value)
-        self._property_changed('assetClass')        
+    @asset_class.setter
+    def asset_class(self, value: Union[MqexsAssetClass, str]):
+        self.__asset_class = value if isinstance(value, MqexsAssetClass) else get_enum_value(MqexsAssetClass, value)
+        self._property_changed('asset_class')        
 
 
 class MqexsProductDetails(Base):
         
     """Details specific to the product type."""
        
-    def __init__(self, name: str, contractCode: str = None, clearer: Union[MqexsClearer, str] = None, settlementType: Union[MqexsOtcSettlementType, str] = None):
+    def __init__(
+        self,
+        name: str,
+        contract_code: str = None,
+        clearer: Union[MqexsClearer, str] = None,
+        settlement_type: Union[MqexsOtcSettlementType, str] = None        
+    ):
         super().__init__()
-        self.__contractCode = contractCode
+        self.__contract_code = contract_code
         self.__name = name
-        self.__clearer = clearer if isinstance(clearer, MqexsClearer) else get_enum_value(MqexsClearer, clearer)
-        self.__settlementType = settlementType if isinstance(settlementType, MqexsOtcSettlementType) else get_enum_value(MqexsOtcSettlementType, settlementType)
+        self.__clearer = get_enum_value(MqexsClearer, clearer)
+        self.__settlement_type = get_enum_value(MqexsOtcSettlementType, settlement_type)
 
     @property
-    def contractCode(self) -> str:
+    def contract_code(self) -> str:
         """Contract month"""
-        return self.__contractCode
+        return self.__contract_code
 
-    @contractCode.setter
-    def contractCode(self, value: str):
-        self.__contractCode = value
-        self._property_changed('contractCode')        
+    @contract_code.setter
+    def contract_code(self, value: str):
+        self.__contract_code = value
+        self._property_changed('contract_code')        
 
     @property
     def name(self) -> str:
@@ -518,38 +532,46 @@ class MqexsProductDetails(Base):
         self._property_changed('clearer')        
 
     @property
-    def settlementType(self) -> Union[MqexsOtcSettlementType, str]:
+    def settlement_type(self) -> Union[MqexsOtcSettlementType, str]:
         """OTC settlement type"""
-        return self.__settlementType
+        return self.__settlement_type
 
-    @settlementType.setter
-    def settlementType(self, value: Union[MqexsOtcSettlementType, str]):
-        self.__settlementType = value if isinstance(value, MqexsOtcSettlementType) else get_enum_value(MqexsOtcSettlementType, value)
-        self._property_changed('settlementType')        
+    @settlement_type.setter
+    def settlement_type(self, value: Union[MqexsOtcSettlementType, str]):
+        self.__settlement_type = value if isinstance(value, MqexsOtcSettlementType) else get_enum_value(MqexsOtcSettlementType, value)
+        self._property_changed('settlement_type')        
 
 
 class MqexsTradeDetails(Base):
         
     """Details specific to the trade type."""
        
-    def __init__(self, side: Union[MqexsSide, str], quantity: str, unitPrice: str, currency: Union[MqexsCurrencyExt, str], settlementDate: datetime.date = None, quantityUnit: str = None):
+    def __init__(
+        self,
+        side: Union[MqexsSide, str],
+        quantity: str,
+        unit_price: str,
+        currency: Union[MqexsCurrencyExt, str],
+        settlement_date: datetime.date = None,
+        quantity_unit: str = None        
+    ):
         super().__init__()
-        self.__settlementDate = settlementDate
-        self.__side = side if isinstance(side, MqexsSide) else get_enum_value(MqexsSide, side)
+        self.__settlement_date = settlement_date
+        self.__side = get_enum_value(MqexsSide, side)
         self.__quantity = quantity
-        self.__unitPrice = unitPrice
-        self.__quantityUnit = quantityUnit
-        self.__currency = currency if isinstance(currency, MqexsCurrencyExt) else get_enum_value(MqexsCurrencyExt, currency)
+        self.__unit_price = unit_price
+        self.__quantity_unit = quantity_unit
+        self.__currency = get_enum_value(MqexsCurrencyExt, currency)
 
     @property
-    def settlementDate(self) -> datetime.date:
+    def settlement_date(self) -> datetime.date:
         """Settlement date, formatted as yyyy-MM or yyyy-MM-dd (ISO-8601)"""
-        return self.__settlementDate
+        return self.__settlement_date
 
-    @settlementDate.setter
-    def settlementDate(self, value: datetime.date):
-        self.__settlementDate = value
-        self._property_changed('settlementDate')        
+    @settlement_date.setter
+    def settlement_date(self, value: datetime.date):
+        self.__settlement_date = value
+        self._property_changed('settlement_date')        
 
     @property
     def side(self) -> Union[MqexsSide, str]:
@@ -572,24 +594,24 @@ class MqexsTradeDetails(Base):
         self._property_changed('quantity')        
 
     @property
-    def unitPrice(self) -> str:
+    def unit_price(self) -> str:
         """trade unit price."""
-        return self.__unitPrice
+        return self.__unit_price
 
-    @unitPrice.setter
-    def unitPrice(self, value: str):
-        self.__unitPrice = value
-        self._property_changed('unitPrice')        
+    @unit_price.setter
+    def unit_price(self, value: str):
+        self.__unit_price = value
+        self._property_changed('unit_price')        
 
     @property
-    def quantityUnit(self) -> str:
+    def quantity_unit(self) -> str:
         """unit and frequency of the quantity of a product in a quote"""
-        return self.__quantityUnit
+        return self.__quantity_unit
 
-    @quantityUnit.setter
-    def quantityUnit(self, value: str):
-        self.__quantityUnit = value
-        self._property_changed('quantityUnit')        
+    @quantity_unit.setter
+    def quantity_unit(self, value: str):
+        self.__quantity_unit = value
+        self._property_changed('quantity_unit')        
 
     @property
     def currency(self) -> Union[MqexsCurrencyExt, str]:
@@ -606,17 +628,28 @@ class MqexsTradeExt(Base):
         
     """Trade Object Model"""
        
-    def __init__(self, id: str, tradeDetails: MqexsTradeDetails, productDetails: MqexsProductDetails, quoteId: str, assetClass: Union[MqexsAssetClassExt, str], createdById: str, createdTime: datetime.datetime, lastUpdatedTime: datetime.datetime, lastUpdatedById: str):
+    def __init__(
+        self,
+        id: str,
+        trade_details: MqexsTradeDetails,
+        product_details: MqexsProductDetails,
+        quote_id: str,
+        asset_class: Union[MqexsAssetClassExt, str],
+        created_by_id: str,
+        created_time: datetime.datetime,
+        last_updated_time: datetime.datetime,
+        last_updated_by_id: str        
+    ):
         super().__init__()
         self.__id = id
-        self.__tradeDetails = tradeDetails
-        self.__productDetails = productDetails
-        self.__quoteId = quoteId
-        self.__assetClass = assetClass if isinstance(assetClass, MqexsAssetClassExt) else get_enum_value(MqexsAssetClassExt, assetClass)
-        self.__createdById = createdById
-        self.__createdTime = createdTime
-        self.__lastUpdatedTime = lastUpdatedTime
-        self.__lastUpdatedById = lastUpdatedById
+        self.__trade_details = trade_details
+        self.__product_details = product_details
+        self.__quote_id = quote_id
+        self.__asset_class = get_enum_value(MqexsAssetClassExt, asset_class)
+        self.__created_by_id = created_by_id
+        self.__created_time = created_time
+        self.__last_updated_time = last_updated_time
+        self.__last_updated_by_id = last_updated_by_id
 
     @property
     def id(self) -> str:
@@ -629,91 +662,95 @@ class MqexsTradeExt(Base):
         self._property_changed('id')        
 
     @property
-    def tradeDetails(self) -> MqexsTradeDetails:
+    def trade_details(self) -> MqexsTradeDetails:
         """Details specific to the trade type."""
-        return self.__tradeDetails
+        return self.__trade_details
 
-    @tradeDetails.setter
-    def tradeDetails(self, value: MqexsTradeDetails):
-        self.__tradeDetails = value
-        self._property_changed('tradeDetails')        
+    @trade_details.setter
+    def trade_details(self, value: MqexsTradeDetails):
+        self.__trade_details = value
+        self._property_changed('trade_details')        
 
     @property
-    def productDetails(self) -> MqexsProductDetails:
+    def product_details(self) -> MqexsProductDetails:
         """Details specific to the product type."""
-        return self.__productDetails
+        return self.__product_details
 
-    @productDetails.setter
-    def productDetails(self, value: MqexsProductDetails):
-        self.__productDetails = value
-        self._property_changed('productDetails')        
+    @product_details.setter
+    def product_details(self, value: MqexsProductDetails):
+        self.__product_details = value
+        self._property_changed('product_details')        
 
     @property
-    def quoteId(self) -> str:
+    def quote_id(self) -> str:
         """trade unique identifier"""
-        return self.__quoteId
+        return self.__quote_id
 
-    @quoteId.setter
-    def quoteId(self, value: str):
-        self.__quoteId = value
-        self._property_changed('quoteId')        
+    @quote_id.setter
+    def quote_id(self, value: str):
+        self.__quote_id = value
+        self._property_changed('quote_id')        
 
     @property
-    def assetClass(self) -> Union[MqexsAssetClassExt, str]:
+    def asset_class(self) -> Union[MqexsAssetClassExt, str]:
         """Asset classification of security. Assets are classified into broad groups which exhibit similar characteristics and behave in a consistent way under different market conditions"""
-        return self.__assetClass
+        return self.__asset_class
 
-    @assetClass.setter
-    def assetClass(self, value: Union[MqexsAssetClassExt, str]):
-        self.__assetClass = value if isinstance(value, MqexsAssetClassExt) else get_enum_value(MqexsAssetClassExt, value)
-        self._property_changed('assetClass')        
+    @asset_class.setter
+    def asset_class(self, value: Union[MqexsAssetClassExt, str]):
+        self.__asset_class = value if isinstance(value, MqexsAssetClassExt) else get_enum_value(MqexsAssetClassExt, value)
+        self._property_changed('asset_class')        
 
     @property
-    def createdById(self) -> str:
+    def created_by_id(self) -> str:
         """Creation user's unique identifier"""
-        return self.__createdById
+        return self.__created_by_id
 
-    @createdById.setter
-    def createdById(self, value: str):
-        self.__createdById = value
-        self._property_changed('createdById')        
+    @created_by_id.setter
+    def created_by_id(self, value: str):
+        self.__created_by_id = value
+        self._property_changed('created_by_id')        
 
     @property
-    def createdTime(self) -> datetime.datetime:
+    def created_time(self) -> datetime.datetime:
         """Creation time as ISO-8601 UTC instant"""
-        return self.__createdTime
+        return self.__created_time
 
-    @createdTime.setter
-    def createdTime(self, value: datetime.datetime):
-        self.__createdTime = value
-        self._property_changed('createdTime')        
+    @created_time.setter
+    def created_time(self, value: datetime.datetime):
+        self.__created_time = value
+        self._property_changed('created_time')        
 
     @property
-    def lastUpdatedTime(self) -> datetime.datetime:
+    def last_updated_time(self) -> datetime.datetime:
         """Last update time as ISO-8601 UTC instant"""
-        return self.__lastUpdatedTime
+        return self.__last_updated_time
 
-    @lastUpdatedTime.setter
-    def lastUpdatedTime(self, value: datetime.datetime):
-        self.__lastUpdatedTime = value
-        self._property_changed('lastUpdatedTime')        
+    @last_updated_time.setter
+    def last_updated_time(self, value: datetime.datetime):
+        self.__last_updated_time = value
+        self._property_changed('last_updated_time')        
 
     @property
-    def lastUpdatedById(self) -> str:
+    def last_updated_by_id(self) -> str:
         """Last update user's unique identifier"""
-        return self.__lastUpdatedById
+        return self.__last_updated_by_id
 
-    @lastUpdatedById.setter
-    def lastUpdatedById(self, value: str):
-        self.__lastUpdatedById = value
-        self._property_changed('lastUpdatedById')        
+    @last_updated_by_id.setter
+    def last_updated_by_id(self, value: str):
+        self.__last_updated_by_id = value
+        self._property_changed('last_updated_by_id')        
 
 
 class MqexsTradesWErrorExt(Base):
         
     """List of trade objects returned as a server response with specific error code and message in case of a server error."""
        
-    def __init__(self, trades: Tuple[MqexsTradeExt, ...] = None, errors: Tuple[MqexsErrorInfo, ...] = None):
+    def __init__(
+        self,
+        trades: Tuple[MqexsTradeExt, ...] = None,
+        errors: Tuple[MqexsErrorInfo, ...] = None        
+    ):
         super().__init__()
         self.__trades = trades
         self.__errors = errors

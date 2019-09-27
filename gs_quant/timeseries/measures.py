@@ -19,6 +19,7 @@ import time
 from collections import namedtuple
 from enum import auto
 from numbers import Real
+from dateutil import tz
 
 import cachetools.func
 import numpy as np
@@ -1232,7 +1233,7 @@ def var_swap(asset: Asset, tenor: str, forward_start_date: Optional[str] = None,
 def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
                     granularity: str = 'daily', *, source: str = None, real_time: bool = True) -> pd.Series:
     """'
-    Bucketized Elec Historical Clears
+    Bucketized COMMOD_US_ELEC_ENERGY_PRICES
 
     :param asset: asset object loaded from security master
     :param price_method: price method between LMP, MCP, SPP, energy, loss, congestion: Default value = LMP
@@ -1240,7 +1241,7 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
     :param granularity: daily or monthly: default value = daily
     :param source: name of function caller: default source = None
     :param real_time: whether to retrieve intraday data instead of EOD: default value = True
-    :return: Bucketized Elec Historical Clears
+    :return: Bucketized COMMOD_US_ELEC_ENERGY_PRICES
     """
 
     # create granularity indicator
@@ -1251,40 +1252,55 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
     else:
         raise ValueError('Invalid granularity: ' + granularity + '. Expected Value: daily or monthly.')
 
-    start_date, end_date = DataContext.current.start_date, DataContext.current.end_date
-
-    where = FieldFilterMap(priceMethod=price_method)
-
-    with DataContext(start_date, end_date + datetime.timedelta(days=2)):
-        q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.PRICE, where=where, source=source,
-                                              real_time=True)
-        df = _market_data_timed(q)
-        _logger.debug('q %s', q)
+    bbid = Asset.get_identifier(asset, AssetIdentifier.BLOOMBERG_ID)
 
     # TODO: get timezone info from Asset
     # default frequency definition
-    df = df.tz_convert('US/Eastern')
+    timezone = 'US/Eastern'
     peak_start = 7
     peak_end = 23
     weekends = [5, 6]
-    bbid = Asset.get_identifier(asset, AssetIdentifier.BLOOMBERG_ID)
-    if bbid.split(" ")[0] in ['MISO', 'CAISO', 'ERCOT', 'SPP']:
-        df = df.tz_convert('US/Central')
+
+    if bbid.split(" ")[0] in ['MISO', 'ERCOT', 'SPP']:
+        timezone = 'US/Central'
         peak_start = 6
         peak_end = 22
     if bbid.split(" ")[0] == 'CAISO':
-        df = df.tz_convert('US/Pacific')
+        timezone = 'US/Pacific'
         weekends = [6]
 
-    start_time, end_time = pd.to_datetime(start_date), pd.to_datetime(end_date) + datetime.timedelta(hours=23)
+    to_zone = tz.gettz('UTC')
+    from_zone = tz.gettz(timezone)
+    # Start date and end date are considered to be in ISO's local timezone
+    start_date, end_date = DataContext.current.start_date, DataContext.current.end_date
+    # Start time is constructed by combining start date with 00:00:00 timestamp
+    # in local time and then converted to UTC time
+    # End time is constructed by combining end date with 23:59:59 timestamp
+    # in local time and then converted to UTC time
+    start_time = datetime.datetime.combine(start_date, datetime.datetime.min.time(), tzinfo=from_zone)\
+        .astimezone(to_zone)
+    end_time = datetime.datetime.combine(end_date, datetime.datetime.max.time(), tzinfo=from_zone).astimezone(to_zone)
+
+    where = FieldFilterMap(priceMethod=price_method)
+    with DataContext(start_time, end_time):
+        q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.PRICE, where=where, source=source,
+                                              real_time=real_time)
+        df = _market_data_timed(q)
+        _logger.debug('q %s', q)
+
+    df = df.tz_convert(timezone)
+
     df['month'] = df.index.to_period('M')
     df['date'] = df.index.date
     df['day'] = df.index.dayofweek
     df['hour'] = df.index.hour
     holidays = NercCalendar().holidays(start=start_date, end=end_date).date
 
+    # freq is the frequency at which the ISO publishes data for e.g. 15 min, 1hr
+    freq = int(min(np.diff(df.index) / np.timedelta64(1, 's')))
     # checking missing data points
-    ref_hour_range = pd.date_range(start_time, end_time, freq='1h', tz='US/Eastern')
+    ref_hour_range = pd.date_range(str(start_date), str(end_date + datetime.timedelta(days=1)),
+                                   freq=str(freq) + "S", tz=timezone, closed='left')
     missing_hours = ref_hour_range[~ref_hour_range.isin(df.index)]
     missing_dates = np.unique(missing_hours.date)
     missing_months = np.unique(np.array(missing_dates, dtype='M8[D]').astype('M8[M]'))

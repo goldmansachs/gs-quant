@@ -21,22 +21,21 @@ import gs_quant.target.backtests as backtests
 from gs_quant.api.gs.backtests import GsBacktestApi
 from gs_quant.backtests.core import Backtest, QuantityType, TradeInMethod
 from gs_quant.backtests.strategy_systematic import StrategySystematic
-from gs_quant.instrument import EqOption
 from gs_quant.session import *
 from gs_quant.target.backtests import *
 
 underlierList = [EqOption("MA4B66MW5E27U8P32SB", "3m", 3000, 'Call', 'European'),
                  EqOption("MA4B66MW5E27U8P32SB", "3m", 3000, 'Put', 'European')]
 
-hedge = DeltaHedgeParameters(frequency="Daily")
+hedge = DeltaHedgeParameters(frequency='Daily')
 
 strategy = StrategySystematic(name="Mock Test",
                               underliers=underlierList,
                               delta_hedge=hedge,
                               quantity=1,
-                              quantity_type="notional",
-                              trade_in_method="fixedRoll",
-                              roll_frequency="1m")
+                              quantity_type=QuantityType.Notional,
+                              trade_in_method=TradeInMethod.FixedRoll,
+                              roll_frequency='1m')
 
 
 def set_session():
@@ -93,43 +92,45 @@ def test_eqstrategies_backtest(mocker):
 
     trading_parameters = BacktestTradingParameters(
         quantity=1,
-        quantityType=get_enum_value(QuantityType, "notional").value,
-        tradeInMethod=get_enum_value(TradeInMethod, "fixedRoll").value,
-        rollFrequency="1m")
+        quantity_type=QuantityType.Notional.value,
+        trade_in_method=TradeInMethod.FixedRoll.value,
+        roll_frequency='1m')
 
     l1 = BacktestStrategyUnderlier(
-        instrument=underlierList[0],
-        notionalPercentage=100,
-        hedge=BacktestStrategyUnderlierHedge(riskDetails=hedge),
-        marketModel='SFK')
+        instrument=underlierList[0].as_dict(),
+        notional_percentage=100,
+        hedge=BacktestStrategyUnderlierHedge(risk_details=hedge),
+        market_model='SFK')
 
     l2 = BacktestStrategyUnderlier(
-        instrument=underlierList[1],
-        notionalPercentage=100,
-        hedge=BacktestStrategyUnderlierHedge(riskDetails=hedge),
-        marketModel='SFK')
+        instrument=underlierList[1].as_dict(),
+        notional_percentage=100,
+        hedge=BacktestStrategyUnderlierHedge(risk_details=hedge),
+        market_model='SFK')
 
     underliers = [l1, l2]
 
     backtest_parameters_class: Base = getattr(backtests, 'VolatilityFlowBacktestParameters')
 
     backtest_parameter_args = {
-        'tradingParameters': trading_parameters,
+        'trading_parameters': trading_parameters,
         'underliers': underliers,
-        'tradeInMethod': get_enum_value(TradeInMethod, "fixedRoll").value,
-        'scalingMethod': None,
-        'indexInitialValue': 0
+        'trade_in_method': TradeInMethod.FixedRoll,
+        'scaling_method': None,
+        'index_initial_value': 0.0,
     }
     backtest_parameters = backtest_parameters_class.from_dict(backtest_parameter_args)
 
+    params_dict = backtest_parameters.as_dict()
+    params_dict["measures"] = [FlowVolBacktestMeasure.ALL_MEASURES.value]
     backtest = Backtest(name="Mock Test",
-                        mqSymbol="Mock Test",
+                        mq_symbol="Mock Test",
                         parameters=backtest_parameters.as_dict(),
-                        startDate=start_date,
-                        endDate=end_date,
+                        start_date=start_date,
+                        end_date=end_date,
                         type='Volatility Flow',
-                        assetClass=AssetClass.Equity,
-                        currency=get_enum_value(Currency, Currency.USD),
-                        costNetting=False)
+                        asset_class=AssetClass.Equity,
+                        currency=Currency.USD,
+                        cost_netting=False)
 
     mocker.assert_called_with(backtest)

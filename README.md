@@ -73,7 +73,7 @@ import gs_quant.risk as risk
 with GsSession.get(Environment.PROD, <client_id>, <client_secret>, scopes=('read_product_data','run_analytics')):
      
     # price an interest rate swap and compute its bucketed delta
-    irs = IRSwap(PayReceive.Pay, "5y", Currency.USD, fixedRate=0.0275)
+    irs = IRSwap(PayReceive.Pay, "5y", Currency.USD, fixed_rate=0.0275)
     pv = irs.price()
     ir_delta = irs.calc(risk.IRDelta)
 ```

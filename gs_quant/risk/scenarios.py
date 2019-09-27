@@ -15,10 +15,15 @@ under the License.
 """
 from typing import Mapping, Union
 
-from gs_quant.context_base import ContextBaseWithDefault
+from gs_quant.base import BaseMeta
+from gs_quant.context_base import ContextBaseWithDefault, ContextMeta
 from gs_quant.markets.core import PricingContext
-from gs_quant.target.risk import CurveScenario, MarketDataScenario, MarketDataPattern, MarketDataShock, \
+from gs_quant.target.risk import CarryScenario, CurveScenario, MarketDataScenario, MarketDataPattern, MarketDataShock,\
     MarketDataPatternAndShock, MarketDataShockBasedScenario as __MarketDataShockBasedScenario
+
+
+class __ScenarioMeta(BaseMeta, ContextMeta):
+    pass
 
 
 class MarketDataShockBasedScenario(__MarketDataShockBasedScenario):
@@ -27,11 +32,11 @@ class MarketDataShockBasedScenario(__MarketDataShockBasedScenario):
         super().__init__(tuple(MarketDataPatternAndShock(p, s) for p, s in shocks.items()))
 
 
-class ScenarioContext(MarketDataScenario, ContextBaseWithDefault):
+class ScenarioContext(MarketDataScenario, ContextBaseWithDefault, metaclass=__ScenarioMeta):
 
     """A context containing scenario parameters, such as shocks"""
 
-    def __init__(self, scenario: Union[CurveScenario, MarketDataShockBasedScenario]
+    def __init__(self, scenario: Union[CarryScenario, CurveScenario, MarketDataShockBasedScenario]
                  = None, subtract_base: bool = False):
         super().__init__(scenario, subtract_base)
 

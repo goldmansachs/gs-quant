@@ -15,6 +15,7 @@ under the License.
 """
 import datetime as dt
 from abc import ABCMeta
+import inflection
 from typing import Optional, Union
 
 from gs_quant.target.common import FieldFilterMap
@@ -58,11 +59,11 @@ class DataApi(metaclass=ABCMeta):
             raise ValueError('If start is of type date, so must end be!')
 
         query = DataQuery(
-            startDate=start if not start_is_time else None,
-            startTime=start if start_is_time else None,
-            endDate=end if not end_is_time else None,
-            endTime=end if end_is_time else None,
-            asOfTime=as_of,
+            start_date=start if not start_is_time else None,
+            start_time=start if start_is_time else None,
+            end_date=end if not end_is_time else None,
+            end_time=end if end_is_time else None,
+            as_of_time=as_of,
             since=since,
             format="MessagePack"
         )
@@ -72,10 +73,11 @@ class DataApi(metaclass=ABCMeta):
         where_properties = where.properties()
 
         for field, value in kwargs.items():
-            if field in query_properties:
-                setattr(query, field, value)
-            elif field in where_properties:
-                setattr(where, field, value)
+            snake_case_field = inflection.underscore(field)
+            if snake_case_field in query_properties:
+                setattr(query, snake_case_field, value)
+            elif snake_case_field in where_properties:
+                setattr(where, snake_case_field, value)
             else:
                 raise ValueError('Invalid query field: ' + field)
 

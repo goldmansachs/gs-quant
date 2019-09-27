@@ -88,4 +88,4 @@ class ContentFixtures:
     @classmethod
     def get_many_contents_response(cls, status: int = 200, message: str = "Ok"):
         content = cls._get_content_response()
-        return GetManyContentsResponse(status, message, [content])
+        return GetManyContentsResponse(status, message, (content,))

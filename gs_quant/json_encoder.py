@@ -32,8 +32,8 @@ class JSONEncoder(json.JSONEncoder):
         elif isinstance(o, EnumBase):
             return o.value
         elif isinstance(o, pd.DataFrame):
-            return o.to_json(as_camel_case=True)
+            return o.to_json()
         elif isinstance(o, Base):
-            return o.as_dict()
+            return o.as_dict(as_camel_case=True)
         else:
             return json.JSONEncoder.default(self, o)

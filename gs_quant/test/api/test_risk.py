@@ -136,9 +136,6 @@ def test_structured_calc(mocker):
         if priceable.assetClass == AssetClass.Rates:
             for measure in (risk.IRDelta, risk.IRGamma, risk.IRVega):
                 structured_calc(mocker, priceable, measure)
-        elif priceable.assetClass == AssetClass.Commod:
-            for measure in (risk.CommodDelta, risk.CommodVega, risk.CommodTheta):
-                structured_calc(mocker, priceable, measure)
         elif priceable.assetClass == AssetClass.FX:
             for measure in (risk.FXDelta, risk.FXGamma, risk.FXVega):
                 structured_calc(mocker, priceable, measure)
@@ -163,6 +160,9 @@ def test_scalar_calc(mocker):
     for priceable in priceables:
         if priceable.assetClass == AssetClass.Equity:
             for measure in (risk.EqDelta, risk.EqGamma, risk.EqVega, risk.Theta):
+                scalar_calc(mocker, priceable, measure)
+        elif priceable.assetClass == AssetClass.Commod:
+            for measure in (risk.CommodDelta, risk.CommodVega, risk.CommodTheta):
                 scalar_calc(mocker, priceable, measure)
 
 

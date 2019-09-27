@@ -24,11 +24,16 @@ class ColumnFormat(Base):
         
     """Object used to specify the column formatting"""
        
-    def __init__(self, precision: float, unit=None, humanReadable: bool = None):
+    def __init__(
+        self,
+        precision: float,
+        unit=None,
+        human_readable: bool = None        
+    ):
         super().__init__()
         self.__precision = precision
         self.__unit = unit
-        self.__humanReadable = humanReadable
+        self.__human_readable = human_readable
 
     @property
     def precision(self) -> float:
@@ -51,21 +56,24 @@ class ColumnFormat(Base):
         self._property_changed('unit')        
 
     @property
-    def humanReadable(self) -> bool:
+    def human_readable(self) -> bool:
         """Formats number to have commas"""
-        return self.__humanReadable
+        return self.__human_readable
 
-    @humanReadable.setter
-    def humanReadable(self, value: bool):
-        self.__humanReadable = value
-        self._property_changed('humanReadable')        
+    @human_readable.setter
+    def human_readable(self, value: bool):
+        self.__human_readable = value
+        self._property_changed('human_readable')        
 
 
 class Historical(Base):
         
     """value and date for historical data"""
        
-    def __init__(self, value: Union[float, str] = None):
+    def __init__(
+        self,
+        value: Union[float, str] = None        
+    ):
         super().__init__()
         self.__value = value
 
@@ -83,7 +91,10 @@ class IntervalCount(Base):
         
     """Defines the interval in which data is returned"""
        
-    def __init__(self, count: float = None):
+    def __init__(
+        self,
+        count: float = None        
+    ):
         super().__init__()
         self.__count = count
 
@@ -102,26 +113,33 @@ class MaxDataPoints(Base):
         
     """Defines the max number of data points to be returned in equal intervals"""
        
-    def __init__(self, maxDataPoints: float = None):
+    def __init__(
+        self,
+        max_data_points: float = None        
+    ):
         super().__init__()
-        self.__maxDataPoints = maxDataPoints
+        self.__max_data_points = max_data_points
 
     @property
-    def maxDataPoints(self) -> float:
+    def max_data_points(self) -> float:
         """Integer in the range from 0 to 10000"""
-        return self.__maxDataPoints
+        return self.__max_data_points
 
-    @maxDataPoints.setter
-    def maxDataPoints(self, value: float):
-        self.__maxDataPoints = value
-        self._property_changed('maxDataPoints')        
+    @max_data_points.setter
+    def max_data_points(self, value: float):
+        self.__max_data_points = value
+        self._property_changed('max_data_points')        
 
 
 class MonitorResponseData(Base):
         
     """Monitor calculated response data"""
        
-    def __init__(self, id: str, result: dict):
+    def __init__(
+        self,
+        id: str,
+        result: dict        
+    ):
         super().__init__()
         self.__id = id
         self.__result = result
@@ -150,11 +168,16 @@ class Movers(Base):
         
     """Object that allows to specify the case in which we only want to return the n top or bottom entities"""
        
-    def __init__(self, columnName: str, top: float = None, bottom: float = None):
+    def __init__(
+        self,
+        column_name: str,
+        top: float = None,
+        bottom: float = None        
+    ):
         super().__init__()
         self.__top = top
         self.__bottom = bottom
-        self.__columnName = columnName
+        self.__column_name = column_name
 
     @property
     def top(self) -> float:
@@ -177,24 +200,29 @@ class Movers(Base):
         self._property_changed('bottom')        
 
     @property
-    def columnName(self) -> str:
+    def column_name(self) -> str:
         """Required small string with a length from empty string to 50 characters"""
-        return self.__columnName
+        return self.__column_name
 
-    @columnName.setter
-    def columnName(self, value: str):
-        self.__columnName = value
-        self._property_changed('columnName')        
+    @column_name.setter
+    def column_name(self, value: str):
+        self.__column_name = value
+        self._property_changed('column_name')        
 
 
 class Sort(Base):
         
     """Object used to define sorting"""
        
-    def __init__(self, columnName: str, type=None, direction=None):
+    def __init__(
+        self,
+        column_name: str,
+        type=None,
+        direction=None        
+    ):
         super().__init__()
         self.__type = type
-        self.__columnName = columnName
+        self.__column_name = column_name
         self.__direction = direction
 
     @property
@@ -208,14 +236,14 @@ class Sort(Base):
         self._property_changed('type')        
 
     @property
-    def columnName(self) -> str:
+    def column_name(self) -> str:
         """Required small string with a length from empty string to 50 characters"""
-        return self.__columnName
+        return self.__column_name
 
-    @columnName.setter
-    def columnName(self, value: str):
-        self.__columnName = value
-        self._property_changed('columnName')        
+    @column_name.setter
+    def column_name(self, value: str):
+        self.__column_name = value
+        self._property_changed('column_name')        
 
     @property
     def direction(self):
@@ -232,7 +260,13 @@ class WipiRequestFilter(Base):
         
     """A filter used for transforming data"""
        
-    def __init__(self, column: str, operation, value: Union[float, str], type=None):
+    def __init__(
+        self,
+        column: str,
+        operation,
+        value: Union[float, str],
+        type=None        
+    ):
         super().__init__()
         self.__column = column
         self.__operation = operation
@@ -261,6 +295,7 @@ class WipiRequestFilter(Base):
 
     @property
     def value(self) -> Union[float, str]:
+        """The value of the operation is used with. Relative dates are used against the last valuationDate."""
         return self.__value
 
     @value.setter
@@ -283,7 +318,11 @@ class FunctionParameters(Base):
         
     """Function parameters to be passed"""
        
-    def __init__(self, period=None, intervals: dict = None):
+    def __init__(
+        self,
+        period=None,
+        intervals: dict = None        
+    ):
         super().__init__()
         self.__period = period
         self.__intervals = intervals
@@ -312,13 +351,22 @@ class RateRow(Base):
         
     """Rate row with calculated data"""
        
-    def __init__(self, period, last: float, change: float, std: float, slope: float, historical: Historical = None, percentageChange: float = None):
+    def __init__(
+        self,
+        period,
+        last: float,
+        change: float,
+        std: float,
+        slope: float,
+        historical: Historical = None,
+        percentage_change: float = None        
+    ):
         super().__init__()
         self.__period = period
         self.__last = last
         self.__historical = historical
         self.__change = change
-        self.__percentageChange = percentageChange
+        self.__percentage_change = percentage_change
         self.__std = std
         self.__slope = slope
 
@@ -363,14 +411,14 @@ class RateRow(Base):
         self._property_changed('change')        
 
     @property
-    def percentageChange(self) -> float:
+    def percentage_change(self) -> float:
         """One day prince change in percentage"""
-        return self.__percentageChange
+        return self.__percentage_change
 
-    @percentageChange.setter
-    def percentageChange(self, value: float):
-        self.__percentageChange = value
-        self._property_changed('percentageChange')        
+    @percentage_change.setter
+    def percentage_change(self, value: float):
+        self.__percentage_change = value
+        self._property_changed('percentage_change')        
 
     @property
     def std(self) -> float:
@@ -397,11 +445,17 @@ class RowGroup(Base):
         
     """Object specifying a group name and a list of assets to be calculated in a monitor"""
        
-    def __init__(self, name: str, entityIds: Tuple[str, ...], movers: Movers = None, sort: Sort = None):
+    def __init__(
+        self,
+        name: str,
+        entity_ids: Tuple[str, ...],
+        movers: Movers = None,
+        sort: Sort = None        
+    ):
         super().__init__()
         self.__name = name
         self.__movers = movers
-        self.__entityIds = entityIds
+        self.__entity_ids = entity_ids
         self.__sort = sort
 
     @property
@@ -425,14 +479,14 @@ class RowGroup(Base):
         self._property_changed('movers')        
 
     @property
-    def entityIds(self) -> Tuple[str, ...]:
+    def entity_ids(self) -> Tuple[str, ...]:
         """Array of entities that belong to the group"""
-        return self.__entityIds
+        return self.__entity_ids
 
-    @entityIds.setter
-    def entityIds(self, value: Tuple[str, ...]):
-        self.__entityIds = value
-        self._property_changed('entityIds')        
+    @entity_ids.setter
+    def entity_ids(self, value: Tuple[str, ...]):
+        self.__entity_ids = value
+        self._property_changed('entity_ids')        
 
     @property
     def sort(self) -> Sort:
@@ -447,22 +501,62 @@ class RowGroup(Base):
 
 class Function(Base):
         
-    """Function to be applied"""
+    """Function or Measure to be applied to the column."""
        
-    def __init__(self, name, parameters: FunctionParameters = None):
+    def __init__(
+        self,
+        measure: str,
+        frequency,
+        name: str = None,
+        start_date: str = None,
+        parameters: FunctionParameters = None        
+    ):
         super().__init__()
         self.__name = name
+        self.__measure = measure
+        self.__frequency = frequency
+        self.__start_date = start_date
         self.__parameters = parameters
 
     @property
-    def name(self):
-        """Enum listing supported functions for monitor calculations"""
+    def name(self) -> str:
+        """The name of the function to be applied to the column."""
         return self.__name
 
     @name.setter
-    def name(self, value):
+    def name(self, value: str):
         self.__name = value
         self._property_changed('name')        
+
+    @property
+    def measure(self) -> str:
+        """The asset data measure to be applied to the column."""
+        return self.__measure
+
+    @measure.setter
+    def measure(self, value: str):
+        self.__measure = value
+        self._property_changed('measure')        
+
+    @property
+    def frequency(self):
+        """The frequency of the column data changes which dataset the values are retrieved from."""
+        return self.__frequency
+
+    @frequency.setter
+    def frequency(self, value):
+        self.__frequency = value
+        self._property_changed('frequency')        
+
+    @property
+    def start_date(self) -> str:
+        """The relative date for columns requiring historical data. Eg: -1y."""
+        return self.__start_date
+
+    @start_date.setter
+    def start_date(self, value: str):
+        self.__start_date = value
+        self._property_changed('start_date')        
 
     @property
     def parameters(self) -> FunctionParameters:
@@ -479,7 +573,13 @@ class RatesResponseData(Base):
         
     """Rates calculated response data."""
        
-    def __init__(self, name, id: str, rows: Tuple[RateRow, ...], libor_id: str = None):
+    def __init__(
+        self,
+        name,
+        id: str,
+        rows: Tuple[RateRow, ...],
+        libor_id: str = None        
+    ):
         super().__init__()
         self.__name = name
         self.__id = id
@@ -531,25 +631,34 @@ class ColumnDefinition(Base):
         
     """Object defining the columns to be calculated in the monitor"""
        
-    def __init__(self, render, name: str, enableCellFlashing: bool = None, entityProperty=None, function: Function = None, format: ColumnFormat = None, width: float = None):
+    def __init__(
+        self,
+        render,
+        name: str,
+        enable_cell_flashing: bool = None,
+        entity_property=None,
+        function: Function = None,
+        format: ColumnFormat = None,
+        width: float = None        
+    ):
         super().__init__()
-        self.__enableCellFlashing = enableCellFlashing
+        self.__enable_cell_flashing = enable_cell_flashing
         self.__name = name
         self.__render = render
-        self.__entityProperty = entityProperty
+        self.__entity_property = entity_property
         self.__function = function
         self.__format = format
         self.__width = width
 
     @property
-    def enableCellFlashing(self) -> bool:
+    def enable_cell_flashing(self) -> bool:
         """Enable cell flashing for the column"""
-        return self.__enableCellFlashing
+        return self.__enable_cell_flashing
 
-    @enableCellFlashing.setter
-    def enableCellFlashing(self, value: bool):
-        self.__enableCellFlashing = value
-        self._property_changed('enableCellFlashing')        
+    @enable_cell_flashing.setter
+    def enable_cell_flashing(self, value: bool):
+        self.__enable_cell_flashing = value
+        self._property_changed('enable_cell_flashing')        
 
     @property
     def name(self) -> str:
@@ -572,18 +681,18 @@ class ColumnDefinition(Base):
         self._property_changed('render')        
 
     @property
-    def entityProperty(self):
+    def entity_property(self):
         """Property to fetch from an entity"""
-        return self.__entityProperty
+        return self.__entity_property
 
-    @entityProperty.setter
-    def entityProperty(self, value):
-        self.__entityProperty = value
-        self._property_changed('entityProperty')        
+    @entity_property.setter
+    def entity_property(self, value):
+        self.__entity_property = value
+        self._property_changed('entity_property')        
 
     @property
     def function(self) -> Function:
-        """Function to be applied"""
+        """Function or Measure to be applied to the column."""
         return self.__function
 
     @function.setter
@@ -616,75 +725,120 @@ class MonitorParameters(Base):
         
     """Parameters provided for a monitor"""
        
-    def __init__(self, columnDefinitions: Tuple[ColumnDefinition, ...], rowGroups: Tuple[RowGroup, ...], dataSetId: str = None, rebaseToSpot: bool = None, rebaseHistoricalCurve: bool = None, rebaseToEndOfYearSpot: bool = None, filters: Tuple[WipiRequestFilter, ...] = None):
+    def __init__(
+        self,
+        column_definitions: Tuple[ColumnDefinition, ...],
+        row_groups: Tuple[RowGroup, ...],
+        data_set_id: str = None,
+        rebase_to_spot: bool = None,
+        rebase_historical_curve: bool = None,
+        meeting_after_next: bool = None,
+        next_meeting: bool = None,
+        last_meeting: bool = None,
+        rebase_to_end_of_year_spot: bool = None,
+        filters: Tuple[WipiRequestFilter, ...] = None        
+    ):
         super().__init__()
-        self.__columnDefinitions = columnDefinitions
-        self.__rowGroups = rowGroups
-        self.__dataSetId = dataSetId
-        self.__rebaseToSpot = rebaseToSpot
-        self.__rebaseHistoricalCurve = rebaseHistoricalCurve
-        self.__rebaseToEndOfYearSpot = rebaseToEndOfYearSpot
+        self.__column_definitions = column_definitions
+        self.__row_groups = row_groups
+        self.__data_set_id = data_set_id
+        self.__rebase_to_spot = rebase_to_spot
+        self.__rebase_historical_curve = rebase_historical_curve
+        self.__meeting_after_next = meeting_after_next
+        self.__next_meeting = next_meeting
+        self.__last_meeting = last_meeting
+        self.__rebase_to_end_of_year_spot = rebase_to_end_of_year_spot
         self.__filters = filters
 
     @property
-    def columnDefinitions(self) -> Tuple[ColumnDefinition, ...]:
+    def column_definitions(self) -> Tuple[ColumnDefinition, ...]:
         """Array of monitor column definitions"""
-        return self.__columnDefinitions
+        return self.__column_definitions
 
-    @columnDefinitions.setter
-    def columnDefinitions(self, value: Tuple[ColumnDefinition, ...]):
-        self.__columnDefinitions = value
-        self._property_changed('columnDefinitions')        
+    @column_definitions.setter
+    def column_definitions(self, value: Tuple[ColumnDefinition, ...]):
+        self.__column_definitions = value
+        self._property_changed('column_definitions')        
 
     @property
-    def rowGroups(self) -> Tuple[RowGroup, ...]:
+    def row_groups(self) -> Tuple[RowGroup, ...]:
         """Monitor row groups"""
-        return self.__rowGroups
+        return self.__row_groups
 
-    @rowGroups.setter
-    def rowGroups(self, value: Tuple[RowGroup, ...]):
-        self.__rowGroups = value
-        self._property_changed('rowGroups')        
+    @row_groups.setter
+    def row_groups(self, value: Tuple[RowGroup, ...]):
+        self.__row_groups = value
+        self._property_changed('row_groups')        
 
     @property
-    def dataSetId(self) -> str:
+    def data_set_id(self) -> str:
         """ID of the dataset in which the monitor fetches data."""
-        return self.__dataSetId
+        return self.__data_set_id
 
-    @dataSetId.setter
-    def dataSetId(self, value: str):
-        self.__dataSetId = value
-        self._property_changed('dataSetId')        
+    @data_set_id.setter
+    def data_set_id(self, value: str):
+        self.__data_set_id = value
+        self._property_changed('data_set_id')        
 
     @property
-    def rebaseToSpot(self) -> bool:
+    def rebase_to_spot(self) -> bool:
         """Whether to rebase the output to the first rows values"""
-        return self.__rebaseToSpot
+        return self.__rebase_to_spot
 
-    @rebaseToSpot.setter
-    def rebaseToSpot(self, value: bool):
-        self.__rebaseToSpot = value
-        self._property_changed('rebaseToSpot')        
+    @rebase_to_spot.setter
+    def rebase_to_spot(self, value: bool):
+        self.__rebase_to_spot = value
+        self._property_changed('rebase_to_spot')        
 
     @property
-    def rebaseHistoricalCurve(self) -> bool:
+    def rebase_historical_curve(self) -> bool:
         """Whether to rebase the historical curve."""
-        return self.__rebaseHistoricalCurve
+        return self.__rebase_historical_curve
 
-    @rebaseHistoricalCurve.setter
-    def rebaseHistoricalCurve(self, value: bool):
-        self.__rebaseHistoricalCurve = value
-        self._property_changed('rebaseHistoricalCurve')        
+    @rebase_historical_curve.setter
+    def rebase_historical_curve(self, value: bool):
+        self.__rebase_historical_curve = value
+        self._property_changed('rebase_historical_curve')        
 
     @property
-    def rebaseToEndOfYearSpot(self) -> bool:
-        """Whether to rebase to the EOY Forward."""
-        return self.__rebaseToEndOfYearSpot
+    def meeting_after_next(self) -> bool:
+        """For a given valuation date, toggle to pull the hikes/cuts priced in for the 2nd meeting after the valuation date over the past 3 months."""
+        return self.__meeting_after_next
 
-    @rebaseToEndOfYearSpot.setter
-    def rebaseToEndOfYearSpot(self, value: bool):
-        self.__rebaseToEndOfYearSpot = value
-        self._property_changed('rebaseToEndOfYearSpot')        
+    @meeting_after_next.setter
+    def meeting_after_next(self, value: bool):
+        self.__meeting_after_next = value
+        self._property_changed('meeting_after_next')        
+
+    @property
+    def next_meeting(self) -> bool:
+        """For a given valuation date, toggle to pull the hikes/cuts priced in for the next meeting after the valuation date over the past 3 months."""
+        return self.__next_meeting
+
+    @next_meeting.setter
+    def next_meeting(self, value: bool):
+        self.__next_meeting = value
+        self._property_changed('next_meeting')        
+
+    @property
+    def last_meeting(self) -> bool:
+        """For a given valuation date, toggle to pull the hikes/cuts priced in for the last meeting before the valuation date over the past 3 months."""
+        return self.__last_meeting
+
+    @last_meeting.setter
+    def last_meeting(self, value: bool):
+        self.__last_meeting = value
+        self._property_changed('last_meeting')        
+
+    @property
+    def rebase_to_end_of_year_spot(self) -> bool:
+        """Whether to rebase to the EOY Forward."""
+        return self.__rebase_to_end_of_year_spot
+
+    @rebase_to_end_of_year_spot.setter
+    def rebase_to_end_of_year_spot(self, value: bool):
+        self.__rebase_to_end_of_year_spot = value
+        self._property_changed('rebase_to_end_of_year_spot')        
 
     @property
     def filters(self) -> Tuple[WipiRequestFilter, ...]:
@@ -701,20 +855,35 @@ class Monitor(Base):
         
     """A marquee monitor object"""
        
-    def __init__(self, name: str, type, id: str = None, parameters: MonitorParameters = None, createdTime: datetime.datetime = None, lastUpdatedTime: datetime.datetime = None, createdById: str = None, lastUpdatedById: str = None, ownerId: str = None, entitlements: Entitlements = None, folderName: str = None, pollingTime: float = None, tags: Tuple[str, ...] = None):
+    def __init__(
+        self,
+        name: str,
+        type,
+        id: str = None,
+        parameters: MonitorParameters = None,
+        created_time: datetime.datetime = None,
+        last_updated_time: datetime.datetime = None,
+        created_by_id: str = None,
+        last_updated_by_id: str = None,
+        owner_id: str = None,
+        entitlements: Entitlements = None,
+        folder_name: str = None,
+        polling_time: float = None,
+        tags: Tuple[str, ...] = None        
+    ):
         super().__init__()
         self.__id = id
         self.__name = name
         self.__type = type
         self.__parameters = parameters
-        self.__createdTime = createdTime
-        self.__lastUpdatedTime = lastUpdatedTime
-        self.__createdById = createdById
-        self.__lastUpdatedById = lastUpdatedById
-        self.__ownerId = ownerId
+        self.__created_time = created_time
+        self.__last_updated_time = last_updated_time
+        self.__created_by_id = created_by_id
+        self.__last_updated_by_id = last_updated_by_id
+        self.__owner_id = owner_id
         self.__entitlements = entitlements
-        self.__folderName = folderName
-        self.__pollingTime = pollingTime
+        self.__folder_name = folder_name
+        self.__polling_time = polling_time
         self.__tags = tags
 
     @property
@@ -758,54 +927,54 @@ class Monitor(Base):
         self._property_changed('parameters')        
 
     @property
-    def createdTime(self) -> datetime.datetime:
+    def created_time(self) -> datetime.datetime:
         """Time created. ISO 8601 formatted string"""
-        return self.__createdTime
+        return self.__created_time
 
-    @createdTime.setter
-    def createdTime(self, value: datetime.datetime):
-        self.__createdTime = value
-        self._property_changed('createdTime')        
+    @created_time.setter
+    def created_time(self, value: datetime.datetime):
+        self.__created_time = value
+        self._property_changed('created_time')        
 
     @property
-    def lastUpdatedTime(self) -> datetime.datetime:
+    def last_updated_time(self) -> datetime.datetime:
         """Timestamp of when the object was last updated"""
-        return self.__lastUpdatedTime
+        return self.__last_updated_time
 
-    @lastUpdatedTime.setter
-    def lastUpdatedTime(self, value: datetime.datetime):
-        self.__lastUpdatedTime = value
-        self._property_changed('lastUpdatedTime')        
+    @last_updated_time.setter
+    def last_updated_time(self, value: datetime.datetime):
+        self.__last_updated_time = value
+        self._property_changed('last_updated_time')        
 
     @property
-    def createdById(self) -> str:
+    def created_by_id(self) -> str:
         """Unique identifier of user who created the object"""
-        return self.__createdById
+        return self.__created_by_id
 
-    @createdById.setter
-    def createdById(self, value: str):
-        self.__createdById = value
-        self._property_changed('createdById')        
+    @created_by_id.setter
+    def created_by_id(self, value: str):
+        self.__created_by_id = value
+        self._property_changed('created_by_id')        
 
     @property
-    def lastUpdatedById(self) -> str:
+    def last_updated_by_id(self) -> str:
         """Unique identifier of user who last updated the object"""
-        return self.__lastUpdatedById
+        return self.__last_updated_by_id
 
-    @lastUpdatedById.setter
-    def lastUpdatedById(self, value: str):
-        self.__lastUpdatedById = value
-        self._property_changed('lastUpdatedById')        
+    @last_updated_by_id.setter
+    def last_updated_by_id(self, value: str):
+        self.__last_updated_by_id = value
+        self._property_changed('last_updated_by_id')        
 
     @property
-    def ownerId(self) -> str:
+    def owner_id(self) -> str:
         """Marquee unique identifier"""
-        return self.__ownerId
+        return self.__owner_id
 
-    @ownerId.setter
-    def ownerId(self, value: str):
-        self.__ownerId = value
-        self._property_changed('ownerId')        
+    @owner_id.setter
+    def owner_id(self, value: str):
+        self.__owner_id = value
+        self._property_changed('owner_id')        
 
     @property
     def entitlements(self) -> Entitlements:
@@ -818,24 +987,24 @@ class Monitor(Base):
         self._property_changed('entitlements')        
 
     @property
-    def folderName(self) -> str:
+    def folder_name(self) -> str:
         """Folder name of the monitor"""
-        return self.__folderName
+        return self.__folder_name
 
-    @folderName.setter
-    def folderName(self, value: str):
-        self.__folderName = value
-        self._property_changed('folderName')        
+    @folder_name.setter
+    def folder_name(self, value: str):
+        self.__folder_name = value
+        self._property_changed('folder_name')        
 
     @property
-    def pollingTime(self) -> float:
+    def polling_time(self) -> float:
         """Polling time to use in milliseconds."""
-        return self.__pollingTime
+        return self.__polling_time
 
-    @pollingTime.setter
-    def pollingTime(self, value: float):
-        self.__pollingTime = value
-        self._property_changed('pollingTime')        
+    @polling_time.setter
+    def polling_time(self, value: float):
+        self.__polling_time = value
+        self._property_changed('polling_time')        
 
     @property
     def tags(self) -> Tuple[str, ...]:

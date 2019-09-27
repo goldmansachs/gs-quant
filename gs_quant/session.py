@@ -141,7 +141,8 @@ class GsSession(ContextBase):
             request_headers: Optional[dict] = None,
             cls: Optional[type] = None,
             try_auth=True,
-            include_version: bool = True) -> Union[Base, tuple, dict]:
+            include_version: bool = True
+    ) -> Union[Base, tuple, dict]:
         is_dataframe = isinstance(payload, pd.DataFrame)
         if not is_dataframe:
             payload = payload or {}
@@ -230,7 +231,7 @@ class GsSession(ContextBase):
             environment_or_domain: Union[Environment, str] = Environment.PROD,
             client_id: Optional[str] = None,
             client_secret: Optional[str] = None,
-            scopes: Optional[Union[Tuple, List]] = (),
+            scopes: Optional[Union[Tuple, List, str]] = (),
             api_version: str = API_VERSION,
             application: str = DEFAULT_APPLICATION,
             http_adapter: requests.adapters.HTTPAdapter = None
@@ -260,7 +261,7 @@ class GsSession(ContextBase):
             environment_or_domain: Union[Environment, str] = Environment.PROD,
             client_id: Optional[str] = None,
             client_secret: Optional[str] = None,
-            scopes: Optional[Union[Tuple, List]] = (),
+            scopes: Optional[Union[Tuple, List, str]] = (),
             token: str = '',
             is_gssso: bool = False,
             api_version: str = API_VERSION,
@@ -275,7 +276,10 @@ class GsSession(ContextBase):
         if client_id is not None:
             if environment_or_domain not in (Environment.PROD.name, Environment.QA.name, Environment.DEV.name):
                 raise MqUninitialisedError('Only PROD, QA and DEV are valid environments')
-
+            if isinstance(scopes, str):
+                scopes = (scopes,)
+            else:
+                scopes = cls.Scopes.get_default() if len(scopes) == 0 else scopes
             return OAuth2Session(environment_or_domain, client_id, client_secret, scopes, api_version=api_version,
                                  application=application, http_adapter=http_adapter)
         elif token:
