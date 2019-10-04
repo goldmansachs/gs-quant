@@ -14,11 +14,11 @@ specific language governing permissions and limitations
 under the License.
 """
 
+from gs_quant.target.common import *
+import datetime
+from typing import Tuple, Union
 from enum import Enum
 from gs_quant.base import Base, EnumBase, get_enum_value
-from gs_quant.target.common import *
-from typing import Tuple, Union
-import datetime
 
 
 class MarketDataFrequency(EnumBase, Enum):    
@@ -161,9 +161,9 @@ class DataQuery(Base):
                
     def __init__(
         self,
-        id: str = None,
+        id_: str = None,
         data_set_id: str = None,
-        format: Union[Format, str] = None,
+        format_: Union[Format, str] = None,
         market_data_coordinates: Tuple[MarketDataCoordinate, ...] = None,
         where: FieldFilterMap = None,
         vendor: str = None,
@@ -187,9 +187,9 @@ class DataQuery(Base):
         restrict_fields: bool = False        
     ):
         super().__init__()
-        self.__id = id
+        self.__id = id_
         self.__data_set_id = data_set_id
-        self.__format = get_enum_value(Format, format)
+        self.__format = get_enum_value(Format, format_)
         self.__market_data_coordinates = market_data_coordinates
         self.__where = where
         self.__vendor = vendor
@@ -239,7 +239,7 @@ class DataQuery(Base):
 
     @format.setter
     def format(self, value: Union[Format, str]):
-        self.__format = value if isinstance(value, Format) else get_enum_value(Format, value)
+        self.__format = get_enum_value(Format, value)
         self._property_changed('format')        
 
     @property
@@ -333,7 +333,9 @@ class DataQuery(Base):
 
     @property
     def use_temporal_x_ref(self) -> bool:
-        """Set to true when xrefs provided in the query should be treated in a temporal way (e.g. get data points which had a certain BCID at some point in time, not which currently have it)."""
+        """Set to true when xrefs provided in the query should be treated in a temporal way
+           (e.g. get data points which had a certain BCID at some point in time,
+           not which currently have it)."""
         return self.__use_temporal_x_ref
 
     @use_temporal_x_ref.setter
@@ -383,7 +385,8 @@ class DataQuery(Base):
 
     @property
     def intervals(self) -> int:
-        """Number of intervals for which to return output times, for example if 10, it will return 10 data points evenly spaced over the time/date range."""
+        """Number of intervals for which to return output times, for example if 10, it will
+           return 10 data points evenly spaced over the time/date range."""
         return self.__intervals
 
     @intervals.setter
@@ -393,7 +396,8 @@ class DataQuery(Base):
 
     @property
     def samples(self) -> int:
-        """Number of points to down sample the data, for example if 10, it will return at most 10 sample data points evenly spaced over the time/date range"""
+        """Number of points to down sample the data, for example if 10, it will return at
+           most 10 sample data points evenly spaced over the time/date range"""
         return self.__samples
 
     @samples.setter
@@ -443,7 +447,8 @@ class DataQuery(Base):
 
     @property
     def restrict_fields(self) -> bool:
-        """Whether to return only the fields which are requested and suppress every other field"""
+        """Whether to return only the fields which are requested and suppress every other
+           field"""
         return self.__restrict_fields
 
     @restrict_fields.setter
@@ -527,7 +532,8 @@ class DataSetDelay(Base):
 
     @property
     def at_time_zone(self) -> str:
-        """The time zone with respect to which the delay will be applied (must be a valid IANA TimeZone identifier)."""
+        """The time zone with respect to which the delay will be applied (must be a valid
+           IANA TimeZone identifier)."""
         return self.__at_time_zone
 
     @at_time_zone.setter
@@ -537,7 +543,8 @@ class DataSetDelay(Base):
 
     @property
     def history_up_to_seconds(self) -> float:
-        """Relative seconds up to which the data history will be shown for the business day."""
+        """Relative seconds up to which the data history will be shown for the business
+           day."""
         return self.__history_up_to_seconds
 
     @history_up_to_seconds.setter
@@ -721,12 +728,14 @@ class DataSetParameters(Base):
 
     @property
     def asset_class(self) -> Union[AssetClass, str]:
-        """Asset classification of security. Assets are classified into broad groups which exhibit similar characteristics and behave in a consistent way under different market conditions"""
+        """Asset classification of security. Assets are classified into broad groups which
+           exhibit similar characteristics and behave in a consistent way under
+           different market conditions"""
         return self.__asset_class
 
     @asset_class.setter
     def asset_class(self, value: Union[AssetClass, str]):
-        self.__asset_class = value if isinstance(value, AssetClass) else get_enum_value(AssetClass, value)
+        self.__asset_class = get_enum_value(AssetClass, value)
         self._property_changed('asset_class')        
 
     @property
@@ -865,7 +874,8 @@ class DataSetParameters(Base):
 
     @property
     def override_query_column_ids(self) -> Tuple[str, ...]:
-        """Explicit set of database columns to query for, regardless of fields specified in request."""
+        """Explicit set of database columns to query for, regardless of fields specified in
+           request."""
         return self.__override_query_column_ids
 
     @override_query_column_ids.setter
@@ -924,7 +934,8 @@ class FieldLink(Base):
 
     @property
     def prefix(self) -> str:
-        """Prefix to put before the fields fetched from the linked entity (must be unique for each dataset field)."""
+        """Prefix to put before the fields fetched from the linked entity (must be unique
+           for each dataset field)."""
         return self.__prefix
 
     @prefix.setter
@@ -939,13 +950,13 @@ class MDAPI(Base):
        
     def __init__(
         self,
-        type: str,
+        type_: str,
         quoting_styles: Tuple[dict, ...],
         class_: str = None        
     ):
         super().__init__()
         self.__class = class_
-        self.__type = type
+        self.__type = type_
         self.__quoting_styles = quoting_styles
 
     @property
@@ -1250,10 +1261,10 @@ class DataQueryResponse(Base):
                
     def __init__(
         self,
-        type: str,
+        type_: str,
         request_id: str = None,
         error_message: str = None,
-        id: str = None,
+        id_: str = None,
         data_set_id: str = None,
         entity_type: Union[MeasureEntityType, str] = None,
         delay: int = None,
@@ -1262,9 +1273,9 @@ class DataQueryResponse(Base):
     ):
         super().__init__()
         self.__request_id = request_id
-        self.__type = type
+        self.__type = type_
         self.__error_message = error_message
-        self.__id = id
+        self.__id = id_
         self.__data_set_id = data_set_id
         self.__entity_type = get_enum_value(MeasureEntityType, entity_type)
         self.__delay = delay
@@ -1326,7 +1337,7 @@ class DataQueryResponse(Base):
 
     @entity_type.setter
     def entity_type(self, value: Union[MeasureEntityType, str]):
-        self.__entity_type = value if isinstance(value, MeasureEntityType) else get_enum_value(MeasureEntityType, value)
+        self.__entity_type = get_enum_value(MeasureEntityType, value)
         self._property_changed('entity_type')        
 
     @property
@@ -1563,7 +1574,7 @@ class MarketDataMapping(Base):
 
     @asset_class.setter
     def asset_class(self, value: Union[AssetClass, str]):
-        self.__asset_class = value if isinstance(value, AssetClass) else get_enum_value(AssetClass, value)
+        self.__asset_class = get_enum_value(AssetClass, value)
         self._property_changed('asset_class')        
 
     @property
@@ -1602,7 +1613,7 @@ class MarketDataMapping(Base):
 
     @frequency.setter
     def frequency(self, value: Union[MarketDataFrequency, str]):
-        self.__frequency = value if isinstance(value, MarketDataFrequency) else get_enum_value(MarketDataFrequency, value)
+        self.__frequency = get_enum_value(MarketDataFrequency, value)
         self._property_changed('frequency')        
 
     @property
@@ -1630,7 +1641,7 @@ class MarketDataMapping(Base):
 
     @vendor.setter
     def vendor(self, value: Union[MarketDataVendor, str]):
-        self.__vendor = value if isinstance(value, MarketDataVendor) else get_enum_value(MarketDataVendor, value)
+        self.__vendor = get_enum_value(MarketDataVendor, value)
         self._property_changed('vendor')        
 
     @property
@@ -1677,7 +1688,7 @@ class MarketDataMapping(Base):
 
     @entity_type.setter
     def entity_type(self, value: Union[MeasureEntityType, str]):
-        self.__entity_type = value if isinstance(value, MeasureEntityType) else get_enum_value(MeasureEntityType, value)
+        self.__entity_type = get_enum_value(MeasureEntityType, value)
         self._property_changed('entity_type')        
 
     @property
@@ -1781,7 +1792,8 @@ class DataSetDimensions(Base):
 
     @property
     def transaction_time_field(self) -> str:
-        """For bi-temporal datasets, field for capturing the time at which a data point was updated."""
+        """For bi-temporal datasets, field for capturing the time at which a data point was
+           updated."""
         return self.__transaction_time_field
 
     @transaction_time_field.setter
@@ -1946,7 +1958,7 @@ class DataSetEntity(Base):
                
     def __init__(
         self,
-        id: str,
+        id_: str,
         name: str,
         description: str,
         short_description: str,
@@ -1971,7 +1983,7 @@ class DataSetEntity(Base):
     ):
         super().__init__()
         self.__owner_id = owner_id
-        self.__id = id
+        self.__id = id_
         self.__name = name
         self.__description = description
         self.__short_description = short_description

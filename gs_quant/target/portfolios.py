@@ -14,11 +14,11 @@ specific language governing permissions and limitations
 under the License.
 """
 
+from gs_quant.target.common import *
+import datetime
+from typing import Tuple, Union
 from enum import Enum
 from gs_quant.base import Base, EnumBase, get_enum_value
-from gs_quant.target.common import *
-from typing import Tuple, Union
-import datetime
 
 
 class PortfolioType(EnumBase, Enum):    
@@ -43,7 +43,7 @@ class Portfolio(Base):
         description: str = None,
         entitlements: Entitlements = None,
         entitlement_exclusions: EntitlementExclusions = None,
-        id: str = None,
+        id_: str = None,
         identifiers: Tuple[Identifier, ...] = None,
         last_updated_by_id: str = None,
         last_updated_time: datetime.datetime = None,
@@ -52,7 +52,7 @@ class Portfolio(Base):
         short_name: str = None,
         underlying_portfolio_ids: Tuple[str, ...] = None,
         tags: Tuple[str, ...] = None,
-        type: Union[PortfolioType, str] = None,
+        type_: Union[PortfolioType, str] = None,
         parameters: LiquidityRequest = None        
     ):
         super().__init__()
@@ -62,7 +62,7 @@ class Portfolio(Base):
         self.__description = description
         self.__entitlements = entitlements
         self.__entitlement_exclusions = entitlement_exclusions
-        self.__id = id
+        self.__id = id_
         self.__identifiers = identifiers
         self.__last_updated_by_id = last_updated_by_id
         self.__last_updated_time = last_updated_time
@@ -72,7 +72,7 @@ class Portfolio(Base):
         self.__short_name = short_name
         self.__underlying_portfolio_ids = underlying_portfolio_ids
         self.__tags = tags
-        self.__type = get_enum_value(PortfolioType, type)
+        self.__type = get_enum_value(PortfolioType, type_)
         self.__parameters = parameters
 
     @property
@@ -101,12 +101,13 @@ class Portfolio(Base):
 
     @currency.setter
     def currency(self, value: Union[Currency, str]):
-        self.__currency = value if isinstance(value, Currency) else get_enum_value(Currency, value)
+        self.__currency = get_enum_value(Currency, value)
         self._property_changed('currency')        
 
     @property
     def description(self) -> str:
-        """Free text description of portfolio. Description provided will be indexed in the search service for free text relevance match"""
+        """Free text description of portfolio. Description provided will be indexed in the
+           search service for free text relevance match"""
         return self.__description
 
     @description.setter
@@ -146,7 +147,8 @@ class Portfolio(Base):
 
     @property
     def identifiers(self) -> Tuple[Identifier, ...]:
-        """Array of identifier objects which can be used to locate this item in searches and other services"""
+        """Array of identifier objects which can be used to locate this item in searches
+           and other services"""
         return self.__identifiers
 
     @identifiers.setter
@@ -226,7 +228,8 @@ class Portfolio(Base):
 
     @property
     def tags(self) -> Tuple[str, ...]:
-        """Metadata associated with the object. Provide an array of strings which will be indexed for search and locating related objects"""
+        """Metadata associated with the object. Provide an array of strings which will be
+           indexed for search and locating related objects"""
         return self.__tags
 
     @tags.setter
@@ -241,7 +244,7 @@ class Portfolio(Base):
 
     @type.setter
     def type(self, value: Union[PortfolioType, str]):
-        self.__type = value if isinstance(value, PortfolioType) else get_enum_value(PortfolioType, value)
+        self.__type = get_enum_value(PortfolioType, value)
         self._property_changed('type')        
 
     @property

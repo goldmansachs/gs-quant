@@ -14,11 +14,11 @@ specific language governing permissions and limitations
 under the License.
 """
 
+from gs_quant.target.common import *
+import datetime
+from typing import Tuple, Union
 from enum import Enum
 from gs_quant.base import Base, EnumBase, get_enum_value
-from gs_quant.target.common import *
-from typing import Tuple, Union
-import datetime
 
 
 class IndicesCurrency(EnumBase, Enum):    
@@ -95,7 +95,8 @@ class CustomBasketsResponse(Base):
 
     @property
     def status(self) -> str:
-        """Indices rebalance process status. Status is done if basket assets rebalance, report creation and scheduling are all successfully executed."""
+        """Indices rebalance process status. Status is done if basket assets rebalance,
+           report creation and scheduling are all successfully executed."""
         return self.__status
 
     @status.setter
@@ -138,12 +139,12 @@ class ISelectConstituentColumn(Base):
                
     def __init__(
         self,
-        id: str,
+        id_: str,
         field: str,
         name: str,
         aggregator_string: str = None,
         class_: str = None,
-        filter: str = None,
+        filter_: str = None,
         formatter_string: str = None,
         ID: int = None,
         max_width: int = None,
@@ -156,9 +157,9 @@ class ISelectConstituentColumn(Base):
         self.__aggregator_string = aggregator_string
         self.__class = class_
         self.__field = field
-        self.__filter = filter
+        self.__filter = filter_
         self.__formatter_string = formatter_string
-        self.__id = id
+        self.__id = id_
         self.__ID = ID
         self.__max_width = max_width
         self.__min_width = min_width
@@ -425,7 +426,8 @@ class PositionPriceInput(Base):
 
 class PublishParameters(Base):
         
-    """Publishing parameters to determine where and how to publish indices, default all to false"""
+    """Publishing parameters to determine where and how to publish indices, default all
+       to false"""
        
     def __init__(
         self,
@@ -500,7 +502,8 @@ class CustomBasketsEditInputs(Base):
 
     @property
     def description(self) -> str:
-        """Free text description of asset. Description provided will be indexed in the search service for free text relevance match"""
+        """Free text description of asset. Description provided will be indexed in the
+           search service for free text relevance match"""
         return self.__description
 
     @description.setter
@@ -529,7 +532,8 @@ class CustomBasketsEditInputs(Base):
 
     @property
     def publish_parameters(self) -> PublishParameters:
-        """Publishing parameters to determine where and how to publish indices, default all to false"""
+        """Publishing parameters to determine where and how to publish indices, default all
+           to false"""
         return self.__publish_parameters
 
     @publish_parameters.setter
@@ -960,12 +964,14 @@ class IndicesPriceParameters(Base):
 
     @property
     def currency(self) -> Union[IndicesCurrency, str]:
-        """Currencies supported for Indices Create, default to USD during create. During rebalance, cannot change basket currency hence the input value will be discarded."""
+        """Currencies supported for Indices Create, default to USD during create. During
+           rebalance, cannot change basket currency hence the input value will
+           be discarded."""
         return self.__currency
 
     @currency.setter
     def currency(self, value: Union[IndicesCurrency, str]):
-        self.__currency = value if isinstance(value, IndicesCurrency) else get_enum_value(IndicesCurrency, value)
+        self.__currency = get_enum_value(IndicesCurrency, value)
         self._property_changed('currency')        
 
     @property
@@ -1000,7 +1006,8 @@ class IndicesPriceParameters(Base):
 
     @property
     def weighting_strategy(self) -> str:
-        """Strategy used to price the position set. If not supplied, it is inferred from the quantities or weights in the positions."""
+        """Strategy used to price the position set. If not supplied, it is inferred from
+           the quantities or weights in the positions."""
         return self.__weighting_strategy
 
     @weighting_strategy.setter
@@ -1046,7 +1053,8 @@ class CustomBasketsRebalanceInputs(Base):
 
     @property
     def publish_parameters(self) -> PublishParameters:
-        """Publishing parameters to determine where and how to publish indices, default all to false"""
+        """Publishing parameters to determine where and how to publish indices, default all
+           to false"""
         return self.__publish_parameters
 
     @publish_parameters.setter
@@ -1118,7 +1126,8 @@ class IndicesCreateInputs(Base):
 
     @property
     def description(self) -> str:
-        """Free text description of asset, default to empty. Description provided will be indexed in the search service for free text relevance match."""
+        """Free text description of asset, default to empty. Description provided will be
+           indexed in the search service for free text relevance match."""
         return self.__description
 
     @description.setter
@@ -1153,12 +1162,13 @@ class IndicesCreateInputs(Base):
 
     @index_create_source.setter
     def index_create_source(self, value: Union[IndexCreateSource, str]):
-        self.__index_create_source = value if isinstance(value, IndexCreateSource) else get_enum_value(IndexCreateSource, value)
+        self.__index_create_source = get_enum_value(IndexCreateSource, value)
         self._property_changed('index_create_source')        
 
     @property
     def return_type(self) -> str:
-        """Determines the index calculation methodology with respect to dividend reinvestment, default to Price Return"""
+        """Determines the index calculation methodology with respect to dividend
+           reinvestment, default to Price Return"""
         return self.__return_type
 
     @return_type.setter
@@ -1168,7 +1178,8 @@ class IndicesCreateInputs(Base):
 
     @property
     def position_set(self) -> Tuple[PositionPriceInput, ...]:
-        """Information of constituents associated with the index. Need to supply one of weight, quantity."""
+        """Information of constituents associated with the index. Need to supply one of
+           weight, quantity."""
         return self.__position_set
 
     @position_set.setter
@@ -1178,7 +1189,8 @@ class IndicesCreateInputs(Base):
 
     @property
     def publish_parameters(self) -> PublishParameters:
-        """Publishing parameters to determine where and how to publish indices, default all to false"""
+        """Publishing parameters to determine where and how to publish indices, default all
+           to false"""
         return self.__publish_parameters
 
     @publish_parameters.setter

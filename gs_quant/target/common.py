@@ -14,15 +14,17 @@ specific language governing permissions and limitations
 under the License.
 """
 
+import datetime
+from typing import Tuple, Union
 from enum import Enum
 from gs_quant.base import Base, EnumBase, Priceable, get_enum_value
-from typing import Tuple, Union
-import datetime
 
 
 class AssetClass(EnumBase, Enum):    
     
-    """Asset classification of security. Assets are classified into broad groups which exhibit similar characteristics and behave in a consistent way under different market conditions"""
+    """Asset classification of security. Assets are classified into broad groups which
+       exhibit similar characteristics and behave in a consistent way under
+       different market conditions"""
 
     Cash = 'Cash'
     Commod = 'Commod'
@@ -1510,7 +1512,8 @@ class Entitlements(Base):
 
     @property
     def edit(self) -> Tuple[str, ...]:
-        """Permission to edit details about the resource content, excluding entitlements. Can also delete the resource"""
+        """Permission to edit details about the resource content, excluding entitlements.
+           Can also delete the resource"""
         return self.__edit
 
     @edit.setter
@@ -1520,7 +1523,8 @@ class Entitlements(Base):
 
     @property
     def admin(self) -> Tuple[str, ...]:
-        """Permission to edit all details of the resource, including entitlements. Can also delete the resource"""
+        """Permission to edit all details of the resource, including entitlements. Can also
+           delete the resource"""
         return self.__admin
 
     @admin.setter
@@ -1593,11 +1597,11 @@ class ISelectNewUnit(Base):
                
     def __init__(
         self,
-        id: str,
+        id_: str,
         new_units: float = None        
     ):
         super().__init__()
-        self.__id = id
+        self.__id = id_
         self.__new_units = new_units
 
     @property
@@ -1623,11 +1627,11 @@ class ISelectNewWeight(Base):
                
     def __init__(
         self,
-        id: str,
+        id_: str,
         new_weight: float = None        
     ):
         super().__init__()
-        self.__id = id
+        self.__id = id_
         self.__new_weight = new_weight
 
     @property
@@ -1653,11 +1657,11 @@ class Identifier(Base):
                
     def __init__(
         self,
-        type: str = None,
+        type_: str = None,
         value: str = None        
     ):
         super().__init__()
-        self.__type = type
+        self.__type = type_
         self.__value = value
 
     @property
@@ -1893,11 +1897,11 @@ class MarketDataTypeAndAsset(Base):
        
     def __init__(
         self,
-        type: str,
+        type_: str,
         asset: str        
     ):
         super().__init__()
-        self.__type = type
+        self.__type = type_
         self.__asset = asset
 
     @property
@@ -2302,7 +2306,8 @@ class PerformanceStats(Base):
 
     @property
     def sharpe_ratio(self) -> float:
-        """Annualized return of the series minus risk free rate (accrued daily) divided by annual volatility."""
+        """Annualized return of the series minus risk free rate (accrued daily) divided by
+           annual volatility."""
         return self.__sharpe_ratio
 
     @sharpe_ratio.setter
@@ -2312,7 +2317,8 @@ class PerformanceStats(Base):
 
     @property
     def sortino_ratio(self) -> float:
-        """Annualized return of the series minus risk free rate (accrued daily) divided by annual volatility of negative returns."""
+        """Annualized return of the series minus risk free rate (accrued daily) divided by
+           annual volatility of negative returns."""
         return self.__sortino_ratio
 
     @sortino_ratio.setter
@@ -2891,7 +2897,7 @@ class CSLCurrency(Base):
 
     @string_value.setter
     def string_value(self, value: Union[Currency, str]):
-        self.__string_value = value if isinstance(value, Currency) else get_enum_value(Currency, value)
+        self.__string_value = get_enum_value(Currency, value)
         self._property_changed('string_value')        
 
 
@@ -3109,7 +3115,8 @@ class CurveScenario(Base):
 
     @property
     def market_data_types_and_assets(self) -> Tuple[MarketDataTypeAndAsset, ...]:
-        """Market data types and assets (e.g. type=IR, asset=USD) to which this scenario applies"""
+        """Market data types and assets (e.g. type=IR, asset=USD) to which this scenario
+           applies"""
         return self.__market_data_types_and_assets
 
     @market_data_types_and_assets.setter
@@ -3262,7 +3269,8 @@ class ISelectNewParameter(Base):
 
     @property
     def expiry_date_rule(self) -> str:
-        """Free text description of asset. Description provided will be indexed in the search service for free text relevance match"""
+        """Free text description of asset. Description provided will be indexed in the
+           search service for free text relevance match"""
         return self.__expiry_date_rule
 
     @expiry_date_rule.setter
@@ -3336,7 +3344,8 @@ class ISelectNewParameter(Base):
 
     @property
     def module_name(self) -> str:
-        """Free text description of asset. Description provided will be indexed in the search service for free text relevance match"""
+        """Free text description of asset. Description provided will be indexed in the
+           search service for free text relevance match"""
         return self.__module_name
 
     @module_name.setter
@@ -3359,7 +3368,7 @@ class ISelectNewParameter(Base):
 
     @strike_method.setter
     def strike_method(self, value: Union[StrikeMethodType, str]):
-        self.__strike_method = value if isinstance(value, StrikeMethodType) else get_enum_value(StrikeMethodType, value)
+        self.__strike_method = get_enum_value(StrikeMethodType, value)
         self._property_changed('strike_method')        
 
     @property
@@ -3368,7 +3377,7 @@ class ISelectNewParameter(Base):
 
     @option_expiry.setter
     def option_expiry(self, value: Union[OptionExpiryType, str]):
-        self.__option_expiry = value if isinstance(value, OptionExpiryType) else get_enum_value(OptionExpiryType, value)
+        self.__option_expiry = get_enum_value(OptionExpiryType, value)
         self._property_changed('option_expiry')        
 
     @property
@@ -3413,7 +3422,7 @@ class ISelectNewParameter(Base):
 
     @option_type.setter
     def option_type(self, value: Union[OptionType, str]):
-        self.__option_type = value if isinstance(value, OptionType) else get_enum_value(OptionType, value)
+        self.__option_type = get_enum_value(OptionType, value)
         self._property_changed('option_type')        
 
     @property
@@ -3422,7 +3431,7 @@ class ISelectNewParameter(Base):
 
     @option_strike_type.setter
     def option_strike_type(self, value: Union[OptionStrikeType, str]):
-        self.__option_strike_type = value if isinstance(value, OptionStrikeType) else get_enum_value(OptionStrikeType, value)
+        self.__option_strike_type = get_enum_value(OptionStrikeType, value)
         self._property_changed('option_strike_type')        
 
     @property
@@ -3441,7 +3450,7 @@ class ISelectNewParameter(Base):
 
     @trade_type.setter
     def trade_type(self, value: Union[TradeType, str]):
-        self.__trade_type = value if isinstance(value, TradeType) else get_enum_value(TradeType, value)
+        self.__trade_type = get_enum_value(TradeType, value)
         self._property_changed('trade_type')        
 
     @property
@@ -3610,7 +3619,7 @@ class MarketDataPattern(Base):
 
     @currency.setter
     def currency(self, value: Union[Currency, str]):
-        self.__currency = value if isinstance(value, Currency) else get_enum_value(Currency, value)
+        self.__currency = get_enum_value(Currency, value)
         self._property_changed('currency')        
 
     @property
@@ -3620,7 +3629,7 @@ class MarketDataPattern(Base):
 
     @country_code.setter
     def country_code(self, value: Union[CountryCode, str]):
-        self.__country_code = value if isinstance(value, CountryCode) else get_enum_value(CountryCode, value)
+        self.__country_code = get_enum_value(CountryCode, value)
         self._property_changed('country_code')        
 
     @property
@@ -3694,7 +3703,7 @@ class MarketDataShock(Base):
 
     @shock_type.setter
     def shock_type(self, value: Union[MarketDataShockType, str]):
-        self.__shock_type = value if isinstance(value, MarketDataShockType) else get_enum_value(MarketDataShockType, value)
+        self.__shock_type = get_enum_value(MarketDataShockType, value)
         self._property_changed('shock_type')        
 
     @property
@@ -3760,7 +3769,8 @@ class MarketDataShock(Base):
 
 class RiskMeasure(Base):
         
-    """The measure to perform risk on. Each risk measure consists of an asset class, a measure type, and a unit."""
+    """The measure to perform risk on. Each risk measure consists of an asset class, a
+       measure type, and a unit."""
        
     def __init__(
         self,
@@ -3775,12 +3785,14 @@ class RiskMeasure(Base):
 
     @property
     def asset_class(self) -> Union[AssetClass, str]:
-        """Asset classification of security. Assets are classified into broad groups which exhibit similar characteristics and behave in a consistent way under different market conditions"""
+        """Asset classification of security. Assets are classified into broad groups which
+           exhibit similar characteristics and behave in a consistent way under
+           different market conditions"""
         return self.__asset_class
 
     @asset_class.setter
     def asset_class(self, value: Union[AssetClass, str]):
-        self.__asset_class = value if isinstance(value, AssetClass) else get_enum_value(AssetClass, value)
+        self.__asset_class = get_enum_value(AssetClass, value)
         self._property_changed('asset_class')        
 
     @property
@@ -3790,7 +3802,7 @@ class RiskMeasure(Base):
 
     @measure_type.setter
     def measure_type(self, value: Union[RiskMeasureType, str]):
-        self.__measure_type = value if isinstance(value, RiskMeasureType) else get_enum_value(RiskMeasureType, value)
+        self.__measure_type = get_enum_value(RiskMeasureType, value)
         self._property_changed('measure_type')        
 
     @property
@@ -3800,7 +3812,7 @@ class RiskMeasure(Base):
 
     @unit.setter
     def unit(self, value: Union[RiskMeasureUnit, str]):
-        self.__unit = value if isinstance(value, RiskMeasureUnit) else get_enum_value(RiskMeasureUnit, value)
+        self.__unit = get_enum_value(RiskMeasureUnit, value)
         self._property_changed('unit')        
 
 
@@ -4047,7 +4059,8 @@ class DataSetFieldMap(Base):
 
     @property
     def risk_measure(self) -> RiskMeasure:
-        """The measure to perform risk on. Each risk measure consists of an asset class, a measure type, and a unit."""
+        """The measure to perform risk on. Each risk measure consists of an asset class, a
+           measure type, and a unit."""
         return self.__risk_measure
 
     @risk_measure.setter
@@ -13099,7 +13112,9 @@ class FieldValueMap(Base):
 
     @property
     def investment_rate(self) -> float:
-        """The rate of return on an investment.  In the context of securities lending, it is the rate being earned on the reinvested collateral received from the borrower."""
+        """The rate of return on an investment.  In the context of securities lending, it
+           is the rate being earned on the reinvested collateral received from
+           the borrower."""
         return self.__investment_rate
 
     @investment_rate.setter
@@ -13109,7 +13124,8 @@ class FieldValueMap(Base):
 
     @property
     def bid_unadjusted(self) -> float:
-        """Unadjusted bid level of an asset based on official exchange fixing or calculation agent marked level."""
+        """Unadjusted bid level of an asset based on official exchange fixing or
+           calculation agent marked level."""
         return self.__bid_unadjusted
 
     @bid_unadjusted.setter
@@ -13119,7 +13135,8 @@ class FieldValueMap(Base):
 
     @property
     def available_inventory(self) -> float:
-        """An estimated indication of the share quantity potentially available to borrow in the relevant asset."""
+        """An estimated indication of the share quantity potentially available to borrow in
+           the relevant asset."""
         return self.__available_inventory
 
     @available_inventory.setter
@@ -13149,7 +13166,8 @@ class FieldValueMap(Base):
 
     @property
     def vehicle_type(self) -> str:
-        """Type of investment vehicle. Only viewable after having been granted additional access to asset information."""
+        """Type of investment vehicle. Only viewable after having been granted additional
+           access to asset information."""
         return self.__vehicle_type
 
     @vehicle_type.setter
@@ -13179,7 +13197,8 @@ class FieldValueMap(Base):
 
     @property
     def market_data_type(self) -> str:
-        """The market data type (e.g. IR_BASIS, FX_Vol). This can be resolved into a dataset when combined with vendor and intraday=true/false."""
+        """The market data type (e.g. IR_BASIS, FX_Vol). This can be resolved into a
+           dataset when combined with vendor and intraday=true/false."""
         return self.__market_data_type
 
     @market_data_type.setter
@@ -13259,7 +13278,8 @@ class FieldValueMap(Base):
 
     @property
     def exposure(self) -> float:
-        """Exposure of a given asset or portfolio in the denominated currency of the asset or portfolio."""
+        """Exposure of a given asset or portfolio in the denominated currency of the asset
+           or portfolio."""
         return self.__exposure
 
     @exposure.setter
@@ -13279,7 +13299,8 @@ class FieldValueMap(Base):
 
     @property
     def unadjusted_high(self) -> float:
-        """Unadjusted high level of an asset based on official exchange fixing or calculation agent marked level."""
+        """Unadjusted high level of an asset based on official exchange fixing or
+           calculation agent marked level."""
         return self.__unadjusted_high
 
     @unadjusted_high.setter
@@ -13379,7 +13400,8 @@ class FieldValueMap(Base):
 
     @property
     def close(self) -> float:
-        """Closing level of an asset based on official exchange fixing or calculation agent marked level."""
+        """Closing level of an asset based on official exchange fixing or calculation agent
+           marked level."""
         return self.__close
 
     @close.setter
@@ -13439,7 +13461,8 @@ class FieldValueMap(Base):
 
     @property
     def lender_payment(self) -> float:
-        """Payment made to lender's bank in support of the income accrued from securities lending."""
+        """Payment made to lender's bank in support of the income accrued from securities
+           lending."""
         return self.__lender_payment
 
     @lender_payment.setter
@@ -13579,7 +13602,8 @@ class FieldValueMap(Base):
 
     @property
     def unadjusted_open(self) -> float:
-        """Unadjusted open level of an asset based on official exchange fixing or calculation agent marked level."""
+        """Unadjusted open level of an asset based on official exchange fixing or
+           calculation agent marked level."""
         return self.__unadjusted_open
 
     @unadjusted_open.setter
@@ -13699,7 +13723,8 @@ class FieldValueMap(Base):
 
     @property
     def open_unadjusted(self) -> float:
-        """Unadjusted open level of an asset based on official exchange fixing or calculation agent marked level."""
+        """Unadjusted open level of an asset based on official exchange fixing or
+           calculation agent marked level."""
         return self.__open_unadjusted
 
     @open_unadjusted.setter
@@ -13739,7 +13764,8 @@ class FieldValueMap(Base):
 
     @property
     def std30_days_subsidized_yield(self) -> float:
-        """Average annual total returns as of most recent calendar quarter-end, does not account for any fee waivers or expense reimbursements."""
+        """Average annual total returns as of most recent calendar quarter-end, does not
+           account for any fee waivers or expense reimbursements."""
         return self.__std30_days_subsidized_yield
 
     @std30_days_subsidized_yield.setter
@@ -13759,7 +13785,8 @@ class FieldValueMap(Base):
 
     @property
     def additional_price_notation_type(self) -> str:
-        """Basis points, Price, Yield, Spread, Coupon, etc., depending on the type of SB swap, which is calculated at affirmation."""
+        """Basis points, Price, Yield, Spread, Coupon, etc., depending on the type of SB
+           swap, which is calculated at affirmation."""
         return self.__additional_price_notation_type
 
     @additional_price_notation_type.setter
@@ -13819,7 +13846,8 @@ class FieldValueMap(Base):
 
     @property
     def gross_exposure(self) -> float:
-        """Sum of absolute long and short exposures in the portfolio. If you are $60 short and $40 long, then the grossExposure would be $100 (60+40)."""
+        """Sum of absolute long and short exposures in the portfolio. If you are $60 short
+           and $40 long, then the grossExposure would be $100 (60+40)."""
         return self.__gross_exposure
 
     @gross_exposure.setter
@@ -13829,7 +13857,8 @@ class FieldValueMap(Base):
 
     @property
     def volume_composite(self) -> float:
-        """Accumulated number of shares, lots or contracts traded according to the market convention at all exchanges."""
+        """Accumulated number of shares, lots or contracts traded according to the market
+           convention at all exchanges."""
         return self.__volume_composite
 
     @volume_composite.setter
@@ -13839,7 +13868,8 @@ class FieldValueMap(Base):
 
     @property
     def volume(self) -> float:
-        """Accumulated number of shares, lots or contracts traded according to the market convention."""
+        """Accumulated number of shares, lots or contracts traded according to the market
+           convention."""
         return self.__volume
 
     @volume.setter
@@ -13889,7 +13919,8 @@ class FieldValueMap(Base):
 
     @property
     def cleared(self) -> str:
-        """An indication of whether or not an SB swap transaction is going to be cleared by a derivatives clearing organization."""
+        """An indication of whether or not an SB swap transaction is going to be cleared by
+           a derivatives clearing organization."""
         return self.__cleared
 
     @cleared.setter
@@ -13939,7 +13970,8 @@ class FieldValueMap(Base):
 
     @property
     def fair_variance(self) -> float:
-        """Strike such that the price of an uncapped variance swap on the underlying index is zero at inception."""
+        """Strike such that the price of an uncapped variance swap on the underlying index
+           is zero at inception."""
         return self.__fair_variance
 
     @fair_variance.setter
@@ -13959,7 +13991,8 @@ class FieldValueMap(Base):
 
     @property
     def bos_in_bps_description(self) -> str:
-        """Description of the Stock's Bid-Offer Spread in Basis points on the particular date."""
+        """Description of the Stock's Bid-Offer Spread in Basis points on the particular
+           date."""
         return self.__bos_in_bps_description
 
     @bos_in_bps_description.setter
@@ -13969,7 +14002,8 @@ class FieldValueMap(Base):
 
     @property
     def low_price(self) -> float:
-        """Low level of an asset based on official exchange fixing or calculation agent marked level."""
+        """Low level of an asset based on official exchange fixing or calculation agent
+           marked level."""
         return self.__low_price
 
     @low_price.setter
@@ -14057,7 +14091,8 @@ class FieldValueMap(Base):
 
     @property
     def horizon(self) -> str:
-        """Time period indicating the validity of the idea. Eg. 2d (2 days), 1w (1 week), 3m (3 months), 1y (1 year)."""
+        """Time period indicating the validity of the idea. Eg. 2d (2 days), 1w (1 week),
+           3m (3 months), 1y (1 year)."""
         return self.__horizon
 
     @horizon.setter
@@ -14127,7 +14162,8 @@ class FieldValueMap(Base):
 
     @property
     def percent_of_mediandv1m(self) -> float:
-        """Percentage of median daily volume calculated using 1 month period (last 22 trading days)."""
+        """Percentage of median daily volume calculated using 1 month period (last 22
+           trading days)."""
         return self.__percent_of_mediandv1m
 
     @percent_of_mediandv1m.setter
@@ -14147,7 +14183,9 @@ class FieldValueMap(Base):
 
     @property
     def asset_class(self) -> str:
-        """Asset classification of security. Assets are classified into broad groups which exhibit similar characteristics and behave in a consistent way under different market conditions"""
+        """Asset classification of security. Assets are classified into broad groups which
+           exhibit similar characteristics and behave in a consistent way under
+           different market conditions"""
         return self.__asset_class
 
     @asset_class.setter
@@ -14157,7 +14195,8 @@ class FieldValueMap(Base):
 
     @property
     def sovereign_spread_contribution(self) -> float:
-        """Contribution of sovereign spread component to FCI. Only applicable to Euro countries."""
+        """Contribution of sovereign spread component to FCI. Only applicable to Euro
+           countries."""
         return self.__sovereign_spread_contribution
 
     @sovereign_spread_contribution.setter
@@ -14236,7 +14275,10 @@ class FieldValueMap(Base):
 
     @property
     def short_weight(self) -> float:
-        """Short weight of a position in a given portfolio. Equivalent to position short exposure / total short exposure. If you have a position with a shortExposure of $20, and your portfolio shortExposure is $100, then your asset shortWeight would be 0.2 (20/100)."""
+        """Short weight of a position in a given portfolio. Equivalent to position short
+           exposure / total short exposure. If you have a position with a
+           shortExposure of $20, and your portfolio shortExposure is $100, then
+           your asset shortWeight would be 0.2 (20/100)."""
         return self.__short_weight
 
     @short_weight.setter
@@ -14296,7 +14338,8 @@ class FieldValueMap(Base):
 
     @property
     def market_impact(self) -> float:
-        """Market impact is based on the Goldman Sachs Shortfall Model where available alongside best estimates from the desk."""
+        """Market impact is based on the Goldman Sachs Shortfall Model where available
+           alongside best estimates from the desk."""
         return self.__market_impact
 
     @market_impact.setter
@@ -14306,7 +14349,11 @@ class FieldValueMap(Base):
 
     @property
     def event_type(self) -> str:
-        """Equals Analyst Meeting if the event indicates an analyst meeting. Equals Earnings Release if the event indicates an earnings release. Equals Sales Release when the event indicates a sales release. Indicates Drug Data when the event indicates an event related to drugs data. Equals Other for any other events."""
+        """Equals Analyst Meeting if the event indicates an analyst meeting. Equals
+           Earnings Release if the event indicates an earnings release. Equals
+           Sales Release when the event indicates a sales release. Indicates
+           Drug Data when the event indicates an event related to drugs data.
+           Equals Other for any other events."""
         return self.__event_type
 
     @event_type.setter
@@ -14346,7 +14393,8 @@ class FieldValueMap(Base):
 
     @property
     def loan_value(self) -> float:
-        """The value of the securities or cash delivered by a borrower to a lender to support a loan of securities."""
+        """The value of the securities or cash delivered by a borrower to a lender to
+           support a loan of securities."""
         return self.__loan_value
 
     @loan_value.setter
@@ -14396,7 +14444,8 @@ class FieldValueMap(Base):
 
     @property
     def leg_two_fixed_payment(self) -> float:
-        """If fixed payment leg, the fixed payment amount, which is price*number of contracts bought*contract unit."""
+        """If fixed payment leg, the fixed payment amount, which is price*number of
+           contracts bought*contract unit."""
         return self.__leg_two_fixed_payment
 
     @leg_two_fixed_payment.setter
@@ -14466,7 +14515,8 @@ class FieldValueMap(Base):
 
     @property
     def pct_change(self) -> float:
-        """Percentage change of the latest trade price or value from the adjusted historical close."""
+        """Percentage change of the latest trade price or value from the adjusted
+           historical close."""
         return self.__pct_change
 
     @pct_change.setter
@@ -14546,7 +14596,8 @@ class FieldValueMap(Base):
 
     @property
     def underlying_asset1(self) -> str:
-        """The asset, reference asset, or reference obligation for payments of a party???s obligations under the SB swap transaction reference."""
+        """The asset, reference asset, or reference obligation for payments of a party???s
+           obligations under the SB swap transaction reference."""
         return self.__underlying_asset1
 
     @underlying_asset1.setter
@@ -14644,7 +14695,8 @@ class FieldValueMap(Base):
 
     @property
     def annual_risk(self) -> float:
-        """Annualized risk of a given portfolio, position or asset. Generally computed as annualized daily standard deviation of returns."""
+        """Annualized risk of a given portfolio, position or asset. Generally computed as
+           annualized daily standard deviation of returns."""
         return self.__annual_risk
 
     @annual_risk.setter
@@ -14723,7 +14775,8 @@ class FieldValueMap(Base):
 
     @property
     def bbid_equivalent(self) -> str:
-        """Bloomberg identifier (ticker and country code) equivalent - i.e. for OTCs options, the equivalent BBID on exchange."""
+        """Bloomberg identifier (ticker and country code) equivalent - i.e. for OTCs
+           options, the equivalent BBID on exchange."""
         return self.__bbid_equivalent
 
     @bbid_equivalent.setter
@@ -14733,7 +14786,8 @@ class FieldValueMap(Base):
 
     @property
     def valoren(self) -> str:
-        """Valoren or VALOR number, Swiss primary security identifier (subject to licensing)."""
+        """Valoren or VALOR number, Swiss primary security identifier (subject to
+           licensing)."""
         return self.__valoren
 
     @valoren.setter
@@ -14783,7 +14837,8 @@ class FieldValueMap(Base):
 
     @property
     def supra_strategy(self) -> str:
-        """Broad descriptor of a fund's investment approach. Same view permissions as the asset"""
+        """Broad descriptor of a fund's investment approach. Same view permissions as the
+           asset"""
         return self.__supra_strategy
 
     @supra_strategy.setter
@@ -14873,7 +14928,8 @@ class FieldValueMap(Base):
 
     @property
     def borrow_cost(self) -> float:
-        """An indication of the rate one would be charged for borrowing/shorting the relevant asset on that day, expressed in bps. Rates may change daily."""
+        """An indication of the rate one would be charged for borrowing/shorting the
+           relevant asset on that day, expressed in bps. Rates may change daily."""
         return self.__borrow_cost
 
     @borrow_cost.setter
@@ -14903,7 +14959,8 @@ class FieldValueMap(Base):
 
     @property
     def adjusted_high_price(self) -> float:
-        """Adjusted high level of an asset based on official exchange fixing or calculation agent marked level."""
+        """Adjusted high level of an asset based on official exchange fixing or calculation
+           agent marked level."""
         return self.__adjusted_high_price
 
     @adjusted_high_price.setter
@@ -14943,7 +15000,9 @@ class FieldValueMap(Base):
 
     @property
     def execution_venue(self) -> str:
-        """An indication of whether the SB swap transaction was executed on a registered swap execution facility or designated contract market or was executed as an off-facility swap."""
+        """An indication of whether the SB swap transaction was executed on a registered
+           swap execution facility or designated contract market or was executed
+           as an off-facility swap."""
         return self.__execution_venue
 
     @execution_venue.setter
@@ -14983,7 +15042,9 @@ class FieldValueMap(Base):
 
     @property
     def rebate_rate(self) -> float:
-        """Defines the rate of the cash-back payment to an investor who puts up collateral in borrowing a stock. A rebate rate of interest implies a fee for the loan of securities."""
+        """Defines the rate of the cash-back payment to an investor who puts up collateral
+           in borrowing a stock. A rebate rate of interest implies a fee for the
+           loan of securities."""
         return self.__rebate_rate
 
     @rebate_rate.setter
@@ -15023,7 +15084,8 @@ class FieldValueMap(Base):
 
     @property
     def es_momentum_percentile(self) -> float:
-        """A percentile that captures a company???s E&S momentum ranking within its subsector."""
+        """A percentile that captures a company???s E&S momentum ranking within its
+           subsector."""
         return self.__es_momentum_percentile
 
     @es_momentum_percentile.setter
@@ -15033,7 +15095,8 @@ class FieldValueMap(Base):
 
     @property
     def lender_income_adjustment(self) -> float:
-        """Adjustments to income earned by the Lender for the loan of securities to a borrower."""
+        """Adjustments to income earned by the Lender for the loan of securities to a
+           borrower."""
         return self.__lender_income_adjustment
 
     @lender_income_adjustment.setter
@@ -15043,7 +15106,8 @@ class FieldValueMap(Base):
 
     @property
     def price_notation(self) -> float:
-        """The Basis points, Price, Yield, Spread, Coupon, etc., value depending on the type of SB swap, which is calculated at affirmation."""
+        """The Basis points, Price, Yield, Spread, Coupon, etc., value depending on the
+           type of SB swap, which is calculated at affirmation."""
         return self.__price_notation
 
     @price_notation.setter
@@ -15053,7 +15117,8 @@ class FieldValueMap(Base):
 
     @property
     def strategy(self) -> str:
-        """More specific descriptor of a fund's investment approach. Same view permissions as the asset."""
+        """More specific descriptor of a fund's investment approach. Same view permissions
+           as the asset."""
         return self.__strategy
 
     @strategy.setter
@@ -15113,7 +15178,8 @@ class FieldValueMap(Base):
 
     @property
     def adjusted_volume(self) -> float:
-        """Accumulated number of shares, lots or contracts traded according to the market convention adjusted for corporate actions."""
+        """Accumulated number of shares, lots or contracts traded according to the market
+           convention adjusted for corporate actions."""
         return self.__adjusted_volume
 
     @adjusted_volume.setter
@@ -15153,7 +15219,10 @@ class FieldValueMap(Base):
 
     @property
     def idea_activity_type(self) -> str:
-        """Equals CorporateAction if the activity originates as a result of a corporate action. Equals GovernanceAction if the activity originates as a result of a control measure. Equals UserAction if the activity is user driven."""
+        """Equals CorporateAction if the activity originates as a result of a corporate
+           action. Equals GovernanceAction if the activity originates as a
+           result of a control measure. Equals UserAction if the activity is
+           user driven."""
         return self.__idea_activity_type
 
     @idea_activity_type.setter
@@ -15163,7 +15232,8 @@ class FieldValueMap(Base):
 
     @property
     def idea_source(self) -> str:
-        """Equals User if the idea activity originates from a sales person. Equals System if the idea activity is system generated."""
+        """Equals User if the idea activity originates from a sales person. Equals System
+           if the idea activity is system generated."""
         return self.__idea_source
 
     @idea_source.setter
@@ -15173,7 +15243,8 @@ class FieldValueMap(Base):
 
     @property
     def unadjusted_ask(self) -> float:
-        """Unadjusted ask level of an asset based on official exchange fixing or calculation agent marked level."""
+        """Unadjusted ask level of an asset based on official exchange fixing or
+           calculation agent marked level."""
         return self.__unadjusted_ask
 
     @unadjusted_ask.setter
@@ -15303,7 +15374,8 @@ class FieldValueMap(Base):
 
     @property
     def dwi_contribution(self) -> float:
-        """Contribution of debt weighted exchange rate index to FCI. Only applicable to EM countries."""
+        """Contribution of debt weighted exchange rate index to FCI. Only applicable to EM
+           countries."""
         return self.__dwi_contribution
 
     @dwi_contribution.setter
@@ -15313,7 +15385,10 @@ class FieldValueMap(Base):
 
     @property
     def reset_frequency1(self) -> str:
-        """An integer multiplier of a period describing how often the parties to an SB swap transaction shall evaluate and, when applicable, change the price used for the underlying assets of the swap transaction. Such reset frequency may be described as one letter preceded by an integer."""
+        """An integer multiplier of a period describing how often the parties to an SB swap
+           transaction shall evaluate and, when applicable, change the price
+           used for the underlying assets of the swap transaction. Such reset
+           frequency may be described as one letter preceded by an integer."""
         return self.__reset_frequency1
 
     @reset_frequency1.setter
@@ -15343,7 +15418,8 @@ class FieldValueMap(Base):
 
     @property
     def price_notation_type2(self) -> str:
-        """Basis points, Price, Yield, Spread, Coupon, etc., depending on the type of SB swap, which is calculated at affirmation."""
+        """Basis points, Price, Yield, Spread, Coupon, etc., depending on the type of SB
+           swap, which is calculated at affirmation."""
         return self.__price_notation_type2
 
     @price_notation_type2.setter
@@ -15353,7 +15429,8 @@ class FieldValueMap(Base):
 
     @property
     def price_notation_type3(self) -> str:
-        """Basis points, Price, Yield, Spread, Coupon, etc., depending on the type of SB swap, which is calculated at affirmation."""
+        """Basis points, Price, Yield, Spread, Coupon, etc., depending on the type of SB
+           swap, which is calculated at affirmation."""
         return self.__price_notation_type3
 
     @price_notation_type3.setter
@@ -15373,7 +15450,8 @@ class FieldValueMap(Base):
 
     @property
     def open_price(self) -> float:
-        """Opening level of an asset based on official exchange fixing or calculation agent marked level."""
+        """Opening level of an asset based on official exchange fixing or calculation agent
+           marked level."""
         return self.__open_price
 
     @open_price.setter
@@ -15383,7 +15461,8 @@ class FieldValueMap(Base):
 
     @property
     def depth_spread_score(self) -> float:
-        """Z-score of the difference between the mid price and the best price an order to buy or sell a specific notional can be filled at."""
+        """Z-score of the difference between the mid price and the best price an order to
+           buy or sell a specific notional can be filled at."""
         return self.__depth_spread_score
 
     @depth_spread_score.setter
@@ -15442,7 +15521,8 @@ class FieldValueMap(Base):
 
     @property
     def cluster_class(self) -> str:
-        """The Cluster the stock belongs to on the particular date. The cluster class will be assigned to a value between 1 and 13 (inclusive)."""
+        """The Cluster the stock belongs to on the particular date. The cluster class will
+           be assigned to a value between 1 and 13 (inclusive)."""
         return self.__cluster_class
 
     @cluster_class.setter
@@ -15462,7 +15542,8 @@ class FieldValueMap(Base):
 
     @property
     def ann_return5_year(self) -> float:
-        """Total return representing past performance, used for GS Money Market onshore funds, over five years."""
+        """Total return representing past performance, used for GS Money Market onshore
+           funds, over five years."""
         return self.__ann_return5_year
 
     @ann_return5_year.setter
@@ -15542,7 +15623,8 @@ class FieldValueMap(Base):
 
     @property
     def close_price(self) -> float:
-        """Closing level of an asset based on official exchange fixing or calculation agent marked level."""
+        """Closing level of an asset based on official exchange fixing or calculation agent
+           marked level."""
         return self.__close_price
 
     @close_price.setter
@@ -15562,7 +15644,8 @@ class FieldValueMap(Base):
 
     @property
     def execution_timestamp(self) -> datetime.datetime:
-        """The time and date of execution of the publicly reportable swap transaction in Coordinated Universal Time (UTC - CCYY-MMDDThh:mm:ss)."""
+        """The time and date of execution of the publicly reportable swap transaction in
+           Coordinated Universal Time (UTC - CCYY-MMDDThh:mm:ss)."""
         return self.__execution_timestamp
 
     @execution_timestamp.setter
@@ -15622,7 +15705,10 @@ class FieldValueMap(Base):
 
     @property
     def factor_two(self) -> str:
-        """For Axioma, one of: Exchange Rate Sensitivity, Growth, Leverage, Medium-Term Momentum, Short-Term Momentum, Size, Value, Volatility. For Prime, one of: Long Concentration, Short Concentration, Long Crowdedness, Short Crowdedness, Crowdedness momentum, Short Conviction."""
+        """For Axioma, one of: Exchange Rate Sensitivity, Growth, Leverage, Medium-Term
+           Momentum, Short-Term Momentum, Size, Value, Volatility. For Prime,
+           one of: Long Concentration, Short Concentration, Long Crowdedness,
+           Short Crowdedness, Crowdedness momentum, Short Conviction."""
         return self.__factor_two
 
     @factor_two.setter
@@ -15642,7 +15728,8 @@ class FieldValueMap(Base):
 
     @property
     def opening_price_value(self) -> float:
-        """Opening price value of the trade idea (either in absolute value or percent units)."""
+        """Opening price value of the trade idea (either in absolute value or percent
+           units)."""
         return self.__opening_price_value
 
     @opening_price_value.setter
@@ -15672,7 +15759,8 @@ class FieldValueMap(Base):
 
     @property
     def weight(self) -> float:
-        """Weight of a given position within a portfolio, by default calcualted as netWeight."""
+        """Weight of a given position within a portfolio, by default calcualted as
+           netWeight."""
         return self.__weight
 
     @weight.setter
@@ -15840,7 +15928,8 @@ class FieldValueMap(Base):
 
     @property
     def region_name(self) -> str:
-        """Name of the region for which FCI is calculated ??? Developed Markets, Emerging Markets, Euro Area, Global."""
+        """Name of the region for which FCI is calculated ??? Developed Markets, Emerging
+           Markets, Euro Area, Global."""
         return self.__region_name
 
     @region_name.setter
@@ -15890,7 +15979,10 @@ class FieldValueMap(Base):
 
     @property
     def factor(self) -> str:
-        """For Axioma, one of: Exchange Rate Sensitivity, Growth, Leverage, Medium-Term Momentum, Short-Term Momentum, Size, Value, Volatility. For Prime, one of: Long Concentration, Short Concentration, Long Crowdedness, Short Crowdedness, Crowdedness momentum, Short Conviction."""
+        """For Axioma, one of: Exchange Rate Sensitivity, Growth, Leverage, Medium-Term
+           Momentum, Short-Term Momentum, Size, Value, Volatility. For Prime,
+           one of: Long Concentration, Short Concentration, Long Crowdedness,
+           Short Crowdedness, Crowdedness momentum, Short Conviction."""
         return self.__factor
 
     @factor.setter
@@ -15940,7 +16032,8 @@ class FieldValueMap(Base):
 
     @property
     def wam(self) -> float:
-        """Weighted average maturity, average of effective maturities of all securities held in portfolio, weighted."""
+        """Weighted average maturity, average of effective maturities of all securities
+           held in portfolio, weighted."""
         return self.__wam
 
     @wam.setter
@@ -16000,7 +16093,8 @@ class FieldValueMap(Base):
 
     @property
     def market_value(self) -> float:
-        """Marketable value of a given position, generally the market price for a given date."""
+        """Marketable value of a given position, generally the market price for a given
+           date."""
         return self.__market_value
 
     @market_value.setter
@@ -16030,7 +16124,8 @@ class FieldValueMap(Base):
 
     @property
     def multiple_score(self) -> float:
-        """Multiple percentile relative to Americas coverage universe (a higher score means more expensive)."""
+        """Multiple percentile relative to Americas coverage universe (a higher score means
+           more expensive)."""
         return self.__multiple_score
 
     @multiple_score.setter
@@ -16210,7 +16305,8 @@ class FieldValueMap(Base):
 
     @property
     def unadjusted_low(self) -> float:
-        """Unadjusted low level of an asset based on official exchange fixing or calculation agent marked level."""
+        """Unadjusted low level of an asset based on official exchange fixing or
+           calculation agent marked level."""
         return self.__unadjusted_low
 
     @unadjusted_low.setter
@@ -16250,7 +16346,9 @@ class FieldValueMap(Base):
 
     @property
     def sustain_global(self) -> bool:
-        """True if the stock is on the SUSTAIN (Global) 50 list as of the corresponding date. False if the stock is removed from the SUSTAIN (Global) 50 list on the corresponding date."""
+        """True if the stock is on the SUSTAIN (Global) 50 list as of the corresponding
+           date. False if the stock is removed from the SUSTAIN (Global) 50 list
+           on the corresponding date."""
         return self.__sustain_global
 
     @sustain_global.setter
@@ -16300,7 +16398,8 @@ class FieldValueMap(Base):
 
     @property
     def ann_return3_year(self) -> float:
-        """Total return representing past performance, used for GS Money Market onshore funds, over three years."""
+        """Total return representing past performance, used for GS Money Market onshore
+           funds, over three years."""
         return self.__ann_return3_year
 
     @ann_return3_year.setter
@@ -16360,7 +16459,8 @@ class FieldValueMap(Base):
 
     @property
     def low(self) -> float:
-        """Low level of an asset based on official exchange fixing or calculation agent marked level."""
+        """Low level of an asset based on official exchange fixing or calculation agent
+           marked level."""
         return self.__low
 
     @low.setter
@@ -16480,7 +16580,8 @@ class FieldValueMap(Base):
 
     @property
     def leg_one_fixed_payment(self) -> float:
-        """If fixed payment leg, the fixed payment amount, which is price*number of contracts bought*contract unit."""
+        """If fixed payment leg, the fixed payment amount, which is price*number of
+           contracts bought*contract unit."""
         return self.__leg_one_fixed_payment
 
     @leg_one_fixed_payment.setter
@@ -16520,7 +16621,8 @@ class FieldValueMap(Base):
 
     @property
     def growth_score(self) -> float:
-        """Growth percentile relative to Americas coverage universe (a higher score means faster growth)."""
+        """Growth percentile relative to Americas coverage universe (a higher score means
+           faster growth)."""
         return self.__growth_score
 
     @growth_score.setter
@@ -16540,7 +16642,10 @@ class FieldValueMap(Base):
 
     @property
     def price_forming_continuation_data(self) -> str:
-        """An indication of whether an SB swap transaction is a post-execution event that affects the price of the swap transaction, e.g. terminations, assignments, novations, exchanges, transfers, amendments, conveyances or extinguishing of rights that change the price of the SB swap."""
+        """An indication of whether an SB swap transaction is a post-execution event that
+           affects the price of the swap transaction, e.g. terminations,
+           assignments, novations, exchanges, transfers, amendments, conveyances
+           or extinguishing of rights that change the price of the SB swap."""
         return self.__price_forming_continuation_data
 
     @price_forming_continuation_data.setter
@@ -16560,7 +16665,8 @@ class FieldValueMap(Base):
 
     @property
     def estimated_spread(self) -> float:
-        """Average bid-ask quoted spread of the stock (bps) over the execution horizon (1 day)."""
+        """Average bid-ask quoted spread of the stock (bps) over the execution horizon (1
+           day)."""
         return self.__estimated_spread
 
     @estimated_spread.setter
@@ -16570,7 +16676,8 @@ class FieldValueMap(Base):
 
     @property
     def ann_return10_year(self) -> float:
-        """Total return representing past performance, used for GS Money Market onshore funds, over ten years."""
+        """Total return representing past performance, used for GS Money Market onshore
+           funds, over ten years."""
         return self.__ann_return10_year
 
     @ann_return10_year.setter
@@ -16600,7 +16707,9 @@ class FieldValueMap(Base):
 
     @property
     def sustain_japan(self) -> bool:
-        """True if the stock is on the SUSTAIN Japan list as of the corresponding date. False if the stock is removed from the SUSTAIN Japan list on the corresponding date."""
+        """True if the stock is on the SUSTAIN Japan list as of the corresponding date.
+           False if the stock is removed from the SUSTAIN Japan list on the
+           corresponding date."""
         return self.__sustain_japan
 
     @sustain_japan.setter
@@ -16610,7 +16719,8 @@ class FieldValueMap(Base):
 
     @property
     def hedge_tracking_error(self) -> float:
-        """Standard deviation of the difference in the portfolio and benchmark returns over time."""
+        """Standard deviation of the difference in the portfolio and benchmark returns over
+           time."""
         return self.__hedge_tracking_error
 
     @hedge_tracking_error.setter
@@ -16620,7 +16730,8 @@ class FieldValueMap(Base):
 
     @property
     def market_cap_category(self) -> str:
-        """Category of market capitalizations a fund is focused on from an investment perspective. Same view permissions as the asset."""
+        """Category of market capitalizations a fund is focused on from an investment
+           perspective. Same view permissions as the asset."""
         return self.__market_cap_category
 
     @market_cap_category.setter
@@ -16650,7 +16761,8 @@ class FieldValueMap(Base):
 
     @property
     def event_start_date(self) -> datetime.date:
-        """The start date of the event if the event occurs during a time window, in the time zone of the exchange where the company is listed (optional)."""
+        """The start date of the event if the event occurs during a time window, in the
+           time zone of the exchange where the company is listed (optional)."""
         return self.__event_start_date
 
     @event_start_date.setter
@@ -16670,7 +16782,8 @@ class FieldValueMap(Base):
 
     @property
     def gross_income(self) -> float:
-        """The income earned by the reinvested collateral including the rebate or fee, excluding lender or partner fees."""
+        """The income earned by the reinvested collateral including the rebate or fee,
+           excluding lender or partner fees."""
         return self.__gross_income
 
     @gross_income.setter
@@ -16680,7 +16793,8 @@ class FieldValueMap(Base):
 
     @property
     def adjusted_open_price(self) -> float:
-        """Opening level of an asset based on official exchange fixing or calculation agent marked level adjusted for corporate actions."""
+        """Opening level of an asset based on official exchange fixing or calculation agent
+           marked level adjusted for corporate actions."""
         return self.__adjusted_open_price
 
     @adjusted_open_price.setter
@@ -16720,7 +16834,8 @@ class FieldValueMap(Base):
 
     @property
     def ann_return1_year(self) -> float:
-        """Total return representing past performance, used for GS Money Market onshore funds over one year."""
+        """Total return representing past performance, used for GS Money Market onshore
+           funds over one year."""
         return self.__ann_return1_year
 
     @ann_return1_year.setter
@@ -16740,7 +16855,9 @@ class FieldValueMap(Base):
 
     @property
     def eff_yield7_day(self) -> float:
-        """Average income return over the previous 7 days reduced by any capital gains that may have been included in rate calculation, assuming the rate stays the same for one year and that dividends are reinvested."""
+        """Average income return over the previous 7 days reduced by any capital gains that
+           may have been included in rate calculation, assuming the rate stays
+           the same for one year and that dividends are reinvested."""
         return self.__eff_yield7_day
 
     @eff_yield7_day.setter
@@ -16790,7 +16907,8 @@ class FieldValueMap(Base):
 
     @property
     def rebate(self) -> float:
-        """Amount of the payment to an investor who puts up collateral in borrowing a stock."""
+        """Amount of the payment to an investor who puts up collateral in borrowing a
+           stock."""
         return self.__rebate
 
     @rebate.setter
@@ -16810,7 +16928,10 @@ class FieldValueMap(Base):
 
     @property
     def additional_price_notation(self) -> float:
-        """The additional price notation value includes execution events, the presence of collateral, frontend payments, back-end payments, or other noneconomic characteristics (e.g. counterparty credit risk) not illustrated in the reporting field for pricing characteristic."""
+        """The additional price notation value includes execution events, the presence of
+           collateral, frontend payments, back-end payments, or other
+           noneconomic characteristics (e.g. counterparty credit risk) not
+           illustrated in the reporting field for pricing characteristic."""
         return self.__additional_price_notation
 
     @additional_price_notation.setter
@@ -16830,7 +16951,8 @@ class FieldValueMap(Base):
 
     @property
     def spread(self) -> float:
-        """Quoted (running) spread (mid) of buying / selling protection on an index. (Equally weighted CDS basket). In basis points."""
+        """Quoted (running) spread (mid) of buying / selling protection on an index.
+           (Equally weighted CDS basket). In basis points."""
         return self.__spread
 
     @spread.setter
@@ -16850,7 +16972,10 @@ class FieldValueMap(Base):
 
     @property
     def gross_weight(self) -> float:
-        """Sum of the absolute weight values, which equals the sum of absolute long and short weights. If you have IBM stock with shortWeight 0.2 and also IBM stock with longWeight 0.4, then the grossWeight would be 0.6 (0.2+0.4)."""
+        """Sum of the absolute weight values, which equals the sum of absolute long and
+           short weights. If you have IBM stock with shortWeight 0.2 and also
+           IBM stock with longWeight 0.4, then the grossWeight would be 0.6
+           (0.2+0.4)."""
         return self.__gross_weight
 
     @gross_weight.setter
@@ -16929,7 +17054,9 @@ class FieldValueMap(Base):
 
     @property
     def sustain_asia_ex_japan(self) -> bool:
-        """True if the stock is on the SUSTAIN Asia Ex Japan list as of the corresponding date. False if the stock is removed from the SUSTAIN Asia Ex Japan list on the corresponding date."""
+        """True if the stock is on the SUSTAIN Asia Ex Japan list as of the corresponding
+           date. False if the stock is removed from the SUSTAIN Asia Ex Japan
+           list on the corresponding date."""
         return self.__sustain_asia_ex_japan
 
     @sustain_asia_ex_japan.setter
@@ -17098,7 +17225,10 @@ class FieldValueMap(Base):
 
     @property
     def uid(self) -> str:
-        """Two-digit code for countries and regions for which FCI numbers are represented. For countries it will be ISO 2-digit country code. Regions are denoted as DM(Developed Markets), EM(Emerging Markets), EA(Euro Area) and GL(Global)."""
+        """Two-digit code for countries and regions for which FCI numbers are represented.
+           For countries it will be ISO 2-digit country code. Regions are
+           denoted as DM(Developed Markets), EM(Emerging Markets), EA(Euro Area)
+           and GL(Global)."""
         return self.__uid
 
     @uid.setter
@@ -17158,7 +17288,8 @@ class FieldValueMap(Base):
 
     @property
     def loan_fee(self) -> float:
-        """Fee charged for the loan of securities to a borrower in a securities lending agreement."""
+        """Fee charged for the loan of securities to a borrower in a securities lending
+           agreement."""
         return self.__loan_fee
 
     @loan_fee.setter
@@ -17208,7 +17339,8 @@ class FieldValueMap(Base):
 
     @property
     def regional_focus(self) -> str:
-        """Section of the world a fund is focused on from an investment perspective. Same view permissions as the asset."""
+        """Section of the world a fund is focused on from an investment perspective. Same
+           view permissions as the asset."""
         return self.__regional_focus
 
     @regional_focus.setter
@@ -17218,7 +17350,8 @@ class FieldValueMap(Base):
 
     @property
     def volume_primary(self) -> float:
-        """Accumulated number of shares, lots or contracts traded according to the market convention at the primary exchange."""
+        """Accumulated number of shares, lots or contracts traded according to the market
+           convention at the primary exchange."""
         return self.__volume_primary
 
     @volume_primary.setter
@@ -17348,7 +17481,8 @@ class FieldValueMap(Base):
 
     @property
     def event_start_date_time(self) -> datetime.datetime:
-        """The start time of the event if the event occurs during a time window and the event has a specific start time, using UTC convention (optional)."""
+        """The start time of the event if the event occurs during a time window and the
+           event has a specific start time, using UTC convention (optional)."""
         return self.__event_start_date_time
 
     @event_start_date_time.setter
@@ -17448,7 +17582,8 @@ class FieldValueMap(Base):
 
     @property
     def wpk(self) -> str:
-        """Wertpapierkennnummer (WKN, WPKN, Wert), German security identifier code (subject to licensing)."""
+        """Wertpapierkennnummer (WKN, WPKN, Wert), German security identifier code (subject
+           to licensing)."""
         return self.__wpk
 
     @wpk.setter
@@ -17508,7 +17643,8 @@ class FieldValueMap(Base):
 
     @property
     def liquidity_score(self) -> float:
-        """Liquidity conditions in the aggregate market, calculated as the average of touch liquidity score, touch spread score, and depth spread score."""
+        """Liquidity conditions in the aggregate market, calculated as the average of touch
+           liquidity score, touch spread score, and depth spread score."""
         return self.__liquidity_score
 
     @liquidity_score.setter
@@ -17568,7 +17704,8 @@ class FieldValueMap(Base):
 
     @property
     def close_unadjusted(self) -> float:
-        """Unadjusted Close level of an asset based on official exchange fixing or calculation agent marked level."""
+        """Unadjusted Close level of an asset based on official exchange fixing or
+           calculation agent marked level."""
         return self.__close_unadjusted
 
     @close_unadjusted.setter
@@ -17598,7 +17735,8 @@ class FieldValueMap(Base):
 
     @property
     def adjusted_low_price(self) -> float:
-        """Adjusted low level of an asset based on official exchange fixing or calculation agent marked level."""
+        """Adjusted low level of an asset based on official exchange fixing or calculation
+           agent marked level."""
         return self.__adjusted_low_price
 
     @adjusted_low_price.setter
@@ -17658,7 +17796,10 @@ class FieldValueMap(Base):
 
     @property
     def conviction_list(self) -> bool:
-        """Conviction List, which is true if the security is on the Conviction Buy List or false otherwise. Securities with a convictionList value equal to true are by definition a subset of the securities with a rating equal to Buy."""
+        """Conviction List, which is true if the security is on the Conviction Buy List or
+           false otherwise. Securities with a convictionList value equal to true
+           are by definition a subset of the securities with a rating equal to
+           Buy."""
         return self.__conviction_list
 
     @conviction_list.setter
@@ -17678,7 +17819,9 @@ class FieldValueMap(Base):
 
     @property
     def dist_avg7_day(self) -> float:
-        """Goldman custom calculated value, only used for GS onshore Money Market Funds, assumes sum of the past 7 days divided by 7 and expressed as a percent."""
+        """Goldman custom calculated value, only used for GS onshore Money Market Funds,
+           assumes sum of the past 7 days divided by 7 and expressed as a
+           percent."""
         return self.__dist_avg7_day
 
     @dist_avg7_day.setter
@@ -17828,7 +17971,8 @@ class FieldValueMap(Base):
 
     @property
     def high_price(self) -> float:
-        """High level of an asset based on official exchange fixing or calculation agent marked level."""
+        """High level of an asset based on official exchange fixing or calculation agent
+           marked level."""
         return self.__high_price
 
     @high_price.setter
@@ -17998,7 +18142,8 @@ class FieldValueMap(Base):
 
     @property
     def touch_liquidity_score(self) -> float:
-        """Z-score of the amount available to trade at the top of the aggregated order book."""
+        """Z-score of the amount available to trade at the top of the aggregated order
+           book."""
         return self.__touch_liquidity_score
 
     @touch_liquidity_score.setter
@@ -18008,7 +18153,8 @@ class FieldValueMap(Base):
 
     @property
     def field(self) -> str:
-        """The market data field (e.g. rate, price). This can be resolved into a dataset when combined with vendor and intraday=true/false."""
+        """The market data field (e.g. rate, price). This can be resolved into a dataset
+           when combined with vendor and intraday=true/false."""
         return self.__field
 
     @field.setter
@@ -18038,7 +18184,8 @@ class FieldValueMap(Base):
 
     @property
     def spread_option_vol(self) -> float:
-        """Historical implied normal volatility for a liquid point on spread option vol surface."""
+        """Historical implied normal volatility for a liquid point on spread option vol
+           surface."""
         return self.__spread_option_vol
 
     @spread_option_vol.setter
@@ -18078,7 +18225,9 @@ class FieldValueMap(Base):
 
     @property
     def sustain_emerging_markets(self) -> bool:
-        """True if the stock is on the SUSTAIN Emerging Markets list as of the corresponding date. False if the stock is removed from the SUSTAIN Emerging Markets list on the corresponding date."""
+        """True if the stock is on the SUSTAIN Emerging Markets list as of the
+           corresponding date. False if the stock is removed from the SUSTAIN
+           Emerging Markets list on the corresponding date."""
         return self.__sustain_emerging_markets
 
     @sustain_emerging_markets.setter
@@ -18088,7 +18237,9 @@ class FieldValueMap(Base):
 
     @property
     def event_date_time(self) -> datetime.datetime:
-        """The time of the event if the event has a specific time, using UTC convention, or the end time of the event if the event occurs during a time window (optional)."""
+        """The time of the event if the event has a specific time, using UTC convention, or
+           the end time of the event if the event occurs during a time window
+           (optional)."""
         return self.__event_date_time
 
     @event_date_time.setter
@@ -18118,7 +18269,9 @@ class FieldValueMap(Base):
 
     @property
     def event_source(self) -> str:
-        """Equals GS if the event is sourced from Goldman Sachs Global Investment Research analysts. Equals TR if the event is sourced from Refinitive StreetEvents."""
+        """Equals GS if the event is sourced from Goldman Sachs Global Investment Research
+           analysts. Equals TR if the event is sourced from Refinitive
+           StreetEvents."""
         return self.__event_source
 
     @event_source.setter
@@ -18168,7 +18321,8 @@ class FieldValueMap(Base):
 
     @property
     def short_exposure(self) -> float:
-        """Exposure of a given portfolio to securities which are short in direction. If you are $60 short and $40 long, shortExposure would be $60."""
+        """Exposure of a given portfolio to securities which are short in direction. If you
+           are $60 short and $40 long, shortExposure would be $60."""
         return self.__short_exposure
 
     @short_exposure.setter
@@ -18188,7 +18342,10 @@ class FieldValueMap(Base):
 
     @property
     def event_time(self) -> str:
-        """The time of the event if the event has a specific time or the end time of the event if the event occurs during a time window (optional). It is represented in HH:MM 24 hour format in the time zone of the exchange where the company is listed."""
+        """The time of the event if the event has a specific time or the end time of the
+           event if the event occurs during a time window (optional). It is
+           represented in HH:MM 24 hour format in the time zone of the exchange
+           where the company is listed."""
         return self.__event_time
 
     @event_time.setter
@@ -18198,7 +18355,8 @@ class FieldValueMap(Base):
 
     @property
     def delivery_date(self) -> datetime.date:
-        """The final date by which the underlying commodity for a futures contract must be delivered in order for the terms of the contract to be fulfilled."""
+        """The final date by which the underlying commodity for a futures contract must be
+           delivered in order for the terms of the contract to be fulfilled."""
         return self.__delivery_date
 
     @delivery_date.setter
@@ -18238,7 +18396,8 @@ class FieldValueMap(Base):
 
     @property
     def recall_due_date(self) -> datetime.date:
-        """Date in which the recall of securities in a stock loan recall activity must be complete."""
+        """Date in which the recall of securities in a stock loan recall activity must be
+           complete."""
         return self.__recall_due_date
 
     @recall_due_date.setter
@@ -18268,7 +18427,9 @@ class FieldValueMap(Base):
 
     @property
     def borrow_fee(self) -> float:
-        """An indication of the rate one would be charged for borrowing/shorting the relevant asset on that day, expressed in annualized percent terms. Rates may change daily."""
+        """An indication of the rate one would be charged for borrowing/shorting the
+           relevant asset on that day, expressed in annualized percent terms.
+           Rates may change daily."""
         return self.__borrow_fee
 
     @borrow_fee.setter
@@ -18288,7 +18449,8 @@ class FieldValueMap(Base):
 
     @property
     def loan_spread(self) -> float:
-        """The difference between the investment rate on cash collateral and the rebate rate of a loan."""
+        """The difference between the investment rate on cash collateral and the rebate
+           rate of a loan."""
         return self.__loan_spread
 
     @loan_spread.setter
@@ -18338,7 +18500,8 @@ class FieldValueMap(Base):
 
     @property
     def event_status(self) -> str:
-        """Included if there is additional information about an event, such as the event being cancelled."""
+        """Included if there is additional information about an event, such as the event
+           being cancelled."""
         return self.__event_status
 
     @event_status.setter
@@ -18438,7 +18601,8 @@ class FieldValueMap(Base):
 
     @property
     def high(self) -> float:
-        """High level of an asset based on official exchange fixing or calculation agent marked level."""
+        """High level of an asset based on official exchange fixing or calculation agent
+           marked level."""
         return self.__high
 
     @high.setter
@@ -18468,7 +18632,10 @@ class FieldValueMap(Base):
 
     @property
     def indication_of_other_price_affecting_term(self) -> str:
-        """An indication that the publicly reportable SB swap transaction has one or more additional term(s) or provision(s), other than those listed in the required real-time data fields, that materially affect(s) the price of the swap transaction."""
+        """An indication that the publicly reportable SB swap transaction has one or more
+           additional term(s) or provision(s), other than those listed in the
+           required real-time data fields, that materially affect(s) the price
+           of the swap transaction."""
         return self.__indication_of_other_price_affecting_term
 
     @indication_of_other_price_affecting_term.setter
@@ -18478,7 +18645,8 @@ class FieldValueMap(Base):
 
     @property
     def unadjusted_bid(self) -> float:
-        """Unadjusted bid level of an asset based on official exchange fixing or calculation agent marked level."""
+        """Unadjusted bid level of an asset based on official exchange fixing or
+           calculation agent marked level."""
         return self.__unadjusted_bid
 
     @unadjusted_bid.setter
@@ -18538,7 +18706,8 @@ class FieldValueMap(Base):
 
     @property
     def mnav(self) -> float:
-        """Net asset value, assets of a fund (ex dividend) divided by total number of shares."""
+        """Net asset value, assets of a fund (ex dividend) divided by total number of
+           shares."""
         return self.__mnav
 
     @mnav.setter
@@ -18558,7 +18727,9 @@ class FieldValueMap(Base):
 
     @property
     def curr_yield7_day(self) -> float:
-        """Average income return over previous 7 days reduced by any capital gains that may have been included in rate calculation, according to the current amount."""
+        """Average income return over previous 7 days reduced by any capital gains that may
+           have been included in rate calculation, according to the current
+           amount."""
         return self.__curr_yield7_day
 
     @curr_yield7_day.setter
@@ -18598,7 +18769,9 @@ class FieldValueMap(Base):
 
     @property
     def net_weight(self) -> float:
-        """Difference between the longWeight and shortWeight. If you have IBM stock with shortWeight 0.2 and also IBM stock with longWeight 0.4, then the netWeight would be 0.2 (-0.2+0.4)."""
+        """Difference between the longWeight and shortWeight. If you have IBM stock with
+           shortWeight 0.2 and also IBM stock with longWeight 0.4, then the
+           netWeight would be 0.2 (-0.2+0.4)."""
         return self.__net_weight
 
     @net_weight.setter
@@ -18638,7 +18811,8 @@ class FieldValueMap(Base):
 
     @property
     def price_notation2(self) -> float:
-        """The Basis points, Price, Yield, Spread, Coupon, etc., value depending on the type of SB swap, which is calculated at affirmation."""
+        """The Basis points, Price, Yield, Spread, Coupon, etc., value depending on the
+           type of SB swap, which is calculated at affirmation."""
         return self.__price_notation2
 
     @price_notation2.setter
@@ -18658,7 +18832,8 @@ class FieldValueMap(Base):
 
     @property
     def price_notation3(self) -> float:
-        """The Basis points, Price, Yield, Spread, Coupon, etc., value depending on the type of SB swap, which is calculated at affirmation."""
+        """The Basis points, Price, Yield, Spread, Coupon, etc., value depending on the
+           type of SB swap, which is calculated at affirmation."""
         return self.__price_notation3
 
     @price_notation3.setter
@@ -18668,7 +18843,8 @@ class FieldValueMap(Base):
 
     @property
     def cap_floor_vol(self) -> float:
-        """Historical implied normal volatility for a liquid point on cap and floor vol surface."""
+        """Historical implied normal volatility for a liquid point on cap and floor vol
+           surface."""
         return self.__cap_floor_vol
 
     @cap_floor_vol.setter
@@ -18808,7 +18984,8 @@ class FieldValueMap(Base):
 
     @property
     def long_exposure(self) -> float:
-        """Exposure of a given portfolio to securities which are long in direction. If you are $60 short and $40 long, longExposure would be $40."""
+        """Exposure of a given portfolio to securities which are long in direction. If you
+           are $60 short and $40 long, longExposure would be $40."""
         return self.__long_exposure
 
     @long_exposure.setter
@@ -18948,7 +19125,9 @@ class FieldValueMap(Base):
 
     @property
     def action_sdr(self) -> str:
-        """An indication that a publicly reportable securitybased (SB) swap transaction has been incorrectly or erroneously publicly disseminated and is canceled or corrected or a new transaction."""
+        """An indication that a publicly reportable securitybased (SB) swap transaction has
+           been incorrectly or erroneously publicly disseminated and is canceled
+           or corrected or a new transaction."""
         return self.__action_sdr
 
     @action_sdr.setter
@@ -18968,7 +19147,8 @@ class FieldValueMap(Base):
 
     @property
     def queue_in_lots_description(self) -> str:
-        """Description of the Stock's Queue size in Lots (if applicable) on the particular date."""
+        """Description of the Stock's Queue size in Lots (if applicable) on the particular
+           date."""
         return self.__queue_in_lots_description
 
     @queue_in_lots_description.setter
@@ -18988,7 +19168,8 @@ class FieldValueMap(Base):
 
     @property
     def nav_price(self) -> float:
-        """Net asset value price. Quoted price (mid, 100 ??? Upfront) of the underlying basket of single name CDS. (Theoretical Index value). In percent."""
+        """Net asset value price. Quoted price (mid, 100 ??? Upfront) of the underlying
+           basket of single name CDS. (Theoretical Index value). In percent."""
         return self.__nav_price
 
     @nav_price.setter
@@ -19038,7 +19219,8 @@ class FieldValueMap(Base):
 
     @property
     def avg_monthly_yield(self) -> float:
-        """Only used for GS Money Market funds, assumes sum of the past 30 days, divided by 30, and expressed as a percent."""
+        """Only used for GS Money Market funds, assumes sum of the past 30 days, divided by
+           30, and expressed as a percent."""
         return self.__avg_monthly_yield
 
     @avg_monthly_yield.setter
@@ -19098,7 +19280,8 @@ class FieldValueMap(Base):
 
     @property
     def unadjusted_close(self) -> float:
-        """Unadjusted Close level of an asset based on official exchange fixing or calculation agent marked level."""
+        """Unadjusted Close level of an asset based on official exchange fixing or
+           calculation agent marked level."""
         return self.__unadjusted_close
 
     @unadjusted_close.setter
@@ -19208,7 +19391,10 @@ class FieldValueMap(Base):
 
     @property
     def long_weight(self) -> float:
-        """Long weight of a position in a given portfolio. Equivalent to position long exposure / total long exposure. If you have a position with a longExposure of $20, and your portfolio longExposure is $100, longWeight would be 0.2 (20/100)."""
+        """Long weight of a position in a given portfolio. Equivalent to position long
+           exposure / total long exposure. If you have a position with a
+           longExposure of $20, and your portfolio longExposure is $100,
+           longWeight would be 0.2 (20/100)."""
         return self.__long_weight
 
     @long_weight.setter
@@ -19238,7 +19424,8 @@ class FieldValueMap(Base):
 
     @property
     def financial_returns_score(self) -> float:
-        """Financial Returns percentile relative to Americas coverage universe (a higher score means stronger financial returns)."""
+        """Financial Returns percentile relative to Americas coverage universe (a higher
+           score means stronger financial returns)."""
         return self.__financial_returns_score
 
     @financial_returns_score.setter
@@ -19248,7 +19435,8 @@ class FieldValueMap(Base):
 
     @property
     def net_change(self) -> float:
-        """Difference between the lastest trading price or value and the adjusted historical closing value or settlement price."""
+        """Difference between the lastest trading price or value and the adjusted
+           historical closing value or settlement price."""
         return self.__net_change
 
     @net_change.setter
@@ -19317,7 +19505,8 @@ class FieldValueMap(Base):
 
     @property
     def open(self) -> float:
-        """Opening level of an asset based on official exchange fixing or calculation agent marked level."""
+        """Opening level of an asset based on official exchange fixing or calculation agent
+           marked level."""
         return self.__open
 
     @open.setter
@@ -19337,7 +19526,8 @@ class FieldValueMap(Base):
 
     @property
     def cusip(self) -> str:
-        """CUSIP - Committee on Uniform Securities Identification Procedures number (subject to licensing)."""
+        """CUSIP - Committee on Uniform Securities Identification Procedures number
+           (subject to licensing)."""
         return self.__cusip
 
     @cusip.setter
@@ -19347,7 +19537,9 @@ class FieldValueMap(Base):
 
     @property
     def idea_activity_time(self) -> datetime.datetime:
-        """The time the idea activity took place. If ideaStatus is open, the time reflects the Idea creation time. If ideaStatus is closed, the time reflects the time the idea was closed."""
+        """The time the idea activity took place. If ideaStatus is open, the time reflects
+           the Idea creation time. If ideaStatus is closed, the time reflects
+           the time the idea was closed."""
         return self.__idea_activity_time
 
     @idea_activity_time.setter
@@ -19377,7 +19569,8 @@ class FieldValueMap(Base):
 
     @property
     def net_exposure(self) -> float:
-        """The difference between long and short exposure in the portfolio. If you are $60 short and $40 long, then the netExposure would be -$20 (-60+40)."""
+        """The difference between long and short exposure in the portfolio. If you are $60
+           short and $40 long, then the netExposure would be -$20 (-60+40)."""
         return self.__net_exposure
 
     @net_exposure.setter
@@ -19407,7 +19600,10 @@ class FieldValueMap(Base):
 
     @property
     def estimated_impact(self) -> float:
-        """Likely impact of a proposed trade on the price of an asset (bps). The model's shortfall estimates reflect how much it cost to execute similar trades in the past, as opposed to providing a hypothetical cost derived using tick data."""
+        """Likely impact of a proposed trade on the price of an asset (bps). The model's
+           shortfall estimates reflect how much it cost to execute similar
+           trades in the past, as opposed to providing a hypothetical cost
+           derived using tick data."""
         return self.__estimated_impact
 
     @estimated_impact.setter
@@ -19417,7 +19613,8 @@ class FieldValueMap(Base):
 
     @property
     def loan_spread_bucket(self) -> str:
-        """The difference between the investment rate on cash collateral and the rebate rate of a loan."""
+        """The difference between the investment rate on cash collateral and the rebate
+           rate of a loan."""
         return self.__loan_spread_bucket
 
     @loan_spread_bucket.setter
@@ -19427,7 +19624,8 @@ class FieldValueMap(Base):
 
     @property
     def event_description(self) -> str:
-        """Short description of the event, providing additional information beyond eventType."""
+        """Short description of the event, providing additional information beyond
+           eventType."""
         return self.__event_description
 
     @event_description.setter
@@ -19497,7 +19695,8 @@ class FieldValueMap(Base):
 
     @property
     def mctr(self) -> float:
-        """Marginal contribution of a given asset to portfolio variance, is dependent on covariance matrix."""
+        """Marginal contribution of a given asset to portfolio variance, is dependent on
+           covariance matrix."""
         return self.__mctr
 
     @mctr.setter
@@ -19567,7 +19766,9 @@ class FieldValueMap(Base):
 
     @property
     def indication_of_collateralization(self) -> str:
-        """If an SB swap is not cleared, an indication of whether a swap is Uncollateralized (UC), Partially Collateralized (PC), One-Way Collateralized (OC), or Fully Collateralized (FC)."""
+        """If an SB swap is not cleared, an indication of whether a swap is
+           Uncollateralized (UC), Partially Collateralized (PC), One-Way
+           Collateralized (OC), or Fully Collateralized (FC)."""
         return self.__indication_of_collateralization
 
     @indication_of_collateralization.setter
@@ -19577,7 +19778,8 @@ class FieldValueMap(Base):
 
     @property
     def liq_wkly(self) -> float:
-        """Percent of assets that could be quickly and easily converted into investable cash without loss of value within a week."""
+        """Percent of assets that could be quickly and easily converted into investable
+           cash without loss of value within a week."""
         return self.__liq_wkly
 
     @liq_wkly.setter
@@ -19657,7 +19859,8 @@ class FieldValueMap(Base):
 
     @property
     def collateral_market_value(self) -> float:
-        """Marketable value of a given collateral position, generally the market price for a given date."""
+        """Marketable value of a given collateral position, generally the market price for
+           a given date."""
         return self.__collateral_market_value
 
     @collateral_market_value.setter
@@ -19667,7 +19870,9 @@ class FieldValueMap(Base):
 
     @property
     def event_start_time(self) -> str:
-        """The start time of the event if the event occurs during a time window and the event has a specific start time. It is represented in HH:MM 24 hour format in the time zone of the exchange where the company is listed."""
+        """The start time of the event if the event occurs during a time window and the
+           event has a specific start time. It is represented in HH:MM 24 hour
+           format in the time zone of the exchange where the company is listed."""
         return self.__event_start_time
 
     @event_start_time.setter
@@ -19797,7 +20002,8 @@ class FieldValueMap(Base):
 
     @property
     def asset_class_sdr(self) -> str:
-        """An indication of one of the broad categories. For our use case will typically be CO."""
+        """An indication of one of the broad categories. For our use case will typically be
+           CO."""
         return self.__asset_class_sdr
 
     @asset_class_sdr.setter
@@ -19837,7 +20043,8 @@ class FieldValueMap(Base):
 
     @property
     def ask_unadjusted(self) -> float:
-        """Unadjusted ask level of an asset based on official exchange fixing or calculation agent marked level."""
+        """Unadjusted ask level of an asset based on official exchange fixing or
+           calculation agent marked level."""
         return self.__ask_unadjusted
 
     @ask_unadjusted.setter
@@ -19957,7 +20164,8 @@ class FieldValueMap(Base):
 
     @property
     def price_notation_type(self) -> str:
-        """Basis points, Price, Yield, Spread, Coupon, etc., depending on the type of SB swap, which is calculated at affirmation."""
+        """Basis points, Price, Yield, Spread, Coupon, etc., depending on the type of SB
+           swap, which is calculated at affirmation."""
         return self.__price_notation_type
 
     @price_notation_type.setter
@@ -20017,7 +20225,10 @@ class FieldValueMap(Base):
 
     @property
     def payment_frequency1(self) -> str:
-        """An integer multiplier of a time period describing how often the parties to the SB swap transaction exchange payments associated with each party???s obligation. Such payment frequency may be described as one letter preceded by an integer."""
+        """An integer multiplier of a time period describing how often the parties to the
+           SB swap transaction exchange payments associated with each party???s
+           obligation. Such payment frequency may be described as one letter
+           preceded by an integer."""
         return self.__payment_frequency1
 
     @payment_frequency1.setter
@@ -20137,7 +20348,8 @@ class FieldValueMap(Base):
 
     @property
     def var_swap(self) -> float:
-        """Strike such that the price of an uncapped variance swap on the underlying index is zero at inception."""
+        """Strike such that the price of an uncapped variance swap on the underlying index
+           is zero at inception."""
         return self.__var_swap
 
     @var_swap.setter
@@ -20147,7 +20359,8 @@ class FieldValueMap(Base):
 
     @property
     def low_unadjusted(self) -> float:
-        """Unadjusted low level of an asset based on official exchange fixing or calculation agent marked level."""
+        """Unadjusted low level of an asset based on official exchange fixing or
+           calculation agent marked level."""
         return self.__low_unadjusted
 
     @low_unadjusted.setter
@@ -20157,7 +20370,8 @@ class FieldValueMap(Base):
 
     @property
     def original_dissemination_id(self) -> str:
-        """On cancellations and corrections, this ID will hold the Dissemination ID of the originally published real-time message."""
+        """On cancellations and corrections, this ID will hold the Dissemination ID of the
+           originally published real-time message."""
         return self.__original_dissemination_id
 
     @original_dissemination_id.setter
@@ -20207,7 +20421,8 @@ class FieldValueMap(Base):
 
     @property
     def integrated_score(self) -> float:
-        """Average of the Growth, Financial Returns and (1-Multiple) percentile (a higher score means more attractive)."""
+        """Average of the Growth, Financial Returns and (1-Multiple) percentile (a higher
+           score means more attractive)."""
         return self.__integrated_score
 
     @integrated_score.setter
@@ -20257,7 +20472,8 @@ class FieldValueMap(Base):
 
     @property
     def avg_yield7_day(self) -> float:
-        """Only used for GS Money Market funds, assumes sum of the past 7 days, divided by 7, and expressed as a percent."""
+        """Only used for GS Money Market funds, assumes sum of the past 7 days, divided by
+           7, and expressed as a percent."""
         return self.__avg_yield7_day
 
     @avg_yield7_day.setter
@@ -20337,7 +20553,8 @@ class FieldValueMap(Base):
 
     @property
     def high_unadjusted(self) -> float:
-        """Unadjusted high level of an asset based on official exchange fixing or calculation agent marked level."""
+        """Unadjusted high level of an asset based on official exchange fixing or
+           calculation agent marked level."""
         return self.__high_unadjusted
 
     @high_unadjusted.setter
@@ -20396,7 +20613,8 @@ class FieldValueMap(Base):
 
     @property
     def target_price_value(self) -> float:
-        """Target price value of the trade idea (either in absolute value or percent units)."""
+        """Target price value of the trade idea (either in absolute value or percent
+           units)."""
         return self.__target_price_value
 
     @target_price_value.setter
@@ -20456,7 +20674,8 @@ class FieldValueMap(Base):
 
     @property
     def nav_spread(self) -> float:
-        """Net asset value spread. Quoted (running) spread (mid) of the underlying basket of single name CDS. (Theoretical Index value). In basis points."""
+        """Net asset value spread. Quoted (running) spread (mid) of the underlying basket
+           of single name CDS. (Theoretical Index value). In basis points."""
         return self.__nav_spread
 
     @nav_spread.setter
@@ -20546,7 +20765,9 @@ class FieldValueMap(Base):
 
     @property
     def cal_spread_mis_pricing(self) -> float:
-        """Futures implied funding rate relative to interest rate benchmark (usually Libor-based). Represents dividend-adjusted rate at which investor is borrowing (lending) when long (short) future."""
+        """Futures implied funding rate relative to interest rate benchmark (usually Libor-
+           based). Represents dividend-adjusted rate at which investor is
+           borrowing (lending) when long (short) future."""
         return self.__cal_spread_mis_pricing
 
     @cal_spread_mis_pricing.setter
@@ -20566,7 +20787,8 @@ class FieldValueMap(Base):
 
     @property
     def rate366(self) -> float:
-        """Rate with interest calculated according to the number of days in a leap year, 366."""
+        """Rate with interest calculated according to the number of days in a leap year,
+           366."""
         return self.__rate366
 
     @rate366.setter
@@ -20576,7 +20798,8 @@ class FieldValueMap(Base):
 
     @property
     def rate365(self) -> float:
-        """Rate with interest calculated according to a normal number of days in the total year, 365."""
+        """Rate with interest calculated according to a normal number of days in the total
+           year, 365."""
         return self.__rate365
 
     @rate365.setter
@@ -20586,7 +20809,8 @@ class FieldValueMap(Base):
 
     @property
     def rate360(self) -> float:
-        """Rate with interest calculated according to the discount method, using the number of days used by banks, 360."""
+        """Rate with interest calculated according to the discount method, using the number
+           of days used by banks, 360."""
         return self.__rate360
 
     @rate360.setter
@@ -20696,7 +20920,8 @@ class FieldValueMap(Base):
 
     @property
     def liq_dly(self) -> float:
-        """Percent of assets that could be quickly and easily converted into investable cash without loss of value within a day."""
+        """Percent of assets that could be quickly and easily converted into investable
+           cash without loss of value within a day."""
         return self.__liq_dly
 
     @liq_dly.setter
@@ -20735,7 +20960,7 @@ class LiquidityRequest(Base):
         time_series_benchmark_ids: Tuple[str, ...] = None,
         time_series_start_date: datetime.date = None,
         time_series_end_date: datetime.date = None,
-        format: Union[Format, str] = None,
+        format_: Union[Format, str] = None,
         report_parameters: LiquidityReportParameters = None        
     ):
         super().__init__()
@@ -20753,7 +20978,7 @@ class LiquidityRequest(Base):
         self.__time_series_benchmark_ids = time_series_benchmark_ids
         self.__time_series_start_date = time_series_start_date
         self.__time_series_end_date = time_series_end_date
-        self.__format = get_enum_value(Format, format)
+        self.__format = get_enum_value(Format, format_)
         self.__report_parameters = report_parameters
 
     @property
@@ -20803,7 +21028,7 @@ class LiquidityRequest(Base):
 
     @currency.setter
     def currency(self, value: Union[Currency, str]):
-        self.__currency = value if isinstance(value, Currency) else get_enum_value(Currency, value)
+        self.__currency = get_enum_value(Currency, value)
         self._property_changed('currency')        
 
     @property
@@ -20900,7 +21125,7 @@ class LiquidityRequest(Base):
 
     @format.setter
     def format(self, value: Union[Format, str]):
-        self.__format = value if isinstance(value, Format) else get_enum_value(Format, value)
+        self.__format = get_enum_value(Format, value)
         self._property_changed('format')        
 
     @property
@@ -20952,19 +21177,19 @@ class PositionSet(Base):
                
     def __init__(
         self,
-        id: str = None,
+        id_: str = None,
         position_date: datetime.date = None,
         last_update_time: datetime.datetime = None,
         positions: Tuple[Position, ...] = None,
-        type: str = None,
+        type_: str = None,
         divisor: float = None        
     ):
         super().__init__()
-        self.__id = id
+        self.__id = id_
         self.__position_date = position_date
         self.__last_update_time = last_update_time
         self.__positions = positions
-        self.__type = type
+        self.__type = type_
         self.__divisor = divisor
 
     @property
@@ -21102,7 +21327,8 @@ class MarketDataScenario(Base):
 
     @property
     def subtract_base(self) -> bool:
-        """Subtract values computed under the base market data state, to return a diff, if true"""
+        """Subtract values computed under the base market data state, to return a diff, if
+           true"""
         return self.__subtract_base
 
     @subtract_base.setter
@@ -21124,10 +21350,10 @@ class RiskPosition(Base):
 
     @property
     def instrument(self) -> Priceable:
-        """Instrument or Id  
-To specify a Marquee asset use the asset Id.
-For listed products use an XRef, e.g. { 'bid': 'NGZ19 Comdty' }, { 'isin': 'US912810SD19' }.
-To specify an instrument use one of the listed types"""
+        """Instrument or Id   To specify a Marquee asset use the asset Id. For listed
+           products use an XRef, e.g. { 'bid': 'NGZ19 Comdty' }, { 'isin':
+           'US912810SD19' }. To specify an instrument use one of the listed
+           types"""
         return self.__instrument
 
     @instrument.setter
@@ -21187,7 +21413,8 @@ class RiskRequest(Base):
 
     @property
     def measures(self) -> Tuple[RiskMeasure, ...]:
-        """A collection of risk measures to compute. E.g. { 'measureType': 'Delta', 'assetClass': 'Equity'"""
+        """A collection of risk measures to compute. E.g. { 'measureType': 'Delta',
+           'assetClass': 'Equity'"""
         return self.__measures
 
     @measures.setter
@@ -21212,7 +21439,7 @@ class RiskRequest(Base):
 
     @pricing_location.setter
     def pricing_location(self, value: Union[PricingLocation, str]):
-        self.__pricing_location = value if isinstance(value, PricingLocation) else get_enum_value(PricingLocation, value)
+        self.__pricing_location = get_enum_value(PricingLocation, value)
         self._property_changed('pricing_location')        
 
     @property
@@ -21222,12 +21449,14 @@ class RiskRequest(Base):
 
     @market_data_vendor.setter
     def market_data_vendor(self, value: Union[MarketDataVendor, str]):
-        self.__market_data_vendor = value if isinstance(value, MarketDataVendor) else get_enum_value(MarketDataVendor, value)
+        self.__market_data_vendor = get_enum_value(MarketDataVendor, value)
         self._property_changed('market_data_vendor')        
 
     @property
     def wait_for_results(self) -> bool:
-        """For short-running requests this may be set to true and the results will be returned directly. If false, the response will contain the Id to retrieve the results"""
+        """For short-running requests this may be set to true and the results will be
+           returned directly. If false, the response will contain the Id to
+           retrieve the results"""
         return self.__wait_for_results
 
     @wait_for_results.setter

@@ -14,16 +14,18 @@ specific language governing permissions and limitations
 under the License.
 """
 
+from gs_quant.target.common import *
+import datetime
+from typing import Tuple, Union
 from enum import Enum
 from gs_quant.base import Base, EnumBase, get_enum_value
-from gs_quant.target.common import *
-from typing import Tuple, Union
-import datetime
 
 
 class MqexsAssetClass(EnumBase, Enum):    
     
-    """Asset classification of security. Assets are classified into broad groups which exhibit similar characteristics and behave in a consistent way under different market conditions"""
+    """Asset classification of security. Assets are classified into broad groups which
+       exhibit similar characteristics and behave in a consistent way under
+       different market conditions"""
 
     Commod = 'Commod'
     FX = 'FX'
@@ -37,7 +39,9 @@ class MqexsAssetClass(EnumBase, Enum):
 
 class MqexsAssetClassExt(EnumBase, Enum):    
     
-    """Asset classification of security. Assets are classified into broad groups which exhibit similar characteristics and behave in a consistent way under different market conditions"""
+    """Asset classification of security. Assets are classified into broad groups which
+       exhibit similar characteristics and behave in a consistent way under
+       different market conditions"""
 
     Commod = 'Commod'
     FX = 'FX'
@@ -455,7 +459,8 @@ class MqexsErrorInfo(Base):
 
     @property
     def error_msg(self) -> str:
-        """specific error message in the server response indicating an order processing error."""
+        """specific error message in the server response indicating an order processing
+           error."""
         return self.__error_msg
 
     @error_msg.setter
@@ -470,17 +475,19 @@ class MqexsErrorInfo(Base):
 
     @error_severity.setter
     def error_severity(self, value: Union[MqexsErrorSeverity, str]):
-        self.__error_severity = value if isinstance(value, MqexsErrorSeverity) else get_enum_value(MqexsErrorSeverity, value)
+        self.__error_severity = get_enum_value(MqexsErrorSeverity, value)
         self._property_changed('error_severity')        
 
     @property
     def asset_class(self) -> Union[MqexsAssetClass, str]:
-        """Asset classification of security. Assets are classified into broad groups which exhibit similar characteristics and behave in a consistent way under different market conditions"""
+        """Asset classification of security. Assets are classified into broad groups which
+           exhibit similar characteristics and behave in a consistent way under
+           different market conditions"""
         return self.__asset_class
 
     @asset_class.setter
     def asset_class(self, value: Union[MqexsAssetClass, str]):
-        self.__asset_class = value if isinstance(value, MqexsAssetClass) else get_enum_value(MqexsAssetClass, value)
+        self.__asset_class = get_enum_value(MqexsAssetClass, value)
         self._property_changed('asset_class')        
 
 
@@ -528,7 +535,7 @@ class MqexsProductDetails(Base):
 
     @clearer.setter
     def clearer(self, value: Union[MqexsClearer, str]):
-        self.__clearer = value if isinstance(value, MqexsClearer) else get_enum_value(MqexsClearer, value)
+        self.__clearer = get_enum_value(MqexsClearer, value)
         self._property_changed('clearer')        
 
     @property
@@ -538,7 +545,7 @@ class MqexsProductDetails(Base):
 
     @settlement_type.setter
     def settlement_type(self, value: Union[MqexsOtcSettlementType, str]):
-        self.__settlement_type = value if isinstance(value, MqexsOtcSettlementType) else get_enum_value(MqexsOtcSettlementType, value)
+        self.__settlement_type = get_enum_value(MqexsOtcSettlementType, value)
         self._property_changed('settlement_type')        
 
 
@@ -580,12 +587,13 @@ class MqexsTradeDetails(Base):
 
     @side.setter
     def side(self, value: Union[MqexsSide, str]):
-        self.__side = value if isinstance(value, MqexsSide) else get_enum_value(MqexsSide, value)
+        self.__side = get_enum_value(MqexsSide, value)
         self._property_changed('side')        
 
     @property
     def quantity(self) -> str:
-        """Quantity of product being requested, as a string representation of the double value"""
+        """Quantity of product being requested, as a string representation of the double
+           value"""
         return self.__quantity
 
     @quantity.setter
@@ -620,7 +628,7 @@ class MqexsTradeDetails(Base):
 
     @currency.setter
     def currency(self, value: Union[MqexsCurrencyExt, str]):
-        self.__currency = value if isinstance(value, MqexsCurrencyExt) else get_enum_value(MqexsCurrencyExt, value)
+        self.__currency = get_enum_value(MqexsCurrencyExt, value)
         self._property_changed('currency')        
 
 
@@ -630,7 +638,7 @@ class MqexsTradeExt(Base):
        
     def __init__(
         self,
-        id: str,
+        id_: str,
         trade_details: MqexsTradeDetails,
         product_details: MqexsProductDetails,
         quote_id: str,
@@ -641,7 +649,7 @@ class MqexsTradeExt(Base):
         last_updated_by_id: str        
     ):
         super().__init__()
-        self.__id = id
+        self.__id = id_
         self.__trade_details = trade_details
         self.__product_details = product_details
         self.__quote_id = quote_id
@@ -693,12 +701,14 @@ class MqexsTradeExt(Base):
 
     @property
     def asset_class(self) -> Union[MqexsAssetClassExt, str]:
-        """Asset classification of security. Assets are classified into broad groups which exhibit similar characteristics and behave in a consistent way under different market conditions"""
+        """Asset classification of security. Assets are classified into broad groups which
+           exhibit similar characteristics and behave in a consistent way under
+           different market conditions"""
         return self.__asset_class
 
     @asset_class.setter
     def asset_class(self, value: Union[MqexsAssetClassExt, str]):
-        self.__asset_class = value if isinstance(value, MqexsAssetClassExt) else get_enum_value(MqexsAssetClassExt, value)
+        self.__asset_class = get_enum_value(MqexsAssetClassExt, value)
         self._property_changed('asset_class')        
 
     @property
@@ -744,7 +754,8 @@ class MqexsTradeExt(Base):
 
 class MqexsTradesWErrorExt(Base):
         
-    """List of trade objects returned as a server response with specific error code and message in case of a server error."""
+    """List of trade objects returned as a server response with specific error code and
+       message in case of a server error."""
        
     def __init__(
         self,

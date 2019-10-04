@@ -46,8 +46,8 @@ class HistoricalPricingContext(PricingContext):
         :param calendars: holiday calendars
         :param dates: a custom iterable of dates
         :param is_async: return immediately (True) or wait for results (False). Defaults to False
-        :param is_batch: use for calculations expected to run longer than 3 mins, to avoid timeouts. It can be used
-        with is_aync=True|False
+        :param is_batch: use for calculations expected to run longer than 3 mins, to avoid timeouts.
+        It can be used with is_async=True|False
 
         **Examples**
 

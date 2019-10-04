@@ -78,9 +78,9 @@ def test_eqstrategies_backtest(mocker):
 
     risk_data = (delta, vega, gamma, theta)
 
-    mock_response = BacktestResult('BT1', performance=data, risks=risk_data, stats=None, backtestVersion=1)
+    mock_response = BacktestResult('BT1', performance=data, risks=risk_data, stats=None, backtest_version=1)
 
-    expected_response = BacktestResult('BT1', performance=data, risks=risk_data, stats=None, backtestVersion=1)
+    expected_response = BacktestResult('BT1', performance=data, risks=risk_data, stats=None, backtest_version=1)
 
     set_session()
 
@@ -97,13 +97,13 @@ def test_eqstrategies_backtest(mocker):
         roll_frequency='1m')
 
     l1 = BacktestStrategyUnderlier(
-        instrument=underlierList[0].as_dict(),
+        instrument=underlierList[0],
         notional_percentage=100,
         hedge=BacktestStrategyUnderlierHedge(risk_details=hedge),
         market_model='SFK')
 
     l2 = BacktestStrategyUnderlier(
-        instrument=underlierList[1].as_dict(),
+        instrument=underlierList[1],
         notional_percentage=100,
         hedge=BacktestStrategyUnderlierHedge(risk_details=hedge),
         market_model='SFK')
@@ -122,10 +122,12 @@ def test_eqstrategies_backtest(mocker):
     backtest_parameters = backtest_parameters_class.from_dict(backtest_parameter_args)
 
     params_dict = backtest_parameters.as_dict()
-    params_dict["measures"] = [FlowVolBacktestMeasure.ALL_MEASURES.value]
+    params_dict["measures"] = [FlowVolBacktestMeasure.ALL_MEASURES]
+    params = backtest_parameters_class.from_dict(params_dict)
+
     backtest = Backtest(name="Mock Test",
                         mq_symbol="Mock Test",
-                        parameters=backtest_parameters.as_dict(),
+                        parameters=params,
                         start_date=start_date,
                         end_date=end_date,
                         type='Volatility Flow',
@@ -133,4 +135,4 @@ def test_eqstrategies_backtest(mocker):
                         currency=Currency.USD,
                         cost_netting=False)
 
-    mocker.assert_called_with(backtest)
+    mocker.assert_called_with(backtest, None)

@@ -14,11 +14,11 @@ specific language governing permissions and limitations
 under the License.
 """
 
+from gs_quant.target.common import *
+import datetime
+from typing import Tuple, Union
 from enum import Enum
 from gs_quant.base import Base, EnumBase, Instrument, get_enum_value
-from gs_quant.target.common import *
-from typing import Tuple, Union
-import datetime
 
 
 class AllocatorType(EnumBase, Enum):    
@@ -176,7 +176,8 @@ class NetExposureClassification(EnumBase, Enum):
 
 class Strategy(EnumBase, Enum):    
     
-    """More specific descriptor of a fund's investment approach. Same view permissions as the asset"""
+    """More specific descriptor of a fund's investment approach. Same view permissions
+       as the asset"""
 
     Active_Trading = 'Active Trading'
     Activist = 'Activist'
@@ -246,7 +247,8 @@ class Strategy(EnumBase, Enum):
 
 class SupraStrategy(EnumBase, Enum):    
     
-    """Broad descriptor of a fund's investment approach. Same view permissions as the asset"""
+    """Broad descriptor of a fund's investment approach. Same view permissions as the
+       asset"""
 
     Composite = 'Composite'
     Credit = 'Credit'
@@ -726,7 +728,8 @@ class SecuritiesLendingLoan(Base):
 
     @property
     def asset_id(self) -> str:
-        """Id of the security being lent as part of this loan.  This Id should tie to an Asset"""
+        """Id of the security being lent as part of this loan.  This Id should tie to an
+           Asset"""
         return self.__asset_id
 
     @asset_id.setter
@@ -801,12 +804,13 @@ class SecuritiesLendingLoan(Base):
 
     @loan_currency.setter
     def loan_currency(self, value: Union[Currency, str]):
-        self.__loan_currency = value if isinstance(value, Currency) else get_enum_value(Currency, value)
+        self.__loan_currency = get_enum_value(Currency, value)
         self._property_changed('loan_currency')        
 
     @property
     def adjustment_ind(self) -> bool:
-        """Defines whether or not this contract is for the purpose of a month end loan adjustment."""
+        """Defines whether or not this contract is for the purpose of a month end loan
+           adjustment."""
         return self.__adjustment_ind
 
     @adjustment_ind.setter
@@ -979,7 +983,7 @@ class AssetParameters(Base):
         premium_payment_date: datetime.date = None,
         premium: float = None,
         premium_currency: Union[Currency, str] = None,
-        callable: bool = None,
+        callable_: bool = None,
         puttable: bool = None,
         perpetual: bool = None,
         seniority: str = None,
@@ -1052,7 +1056,7 @@ class AssetParameters(Base):
         self.__premium_payment_date = premium_payment_date
         self.__premium = premium
         self.__premium_currency = get_enum_value(Currency, premium_currency)
-        self.__callable = callable
+        self.__callable = callable_
         self.__puttable = puttable
         self.__perpetual = perpetual
         self.__seniority = seniority
@@ -1125,7 +1129,8 @@ class AssetParameters(Base):
 
     @property
     def index_calculation_type(self) -> str:
-        """Determines the index calculation methodology with respect to dividend reinvestment"""
+        """Determines the index calculation methodology with respect to dividend
+           reinvestment"""
         return self.__index_calculation_type
 
     @index_calculation_type.setter
@@ -1135,7 +1140,8 @@ class AssetParameters(Base):
 
     @property
     def index_return_type(self) -> str:
-        """Determines the return calculation type method with respect to cash accrual / funding"""
+        """Determines the return calculation type method with respect to cash accrual /
+           funding"""
         return self.__index_return_type
 
     @index_return_type.setter
@@ -1160,7 +1166,7 @@ class AssetParameters(Base):
 
     @currency.setter
     def currency(self, value: Union[Currency, str]):
-        self.__currency = value if isinstance(value, Currency) else get_enum_value(Currency, value)
+        self.__currency = get_enum_value(Currency, value)
         self._property_changed('currency')        
 
     @property
@@ -1170,7 +1176,7 @@ class AssetParameters(Base):
 
     @quote_currency.setter
     def quote_currency(self, value: Union[Currency, str]):
-        self.__quote_currency = value if isinstance(value, Currency) else get_enum_value(Currency, value)
+        self.__quote_currency = get_enum_value(Currency, value)
         self._property_changed('quote_currency')        
 
     @property
@@ -1228,7 +1234,7 @@ class AssetParameters(Base):
 
     @option_type.setter
     def option_type(self, value: Union[OptionType, str]):
-        self.__option_type = value if isinstance(value, OptionType) else get_enum_value(OptionType, value)
+        self.__option_type = get_enum_value(OptionType, value)
         self._property_changed('option_type')        
 
     @property
@@ -1266,7 +1272,7 @@ class AssetParameters(Base):
 
     @put_currency.setter
     def put_currency(self, value: Union[Currency, str]):
-        self.__put_currency = value if isinstance(value, Currency) else get_enum_value(Currency, value)
+        self.__put_currency = get_enum_value(Currency, value)
         self._property_changed('put_currency')        
 
     @property
@@ -1303,7 +1309,7 @@ class AssetParameters(Base):
 
     @call_currency.setter
     def call_currency(self, value: Union[Currency, str]):
-        self.__call_currency = value if isinstance(value, Currency) else get_enum_value(Currency, value)
+        self.__call_currency = get_enum_value(Currency, value)
         self._property_changed('call_currency')        
 
     @property
@@ -1352,7 +1358,7 @@ class AssetParameters(Base):
 
     @premium_currency.setter
     def premium_currency(self, value: Union[Currency, str]):
-        self.__premium_currency = value if isinstance(value, Currency) else get_enum_value(Currency, value)
+        self.__premium_currency = get_enum_value(Currency, value)
         self._property_changed('premium_currency')        
 
     @property
@@ -1417,7 +1423,8 @@ class AssetParameters(Base):
 
     @property
     def index_term(self) -> str:
-        """The term of rate index (e.g. USD-LIBOR-BBA) for the floating rate coupon of this bond"""
+        """The term of rate index (e.g. USD-LIBOR-BBA) for the floating rate coupon of this
+           bond"""
         return self.__index_term
 
     @index_term.setter
@@ -1427,7 +1434,8 @@ class AssetParameters(Base):
 
     @property
     def index_margin(self) -> float:
-        """The spread over the rate index (e.g. USD-LIBOR-BBA) for the floating rate coupon of this bond"""
+        """The spread over the rate index (e.g. USD-LIBOR-BBA) for the floating rate coupon
+           of this bond"""
         return self.__index_margin
 
     @index_margin.setter
@@ -1502,7 +1510,7 @@ class AssetParameters(Base):
 
     @commodity_sector.setter
     def commodity_sector(self, value: Union[CommoditySector, str]):
-        self.__commodity_sector = value if isinstance(value, CommoditySector) else get_enum_value(CommoditySector, value)
+        self.__commodity_sector = get_enum_value(CommoditySector, value)
         self._property_changed('commodity_sector')        
 
     @property
@@ -1512,7 +1520,7 @@ class AssetParameters(Base):
 
     @pricing_location.setter
     def pricing_location(self, value: Union[PricingLocation, str]):
-        self.__pricing_location = value if isinstance(value, PricingLocation) else get_enum_value(PricingLocation, value)
+        self.__pricing_location = get_enum_value(PricingLocation, value)
         self._property_changed('pricing_location')        
 
     @property
@@ -1557,22 +1565,24 @@ class AssetParameters(Base):
 
     @property
     def strategy(self) -> Union[Strategy, str]:
-        """More specific descriptor of a fund's investment approach. Same view permissions as the asset"""
+        """More specific descriptor of a fund's investment approach. Same view permissions
+           as the asset"""
         return self.__strategy
 
     @strategy.setter
     def strategy(self, value: Union[Strategy, str]):
-        self.__strategy = value if isinstance(value, Strategy) else get_enum_value(Strategy, value)
+        self.__strategy = get_enum_value(Strategy, value)
         self._property_changed('strategy')        
 
     @property
     def supra_strategy(self) -> Union[SupraStrategy, str]:
-        """Broad descriptor of a fund's investment approach. Same view permissions as the asset"""
+        """Broad descriptor of a fund's investment approach. Same view permissions as the
+           asset"""
         return self.__supra_strategy
 
     @supra_strategy.setter
     def supra_strategy(self, value: Union[SupraStrategy, str]):
-        self.__supra_strategy = value if isinstance(value, SupraStrategy) else get_enum_value(SupraStrategy, value)
+        self.__supra_strategy = get_enum_value(SupraStrategy, value)
         self._property_changed('supra_strategy')        
 
     @property
@@ -1582,7 +1592,7 @@ class AssetParameters(Base):
 
     @exchange_currency.setter
     def exchange_currency(self, value: Union[Currency, str]):
-        self.__exchange_currency = value if isinstance(value, Currency) else get_enum_value(Currency, value)
+        self.__exchange_currency = get_enum_value(Currency, value)
         self._property_changed('exchange_currency')        
 
     @property
@@ -1646,7 +1656,7 @@ class AssetParameters(Base):
 
     @index_create_source.setter
     def index_create_source(self, value: Union[IndexCreateSource, str]):
-        self.__index_create_source = value if isinstance(value, IndexCreateSource) else get_enum_value(IndexCreateSource, value)
+        self.__index_create_source = get_enum_value(IndexCreateSource, value)
         self._property_changed('index_create_source')        
 
     @property
@@ -1675,7 +1685,7 @@ class AssetParameters(Base):
 
     @fixed_rate_day_count_fraction.setter
     def fixed_rate_day_count_fraction(self, value: Union[DayCountFraction, str]):
-        self.__fixed_rate_day_count_fraction = value if isinstance(value, DayCountFraction) else get_enum_value(DayCountFraction, value)
+        self.__fixed_rate_day_count_fraction = get_enum_value(DayCountFraction, value)
         self._property_changed('fixed_rate_day_count_fraction')        
 
     @property
@@ -1685,7 +1695,7 @@ class AssetParameters(Base):
 
     @floating_rate_day_count_fraction.setter
     def floating_rate_day_count_fraction(self, value: Union[DayCountFraction, str]):
-        self.__floating_rate_day_count_fraction = value if isinstance(value, DayCountFraction) else get_enum_value(DayCountFraction, value)
+        self.__floating_rate_day_count_fraction = get_enum_value(DayCountFraction, value)
         self._property_changed('floating_rate_day_count_fraction')        
 
     @property
@@ -1695,7 +1705,7 @@ class AssetParameters(Base):
 
     @pay_day_count_fraction.setter
     def pay_day_count_fraction(self, value: Union[DayCountFraction, str]):
-        self.__pay_day_count_fraction = value if isinstance(value, DayCountFraction) else get_enum_value(DayCountFraction, value)
+        self.__pay_day_count_fraction = get_enum_value(DayCountFraction, value)
         self._property_changed('pay_day_count_fraction')        
 
     @property
@@ -1705,7 +1715,7 @@ class AssetParameters(Base):
 
     @receive_day_count_fraction.setter
     def receive_day_count_fraction(self, value: Union[DayCountFraction, str]):
-        self.__receive_day_count_fraction = value if isinstance(value, DayCountFraction) else get_enum_value(DayCountFraction, value)
+        self.__receive_day_count_fraction = get_enum_value(DayCountFraction, value)
         self._property_changed('receive_day_count_fraction')        
 
     @property
@@ -1735,7 +1745,7 @@ class AssetParameters(Base):
 
     @resettable_leg.setter
     def resettable_leg(self, value: Union[PayReceive, str]):
-        self.__resettable_leg = value if isinstance(value, PayReceive) else get_enum_value(PayReceive, value)
+        self.__resettable_leg = get_enum_value(PayReceive, value)
         self._property_changed('resettable_leg')        
 
     @property
@@ -1807,13 +1817,13 @@ class AssetStats(Base):
         self,
         last_updated_time: datetime.datetime = None,
         period: Union[AssetStatsPeriod, str] = None,
-        type: Union[AssetStatsType, str] = None,
+        type_: Union[AssetStatsType, str] = None,
         stats: PerformanceStats = None        
     ):
         super().__init__()
         self.__last_updated_time = last_updated_time
         self.__period = get_enum_value(AssetStatsPeriod, period)
-        self.__type = get_enum_value(AssetStatsType, type)
+        self.__type = get_enum_value(AssetStatsType, type_)
         self.__stats = stats
 
     @property
@@ -1832,7 +1842,7 @@ class AssetStats(Base):
 
     @period.setter
     def period(self, value: Union[AssetStatsPeriod, str]):
-        self.__period = value if isinstance(value, AssetStatsPeriod) else get_enum_value(AssetStatsPeriod, value)
+        self.__period = get_enum_value(AssetStatsPeriod, value)
         self._property_changed('period')        
 
     @property
@@ -1842,7 +1852,7 @@ class AssetStats(Base):
 
     @type.setter
     def type(self, value: Union[AssetStatsType, str]):
-        self.__type = value if isinstance(value, AssetStatsType) else get_enum_value(AssetStatsType, value)
+        self.__type = get_enum_value(AssetStatsType, value)
         self._property_changed('type')        
 
     @property
@@ -1864,13 +1874,13 @@ class AssetStatsRequest(Base):
         self,
         last_updated_time: DateRange = None,
         period: Union[AssetStatsPeriod, str] = None,
-        type: Union[AssetStatsType, str] = None,
+        type_: Union[AssetStatsType, str] = None,
         stats: PerformanceStatsRequest = None        
     ):
         super().__init__()
         self.__last_updated_time = last_updated_time
         self.__period = get_enum_value(AssetStatsPeriod, period)
-        self.__type = get_enum_value(AssetStatsType, type)
+        self.__type = get_enum_value(AssetStatsType, type_)
         self.__stats = stats
 
     @property
@@ -1889,7 +1899,7 @@ class AssetStatsRequest(Base):
 
     @period.setter
     def period(self, value: Union[AssetStatsPeriod, str]):
-        self.__period = value if isinstance(value, AssetStatsPeriod) else get_enum_value(AssetStatsPeriod, value)
+        self.__period = get_enum_value(AssetStatsPeriod, value)
         self._property_changed('period')        
 
     @property
@@ -1899,7 +1909,7 @@ class AssetStatsRequest(Base):
 
     @type.setter
     def type(self, value: Union[AssetStatsType, str]):
-        self.__type = value if isinstance(value, AssetStatsType) else get_enum_value(AssetStatsType, value)
+        self.__type = get_enum_value(AssetStatsType, value)
         self._property_changed('type')        
 
     @property
@@ -1996,7 +2006,8 @@ class HedgeFundParameters(Base):
 
     @property
     def aum(self) -> float:
-        """Current assets under management. Only viewable after having been granted additional access to asset information."""
+        """Current assets under management. Only viewable after having been granted
+           additional access to asset information."""
         return self.__aum
 
     @aum.setter
@@ -2006,7 +2017,9 @@ class HedgeFundParameters(Base):
 
     @property
     def strategy_aum(self) -> float:
-        """Total assets under management for this strategy (including comingled fund, managed accounts, and funds of one). Only viewable after having been granted additional access to asset information."""
+        """Total assets under management for this strategy (including comingled fund,
+           managed accounts, and funds of one). Only viewable after having been
+           granted additional access to asset information."""
         return self.__strategy_aum
 
     @strategy_aum.setter
@@ -2026,7 +2039,8 @@ class HedgeFundParameters(Base):
 
     @property
     def strategy_aum_range(self) -> NumberRange:
-        """Range in which assets under management for this strategy fall. Same view permissions as the asset."""
+        """Range in which assets under management for this strategy fall. Same view
+           permissions as the asset."""
         return self.__strategy_aum_range
 
     @strategy_aum_range.setter
@@ -2046,7 +2060,8 @@ class HedgeFundParameters(Base):
 
     @property
     def market_cap_category(self) -> Tuple[str, ...]:
-        """Category of market capitalizations a fund is focused on from an investment perspective. Same view permissions as the asset."""
+        """Category of market capitalizations a fund is focused on from an investment
+           perspective. Same view permissions as the asset."""
         return self.__market_cap_category
 
     @market_cap_category.setter
@@ -2056,7 +2071,8 @@ class HedgeFundParameters(Base):
 
     @property
     def marketing_status(self) -> str:
-        """A fund's posture as to whether it is currently accepting new subscriptions. Same view permissions as the asset."""
+        """A fund's posture as to whether it is currently accepting new subscriptions. Same
+           view permissions as the asset."""
         return self.__marketing_status
 
     @marketing_status.setter
@@ -2076,7 +2092,8 @@ class HedgeFundParameters(Base):
 
     @property
     def regional_focus(self) -> Tuple[str, ...]:
-        """Section of the world a fund is focused on from an investment perspective. Same view permissions as the asset"""
+        """Section of the world a fund is focused on from an investment perspective. Same
+           view permissions as the asset"""
         return self.__regional_focus
 
     @regional_focus.setter
@@ -2096,27 +2113,30 @@ class HedgeFundParameters(Base):
 
     @property
     def strategy(self) -> Union[Strategy, str]:
-        """More specific descriptor of a fund's investment approach. Same view permissions as the asset"""
+        """More specific descriptor of a fund's investment approach. Same view permissions
+           as the asset"""
         return self.__strategy
 
     @strategy.setter
     def strategy(self, value: Union[Strategy, str]):
-        self.__strategy = value if isinstance(value, Strategy) else get_enum_value(Strategy, value)
+        self.__strategy = get_enum_value(Strategy, value)
         self._property_changed('strategy')        
 
     @property
     def supra_strategy(self) -> Union[SupraStrategy, str]:
-        """Broad descriptor of a fund's investment approach. Same view permissions as the asset"""
+        """Broad descriptor of a fund's investment approach. Same view permissions as the
+           asset"""
         return self.__supra_strategy
 
     @supra_strategy.setter
     def supra_strategy(self, value: Union[SupraStrategy, str]):
-        self.__supra_strategy = value if isinstance(value, SupraStrategy) else get_enum_value(SupraStrategy, value)
+        self.__supra_strategy = get_enum_value(SupraStrategy, value)
         self._property_changed('supra_strategy')        
 
     @property
     def strategy_description(self) -> str:
-        """Statement explaining a fund's investment approach. Only viewable after having been granted additional access to asset information."""
+        """Statement explaining a fund's investment approach. Only viewable after having
+           been granted additional access to asset information."""
         return self.__strategy_description
 
     @strategy_description.setter
@@ -2126,7 +2146,9 @@ class HedgeFundParameters(Base):
 
     @property
     def targeted_gross_exposure(self) -> NumberRange:
-        """Value of a fund's long positions plus short positions, expressed in percentage terms. Only viewable after having been granted additional access to asset information."""
+        """Value of a fund's long positions plus short positions, expressed in percentage
+           terms. Only viewable after having been granted additional access to
+           asset information."""
         return self.__targeted_gross_exposure
 
     @targeted_gross_exposure.setter
@@ -2136,7 +2158,9 @@ class HedgeFundParameters(Base):
 
     @property
     def targeted_net_exposure(self) -> NumberRange:
-        """Value of a fund's long positions minus short positions, expressed in percentage terms. Only viewable after having been granted additional access to asset information."""
+        """Value of a fund's long positions minus short positions, expressed in percentage
+           terms. Only viewable after having been granted additional access to
+           asset information."""
         return self.__targeted_net_exposure
 
     @targeted_net_exposure.setter
@@ -2146,7 +2170,9 @@ class HedgeFundParameters(Base):
 
     @property
     def targeted_num_of_positions_short(self) -> NumberRange:
-        """Range of positions the fund typically holds on the short side of its portfolio. Only viewable after having been granted additional access to asset information."""
+        """Range of positions the fund typically holds on the short side of its portfolio.
+           Only viewable after having been granted additional access to asset
+           information."""
         return self.__targeted_num_of_positions_short
 
     @targeted_num_of_positions_short.setter
@@ -2156,7 +2182,9 @@ class HedgeFundParameters(Base):
 
     @property
     def targeted_num_of_positions_long(self) -> NumberRange:
-        """Range of positions the fund typically holds on the long side of its portfolio. Only viewable after having been granted additional access to asset information."""
+        """Range of positions the fund typically holds on the long side of its portfolio.
+           Only viewable after having been granted additional access to asset
+           information."""
         return self.__targeted_num_of_positions_long
 
     @targeted_num_of_positions_long.setter
@@ -2166,7 +2194,8 @@ class HedgeFundParameters(Base):
 
     @property
     def turnover(self) -> str:
-        """Rate at which a fund replaces its investment holdings. Only viewable after having been granted additional access to asset information."""
+        """Rate at which a fund replaces its investment holdings. Only viewable after
+           having been granted additional access to asset information."""
         return self.__turnover
 
     @turnover.setter
@@ -2176,7 +2205,8 @@ class HedgeFundParameters(Base):
 
     @property
     def vehicle_type(self) -> str:
-        """Type of investment vehicle. Only viewable after having been granted additional access to asset information."""
+        """Type of investment vehicle. Only viewable after having been granted additional
+           access to asset information."""
         return self.__vehicle_type
 
     @vehicle_type.setter
@@ -2191,7 +2221,7 @@ class HedgeFundParameters(Base):
 
     @net_exposure_classification.setter
     def net_exposure_classification(self, value: Union[NetExposureClassification, str]):
-        self.__net_exposure_classification = value if isinstance(value, NetExposureClassification) else get_enum_value(NetExposureClassification, value)
+        self.__net_exposure_classification = get_enum_value(NetExposureClassification, value)
         self._property_changed('net_exposure_classification')        
 
 
@@ -2276,7 +2306,8 @@ class ShareClassParameters(Base):
 
     @property
     def additional_provisions(self) -> str:
-        """Additional details that are relevant to the share class that not captured by the other fields"""
+        """Additional details that are relevant to the share class that not captured by the
+           other fields"""
         return self.__additional_provisions
 
     @additional_provisions.setter
@@ -2446,7 +2477,8 @@ class ShareClassParameters(Base):
 
     @property
     def management_fee(self) -> float:
-        """Percent fee paid by investor to compensate manager for the cost of managing their assets"""
+        """Percent fee paid by investor to compensate manager for the cost of managing
+           their assets"""
         return self.__management_fee
 
     @management_fee.setter
@@ -2486,7 +2518,8 @@ class ShareClassParameters(Base):
 
     @property
     def performance_fee(self) -> float:
-        """Fee paid by investor to compensate manager for generating positive returns or alpha"""
+        """Fee paid by investor to compensate manager for generating positive returns or
+           alpha"""
         return self.__performance_fee
 
     @performance_fee.setter
@@ -2496,7 +2529,8 @@ class ShareClassParameters(Base):
 
     @property
     def redemption_notice_period(self) -> float:
-        """Number of days prior to a redemption that an investor must notify a manager of their intent"""
+        """Number of days prior to a redemption that an investor must notify a manager of
+           their intent"""
         return self.__redemption_notice_period
 
     @redemption_notice_period.setter
@@ -2546,7 +2580,7 @@ class ShareClassParameters(Base):
 
     @property
     def sub_category(self) -> str:
-        """Subtype of what funds invest in within each SEC category """
+        """Subtype of what funds invest in within each SEC category"""
         return self.__sub_category
 
     @sub_category.setter
@@ -2613,12 +2647,15 @@ class TemporalPeople(Base):
 
 class Asset(Base):
         
-    """A security or instrument which can be held in a trading book (for example a stock or a bond) or a publically identifiable object with observable market data fixings which can be referenced in derivative transations (for example the SPX Index)"""
+    """A security or instrument which can be held in a trading book (for example a
+       stock or a bond) or a publically identifiable object with observable
+       market data fixings which can be referenced in derivative transations
+       (for example the SPX Index)"""
        
     def __init__(
         self,
         asset_class: Union[AssetClass, str],
-        type: Union[AssetType, str],
+        type_: Union[AssetType, str],
         name: str,
         created_by_id: str = None,
         created_time: datetime.datetime = None,
@@ -2627,7 +2664,7 @@ class Asset(Base):
         entitlements: Entitlements = None,
         entitlement_exclusions: EntitlementExclusions = None,
         exchange: str = None,
-        id: str = None,
+        id_: str = None,
         identifiers: Tuple[Identifier, ...] = None,
         last_updated_by_id: str = None,
         last_updated_time: datetime.datetime = None,
@@ -2653,7 +2690,7 @@ class Asset(Base):
         self.__entitlements = entitlements
         self.__entitlement_exclusions = entitlement_exclusions
         self.__exchange = exchange
-        self.__id = id
+        self.__id = id_
         self.__identifiers = identifiers
         self.__last_updated_by_id = last_updated_by_id
         self.__last_updated_time = last_updated_time
@@ -2669,17 +2706,19 @@ class Asset(Base):
         self.__short_name = short_name
         self.__styles = styles
         self.__tags = tags
-        self.__type = get_enum_value(AssetType, type)
+        self.__type = get_enum_value(AssetType, type_)
         self.__underlying_asset_ids = underlying_asset_ids
 
     @property
     def asset_class(self) -> Union[AssetClass, str]:
-        """Asset classification of security. Assets are classified into broad groups which exhibit similar characteristics and behave in a consistent way under different market conditions"""
+        """Asset classification of security. Assets are classified into broad groups which
+           exhibit similar characteristics and behave in a consistent way under
+           different market conditions"""
         return self.__asset_class
 
     @asset_class.setter
     def asset_class(self, value: Union[AssetClass, str]):
-        self.__asset_class = value if isinstance(value, AssetClass) else get_enum_value(AssetClass, value)
+        self.__asset_class = get_enum_value(AssetClass, value)
         self._property_changed('asset_class')        
 
     @property
@@ -2709,12 +2748,13 @@ class Asset(Base):
 
     @currency.setter
     def currency(self, value: Union[Currency, str]):
-        self.__currency = value if isinstance(value, Currency) else get_enum_value(Currency, value)
+        self.__currency = get_enum_value(Currency, value)
         self._property_changed('currency')        
 
     @property
     def description(self) -> str:
-        """Free text description of asset. Description provided will be indexed in the search service for free text relevance match"""
+        """Free text description of asset. Description provided will be indexed in the
+           search service for free text relevance match"""
         return self.__description
 
     @description.setter
@@ -2764,7 +2804,8 @@ class Asset(Base):
 
     @property
     def identifiers(self) -> Tuple[Identifier, ...]:
-        """Array of identifier objects which can be used to locate this item in searches and other services"""
+        """Array of identifier objects which can be used to locate this item in searches
+           and other services"""
         return self.__identifiers
 
     @identifiers.setter
@@ -2868,7 +2909,7 @@ class Asset(Base):
 
     @region.setter
     def region(self, value: Union[Region, str]):
-        self.__region = value if isinstance(value, Region) else get_enum_value(Region, value)
+        self.__region = get_enum_value(Region, value)
         self._property_changed('region')        
 
     @property
@@ -2903,7 +2944,8 @@ class Asset(Base):
 
     @property
     def tags(self) -> Tuple[str, ...]:
-        """Metadata associated with the object. Provide an array of strings which will be indexed for search and locating related objects"""
+        """Metadata associated with the object. Provide an array of strings which will be
+           indexed for search and locating related objects"""
         return self.__tags
 
     @tags.setter
@@ -2918,7 +2960,7 @@ class Asset(Base):
 
     @type.setter
     def type(self, value: Union[AssetType, str]):
-        self.__type = value if isinstance(value, AssetType) else get_enum_value(AssetType, value)
+        self.__type = get_enum_value(AssetType, value)
         self._property_changed('type')        
 
     @property
@@ -2936,7 +2978,7 @@ class EntityQuery(Base):
                
     def __init__(
         self,
-        format: Union[Format, str] = None,
+        format_: Union[Format, str] = None,
         where: FieldFilterMap = None,
         as_of_time: datetime.datetime = None,
         last_updated_since: datetime.datetime = None,
@@ -2951,7 +2993,7 @@ class EntityQuery(Base):
         offset: int = None        
     ):
         super().__init__()
-        self.__format = get_enum_value(Format, format)
+        self.__format = get_enum_value(Format, format_)
         self.__where = where
         self.__as_of_time = as_of_time
         self.__last_updated_since = last_updated_since
@@ -2972,7 +3014,7 @@ class EntityQuery(Base):
 
     @format.setter
     def format(self, value: Union[Format, str]):
-        self.__format = value if isinstance(value, Format) else get_enum_value(Format, value)
+        self.__format = get_enum_value(Format, value)
         self._property_changed('format')        
 
     @property
@@ -3045,7 +3087,8 @@ class EntityQuery(Base):
 
     @property
     def scroll(self) -> str:
-        """Time for which to keep the scroll search context alive, i.e. 1m (1 minute) or 10s (10 seconds)"""
+        """Time for which to keep the scroll search context alive, i.e. 1m (1 minute) or
+           10s (10 seconds)"""
         return self.__scroll
 
     @scroll.setter
@@ -3074,7 +3117,8 @@ class EntityQuery(Base):
 
     @property
     def limit(self) -> int:
-        """Limit on the number of objects to be returned in the response. Can range between 1 and 10000"""
+        """Limit on the number of objects to be returned in the response. Can range between
+           1 and 10000"""
         return self.__limit
 
     @limit.setter
@@ -3084,7 +3128,10 @@ class EntityQuery(Base):
 
     @property
     def offset(self) -> int:
-        """The offset of the first result returned (default 0). Can be used in pagination to defined the first item in the list to be returned, for example if you request 100 objects, to query the next page you would specify offset = 100."""
+        """The offset of the first result returned (default 0). Can be used in pagination
+           to defined the first item in the list to be returned, for example if
+           you request 100 objects, to query the next page you would specify
+           offset = 100."""
         return self.__offset
 
     @offset.setter

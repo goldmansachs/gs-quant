@@ -14,10 +14,10 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.base import Base, get_enum_value
 from gs_quant.target.common import *
-from typing import Tuple, Union
 import datetime
+from typing import Tuple, Union
+from gs_quant.base import Base, get_enum_value
 
 
 class Author(Base):
@@ -26,12 +26,12 @@ class Author(Base):
        
     def __init__(
         self,
-        id: str = None,
+        id_: str = None,
         name: str = None,
         division=None        
     ):
         super().__init__()
-        self.__id = id
+        self.__id = id_
         self.__name = name
         self.__division = division
 
@@ -206,11 +206,11 @@ class Disclaimer(Base):
     def __init__(
         self,
         text: str = None,
-        type=None        
+        type_=None        
     ):
         super().__init__()
         self.__text = text
-        self.__type = type
+        self.__type = type_
 
     @property
     def text(self) -> str:
@@ -327,7 +327,7 @@ class ContentResponse(Base):
                
     def __init__(
         self,
-        id: str = None,
+        id_: str = None,
         version: str = None,
         name: str = None,
         entitlements: Entitlements = None,
@@ -338,7 +338,7 @@ class ContentResponse(Base):
         content: Content = None        
     ):
         super().__init__()
-        self.__id = id
+        self.__id = id_
         self.__version = version
         self.__name = name
         self.__entitlements = entitlements
@@ -487,11 +487,11 @@ class BulkContentUpdateRequestItem(Base):
                
     def __init__(
         self,
-        id: str = None,
+        id_: str = None,
         update: ContentUpdateRequest = None        
     ):
         super().__init__()
-        self.__id = id
+        self.__id = id_
         self.__update = update
 
     @property
@@ -518,7 +518,7 @@ class ContentAuditFields(Base):
                
     def __init__(
         self,
-        id: str = None,
+        id_: str = None,
         version: str = None,
         name: str = None,
         entitlements: Entitlements = None,
@@ -528,7 +528,7 @@ class ContentAuditFields(Base):
         last_updated_time: datetime.datetime = None        
     ):
         super().__init__()
-        self.__id = id
+        self.__id = id_
         self.__version = version
         self.__name = name
         self.__entitlements = entitlements
@@ -701,7 +701,7 @@ class ContentParameters(Base):
 
     @property
     def attachments(self) -> Tuple[Content, ...]:
-        """List of attachments on the parent content piece """
+        """List of attachments on the parent content piece"""
         return self.__attachments
 
     @attachments.setter
