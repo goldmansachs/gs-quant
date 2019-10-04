@@ -384,9 +384,13 @@ def test_percentiles():
     assert_series_equal(percentiles(x, pd.Series([])), pd.Series([]))
     assert_series_equal(percentiles(x, y, Window(7, 0)), pd.Series([]))
 
+    result = percentiles(x, y, 2)
+    expected = pd.Series([50.0, 50.0, 100.0, 75.0], index=dates[2:])
+    assert_series_equal(result, expected, obj="percentiles with window length 2")
+
     result = percentiles(x, y, Window(2, 0))
-    expected = pd.Series([0.0, 50.0, 50.0, 100.0, 75.0], index=dates[1:])
-    assert_series_equal(result, expected, obj="percentiles with window 2")
+    expected = pd.Series([100.0, 0.0, 50.0, 50.0, 100.0, 75.0], index=dates)
+    assert_series_equal(result, expected, obj="percentiles with window 2 and ramp 0")
 
     result = percentiles(x)
     expected = pd.Series([50.0, 25.0, 66.667, 12.500, 70.0, 91.667], index=dates)

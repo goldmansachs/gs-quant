@@ -14,11 +14,11 @@ specific language governing permissions and limitations
 under the License.
 """
 
+from gs_quant.target.common import *
+import datetime
+from typing import Tuple, Union
 from enum import Enum
 from gs_quant.base import Base, EnumBase, get_enum_value
-from gs_quant.target.common import *
-from typing import Tuple, Union
-import datetime
 
 
 class SortByTerm(EnumBase, Enum):    
@@ -86,10 +86,10 @@ class CoordinatesRequest(Base):
 
     @property
     def instruments(self) -> Tuple[Priceable, ...]:
-        """Instrument or Id  
-To specify a Marquee asset use the asset Id.
-For listed products use an XRef, e.g. { 'bid': 'NGZ19 Comdty' }, { 'isin': 'US912810SD19' }.
-To specify an instrument use one of the listed types"""
+        """Instrument or Id   To specify a Marquee asset use the asset Id. For listed
+           products use an XRef, e.g. { 'bid': 'NGZ19 Comdty' }, { 'isin':
+           'US912810SD19' }. To specify an instrument use one of the listed
+           types"""
         return self.__instruments
 
     @instruments.setter
@@ -305,7 +305,8 @@ class LiquidityBucket(Base):
 
     @property
     def marginal_cost(self) -> float:
-        """The average estimated transaction cost of the positions in this bucket multiplied by the bucket's gross weight in the portfolio."""
+        """The average estimated transaction cost of the positions in this bucket
+           multiplied by the bucket's gross weight in the portfolio."""
         return self.__marginal_cost
 
     @marginal_cost.setter
@@ -375,7 +376,9 @@ class LiquidityBucket(Base):
 
     @property
     def long_marginal_cost(self) -> float:
-        """The estimated transaction cost of the long positions in this bucket multiplied by the sum of these positions' normalized weight with respect to all long positions in the portfolio."""
+        """The estimated transaction cost of the long positions in this bucket multiplied
+           by the sum of these positions' normalized weight with respect to all
+           long positions in the portfolio."""
         return self.__long_marginal_cost
 
     @long_marginal_cost.setter
@@ -445,7 +448,9 @@ class LiquidityBucket(Base):
 
     @property
     def short_marginal_cost(self) -> float:
-        """The estimated transaction cost of the short positions in this bucket multiplied by the sum of these positions' normalized weight with respect to all short positions in the portfolio."""
+        """The estimated transaction cost of the short positions in this bucket multiplied
+           by the sum of these positions' normalized weight with respect to all
+           short positions in the portfolio."""
         return self.__short_marginal_cost
 
     @short_marginal_cost.setter
@@ -486,7 +491,8 @@ class LiquidityBucket(Base):
 
 class LiquidityConstituent(Base):
         
-    """A constituent of the portfolio enriched with liquidity and estimated transaction cost information."""
+    """A constituent of the portfolio enriched with liquidity and estimated transaction
+       cost information."""
        
     def __init__(
         self,
@@ -505,7 +511,7 @@ class LiquidityConstituent(Base):
         bid_ask_spread: float = None,
         country: str = None,
         region: Union[Region, str] = None,
-        type: Union[AssetType, str] = None,
+        type_: Union[AssetType, str] = None,
         market_cap: float = None,
         market_cap_bucket=None,
         est1_day_complete_pct: float = None,
@@ -536,7 +542,7 @@ class LiquidityConstituent(Base):
         self.__bid_ask_spread = bid_ask_spread
         self.__country = country
         self.__region = get_enum_value(Region, region)
-        self.__type = get_enum_value(AssetType, type)
+        self.__type = get_enum_value(AssetType, type_)
         self.__market_cap = market_cap
         self.__market_cap_bucket = market_cap_bucket
         self.__est1_day_complete_pct = est1_day_complete_pct
@@ -618,7 +624,7 @@ class LiquidityConstituent(Base):
 
     @currency.setter
     def currency(self, value: Union[Currency, str]):
-        self.__currency = value if isinstance(value, Currency) else get_enum_value(Currency, value)
+        self.__currency = get_enum_value(Currency, value)
         self._property_changed('currency')        
 
     @property
@@ -643,7 +649,8 @@ class LiquidityConstituent(Base):
 
     @property
     def adv22_day_pct(self) -> float:
-        """Percentage of the constituent's notional to it's 22 day average daily dollar volume."""
+        """Percentage of the constituent's notional to it's 22 day average daily dollar
+           volume."""
         return self.__adv22_day_pct
 
     @adv22_day_pct.setter
@@ -663,7 +670,8 @@ class LiquidityConstituent(Base):
 
     @property
     def marginal_cost(self) -> float:
-        """The estimated transaction cost multiplied by the position's gross weight in the portfolio."""
+        """The estimated transaction cost multiplied by the position's gross weight in the
+           portfolio."""
         return self.__marginal_cost
 
     @marginal_cost.setter
@@ -698,7 +706,7 @@ class LiquidityConstituent(Base):
 
     @region.setter
     def region(self, value: Union[Region, str]):
-        self.__region = value if isinstance(value, Region) else get_enum_value(Region, value)
+        self.__region = get_enum_value(Region, value)
         self._property_changed('region')        
 
     @property
@@ -708,12 +716,13 @@ class LiquidityConstituent(Base):
 
     @type.setter
     def type(self, value: Union[AssetType, str]):
-        self.__type = value if isinstance(value, AssetType) else get_enum_value(AssetType, value)
+        self.__type = get_enum_value(AssetType, value)
         self._property_changed('type')        
 
     @property
     def market_cap(self) -> float:
-        """Market capitalization of a given asset denominated in the currency given in the liquidity parameters."""
+        """Market capitalization of a given asset denominated in the currency given in the
+           liquidity parameters."""
         return self.__market_cap
 
     @market_cap.setter
@@ -876,7 +885,8 @@ class LiquidityFactor(Base):
 
 class LiquiditySummarySection(Base):
         
-    """Summary of the liquidity metrics for either the total, long, or short side of the portfolio."""
+    """Summary of the liquidity metrics for either the total, long, or short side of
+       the portfolio."""
        
     def __init__(
         self,
@@ -1075,7 +1085,8 @@ class LiquiditySummarySection(Base):
 
     @property
     def market_cap(self) -> float:
-        """Average market capitalization of the group of asset denominated in the currency given in the liquidity parameters."""
+        """Average market capitalization of the group of asset denominated in the currency
+           given in the liquidity parameters."""
         return self.__market_cap
 
     @market_cap.setter
@@ -1192,7 +1203,8 @@ class LiquidityTableRow(Base):
 
     @property
     def adv22_day_pct(self) -> float:
-        """Percentage of the constituent's notional to it's 22 day average daily dollar volume."""
+        """Percentage of the constituent's notional to it's 22 day average daily dollar
+           volume."""
         return self.__adv22_day_pct
 
     @adv22_day_pct.setter
@@ -1262,7 +1274,8 @@ class LiquidityTableRow(Base):
 
     @property
     def marginal_cost(self) -> float:
-        """The estimated transaction cost multiplied by the position's gross weight in the portfolio."""
+        """The estimated transaction cost multiplied by the position's gross weight in the
+           portfolio."""
         return self.__marginal_cost
 
     @marginal_cost.setter
@@ -1637,7 +1650,8 @@ class LiquiditySummary(Base):
 
     @property
     def total(self) -> LiquiditySummarySection:
-        """Summary of the liquidity metrics for either the total, long, or short side of the portfolio."""
+        """Summary of the liquidity metrics for either the total, long, or short side of
+           the portfolio."""
         return self.__total
 
     @total.setter
@@ -1647,7 +1661,8 @@ class LiquiditySummary(Base):
 
     @property
     def long(self) -> LiquiditySummarySection:
-        """Summary of the liquidity metrics for either the total, long, or short side of the portfolio."""
+        """Summary of the liquidity metrics for either the total, long, or short side of
+           the portfolio."""
         return self.__long
 
     @long.setter
@@ -1657,7 +1672,8 @@ class LiquiditySummary(Base):
 
     @property
     def short(self) -> LiquiditySummarySection:
-        """Summary of the liquidity metrics for either the total, long, or short side of the portfolio."""
+        """Summary of the liquidity metrics for either the total, long, or short side of
+           the portfolio."""
         return self.__short
 
     @short.setter
@@ -1667,7 +1683,8 @@ class LiquiditySummary(Base):
 
     @property
     def long_vs_short(self) -> LiquiditySummarySection:
-        """Summary of the liquidity metrics for either the total, long, or short side of the portfolio."""
+        """Summary of the liquidity metrics for either the total, long, or short side of
+           the portfolio."""
         return self.__long_vs_short
 
     @long_vs_short.setter
@@ -1718,7 +1735,7 @@ class RiskModelRequest(Base):
 
     @sort_by_term.setter
     def sort_by_term(self, value: Union[SortByTerm, str]):
-        self.__sort_by_term = value if isinstance(value, SortByTerm) else get_enum_value(SortByTerm, value)
+        self.__sort_by_term = get_enum_value(SortByTerm, value)
         self._property_changed('sort_by_term')        
 
 
@@ -1846,7 +1863,7 @@ class LiquidityResponse(Base):
 
     @currency.setter
     def currency(self, value: Union[Currency, str]):
-        self.__currency = value if isinstance(value, Currency) else get_enum_value(Currency, value)
+        self.__currency = get_enum_value(Currency, value)
         self._property_changed('currency')        
 
     @property
@@ -1880,7 +1897,8 @@ class LiquidityResponse(Base):
 
     @property
     def constituents(self) -> Tuple[LiquidityConstituent, ...]:
-        """Constituents of the portfolio enriched with liquidity and estimated transaction cost information."""
+        """Constituents of the portfolio enriched with liquidity and estimated transaction
+           cost information."""
         return self.__constituents
 
     @constituents.setter

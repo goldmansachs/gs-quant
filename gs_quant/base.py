@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import builtins
 from concurrent.futures import Future
 import datetime as dt
 import dateutil
@@ -39,6 +40,9 @@ class BaseMeta(type):
     def __call__(cls, *args, **kwargs):
         normalised_kwargs = {}
         for arg, value in kwargs.items():
+            if arg in dir(builtins):
+                arg += '_'
+
             if not arg.isupper():
                 snake_case_arg = inflection.underscore(arg)
                 if snake_case_arg != arg:
@@ -187,7 +191,8 @@ class Base(metaclass=BaseMeta):
         required = {}
 
         for arg in args:
-            prop_type = cls.prop_type(arg)
+            prop_name = arg[:-1] if arg.endswith('_') else arg
+            prop_type = cls.prop_type(prop_name)
             value = values.pop(arg, None)
 
             if prop_type:

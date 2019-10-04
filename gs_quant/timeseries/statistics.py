@@ -641,6 +641,7 @@ def percentiles(x: pd.Series, y: pd.Series = None, w: Union[Window, int] = Windo
     :func:`zscores`
 
     """
+    w = normalize_window(x, w)
     if x.empty:
         return x
 
@@ -649,12 +650,7 @@ def percentiles(x: pd.Series, y: pd.Series = None, w: Union[Window, int] = Windo
 
     res = pd.Series()
     for idx, val in y.iteritems():
-        sample = x[x.index <= idx]
-        if w.w:
-            if len(sample) < w.w:
-                continue
-            sample = sample[-w.w:]
-
+        sample = x[:idx][-w.w:]
         res.loc[idx] = percentileofscore(sample, val, kind='mean')
 
-    return apply_ramp(res, normalize_window(x, w))
+    return apply_ramp(res, w)

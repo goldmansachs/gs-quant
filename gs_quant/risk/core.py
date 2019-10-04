@@ -26,10 +26,13 @@ from gs_quant.markets.core import PricingContext
 from gs_quant.markets.historical import HistoricalPricingContext
 from gs_quant.target.risk import RiskMeasure, RiskMeasureType, RiskMeasureUnit
 
-__field_sort_fns = {
+__column_sort_fns = {
+    'label1': point_sort_order,
+    'mkt_point': point_sort_order,
     'point': point_sort_order
 }
-__field_order = ('date', 'time', 'marketDataType', 'assetId', 'pointClass', 'point')
+__risk_columns = ('date', 'time', 'marketDataType', 'assetId', 'pointClass', 'point')
+__crif_columns = ('date', 'time', 'riskType', 'amountCurrency', 'qualifier', 'bucket', 'label1', 'label2')
 
 
 def sum_formatter(result: List) -> float:
@@ -76,6 +79,13 @@ def structured_formatter(result: List) -> Optional[pd.DataFrame]:
         return None
 
     return sort_risk(pd.DataFrame.from_records(__flatten_result(result)))
+
+
+def crif_formatter(result: List) -> Optional[pd.DataFrame]:
+    if not result:
+        return None
+
+    return sort_risk(pd.DataFrame.from_records(__flatten_result(result)), __crif_columns)
 
 
 def aggregate_risk(results: Iterable[Union[pd.DataFrame, Future]], threshold: Optional[float] = None) -> pd.DataFrame:
@@ -134,7 +144,7 @@ def subtract_risk(left: pd.DataFrame, right: pd.DataFrame) -> pd.DataFrame:
     return aggregate_risk((left, right_negated))
 
 
-def sort_risk(df: pd.DataFrame, by: Tuple[str] = ('date', 'time', 'marketDataType', 'assetId', 'point')):
+def sort_risk(df: pd.DataFrame, by: Tuple[str, ...] = __risk_columns) -> pd.DataFrame:
     """
     Sort bucketed risk
 
@@ -144,13 +154,13 @@ def sort_risk(df: pd.DataFrame, by: Tuple[str] = ('date', 'time', 'marketDataTyp
     """
     columns = tuple(df.columns)
     indices = [columns.index(c) if c in columns else -1 for c in by]
-    fns = [__field_sort_fns.get(c) for c in columns]
+    fns = [__column_sort_fns.get(c) for c in columns]
 
     def cmp(row) -> tuple:
         return tuple(fns[i](row[i]) if fns[i] else row[i] for i in indices if i != -1)
 
     data = sorted((tuple(r)[1:] for r in df.to_records()), key=cmp)
-    fields = [f for f in __field_order if f in columns]
+    fields = [f for f in by if f in columns]
     fields.extend(f for f in columns if f not in fields)
 
     return pd.DataFrame.from_records(data, columns=columns)[fields]
@@ -274,5 +284,5 @@ Formatters = {
     IRAnnualATMImpliedVol: scalar_formatter,
     IRSpotRate: scalar_formatter,
     IRFwdRate: scalar_formatter,
-    CRIFIRCurve: structured_formatter
+    CRIFIRCurve: crif_formatter
 }

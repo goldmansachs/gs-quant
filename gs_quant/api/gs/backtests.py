@@ -63,16 +63,10 @@ class GsBacktestApi:
         return GsSession.current._get('/backtests/results?id={id}'.format(id=backtest_id))['backtestResults']
 
     @classmethod
-    def get_comparison_results(cls,
-                               limit: int = 100,
-                               start_date: dt.date = None,
-                               end_date: dt.date = None,
-                               backtest_id: str = None,
-                               comparison_id: str = None,
-                               owner_id: str = None,
-                               name: str = None,
-                               mq_symbol: str = None) -> Tuple[
-            Tuple[BacktestResult, ...], Tuple[ComparisonBacktestResult, ...]]:
+    def get_comparison_results(
+        cls, limit: int = 100, start_date: dt.date = None, end_date: dt.date = None, backtest_id: str = None,
+        comparison_id: str = None, owner_id: str = None, name: str = None, mq_symbol: str = None
+    ) -> Tuple[Tuple[BacktestResult, ...], Tuple[ComparisonBacktestResult, ...]]:
         query_string = urlencode(dict(filter(lambda item: item[1] is not None,
                                              dict(id=backtest_id, comparisonIds=comparison_id, ownerId=owner_id,
                                                   name=name, mqSymbol=mq_symbol, limit=limit,
@@ -86,8 +80,17 @@ class GsBacktestApi:
         return GsSession.current._post('/backtests/{id}/schedule'.format(id=backtest_id))
 
     @classmethod
-    def run_backtest(cls, backtest: Backtest) -> BacktestResult:
+    def run_backtest(cls, backtest: Backtest, correlation_id: str = None) -> BacktestResult:
+        """
+        :param backtest: definition of a backtest which should be run on Marquee API
+        :param correlation_id: used for logging purposes; helps in tracking all the requests which ultimately serve
+               the same purpose (e.g. calculating a backtest)
+        :return: result of running the backtest
+        """
         request_headers = {'Content-Type': 'application/json;charset=utf-8'}
+        if correlation_id is not None:
+            request_headers["X-CorrelationId"] = correlation_id
+
         response = GsSession.current._post('/backtests/calculate', backtest, request_headers=request_headers)
 
         # map the response to backtest result

@@ -14,11 +14,11 @@ specific language governing permissions and limitations
 under the License.
 """
 
+from gs_quant.target.common import *
+import datetime
+from typing import Tuple, Union
 from enum import Enum
 from gs_quant.base import Base, EnumBase, get_enum_value
-from gs_quant.target.common import *
-from typing import Tuple, Union
-import datetime
 
 
 class BasketAction(EnumBase, Enum):    
@@ -190,12 +190,14 @@ class ReportParameters(Base):
 
     @property
     def asset_class(self) -> Union[AssetClass, str]:
-        """Asset classification of security. Assets are classified into broad groups which exhibit similar characteristics and behave in a consistent way under different market conditions"""
+        """Asset classification of security. Assets are classified into broad groups which
+           exhibit similar characteristics and behave in a consistent way under
+           different market conditions"""
         return self.__asset_class
 
     @asset_class.setter
     def asset_class(self, value: Union[AssetClass, str]):
-        self.__asset_class = value if isinstance(value, AssetClass) else get_enum_value(AssetClass, value)
+        self.__asset_class = get_enum_value(AssetClass, value)
         self._property_changed('asset_class')        
 
     @property
@@ -325,7 +327,7 @@ class ReportParameters(Base):
 
     @basket_action.setter
     def basket_action(self, value: Union[BasketAction, str]):
-        self.__basket_action = value if isinstance(value, BasketAction) else get_enum_value(BasketAction, value)
+        self.__basket_action = get_enum_value(BasketAction, value)
         self._property_changed('basket_action')        
 
     @property
@@ -405,7 +407,7 @@ class ReportParameters(Base):
 
     @scenario_type.setter
     def scenario_type(self, value: Union[ScenarioType, str]):
-        self.__scenario_type = value if isinstance(value, ScenarioType) else get_enum_value(ScenarioType, value)
+        self.__scenario_type = get_enum_value(ScenarioType, value)
         self._property_changed('scenario_type')        
 
     @property
@@ -485,7 +487,7 @@ class Report(Base):
         self,
         position_source_id: str,
         position_source_type: Union[PositionSourceType, str],
-        type: Union[ReportType, str],
+        type_: Union[ReportType, str],
         parameters: ReportParameters,
         calculation_time: float = None,
         data_set_id: str = None,
@@ -494,7 +496,7 @@ class Report(Base):
         created_time: datetime.datetime = None,
         entitlements: Entitlements = None,
         entitlement_exclusions: EntitlementExclusions = None,
-        id: str = None,
+        id_: str = None,
         last_updated_by_id: str = None,
         last_updated_time: datetime.datetime = None,
         measures: Tuple[Union[ReportMeasures, str], ...] = None,
@@ -513,7 +515,7 @@ class Report(Base):
         self.__created_time = created_time
         self.__entitlements = entitlements
         self.__entitlement_exclusions = entitlement_exclusions
-        self.__id = id
+        self.__id = id_
         self.__last_updated_by_id = last_updated_by_id
         self.__last_updated_time = last_updated_time
         self.__measures = measures
@@ -522,7 +524,7 @@ class Report(Base):
         self.__parameters = parameters
         self.__position_source_id = position_source_id
         self.__position_source_type = get_enum_value(PositionSourceType, position_source_type)
-        self.__type = get_enum_value(ReportType, type)
+        self.__type = get_enum_value(ReportType, type_)
         self.__status = get_enum_value(ReportStatus, status)
         self.__latest_execution_time = latest_execution_time
         self.__latest_end_date = latest_end_date
@@ -685,7 +687,7 @@ class Report(Base):
 
     @position_source_type.setter
     def position_source_type(self, value: Union[PositionSourceType, str]):
-        self.__position_source_type = value if isinstance(value, PositionSourceType) else get_enum_value(PositionSourceType, value)
+        self.__position_source_type = get_enum_value(PositionSourceType, value)
         self._property_changed('position_source_type')        
 
     @property
@@ -695,7 +697,7 @@ class Report(Base):
 
     @type.setter
     def type(self, value: Union[ReportType, str]):
-        self.__type = value if isinstance(value, ReportType) else get_enum_value(ReportType, value)
+        self.__type = get_enum_value(ReportType, value)
         self._property_changed('type')        
 
     @property
@@ -705,7 +707,7 @@ class Report(Base):
 
     @status.setter
     def status(self, value: Union[ReportStatus, str]):
-        self.__status = value if isinstance(value, ReportStatus) else get_enum_value(ReportStatus, value)
+        self.__status = get_enum_value(ReportStatus, value)
         self._property_changed('status')        
 
     @property

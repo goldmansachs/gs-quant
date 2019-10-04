@@ -67,7 +67,7 @@ class StrategySystematic:
             notional_percentage = 100
             self.check_underlier_fields(instrument)
             self.__underliers.append(BacktestStrategyUnderlier(
-                instrument=instrument.as_dict(),
+                instrument=instrument,
                 notional_percentage=notional_percentage,
                 hedge=BacktestStrategyUnderlierHedge(risk_details=delta_hedge),
                 market_model=EQ_MARKET_MODEL))
@@ -83,7 +83,7 @@ class StrategySystematic:
                     raise MqValueError('The format of the backtest asset is incorrect.')
                 self.check_underlier_fields(instrument)
                 self.__underliers.append(BacktestStrategyUnderlier(
-                    instrument=instrument.as_dict(),
+                    instrument=instrument,
                     notional_percentage=notional_percentage,
                     hedge=BacktestStrategyUnderlierHedge(risk_details=delta_hedge),
                     market_model=EQ_MARKET_MODEL))
@@ -116,15 +116,18 @@ class StrategySystematic:
             start: datetime.date = None,
             end: datetime.date = datetime.date.today() - datetime.timedelta(days=1),
             is_async: bool = False,
-            measures: Iterable[FlowVolBacktestMeasure] = (FlowVolBacktestMeasure.ALL_MEASURES,)
+            measures: Iterable[FlowVolBacktestMeasure] = (FlowVolBacktestMeasure.ALL_MEASURES,),
+            correlation_id: str = None
     ) -> Union[Backtest, BacktestResult]:
 
         params_dict = self.__backtest_parameters.as_dict()
         params_dict['measures'] = [m.value for m in measures]
+        backtest_parameters_class: Base = getattr(backtests, self.__backtest_type + 'BacktestParameters')
+        params = backtest_parameters_class.from_dict(params_dict)
 
         backtest = Backtest(name=self.__name,
                             mq_symbol=self.__name,
-                            parameters=self.__backtest_parameters.as_dict(),
+                            parameters=params,
                             start_date=start,
                             end_date=end,
                             type=BACKTEST_TYPE_VALUE,
@@ -140,6 +143,6 @@ class StrategySystematic:
             GsBacktestApi.schedule_backtest(backtest_id=response.id)
         else:
             # Run on-the-fly back test
-            response = GsBacktestApi.run_backtest(backtest)
+            response = GsBacktestApi.run_backtest(backtest, correlation_id)
 
         return response

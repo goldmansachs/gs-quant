@@ -14,12 +14,12 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from enum import Enum
-from gs_quant.base import Base, EnumBase, get_enum_value
 from gs_quant.target.common import *
 from gs_quant.target.instrument import *
-from typing import Tuple, Union
 import datetime
+from typing import Tuple, Union
+from enum import Enum
+from gs_quant.base import Base, EnumBase, get_enum_value
 
 
 class BacktestRiskMeasureType(EnumBase, Enum):    
@@ -82,11 +82,11 @@ class BacktestComparison(Base):
        
     def __init__(
         self,
-        id: str = None,
+        id_: str = None,
         correlation: float = None        
     ):
         super().__init__()
-        self.__id = id
+        self.__id = id_
         self.__correlation = correlation
 
     @property
@@ -193,7 +193,8 @@ class BacktestRebalanceParameters(Base):
 
     @property
     def day_of_month(self) -> float:
-        """For monthly frequencyPeriod rebalances, the day of the month the rebalance should occur"""
+        """For monthly frequencyPeriod rebalances, the day of the month the rebalance
+           should occur"""
         return self.__day_of_month
 
     @day_of_month.setter
@@ -400,11 +401,11 @@ class ComparisonBacktestResult(Base):
     def __init__(
         self,
         stats: PerformanceStats = None,
-        id: str = None        
+        id_: str = None        
     ):
         super().__init__()
         self.__stats = stats
-        self.__id = id
+        self.__id = id_
 
     @property
     def stats(self) -> PerformanceStats:
@@ -447,7 +448,7 @@ class CurrencyRefData(Base):
 
     @default.setter
     def default(self, value: Union[Currency, str]):
-        self.__default = value if isinstance(value, Currency) else get_enum_value(Currency, value)
+        self.__default = get_enum_value(Currency, value)
         self._property_changed('default')        
 
     @property
@@ -601,7 +602,8 @@ class EnhancedBetaUnderlier(Base):
 
     @property
     def month_add(self) -> float:
-        """Allows users to roll to a contract farther in the future by the number of months specified."""
+        """Allows users to roll to a contract farther in the future by the number of months
+           specified."""
         return self.__month_add
 
     @month_add.setter
@@ -875,13 +877,13 @@ class NotionalPercentageRefData(Base):
     def __init__(
         self,
         default: float = None,
-        min: float = None,
-        max: float = None        
+        min_: float = None,
+        max_: float = None        
     ):
         super().__init__()
         self.__default = default
-        self.__min = min
-        self.__max = max
+        self.__min = min_
+        self.__max = max_
 
     @property
     def default(self) -> float:
@@ -1057,13 +1059,13 @@ class StrikeRefData(Base):
     def __init__(
         self,
         default: float = None,
-        min: float = None,
-        max: float = None        
+        min_: float = None,
+        max_: float = None        
     ):
         super().__init__()
         self.__default = default
-        self.__min = min
-        self.__max = max
+        self.__min = min_
+        self.__max = max_
 
     @property
     def default(self) -> float:
@@ -1220,7 +1222,8 @@ class VolatilityWeightedWeightingModifier(Base):
 
     @property
     def em_aalpha(self) -> float:
-        """Alpha value for Exponentially Weighted Moving Average Volatility; set to 0 if standard volatility."""
+        """Alpha value for Exponentially Weighted Moving Average Volatility; set to 0 if
+           standard volatility."""
         return self.__em_aalpha
 
     @em_aalpha.setter
@@ -1240,7 +1243,8 @@ class VolatilityWeightedWeightingModifier(Base):
 
     @property
     def use_log_return(self) -> bool:
-        """Whether to use Log Returns instead of Arithmetic Returns for volatility calculation."""
+        """Whether to use Log Returns instead of Arithmetic Returns for volatility
+           calculation."""
         return self.__use_log_return
 
     @use_log_return.setter
@@ -1264,7 +1268,8 @@ class VolatilityWeightedWeightingModifierRefData(Base):
 
     @property
     def em_aalpha(self) -> dict:
-        """Alpha value for Exponentially Weighted Moving Average Volatility reference data object."""
+        """Alpha value for Exponentially Weighted Moving Average Volatility reference data
+           object."""
         return self.__em_aalpha
 
     @em_aalpha.setter
@@ -1274,7 +1279,7 @@ class VolatilityWeightedWeightingModifierRefData(Base):
 
     @property
     def look_back_period(self) -> dict:
-        """Lookback period to measure volatility for each underlier reference data object. """
+        """Lookback period to measure volatility for each underlier reference data object."""
         return self.__look_back_period
 
     @look_back_period.setter
@@ -1430,7 +1435,8 @@ class BacktestRiskRequest(Base):
 
     @property
     def measures(self) -> Tuple[Union[BacktestRiskMeasureType, str], ...]:
-        """A collection of risk measures to compute. E.g. { 'measureType': 'Delta', 'assetClass': 'Equity'"""
+        """A collection of risk measures to compute. E.g. { 'measureType': 'Delta',
+           'assetClass': 'Equity'"""
         return self.__measures
 
     @measures.setter
@@ -1450,7 +1456,8 @@ class BacktestRiskRequest(Base):
 
     @property
     def end_date(self) -> datetime.date:
-        """End date of backtest risk computation selected by user. If not selected, defaults to the last date for which we can compute price"""
+        """End date of backtest risk computation selected by user. If not selected,
+           defaults to the last date for which we can compute price"""
         return self.__end_date
 
     @end_date.setter
@@ -2346,7 +2353,8 @@ class VolatilityFlowBacktestParameters(Base):
 
     @property
     def measures(self) -> Tuple[Union[FlowVolBacktestMeasure, str], ...]:
-        """Array of measures which should be calculated. By default all measures will be calculated"""
+        """Array of measures which should be calculated. By default all measures will be
+           calculated"""
         return self.__measures
 
     @measures.setter
@@ -2362,7 +2370,7 @@ class Backtest(Base):
     def __init__(
         self,
         name: str,
-        type: Union[BacktestType, str],
+        type_: Union[BacktestType, str],
         asset_class: Union[AssetClass, str],
         cost_netting: bool = False,
         created_by_id: str = None,
@@ -2370,7 +2378,7 @@ class Backtest(Base):
         currency: Union[Currency, str] = None,
         entitlements: Entitlements = None,
         entitlement_exclusions: EntitlementExclusions = None,
-        id: str = None,
+        id_: str = None,
         last_updated_by_id: str = None,
         last_updated_time: datetime.datetime = None,
         mq_symbol: str = None,
@@ -2388,7 +2396,7 @@ class Backtest(Base):
         self.__currency = get_enum_value(Currency, currency)
         self.__entitlements = entitlements
         self.__entitlement_exclusions = entitlement_exclusions
-        self.__id = id
+        self.__id = id_
         self.__last_updated_by_id = last_updated_by_id
         self.__last_updated_time = last_updated_time
         self.__mq_symbol = mq_symbol
@@ -2398,7 +2406,7 @@ class Backtest(Base):
         self.__parameters = parameters
         self.__start_date = start_date
         self.__end_date = end_date
-        self.__type = get_enum_value(BacktestType, type)
+        self.__type = get_enum_value(BacktestType, type_)
         self.__asset_class = get_enum_value(AssetClass, asset_class)
         self.__version = version
 
@@ -2439,7 +2447,7 @@ class Backtest(Base):
 
     @currency.setter
     def currency(self, value: Union[Currency, str]):
-        self.__currency = value if isinstance(value, Currency) else get_enum_value(Currency, value)
+        self.__currency = get_enum_value(Currency, value)
         self._property_changed('currency')        
 
     @property
@@ -2543,7 +2551,8 @@ class Backtest(Base):
 
     @property
     def start_date(self) -> datetime.date:
-        """Start date of backtest selected by user. If not selected, defaults to start of backtest timeseries."""
+        """Start date of backtest selected by user. If not selected, defaults to start of
+           backtest timeseries."""
         return self.__start_date
 
     @start_date.setter
@@ -2553,7 +2562,8 @@ class Backtest(Base):
 
     @property
     def end_date(self) -> datetime.date:
-        """End date of backtest selected by user. If not selected, defaults to end of backtest timeseries."""
+        """End date of backtest selected by user. If not selected, defaults to end of
+           backtest timeseries."""
         return self.__end_date
 
     @end_date.setter
@@ -2568,7 +2578,7 @@ class Backtest(Base):
 
     @type.setter
     def type(self, value: Union[BacktestType, str]):
-        self.__type = value if isinstance(value, BacktestType) else get_enum_value(BacktestType, value)
+        self.__type = get_enum_value(BacktestType, value)
         self._property_changed('type')        
 
     @property
@@ -2578,7 +2588,7 @@ class Backtest(Base):
 
     @asset_class.setter
     def asset_class(self, value: Union[AssetClass, str]):
-        self.__asset_class = value if isinstance(value, AssetClass) else get_enum_value(AssetClass, value)
+        self.__asset_class = get_enum_value(AssetClass, value)
         self._property_changed('asset_class')        
 
     @property
@@ -2598,7 +2608,7 @@ class BacktestRefData(Base):
        
     def __init__(
         self,
-        id: str = None,
+        id_: str = None,
         volatility: dict = None,
         enhanced_beta: EnhancedBetaRefData = None,
         basket: BasketBacktestRefData = None,
@@ -2609,7 +2619,7 @@ class BacktestRefData(Base):
         last_updated_time: datetime.datetime = None        
     ):
         super().__init__()
-        self.__id = id
+        self.__id = id_
         self.__volatility = volatility
         self.__enhanced_beta = enhanced_beta
         self.__basket = basket

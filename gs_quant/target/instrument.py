@@ -14,10 +14,10 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.base import Instrument, get_enum_value
 from gs_quant.target.common import *
-from typing import Tuple, Union
 import datetime
+from typing import Tuple, Union
+from gs_quant.base import Instrument, get_enum_value
 
 
 class CSLPython(Instrument):
@@ -96,7 +96,7 @@ class CSLPython(Instrument):
 
     @denominated.setter
     def denominated(self, value: Union[Currency, str]):
-        self.__denominated = value if isinstance(value, Currency) else get_enum_value(Currency, value)
+        self.__denominated = get_enum_value(Currency, value)
         self._property_changed('denominated')        
 
     @property
@@ -320,7 +320,7 @@ class CommodSwap(Instrument):
 
     @commodity.setter
     def commodity(self, value: Union[CommodityAsset, str]):
-        self.__commodity = value if isinstance(value, CommodityAsset) else get_enum_value(CommodityAsset, value)
+        self.__commodity = get_enum_value(CommodityAsset, value)
         self._property_changed('commodity')        
 
     @property
@@ -358,7 +358,7 @@ class CommodSwap(Instrument):
 
     @currency.setter
     def currency(self, value: Union[Currency, str]):
-        self.__currency = value if isinstance(value, Currency) else get_enum_value(Currency, value)
+        self.__currency = get_enum_value(Currency, value)
         self._property_changed('currency')        
 
     @property
@@ -378,7 +378,7 @@ class CommodSwap(Instrument):
 
     @calculation_period_frequency.setter
     def calculation_period_frequency(self, value: Union[Frequency, str]):
-        self.__calculation_period_frequency = value if isinstance(value, Frequency) else get_enum_value(Frequency, value)
+        self.__calculation_period_frequency = get_enum_value(Frequency, value)
         self._property_changed('calculation_period_frequency')        
 
 
@@ -444,7 +444,7 @@ class EqCliquet(Instrument):
 
     @currency.setter
     def currency(self, value: Union[Currency, str]):
-        self.__currency = value if isinstance(value, Currency) else get_enum_value(Currency, value)
+        self.__currency = get_enum_value(Currency, value)
         self._property_changed('currency')        
 
     @property
@@ -708,7 +708,8 @@ class EqOption(Instrument):
 
     @property
     def strike_price(self) -> Union[float, str]:
-        """Strike as value, percent or string e.g. 62.5, 95%, ATM, ATMF, 25ATM, 20CallDelta, 10PutDelta, 10NS"""
+        """Strike as value, percent or string e.g. 62.5, 95%, ATM, ATMF, 25ATM,
+           20CallDelta, 10PutDelta, 10NS"""
         return self.__strike_price
 
     @strike_price.setter
@@ -723,7 +724,7 @@ class EqOption(Instrument):
 
     @option_type.setter
     def option_type(self, value: Union[OptionType, str]):
-        self.__option_type = value if isinstance(value, OptionType) else get_enum_value(OptionType, value)
+        self.__option_type = get_enum_value(OptionType, value)
         self._property_changed('option_type')        
 
     @property
@@ -733,7 +734,7 @@ class EqOption(Instrument):
 
     @option_style.setter
     def option_style(self, value: Union[OptionStyle, str]):
-        self.__option_style = value if isinstance(value, OptionStyle) else get_enum_value(OptionStyle, value)
+        self.__option_style = get_enum_value(OptionStyle, value)
         self._property_changed('option_style')        
 
     @property
@@ -763,7 +764,7 @@ class EqOption(Instrument):
 
     @currency.setter
     def currency(self, value: Union[Currency, str]):
-        self.__currency = value if isinstance(value, Currency) else get_enum_value(Currency, value)
+        self.__currency = get_enum_value(Currency, value)
         self._property_changed('currency')        
 
     @property
@@ -979,7 +980,7 @@ class FXOption(Instrument):
 
     @call_currency.setter
     def call_currency(self, value: Union[Currency, str]):
-        self.__call_currency = value if isinstance(value, Currency) else get_enum_value(Currency, value)
+        self.__call_currency = get_enum_value(Currency, value)
         self._property_changed('call_currency')        
 
     @property
@@ -989,7 +990,7 @@ class FXOption(Instrument):
 
     @put_currency.setter
     def put_currency(self, value: Union[Currency, str]):
-        self.__put_currency = value if isinstance(value, Currency) else get_enum_value(Currency, value)
+        self.__put_currency = get_enum_value(Currency, value)
         self._property_changed('put_currency')        
 
     @property
@@ -1039,7 +1040,7 @@ class FXOption(Instrument):
 
     @option_type.setter
     def option_type(self, value: Union[OptionType, str]):
-        self.__option_type = value if isinstance(value, OptionType) else get_enum_value(OptionType, value)
+        self.__option_type = get_enum_value(OptionType, value)
         self._property_changed('option_type')        
 
     @property
@@ -1085,7 +1086,7 @@ class Forward(Instrument):
 
     @currency.setter
     def currency(self, value: Union[Currency, str]):
-        self.__currency = value if isinstance(value, Currency) else get_enum_value(Currency, value)
+        self.__currency = get_enum_value(Currency, value)
         self._property_changed('currency')        
 
     @property
@@ -1150,7 +1151,8 @@ class IRBasisSwap(Instrument):
         self.__receiver_designated_maturity = receiver_designated_maturity
         self.__receiver_frequency = receiver_frequency
         self.__receiver_day_count_fraction = get_enum_value(DayCountFraction, receiver_day_count_fraction)
-        self.__receiver_business_day_convention = get_enum_value(BusinessDayConvention, receiver_business_day_convention)
+        self.__receiver_business_day_convention =\
+            get_enum_value(BusinessDayConvention, receiver_business_day_convention)
         self.__fee = fee
         self.__clearing_house = get_enum_value(SwapClearingHouse, clearing_house)
 
@@ -1181,7 +1183,7 @@ class IRBasisSwap(Instrument):
 
     @notional_currency.setter
     def notional_currency(self, value: Union[Currency, str]):
-        self.__notional_currency = value if isinstance(value, Currency) else get_enum_value(Currency, value)
+        self.__notional_currency = get_enum_value(Currency, value)
         self._property_changed('notional_currency')        
 
     @property
@@ -1251,7 +1253,7 @@ class IRBasisSwap(Instrument):
 
     @payer_day_count_fraction.setter
     def payer_day_count_fraction(self, value: Union[DayCountFraction, str]):
-        self.__payer_day_count_fraction = value if isinstance(value, DayCountFraction) else get_enum_value(DayCountFraction, value)
+        self.__payer_day_count_fraction = get_enum_value(DayCountFraction, value)
         self._property_changed('payer_day_count_fraction')        
 
     @property
@@ -1261,7 +1263,7 @@ class IRBasisSwap(Instrument):
 
     @payer_business_day_convention.setter
     def payer_business_day_convention(self, value: Union[BusinessDayConvention, str]):
-        self.__payer_business_day_convention = value if isinstance(value, BusinessDayConvention) else get_enum_value(BusinessDayConvention, value)
+        self.__payer_business_day_convention = get_enum_value(BusinessDayConvention, value)
         self._property_changed('payer_business_day_convention')        
 
     @property
@@ -1276,7 +1278,8 @@ class IRBasisSwap(Instrument):
 
     @property
     def receiver_rate_option(self) -> str:
-        """The underlying benchmark for the receiver, e.g. USD-LIBOR-BBA, EUR-EURIBOR-TELERATE"""
+        """The underlying benchmark for the receiver, e.g. USD-LIBOR-BBA, EUR-EURIBOR-
+           TELERATE"""
         return self.__receiver_rate_option
 
     @receiver_rate_option.setter
@@ -1311,7 +1314,7 @@ class IRBasisSwap(Instrument):
 
     @receiver_day_count_fraction.setter
     def receiver_day_count_fraction(self, value: Union[DayCountFraction, str]):
-        self.__receiver_day_count_fraction = value if isinstance(value, DayCountFraction) else get_enum_value(DayCountFraction, value)
+        self.__receiver_day_count_fraction = get_enum_value(DayCountFraction, value)
         self._property_changed('receiver_day_count_fraction')        
 
     @property
@@ -1321,7 +1324,7 @@ class IRBasisSwap(Instrument):
 
     @receiver_business_day_convention.setter
     def receiver_business_day_convention(self, value: Union[BusinessDayConvention, str]):
-        self.__receiver_business_day_convention = value if isinstance(value, BusinessDayConvention) else get_enum_value(BusinessDayConvention, value)
+        self.__receiver_business_day_convention = get_enum_value(BusinessDayConvention, value)
         self._property_changed('receiver_business_day_convention')        
 
     @property
@@ -1341,7 +1344,7 @@ class IRBasisSwap(Instrument):
 
     @clearing_house.setter
     def clearing_house(self, value: Union[SwapClearingHouse, str]):
-        self.__clearing_house = value if isinstance(value, SwapClearingHouse) else get_enum_value(SwapClearingHouse, value)
+        self.__clearing_house = get_enum_value(SwapClearingHouse, value)
         self._property_changed('clearing_house')        
 
 
@@ -1374,7 +1377,8 @@ class IRCap(Instrument):
         self.__floating_rate_designated_maturity = floating_rate_designated_maturity
         self.__floating_rate_frequency = floating_rate_frequency
         self.__floating_rate_day_count_fraction = get_enum_value(DayCountFraction, floating_rate_day_count_fraction)
-        self.__floating_rate_business_day_convention = get_enum_value(BusinessDayConvention, floating_rate_business_day_convention)
+        self.__floating_rate_business_day_convention =\
+            get_enum_value(BusinessDayConvention, floating_rate_business_day_convention)
         self.__cap_rate = cap_rate
         self.__premium = premium
         self.__fee = fee
@@ -1407,7 +1411,7 @@ class IRCap(Instrument):
 
     @notional_currency.setter
     def notional_currency(self, value: Union[Currency, str]):
-        self.__notional_currency = value if isinstance(value, Currency) else get_enum_value(Currency, value)
+        self.__notional_currency = get_enum_value(Currency, value)
         self._property_changed('notional_currency')        
 
     @property
@@ -1432,7 +1436,8 @@ class IRCap(Instrument):
 
     @property
     def floating_rate_option(self) -> str:
-        """The underlying benchmark for the floating rate, e.g. USD-LIBOR-BBA, EUR-EURIBOR-TELERATE"""
+        """The underlying benchmark for the floating rate, e.g. USD-LIBOR-BBA, EUR-EURIBOR-
+           TELERATE"""
         return self.__floating_rate_option
 
     @floating_rate_option.setter
@@ -1467,7 +1472,7 @@ class IRCap(Instrument):
 
     @floating_rate_day_count_fraction.setter
     def floating_rate_day_count_fraction(self, value: Union[DayCountFraction, str]):
-        self.__floating_rate_day_count_fraction = value if isinstance(value, DayCountFraction) else get_enum_value(DayCountFraction, value)
+        self.__floating_rate_day_count_fraction = get_enum_value(DayCountFraction, value)
         self._property_changed('floating_rate_day_count_fraction')        
 
     @property
@@ -1477,12 +1482,13 @@ class IRCap(Instrument):
 
     @floating_rate_business_day_convention.setter
     def floating_rate_business_day_convention(self, value: Union[BusinessDayConvention, str]):
-        self.__floating_rate_business_day_convention = value if isinstance(value, BusinessDayConvention) else get_enum_value(BusinessDayConvention, value)
+        self.__floating_rate_business_day_convention = get_enum_value(BusinessDayConvention, value)
         self._property_changed('floating_rate_business_day_convention')        
 
     @property
     def cap_rate(self) -> Union[float, str]:
-        """The rate of this cap, as value, percent or at-the-money e.g. 62.5, 95%, ATM-25, ATMF"""
+        """The rate of this cap, as value, percent or at-the-money e.g. 62.5, 95%, ATM-25,
+           ATMF"""
         return self.__cap_rate
 
     @cap_rate.setter
@@ -1549,7 +1555,8 @@ class IRFloor(Instrument):
         self.__floating_rate_designated_maturity = floating_rate_designated_maturity
         self.__floating_rate_frequency = floating_rate_frequency
         self.__floating_rate_day_count_fraction = get_enum_value(DayCountFraction, floating_rate_day_count_fraction)
-        self.__floating_rate_business_day_convention = get_enum_value(BusinessDayConvention, floating_rate_business_day_convention)
+        self.__floating_rate_business_day_convention =\
+            get_enum_value(BusinessDayConvention, floating_rate_business_day_convention)
         self.__floor_rate = floor_rate
         self.__fee = fee
         self.__premium_payment_date = premium_payment_date
@@ -1581,7 +1588,7 @@ class IRFloor(Instrument):
 
     @notional_currency.setter
     def notional_currency(self, value: Union[Currency, str]):
-        self.__notional_currency = value if isinstance(value, Currency) else get_enum_value(Currency, value)
+        self.__notional_currency = get_enum_value(Currency, value)
         self._property_changed('notional_currency')        
 
     @property
@@ -1606,7 +1613,8 @@ class IRFloor(Instrument):
 
     @property
     def floating_rate_option(self) -> str:
-        """The underlying benchmark for the floating rate, e.g. USD-LIBOR-BBA, EUR-EURIBOR-TELERATE"""
+        """The underlying benchmark for the floating rate, e.g. USD-LIBOR-BBA, EUR-EURIBOR-
+           TELERATE"""
         return self.__floating_rate_option
 
     @floating_rate_option.setter
@@ -1641,7 +1649,7 @@ class IRFloor(Instrument):
 
     @floating_rate_day_count_fraction.setter
     def floating_rate_day_count_fraction(self, value: Union[DayCountFraction, str]):
-        self.__floating_rate_day_count_fraction = value if isinstance(value, DayCountFraction) else get_enum_value(DayCountFraction, value)
+        self.__floating_rate_day_count_fraction = get_enum_value(DayCountFraction, value)
         self._property_changed('floating_rate_day_count_fraction')        
 
     @property
@@ -1651,12 +1659,13 @@ class IRFloor(Instrument):
 
     @floating_rate_business_day_convention.setter
     def floating_rate_business_day_convention(self, value: Union[BusinessDayConvention, str]):
-        self.__floating_rate_business_day_convention = value if isinstance(value, BusinessDayConvention) else get_enum_value(BusinessDayConvention, value)
+        self.__floating_rate_business_day_convention = get_enum_value(BusinessDayConvention, value)
         self._property_changed('floating_rate_business_day_convention')        
 
     @property
     def floor_rate(self) -> Union[float, str]:
-        """The rate of this floor, as value, percent or at-the-money e.g. 62.5, 95%, ATM-25, ATMF"""
+        """The rate of this floor, as value, percent or at-the-money e.g. 62.5, 95%,
+           ATM-25, ATMF"""
         return self.__floor_rate
 
     @floor_rate.setter
@@ -1722,11 +1731,13 @@ class IRSwap(Instrument):
         self.__floating_rate_spread = floating_rate_spread
         self.__floating_rate_frequency = floating_rate_frequency
         self.__floating_rate_day_count_fraction = get_enum_value(DayCountFraction, floating_rate_day_count_fraction)
-        self.__floating_rate_business_day_convention = get_enum_value(BusinessDayConvention, floating_rate_business_day_convention)
+        self.__floating_rate_business_day_convention =\
+            get_enum_value(BusinessDayConvention, floating_rate_business_day_convention)
         self.__fixed_rate = fixed_rate
         self.__fixed_rate_frequency = fixed_rate_frequency
         self.__fixed_rate_day_count_fraction = get_enum_value(DayCountFraction, fixed_rate_day_count_fraction)
-        self.__fixed_rate_business_day_convention = get_enum_value(BusinessDayConvention, fixed_rate_business_day_convention)
+        self.__fixed_rate_business_day_convention =\
+            get_enum_value(BusinessDayConvention, fixed_rate_business_day_convention)
         self.__fee = fee
         self.__clearing_house = get_enum_value(SwapClearingHouse, clearing_house)
 
@@ -1747,7 +1758,7 @@ class IRSwap(Instrument):
 
     @pay_or_receive.setter
     def pay_or_receive(self, value: Union[PayReceive, str]):
-        self.__pay_or_receive = value if isinstance(value, PayReceive) else get_enum_value(PayReceive, value)
+        self.__pay_or_receive = get_enum_value(PayReceive, value)
         self._property_changed('pay_or_receive')        
 
     @property
@@ -1767,7 +1778,7 @@ class IRSwap(Instrument):
 
     @notional_currency.setter
     def notional_currency(self, value: Union[Currency, str]):
-        self.__notional_currency = value if isinstance(value, Currency) else get_enum_value(Currency, value)
+        self.__notional_currency = get_enum_value(Currency, value)
         self._property_changed('notional_currency')        
 
     @property
@@ -1802,7 +1813,8 @@ class IRSwap(Instrument):
 
     @property
     def floating_rate_option(self) -> str:
-        """The underlying benchmark for the floating rate, e.g. USD-LIBOR-BBA, EUR-EURIBOR-TELERATE"""
+        """The underlying benchmark for the floating rate, e.g. USD-LIBOR-BBA, EUR-EURIBOR-
+           TELERATE"""
         return self.__floating_rate_option
 
     @floating_rate_option.setter
@@ -1847,7 +1859,7 @@ class IRSwap(Instrument):
 
     @floating_rate_day_count_fraction.setter
     def floating_rate_day_count_fraction(self, value: Union[DayCountFraction, str]):
-        self.__floating_rate_day_count_fraction = value if isinstance(value, DayCountFraction) else get_enum_value(DayCountFraction, value)
+        self.__floating_rate_day_count_fraction = get_enum_value(DayCountFraction, value)
         self._property_changed('floating_rate_day_count_fraction')        
 
     @property
@@ -1857,7 +1869,7 @@ class IRSwap(Instrument):
 
     @floating_rate_business_day_convention.setter
     def floating_rate_business_day_convention(self, value: Union[BusinessDayConvention, str]):
-        self.__floating_rate_business_day_convention = value if isinstance(value, BusinessDayConvention) else get_enum_value(BusinessDayConvention, value)
+        self.__floating_rate_business_day_convention = get_enum_value(BusinessDayConvention, value)
         self._property_changed('floating_rate_business_day_convention')        
 
     @property
@@ -1887,7 +1899,7 @@ class IRSwap(Instrument):
 
     @fixed_rate_day_count_fraction.setter
     def fixed_rate_day_count_fraction(self, value: Union[DayCountFraction, str]):
-        self.__fixed_rate_day_count_fraction = value if isinstance(value, DayCountFraction) else get_enum_value(DayCountFraction, value)
+        self.__fixed_rate_day_count_fraction = get_enum_value(DayCountFraction, value)
         self._property_changed('fixed_rate_day_count_fraction')        
 
     @property
@@ -1897,7 +1909,7 @@ class IRSwap(Instrument):
 
     @fixed_rate_business_day_convention.setter
     def fixed_rate_business_day_convention(self, value: Union[BusinessDayConvention, str]):
-        self.__fixed_rate_business_day_convention = value if isinstance(value, BusinessDayConvention) else get_enum_value(BusinessDayConvention, value)
+        self.__fixed_rate_business_day_convention = get_enum_value(BusinessDayConvention, value)
         self._property_changed('fixed_rate_business_day_convention')        
 
     @property
@@ -1917,7 +1929,7 @@ class IRSwap(Instrument):
 
     @clearing_house.setter
     def clearing_house(self, value: Union[SwapClearingHouse, str]):
-        self.__clearing_house = value if isinstance(value, SwapClearingHouse) else get_enum_value(SwapClearingHouse, value)
+        self.__clearing_house = get_enum_value(SwapClearingHouse, value)
         self._property_changed('clearing_house')        
 
 
@@ -1961,10 +1973,12 @@ class IRSwaption(Instrument):
         self.__floating_rate_spread = floating_rate_spread
         self.__floating_rate_frequency = floating_rate_frequency
         self.__floating_rate_day_count_fraction = get_enum_value(DayCountFraction, floating_rate_day_count_fraction)
-        self.__floating_rate_business_day_convention = get_enum_value(BusinessDayConvention, floating_rate_business_day_convention)
+        self.__floating_rate_business_day_convention =\
+            get_enum_value(BusinessDayConvention, floating_rate_business_day_convention)
         self.__fixed_rate_frequency = fixed_rate_frequency
         self.__fixed_rate_day_count_fraction = get_enum_value(DayCountFraction, fixed_rate_day_count_fraction)
-        self.__fixed_rate_business_day_convention = get_enum_value(BusinessDayConvention, fixed_rate_business_day_convention)
+        self.__fixed_rate_business_day_convention =\
+            get_enum_value(BusinessDayConvention, fixed_rate_business_day_convention)
         self.__strike = strike
         self.__premium = premium
         self.__fee = fee
@@ -2019,7 +2033,7 @@ class IRSwaption(Instrument):
 
     @notional_currency.setter
     def notional_currency(self, value: Union[Currency, str]):
-        self.__notional_currency = value if isinstance(value, Currency) else get_enum_value(Currency, value)
+        self.__notional_currency = get_enum_value(Currency, value)
         self._property_changed('notional_currency')        
 
     @property
@@ -2044,7 +2058,8 @@ class IRSwaption(Instrument):
 
     @property
     def floating_rate_option(self) -> str:
-        """The underlying benchmark for the floating rate, e.g. USD-LIBOR-BBA, EUR-EURIBOR-TELERATE"""
+        """The underlying benchmark for the floating rate, e.g. USD-LIBOR-BBA, EUR-EURIBOR-
+           TELERATE"""
         return self.__floating_rate_option
 
     @floating_rate_option.setter
@@ -2089,7 +2104,7 @@ class IRSwaption(Instrument):
 
     @floating_rate_day_count_fraction.setter
     def floating_rate_day_count_fraction(self, value: Union[DayCountFraction, str]):
-        self.__floating_rate_day_count_fraction = value if isinstance(value, DayCountFraction) else get_enum_value(DayCountFraction, value)
+        self.__floating_rate_day_count_fraction = get_enum_value(DayCountFraction, value)
         self._property_changed('floating_rate_day_count_fraction')        
 
     @property
@@ -2099,7 +2114,7 @@ class IRSwaption(Instrument):
 
     @floating_rate_business_day_convention.setter
     def floating_rate_business_day_convention(self, value: Union[BusinessDayConvention, str]):
-        self.__floating_rate_business_day_convention = value if isinstance(value, BusinessDayConvention) else get_enum_value(BusinessDayConvention, value)
+        self.__floating_rate_business_day_convention = get_enum_value(BusinessDayConvention, value)
         self._property_changed('floating_rate_business_day_convention')        
 
     @property
@@ -2119,7 +2134,7 @@ class IRSwaption(Instrument):
 
     @fixed_rate_day_count_fraction.setter
     def fixed_rate_day_count_fraction(self, value: Union[DayCountFraction, str]):
-        self.__fixed_rate_day_count_fraction = value if isinstance(value, DayCountFraction) else get_enum_value(DayCountFraction, value)
+        self.__fixed_rate_day_count_fraction = get_enum_value(DayCountFraction, value)
         self._property_changed('fixed_rate_day_count_fraction')        
 
     @property
@@ -2129,7 +2144,7 @@ class IRSwaption(Instrument):
 
     @fixed_rate_business_day_convention.setter
     def fixed_rate_business_day_convention(self, value: Union[BusinessDayConvention, str]):
-        self.__fixed_rate_business_day_convention = value if isinstance(value, BusinessDayConvention) else get_enum_value(BusinessDayConvention, value)
+        self.__fixed_rate_business_day_convention = get_enum_value(BusinessDayConvention, value)
         self._property_changed('fixed_rate_business_day_convention')        
 
     @property
@@ -2169,7 +2184,7 @@ class IRSwaption(Instrument):
 
     @clearing_house.setter
     def clearing_house(self, value: Union[SwapClearingHouse, str]):
-        self.__clearing_house = value if isinstance(value, SwapClearingHouse) else get_enum_value(SwapClearingHouse, value)
+        self.__clearing_house = get_enum_value(SwapClearingHouse, value)
         self._property_changed('clearing_house')        
 
     @property
@@ -2179,7 +2194,7 @@ class IRSwaption(Instrument):
 
     @settlement.setter
     def settlement(self, value: Union[SwapSettlement, str]):
-        self.__settlement = value if isinstance(value, SwapSettlement) else get_enum_value(SwapSettlement, value)
+        self.__settlement = get_enum_value(SwapSettlement, value)
         self._property_changed('settlement')        
 
     @property
@@ -2195,7 +2210,8 @@ class IRSwaption(Instrument):
 
 class InflationSwap(Instrument):
         
-    """A vanilla inflation swap of fixed vs floating cashflows adjusted to an inflation rate"""
+    """A vanilla inflation swap of fixed vs floating cashflows adjusted to an inflation
+       rate"""
        
     def __init__(
         self,
@@ -2217,9 +2233,11 @@ class InflationSwap(Instrument):
         self.__notional_amount = notional_amount
         self.__effective_date = effective_date
         self.__index = index
-        self.__floating_rate_business_day_convention = get_enum_value(BusinessDayConvention, floating_rate_business_day_convention)
+        self.__floating_rate_business_day_convention =\
+            get_enum_value(BusinessDayConvention, floating_rate_business_day_convention)
         self.__fixed_rate = fixed_rate
-        self.__fixed_rate_business_day_convention = get_enum_value(BusinessDayConvention, fixed_rate_business_day_convention)
+        self.__fixed_rate_business_day_convention =\
+            get_enum_value(BusinessDayConvention, fixed_rate_business_day_convention)
         self.__fee = fee
 
     @property
@@ -2239,7 +2257,7 @@ class InflationSwap(Instrument):
 
     @pay_or_receive.setter
     def pay_or_receive(self, value: Union[PayReceive, str]):
-        self.__pay_or_receive = value if isinstance(value, PayReceive) else get_enum_value(PayReceive, value)
+        self.__pay_or_receive = get_enum_value(PayReceive, value)
         self._property_changed('pay_or_receive')        
 
     @property
@@ -2259,7 +2277,7 @@ class InflationSwap(Instrument):
 
     @notional_currency.setter
     def notional_currency(self, value: Union[Currency, str]):
-        self.__notional_currency = value if isinstance(value, Currency) else get_enum_value(Currency, value)
+        self.__notional_currency = get_enum_value(Currency, value)
         self._property_changed('notional_currency')        
 
     @property
@@ -2299,7 +2317,7 @@ class InflationSwap(Instrument):
 
     @floating_rate_business_day_convention.setter
     def floating_rate_business_day_convention(self, value: Union[BusinessDayConvention, str]):
-        self.__floating_rate_business_day_convention = value if isinstance(value, BusinessDayConvention) else get_enum_value(BusinessDayConvention, value)
+        self.__floating_rate_business_day_convention = get_enum_value(BusinessDayConvention, value)
         self._property_changed('floating_rate_business_day_convention')        
 
     @property
@@ -2319,7 +2337,7 @@ class InflationSwap(Instrument):
 
     @fixed_rate_business_day_convention.setter
     def fixed_rate_business_day_convention(self, value: Union[BusinessDayConvention, str]):
-        self.__fixed_rate_business_day_convention = value if isinstance(value, BusinessDayConvention) else get_enum_value(BusinessDayConvention, value)
+        self.__fixed_rate_business_day_convention = get_enum_value(BusinessDayConvention, value)
         self._property_changed('fixed_rate_business_day_convention')        
 
     @property
