@@ -12,6 +12,8 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+
+//Portions copyright Maverick Lin. Licensed under Apache 2.0 license
 """
 
 import os
@@ -64,7 +66,8 @@ setuptools.setup(
         "requests",
         "scipy",
         "six",
-        "typing;python_version<'3.7'"
+        "typing;python_version<'3.7'",
+        "fredapi"
     ],
     extras_require={
         "internal": ["gs_quant_internal", "requests_kerberos"],
