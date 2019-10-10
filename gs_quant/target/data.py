@@ -61,12 +61,12 @@ class AdvancedFilter(Base):
         self,
         column: str,
         value: float,
-        operator: str        
-    ):
+        operator: str
+    ):        
         super().__init__()
-        self.__column = column
-        self.__value = value
-        self.__operator = operator
+        self.column = column
+        self.value = value
+        self.operator = operator
 
     @property
     def column(self) -> str:
@@ -107,12 +107,12 @@ class DataFilter(Base):
         self,
         field: str,
         values: Tuple[str, ...],
-        column: str = None        
-    ):
+        column: str = None
+    ):        
         super().__init__()
-        self.__field = field
-        self.__column = column
-        self.__values = values
+        self.field = field
+        self.column = column
+        self.values = values
 
     @property
     def field(self) -> str:
@@ -150,11 +150,9 @@ class DataGroup(Base):
     """Dataset grouped by context (key dimensions)"""
        
     def __init__(
-        self,
-                
-    ):
+        self
+    ):        
         super().__init__()
-        
 
 
 class DataQuery(Base):
@@ -184,33 +182,33 @@ class DataQuery(Base):
         polling_interval: int = None,
         grouped: bool = None,
         fields: Tuple[Union[dict, str], ...] = None,
-        restrict_fields: bool = False        
-    ):
+        restrict_fields: bool = False
+    ):        
         super().__init__()
         self.__id = id_
-        self.__data_set_id = data_set_id
+        self.data_set_id = data_set_id
         self.__format = get_enum_value(Format, format_)
-        self.__market_data_coordinates = market_data_coordinates
-        self.__where = where
-        self.__vendor = vendor
-        self.__start_date = start_date
-        self.__end_date = end_date
-        self.__start_time = start_time
-        self.__end_time = end_time
-        self.__as_of_time = as_of_time
-        self.__id_as_of_date = id_as_of_date
-        self.__use_temporal_x_ref = use_temporal_x_ref
-        self.__since = since
-        self.__dates = dates
-        self.__times = times
-        self.__delay = delay
-        self.__intervals = intervals
-        self.__samples = samples
-        self.__limit = limit
-        self.__polling_interval = polling_interval
-        self.__grouped = grouped
-        self.__fields = fields
-        self.__restrict_fields = restrict_fields
+        self.market_data_coordinates = market_data_coordinates
+        self.where = where
+        self.vendor = vendor
+        self.start_date = start_date
+        self.end_date = end_date
+        self.start_time = start_time
+        self.end_time = end_time
+        self.as_of_time = as_of_time
+        self.id_as_of_date = id_as_of_date
+        self.use_temporal_x_ref = use_temporal_x_ref
+        self.since = since
+        self.dates = dates
+        self.times = times
+        self.delay = delay
+        self.intervals = intervals
+        self.samples = samples
+        self.limit = limit
+        self.polling_interval = polling_interval
+        self.grouped = grouped
+        self.fields = fields
+        self.restrict_fields = restrict_fields
 
     @property
     def id(self) -> str:
@@ -465,12 +463,12 @@ class DataSetDefaults(Base):
         self,
         start_seconds: float = None,
         end_seconds: float = None,
-        delay_seconds: float = None        
-    ):
+        delay_seconds: float = None
+    ):        
         super().__init__()
-        self.__start_seconds = start_seconds
-        self.__end_seconds = end_seconds
-        self.__delay_seconds = delay_seconds
+        self.start_seconds = start_seconds
+        self.end_seconds = end_seconds
+        self.delay_seconds = delay_seconds
 
     @property
     def start_seconds(self) -> float:
@@ -512,13 +510,13 @@ class DataSetDelay(Base):
         until_seconds: float,
         at_time_zone: str,
         history_up_to_seconds: float = None,
-        history_up_to_time: datetime.datetime = None        
-    ):
+        history_up_to_time: datetime.datetime = None
+    ):        
         super().__init__()
-        self.__until_seconds = until_seconds
-        self.__at_time_zone = at_time_zone
-        self.__history_up_to_seconds = history_up_to_seconds
-        self.__history_up_to_time = history_up_to_time
+        self.until_seconds = until_seconds
+        self.at_time_zone = at_time_zone
+        self.history_up_to_seconds = history_up_to_seconds
+        self.history_up_to_time = history_up_to_time
 
     @property
     def until_seconds(self) -> float:
@@ -576,9 +574,11 @@ class DataSetParameters(Base):
         coverage: str,
         frequency: str,
         methodology: str,
-        history: str,
         category: str = None,
         sub_category: str = None,
+        coverages: Tuple[Union[AssetType, str], ...] = None,
+        notes: str = None,
+        history: str = None,
         sample_start: datetime.datetime = None,
         sample_end: datetime.datetime = None,
         published_date: datetime.datetime = None,
@@ -595,36 +595,38 @@ class DataSetParameters(Base):
         include_in_catalog: bool = False,
         override_query_column_ids: Tuple[str, ...] = None,
         plot: bool = None,
-        coverage_enabled: bool = True        
-    ):
+        coverage_enabled: bool = True
+    ):        
         super().__init__()
-        self.__category = category
-        self.__sub_category = sub_category
-        self.__methodology = methodology
-        self.__coverage = coverage
-        self.__history = history
-        self.__sample_start = sample_start
-        self.__sample_end = sample_end
-        self.__published_date = published_date
-        self.__history_date = history_date
-        self.__frequency = frequency
-        self.__asset_class = get_enum_value(AssetClass, asset_class)
-        self.__owner_ids = owner_ids
-        self.__approver_ids = approver_ids
-        self.__support_ids = support_ids
-        self.__support_distribution_list = support_distribution_list
-        self.__apply_market_data_entitlements = apply_market_data_entitlements
-        self.__upload_data_policy = upload_data_policy
-        self.__identifier_mapper_name = identifier_mapper_name
-        self.__logical_db = logical_db
-        self.__symbol_strategy = symbol_strategy
-        self.__constant_symbols = constant_symbols
-        self.__underlying_data_set_id = underlying_data_set_id
-        self.__immutable = immutable
-        self.__include_in_catalog = include_in_catalog
-        self.__override_query_column_ids = override_query_column_ids
-        self.__plot = plot
-        self.__coverage_enabled = coverage_enabled
+        self.category = category
+        self.sub_category = sub_category
+        self.methodology = methodology
+        self.coverage = coverage
+        self.coverages = coverages
+        self.notes = notes
+        self.history = history
+        self.sample_start = sample_start
+        self.sample_end = sample_end
+        self.published_date = published_date
+        self.history_date = history_date
+        self.frequency = frequency
+        self.asset_class = asset_class
+        self.owner_ids = owner_ids
+        self.approver_ids = approver_ids
+        self.support_ids = support_ids
+        self.support_distribution_list = support_distribution_list
+        self.apply_market_data_entitlements = apply_market_data_entitlements
+        self.upload_data_policy = upload_data_policy
+        self.identifier_mapper_name = identifier_mapper_name
+        self.logical_db = logical_db
+        self.symbol_strategy = symbol_strategy
+        self.constant_symbols = constant_symbols
+        self.underlying_data_set_id = underlying_data_set_id
+        self.immutable = immutable
+        self.include_in_catalog = include_in_catalog
+        self.override_query_column_ids = override_query_column_ids
+        self.plot = plot
+        self.coverage_enabled = coverage_enabled
 
     @property
     def category(self) -> str:
@@ -665,6 +667,26 @@ class DataSetParameters(Base):
     def coverage(self, value: str):
         self.__coverage = value
         self._property_changed('coverage')        
+
+    @property
+    def coverages(self) -> Tuple[Union[AssetType, str], ...]:
+        """asset types coverage of dataset."""
+        return self.__coverages
+
+    @coverages.setter
+    def coverages(self, value: Tuple[Union[AssetType, str], ...]):
+        self.__coverages = value
+        self._property_changed('coverages')        
+
+    @property
+    def notes(self) -> str:
+        """Notes of dataset."""
+        return self.__notes
+
+    @notes.setter
+    def notes(self, value: str):
+        self.__notes = value
+        self._property_changed('notes')        
 
     @property
     def history(self) -> str:
@@ -911,11 +933,11 @@ class FieldLink(Base):
     def __init__(
         self,
         entity_identifier: str = None,
-        prefix: str = None        
-    ):
+        prefix: str = None
+    ):        
         super().__init__()
-        self.__entity_identifier = entity_identifier
-        self.__prefix = prefix
+        self.entity_identifier = entity_identifier
+        self.prefix = prefix
 
     @property
     def entity_type(self) -> str:
@@ -952,12 +974,12 @@ class MDAPI(Base):
         self,
         type_: str,
         quoting_styles: Tuple[dict, ...],
-        class_: str = None        
-    ):
+        class_: str = None
+    ):        
         super().__init__()
         self.__class = class_
         self.__type = type_
-        self.__quoting_styles = quoting_styles
+        self.quoting_styles = quoting_styles
 
     @property
     def class_(self) -> str:
@@ -967,7 +989,7 @@ class MDAPI(Base):
     @class_.setter
     def class_(self, value: str):
         self.__class = value
-        self._property_changed('class')        
+        self._property_changed('class_')        
 
     @property
     def type(self) -> str:
@@ -994,10 +1016,10 @@ class MDAPIDataQueryResponse(Base):
                
     def __init__(
         self,
-        data: Tuple[FieldValueMap, ...] = None        
-    ):
+        data: Tuple[FieldValueMap, ...] = None
+    ):        
         super().__init__()
-        self.__data = data
+        self.data = data
 
     @property
     def data(self) -> Tuple[FieldValueMap, ...]:
@@ -1015,11 +1037,11 @@ class MarketDataField(Base):
     def __init__(
         self,
         name: str = None,
-        mapping: str = None        
-    ):
+        mapping: str = None
+    ):        
         super().__init__()
-        self.__name = name
-        self.__mapping = mapping
+        self.name = name
+        self.mapping = mapping
 
     @property
     def name(self) -> str:
@@ -1048,14 +1070,14 @@ class MarketDataFilteredField(Base):
         default_value: str = None,
         default_numerical_value: float = None,
         numerical_values: Tuple[float, ...] = None,
-        values: Tuple[str, ...] = None        
-    ):
+        values: Tuple[str, ...] = None
+    ):        
         super().__init__()
-        self.__field = field
-        self.__default_value = default_value
-        self.__default_numerical_value = default_numerical_value
-        self.__numerical_values = numerical_values
-        self.__values = values
+        self.field = field
+        self.default_value = default_value
+        self.default_numerical_value = default_numerical_value
+        self.numerical_values = numerical_values
+        self.values = values
 
     @property
     def field(self) -> str:
@@ -1113,11 +1135,9 @@ class MeasureBacktest(Base):
     """Describes backtests that should be associated with a measure."""
        
     def __init__(
-        self,
-                
-    ):
+        self
+    ):        
         super().__init__()
-        
 
 
 class MeasureKpi(Base):
@@ -1125,11 +1145,9 @@ class MeasureKpi(Base):
     """Describes KPIs that should be associated with a measure."""
        
     def __init__(
-        self,
-                
-    ):
+        self
+    ):        
         super().__init__()
-        
 
 
 class MidPrice(Base):
@@ -1140,12 +1158,12 @@ class MidPrice(Base):
         self,
         bid_column: str = None,
         ask_column: str = None,
-        mid_column: str = None        
-    ):
+        mid_column: str = None
+    ):        
         super().__init__()
-        self.__bid_column = bid_column
-        self.__ask_column = ask_column
-        self.__mid_column = mid_column
+        self.bid_column = bid_column
+        self.ask_column = ask_column
+        self.mid_column = mid_column
 
     @property
     def bid_column(self) -> str:
@@ -1186,12 +1204,12 @@ class ParserEntity(Base):
         self,
         only_normalized_fields: bool = None,
         quotes: bool = None,
-        trades: bool = None        
-    ):
+        trades: bool = None
+    ):        
         super().__init__()
-        self.__only_normalized_fields = only_normalized_fields
-        self.__quotes = quotes
-        self.__trades = trades
+        self.only_normalized_fields = only_normalized_fields
+        self.quotes = quotes
+        self.trades = trades
 
     @property
     def only_normalized_fields(self) -> bool:
@@ -1224,6 +1242,55 @@ class ParserEntity(Base):
         self._property_changed('trades')        
 
 
+class TimeFilter(Base):
+        
+    """Filter to restrict data to a range of hours per day."""
+       
+    def __init__(
+        self,
+        start_hours: str,
+        end_hours: str,
+        time_zone: str
+    ):        
+        super().__init__()
+        self.start_hours = start_hours
+        self.end_hours = end_hours
+        self.time_zone = time_zone
+
+    @property
+    def start_hours(self) -> str:
+        """Start hours after which the data will be shown. Data is inclusive of the
+           startHours value."""
+        return self.__start_hours
+
+    @start_hours.setter
+    def start_hours(self, value: str):
+        self.__start_hours = value
+        self._property_changed('start_hours')        
+
+    @property
+    def end_hours(self) -> str:
+        """End hours up to which the data will be shown. Data is exclusive of the endHours
+           value with a precision of 1 second."""
+        return self.__end_hours
+
+    @end_hours.setter
+    def end_hours(self, value: str):
+        self.__end_hours = value
+        self._property_changed('end_hours')        
+
+    @property
+    def time_zone(self) -> str:
+        """The time zone with respect to which the start and end hours will be applied
+           (must be a valid IANA TimeZone identifier)."""
+        return self.__time_zone
+
+    @time_zone.setter
+    def time_zone(self, value: str):
+        self.__time_zone = value
+        self._property_changed('time_zone')        
+
+
 class ComplexFilter(Base):
         
     """A compound filter for data requests."""
@@ -1231,11 +1298,11 @@ class ComplexFilter(Base):
     def __init__(
         self,
         operator: str,
-        simple_filters: Tuple[DataFilter, ...]        
-    ):
+        simple_filters: Tuple[DataFilter, ...]
+    ):        
         super().__init__()
-        self.__operator = operator
-        self.__simple_filters = simple_filters
+        self.operator = operator
+        self.simple_filters = simple_filters
 
     @property
     def operator(self) -> str:
@@ -1269,18 +1336,18 @@ class DataQueryResponse(Base):
         entity_type: Union[MeasureEntityType, str] = None,
         delay: int = None,
         data: Tuple[FieldValueMap, ...] = None,
-        groups: Tuple[DataGroup, ...] = None        
-    ):
+        groups: Tuple[DataGroup, ...] = None
+    ):        
         super().__init__()
-        self.__request_id = request_id
+        self.request_id = request_id
         self.__type = type_
-        self.__error_message = error_message
+        self.error_message = error_message
         self.__id = id_
-        self.__data_set_id = data_set_id
-        self.__entity_type = get_enum_value(MeasureEntityType, entity_type)
-        self.__delay = delay
-        self.__data = data
-        self.__groups = groups
+        self.data_set_id = data_set_id
+        self.entity_type = entity_type
+        self.delay = delay
+        self.data = data
+        self.groups = groups
 
     @property
     def request_id(self) -> str:
@@ -1379,13 +1446,13 @@ class FieldColumnPair(Base):
         field: str = None,
         column: str = None,
         field_description: str = None,
-        link: FieldLink = None        
-    ):
+        link: FieldLink = None
+    ):        
         super().__init__()
-        self.__field = field
-        self.__column = column
-        self.__field_description = field_description
-        self.__link = link
+        self.field = field
+        self.column = column
+        self.field_description = field_description
+        self.link = link
 
     @property
     def field(self) -> str:
@@ -1438,14 +1505,14 @@ class HistoryFilter(Base):
         absolute_end: datetime.datetime = None,
         relative_start_seconds: float = None,
         relative_end_seconds: float = None,
-        delay: DataSetDelay = None        
-    ):
+        delay: DataSetDelay = None
+    ):        
         super().__init__()
-        self.__absolute_start = absolute_start
-        self.__absolute_end = absolute_end
-        self.__relative_start_seconds = relative_start_seconds
-        self.__relative_end_seconds = relative_end_seconds
-        self.__delay = delay
+        self.absolute_start = absolute_start
+        self.absolute_end = absolute_end
+        self.relative_start_seconds = relative_start_seconds
+        self.relative_end_seconds = relative_end_seconds
+        self.delay = delay
 
     @property
     def absolute_start(self) -> datetime.datetime:
@@ -1503,11 +1570,11 @@ class MDAPIDataBatchResponse(Base):
     def __init__(
         self,
         request_id: str = None,
-        responses: Tuple[MDAPIDataQueryResponse, ...] = None        
-    ):
+        responses: Tuple[MDAPIDataQueryResponse, ...] = None
+    ):        
         super().__init__()
-        self.__request_id = request_id
-        self.__responses = responses
+        self.request_id = request_id
+        self.responses = responses
 
     @property
     def request_id(self) -> str:
@@ -1548,24 +1615,24 @@ class MarketDataMapping(Base):
         asset_types: Tuple[Union[AssetType, str], ...] = None,
         entity_type: Union[MeasureEntityType, str] = None,
         backtest_entity: MeasureBacktest = None,
-        kpi_entity: MeasureKpi = None        
-    ):
+        kpi_entity: MeasureKpi = None
+    ):        
         super().__init__()
-        self.__asset_class = get_enum_value(AssetClass, asset_class)
-        self.__query_type = query_type
-        self.__description = description
-        self.__scale = scale
-        self.__frequency = get_enum_value(MarketDataFrequency, frequency)
-        self.__measures = measures
-        self.__data_set = data_set
-        self.__vendor = get_enum_value(MarketDataVendor, vendor)
-        self.__fields = fields
-        self.__rank = rank
-        self.__filtered_fields = filtered_fields
-        self.__asset_types = asset_types
-        self.__entity_type = get_enum_value(MeasureEntityType, entity_type)
-        self.__backtest_entity = backtest_entity
-        self.__kpi_entity = kpi_entity
+        self.asset_class = asset_class
+        self.query_type = query_type
+        self.description = description
+        self.scale = scale
+        self.frequency = frequency
+        self.measures = measures
+        self.data_set = data_set
+        self.vendor = vendor
+        self.fields = fields
+        self.rank = rank
+        self.filtered_fields = filtered_fields
+        self.asset_types = asset_types
+        self.entity_type = entity_type
+        self.backtest_entity = backtest_entity
+        self.kpi_entity = kpi_entity
 
     @property
     def asset_class(self) -> Union[AssetClass, str]:
@@ -1720,12 +1787,12 @@ class ProcessorEntity(Base):
         self,
         filters: Tuple[str, ...] = None,
         parsers: Tuple[ParserEntity, ...] = None,
-        deduplicate: Tuple[str, ...] = None        
-    ):
+        deduplicate: Tuple[str, ...] = None
+    ):        
         super().__init__()
-        self.__filters = filters
-        self.__parsers = parsers
-        self.__deduplicate = deduplicate
+        self.filters = filters
+        self.parsers = parsers
+        self.deduplicate = deduplicate
 
     @property
     def filters(self) -> Tuple[str, ...]:
@@ -1770,16 +1837,16 @@ class DataSetDimensions(Base):
         non_symbol_dimensions: Tuple[FieldColumnPair, ...] = None,
         key_dimensions: Tuple[str, ...] = None,
         measures: Tuple[FieldColumnPair, ...] = None,
-        entity_dimension: str = None        
-    ):
+        entity_dimension: str = None
+    ):        
         super().__init__()
-        self.__time_field = time_field
-        self.__transaction_time_field = transaction_time_field
-        self.__symbol_dimensions = symbol_dimensions
-        self.__non_symbol_dimensions = non_symbol_dimensions
-        self.__key_dimensions = key_dimensions
-        self.__measures = measures
-        self.__entity_dimension = entity_dimension
+        self.time_field = time_field
+        self.transaction_time_field = transaction_time_field
+        self.symbol_dimensions = symbol_dimensions
+        self.non_symbol_dimensions = non_symbol_dimensions
+        self.key_dimensions = key_dimensions
+        self.measures = measures
+        self.entity_dimension = entity_dimension
 
     @property
     def time_field(self) -> str:
@@ -1859,12 +1926,12 @@ class EntityFilter(Base):
         self,
         operator: str = None,
         simple_filters: Tuple[DataFilter, ...] = None,
-        complex_filters: Tuple[ComplexFilter, ...] = None        
-    ):
+        complex_filters: Tuple[ComplexFilter, ...] = None
+    ):        
         super().__init__()
-        self.__operator = operator
-        self.__simple_filters = simple_filters
-        self.__complex_filters = complex_filters
+        self.operator = operator
+        self.simple_filters = simple_filters
+        self.complex_filters = complex_filters
 
     @property
     def operator(self) -> str:
@@ -1905,13 +1972,15 @@ class DataSetFilters(Base):
         entity_filter: EntityFilter = None,
         row_filters: Tuple[DataFilter, ...] = None,
         advanced_filters: Tuple[AdvancedFilter, ...] = None,
-        history_filter: HistoryFilter = None        
-    ):
+        history_filter: HistoryFilter = None,
+        time_filter: TimeFilter = None
+    ):        
         super().__init__()
-        self.__entity_filter = entity_filter
-        self.__row_filters = row_filters
-        self.__advanced_filters = advanced_filters
-        self.__history_filter = history_filter
+        self.entity_filter = entity_filter
+        self.row_filters = row_filters
+        self.advanced_filters = advanced_filters
+        self.history_filter = history_filter
+        self.time_filter = time_filter
 
     @property
     def entity_filter(self) -> EntityFilter:
@@ -1953,6 +2022,16 @@ class DataSetFilters(Base):
         self.__history_filter = value
         self._property_changed('history_filter')        
 
+    @property
+    def time_filter(self) -> TimeFilter:
+        """Filter to restrict data to a range of hours per day."""
+        return self.__time_filter
+
+    @time_filter.setter
+    def time_filter(self, value: TimeFilter):
+        self.__time_filter = value
+        self._property_changed('time_filter')        
+
 
 class DataSetEntity(Base):
                
@@ -1979,31 +2058,31 @@ class DataSetEntity(Base):
         created_time: datetime.datetime = None,
         last_updated_by_id: str = None,
         last_updated_time: datetime.datetime = None,
-        tags: Tuple[str, ...] = None        
-    ):
+        tags: Tuple[str, ...] = None
+    ):        
         super().__init__()
-        self.__owner_id = owner_id
+        self.owner_id = owner_id
         self.__id = id_
-        self.__name = name
-        self.__description = description
-        self.__short_description = short_description
-        self.__mappings = mappings
-        self.__vendor = vendor
-        self.__start_date = start_date
-        self.__mdapi = mdapi
-        self.__data_product = data_product
-        self.__entitlements = entitlements
-        self.__entitlement_exclusions = entitlement_exclusions
-        self.__query_processors = query_processors
-        self.__parameters = parameters
-        self.__dimensions = dimensions
-        self.__defaults = defaults
-        self.__filters = filters
-        self.__created_by_id = created_by_id
-        self.__created_time = created_time
-        self.__last_updated_by_id = last_updated_by_id
-        self.__last_updated_time = last_updated_time
-        self.__tags = tags
+        self.name = name
+        self.description = description
+        self.short_description = short_description
+        self.mappings = mappings
+        self.vendor = vendor
+        self.start_date = start_date
+        self.mdapi = mdapi
+        self.data_product = data_product
+        self.entitlements = entitlements
+        self.entitlement_exclusions = entitlement_exclusions
+        self.query_processors = query_processors
+        self.parameters = parameters
+        self.dimensions = dimensions
+        self.defaults = defaults
+        self.filters = filters
+        self.created_by_id = created_by_id
+        self.created_time = created_time
+        self.last_updated_by_id = last_updated_by_id
+        self.last_updated_time = last_updated_time
+        self.tags = tags
 
     @property
     def owner_id(self) -> str:

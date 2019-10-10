@@ -15,17 +15,26 @@ under the License.
 """
 import builtins
 from concurrent.futures import Future
+import copy
 import datetime as dt
 import dateutil
 from enum import EnumMeta
 import inflection
 from inspect import signature, Parameter
+import keyword
 import logging
 import pandas as pd
 from typing import Mapping, Optional, Tuple, Union, get_type_hints
 
 
 _logger = logging.getLogger(__name__)
+
+
+def _normalise_arg(arg: str) -> str:
+    if keyword.iskeyword(arg) or arg in dir(builtins):
+        return arg + '_'
+    else:
+        return arg
 
 
 class EnumBase:
@@ -40,8 +49,7 @@ class BaseMeta(type):
     def __call__(cls, *args, **kwargs):
         normalised_kwargs = {}
         for arg, value in kwargs.items():
-            if arg in dir(builtins):
-                arg += '_'
+            arg = _normalise_arg(arg)
 
             if not arg.isupper():
                 snake_case_arg = inflection.underscore(arg)
@@ -67,20 +75,22 @@ class Base(metaclass=BaseMeta):
     __properties = set()
 
     def __init__(self):
-        self.__calced_hash = None
+        self.__calced_hash: int = None
 
     def __getattr__(self, item):
         snake_case_item = inflection.underscore(item)
-        attr = getattr(super().__getattribute__('__class__'), snake_case_item, None)
-        if attr and isinstance(attr, property):
+        if snake_case_item in super().__getattribute__('properties')():
             return super().__getattribute__(snake_case_item)
         else:
             return super().__getattribute__(item)
 
     def __setattr__(self, key, value):
+        properties = super().__getattribute__('properties')()
         snake_case_key = inflection.underscore(key)
-        attr = getattr(super().__getattribute__('__class__'), snake_case_key, None)
-        if attr and isinstance(attr, property):
+        key_is_property = key in properties
+        snake_case_key_is_property = snake_case_key in properties
+
+        if snake_case_key_is_property and not key_is_property:
             return super().__setattr__(snake_case_key, value)
         else:
             return super().__setattr__(key, value)
@@ -88,24 +98,51 @@ class Base(metaclass=BaseMeta):
     def _property_changed(self, prop: str):
         self.__calced_hash = None
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         if self.__calced_hash is None:
             properties = iter(self.properties())
             prop = next(properties, None)
-            self.__calced_hash = hash(super().__getattribute__(prop)) if prop else 1
+            calced_hash = hash(super().__getattribute__(prop)) if prop else 1
             for prop in properties:
-                self.__calced_hash ^= hash(super().__getattribute__(prop))
+                calced_hash ^= hash(super().__getattribute__(prop))
+
+            self.__calced_hash = calced_hash
 
         return self.__calced_hash
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         return\
             type(self) == type(other) and\
             (self.__calced_hash is None or other.__calced_hash is None or self.__calced_hash == other.__calced_hash) and\
             all(super(Base, self).__getattribute__(p) == super(Base, other).__getattribute__(p) for p in self.properties())
 
-    def __ne__(self, other):
+    def __ne__(self, other) -> bool:
         return not self.__eq__(other)
+
+    def clone(self, **kwargs):
+        """
+            Clone this object, overriding specified values
+
+            :param kwargs: property names and values, e.g. swap.clone(fixed_rate=0.01)
+
+            **Examples**
+
+            To change the market data location of the default context:
+
+            >>> from gs_quant.instrument import IRCap
+            >>> cap = IRCap('5y', 'GBP')
+            >>>
+            >>> new_cap = cap.clone(cap_rate=0.01)
+        """
+        clone = copy.copy(self)
+        properties = self.properties()
+        for key, value in kwargs.items():
+            if key in properties:
+                setattr(clone, key, value)
+            else:
+                raise ValueError('Only properties may be passed as kwargs')
+
+        return clone
 
     @classmethod
     def properties(cls) -> set:
@@ -191,7 +228,7 @@ class Base(metaclass=BaseMeta):
         required = {}
 
         for arg in args:
-            prop_name = arg[:-1] if arg.endswith('_') else arg
+            prop_name = arg[:-1] if arg.endswith('_') and not keyword.iskeyword(arg) else arg
             prop_type = cls.prop_type(prop_name)
             value = values.pop(arg, None)
 
@@ -236,10 +273,20 @@ class Priceable(Base):
 
     def __init__(self):
         super().__init__()
-        self._resolved = False
+        self._resolution_info: dict = None
+        self.unresolved: Priceable = None
 
     def __getattribute__(self, name):
-        if not super().__getattribute__('_resolved'):
+        resolved = False
+
+        try:
+            resolved = super().__getattribute__('_resolution_info') is not None
+        except AttributeError:
+            pass
+
+        from gs_quant.session import GsSession
+
+        if GsSession.current_is_set and not resolved:
             attr = getattr(super().__getattribute__('__class__'), name, None)
             if attr and isinstance(attr, property) and super().__getattribute__(name) is None:
                 self.resolve()
@@ -248,7 +295,7 @@ class Priceable(Base):
 
     def _property_changed(self, prop: str):
         super()._property_changed(prop)
-        self._resolved = False
+        self._resolution_info = None
 
     def get_quantity(self) -> float:
         """
@@ -285,9 +332,6 @@ class Priceable(Base):
         rates is now the solved fixed rate
         """
         from gs_quant.risk import PricingContext
-        if self._resolved:
-            raise RuntimeError('Already resolved')
-
         return PricingContext.current.resolve_fields(self, in_place)
 
     def dollar_price(self) -> Union[float, Future]:

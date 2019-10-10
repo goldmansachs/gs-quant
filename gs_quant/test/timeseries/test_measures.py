@@ -1055,6 +1055,9 @@ def test_bucketize_price():
                             actual)
 
         with pytest.raises(ValueError):
+            tm.bucketize_price(mock_pjm, 'LMP', bucket='7X24', real_time=True)
+
+        with pytest.raises(ValueError):
             tm.bucketize_price(mock_pjm, 'LMP', bucket='weekday')
 
         with pytest.raises(ValueError):

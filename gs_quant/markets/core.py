@@ -14,9 +14,11 @@ specific language governing permissions and limitations
 under the License.
 """
 from concurrent.futures import Future, ThreadPoolExecutor
+import copy
 import datetime as dt
 import functools
 import inflection
+import logging
 from typing import Optional, Tuple, Union
 
 import pandas as pd
@@ -27,6 +29,8 @@ from gs_quant.datetime.date import business_day_offset
 from gs_quant.session import GsSession
 from gs_quant.target.common import MarketDataCoordinate as __MarketDataCoordinate
 from gs_quant.target.risk import PricingDateAndMarketDataAsOf, RiskMeasure, RiskPosition, RiskRequest
+
+_logger = logging.getLogger(__name__)
 
 
 class MarketDataCoordinate(__MarketDataCoordinate):
@@ -251,9 +255,10 @@ class PricingContext(ContextBaseWithDefault):
         value_mappings = {'Payer': 'Pay', 'Rec': 'Receive', 'Receiver': 'Receive'}
 
         def apply_field_values(
-                field_values: Union[dict, list, tuple, Future],
-                priceable_inst: Priceable,
-                future: Optional[Future] = None
+            field_values: Union[dict, list, tuple, Future],
+            priceable_inst: Priceable,
+            resolution_info: dict,
+            future: Optional[Future] = None
         ):
             if isinstance(field_values, str):
                 raise RuntimeError(field_values)
@@ -274,23 +279,42 @@ class PricingContext(ContextBaseWithDefault):
                             if inflection.underscore(field) in priceable_inst.properties() and value not in invalid_defaults}
 
             if in_place and not future:
+                priceable_inst.unresolved = copy.copy(priceable_inst)
                 for field, value in field_values.items():
                     setattr(priceable_inst, field, value)
 
-                priceable_inst._resolved = True
+                priceable_inst._resolution_info = resolution_info
             else:
                 new_inst = priceable_inst._from_dict(field_values)
-                new_inst._resolved = True
+                new_inst.unresolved = priceable_inst
+                new_inst._resolution_info = resolution_info
 
                 if future:
                     future.set_result(new_inst)
                 else:
                     return new_inst
 
+        resolution_info = {
+            'pricing_date': self.pricing_date,
+            'market_data_as_of': self.market_data_as_of,
+            'market_data_location': self.market_data_location}
+
+        if priceable._resolution_info:
+            if in_place:
+                if resolution_info != priceable._resolution_info:
+                    _logger.warning('Calling resolve() on an instrument which was already resolved under a difference PricingContext')
+
+                return
+            elif resolution_info == priceable._resolution_info:
+                return copy.copy(priceable)
+
         res = self.calc(priceable, RiskMeasure(measure_type='Resolved Instrument Values'))
         if isinstance(res, Future):
             ret = Future() if not in_place else None
-            res.add_done_callback(functools.partial(apply_field_values, priceable_inst=priceable, future=ret))
+            res.add_done_callback(functools.partial(apply_field_values,
+                                                    priceable_inst=priceable,
+                                                    resolution_info=resolution_info,
+                                                    future=ret))
             return ret
         else:
-            return apply_field_values(res, priceable)
+            return apply_field_values(res, priceable, resolution_info)

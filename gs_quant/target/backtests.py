@@ -83,11 +83,11 @@ class BacktestComparison(Base):
     def __init__(
         self,
         id_: str = None,
-        correlation: float = None        
-    ):
+        correlation: float = None
+    ):        
         super().__init__()
         self.__id = id_
-        self.__correlation = correlation
+        self.correlation = correlation
 
     @property
     def id(self) -> str:
@@ -117,11 +117,11 @@ class BacktestPerformanceDecomposition(Base):
     def __init__(
         self,
         name: str = None,
-        stats: PerformanceStats = None        
-    ):
+        stats: PerformanceStats = None
+    ):        
         super().__init__()
-        self.__name = name
-        self.__stats = stats
+        self.name = name
+        self.stats = stats
 
     @property
     def name(self) -> str:
@@ -153,13 +153,13 @@ class BacktestRebalanceParameters(Base):
         frequency_period: str = None,
         frequency: int = None,
         day_of_week: str = None,
-        day_of_month: float = None        
-    ):
+        day_of_month: float = None
+    ):        
         super().__init__()
-        self.__frequency_period = frequency_period
-        self.__frequency = frequency
-        self.__day_of_week = day_of_week
-        self.__day_of_month = day_of_month
+        self.frequency_period = frequency_period
+        self.frequency = frequency
+        self.day_of_week = day_of_week
+        self.day_of_month = day_of_month
 
     @property
     def frequency_period(self) -> str:
@@ -209,10 +209,10 @@ class BacktestRisk(Base):
        
     def __init__(
         self,
-        name: str = None        
-    ):
+        name: str = None
+    ):        
         super().__init__()
-        self.__name = name
+        self.name = name
 
     @property
     def name(self) -> str:
@@ -230,11 +230,11 @@ class BacktestRiskPosition(Base):
     def __init__(
         self,
         instrument: EqOption,
-        quantity: float = None        
-    ):
+        quantity: float = None
+    ):        
         super().__init__()
-        self.__instrument = instrument
-        self.__quantity = quantity
+        self.instrument = instrument
+        self.quantity = quantity
 
     @property
     def instrument(self) -> EqOption:
@@ -266,14 +266,14 @@ class BacktestTradingParameters(Base):
         quantity: float = None,
         trade_in_method: str = None,
         roll_frequency: str = None,
-        scaling_method: str = None        
-    ):
+        scaling_method: str = None
+    ):        
         super().__init__()
-        self.__quantity_type = quantity_type
-        self.__quantity = quantity
-        self.__trade_in_method = trade_in_method
-        self.__roll_frequency = roll_frequency
-        self.__scaling_method = scaling_method
+        self.quantity_type = quantity_type
+        self.quantity = quantity
+        self.trade_in_method = trade_in_method
+        self.roll_frequency = roll_frequency
+        self.scaling_method = scaling_method
 
     @property
     def quantity_type(self) -> str:
@@ -333,11 +333,11 @@ class BaseIndexRefData(Base):
     def __init__(
         self,
         default: str = None,
-        enum: Tuple[str, ...] = None        
-    ):
+        enum: Tuple[str, ...] = None
+    ):        
         super().__init__()
-        self.__default = default
-        self.__enum = enum
+        self.default = default
+        self.enum = enum
 
     @property
     def default(self) -> str:
@@ -367,11 +367,11 @@ class BuySellRefData(Base):
     def __init__(
         self,
         default: str = None,
-        enum: Tuple[str, ...] = None        
-    ):
+        enum: Tuple[str, ...] = None
+    ):        
         super().__init__()
-        self.__default = default
-        self.__enum = enum
+        self.default = default
+        self.enum = enum
 
     @property
     def default(self) -> str:
@@ -401,10 +401,10 @@ class ComparisonBacktestResult(Base):
     def __init__(
         self,
         stats: PerformanceStats = None,
-        id_: str = None        
-    ):
+        id_: str = None
+    ):        
         super().__init__()
-        self.__stats = stats
+        self.stats = stats
         self.__id = id_
 
     @property
@@ -435,11 +435,11 @@ class CurrencyRefData(Base):
     def __init__(
         self,
         default: Union[Currency, str] = None,
-        enum: Tuple[Union[Currency, str], ...] = None        
-    ):
+        enum: Tuple[Union[Currency, str], ...] = None
+    ):        
         super().__init__()
-        self.__default = get_enum_value(Currency, default)
-        self.__enum = enum
+        self.default = default
+        self.enum = enum
 
     @property
     def default(self) -> Union[Currency, str]:
@@ -470,12 +470,12 @@ class DeltaHedgeParameters(Base):
         self,
         frequency: str,
         fixing_time: str = None,
-        notional: float = None        
-    ):
+        notional: float = None
+    ):        
         super().__init__()
-        self.__fixing_time = fixing_time
-        self.__frequency = frequency
-        self.__notional = notional
+        self.fixing_time = fixing_time
+        self.frequency = frequency
+        self.notional = notional
 
     @property
     def delta_type(self) -> str:
@@ -522,13 +522,13 @@ class DeltaHedgingParameters(Base):
         enabled: bool,
         frequency: str,
         fixing_time: str,
-        notional_percentage: float        
-    ):
+        notional_percentage: float
+    ):        
         super().__init__()
-        self.__enabled = enabled
-        self.__fixing_time = fixing_time
-        self.__frequency = frequency
-        self.__notional_percentage = notional_percentage
+        self.enabled = enabled
+        self.fixing_time = fixing_time
+        self.frequency = frequency
+        self.notional_percentage = notional_percentage
 
     @property
     def enabled(self) -> bool:
@@ -581,14 +581,14 @@ class EnhancedBetaUnderlier(Base):
         month_add: float = None,
         valid_months: Tuple[str, ...] = None,
         is_included: bool = None,
-        weight_scale: float = None        
-    ):
+        weight_scale: float = None
+    ):        
         super().__init__()
-        self.__asset_id = asset_id
-        self.__month_add = month_add
-        self.__valid_months = valid_months
-        self.__is_included = is_included
-        self.__weight_scale = weight_scale
+        self.asset_id = asset_id
+        self.month_add = month_add
+        self.valid_months = valid_months
+        self.is_included = is_included
+        self.weight_scale = weight_scale
 
     @property
     def asset_id(self) -> str:
@@ -650,12 +650,12 @@ class EnhancedBetaUnderlierRefData(Base):
         self,
         asset_id: str = None,
         valid_months: Tuple[str, ...] = None,
-        current: bool = None        
-    ):
+        current: bool = None
+    ):        
         super().__init__()
-        self.__asset_id = asset_id
-        self.__valid_months = valid_months
-        self.__current = current
+        self.asset_id = asset_id
+        self.valid_months = valid_months
+        self.current = current
 
     @property
     def asset_id(self) -> str:
@@ -696,12 +696,12 @@ class EntityCorrelation(Base):
         self,
         primary_id: str = None,
         secondary_id: str = None,
-        correlation: float = None        
-    ):
+        correlation: float = None
+    ):        
         super().__init__()
-        self.__primary_id = primary_id
-        self.__secondary_id = secondary_id
-        self.__correlation = correlation
+        self.primary_id = primary_id
+        self.secondary_id = secondary_id
+        self.correlation = correlation
 
     @property
     def primary_id(self) -> str:
@@ -741,11 +741,11 @@ class ExpirationRefData(Base):
     def __init__(
         self,
         default: str = None,
-        enum: Tuple[str, ...] = None        
-    ):
+        enum: Tuple[str, ...] = None
+    ):        
         super().__init__()
-        self.__default = default
-        self.__enum = enum
+        self.default = default
+        self.enum = enum
 
     @property
     def default(self) -> str:
@@ -775,11 +775,11 @@ class FixingTimeRefData(Base):
     def __init__(
         self,
         default: str = None,
-        enum: Tuple[str, ...] = None        
-    ):
+        enum: Tuple[str, ...] = None
+    ):        
         super().__init__()
-        self.__default = default
-        self.__enum = enum
+        self.default = default
+        self.enum = enum
 
     @property
     def default(self) -> str:
@@ -809,11 +809,11 @@ class FrequencyRefData(Base):
     def __init__(
         self,
         default: str = None,
-        enum: Tuple[str, ...] = None        
-    ):
+        enum: Tuple[str, ...] = None
+    ):        
         super().__init__()
-        self.__default = default
-        self.__enum = enum
+        self.default = default
+        self.enum = enum
 
     @property
     def default(self) -> str:
@@ -843,11 +843,11 @@ class LookBackPeriodRefData(Base):
     def __init__(
         self,
         default: str = None,
-        enum: Tuple[str, ...] = None        
-    ):
+        enum: Tuple[str, ...] = None
+    ):        
         super().__init__()
-        self.__default = default
-        self.__enum = enum
+        self.default = default
+        self.enum = enum
 
     @property
     def default(self) -> str:
@@ -878,10 +878,10 @@ class NotionalPercentageRefData(Base):
         self,
         default: float = None,
         min_: float = None,
-        max_: float = None        
-    ):
+        max_: float = None
+    ):        
         super().__init__()
-        self.__default = default
+        self.default = default
         self.__min = min_
         self.__max = max_
 
@@ -923,11 +923,11 @@ class OptionStrikeTypeRefData(Base):
     def __init__(
         self,
         default: str = None,
-        enum: Tuple[str, ...] = None        
-    ):
+        enum: Tuple[str, ...] = None
+    ):        
         super().__init__()
-        self.__default = default
-        self.__enum = enum
+        self.default = default
+        self.enum = enum
 
     @property
     def default(self) -> str:
@@ -957,11 +957,11 @@ class OptionTypeRefData(Base):
     def __init__(
         self,
         default: str = None,
-        enum: Tuple[str, ...] = None        
-    ):
+        enum: Tuple[str, ...] = None
+    ):        
         super().__init__()
-        self.__default = default
-        self.__enum = enum
+        self.default = default
+        self.enum = enum
 
     @property
     def default(self) -> str:
@@ -991,11 +991,11 @@ class PerformanceRange(Base):
     def __init__(
         self,
         horizon: str = None,
-        stats: PerformanceStats = None        
-    ):
+        stats: PerformanceStats = None
+    ):        
         super().__init__()
-        self.__horizon = horizon
-        self.__stats = stats
+        self.horizon = horizon
+        self.stats = stats
 
     @property
     def horizon(self) -> str:
@@ -1025,11 +1025,11 @@ class ScalingMethodRefData(Base):
     def __init__(
         self,
         default: str = None,
-        enum: Tuple[str, ...] = None        
-    ):
+        enum: Tuple[str, ...] = None
+    ):        
         super().__init__()
-        self.__default = default
-        self.__enum = enum
+        self.default = default
+        self.enum = enum
 
     @property
     def default(self) -> str:
@@ -1060,10 +1060,10 @@ class StrikeRefData(Base):
         self,
         default: float = None,
         min_: float = None,
-        max_: float = None        
-    ):
+        max_: float = None
+    ):        
         super().__init__()
-        self.__default = default
+        self.default = default
         self.__min = min_
         self.__max = max_
 
@@ -1105,11 +1105,11 @@ class TradeInMethodRefData(Base):
     def __init__(
         self,
         default: str = None,
-        enum: Tuple[str, ...] = None        
-    ):
+        enum: Tuple[str, ...] = None
+    ):        
         super().__init__()
-        self.__default = default
-        self.__enum = enum
+        self.default = default
+        self.enum = enum
 
     @property
     def default(self) -> str:
@@ -1139,11 +1139,11 @@ class TradeInTimeRefData(Base):
     def __init__(
         self,
         default: str = None,
-        enum: Tuple[str, ...] = None        
-    ):
+        enum: Tuple[str, ...] = None
+    ):        
         super().__init__()
-        self.__default = default
-        self.__enum = enum
+        self.default = default
+        self.enum = enum
 
     @property
     def default(self) -> str:
@@ -1173,11 +1173,11 @@ class Underlier(Base):
     def __init__(
         self,
         asset_id: str = None,
-        weight: float = None        
-    ):
+        weight: float = None
+    ):        
         super().__init__()
-        self.__asset_id = asset_id
-        self.__weight = weight
+        self.asset_id = asset_id
+        self.weight = weight
 
     @property
     def asset_id(self) -> str:
@@ -1208,12 +1208,12 @@ class VolatilityWeightedWeightingModifier(Base):
         self,
         em_aalpha: float = None,
         look_back_period: str = None,
-        use_log_return: bool = False        
-    ):
+        use_log_return: bool = False
+    ):        
         super().__init__()
-        self.__em_aalpha = em_aalpha
-        self.__look_back_period = look_back_period
-        self.__use_log_return = use_log_return
+        self.em_aalpha = em_aalpha
+        self.look_back_period = look_back_period
+        self.use_log_return = use_log_return
 
     @property
     def name(self) -> str:
@@ -1260,11 +1260,11 @@ class VolatilityWeightedWeightingModifierRefData(Base):
     def __init__(
         self,
         em_aalpha: dict = None,
-        look_back_period: dict = None        
-    ):
+        look_back_period: dict = None
+    ):        
         super().__init__()
-        self.__em_aalpha = em_aalpha
-        self.__look_back_period = look_back_period
+        self.em_aalpha = em_aalpha
+        self.look_back_period = look_back_period
 
     @property
     def em_aalpha(self) -> dict:
@@ -1302,18 +1302,18 @@ class BacktestResult(Base):
         history: Tuple[PerformanceRange, ...] = None,
         underlier_correlation: Tuple[EntityCorrelation, ...] = None,
         comparisons: Tuple[BacktestComparison, ...] = None,
-        backtest_version: float = None        
-    ):
+        backtest_version: float = None
+    ):        
         super().__init__()
-        self.__backtest_id = backtest_id
-        self.__performance = performance
-        self.__stats = stats
-        self.__performance_decompositions = performance_decompositions
-        self.__risks = risks
-        self.__history = history
-        self.__underlier_correlation = underlier_correlation
-        self.__comparisons = comparisons
-        self.__backtest_version = backtest_version
+        self.backtest_id = backtest_id
+        self.performance = performance
+        self.stats = stats
+        self.performance_decompositions = performance_decompositions
+        self.risks = risks
+        self.history = history
+        self.underlier_correlation = underlier_correlation
+        self.comparisons = comparisons
+        self.backtest_version = backtest_version
 
     @property
     def backtest_id(self) -> str:
@@ -1415,13 +1415,13 @@ class BacktestRiskRequest(Base):
         positions: Tuple[BacktestRiskPosition, ...],
         measures: Tuple[Union[BacktestRiskMeasureType, str], ...],
         start_date: datetime.date = None,
-        end_date: datetime.date = None        
-    ):
+        end_date: datetime.date = None
+    ):        
         super().__init__()
-        self.__positions = positions
-        self.__measures = measures
-        self.__start_date = start_date
-        self.__end_date = end_date
+        self.positions = positions
+        self.measures = measures
+        self.start_date = start_date
+        self.end_date = end_date
 
     @property
     def positions(self) -> Tuple[BacktestRiskPosition, ...]:
@@ -1473,11 +1473,11 @@ class BacktestStrategyUnderlierHedge(Base):
     def __init__(
         self,
         risk_details: DeltaHedgeParameters = None,
-        quantity_percentage: float = None        
-    ):
+        quantity_percentage: float = None
+    ):        
         super().__init__()
-        self.__risk_details = risk_details
-        self.__quantity_percentage = quantity_percentage
+        self.risk_details = risk_details
+        self.quantity_percentage = quantity_percentage
 
     @property
     def risk_details(self) -> DeltaHedgeParameters:
@@ -1509,13 +1509,13 @@ class BasketBacktestParameters(Base):
         underliers: Tuple[Underlier, ...],
         rebalance_parameters: BacktestRebalanceParameters = None,
         weighting_modifiers: Tuple[VolatilityWeightedWeightingModifier, ...] = None,
-        weighting_strategy: str = None        
-    ):
+        weighting_strategy: str = None
+    ):        
         super().__init__()
-        self.__rebalance_parameters = rebalance_parameters
-        self.__underliers = underliers
-        self.__weighting_modifiers = weighting_modifiers
-        self.__weighting_strategy = weighting_strategy
+        self.rebalance_parameters = rebalance_parameters
+        self.underliers = underliers
+        self.weighting_modifiers = weighting_modifiers
+        self.weighting_strategy = weighting_strategy
 
     @property
     def rebalance_parameters(self) -> BacktestRebalanceParameters:
@@ -1567,13 +1567,13 @@ class BasketBacktestRefData(Base):
         currency: CurrencyRefData = None,
         look_back_period: LookBackPeriodRefData = None,
         weighting_strategy: dict = None,
-        weighting_modifiers: dict = None        
-    ):
+        weighting_modifiers: dict = None
+    ):        
         super().__init__()
-        self.__currency = currency
-        self.__look_back_period = look_back_period
-        self.__weighting_strategy = weighting_strategy
-        self.__weighting_modifiers = weighting_modifiers
+        self.currency = currency
+        self.look_back_period = look_back_period
+        self.weighting_strategy = weighting_strategy
+        self.weighting_modifiers = weighting_modifiers
 
     @property
     def currency(self) -> CurrencyRefData:
@@ -1624,12 +1624,12 @@ class DeltaHedgingRefData(Base):
         self,
         fixing_time: FixingTimeRefData = None,
         frequency: FrequencyRefData = None,
-        notional_percentage: NotionalPercentageRefData = None        
-    ):
+        notional_percentage: NotionalPercentageRefData = None
+    ):        
         super().__init__()
-        self.__fixing_time = fixing_time
-        self.__frequency = frequency
-        self.__notional_percentage = notional_percentage
+        self.fixing_time = fixing_time
+        self.frequency = frequency
+        self.notional_percentage = notional_percentage
 
     @property
     def fixing_time(self) -> FixingTimeRefData:
@@ -1671,13 +1671,13 @@ class EnhancedBetaBacktestParameters(Base):
         underliers: Tuple[EnhancedBetaUnderlier, ...],
         roll_start: float,
         roll_end: float,
-        base_index: str        
-    ):
+        base_index: str
+    ):        
         super().__init__()
-        self.__roll_start = roll_start
-        self.__roll_end = roll_end
-        self.__base_index = base_index
-        self.__underliers = underliers
+        self.roll_start = roll_start
+        self.roll_end = roll_end
+        self.base_index = base_index
+        self.underliers = underliers
 
     @property
     def roll_start(self) -> float:
@@ -1730,14 +1730,14 @@ class EnhancedBetaRefData(Base):
         currency: CurrencyRefData = None,
         base_index: BaseIndexRefData = None,
         MASJ8W49Y02X9CGS: dict = None,
-        MAAHST8JED9B607H: dict = None        
-    ):
+        MAAHST8JED9B607H: dict = None
+    ):        
         super().__init__()
-        self.__look_back_period = look_back_period
-        self.__currency = currency
-        self.__base_index = base_index
-        self.__MASJ8W49Y02X9CGS = MASJ8W49Y02X9CGS
-        self.__MAAHST8JED9B607H = MAAHST8JED9B607H
+        self.look_back_period = look_back_period
+        self.currency = currency
+        self.base_index = base_index
+        self.MASJ8W49Y02X9CGS = MASJ8W49Y02X9CGS
+        self.MAAHST8JED9B607H = MAAHST8JED9B607H
 
     @property
     def look_back_period(self) -> LookBackPeriodRefData:
@@ -1802,18 +1802,18 @@ class OptionBacktestUnderlier(Base):
         underlying_asset_id: str,
         notional_percentage: float = None,
         delta_hedging: DeltaHedgingParameters = None,
-        trade_in_time: str = None        
-    ):
+        trade_in_time: str = None
+    ):        
         super().__init__()
-        self.__buy_sell = buy_sell
-        self.__expiration = expiration
-        self.__option_type = option_type
-        self.__option_strike_type = option_strike_type
-        self.__notional_percentage = notional_percentage
-        self.__strike = strike
-        self.__underlying_asset_id = underlying_asset_id
-        self.__delta_hedging = delta_hedging
-        self.__trade_in_time = trade_in_time
+        self.buy_sell = buy_sell
+        self.expiration = expiration
+        self.option_type = option_type
+        self.option_strike_type = option_strike_type
+        self.notional_percentage = notional_percentage
+        self.strike = strike
+        self.underlying_asset_id = underlying_asset_id
+        self.delta_hedging = delta_hedging
+        self.trade_in_time = trade_in_time
 
     @property
     def buy_sell(self) -> str:
@@ -1914,12 +1914,12 @@ class UnderlyingAssetIdDataRefData(Base):
         self,
         asset_id: str = None,
         fixing_time: FixingTimeRefData = None,
-        frequency: FrequencyRefData = None        
-    ):
+        frequency: FrequencyRefData = None
+    ):        
         super().__init__()
-        self.__asset_id = asset_id
-        self.__fixing_time = fixing_time
-        self.__frequency = frequency
+        self.asset_id = asset_id
+        self.fixing_time = fixing_time
+        self.frequency = frequency
 
     @property
     def asset_id(self) -> str:
@@ -1962,14 +1962,14 @@ class BacktestStrategyUnderlier(Base):
         market_model: str,
         notional_percentage: float = None,
         name: str = None,
-        hedge: BacktestStrategyUnderlierHedge = None        
-    ):
+        hedge: BacktestStrategyUnderlierHedge = None
+    ):        
         super().__init__()
-        self.__instrument = instrument
-        self.__notional_percentage = notional_percentage
-        self.__market_model = market_model
-        self.__name = name
-        self.__hedge = hedge
+        self.instrument = instrument
+        self.notional_percentage = notional_percentage
+        self.market_model = market_model
+        self.name = name
+        self.hedge = hedge
 
     @property
     def instrument(self) -> dict:
@@ -2030,12 +2030,12 @@ class UnderlyingAssetIdRefData(Base):
         self,
         default: str = None,
         enum: Tuple[str, ...] = None,
-        data: Tuple[UnderlyingAssetIdDataRefData, ...] = None        
-    ):
+        data: Tuple[UnderlyingAssetIdDataRefData, ...] = None
+    ):        
         super().__init__()
-        self.__default = default
-        self.__enum = enum
-        self.__data = data
+        self.default = default
+        self.enum = enum
+        self.data = data
 
     @property
     def default(self) -> str:
@@ -2076,12 +2076,12 @@ class VolatilityBacktestParameters(Base):
         self,
         underliers: Tuple[OptionBacktestUnderlier, ...],
         trade_in_method: str = None,
-        scaling_method: str = None        
-    ):
+        scaling_method: str = None
+    ):        
         super().__init__()
-        self.__underliers = underliers
-        self.__trade_in_method = trade_in_method
-        self.__scaling_method = scaling_method
+        self.underliers = underliers
+        self.trade_in_method = trade_in_method
+        self.scaling_method = scaling_method
 
     @property
     def underliers(self) -> Tuple[OptionBacktestUnderlier, ...]:
@@ -2134,24 +2134,24 @@ class VolBacktestRefData(Base):
         scaling_method: ScalingMethodRefData = None,
         underlying_asset_id: UnderlyingAssetIdRefData = None,
         trade_in_method: TradeInMethodRefData = None,
-        trade_in_time: TradeInTimeRefData = None        
-    ):
+        trade_in_time: TradeInTimeRefData = None
+    ):        
         super().__init__()
-        self.__buy_sell = buy_sell
-        self.__currency = currency
-        self.__delta_hedging = delta_hedging
-        self.__delta_strike = delta_strike
-        self.__notional_percentage = notional_percentage
-        self.__expiration = expiration
-        self.__look_back_period = look_back_period
-        self.__option_type = option_type
-        self.__option_strike_type = option_strike_type
-        self.__relative_strike = relative_strike
-        self.__strike = strike
-        self.__scaling_method = scaling_method
-        self.__underlying_asset_id = underlying_asset_id
-        self.__trade_in_method = trade_in_method
-        self.__trade_in_time = trade_in_time
+        self.buy_sell = buy_sell
+        self.currency = currency
+        self.delta_hedging = delta_hedging
+        self.delta_strike = delta_strike
+        self.notional_percentage = notional_percentage
+        self.expiration = expiration
+        self.look_back_period = look_back_period
+        self.option_type = option_type
+        self.option_strike_type = option_strike_type
+        self.relative_strike = relative_strike
+        self.strike = strike
+        self.scaling_method = scaling_method
+        self.underlying_asset_id = underlying_asset_id
+        self.trade_in_method = trade_in_method
+        self.trade_in_time = trade_in_time
 
     @property
     def buy_sell(self) -> BuySellRefData:
@@ -2313,13 +2313,13 @@ class VolatilityFlowBacktestParameters(Base):
         trading_parameters: BacktestTradingParameters,
         index_initial_value: float,
         underliers: Tuple[BacktestStrategyUnderlier, ...] = None,
-        measures: Tuple[Union[FlowVolBacktestMeasure, str], ...] = ['ALL MEASURES']        
-    ):
+        measures: Tuple[Union[FlowVolBacktestMeasure, str], ...] = ['ALL MEASURES']
+    ):        
         super().__init__()
-        self.__index_initial_value = index_initial_value
-        self.__underliers = underliers
-        self.__trading_parameters = trading_parameters
-        self.__measures = measures
+        self.index_initial_value = index_initial_value
+        self.underliers = underliers
+        self.trading_parameters = trading_parameters
+        self.measures = measures
 
     @property
     def index_initial_value(self) -> float:
@@ -2387,28 +2387,28 @@ class Backtest(Base):
         parameters: dict = None,
         start_date: datetime.date = None,
         end_date: datetime.date = None,
-        version: float = None        
-    ):
+        version: float = None
+    ):        
         super().__init__()
-        self.__cost_netting = cost_netting
-        self.__created_by_id = created_by_id
-        self.__created_time = created_time
-        self.__currency = get_enum_value(Currency, currency)
-        self.__entitlements = entitlements
-        self.__entitlement_exclusions = entitlement_exclusions
+        self.cost_netting = cost_netting
+        self.created_by_id = created_by_id
+        self.created_time = created_time
+        self.currency = currency
+        self.entitlements = entitlements
+        self.entitlement_exclusions = entitlement_exclusions
         self.__id = id_
-        self.__last_updated_by_id = last_updated_by_id
-        self.__last_updated_time = last_updated_time
-        self.__mq_symbol = mq_symbol
-        self.__name = name
-        self.__owner_id = owner_id
-        self.__report_ids = report_ids
-        self.__parameters = parameters
-        self.__start_date = start_date
-        self.__end_date = end_date
+        self.last_updated_by_id = last_updated_by_id
+        self.last_updated_time = last_updated_time
+        self.mq_symbol = mq_symbol
+        self.name = name
+        self.owner_id = owner_id
+        self.report_ids = report_ids
+        self.parameters = parameters
+        self.start_date = start_date
+        self.end_date = end_date
         self.__type = get_enum_value(BacktestType, type_)
-        self.__asset_class = get_enum_value(AssetClass, asset_class)
-        self.__version = version
+        self.asset_class = asset_class
+        self.version = version
 
     @property
     def cost_netting(self) -> bool:
@@ -2616,18 +2616,18 @@ class BacktestRefData(Base):
         entitlements: Entitlements = None,
         entitlement_exclusions: EntitlementExclusions = None,
         last_updated_by_id: str = None,
-        last_updated_time: datetime.datetime = None        
-    ):
+        last_updated_time: datetime.datetime = None
+    ):        
         super().__init__()
         self.__id = id_
-        self.__volatility = volatility
-        self.__enhanced_beta = enhanced_beta
-        self.__basket = basket
-        self.__owner_id = owner_id
-        self.__entitlements = entitlements
-        self.__entitlement_exclusions = entitlement_exclusions
-        self.__last_updated_by_id = last_updated_by_id
-        self.__last_updated_time = last_updated_time
+        self.volatility = volatility
+        self.enhanced_beta = enhanced_beta
+        self.basket = basket
+        self.owner_id = owner_id
+        self.entitlements = entitlements
+        self.entitlement_exclusions = entitlement_exclusions
+        self.last_updated_by_id = last_updated_by_id
+        self.last_updated_time = last_updated_time
 
     @property
     def id(self) -> str:

@@ -37,11 +37,11 @@ class AdvCurveTick(Base):
     def __init__(
         self,
         date: datetime.date = None,
-        value: float = None        
-    ):
+        value: float = None
+    ):        
         super().__init__()
-        self.__date = date
-        self.__value = value
+        self.date = date
+        self.value = value
 
     @property
     def date(self) -> datetime.date:
@@ -69,11 +69,11 @@ class CoordinatesRequest(Base):
     def __init__(
         self,
         as_of: datetime.date,
-        instruments: Tuple[Priceable, ...]        
-    ):
+        instruments: Tuple[Priceable, ...]
+    ):        
         super().__init__()
-        self.__as_of = as_of
-        self.__instruments = instruments
+        self.as_of = as_of
+        self.instruments = instruments
 
     @property
     def as_of(self) -> datetime.date:
@@ -102,10 +102,10 @@ class CoordinatesResponse(Base):
                
     def __init__(
         self,
-        results: Tuple[MarketDataCoordinate, ...]        
-    ):
+        results: Tuple[MarketDataCoordinate, ...]
+    ):        
         super().__init__()
-        self.__results = results
+        self.results = results
 
     @property
     def results(self) -> Tuple[MarketDataCoordinate, ...]:
@@ -125,13 +125,13 @@ class ExecutionCostForHorizon(Base):
         minutes_expired: int = None,
         execution_cost: float = None,
         execution_cost_long: float = None,
-        execution_cost_short: float = None        
-    ):
+        execution_cost_short: float = None
+    ):        
         super().__init__()
-        self.__minutes_expired = minutes_expired
-        self.__execution_cost = execution_cost
-        self.__execution_cost_long = execution_cost_long
-        self.__execution_cost_short = execution_cost_short
+        self.minutes_expired = minutes_expired
+        self.execution_cost = execution_cost
+        self.execution_cost_long = execution_cost_long
+        self.execution_cost_short = execution_cost_short
 
     @property
     def minutes_expired(self) -> int:
@@ -204,34 +204,34 @@ class LiquidityBucket(Base):
         short_marginal_cost: float = None,
         short_adv22_day_pct: float = None,
         short_number_of_positions: float = None,
-        short_beta_adjusted_exposure: float = None        
-    ):
+        short_beta_adjusted_exposure: float = None
+    ):        
         super().__init__()
-        self.__name = name
-        self.__description = description
-        self.__net_exposure = net_exposure
-        self.__gross_exposure = gross_exposure
-        self.__net_weight = net_weight
-        self.__gross_weight = gross_weight
-        self.__transaction_cost = transaction_cost
-        self.__marginal_cost = marginal_cost
-        self.__adv22_day_pct = adv22_day_pct
-        self.__number_of_positions = number_of_positions
-        self.__beta_adjusted_exposure = beta_adjusted_exposure
-        self.__long_weight = long_weight
-        self.__long_exposure = long_exposure
-        self.__long_transaction_cost = long_transaction_cost
-        self.__long_marginal_cost = long_marginal_cost
-        self.__long_adv22_day_pct = long_adv22_day_pct
-        self.__long_number_of_positions = long_number_of_positions
-        self.__long_beta_adjusted_exposure = long_beta_adjusted_exposure
-        self.__short_weight = short_weight
-        self.__short_exposure = short_exposure
-        self.__short_transaction_cost = short_transaction_cost
-        self.__short_marginal_cost = short_marginal_cost
-        self.__short_adv22_day_pct = short_adv22_day_pct
-        self.__short_number_of_positions = short_number_of_positions
-        self.__short_beta_adjusted_exposure = short_beta_adjusted_exposure
+        self.name = name
+        self.description = description
+        self.net_exposure = net_exposure
+        self.gross_exposure = gross_exposure
+        self.net_weight = net_weight
+        self.gross_weight = gross_weight
+        self.transaction_cost = transaction_cost
+        self.marginal_cost = marginal_cost
+        self.adv22_day_pct = adv22_day_pct
+        self.number_of_positions = number_of_positions
+        self.beta_adjusted_exposure = beta_adjusted_exposure
+        self.long_weight = long_weight
+        self.long_exposure = long_exposure
+        self.long_transaction_cost = long_transaction_cost
+        self.long_marginal_cost = long_marginal_cost
+        self.long_adv22_day_pct = long_adv22_day_pct
+        self.long_number_of_positions = long_number_of_positions
+        self.long_beta_adjusted_exposure = long_beta_adjusted_exposure
+        self.short_weight = short_weight
+        self.short_exposure = short_exposure
+        self.short_transaction_cost = short_transaction_cost
+        self.short_marginal_cost = short_marginal_cost
+        self.short_adv22_day_pct = short_adv22_day_pct
+        self.short_number_of_positions = short_number_of_positions
+        self.short_beta_adjusted_exposure = short_beta_adjusted_exposure
 
     @property
     def name(self) -> str:
@@ -524,38 +524,38 @@ class LiquidityConstituent(Base):
         one_day_price_change_pct: float = None,
         beta_adjusted_exposure: float = None,
         adv_bucket=None,
-        settlement_date: datetime.date = None        
-    ):
+        settlement_date: datetime.date = None
+    ):        
         super().__init__()
-        self.__asset_id = asset_id
-        self.__name = name
-        self.__exchange = exchange
-        self.__quantity = quantity
-        self.__gross_weight = gross_weight
-        self.__net_weight = net_weight
-        self.__currency = get_enum_value(Currency, currency)
-        self.__gross_exposure = gross_exposure
-        self.__net_exposure = net_exposure
-        self.__adv22_day_pct = adv22_day_pct
-        self.__transaction_cost = transaction_cost
-        self.__marginal_cost = marginal_cost
-        self.__bid_ask_spread = bid_ask_spread
-        self.__country = country
-        self.__region = get_enum_value(Region, region)
+        self.asset_id = asset_id
+        self.name = name
+        self.exchange = exchange
+        self.quantity = quantity
+        self.gross_weight = gross_weight
+        self.net_weight = net_weight
+        self.currency = currency
+        self.gross_exposure = gross_exposure
+        self.net_exposure = net_exposure
+        self.adv22_day_pct = adv22_day_pct
+        self.transaction_cost = transaction_cost
+        self.marginal_cost = marginal_cost
+        self.bid_ask_spread = bid_ask_spread
+        self.country = country
+        self.region = region
         self.__type = get_enum_value(AssetType, type_)
-        self.__market_cap = market_cap
-        self.__market_cap_bucket = market_cap_bucket
-        self.__est1_day_complete_pct = est1_day_complete_pct
-        self.__in_benchmark = in_benchmark
-        self.__in_risk_model = in_risk_model
-        self.__in_cost_predict_model = in_cost_predict_model
-        self.__beta = beta
-        self.__daily_risk = daily_risk
-        self.__annualized_risk = annualized_risk
-        self.__one_day_price_change_pct = one_day_price_change_pct
-        self.__beta_adjusted_exposure = beta_adjusted_exposure
-        self.__adv_bucket = adv_bucket
-        self.__settlement_date = settlement_date
+        self.market_cap = market_cap
+        self.market_cap_bucket = market_cap_bucket
+        self.est1_day_complete_pct = est1_day_complete_pct
+        self.in_benchmark = in_benchmark
+        self.in_risk_model = in_risk_model
+        self.in_cost_predict_model = in_cost_predict_model
+        self.beta = beta
+        self.daily_risk = daily_risk
+        self.annualized_risk = annualized_risk
+        self.one_day_price_change_pct = one_day_price_change_pct
+        self.beta_adjusted_exposure = beta_adjusted_exposure
+        self.adv_bucket = adv_bucket
+        self.settlement_date = settlement_date
 
     @property
     def asset_id(self) -> str:
@@ -856,11 +856,11 @@ class LiquidityFactor(Base):
     def __init__(
         self,
         name: str = None,
-        value: float = None        
-    ):
+        value: float = None
+    ):        
         super().__init__()
-        self.__name = name
-        self.__value = value
+        self.name = name
+        self.value = value
 
     @property
     def name(self) -> str:
@@ -912,32 +912,32 @@ class LiquiditySummarySection(Base):
         number_of_positions=None,
         percent_in_benchmark=None,
         transaction_cost: float = None,
-        weight_of_top_five_positions: float = None        
-    ):
+        weight_of_top_five_positions: float = None
+    ):        
         super().__init__()
-        self.__adv10_day_pct = adv10_day_pct
-        self.__adv22_day_pct = adv22_day_pct
-        self.__adv5_day_pct = adv5_day_pct
-        self.__annualized_risk = annualized_risk
-        self.__annualized_tracking_error = annualized_tracking_error
-        self.__beta = beta
-        self.__beta_adjusted_exposure = beta_adjusted_exposure
-        self.__beta_adjusted_net_exposure = beta_adjusted_net_exposure
-        self.__bid_ask_spread = bid_ask_spread
-        self.__correlation = correlation
-        self.__daily_risk = daily_risk
-        self.__daily_tracking_error = daily_tracking_error
-        self.__est1_day_complete_pct = est1_day_complete_pct
-        self.__five_day_price_change_bps = five_day_price_change_bps
-        self.__gross_exposure = gross_exposure
-        self.__marginal_cost = marginal_cost
-        self.__market_cap = market_cap
-        self.__minutes_to_trade100_pct = minutes_to_trade100_pct
-        self.__net_exposure = net_exposure
-        self.__number_of_positions = number_of_positions
-        self.__percent_in_benchmark = percent_in_benchmark
-        self.__transaction_cost = transaction_cost
-        self.__weight_of_top_five_positions = weight_of_top_five_positions
+        self.adv10_day_pct = adv10_day_pct
+        self.adv22_day_pct = adv22_day_pct
+        self.adv5_day_pct = adv5_day_pct
+        self.annualized_risk = annualized_risk
+        self.annualized_tracking_error = annualized_tracking_error
+        self.beta = beta
+        self.beta_adjusted_exposure = beta_adjusted_exposure
+        self.beta_adjusted_net_exposure = beta_adjusted_net_exposure
+        self.bid_ask_spread = bid_ask_spread
+        self.correlation = correlation
+        self.daily_risk = daily_risk
+        self.daily_tracking_error = daily_tracking_error
+        self.est1_day_complete_pct = est1_day_complete_pct
+        self.five_day_price_change_bps = five_day_price_change_bps
+        self.gross_exposure = gross_exposure
+        self.marginal_cost = marginal_cost
+        self.market_cap = market_cap
+        self.minutes_to_trade100_pct = minutes_to_trade100_pct
+        self.net_exposure = net_exposure
+        self.number_of_positions = number_of_positions
+        self.percent_in_benchmark = percent_in_benchmark
+        self.transaction_cost = transaction_cost
+        self.weight_of_top_five_positions = weight_of_top_five_positions
 
     @property
     def adv10_day_pct(self):
@@ -1165,21 +1165,21 @@ class LiquidityTableRow(Base):
         transaction_cost: float = None,
         marginal_cost: float = None,
         one_day_price_change_pct: float = None,
-        normalized_performance: Tuple[Tuple[Union[datetime.date, float], ...], ...] = None        
-    ):
+        normalized_performance: Tuple[Tuple[Union[datetime.date, float], ...], ...] = None
+    ):        
         super().__init__()
-        self.__asset_id = asset_id
-        self.__name = name
-        self.__adv22_day_pct = adv22_day_pct
-        self.__shares = shares
-        self.__net_weight = net_weight
-        self.__gross_weight = gross_weight
-        self.__gross_exposure = gross_exposure
-        self.__net_exposure = net_exposure
-        self.__transaction_cost = transaction_cost
-        self.__marginal_cost = marginal_cost
-        self.__one_day_price_change_pct = one_day_price_change_pct
-        self.__normalized_performance = normalized_performance
+        self.asset_id = asset_id
+        self.name = name
+        self.adv22_day_pct = adv22_day_pct
+        self.shares = shares
+        self.net_weight = net_weight
+        self.gross_weight = gross_weight
+        self.gross_exposure = gross_exposure
+        self.net_exposure = net_exposure
+        self.transaction_cost = transaction_cost
+        self.marginal_cost = marginal_cost
+        self.one_day_price_change_pct = one_day_price_change_pct
+        self.normalized_performance = normalized_performance
 
     @property
     def asset_id(self) -> str:
@@ -1317,19 +1317,19 @@ class LiquidityTimeSeriesItem(Base):
         annualized_tracking_error: Tuple[Tuple[Union[datetime.date, float], ...], ...] = None,
         max_drawdown: Tuple[Tuple[Union[datetime.date, float], ...], ...] = None,
         net_exposure: Tuple[Tuple[Union[datetime.date, float], ...], ...] = None,
-        cumulative_pnl: Tuple[Tuple[Union[datetime.date, float], ...], ...] = None        
-    ):
+        cumulative_pnl: Tuple[Tuple[Union[datetime.date, float], ...], ...] = None
+    ):        
         super().__init__()
-        self.__name = name
-        self.__normalized_performance = normalized_performance
-        self.__annualized_return = annualized_return
-        self.__annualized_correlation = annualized_correlation
-        self.__annualized_volatility = annualized_volatility
-        self.__annualized_sharp_ratio = annualized_sharp_ratio
-        self.__annualized_tracking_error = annualized_tracking_error
-        self.__max_drawdown = max_drawdown
-        self.__net_exposure = net_exposure
-        self.__cumulative_pnl = cumulative_pnl
+        self.name = name
+        self.normalized_performance = normalized_performance
+        self.annualized_return = annualized_return
+        self.annualized_correlation = annualized_correlation
+        self.annualized_volatility = annualized_volatility
+        self.annualized_sharp_ratio = annualized_sharp_ratio
+        self.annualized_tracking_error = annualized_tracking_error
+        self.max_drawdown = max_drawdown
+        self.net_exposure = net_exposure
+        self.cumulative_pnl = cumulative_pnl
 
     @property
     def name(self) -> str:
@@ -1439,13 +1439,13 @@ class PRateForHorizon(Base):
         minutes_expired: int = None,
         participation_rate: float = None,
         participation_rate_long: float = None,
-        participation_rate_short: float = None        
-    ):
+        participation_rate_short: float = None
+    ):        
         super().__init__()
-        self.__minutes_expired = minutes_expired
-        self.__participation_rate = participation_rate
-        self.__participation_rate_long = participation_rate_long
-        self.__participation_rate_short = participation_rate_short
+        self.minutes_expired = minutes_expired
+        self.participation_rate = participation_rate
+        self.participation_rate_long = participation_rate_long
+        self.participation_rate_short = participation_rate_short
 
     @property
     def minutes_expired(self) -> int:
@@ -1495,13 +1495,13 @@ class RiskAtHorizon(Base):
         minutes_expired: int = None,
         risk: int = None,
         risk_long: float = None,
-        risk_short: float = None        
-    ):
+        risk_short: float = None
+    ):        
         super().__init__()
-        self.__minutes_expired = minutes_expired
-        self.__risk = risk
-        self.__risk_long = risk_long
-        self.__risk_short = risk_short
+        self.minutes_expired = minutes_expired
+        self.risk = risk
+        self.risk_long = risk_long
+        self.risk_short = risk_short
 
     @property
     def minutes_expired(self) -> int:
@@ -1551,13 +1551,13 @@ class TradeCompleteAtHorizon(Base):
         minutes_expired: int = None,
         positions_complete: int = None,
         positions_complete_pct: float = None,
-        notional_complete_pct: float = None        
-    ):
+        notional_complete_pct: float = None
+    ):        
         super().__init__()
-        self.__minutes_expired = minutes_expired
-        self.__positions_complete = positions_complete
-        self.__positions_complete_pct = positions_complete_pct
-        self.__notional_complete_pct = notional_complete_pct
+        self.minutes_expired = minutes_expired
+        self.positions_complete = positions_complete
+        self.positions_complete_pct = positions_complete_pct
+        self.notional_complete_pct = notional_complete_pct
 
     @property
     def minutes_expired(self) -> int:
@@ -1605,11 +1605,11 @@ class LiquidityFactorCategory(Base):
     def __init__(
         self,
         name: str = None,
-        sub_factors: Tuple[LiquidityFactor, ...] = None        
-    ):
+        sub_factors: Tuple[LiquidityFactor, ...] = None
+    ):        
         super().__init__()
-        self.__name = name
-        self.__sub_factors = sub_factors
+        self.name = name
+        self.sub_factors = sub_factors
 
     @property
     def name(self) -> str:
@@ -1640,13 +1640,13 @@ class LiquiditySummary(Base):
         total: LiquiditySummarySection,
         long: LiquiditySummarySection = None,
         short: LiquiditySummarySection = None,
-        long_vs_short: LiquiditySummarySection = None        
-    ):
+        long_vs_short: LiquiditySummarySection = None
+    ):        
         super().__init__()
-        self.__total = total
-        self.__long = long
-        self.__short = short
-        self.__long_vs_short = long_vs_short
+        self.total = total
+        self.long = long
+        self.short = short
+        self.long_vs_short = long_vs_short
 
     @property
     def total(self) -> LiquiditySummarySection:
@@ -1701,12 +1701,12 @@ class RiskModelRequest(Base):
         self,
         asset_ids: Tuple[str, ...] = None,
         as_of_date: datetime.date = None,
-        sort_by_term: Union[SortByTerm, str] = None        
-    ):
+        sort_by_term: Union[SortByTerm, str] = None
+    ):        
         super().__init__()
-        self.__asset_ids = asset_ids
-        self.__as_of_date = as_of_date
-        self.__sort_by_term = get_enum_value(SortByTerm, sort_by_term)
+        self.asset_ids = asset_ids
+        self.as_of_date = as_of_date
+        self.sort_by_term = sort_by_term
 
     @property
     def asset_ids(self) -> Tuple[str, ...]:
@@ -1773,38 +1773,38 @@ class LiquidityResponse(Base):
         exposure_buckets: Tuple[LiquidityFactor, ...] = None,
         factor_exposure_buckets: Tuple[LiquidityFactorCategory, ...] = None,
         timeseries_data: Tuple[LiquidityTimeSeriesItem, ...] = None,
-        error_message: str = None        
-    ):
+        error_message: str = None
+    ):        
         super().__init__()
-        self.__assets_not_in_risk_model = assets_not_in_risk_model
-        self.__assets_not_in_cost_predict_model = assets_not_in_cost_predict_model
-        self.__as_of_date = as_of_date
-        self.__risk_model = risk_model
-        self.__notional = notional
-        self.__currency = get_enum_value(Currency, currency)
-        self.__report = report
-        self.__summary = summary
-        self.__constituent_transaction_costs = constituent_transaction_costs
-        self.__constituents = constituents
-        self.__largest_holdings_by_weight = largest_holdings_by_weight
-        self.__least_liquid_holdings = least_liquid_holdings
-        self.__adv_buckets = adv_buckets
-        self.__region_buckets = region_buckets
-        self.__country_buckets = country_buckets
-        self.__sector_buckets = sector_buckets
-        self.__industry_buckets = industry_buckets
-        self.__market_cap_buckets = market_cap_buckets
-        self.__execution_costs_with_different_time_horizons = execution_costs_with_different_time_horizons
-        self.__time_to_trade_with_different_participation_rates = time_to_trade_with_different_participation_rates
-        self.__risk_over_time = risk_over_time
-        self.__trade_complete_percent_over_time = trade_complete_percent_over_time
-        self.__adv_percent_over_time = adv_percent_over_time
-        self.__risk_buckets = risk_buckets
-        self.__factor_risk_buckets = factor_risk_buckets
-        self.__exposure_buckets = exposure_buckets
-        self.__factor_exposure_buckets = factor_exposure_buckets
-        self.__timeseries_data = timeseries_data
-        self.__error_message = error_message
+        self.assets_not_in_risk_model = assets_not_in_risk_model
+        self.assets_not_in_cost_predict_model = assets_not_in_cost_predict_model
+        self.as_of_date = as_of_date
+        self.risk_model = risk_model
+        self.notional = notional
+        self.currency = currency
+        self.report = report
+        self.summary = summary
+        self.constituent_transaction_costs = constituent_transaction_costs
+        self.constituents = constituents
+        self.largest_holdings_by_weight = largest_holdings_by_weight
+        self.least_liquid_holdings = least_liquid_holdings
+        self.adv_buckets = adv_buckets
+        self.region_buckets = region_buckets
+        self.country_buckets = country_buckets
+        self.sector_buckets = sector_buckets
+        self.industry_buckets = industry_buckets
+        self.market_cap_buckets = market_cap_buckets
+        self.execution_costs_with_different_time_horizons = execution_costs_with_different_time_horizons
+        self.time_to_trade_with_different_participation_rates = time_to_trade_with_different_participation_rates
+        self.risk_over_time = risk_over_time
+        self.trade_complete_percent_over_time = trade_complete_percent_over_time
+        self.adv_percent_over_time = adv_percent_over_time
+        self.risk_buckets = risk_buckets
+        self.factor_risk_buckets = factor_risk_buckets
+        self.exposure_buckets = exposure_buckets
+        self.factor_exposure_buckets = factor_exposure_buckets
+        self.timeseries_data = timeseries_data
+        self.error_message = error_message
 
     @property
     def assets_not_in_risk_model(self) -> Tuple[str, ...]:

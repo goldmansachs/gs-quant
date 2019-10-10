@@ -16,6 +16,7 @@ under the License.
 
 import datetime
 import json
+import re
 
 import pandas as pd
 
@@ -34,6 +35,6 @@ class JSONEncoder(json.JSONEncoder):
         elif isinstance(o, pd.DataFrame):
             return o.to_json()
         elif isinstance(o, Base):
-            return o.as_dict(as_camel_case=True)
+            return {re.sub('_$', '', k): v for k, v in o.as_dict(as_camel_case=True).items()}
         else:
             return json.JSONEncoder.default(self, o)

@@ -45,29 +45,29 @@ class CSLPython(Instrument):
         currency_array_params: Tuple[CSLCurrencyArray, ...] = None,
         stock_array_params: Tuple[CSLStockArray, ...] = None,
         index_array_params: Tuple[CSLIndexArray, ...] = None,
-        fx_cross_array_params: Tuple[CSLFXCrossArray, ...] = None        
-    ):
+        fx_cross_array_params: Tuple[CSLFXCrossArray, ...] = None
+    ):        
         super().__init__()
-        self.__class_name = class_name
-        self.__denominated = get_enum_value(Currency, denominated)
-        self.__double_params = double_params
-        self.__date_params = date_params
-        self.__string_params = string_params
-        self.__simple_schedule_params = simple_schedule_params
-        self.__schedule_params = schedule_params
-        self.__currency_params = currency_params
-        self.__stock_params = stock_params
-        self.__index_params = index_params
-        self.__fx_cross_params = fx_cross_params
-        self.__double_array_params = double_array_params
-        self.__date_array_params = date_array_params
-        self.__string_array_params = string_array_params
-        self.__simple_schedule_array_params = simple_schedule_array_params
-        self.__schedule_array_params = schedule_array_params
-        self.__currency_array_params = currency_array_params
-        self.__stock_array_params = stock_array_params
-        self.__index_array_params = index_array_params
-        self.__fx_cross_array_params = fx_cross_array_params
+        self.class_name = class_name
+        self.denominated = denominated
+        self.double_params = double_params
+        self.date_params = date_params
+        self.string_params = string_params
+        self.simple_schedule_params = simple_schedule_params
+        self.schedule_params = schedule_params
+        self.currency_params = currency_params
+        self.stock_params = stock_params
+        self.index_params = index_params
+        self.fx_cross_params = fx_cross_params
+        self.double_array_params = double_array_params
+        self.date_array_params = date_array_params
+        self.string_array_params = string_array_params
+        self.simple_schedule_array_params = simple_schedule_array_params
+        self.schedule_array_params = schedule_array_params
+        self.currency_array_params = currency_array_params
+        self.stock_array_params = stock_array_params
+        self.index_array_params = index_array_params
+        self.fx_cross_array_params = fx_cross_array_params
 
     @property
     def asset_class(self) -> AssetClass:
@@ -292,16 +292,16 @@ class CommodSwap(Instrument):
         notional_amount: float = 1000000.0,
         currency: Union[Currency, str] = None,
         calculation_periods: int = None,
-        calculation_period_frequency: Union[Frequency, str] = None        
-    ):
+        calculation_period_frequency: Union[Frequency, str] = None
+    ):        
         super().__init__()
-        self.__commodity = get_enum_value(CommodityAsset, commodity)
-        self.__commodity_reference_price = commodity_reference_price
-        self.__start = start
-        self.__notional_amount = notional_amount
-        self.__currency = get_enum_value(Currency, currency)
-        self.__calculation_periods = calculation_periods
-        self.__calculation_period_frequency = get_enum_value(Frequency, calculation_period_frequency)
+        self.commodity = commodity
+        self.commodity_reference_price = commodity_reference_price
+        self.start = start
+        self.notional_amount = notional_amount
+        self.currency = currency
+        self.calculation_periods = calculation_periods
+        self.calculation_period_frequency = calculation_period_frequency
 
     @property
     def asset_class(self) -> AssetClass:
@@ -400,22 +400,22 @@ class EqCliquet(Instrument):
         payment_frequency: str = 'Maturity',
         return_style: str = 'Rate of Return',
         return_type: str = 'Sum',
-        valuation_period: str = None        
-    ):
+        valuation_period: str = None
+    ):        
         super().__init__()
-        self.__asset = asset
-        self.__currency = get_enum_value(Currency, currency)
-        self.__expiration_date = expiration_date
-        self.__first_valuation_date = first_valuation_date
-        self.__global_floor = global_floor
-        self.__global_cap = global_cap
-        self.__last_valuation_date = last_valuation_date
-        self.__notional_amount = notional_amount
-        self.__payment_frequency = payment_frequency
-        self.__return_style = return_style
-        self.__return_type = return_type
-        self.__strike_price = strike_price
-        self.__valuation_period = valuation_period
+        self.asset = asset
+        self.currency = currency
+        self.expiration_date = expiration_date
+        self.first_valuation_date = first_valuation_date
+        self.global_floor = global_floor
+        self.global_cap = global_cap
+        self.last_valuation_date = last_valuation_date
+        self.notional_amount = notional_amount
+        self.payment_frequency = payment_frequency
+        self.return_style = return_style
+        self.return_type = return_type
+        self.strike_price = strike_price
+        self.valuation_period = valuation_period
 
     @property
     def asset_class(self) -> AssetClass:
@@ -566,13 +566,13 @@ class EqForward(Instrument):
         asset: str,
         expiration_date: Union[datetime.date, str],
         forward_price: float,
-        number_of_shares: int = 1        
-    ):
+        number_of_shares: int = 1
+    ):        
         super().__init__()
-        self.__asset = asset
-        self.__number_of_shares = number_of_shares
-        self.__expiration_date = expiration_date
-        self.__forward_price = forward_price
+        self.asset = asset
+        self.number_of_shares = number_of_shares
+        self.expiration_date = expiration_date
+        self.forward_price = forward_price
 
     @property
     def asset_class(self) -> AssetClass:
@@ -641,20 +641,20 @@ class EqOption(Instrument):
         multiplier: float = None,
         settlement_date: Union[datetime.date, str] = None,
         currency: Union[Currency, str] = None,
-        premium: float = None        
-    ):
+        premium: float = None
+    ):        
         super().__init__()
-        self.__number_of_options = number_of_options
-        self.__asset = asset
-        self.__exchange = exchange
-        self.__expiration_date = expiration_date
-        self.__strike_price = strike_price
-        self.__option_type = get_enum_value(OptionType, option_type)
-        self.__option_style = get_enum_value(OptionStyle, option_style)
-        self.__multiplier = multiplier
-        self.__settlement_date = settlement_date
-        self.__currency = get_enum_value(Currency, currency)
-        self.__premium = premium
+        self.number_of_options = number_of_options
+        self.asset = asset
+        self.exchange = exchange
+        self.expiration_date = expiration_date
+        self.strike_price = strike_price
+        self.option_type = option_type
+        self.option_style = option_style
+        self.multiplier = multiplier
+        self.settlement_date = settlement_date
+        self.currency = currency
+        self.premium = premium
 
     @property
     def asset_class(self) -> AssetClass:
@@ -789,15 +789,15 @@ class EqVarianceSwap(Instrument):
         strike_price: Union[float, str],
         variance_cap: float = None,
         settlement_date: Union[datetime.date, str] = None,
-        premium: float = None        
-    ):
+        premium: float = None
+    ):        
         super().__init__()
-        self.__asset = asset
-        self.__expiration_date = expiration_date
-        self.__strike_price = strike_price
-        self.__variance_cap = variance_cap
-        self.__settlement_date = settlement_date
-        self.__premium = premium
+        self.asset = asset
+        self.expiration_date = expiration_date
+        self.strike_price = strike_price
+        self.variance_cap = variance_cap
+        self.settlement_date = settlement_date
+        self.premium = premium
 
     @property
     def asset_class(self) -> AssetClass:
@@ -879,13 +879,13 @@ class FXForward(Instrument):
         pair: str = None,
         settlement_date: Union[datetime.date, str] = None,
         forward_rate: float = None,
-        notional_amount: float = None        
-    ):
+        notional_amount: float = None
+    ):        
         super().__init__()
-        self.__pair = pair
-        self.__settlement_date = settlement_date
-        self.__forward_rate = forward_rate
-        self.__notional_amount = notional_amount
+        self.pair = pair
+        self.settlement_date = settlement_date
+        self.forward_rate = forward_rate
+        self.notional_amount = notional_amount
 
     @property
     def asset_class(self) -> AssetClass:
@@ -951,17 +951,17 @@ class FXOption(Instrument):
         call_amount: float = 1000000.0,
         put_amount: float = 1000000.0,
         strike: Union[float, str] = None,
-        premium: float = 0        
-    ):
+        premium: float = 0
+    ):        
         super().__init__()
-        self.__call_currency = get_enum_value(Currency, call_currency)
-        self.__put_currency = get_enum_value(Currency, put_currency)
-        self.__call_amount = call_amount
-        self.__put_amount = put_amount
-        self.__strike = strike
-        self.__expiration_date = expiration_date
-        self.__option_type = get_enum_value(OptionType, option_type)
-        self.__premium = premium
+        self.call_currency = call_currency
+        self.put_currency = put_currency
+        self.call_amount = call_amount
+        self.put_amount = put_amount
+        self.strike = strike
+        self.expiration_date = expiration_date
+        self.option_type = option_type
+        self.premium = premium
 
     @property
     def asset_class(self) -> AssetClass:
@@ -1062,12 +1062,12 @@ class Forward(Instrument):
         self,
         currency: Union[Currency, str],
         expiration_date: Union[datetime.date, str],
-        notional_amount: float = None        
-    ):
+        notional_amount: float = None
+    ):        
         super().__init__()
-        self.__currency = get_enum_value(Currency, currency)
-        self.__expiration_date = expiration_date
-        self.__notional_amount = notional_amount
+        self.currency = currency
+        self.expiration_date = expiration_date
+        self.notional_amount = notional_amount
 
     @property
     def asset_class(self) -> AssetClass:
@@ -1133,28 +1133,27 @@ class IRBasisSwap(Instrument):
         receiver_day_count_fraction: Union[DayCountFraction, str] = None,
         receiver_business_day_convention: Union[BusinessDayConvention, str] = None,
         fee: float = 0,
-        clearing_house: Union[SwapClearingHouse, str] = None        
-    ):
+        clearing_house: Union[SwapClearingHouse, str] = None
+    ):        
         super().__init__()
-        self.__notional_amount = notional_amount
-        self.__notional_currency = get_enum_value(Currency, notional_currency)
-        self.__effective_date = effective_date
-        self.__termination_date = termination_date
-        self.__payer_spread = payer_spread
-        self.__payer_rate_option = payer_rate_option
-        self.__payer_designated_maturity = payer_designated_maturity
-        self.__payer_frequency = payer_frequency
-        self.__payer_day_count_fraction = get_enum_value(DayCountFraction, payer_day_count_fraction)
-        self.__payer_business_day_convention = get_enum_value(BusinessDayConvention, payer_business_day_convention)
-        self.__receiver_spread = receiver_spread
-        self.__receiver_rate_option = receiver_rate_option
-        self.__receiver_designated_maturity = receiver_designated_maturity
-        self.__receiver_frequency = receiver_frequency
-        self.__receiver_day_count_fraction = get_enum_value(DayCountFraction, receiver_day_count_fraction)
-        self.__receiver_business_day_convention =\
-            get_enum_value(BusinessDayConvention, receiver_business_day_convention)
-        self.__fee = fee
-        self.__clearing_house = get_enum_value(SwapClearingHouse, clearing_house)
+        self.notional_amount = notional_amount
+        self.notional_currency = notional_currency
+        self.effective_date = effective_date
+        self.termination_date = termination_date
+        self.payer_spread = payer_spread
+        self.payer_rate_option = payer_rate_option
+        self.payer_designated_maturity = payer_designated_maturity
+        self.payer_frequency = payer_frequency
+        self.payer_day_count_fraction = payer_day_count_fraction
+        self.payer_business_day_convention = payer_business_day_convention
+        self.receiver_spread = receiver_spread
+        self.receiver_rate_option = receiver_rate_option
+        self.receiver_designated_maturity = receiver_designated_maturity
+        self.receiver_frequency = receiver_frequency
+        self.receiver_day_count_fraction = receiver_day_count_fraction
+        self.receiver_business_day_convention = receiver_business_day_convention
+        self.fee = fee
+        self.clearing_house = clearing_house
 
     @property
     def asset_class(self) -> AssetClass:
@@ -1366,23 +1365,22 @@ class IRCap(Instrument):
         cap_rate: Union[float, str] = None,
         premium: float = 0,
         fee: float = 0,
-        premium_payment_date: Union[datetime.date, str] = None        
-    ):
+        premium_payment_date: Union[datetime.date, str] = None
+    ):        
         super().__init__()
-        self.__termination_date = termination_date
-        self.__notional_currency = get_enum_value(Currency, notional_currency)
-        self.__notional_amount = notional_amount
-        self.__effective_date = effective_date
-        self.__floating_rate_option = floating_rate_option
-        self.__floating_rate_designated_maturity = floating_rate_designated_maturity
-        self.__floating_rate_frequency = floating_rate_frequency
-        self.__floating_rate_day_count_fraction = get_enum_value(DayCountFraction, floating_rate_day_count_fraction)
-        self.__floating_rate_business_day_convention =\
-            get_enum_value(BusinessDayConvention, floating_rate_business_day_convention)
-        self.__cap_rate = cap_rate
-        self.__premium = premium
-        self.__fee = fee
-        self.__premium_payment_date = premium_payment_date
+        self.termination_date = termination_date
+        self.notional_currency = notional_currency
+        self.notional_amount = notional_amount
+        self.effective_date = effective_date
+        self.floating_rate_option = floating_rate_option
+        self.floating_rate_designated_maturity = floating_rate_designated_maturity
+        self.floating_rate_frequency = floating_rate_frequency
+        self.floating_rate_day_count_fraction = floating_rate_day_count_fraction
+        self.floating_rate_business_day_convention = floating_rate_business_day_convention
+        self.cap_rate = cap_rate
+        self.premium = premium
+        self.fee = fee
+        self.premium_payment_date = premium_payment_date
 
     @property
     def asset_class(self) -> AssetClass:
@@ -1544,22 +1542,21 @@ class IRFloor(Instrument):
         floating_rate_business_day_convention: Union[BusinessDayConvention, str] = None,
         floor_rate: Union[float, str] = None,
         fee: float = 0,
-        premium_payment_date: Union[datetime.date, str] = None        
-    ):
+        premium_payment_date: Union[datetime.date, str] = None
+    ):        
         super().__init__()
-        self.__termination_date = termination_date
-        self.__notional_currency = get_enum_value(Currency, notional_currency)
-        self.__notional_amount = notional_amount
-        self.__effective_date = effective_date
-        self.__floating_rate_option = floating_rate_option
-        self.__floating_rate_designated_maturity = floating_rate_designated_maturity
-        self.__floating_rate_frequency = floating_rate_frequency
-        self.__floating_rate_day_count_fraction = get_enum_value(DayCountFraction, floating_rate_day_count_fraction)
-        self.__floating_rate_business_day_convention =\
-            get_enum_value(BusinessDayConvention, floating_rate_business_day_convention)
-        self.__floor_rate = floor_rate
-        self.__fee = fee
-        self.__premium_payment_date = premium_payment_date
+        self.termination_date = termination_date
+        self.notional_currency = notional_currency
+        self.notional_amount = notional_amount
+        self.effective_date = effective_date
+        self.floating_rate_option = floating_rate_option
+        self.floating_rate_designated_maturity = floating_rate_designated_maturity
+        self.floating_rate_frequency = floating_rate_frequency
+        self.floating_rate_day_count_fraction = floating_rate_day_count_fraction
+        self.floating_rate_business_day_convention = floating_rate_business_day_convention
+        self.floor_rate = floor_rate
+        self.fee = fee
+        self.premium_payment_date = premium_payment_date
 
     @property
     def asset_class(self) -> AssetClass:
@@ -1717,29 +1714,27 @@ class IRSwap(Instrument):
         fixed_rate_day_count_fraction: Union[DayCountFraction, str] = None,
         fixed_rate_business_day_convention: Union[BusinessDayConvention, str] = None,
         fee: float = 0,
-        clearing_house: Union[SwapClearingHouse, str] = None        
-    ):
+        clearing_house: Union[SwapClearingHouse, str] = None
+    ):        
         super().__init__()
-        self.__pay_or_receive = get_enum_value(PayReceive, pay_or_receive)
-        self.__termination_date = termination_date
-        self.__notional_currency = get_enum_value(Currency, notional_currency)
-        self.__notional_amount = notional_amount
-        self.__effective_date = effective_date
-        self.__floating_rate_for_the_initial_calculation_period = floating_rate_for_the_initial_calculation_period
-        self.__floating_rate_option = floating_rate_option
-        self.__floating_rate_designated_maturity = floating_rate_designated_maturity
-        self.__floating_rate_spread = floating_rate_spread
-        self.__floating_rate_frequency = floating_rate_frequency
-        self.__floating_rate_day_count_fraction = get_enum_value(DayCountFraction, floating_rate_day_count_fraction)
-        self.__floating_rate_business_day_convention =\
-            get_enum_value(BusinessDayConvention, floating_rate_business_day_convention)
-        self.__fixed_rate = fixed_rate
-        self.__fixed_rate_frequency = fixed_rate_frequency
-        self.__fixed_rate_day_count_fraction = get_enum_value(DayCountFraction, fixed_rate_day_count_fraction)
-        self.__fixed_rate_business_day_convention =\
-            get_enum_value(BusinessDayConvention, fixed_rate_business_day_convention)
-        self.__fee = fee
-        self.__clearing_house = get_enum_value(SwapClearingHouse, clearing_house)
+        self.pay_or_receive = pay_or_receive
+        self.termination_date = termination_date
+        self.notional_currency = notional_currency
+        self.notional_amount = notional_amount
+        self.effective_date = effective_date
+        self.floating_rate_for_the_initial_calculation_period = floating_rate_for_the_initial_calculation_period
+        self.floating_rate_option = floating_rate_option
+        self.floating_rate_designated_maturity = floating_rate_designated_maturity
+        self.floating_rate_spread = floating_rate_spread
+        self.floating_rate_frequency = floating_rate_frequency
+        self.floating_rate_day_count_fraction = floating_rate_day_count_fraction
+        self.floating_rate_business_day_convention = floating_rate_business_day_convention
+        self.fixed_rate = fixed_rate
+        self.fixed_rate_frequency = fixed_rate_frequency
+        self.fixed_rate_day_count_fraction = fixed_rate_day_count_fraction
+        self.fixed_rate_business_day_convention = fixed_rate_business_day_convention
+        self.fee = fee
+        self.clearing_house = clearing_house
 
     @property
     def asset_class(self) -> AssetClass:
@@ -1959,32 +1954,30 @@ class IRSwaption(Instrument):
         fee: float = 0,
         clearing_house: Union[SwapClearingHouse, str] = None,
         settlement: Union[SwapSettlement, str] = None,
-        premium_payment_date: Union[datetime.date, str] = None        
-    ):
+        premium_payment_date: Union[datetime.date, str] = None
+    ):        
         super().__init__()
-        self.__pay_or_receive = pay_or_receive
-        self.__effective_date = effective_date
-        self.__termination_date = termination_date
-        self.__notional_currency = get_enum_value(Currency, notional_currency)
-        self.__notional_amount = notional_amount
-        self.__expiration_date = expiration_date
-        self.__floating_rate_option = floating_rate_option
-        self.__floating_rate_designated_maturity = floating_rate_designated_maturity
-        self.__floating_rate_spread = floating_rate_spread
-        self.__floating_rate_frequency = floating_rate_frequency
-        self.__floating_rate_day_count_fraction = get_enum_value(DayCountFraction, floating_rate_day_count_fraction)
-        self.__floating_rate_business_day_convention =\
-            get_enum_value(BusinessDayConvention, floating_rate_business_day_convention)
-        self.__fixed_rate_frequency = fixed_rate_frequency
-        self.__fixed_rate_day_count_fraction = get_enum_value(DayCountFraction, fixed_rate_day_count_fraction)
-        self.__fixed_rate_business_day_convention =\
-            get_enum_value(BusinessDayConvention, fixed_rate_business_day_convention)
-        self.__strike = strike
-        self.__premium = premium
-        self.__fee = fee
-        self.__clearing_house = get_enum_value(SwapClearingHouse, clearing_house)
-        self.__settlement = get_enum_value(SwapSettlement, settlement)
-        self.__premium_payment_date = premium_payment_date
+        self.pay_or_receive = pay_or_receive
+        self.effective_date = effective_date
+        self.termination_date = termination_date
+        self.notional_currency = notional_currency
+        self.notional_amount = notional_amount
+        self.expiration_date = expiration_date
+        self.floating_rate_option = floating_rate_option
+        self.floating_rate_designated_maturity = floating_rate_designated_maturity
+        self.floating_rate_spread = floating_rate_spread
+        self.floating_rate_frequency = floating_rate_frequency
+        self.floating_rate_day_count_fraction = floating_rate_day_count_fraction
+        self.floating_rate_business_day_convention = floating_rate_business_day_convention
+        self.fixed_rate_frequency = fixed_rate_frequency
+        self.fixed_rate_day_count_fraction = fixed_rate_day_count_fraction
+        self.fixed_rate_business_day_convention = fixed_rate_business_day_convention
+        self.strike = strike
+        self.premium = premium
+        self.fee = fee
+        self.clearing_house = clearing_house
+        self.settlement = settlement
+        self.premium_payment_date = premium_payment_date
 
     @property
     def asset_class(self) -> AssetClass:
@@ -2224,21 +2217,19 @@ class InflationSwap(Instrument):
         floating_rate_business_day_convention: Union[BusinessDayConvention, str] = None,
         fixed_rate: Union[float, str] = None,
         fixed_rate_business_day_convention: Union[BusinessDayConvention, str] = None,
-        fee: float = 0        
-    ):
+        fee: float = 0
+    ):        
         super().__init__()
-        self.__pay_or_receive = get_enum_value(PayReceive, pay_or_receive)
-        self.__termination_date = termination_date
-        self.__notional_currency = get_enum_value(Currency, notional_currency)
-        self.__notional_amount = notional_amount
-        self.__effective_date = effective_date
-        self.__index = index
-        self.__floating_rate_business_day_convention =\
-            get_enum_value(BusinessDayConvention, floating_rate_business_day_convention)
-        self.__fixed_rate = fixed_rate
-        self.__fixed_rate_business_day_convention =\
-            get_enum_value(BusinessDayConvention, fixed_rate_business_day_convention)
-        self.__fee = fee
+        self.pay_or_receive = pay_or_receive
+        self.termination_date = termination_date
+        self.notional_currency = notional_currency
+        self.notional_amount = notional_amount
+        self.effective_date = effective_date
+        self.index = index
+        self.floating_rate_business_day_convention = floating_rate_business_day_convention
+        self.fixed_rate = fixed_rate
+        self.fixed_rate_business_day_convention = fixed_rate_business_day_convention
+        self.fee = fee
 
     @property
     def asset_class(self) -> AssetClass:
