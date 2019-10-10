@@ -995,6 +995,7 @@ class RiskMeasureType(EnumBase, Enum):
     Annual_ATMF_Implied_Volatility = 'Annual ATMF Implied Volatility'
     Daily_Implied_Volatility = 'Daily Implied Volatility'
     Resolved_Instrument_Values = 'Resolved Instrument Values'
+    Local_Currency_Annuity = 'Local Currency Annuity'
     AnnuityLocalCcy = 'AnnuityLocalCcy'
     Premium_In_Cents = 'Premium In Cents'
     CRIF_IRCurve = 'CRIF IRCurve'
@@ -1077,10 +1078,10 @@ class AssetIdPriceable(Priceable):
        
     def __init__(
         self,
-        asset_id: str = None        
-    ):
+        asset_id: str = None
+    ):        
         super().__init__()
-        self.__asset_id = asset_id
+        self.asset_id = asset_id
 
     @property
     def asset_id(self) -> str:
@@ -1099,10 +1100,10 @@ class CSLDate(Base):
        
     def __init__(
         self,
-        date_value: datetime.date = None        
-    ):
+        date_value: datetime.date = None
+    ):        
         super().__init__()
-        self.__date_value = date_value
+        self.date_value = date_value
 
     @property
     def date_value(self) -> datetime.date:
@@ -1121,10 +1122,10 @@ class CSLDouble(Base):
        
     def __init__(
         self,
-        double_value: float = None        
-    ):
+        double_value: float = None
+    ):        
         super().__init__()
-        self.__double_value = double_value
+        self.double_value = double_value
 
     @property
     def double_value(self) -> float:
@@ -1143,10 +1144,10 @@ class CSLFXCross(Base):
        
     def __init__(
         self,
-        string_value: str = None        
-    ):
+        string_value: str = None
+    ):        
         super().__init__()
-        self.__string_value = string_value
+        self.string_value = string_value
 
     @property
     def string_value(self) -> str:
@@ -1165,10 +1166,10 @@ class CSLIndex(Base):
        
     def __init__(
         self,
-        string_value: str = None        
-    ):
+        string_value: str = None
+    ):        
         super().__init__()
-        self.__string_value = string_value
+        self.string_value = string_value
 
     @property
     def string_value(self) -> str:
@@ -1188,11 +1189,11 @@ class CSLSimpleSchedule(Base):
     def __init__(
         self,
         fixing_date: datetime.date = None,
-        settlement_date: datetime.date = None        
-    ):
+        settlement_date: datetime.date = None
+    ):        
         super().__init__()
-        self.__fixing_date = fixing_date
-        self.__settlement_date = settlement_date
+        self.fixing_date = fixing_date
+        self.settlement_date = settlement_date
 
     @property
     def fixing_date(self) -> datetime.date:
@@ -1221,10 +1222,10 @@ class CSLStock(Base):
        
     def __init__(
         self,
-        string_value: str = None        
-    ):
+        string_value: str = None
+    ):        
         super().__init__()
-        self.__string_value = string_value
+        self.string_value = string_value
 
     @property
     def string_value(self) -> str:
@@ -1243,10 +1244,10 @@ class CSLString(Base):
        
     def __init__(
         self,
-        string_value: str = None        
-    ):
+        string_value: str = None
+    ):        
         super().__init__()
-        self.__string_value = string_value
+        self.string_value = string_value
 
     @property
     def string_value(self) -> str:
@@ -1266,11 +1267,11 @@ class CSLSymCaseNamedParam(Base):
     def __init__(
         self,
         sym_case_value: str = None,
-        name: str = None        
-    ):
+        name: str = None
+    ):        
         super().__init__()
-        self.__sym_case_value = sym_case_value
-        self.__name = name
+        self.sym_case_value = sym_case_value
+        self.name = name
 
     @property
     def sym_case_value(self) -> str:
@@ -1300,11 +1301,11 @@ class CarryScenario(Base):
     def __init__(
         self,
         time_shift: int = None,
-        roll_fwd_no_d_left: bool = False        
-    ):
+        roll_fwd_no_d_left: bool = False
+    ):        
         super().__init__()
-        self.__time_shift = time_shift
-        self.__roll_fwd_no_d_left = roll_fwd_no_d_left
+        self.time_shift = time_shift
+        self.roll_fwd_no_d_left = roll_fwd_no_d_left
 
     @property
     def scenario_type(self) -> str:
@@ -1337,11 +1338,11 @@ class DateRange(Base):
     def __init__(
         self,
         end_date: datetime.date = None,
-        start_date: datetime.date = None        
-    ):
+        start_date: datetime.date = None
+    ):        
         super().__init__()
-        self.__end_date = end_date
-        self.__start_date = start_date
+        self.end_date = end_date
+        self.start_date = start_date
 
     @property
     def end_date(self) -> datetime.date:
@@ -1378,18 +1379,18 @@ class EntitlementExclusions(Base):
         upload: Tuple[Tuple[str, ...], ...] = None,
         query: Tuple[Tuple[str, ...], ...] = None,
         performance_details: Tuple[Tuple[str, ...], ...] = None,
-        plot: Tuple[Tuple[str, ...], ...] = None        
-    ):
+        plot: Tuple[Tuple[str, ...], ...] = None
+    ):        
         super().__init__()
-        self.__view = view
-        self.__edit = edit
-        self.__admin = admin
-        self.__rebalance = rebalance
-        self.__trade = trade
-        self.__upload = upload
-        self.__query = query
-        self.__performance_details = performance_details
-        self.__plot = plot
+        self.view = view
+        self.edit = edit
+        self.admin = admin
+        self.rebalance = rebalance
+        self.trade = trade
+        self.upload = upload
+        self.query = query
+        self.performance_details = performance_details
+        self.plot = plot
 
     @property
     def view(self) -> Tuple[Tuple[str, ...], ...]:
@@ -1487,18 +1488,18 @@ class Entitlements(Base):
         upload: Tuple[str, ...] = None,
         query: Tuple[str, ...] = None,
         performance_details: Tuple[str, ...] = None,
-        plot: Tuple[str, ...] = None        
-    ):
+        plot: Tuple[str, ...] = None
+    ):        
         super().__init__()
-        self.__view = view
-        self.__edit = edit
-        self.__admin = admin
-        self.__rebalance = rebalance
-        self.__trade = trade
-        self.__upload = upload
-        self.__query = query
-        self.__performance_details = performance_details
-        self.__plot = plot
+        self.view = view
+        self.edit = edit
+        self.admin = admin
+        self.rebalance = rebalance
+        self.trade = trade
+        self.upload = upload
+        self.query = query
+        self.performance_details = performance_details
+        self.plot = plot
 
     @property
     def view(self) -> Tuple[str, ...]:
@@ -1598,11 +1599,11 @@ class ISelectNewUnit(Base):
     def __init__(
         self,
         id_: str,
-        new_units: float = None        
-    ):
+        new_units: float = None
+    ):        
         super().__init__()
         self.__id = id_
-        self.__new_units = new_units
+        self.new_units = new_units
 
     @property
     def id(self) -> str:
@@ -1628,11 +1629,11 @@ class ISelectNewWeight(Base):
     def __init__(
         self,
         id_: str,
-        new_weight: float = None        
-    ):
+        new_weight: float = None
+    ):        
         super().__init__()
         self.__id = id_
-        self.__new_weight = new_weight
+        self.new_weight = new_weight
 
     @property
     def id(self) -> str:
@@ -1658,11 +1659,11 @@ class Identifier(Base):
     def __init__(
         self,
         type_: str = None,
-        value: str = None        
-    ):
+        value: str = None
+    ):        
         super().__init__()
         self.__type = type_
-        self.__value = value
+        self.value = value
 
     @property
     def type(self) -> str:
@@ -1692,11 +1693,11 @@ class Link(Base):
     def __init__(
         self,
         title: str = None,
-        source: str = None        
-    ):
+        source: str = None
+    ):        
         super().__init__()
-        self.__title = title
-        self.__source = source
+        self.title = title
+        self.source = source
 
     @property
     def title(self) -> str:
@@ -1727,12 +1728,12 @@ class LiquidityReportParameters(Base):
         self,
         title: str = None,
         email: str = None,
-        trading_desk: str = None        
-    ):
+        trading_desk: str = None
+    ):        
         super().__init__()
-        self.__title = title
-        self.__email = email
-        self.__trading_desk = trading_desk
+        self.title = title
+        self.email = email
+        self.trading_desk = trading_desk
 
     @property
     def title(self) -> str:
@@ -1778,19 +1779,19 @@ class MarketDataCoordinate(Base):
         mkt_asset: str = None,
         mkt_class: str = None,
         mkt_point: Tuple[str, ...] = None,
-        mkt_quoting_style: str = None        
-    ):
+        mkt_quoting_style: str = None
+    ):        
         super().__init__()
-        self.__market_data_type = market_data_type
-        self.__market_data_asset = market_data_asset
-        self.__point_class = point_class
-        self.__market_data_point = market_data_point
-        self.__quoting_style = quoting_style
-        self.__mkt_type = mkt_type
-        self.__mkt_asset = mkt_asset
-        self.__mkt_class = mkt_class
-        self.__mkt_point = mkt_point
-        self.__mkt_quoting_style = mkt_quoting_style
+        self.market_data_type = market_data_type
+        self.market_data_asset = market_data_asset
+        self.point_class = point_class
+        self.market_data_point = market_data_point
+        self.quoting_style = quoting_style
+        self.mkt_type = mkt_type
+        self.mkt_asset = mkt_asset
+        self.mkt_class = mkt_class
+        self.mkt_point = mkt_point
+        self.mkt_quoting_style = mkt_quoting_style
 
     @property
     def market_data_type(self) -> str:
@@ -1898,11 +1899,11 @@ class MarketDataTypeAndAsset(Base):
     def __init__(
         self,
         type_: str,
-        asset: str        
-    ):
+        asset: str
+    ):        
         super().__init__()
         self.__type = type_
-        self.__asset = asset
+        self.asset = asset
 
     @property
     def type(self) -> str:
@@ -1934,13 +1935,13 @@ class Op(Base):
         gte: Union[datetime.date, float] = None,
         lte: Union[datetime.date, float] = None,
         lt: Union[datetime.date, float] = None,
-        gt: Union[datetime.date, float] = None        
-    ):
+        gt: Union[datetime.date, float] = None
+    ):        
         super().__init__()
-        self.__gte = gte
-        self.__lte = lte
-        self.__lt = lt
-        self.__gt = gt
+        self.gte = gte
+        self.lte = lte
+        self.lt = lt
+        self.gt = gt
 
     @property
     def gte(self) -> Union[datetime.date, float]:
@@ -2019,40 +2020,40 @@ class PerformanceStats(Base):
         worst_month: float = None,
         worst_month_date: datetime.date = None,
         total_return: float = None,
-        volume: float = None        
-    ):
+        volume: float = None
+    ):        
         super().__init__()
-        self.__alpha = alpha
-        self.__annualized_return = annualized_return
-        self.__annualized_volatility = annualized_volatility
-        self.__average_return = average_return
-        self.__average_value = average_value
-        self.__average_volume_last_month = average_volume_last_month
-        self.__best_month = best_month
-        self.__best_month_date = best_month_date
-        self.__beta = beta
-        self.__close_price = close_price
-        self.__correlation = correlation
-        self.__current_value = current_value
-        self.__drawdown_over_return = drawdown_over_return
-        self.__high = high
-        self.__high_eod = high_eod
-        self.__last_change = last_change
-        self.__last_change_pct = last_change_pct
-        self.__last_date = last_date
-        self.__last_value = last_value
-        self.__low = low
-        self.__low_eod = low_eod
-        self.__max_draw_down = max_draw_down
-        self.__max_draw_down_duration = max_draw_down_duration
-        self.__open_price = open_price
-        self.__positive_months = positive_months
-        self.__sharpe_ratio = sharpe_ratio
-        self.__sortino_ratio = sortino_ratio
-        self.__worst_month = worst_month
-        self.__worst_month_date = worst_month_date
-        self.__total_return = total_return
-        self.__volume = volume
+        self.alpha = alpha
+        self.annualized_return = annualized_return
+        self.annualized_volatility = annualized_volatility
+        self.average_return = average_return
+        self.average_value = average_value
+        self.average_volume_last_month = average_volume_last_month
+        self.best_month = best_month
+        self.best_month_date = best_month_date
+        self.beta = beta
+        self.close_price = close_price
+        self.correlation = correlation
+        self.current_value = current_value
+        self.drawdown_over_return = drawdown_over_return
+        self.high = high
+        self.high_eod = high_eod
+        self.last_change = last_change
+        self.last_change_pct = last_change_pct
+        self.last_date = last_date
+        self.last_value = last_value
+        self.low = low
+        self.low_eod = low_eod
+        self.max_draw_down = max_draw_down
+        self.max_draw_down_duration = max_draw_down_duration
+        self.open_price = open_price
+        self.positive_months = positive_months
+        self.sharpe_ratio = sharpe_ratio
+        self.sortino_ratio = sortino_ratio
+        self.worst_month = worst_month
+        self.worst_month_date = worst_month_date
+        self.total_return = total_return
+        self.volume = volume
 
     @property
     def alpha(self) -> float:
@@ -2372,11 +2373,11 @@ class Position(Base):
     def __init__(
         self,
         asset_id: str = None,
-        quantity: float = None        
-    ):
+        quantity: float = None
+    ):        
         super().__init__()
-        self.__asset_id = asset_id
-        self.__quantity = quantity
+        self.asset_id = asset_id
+        self.quantity = quantity
 
     @property
     def asset_id(self) -> str:
@@ -2406,11 +2407,11 @@ class PricingDateAndMarketDataAsOf(Base):
     def __init__(
         self,
         pricing_date: datetime.date,
-        market_data_as_of: Union[datetime.date, datetime.datetime]        
-    ):
+        market_data_as_of: Union[datetime.date, datetime.datetime]
+    ):        
         super().__init__()
-        self.__pricing_date = pricing_date
-        self.__market_data_as_of = market_data_as_of
+        self.pricing_date = pricing_date
+        self.market_data_as_of = market_data_as_of
 
     @property
     def pricing_date(self) -> datetime.date:
@@ -2439,10 +2440,10 @@ class RiskRequestParameters(Base):
        
     def __init__(
         self,
-        csa_term: str = None        
-    ):
+        csa_term: str = None
+    ):        
         super().__init__()
-        self.__csa_term = csa_term
+        self.csa_term = csa_term
 
     @property
     def csa_term(self) -> str:
@@ -2460,11 +2461,11 @@ class WeightedPosition(Base):
     def __init__(
         self,
         asset_id: str,
-        weight: float        
-    ):
+        weight: float
+    ):        
         super().__init__()
-        self.__asset_id = asset_id
-        self.__weight = weight
+        self.asset_id = asset_id
+        self.weight = weight
 
     @property
     def asset_id(self) -> str:
@@ -2522,41 +2523,43 @@ class XRef(Priceable):
         mic: str = None,
         sf_id: str = None,
         dollar_cross: str = None,
-        mq_symbol: str = None        
-    ):
+        mq_symbol: str = None,
+        primary_country_ric: str = None
+    ):        
         super().__init__()
-        self.__ric = ric
-        self.__rcic = rcic
-        self.__eid = eid
-        self.__gsideid = gsideid
-        self.__gsid = gsid
-        self.__cid = cid
-        self.__bbid = bbid
-        self.__bcid = bcid
-        self.__delisted = delisted
-        self.__bbid_equivalent = bbid_equivalent
-        self.__cusip = cusip
-        self.__gss = gss
-        self.__isin = isin
-        self.__jsn = jsn
-        self.__prime_id = prime_id
-        self.__sedol = sedol
-        self.__ticker = ticker
-        self.__valoren = valoren
-        self.__wpk = wpk
-        self.__gsn = gsn
-        self.__sec_name = sec_name
-        self.__cross = cross
-        self.__simon_id = simon_id
-        self.__em_id = em_id
-        self.__cm_id = cm_id
-        self.__lms_id = lms_id
-        self.__mdapi = mdapi
-        self.__mdapi_class = mdapi_class
-        self.__mic = mic
-        self.__sf_id = sf_id
-        self.__dollar_cross = dollar_cross
-        self.__mq_symbol = mq_symbol
+        self.ric = ric
+        self.rcic = rcic
+        self.eid = eid
+        self.gsideid = gsideid
+        self.gsid = gsid
+        self.cid = cid
+        self.bbid = bbid
+        self.bcid = bcid
+        self.delisted = delisted
+        self.bbid_equivalent = bbid_equivalent
+        self.cusip = cusip
+        self.gss = gss
+        self.isin = isin
+        self.jsn = jsn
+        self.prime_id = prime_id
+        self.sedol = sedol
+        self.ticker = ticker
+        self.valoren = valoren
+        self.wpk = wpk
+        self.gsn = gsn
+        self.sec_name = sec_name
+        self.cross = cross
+        self.simon_id = simon_id
+        self.em_id = em_id
+        self.cm_id = cm_id
+        self.lms_id = lms_id
+        self.mdapi = mdapi
+        self.mdapi_class = mdapi_class
+        self.mic = mic
+        self.sf_id = sf_id
+        self.dollar_cross = dollar_cross
+        self.mq_symbol = mq_symbol
+        self.primary_country_ric = primary_country_ric
 
     @property
     def ric(self) -> str:
@@ -2878,6 +2881,16 @@ class XRef(Priceable):
         self.__mq_symbol = value
         self._property_changed('mq_symbol')        
 
+    @property
+    def primary_country_ric(self) -> str:
+        """Reuters Primary Country Instrument Code Identifier"""
+        return self.__primary_country_ric
+
+    @primary_country_ric.setter
+    def primary_country_ric(self, value: str):
+        self.__primary_country_ric = value
+        self._property_changed('primary_country_ric')        
+
 
 class CSLCurrency(Base):
         
@@ -2885,10 +2898,10 @@ class CSLCurrency(Base):
        
     def __init__(
         self,
-        string_value: Union[Currency, str] = None        
-    ):
+        string_value: Union[Currency, str] = None
+    ):        
         super().__init__()
-        self.__string_value = get_enum_value(Currency, string_value)
+        self.string_value = string_value
 
     @property
     def string_value(self) -> Union[Currency, str]:
@@ -2907,10 +2920,10 @@ class CSLDateArray(Base):
        
     def __init__(
         self,
-        date_values: Tuple[CSLDate, ...] = None        
-    ):
+        date_values: Tuple[CSLDate, ...] = None
+    ):        
         super().__init__()
-        self.__date_values = date_values
+        self.date_values = date_values
 
     @property
     def date_values(self) -> Tuple[CSLDate, ...]:
@@ -2930,11 +2943,11 @@ class CSLDateArrayNamedParam(Base):
     def __init__(
         self,
         date_values: Tuple[CSLDate, ...] = None,
-        name: str = None        
-    ):
+        name: str = None
+    ):        
         super().__init__()
-        self.__date_values = date_values
-        self.__name = name
+        self.date_values = date_values
+        self.name = name
 
     @property
     def date_values(self) -> Tuple[CSLDate, ...]:
@@ -2963,10 +2976,10 @@ class CSLDoubleArray(Base):
        
     def __init__(
         self,
-        double_values: Tuple[CSLDouble, ...] = None        
-    ):
+        double_values: Tuple[CSLDouble, ...] = None
+    ):        
         super().__init__()
-        self.__double_values = double_values
+        self.double_values = double_values
 
     @property
     def double_values(self) -> Tuple[CSLDouble, ...]:
@@ -2985,10 +2998,10 @@ class CSLFXCrossArray(Base):
        
     def __init__(
         self,
-        fx_cross_values: Tuple[CSLFXCross, ...] = None        
-    ):
+        fx_cross_values: Tuple[CSLFXCross, ...] = None
+    ):        
         super().__init__()
-        self.__fx_cross_values = fx_cross_values
+        self.fx_cross_values = fx_cross_values
 
     @property
     def fx_cross_values(self) -> Tuple[CSLFXCross, ...]:
@@ -3007,10 +3020,10 @@ class CSLIndexArray(Base):
        
     def __init__(
         self,
-        index_values: Tuple[CSLIndex, ...] = None        
-    ):
+        index_values: Tuple[CSLIndex, ...] = None
+    ):        
         super().__init__()
-        self.__index_values = index_values
+        self.index_values = index_values
 
     @property
     def index_values(self) -> Tuple[CSLIndex, ...]:
@@ -3029,10 +3042,10 @@ class CSLSimpleScheduleArray(Base):
        
     def __init__(
         self,
-        simple_schedule_values: Tuple[CSLSimpleSchedule, ...] = None        
-    ):
+        simple_schedule_values: Tuple[CSLSimpleSchedule, ...] = None
+    ):        
         super().__init__()
-        self.__simple_schedule_values = simple_schedule_values
+        self.simple_schedule_values = simple_schedule_values
 
     @property
     def simple_schedule_values(self) -> Tuple[CSLSimpleSchedule, ...]:
@@ -3051,10 +3064,10 @@ class CSLStockArray(Base):
        
     def __init__(
         self,
-        stock_values: Tuple[CSLStock, ...] = None        
-    ):
+        stock_values: Tuple[CSLStock, ...] = None
+    ):        
         super().__init__()
-        self.__stock_values = stock_values
+        self.stock_values = stock_values
 
     @property
     def stock_values(self) -> Tuple[CSLStock, ...]:
@@ -3073,10 +3086,10 @@ class CSLStringArray(Base):
        
     def __init__(
         self,
-        string_values: Tuple[CSLString, ...] = None        
-    ):
+        string_values: Tuple[CSLString, ...] = None
+    ):        
         super().__init__()
-        self.__string_values = string_values
+        self.string_values = string_values
 
     @property
     def string_values(self) -> Tuple[CSLString, ...]:
@@ -3099,14 +3112,14 @@ class CurveScenario(Base):
         annualised_parallel_shift: float = None,
         annualised_slope_shift: float = None,
         pivot_point: float = None,
-        cutoff: float = None        
-    ):
+        cutoff: float = None
+    ):        
         super().__init__()
-        self.__market_data_types_and_assets = market_data_types_and_assets
-        self.__annualised_parallel_shift = annualised_parallel_shift
-        self.__annualised_slope_shift = annualised_slope_shift
-        self.__pivot_point = pivot_point
-        self.__cutoff = cutoff
+        self.market_data_types_and_assets = market_data_types_and_assets
+        self.annualised_parallel_shift = annualised_parallel_shift
+        self.annualised_slope_shift = annualised_slope_shift
+        self.pivot_point = pivot_point
+        self.cutoff = cutoff
 
     @property
     def scenario_type(self) -> str:
@@ -3169,10 +3182,10 @@ class GIRDomain(Base):
                
     def __init__(
         self,
-        document_links: Tuple[Link, ...] = None        
-    ):
+        document_links: Tuple[Link, ...] = None
+    ):        
         super().__init__()
-        self.__document_links = document_links
+        self.document_links = document_links
 
     @property
     def document_links(self) -> Tuple[Link, ...]:
@@ -3216,37 +3229,37 @@ class ISelectNewParameter(Base):
         new_min_weight: float = None,
         new_max_weight: float = None,
         min_weight: float = None,
-        max_weight: float = None        
-    ):
+        max_weight: float = None
+    ):        
         super().__init__()
-        self.__early_unwind_after = early_unwind_after
-        self.__early_unwind_applicable = early_unwind_applicable
-        self.__expiry_date_rule = expiry_date_rule
-        self.__option_target_expiry_parameter = option_target_expiry_parameter
-        self.__option_early_unwind_days = option_early_unwind_days
-        self.__in_alpha = in_alpha
-        self.__is_fsr_target_factor = is_fsr_target_factor
-        self.__fsr_max_ratio = fsr_max_ratio
-        self.__fsr_min_ratio = fsr_min_ratio
-        self.__module_enabled = module_enabled
-        self.__module_name = module_name
-        self.__target_strike = target_strike
-        self.__strike_method = get_enum_value(StrikeMethodType, strike_method)
-        self.__option_expiry = get_enum_value(OptionExpiryType, option_expiry)
-        self.__bloomberg_id = bloomberg_id
-        self.__stock_id = stock_id
-        self.__new_weight = new_weight
-        self.__notional = notional
-        self.__option_type = get_enum_value(OptionType, option_type)
-        self.__option_strike_type = get_enum_value(OptionStrikeType, option_strike_type)
-        self.__strike_relative = strike_relative
-        self.__trade_type = get_enum_value(TradeType, trade_type)
-        self.__signal = signal
-        self.__new_signal = new_signal
-        self.__new_min_weight = new_min_weight
-        self.__new_max_weight = new_max_weight
-        self.__min_weight = min_weight
-        self.__max_weight = max_weight
+        self.early_unwind_after = early_unwind_after
+        self.early_unwind_applicable = early_unwind_applicable
+        self.expiry_date_rule = expiry_date_rule
+        self.option_target_expiry_parameter = option_target_expiry_parameter
+        self.option_early_unwind_days = option_early_unwind_days
+        self.in_alpha = in_alpha
+        self.is_fsr_target_factor = is_fsr_target_factor
+        self.fsr_max_ratio = fsr_max_ratio
+        self.fsr_min_ratio = fsr_min_ratio
+        self.module_enabled = module_enabled
+        self.module_name = module_name
+        self.target_strike = target_strike
+        self.strike_method = strike_method
+        self.option_expiry = option_expiry
+        self.bloomberg_id = bloomberg_id
+        self.stock_id = stock_id
+        self.new_weight = new_weight
+        self.notional = notional
+        self.option_type = option_type
+        self.option_strike_type = option_strike_type
+        self.strike_relative = strike_relative
+        self.trade_type = trade_type
+        self.signal = signal
+        self.new_signal = new_signal
+        self.new_min_weight = new_min_weight
+        self.new_max_weight = new_max_weight
+        self.min_weight = min_weight
+        self.max_weight = max_weight
 
     @property
     def early_unwind_after(self) -> float:
@@ -3526,22 +3539,22 @@ class MarketDataPattern(Base):
         gics_sector: str = None,
         gics_industry_group: str = None,
         gics_industry: str = None,
-        gics_sub_industry: str = None        
-    ):
+        gics_sub_industry: str = None
+    ):        
         super().__init__()
-        self.__market_data_type = market_data_type
-        self.__market_data_asset = market_data_asset
-        self.__point_class = point_class
-        self.__market_data_point = market_data_point
-        self.__quoting_style = quoting_style
-        self.__is_active = is_active
-        self.__is_investment_grade = is_investment_grade
-        self.__currency = get_enum_value(Currency, currency)
-        self.__country_code = get_enum_value(CountryCode, country_code)
-        self.__gics_sector = gics_sector
-        self.__gics_industry_group = gics_industry_group
-        self.__gics_industry = gics_industry
-        self.__gics_sub_industry = gics_sub_industry
+        self.market_data_type = market_data_type
+        self.market_data_asset = market_data_asset
+        self.point_class = point_class
+        self.market_data_point = market_data_point
+        self.quoting_style = quoting_style
+        self.is_active = is_active
+        self.is_investment_grade = is_investment_grade
+        self.currency = currency
+        self.country_code = country_code
+        self.gics_sector = gics_sector
+        self.gics_industry_group = gics_industry_group
+        self.gics_industry = gics_industry
+        self.gics_sub_industry = gics_sub_industry
 
     @property
     def market_data_type(self) -> str:
@@ -3685,16 +3698,16 @@ class MarketDataShock(Base):
         cap: float = None,
         floor: float = None,
         coordinate_cap: float = None,
-        coordinate_floor: float = None        
-    ):
+        coordinate_floor: float = None
+    ):        
         super().__init__()
-        self.__shock_type = get_enum_value(MarketDataShockType, shock_type)
-        self.__value = value
-        self.__precision = precision
-        self.__cap = cap
-        self.__floor = floor
-        self.__coordinate_cap = coordinate_cap
-        self.__coordinate_floor = coordinate_floor
+        self.shock_type = shock_type
+        self.value = value
+        self.precision = precision
+        self.cap = cap
+        self.floor = floor
+        self.coordinate_cap = coordinate_cap
+        self.coordinate_floor = coordinate_floor
 
     @property
     def shock_type(self) -> Union[MarketDataShockType, str]:
@@ -3776,12 +3789,12 @@ class RiskMeasure(Base):
         self,
         asset_class: Union[AssetClass, str] = None,
         measure_type: Union[RiskMeasureType, str] = None,
-        unit: Union[RiskMeasureUnit, str] = None        
-    ):
+        unit: Union[RiskMeasureUnit, str] = None
+    ):        
         super().__init__()
-        self.__asset_class = get_enum_value(AssetClass, asset_class)
-        self.__measure_type = get_enum_value(RiskMeasureType, measure_type)
-        self.__unit = get_enum_value(RiskMeasureUnit, unit)
+        self.asset_class = asset_class
+        self.measure_type = measure_type
+        self.unit = unit
 
     @property
     def asset_class(self) -> Union[AssetClass, str]:
@@ -3822,10 +3835,10 @@ class CSLCurrencyArray(Base):
        
     def __init__(
         self,
-        currency_values: Tuple[CSLCurrency, ...] = None        
-    ):
+        currency_values: Tuple[CSLCurrency, ...] = None
+    ):        
         super().__init__()
-        self.__currency_values = currency_values
+        self.currency_values = currency_values
 
     @property
     def currency_values(self) -> Tuple[CSLCurrency, ...]:
@@ -3857,23 +3870,23 @@ class CSLSchedule(Base):
         has_reset_date: bool = None,
         term_formula: str = None,
         extra_dates: Tuple[CSLDateArrayNamedParam, ...] = None,
-        extra_dates_by_offset: Tuple[CSLSymCaseNamedParam, ...] = None        
-    ):
+        extra_dates_by_offset: Tuple[CSLSymCaseNamedParam, ...] = None
+    ):        
         super().__init__()
-        self.__first_date = first_date
-        self.__last_date = last_date
-        self.__calendar_name = calendar_name
-        self.__period = period
-        self.__delay = delay
-        self.__business_day_convention = business_day_convention
-        self.__day_count_convention = day_count_convention
-        self.__days_per_term = days_per_term
-        self.__delay_business_day_convention = delay_business_day_convention
-        self.__delay_calendar_name = delay_calendar_name
-        self.__has_reset_date = has_reset_date
-        self.__term_formula = term_formula
-        self.__extra_dates = extra_dates
-        self.__extra_dates_by_offset = extra_dates_by_offset
+        self.first_date = first_date
+        self.last_date = last_date
+        self.calendar_name = calendar_name
+        self.period = period
+        self.delay = delay
+        self.business_day_convention = business_day_convention
+        self.day_count_convention = day_count_convention
+        self.days_per_term = days_per_term
+        self.delay_business_day_convention = delay_business_day_convention
+        self.delay_calendar_name = delay_calendar_name
+        self.has_reset_date = has_reset_date
+        self.term_formula = term_formula
+        self.extra_dates = extra_dates
+        self.extra_dates_by_offset = extra_dates_by_offset
 
     @property
     def first_date(self) -> datetime.date:
@@ -4019,13 +4032,13 @@ class DataSetFieldMap(Base):
         data_set_id: str,
         field: str,
         results_field: str,
-        risk_measure: RiskMeasure        
-    ):
+        risk_measure: RiskMeasure
+    ):        
         super().__init__()
-        self.__data_set_id = data_set_id
-        self.__field = field
-        self.__results_field = results_field
-        self.__risk_measure = risk_measure
+        self.data_set_id = data_set_id
+        self.field = field
+        self.results_field = results_field
+        self.risk_measure = risk_measure
 
     @property
     def data_set_id(self) -> str:
@@ -4073,834 +4086,854 @@ class FieldFilterMap(Base):
                
     def __init__(
         self,
-        **kwargs        
-    ):
+        **kwargs
+    ):        
         super().__init__()
-        self.__year = kwargs.get('year')
-        self.__investment_rate = kwargs.get('investment_rate')
-        self.__mdapi_class = kwargs.get('mdapi_class')
-        self.__bid_unadjusted = kwargs.get('bid_unadjusted')
-        self.__economic_terms_hash = kwargs.get('economic_terms_hash')
-        self.__available_inventory = kwargs.get('available_inventory')
-        self.__est1_day_complete_pct = kwargs.get('est1_day_complete_pct')
-        self.__created_by_id = kwargs.get('created_by_id')
-        self.__vehicle_type = kwargs.get('vehicle_type')
-        self.__daily_risk = kwargs.get('daily_risk')
-        self.__energy = kwargs.get('energy')
-        self.__market_data_type = kwargs.get('market_data_type')
-        self.__real_short_rates_contribution = kwargs.get('real_short_rates_contribution')
-        self.__sentiment_score = kwargs.get('sentiment_score')
-        self.__leg_one_payment_type = kwargs.get('leg_one_payment_type')
-        self.__value_previous = kwargs.get('value_previous')
-        self.__avg_trade_rate = kwargs.get('avg_trade_rate')
-        self.__short_level = kwargs.get('short_level')
-        self.__version = kwargs.get('version')
-        self.__correlation = kwargs.get('correlation')
-        self.__exposure = kwargs.get('exposure')
-        self.__market_data_asset = kwargs.get('market_data_asset')
-        self.__unadjusted_high = kwargs.get('unadjusted_high')
-        self.__source_importance = kwargs.get('source_importance')
-        self.__eid = kwargs.get('eid')
-        self.__relative_return_qtd = kwargs.get('relative_return_qtd')
-        self.__display_name = kwargs.get('display_name')
-        self.__minutes_to_trade100_pct = kwargs.get('minutes_to_trade100_pct')
-        self.__mkt_quoting_style = kwargs.get('mkt_quoting_style')
-        self.__market_model_id = kwargs.get('market_model_id')
-        self.__realized_correlation = kwargs.get('realized_correlation')
-        self.__target_price_unit = kwargs.get('target_price_unit')
-        self.__upfront_payment = kwargs.get('upfront_payment')
-        self.__atm_fwd_rate = kwargs.get('atm_fwd_rate')
-        self.__tcm_cost_participation_rate75_pct = kwargs.get('tcm_cost_participation_rate75_pct')
-        self.__close = kwargs.get('close')
-        self.__a = kwargs.get('a')
-        self.__b = kwargs.get('b')
-        self.__c = kwargs.get('c')
-        self.__equity_vega = kwargs.get('equity_vega')
-        self.__leg_one_spread = kwargs.get('leg_one_spread')
-        self.__lender_payment = kwargs.get('lender_payment')
-        self.__five_day_move = kwargs.get('five_day_move')
-        self.__borrower = kwargs.get('borrower')
-        self.__value_format = kwargs.get('value_format')
-        self.__performance_contribution = kwargs.get('performance_contribution')
-        self.__target_notional = kwargs.get('target_notional')
-        self.__fill_leg_id = kwargs.get('fill_leg_id')
-        self.__rationale = kwargs.get('rationale')
-        self.__mkt_class = kwargs.get('mkt_class')
-        self.__last_updated_since = kwargs.get('last_updated_since')
-        self.__equities_contribution = kwargs.get('equities_contribution')
-        self.__simon_id = kwargs.get('simon_id')
-        self.__congestion = kwargs.get('congestion')
-        self.__event_category = kwargs.get('event_category')
-        self.__short_rates_contribution = kwargs.get('short_rates_contribution')
-        self.__implied_normal_volatility = kwargs.get('implied_normal_volatility')
-        self.__unadjusted_open = kwargs.get('unadjusted_open')
-        self.__criticality = kwargs.get('criticality')
-        self.__mtm_price = kwargs.get('mtm_price')
-        self.__bid_ask_spread = kwargs.get('bid_ask_spread')
-        self.__leg_one_averaging_method = kwargs.get('leg_one_averaging_method')
-        self.__option_type = kwargs.get('option_type')
-        self.__portfolio_assets = kwargs.get('portfolio_assets')
-        self.__idea_title = kwargs.get('idea_title')
-        self.__tcm_cost_horizon3_hour = kwargs.get('tcm_cost_horizon3_hour')
-        self.__credit_limit = kwargs.get('credit_limit')
-        self.__number_of_positions = kwargs.get('number_of_positions')
-        self.__open_unadjusted = kwargs.get('open_unadjusted')
-        self.__ask_price = kwargs.get('ask_price')
-        self.__event_id = kwargs.get('event_id')
-        self.__sectors = kwargs.get('sectors')
-        self.__std30_days_subsidized_yield = kwargs.get('std30_days_subsidized_yield')
-        self.__annualized_tracking_error = kwargs.get('annualized_tracking_error')
-        self.__additional_price_notation_type = kwargs.get('additional_price_notation_type')
-        self.__vol_swap = kwargs.get('vol_swap')
-        self.__real_fci = kwargs.get('real_fci')
-        self.__annualized_risk = kwargs.get('annualized_risk')
-        self.__block_trades_and_large_notional_off_facility_swaps = kwargs.get('block_trades_and_large_notional_off_facility_swaps')
-        self.__leg_one_fixed_payment_currency = kwargs.get('leg_one_fixed_payment_currency')
-        self.__gross_exposure = kwargs.get('gross_exposure')
-        self.__volume_composite = kwargs.get('volume_composite')
-        self.__volume = kwargs.get('volume')
-        self.__adv = kwargs.get('adv')
-        self.__short_conviction_medium = kwargs.get('short_conviction_medium')
-        self.__exchange = kwargs.get('exchange')
-        self.__trade_price = kwargs.get('trade_price')
-        self.__cleared = kwargs.get('cleared')
-        self.__es_policy_score = kwargs.get('es_policy_score')
-        self.__prime_id_numeric = kwargs.get('prime_id_numeric')
-        self.__cid = kwargs.get('cid')
-        self.__leg_one_index = kwargs.get('leg_one_index')
-        self.__bid_high = kwargs.get('bid_high')
-        self.__fair_variance = kwargs.get('fair_variance')
-        self.__hit_rate_wtd = kwargs.get('hit_rate_wtd')
-        self.__bos_in_bps_description = kwargs.get('bos_in_bps_description')
-        self.__low_price = kwargs.get('low_price')
-        self.__realized_volatility = kwargs.get('realized_volatility')
-        self.__adv22_day_pct = kwargs.get('adv22_day_pct')
-        self.__clone_parent_id = kwargs.get('clone_parent_id')
-        self.__price_range_in_ticks_label = kwargs.get('price_range_in_ticks_label')
-        self.__ticker = kwargs.get('ticker')
-        self.__tcm_cost_horizon1_day = kwargs.get('tcm_cost_horizon1_day')
-        self.__file_location = kwargs.get('file_location')
-        self.__sts_rates_country = kwargs.get('sts_rates_country')
-        self.__leg_two_payment_type = kwargs.get('leg_two_payment_type')
-        self.__horizon = kwargs.get('horizon')
-        self.__source_value_forecast = kwargs.get('source_value_forecast')
-        self.__short_conviction_large = kwargs.get('short_conviction_large')
-        self.__counter_party_status = kwargs.get('counter_party_status')
-        self.__composite22_day_adv = kwargs.get('composite22_day_adv')
-        self.__dollar_excess_return = kwargs.get('dollar_excess_return')
-        self.__gsn = kwargs.get('gsn')
-        self.__gss = kwargs.get('gss')
-        self.__percent_of_mediandv1m = kwargs.get('percent_of_mediandv1m')
-        self.__lendables = kwargs.get('lendables')
-        self.__asset_class = kwargs.get('asset_class')
-        self.__sovereign_spread_contribution = kwargs.get('sovereign_spread_contribution')
-        self.__bos_in_ticks_label = kwargs.get('bos_in_ticks_label')
-        self.__ric = kwargs.get('ric')
-        self.__position_source_id = kwargs.get('position_source_id')
-        self.__rate_type = kwargs.get('rate_type')
-        self.__gs_sustain_region = kwargs.get('gs_sustain_region')
-        self.__deployment_id = kwargs.get('deployment_id')
-        self.__loan_status = kwargs.get('loan_status')
-        self.__short_weight = kwargs.get('short_weight')
-        self.__loan_rebate = kwargs.get('loan_rebate')
-        self.__period = kwargs.get('period')
-        self.__index_create_source = kwargs.get('index_create_source')
-        self.__fiscal_quarter = kwargs.get('fiscal_quarter')
-        self.__real_twi_contribution = kwargs.get('real_twi_contribution')
-        self.__market_impact = kwargs.get('market_impact')
-        self.__event_type = kwargs.get('event_type')
-        self.__mkt_asset = kwargs.get('mkt_asset')
-        self.__asset_count_long = kwargs.get('asset_count_long')
-        self.__spot = kwargs.get('spot')
-        self.__loan_value = kwargs.get('loan_value')
-        self.__swap_spread = kwargs.get('swap_spread')
-        self.__trading_restriction = kwargs.get('trading_restriction')
-        self.__total_return_price = kwargs.get('total_return_price')
-        self.__city = kwargs.get('city')
-        self.__dissemination_id = kwargs.get('dissemination_id')
-        self.__leg_two_fixed_payment = kwargs.get('leg_two_fixed_payment')
-        self.__hit_rate_ytd = kwargs.get('hit_rate_ytd')
-        self.__valid = kwargs.get('valid')
-        self.__sts_commodity = kwargs.get('sts_commodity')
-        self.__indication_of_end_user_exception = kwargs.get('indication_of_end_user_exception')
-        self.__es_score = kwargs.get('es_score')
-        self.__price_range_in_ticks = kwargs.get('price_range_in_ticks')
-        self.__expense_ratio_gross_bps = kwargs.get('expense_ratio_gross_bps')
-        self.__pct_change = kwargs.get('pct_change')
-        self.__number_of_rolls = kwargs.get('number_of_rolls')
-        self.__agent_lender_fee = kwargs.get('agent_lender_fee')
-        self.__bbid = kwargs.get('bbid')
-        self.__option_strike_price = kwargs.get('option_strike_price')
-        self.__arrival_mid_normalized = kwargs.get('arrival_mid_normalized')
-        self.__underlying_asset2 = kwargs.get('underlying_asset2')
-        self.__underlying_asset1 = kwargs.get('underlying_asset1')
-        self.__capped = kwargs.get('capped')
-        self.__rating = kwargs.get('rating')
-        self.__option_currency = kwargs.get('option_currency')
-        self.__volatility = kwargs.get('volatility')
-        self.__legal_entity = kwargs.get('legal_entity')
-        self.__performance_fee = kwargs.get('performance_fee')
-        self.__underlying_asset_ids = kwargs.get('underlying_asset_ids')
-        self.__queue_in_lots_label = kwargs.get('queue_in_lots_label')
-        self.__adv10_day_pct = kwargs.get('adv10_day_pct')
-        self.__long_conviction_medium = kwargs.get('long_conviction_medium')
-        self.__annual_risk = kwargs.get('annual_risk')
-        self.__eti = kwargs.get('eti')
-        self.__daily_tracking_error = kwargs.get('daily_tracking_error')
-        self.__leg_two_index = kwargs.get('leg_two_index')
-        self.__market_buffer = kwargs.get('market_buffer')
-        self.__market_cap = kwargs.get('market_cap')
-        self.__oe_id = kwargs.get('oe_id')
-        self.__cluster_region = kwargs.get('cluster_region')
-        self.__bbid_equivalent = kwargs.get('bbid_equivalent')
-        self.__valoren = kwargs.get('valoren')
-        self.__basis = kwargs.get('basis')
-        self.__price_currency = kwargs.get('price_currency')
-        self.__hedge_id = kwargs.get('hedge_id')
-        self.__tcm_cost_horizon8_day = kwargs.get('tcm_cost_horizon8_day')
-        self.__supra_strategy = kwargs.get('supra_strategy')
-        self.__day_count_convention = kwargs.get('day_count_convention')
-        self.__rounded_notional_amount1 = kwargs.get('rounded_notional_amount1')
-        self.__adv5_day_pct = kwargs.get('adv5_day_pct')
-        self.__rounded_notional_amount2 = kwargs.get('rounded_notional_amount2')
-        self.__factor_source = kwargs.get('factor_source')
-        self.__leverage = kwargs.get('leverage')
-        self.__option_family = kwargs.get('option_family')
-        self.__fwd_points = kwargs.get('fwd_points')
-        self.__kpi_id = kwargs.get('kpi_id')
-        self.__relative_return_wtd = kwargs.get('relative_return_wtd')
-        self.__borrow_cost = kwargs.get('borrow_cost')
-        self.__asset_classifications_risk_country_name = kwargs.get('asset_classifications_risk_country_name')
-        self.__risk_model = kwargs.get('risk_model')
-        self.__average_implied_volatility = kwargs.get('average_implied_volatility')
-        self.__fair_value = kwargs.get('fair_value')
-        self.__adjusted_high_price = kwargs.get('adjusted_high_price')
-        self.__direction = kwargs.get('direction')
-        self.__value_forecast = kwargs.get('value_forecast')
-        self.__execution_venue = kwargs.get('execution_venue')
-        self.__position_source_type = kwargs.get('position_source_type')
-        self.__adjusted_close_price = kwargs.get('adjusted_close_price')
-        self.__lms_id = kwargs.get('lms_id')
-        self.__rebate_rate = kwargs.get('rebate_rate')
-        self.__participation_rate = kwargs.get('participation_rate')
-        self.__obfr = kwargs.get('obfr')
-        self.__option_lock_period = kwargs.get('option_lock_period')
-        self.__es_momentum_percentile = kwargs.get('es_momentum_percentile')
-        self.__lender_income_adjustment = kwargs.get('lender_income_adjustment')
-        self.__price_notation = kwargs.get('price_notation')
-        self.__strategy = kwargs.get('strategy')
-        self.__position_type = kwargs.get('position_type')
-        self.__lender_income = kwargs.get('lender_income')
-        self.__sub_asset_class = kwargs.get('sub_asset_class')
-        self.__short_interest = kwargs.get('short_interest')
-        self.__reference_period = kwargs.get('reference_period')
-        self.__adjusted_volume = kwargs.get('adjusted_volume')
-        self.__pb_client_id = kwargs.get('pb_client_id')
-        self.__owner_id = kwargs.get('owner_id')
-        self.__sec_db = kwargs.get('sec_db')
-        self.__composite10_day_adv = kwargs.get('composite10_day_adv')
-        self.__bpe_quality_stars = kwargs.get('bpe_quality_stars')
-        self.__idea_activity_type = kwargs.get('idea_activity_type')
-        self.__idea_source = kwargs.get('idea_source')
-        self.__unadjusted_ask = kwargs.get('unadjusted_ask')
-        self.__trading_pnl = kwargs.get('trading_pnl')
-        self.__given_plus_paid = kwargs.get('given_plus_paid')
-        self.__close_location = kwargs.get('close_location')
-        self.__short_conviction_small = kwargs.get('short_conviction_small')
-        self.__forecast = kwargs.get('forecast')
-        self.__pnl = kwargs.get('pnl')
-        self.__upfront_payment_currency = kwargs.get('upfront_payment_currency')
-        self.__date_index = kwargs.get('date_index')
-        self.__tcm_cost_horizon4_day = kwargs.get('tcm_cost_horizon4_day')
-        self.__asset_classifications_is_primary = kwargs.get('asset_classifications_is_primary')
-        self.__styles = kwargs.get('styles')
-        self.__short_name = kwargs.get('short_name')
-        self.__dwi_contribution = kwargs.get('dwi_contribution')
-        self.__reset_frequency1 = kwargs.get('reset_frequency1')
-        self.__reset_frequency2 = kwargs.get('reset_frequency2')
-        self.__average_fill_price = kwargs.get('average_fill_price')
-        self.__price_notation_type2 = kwargs.get('price_notation_type2')
-        self.__price_notation_type3 = kwargs.get('price_notation_type3')
-        self.__bid_gspread = kwargs.get('bid_gspread')
-        self.__open_price = kwargs.get('open_price')
-        self.__depth_spread_score = kwargs.get('depth_spread_score')
-        self.__sub_account = kwargs.get('sub_account')
-        self.__fair_volatility = kwargs.get('fair_volatility')
-        self.__dollar_cross = kwargs.get('dollar_cross')
-        self.__portfolio_type = kwargs.get('portfolio_type')
-        self.__vendor = kwargs.get('vendor')
-        self.__currency = kwargs.get('currency')
-        self.__cluster_class = kwargs.get('cluster_class')
-        self.__queueing_time = kwargs.get('queueing_time')
-        self.__ann_return5_year = kwargs.get('ann_return5_year')
-        self.__bid_size = kwargs.get('bid_size')
-        self.__arrival_mid = kwargs.get('arrival_mid')
-        self.__asset_parameters_exchange_currency = kwargs.get('asset_parameters_exchange_currency')
-        self.__unexplained = kwargs.get('unexplained')
-        self.__metric = kwargs.get('metric')
-        self.__ask = kwargs.get('ask')
-        self.__implied_lognormal_volatility = kwargs.get('implied_lognormal_volatility')
-        self.__close_price = kwargs.get('close_price')
-        self.__absolute_strike = kwargs.get('absolute_strike')
-        self.__source = kwargs.get('source')
-        self.__asset_classifications_country_code = kwargs.get('asset_classifications_country_code')
-        self.__expense_ratio_net_bps = kwargs.get('expense_ratio_net_bps')
-        self.__data_set_sub_category = kwargs.get('data_set_sub_category')
-        self.__day_count_convention2 = kwargs.get('day_count_convention2')
-        self.__quantity_bucket = kwargs.get('quantity_bucket')
-        self.__factor_two = kwargs.get('factor_two')
-        self.__oe_name = kwargs.get('oe_name')
-        self.__opening_price_value = kwargs.get('opening_price_value')
-        self.__given = kwargs.get('given')
-        self.__delisting_date = kwargs.get('delisting_date')
-        self.__weight = kwargs.get('weight')
-        self.__market_data_point = kwargs.get('market_data_point')
-        self.__absolute_weight = kwargs.get('absolute_weight')
-        self.__measure = kwargs.get('measure')
-        self.__hedge_annualized_volatility = kwargs.get('hedge_annualized_volatility')
-        self.__benchmark_currency = kwargs.get('benchmark_currency')
-        self.__futures_contract = kwargs.get('futures_contract')
-        self.__name = kwargs.get('name')
-        self.__aum = kwargs.get('aum')
-        self.__folder_name = kwargs.get('folder_name')
-        self.__swaption_atm_fwd_rate = kwargs.get('swaption_atm_fwd_rate')
-        self.__live_date = kwargs.get('live_date')
-        self.__ask_high = kwargs.get('ask_high')
-        self.__corporate_action_type = kwargs.get('corporate_action_type')
-        self.__prime_id = kwargs.get('prime_id')
-        self.__region_name = kwargs.get('region_name')
-        self.__description = kwargs.get('description')
-        self.__value_revised = kwargs.get('value_revised')
-        self.__adjusted_trade_price = kwargs.get('adjusted_trade_price')
-        self.__is_adr = kwargs.get('is_adr')
-        self.__factor = kwargs.get('factor')
-        self.__days_on_loan = kwargs.get('days_on_loan')
-        self.__long_conviction_small = kwargs.get('long_conviction_small')
-        self.__service_id = kwargs.get('service_id')
-        self.__gsfeer = kwargs.get('gsfeer')
-        self.__wam = kwargs.get('wam')
-        self.__wal = kwargs.get('wal')
-        self.__backtest_id = kwargs.get('backtest_id')
-        self.__leg_two_index_location = kwargs.get('leg_two_index_location')
-        self.__g_score = kwargs.get('g_score')
-        self.__corporate_spread_contribution = kwargs.get('corporate_spread_contribution')
-        self.__market_value = kwargs.get('market_value')
-        self.__notional_currency1 = kwargs.get('notional_currency1')
-        self.__notional_currency2 = kwargs.get('notional_currency2')
-        self.__multiple_score = kwargs.get('multiple_score')
-        self.__beta_adjusted_exposure = kwargs.get('beta_adjusted_exposure')
-        self.__dividend_points = kwargs.get('dividend_points')
-        self.__paid = kwargs.get('paid')
-        self.__short = kwargs.get('short')
-        self.__bos_in_ticks_description = kwargs.get('bos_in_ticks_description')
-        self.__implied_correlation = kwargs.get('implied_correlation')
-        self.__normalized_performance = kwargs.get('normalized_performance')
-        self.__cm_id = kwargs.get('cm_id')
-        self.__taxonomy = kwargs.get('taxonomy')
-        self.__swaption_vol = kwargs.get('swaption_vol')
-        self.__dividend_yield = kwargs.get('dividend_yield')
-        self.__source_origin = kwargs.get('source_origin')
-        self.__measures = kwargs.get('measures')
-        self.__total_quantity = kwargs.get('total_quantity')
-        self.__internal_user = kwargs.get('internal_user')
-        self.__underlyer = kwargs.get('underlyer')
-        self.__price_unit = kwargs.get('price_unit')
-        self.__redemption_option = kwargs.get('redemption_option')
-        self.__notional_unit2 = kwargs.get('notional_unit2')
-        self.__unadjusted_low = kwargs.get('unadjusted_low')
-        self.__notional_unit1 = kwargs.get('notional_unit1')
-        self.__sedol = kwargs.get('sedol')
-        self.__rounding_cost_pnl = kwargs.get('rounding_cost_pnl')
-        self.__sustain_global = kwargs.get('sustain_global')
-        self.__portfolio_id = kwargs.get('portfolio_id')
-        self.__ending_date = kwargs.get('ending_date')
-        self.__cap_floor_atm_fwd_rate = kwargs.get('cap_floor_atm_fwd_rate')
-        self.__es_percentile = kwargs.get('es_percentile')
-        self.__ann_return3_year = kwargs.get('ann_return3_year')
-        self.__rcic = kwargs.get('rcic')
-        self.__simon_asset_tags = kwargs.get('simon_asset_tags')
-        self.__forward_point = kwargs.get('forward_point')
-        self.__hit_rate_qtd = kwargs.get('hit_rate_qtd')
-        self.__fci = kwargs.get('fci')
-        self.__recall_quantity = kwargs.get('recall_quantity')
-        self.__premium = kwargs.get('premium')
-        self.__low = kwargs.get('low')
-        self.__cross_group = kwargs.get('cross_group')
-        self.__five_day_price_change_bps = kwargs.get('five_day_price_change_bps')
-        self.__holdings = kwargs.get('holdings')
-        self.__price_method = kwargs.get('price_method')
-        self.__quoting_style = kwargs.get('quoting_style')
-        self.__error_message = kwargs.get('error_message')
-        self.__mid_price = kwargs.get('mid_price')
-        self.__sts_em_dm = kwargs.get('sts_em_dm')
-        self.__tcm_cost_horizon2_day = kwargs.get('tcm_cost_horizon2_day')
-        self.__pending_loan_count = kwargs.get('pending_loan_count')
-        self.__queue_in_lots = kwargs.get('queue_in_lots')
-        self.__price_range_in_ticks_description = kwargs.get('price_range_in_ticks_description')
-        self.__tender_offer_expiration_date = kwargs.get('tender_offer_expiration_date')
-        self.__leg_one_fixed_payment = kwargs.get('leg_one_fixed_payment')
-        self.__option_expiration_frequency = kwargs.get('option_expiration_frequency')
-        self.__tcm_cost_participation_rate5_pct = kwargs.get('tcm_cost_participation_rate5_pct')
-        self.__is_active = kwargs.get('is_active')
-        self.__growth_score = kwargs.get('growth_score')
-        self.__buffer_threshold = kwargs.get('buffer_threshold')
-        self.__price_forming_continuation_data = kwargs.get('price_forming_continuation_data')
-        self.__adjusted_short_interest = kwargs.get('adjusted_short_interest')
-        self.__group = kwargs.get('group')
-        self.__estimated_spread = kwargs.get('estimated_spread')
-        self.__ann_return10_year = kwargs.get('ann_return10_year')
-        self.__tcm_cost = kwargs.get('tcm_cost')
-        self.__sustain_japan = kwargs.get('sustain_japan')
-        self.__hedge_tracking_error = kwargs.get('hedge_tracking_error')
-        self.__market_cap_category = kwargs.get('market_cap_category')
-        self.__historical_volume = kwargs.get('historical_volume')
-        self.__strike_price = kwargs.get('strike_price')
-        self.__equity_gamma = kwargs.get('equity_gamma')
-        self.__gross_income = kwargs.get('gross_income')
-        self.__em_id = kwargs.get('em_id')
-        self.__adjusted_open_price = kwargs.get('adjusted_open_price')
-        self.__asset_count_in_model = kwargs.get('asset_count_in_model')
-        self.__sts_credit_region = kwargs.get('sts_credit_region')
-        self.__point = kwargs.get('point')
-        self.__total_returns = kwargs.get('total_returns')
-        self.__lender = kwargs.get('lender')
-        self.__ann_return1_year = kwargs.get('ann_return1_year')
-        self.__min_temperature = kwargs.get('min_temperature')
-        self.__eff_yield7_day = kwargs.get('eff_yield7_day')
-        self.__meeting_date = kwargs.get('meeting_date')
-        self.__relative_strike = kwargs.get('relative_strike')
-        self.__amount = kwargs.get('amount')
-        self.__lending_fund_acct = kwargs.get('lending_fund_acct')
-        self.__rebate = kwargs.get('rebate')
-        self.__flagship = kwargs.get('flagship')
-        self.__additional_price_notation = kwargs.get('additional_price_notation')
-        self.__factor_category = kwargs.get('factor_category')
-        self.__implied_volatility = kwargs.get('implied_volatility')
-        self.__spread = kwargs.get('spread')
-        self.__equity_delta = kwargs.get('equity_delta')
-        self.__gross_weight = kwargs.get('gross_weight')
-        self.__listed = kwargs.get('listed')
-        self.__variance = kwargs.get('variance')
-        self.__g10_currency = kwargs.get('g10_currency')
-        self.__shock_style = kwargs.get('shock_style')
-        self.__relative_period = kwargs.get('relative_period')
-        self.__methodology = kwargs.get('methodology')
-        self.__queue_clock_time_label = kwargs.get('queue_clock_time_label')
-        self.__market_pnl = kwargs.get('market_pnl')
-        self.__sustain_asia_ex_japan = kwargs.get('sustain_asia_ex_japan')
-        self.__asset_classifications_gics_sub_industry = kwargs.get('asset_classifications_gics_sub_industry')
-        self.__neighbour_asset_id = kwargs.get('neighbour_asset_id')
-        self.__simon_intl_asset_tags = kwargs.get('simon_intl_asset_tags')
-        self.__swap_rate = kwargs.get('swap_rate')
-        self.__path = kwargs.get('path')
-        self.__client_contact = kwargs.get('client_contact')
-        self.__rank = kwargs.get('rank')
-        self.__mixed_swap_other_reported_sdr = kwargs.get('mixed_swap_other_reported_sdr')
-        self.__data_set_category = kwargs.get('data_set_category')
-        self.__bos_in_bps_label = kwargs.get('bos_in_bps_label')
-        self.__bos_in_bps = kwargs.get('bos_in_bps')
-        self.__point_class = kwargs.get('point_class')
-        self.__fx_spot = kwargs.get('fx_spot')
-        self.__bid_low = kwargs.get('bid_low')
-        self.__fair_variance_volatility = kwargs.get('fair_variance_volatility')
-        self.__hedge_volatility = kwargs.get('hedge_volatility')
-        self.__tags = kwargs.get('tags')
-        self.__underlying_asset_id = kwargs.get('underlying_asset_id')
-        self.__real_long_rates_contribution = kwargs.get('real_long_rates_contribution')
-        self.__client_exposure = kwargs.get('client_exposure')
-        self.__gs_sustain_sub_sector = kwargs.get('gs_sustain_sub_sector')
-        self.__domain = kwargs.get('domain')
-        self.__forward_tenor = kwargs.get('forward_tenor')
-        self.__jsn = kwargs.get('jsn')
-        self.__share_class_assets = kwargs.get('share_class_assets')
-        self.__annuity = kwargs.get('annuity')
-        self.__quote_type = kwargs.get('quote_type')
-        self.__uid = kwargs.get('uid')
-        self.__tenor = kwargs.get('tenor')
-        self.__es_policy_percentile = kwargs.get('es_policy_percentile')
-        self.__term = kwargs.get('term')
-        self.__tcm_cost_participation_rate100_pct = kwargs.get('tcm_cost_participation_rate100_pct')
-        self.__disclaimer = kwargs.get('disclaimer')
-        self.__measure_idx = kwargs.get('measure_idx')
-        self.__loan_fee = kwargs.get('loan_fee')
-        self.__stop_price_value = kwargs.get('stop_price_value')
-        self.__deployment_version = kwargs.get('deployment_version')
-        self.__twi_contribution = kwargs.get('twi_contribution')
-        self.__delisted = kwargs.get('delisted')
-        self.__regional_focus = kwargs.get('regional_focus')
-        self.__volume_primary = kwargs.get('volume_primary')
-        self.__leg_two_delivery_point = kwargs.get('leg_two_delivery_point')
-        self.__series = kwargs.get('series')
-        self.__new_ideas_qtd = kwargs.get('new_ideas_qtd')
-        self.__adjusted_ask_price = kwargs.get('adjusted_ask_price')
-        self.__quarter = kwargs.get('quarter')
-        self.__factor_universe = kwargs.get('factor_universe')
-        self.__opening_price_unit = kwargs.get('opening_price_unit')
-        self.__arrival_rt = kwargs.get('arrival_rt')
-        self.__transaction_cost = kwargs.get('transaction_cost')
-        self.__servicing_cost_short_pnl = kwargs.get('servicing_cost_short_pnl')
-        self.__cluster_description = kwargs.get('cluster_description')
-        self.__position_amount = kwargs.get('position_amount')
-        self.__wind_speed = kwargs.get('wind_speed')
-        self.__ma_rank = kwargs.get('ma_rank')
-        self.__borrower_id = kwargs.get('borrower_id')
-        self.__data_product = kwargs.get('data_product')
-        self.__implied_volatility_by_delta_strike = kwargs.get('implied_volatility_by_delta_strike')
-        self.__mq_symbol = kwargs.get('mq_symbol')
-        self.__bm_prime_id = kwargs.get('bm_prime_id')
-        self.__corporate_action = kwargs.get('corporate_action')
-        self.__conviction = kwargs.get('conviction')
-        self.__benchmark_maturity = kwargs.get('benchmark_maturity')
-        self.__g_regional_score = kwargs.get('g_regional_score')
-        self.__factor_id = kwargs.get('factor_id')
-        self.__hard_to_borrow = kwargs.get('hard_to_borrow')
-        self.__sts_fx_currency = kwargs.get('sts_fx_currency')
-        self.__wpk = kwargs.get('wpk')
-        self.__bid_change = kwargs.get('bid_change')
-        self.__expiration = kwargs.get('expiration')
-        self.__country_name = kwargs.get('country_name')
-        self.__starting_date = kwargs.get('starting_date')
-        self.__loan_id = kwargs.get('loan_id')
-        self.__onboarded = kwargs.get('onboarded')
-        self.__liquidity_score = kwargs.get('liquidity_score')
-        self.__long_rates_contribution = kwargs.get('long_rates_contribution')
-        self.__importance = kwargs.get('importance')
-        self.__source_date_span = kwargs.get('source_date_span')
-        self.__asset_classifications_gics_sector = kwargs.get('asset_classifications_gics_sector')
-        self.__ann_yield6_month = kwargs.get('ann_yield6_month')
-        self.__underlying_data_set_id = kwargs.get('underlying_data_set_id')
-        self.__sts_asset_name = kwargs.get('sts_asset_name')
-        self.__close_unadjusted = kwargs.get('close_unadjusted')
-        self.__value_unit = kwargs.get('value_unit')
-        self.__quantity_unit = kwargs.get('quantity_unit')
-        self.__adjusted_low_price = kwargs.get('adjusted_low_price')
-        self.__net_exposure_classification = kwargs.get('net_exposure_classification')
-        self.__settlement_method = kwargs.get('settlement_method')
-        self.__long_conviction_large = kwargs.get('long_conviction_large')
-        self.__oad = kwargs.get('oad')
-        self.__rate = kwargs.get('rate')
-        self.__alpha = kwargs.get('alpha')
-        self.__client = kwargs.get('client')
-        self.__company = kwargs.get('company')
-        self.__conviction_list = kwargs.get('conviction_list')
-        self.__settlement_frequency = kwargs.get('settlement_frequency')
-        self.__dist_avg7_day = kwargs.get('dist_avg7_day')
-        self.__in_risk_model = kwargs.get('in_risk_model')
-        self.__daily_net_shareholder_flows_percent = kwargs.get('daily_net_shareholder_flows_percent')
-        self.__servicing_cost_long_pnl = kwargs.get('servicing_cost_long_pnl')
-        self.__meeting_number = kwargs.get('meeting_number')
-        self.__exchange_id = kwargs.get('exchange_id')
-        self.__mid_gspread = kwargs.get('mid_gspread')
-        self.__tcm_cost_horizon20_day = kwargs.get('tcm_cost_horizon20_day')
-        self.__long_level = kwargs.get('long_level')
-        self.__realm = kwargs.get('realm')
-        self.__bid = kwargs.get('bid')
-        self.__data_description = kwargs.get('data_description')
-        self.__is_aggressive = kwargs.get('is_aggressive')
-        self.__order_id = kwargs.get('order_id')
-        self.__gsideid = kwargs.get('gsideid')
-        self.__repo_rate = kwargs.get('repo_rate')
-        self.__division = kwargs.get('division')
-        self.__market_cap_usd = kwargs.get('market_cap_usd')
-        self.__high_price = kwargs.get('high_price')
-        self.__absolute_shares = kwargs.get('absolute_shares')
-        self.__action = kwargs.get('action')
-        self.__model = kwargs.get('model')
-        self.__id = kwargs.get('id')
-        self.__arrival_haircut_vwap_normalized = kwargs.get('arrival_haircut_vwap_normalized')
-        self.__price_component = kwargs.get('price_component')
-        self.__queue_clock_time_description = kwargs.get('queue_clock_time_description')
-        self.__delta_strike = kwargs.get('delta_strike')
-        self.__value_actual = kwargs.get('value_actual')
-        self.__upi = kwargs.get('upi')
-        self.__bcid = kwargs.get('bcid')
-        self.__mkt_point = kwargs.get('mkt_point')
-        self.__collateral_currency = kwargs.get('collateral_currency')
-        self.__original_country = kwargs.get('original_country')
-        self.__touch_liquidity_score = kwargs.get('touch_liquidity_score')
-        self.__field = kwargs.get('field')
-        self.__factor_category_id = kwargs.get('factor_category_id')
-        self.__expected_completion_date = kwargs.get('expected_completion_date')
-        self.__spread_option_vol = kwargs.get('spread_option_vol')
-        self.__inflation_swap_rate = kwargs.get('inflation_swap_rate')
-        self.__skew = kwargs.get('skew')
-        self.__status = kwargs.get('status')
-        self.__sustain_emerging_markets = kwargs.get('sustain_emerging_markets')
-        self.__total_price = kwargs.get('total_price')
-        self.__embeded_option = kwargs.get('embeded_option')
-        self.__event_source = kwargs.get('event_source')
-        self.__on_behalf_of = kwargs.get('on_behalf_of')
-        self.__qis_perm_no = kwargs.get('qis_perm_no')
-        self.__shareclass_id = kwargs.get('shareclass_id')
-        self.__sts_commodity_sector = kwargs.get('sts_commodity_sector')
-        self.__exception_status = kwargs.get('exception_status')
-        self.__sales_coverage = kwargs.get('sales_coverage')
-        self.__short_exposure = kwargs.get('short_exposure')
-        self.__tcm_cost_participation_rate10_pct = kwargs.get('tcm_cost_participation_rate10_pct')
-        self.__event_time = kwargs.get('event_time')
-        self.__position_source_name = kwargs.get('position_source_name')
-        self.__arrival_haircut_vwap = kwargs.get('arrival_haircut_vwap')
-        self.__interest_rate = kwargs.get('interest_rate')
-        self.__execution_days = kwargs.get('execution_days')
-        self.__side = kwargs.get('side')
-        self.__compliance_restricted_status = kwargs.get('compliance_restricted_status')
-        self.__forward = kwargs.get('forward')
-        self.__borrow_fee = kwargs.get('borrow_fee')
-        self.__strike = kwargs.get('strike')
-        self.__loan_spread = kwargs.get('loan_spread')
-        self.__tcm_cost_horizon12_hour = kwargs.get('tcm_cost_horizon12_hour')
-        self.__dew_point = kwargs.get('dew_point')
-        self.__research_commission = kwargs.get('research_commission')
-        self.__leg_one_delivery_point = kwargs.get('leg_one_delivery_point')
-        self.__asset_classifications_risk_country_code = kwargs.get('asset_classifications_risk_country_code')
-        self.__event_status = kwargs.get('event_status')
+        self.collateral_value_variance = kwargs.get('collateral_value_variance')
+        self.year = kwargs.get('year')
+        self.investment_rate = kwargs.get('investment_rate')
+        self.mdapi_class = kwargs.get('mdapi_class')
+        self.bid_unadjusted = kwargs.get('bid_unadjusted')
+        self.economic_terms_hash = kwargs.get('economic_terms_hash')
+        self.available_inventory = kwargs.get('available_inventory')
+        self.est1_day_complete_pct = kwargs.get('est1_day_complete_pct')
+        self.created_by_id = kwargs.get('created_by_id')
+        self.vehicle_type = kwargs.get('vehicle_type')
+        self.daily_risk = kwargs.get('daily_risk')
+        self.energy = kwargs.get('energy')
+        self.market_data_type = kwargs.get('market_data_type')
+        self.real_short_rates_contribution = kwargs.get('real_short_rates_contribution')
+        self.sentiment_score = kwargs.get('sentiment_score')
+        self.leg_one_payment_type = kwargs.get('leg_one_payment_type')
+        self.value_previous = kwargs.get('value_previous')
+        self.avg_trade_rate = kwargs.get('avg_trade_rate')
+        self.short_level = kwargs.get('short_level')
+        self.version = kwargs.get('version')
+        self.correlation = kwargs.get('correlation')
+        self.exposure = kwargs.get('exposure')
+        self.market_data_asset = kwargs.get('market_data_asset')
+        self.unadjusted_high = kwargs.get('unadjusted_high')
+        self.source_importance = kwargs.get('source_importance')
+        self.eid = kwargs.get('eid')
+        self.relative_return_qtd = kwargs.get('relative_return_qtd')
+        self.display_name = kwargs.get('display_name')
+        self.minutes_to_trade100_pct = kwargs.get('minutes_to_trade100_pct')
+        self.mkt_quoting_style = kwargs.get('mkt_quoting_style')
+        self.market_model_id = kwargs.get('market_model_id')
+        self.realized_correlation = kwargs.get('realized_correlation')
+        self.collateral_value_actual = kwargs.get('collateral_value_actual')
+        self.upfront_payment = kwargs.get('upfront_payment')
+        self.atm_fwd_rate = kwargs.get('atm_fwd_rate')
+        self.tcm_cost_participation_rate75_pct = kwargs.get('tcm_cost_participation_rate75_pct')
+        self.close = kwargs.get('close')
+        self.a = kwargs.get('a')
+        self.b = kwargs.get('b')
+        self.c = kwargs.get('c')
+        self.equity_vega = kwargs.get('equity_vega')
+        self.leg_one_spread = kwargs.get('leg_one_spread')
+        self.lender_payment = kwargs.get('lender_payment')
+        self.five_day_move = kwargs.get('five_day_move')
+        self.borrower = kwargs.get('borrower')
+        self.value_format = kwargs.get('value_format')
+        self.performance_contribution = kwargs.get('performance_contribution')
+        self.target_notional = kwargs.get('target_notional')
+        self.fill_leg_id = kwargs.get('fill_leg_id')
+        self.rationale = kwargs.get('rationale')
+        self.mkt_class = kwargs.get('mkt_class')
+        self.last_updated_since = kwargs.get('last_updated_since')
+        self.equities_contribution = kwargs.get('equities_contribution')
+        self.simon_id = kwargs.get('simon_id')
+        self.congestion = kwargs.get('congestion')
+        self.event_category = kwargs.get('event_category')
+        self.short_rates_contribution = kwargs.get('short_rates_contribution')
+        self.implied_normal_volatility = kwargs.get('implied_normal_volatility')
+        self.unadjusted_open = kwargs.get('unadjusted_open')
+        self.criticality = kwargs.get('criticality')
+        self.mtm_price = kwargs.get('mtm_price')
+        self.bid_ask_spread = kwargs.get('bid_ask_spread')
+        self.leg_one_averaging_method = kwargs.get('leg_one_averaging_method')
+        self.option_type = kwargs.get('option_type')
+        self.portfolio_assets = kwargs.get('portfolio_assets')
+        self.tcm_cost_horizon3_hour = kwargs.get('tcm_cost_horizon3_hour')
+        self.credit_limit = kwargs.get('credit_limit')
+        self.number_of_positions = kwargs.get('number_of_positions')
+        self.open_unadjusted = kwargs.get('open_unadjusted')
+        self.ask_price = kwargs.get('ask_price')
+        self.event_id = kwargs.get('event_id')
+        self.sectors = kwargs.get('sectors')
+        self.std30_days_subsidized_yield = kwargs.get('std30_days_subsidized_yield')
+        self.annualized_tracking_error = kwargs.get('annualized_tracking_error')
+        self.additional_price_notation_type = kwargs.get('additional_price_notation_type')
+        self.vol_swap = kwargs.get('vol_swap')
+        self.real_fci = kwargs.get('real_fci')
+        self.annualized_risk = kwargs.get('annualized_risk')
+        self.block_trades_and_large_notional_off_facility_swaps = kwargs.get(
+            'block_trades_and_large_notional_off_facility_swaps')
+        self.leg_one_fixed_payment_currency = kwargs.get('leg_one_fixed_payment_currency')
+        self.gross_exposure = kwargs.get('gross_exposure')
+        self.volume_composite = kwargs.get('volume_composite')
+        self.volume = kwargs.get('volume')
+        self.adv = kwargs.get('adv')
+        self.external = kwargs.get('external')
+        self.short_conviction_medium = kwargs.get('short_conviction_medium')
+        self.exchange = kwargs.get('exchange')
+        self.trade_price = kwargs.get('trade_price')
+        self.cleared = kwargs.get('cleared')
+        self.es_policy_score = kwargs.get('es_policy_score')
+        self.prime_id_numeric = kwargs.get('prime_id_numeric')
+        self.cid = kwargs.get('cid')
+        self.leg_one_index = kwargs.get('leg_one_index')
+        self.bid_high = kwargs.get('bid_high')
+        self.fair_variance = kwargs.get('fair_variance')
+        self.hit_rate_wtd = kwargs.get('hit_rate_wtd')
+        self.bos_in_bps_description = kwargs.get('bos_in_bps_description')
+        self.low_price = kwargs.get('low_price')
+        self.realized_volatility = kwargs.get('realized_volatility')
+        self.adv22_day_pct = kwargs.get('adv22_day_pct')
+        self.clone_parent_id = kwargs.get('clone_parent_id')
+        self.price_range_in_ticks_label = kwargs.get('price_range_in_ticks_label')
+        self.ticker = kwargs.get('ticker')
+        self.tcm_cost_horizon1_day = kwargs.get('tcm_cost_horizon1_day')
+        self.file_location = kwargs.get('file_location')
+        self.sts_rates_country = kwargs.get('sts_rates_country')
+        self.leg_two_payment_type = kwargs.get('leg_two_payment_type')
+        self.horizon = kwargs.get('horizon')
+        self.source_value_forecast = kwargs.get('source_value_forecast')
+        self.short_conviction_large = kwargs.get('short_conviction_large')
+        self.counter_party_status = kwargs.get('counter_party_status')
+        self.composite22_day_adv = kwargs.get('composite22_day_adv')
+        self.dollar_excess_return = kwargs.get('dollar_excess_return')
+        self.gsn = kwargs.get('gsn')
+        self.gss = kwargs.get('gss')
+        self.percent_of_mediandv1m = kwargs.get('percent_of_mediandv1m')
+        self.lendables = kwargs.get('lendables')
+        self.asset_class = kwargs.get('asset_class')
+        self.sovereign_spread_contribution = kwargs.get('sovereign_spread_contribution')
+        self.bos_in_ticks_label = kwargs.get('bos_in_ticks_label')
+        self.ric = kwargs.get('ric')
+        self.position_source_id = kwargs.get('position_source_id')
+        self.rate_type = kwargs.get('rate_type')
+        self.gs_sustain_region = kwargs.get('gs_sustain_region')
+        self.deployment_id = kwargs.get('deployment_id')
+        self.loan_status = kwargs.get('loan_status')
+        self.short_weight = kwargs.get('short_weight')
+        self.loan_rebate = kwargs.get('loan_rebate')
+        self.period = kwargs.get('period')
+        self.index_create_source = kwargs.get('index_create_source')
+        self.fiscal_quarter = kwargs.get('fiscal_quarter')
+        self.real_twi_contribution = kwargs.get('real_twi_contribution')
+        self.market_impact = kwargs.get('market_impact')
+        self.event_type = kwargs.get('event_type')
+        self.mkt_asset = kwargs.get('mkt_asset')
+        self.asset_count_long = kwargs.get('asset_count_long')
+        self.spot = kwargs.get('spot')
+        self.loan_value = kwargs.get('loan_value')
+        self.swap_spread = kwargs.get('swap_spread')
+        self.trading_restriction = kwargs.get('trading_restriction')
+        self.price_spot_entry_unit = kwargs.get('price_spot_entry_unit')
+        self.total_return_price = kwargs.get('total_return_price')
+        self.city = kwargs.get('city')
+        self.dissemination_id = kwargs.get('dissemination_id')
+        self.leg_two_fixed_payment = kwargs.get('leg_two_fixed_payment')
+        self.hit_rate_ytd = kwargs.get('hit_rate_ytd')
+        self.valid = kwargs.get('valid')
+        self.sts_commodity = kwargs.get('sts_commodity')
+        self.indication_of_end_user_exception = kwargs.get('indication_of_end_user_exception')
+        self.es_score = kwargs.get('es_score')
+        self.price_range_in_ticks = kwargs.get('price_range_in_ticks')
+        self.expense_ratio_gross_bps = kwargs.get('expense_ratio_gross_bps')
+        self.pct_change = kwargs.get('pct_change')
+        self.number_of_rolls = kwargs.get('number_of_rolls')
+        self.agent_lender_fee = kwargs.get('agent_lender_fee')
+        self.bbid = kwargs.get('bbid')
+        self.option_strike_price = kwargs.get('option_strike_price')
+        self.arrival_mid_normalized = kwargs.get('arrival_mid_normalized')
+        self.underlying_asset2 = kwargs.get('underlying_asset2')
+        self.underlying_asset1 = kwargs.get('underlying_asset1')
+        self.capped = kwargs.get('capped')
+        self.rating = kwargs.get('rating')
+        self.option_currency = kwargs.get('option_currency')
+        self.volatility = kwargs.get('volatility')
+        self.legal_entity = kwargs.get('legal_entity')
+        self.performance_fee = kwargs.get('performance_fee')
+        self.underlying_asset_ids = kwargs.get('underlying_asset_ids')
+        self.queue_in_lots_label = kwargs.get('queue_in_lots_label')
+        self.adv10_day_pct = kwargs.get('adv10_day_pct')
+        self.long_conviction_medium = kwargs.get('long_conviction_medium')
+        self.annual_risk = kwargs.get('annual_risk')
+        self.eti = kwargs.get('eti')
+        self.daily_tracking_error = kwargs.get('daily_tracking_error')
+        self.leg_two_index = kwargs.get('leg_two_index')
+        self.market_buffer = kwargs.get('market_buffer')
+        self.market_cap = kwargs.get('market_cap')
+        self.oe_id = kwargs.get('oe_id')
+        self.cluster_region = kwargs.get('cluster_region')
+        self.bbid_equivalent = kwargs.get('bbid_equivalent')
+        self.valoren = kwargs.get('valoren')
+        self.basis = kwargs.get('basis')
+        self.ext_mkt_class = kwargs.get('ext_mkt_class')
+        self.price_currency = kwargs.get('price_currency')
+        self.hedge_id = kwargs.get('hedge_id')
+        self.tcm_cost_horizon8_day = kwargs.get('tcm_cost_horizon8_day')
+        self.supra_strategy = kwargs.get('supra_strategy')
+        self.day_count_convention = kwargs.get('day_count_convention')
+        self.rounded_notional_amount1 = kwargs.get('rounded_notional_amount1')
+        self.adv5_day_pct = kwargs.get('adv5_day_pct')
+        self.rounded_notional_amount2 = kwargs.get('rounded_notional_amount2')
+        self.factor_source = kwargs.get('factor_source')
+        self.leverage = kwargs.get('leverage')
+        self.option_family = kwargs.get('option_family')
+        self.price_spot_stop_loss_value = kwargs.get('price_spot_stop_loss_value')
+        self.fwd_points = kwargs.get('fwd_points')
+        self.kpi_id = kwargs.get('kpi_id')
+        self.relative_return_wtd = kwargs.get('relative_return_wtd')
+        self.borrow_cost = kwargs.get('borrow_cost')
+        self.asset_classifications_risk_country_name = kwargs.get('asset_classifications_risk_country_name')
+        self.risk_model = kwargs.get('risk_model')
+        self.average_implied_volatility = kwargs.get('average_implied_volatility')
+        self.fair_value = kwargs.get('fair_value')
+        self.adjusted_high_price = kwargs.get('adjusted_high_price')
+        self.ext_mkt_point1 = kwargs.get('ext_mkt_point1')
+        self.direction = kwargs.get('direction')
+        self.ext_mkt_point2 = kwargs.get('ext_mkt_point2')
+        self.value_forecast = kwargs.get('value_forecast')
+        self.execution_venue = kwargs.get('execution_venue')
+        self.position_source_type = kwargs.get('position_source_type')
+        self.adjusted_close_price = kwargs.get('adjusted_close_price')
+        self.lms_id = kwargs.get('lms_id')
+        self.rebate_rate = kwargs.get('rebate_rate')
+        self.participation_rate = kwargs.get('participation_rate')
+        self.obfr = kwargs.get('obfr')
+        self.option_lock_period = kwargs.get('option_lock_period')
+        self.es_momentum_percentile = kwargs.get('es_momentum_percentile')
+        self.price_notation = kwargs.get('price_notation')
+        self.strategy = kwargs.get('strategy')
+        self.position_type = kwargs.get('position_type')
+        self.lender_income = kwargs.get('lender_income')
+        self.sub_asset_class = kwargs.get('sub_asset_class')
+        self.short_interest = kwargs.get('short_interest')
+        self.reference_period = kwargs.get('reference_period')
+        self.adjusted_volume = kwargs.get('adjusted_volume')
+        self.pb_client_id = kwargs.get('pb_client_id')
+        self.owner_id = kwargs.get('owner_id')
+        self.sec_db = kwargs.get('sec_db')
+        self.composite10_day_adv = kwargs.get('composite10_day_adv')
+        self.bpe_quality_stars = kwargs.get('bpe_quality_stars')
+        self.idea_activity_type = kwargs.get('idea_activity_type')
+        self.idea_source = kwargs.get('idea_source')
+        self.unadjusted_ask = kwargs.get('unadjusted_ask')
+        self.trading_pnl = kwargs.get('trading_pnl')
+        self.collateral_value_required = kwargs.get('collateral_value_required')
+        self.given_plus_paid = kwargs.get('given_plus_paid')
+        self.close_location = kwargs.get('close_location')
+        self.short_conviction_small = kwargs.get('short_conviction_small')
+        self.forecast = kwargs.get('forecast')
+        self.pnl = kwargs.get('pnl')
+        self.upfront_payment_currency = kwargs.get('upfront_payment_currency')
+        self.date_index = kwargs.get('date_index')
+        self.tcm_cost_horizon4_day = kwargs.get('tcm_cost_horizon4_day')
+        self.asset_classifications_is_primary = kwargs.get('asset_classifications_is_primary')
+        self.styles = kwargs.get('styles')
+        self.short_name = kwargs.get('short_name')
+        self.dwi_contribution = kwargs.get('dwi_contribution')
+        self.reset_frequency1 = kwargs.get('reset_frequency1')
+        self.reset_frequency2 = kwargs.get('reset_frequency2')
+        self.average_fill_price = kwargs.get('average_fill_price')
+        self.price_notation_type2 = kwargs.get('price_notation_type2')
+        self.price_notation_type3 = kwargs.get('price_notation_type3')
+        self.bid_gspread = kwargs.get('bid_gspread')
+        self.open_price = kwargs.get('open_price')
+        self.depth_spread_score = kwargs.get('depth_spread_score')
+        self.sub_account = kwargs.get('sub_account')
+        self.fair_volatility = kwargs.get('fair_volatility')
+        self.dollar_cross = kwargs.get('dollar_cross')
+        self.portfolio_type = kwargs.get('portfolio_type')
+        self.vendor = kwargs.get('vendor')
+        self.currency = kwargs.get('currency')
+        self.cluster_class = kwargs.get('cluster_class')
+        self.queueing_time = kwargs.get('queueing_time')
+        self.ann_return5_year = kwargs.get('ann_return5_year')
+        self.bid_size = kwargs.get('bid_size')
+        self.arrival_mid = kwargs.get('arrival_mid')
+        self.asset_parameters_exchange_currency = kwargs.get('asset_parameters_exchange_currency')
+        self.unexplained = kwargs.get('unexplained')
+        self.metric = kwargs.get('metric')
+        self.ask = kwargs.get('ask')
+        self.implied_lognormal_volatility = kwargs.get('implied_lognormal_volatility')
+        self.close_price = kwargs.get('close_price')
+        self.absolute_strike = kwargs.get('absolute_strike')
+        self.source = kwargs.get('source')
+        self.asset_classifications_country_code = kwargs.get('asset_classifications_country_code')
+        self.expense_ratio_net_bps = kwargs.get('expense_ratio_net_bps')
+        self.data_set_sub_category = kwargs.get('data_set_sub_category')
+        self.day_count_convention2 = kwargs.get('day_count_convention2')
+        self.quantity_bucket = kwargs.get('quantity_bucket')
+        self.factor_two = kwargs.get('factor_two')
+        self.oe_name = kwargs.get('oe_name')
+        self.given = kwargs.get('given')
+        self.delisting_date = kwargs.get('delisting_date')
+        self.price_spot_target_value = kwargs.get('price_spot_target_value')
+        self.weight = kwargs.get('weight')
+        self.market_data_point = kwargs.get('market_data_point')
+        self.absolute_weight = kwargs.get('absolute_weight')
+        self.measure = kwargs.get('measure')
+        self.hedge_annualized_volatility = kwargs.get('hedge_annualized_volatility')
+        self.benchmark_currency = kwargs.get('benchmark_currency')
+        self.futures_contract = kwargs.get('futures_contract')
+        self.name = kwargs.get('name')
+        self.aum = kwargs.get('aum')
+        self.folder_name = kwargs.get('folder_name')
+        self.swaption_atm_fwd_rate = kwargs.get('swaption_atm_fwd_rate')
+        self.live_date = kwargs.get('live_date')
+        self.ask_high = kwargs.get('ask_high')
+        self.corporate_action_type = kwargs.get('corporate_action_type')
+        self.prime_id = kwargs.get('prime_id')
+        self.region_name = kwargs.get('region_name')
+        self.description = kwargs.get('description')
+        self.asset_classifications_is_country_primary = kwargs.get('asset_classifications_is_country_primary')
+        self.value_revised = kwargs.get('value_revised')
+        self.adjusted_trade_price = kwargs.get('adjusted_trade_price')
+        self.is_adr = kwargs.get('is_adr')
+        self.factor = kwargs.get('factor')
+        self.days_on_loan = kwargs.get('days_on_loan')
+        self.long_conviction_small = kwargs.get('long_conviction_small')
+        self.service_id = kwargs.get('service_id')
+        self.gsfeer = kwargs.get('gsfeer')
+        self.wam = kwargs.get('wam')
+        self.wal = kwargs.get('wal')
+        self.backtest_id = kwargs.get('backtest_id')
+        self.leg_two_index_location = kwargs.get('leg_two_index_location')
+        self.g_score = kwargs.get('g_score')
+        self.corporate_spread_contribution = kwargs.get('corporate_spread_contribution')
+        self.market_value = kwargs.get('market_value')
+        self.notional_currency1 = kwargs.get('notional_currency1')
+        self.notional_currency2 = kwargs.get('notional_currency2')
+        self.multiple_score = kwargs.get('multiple_score')
+        self.beta_adjusted_exposure = kwargs.get('beta_adjusted_exposure')
+        self.dividend_points = kwargs.get('dividend_points')
+        self.paid = kwargs.get('paid')
+        self.short = kwargs.get('short')
+        self.bos_in_ticks_description = kwargs.get('bos_in_ticks_description')
+        self.implied_correlation = kwargs.get('implied_correlation')
+        self.normalized_performance = kwargs.get('normalized_performance')
+        self.cm_id = kwargs.get('cm_id')
+        self.taxonomy = kwargs.get('taxonomy')
+        self.swaption_vol = kwargs.get('swaption_vol')
+        self.dividend_yield = kwargs.get('dividend_yield')
+        self.source_origin = kwargs.get('source_origin')
+        self.measures = kwargs.get('measures')
+        self.total_quantity = kwargs.get('total_quantity')
+        self.internal_user = kwargs.get('internal_user')
+        self.underlyer = kwargs.get('underlyer')
+        self.price_unit = kwargs.get('price_unit')
+        self.redemption_option = kwargs.get('redemption_option')
+        self.notional_unit2 = kwargs.get('notional_unit2')
+        self.unadjusted_low = kwargs.get('unadjusted_low')
+        self.notional_unit1 = kwargs.get('notional_unit1')
+        self.sedol = kwargs.get('sedol')
+        self.rounding_cost_pnl = kwargs.get('rounding_cost_pnl')
+        self.sustain_global = kwargs.get('sustain_global')
+        self.portfolio_id = kwargs.get('portfolio_id')
+        self.ending_date = kwargs.get('ending_date')
+        self.cap_floor_atm_fwd_rate = kwargs.get('cap_floor_atm_fwd_rate')
+        self.es_percentile = kwargs.get('es_percentile')
+        self.ann_return3_year = kwargs.get('ann_return3_year')
+        self.rcic = kwargs.get('rcic')
+        self.simon_asset_tags = kwargs.get('simon_asset_tags')
+        self.forward_point = kwargs.get('forward_point')
+        self.hit_rate_qtd = kwargs.get('hit_rate_qtd')
+        self.fci = kwargs.get('fci')
+        self.recall_quantity = kwargs.get('recall_quantity')
+        self.premium = kwargs.get('premium')
+        self.low = kwargs.get('low')
+        self.cross_group = kwargs.get('cross_group')
+        self.five_day_price_change_bps = kwargs.get('five_day_price_change_bps')
+        self.holdings = kwargs.get('holdings')
+        self.price_method = kwargs.get('price_method')
+        self.quoting_style = kwargs.get('quoting_style')
+        self.error_message = kwargs.get('error_message')
+        self.mid_price = kwargs.get('mid_price')
+        self.sts_em_dm = kwargs.get('sts_em_dm')
+        self.tcm_cost_horizon2_day = kwargs.get('tcm_cost_horizon2_day')
+        self.pending_loan_count = kwargs.get('pending_loan_count')
+        self.price_spot_stop_loss_unit = kwargs.get('price_spot_stop_loss_unit')
+        self.queue_in_lots = kwargs.get('queue_in_lots')
+        self.price_range_in_ticks_description = kwargs.get('price_range_in_ticks_description')
+        self.tender_offer_expiration_date = kwargs.get('tender_offer_expiration_date')
+        self.primary_country_ric = kwargs.get('primary_country_ric')
+        self.leg_one_fixed_payment = kwargs.get('leg_one_fixed_payment')
+        self.option_expiration_frequency = kwargs.get('option_expiration_frequency')
+        self.tcm_cost_participation_rate5_pct = kwargs.get('tcm_cost_participation_rate5_pct')
+        self.is_active = kwargs.get('is_active')
+        self.growth_score = kwargs.get('growth_score')
+        self.buffer_threshold = kwargs.get('buffer_threshold')
+        self.price_forming_continuation_data = kwargs.get('price_forming_continuation_data')
+        self.adjusted_short_interest = kwargs.get('adjusted_short_interest')
+        self.group = kwargs.get('group')
+        self.estimated_spread = kwargs.get('estimated_spread')
+        self.ann_return10_year = kwargs.get('ann_return10_year')
+        self.tcm_cost = kwargs.get('tcm_cost')
+        self.sustain_japan = kwargs.get('sustain_japan')
+        self.hedge_tracking_error = kwargs.get('hedge_tracking_error')
+        self.market_cap_category = kwargs.get('market_cap_category')
+        self.historical_volume = kwargs.get('historical_volume')
+        self.strike_price = kwargs.get('strike_price')
+        self.equity_gamma = kwargs.get('equity_gamma')
+        self.gross_income = kwargs.get('gross_income')
+        self.em_id = kwargs.get('em_id')
+        self.adjusted_open_price = kwargs.get('adjusted_open_price')
+        self.asset_count_in_model = kwargs.get('asset_count_in_model')
+        self.sts_credit_region = kwargs.get('sts_credit_region')
+        self.point = kwargs.get('point')
+        self.total_returns = kwargs.get('total_returns')
+        self.lender = kwargs.get('lender')
+        self.ann_return1_year = kwargs.get('ann_return1_year')
+        self.min_temperature = kwargs.get('min_temperature')
+        self.eff_yield7_day = kwargs.get('eff_yield7_day')
+        self.meeting_date = kwargs.get('meeting_date')
+        self.relative_strike = kwargs.get('relative_strike')
+        self.amount = kwargs.get('amount')
+        self.lending_fund_acct = kwargs.get('lending_fund_acct')
+        self.rebate = kwargs.get('rebate')
+        self.flagship = kwargs.get('flagship')
+        self.additional_price_notation = kwargs.get('additional_price_notation')
+        self.factor_category = kwargs.get('factor_category')
+        self.implied_volatility = kwargs.get('implied_volatility')
+        self.spread = kwargs.get('spread')
+        self.equity_delta = kwargs.get('equity_delta')
+        self.gross_weight = kwargs.get('gross_weight')
+        self.listed = kwargs.get('listed')
+        self.variance = kwargs.get('variance')
+        self.earnings_record_type = kwargs.get('earnings_record_type')
+        self.g10_currency = kwargs.get('g10_currency')
+        self.shock_style = kwargs.get('shock_style')
+        self.relative_period = kwargs.get('relative_period')
+        self.methodology = kwargs.get('methodology')
+        self.queue_clock_time_label = kwargs.get('queue_clock_time_label')
+        self.market_pnl = kwargs.get('market_pnl')
+        self.sustain_asia_ex_japan = kwargs.get('sustain_asia_ex_japan')
+        self.asset_classifications_gics_sub_industry = kwargs.get('asset_classifications_gics_sub_industry')
+        self.neighbour_asset_id = kwargs.get('neighbour_asset_id')
+        self.simon_intl_asset_tags = kwargs.get('simon_intl_asset_tags')
+        self.swap_rate = kwargs.get('swap_rate')
+        self.path = kwargs.get('path')
+        self.client_contact = kwargs.get('client_contact')
+        self.rank = kwargs.get('rank')
+        self.mixed_swap_other_reported_sdr = kwargs.get('mixed_swap_other_reported_sdr')
+        self.data_set_category = kwargs.get('data_set_category')
+        self.bos_in_bps_label = kwargs.get('bos_in_bps_label')
+        self.bos_in_bps = kwargs.get('bos_in_bps')
+        self.point_class = kwargs.get('point_class')
+        self.fx_spot = kwargs.get('fx_spot')
+        self.bid_low = kwargs.get('bid_low')
+        self.fair_variance_volatility = kwargs.get('fair_variance_volatility')
+        self.hedge_volatility = kwargs.get('hedge_volatility')
+        self.tags = kwargs.get('tags')
+        self.underlying_asset_id = kwargs.get('underlying_asset_id')
+        self.real_long_rates_contribution = kwargs.get('real_long_rates_contribution')
+        self.client_exposure = kwargs.get('client_exposure')
+        self.gs_sustain_sub_sector = kwargs.get('gs_sustain_sub_sector')
+        self.domain = kwargs.get('domain')
+        self.forward_tenor = kwargs.get('forward_tenor')
+        self.jsn = kwargs.get('jsn')
+        self.share_class_assets = kwargs.get('share_class_assets')
+        self.annuity = kwargs.get('annuity')
+        self.quote_type = kwargs.get('quote_type')
+        self.uid = kwargs.get('uid')
+        self.tenor = kwargs.get('tenor')
+        self.es_policy_percentile = kwargs.get('es_policy_percentile')
+        self.term = kwargs.get('term')
+        self.tcm_cost_participation_rate100_pct = kwargs.get('tcm_cost_participation_rate100_pct')
+        self.disclaimer = kwargs.get('disclaimer')
+        self.measure_idx = kwargs.get('measure_idx')
+        self.loan_fee = kwargs.get('loan_fee')
+        self.deployment_version = kwargs.get('deployment_version')
+        self.twi_contribution = kwargs.get('twi_contribution')
+        self.delisted = kwargs.get('delisted')
+        self.regional_focus = kwargs.get('regional_focus')
+        self.volume_primary = kwargs.get('volume_primary')
+        self.leg_two_delivery_point = kwargs.get('leg_two_delivery_point')
+        self.series = kwargs.get('series')
+        self.new_ideas_qtd = kwargs.get('new_ideas_qtd')
+        self.adjusted_ask_price = kwargs.get('adjusted_ask_price')
+        self.quarter = kwargs.get('quarter')
+        self.factor_universe = kwargs.get('factor_universe')
+        self.arrival_rt = kwargs.get('arrival_rt')
+        self.transaction_cost = kwargs.get('transaction_cost')
+        self.servicing_cost_short_pnl = kwargs.get('servicing_cost_short_pnl')
+        self.cluster_description = kwargs.get('cluster_description')
+        self.position_amount = kwargs.get('position_amount')
+        self.wind_speed = kwargs.get('wind_speed')
+        self.ma_rank = kwargs.get('ma_rank')
+        self.borrower_id = kwargs.get('borrower_id')
+        self.data_product = kwargs.get('data_product')
+        self.implied_volatility_by_delta_strike = kwargs.get('implied_volatility_by_delta_strike')
+        self.mq_symbol = kwargs.get('mq_symbol')
+        self.bm_prime_id = kwargs.get('bm_prime_id')
+        self.corporate_action = kwargs.get('corporate_action')
+        self.conviction = kwargs.get('conviction')
+        self.benchmark_maturity = kwargs.get('benchmark_maturity')
+        self.g_regional_score = kwargs.get('g_regional_score')
+        self.factor_id = kwargs.get('factor_id')
+        self.hard_to_borrow = kwargs.get('hard_to_borrow')
+        self.sts_fx_currency = kwargs.get('sts_fx_currency')
+        self.wpk = kwargs.get('wpk')
+        self.bid_change = kwargs.get('bid_change')
+        self.expiration = kwargs.get('expiration')
+        self.country_name = kwargs.get('country_name')
+        self.starting_date = kwargs.get('starting_date')
+        self.loan_id = kwargs.get('loan_id')
+        self.onboarded = kwargs.get('onboarded')
+        self.liquidity_score = kwargs.get('liquidity_score')
+        self.long_rates_contribution = kwargs.get('long_rates_contribution')
+        self.importance = kwargs.get('importance')
+        self.source_date_span = kwargs.get('source_date_span')
+        self.asset_classifications_gics_sector = kwargs.get('asset_classifications_gics_sector')
+        self.ann_yield6_month = kwargs.get('ann_yield6_month')
+        self.underlying_data_set_id = kwargs.get('underlying_data_set_id')
+        self.sts_asset_name = kwargs.get('sts_asset_name')
+        self.close_unadjusted = kwargs.get('close_unadjusted')
+        self.value_unit = kwargs.get('value_unit')
+        self.quantity_unit = kwargs.get('quantity_unit')
+        self.adjusted_low_price = kwargs.get('adjusted_low_price')
+        self.net_exposure_classification = kwargs.get('net_exposure_classification')
+        self.settlement_method = kwargs.get('settlement_method')
+        self.long_conviction_large = kwargs.get('long_conviction_large')
+        self.oad = kwargs.get('oad')
+        self.rate = kwargs.get('rate')
+        self.alpha = kwargs.get('alpha')
+        self.client = kwargs.get('client')
+        self.company = kwargs.get('company')
+        self.conviction_list = kwargs.get('conviction_list')
+        self.settlement_frequency = kwargs.get('settlement_frequency')
+        self.dist_avg7_day = kwargs.get('dist_avg7_day')
+        self.in_risk_model = kwargs.get('in_risk_model')
+        self.daily_net_shareholder_flows_percent = kwargs.get('daily_net_shareholder_flows_percent')
+        self.servicing_cost_long_pnl = kwargs.get('servicing_cost_long_pnl')
+        self.meeting_number = kwargs.get('meeting_number')
+        self.exchange_id = kwargs.get('exchange_id')
+        self.mid_gspread = kwargs.get('mid_gspread')
+        self.tcm_cost_horizon20_day = kwargs.get('tcm_cost_horizon20_day')
+        self.long_level = kwargs.get('long_level')
+        self.realm = kwargs.get('realm')
+        self.bid = kwargs.get('bid')
+        self.data_description = kwargs.get('data_description')
+        self.is_aggressive = kwargs.get('is_aggressive')
+        self.order_id = kwargs.get('order_id')
+        self.gsideid = kwargs.get('gsideid')
+        self.repo_rate = kwargs.get('repo_rate')
+        self.division = kwargs.get('division')
+        self.market_cap_usd = kwargs.get('market_cap_usd')
+        self.high_price = kwargs.get('high_price')
+        self.absolute_shares = kwargs.get('absolute_shares')
+        self.action = kwargs.get('action')
+        self.model = kwargs.get('model')
+        self.__id = kwargs.get('id_')
+        self.arrival_haircut_vwap_normalized = kwargs.get('arrival_haircut_vwap_normalized')
+        self.price_component = kwargs.get('price_component')
+        self.queue_clock_time_description = kwargs.get('queue_clock_time_description')
+        self.delta_strike = kwargs.get('delta_strike')
+        self.value_actual = kwargs.get('value_actual')
+        self.upi = kwargs.get('upi')
+        self.bcid = kwargs.get('bcid')
+        self.mkt_point = kwargs.get('mkt_point')
+        self.collateral_currency = kwargs.get('collateral_currency')
+        self.original_country = kwargs.get('original_country')
+        self.touch_liquidity_score = kwargs.get('touch_liquidity_score')
+        self.field = kwargs.get('field')
+        self.factor_category_id = kwargs.get('factor_category_id')
+        self.expected_completion_date = kwargs.get('expected_completion_date')
+        self.spread_option_vol = kwargs.get('spread_option_vol')
+        self.inflation_swap_rate = kwargs.get('inflation_swap_rate')
+        self.skew = kwargs.get('skew')
+        self.status = kwargs.get('status')
+        self.sustain_emerging_markets = kwargs.get('sustain_emerging_markets')
+        self.total_price = kwargs.get('total_price')
+        self.embeded_option = kwargs.get('embeded_option')
+        self.event_source = kwargs.get('event_source')
+        self.on_behalf_of = kwargs.get('on_behalf_of')
+        self.qis_perm_no = kwargs.get('qis_perm_no')
+        self.shareclass_id = kwargs.get('shareclass_id')
+        self.sts_commodity_sector = kwargs.get('sts_commodity_sector')
+        self.exception_status = kwargs.get('exception_status')
+        self.sales_coverage = kwargs.get('sales_coverage')
+        self.short_exposure = kwargs.get('short_exposure')
+        self.tcm_cost_participation_rate10_pct = kwargs.get('tcm_cost_participation_rate10_pct')
+        self.event_time = kwargs.get('event_time')
+        self.position_source_name = kwargs.get('position_source_name')
+        self.arrival_haircut_vwap = kwargs.get('arrival_haircut_vwap')
+        self.interest_rate = kwargs.get('interest_rate')
+        self.execution_days = kwargs.get('execution_days')
+        self.side = kwargs.get('side')
+        self.compliance_restricted_status = kwargs.get('compliance_restricted_status')
+        self.forward = kwargs.get('forward')
+        self.borrow_fee = kwargs.get('borrow_fee')
+        self.strike = kwargs.get('strike')
+        self.loan_spread = kwargs.get('loan_spread')
+        self.tcm_cost_horizon12_hour = kwargs.get('tcm_cost_horizon12_hour')
+        self.dew_point = kwargs.get('dew_point')
+        self.research_commission = kwargs.get('research_commission')
+        self.leg_one_delivery_point = kwargs.get('leg_one_delivery_point')
+        self.asset_classifications_risk_country_code = kwargs.get('asset_classifications_risk_country_code')
+        self.event_status = kwargs.get('event_status')
         self.__return = kwargs.get('return_')
-        self.__max_temperature = kwargs.get('max_temperature')
-        self.__acquirer_shareholder_meeting_date = kwargs.get('acquirer_shareholder_meeting_date')
-        self.__notional_amount = kwargs.get('notional_amount')
-        self.__arrival_rt_normalized = kwargs.get('arrival_rt_normalized')
-        self.__report_type = kwargs.get('report_type')
-        self.__source_url = kwargs.get('source_url')
-        self.__estimated_return = kwargs.get('estimated_return')
-        self.__high = kwargs.get('high')
-        self.__source_last_update = kwargs.get('source_last_update')
-        self.__event_name = kwargs.get('event_name')
-        self.__indication_of_other_price_affecting_term = kwargs.get('indication_of_other_price_affecting_term')
-        self.__unadjusted_bid = kwargs.get('unadjusted_bid')
-        self.__backtest_type = kwargs.get('backtest_type')
-        self.__gsdeer = kwargs.get('gsdeer')
-        self.__g_regional_percentile = kwargs.get('g_regional_percentile')
-        self.__prev_close_ask = kwargs.get('prev_close_ask')
-        self.__level = kwargs.get('level')
-        self.__mnav = kwargs.get('mnav')
-        self.__es_momentum_score = kwargs.get('es_momentum_score')
-        self.__curr_yield7_day = kwargs.get('curr_yield7_day')
-        self.__pressure = kwargs.get('pressure')
-        self.__short_description = kwargs.get('short_description')
-        self.__feed = kwargs.get('feed')
-        self.__net_weight = kwargs.get('net_weight')
-        self.__portfolio_managers = kwargs.get('portfolio_managers')
-        self.__asset_parameters_commodity_sector = kwargs.get('asset_parameters_commodity_sector')
-        self.__bos_in_ticks = kwargs.get('bos_in_ticks')
-        self.__price_notation2 = kwargs.get('price_notation2')
-        self.__market_buffer_threshold = kwargs.get('market_buffer_threshold')
-        self.__price_notation3 = kwargs.get('price_notation3')
-        self.__cap_floor_vol = kwargs.get('cap_floor_vol')
-        self.__submitter = kwargs.get('submitter')
-        self.__notional = kwargs.get('notional')
-        self.__es_disclosure_percentage = kwargs.get('es_disclosure_percentage')
-        self.__investment_income = kwargs.get('investment_income')
-        self.__forward_point_imm = kwargs.get('forward_point_imm')
-        self.__client_short_name = kwargs.get('client_short_name')
-        self.__group_category = kwargs.get('group_category')
-        self.__bid_plus_ask = kwargs.get('bid_plus_ask')
-        self.__total = kwargs.get('total')
-        self.__asset_id = kwargs.get('asset_id')
-        self.__mkt_type = kwargs.get('mkt_type')
-        self.__pricing_location = kwargs.get('pricing_location')
-        self.__yield30_day = kwargs.get('yield30_day')
-        self.__beta = kwargs.get('beta')
-        self.__long_exposure = kwargs.get('long_exposure')
-        self.__tcm_cost_participation_rate20_pct = kwargs.get('tcm_cost_participation_rate20_pct')
-        self.__multi_asset_class_swap = kwargs.get('multi_asset_class_swap')
-        self.__cross = kwargs.get('cross')
-        self.__idea_status = kwargs.get('idea_status')
-        self.__contract_subtype = kwargs.get('contract_subtype')
-        self.__fx_forecast = kwargs.get('fx_forecast')
-        self.__stop_price_unit = kwargs.get('stop_price_unit')
-        self.__fixing_time_label = kwargs.get('fixing_time_label')
-        self.__implementation_id = kwargs.get('implementation_id')
-        self.__fill_id = kwargs.get('fill_id')
-        self.__excess_returns = kwargs.get('excess_returns')
-        self.__dollar_return = kwargs.get('dollar_return')
-        self.__es_numeric_score = kwargs.get('es_numeric_score')
-        self.__in_benchmark = kwargs.get('in_benchmark')
-        self.__action_sdr = kwargs.get('action_sdr')
-        self.__queue_in_lots_description = kwargs.get('queue_in_lots_description')
-        self.__objective = kwargs.get('objective')
-        self.__nav_price = kwargs.get('nav_price')
-        self.__precipitation = kwargs.get('precipitation')
-        self.__hedge_notional = kwargs.get('hedge_notional')
-        self.__ask_low = kwargs.get('ask_low')
-        self.__beta_adjusted_net_exposure = kwargs.get('beta_adjusted_net_exposure')
-        self.__expiry = kwargs.get('expiry')
-        self.__avg_monthly_yield = kwargs.get('avg_monthly_yield')
-        self.__strike_percentage = kwargs.get('strike_percentage')
-        self.__excess_return_price = kwargs.get('excess_return_price')
-        self.__prev_close_bid = kwargs.get('prev_close_bid')
-        self.__fx_pnl = kwargs.get('fx_pnl')
-        self.__tcm_cost_horizon16_day = kwargs.get('tcm_cost_horizon16_day')
-        self.__asset_classifications_gics_industry_group = kwargs.get('asset_classifications_gics_industry_group')
-        self.__unadjusted_close = kwargs.get('unadjusted_close')
-        self.__lending_sec_id = kwargs.get('lending_sec_id')
-        self.__equity_theta = kwargs.get('equity_theta')
-        self.__mixed_swap = kwargs.get('mixed_swap')
-        self.__snowfall = kwargs.get('snowfall')
-        self.__mic = kwargs.get('mic')
-        self.__mid = kwargs.get('mid')
-        self.__auto_exec_state = kwargs.get('auto_exec_state')
-        self.__relative_return_ytd = kwargs.get('relative_return_ytd')
-        self.__long = kwargs.get('long')
-        self.__long_weight = kwargs.get('long_weight')
-        self.__calculation_time = kwargs.get('calculation_time')
-        self.__real_time_restriction_status = kwargs.get('real_time_restriction_status')
-        self.__average_realized_variance = kwargs.get('average_realized_variance')
-        self.__financial_returns_score = kwargs.get('financial_returns_score')
-        self.__net_change = kwargs.get('net_change')
-        self.__non_symbol_dimensions = kwargs.get('non_symbol_dimensions')
-        self.__leg_two_fixed_payment_currency = kwargs.get('leg_two_fixed_payment_currency')
-        self.__swap_type = kwargs.get('swap_type')
-        self.__asset_classifications_country_name = kwargs.get('asset_classifications_country_name')
-        self.__new_ideas_ytd = kwargs.get('new_ideas_ytd')
-        self.__management_fee = kwargs.get('management_fee')
-        self.__open = kwargs.get('open')
-        self.__source_id = kwargs.get('source_id')
-        self.__country = kwargs.get('country')
-        self.__cusip = kwargs.get('cusip')
-        self.__touch_spread_score = kwargs.get('touch_spread_score')
-        self.__spread_option_atm_fwd_rate = kwargs.get('spread_option_atm_fwd_rate')
-        self.__net_exposure = kwargs.get('net_exposure')
-        self.__frequency = kwargs.get('frequency')
-        self.__activity_id = kwargs.get('activity_id')
-        self.__estimated_impact = kwargs.get('estimated_impact')
-        self.__loan_spread_bucket = kwargs.get('loan_spread_bucket')
-        self.__asset_parameters_pricing_location = kwargs.get('asset_parameters_pricing_location')
-        self.__event_description = kwargs.get('event_description')
-        self.__strike_reference = kwargs.get('strike_reference')
-        self.__details = kwargs.get('details')
-        self.__asset_count = kwargs.get('asset_count')
-        self.__sector = kwargs.get('sector')
-        self.__absolute_value = kwargs.get('absolute_value')
-        self.__closing_report = kwargs.get('closing_report')
-        self.__long_tenor = kwargs.get('long_tenor')
-        self.__mctr = kwargs.get('mctr')
-        self.__historical_close = kwargs.get('historical_close')
-        self.__asset_count_priced = kwargs.get('asset_count_priced')
-        self.__idea_id = kwargs.get('idea_id')
-        self.__comment_status = kwargs.get('comment_status')
-        self.__marginal_cost = kwargs.get('marginal_cost')
-        self.__settlement_currency = kwargs.get('settlement_currency')
-        self.__client_weight = kwargs.get('client_weight')
-        self.__indication_of_collateralization = kwargs.get('indication_of_collateralization')
-        self.__liq_wkly = kwargs.get('liq_wkly')
-        self.__lending_partner_fee = kwargs.get('lending_partner_fee')
-        self.__region = kwargs.get('region')
-        self.__tenor2 = kwargs.get('tenor2')
-        self.__option_premium = kwargs.get('option_premium')
-        self.__owner_name = kwargs.get('owner_name')
-        self.__last_updated_by_id = kwargs.get('last_updated_by_id')
-        self.__z_score = kwargs.get('z_score')
-        self.__target_shareholder_meeting_date = kwargs.get('target_shareholder_meeting_date')
-        self.__collateral_market_value = kwargs.get('collateral_market_value')
-        self.__event_start_time = kwargs.get('event_start_time')
-        self.__turnover = kwargs.get('turnover')
-        self.__leg_one_type = kwargs.get('leg_one_type')
-        self.__leg_two_spread = kwargs.get('leg_two_spread')
-        self.__coverage = kwargs.get('coverage')
-        self.__g_percentile = kwargs.get('g_percentile')
-        self.__lending_fund_nav = kwargs.get('lending_fund_nav')
-        self.__source_original_category = kwargs.get('source_original_category')
-        self.__composite5_day_adv = kwargs.get('composite5_day_adv')
-        self.__new_ideas_wtd = kwargs.get('new_ideas_wtd')
-        self.__asset_class_sdr = kwargs.get('asset_class_sdr')
-        self.__location = kwargs.get('location')
-        self.__comment = kwargs.get('comment')
-        self.__source_symbol = kwargs.get('source_symbol')
-        self.__scenario_id = kwargs.get('scenario_id')
-        self.__ask_unadjusted = kwargs.get('ask_unadjusted')
-        self.__queue_clock_time = kwargs.get('queue_clock_time')
-        self.__ask_change = kwargs.get('ask_change')
-        self.__tcm_cost_participation_rate50_pct = kwargs.get('tcm_cost_participation_rate50_pct')
-        self.__contract_type = kwargs.get('contract_type')
-        self.__type = kwargs.get('type')
-        self.__mdapi = kwargs.get('mdapi')
-        self.__cumulative_pnl = kwargs.get('cumulative_pnl')
-        self.__short_tenor = kwargs.get('short_tenor')
-        self.__loss = kwargs.get('loss')
-        self.__unadjusted_volume = kwargs.get('unadjusted_volume')
-        self.__midcurve_vol = kwargs.get('midcurve_vol')
-        self.__trading_cost_pnl = kwargs.get('trading_cost_pnl')
-        self.__price_notation_type = kwargs.get('price_notation_type')
-        self.__price = kwargs.get('price')
-        self.__payment_quantity = kwargs.get('payment_quantity')
-        self.__position_idx = kwargs.get('position_idx')
-        self.__sec_name = kwargs.get('sec_name')
-        self.__implied_volatility_by_relative_strike = kwargs.get('implied_volatility_by_relative_strike')
-        self.__percent_adv = kwargs.get('percent_adv')
-        self.__contract = kwargs.get('contract')
-        self.__payment_frequency1 = kwargs.get('payment_frequency1')
-        self.__payment_frequency2 = kwargs.get('payment_frequency2')
-        self.__bespoke = kwargs.get('bespoke')
-        self.__quality_stars = kwargs.get('quality_stars')
-        self.__source_ticker = kwargs.get('source_ticker')
-        self.__gsid = kwargs.get('gsid')
-        self.__lending_fund = kwargs.get('lending_fund')
-        self.__tcm_cost_participation_rate15_pct = kwargs.get('tcm_cost_participation_rate15_pct')
-        self.__sensitivity = kwargs.get('sensitivity')
-        self.__fiscal_year = kwargs.get('fiscal_year')
-        self.__internal = kwargs.get('internal')
-        self.__asset_classifications_gics_industry = kwargs.get('asset_classifications_gics_industry')
-        self.__adjusted_bid_price = kwargs.get('adjusted_bid_price')
-        self.__var_swap = kwargs.get('var_swap')
-        self.__low_unadjusted = kwargs.get('low_unadjusted')
-        self.__original_dissemination_id = kwargs.get('original_dissemination_id')
-        self.__macs_secondary_asset_class = kwargs.get('macs_secondary_asset_class')
-        self.__leg_two_averaging_method = kwargs.get('leg_two_averaging_method')
-        self.__sectors_raw = kwargs.get('sectors_raw')
-        self.__shareclass_price = kwargs.get('shareclass_price')
-        self.__integrated_score = kwargs.get('integrated_score')
-        self.__trade_size = kwargs.get('trade_size')
-        self.__symbol_dimensions = kwargs.get('symbol_dimensions')
-        self.__option_type_sdr = kwargs.get('option_type_sdr')
-        self.__scenario_group_id = kwargs.get('scenario_group_id')
-        self.__avg_yield7_day = kwargs.get('avg_yield7_day')
-        self.__average_implied_variance = kwargs.get('average_implied_variance')
-        self.__avg_trade_rate_description = kwargs.get('avg_trade_rate_description')
-        self.__fraction = kwargs.get('fraction')
-        self.__sts_credit_market = kwargs.get('sts_credit_market')
-        self.__asset_count_short = kwargs.get('asset_count_short')
-        self.__required_collateral_value = kwargs.get('required_collateral_value')
-        self.__total_std_return_since_inception = kwargs.get('total_std_return_since_inception')
-        self.__high_unadjusted = kwargs.get('high_unadjusted')
-        self.__source_category = kwargs.get('source_category')
-        self.__tv_product_mnemonic = kwargs.get('tv_product_mnemonic')
-        self.__volume_unadjusted = kwargs.get('volume_unadjusted')
-        self.__avg_trade_rate_label = kwargs.get('avg_trade_rate_label')
-        self.__ann_yield3_month = kwargs.get('ann_yield3_month')
-        self.__encoded_stats = kwargs.get('encoded_stats')
-        self.__target_price_value = kwargs.get('target_price_value')
-        self.__ask_size = kwargs.get('ask_size')
-        self.__std30_days_unsubsidized_yield = kwargs.get('std30_days_unsubsidized_yield')
-        self.__resource = kwargs.get('resource')
-        self.__average_realized_volatility = kwargs.get('average_realized_volatility')
-        self.__nav_spread = kwargs.get('nav_spread')
-        self.__bid_price = kwargs.get('bid_price')
-        self.__dollar_total_return = kwargs.get('dollar_total_return')
-        self.__block_unit = kwargs.get('block_unit')
-        self.__es_numeric_percentile = kwargs.get('es_numeric_percentile')
-        self.__repurchase_rate = kwargs.get('repurchase_rate')
-        self.__csa_terms = kwargs.get('csa_terms')
-        self.__daily_net_shareholder_flows = kwargs.get('daily_net_shareholder_flows')
-        self.__ask_gspread = kwargs.get('ask_gspread')
-        self.__cal_spread_mis_pricing = kwargs.get('cal_spread_mis_pricing')
-        self.__leg_two_type = kwargs.get('leg_two_type')
-        self.__rate366 = kwargs.get('rate366')
-        self.__rate365 = kwargs.get('rate365')
-        self.__rate360 = kwargs.get('rate360')
-        self.__opening_report = kwargs.get('opening_report')
-        self.__value = kwargs.get('value')
-        self.__leg_one_index_location = kwargs.get('leg_one_index_location')
-        self.__quantity = kwargs.get('quantity')
-        self.__report_id = kwargs.get('report_id')
-        self.__index_weight = kwargs.get('index_weight')
-        self.__macs_primary_asset_class = kwargs.get('macs_primary_asset_class')
-        self.__midcurve_atm_fwd_rate = kwargs.get('midcurve_atm_fwd_rate')
-        self.__trader = kwargs.get('trader')
-        self.__sts_rates_maturity = kwargs.get('sts_rates_maturity')
-        self.__valuation_date = kwargs.get('valuation_date')
-        self.__tcm_cost_horizon6_hour = kwargs.get('tcm_cost_horizon6_hour')
-        self.__liq_dly = kwargs.get('liq_dly')
-        self.__isin = kwargs.get('isin')
+        self.max_temperature = kwargs.get('max_temperature')
+        self.acquirer_shareholder_meeting_date = kwargs.get('acquirer_shareholder_meeting_date')
+        self.notional_amount = kwargs.get('notional_amount')
+        self.arrival_rt_normalized = kwargs.get('arrival_rt_normalized')
+        self.report_type = kwargs.get('report_type')
+        self.source_url = kwargs.get('source_url')
+        self.estimated_return = kwargs.get('estimated_return')
+        self.high = kwargs.get('high')
+        self.source_last_update = kwargs.get('source_last_update')
+        self.event_name = kwargs.get('event_name')
+        self.indication_of_other_price_affecting_term = kwargs.get('indication_of_other_price_affecting_term')
+        self.unadjusted_bid = kwargs.get('unadjusted_bid')
+        self.backtest_type = kwargs.get('backtest_type')
+        self.gsdeer = kwargs.get('gsdeer')
+        self.g_regional_percentile = kwargs.get('g_regional_percentile')
+        self.prev_close_ask = kwargs.get('prev_close_ask')
+        self.level = kwargs.get('level')
+        self.mnav = kwargs.get('mnav')
+        self.es_momentum_score = kwargs.get('es_momentum_score')
+        self.curr_yield7_day = kwargs.get('curr_yield7_day')
+        self.pressure = kwargs.get('pressure')
+        self.short_description = kwargs.get('short_description')
+        self.feed = kwargs.get('feed')
+        self.net_weight = kwargs.get('net_weight')
+        self.portfolio_managers = kwargs.get('portfolio_managers')
+        self.asset_parameters_commodity_sector = kwargs.get('asset_parameters_commodity_sector')
+        self.bos_in_ticks = kwargs.get('bos_in_ticks')
+        self.price_notation2 = kwargs.get('price_notation2')
+        self.market_buffer_threshold = kwargs.get('market_buffer_threshold')
+        self.price_notation3 = kwargs.get('price_notation3')
+        self.cap_floor_vol = kwargs.get('cap_floor_vol')
+        self.submitter = kwargs.get('submitter')
+        self.notional = kwargs.get('notional')
+        self.es_disclosure_percentage = kwargs.get('es_disclosure_percentage')
+        self.investment_income = kwargs.get('investment_income')
+        self.forward_point_imm = kwargs.get('forward_point_imm')
+        self.client_short_name = kwargs.get('client_short_name')
+        self.group_category = kwargs.get('group_category')
+        self.bid_plus_ask = kwargs.get('bid_plus_ask')
+        self.total = kwargs.get('total')
+        self.asset_id = kwargs.get('asset_id')
+        self.mkt_type = kwargs.get('mkt_type')
+        self.pricing_location = kwargs.get('pricing_location')
+        self.yield30_day = kwargs.get('yield30_day')
+        self.beta = kwargs.get('beta')
+        self.long_exposure = kwargs.get('long_exposure')
+        self.tcm_cost_participation_rate20_pct = kwargs.get('tcm_cost_participation_rate20_pct')
+        self.multi_asset_class_swap = kwargs.get('multi_asset_class_swap')
+        self.cross = kwargs.get('cross')
+        self.idea_status = kwargs.get('idea_status')
+        self.contract_subtype = kwargs.get('contract_subtype')
+        self.fx_forecast = kwargs.get('fx_forecast')
+        self.fixing_time_label = kwargs.get('fixing_time_label')
+        self.implementation_id = kwargs.get('implementation_id')
+        self.fill_id = kwargs.get('fill_id')
+        self.excess_returns = kwargs.get('excess_returns')
+        self.dollar_return = kwargs.get('dollar_return')
+        self.es_numeric_score = kwargs.get('es_numeric_score')
+        self.in_benchmark = kwargs.get('in_benchmark')
+        self.action_sdr = kwargs.get('action_sdr')
+        self.queue_in_lots_description = kwargs.get('queue_in_lots_description')
+        self.objective = kwargs.get('objective')
+        self.nav_price = kwargs.get('nav_price')
+        self.precipitation = kwargs.get('precipitation')
+        self.hedge_notional = kwargs.get('hedge_notional')
+        self.ask_low = kwargs.get('ask_low')
+        self.beta_adjusted_net_exposure = kwargs.get('beta_adjusted_net_exposure')
+        self.expiry = kwargs.get('expiry')
+        self.avg_monthly_yield = kwargs.get('avg_monthly_yield')
+        self.strike_percentage = kwargs.get('strike_percentage')
+        self.excess_return_price = kwargs.get('excess_return_price')
+        self.prev_close_bid = kwargs.get('prev_close_bid')
+        self.fx_pnl = kwargs.get('fx_pnl')
+        self.tcm_cost_horizon16_day = kwargs.get('tcm_cost_horizon16_day')
+        self.asset_classifications_gics_industry_group = kwargs.get('asset_classifications_gics_industry_group')
+        self.unadjusted_close = kwargs.get('unadjusted_close')
+        self.lending_sec_id = kwargs.get('lending_sec_id')
+        self.equity_theta = kwargs.get('equity_theta')
+        self.collateral_percentage_actual = kwargs.get('collateral_percentage_actual')
+        self.mixed_swap = kwargs.get('mixed_swap')
+        self.snowfall = kwargs.get('snowfall')
+        self.mic = kwargs.get('mic')
+        self.mid = kwargs.get('mid')
+        self.auto_exec_state = kwargs.get('auto_exec_state')
+        self.relative_return_ytd = kwargs.get('relative_return_ytd')
+        self.long = kwargs.get('long')
+        self.long_weight = kwargs.get('long_weight')
+        self.calculation_time = kwargs.get('calculation_time')
+        self.real_time_restriction_status = kwargs.get('real_time_restriction_status')
+        self.average_realized_variance = kwargs.get('average_realized_variance')
+        self.financial_returns_score = kwargs.get('financial_returns_score')
+        self.net_change = kwargs.get('net_change')
+        self.non_symbol_dimensions = kwargs.get('non_symbol_dimensions')
+        self.leg_two_fixed_payment_currency = kwargs.get('leg_two_fixed_payment_currency')
+        self.swap_type = kwargs.get('swap_type')
+        self.asset_classifications_country_name = kwargs.get('asset_classifications_country_name')
+        self.new_ideas_ytd = kwargs.get('new_ideas_ytd')
+        self.management_fee = kwargs.get('management_fee')
+        self.__open = kwargs.get('open_')
+        self.source_id = kwargs.get('source_id')
+        self.country = kwargs.get('country')
+        self.cusip = kwargs.get('cusip')
+        self.touch_spread_score = kwargs.get('touch_spread_score')
+        self.spread_option_atm_fwd_rate = kwargs.get('spread_option_atm_fwd_rate')
+        self.net_exposure = kwargs.get('net_exposure')
+        self.frequency = kwargs.get('frequency')
+        self.activity_id = kwargs.get('activity_id')
+        self.estimated_impact = kwargs.get('estimated_impact')
+        self.loan_spread_bucket = kwargs.get('loan_spread_bucket')
+        self.asset_parameters_pricing_location = kwargs.get('asset_parameters_pricing_location')
+        self.event_description = kwargs.get('event_description')
+        self.strike_reference = kwargs.get('strike_reference')
+        self.details = kwargs.get('details')
+        self.asset_count = kwargs.get('asset_count')
+        self.sector = kwargs.get('sector')
+        self.absolute_value = kwargs.get('absolute_value')
+        self.closing_report = kwargs.get('closing_report')
+        self.long_tenor = kwargs.get('long_tenor')
+        self.mctr = kwargs.get('mctr')
+        self.historical_close = kwargs.get('historical_close')
+        self.asset_count_priced = kwargs.get('asset_count_priced')
+        self.idea_id = kwargs.get('idea_id')
+        self.comment_status = kwargs.get('comment_status')
+        self.marginal_cost = kwargs.get('marginal_cost')
+        self.settlement_currency = kwargs.get('settlement_currency')
+        self.client_weight = kwargs.get('client_weight')
+        self.indication_of_collateralization = kwargs.get('indication_of_collateralization')
+        self.liq_wkly = kwargs.get('liq_wkly')
+        self.lending_partner_fee = kwargs.get('lending_partner_fee')
+        self.region = kwargs.get('region')
+        self.tenor2 = kwargs.get('tenor2')
+        self.option_premium = kwargs.get('option_premium')
+        self.owner_name = kwargs.get('owner_name')
+        self.last_updated_by_id = kwargs.get('last_updated_by_id')
+        self.z_score = kwargs.get('z_score')
+        self.legal_entity_acct = kwargs.get('legal_entity_acct')
+        self.target_shareholder_meeting_date = kwargs.get('target_shareholder_meeting_date')
+        self.event_start_time = kwargs.get('event_start_time')
+        self.turnover = kwargs.get('turnover')
+        self.price_spot_target_unit = kwargs.get('price_spot_target_unit')
+        self.leg_one_type = kwargs.get('leg_one_type')
+        self.leg_two_spread = kwargs.get('leg_two_spread')
+        self.coverage = kwargs.get('coverage')
+        self.g_percentile = kwargs.get('g_percentile')
+        self.lending_fund_nav = kwargs.get('lending_fund_nav')
+        self.source_original_category = kwargs.get('source_original_category')
+        self.composite5_day_adv = kwargs.get('composite5_day_adv')
+        self.new_ideas_wtd = kwargs.get('new_ideas_wtd')
+        self.asset_class_sdr = kwargs.get('asset_class_sdr')
+        self.location = kwargs.get('location')
+        self.comment = kwargs.get('comment')
+        self.source_symbol = kwargs.get('source_symbol')
+        self.scenario_id = kwargs.get('scenario_id')
+        self.ask_unadjusted = kwargs.get('ask_unadjusted')
+        self.queue_clock_time = kwargs.get('queue_clock_time')
+        self.ask_change = kwargs.get('ask_change')
+        self.tcm_cost_participation_rate50_pct = kwargs.get('tcm_cost_participation_rate50_pct')
+        self.contract_type = kwargs.get('contract_type')
+        self.__type = kwargs.get('type_')
+        self.mdapi = kwargs.get('mdapi')
+        self.cumulative_pnl = kwargs.get('cumulative_pnl')
+        self.short_tenor = kwargs.get('short_tenor')
+        self.loss = kwargs.get('loss')
+        self.unadjusted_volume = kwargs.get('unadjusted_volume')
+        self.midcurve_vol = kwargs.get('midcurve_vol')
+        self.trading_cost_pnl = kwargs.get('trading_cost_pnl')
+        self.price_notation_type = kwargs.get('price_notation_type')
+        self.price = kwargs.get('price')
+        self.payment_quantity = kwargs.get('payment_quantity')
+        self.position_idx = kwargs.get('position_idx')
+        self.sec_name = kwargs.get('sec_name')
+        self.implied_volatility_by_relative_strike = kwargs.get('implied_volatility_by_relative_strike')
+        self.percent_adv = kwargs.get('percent_adv')
+        self.contract = kwargs.get('contract')
+        self.payment_frequency1 = kwargs.get('payment_frequency1')
+        self.payment_frequency2 = kwargs.get('payment_frequency2')
+        self.bespoke = kwargs.get('bespoke')
+        self.repo_tenor = kwargs.get('repo_tenor')
+        self.quality_stars = kwargs.get('quality_stars')
+        self.source_ticker = kwargs.get('source_ticker')
+        self.gsid = kwargs.get('gsid')
+        self.lending_fund = kwargs.get('lending_fund')
+        self.tcm_cost_participation_rate15_pct = kwargs.get('tcm_cost_participation_rate15_pct')
+        self.sensitivity = kwargs.get('sensitivity')
+        self.fiscal_year = kwargs.get('fiscal_year')
+        self.internal = kwargs.get('internal')
+        self.asset_classifications_gics_industry = kwargs.get('asset_classifications_gics_industry')
+        self.adjusted_bid_price = kwargs.get('adjusted_bid_price')
+        self.var_swap = kwargs.get('var_swap')
+        self.low_unadjusted = kwargs.get('low_unadjusted')
+        self.original_dissemination_id = kwargs.get('original_dissemination_id')
+        self.macs_secondary_asset_class = kwargs.get('macs_secondary_asset_class')
+        self.leg_two_averaging_method = kwargs.get('leg_two_averaging_method')
+        self.sectors_raw = kwargs.get('sectors_raw')
+        self.shareclass_price = kwargs.get('shareclass_price')
+        self.integrated_score = kwargs.get('integrated_score')
+        self.trade_size = kwargs.get('trade_size')
+        self.price_spot_entry_value = kwargs.get('price_spot_entry_value')
+        self.symbol_dimensions = kwargs.get('symbol_dimensions')
+        self.option_type_sdr = kwargs.get('option_type_sdr')
+        self.scenario_group_id = kwargs.get('scenario_group_id')
+        self.avg_yield7_day = kwargs.get('avg_yield7_day')
+        self.average_implied_variance = kwargs.get('average_implied_variance')
+        self.avg_trade_rate_description = kwargs.get('avg_trade_rate_description')
+        self.fraction = kwargs.get('fraction')
+        self.sts_credit_market = kwargs.get('sts_credit_market')
+        self.asset_count_short = kwargs.get('asset_count_short')
+        self.collateral_percentage_required = kwargs.get('collateral_percentage_required')
+        self.total_std_return_since_inception = kwargs.get('total_std_return_since_inception')
+        self.high_unadjusted = kwargs.get('high_unadjusted')
+        self.source_category = kwargs.get('source_category')
+        self.tv_product_mnemonic = kwargs.get('tv_product_mnemonic')
+        self.volume_unadjusted = kwargs.get('volume_unadjusted')
+        self.avg_trade_rate_label = kwargs.get('avg_trade_rate_label')
+        self.ann_yield3_month = kwargs.get('ann_yield3_month')
+        self.encoded_stats = kwargs.get('encoded_stats')
+        self.ask_size = kwargs.get('ask_size')
+        self.std30_days_unsubsidized_yield = kwargs.get('std30_days_unsubsidized_yield')
+        self.resource = kwargs.get('resource')
+        self.average_realized_volatility = kwargs.get('average_realized_volatility')
+        self.nav_spread = kwargs.get('nav_spread')
+        self.bid_price = kwargs.get('bid_price')
+        self.dollar_total_return = kwargs.get('dollar_total_return')
+        self.block_unit = kwargs.get('block_unit')
+        self.es_numeric_percentile = kwargs.get('es_numeric_percentile')
+        self.repurchase_rate = kwargs.get('repurchase_rate')
+        self.csa_terms = kwargs.get('csa_terms')
+        self.daily_net_shareholder_flows = kwargs.get('daily_net_shareholder_flows')
+        self.ask_gspread = kwargs.get('ask_gspread')
+        self.cal_spread_mis_pricing = kwargs.get('cal_spread_mis_pricing')
+        self.leg_two_type = kwargs.get('leg_two_type')
+        self.rate366 = kwargs.get('rate366')
+        self.rate365 = kwargs.get('rate365')
+        self.rate360 = kwargs.get('rate360')
+        self.opening_report = kwargs.get('opening_report')
+        self.value = kwargs.get('value')
+        self.leg_one_index_location = kwargs.get('leg_one_index_location')
+        self.quantity = kwargs.get('quantity')
+        self.report_id = kwargs.get('report_id')
+        self.index_weight = kwargs.get('index_weight')
+        self.macs_primary_asset_class = kwargs.get('macs_primary_asset_class')
+        self.midcurve_atm_fwd_rate = kwargs.get('midcurve_atm_fwd_rate')
+        self.trader = kwargs.get('trader')
+        self.sts_rates_maturity = kwargs.get('sts_rates_maturity')
+        self.valuation_date = kwargs.get('valuation_date')
+        self.tcm_cost_horizon6_hour = kwargs.get('tcm_cost_horizon6_hour')
+        self.liq_dly = kwargs.get('liq_dly')
+        self.isin = kwargs.get('isin')
+
+    @property
+    def collateral_value_variance(self) -> dict:
+        return self.__collateral_value_variance
+
+    @collateral_value_variance.setter
+    def collateral_value_variance(self, value: dict):
+        self.__collateral_value_variance = value
+        self._property_changed('collateral_value_variance')        
 
     @property
     def year(self) -> dict:
@@ -5182,13 +5215,13 @@ class FieldFilterMap(Base):
         self._property_changed('realized_correlation')        
 
     @property
-    def target_price_unit(self) -> dict:
-        return self.__target_price_unit
+    def collateral_value_actual(self) -> dict:
+        return self.__collateral_value_actual
 
-    @target_price_unit.setter
-    def target_price_unit(self, value: dict):
-        self.__target_price_unit = value
-        self._property_changed('target_price_unit')        
+    @collateral_value_actual.setter
+    def collateral_value_actual(self, value: dict):
+        self.__collateral_value_actual = value
+        self._property_changed('collateral_value_actual')        
 
     @property
     def upfront_payment(self) -> dict:
@@ -5479,15 +5512,6 @@ class FieldFilterMap(Base):
         self._property_changed('portfolio_assets')        
 
     @property
-    def idea_title(self) -> dict:
-        return self.__idea_title
-
-    @idea_title.setter
-    def idea_title(self, value: dict):
-        self.__idea_title = value
-        self._property_changed('idea_title')        
-
-    @property
     def tcm_cost_horizon3_hour(self) -> dict:
         return self.__tcm_cost_horizon3_hour
 
@@ -5657,6 +5681,15 @@ class FieldFilterMap(Base):
     def adv(self, value: dict):
         self.__adv = value
         self._property_changed('adv')        
+
+    @property
+    def external(self) -> dict:
+        return self.__external
+
+    @external.setter
+    def external(self, value: dict):
+        self.__external = value
+        self._property_changed('external')        
 
     @property
     def short_conviction_medium(self) -> dict:
@@ -6154,6 +6187,15 @@ class FieldFilterMap(Base):
         self._property_changed('trading_restriction')        
 
     @property
+    def price_spot_entry_unit(self) -> dict:
+        return self.__price_spot_entry_unit
+
+    @price_spot_entry_unit.setter
+    def price_spot_entry_unit(self, value: dict):
+        self.__price_spot_entry_unit = value
+        self._property_changed('price_spot_entry_unit')        
+
+    @property
     def total_return_price(self) -> dict:
         return self.__total_return_price
 
@@ -6514,6 +6556,15 @@ class FieldFilterMap(Base):
         self._property_changed('basis')        
 
     @property
+    def ext_mkt_class(self) -> dict:
+        return self.__ext_mkt_class
+
+    @ext_mkt_class.setter
+    def ext_mkt_class(self, value: dict):
+        self.__ext_mkt_class = value
+        self._property_changed('ext_mkt_class')        
+
+    @property
     def price_currency(self) -> dict:
         return self.__price_currency
 
@@ -6613,6 +6664,15 @@ class FieldFilterMap(Base):
         self._property_changed('option_family')        
 
     @property
+    def price_spot_stop_loss_value(self) -> dict:
+        return self.__price_spot_stop_loss_value
+
+    @price_spot_stop_loss_value.setter
+    def price_spot_stop_loss_value(self, value: dict):
+        self.__price_spot_stop_loss_value = value
+        self._property_changed('price_spot_stop_loss_value')        
+
+    @property
     def fwd_points(self) -> dict:
         return self.__fwd_points
 
@@ -6694,6 +6754,15 @@ class FieldFilterMap(Base):
         self._property_changed('adjusted_high_price')        
 
     @property
+    def ext_mkt_point1(self) -> dict:
+        return self.__ext_mkt_point1
+
+    @ext_mkt_point1.setter
+    def ext_mkt_point1(self, value: dict):
+        self.__ext_mkt_point1 = value
+        self._property_changed('ext_mkt_point1')        
+
+    @property
     def direction(self) -> dict:
         return self.__direction
 
@@ -6701,6 +6770,15 @@ class FieldFilterMap(Base):
     def direction(self, value: dict):
         self.__direction = value
         self._property_changed('direction')        
+
+    @property
+    def ext_mkt_point2(self) -> dict:
+        return self.__ext_mkt_point2
+
+    @ext_mkt_point2.setter
+    def ext_mkt_point2(self, value: dict):
+        self.__ext_mkt_point2 = value
+        self._property_changed('ext_mkt_point2')        
 
     @property
     def value_forecast(self) -> dict:
@@ -6791,15 +6869,6 @@ class FieldFilterMap(Base):
     def es_momentum_percentile(self, value: dict):
         self.__es_momentum_percentile = value
         self._property_changed('es_momentum_percentile')        
-
-    @property
-    def lender_income_adjustment(self) -> dict:
-        return self.__lender_income_adjustment
-
-    @lender_income_adjustment.setter
-    def lender_income_adjustment(self, value: dict):
-        self.__lender_income_adjustment = value
-        self._property_changed('lender_income_adjustment')        
 
     @property
     def price_notation(self) -> dict:
@@ -6953,6 +7022,15 @@ class FieldFilterMap(Base):
     def trading_pnl(self, value: dict):
         self.__trading_pnl = value
         self._property_changed('trading_pnl')        
+
+    @property
+    def collateral_value_required(self) -> dict:
+        return self.__collateral_value_required
+
+    @collateral_value_required.setter
+    def collateral_value_required(self, value: dict):
+        self.__collateral_value_required = value
+        self._property_changed('collateral_value_required')        
 
     @property
     def given_plus_paid(self) -> dict:
@@ -7369,15 +7447,6 @@ class FieldFilterMap(Base):
         self._property_changed('oe_name')        
 
     @property
-    def opening_price_value(self) -> dict:
-        return self.__opening_price_value
-
-    @opening_price_value.setter
-    def opening_price_value(self, value: dict):
-        self.__opening_price_value = value
-        self._property_changed('opening_price_value')        
-
-    @property
     def given(self) -> dict:
         return self.__given
 
@@ -7394,6 +7463,15 @@ class FieldFilterMap(Base):
     def delisting_date(self, value: dict):
         self.__delisting_date = value
         self._property_changed('delisting_date')        
+
+    @property
+    def price_spot_target_value(self) -> dict:
+        return self.__price_spot_target_value
+
+    @price_spot_target_value.setter
+    def price_spot_target_value(self, value: dict):
+        self.__price_spot_target_value = value
+        self._property_changed('price_spot_target_value')        
 
     @property
     def weight(self) -> dict:
@@ -7547,6 +7625,15 @@ class FieldFilterMap(Base):
     def description(self, value: dict):
         self.__description = value
         self._property_changed('description')        
+
+    @property
+    def asset_classifications_is_country_primary(self) -> dict:
+        return self.__asset_classifications_is_country_primary
+
+    @asset_classifications_is_country_primary.setter
+    def asset_classifications_is_country_primary(self, value: dict):
+        self.__asset_classifications_is_country_primary = value
+        self._property_changed('asset_classifications_is_country_primary')        
 
     @property
     def value_revised(self) -> dict:
@@ -8134,6 +8221,15 @@ class FieldFilterMap(Base):
         self._property_changed('pending_loan_count')        
 
     @property
+    def price_spot_stop_loss_unit(self) -> dict:
+        return self.__price_spot_stop_loss_unit
+
+    @price_spot_stop_loss_unit.setter
+    def price_spot_stop_loss_unit(self, value: dict):
+        self.__price_spot_stop_loss_unit = value
+        self._property_changed('price_spot_stop_loss_unit')        
+
+    @property
     def queue_in_lots(self) -> dict:
         return self.__queue_in_lots
 
@@ -8159,6 +8255,15 @@ class FieldFilterMap(Base):
     def tender_offer_expiration_date(self, value: dict):
         self.__tender_offer_expiration_date = value
         self._property_changed('tender_offer_expiration_date')        
+
+    @property
+    def primary_country_ric(self) -> dict:
+        return self.__primary_country_ric
+
+    @primary_country_ric.setter
+    def primary_country_ric(self, value: dict):
+        self.__primary_country_ric = value
+        self._property_changed('primary_country_ric')        
 
     @property
     def leg_one_fixed_payment(self) -> dict:
@@ -8548,6 +8653,15 @@ class FieldFilterMap(Base):
         self._property_changed('variance')        
 
     @property
+    def earnings_record_type(self) -> dict:
+        return self.__earnings_record_type
+
+    @earnings_record_type.setter
+    def earnings_record_type(self, value: dict):
+        self.__earnings_record_type = value
+        self._property_changed('earnings_record_type')        
+
+    @property
     def g10_currency(self) -> dict:
         return self.__g10_currency
 
@@ -8926,15 +9040,6 @@ class FieldFilterMap(Base):
         self._property_changed('loan_fee')        
 
     @property
-    def stop_price_value(self) -> dict:
-        return self.__stop_price_value
-
-    @stop_price_value.setter
-    def stop_price_value(self, value: dict):
-        self.__stop_price_value = value
-        self._property_changed('stop_price_value')        
-
-    @property
     def deployment_version(self) -> dict:
         return self.__deployment_version
 
@@ -9032,15 +9137,6 @@ class FieldFilterMap(Base):
     def factor_universe(self, value: dict):
         self.__factor_universe = value
         self._property_changed('factor_universe')        
-
-    @property
-    def opening_price_unit(self) -> dict:
-        return self.__opening_price_unit
-
-    @opening_price_unit.setter
-    def opening_price_unit(self, value: dict):
-        self.__opening_price_unit = value
-        self._property_changed('opening_price_unit')        
 
     @property
     def arrival_rt(self) -> dict:
@@ -10111,7 +10207,7 @@ class FieldFilterMap(Base):
     @return_.setter
     def return_(self, value: dict):
         self.__return = value
-        self._property_changed('return')        
+        self._property_changed('return_')        
 
     @property
     def max_temperature(self) -> dict:
@@ -10582,15 +10678,6 @@ class FieldFilterMap(Base):
         self._property_changed('fx_forecast')        
 
     @property
-    def stop_price_unit(self) -> dict:
-        return self.__stop_price_unit
-
-    @stop_price_unit.setter
-    def stop_price_unit(self, value: dict):
-        self.__stop_price_unit = value
-        self._property_changed('stop_price_unit')        
-
-    @property
     def fixing_time_label(self) -> dict:
         return self.__fixing_time_label
 
@@ -10823,6 +10910,15 @@ class FieldFilterMap(Base):
     def equity_theta(self, value: dict):
         self.__equity_theta = value
         self._property_changed('equity_theta')        
+
+    @property
+    def collateral_percentage_actual(self) -> dict:
+        return self.__collateral_percentage_actual
+
+    @collateral_percentage_actual.setter
+    def collateral_percentage_actual(self, value: dict):
+        self.__collateral_percentage_actual = value
+        self._property_changed('collateral_percentage_actual')        
 
     @property
     def mixed_swap(self) -> dict:
@@ -11329,6 +11425,15 @@ class FieldFilterMap(Base):
         self._property_changed('z_score')        
 
     @property
+    def legal_entity_acct(self) -> dict:
+        return self.__legal_entity_acct
+
+    @legal_entity_acct.setter
+    def legal_entity_acct(self, value: dict):
+        self.__legal_entity_acct = value
+        self._property_changed('legal_entity_acct')        
+
+    @property
     def target_shareholder_meeting_date(self) -> dict:
         return self.__target_shareholder_meeting_date
 
@@ -11336,15 +11441,6 @@ class FieldFilterMap(Base):
     def target_shareholder_meeting_date(self, value: dict):
         self.__target_shareholder_meeting_date = value
         self._property_changed('target_shareholder_meeting_date')        
-
-    @property
-    def collateral_market_value(self) -> dict:
-        return self.__collateral_market_value
-
-    @collateral_market_value.setter
-    def collateral_market_value(self, value: dict):
-        self.__collateral_market_value = value
-        self._property_changed('collateral_market_value')        
 
     @property
     def event_start_time(self) -> dict:
@@ -11363,6 +11459,15 @@ class FieldFilterMap(Base):
     def turnover(self, value: dict):
         self.__turnover = value
         self._property_changed('turnover')        
+
+    @property
+    def price_spot_target_unit(self) -> dict:
+        return self.__price_spot_target_unit
+
+    @price_spot_target_unit.setter
+    def price_spot_target_unit(self, value: dict):
+        self.__price_spot_target_unit = value
+        self._property_changed('price_spot_target_unit')        
 
     @property
     def leg_one_type(self) -> dict:
@@ -11698,6 +11803,15 @@ class FieldFilterMap(Base):
         self._property_changed('bespoke')        
 
     @property
+    def repo_tenor(self) -> dict:
+        return self.__repo_tenor
+
+    @repo_tenor.setter
+    def repo_tenor(self, value: dict):
+        self.__repo_tenor = value
+        self._property_changed('repo_tenor')        
+
+    @property
     def quality_stars(self) -> dict:
         return self.__quality_stars
 
@@ -11869,6 +11983,15 @@ class FieldFilterMap(Base):
         self._property_changed('trade_size')        
 
     @property
+    def price_spot_entry_value(self) -> dict:
+        return self.__price_spot_entry_value
+
+    @price_spot_entry_value.setter
+    def price_spot_entry_value(self, value: dict):
+        self.__price_spot_entry_value = value
+        self._property_changed('price_spot_entry_value')        
+
+    @property
     def symbol_dimensions(self) -> dict:
         return self.__symbol_dimensions
 
@@ -11950,13 +12073,13 @@ class FieldFilterMap(Base):
         self._property_changed('asset_count_short')        
 
     @property
-    def required_collateral_value(self) -> dict:
-        return self.__required_collateral_value
+    def collateral_percentage_required(self) -> dict:
+        return self.__collateral_percentage_required
 
-    @required_collateral_value.setter
-    def required_collateral_value(self, value: dict):
-        self.__required_collateral_value = value
-        self._property_changed('required_collateral_value')        
+    @collateral_percentage_required.setter
+    def collateral_percentage_required(self, value: dict):
+        self.__collateral_percentage_required = value
+        self._property_changed('collateral_percentage_required')        
 
     @property
     def total_std_return_since_inception(self) -> dict:
@@ -12029,15 +12152,6 @@ class FieldFilterMap(Base):
     def encoded_stats(self, value: dict):
         self.__encoded_stats = value
         self._property_changed('encoded_stats')        
-
-    @property
-    def target_price_value(self) -> dict:
-        return self.__target_price_value
-
-    @target_price_value.setter
-    def target_price_value(self, value: dict):
-        self.__target_price_value = value
-        self._property_changed('target_price_value')        
 
     @property
     def ask_size(self) -> dict:
@@ -12332,773 +12446,793 @@ class FieldValueMap(Base):
                
     def __init__(
         self,
-        **kwargs        
-    ):
+        **kwargs
+    ):        
         super().__init__()
-        self.__year = kwargs.get('year')
-        self.__investment_rate = kwargs.get('investment_rate')
-        self.__bid_unadjusted = kwargs.get('bid_unadjusted')
-        self.__available_inventory = kwargs.get('available_inventory')
-        self.__est1_day_complete_pct = kwargs.get('est1_day_complete_pct')
-        self.__created_by_id = kwargs.get('created_by_id')
-        self.__vehicle_type = kwargs.get('vehicle_type')
-        self.__daily_risk = kwargs.get('daily_risk')
-        self.__energy = kwargs.get('energy')
-        self.__market_data_type = kwargs.get('market_data_type')
-        self.__real_short_rates_contribution = kwargs.get('real_short_rates_contribution')
-        self.__sentiment_score = kwargs.get('sentiment_score')
-        self.__leg_one_payment_type = kwargs.get('leg_one_payment_type')
-        self.__value_previous = kwargs.get('value_previous')
-        self.__avg_trade_rate = kwargs.get('avg_trade_rate')
-        self.__short_level = kwargs.get('short_level')
-        self.__version = kwargs.get('version')
-        self.__exposure = kwargs.get('exposure')
-        self.__market_data_asset = kwargs.get('market_data_asset')
-        self.__unadjusted_high = kwargs.get('unadjusted_high')
-        self.__source_importance = kwargs.get('source_importance')
-        self.__relative_return_qtd = kwargs.get('relative_return_qtd')
-        self.__minutes_to_trade100_pct = kwargs.get('minutes_to_trade100_pct')
-        self.__market_model_id = kwargs.get('market_model_id')
-        self.__realized_correlation = kwargs.get('realized_correlation')
-        self.__target_price_unit = kwargs.get('target_price_unit')
-        self.__upfront_payment = kwargs.get('upfront_payment')
-        self.__atm_fwd_rate = kwargs.get('atm_fwd_rate')
-        self.__tcm_cost_participation_rate75_pct = kwargs.get('tcm_cost_participation_rate75_pct')
-        self.__close = kwargs.get('close')
-        self.__a = kwargs.get('a')
-        self.__b = kwargs.get('b')
-        self.__c = kwargs.get('c')
-        self.__equity_vega = kwargs.get('equity_vega')
-        self.__leg_one_spread = kwargs.get('leg_one_spread')
-        self.__lender_payment = kwargs.get('lender_payment')
-        self.__five_day_move = kwargs.get('five_day_move')
-        self.__borrower = kwargs.get('borrower')
-        self.__value_format = kwargs.get('value_format')
-        self.__performance_contribution = kwargs.get('performance_contribution')
-        self.__target_notional = kwargs.get('target_notional')
-        self.__fill_leg_id = kwargs.get('fill_leg_id')
-        self.__rationale = kwargs.get('rationale')
-        self.__mkt_class = kwargs.get('mkt_class')
-        self.__last_updated_since = kwargs.get('last_updated_since')
-        self.__equities_contribution = kwargs.get('equities_contribution')
-        self.__congestion = kwargs.get('congestion')
-        self.__event_category = kwargs.get('event_category')
-        self.__short_rates_contribution = kwargs.get('short_rates_contribution')
-        self.__unadjusted_open = kwargs.get('unadjusted_open')
-        self.__criticality = kwargs.get('criticality')
-        self.__mtm_price = kwargs.get('mtm_price')
-        self.__bid_ask_spread = kwargs.get('bid_ask_spread')
-        self.__leg_one_averaging_method = kwargs.get('leg_one_averaging_method')
-        self.__option_type = kwargs.get('option_type')
-        self.__portfolio_assets = kwargs.get('portfolio_assets')
-        self.__termination_date = kwargs.get('termination_date')
-        self.__idea_title = kwargs.get('idea_title')
-        self.__tcm_cost_horizon3_hour = kwargs.get('tcm_cost_horizon3_hour')
-        self.__credit_limit = kwargs.get('credit_limit')
-        self.__number_of_positions = kwargs.get('number_of_positions')
-        self.__open_unadjusted = kwargs.get('open_unadjusted')
-        self.__ask_price = kwargs.get('ask_price')
-        self.__event_id = kwargs.get('event_id')
-        self.__sectors = kwargs.get('sectors')
-        self.__std30_days_subsidized_yield = kwargs.get('std30_days_subsidized_yield')
-        self.__annualized_tracking_error = kwargs.get('annualized_tracking_error')
-        self.__additional_price_notation_type = kwargs.get('additional_price_notation_type')
-        self.__vol_swap = kwargs.get('vol_swap')
-        self.__real_fci = kwargs.get('real_fci')
-        self.__annualized_risk = kwargs.get('annualized_risk')
-        self.__block_trades_and_large_notional_off_facility_swaps = kwargs.get('block_trades_and_large_notional_off_facility_swaps')
-        self.__leg_one_fixed_payment_currency = kwargs.get('leg_one_fixed_payment_currency')
-        self.__gross_exposure = kwargs.get('gross_exposure')
-        self.__volume_composite = kwargs.get('volume_composite')
-        self.__volume = kwargs.get('volume')
-        self.__adv = kwargs.get('adv')
-        self.__short_conviction_medium = kwargs.get('short_conviction_medium')
-        self.__exchange = kwargs.get('exchange')
-        self.__trade_price = kwargs.get('trade_price')
-        self.__cleared = kwargs.get('cleared')
-        self.__es_policy_score = kwargs.get('es_policy_score')
-        self.__prime_id_numeric = kwargs.get('prime_id_numeric')
-        self.__leg_one_index = kwargs.get('leg_one_index')
-        self.__bid_high = kwargs.get('bid_high')
-        self.__fair_variance = kwargs.get('fair_variance')
-        self.__hit_rate_wtd = kwargs.get('hit_rate_wtd')
-        self.__bos_in_bps_description = kwargs.get('bos_in_bps_description')
-        self.__low_price = kwargs.get('low_price')
-        self.__realized_volatility = kwargs.get('realized_volatility')
-        self.__adv22_day_pct = kwargs.get('adv22_day_pct')
-        self.__clone_parent_id = kwargs.get('clone_parent_id')
-        self.__price_range_in_ticks_label = kwargs.get('price_range_in_ticks_label')
-        self.__ticker = kwargs.get('ticker')
-        self.__tcm_cost_horizon1_day = kwargs.get('tcm_cost_horizon1_day')
-        self.__file_location = kwargs.get('file_location')
-        self.__leg_two_payment_type = kwargs.get('leg_two_payment_type')
-        self.__horizon = kwargs.get('horizon')
-        self.__source_value_forecast = kwargs.get('source_value_forecast')
-        self.__short_conviction_large = kwargs.get('short_conviction_large')
-        self.__counter_party_status = kwargs.get('counter_party_status')
-        self.__composite22_day_adv = kwargs.get('composite22_day_adv')
-        self.__dollar_excess_return = kwargs.get('dollar_excess_return')
-        self.__trade_end_date = kwargs.get('trade_end_date')
-        self.__percent_of_mediandv1m = kwargs.get('percent_of_mediandv1m')
-        self.__lendables = kwargs.get('lendables')
-        self.__asset_class = kwargs.get('asset_class')
-        self.__sovereign_spread_contribution = kwargs.get('sovereign_spread_contribution')
-        self.__bos_in_ticks_label = kwargs.get('bos_in_ticks_label')
-        self.__ric = kwargs.get('ric')
-        self.__position_source_id = kwargs.get('position_source_id')
-        self.__rate_type = kwargs.get('rate_type')
-        self.__gs_sustain_region = kwargs.get('gs_sustain_region')
-        self.__deployment_id = kwargs.get('deployment_id')
-        self.__loan_status = kwargs.get('loan_status')
-        self.__short_weight = kwargs.get('short_weight')
-        self.__loan_rebate = kwargs.get('loan_rebate')
-        self.__period = kwargs.get('period')
-        self.__index_create_source = kwargs.get('index_create_source')
-        self.__fiscal_quarter = kwargs.get('fiscal_quarter')
-        self.__real_twi_contribution = kwargs.get('real_twi_contribution')
-        self.__market_impact = kwargs.get('market_impact')
-        self.__event_type = kwargs.get('event_type')
-        self.__mkt_asset = kwargs.get('mkt_asset')
-        self.__asset_count_long = kwargs.get('asset_count_long')
-        self.__spot = kwargs.get('spot')
-        self.__loan_value = kwargs.get('loan_value')
-        self.__swap_spread = kwargs.get('swap_spread')
-        self.__trading_restriction = kwargs.get('trading_restriction')
-        self.__total_return_price = kwargs.get('total_return_price')
-        self.__dissemination_id = kwargs.get('dissemination_id')
-        self.__leg_two_fixed_payment = kwargs.get('leg_two_fixed_payment')
-        self.__hit_rate_ytd = kwargs.get('hit_rate_ytd')
-        self.__valid = kwargs.get('valid')
-        self.__indication_of_end_user_exception = kwargs.get('indication_of_end_user_exception')
-        self.__es_score = kwargs.get('es_score')
-        self.__price_range_in_ticks = kwargs.get('price_range_in_ticks')
-        self.__expense_ratio_gross_bps = kwargs.get('expense_ratio_gross_bps')
-        self.__pct_change = kwargs.get('pct_change')
-        self.__number_of_rolls = kwargs.get('number_of_rolls')
-        self.__agent_lender_fee = kwargs.get('agent_lender_fee')
-        self.__bbid = kwargs.get('bbid')
-        self.__option_strike_price = kwargs.get('option_strike_price')
-        self.__effective_date = kwargs.get('effective_date')
-        self.__arrival_mid_normalized = kwargs.get('arrival_mid_normalized')
-        self.__underlying_asset2 = kwargs.get('underlying_asset2')
-        self.__underlying_asset1 = kwargs.get('underlying_asset1')
-        self.__capped = kwargs.get('capped')
-        self.__rating = kwargs.get('rating')
-        self.__option_currency = kwargs.get('option_currency')
-        self.__legal_entity = kwargs.get('legal_entity')
-        self.__performance_fee = kwargs.get('performance_fee')
-        self.__underlying_asset_ids = kwargs.get('underlying_asset_ids')
-        self.__queue_in_lots_label = kwargs.get('queue_in_lots_label')
-        self.__adv10_day_pct = kwargs.get('adv10_day_pct')
-        self.__long_conviction_medium = kwargs.get('long_conviction_medium')
-        self.__annual_risk = kwargs.get('annual_risk')
-        self.__eti = kwargs.get('eti')
-        self.__daily_tracking_error = kwargs.get('daily_tracking_error')
-        self.__leg_two_index = kwargs.get('leg_two_index')
-        self.__market_buffer = kwargs.get('market_buffer')
-        self.__market_cap = kwargs.get('market_cap')
-        self.__oe_id = kwargs.get('oe_id')
-        self.__cluster_region = kwargs.get('cluster_region')
-        self.__bbid_equivalent = kwargs.get('bbid_equivalent')
-        self.__valoren = kwargs.get('valoren')
-        self.__basis = kwargs.get('basis')
-        self.__price_currency = kwargs.get('price_currency')
-        self.__hedge_id = kwargs.get('hedge_id')
-        self.__tcm_cost_horizon8_day = kwargs.get('tcm_cost_horizon8_day')
-        self.__supra_strategy = kwargs.get('supra_strategy')
-        self.__day_count_convention = kwargs.get('day_count_convention')
-        self.__rounded_notional_amount1 = kwargs.get('rounded_notional_amount1')
-        self.__adv5_day_pct = kwargs.get('adv5_day_pct')
-        self.__rounded_notional_amount2 = kwargs.get('rounded_notional_amount2')
-        self.__leverage = kwargs.get('leverage')
-        self.__option_family = kwargs.get('option_family')
-        self.__kpi_id = kwargs.get('kpi_id')
-        self.__relative_return_wtd = kwargs.get('relative_return_wtd')
-        self.__borrow_cost = kwargs.get('borrow_cost')
-        self.__average_implied_volatility = kwargs.get('average_implied_volatility')
-        self.__fair_value = kwargs.get('fair_value')
-        self.__adjusted_high_price = kwargs.get('adjusted_high_price')
-        self.__open_time = kwargs.get('open_time')
-        self.__direction = kwargs.get('direction')
-        self.__value_forecast = kwargs.get('value_forecast')
-        self.__execution_venue = kwargs.get('execution_venue')
-        self.__position_source_type = kwargs.get('position_source_type')
-        self.__adjusted_close_price = kwargs.get('adjusted_close_price')
-        self.__lms_id = kwargs.get('lms_id')
-        self.__rebate_rate = kwargs.get('rebate_rate')
-        self.__participation_rate = kwargs.get('participation_rate')
-        self.__obfr = kwargs.get('obfr')
-        self.__option_lock_period = kwargs.get('option_lock_period')
-        self.__es_momentum_percentile = kwargs.get('es_momentum_percentile')
-        self.__lender_income_adjustment = kwargs.get('lender_income_adjustment')
-        self.__price_notation = kwargs.get('price_notation')
-        self.__strategy = kwargs.get('strategy')
-        self.__position_type = kwargs.get('position_type')
-        self.__lender_income = kwargs.get('lender_income')
-        self.__sub_asset_class = kwargs.get('sub_asset_class')
-        self.__short_interest = kwargs.get('short_interest')
-        self.__reference_period = kwargs.get('reference_period')
-        self.__adjusted_volume = kwargs.get('adjusted_volume')
-        self.__owner_id = kwargs.get('owner_id')
-        self.__composite10_day_adv = kwargs.get('composite10_day_adv')
-        self.__bpe_quality_stars = kwargs.get('bpe_quality_stars')
-        self.__idea_activity_type = kwargs.get('idea_activity_type')
-        self.__idea_source = kwargs.get('idea_source')
-        self.__unadjusted_ask = kwargs.get('unadjusted_ask')
-        self.__trading_pnl = kwargs.get('trading_pnl')
-        self.__given_plus_paid = kwargs.get('given_plus_paid')
-        self.__close_location = kwargs.get('close_location')
-        self.__short_conviction_small = kwargs.get('short_conviction_small')
-        self.__forecast = kwargs.get('forecast')
-        self.__pnl = kwargs.get('pnl')
-        self.__upfront_payment_currency = kwargs.get('upfront_payment_currency')
-        self.__date_index = kwargs.get('date_index')
-        self.__tcm_cost_horizon4_day = kwargs.get('tcm_cost_horizon4_day')
-        self.__asset_classifications_is_primary = kwargs.get('asset_classifications_is_primary')
-        self.__styles = kwargs.get('styles')
-        self.__short_name = kwargs.get('short_name')
-        self.__dwi_contribution = kwargs.get('dwi_contribution')
-        self.__reset_frequency1 = kwargs.get('reset_frequency1')
-        self.__reset_frequency2 = kwargs.get('reset_frequency2')
-        self.__average_fill_price = kwargs.get('average_fill_price')
-        self.__price_notation_type2 = kwargs.get('price_notation_type2')
-        self.__price_notation_type3 = kwargs.get('price_notation_type3')
-        self.__bid_gspread = kwargs.get('bid_gspread')
-        self.__open_price = kwargs.get('open_price')
-        self.__depth_spread_score = kwargs.get('depth_spread_score')
-        self.__sub_account = kwargs.get('sub_account')
-        self.__fair_volatility = kwargs.get('fair_volatility')
-        self.__portfolio_type = kwargs.get('portfolio_type')
-        self.__vendor = kwargs.get('vendor')
-        self.__currency = kwargs.get('currency')
-        self.__cluster_class = kwargs.get('cluster_class')
-        self.__queueing_time = kwargs.get('queueing_time')
-        self.__ann_return5_year = kwargs.get('ann_return5_year')
-        self.__bid_size = kwargs.get('bid_size')
-        self.__arrival_mid = kwargs.get('arrival_mid')
-        self.__asset_parameters_exchange_currency = kwargs.get('asset_parameters_exchange_currency')
-        self.__unexplained = kwargs.get('unexplained')
-        self.__closed_date = kwargs.get('closed_date')
-        self.__metric = kwargs.get('metric')
-        self.__ask = kwargs.get('ask')
-        self.__close_price = kwargs.get('close_price')
-        self.__end_time = kwargs.get('end_time')
-        self.__execution_timestamp = kwargs.get('execution_timestamp')
-        self.__source = kwargs.get('source')
-        self.__expense_ratio_net_bps = kwargs.get('expense_ratio_net_bps')
-        self.__data_set_sub_category = kwargs.get('data_set_sub_category')
-        self.__day_count_convention2 = kwargs.get('day_count_convention2')
-        self.__quantity_bucket = kwargs.get('quantity_bucket')
-        self.__factor_two = kwargs.get('factor_two')
-        self.__oe_name = kwargs.get('oe_name')
-        self.__opening_price_value = kwargs.get('opening_price_value')
-        self.__given = kwargs.get('given')
-        self.__delisting_date = kwargs.get('delisting_date')
-        self.__weight = kwargs.get('weight')
-        self.__market_data_point = kwargs.get('market_data_point')
-        self.__absolute_weight = kwargs.get('absolute_weight')
-        self.__trade_time = kwargs.get('trade_time')
-        self.__measure = kwargs.get('measure')
-        self.__hedge_annualized_volatility = kwargs.get('hedge_annualized_volatility')
-        self.__benchmark_currency = kwargs.get('benchmark_currency')
-        self.__futures_contract = kwargs.get('futures_contract')
-        self.__name = kwargs.get('name')
-        self.__aum = kwargs.get('aum')
-        self.__folder_name = kwargs.get('folder_name')
-        self.__option_expiration_date = kwargs.get('option_expiration_date')
-        self.__swaption_atm_fwd_rate = kwargs.get('swaption_atm_fwd_rate')
-        self.__live_date = kwargs.get('live_date')
-        self.__ask_high = kwargs.get('ask_high')
-        self.__corporate_action_type = kwargs.get('corporate_action_type')
-        self.__prime_id = kwargs.get('prime_id')
-        self.__region_name = kwargs.get('region_name')
-        self.__description = kwargs.get('description')
-        self.__value_revised = kwargs.get('value_revised')
-        self.__adjusted_trade_price = kwargs.get('adjusted_trade_price')
-        self.__is_adr = kwargs.get('is_adr')
-        self.__factor = kwargs.get('factor')
-        self.__days_on_loan = kwargs.get('days_on_loan')
-        self.__long_conviction_small = kwargs.get('long_conviction_small')
-        self.__service_id = kwargs.get('service_id')
-        self.__gsfeer = kwargs.get('gsfeer')
-        self.__wam = kwargs.get('wam')
-        self.__wal = kwargs.get('wal')
-        self.__backtest_id = kwargs.get('backtest_id')
-        self.__leg_two_index_location = kwargs.get('leg_two_index_location')
-        self.__g_score = kwargs.get('g_score')
-        self.__corporate_spread_contribution = kwargs.get('corporate_spread_contribution')
-        self.__market_value = kwargs.get('market_value')
-        self.__notional_currency1 = kwargs.get('notional_currency1')
-        self.__notional_currency2 = kwargs.get('notional_currency2')
-        self.__multiple_score = kwargs.get('multiple_score')
-        self.__beta_adjusted_exposure = kwargs.get('beta_adjusted_exposure')
-        self.__paid = kwargs.get('paid')
-        self.__short = kwargs.get('short')
-        self.__bos_in_ticks_description = kwargs.get('bos_in_ticks_description')
-        self.__time = kwargs.get('time')
-        self.__implied_correlation = kwargs.get('implied_correlation')
-        self.__normalized_performance = kwargs.get('normalized_performance')
-        self.__taxonomy = kwargs.get('taxonomy')
-        self.__swaption_vol = kwargs.get('swaption_vol')
-        self.__source_origin = kwargs.get('source_origin')
-        self.__measures = kwargs.get('measures')
-        self.__total_quantity = kwargs.get('total_quantity')
-        self.__internal_user = kwargs.get('internal_user')
-        self.__created_time = kwargs.get('created_time')
-        self.__price_unit = kwargs.get('price_unit')
-        self.__redemption_option = kwargs.get('redemption_option')
-        self.__notional_unit2 = kwargs.get('notional_unit2')
-        self.__unadjusted_low = kwargs.get('unadjusted_low')
-        self.__notional_unit1 = kwargs.get('notional_unit1')
-        self.__sedol = kwargs.get('sedol')
-        self.__rounding_cost_pnl = kwargs.get('rounding_cost_pnl')
-        self.__sustain_global = kwargs.get('sustain_global')
-        self.__portfolio_id = kwargs.get('portfolio_id')
-        self.__ending_date = kwargs.get('ending_date')
-        self.__cap_floor_atm_fwd_rate = kwargs.get('cap_floor_atm_fwd_rate')
-        self.__es_percentile = kwargs.get('es_percentile')
-        self.__ann_return3_year = kwargs.get('ann_return3_year')
-        self.__rcic = kwargs.get('rcic')
-        self.__hit_rate_qtd = kwargs.get('hit_rate_qtd')
-        self.__fci = kwargs.get('fci')
-        self.__recall_quantity = kwargs.get('recall_quantity')
-        self.__premium = kwargs.get('premium')
-        self.__low = kwargs.get('low')
-        self.__cross_group = kwargs.get('cross_group')
-        self.__report_run_time = kwargs.get('report_run_time')
-        self.__five_day_price_change_bps = kwargs.get('five_day_price_change_bps')
-        self.__holdings = kwargs.get('holdings')
-        self.__price_method = kwargs.get('price_method')
-        self.__mid_price = kwargs.get('mid_price')
-        self.__tcm_cost_horizon2_day = kwargs.get('tcm_cost_horizon2_day')
-        self.__pending_loan_count = kwargs.get('pending_loan_count')
-        self.__queue_in_lots = kwargs.get('queue_in_lots')
-        self.__price_range_in_ticks_description = kwargs.get('price_range_in_ticks_description')
-        self.__tender_offer_expiration_date = kwargs.get('tender_offer_expiration_date')
-        self.__leg_one_fixed_payment = kwargs.get('leg_one_fixed_payment')
-        self.__option_expiration_frequency = kwargs.get('option_expiration_frequency')
-        self.__tcm_cost_participation_rate5_pct = kwargs.get('tcm_cost_participation_rate5_pct')
-        self.__is_active = kwargs.get('is_active')
-        self.__growth_score = kwargs.get('growth_score')
-        self.__buffer_threshold = kwargs.get('buffer_threshold')
-        self.__price_forming_continuation_data = kwargs.get('price_forming_continuation_data')
-        self.__adjusted_short_interest = kwargs.get('adjusted_short_interest')
-        self.__estimated_spread = kwargs.get('estimated_spread')
-        self.__ann_return10_year = kwargs.get('ann_return10_year')
-        self.__created = kwargs.get('created')
-        self.__tcm_cost = kwargs.get('tcm_cost')
-        self.__sustain_japan = kwargs.get('sustain_japan')
-        self.__hedge_tracking_error = kwargs.get('hedge_tracking_error')
-        self.__market_cap_category = kwargs.get('market_cap_category')
-        self.__historical_volume = kwargs.get('historical_volume')
-        self.__strike_price = kwargs.get('strike_price')
-        self.__event_start_date = kwargs.get('event_start_date')
-        self.__equity_gamma = kwargs.get('equity_gamma')
-        self.__gross_income = kwargs.get('gross_income')
-        self.__adjusted_open_price = kwargs.get('adjusted_open_price')
-        self.__asset_count_in_model = kwargs.get('asset_count_in_model')
-        self.__total_returns = kwargs.get('total_returns')
-        self.__lender = kwargs.get('lender')
-        self.__ann_return1_year = kwargs.get('ann_return1_year')
-        self.__min_temperature = kwargs.get('min_temperature')
-        self.__eff_yield7_day = kwargs.get('eff_yield7_day')
-        self.__meeting_date = kwargs.get('meeting_date')
-        self.__close_time = kwargs.get('close_time')
-        self.__amount = kwargs.get('amount')
-        self.__lending_fund_acct = kwargs.get('lending_fund_acct')
-        self.__rebate = kwargs.get('rebate')
-        self.__flagship = kwargs.get('flagship')
-        self.__additional_price_notation = kwargs.get('additional_price_notation')
-        self.__implied_volatility = kwargs.get('implied_volatility')
-        self.__spread = kwargs.get('spread')
-        self.__equity_delta = kwargs.get('equity_delta')
-        self.__gross_weight = kwargs.get('gross_weight')
-        self.__listed = kwargs.get('listed')
-        self.__g10_currency = kwargs.get('g10_currency')
-        self.__shock_style = kwargs.get('shock_style')
-        self.__relative_period = kwargs.get('relative_period')
-        self.__methodology = kwargs.get('methodology')
-        self.__queue_clock_time_label = kwargs.get('queue_clock_time_label')
-        self.__market_pnl = kwargs.get('market_pnl')
-        self.__sustain_asia_ex_japan = kwargs.get('sustain_asia_ex_japan')
-        self.__swap_rate = kwargs.get('swap_rate')
-        self.__mixed_swap_other_reported_sdr = kwargs.get('mixed_swap_other_reported_sdr')
-        self.__data_set_category = kwargs.get('data_set_category')
-        self.__bos_in_bps_label = kwargs.get('bos_in_bps_label')
-        self.__bos_in_bps = kwargs.get('bos_in_bps')
-        self.__fx_spot = kwargs.get('fx_spot')
-        self.__bid_low = kwargs.get('bid_low')
-        self.__fair_variance_volatility = kwargs.get('fair_variance_volatility')
-        self.__hedge_volatility = kwargs.get('hedge_volatility')
-        self.__tags = kwargs.get('tags')
-        self.__real_long_rates_contribution = kwargs.get('real_long_rates_contribution')
-        self.__client_exposure = kwargs.get('client_exposure')
-        self.__gs_sustain_sub_sector = kwargs.get('gs_sustain_sub_sector')
-        self.__domain = kwargs.get('domain')
-        self.__share_class_assets = kwargs.get('share_class_assets')
-        self.__annuity = kwargs.get('annuity')
-        self.__uid = kwargs.get('uid')
-        self.__es_policy_percentile = kwargs.get('es_policy_percentile')
-        self.__term = kwargs.get('term')
-        self.__tcm_cost_participation_rate100_pct = kwargs.get('tcm_cost_participation_rate100_pct')
-        self.__disclaimer = kwargs.get('disclaimer')
-        self.__measure_idx = kwargs.get('measure_idx')
-        self.__loan_fee = kwargs.get('loan_fee')
-        self.__stop_price_value = kwargs.get('stop_price_value')
-        self.__deployment_version = kwargs.get('deployment_version')
-        self.__twi_contribution = kwargs.get('twi_contribution')
-        self.__delisted = kwargs.get('delisted')
-        self.__regional_focus = kwargs.get('regional_focus')
-        self.__volume_primary = kwargs.get('volume_primary')
-        self.__leg_two_delivery_point = kwargs.get('leg_two_delivery_point')
-        self.__new_ideas_qtd = kwargs.get('new_ideas_qtd')
-        self.__adjusted_ask_price = kwargs.get('adjusted_ask_price')
-        self.__quarter = kwargs.get('quarter')
-        self.__factor_universe = kwargs.get('factor_universe')
-        self.__opening_price_unit = kwargs.get('opening_price_unit')
-        self.__arrival_rt = kwargs.get('arrival_rt')
-        self.__transaction_cost = kwargs.get('transaction_cost')
-        self.__servicing_cost_short_pnl = kwargs.get('servicing_cost_short_pnl')
-        self.__cluster_description = kwargs.get('cluster_description')
-        self.__position_amount = kwargs.get('position_amount')
-        self.__wind_speed = kwargs.get('wind_speed')
-        self.__event_start_date_time = kwargs.get('event_start_date_time')
-        self.__borrower_id = kwargs.get('borrower_id')
-        self.__data_product = kwargs.get('data_product')
-        self.__implied_volatility_by_delta_strike = kwargs.get('implied_volatility_by_delta_strike')
-        self.__bm_prime_id = kwargs.get('bm_prime_id')
-        self.__corporate_action = kwargs.get('corporate_action')
-        self.__conviction = kwargs.get('conviction')
-        self.__g_regional_score = kwargs.get('g_regional_score')
-        self.__factor_id = kwargs.get('factor_id')
-        self.__hard_to_borrow = kwargs.get('hard_to_borrow')
-        self.__wpk = kwargs.get('wpk')
-        self.__bid_change = kwargs.get('bid_change')
-        self.__expiration = kwargs.get('expiration')
-        self.__country_name = kwargs.get('country_name')
-        self.__starting_date = kwargs.get('starting_date')
-        self.__onboarded = kwargs.get('onboarded')
-        self.__liquidity_score = kwargs.get('liquidity_score')
-        self.__long_rates_contribution = kwargs.get('long_rates_contribution')
-        self.__importance = kwargs.get('importance')
-        self.__source_date_span = kwargs.get('source_date_span')
-        self.__ann_yield6_month = kwargs.get('ann_yield6_month')
-        self.__underlying_data_set_id = kwargs.get('underlying_data_set_id')
-        self.__close_unadjusted = kwargs.get('close_unadjusted')
-        self.__value_unit = kwargs.get('value_unit')
-        self.__quantity_unit = kwargs.get('quantity_unit')
-        self.__adjusted_low_price = kwargs.get('adjusted_low_price')
-        self.__net_exposure_classification = kwargs.get('net_exposure_classification')
-        self.__settlement_method = kwargs.get('settlement_method')
-        self.__long_conviction_large = kwargs.get('long_conviction_large')
-        self.__alpha = kwargs.get('alpha')
-        self.__company = kwargs.get('company')
-        self.__conviction_list = kwargs.get('conviction_list')
-        self.__settlement_frequency = kwargs.get('settlement_frequency')
-        self.__dist_avg7_day = kwargs.get('dist_avg7_day')
-        self.__in_risk_model = kwargs.get('in_risk_model')
-        self.__daily_net_shareholder_flows_percent = kwargs.get('daily_net_shareholder_flows_percent')
-        self.__servicing_cost_long_pnl = kwargs.get('servicing_cost_long_pnl')
-        self.__meeting_number = kwargs.get('meeting_number')
-        self.__exchange_id = kwargs.get('exchange_id')
-        self.__mid_gspread = kwargs.get('mid_gspread')
-        self.__tcm_cost_horizon20_day = kwargs.get('tcm_cost_horizon20_day')
-        self.__long_level = kwargs.get('long_level')
-        self.__realm = kwargs.get('realm')
-        self.__bid = kwargs.get('bid')
-        self.__is_aggressive = kwargs.get('is_aggressive')
-        self.__order_id = kwargs.get('order_id')
-        self.__repo_rate = kwargs.get('repo_rate')
-        self.__market_cap_usd = kwargs.get('market_cap_usd')
-        self.__high_price = kwargs.get('high_price')
-        self.__absolute_shares = kwargs.get('absolute_shares')
-        self.__action = kwargs.get('action')
-        self.__model = kwargs.get('model')
-        self.__id = kwargs.get('id')
-        self.__arrival_haircut_vwap_normalized = kwargs.get('arrival_haircut_vwap_normalized')
-        self.__price_component = kwargs.get('price_component')
-        self.__queue_clock_time_description = kwargs.get('queue_clock_time_description')
-        self.__delta_strike = kwargs.get('delta_strike')
-        self.__value_actual = kwargs.get('value_actual')
-        self.__upi = kwargs.get('upi')
-        self.__opened_date = kwargs.get('opened_date')
-        self.__bcid = kwargs.get('bcid')
-        self.__mkt_point = kwargs.get('mkt_point')
-        self.__collateral_currency = kwargs.get('collateral_currency')
-        self.__restriction_start_date = kwargs.get('restriction_start_date')
-        self.__original_country = kwargs.get('original_country')
-        self.__touch_liquidity_score = kwargs.get('touch_liquidity_score')
-        self.__field = kwargs.get('field')
-        self.__factor_category_id = kwargs.get('factor_category_id')
-        self.__expected_completion_date = kwargs.get('expected_completion_date')
-        self.__spread_option_vol = kwargs.get('spread_option_vol')
-        self.__inflation_swap_rate = kwargs.get('inflation_swap_rate')
-        self.__skew = kwargs.get('skew')
-        self.__status = kwargs.get('status')
-        self.__sustain_emerging_markets = kwargs.get('sustain_emerging_markets')
-        self.__event_date_time = kwargs.get('event_date_time')
-        self.__total_price = kwargs.get('total_price')
-        self.__embeded_option = kwargs.get('embeded_option')
-        self.__event_source = kwargs.get('event_source')
-        self.__on_behalf_of = kwargs.get('on_behalf_of')
-        self.__qis_perm_no = kwargs.get('qis_perm_no')
-        self.__shareclass_id = kwargs.get('shareclass_id')
-        self.__exception_status = kwargs.get('exception_status')
-        self.__short_exposure = kwargs.get('short_exposure')
-        self.__tcm_cost_participation_rate10_pct = kwargs.get('tcm_cost_participation_rate10_pct')
-        self.__event_time = kwargs.get('event_time')
-        self.__delivery_date = kwargs.get('delivery_date')
-        self.__arrival_haircut_vwap = kwargs.get('arrival_haircut_vwap')
-        self.__interest_rate = kwargs.get('interest_rate')
-        self.__execution_days = kwargs.get('execution_days')
-        self.__recall_due_date = kwargs.get('recall_due_date')
-        self.__side = kwargs.get('side')
-        self.__forward = kwargs.get('forward')
-        self.__borrow_fee = kwargs.get('borrow_fee')
-        self.__update_time = kwargs.get('update_time')
-        self.__loan_spread = kwargs.get('loan_spread')
-        self.__tcm_cost_horizon12_hour = kwargs.get('tcm_cost_horizon12_hour')
-        self.__dew_point = kwargs.get('dew_point')
-        self.__research_commission = kwargs.get('research_commission')
-        self.__leg_one_delivery_point = kwargs.get('leg_one_delivery_point')
-        self.__event_status = kwargs.get('event_status')
-        self.__sell_date = kwargs.get('sell_date')
+        self.collateral_value_variance = kwargs.get('collateral_value_variance')
+        self.year = kwargs.get('year')
+        self.investment_rate = kwargs.get('investment_rate')
+        self.bid_unadjusted = kwargs.get('bid_unadjusted')
+        self.available_inventory = kwargs.get('available_inventory')
+        self.est1_day_complete_pct = kwargs.get('est1_day_complete_pct')
+        self.created_by_id = kwargs.get('created_by_id')
+        self.vehicle_type = kwargs.get('vehicle_type')
+        self.daily_risk = kwargs.get('daily_risk')
+        self.energy = kwargs.get('energy')
+        self.market_data_type = kwargs.get('market_data_type')
+        self.real_short_rates_contribution = kwargs.get('real_short_rates_contribution')
+        self.sentiment_score = kwargs.get('sentiment_score')
+        self.leg_one_payment_type = kwargs.get('leg_one_payment_type')
+        self.value_previous = kwargs.get('value_previous')
+        self.avg_trade_rate = kwargs.get('avg_trade_rate')
+        self.short_level = kwargs.get('short_level')
+        self.version = kwargs.get('version')
+        self.exposure = kwargs.get('exposure')
+        self.market_data_asset = kwargs.get('market_data_asset')
+        self.unadjusted_high = kwargs.get('unadjusted_high')
+        self.source_importance = kwargs.get('source_importance')
+        self.relative_return_qtd = kwargs.get('relative_return_qtd')
+        self.minutes_to_trade100_pct = kwargs.get('minutes_to_trade100_pct')
+        self.market_model_id = kwargs.get('market_model_id')
+        self.realized_correlation = kwargs.get('realized_correlation')
+        self.collateral_value_actual = kwargs.get('collateral_value_actual')
+        self.upfront_payment = kwargs.get('upfront_payment')
+        self.atm_fwd_rate = kwargs.get('atm_fwd_rate')
+        self.tcm_cost_participation_rate75_pct = kwargs.get('tcm_cost_participation_rate75_pct')
+        self.close = kwargs.get('close')
+        self.a = kwargs.get('a')
+        self.b = kwargs.get('b')
+        self.c = kwargs.get('c')
+        self.equity_vega = kwargs.get('equity_vega')
+        self.leg_one_spread = kwargs.get('leg_one_spread')
+        self.lender_payment = kwargs.get('lender_payment')
+        self.five_day_move = kwargs.get('five_day_move')
+        self.borrower = kwargs.get('borrower')
+        self.value_format = kwargs.get('value_format')
+        self.performance_contribution = kwargs.get('performance_contribution')
+        self.target_notional = kwargs.get('target_notional')
+        self.fill_leg_id = kwargs.get('fill_leg_id')
+        self.rationale = kwargs.get('rationale')
+        self.mkt_class = kwargs.get('mkt_class')
+        self.last_updated_since = kwargs.get('last_updated_since')
+        self.equities_contribution = kwargs.get('equities_contribution')
+        self.congestion = kwargs.get('congestion')
+        self.event_category = kwargs.get('event_category')
+        self.short_rates_contribution = kwargs.get('short_rates_contribution')
+        self.unadjusted_open = kwargs.get('unadjusted_open')
+        self.criticality = kwargs.get('criticality')
+        self.mtm_price = kwargs.get('mtm_price')
+        self.bid_ask_spread = kwargs.get('bid_ask_spread')
+        self.leg_one_averaging_method = kwargs.get('leg_one_averaging_method')
+        self.option_type = kwargs.get('option_type')
+        self.portfolio_assets = kwargs.get('portfolio_assets')
+        self.termination_date = kwargs.get('termination_date')
+        self.tcm_cost_horizon3_hour = kwargs.get('tcm_cost_horizon3_hour')
+        self.credit_limit = kwargs.get('credit_limit')
+        self.number_of_positions = kwargs.get('number_of_positions')
+        self.open_unadjusted = kwargs.get('open_unadjusted')
+        self.ask_price = kwargs.get('ask_price')
+        self.event_id = kwargs.get('event_id')
+        self.sectors = kwargs.get('sectors')
+        self.std30_days_subsidized_yield = kwargs.get('std30_days_subsidized_yield')
+        self.annualized_tracking_error = kwargs.get('annualized_tracking_error')
+        self.additional_price_notation_type = kwargs.get('additional_price_notation_type')
+        self.vol_swap = kwargs.get('vol_swap')
+        self.real_fci = kwargs.get('real_fci')
+        self.annualized_risk = kwargs.get('annualized_risk')
+        self.block_trades_and_large_notional_off_facility_swaps = kwargs.get(
+            'block_trades_and_large_notional_off_facility_swaps')
+        self.leg_one_fixed_payment_currency = kwargs.get('leg_one_fixed_payment_currency')
+        self.gross_exposure = kwargs.get('gross_exposure')
+        self.volume_composite = kwargs.get('volume_composite')
+        self.volume = kwargs.get('volume')
+        self.adv = kwargs.get('adv')
+        self.external = kwargs.get('external')
+        self.short_conviction_medium = kwargs.get('short_conviction_medium')
+        self.exchange = kwargs.get('exchange')
+        self.trade_price = kwargs.get('trade_price')
+        self.cleared = kwargs.get('cleared')
+        self.es_policy_score = kwargs.get('es_policy_score')
+        self.prime_id_numeric = kwargs.get('prime_id_numeric')
+        self.leg_one_index = kwargs.get('leg_one_index')
+        self.bid_high = kwargs.get('bid_high')
+        self.fair_variance = kwargs.get('fair_variance')
+        self.hit_rate_wtd = kwargs.get('hit_rate_wtd')
+        self.bos_in_bps_description = kwargs.get('bos_in_bps_description')
+        self.low_price = kwargs.get('low_price')
+        self.realized_volatility = kwargs.get('realized_volatility')
+        self.adv22_day_pct = kwargs.get('adv22_day_pct')
+        self.clone_parent_id = kwargs.get('clone_parent_id')
+        self.price_range_in_ticks_label = kwargs.get('price_range_in_ticks_label')
+        self.ticker = kwargs.get('ticker')
+        self.tcm_cost_horizon1_day = kwargs.get('tcm_cost_horizon1_day')
+        self.file_location = kwargs.get('file_location')
+        self.leg_two_payment_type = kwargs.get('leg_two_payment_type')
+        self.horizon = kwargs.get('horizon')
+        self.source_value_forecast = kwargs.get('source_value_forecast')
+        self.short_conviction_large = kwargs.get('short_conviction_large')
+        self.counter_party_status = kwargs.get('counter_party_status')
+        self.composite22_day_adv = kwargs.get('composite22_day_adv')
+        self.dollar_excess_return = kwargs.get('dollar_excess_return')
+        self.trade_end_date = kwargs.get('trade_end_date')
+        self.percent_of_mediandv1m = kwargs.get('percent_of_mediandv1m')
+        self.lendables = kwargs.get('lendables')
+        self.asset_class = kwargs.get('asset_class')
+        self.sovereign_spread_contribution = kwargs.get('sovereign_spread_contribution')
+        self.bos_in_ticks_label = kwargs.get('bos_in_ticks_label')
+        self.ric = kwargs.get('ric')
+        self.position_source_id = kwargs.get('position_source_id')
+        self.rate_type = kwargs.get('rate_type')
+        self.gs_sustain_region = kwargs.get('gs_sustain_region')
+        self.deployment_id = kwargs.get('deployment_id')
+        self.loan_status = kwargs.get('loan_status')
+        self.short_weight = kwargs.get('short_weight')
+        self.loan_rebate = kwargs.get('loan_rebate')
+        self.period = kwargs.get('period')
+        self.index_create_source = kwargs.get('index_create_source')
+        self.fiscal_quarter = kwargs.get('fiscal_quarter')
+        self.real_twi_contribution = kwargs.get('real_twi_contribution')
+        self.market_impact = kwargs.get('market_impact')
+        self.event_type = kwargs.get('event_type')
+        self.mkt_asset = kwargs.get('mkt_asset')
+        self.asset_count_long = kwargs.get('asset_count_long')
+        self.spot = kwargs.get('spot')
+        self.loan_value = kwargs.get('loan_value')
+        self.swap_spread = kwargs.get('swap_spread')
+        self.trading_restriction = kwargs.get('trading_restriction')
+        self.price_spot_entry_unit = kwargs.get('price_spot_entry_unit')
+        self.total_return_price = kwargs.get('total_return_price')
+        self.dissemination_id = kwargs.get('dissemination_id')
+        self.leg_two_fixed_payment = kwargs.get('leg_two_fixed_payment')
+        self.hit_rate_ytd = kwargs.get('hit_rate_ytd')
+        self.valid = kwargs.get('valid')
+        self.indication_of_end_user_exception = kwargs.get('indication_of_end_user_exception')
+        self.es_score = kwargs.get('es_score')
+        self.price_range_in_ticks = kwargs.get('price_range_in_ticks')
+        self.expense_ratio_gross_bps = kwargs.get('expense_ratio_gross_bps')
+        self.pct_change = kwargs.get('pct_change')
+        self.number_of_rolls = kwargs.get('number_of_rolls')
+        self.agent_lender_fee = kwargs.get('agent_lender_fee')
+        self.bbid = kwargs.get('bbid')
+        self.option_strike_price = kwargs.get('option_strike_price')
+        self.effective_date = kwargs.get('effective_date')
+        self.arrival_mid_normalized = kwargs.get('arrival_mid_normalized')
+        self.underlying_asset2 = kwargs.get('underlying_asset2')
+        self.underlying_asset1 = kwargs.get('underlying_asset1')
+        self.capped = kwargs.get('capped')
+        self.rating = kwargs.get('rating')
+        self.option_currency = kwargs.get('option_currency')
+        self.legal_entity = kwargs.get('legal_entity')
+        self.performance_fee = kwargs.get('performance_fee')
+        self.underlying_asset_ids = kwargs.get('underlying_asset_ids')
+        self.queue_in_lots_label = kwargs.get('queue_in_lots_label')
+        self.adv10_day_pct = kwargs.get('adv10_day_pct')
+        self.long_conviction_medium = kwargs.get('long_conviction_medium')
+        self.annual_risk = kwargs.get('annual_risk')
+        self.eti = kwargs.get('eti')
+        self.daily_tracking_error = kwargs.get('daily_tracking_error')
+        self.leg_two_index = kwargs.get('leg_two_index')
+        self.market_buffer = kwargs.get('market_buffer')
+        self.market_cap = kwargs.get('market_cap')
+        self.oe_id = kwargs.get('oe_id')
+        self.cluster_region = kwargs.get('cluster_region')
+        self.bbid_equivalent = kwargs.get('bbid_equivalent')
+        self.valoren = kwargs.get('valoren')
+        self.basis = kwargs.get('basis')
+        self.ext_mkt_class = kwargs.get('ext_mkt_class')
+        self.price_currency = kwargs.get('price_currency')
+        self.hedge_id = kwargs.get('hedge_id')
+        self.tcm_cost_horizon8_day = kwargs.get('tcm_cost_horizon8_day')
+        self.supra_strategy = kwargs.get('supra_strategy')
+        self.day_count_convention = kwargs.get('day_count_convention')
+        self.rounded_notional_amount1 = kwargs.get('rounded_notional_amount1')
+        self.adv5_day_pct = kwargs.get('adv5_day_pct')
+        self.rounded_notional_amount2 = kwargs.get('rounded_notional_amount2')
+        self.leverage = kwargs.get('leverage')
+        self.option_family = kwargs.get('option_family')
+        self.price_spot_stop_loss_value = kwargs.get('price_spot_stop_loss_value')
+        self.kpi_id = kwargs.get('kpi_id')
+        self.relative_return_wtd = kwargs.get('relative_return_wtd')
+        self.borrow_cost = kwargs.get('borrow_cost')
+        self.average_implied_volatility = kwargs.get('average_implied_volatility')
+        self.fair_value = kwargs.get('fair_value')
+        self.adjusted_high_price = kwargs.get('adjusted_high_price')
+        self.open_time = kwargs.get('open_time')
+        self.ext_mkt_point1 = kwargs.get('ext_mkt_point1')
+        self.direction = kwargs.get('direction')
+        self.ext_mkt_point2 = kwargs.get('ext_mkt_point2')
+        self.value_forecast = kwargs.get('value_forecast')
+        self.execution_venue = kwargs.get('execution_venue')
+        self.position_source_type = kwargs.get('position_source_type')
+        self.adjusted_close_price = kwargs.get('adjusted_close_price')
+        self.lms_id = kwargs.get('lms_id')
+        self.rebate_rate = kwargs.get('rebate_rate')
+        self.participation_rate = kwargs.get('participation_rate')
+        self.obfr = kwargs.get('obfr')
+        self.option_lock_period = kwargs.get('option_lock_period')
+        self.es_momentum_percentile = kwargs.get('es_momentum_percentile')
+        self.price_notation = kwargs.get('price_notation')
+        self.strategy = kwargs.get('strategy')
+        self.position_type = kwargs.get('position_type')
+        self.lender_income = kwargs.get('lender_income')
+        self.sub_asset_class = kwargs.get('sub_asset_class')
+        self.short_interest = kwargs.get('short_interest')
+        self.reference_period = kwargs.get('reference_period')
+        self.adjusted_volume = kwargs.get('adjusted_volume')
+        self.owner_id = kwargs.get('owner_id')
+        self.composite10_day_adv = kwargs.get('composite10_day_adv')
+        self.bpe_quality_stars = kwargs.get('bpe_quality_stars')
+        self.idea_activity_type = kwargs.get('idea_activity_type')
+        self.idea_source = kwargs.get('idea_source')
+        self.unadjusted_ask = kwargs.get('unadjusted_ask')
+        self.trading_pnl = kwargs.get('trading_pnl')
+        self.collateral_value_required = kwargs.get('collateral_value_required')
+        self.given_plus_paid = kwargs.get('given_plus_paid')
+        self.close_location = kwargs.get('close_location')
+        self.short_conviction_small = kwargs.get('short_conviction_small')
+        self.forecast = kwargs.get('forecast')
+        self.pnl = kwargs.get('pnl')
+        self.upfront_payment_currency = kwargs.get('upfront_payment_currency')
+        self.date_index = kwargs.get('date_index')
+        self.tcm_cost_horizon4_day = kwargs.get('tcm_cost_horizon4_day')
+        self.asset_classifications_is_primary = kwargs.get('asset_classifications_is_primary')
+        self.styles = kwargs.get('styles')
+        self.short_name = kwargs.get('short_name')
+        self.dwi_contribution = kwargs.get('dwi_contribution')
+        self.reset_frequency1 = kwargs.get('reset_frequency1')
+        self.reset_frequency2 = kwargs.get('reset_frequency2')
+        self.average_fill_price = kwargs.get('average_fill_price')
+        self.price_notation_type2 = kwargs.get('price_notation_type2')
+        self.price_notation_type3 = kwargs.get('price_notation_type3')
+        self.bid_gspread = kwargs.get('bid_gspread')
+        self.open_price = kwargs.get('open_price')
+        self.depth_spread_score = kwargs.get('depth_spread_score')
+        self.sub_account = kwargs.get('sub_account')
+        self.fair_volatility = kwargs.get('fair_volatility')
+        self.portfolio_type = kwargs.get('portfolio_type')
+        self.vendor = kwargs.get('vendor')
+        self.currency = kwargs.get('currency')
+        self.cluster_class = kwargs.get('cluster_class')
+        self.queueing_time = kwargs.get('queueing_time')
+        self.ann_return5_year = kwargs.get('ann_return5_year')
+        self.bid_size = kwargs.get('bid_size')
+        self.arrival_mid = kwargs.get('arrival_mid')
+        self.asset_parameters_exchange_currency = kwargs.get('asset_parameters_exchange_currency')
+        self.unexplained = kwargs.get('unexplained')
+        self.metric = kwargs.get('metric')
+        self.ask = kwargs.get('ask')
+        self.close_price = kwargs.get('close_price')
+        self.end_time = kwargs.get('end_time')
+        self.execution_timestamp = kwargs.get('execution_timestamp')
+        self.source = kwargs.get('source')
+        self.expense_ratio_net_bps = kwargs.get('expense_ratio_net_bps')
+        self.data_set_sub_category = kwargs.get('data_set_sub_category')
+        self.day_count_convention2 = kwargs.get('day_count_convention2')
+        self.quantity_bucket = kwargs.get('quantity_bucket')
+        self.factor_two = kwargs.get('factor_two')
+        self.oe_name = kwargs.get('oe_name')
+        self.given = kwargs.get('given')
+        self.delisting_date = kwargs.get('delisting_date')
+        self.price_spot_target_value = kwargs.get('price_spot_target_value')
+        self.weight = kwargs.get('weight')
+        self.market_data_point = kwargs.get('market_data_point')
+        self.absolute_weight = kwargs.get('absolute_weight')
+        self.trade_time = kwargs.get('trade_time')
+        self.measure = kwargs.get('measure')
+        self.hedge_annualized_volatility = kwargs.get('hedge_annualized_volatility')
+        self.benchmark_currency = kwargs.get('benchmark_currency')
+        self.futures_contract = kwargs.get('futures_contract')
+        self.name = kwargs.get('name')
+        self.aum = kwargs.get('aum')
+        self.folder_name = kwargs.get('folder_name')
+        self.option_expiration_date = kwargs.get('option_expiration_date')
+        self.swaption_atm_fwd_rate = kwargs.get('swaption_atm_fwd_rate')
+        self.live_date = kwargs.get('live_date')
+        self.ask_high = kwargs.get('ask_high')
+        self.corporate_action_type = kwargs.get('corporate_action_type')
+        self.prime_id = kwargs.get('prime_id')
+        self.region_name = kwargs.get('region_name')
+        self.description = kwargs.get('description')
+        self.asset_classifications_is_country_primary = kwargs.get('asset_classifications_is_country_primary')
+        self.value_revised = kwargs.get('value_revised')
+        self.adjusted_trade_price = kwargs.get('adjusted_trade_price')
+        self.is_adr = kwargs.get('is_adr')
+        self.factor = kwargs.get('factor')
+        self.days_on_loan = kwargs.get('days_on_loan')
+        self.long_conviction_small = kwargs.get('long_conviction_small')
+        self.service_id = kwargs.get('service_id')
+        self.gsfeer = kwargs.get('gsfeer')
+        self.wam = kwargs.get('wam')
+        self.wal = kwargs.get('wal')
+        self.backtest_id = kwargs.get('backtest_id')
+        self.leg_two_index_location = kwargs.get('leg_two_index_location')
+        self.g_score = kwargs.get('g_score')
+        self.corporate_spread_contribution = kwargs.get('corporate_spread_contribution')
+        self.market_value = kwargs.get('market_value')
+        self.notional_currency1 = kwargs.get('notional_currency1')
+        self.notional_currency2 = kwargs.get('notional_currency2')
+        self.multiple_score = kwargs.get('multiple_score')
+        self.beta_adjusted_exposure = kwargs.get('beta_adjusted_exposure')
+        self.paid = kwargs.get('paid')
+        self.short = kwargs.get('short')
+        self.bos_in_ticks_description = kwargs.get('bos_in_ticks_description')
+        self.time = kwargs.get('time')
+        self.implied_correlation = kwargs.get('implied_correlation')
+        self.normalized_performance = kwargs.get('normalized_performance')
+        self.taxonomy = kwargs.get('taxonomy')
+        self.swaption_vol = kwargs.get('swaption_vol')
+        self.source_origin = kwargs.get('source_origin')
+        self.measures = kwargs.get('measures')
+        self.total_quantity = kwargs.get('total_quantity')
+        self.internal_user = kwargs.get('internal_user')
+        self.created_time = kwargs.get('created_time')
+        self.price_unit = kwargs.get('price_unit')
+        self.redemption_option = kwargs.get('redemption_option')
+        self.notional_unit2 = kwargs.get('notional_unit2')
+        self.unadjusted_low = kwargs.get('unadjusted_low')
+        self.notional_unit1 = kwargs.get('notional_unit1')
+        self.sedol = kwargs.get('sedol')
+        self.rounding_cost_pnl = kwargs.get('rounding_cost_pnl')
+        self.sustain_global = kwargs.get('sustain_global')
+        self.portfolio_id = kwargs.get('portfolio_id')
+        self.ending_date = kwargs.get('ending_date')
+        self.cap_floor_atm_fwd_rate = kwargs.get('cap_floor_atm_fwd_rate')
+        self.es_percentile = kwargs.get('es_percentile')
+        self.ann_return3_year = kwargs.get('ann_return3_year')
+        self.rcic = kwargs.get('rcic')
+        self.hit_rate_qtd = kwargs.get('hit_rate_qtd')
+        self.fci = kwargs.get('fci')
+        self.recall_quantity = kwargs.get('recall_quantity')
+        self.premium = kwargs.get('premium')
+        self.low = kwargs.get('low')
+        self.cross_group = kwargs.get('cross_group')
+        self.report_run_time = kwargs.get('report_run_time')
+        self.five_day_price_change_bps = kwargs.get('five_day_price_change_bps')
+        self.holdings = kwargs.get('holdings')
+        self.price_method = kwargs.get('price_method')
+        self.mid_price = kwargs.get('mid_price')
+        self.tcm_cost_horizon2_day = kwargs.get('tcm_cost_horizon2_day')
+        self.pending_loan_count = kwargs.get('pending_loan_count')
+        self.price_spot_stop_loss_unit = kwargs.get('price_spot_stop_loss_unit')
+        self.queue_in_lots = kwargs.get('queue_in_lots')
+        self.price_range_in_ticks_description = kwargs.get('price_range_in_ticks_description')
+        self.tender_offer_expiration_date = kwargs.get('tender_offer_expiration_date')
+        self.primary_country_ric = kwargs.get('primary_country_ric')
+        self.leg_one_fixed_payment = kwargs.get('leg_one_fixed_payment')
+        self.option_expiration_frequency = kwargs.get('option_expiration_frequency')
+        self.tcm_cost_participation_rate5_pct = kwargs.get('tcm_cost_participation_rate5_pct')
+        self.is_active = kwargs.get('is_active')
+        self.growth_score = kwargs.get('growth_score')
+        self.buffer_threshold = kwargs.get('buffer_threshold')
+        self.price_forming_continuation_data = kwargs.get('price_forming_continuation_data')
+        self.adjusted_short_interest = kwargs.get('adjusted_short_interest')
+        self.estimated_spread = kwargs.get('estimated_spread')
+        self.ann_return10_year = kwargs.get('ann_return10_year')
+        self.created = kwargs.get('created')
+        self.tcm_cost = kwargs.get('tcm_cost')
+        self.sustain_japan = kwargs.get('sustain_japan')
+        self.hedge_tracking_error = kwargs.get('hedge_tracking_error')
+        self.market_cap_category = kwargs.get('market_cap_category')
+        self.historical_volume = kwargs.get('historical_volume')
+        self.strike_price = kwargs.get('strike_price')
+        self.event_start_date = kwargs.get('event_start_date')
+        self.equity_gamma = kwargs.get('equity_gamma')
+        self.gross_income = kwargs.get('gross_income')
+        self.adjusted_open_price = kwargs.get('adjusted_open_price')
+        self.asset_count_in_model = kwargs.get('asset_count_in_model')
+        self.total_returns = kwargs.get('total_returns')
+        self.lender = kwargs.get('lender')
+        self.ann_return1_year = kwargs.get('ann_return1_year')
+        self.min_temperature = kwargs.get('min_temperature')
+        self.eff_yield7_day = kwargs.get('eff_yield7_day')
+        self.meeting_date = kwargs.get('meeting_date')
+        self.close_time = kwargs.get('close_time')
+        self.amount = kwargs.get('amount')
+        self.lending_fund_acct = kwargs.get('lending_fund_acct')
+        self.rebate = kwargs.get('rebate')
+        self.flagship = kwargs.get('flagship')
+        self.additional_price_notation = kwargs.get('additional_price_notation')
+        self.implied_volatility = kwargs.get('implied_volatility')
+        self.spread = kwargs.get('spread')
+        self.equity_delta = kwargs.get('equity_delta')
+        self.gross_weight = kwargs.get('gross_weight')
+        self.listed = kwargs.get('listed')
+        self.earnings_record_type = kwargs.get('earnings_record_type')
+        self.g10_currency = kwargs.get('g10_currency')
+        self.shock_style = kwargs.get('shock_style')
+        self.relative_period = kwargs.get('relative_period')
+        self.methodology = kwargs.get('methodology')
+        self.queue_clock_time_label = kwargs.get('queue_clock_time_label')
+        self.market_pnl = kwargs.get('market_pnl')
+        self.sustain_asia_ex_japan = kwargs.get('sustain_asia_ex_japan')
+        self.swap_rate = kwargs.get('swap_rate')
+        self.mixed_swap_other_reported_sdr = kwargs.get('mixed_swap_other_reported_sdr')
+        self.data_set_category = kwargs.get('data_set_category')
+        self.bos_in_bps_label = kwargs.get('bos_in_bps_label')
+        self.bos_in_bps = kwargs.get('bos_in_bps')
+        self.fx_spot = kwargs.get('fx_spot')
+        self.bid_low = kwargs.get('bid_low')
+        self.fair_variance_volatility = kwargs.get('fair_variance_volatility')
+        self.hedge_volatility = kwargs.get('hedge_volatility')
+        self.tags = kwargs.get('tags')
+        self.real_long_rates_contribution = kwargs.get('real_long_rates_contribution')
+        self.client_exposure = kwargs.get('client_exposure')
+        self.gs_sustain_sub_sector = kwargs.get('gs_sustain_sub_sector')
+        self.domain = kwargs.get('domain')
+        self.share_class_assets = kwargs.get('share_class_assets')
+        self.annuity = kwargs.get('annuity')
+        self.uid = kwargs.get('uid')
+        self.es_policy_percentile = kwargs.get('es_policy_percentile')
+        self.term = kwargs.get('term')
+        self.tcm_cost_participation_rate100_pct = kwargs.get('tcm_cost_participation_rate100_pct')
+        self.disclaimer = kwargs.get('disclaimer')
+        self.measure_idx = kwargs.get('measure_idx')
+        self.loan_fee = kwargs.get('loan_fee')
+        self.deployment_version = kwargs.get('deployment_version')
+        self.twi_contribution = kwargs.get('twi_contribution')
+        self.delisted = kwargs.get('delisted')
+        self.regional_focus = kwargs.get('regional_focus')
+        self.volume_primary = kwargs.get('volume_primary')
+        self.leg_two_delivery_point = kwargs.get('leg_two_delivery_point')
+        self.new_ideas_qtd = kwargs.get('new_ideas_qtd')
+        self.adjusted_ask_price = kwargs.get('adjusted_ask_price')
+        self.quarter = kwargs.get('quarter')
+        self.factor_universe = kwargs.get('factor_universe')
+        self.arrival_rt = kwargs.get('arrival_rt')
+        self.transaction_cost = kwargs.get('transaction_cost')
+        self.servicing_cost_short_pnl = kwargs.get('servicing_cost_short_pnl')
+        self.cluster_description = kwargs.get('cluster_description')
+        self.position_amount = kwargs.get('position_amount')
+        self.wind_speed = kwargs.get('wind_speed')
+        self.event_start_date_time = kwargs.get('event_start_date_time')
+        self.borrower_id = kwargs.get('borrower_id')
+        self.data_product = kwargs.get('data_product')
+        self.implied_volatility_by_delta_strike = kwargs.get('implied_volatility_by_delta_strike')
+        self.bm_prime_id = kwargs.get('bm_prime_id')
+        self.corporate_action = kwargs.get('corporate_action')
+        self.conviction = kwargs.get('conviction')
+        self.g_regional_score = kwargs.get('g_regional_score')
+        self.factor_id = kwargs.get('factor_id')
+        self.hard_to_borrow = kwargs.get('hard_to_borrow')
+        self.wpk = kwargs.get('wpk')
+        self.bid_change = kwargs.get('bid_change')
+        self.expiration = kwargs.get('expiration')
+        self.country_name = kwargs.get('country_name')
+        self.starting_date = kwargs.get('starting_date')
+        self.onboarded = kwargs.get('onboarded')
+        self.liquidity_score = kwargs.get('liquidity_score')
+        self.long_rates_contribution = kwargs.get('long_rates_contribution')
+        self.importance = kwargs.get('importance')
+        self.source_date_span = kwargs.get('source_date_span')
+        self.ann_yield6_month = kwargs.get('ann_yield6_month')
+        self.underlying_data_set_id = kwargs.get('underlying_data_set_id')
+        self.close_unadjusted = kwargs.get('close_unadjusted')
+        self.value_unit = kwargs.get('value_unit')
+        self.quantity_unit = kwargs.get('quantity_unit')
+        self.adjusted_low_price = kwargs.get('adjusted_low_price')
+        self.net_exposure_classification = kwargs.get('net_exposure_classification')
+        self.settlement_method = kwargs.get('settlement_method')
+        self.long_conviction_large = kwargs.get('long_conviction_large')
+        self.alpha = kwargs.get('alpha')
+        self.company = kwargs.get('company')
+        self.conviction_list = kwargs.get('conviction_list')
+        self.settlement_frequency = kwargs.get('settlement_frequency')
+        self.dist_avg7_day = kwargs.get('dist_avg7_day')
+        self.in_risk_model = kwargs.get('in_risk_model')
+        self.daily_net_shareholder_flows_percent = kwargs.get('daily_net_shareholder_flows_percent')
+        self.servicing_cost_long_pnl = kwargs.get('servicing_cost_long_pnl')
+        self.meeting_number = kwargs.get('meeting_number')
+        self.exchange_id = kwargs.get('exchange_id')
+        self.mid_gspread = kwargs.get('mid_gspread')
+        self.tcm_cost_horizon20_day = kwargs.get('tcm_cost_horizon20_day')
+        self.long_level = kwargs.get('long_level')
+        self.realm = kwargs.get('realm')
+        self.bid = kwargs.get('bid')
+        self.is_aggressive = kwargs.get('is_aggressive')
+        self.order_id = kwargs.get('order_id')
+        self.repo_rate = kwargs.get('repo_rate')
+        self.market_cap_usd = kwargs.get('market_cap_usd')
+        self.high_price = kwargs.get('high_price')
+        self.absolute_shares = kwargs.get('absolute_shares')
+        self.action = kwargs.get('action')
+        self.model = kwargs.get('model')
+        self.__id = kwargs.get('id_')
+        self.arrival_haircut_vwap_normalized = kwargs.get('arrival_haircut_vwap_normalized')
+        self.price_component = kwargs.get('price_component')
+        self.queue_clock_time_description = kwargs.get('queue_clock_time_description')
+        self.delta_strike = kwargs.get('delta_strike')
+        self.value_actual = kwargs.get('value_actual')
+        self.upi = kwargs.get('upi')
+        self.bcid = kwargs.get('bcid')
+        self.mkt_point = kwargs.get('mkt_point')
+        self.collateral_currency = kwargs.get('collateral_currency')
+        self.restriction_start_date = kwargs.get('restriction_start_date')
+        self.original_country = kwargs.get('original_country')
+        self.touch_liquidity_score = kwargs.get('touch_liquidity_score')
+        self.field = kwargs.get('field')
+        self.factor_category_id = kwargs.get('factor_category_id')
+        self.expected_completion_date = kwargs.get('expected_completion_date')
+        self.spread_option_vol = kwargs.get('spread_option_vol')
+        self.inflation_swap_rate = kwargs.get('inflation_swap_rate')
+        self.skew = kwargs.get('skew')
+        self.status = kwargs.get('status')
+        self.sustain_emerging_markets = kwargs.get('sustain_emerging_markets')
+        self.event_date_time = kwargs.get('event_date_time')
+        self.total_price = kwargs.get('total_price')
+        self.embeded_option = kwargs.get('embeded_option')
+        self.event_source = kwargs.get('event_source')
+        self.on_behalf_of = kwargs.get('on_behalf_of')
+        self.qis_perm_no = kwargs.get('qis_perm_no')
+        self.shareclass_id = kwargs.get('shareclass_id')
+        self.exception_status = kwargs.get('exception_status')
+        self.short_exposure = kwargs.get('short_exposure')
+        self.tcm_cost_participation_rate10_pct = kwargs.get('tcm_cost_participation_rate10_pct')
+        self.event_time = kwargs.get('event_time')
+        self.delivery_date = kwargs.get('delivery_date')
+        self.arrival_haircut_vwap = kwargs.get('arrival_haircut_vwap')
+        self.interest_rate = kwargs.get('interest_rate')
+        self.execution_days = kwargs.get('execution_days')
+        self.recall_due_date = kwargs.get('recall_due_date')
+        self.side = kwargs.get('side')
+        self.forward = kwargs.get('forward')
+        self.borrow_fee = kwargs.get('borrow_fee')
+        self.update_time = kwargs.get('update_time')
+        self.loan_spread = kwargs.get('loan_spread')
+        self.tcm_cost_horizon12_hour = kwargs.get('tcm_cost_horizon12_hour')
+        self.dew_point = kwargs.get('dew_point')
+        self.research_commission = kwargs.get('research_commission')
+        self.leg_one_delivery_point = kwargs.get('leg_one_delivery_point')
+        self.event_status = kwargs.get('event_status')
+        self.sell_date = kwargs.get('sell_date')
         self.__return = kwargs.get('return_')
-        self.__max_temperature = kwargs.get('max_temperature')
-        self.__acquirer_shareholder_meeting_date = kwargs.get('acquirer_shareholder_meeting_date')
-        self.__notional_amount = kwargs.get('notional_amount')
-        self.__arrival_rt_normalized = kwargs.get('arrival_rt_normalized')
-        self.__report_type = kwargs.get('report_type')
-        self.__source_url = kwargs.get('source_url')
-        self.__estimated_return = kwargs.get('estimated_return')
-        self.__high = kwargs.get('high')
-        self.__source_last_update = kwargs.get('source_last_update')
-        self.__event_name = kwargs.get('event_name')
-        self.__indication_of_other_price_affecting_term = kwargs.get('indication_of_other_price_affecting_term')
-        self.__unadjusted_bid = kwargs.get('unadjusted_bid')
-        self.__backtest_type = kwargs.get('backtest_type')
-        self.__gsdeer = kwargs.get('gsdeer')
-        self.__g_regional_percentile = kwargs.get('g_regional_percentile')
-        self.__prev_close_ask = kwargs.get('prev_close_ask')
-        self.__level = kwargs.get('level')
-        self.__mnav = kwargs.get('mnav')
-        self.__es_momentum_score = kwargs.get('es_momentum_score')
-        self.__curr_yield7_day = kwargs.get('curr_yield7_day')
-        self.__pressure = kwargs.get('pressure')
-        self.__short_description = kwargs.get('short_description')
-        self.__feed = kwargs.get('feed')
-        self.__net_weight = kwargs.get('net_weight')
-        self.__portfolio_managers = kwargs.get('portfolio_managers')
-        self.__asset_parameters_commodity_sector = kwargs.get('asset_parameters_commodity_sector')
-        self.__bos_in_ticks = kwargs.get('bos_in_ticks')
-        self.__price_notation2 = kwargs.get('price_notation2')
-        self.__market_buffer_threshold = kwargs.get('market_buffer_threshold')
-        self.__price_notation3 = kwargs.get('price_notation3')
-        self.__cap_floor_vol = kwargs.get('cap_floor_vol')
-        self.__notional = kwargs.get('notional')
-        self.__es_disclosure_percentage = kwargs.get('es_disclosure_percentage')
-        self.__investment_income = kwargs.get('investment_income')
-        self.__client_short_name = kwargs.get('client_short_name')
-        self.__bid_plus_ask = kwargs.get('bid_plus_ask')
-        self.__total = kwargs.get('total')
-        self.__asset_id = kwargs.get('asset_id')
-        self.__mkt_type = kwargs.get('mkt_type')
-        self.__last_updated_time = kwargs.get('last_updated_time')
-        self.__pricing_location = kwargs.get('pricing_location')
-        self.__yield30_day = kwargs.get('yield30_day')
-        self.__beta = kwargs.get('beta')
-        self.__upfront_payment_date = kwargs.get('upfront_payment_date')
-        self.__long_exposure = kwargs.get('long_exposure')
-        self.__tcm_cost_participation_rate20_pct = kwargs.get('tcm_cost_participation_rate20_pct')
-        self.__multi_asset_class_swap = kwargs.get('multi_asset_class_swap')
-        self.__idea_status = kwargs.get('idea_status')
-        self.__contract_subtype = kwargs.get('contract_subtype')
-        self.__fx_forecast = kwargs.get('fx_forecast')
-        self.__stop_price_unit = kwargs.get('stop_price_unit')
-        self.__fixing_time_label = kwargs.get('fixing_time_label')
-        self.__implementation_id = kwargs.get('implementation_id')
-        self.__fill_id = kwargs.get('fill_id')
-        self.__excess_returns = kwargs.get('excess_returns')
-        self.__dollar_return = kwargs.get('dollar_return')
-        self.__es_numeric_score = kwargs.get('es_numeric_score')
-        self.__in_benchmark = kwargs.get('in_benchmark')
-        self.__action_sdr = kwargs.get('action_sdr')
-        self.__restriction_end_date = kwargs.get('restriction_end_date')
-        self.__queue_in_lots_description = kwargs.get('queue_in_lots_description')
-        self.__objective = kwargs.get('objective')
-        self.__nav_price = kwargs.get('nav_price')
-        self.__precipitation = kwargs.get('precipitation')
-        self.__hedge_notional = kwargs.get('hedge_notional')
-        self.__ask_low = kwargs.get('ask_low')
-        self.__beta_adjusted_net_exposure = kwargs.get('beta_adjusted_net_exposure')
-        self.__avg_monthly_yield = kwargs.get('avg_monthly_yield')
-        self.__strike_percentage = kwargs.get('strike_percentage')
-        self.__excess_return_price = kwargs.get('excess_return_price')
-        self.__prev_close_bid = kwargs.get('prev_close_bid')
-        self.__fx_pnl = kwargs.get('fx_pnl')
-        self.__tcm_cost_horizon16_day = kwargs.get('tcm_cost_horizon16_day')
-        self.__unadjusted_close = kwargs.get('unadjusted_close')
-        self.__loan_date = kwargs.get('loan_date')
-        self.__lending_sec_id = kwargs.get('lending_sec_id')
-        self.__equity_theta = kwargs.get('equity_theta')
-        self.__start_date = kwargs.get('start_date')
-        self.__mixed_swap = kwargs.get('mixed_swap')
-        self.__snowfall = kwargs.get('snowfall')
-        self.__mic = kwargs.get('mic')
-        self.__mid = kwargs.get('mid')
-        self.__relative_return_ytd = kwargs.get('relative_return_ytd')
-        self.__long = kwargs.get('long')
-        self.__long_weight = kwargs.get('long_weight')
-        self.__calculation_time = kwargs.get('calculation_time')
-        self.__average_realized_variance = kwargs.get('average_realized_variance')
-        self.__financial_returns_score = kwargs.get('financial_returns_score')
-        self.__net_change = kwargs.get('net_change')
-        self.__non_symbol_dimensions = kwargs.get('non_symbol_dimensions')
-        self.__leg_two_fixed_payment_currency = kwargs.get('leg_two_fixed_payment_currency')
-        self.__swap_type = kwargs.get('swap_type')
-        self.__sell_settle_date = kwargs.get('sell_settle_date')
-        self.__new_ideas_ytd = kwargs.get('new_ideas_ytd')
-        self.__management_fee = kwargs.get('management_fee')
-        self.__open = kwargs.get('open')
-        self.__source_id = kwargs.get('source_id')
-        self.__cusip = kwargs.get('cusip')
-        self.__idea_activity_time = kwargs.get('idea_activity_time')
-        self.__touch_spread_score = kwargs.get('touch_spread_score')
-        self.__spread_option_atm_fwd_rate = kwargs.get('spread_option_atm_fwd_rate')
-        self.__net_exposure = kwargs.get('net_exposure')
-        self.__frequency = kwargs.get('frequency')
-        self.__activity_id = kwargs.get('activity_id')
-        self.__estimated_impact = kwargs.get('estimated_impact')
-        self.__loan_spread_bucket = kwargs.get('loan_spread_bucket')
-        self.__event_description = kwargs.get('event_description')
-        self.__strike_reference = kwargs.get('strike_reference')
-        self.__details = kwargs.get('details')
-        self.__asset_count = kwargs.get('asset_count')
-        self.__sector = kwargs.get('sector')
-        self.__absolute_value = kwargs.get('absolute_value')
-        self.__closing_report = kwargs.get('closing_report')
-        self.__mctr = kwargs.get('mctr')
-        self.__historical_close = kwargs.get('historical_close')
-        self.__asset_count_priced = kwargs.get('asset_count_priced')
-        self.__idea_id = kwargs.get('idea_id')
-        self.__comment_status = kwargs.get('comment_status')
-        self.__marginal_cost = kwargs.get('marginal_cost')
-        self.__settlement_currency = kwargs.get('settlement_currency')
-        self.__indication_of_collateralization = kwargs.get('indication_of_collateralization')
-        self.__liq_wkly = kwargs.get('liq_wkly')
-        self.__lending_partner_fee = kwargs.get('lending_partner_fee')
-        self.__region = kwargs.get('region')
-        self.__option_premium = kwargs.get('option_premium')
-        self.__owner_name = kwargs.get('owner_name')
-        self.__last_updated_by_id = kwargs.get('last_updated_by_id')
-        self.__z_score = kwargs.get('z_score')
-        self.__target_shareholder_meeting_date = kwargs.get('target_shareholder_meeting_date')
-        self.__collateral_market_value = kwargs.get('collateral_market_value')
-        self.__event_start_time = kwargs.get('event_start_time')
-        self.__turnover = kwargs.get('turnover')
-        self.__compliance_effective_time = kwargs.get('compliance_effective_time')
-        self.__expiration_date = kwargs.get('expiration_date')
-        self.__leg_one_type = kwargs.get('leg_one_type')
-        self.__leg_two_spread = kwargs.get('leg_two_spread')
-        self.__coverage = kwargs.get('coverage')
-        self.__g_percentile = kwargs.get('g_percentile')
-        self.__lending_fund_nav = kwargs.get('lending_fund_nav')
-        self.__source_original_category = kwargs.get('source_original_category')
-        self.__composite5_day_adv = kwargs.get('composite5_day_adv')
-        self.__latest_execution_time = kwargs.get('latest_execution_time')
-        self.__new_ideas_wtd = kwargs.get('new_ideas_wtd')
-        self.__asset_class_sdr = kwargs.get('asset_class_sdr')
-        self.__comment = kwargs.get('comment')
-        self.__source_symbol = kwargs.get('source_symbol')
-        self.__scenario_id = kwargs.get('scenario_id')
-        self.__ask_unadjusted = kwargs.get('ask_unadjusted')
-        self.__queue_clock_time = kwargs.get('queue_clock_time')
-        self.__ask_change = kwargs.get('ask_change')
-        self.__tcm_cost_participation_rate50_pct = kwargs.get('tcm_cost_participation_rate50_pct')
-        self.__end_date = kwargs.get('end_date')
-        self.__contract_type = kwargs.get('contract_type')
-        self.__type = kwargs.get('type')
-        self.__cumulative_pnl = kwargs.get('cumulative_pnl')
-        self.__loss = kwargs.get('loss')
-        self.__unadjusted_volume = kwargs.get('unadjusted_volume')
-        self.__midcurve_vol = kwargs.get('midcurve_vol')
-        self.__trading_cost_pnl = kwargs.get('trading_cost_pnl')
-        self.__price_notation_type = kwargs.get('price_notation_type')
-        self.__payment_quantity = kwargs.get('payment_quantity')
-        self.__position_idx = kwargs.get('position_idx')
-        self.__implied_volatility_by_relative_strike = kwargs.get('implied_volatility_by_relative_strike')
-        self.__percent_adv = kwargs.get('percent_adv')
-        self.__contract = kwargs.get('contract')
-        self.__payment_frequency1 = kwargs.get('payment_frequency1')
-        self.__payment_frequency2 = kwargs.get('payment_frequency2')
-        self.__bespoke = kwargs.get('bespoke')
-        self.__quality_stars = kwargs.get('quality_stars')
-        self.__source_ticker = kwargs.get('source_ticker')
-        self.__lending_fund = kwargs.get('lending_fund')
-        self.__tcm_cost_participation_rate15_pct = kwargs.get('tcm_cost_participation_rate15_pct')
-        self.__sensitivity = kwargs.get('sensitivity')
-        self.__fiscal_year = kwargs.get('fiscal_year')
-        self.__recall_date = kwargs.get('recall_date')
-        self.__internal = kwargs.get('internal')
-        self.__adjusted_bid_price = kwargs.get('adjusted_bid_price')
-        self.__var_swap = kwargs.get('var_swap')
-        self.__low_unadjusted = kwargs.get('low_unadjusted')
-        self.__original_dissemination_id = kwargs.get('original_dissemination_id')
-        self.__macs_secondary_asset_class = kwargs.get('macs_secondary_asset_class')
-        self.__leg_two_averaging_method = kwargs.get('leg_two_averaging_method')
-        self.__sectors_raw = kwargs.get('sectors_raw')
-        self.__shareclass_price = kwargs.get('shareclass_price')
-        self.__integrated_score = kwargs.get('integrated_score')
-        self.__trade_size = kwargs.get('trade_size')
-        self.__symbol_dimensions = kwargs.get('symbol_dimensions')
-        self.__option_type_sdr = kwargs.get('option_type_sdr')
-        self.__scenario_group_id = kwargs.get('scenario_group_id')
-        self.__avg_yield7_day = kwargs.get('avg_yield7_day')
-        self.__average_implied_variance = kwargs.get('average_implied_variance')
-        self.__avg_trade_rate_description = kwargs.get('avg_trade_rate_description')
-        self.__fraction = kwargs.get('fraction')
-        self.__asset_count_short = kwargs.get('asset_count_short')
-        self.__required_collateral_value = kwargs.get('required_collateral_value')
-        self.__date = kwargs.get('date')
-        self.__total_std_return_since_inception = kwargs.get('total_std_return_since_inception')
-        self.__high_unadjusted = kwargs.get('high_unadjusted')
-        self.__source_category = kwargs.get('source_category')
-        self.__tv_product_mnemonic = kwargs.get('tv_product_mnemonic')
-        self.__volume_unadjusted = kwargs.get('volume_unadjusted')
-        self.__avg_trade_rate_label = kwargs.get('avg_trade_rate_label')
-        self.__ann_yield3_month = kwargs.get('ann_yield3_month')
-        self.__target_price_value = kwargs.get('target_price_value')
-        self.__ask_size = kwargs.get('ask_size')
-        self.__std30_days_unsubsidized_yield = kwargs.get('std30_days_unsubsidized_yield')
-        self.__resource = kwargs.get('resource')
-        self.__dissemination_time = kwargs.get('dissemination_time')
-        self.__average_realized_volatility = kwargs.get('average_realized_volatility')
-        self.__nav_spread = kwargs.get('nav_spread')
-        self.__bid_price = kwargs.get('bid_price')
-        self.__dollar_total_return = kwargs.get('dollar_total_return')
-        self.__block_unit = kwargs.get('block_unit')
-        self.__es_numeric_percentile = kwargs.get('es_numeric_percentile')
-        self.__repurchase_rate = kwargs.get('repurchase_rate')
-        self.__csa_terms = kwargs.get('csa_terms')
-        self.__daily_net_shareholder_flows = kwargs.get('daily_net_shareholder_flows')
-        self.__ask_gspread = kwargs.get('ask_gspread')
-        self.__cal_spread_mis_pricing = kwargs.get('cal_spread_mis_pricing')
-        self.__leg_two_type = kwargs.get('leg_two_type')
-        self.__rate366 = kwargs.get('rate366')
-        self.__rate365 = kwargs.get('rate365')
-        self.__rate360 = kwargs.get('rate360')
-        self.__opening_report = kwargs.get('opening_report')
-        self.__value = kwargs.get('value')
-        self.__leg_one_index_location = kwargs.get('leg_one_index_location')
-        self.__quantity = kwargs.get('quantity')
-        self.__report_id = kwargs.get('report_id')
-        self.__macs_primary_asset_class = kwargs.get('macs_primary_asset_class')
-        self.__midcurve_atm_fwd_rate = kwargs.get('midcurve_atm_fwd_rate')
-        self.__trader = kwargs.get('trader')
-        self.__valuation_date = kwargs.get('valuation_date')
-        self.__tcm_cost_horizon6_hour = kwargs.get('tcm_cost_horizon6_hour')
-        self.__liq_dly = kwargs.get('liq_dly')
-        self.__isin = kwargs.get('isin')
+        self.max_temperature = kwargs.get('max_temperature')
+        self.acquirer_shareholder_meeting_date = kwargs.get('acquirer_shareholder_meeting_date')
+        self.notional_amount = kwargs.get('notional_amount')
+        self.arrival_rt_normalized = kwargs.get('arrival_rt_normalized')
+        self.report_type = kwargs.get('report_type')
+        self.source_url = kwargs.get('source_url')
+        self.estimated_return = kwargs.get('estimated_return')
+        self.high = kwargs.get('high')
+        self.source_last_update = kwargs.get('source_last_update')
+        self.event_name = kwargs.get('event_name')
+        self.indication_of_other_price_affecting_term = kwargs.get('indication_of_other_price_affecting_term')
+        self.unadjusted_bid = kwargs.get('unadjusted_bid')
+        self.backtest_type = kwargs.get('backtest_type')
+        self.gsdeer = kwargs.get('gsdeer')
+        self.g_regional_percentile = kwargs.get('g_regional_percentile')
+        self.prev_close_ask = kwargs.get('prev_close_ask')
+        self.level = kwargs.get('level')
+        self.mnav = kwargs.get('mnav')
+        self.es_momentum_score = kwargs.get('es_momentum_score')
+        self.curr_yield7_day = kwargs.get('curr_yield7_day')
+        self.pressure = kwargs.get('pressure')
+        self.short_description = kwargs.get('short_description')
+        self.feed = kwargs.get('feed')
+        self.net_weight = kwargs.get('net_weight')
+        self.portfolio_managers = kwargs.get('portfolio_managers')
+        self.asset_parameters_commodity_sector = kwargs.get('asset_parameters_commodity_sector')
+        self.bos_in_ticks = kwargs.get('bos_in_ticks')
+        self.price_notation2 = kwargs.get('price_notation2')
+        self.market_buffer_threshold = kwargs.get('market_buffer_threshold')
+        self.price_notation3 = kwargs.get('price_notation3')
+        self.cap_floor_vol = kwargs.get('cap_floor_vol')
+        self.notional = kwargs.get('notional')
+        self.es_disclosure_percentage = kwargs.get('es_disclosure_percentage')
+        self.investment_income = kwargs.get('investment_income')
+        self.client_short_name = kwargs.get('client_short_name')
+        self.bid_plus_ask = kwargs.get('bid_plus_ask')
+        self.total = kwargs.get('total')
+        self.asset_id = kwargs.get('asset_id')
+        self.mkt_type = kwargs.get('mkt_type')
+        self.last_updated_time = kwargs.get('last_updated_time')
+        self.pricing_location = kwargs.get('pricing_location')
+        self.yield30_day = kwargs.get('yield30_day')
+        self.beta = kwargs.get('beta')
+        self.upfront_payment_date = kwargs.get('upfront_payment_date')
+        self.long_exposure = kwargs.get('long_exposure')
+        self.tcm_cost_participation_rate20_pct = kwargs.get('tcm_cost_participation_rate20_pct')
+        self.multi_asset_class_swap = kwargs.get('multi_asset_class_swap')
+        self.idea_status = kwargs.get('idea_status')
+        self.contract_subtype = kwargs.get('contract_subtype')
+        self.fx_forecast = kwargs.get('fx_forecast')
+        self.fixing_time_label = kwargs.get('fixing_time_label')
+        self.implementation_id = kwargs.get('implementation_id')
+        self.fill_id = kwargs.get('fill_id')
+        self.excess_returns = kwargs.get('excess_returns')
+        self.dollar_return = kwargs.get('dollar_return')
+        self.es_numeric_score = kwargs.get('es_numeric_score')
+        self.in_benchmark = kwargs.get('in_benchmark')
+        self.action_sdr = kwargs.get('action_sdr')
+        self.restriction_end_date = kwargs.get('restriction_end_date')
+        self.queue_in_lots_description = kwargs.get('queue_in_lots_description')
+        self.objective = kwargs.get('objective')
+        self.nav_price = kwargs.get('nav_price')
+        self.precipitation = kwargs.get('precipitation')
+        self.hedge_notional = kwargs.get('hedge_notional')
+        self.ask_low = kwargs.get('ask_low')
+        self.beta_adjusted_net_exposure = kwargs.get('beta_adjusted_net_exposure')
+        self.avg_monthly_yield = kwargs.get('avg_monthly_yield')
+        self.strike_percentage = kwargs.get('strike_percentage')
+        self.excess_return_price = kwargs.get('excess_return_price')
+        self.prev_close_bid = kwargs.get('prev_close_bid')
+        self.fx_pnl = kwargs.get('fx_pnl')
+        self.tcm_cost_horizon16_day = kwargs.get('tcm_cost_horizon16_day')
+        self.unadjusted_close = kwargs.get('unadjusted_close')
+        self.loan_date = kwargs.get('loan_date')
+        self.lending_sec_id = kwargs.get('lending_sec_id')
+        self.equity_theta = kwargs.get('equity_theta')
+        self.start_date = kwargs.get('start_date')
+        self.collateral_percentage_actual = kwargs.get('collateral_percentage_actual')
+        self.mixed_swap = kwargs.get('mixed_swap')
+        self.snowfall = kwargs.get('snowfall')
+        self.mic = kwargs.get('mic')
+        self.mid = kwargs.get('mid')
+        self.relative_return_ytd = kwargs.get('relative_return_ytd')
+        self.long = kwargs.get('long')
+        self.long_weight = kwargs.get('long_weight')
+        self.calculation_time = kwargs.get('calculation_time')
+        self.average_realized_variance = kwargs.get('average_realized_variance')
+        self.financial_returns_score = kwargs.get('financial_returns_score')
+        self.net_change = kwargs.get('net_change')
+        self.non_symbol_dimensions = kwargs.get('non_symbol_dimensions')
+        self.leg_two_fixed_payment_currency = kwargs.get('leg_two_fixed_payment_currency')
+        self.swap_type = kwargs.get('swap_type')
+        self.sell_settle_date = kwargs.get('sell_settle_date')
+        self.new_ideas_ytd = kwargs.get('new_ideas_ytd')
+        self.management_fee = kwargs.get('management_fee')
+        self.__open = kwargs.get('open_')
+        self.source_id = kwargs.get('source_id')
+        self.cusip = kwargs.get('cusip')
+        self.idea_activity_time = kwargs.get('idea_activity_time')
+        self.touch_spread_score = kwargs.get('touch_spread_score')
+        self.spread_option_atm_fwd_rate = kwargs.get('spread_option_atm_fwd_rate')
+        self.net_exposure = kwargs.get('net_exposure')
+        self.frequency = kwargs.get('frequency')
+        self.activity_id = kwargs.get('activity_id')
+        self.estimated_impact = kwargs.get('estimated_impact')
+        self.loan_spread_bucket = kwargs.get('loan_spread_bucket')
+        self.event_description = kwargs.get('event_description')
+        self.strike_reference = kwargs.get('strike_reference')
+        self.details = kwargs.get('details')
+        self.asset_count = kwargs.get('asset_count')
+        self.sector = kwargs.get('sector')
+        self.absolute_value = kwargs.get('absolute_value')
+        self.closing_report = kwargs.get('closing_report')
+        self.mctr = kwargs.get('mctr')
+        self.historical_close = kwargs.get('historical_close')
+        self.asset_count_priced = kwargs.get('asset_count_priced')
+        self.idea_id = kwargs.get('idea_id')
+        self.comment_status = kwargs.get('comment_status')
+        self.marginal_cost = kwargs.get('marginal_cost')
+        self.settlement_currency = kwargs.get('settlement_currency')
+        self.indication_of_collateralization = kwargs.get('indication_of_collateralization')
+        self.liq_wkly = kwargs.get('liq_wkly')
+        self.lending_partner_fee = kwargs.get('lending_partner_fee')
+        self.region = kwargs.get('region')
+        self.option_premium = kwargs.get('option_premium')
+        self.owner_name = kwargs.get('owner_name')
+        self.last_updated_by_id = kwargs.get('last_updated_by_id')
+        self.z_score = kwargs.get('z_score')
+        self.legal_entity_acct = kwargs.get('legal_entity_acct')
+        self.target_shareholder_meeting_date = kwargs.get('target_shareholder_meeting_date')
+        self.event_start_time = kwargs.get('event_start_time')
+        self.turnover = kwargs.get('turnover')
+        self.price_spot_target_unit = kwargs.get('price_spot_target_unit')
+        self.compliance_effective_time = kwargs.get('compliance_effective_time')
+        self.expiration_date = kwargs.get('expiration_date')
+        self.leg_one_type = kwargs.get('leg_one_type')
+        self.leg_two_spread = kwargs.get('leg_two_spread')
+        self.coverage = kwargs.get('coverage')
+        self.g_percentile = kwargs.get('g_percentile')
+        self.lending_fund_nav = kwargs.get('lending_fund_nav')
+        self.source_original_category = kwargs.get('source_original_category')
+        self.composite5_day_adv = kwargs.get('composite5_day_adv')
+        self.latest_execution_time = kwargs.get('latest_execution_time')
+        self.close_date = kwargs.get('close_date')
+        self.new_ideas_wtd = kwargs.get('new_ideas_wtd')
+        self.asset_class_sdr = kwargs.get('asset_class_sdr')
+        self.comment = kwargs.get('comment')
+        self.source_symbol = kwargs.get('source_symbol')
+        self.scenario_id = kwargs.get('scenario_id')
+        self.ask_unadjusted = kwargs.get('ask_unadjusted')
+        self.queue_clock_time = kwargs.get('queue_clock_time')
+        self.ask_change = kwargs.get('ask_change')
+        self.tcm_cost_participation_rate50_pct = kwargs.get('tcm_cost_participation_rate50_pct')
+        self.end_date = kwargs.get('end_date')
+        self.contract_type = kwargs.get('contract_type')
+        self.__type = kwargs.get('type_')
+        self.cumulative_pnl = kwargs.get('cumulative_pnl')
+        self.loss = kwargs.get('loss')
+        self.unadjusted_volume = kwargs.get('unadjusted_volume')
+        self.midcurve_vol = kwargs.get('midcurve_vol')
+        self.trading_cost_pnl = kwargs.get('trading_cost_pnl')
+        self.price_notation_type = kwargs.get('price_notation_type')
+        self.payment_quantity = kwargs.get('payment_quantity')
+        self.position_idx = kwargs.get('position_idx')
+        self.implied_volatility_by_relative_strike = kwargs.get('implied_volatility_by_relative_strike')
+        self.percent_adv = kwargs.get('percent_adv')
+        self.contract = kwargs.get('contract')
+        self.payment_frequency1 = kwargs.get('payment_frequency1')
+        self.payment_frequency2 = kwargs.get('payment_frequency2')
+        self.bespoke = kwargs.get('bespoke')
+        self.repo_tenor = kwargs.get('repo_tenor')
+        self.quality_stars = kwargs.get('quality_stars')
+        self.source_ticker = kwargs.get('source_ticker')
+        self.lending_fund = kwargs.get('lending_fund')
+        self.tcm_cost_participation_rate15_pct = kwargs.get('tcm_cost_participation_rate15_pct')
+        self.sensitivity = kwargs.get('sensitivity')
+        self.fiscal_year = kwargs.get('fiscal_year')
+        self.recall_date = kwargs.get('recall_date')
+        self.internal = kwargs.get('internal')
+        self.adjusted_bid_price = kwargs.get('adjusted_bid_price')
+        self.var_swap = kwargs.get('var_swap')
+        self.low_unadjusted = kwargs.get('low_unadjusted')
+        self.original_dissemination_id = kwargs.get('original_dissemination_id')
+        self.macs_secondary_asset_class = kwargs.get('macs_secondary_asset_class')
+        self.leg_two_averaging_method = kwargs.get('leg_two_averaging_method')
+        self.sectors_raw = kwargs.get('sectors_raw')
+        self.shareclass_price = kwargs.get('shareclass_price')
+        self.integrated_score = kwargs.get('integrated_score')
+        self.trade_size = kwargs.get('trade_size')
+        self.price_spot_entry_value = kwargs.get('price_spot_entry_value')
+        self.symbol_dimensions = kwargs.get('symbol_dimensions')
+        self.option_type_sdr = kwargs.get('option_type_sdr')
+        self.scenario_group_id = kwargs.get('scenario_group_id')
+        self.avg_yield7_day = kwargs.get('avg_yield7_day')
+        self.average_implied_variance = kwargs.get('average_implied_variance')
+        self.avg_trade_rate_description = kwargs.get('avg_trade_rate_description')
+        self.fraction = kwargs.get('fraction')
+        self.asset_count_short = kwargs.get('asset_count_short')
+        self.collateral_percentage_required = kwargs.get('collateral_percentage_required')
+        self.date = kwargs.get('date')
+        self.total_std_return_since_inception = kwargs.get('total_std_return_since_inception')
+        self.high_unadjusted = kwargs.get('high_unadjusted')
+        self.source_category = kwargs.get('source_category')
+        self.tv_product_mnemonic = kwargs.get('tv_product_mnemonic')
+        self.volume_unadjusted = kwargs.get('volume_unadjusted')
+        self.avg_trade_rate_label = kwargs.get('avg_trade_rate_label')
+        self.ann_yield3_month = kwargs.get('ann_yield3_month')
+        self.ask_size = kwargs.get('ask_size')
+        self.std30_days_unsubsidized_yield = kwargs.get('std30_days_unsubsidized_yield')
+        self.resource = kwargs.get('resource')
+        self.dissemination_time = kwargs.get('dissemination_time')
+        self.average_realized_volatility = kwargs.get('average_realized_volatility')
+        self.nav_spread = kwargs.get('nav_spread')
+        self.bid_price = kwargs.get('bid_price')
+        self.dollar_total_return = kwargs.get('dollar_total_return')
+        self.block_unit = kwargs.get('block_unit')
+        self.es_numeric_percentile = kwargs.get('es_numeric_percentile')
+        self.repurchase_rate = kwargs.get('repurchase_rate')
+        self.csa_terms = kwargs.get('csa_terms')
+        self.daily_net_shareholder_flows = kwargs.get('daily_net_shareholder_flows')
+        self.ask_gspread = kwargs.get('ask_gspread')
+        self.cal_spread_mis_pricing = kwargs.get('cal_spread_mis_pricing')
+        self.leg_two_type = kwargs.get('leg_two_type')
+        self.rate366 = kwargs.get('rate366')
+        self.rate365 = kwargs.get('rate365')
+        self.rate360 = kwargs.get('rate360')
+        self.opening_report = kwargs.get('opening_report')
+        self.value = kwargs.get('value')
+        self.leg_one_index_location = kwargs.get('leg_one_index_location')
+        self.quantity = kwargs.get('quantity')
+        self.report_id = kwargs.get('report_id')
+        self.macs_primary_asset_class = kwargs.get('macs_primary_asset_class')
+        self.midcurve_atm_fwd_rate = kwargs.get('midcurve_atm_fwd_rate')
+        self.trader = kwargs.get('trader')
+        self.valuation_date = kwargs.get('valuation_date')
+        self.tcm_cost_horizon6_hour = kwargs.get('tcm_cost_horizon6_hour')
+        self.liq_dly = kwargs.get('liq_dly')
+        self.isin = kwargs.get('isin')
+
+    @property
+    def collateral_value_variance(self) -> float:
+        """Diffrence between actual and required collateral levels."""
+        return self.__collateral_value_variance
+
+    @collateral_value_variance.setter
+    def collateral_value_variance(self, value: float):
+        self.__collateral_value_variance = value
+        self._property_changed('collateral_value_variance')        
 
     @property
     def year(self) -> str:
@@ -13359,14 +13493,14 @@ class FieldValueMap(Base):
         self._property_changed('realized_correlation')        
 
     @property
-    def target_price_unit(self) -> str:
-        """Unit in which the target price is reported."""
-        return self.__target_price_unit
+    def collateral_value_actual(self) -> float:
+        """Value of collateral covering the given position."""
+        return self.__collateral_value_actual
 
-    @target_price_unit.setter
-    def target_price_unit(self, value: str):
-        self.__target_price_unit = value
-        self._property_changed('target_price_unit')        
+    @collateral_value_actual.setter
+    def collateral_value_actual(self, value: float):
+        self.__collateral_value_actual = value
+        self._property_changed('collateral_value_actual')        
 
     @property
     def upfront_payment(self) -> float:
@@ -13682,16 +13816,6 @@ class FieldValueMap(Base):
         self._property_changed('termination_date')        
 
     @property
-    def idea_title(self) -> str:
-        """Brief description of the trade idea."""
-        return self.__idea_title
-
-    @idea_title.setter
-    def idea_title(self, value: str):
-        self.__idea_title = value
-        self._property_changed('idea_title')        
-
-    @property
     def tcm_cost_horizon3_hour(self) -> float:
         """TCM cost with a 3 hour time horizon."""
         return self.__tcm_cost_horizon3_hour
@@ -13886,6 +14010,16 @@ class FieldValueMap(Base):
     def adv(self, value: float):
         self.__adv = value
         self._property_changed('adv')        
+
+    @property
+    def external(self) -> bool:
+        """Whether entity was created by an external user."""
+        return self.__external
+
+    @external.setter
+    def external(self, value: bool):
+        self.__external = value
+        self._property_changed('external')        
 
     @property
     def short_conviction_medium(self) -> float:
@@ -14423,6 +14557,16 @@ class FieldValueMap(Base):
         self._property_changed('trading_restriction')        
 
     @property
+    def price_spot_entry_unit(self) -> str:
+        """Unit in which the opening price is reported."""
+        return self.__price_spot_entry_unit
+
+    @price_spot_entry_unit.setter
+    def price_spot_entry_unit(self, value: str):
+        self.__price_spot_entry_unit = value
+        self._property_changed('price_spot_entry_unit')        
+
+    @property
     def total_return_price(self) -> float:
         """The total return price of an instrument."""
         return self.__total_return_price
@@ -14806,6 +14950,16 @@ class FieldValueMap(Base):
         self._property_changed('basis')        
 
     @property
+    def ext_mkt_class(self) -> str:
+        """External MDAPI class."""
+        return self.__ext_mkt_class
+
+    @ext_mkt_class.setter
+    def ext_mkt_class(self, value: str):
+        self.__ext_mkt_class = value
+        self._property_changed('ext_mkt_class')        
+
+    @property
     def price_currency(self) -> str:
         """Denominated pricing currency."""
         return self.__price_currency
@@ -14907,6 +15061,16 @@ class FieldValueMap(Base):
         self._property_changed('option_family')        
 
     @property
+    def price_spot_stop_loss_value(self) -> float:
+        """Stop loss price value of the trade idea."""
+        return self.__price_spot_stop_loss_value
+
+    @price_spot_stop_loss_value.setter
+    def price_spot_stop_loss_value(self, value: float):
+        self.__price_spot_stop_loss_value = value
+        self._property_changed('price_spot_stop_loss_value')        
+
+    @property
     def kpi_id(self) -> str:
         """Marquee unique KPI identifier."""
         return self.__kpi_id
@@ -14979,6 +15143,16 @@ class FieldValueMap(Base):
         self._property_changed('open_time')        
 
     @property
+    def ext_mkt_point1(self) -> str:
+        """First dimension of external MDAPI point."""
+        return self.__ext_mkt_point1
+
+    @ext_mkt_point1.setter
+    def ext_mkt_point1(self, value: str):
+        self.__ext_mkt_point1 = value
+        self._property_changed('ext_mkt_point1')        
+
+    @property
     def direction(self) -> str:
         """Indicates whether exposure of a given position is long or short."""
         return self.__direction
@@ -14987,6 +15161,16 @@ class FieldValueMap(Base):
     def direction(self, value: str):
         self.__direction = value
         self._property_changed('direction')        
+
+    @property
+    def ext_mkt_point2(self) -> str:
+        """Second dimension of external MDAPI point."""
+        return self.__ext_mkt_point2
+
+    @ext_mkt_point2.setter
+    def ext_mkt_point2(self, value: str):
+        self.__ext_mkt_point2 = value
+        self._property_changed('ext_mkt_point2')        
 
     @property
     def value_forecast(self) -> str:
@@ -15092,17 +15276,6 @@ class FieldValueMap(Base):
     def es_momentum_percentile(self, value: float):
         self.__es_momentum_percentile = value
         self._property_changed('es_momentum_percentile')        
-
-    @property
-    def lender_income_adjustment(self) -> float:
-        """Adjustments to income earned by the Lender for the loan of securities to a
-           borrower."""
-        return self.__lender_income_adjustment
-
-    @lender_income_adjustment.setter
-    def lender_income_adjustment(self, value: float):
-        self.__lender_income_adjustment = value
-        self._property_changed('lender_income_adjustment')        
 
     @property
     def price_notation(self) -> float:
@@ -15261,6 +15434,16 @@ class FieldValueMap(Base):
     def trading_pnl(self, value: float):
         self.__trading_pnl = value
         self._property_changed('trading_pnl')        
+
+    @property
+    def collateral_value_required(self) -> float:
+        """Value of collateral required to cover a given position."""
+        return self.__collateral_value_required
+
+    @collateral_value_required.setter
+    def collateral_value_required(self, value: float):
+        self.__collateral_value_required = value
+        self._property_changed('collateral_value_required')        
 
     @property
     def given_plus_paid(self) -> float:
@@ -15592,16 +15775,6 @@ class FieldValueMap(Base):
         self._property_changed('unexplained')        
 
     @property
-    def closed_date(self) -> datetime.date:
-        """Date the trade idea was closed."""
-        return self.__closed_date
-
-    @closed_date.setter
-    def closed_date(self, value: datetime.date):
-        self.__closed_date = value
-        self._property_changed('closed_date')        
-
-    @property
     def metric(self) -> str:
         """Metric for the associated asset."""
         return self.__metric
@@ -15727,17 +15900,6 @@ class FieldValueMap(Base):
         self._property_changed('oe_name')        
 
     @property
-    def opening_price_value(self) -> float:
-        """Opening price value of the trade idea (either in absolute value or percent
-           units)."""
-        return self.__opening_price_value
-
-    @opening_price_value.setter
-    def opening_price_value(self, value: float):
-        self.__opening_price_value = value
-        self._property_changed('opening_price_value')        
-
-    @property
     def given(self) -> float:
         """Number of trades given."""
         return self.__given
@@ -15756,6 +15918,16 @@ class FieldValueMap(Base):
     def delisting_date(self, value: str):
         self.__delisting_date = value
         self._property_changed('delisting_date')        
+
+    @property
+    def price_spot_target_value(self) -> float:
+        """Target price value of the trade idea."""
+        return self.__price_spot_target_value
+
+    @price_spot_target_value.setter
+    def price_spot_target_value(self, value: float):
+        self.__price_spot_target_value = value
+        self._property_changed('price_spot_target_value')        
 
     @property
     def weight(self) -> float:
@@ -15946,6 +16118,16 @@ class FieldValueMap(Base):
     def description(self, value: str):
         self.__description = value
         self._property_changed('description')        
+
+    @property
+    def asset_classifications_is_country_primary(self) -> bool:
+        """Whether or not it is the primary exchange asset for the exchange country."""
+        return self.__asset_classifications_is_country_primary
+
+    @asset_classifications_is_country_primary.setter
+    def asset_classifications_is_country_primary(self, value: bool):
+        self.__asset_classifications_is_country_primary = value
+        self._property_changed('asset_classifications_is_country_primary')        
 
     @property
     def value_revised(self) -> str:
@@ -16549,6 +16731,16 @@ class FieldValueMap(Base):
         self._property_changed('pending_loan_count')        
 
     @property
+    def price_spot_stop_loss_unit(self) -> str:
+        """Unit in which the stop loss price is reported."""
+        return self.__price_spot_stop_loss_unit
+
+    @price_spot_stop_loss_unit.setter
+    def price_spot_stop_loss_unit(self, value: str):
+        self.__price_spot_stop_loss_unit = value
+        self._property_changed('price_spot_stop_loss_unit')        
+
+    @property
     def queue_in_lots(self) -> float:
         """The Queue size in Lots (if applicable) of the stock  on the particular date."""
         return self.__queue_in_lots
@@ -16577,6 +16769,16 @@ class FieldValueMap(Base):
     def tender_offer_expiration_date(self, value: str):
         self.__tender_offer_expiration_date = value
         self._property_changed('tender_offer_expiration_date')        
+
+    @property
+    def primary_country_ric(self) -> str:
+        """Reuters primary country instrument code (subject to licensing)."""
+        return self.__primary_country_ric
+
+    @primary_country_ric.setter
+    def primary_country_ric(self, value: str):
+        self.__primary_country_ric = value
+        self._property_changed('primary_country_ric')        
 
     @property
     def leg_one_fixed_payment(self) -> float:
@@ -16994,6 +17196,16 @@ class FieldValueMap(Base):
         self._property_changed('listed')        
 
     @property
+    def earnings_record_type(self) -> str:
+        """The violation status for this particular line item."""
+        return self.__earnings_record_type
+
+    @earnings_record_type.setter
+    def earnings_record_type(self, value: str):
+        self.__earnings_record_type = value
+        self._property_changed('earnings_record_type')        
+
+    @property
     def g10_currency(self) -> bool:
         """Is a G10 asset."""
         return self.__g10_currency
@@ -17298,16 +17510,6 @@ class FieldValueMap(Base):
         self._property_changed('loan_fee')        
 
     @property
-    def stop_price_value(self) -> float:
-        """Stop price value of the trade idea (either in absolute value or percent units)."""
-        return self.__stop_price_value
-
-    @stop_price_value.setter
-    def stop_price_value(self, value: float):
-        self.__stop_price_value = value
-        self._property_changed('stop_price_value')        
-
-    @property
     def deployment_version(self) -> str:
         """Deployment version."""
         return self.__deployment_version
@@ -17408,16 +17610,6 @@ class FieldValueMap(Base):
     def factor_universe(self, value: str):
         self.__factor_universe = value
         self._property_changed('factor_universe')        
-
-    @property
-    def opening_price_unit(self) -> str:
-        """Unit in which the opening price is reported."""
-        return self.__opening_price_unit
-
-    @opening_price_unit.setter
-    def opening_price_unit(self, value: str):
-        self.__opening_price_unit = value
-        self._property_changed('opening_price_unit')        
 
     @property
     def arrival_rt(self) -> float:
@@ -18081,16 +18273,6 @@ class FieldValueMap(Base):
         self._property_changed('upi')        
 
     @property
-    def opened_date(self) -> datetime.date:
-        """Date the trade idea was opened."""
-        return self.__opened_date
-
-    @opened_date.setter
-    def opened_date(self, value: datetime.date):
-        self.__opened_date = value
-        self._property_changed('opened_date')        
-
-    @property
     def bcid(self) -> str:
         """Bloomberg composite identifier (ticker and country code)."""
         return self.__bcid
@@ -18527,7 +18709,7 @@ class FieldValueMap(Base):
     @return_.setter
     def return_(self, value: float):
         self.__return = value
-        self._property_changed('return')        
+        self._property_changed('return_')        
 
     @property
     def max_temperature(self) -> float:
@@ -19044,16 +19226,6 @@ class FieldValueMap(Base):
         self._property_changed('fx_forecast')        
 
     @property
-    def stop_price_unit(self) -> str:
-        """Unit in which the stop price is reported."""
-        return self.__stop_price_unit
-
-    @stop_price_unit.setter
-    def stop_price_unit(self, value: str):
-        self.__stop_price_unit = value
-        self._property_changed('stop_price_unit')        
-
-    @property
     def fixing_time_label(self) -> str:
         """Time at which the fixing was taken."""
         return self.__fixing_time_label
@@ -19328,6 +19500,16 @@ class FieldValueMap(Base):
     def start_date(self, value: datetime.date):
         self.__start_date = value
         self._property_changed('start_date')        
+
+    @property
+    def collateral_percentage_actual(self) -> float:
+        """Collateral percentage covering contractual the given position."""
+        return self.__collateral_percentage_actual
+
+    @collateral_percentage_actual.setter
+    def collateral_percentage_actual(self, value: float):
+        self.__collateral_percentage_actual = value
+        self._property_changed('collateral_percentage_actual')        
 
     @property
     def mixed_swap(self) -> str:
@@ -19848,6 +20030,16 @@ class FieldValueMap(Base):
         self._property_changed('z_score')        
 
     @property
+    def legal_entity_acct(self) -> str:
+        """Account assoicated with the entity that has legal rights to the fund."""
+        return self.__legal_entity_acct
+
+    @legal_entity_acct.setter
+    def legal_entity_acct(self, value: str):
+        self.__legal_entity_acct = value
+        self._property_changed('legal_entity_acct')        
+
+    @property
     def target_shareholder_meeting_date(self) -> str:
         """Target acquisition entity shareholder meeting date."""
         return self.__target_shareholder_meeting_date
@@ -19856,17 +20048,6 @@ class FieldValueMap(Base):
     def target_shareholder_meeting_date(self, value: str):
         self.__target_shareholder_meeting_date = value
         self._property_changed('target_shareholder_meeting_date')        
-
-    @property
-    def collateral_market_value(self) -> float:
-        """Marketable value of a given collateral position, generally the market price for
-           a given date."""
-        return self.__collateral_market_value
-
-    @collateral_market_value.setter
-    def collateral_market_value(self, value: float):
-        self.__collateral_market_value = value
-        self._property_changed('collateral_market_value')        
 
     @property
     def event_start_time(self) -> str:
@@ -19889,6 +20070,16 @@ class FieldValueMap(Base):
     def turnover(self, value: float):
         self.__turnover = value
         self._property_changed('turnover')        
+
+    @property
+    def price_spot_target_unit(self) -> str:
+        """Unit in which the target price is reported."""
+        return self.__price_spot_target_unit
+
+    @price_spot_target_unit.setter
+    def price_spot_target_unit(self, value: str):
+        self.__price_spot_target_unit = value
+        self._property_changed('price_spot_target_unit')        
 
     @property
     def compliance_effective_time(self) -> datetime.datetime:
@@ -19989,6 +20180,16 @@ class FieldValueMap(Base):
     def latest_execution_time(self, value: datetime.datetime):
         self.__latest_execution_time = value
         self._property_changed('latest_execution_time')        
+
+    @property
+    def close_date(self) -> datetime.date:
+        """Date the trade idea was closed."""
+        return self.__close_date
+
+    @close_date.setter
+    def close_date(self, value: datetime.date):
+        self.__close_date = value
+        self._property_changed('close_date')        
 
     @property
     def new_ideas_wtd(self) -> float:
@@ -20257,6 +20458,16 @@ class FieldValueMap(Base):
         self._property_changed('bespoke')        
 
     @property
+    def repo_tenor(self) -> str:
+        """Maturity of repurchase agreement."""
+        return self.__repo_tenor
+
+    @repo_tenor.setter
+    def repo_tenor(self, value: str):
+        self.__repo_tenor = value
+        self._property_changed('repo_tenor')        
+
+    @property
     def quality_stars(self) -> float:
         """Confidence in the BPE."""
         return self.__quality_stars
@@ -20441,6 +20652,16 @@ class FieldValueMap(Base):
         self._property_changed('trade_size')        
 
     @property
+    def price_spot_entry_value(self) -> float:
+        """Opening price value of the trade idea."""
+        return self.__price_spot_entry_value
+
+    @price_spot_entry_value.setter
+    def price_spot_entry_value(self, value: float):
+        self.__price_spot_entry_value = value
+        self._property_changed('price_spot_entry_value')        
+
+    @property
     def symbol_dimensions(self) -> Tuple[str, ...]:
         """Set of fields that determine database table name."""
         return self.__symbol_dimensions
@@ -20522,14 +20743,14 @@ class FieldValueMap(Base):
         self._property_changed('asset_count_short')        
 
     @property
-    def required_collateral_value(self) -> float:
-        """Amount of collateral required to cover contractual obligation."""
-        return self.__required_collateral_value
+    def collateral_percentage_required(self) -> float:
+        """Collateral percentage requied to cover the given position."""
+        return self.__collateral_percentage_required
 
-    @required_collateral_value.setter
-    def required_collateral_value(self, value: float):
-        self.__required_collateral_value = value
-        self._property_changed('required_collateral_value')        
+    @collateral_percentage_required.setter
+    def collateral_percentage_required(self, value: float):
+        self.__collateral_percentage_required = value
+        self._property_changed('collateral_percentage_required')        
 
     @property
     def date(self) -> datetime.date:
@@ -20610,17 +20831,6 @@ class FieldValueMap(Base):
     def ann_yield3_month(self, value: float):
         self.__ann_yield3_month = value
         self._property_changed('ann_yield3_month')        
-
-    @property
-    def target_price_value(self) -> float:
-        """Target price value of the trade idea (either in absolute value or percent
-           units)."""
-        return self.__target_price_value
-
-    @target_price_value.setter
-    def target_price_value(self, value: float):
-        self.__target_price_value = value
-        self._property_changed('target_price_value')        
 
     @property
     def ask_size(self) -> float:
@@ -20961,25 +21171,25 @@ class LiquidityRequest(Base):
         time_series_start_date: datetime.date = None,
         time_series_end_date: datetime.date = None,
         format_: Union[Format, str] = None,
-        report_parameters: LiquidityReportParameters = None        
-    ):
+        report_parameters: LiquidityReportParameters = None
+    ):        
         super().__init__()
-        self.__notional = notional
-        self.__positions = positions
-        self.__risk_model = risk_model
-        self.__date = date
-        self.__currency = get_enum_value(Currency, currency)
-        self.__participation_rate = participation_rate
-        self.__execution_horizon = execution_horizon
-        self.__execution_start_time = execution_start_time
-        self.__execution_end_time = execution_end_time
-        self.__benchmark_id = benchmark_id
-        self.__measures = measures
-        self.__time_series_benchmark_ids = time_series_benchmark_ids
-        self.__time_series_start_date = time_series_start_date
-        self.__time_series_end_date = time_series_end_date
+        self.notional = notional
+        self.positions = positions
+        self.risk_model = risk_model
+        self.date = date
+        self.currency = currency
+        self.participation_rate = participation_rate
+        self.execution_horizon = execution_horizon
+        self.execution_start_time = execution_start_time
+        self.execution_end_time = execution_end_time
+        self.benchmark_id = benchmark_id
+        self.measures = measures
+        self.time_series_benchmark_ids = time_series_benchmark_ids
+        self.time_series_start_date = time_series_start_date
+        self.time_series_end_date = time_series_end_date
         self.__format = get_enum_value(Format, format_)
-        self.__report_parameters = report_parameters
+        self.report_parameters = report_parameters
 
     @property
     def notional(self) -> float:
@@ -21146,11 +21356,11 @@ class MarketDataPatternAndShock(Base):
     def __init__(
         self,
         pattern: MarketDataPattern,
-        shock: MarketDataShock        
-    ):
+        shock: MarketDataShock
+    ):        
         super().__init__()
-        self.__pattern = pattern
-        self.__shock = shock
+        self.pattern = pattern
+        self.shock = shock
 
     @property
     def pattern(self) -> MarketDataPattern:
@@ -21182,15 +21392,15 @@ class PositionSet(Base):
         last_update_time: datetime.datetime = None,
         positions: Tuple[Position, ...] = None,
         type_: str = None,
-        divisor: float = None        
-    ):
+        divisor: float = None
+    ):        
         super().__init__()
         self.__id = id_
-        self.__position_date = position_date
-        self.__last_update_time = last_update_time
-        self.__positions = positions
+        self.position_date = position_date
+        self.last_update_time = last_update_time
+        self.positions = positions
         self.__type = type_
-        self.__divisor = divisor
+        self.divisor = divisor
 
     @property
     def id(self) -> str:
@@ -21259,10 +21469,10 @@ class CSLScheduleArray(Base):
        
     def __init__(
         self,
-        schedule_values: Tuple[CSLSchedule, ...] = None        
-    ):
+        schedule_values: Tuple[CSLSchedule, ...] = None
+    ):        
         super().__init__()
-        self.__schedule_values = schedule_values
+        self.schedule_values = schedule_values
 
     @property
     def schedule_values(self) -> Tuple[CSLSchedule, ...]:
@@ -21281,10 +21491,10 @@ class MarketDataShockBasedScenario(Base):
        
     def __init__(
         self,
-        shocks: Tuple[MarketDataPatternAndShock, ...]        
-    ):
+        shocks: Tuple[MarketDataPatternAndShock, ...]
+    ):        
         super().__init__()
-        self.__shocks = shocks
+        self.shocks = shocks
 
     @property
     def scenario_type(self) -> str:
@@ -21309,11 +21519,11 @@ class MarketDataScenario(Base):
     def __init__(
         self,
         scenario: Union[CarryScenario, CurveScenario, MarketDataShockBasedScenario],
-        subtract_base: bool = False        
-    ):
+        subtract_base: bool = False
+    ):        
         super().__init__()
-        self.__scenario = scenario
-        self.__subtract_base = subtract_base
+        self.scenario = scenario
+        self.subtract_base = subtract_base
 
     @property
     def scenario(self) -> Union[CarryScenario, CurveScenario, MarketDataShockBasedScenario]:
@@ -21342,11 +21552,11 @@ class RiskPosition(Base):
     def __init__(
         self,
         instrument: Priceable,
-        quantity: float = None        
-    ):
+        quantity: float = None
+    ):        
         super().__init__()
-        self.__instrument = instrument
-        self.__quantity = quantity
+        self.instrument = instrument
+        self.quantity = quantity
 
     @property
     def instrument(self) -> Priceable:
@@ -21387,19 +21597,19 @@ class RiskRequest(Base):
         scenario: MarketDataScenario = None,
         report_id: str = None,
         data_set_field_maps: Tuple[DataSetFieldMap, ...] = None,
-        parameters: RiskRequestParameters = None        
-    ):
+        parameters: RiskRequestParameters = None
+    ):        
         super().__init__()
-        self.__positions = positions
-        self.__measures = measures
-        self.__pricing_and_market_data_as_of = pricing_and_market_data_as_of
-        self.__pricing_location = get_enum_value(PricingLocation, pricing_location)
-        self.__market_data_vendor = get_enum_value(MarketDataVendor, market_data_vendor)
-        self.__wait_for_results = wait_for_results
-        self.__scenario = scenario
-        self.__report_id = report_id
-        self.__data_set_field_maps = data_set_field_maps
-        self.__parameters = parameters
+        self.positions = positions
+        self.measures = measures
+        self.pricing_and_market_data_as_of = pricing_and_market_data_as_of
+        self.pricing_location = pricing_location
+        self.market_data_vendor = market_data_vendor
+        self.wait_for_results = wait_for_results
+        self.scenario = scenario
+        self.report_id = report_id
+        self.data_set_field_maps = data_set_field_maps
+        self.parameters = parameters
 
     @property
     def positions(self) -> Tuple[RiskPosition, ...]:

@@ -28,12 +28,12 @@ class ColumnFormat(Base):
         self,
         precision: float,
         unit=None,
-        human_readable: bool = None        
-    ):
+        human_readable: bool = None
+    ):        
         super().__init__()
-        self.__precision = precision
-        self.__unit = unit
-        self.__human_readable = human_readable
+        self.precision = precision
+        self.unit = unit
+        self.human_readable = human_readable
 
     @property
     def precision(self) -> float:
@@ -76,14 +76,14 @@ class FunctionParameters(Base):
         obs: int = None,
         returns_type=None,
         type_=None,
-        w: int = None        
-    ):
+        w: int = None
+    ):        
         super().__init__()
-        self.__initial = initial
-        self.__obs = obs
-        self.__returns_type = returns_type
+        self.initial = initial
+        self.obs = obs
+        self.returns_type = returns_type
         self.__type = type_
-        self.__w = w
+        self.w = w
 
     @property
     def initial(self) -> int:
@@ -145,12 +145,12 @@ class FunctionWhere(Base):
         self,
         participation_rate: float = None,
         percent_adv: float = None,
-        strike_reference: str = None        
-    ):
+        strike_reference: str = None
+    ):        
         super().__init__()
-        self.__participation_rate = participation_rate
-        self.__percent_adv = percent_adv
-        self.__strike_reference = strike_reference
+        self.participation_rate = participation_rate
+        self.percent_adv = percent_adv
+        self.strike_reference = strike_reference
 
     @property
     def participation_rate(self) -> float:
@@ -189,10 +189,10 @@ class Historical(Base):
        
     def __init__(
         self,
-        value: Union[float, str] = None        
-    ):
+        value: Union[float, str] = None
+    ):        
         super().__init__()
-        self.__value = value
+        self.value = value
 
     @property
     def value(self) -> Union[float, str]:
@@ -211,11 +211,11 @@ class MonitorResponseData(Base):
     def __init__(
         self,
         id_: str,
-        result: dict        
-    ):
+        result: dict
+    ):        
         super().__init__()
         self.__id = id_
-        self.__result = result
+        self.result = result
 
     @property
     def id(self) -> str:
@@ -246,12 +246,12 @@ class Movers(Base):
         self,
         column_name: str,
         top: float = None,
-        bottom: float = None        
-    ):
+        bottom: float = None
+    ):        
         super().__init__()
-        self.__top = top
-        self.__bottom = bottom
-        self.__column_name = column_name
+        self.top = top
+        self.bottom = bottom
+        self.column_name = column_name
 
     @property
     def top(self) -> float:
@@ -292,12 +292,12 @@ class Sort(Base):
         self,
         column_name: str,
         type_=None,
-        direction=None        
-    ):
+        direction=None
+    ):        
         super().__init__()
         self.__type = type_
-        self.__column_name = column_name
-        self.__direction = direction
+        self.column_name = column_name
+        self.direction = direction
 
     @property
     def type(self):
@@ -339,12 +339,12 @@ class WipiRequestFilter(Base):
         column: str,
         operation,
         value: Union[float, str],
-        type_=None        
-    ):
+        type_=None
+    ):        
         super().__init__()
-        self.__column = column
-        self.__operation = operation
-        self.__value = value
+        self.column = column
+        self.operation = operation
+        self.value = value
         self.__type = type_
 
     @property
@@ -399,18 +399,26 @@ class Function(Base):
         frequency,
         name: str = None,
         start_date: str = None,
+        end_date: str = None,
+        start_time: str = None,
+        end_time: str = None,
+        fields: Tuple[str, ...] = None,
         parameters: FunctionParameters = None,
         where: FunctionWhere = None,
-        vendor: str = None        
-    ):
+        vendor: str = None
+    ):        
         super().__init__()
-        self.__name = name
-        self.__measure = measure
-        self.__frequency = frequency
-        self.__start_date = start_date
-        self.__parameters = parameters
-        self.__where = where
-        self.__vendor = vendor
+        self.name = name
+        self.measure = measure
+        self.frequency = frequency
+        self.start_date = start_date
+        self.end_date = end_date
+        self.start_time = start_time
+        self.end_time = end_time
+        self.fields = fields
+        self.parameters = parameters
+        self.where = where
+        self.vendor = vendor
 
     @property
     def name(self) -> str:
@@ -445,13 +453,53 @@ class Function(Base):
 
     @property
     def start_date(self) -> str:
-        """The relative date for columns requiring historical data. Eg: -1y."""
+        """The relative start date for columns requiring historical data. Eg: -1y."""
         return self.__start_date
 
     @start_date.setter
     def start_date(self, value: str):
         self.__start_date = value
         self._property_changed('start_date')        
+
+    @property
+    def end_date(self) -> str:
+        """The relative end date for columns requiring historical data. Eg: -1y."""
+        return self.__end_date
+
+    @end_date.setter
+    def end_date(self, value: str):
+        self.__end_date = value
+        self._property_changed('end_date')        
+
+    @property
+    def start_time(self) -> str:
+        """The relative start time for columns requiring historical data. Eg: -1y."""
+        return self.__start_time
+
+    @start_time.setter
+    def start_time(self, value: str):
+        self.__start_time = value
+        self._property_changed('start_time')        
+
+    @property
+    def end_time(self) -> str:
+        """The relative end time for columns requiring historical data. Eg: -1y."""
+        return self.__end_time
+
+    @end_time.setter
+    def end_time(self, value: str):
+        self.__end_time = value
+        self._property_changed('end_time')        
+
+    @property
+    def fields(self) -> Tuple[str, ...]:
+        """Fields to be passed into Measure Service. i.e. sum(value)"""
+        return self.__fields
+
+    @fields.setter
+    def fields(self, value: Tuple[str, ...]):
+        self.__fields = value
+        self._property_changed('fields')        
 
     @property
     def parameters(self) -> FunctionParameters:
@@ -496,16 +544,16 @@ class RateRow(Base):
         std: float,
         slope: float,
         historical: Historical = None,
-        percentage_change: float = None        
-    ):
+        percentage_change: float = None
+    ):        
         super().__init__()
-        self.__period = period
-        self.__last = last
-        self.__historical = historical
-        self.__change = change
-        self.__percentage_change = percentage_change
-        self.__std = std
-        self.__slope = slope
+        self.period = period
+        self.last = last
+        self.historical = historical
+        self.change = change
+        self.percentage_change = percentage_change
+        self.std = std
+        self.slope = slope
 
     @property
     def period(self):
@@ -588,13 +636,13 @@ class RowGroup(Base):
         name: str,
         entity_ids: Tuple[str, ...],
         movers: Movers = None,
-        sort: Sort = None        
-    ):
+        sort: Sort = None
+    ):        
         super().__init__()
-        self.__name = name
-        self.__movers = movers
-        self.__entity_ids = entity_ids
-        self.__sort = sort
+        self.name = name
+        self.movers = movers
+        self.entity_ids = entity_ids
+        self.sort = sort
 
     @property
     def name(self) -> str:
@@ -650,16 +698,16 @@ class ColumnDefinition(Base):
         entity_property=None,
         function: Function = None,
         format_: ColumnFormat = None,
-        width: float = None        
-    ):
+        width: float = None
+    ):        
         super().__init__()
-        self.__enable_cell_flashing = enable_cell_flashing
-        self.__name = name
-        self.__render = render
-        self.__entity_property = entity_property
-        self.__function = function
+        self.enable_cell_flashing = enable_cell_flashing
+        self.name = name
+        self.render = render
+        self.entity_property = entity_property
+        self.function = function
         self.__format = format_
-        self.__width = width
+        self.width = width
 
     @property
     def enable_cell_flashing(self) -> bool:
@@ -741,13 +789,13 @@ class RatesResponseData(Base):
         name,
         id_: str,
         rows: Tuple[RateRow, ...],
-        libor_id: str = None        
-    ):
+        libor_id: str = None
+    ):        
         super().__init__()
-        self.__name = name
+        self.name = name
         self.__id = id_
-        self.__libor_id = libor_id
-        self.__rows = rows
+        self.libor_id = libor_id
+        self.rows = rows
 
     @property
     def name(self):
@@ -806,20 +854,22 @@ class MonitorParameters(Base):
         last_meeting: bool = None,
         rebase_to_end_of_year_spot: bool = None,
         filters: Tuple[WipiRequestFilter, ...] = None,
-        exportable: Tuple[str, ...] = None        
-    ):
+        exportable: Tuple[str, ...] = None,
+        fill_column_index: float = None
+    ):        
         super().__init__()
-        self.__column_definitions = column_definitions
-        self.__row_groups = row_groups
-        self.__data_set_id = data_set_id
-        self.__rebase_to_spot = rebase_to_spot
-        self.__rebase_historical_curve = rebase_historical_curve
-        self.__meeting_after_next = meeting_after_next
-        self.__next_meeting = next_meeting
-        self.__last_meeting = last_meeting
-        self.__rebase_to_end_of_year_spot = rebase_to_end_of_year_spot
-        self.__filters = filters
-        self.__exportable = exportable
+        self.column_definitions = column_definitions
+        self.row_groups = row_groups
+        self.data_set_id = data_set_id
+        self.rebase_to_spot = rebase_to_spot
+        self.rebase_historical_curve = rebase_historical_curve
+        self.meeting_after_next = meeting_after_next
+        self.next_meeting = next_meeting
+        self.last_meeting = last_meeting
+        self.rebase_to_end_of_year_spot = rebase_to_end_of_year_spot
+        self.filters = filters
+        self.exportable = exportable
+        self.fill_column_index = fill_column_index
 
     @property
     def column_definitions(self) -> Tuple[ColumnDefinition, ...]:
@@ -934,6 +984,17 @@ class MonitorParameters(Base):
         self.__exportable = value
         self._property_changed('exportable')        
 
+    @property
+    def fill_column_index(self) -> float:
+        """The Index to place the fill column. The Fill column is remaining white space in
+           the monitor. Defaults to the last column."""
+        return self.__fill_column_index
+
+    @fill_column_index.setter
+    def fill_column_index(self, value: float):
+        self.__fill_column_index = value
+        self._property_changed('fill_column_index')        
+
 
 class Monitor(Base):
         
@@ -953,22 +1014,22 @@ class Monitor(Base):
         entitlements: Entitlements = None,
         folder_name: str = None,
         polling_time: float = None,
-        tags: Tuple[str, ...] = None        
-    ):
+        tags: Tuple[str, ...] = None
+    ):        
         super().__init__()
         self.__id = id_
-        self.__name = name
+        self.name = name
         self.__type = type_
-        self.__parameters = parameters
-        self.__created_time = created_time
-        self.__last_updated_time = last_updated_time
-        self.__created_by_id = created_by_id
-        self.__last_updated_by_id = last_updated_by_id
-        self.__owner_id = owner_id
-        self.__entitlements = entitlements
-        self.__folder_name = folder_name
-        self.__polling_time = polling_time
-        self.__tags = tags
+        self.parameters = parameters
+        self.created_time = created_time
+        self.last_updated_time = last_updated_time
+        self.created_by_id = created_by_id
+        self.last_updated_by_id = last_updated_by_id
+        self.owner_id = owner_id
+        self.entitlements = entitlements
+        self.folder_name = folder_name
+        self.polling_time = polling_time
+        self.tags = tags
 
     @property
     def id(self) -> str:

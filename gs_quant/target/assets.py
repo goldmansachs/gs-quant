@@ -276,23 +276,25 @@ class AssetClassifications(Base):
         country_name: str = None,
         country_code: str = None,
         is_primary: bool = None,
+        is_country_primary: bool = None,
         gics_sector: str = None,
         gics_industry_group: str = None,
         gics_industry: str = None,
         gics_sub_industry: str = None,
-        commod_template: str = None        
-    ):
+        commod_template: str = None
+    ):        
         super().__init__()
-        self.__risk_country_name = risk_country_name
-        self.__risk_country_code = risk_country_code
-        self.__country_name = country_name
-        self.__country_code = country_code
-        self.__is_primary = is_primary
-        self.__gics_sector = gics_sector
-        self.__gics_industry_group = gics_industry_group
-        self.__gics_industry = gics_industry
-        self.__gics_sub_industry = gics_sub_industry
-        self.__commod_template = commod_template
+        self.risk_country_name = risk_country_name
+        self.risk_country_code = risk_country_code
+        self.country_name = country_name
+        self.country_code = country_code
+        self.is_primary = is_primary
+        self.is_country_primary = is_country_primary
+        self.gics_sector = gics_sector
+        self.gics_industry_group = gics_industry_group
+        self.gics_industry = gics_industry
+        self.gics_sub_industry = gics_sub_industry
+        self.commod_template = commod_template
 
     @property
     def risk_country_name(self) -> str:
@@ -343,6 +345,16 @@ class AssetClassifications(Base):
     def is_primary(self, value: bool):
         self.__is_primary = value
         self._property_changed('is_primary')        
+
+    @property
+    def is_country_primary(self) -> bool:
+        """Is this the primary exchange listing for the asset given the exchange country"""
+        return self.__is_country_primary
+
+    @is_country_primary.setter
+    def is_country_primary(self, value: bool):
+        self.__is_country_primary = value
+        self._property_changed('is_country_primary')        
 
     @property
     def gics_sector(self) -> str:
@@ -404,13 +416,13 @@ class AssetToInstrumentResponse(Base):
         asset_id: str,
         name: str,
         instrument: Instrument,
-        size_field: str        
-    ):
+        size_field: str
+    ):        
         super().__init__()
-        self.__asset_id = asset_id
-        self.__name = name
-        self.__instrument = instrument
-        self.__size_field = size_field
+        self.asset_id = asset_id
+        self.name = name
+        self.instrument = instrument
+        self.size_field = size_field
 
     @property
     def asset_id(self) -> str:
@@ -461,12 +473,12 @@ class Benchmark(Base):
         self,
         asset_id: str = None,
         value: float = None,
-        name: str = None        
-    ):
+        name: str = None
+    ):        
         super().__init__()
-        self.__asset_id = asset_id
-        self.__value = value
-        self.__name = name
+        self.asset_id = asset_id
+        self.value = value
+        self.name = name
 
     @property
     def asset_id(self) -> str:
@@ -506,11 +518,11 @@ class NumberRange(Base):
     def __init__(
         self,
         lower_bound: float = None,
-        upper_bound: float = None        
-    ):
+        upper_bound: float = None
+    ):        
         super().__init__()
-        self.__lower_bound = lower_bound
-        self.__upper_bound = upper_bound
+        self.lower_bound = lower_bound
+        self.upper_bound = upper_bound
 
     @property
     def lower_bound(self) -> float:
@@ -539,10 +551,10 @@ class People(Base):
        
     def __init__(
         self,
-        portfolio_managers: Tuple[str, ...] = None        
-    ):
+        portfolio_managers: Tuple[str, ...] = None
+    ):        
         super().__init__()
-        self.__portfolio_managers = portfolio_managers
+        self.portfolio_managers = portfolio_managers
 
     @property
     def portfolio_managers(self) -> Tuple[str, ...]:
@@ -570,19 +582,19 @@ class PerformanceStatsRequest(Base):
         sharpe_ratio: Op = None,
         sortino_ratio: Op = None,
         worst_month: Op = None,
-        average_return: Op = None        
-    ):
+        average_return: Op = None
+    ):        
         super().__init__()
-        self.__annualized_return = annualized_return
-        self.__annualized_volatility = annualized_volatility
-        self.__best_month = best_month
-        self.__max_draw_down = max_draw_down
-        self.__max_draw_down_duration = max_draw_down_duration
-        self.__positive_months = positive_months
-        self.__sharpe_ratio = sharpe_ratio
-        self.__sortino_ratio = sortino_ratio
-        self.__worst_month = worst_month
-        self.__average_return = average_return
+        self.annualized_return = annualized_return
+        self.annualized_volatility = annualized_volatility
+        self.best_month = best_month
+        self.max_draw_down = max_draw_down
+        self.max_draw_down_duration = max_draw_down_duration
+        self.positive_months = positive_months
+        self.sharpe_ratio = sharpe_ratio
+        self.sortino_ratio = sortino_ratio
+        self.worst_month = worst_month
+        self.average_return = average_return
 
     @property
     def annualized_return(self) -> Op:
@@ -706,25 +718,25 @@ class SecuritiesLendingLoan(Base):
         security_settle_date: datetime.date = None,
         cash_settle_date: datetime.date = None,
         term_date: datetime.date = None,
-        return_date: datetime.date = None        
-    ):
+        return_date: datetime.date = None
+    ):        
         super().__init__()
-        self.__asset_id = asset_id
-        self.__fund_id = fund_id
-        self.__lender_id = lender_id
-        self.__borrower_id = borrower_id
-        self.__loan_status = loan_status
-        self.__settlement_status = settlement_status
-        self.__collateral_type = collateral_type
-        self.__loan_currency = get_enum_value(Currency, loan_currency)
-        self.__adjustment_ind = adjustment_ind
-        self.__country_of_issue = country_of_issue
-        self.__input_date = input_date
-        self.__effective_date = effective_date
-        self.__security_settle_date = security_settle_date
-        self.__cash_settle_date = cash_settle_date
-        self.__term_date = term_date
-        self.__return_date = return_date
+        self.asset_id = asset_id
+        self.fund_id = fund_id
+        self.lender_id = lender_id
+        self.borrower_id = borrower_id
+        self.loan_status = loan_status
+        self.settlement_status = settlement_status
+        self.collateral_type = collateral_type
+        self.loan_currency = loan_currency
+        self.adjustment_ind = adjustment_ind
+        self.country_of_issue = country_of_issue
+        self.input_date = input_date
+        self.effective_date = effective_date
+        self.security_settle_date = security_settle_date
+        self.cash_settle_date = cash_settle_date
+        self.term_date = term_date
+        self.return_date = return_date
 
     @property
     def asset_id(self) -> str:
@@ -893,10 +905,10 @@ class SocialDomain(Base):
                
     def __init__(
         self,
-        onboarded: dict        
-    ):
+        onboarded: dict
+    ):        
         super().__init__()
-        self.__onboarded = onboarded
+        self.onboarded = onboarded
 
     @property
     def onboarded(self) -> dict:
@@ -914,12 +926,12 @@ class TemporalXRef(Base):
         self,
         start_date: datetime.date = None,
         end_date: datetime.date = None,
-        identifiers: XRef = None        
-    ):
+        identifiers: XRef = None
+    ):        
         super().__init__()
-        self.__start_date = start_date
-        self.__end_date = end_date
-        self.__identifiers = identifiers
+        self.start_date = start_date
+        self.end_date = end_date
+        self.identifiers = identifiers
 
     @property
     def start_date(self) -> datetime.date:
@@ -1027,80 +1039,80 @@ class AssetParameters(Base):
         trade_as: str = None,
         clone_parent_id: str = None,
         on_behalf_of: str = None,
-        index_calculation_agent: str = None        
-    ):
+        index_calculation_agent: str = None
+    ):        
         super().__init__()
-        self.__basket_type = basket_type
-        self.__style = style
-        self.__index_calculation_type = index_calculation_type
-        self.__index_return_type = index_return_type
-        self.__index_divisor = index_divisor
-        self.__currency = get_enum_value(Currency, currency)
-        self.__quote_currency = get_enum_value(Currency, quote_currency)
-        self.__index_initial_price = index_initial_price
-        self.__initial_pricing_date = initial_pricing_date
-        self.__expiration_date = expiration_date
-        self.__expiration_location = expiration_location
-        self.__option_style = option_style
-        self.__option_type = get_enum_value(OptionType, option_type)
-        self.__settlement_date = settlement_date
-        self.__settlement_type = settlement_type
-        self.__strike_price = strike_price
-        self.__put_currency = get_enum_value(Currency, put_currency)
-        self.__put_amount = put_amount
-        self.__automatic_exercise = automatic_exercise
-        self.__call_amount = call_amount
-        self.__call_currency = get_enum_value(Currency, call_currency)
-        self.__exercise_time = exercise_time
-        self.__multiplier = multiplier
-        self.__premium_payment_date = premium_payment_date
-        self.__premium = premium
-        self.__premium_currency = get_enum_value(Currency, premium_currency)
+        self.basket_type = basket_type
+        self.style = style
+        self.index_calculation_type = index_calculation_type
+        self.index_return_type = index_return_type
+        self.index_divisor = index_divisor
+        self.currency = currency
+        self.quote_currency = quote_currency
+        self.index_initial_price = index_initial_price
+        self.initial_pricing_date = initial_pricing_date
+        self.expiration_date = expiration_date
+        self.expiration_location = expiration_location
+        self.option_style = option_style
+        self.option_type = option_type
+        self.settlement_date = settlement_date
+        self.settlement_type = settlement_type
+        self.strike_price = strike_price
+        self.put_currency = put_currency
+        self.put_amount = put_amount
+        self.automatic_exercise = automatic_exercise
+        self.call_amount = call_amount
+        self.call_currency = call_currency
+        self.exercise_time = exercise_time
+        self.multiplier = multiplier
+        self.premium_payment_date = premium_payment_date
+        self.premium = premium
+        self.premium_currency = premium_currency
         self.__callable = callable_
-        self.__puttable = puttable
-        self.__perpetual = perpetual
-        self.__seniority = seniority
-        self.__coupon_type = coupon_type
-        self.__index = index
-        self.__index_term = index_term
-        self.__index_margin = index_margin
-        self.__coupon = coupon
-        self.__issue_date = issue_date
-        self.__issuer = issuer
-        self.__issuer_country_code = issuer_country_code
-        self.__issuer_type = issuer_type
-        self.__issue_size = issue_size
-        self.__commodity_sector = get_enum_value(CommoditySector, commodity_sector)
-        self.__pricing_location = get_enum_value(PricingLocation, pricing_location)
-        self.__contract_months = contract_months
-        self.__g10_currency = g10_currency
-        self.__hedge_id = hedge_id
-        self.__ultimate_ticker = ultimate_ticker
-        self.__strategy = get_enum_value(Strategy, strategy)
-        self.__supra_strategy = get_enum_value(SupraStrategy, supra_strategy)
-        self.__exchange_currency = get_enum_value(Currency, exchange_currency)
-        self.__region = region
-        self.__delivery_point = delivery_point
-        self.__pricing_index = pricing_index
-        self.__contract_month = contract_month
-        self.__load_type = load_type
-        self.__contract_unit = contract_unit
-        self.__index_create_source = get_enum_value(IndexCreateSource, index_create_source)
-        self.__index_approval_ids = index_approval_ids
-        self.__is_pair_basket = is_pair_basket
-        self.__fixed_rate_day_count_fraction = get_enum_value(DayCountFraction, fixed_rate_day_count_fraction)
-        self.__floating_rate_day_count_fraction = get_enum_value(DayCountFraction, floating_rate_day_count_fraction)
-        self.__pay_day_count_fraction = get_enum_value(DayCountFraction, pay_day_count_fraction)
-        self.__receive_day_count_fraction = get_enum_value(DayCountFraction, receive_day_count_fraction)
-        self.__pay_frequency = pay_frequency
-        self.__receive_frequency = receive_frequency
-        self.__resettable_leg = get_enum_value(PayReceive, resettable_leg)
-        self.__inflation_lag = inflation_lag
-        self.__fx_index = fx_index
-        self.__trade_as = trade_as
-        self.__clone_parent_id = clone_parent_id
-        self.__on_behalf_of = on_behalf_of
-        self.__index_calculation_agent = index_calculation_agent
+        self.puttable = puttable
+        self.perpetual = perpetual
+        self.seniority = seniority
+        self.coupon_type = coupon_type
+        self.index = index
+        self.index_term = index_term
+        self.index_margin = index_margin
+        self.coupon = coupon
+        self.issue_date = issue_date
+        self.issuer = issuer
+        self.issuer_country_code = issuer_country_code
+        self.issuer_type = issuer_type
+        self.issue_size = issue_size
+        self.commodity_sector = commodity_sector
+        self.pricing_location = pricing_location
+        self.contract_months = contract_months
+        self.g10_currency = g10_currency
+        self.hedge_id = hedge_id
+        self.ultimate_ticker = ultimate_ticker
+        self.strategy = strategy
+        self.supra_strategy = supra_strategy
+        self.exchange_currency = exchange_currency
+        self.region = region
+        self.delivery_point = delivery_point
+        self.pricing_index = pricing_index
+        self.contract_month = contract_month
+        self.load_type = load_type
+        self.contract_unit = contract_unit
+        self.index_create_source = index_create_source
+        self.index_approval_ids = index_approval_ids
+        self.is_pair_basket = is_pair_basket
+        self.fixed_rate_day_count_fraction = fixed_rate_day_count_fraction
+        self.floating_rate_day_count_fraction = floating_rate_day_count_fraction
+        self.pay_day_count_fraction = pay_day_count_fraction
+        self.receive_day_count_fraction = receive_day_count_fraction
+        self.pay_frequency = pay_frequency
+        self.receive_frequency = receive_frequency
+        self.resettable_leg = resettable_leg
+        self.inflation_lag = inflation_lag
+        self.fx_index = fx_index
+        self.trade_as = trade_as
+        self.clone_parent_id = clone_parent_id
+        self.on_behalf_of = on_behalf_of
+        self.index_calculation_agent = index_calculation_agent
 
     @property
     def basket_type(self) -> str:
@@ -1818,13 +1830,13 @@ class AssetStats(Base):
         last_updated_time: datetime.datetime = None,
         period: Union[AssetStatsPeriod, str] = None,
         type_: Union[AssetStatsType, str] = None,
-        stats: PerformanceStats = None        
-    ):
+        stats: PerformanceStats = None
+    ):        
         super().__init__()
-        self.__last_updated_time = last_updated_time
-        self.__period = get_enum_value(AssetStatsPeriod, period)
+        self.last_updated_time = last_updated_time
+        self.period = period
         self.__type = get_enum_value(AssetStatsType, type_)
-        self.__stats = stats
+        self.stats = stats
 
     @property
     def last_updated_time(self) -> datetime.datetime:
@@ -1875,13 +1887,13 @@ class AssetStatsRequest(Base):
         last_updated_time: DateRange = None,
         period: Union[AssetStatsPeriod, str] = None,
         type_: Union[AssetStatsType, str] = None,
-        stats: PerformanceStatsRequest = None        
-    ):
+        stats: PerformanceStatsRequest = None
+    ):        
         super().__init__()
-        self.__last_updated_time = last_updated_time
-        self.__period = get_enum_value(AssetStatsPeriod, period)
+        self.last_updated_time = last_updated_time
+        self.period = period
         self.__type = get_enum_value(AssetStatsType, type_)
-        self.__stats = stats
+        self.stats = stats
 
     @property
     def last_updated_time(self) -> DateRange:
@@ -1930,11 +1942,11 @@ class CommodConfigParameters(Base):
     def __init__(
         self,
         infra: str,
-        field_history: Tuple[dict, ...]        
-    ):
+        field_history: Tuple[dict, ...]
+    ):        
         super().__init__()
-        self.__infra = infra
-        self.__field_history = field_history
+        self.infra = infra
+        self.field_history = field_history
 
     @property
     def infra(self) -> str:
@@ -1980,29 +1992,29 @@ class HedgeFundParameters(Base):
         targeted_num_of_positions_long: NumberRange = None,
         turnover: str = None,
         vehicle_type: str = None,
-        net_exposure_classification: Union[NetExposureClassification, str] = None        
-    ):
+        net_exposure_classification: Union[NetExposureClassification, str] = None
+    ):        
         super().__init__()
-        self.__aum = aum
-        self.__strategy_aum = strategy_aum
-        self.__aum_range = aum_range
-        self.__strategy_aum_range = strategy_aum_range
-        self.__disclaimers = disclaimers
-        self.__market_cap_category = market_cap_category
-        self.__marketing_status = marketing_status
-        self.__preferences = preferences
-        self.__regional_focus = regional_focus
-        self.__risk_taking_model = risk_taking_model
-        self.__strategy = get_enum_value(Strategy, strategy)
-        self.__supra_strategy = get_enum_value(SupraStrategy, supra_strategy)
-        self.__strategy_description = strategy_description
-        self.__targeted_gross_exposure = targeted_gross_exposure
-        self.__targeted_net_exposure = targeted_net_exposure
-        self.__targeted_num_of_positions_short = targeted_num_of_positions_short
-        self.__targeted_num_of_positions_long = targeted_num_of_positions_long
-        self.__turnover = turnover
-        self.__vehicle_type = vehicle_type
-        self.__net_exposure_classification = get_enum_value(NetExposureClassification, net_exposure_classification)
+        self.aum = aum
+        self.strategy_aum = strategy_aum
+        self.aum_range = aum_range
+        self.strategy_aum_range = strategy_aum_range
+        self.disclaimers = disclaimers
+        self.market_cap_category = market_cap_category
+        self.marketing_status = marketing_status
+        self.preferences = preferences
+        self.regional_focus = regional_focus
+        self.risk_taking_model = risk_taking_model
+        self.strategy = strategy
+        self.supra_strategy = supra_strategy
+        self.strategy_description = strategy_description
+        self.targeted_gross_exposure = targeted_gross_exposure
+        self.targeted_net_exposure = targeted_net_exposure
+        self.targeted_num_of_positions_short = targeted_num_of_positions_short
+        self.targeted_num_of_positions_long = targeted_num_of_positions_long
+        self.turnover = turnover
+        self.vehicle_type = vehicle_type
+        self.net_exposure_classification = net_exposure_classification
 
     @property
     def aum(self) -> float:
@@ -2260,39 +2272,39 @@ class ShareClassParameters(Base):
         side_pocket: str = None,
         status: str = None,
         sub_category: str = None,
-        term_type: str = None        
-    ):
+        term_type: str = None
+    ):        
         super().__init__()
-        self.__active_liquidity_fee = active_liquidity_fee
-        self.__additional_provisions = additional_provisions
-        self.__benchmark = benchmark
-        self.__class_fees = class_fees
-        self.__class_type = class_type
-        self.__early_redemption_fee = early_redemption_fee
-        self.__expense_ratio_gross = expense_ratio_gross
-        self.__expense_ratio_net = expense_ratio_net
-        self.__share_class_type = share_class_type
-        self.__gate = gate
-        self.__gate_type = gate_type
-        self.__hurdle = hurdle
-        self.__hurdle_type = hurdle_type
-        self.__investment_manager = investment_manager
-        self.__investment_type = investment_type
-        self.__institutional_share_class = institutional_share_class
-        self.__lockup = lockup
-        self.__lockup_type = lockup_type
-        self.__management_fee = management_fee
-        self.__minimum_subscription = minimum_subscription
-        self.__name = name
-        self.__number_of_shares = number_of_shares
-        self.__performance_fee = performance_fee
-        self.__redemption_notice_period = redemption_notice_period
-        self.__redemption_period = redemption_period
-        self.__share_class_currency = share_class_currency
-        self.__side_pocket = side_pocket
-        self.__status = status
-        self.__sub_category = sub_category
-        self.__term_type = term_type
+        self.active_liquidity_fee = active_liquidity_fee
+        self.additional_provisions = additional_provisions
+        self.benchmark = benchmark
+        self.class_fees = class_fees
+        self.class_type = class_type
+        self.early_redemption_fee = early_redemption_fee
+        self.expense_ratio_gross = expense_ratio_gross
+        self.expense_ratio_net = expense_ratio_net
+        self.share_class_type = share_class_type
+        self.gate = gate
+        self.gate_type = gate_type
+        self.hurdle = hurdle
+        self.hurdle_type = hurdle_type
+        self.investment_manager = investment_manager
+        self.investment_type = investment_type
+        self.institutional_share_class = institutional_share_class
+        self.lockup = lockup
+        self.lockup_type = lockup_type
+        self.management_fee = management_fee
+        self.minimum_subscription = minimum_subscription
+        self.name = name
+        self.number_of_shares = number_of_shares
+        self.performance_fee = performance_fee
+        self.redemption_notice_period = redemption_notice_period
+        self.redemption_period = redemption_period
+        self.share_class_currency = share_class_currency
+        self.side_pocket = side_pocket
+        self.status = status
+        self.sub_category = sub_category
+        self.term_type = term_type
 
     @property
     def active_liquidity_fee(self) -> float:
@@ -2607,12 +2619,12 @@ class TemporalPeople(Base):
         self,
         start_date: datetime.date = None,
         end_date: datetime.date = None,
-        people: People = None        
-    ):
+        people: People = None
+    ):        
         super().__init__()
-        self.__start_date = start_date
-        self.__end_date = end_date
-        self.__people = people
+        self.start_date = start_date
+        self.end_date = end_date
+        self.people = people
 
     @property
     def start_date(self) -> datetime.date:
@@ -2679,35 +2691,35 @@ class Asset(Base):
         short_name: str = None,
         styles: Tuple[str, ...] = None,
         tags: Tuple[str, ...] = None,
-        underlying_asset_ids: Tuple[str, ...] = None        
-    ):
+        underlying_asset_ids: Tuple[str, ...] = None
+    ):        
         super().__init__()
-        self.__asset_class = get_enum_value(AssetClass, asset_class)
-        self.__created_by_id = created_by_id
-        self.__created_time = created_time
-        self.__currency = get_enum_value(Currency, currency)
-        self.__description = description
-        self.__entitlements = entitlements
-        self.__entitlement_exclusions = entitlement_exclusions
-        self.__exchange = exchange
+        self.asset_class = asset_class
+        self.created_by_id = created_by_id
+        self.created_time = created_time
+        self.currency = currency
+        self.description = description
+        self.entitlements = entitlements
+        self.entitlement_exclusions = entitlement_exclusions
+        self.exchange = exchange
         self.__id = id_
-        self.__identifiers = identifiers
-        self.__last_updated_by_id = last_updated_by_id
-        self.__last_updated_time = last_updated_time
-        self.__listed = listed
-        self.__live_date = live_date
-        self.__name = name
-        self.__owner_id = owner_id
-        self.__parameters = parameters
-        self.__asset_stats = asset_stats
-        self.__people = people
-        self.__region = get_enum_value(Region, region)
-        self.__report_ids = report_ids
-        self.__short_name = short_name
-        self.__styles = styles
-        self.__tags = tags
+        self.identifiers = identifiers
+        self.last_updated_by_id = last_updated_by_id
+        self.last_updated_time = last_updated_time
+        self.listed = listed
+        self.live_date = live_date
+        self.name = name
+        self.owner_id = owner_id
+        self.parameters = parameters
+        self.asset_stats = asset_stats
+        self.people = people
+        self.region = region
+        self.report_ids = report_ids
+        self.short_name = short_name
+        self.styles = styles
+        self.tags = tags
         self.__type = get_enum_value(AssetType, type_)
-        self.__underlying_asset_ids = underlying_asset_ids
+        self.underlying_asset_ids = underlying_asset_ids
 
     @property
     def asset_class(self) -> Union[AssetClass, str]:
@@ -2990,22 +3002,22 @@ class EntityQuery(Base):
         scroll_id: str = None,
         fields: Tuple[Union[dict, str], ...] = None,
         limit: int = None,
-        offset: int = None        
-    ):
+        offset: int = None
+    ):        
         super().__init__()
         self.__format = get_enum_value(Format, format_)
-        self.__where = where
-        self.__as_of_time = as_of_time
-        self.__last_updated_since = last_updated_since
-        self.__date = date
-        self.__time = time
-        self.__delay = delay
-        self.__order_by = order_by
-        self.__scroll = scroll
-        self.__scroll_id = scroll_id
-        self.__fields = fields
-        self.__limit = limit
-        self.__offset = offset
+        self.where = where
+        self.as_of_time = as_of_time
+        self.last_updated_since = last_updated_since
+        self.date = date
+        self.time = time
+        self.delay = delay
+        self.order_by = order_by
+        self.scroll = scroll
+        self.scroll_id = scroll_id
+        self.fields = fields
+        self.limit = limit
+        self.offset = offset
 
     @property
     def format(self) -> Union[Format, str]:

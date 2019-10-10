@@ -53,27 +53,27 @@ class Portfolio(Base):
         underlying_portfolio_ids: Tuple[str, ...] = None,
         tags: Tuple[str, ...] = None,
         type_: Union[PortfolioType, str] = None,
-        parameters: LiquidityRequest = None        
-    ):
+        parameters: LiquidityRequest = None
+    ):        
         super().__init__()
-        self.__created_by_id = created_by_id
-        self.__created_time = created_time
-        self.__currency = get_enum_value(Currency, currency)
-        self.__description = description
-        self.__entitlements = entitlements
-        self.__entitlement_exclusions = entitlement_exclusions
+        self.created_by_id = created_by_id
+        self.created_time = created_time
+        self.currency = currency
+        self.description = description
+        self.entitlements = entitlements
+        self.entitlement_exclusions = entitlement_exclusions
         self.__id = id_
-        self.__identifiers = identifiers
-        self.__last_updated_by_id = last_updated_by_id
-        self.__last_updated_time = last_updated_time
-        self.__name = name
-        self.__owner_id = owner_id
-        self.__report_ids = report_ids
-        self.__short_name = short_name
-        self.__underlying_portfolio_ids = underlying_portfolio_ids
-        self.__tags = tags
+        self.identifiers = identifiers
+        self.last_updated_by_id = last_updated_by_id
+        self.last_updated_time = last_updated_time
+        self.name = name
+        self.owner_id = owner_id
+        self.report_ids = report_ids
+        self.short_name = short_name
+        self.underlying_portfolio_ids = underlying_portfolio_ids
+        self.tags = tags
         self.__type = get_enum_value(PortfolioType, type_)
-        self.__parameters = parameters
+        self.parameters = parameters
 
     @property
     def created_by_id(self) -> str:

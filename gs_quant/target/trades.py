@@ -439,13 +439,13 @@ class MqexsErrorInfo(Base):
         error_code: str,
         error_msg: str,
         error_severity: Union[MqexsErrorSeverity, str] = None,
-        asset_class: Union[MqexsAssetClass, str] = None        
-    ):
+        asset_class: Union[MqexsAssetClass, str] = None
+    ):        
         super().__init__()
-        self.__error_code = error_code
-        self.__error_msg = error_msg
-        self.__error_severity = get_enum_value(MqexsErrorSeverity, error_severity)
-        self.__asset_class = get_enum_value(MqexsAssetClass, asset_class)
+        self.error_code = error_code
+        self.error_msg = error_msg
+        self.error_severity = error_severity
+        self.asset_class = asset_class
 
     @property
     def error_code(self) -> str:
@@ -500,13 +500,13 @@ class MqexsProductDetails(Base):
         name: str,
         contract_code: str = None,
         clearer: Union[MqexsClearer, str] = None,
-        settlement_type: Union[MqexsOtcSettlementType, str] = None        
-    ):
+        settlement_type: Union[MqexsOtcSettlementType, str] = None
+    ):        
         super().__init__()
-        self.__contract_code = contract_code
-        self.__name = name
-        self.__clearer = get_enum_value(MqexsClearer, clearer)
-        self.__settlement_type = get_enum_value(MqexsOtcSettlementType, settlement_type)
+        self.contract_code = contract_code
+        self.name = name
+        self.clearer = clearer
+        self.settlement_type = settlement_type
 
     @property
     def contract_code(self) -> str:
@@ -560,15 +560,15 @@ class MqexsTradeDetails(Base):
         unit_price: str,
         currency: Union[MqexsCurrencyExt, str],
         settlement_date: datetime.date = None,
-        quantity_unit: str = None        
-    ):
+        quantity_unit: str = None
+    ):        
         super().__init__()
-        self.__settlement_date = settlement_date
-        self.__side = get_enum_value(MqexsSide, side)
-        self.__quantity = quantity
-        self.__unit_price = unit_price
-        self.__quantity_unit = quantity_unit
-        self.__currency = get_enum_value(MqexsCurrencyExt, currency)
+        self.settlement_date = settlement_date
+        self.side = side
+        self.quantity = quantity
+        self.unit_price = unit_price
+        self.quantity_unit = quantity_unit
+        self.currency = currency
 
     @property
     def settlement_date(self) -> datetime.date:
@@ -646,18 +646,18 @@ class MqexsTradeExt(Base):
         created_by_id: str,
         created_time: datetime.datetime,
         last_updated_time: datetime.datetime,
-        last_updated_by_id: str        
-    ):
+        last_updated_by_id: str
+    ):        
         super().__init__()
         self.__id = id_
-        self.__trade_details = trade_details
-        self.__product_details = product_details
-        self.__quote_id = quote_id
-        self.__asset_class = get_enum_value(MqexsAssetClassExt, asset_class)
-        self.__created_by_id = created_by_id
-        self.__created_time = created_time
-        self.__last_updated_time = last_updated_time
-        self.__last_updated_by_id = last_updated_by_id
+        self.trade_details = trade_details
+        self.product_details = product_details
+        self.quote_id = quote_id
+        self.asset_class = asset_class
+        self.created_by_id = created_by_id
+        self.created_time = created_time
+        self.last_updated_time = last_updated_time
+        self.last_updated_by_id = last_updated_by_id
 
     @property
     def id(self) -> str:
@@ -760,11 +760,11 @@ class MqexsTradesWErrorExt(Base):
     def __init__(
         self,
         trades: Tuple[MqexsTradeExt, ...] = None,
-        errors: Tuple[MqexsErrorInfo, ...] = None        
-    ):
+        errors: Tuple[MqexsErrorInfo, ...] = None
+    ):        
         super().__init__()
-        self.__trades = trades
-        self.__errors = errors
+        self.trades = trades
+        self.errors = errors
 
     @property
     def trades(self) -> Tuple[MqexsTradeExt, ...]:

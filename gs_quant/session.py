@@ -15,7 +15,6 @@ under the License.
 """
 
 import inspect
-import itertools
 import json
 import os
 from abc import abstractmethod
@@ -88,14 +87,6 @@ class GsSession(ContextBase):
     @abstractmethod
     def _authenticate(self):
         raise NotImplementedError("Must implement _authenticate")
-
-    @abstractmethod
-    def endpoints_and_definitions(self, service):
-        raise NotImplementedError("Must implement endpoints_and_definitions")
-
-    @abstractmethod
-    def request_response_gen(self, endpoint_definition):
-        raise NotImplementedError("Must implement request_response_gen")
 
     def _on_enter(self):
         self.__close_on_exit = self._session is None
@@ -283,8 +274,15 @@ class GsSession(ContextBase):
             return OAuth2Session(environment_or_domain, client_id, client_secret, scopes, api_version=api_version,
                                  application=application, http_adapter=http_adapter)
         elif token:
-            return PassThroughSession(environment_or_domain, token, is_gssso, api_version=api_version,
-                                      application=application, http_adapter=http_adapter)
+            if is_gssso:
+                try:
+                    return PassThroughGSSSOSession(environment_or_domain, token, api_version=api_version,
+                                                   application=application, http_adapter=http_adapter)
+                except NameError:
+                    raise MqUninitialisedError('This option requires gs_quant_internal to be installed')
+            else:
+                return PassThroughSession(environment_or_domain, token, api_version=api_version,
+                                          application=application, http_adapter=http_adapter)
         else:
             try:
                 return KerberosSession(environment_or_domain, api_version=api_version, http_adapter=http_adapter)
@@ -293,6 +291,7 @@ class GsSession(ContextBase):
 
 
 class OAuth2Session(GsSession):
+
     def __init__(self, environment, client_id, client_secret, scopes, api_version=API_VERSION,
                  application=DEFAULT_APPLICATION, http_adapter=None):
         env_config = self._config_for_environment(environment)
@@ -323,59 +322,45 @@ class OAuth2Session(GsSession):
         response = json.loads(reply.text)
         self._session.headers.update({'Authorization': 'Bearer {}'.format(response['access_token'])})
 
-    def request_response_gen(self, endpoint_definition):
-        return filter(None, itertools.chain(
-            (endpoint_definition.get('requestBody', {}),),
-            endpoint_definition.get('responseBody', ())))
-
 
 class PassThroughSession(GsSession):
-    def __init__(self, environment: str, token, is_gssso=True, api_version=API_VERSION,
+
+    def __init__(self, environment: str, token, api_version=API_VERSION,
                  application=DEFAULT_APPLICATION, http_adapter=None):
-        if is_gssso:
-            domain, verify = KerberosSessionMixin.domain_and_verify(environment)
-        else:
-            domain = self._config_for_environment(environment)['AppDomain']
-            verify = True
+        domain = self._config_for_environment(environment)['AppDomain']
+        verify = True
 
         super().__init__(domain, api_version=api_version, application=application, verify=verify,
                          http_adapter=http_adapter)
-        self.token = token
-        self.is_gssso = is_gssso
 
-        if environment == Environment.DEV.name:
-            import urllib3
-            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-            self.verify = False
+        self.token = token
 
     def _authenticate(self):
-        self._session: requests.Session
-        if self.is_gssso:
-            co = requests.cookies.create_cookie(domain='.gs.com', name='GSSSO', value=self.token)
-            self._session.cookies.set_cookie(co)
-        else:
-            self._session.headers.update({'Authorization': 'Bearer {}'.format(self.token)})
-
-    def endpoints_and_definitions(self, service):
-        raise NotImplementedError('Not supported for this type of session')
-
-    def request_response_gen(self, endpoint_definition):
-        raise NotImplementedError('Not supported for this type of session')
+        self._session.headers.update({'Authorization': 'Bearer {}'.format(self.token)})
 
 
 try:
-    import importlib
-
-    mod = importlib.import_module('gs_quant_internal.kerberos.session_kerberos')
-    KerberosSessionMixin = getattr(mod, 'KerberosSessionMixin')
+    from gs_quant_internal.kerberos.session_kerberos import KerberosSessionMixin
 
     class KerberosSession(KerberosSessionMixin, GsSession):
 
         def __init__(self, environment_or_domain: str, api_version: str = API_VERSION,
                      application: str = DEFAULT_APPLICATION, http_adapter: requests.adapters.HTTPAdapter = None):
-            domain, verify = KerberosSessionMixin.domain_and_verify(environment_or_domain)
+            domain, verify = self.domain_and_verify(environment_or_domain)
             GsSession.__init__(self, domain, api_version=api_version, application=application, verify=verify,
                                http_adapter=http_adapter)
 
+    class PassThroughGSSSOSession(KerberosSessionMixin, GsSession):
+
+        def __init__(self, environment: str, token, api_version=API_VERSION,
+                     application=DEFAULT_APPLICATION, http_adapter=None):
+            domain, verify = self.domain_and_verify(environment)
+            GsSession.__init__(self, domain, api_version=api_version, application=application, verify=verify,
+                               http_adapter=http_adapter)
+
+            self.token = token
+
+        def _authenticate(self):
+            self._handle_cookies(self.token)
 except ModuleNotFoundError:
     pass

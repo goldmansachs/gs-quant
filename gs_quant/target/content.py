@@ -28,12 +28,12 @@ class Author(Base):
         self,
         id_: str = None,
         name: str = None,
-        division=None        
-    ):
+        division=None
+    ):        
         super().__init__()
         self.__id = id_
-        self.__name = name
-        self.__division = division
+        self.name = name
+        self.division = division
 
     @property
     def id(self) -> str:
@@ -71,12 +71,12 @@ class BulkDeleteContentResponse(Base):
         self,
         status: int = None,
         message: str = None,
-        data: Tuple[str, ...] = None        
-    ):
+        data: Tuple[str, ...] = None
+    ):        
         super().__init__()
-        self.__status = status
-        self.__message = message
-        self.__data = data
+        self.status = status
+        self.message = message
+        self.data = data
 
     @property
     def status(self) -> int:
@@ -117,12 +117,12 @@ class Content(Base):
         self,
         body: str,
         mime_type,
-        encoding        
-    ):
+        encoding
+    ):        
         super().__init__()
-        self.__body = body
-        self.__mime_type = mime_type
-        self.__encoding = encoding
+        self.body = body
+        self.mime_type = mime_type
+        self.encoding = encoding
 
     @property
     def body(self) -> str:
@@ -161,12 +161,12 @@ class DeleteContentResponse(Base):
         self,
         status: int = None,
         message: str = None,
-        data: str = None        
-    ):
+        data: str = None
+    ):        
         super().__init__()
-        self.__status = status
-        self.__message = message
-        self.__data = data
+        self.status = status
+        self.message = message
+        self.data = data
 
     @property
     def status(self) -> int:
@@ -206,10 +206,10 @@ class Disclaimer(Base):
     def __init__(
         self,
         text: str = None,
-        type_=None        
-    ):
+        type_=None
+    ):        
         super().__init__()
-        self.__text = text
+        self.text = text
         self.__type = type_
 
     @property
@@ -234,11 +234,9 @@ class Disclaimer(Base):
 class Object(Base):
                
     def __init__(
-        self,
-                
-    ):
+        self
+    ):        
         super().__init__()
-        
 
 
 class Certification(Base):
@@ -252,15 +250,15 @@ class Certification(Base):
         submission_state,
         allowed_distribution: Tuple[Object, ...],
         etask_process_instance_id: str = None,
-        tags: Tuple[None, ...] = None        
-    ):
+        tags: Tuple[None, ...] = None
+    ):        
         super().__init__()
-        self.__submission_id = submission_id
-        self.__version = version
-        self.__submission_state = submission_state
-        self.__etask_process_instance_id = etask_process_instance_id
-        self.__allowed_distribution = allowed_distribution
-        self.__tags = tags
+        self.submission_id = submission_id
+        self.version = version
+        self.submission_state = submission_state
+        self.etask_process_instance_id = etask_process_instance_id
+        self.allowed_distribution = allowed_distribution
+        self.tags = tags
 
     @property
     def submission_id(self) -> str:
@@ -335,18 +333,18 @@ class ContentResponse(Base):
         created_time: datetime.datetime = None,
         last_updated_time: datetime.datetime = None,
         channels: Tuple[str, ...] = None,
-        content: Content = None        
-    ):
+        content: Content = None
+    ):        
         super().__init__()
         self.__id = id_
-        self.__version = version
-        self.__name = name
-        self.__entitlements = entitlements
-        self.__created_by_id = created_by_id
-        self.__created_time = created_time
-        self.__last_updated_time = last_updated_time
-        self.__channels = channels
-        self.__content = content
+        self.version = version
+        self.name = name
+        self.entitlements = entitlements
+        self.created_by_id = created_by_id
+        self.created_time = created_time
+        self.last_updated_time = last_updated_time
+        self.channels = channels
+        self.content = content
 
     @property
     def id(self) -> str:
@@ -445,12 +443,12 @@ class ContentUpdateRequest(Base):
         self,
         name: str = None,
         entitlements: Entitlements = None,
-        content: Content = None        
-    ):
+        content: Content = None
+    ):        
         super().__init__()
-        self.__name = name
-        self.__entitlements = entitlements
-        self.__content = content
+        self.name = name
+        self.entitlements = entitlements
+        self.content = content
 
     @property
     def name(self) -> str:
@@ -488,11 +486,11 @@ class BulkContentUpdateRequestItem(Base):
     def __init__(
         self,
         id_: str = None,
-        update: ContentUpdateRequest = None        
-    ):
+        update: ContentUpdateRequest = None
+    ):        
         super().__init__()
         self.__id = id_
-        self.__update = update
+        self.update = update
 
     @property
     def id(self) -> str:
@@ -525,17 +523,17 @@ class ContentAuditFields(Base):
         created_by_id: str = None,
         authors: Tuple[Author, ...] = None,
         created_time: datetime.datetime = None,
-        last_updated_time: datetime.datetime = None        
-    ):
+        last_updated_time: datetime.datetime = None
+    ):        
         super().__init__()
         self.__id = id_
-        self.__version = version
-        self.__name = name
-        self.__entitlements = entitlements
-        self.__created_by_id = created_by_id
-        self.__authors = authors
-        self.__created_time = created_time
-        self.__last_updated_time = last_updated_time
+        self.version = version
+        self.name = name
+        self.entitlements = entitlements
+        self.created_by_id = created_by_id
+        self.authors = authors
+        self.created_time = created_time
+        self.last_updated_time = last_updated_time
 
     @property
     def id(self) -> str:
@@ -634,20 +632,20 @@ class ContentParameters(Base):
         certification: Certification = None,
         asset_ids: Tuple[str, ...] = None,
         origin=None,
-        disclaimers: Tuple[Disclaimer, ...] = None        
-    ):
+        disclaimers: Tuple[Disclaimer, ...] = None
+    ):        
         super().__init__()
-        self.__status = status
-        self.__namespace = namespace
-        self.__tags = tags
-        self.__slug = slug
-        self.__author_ids = author_ids
-        self.__attachments = attachments
-        self.__certification = certification
-        self.__asset_ids = asset_ids
-        self.__origin = origin
-        self.__disclaimers = disclaimers
-        self.__language = language
+        self.status = status
+        self.namespace = namespace
+        self.tags = tags
+        self.slug = slug
+        self.author_ids = author_ids
+        self.attachments = attachments
+        self.certification = certification
+        self.asset_ids = asset_ids
+        self.origin = origin
+        self.disclaimers = disclaimers
+        self.language = language
 
     @property
     def status(self):
@@ -766,12 +764,12 @@ class GetManyContentsResponse(Base):
         self,
         status: int = None,
         message: str = None,
-        data: Tuple[ContentResponse, ...] = None        
-    ):
+        data: Tuple[ContentResponse, ...] = None
+    ):        
         super().__init__()
-        self.__status = status
-        self.__message = message
-        self.__data = data
+        self.status = status
+        self.message = message
+        self.data = data
 
     @property
     def status(self) -> int:
@@ -810,12 +808,12 @@ class BulkContentUpdateResponse(Base):
         self,
         status: int = None,
         message: str = None,
-        data: Tuple[ContentAuditFields, ...] = None        
-    ):
+        data: Tuple[ContentAuditFields, ...] = None
+    ):        
         super().__init__()
-        self.__status = status
-        self.__message = message
-        self.__data = data
+        self.status = status
+        self.message = message
+        self.data = data
 
     @property
     def status(self) -> int:
@@ -855,13 +853,13 @@ class ContentCreateRequest(Base):
         name: str,
         entitlements: Entitlements,
         content: Content,
-        parameters: ContentParameters        
-    ):
+        parameters: ContentParameters
+    ):        
         super().__init__()
-        self.__name = name
-        self.__entitlements = entitlements
-        self.__content = content
-        self.__parameters = parameters
+        self.name = name
+        self.entitlements = entitlements
+        self.content = content
+        self.parameters = parameters
 
     @property
     def name(self) -> str:
@@ -910,12 +908,12 @@ class ContentCreateResponse(Base):
         self,
         status: int = None,
         message: str = None,
-        data: ContentAuditFields = None        
-    ):
+        data: ContentAuditFields = None
+    ):        
         super().__init__()
-        self.__status = status
-        self.__message = message
-        self.__data = data
+        self.status = status
+        self.message = message
+        self.data = data
 
     @property
     def status(self) -> int:
@@ -953,12 +951,12 @@ class ContentUpdateResponse(Base):
         self,
         status: int = None,
         message: str = None,
-        data: ContentAuditFields = None        
-    ):
+        data: ContentAuditFields = None
+    ):        
         super().__init__()
-        self.__status = status
-        self.__message = message
-        self.__data = data
+        self.status = status
+        self.message = message
+        self.data = data
 
     @property
     def status(self) -> int:

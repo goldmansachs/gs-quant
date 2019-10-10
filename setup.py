@@ -40,7 +40,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="gs_quant",
-    version="0.8.67",
+    version="0.8.69",
     author="Goldman Sachs",
     author_email="developer@gs.com",
     description="Goldman Sachs Quant",

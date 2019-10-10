@@ -61,10 +61,10 @@ class ApprovalAction(Base):
        
     def __init__(
         self,
-        comment: str = None        
-    ):
+        comment: str = None
+    ):        
         super().__init__()
-        self.__comment = comment
+        self.comment = comment
 
     @property
     def comment(self) -> str:
@@ -85,13 +85,13 @@ class CustomBasketsResponse(Base):
         status: str = None,
         approval_id: str = None,
         report_id: str = None,
-        asset_id: str = None        
-    ):
+        asset_id: str = None
+    ):        
         super().__init__()
-        self.__status = status
-        self.__approval_id = approval_id
-        self.__report_id = report_id
-        self.__asset_id = asset_id
+        self.status = status
+        self.approval_id = approval_id
+        self.report_id = report_id
+        self.asset_id = asset_id
 
     @property
     def status(self) -> str:
@@ -151,22 +151,22 @@ class ISelectConstituentColumn(Base):
         min_width: int = None,
         precision: int = None,
         sortable: int = None,
-        tooltip: str = None        
-    ):
+        tooltip: str = None
+    ):        
         super().__init__()
-        self.__aggregator_string = aggregator_string
+        self.aggregator_string = aggregator_string
         self.__class = class_
-        self.__field = field
+        self.field = field
         self.__filter = filter_
-        self.__formatter_string = formatter_string
+        self.formatter_string = formatter_string
         self.__id = id_
-        self.__ID = ID
-        self.__max_width = max_width
-        self.__min_width = min_width
-        self.__name = name
-        self.__precision = precision
-        self.__sortable = sortable
-        self.__tooltip = tooltip
+        self.ID = ID
+        self.max_width = max_width
+        self.min_width = min_width
+        self.name = name
+        self.precision = precision
+        self.sortable = sortable
+        self.tooltip = tooltip
 
     @property
     def aggregator_string(self) -> str:
@@ -184,7 +184,7 @@ class ISelectConstituentColumn(Base):
     @class_.setter
     def class_(self, value: str):
         self.__class = value
-        self._property_changed('class')        
+        self._property_changed('class_')        
 
     @property
     def field(self) -> str:
@@ -291,11 +291,11 @@ class ISelectIndexParameters(Base):
     def __init__(
         self,
         name: str = None,
-        value: float = None        
-    ):
+        value: float = None
+    ):        
         super().__init__()
-        self.__name = name
-        self.__value = value
+        self.name = name
+        self.value = value
 
     @property
     def name(self) -> str:
@@ -323,13 +323,13 @@ class ISelectSeries(Base):
         data: tuple = None,
         identifier: str = None,
         identifier_type: str = None,
-        name: str = None        
-    ):
+        name: str = None
+    ):        
         super().__init__()
-        self.__data = data
-        self.__identifier = identifier
-        self.__identifier_type = identifier_type
-        self.__name = name
+        self.data = data
+        self.identifier = identifier
+        self.identifier_type = identifier_type
+        self.name = name
 
     @property
     def data(self) -> tuple:
@@ -375,13 +375,13 @@ class PositionPriceInput(Base):
         asset_id: str,
         quantity: float = None,
         weight: float = None,
-        notional: float = None        
-    ):
+        notional: float = None
+    ):        
         super().__init__()
-        self.__asset_id = asset_id
-        self.__quantity = quantity
-        self.__weight = weight
-        self.__notional = notional
+        self.asset_id = asset_id
+        self.quantity = quantity
+        self.weight = weight
+        self.notional = notional
 
     @property
     def asset_id(self) -> str:
@@ -433,12 +433,12 @@ class PublishParameters(Base):
         self,
         publish_to_reuters: bool,
         publish_to_bloomberg: bool,
-        include_price_history: bool        
-    ):
+        include_price_history: bool
+    ):        
         super().__init__()
-        self.__include_price_history = include_price_history
-        self.__publish_to_bloomberg = publish_to_bloomberg
-        self.__publish_to_reuters = publish_to_reuters
+        self.include_price_history = include_price_history
+        self.publish_to_bloomberg = publish_to_bloomberg
+        self.publish_to_reuters = publish_to_reuters
 
     @property
     def include_price_history(self) -> bool:
@@ -481,14 +481,14 @@ class CustomBasketsEditInputs(Base):
         description: str = None,
         styles: Tuple[str, ...] = None,
         related_content: GIRDomain = None,
-        publish_parameters: PublishParameters = None        
-    ):
+        publish_parameters: PublishParameters = None
+    ):        
         super().__init__()
-        self.__name = name
-        self.__description = description
-        self.__styles = styles
-        self.__related_content = related_content
-        self.__publish_parameters = publish_parameters
+        self.name = name
+        self.description = description
+        self.styles = styles
+        self.related_content = related_content
+        self.publish_parameters = publish_parameters
 
     @property
     def name(self) -> str:
@@ -549,13 +549,13 @@ class ISelectRebalance(Base):
         new_weights: Tuple[ISelectNewWeight, ...] = None,
         rebalance_date: str = None,
         new_parameters: Tuple[ISelectNewParameter, ...] = None,
-        index_parameters: Tuple[ISelectIndexParameters, ...] = None        
-    ):
+        index_parameters: Tuple[ISelectIndexParameters, ...] = None
+    ):        
         super().__init__()
-        self.__new_weights = new_weights
-        self.__rebalance_date = rebalance_date
-        self.__new_parameters = new_parameters
-        self.__index_parameters = index_parameters
+        self.new_weights = new_weights
+        self.rebalance_date = rebalance_date
+        self.new_parameters = new_parameters
+        self.index_parameters = index_parameters
 
     @property
     def new_weights(self) -> Tuple[ISelectNewWeight, ...]:
@@ -631,39 +631,39 @@ class ISelectResponse(Base):
         submission_data_columns: Tuple[ISelectConstituentColumn, ...] = None,
         submission_text: str = None,
         valid: int = None,
-        validation_messages: Tuple[str, ...] = None        
-    ):
+        validation_messages: Tuple[str, ...] = None
+    ):        
         super().__init__()
-        self.__action = action
-        self.__action_comment = action_comment
-        self.__asset_name = asset_name
-        self.__asset_short_name = asset_short_name
-        self.__available_action_confirms = available_action_confirms
-        self.__available_actions = available_actions
-        self.__available_rebalance_dates = available_rebalance_dates
-        self.__constituent_validations = constituent_validations
-        self.__date_validation_status = date_validation_status
-        self.__date_validations = date_validations
-        self.__entry_mode = entry_mode
-        self.__entry_type = entry_type
-        self.__internal_rebalance = internal_rebalance
-        self.__index_parameter_definitions = index_parameter_definitions
-        self.__index_parameters = index_parameters
-        self.__index_parameter_validation = index_parameter_validation
-        self.__new_units = new_units
-        self.__new_weights = new_weights
-        self.__notification_date = notification_date
-        self.__rebalance_date = rebalance_date
-        self.__rebalance_determination_date = rebalance_determination_date
-        self.__reb_determination_index_level = reb_determination_index_level
-        self.__request_counter = request_counter
-        self.__series = series
-        self.__status = status
-        self.__submission_data = submission_data
-        self.__submission_data_columns = submission_data_columns
-        self.__submission_text = submission_text
-        self.__valid = valid
-        self.__validation_messages = validation_messages
+        self.action = action
+        self.action_comment = action_comment
+        self.asset_name = asset_name
+        self.asset_short_name = asset_short_name
+        self.available_action_confirms = available_action_confirms
+        self.available_actions = available_actions
+        self.available_rebalance_dates = available_rebalance_dates
+        self.constituent_validations = constituent_validations
+        self.date_validation_status = date_validation_status
+        self.date_validations = date_validations
+        self.entry_mode = entry_mode
+        self.entry_type = entry_type
+        self.internal_rebalance = internal_rebalance
+        self.index_parameter_definitions = index_parameter_definitions
+        self.index_parameters = index_parameters
+        self.index_parameter_validation = index_parameter_validation
+        self.new_units = new_units
+        self.new_weights = new_weights
+        self.notification_date = notification_date
+        self.rebalance_date = rebalance_date
+        self.rebalance_determination_date = rebalance_determination_date
+        self.reb_determination_index_level = reb_determination_index_level
+        self.request_counter = request_counter
+        self.series = series
+        self.status = status
+        self.submission_data = submission_data
+        self.submission_data_columns = submission_data_columns
+        self.submission_text = submission_text
+        self.valid = valid
+        self.validation_messages = validation_messages
 
     @property
     def action(self):
@@ -952,15 +952,15 @@ class IndicesPriceParameters(Base):
         initial_price: float = None,
         target_notional: float = None,
         weighting_strategy: str = None,
-        reweight: bool = False        
-    ):
+        reweight: bool = False
+    ):        
         super().__init__()
-        self.__currency = get_enum_value(IndicesCurrency, currency)
-        self.__divisor = divisor
-        self.__initial_price = initial_price
-        self.__target_notional = target_notional
-        self.__weighting_strategy = weighting_strategy
-        self.__reweight = reweight
+        self.currency = currency
+        self.divisor = divisor
+        self.initial_price = initial_price
+        self.target_notional = target_notional
+        self.weighting_strategy = weighting_strategy
+        self.reweight = reweight
 
     @property
     def currency(self) -> Union[IndicesCurrency, str]:
@@ -1034,12 +1034,12 @@ class CustomBasketsRebalanceInputs(Base):
         self,
         position_set: Tuple[PositionPriceInput, ...] = None,
         publish_parameters: PublishParameters = None,
-        pricing_parameters: IndicesPriceParameters = None        
-    ):
+        pricing_parameters: IndicesPriceParameters = None
+    ):        
         super().__init__()
-        self.__position_set = position_set
-        self.__publish_parameters = publish_parameters
-        self.__pricing_parameters = pricing_parameters
+        self.position_set = position_set
+        self.publish_parameters = publish_parameters
+        self.pricing_parameters = pricing_parameters
 
     @property
     def position_set(self) -> Tuple[PositionPriceInput, ...]:
@@ -1089,20 +1089,20 @@ class IndicesCreateInputs(Base):
         index_create_source: Union[IndexCreateSource, str] = None,
         return_type: str = 'Price Return',
         publish_parameters: PublishParameters = None,
-        on_behalf_of: str = None        
-    ):
+        on_behalf_of: str = None
+    ):        
         super().__init__()
-        self.__ticker = ticker
-        self.__name = name
-        self.__description = description
-        self.__styles = styles
-        self.__related_content = related_content
-        self.__index_create_source = get_enum_value(IndexCreateSource, index_create_source)
-        self.__return_type = return_type
-        self.__position_set = position_set
-        self.__publish_parameters = publish_parameters
-        self.__pricing_parameters = pricing_parameters
-        self.__on_behalf_of = on_behalf_of
+        self.ticker = ticker
+        self.name = name
+        self.description = description
+        self.styles = styles
+        self.related_content = related_content
+        self.index_create_source = index_create_source
+        self.return_type = return_type
+        self.position_set = position_set
+        self.publish_parameters = publish_parameters
+        self.pricing_parameters = pricing_parameters
+        self.on_behalf_of = on_behalf_of
 
     @property
     def ticker(self) -> str:
@@ -1223,10 +1223,10 @@ class IndicesEditInputs(Base):
                
     def __init__(
         self,
-        parameters: CustomBasketsEditInputs        
-    ):
+        parameters: CustomBasketsEditInputs
+    ):        
         super().__init__()
-        self.__parameters = parameters
+        self.parameters = parameters
 
     @property
     def parameters(self) -> CustomBasketsEditInputs:
@@ -1243,10 +1243,10 @@ class IndicesRebalanceInputs(Base):
                
     def __init__(
         self,
-        parameters: dict        
-    ):
+        parameters: dict
+    ):        
         super().__init__()
-        self.__parameters = parameters
+        self.parameters = parameters
 
     @property
     def parameters(self) -> dict:

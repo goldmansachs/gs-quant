@@ -1231,7 +1231,7 @@ def var_swap(asset: Asset, tenor: str, forward_start_date: Optional[str] = None,
 
 @plot_measure((AssetClass.Commod,), None, [QueryType.PRICE])
 def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
-                    granularity: str = 'daily', *, source: str = None, real_time: bool = True) -> pd.Series:
+                    granularity: str = 'daily', *, source: str = None, real_time: bool = False) -> pd.Series:
     """'
     Bucketized COMMOD_US_ELEC_ENERGY_PRICES
 
@@ -1240,9 +1240,11 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
     :param bucket: bucket type among '7x24', 'peak', 'offpeak', '2x16h' and '7x8': Default value = 7x24
     :param granularity: daily or monthly: default value = daily
     :param source: name of function caller: default source = None
-    :param real_time: whether to retrieve intraday data instead of EOD: default value = True
-    :return: Bucketized COMMOD_US_ELEC_ENERGY_PRICES
+    :param real_time: whether to retrieve intraday data instead of EOD: default value = False
+    :return: Bucketized elec energy prices
     """
+    if real_time:
+        raise ValueError('Bucketize function returns aggregated daily data')
 
     # create granularity indicator
     if granularity.lower() in ['daily', 'd']:
@@ -1271,6 +1273,7 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
 
     to_zone = tz.gettz('UTC')
     from_zone = tz.gettz(timezone)
+
     # Start date and end date are considered to be in ISO's local timezone
     start_date, end_date = DataContext.current.start_date, DataContext.current.end_date
     # Start time is constructed by combining start date with 00:00:00 timestamp
@@ -1284,7 +1287,7 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
     where = FieldFilterMap(priceMethod=price_method)
     with DataContext(start_time, end_time):
         q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.PRICE, where=where, source=source,
-                                              real_time=real_time)
+                                              real_time=True)
         df = _market_data_timed(q)
         _logger.debug('q %s', q)
 

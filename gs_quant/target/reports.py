@@ -155,38 +155,38 @@ class ReportParameters(Base):
         backcast: bool = None,
         risk_request: RiskRequest = None,
         participation_rate: float = None,
-        approve_rebalance: bool = None        
-    ):
+        approve_rebalance: bool = None
+    ):        
         super().__init__()
-        self.__asset_class = get_enum_value(AssetClass, asset_class)
-        self.__transaction_cost_model = transaction_cost_model
-        self.__trading_cost = trading_cost
-        self.__servicing_cost_long = servicing_cost_long
-        self.__servicing_cost_short = servicing_cost_short
-        self.__region = region
-        self.__risk_model = risk_model
-        self.__fx_hedged = fx_hedged
-        self.__publish_to_bloomberg = publish_to_bloomberg
-        self.__publish_to_reuters = publish_to_reuters
-        self.__include_price_history = include_price_history
-        self.__index_update = index_update
-        self.__index_rebalance = index_rebalance
-        self.__basket_action = get_enum_value(BasketAction, basket_action)
-        self.__api_domain = api_domain
-        self.__initial_price = initial_price
-        self.__stock_level_exposures = stock_level_exposures
-        self.__explode_positions = explode_positions
-        self.__scenario_id = scenario_id
-        self.__scenario_ids = scenario_ids
-        self.__scenario_group_id = scenario_group_id
-        self.__scenario_type = get_enum_value(ScenarioType, scenario_type)
-        self.__market_model_id = market_model_id
-        self.__risk_measures = risk_measures
-        self.__initial_pricing_date = initial_pricing_date
-        self.__backcast = backcast
-        self.__risk_request = risk_request
-        self.__participation_rate = participation_rate
-        self.__approve_rebalance = approve_rebalance
+        self.asset_class = asset_class
+        self.transaction_cost_model = transaction_cost_model
+        self.trading_cost = trading_cost
+        self.servicing_cost_long = servicing_cost_long
+        self.servicing_cost_short = servicing_cost_short
+        self.region = region
+        self.risk_model = risk_model
+        self.fx_hedged = fx_hedged
+        self.publish_to_bloomberg = publish_to_bloomberg
+        self.publish_to_reuters = publish_to_reuters
+        self.include_price_history = include_price_history
+        self.index_update = index_update
+        self.index_rebalance = index_rebalance
+        self.basket_action = basket_action
+        self.api_domain = api_domain
+        self.initial_price = initial_price
+        self.stock_level_exposures = stock_level_exposures
+        self.explode_positions = explode_positions
+        self.scenario_id = scenario_id
+        self.scenario_ids = scenario_ids
+        self.scenario_group_id = scenario_group_id
+        self.scenario_type = scenario_type
+        self.market_model_id = market_model_id
+        self.risk_measures = risk_measures
+        self.initial_pricing_date = initial_pricing_date
+        self.backcast = backcast
+        self.risk_request = risk_request
+        self.participation_rate = participation_rate
+        self.approve_rebalance = approve_rebalance
 
     @property
     def asset_class(self) -> Union[AssetClass, str]:
@@ -505,30 +505,30 @@ class Report(Base):
         status: Union[ReportStatus, str] = None,
         latest_execution_time: datetime.datetime = None,
         latest_end_date: datetime.date = None,
-        percentage_complete: float = None        
-    ):
+        percentage_complete: float = None
+    ):        
         super().__init__()
-        self.__calculation_time = calculation_time
-        self.__data_set_id = data_set_id
-        self.__asset_id = asset_id
-        self.__created_by_id = created_by_id
-        self.__created_time = created_time
-        self.__entitlements = entitlements
-        self.__entitlement_exclusions = entitlement_exclusions
+        self.calculation_time = calculation_time
+        self.data_set_id = data_set_id
+        self.asset_id = asset_id
+        self.created_by_id = created_by_id
+        self.created_time = created_time
+        self.entitlements = entitlements
+        self.entitlement_exclusions = entitlement_exclusions
         self.__id = id_
-        self.__last_updated_by_id = last_updated_by_id
-        self.__last_updated_time = last_updated_time
-        self.__measures = measures
-        self.__name = name
-        self.__owner_id = owner_id
-        self.__parameters = parameters
-        self.__position_source_id = position_source_id
-        self.__position_source_type = get_enum_value(PositionSourceType, position_source_type)
+        self.last_updated_by_id = last_updated_by_id
+        self.last_updated_time = last_updated_time
+        self.measures = measures
+        self.name = name
+        self.owner_id = owner_id
+        self.parameters = parameters
+        self.position_source_id = position_source_id
+        self.position_source_type = position_source_type
         self.__type = get_enum_value(ReportType, type_)
-        self.__status = get_enum_value(ReportStatus, status)
-        self.__latest_execution_time = latest_execution_time
-        self.__latest_end_date = latest_end_date
-        self.__percentage_complete = percentage_complete
+        self.status = status
+        self.latest_execution_time = latest_execution_time
+        self.latest_end_date = latest_end_date
+        self.percentage_complete = percentage_complete
 
     @property
     def calculation_time(self) -> float:
