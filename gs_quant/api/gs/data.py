@@ -348,8 +348,7 @@ class GsDataApi(DataApi):
             vendor: str = 'Goldman Sachs',
             as_multiple_dataframes: bool = False
     ) -> Union[pd.DataFrame, Tuple[pd.DataFrame]]:
-        coordinates_iterable = (coordinates, ) if isinstance(coordinates, MarketDataCoordinate) \
-            or isinstance(coordinates, str) else coordinates
+        coordinates_iterable = (coordinates, ) if isinstance(coordinates, (MarketDataCoordinate, str)) else coordinates
         query = cls.build_query(
             market_data_coordinates=tuple(cls._coordinate_from_str(coord) if isinstance(coord, str) else coord
                                           for coord in coordinates_iterable),
@@ -381,7 +380,7 @@ class GsDataApi(DataApi):
             as_multiple_dataframes=True)
 
         ret = tuple(pd.Series() if df.empty else pd.Series(index=df.index, data=df.value.values) for df in dfs)
-        if not isinstance(coordinates, Iterable):
+        if isinstance(coordinates, (MarketDataCoordinate, str)):
             return ret[0]
         else:
             return ret

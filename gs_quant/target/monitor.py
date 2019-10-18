@@ -76,7 +76,8 @@ class FunctionParameters(Base):
         obs: int = None,
         returns_type=None,
         type_=None,
-        w: int = None
+        w: int = None,
+        entity_id: str = None
     ):        
         super().__init__()
         self.initial = initial
@@ -84,6 +85,7 @@ class FunctionParameters(Base):
         self.returns_type = returns_type
         self.__type = type_
         self.w = w
+        self.entity_id = entity_id
 
     @property
     def initial(self) -> int:
@@ -135,6 +137,17 @@ class FunctionParameters(Base):
     def w(self, value: int):
         self.__w = value
         self._property_changed('w')        
+
+    @property
+    def entity_id(self) -> str:
+        """Entity to use as additional series for functions. i.e. Beta or Correlation
+           functions."""
+        return self.__entity_id
+
+    @entity_id.setter
+    def entity_id(self, value: str):
+        self.__entity_id = value
+        self._property_changed('entity_id')        
 
 
 class FunctionWhere(Base):
@@ -855,7 +868,8 @@ class MonitorParameters(Base):
         rebase_to_end_of_year_spot: bool = None,
         filters: Tuple[WipiRequestFilter, ...] = None,
         exportable: Tuple[str, ...] = None,
-        fill_column_index: float = None
+        fill_column_index: float = None,
+        knot: float = None
     ):        
         super().__init__()
         self.column_definitions = column_definitions
@@ -870,6 +884,7 @@ class MonitorParameters(Base):
         self.filters = filters
         self.exportable = exportable
         self.fill_column_index = fill_column_index
+        self.knot = knot
 
     @property
     def column_definitions(self) -> Tuple[ColumnDefinition, ...]:
@@ -994,6 +1009,18 @@ class MonitorParameters(Base):
     def fill_column_index(self, value: float):
         self.__fill_column_index = value
         self._property_changed('fill_column_index')        
+
+    @property
+    def knot(self) -> float:
+        """Used when rendering a chart component from the output, whether to display a knot
+           in the chart configuration as a prop. Number represents size of the
+           knot."""
+        return self.__knot
+
+    @knot.setter
+    def knot(self, value: float):
+        self.__knot = value
+        self._property_changed('knot')        
 
 
 class Monitor(Base):

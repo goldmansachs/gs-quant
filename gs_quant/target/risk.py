@@ -505,14 +505,11 @@ class LiquidityConstituent(Base):
         currency: Union[Currency, str] = None,
         gross_exposure: float = None,
         net_exposure: float = None,
-        adv22_day_pct: float = None,
         transaction_cost: float = None,
         marginal_cost: float = None,
-        bid_ask_spread: float = None,
         country: str = None,
         region: Union[Region, str] = None,
         type_: Union[AssetType, str] = None,
-        market_cap: float = None,
         market_cap_bucket=None,
         est1_day_complete_pct: float = None,
         in_benchmark: bool = None,
@@ -536,14 +533,11 @@ class LiquidityConstituent(Base):
         self.currency = currency
         self.gross_exposure = gross_exposure
         self.net_exposure = net_exposure
-        self.adv22_day_pct = adv22_day_pct
         self.transaction_cost = transaction_cost
         self.marginal_cost = marginal_cost
-        self.bid_ask_spread = bid_ask_spread
         self.country = country
         self.region = region
         self.__type = get_enum_value(AssetType, type_)
-        self.market_cap = market_cap
         self.market_cap_bucket = market_cap_bucket
         self.est1_day_complete_pct = est1_day_complete_pct
         self.in_benchmark = in_benchmark
@@ -648,17 +642,6 @@ class LiquidityConstituent(Base):
         self._property_changed('net_exposure')        
 
     @property
-    def adv22_day_pct(self) -> float:
-        """Percentage of the constituent's notional to it's 22 day average daily dollar
-           volume."""
-        return self.__adv22_day_pct
-
-    @adv22_day_pct.setter
-    def adv22_day_pct(self, value: float):
-        self.__adv22_day_pct = value
-        self._property_changed('adv22_day_pct')        
-
-    @property
     def transaction_cost(self) -> float:
         """The estimated transaction cost for the position."""
         return self.__transaction_cost
@@ -678,16 +661,6 @@ class LiquidityConstituent(Base):
     def marginal_cost(self, value: float):
         self.__marginal_cost = value
         self._property_changed('marginal_cost')        
-
-    @property
-    def bid_ask_spread(self) -> float:
-        """The difference between the bid and ask prices for this asset."""
-        return self.__bid_ask_spread
-
-    @bid_ask_spread.setter
-    def bid_ask_spread(self, value: float):
-        self.__bid_ask_spread = value
-        self._property_changed('bid_ask_spread')        
 
     @property
     def country(self) -> str:
@@ -718,17 +691,6 @@ class LiquidityConstituent(Base):
     def type(self, value: Union[AssetType, str]):
         self.__type = get_enum_value(AssetType, value)
         self._property_changed('type')        
-
-    @property
-    def market_cap(self) -> float:
-        """Market capitalization of a given asset denominated in the currency given in the
-           liquidity parameters."""
-        return self.__market_cap
-
-    @market_cap.setter
-    def market_cap(self, value: float):
-        self.__market_cap = value
-        self._property_changed('market_cap')        
 
     @property
     def market_cap_bucket(self):

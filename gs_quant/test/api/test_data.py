@@ -17,7 +17,7 @@ import datetime as dt
 
 import pandas as pd
 import pytest
-from pandas.util.testing import assert_frame_equal
+from pandas.util.testing import assert_frame_equal, assert_series_equal
 
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.context_base import ContextMeta
@@ -35,64 +35,64 @@ test_str_coordinates = (
     'IR_USD_Swap_2Y'
 )
 
+bond_data = [
+    {
+        'mktType': 'Prime',
+        'mktAsset': '335320934',
+        'mktQuotingStyle': 'price',
+        'price': 1.0139,
+        'time': pd.to_datetime('2019-01-20T01:03:00Z')
+    },
+    {
+        'mktType': 'Prime',
+        'mktAsset': '335320934',
+        'mktQuotingStyle': 'price',
+        'price': 1.0141,
+        'time': pd.to_datetime('2019-01-20T01:08:00Z')
+    }
+]
+
+swap_data = [
+    {
+        'mktType': 'IR',
+        'mktAsset': 'USD',
+        'mktClass': 'Swap',
+        'mktPoint': ('2Y',),
+        'mktQuotingStyle': 'ATMRate',
+        'ATMRate': 0.02592,
+        'time': pd.to_datetime('2019-01-20T01:09:45Z')
+    }
+]
+
+bond_expected_frame = pd.DataFrame(
+    data={
+        'time': [pd.to_datetime('2019-01-20T01:03:00Z'), pd.to_datetime('2019-01-20T01:08:00Z')],
+        'mktType': ['Prime', 'Prime'],
+        'mktAsset': ['335320934', '335320934'],
+        'mktQuotingStyle': ['price', 'price'],
+        'value': [1.0139, 1.0141]
+    },
+    index=pd.DatetimeIndex(['2019-01-20T01:03:00', '2019-01-20T01:08:00']),
+)
+
+swap_expected_frame = pd.DataFrame(
+    data={
+        'time': [pd.to_datetime('2019-01-20T01:09:45Z')],
+        'mktType': ['IR'],
+        'mktAsset': ['USD'],
+        'mktClass': ['Swap'],
+        'mktPoint': [('2Y',)],
+        'mktQuotingStyle': ['ATMRate'],
+        'value': [0.02592]
+    },
+    index=pd.DatetimeIndex(['2019-01-20T01:09:45']),
+)
+
 
 def test_coordinates_data(mocker):
-    bond_data = [
-        {
-            'mktType': 'Prime',
-            'mktAsset': '335320934',
-            'mktQuotingStyle': 'price',
-            'price': 1.0139,
-            'time': pd.to_datetime('2019-01-20T01:03:00Z')
-        },
-        {
-            'mktType': 'Prime',
-            'mktAsset': '335320934',
-            'mktQuotingStyle': 'price',
-            'price': 1.0141,
-            'time': pd.to_datetime('2019-01-20T01:08:00Z')
-        }
-    ]
-    swap_data = [
-        {
-            'mktType': 'IR',
-            'mktAsset': 'USD',
-            'mktClass': 'Swap',
-            'mktPoint': ('2Y',),
-            'mktQuotingStyle': 'ATMRate',
-            'ATMRate': 0.02592,
-            'time': pd.to_datetime('2019-01-20T01:09:45Z')
-        }
-    ]
-
-    bond_expected_result = pd.DataFrame(
-        data={
-            'time': [pd.to_datetime('2019-01-20T01:03:00Z'), pd.to_datetime('2019-01-20T01:08:00Z')],
-            'mktType': ['Prime', 'Prime'],
-            'mktAsset': ['335320934', '335320934'],
-            'mktQuotingStyle': ['price', 'price'],
-            'value': [1.0139, 1.0141]
-        },
-        index=pd.DatetimeIndex(['2019-01-20T01:03:00', '2019-01-20T01:08:00']),
-    )
-
-    swap_expected_result = pd.DataFrame(
-        data={
-            'time': [pd.to_datetime('2019-01-20T01:09:45Z')],
-            'mktType': ['IR'],
-            'mktAsset': ['USD'],
-            'mktClass': ['Swap'],
-            'mktPoint': [('2Y',)],
-            'mktQuotingStyle': ['ATMRate'],
-            'value': [0.02592]
-        },
-        index=pd.DatetimeIndex(['2019-01-20T01:09:45']),
-    )
-
-    # mock GsSession
+    # mock GsSession and data response
     mocker.patch.object(GsSession.__class__, 'current',
                         return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
-
     mocker.patch.object(GsSession.current, '_post', side_effect=[{'responses': [{'data': bond_data}]},
                                                                  {'responses': [{'data': swap_data}]},
                                                                  {'responses': [{'data': bond_data},
@@ -103,25 +103,68 @@ def test_coordinates_data(mocker):
 
     coord_data_result = GsDataApi.coordinates_data(coordinates=test_coordinates[0], start=dt.datetime(2019, 1, 2, 1, 0),
                                                    end=dt.datetime(2019, 1, 2, 1, 10))
-    assert_frame_equal(coord_data_result, bond_expected_result)
+    assert_frame_equal(coord_data_result, bond_expected_frame)
 
     str_coord_data_result = GsDataApi.coordinates_data(coordinates=test_str_coordinates[1],
                                                        start=dt.datetime(2019, 1, 2, 1, 0),
                                                        end=dt.datetime(2019, 1, 2, 1, 10))
-    assert_frame_equal(str_coord_data_result, swap_expected_result)
+    assert_frame_equal(str_coord_data_result, swap_expected_frame)
 
     coords_data_result = GsDataApi.coordinates_data(coordinates=test_coordinates, start=dt.datetime(2019, 1, 2, 1, 0),
                                                     end=dt.datetime(2019, 1, 2, 1, 10), as_multiple_dataframes=True)
     assert len(coords_data_result) == 2
-    assert_frame_equal(coords_data_result[0], bond_expected_result)
-    assert_frame_equal(coords_data_result[1], swap_expected_result)
+    assert_frame_equal(coords_data_result[0], bond_expected_frame)
+    assert_frame_equal(coords_data_result[1], swap_expected_frame)
 
     str_coords_data_result = GsDataApi.coordinates_data(coordinates=test_str_coordinates,
                                                         start=dt.datetime(2019, 1, 2, 1, 0),
                                                         end=dt.datetime(2019, 1, 2, 1, 10), as_multiple_dataframes=True)
     assert len(str_coords_data_result) == 2
-    assert_frame_equal(str_coords_data_result[0], bond_expected_result)
-    assert_frame_equal(str_coords_data_result[1], swap_expected_result)
+    assert_frame_equal(str_coords_data_result[0], bond_expected_frame)
+    assert_frame_equal(str_coords_data_result[1], swap_expected_frame)
+
+    GsSession.current._post.assert_called_with('/data/coordinates/query', payload=mocker.ANY)
+    assert GsSession.current._post.call_count == 4
+
+
+def test_coordinate_data_series(mocker):
+    # mock GsSession and data response
+    mocker.patch.object(GsSession.__class__, 'current',
+                        return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(GsSession.current, '_post', side_effect=[{'responses': [{'data': bond_data}]},
+                                                                 {'responses': [{'data': swap_data}]},
+                                                                 {'responses': [{'data': bond_data},
+                                                                                {'data': swap_data}]},
+                                                                 {'responses': [{'data': bond_data},
+                                                                                {'data': swap_data}]}
+                                                                 ])
+
+    bond_expected_series = pd.Series(index=bond_expected_frame.index, data=bond_expected_frame.value.values)
+    swap_expected_series = pd.Series(index=swap_expected_frame.index, data=swap_expected_frame.value.values)
+
+    coord_data_result = GsDataApi.coordinates_data_series(coordinates=test_coordinates[0],
+                                                          start=dt.datetime(2019, 1, 2, 1, 0),
+                                                          end=dt.datetime(2019, 1, 2, 1, 10))
+    assert_series_equal(coord_data_result, bond_expected_series)
+
+    str_coord_data_result = GsDataApi.coordinates_data_series(coordinates=test_str_coordinates[1],
+                                                              start=dt.datetime(2019, 1, 2, 1, 0),
+                                                              end=dt.datetime(2019, 1, 2, 1, 10))
+    assert_series_equal(str_coord_data_result, swap_expected_series)
+
+    coords_data_result = GsDataApi.coordinates_data_series(coordinates=test_coordinates,
+                                                           start=dt.datetime(2019, 1, 2, 1, 0),
+                                                           end=dt.datetime(2019, 1, 2, 1, 10))
+    assert len(coords_data_result) == 2
+    assert_series_equal(coords_data_result[0], bond_expected_series)
+    assert_series_equal(coords_data_result[1], swap_expected_series)
+
+    str_coords_data_result = GsDataApi.coordinates_data_series(coordinates=test_str_coordinates,
+                                                               start=dt.datetime(2019, 1, 2, 1, 0),
+                                                               end=dt.datetime(2019, 1, 2, 1, 10))
+    assert len(str_coords_data_result) == 2
+    assert_series_equal(str_coords_data_result[0], bond_expected_series)
+    assert_series_equal(str_coords_data_result[1], swap_expected_series)
 
     GsSession.current._post.assert_called_with('/data/coordinates/query', payload=mocker.ANY)
     assert GsSession.current._post.call_count == 4

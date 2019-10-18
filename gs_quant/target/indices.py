@@ -42,6 +42,7 @@ class IndicesCurrency(EnumBase, Enum):
     MYR = 'MYR'
     NOK = 'NOK'
     NZD = 'NZD'
+    PHP = 'PHP'
     RUB = 'RUB'
     SEK = 'SEK'
     SGD = 'SGD'
