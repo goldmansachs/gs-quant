@@ -48,6 +48,7 @@ class MeasureEntityType(EnumBase, Enum):
     ASSET = 'ASSET'
     BACKTEST = 'BACKTEST'
     KPI = 'KPI'
+    COUNTRY = 'COUNTRY'
     
     def __repr__(self):
         return self.value
@@ -164,7 +165,7 @@ class DataQuery(Base):
         format_: Union[Format, str] = None,
         market_data_coordinates: Tuple[MarketDataCoordinate, ...] = None,
         where: FieldFilterMap = None,
-        vendor: str = None,
+        vendor: Union[MarketDataVendor, str] = None,
         start_date: datetime.date = None,
         end_date: datetime.date = None,
         start_time: datetime.datetime = None,
@@ -261,12 +262,12 @@ class DataQuery(Base):
         self._property_changed('where')        
 
     @property
-    def vendor(self) -> str:
+    def vendor(self) -> Union[MarketDataVendor, str]:
         return self.__vendor
 
     @vendor.setter
-    def vendor(self, value: str):
-        self.__vendor = value
+    def vendor(self, value: Union[MarketDataVendor, str]):
+        self.__vendor = get_enum_value(MarketDataVendor, value)
         self._property_changed('vendor')        
 
     @property
@@ -1242,6 +1243,33 @@ class ParserEntity(Base):
         self._property_changed('trades')        
 
 
+class SymbolFilterLink(Base):
+        
+    """The entity type and field used to filter symbols."""
+       
+    def __init__(
+        self,
+        entity_field: str = None
+    ):        
+        super().__init__()
+        self.entity_field = entity_field
+
+    @property
+    def entity_type(self) -> str:
+        """The type of the entity to lookup to."""
+        return 'MDAPIArcticSymbol'        
+
+    @property
+    def entity_field(self) -> str:
+        """The field of the entity to lookup to."""
+        return self.__entity_field
+
+    @entity_field.setter
+    def entity_field(self, value: str):
+        self.__entity_field = value
+        self._property_changed('entity_field')        
+
+
 class TimeFilter(Base):
         
     """Filter to restrict data to a range of hours per day."""
@@ -1825,6 +1853,52 @@ class ProcessorEntity(Base):
         self._property_changed('deduplicate')        
 
 
+class SymbolFilterDimension(Base):
+        
+    """Map the dataset field with an entity for filtering arctic symbols."""
+       
+    def __init__(
+        self,
+        field: str = None,
+        field_description: str = None,
+        symbol_filter_link: SymbolFilterLink = None
+    ):        
+        super().__init__()
+        self.field = field
+        self.field_description = field_description
+        self.symbol_filter_link = symbol_filter_link
+
+    @property
+    def field(self) -> str:
+        """Field name."""
+        return self.__field
+
+    @field.setter
+    def field(self, value: str):
+        self.__field = value
+        self._property_changed('field')        
+
+    @property
+    def field_description(self) -> str:
+        """Custom description (overrides field default)."""
+        return self.__field_description
+
+    @field_description.setter
+    def field_description(self, value: str):
+        self.__field_description = value
+        self._property_changed('field_description')        
+
+    @property
+    def symbol_filter_link(self) -> SymbolFilterLink:
+        """The entity type and field used to filter symbols."""
+        return self.__symbol_filter_link
+
+    @symbol_filter_link.setter
+    def symbol_filter_link(self, value: SymbolFilterLink):
+        self.__symbol_filter_link = value
+        self._property_changed('symbol_filter_link')        
+
+
 class DataSetDimensions(Base):
         
     """Dataset dimensions."""
@@ -1835,6 +1909,7 @@ class DataSetDimensions(Base):
         transaction_time_field: str = None,
         symbol_dimensions: Tuple[str, ...] = None,
         non_symbol_dimensions: Tuple[FieldColumnPair, ...] = None,
+        symbol_filter_dimensions: Tuple[SymbolFilterDimension, ...] = None,
         key_dimensions: Tuple[str, ...] = None,
         measures: Tuple[FieldColumnPair, ...] = None,
         entity_dimension: str = None
@@ -1844,6 +1919,7 @@ class DataSetDimensions(Base):
         self.transaction_time_field = transaction_time_field
         self.symbol_dimensions = symbol_dimensions
         self.non_symbol_dimensions = non_symbol_dimensions
+        self.symbol_filter_dimensions = symbol_filter_dimensions
         self.key_dimensions = key_dimensions
         self.measures = measures
         self.entity_dimension = entity_dimension
@@ -1887,6 +1963,16 @@ class DataSetDimensions(Base):
     def non_symbol_dimensions(self, value: Tuple[FieldColumnPair, ...]):
         self.__non_symbol_dimensions = value
         self._property_changed('non_symbol_dimensions')        
+
+    @property
+    def symbol_filter_dimensions(self) -> Tuple[SymbolFilterDimension, ...]:
+        """Map the dataset field with an entity for filtering arctic symbols."""
+        return self.__symbol_filter_dimensions
+
+    @symbol_filter_dimensions.setter
+    def symbol_filter_dimensions(self, value: Tuple[SymbolFilterDimension, ...]):
+        self.__symbol_filter_dimensions = value
+        self._property_changed('symbol_filter_dimensions')        
 
     @property
     def key_dimensions(self) -> Tuple[str, ...]:
@@ -2041,7 +2127,7 @@ class DataSetEntity(Base):
         name: str,
         description: str,
         short_description: str,
-        vendor: str,
+        vendor: Union[MarketDataVendor, str],
         data_product: str,
         parameters: DataSetParameters,
         dimensions: DataSetDimensions,
@@ -2145,12 +2231,12 @@ class DataSetEntity(Base):
         self._property_changed('mappings')        
 
     @property
-    def vendor(self) -> str:
+    def vendor(self) -> Union[MarketDataVendor, str]:
         return self.__vendor
 
     @vendor.setter
-    def vendor(self, value: str):
-        self.__vendor = value
+    def vendor(self, value: Union[MarketDataVendor, str]):
+        self.__vendor = get_enum_value(MarketDataVendor, value)
         self._property_changed('vendor')        
 
     @property

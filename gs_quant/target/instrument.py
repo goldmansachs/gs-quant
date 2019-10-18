@@ -382,6 +382,243 @@ class CommodSwap(Instrument):
         self._property_changed('calculation_period_frequency')        
 
 
+class CommodVarianceSwap(Instrument):
+        
+    """Object representation of a commodities volitility / variance swap"""
+       
+    def __init__(
+        self,
+        side: Union[BuySell, str] = None,
+        notional: float = 1,
+        notional_currency: Union[Currency, str] = None,
+        asset: Union[CommodityAsset, str] = None,
+        asset_fixing_source: str = None,
+        contract: str = None,
+        fixing_currency: Union[Currency, str] = None,
+        fx_fixing_source: str = None,
+        settlement_date: Union[datetime.date, str] = None,
+        strike: Union[float, str] = None,
+        variance_convention: Union[VarianceConvention, str] = None,
+        annualization_factor: float = None,
+        divisor: str = None,
+        start_date: datetime.date = None,
+        end_date: Union[datetime.date, str] = None,
+        mean_rule: Union[CommodityMeanRule, str] = None,
+        fixed_mean: float = None,
+        first_fixing: float = None
+    ):        
+        super().__init__()
+        self.side = side
+        self.notional = notional
+        self.notional_currency = notional_currency
+        self.asset = asset
+        self.asset_fixing_source = asset_fixing_source
+        self.contract = contract
+        self.fixing_currency = fixing_currency
+        self.fx_fixing_source = fx_fixing_source
+        self.settlement_date = settlement_date
+        self.strike = strike
+        self.variance_convention = variance_convention
+        self.annualization_factor = annualization_factor
+        self.divisor = divisor
+        self.start_date = start_date
+        self.end_date = end_date
+        self.mean_rule = mean_rule
+        self.fixed_mean = fixed_mean
+        self.first_fixing = first_fixing
+
+    @property
+    def asset_class(self) -> AssetClass:
+        """Commod"""
+        return AssetClass.Commod        
+
+    @property
+    def type(self) -> AssetType:
+        """VarianceSwap"""
+        return AssetType.VarianceSwap        
+
+    @property
+    def side(self) -> Union[BuySell, str]:
+        """Buy or Sell side of contract"""
+        return self.__side
+
+    @side.setter
+    def side(self, value: Union[BuySell, str]):
+        self.__side = get_enum_value(BuySell, value)
+        self._property_changed('side')        
+
+    @property
+    def notional(self) -> float:
+        """The notional amount of the variance swap"""
+        return self.__notional
+
+    @notional.setter
+    def notional(self, value: float):
+        self.__notional = value
+        self._property_changed('notional')        
+
+    @property
+    def notional_currency(self) -> Union[Currency, str]:
+        """The currency of the notional amount"""
+        return self.__notional_currency
+
+    @notional_currency.setter
+    def notional_currency(self, value: Union[Currency, str]):
+        self.__notional_currency = get_enum_value(Currency, value)
+        self._property_changed('notional_currency')        
+
+    @property
+    def asset(self) -> Union[CommodityAsset, str]:
+        """Commodity asset"""
+        return self.__asset
+
+    @asset.setter
+    def asset(self, value: Union[CommodityAsset, str]):
+        self.__asset = get_enum_value(CommodityAsset, value)
+        self._property_changed('asset')        
+
+    @property
+    def asset_fixing_source(self) -> str:
+        return self.__asset_fixing_source
+
+    @asset_fixing_source.setter
+    def asset_fixing_source(self, value: str):
+        self.__asset_fixing_source = value
+        self._property_changed('asset_fixing_source')        
+
+    @property
+    def contract(self) -> str:
+        """The contract we are observing (e.g. Z24)"""
+        return self.__contract
+
+    @contract.setter
+    def contract(self, value: str):
+        self.__contract = value
+        self._property_changed('contract')        
+
+    @property
+    def fixing_currency(self) -> Union[Currency, str]:
+        """The currency in which we observe the fix"""
+        return self.__fixing_currency
+
+    @fixing_currency.setter
+    def fixing_currency(self, value: Union[Currency, str]):
+        self.__fixing_currency = get_enum_value(Currency, value)
+        self._property_changed('fixing_currency')        
+
+    @property
+    def fx_fixing_source(self) -> str:
+        """The source to use in the condition that the fixing currency is different from
+           the underlying currency"""
+        return self.__fx_fixing_source
+
+    @fx_fixing_source.setter
+    def fx_fixing_source(self, value: str):
+        self.__fx_fixing_source = value
+        self._property_changed('fx_fixing_source')        
+
+    @property
+    def settlement_date(self) -> Union[datetime.date, str]:
+        """Settlement date of the trade"""
+        return self.__settlement_date
+
+    @settlement_date.setter
+    def settlement_date(self, value: Union[datetime.date, str]):
+        self.__settlement_date = value
+        self._property_changed('settlement_date')        
+
+    @property
+    def strike(self) -> Union[float, str]:
+        """The strike in variance, default to ATM"""
+        return self.__strike
+
+    @strike.setter
+    def strike(self, value: Union[float, str]):
+        self.__strike = value
+        self._property_changed('strike')        
+
+    @property
+    def variance_convention(self) -> Union[VarianceConvention, str]:
+        """'Annualized' to annualize the variance (using Annualization Factor) or 'total'
+           for no annualization'"""
+        return self.__variance_convention
+
+    @variance_convention.setter
+    def variance_convention(self, value: Union[VarianceConvention, str]):
+        self.__variance_convention = get_enum_value(VarianceConvention, value)
+        self._property_changed('variance_convention')        
+
+    @property
+    def annualization_factor(self) -> float:
+        """Annualization factor used to compute variance, defaults to 252"""
+        return self.__annualization_factor
+
+    @annualization_factor.setter
+    def annualization_factor(self, value: float):
+        self.__annualization_factor = value
+        self._property_changed('annualization_factor')        
+
+    @property
+    def divisor(self) -> str:
+        """Number of returns or Number of returns - 1"""
+        return self.__divisor
+
+    @divisor.setter
+    def divisor(self, value: str):
+        self.__divisor = value
+        self._property_changed('divisor')        
+
+    @property
+    def start_date(self) -> datetime.date:
+        """The start date of the observation"""
+        return self.__start_date
+
+    @start_date.setter
+    def start_date(self, value: datetime.date):
+        self.__start_date = value
+        self._property_changed('start_date')        
+
+    @property
+    def end_date(self) -> Union[datetime.date, str]:
+        """The end date of the observation"""
+        return self.__end_date
+
+    @end_date.setter
+    def end_date(self, value: Union[datetime.date, str]):
+        self.__end_date = value
+        self._property_changed('end_date')        
+
+    @property
+    def mean_rule(self) -> Union[CommodityMeanRule, str]:
+        """Commodity mean rule"""
+        return self.__mean_rule
+
+    @mean_rule.setter
+    def mean_rule(self, value: Union[CommodityMeanRule, str]):
+        self.__mean_rule = get_enum_value(CommodityMeanRule, value)
+        self._property_changed('mean_rule')        
+
+    @property
+    def fixed_mean(self) -> float:
+        """True if we want to specify the mean to be used in variance computation"""
+        return self.__fixed_mean
+
+    @fixed_mean.setter
+    def fixed_mean(self, value: float):
+        self.__fixed_mean = value
+        self._property_changed('fixed_mean')        
+
+    @property
+    def first_fixing(self) -> float:
+        """By default there is none, if populate would use it as the first fixing"""
+        return self.__first_fixing
+
+    @first_fixing.setter
+    def first_fixing(self, value: float):
+        self.__first_fixing = value
+        self._property_changed('first_fixing')        
+
+
 class EqCliquet(Instrument):
         
     """Object representation of an Equity Cliquet"""

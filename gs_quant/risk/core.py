@@ -193,6 +193,8 @@ EqAnnualImpliedVol = __risk_measure_with_doc_string(
 CommodDelta = __risk_measure_with_doc_string('Commodity Delta', RiskMeasureType.Delta, asset_class=AssetClass.Commod)
 CommodTheta = __risk_measure_with_doc_string('Commodity Theta', RiskMeasureType.Theta, asset_class=AssetClass.Commod)
 CommodVega = __risk_measure_with_doc_string('Commodity Vega', RiskMeasureType.Vega, asset_class=AssetClass.Commod)
+FairVolStrike = __risk_measure_with_doc_string('Fair Volatility Strike Value of a Variance Swap', RiskMeasureType.FairVolStrike)
+FairVarStrike = __risk_measure_with_doc_string('Fair Variance Strike Value of a Variance Swap', RiskMeasureType.FairVarStrike)
 FXDelta = __risk_measure_with_doc_string('FX Delta', RiskMeasureType.Delta, asset_class=AssetClass.FX)
 FXGamma = __risk_measure_with_doc_string('FX Gamma', RiskMeasureType.Gamma, asset_class=AssetClass.FX)
 FXVega = __risk_measure_with_doc_string('FX Vega', RiskMeasureType.Vega, asset_class=AssetClass.FX)
@@ -266,6 +268,8 @@ Formatters = {
     CommodDelta: scalar_formatter,
     CommodVega: scalar_formatter,
     CommodTheta: scalar_formatter,
+    FairVarStrike: scalar_formatter,
+    FairVolStrike: scalar_formatter,
     FXDelta: structured_formatter,
     FXGamma: structured_formatter,
     FXVega: structured_formatter,
