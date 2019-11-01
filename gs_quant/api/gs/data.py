@@ -396,18 +396,21 @@ class GsDataApi(DataApi):
     @cachetools.cached(TTLCache(ttl=3600, maxsize=128))
     def get_types(dataset_id: str):
         results = GsSession.current._get(f'/data/catalog/{dataset_id}')
-        if results.get("fields"):
+        fields = results.get("fields")
+        if fields:
             field_types = {}
-            for key, value in results.get("fields").items():
+            for key, value in fields.items():
                 field_type = value.get('type')
                 field_format = value.get('format')
-                if field_type:
-                    if field_format:
-                        field_types[key] = field_format
-                    else:
-                        field_types[key] = field_type
-                else:
-                    break
+                field_types[key] = field_format or field_type
+                # print(field_format, field_type)
+                # if field_type:
+                #     if field_format:
+                #         field_types[key] = field_format
+                #     else:
+                #         field_types[key] = field_type
+                # else:
+                #     break
             return field_types
         raise RuntimeError(f"Unable to get Dataset schema for {dataset_id}")
 
@@ -418,7 +421,7 @@ class GsDataApi(DataApi):
         :param data: data to convert with correct types
         :return: dataframe with correct types
         """
-        if len(data) > 0:
+        if len(data):
             dataset_types = cls.get_types(dataset_id)
             df = pd.DataFrame(data)
 

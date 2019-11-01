@@ -28,6 +28,7 @@ import requests
 from requests.utils import requote_uri
 from requests.exceptions import HTTPError
 from urllib.parse import urlencode
+import textwrap
 
 """
 Fred Data API that provides functions to query the Fred dataset. 
@@ -44,8 +45,7 @@ class FredDataApi(object):
         if api_key is not None:
             self.api_key = api_key
         else:
-            import textwrap
-            raise ValueError(textwrap.dedent("""\
+            raise ValueError(textwrap.dedent("""
                     Please pass a string with your API key. You can sign up for 
                     a free api key on the Fred website at 
                     http://research.stlouisfed.org/fred2/"""))
@@ -70,23 +70,20 @@ class FredDataApi(object):
         :param kwargs: Extra query arguments
         :return: a url string of the requested data
         """
-        
-        if end is not None:
-            assert(isinstance(end, dt.datetime) or isinstance(end, dt.date)), \
-                "End must be of type dt.datetime or dt.date!"
-        if start is not None:
-            assert(isinstance(start, dt.datetime) or isinstance(start, dt.date)), \
-                "Start must be of type dt.datetime or dt.date!"
+
+        assert(isinstance(end, (dt.date, dt.datetime, type(None)))), 'end must be a date or datetime!'
+        assert(isinstance(start, (dt.date, dt.datetime, type(None)))), 'start must be a date or datetime!'
+
         if start is not None and end is not None:
             if type(start) != type(end):
                 raise ValueError('Start and end types must match!')
         
         url = ''
         date_dict = {
-            "observation_start" : start,
-            "observation_end" : end,
-            "realtime_end" : as_of,
-            "realtime_start" : since
+            'observation_start': start,
+            'observation_end': end,
+            'realtime_end': as_of,
+            'realtime_start': since
         }
         for date in date_dict.keys():
             if date_dict[date] is not None:
@@ -121,11 +118,11 @@ class FredDataApi(object):
             response.raise_for_status() 
             json_data = response.json()
         except HTTPError as e:
-            raise ValueError(response.json()["error_message"])
-        if not len(json_data["observations"]):
-            raise ValueError("No data exists for {} for the provided paramters... ".format(id))
+            raise ValueError(response.json()['error_message'])
+        if not len(json_data['observations']):
+            raise ValueError('No data exists for {} for the provided paramters... '.format(id))
         
-        data = pd.DataFrame(json_data["observations"])[["date", "value"]]
+        data = pd.DataFrame(json_data['observations'])[['date', 'value']]
         data['date'] = pd.to_datetime(data['date'])
         data = data.set_index('date')['value']
         data = data.sort_index().groupby('date').tail(1)
@@ -149,9 +146,7 @@ class FredDataApi(object):
         
         data = self.query_data(query, id)
         last_data_chunk = {}
-        for id in data:
-            last_data_chunk[id] = data[id].last("1D")
-        return last_data_chunk
+        return {id: datum.last('1D') for id, datum in data.items()}
 
     def __fetch_data(self, url: str):
          """
@@ -164,7 +159,7 @@ class FredDataApi(object):
              response.raise_for_status() 
              data = json.loads(response.text)
          except HTTPError as e:
-             raise ValueError(json.loads(response.text)["error_message"])
+             raise ValueError(json.loads(response.text)['error_message'])
          return data
 
     def __get_search_results(self, url, limit, order_by=None, sort_order=None, filter=None):
@@ -196,12 +191,12 @@ class FredDataApi(object):
         
         # Get first chunk
         data = self.__fetch_data(url)
-        data = pd.DataFrame(data["seriess"])
+        data = pd.DataFrame(data['seriess'])
         if limit > 1000:
             for chunk in range(1, limit // 1000+1):
                 # Fetch data
-                next_data_chunk = self.__fetch_data(url + "&offset={}".format(data.shape[0]))
-                next_data_chunk = pd.DataFrame(next_data_chunk["seriess"])
+                next_data_chunk = self.__fetch_data(url + '&offset={}'.format(data.shape[0]))
+                next_data_chunk = pd.DataFrame(next_data_chunk['seriess'])
                 data = data.append(next_data_chunk)
         return data.head(limit)
 
@@ -245,31 +240,29 @@ class FredDataApi(object):
         >>> fred_data.get_coverage(search_item=33058, search_criteria="category_id")
         """
         
-        assert("search_criteria" in kwargs)
-        assert("search_item" in kwargs)
+        assert('search_criteria' in kwargs)
+        assert('search_item' in kwargs)
+        
         if limit is None:
             limit = 1000
-        search_critera = kwargs["search_criteria"]
-        search_item = kwargs["search_item"]
+        
+        search_critera = kwargs['search_criteria']
+        search_item = kwargs['search_item']
 
         if search_critera == 'text':
-            url = "{}/series/search?search_text={}&limit=1000".format(self.root_url, requote_uri(search_item))
-            coverage = self.__get_search_results(url=url, limit=limit)
-            if coverage is None:
-                raise ValueError('No series exists for text: ' + str(search_item))
+            url = '{}/series/search?search_text={}&limit=1000'.format(self.root_url, requote_uri(search_item))
         elif search_critera == 'release_id':
-            url = "{}/release/series?release_id={}&limt=1000".format(self.root_url, search_item)
-            coverage = self.__get_search_results(url=url, limit=limit)
-            if coverage is None:
-                raise ValueError('No series exists for release id: ' + str(search_item))
+            url = '{}/release/series?release_id={}&limt=1000'.format(self.root_url, search_item)
         elif search_critera == 'category_id':
-            url = "{}/category/series?category_id={}&limit=1000".format(self.root_url, search_item)
-            coverage = self.__get_search_results(url=url, limit=limit)
-            if coverage is None:
-                raise ValueError('No series exists for category id: ' + str(search_item))
+            url = '{}/category/series?category_id={}&limit=1000'.format(self.root_url, search_item)
         else:
             raise ValueError("Please specify search_critera as: 'text', 'release_id', or 'category'!")
-
+        
+        coverage = self.__get_search_results(url=url, limit=limit)
+        
+        if coverage is None:
+            raise ValueError('No series exists for text: {}'.format(str(search_item)))
+        
         return coverage
 
     def construct_dataframe_with_types(
@@ -283,7 +276,7 @@ class FredDataApi(object):
         :param data: Data to convert with correct types
         :return: Dataframe with correct types
         """
-        if len(data) > 0:
+        if len(data):
             idx = pd.date_range(dt.date(1776, 7, 4), dt.date(2262, 4, 11))
             df = None
             for series in data.values():
