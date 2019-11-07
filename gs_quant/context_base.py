@@ -112,3 +112,20 @@ class ContextBaseWithDefault(ContextBase):
     @classmethod
     def has_default(cls) -> bool:
         return True
+
+
+try:
+    from contextlib import nullcontext
+except ImportError:
+    from contextlib import AbstractContextManager
+
+    class nullcontext(AbstractContextManager):
+
+        def __init__(self, enter_result=None):
+            self.enter_result = enter_result
+
+        def __enter__(self):
+            return self.enter_result
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            pass

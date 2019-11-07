@@ -14,3 +14,5 @@ specific language governing permissions and limitations
 under the License.
 """
 name = "gs_quant"
+
+__version__ = "0.8.73"

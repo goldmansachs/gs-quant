@@ -48,6 +48,10 @@ def __flatten_result(item: Union[List, Tuple]):
             excluded_fields = ['calculationTime', 'queueingTime']
             if not issubclass(PricingContext.current.__class__, HistoricalPricingContext):
                 excluded_fields.append('date')
+            else:
+                date = elem.get('date')
+                if date is not None:
+                    elem['date'] = dateutil.parser.isoparse(date).date()
 
             for field in excluded_fields:
                 if field in elem:
@@ -67,7 +71,7 @@ def scalar_formatter(result: List) -> Optional[Union[float, pd.Series]]:
     if len(result) > 1 and 'date' in result[0]:
         series = pd.Series(
             data=[r.get('value', r.get('Val')) for r in result],
-            index=[dateutil.parser.isoparse(r['date']).date() for r in result]
+            index=[r['date'] for r in result]
         )
         return series.sort_index()
     else:
@@ -119,6 +123,23 @@ def aggregate_risk(results: Iterable[Union[pd.DataFrame, Future]], threshold: Op
     return sort_risk(result)
 
 
+def aggregate_results(results: Iterable[Union[dict, float, str, pd.DataFrame, pd.Series]])\
+        -> Union[dict, float, str, pd.DataFrame, pd.Series]:
+    types = set(type(r) for r in results)
+    if str in types:
+        return next(r for r in results if isinstance(r, str))
+    elif len(types) > 1:
+        raise RuntimeError('Cannot aggregate heterogeneous types: {}'.format(tuple(types)))
+
+    inst = next(iter(results))
+    if isinstance(inst, dict):
+        return dict((k, aggregate_results([r[k] for r in results])) for k in inst.keys())
+    elif isinstance(inst, (float, pd.Series)):
+        return sum(results)
+    elif isinstance(inst, pd.DataFrame):
+        return aggregate_risk(results)
+
+
 def subtract_risk(left: pd.DataFrame, right: pd.DataFrame) -> pd.DataFrame:
     """Subtract bucketed risk. Dimensions must be identical
 
@@ -163,95 +184,158 @@ def sort_risk(df: pd.DataFrame, by: Tuple[str, ...] = __risk_columns) -> pd.Data
     fields = [f for f in by if f in columns]
     fields.extend(f for f in columns if f not in fields)
 
-    return pd.DataFrame.from_records(data, columns=columns)[fields]
+    result = pd.DataFrame.from_records(data, columns=columns)[fields]
+    if 'date' in result:
+        result = result.set_index('date')
+
+    return result
 
 
 def __risk_measure_with_doc_string(
+    name: str,
     doc: str,
     measure_type: RiskMeasureType,
     asset_class: Optional[AssetClass] = None,
     unit: Optional[RiskMeasureUnit] = None
 ) -> RiskMeasure:
-    measure = RiskMeasure(measure_type=measure_type, asset_class=asset_class, unit=unit)
+    measure = RiskMeasure(measure_type=measure_type, asset_class=asset_class, unit=unit, name=name)
     measure.__doc__ = doc
     return measure
 
 
-DollarPrice = __risk_measure_with_doc_string('Present value in USD', RiskMeasureType.Dollar_Price)
-Price = __risk_measure_with_doc_string('Present value in local currency', RiskMeasureType.PV)
-ForwardPrice = __risk_measure_with_doc_string('Forward price', RiskMeasureType.Forward_Price, unit=RiskMeasureUnit.BPS)
-Theta = __risk_measure_with_doc_string('1 day Theta', RiskMeasureType.Theta)
-EqDelta = __risk_measure_with_doc_string('Equity Delta', RiskMeasureType.Delta, asset_class=AssetClass.Equity)
-EqGamma = __risk_measure_with_doc_string('Equity Gamma', RiskMeasureType.Gamma, asset_class=AssetClass.Equity)
-EqVega = __risk_measure_with_doc_string('Equity Vega', RiskMeasureType.Vega, asset_class=AssetClass.Equity)
-EqSpot = __risk_measure_with_doc_string('Equity Spot Level', RiskMeasureType.Spot, asset_class=AssetClass.Equity)
+DollarPrice = __risk_measure_with_doc_string('DollarPrice', 'Present value in USD', RiskMeasureType.Dollar_Price)
+Price = __risk_measure_with_doc_string('Price', 'Present value in local currency', RiskMeasureType.PV)
+ForwardPrice = __risk_measure_with_doc_string(
+    'ForwardPrice',
+    'Forward price',
+    RiskMeasureType.Forward_Price,
+    unit=RiskMeasureUnit.BPS)
+Theta = __risk_measure_with_doc_string('Theta', '1 day Theta', RiskMeasureType.Theta)
+EqDelta = __risk_measure_with_doc_string(
+    'EqDelta',
+    'Equity Delta',
+    RiskMeasureType.Delta,
+    asset_class=AssetClass.Equity)
+EqGamma = __risk_measure_with_doc_string(
+    'EqGamma',
+    'Equity Gamma',
+    RiskMeasureType.Gamma,
+    asset_class=AssetClass.Equity)
+EqVega = __risk_measure_with_doc_string('EqVega', 'Equity Vega', RiskMeasureType.Vega, asset_class=AssetClass.Equity)
+EqSpot = __risk_measure_with_doc_string(
+    'EqSpot',
+    'Equity Spot Level',
+    RiskMeasureType.Spot, asset_class=AssetClass.Equity)
 EqAnnualImpliedVol = __risk_measure_with_doc_string(
+    'EqAnnualImpliedVol',
     'Equity Annual Implied Volatility (%)',
     RiskMeasureType.Annual_Implied_Volatility,
     asset_class=AssetClass.Equity,
     unit=RiskMeasureUnit.Percent)
-CommodDelta = __risk_measure_with_doc_string('Commodity Delta', RiskMeasureType.Delta, asset_class=AssetClass.Commod)
-CommodTheta = __risk_measure_with_doc_string('Commodity Theta', RiskMeasureType.Theta, asset_class=AssetClass.Commod)
-CommodVega = __risk_measure_with_doc_string('Commodity Vega', RiskMeasureType.Vega, asset_class=AssetClass.Commod)
-FairVolStrike = __risk_measure_with_doc_string('Fair Volatility Strike Value of a Variance Swap', RiskMeasureType.FairVolStrike)
-FairVarStrike = __risk_measure_with_doc_string('Fair Variance Strike Value of a Variance Swap', RiskMeasureType.FairVarStrike)
-FXDelta = __risk_measure_with_doc_string('FX Delta', RiskMeasureType.Delta, asset_class=AssetClass.FX)
-FXGamma = __risk_measure_with_doc_string('FX Gamma', RiskMeasureType.Gamma, asset_class=AssetClass.FX)
-FXVega = __risk_measure_with_doc_string('FX Vega', RiskMeasureType.Vega, asset_class=AssetClass.FX)
-FXSpot = __risk_measure_with_doc_string('FX Spot Rate', RiskMeasureType.Spot, asset_class=AssetClass.FX)
-IRDelta = __risk_measure_with_doc_string('Interest Rate Delta', RiskMeasureType.Delta, asset_class=AssetClass.Rates)
+CommodDelta = __risk_measure_with_doc_string(
+    'CommodDelta',
+    'Commodity Delta',
+    RiskMeasureType.Delta,
+    asset_class=AssetClass.Commod)
+CommodTheta = __risk_measure_with_doc_string(
+    'CommodTheta',
+    'Commodity Theta',
+    RiskMeasureType.Theta,
+    asset_class=AssetClass.Commod)
+CommodVega = __risk_measure_with_doc_string(
+    'CommodVega',
+    'Commodity Vega',
+    RiskMeasureType.Vega,
+    asset_class=AssetClass.Commod)
+FairVolStrike = __risk_measure_with_doc_string(
+    'FairVolStrike',
+    'Fair Volatility Strike Value of a Variance Swap',
+    RiskMeasureType.FairVolStrike)
+FairVarStrike = __risk_measure_with_doc_string(
+    'FairVarStrike',
+    'Fair Variance Strike Value of a Variance Swap',
+    RiskMeasureType.FairVarStrike)
+FXDelta = __risk_measure_with_doc_string('FXDelta', 'FX Delta', RiskMeasureType.Delta, asset_class=AssetClass.FX)
+FXGamma = __risk_measure_with_doc_string('FXGamma', 'FX Gamma', RiskMeasureType.Gamma, asset_class=AssetClass.FX)
+FXVega = __risk_measure_with_doc_string('FXVega', 'FX Vega', RiskMeasureType.Vega, asset_class=AssetClass.FX)
+FXSpot = __risk_measure_with_doc_string('FXSpot', 'FX Spot Rate', RiskMeasureType.Spot, asset_class=AssetClass.FX)
+IRDelta = __risk_measure_with_doc_string(
+    'IRDelta',
+    'Interest Rate Delta',
+    RiskMeasureType.Delta,
+    asset_class=AssetClass.Rates)
 IRDeltaParallel = __risk_measure_with_doc_string(
+    'IRDeltaParallel',
     'Interest Rate Parallel Delta',
     RiskMeasureType.ParallelDelta,
     asset_class=AssetClass.Rates)
 IRDeltaLocalCcy = __risk_measure_with_doc_string(
+    'IRDeltaLocalCcy',
     'Interest Rate Delta (Local Ccy)',
     RiskMeasureType.DeltaLocalCcy,
     asset_class=AssetClass.Rates)
 IRDeltaParallelLocalCcy = __risk_measure_with_doc_string(
+    'IRDeltaParallelLocalCcy',
     'Interest Rate Parallel Delta (Local Ccy)',
     RiskMeasureType.ParallelDeltaLocalCcy,
     asset_class=AssetClass.Rates)
-IRGamma = __risk_measure_with_doc_string('Interest Rate Gamma', RiskMeasureType.Gamma, asset_class=AssetClass.Rates)
-IRVega = __risk_measure_with_doc_string('Interest Rate Vega', RiskMeasureType.Vega, asset_class=AssetClass.Rates)
+IRGamma = __risk_measure_with_doc_string(
+    'IRGamma',
+    'Interest Rate Gamma',
+    RiskMeasureType.Gamma,
+    asset_class=AssetClass.Rates)
+IRVega = __risk_measure_with_doc_string(
+    'IRVega',
+    'Interest Rate Vega',
+    RiskMeasureType.Vega,
+    asset_class=AssetClass.Rates)
 IRVegaParallel = __risk_measure_with_doc_string(
+    'IRVegaParallel',
     'Interest Rate Parallel Vega',
     RiskMeasureType.ParallelVega,
     asset_class=AssetClass.Rates)
 IRVegaLocalCcy = __risk_measure_with_doc_string(
+    'IRVegaLocalCcy',
     'Interest Rate Vega (Local Ccy)',
     RiskMeasureType.VegaLocalCcy,
     asset_class=AssetClass.Rates)
 IRVegaParallelLocalCcy = __risk_measure_with_doc_string(
+    'IRVegaParallelLocalCcy',
     'Interest Rate Parallel Vega (Local Ccy)',
     RiskMeasureType.ParallelVegaLocalCcy,
     asset_class=AssetClass.Rates)
 IRAnnualImpliedVol = __risk_measure_with_doc_string(
+    'IRAnnualImpliedVol',
     'Interest Rate Annual Implied Volatility (%)',
     RiskMeasureType.Annual_Implied_Volatility,
     asset_class=AssetClass.Rates,
     unit=RiskMeasureUnit.Percent)
 IRAnnualATMImpliedVol = __risk_measure_with_doc_string(
+    'IRAnnualATMImpliedVol',
     'Interest Rate Annual Implied At-The-Money Volatility (%)',
     RiskMeasureType.Annual_ATMF_Implied_Volatility,
     asset_class=AssetClass.Rates,
     unit=RiskMeasureUnit.Percent)
 IRDailyImpliedVol = __risk_measure_with_doc_string(
+    'IRDailyImpliedVol',
     'Interest Rate Daily Implied Volatility (bps)',
     RiskMeasureType.Annual_ATMF_Implied_Volatility,
     asset_class=AssetClass.Rates,
     unit=RiskMeasureUnit.BPS)
 IRSpotRate = __risk_measure_with_doc_string(
+    'IRSpotRate',
     'At-The-Money Spot Rate (%)',
     RiskMeasureType.Spot_Rate,
     asset_class=AssetClass.Rates,
     unit=RiskMeasureUnit.Percent)
 IRFwdRate = __risk_measure_with_doc_string(
+    'IRFwdRate',
     'Par Rate (%)',
     RiskMeasureType.Forward_Rate,
     asset_class=AssetClass.Rates,
     unit=RiskMeasureUnit.Percent)
 CRIFIRCurve = __risk_measure_with_doc_string(
+    'CRIFIRCurve',
     'CRIF IR Curve',
     RiskMeasureType.CRIF_IRCurve)
 

@@ -79,6 +79,12 @@ class SkewReference(Enum):
     FORWARD = 'forward'
 
 
+class CdsVolReference(Enum):
+    DELTA_CALL = 'delta_call'
+    DELTA_PUT = 'delta_put'
+    FORWARD = 'forward'
+
+
 class VolReference(Enum):
     DELTA_CALL = 'delta_call'
     DELTA_PUT = 'delta_put'
@@ -96,7 +102,7 @@ class VolSmileReference(Enum):
 class EdrDataReference(Enum):
     DELTA_CALL = 'delta_call'
     DELTA_PUT = 'delta_put'
-    FORWARD = 'forward'
+    SPOT = 'spot'
 
 
 class ForeCastHorizon(Enum):
@@ -345,6 +351,48 @@ def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Re
         raise MqValueError('skew not available for given inputs')
     series = [curves[qs]['impliedVolatility'] for qs in q_strikes]
     return (series[0] - series[1]) / series[2]
+
+
+@plot_measure((AssetClass.Credit,), (AssetType.Index,), [QueryType.IMPLIED_VOLATILITY_BY_DELTA_STRIKE])
+def cds_implied_volatility(asset: Asset, expiry: str, tenor: str, strike_reference: CdsVolReference,
+                           relative_strike: Real, *, source: str = None, real_time: bool = False) -> Series:
+    """
+    Volatility of a cds index implied by observations of market prices.
+
+    :param asset: asset object loaded from security master
+    :param expiry: relative date representation of expiration date on the option e.g. 3m
+    :param tenor: relative date representation of expiration date e.g. 1m
+    :param strike_reference: reference for strike level
+    :param relative_strike: strike relative to reference
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: implied volatility curve
+    """
+    if real_time:
+        raise NotImplementedError('realtime cds_implied_volatility not implemented')
+
+    delta_strike = "ATMF" if strike_reference is CdsVolReference.FORWARD else "{}DC".format(relative_strike)
+    option_type = "payer" if strike_reference is CdsVolReference.DELTA_CALL else "receiver"
+
+    _logger.debug('where expiry=%s, tenor=%s, deltaStrike=%s, optionType=%s, location=NYC',
+                  expiry, tenor, delta_strike, option_type)
+
+    q = GsDataApi.build_market_data_query(
+        [asset.get_marquee_id()],
+        QueryType.IMPLIED_VOLATILITY_BY_DELTA_STRIKE,
+        where=FieldFilterMap(
+            expiry=expiry,
+            tenor=tenor,
+            deltaStrike=delta_strike,
+            optionType=option_type,
+            location='NYC'
+        ),
+        source=source,
+        real_time=real_time
+    )
+    _logger.debug('q %s', q)
+    df = _market_data_timed(q)
+    return Series() if df.empty else df['impliedVolatilityByDeltaStrike']
 
 
 @plot_measure((AssetClass.Equity, AssetClass.Commod, AssetClass.FX,), None,

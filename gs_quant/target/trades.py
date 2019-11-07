@@ -18,7 +18,7 @@ from gs_quant.target.common import *
 import datetime
 from typing import Tuple, Union
 from enum import Enum
-from gs_quant.base import Base, EnumBase, get_enum_value
+from gs_quant.base import Base, EnumBase, camel_case_translate, get_enum_value
 
 
 class MqexsAssetClass(EnumBase, Enum):    
@@ -434,18 +434,21 @@ class MqexsErrorInfo(Base):
         
     """Service specific error code and message returned as a server response"""
        
+    @camel_case_translate
     def __init__(
         self,
         error_code: str,
         error_msg: str,
         error_severity: Union[MqexsErrorSeverity, str] = None,
-        asset_class: Union[MqexsAssetClass, str] = None
+        asset_class: Union[MqexsAssetClass, str] = None,
+        name: str = None
     ):        
         super().__init__()
         self.error_code = error_code
         self.error_msg = error_msg
         self.error_severity = error_severity
         self.asset_class = asset_class
+        self.name = name
 
     @property
     def error_code(self) -> str:
@@ -454,8 +457,8 @@ class MqexsErrorInfo(Base):
 
     @error_code.setter
     def error_code(self, value: str):
-        self.__error_code = value
-        self._property_changed('error_code')        
+        self._property_changed('error_code')
+        self.__error_code = value        
 
     @property
     def error_msg(self) -> str:
@@ -465,8 +468,8 @@ class MqexsErrorInfo(Base):
 
     @error_msg.setter
     def error_msg(self, value: str):
-        self.__error_msg = value
-        self._property_changed('error_msg')        
+        self._property_changed('error_msg')
+        self.__error_msg = value        
 
     @property
     def error_severity(self) -> Union[MqexsErrorSeverity, str]:
@@ -475,8 +478,8 @@ class MqexsErrorInfo(Base):
 
     @error_severity.setter
     def error_severity(self, value: Union[MqexsErrorSeverity, str]):
-        self.__error_severity = get_enum_value(MqexsErrorSeverity, value)
-        self._property_changed('error_severity')        
+        self._property_changed('error_severity')
+        self.__error_severity = get_enum_value(MqexsErrorSeverity, value)        
 
     @property
     def asset_class(self) -> Union[MqexsAssetClass, str]:
@@ -487,14 +490,15 @@ class MqexsErrorInfo(Base):
 
     @asset_class.setter
     def asset_class(self, value: Union[MqexsAssetClass, str]):
-        self.__asset_class = get_enum_value(MqexsAssetClass, value)
-        self._property_changed('asset_class')        
+        self._property_changed('asset_class')
+        self.__asset_class = get_enum_value(MqexsAssetClass, value)        
 
 
 class MqexsProductDetails(Base):
         
     """Details specific to the product type."""
        
+    @camel_case_translate
     def __init__(
         self,
         name: str,
@@ -515,8 +519,8 @@ class MqexsProductDetails(Base):
 
     @contract_code.setter
     def contract_code(self, value: str):
-        self.__contract_code = value
-        self._property_changed('contract_code')        
+        self._property_changed('contract_code')
+        self.__contract_code = value        
 
     @property
     def name(self) -> str:
@@ -525,8 +529,8 @@ class MqexsProductDetails(Base):
 
     @name.setter
     def name(self, value: str):
-        self.__name = value
-        self._property_changed('name')        
+        self._property_changed('name')
+        self.__name = value        
 
     @property
     def clearer(self) -> Union[MqexsClearer, str]:
@@ -535,8 +539,8 @@ class MqexsProductDetails(Base):
 
     @clearer.setter
     def clearer(self, value: Union[MqexsClearer, str]):
-        self.__clearer = get_enum_value(MqexsClearer, value)
-        self._property_changed('clearer')        
+        self._property_changed('clearer')
+        self.__clearer = get_enum_value(MqexsClearer, value)        
 
     @property
     def settlement_type(self) -> Union[MqexsOtcSettlementType, str]:
@@ -545,14 +549,15 @@ class MqexsProductDetails(Base):
 
     @settlement_type.setter
     def settlement_type(self, value: Union[MqexsOtcSettlementType, str]):
-        self.__settlement_type = get_enum_value(MqexsOtcSettlementType, value)
-        self._property_changed('settlement_type')        
+        self._property_changed('settlement_type')
+        self.__settlement_type = get_enum_value(MqexsOtcSettlementType, value)        
 
 
 class MqexsTradeDetails(Base):
         
     """Details specific to the trade type."""
        
+    @camel_case_translate
     def __init__(
         self,
         side: Union[MqexsSide, str],
@@ -560,7 +565,8 @@ class MqexsTradeDetails(Base):
         unit_price: str,
         currency: Union[MqexsCurrencyExt, str],
         settlement_date: datetime.date = None,
-        quantity_unit: str = None
+        quantity_unit: str = None,
+        name: str = None
     ):        
         super().__init__()
         self.settlement_date = settlement_date
@@ -569,6 +575,7 @@ class MqexsTradeDetails(Base):
         self.unit_price = unit_price
         self.quantity_unit = quantity_unit
         self.currency = currency
+        self.name = name
 
     @property
     def settlement_date(self) -> datetime.date:
@@ -577,8 +584,8 @@ class MqexsTradeDetails(Base):
 
     @settlement_date.setter
     def settlement_date(self, value: datetime.date):
-        self.__settlement_date = value
-        self._property_changed('settlement_date')        
+        self._property_changed('settlement_date')
+        self.__settlement_date = value        
 
     @property
     def side(self) -> Union[MqexsSide, str]:
@@ -587,8 +594,8 @@ class MqexsTradeDetails(Base):
 
     @side.setter
     def side(self, value: Union[MqexsSide, str]):
-        self.__side = get_enum_value(MqexsSide, value)
-        self._property_changed('side')        
+        self._property_changed('side')
+        self.__side = get_enum_value(MqexsSide, value)        
 
     @property
     def quantity(self) -> str:
@@ -598,8 +605,8 @@ class MqexsTradeDetails(Base):
 
     @quantity.setter
     def quantity(self, value: str):
-        self.__quantity = value
-        self._property_changed('quantity')        
+        self._property_changed('quantity')
+        self.__quantity = value        
 
     @property
     def unit_price(self) -> str:
@@ -608,8 +615,8 @@ class MqexsTradeDetails(Base):
 
     @unit_price.setter
     def unit_price(self, value: str):
-        self.__unit_price = value
-        self._property_changed('unit_price')        
+        self._property_changed('unit_price')
+        self.__unit_price = value        
 
     @property
     def quantity_unit(self) -> str:
@@ -618,8 +625,8 @@ class MqexsTradeDetails(Base):
 
     @quantity_unit.setter
     def quantity_unit(self, value: str):
-        self.__quantity_unit = value
-        self._property_changed('quantity_unit')        
+        self._property_changed('quantity_unit')
+        self.__quantity_unit = value        
 
     @property
     def currency(self) -> Union[MqexsCurrencyExt, str]:
@@ -628,14 +635,15 @@ class MqexsTradeDetails(Base):
 
     @currency.setter
     def currency(self, value: Union[MqexsCurrencyExt, str]):
-        self.__currency = get_enum_value(MqexsCurrencyExt, value)
-        self._property_changed('currency')        
+        self._property_changed('currency')
+        self.__currency = get_enum_value(MqexsCurrencyExt, value)        
 
 
 class MqexsTradeExt(Base):
         
     """Trade Object Model"""
        
+    @camel_case_translate
     def __init__(
         self,
         id_: str,
@@ -646,7 +654,8 @@ class MqexsTradeExt(Base):
         created_by_id: str,
         created_time: datetime.datetime,
         last_updated_time: datetime.datetime,
-        last_updated_by_id: str
+        last_updated_by_id: str,
+        name: str = None
     ):        
         super().__init__()
         self.__id = id_
@@ -658,6 +667,7 @@ class MqexsTradeExt(Base):
         self.created_time = created_time
         self.last_updated_time = last_updated_time
         self.last_updated_by_id = last_updated_by_id
+        self.name = name
 
     @property
     def id(self) -> str:
@@ -666,8 +676,8 @@ class MqexsTradeExt(Base):
 
     @id.setter
     def id(self, value: str):
-        self.__id = value
-        self._property_changed('id')        
+        self._property_changed('id')
+        self.__id = value        
 
     @property
     def trade_details(self) -> MqexsTradeDetails:
@@ -676,8 +686,8 @@ class MqexsTradeExt(Base):
 
     @trade_details.setter
     def trade_details(self, value: MqexsTradeDetails):
-        self.__trade_details = value
-        self._property_changed('trade_details')        
+        self._property_changed('trade_details')
+        self.__trade_details = value        
 
     @property
     def product_details(self) -> MqexsProductDetails:
@@ -686,8 +696,8 @@ class MqexsTradeExt(Base):
 
     @product_details.setter
     def product_details(self, value: MqexsProductDetails):
-        self.__product_details = value
-        self._property_changed('product_details')        
+        self._property_changed('product_details')
+        self.__product_details = value        
 
     @property
     def quote_id(self) -> str:
@@ -696,8 +706,8 @@ class MqexsTradeExt(Base):
 
     @quote_id.setter
     def quote_id(self, value: str):
-        self.__quote_id = value
-        self._property_changed('quote_id')        
+        self._property_changed('quote_id')
+        self.__quote_id = value        
 
     @property
     def asset_class(self) -> Union[MqexsAssetClassExt, str]:
@@ -708,8 +718,8 @@ class MqexsTradeExt(Base):
 
     @asset_class.setter
     def asset_class(self, value: Union[MqexsAssetClassExt, str]):
-        self.__asset_class = get_enum_value(MqexsAssetClassExt, value)
-        self._property_changed('asset_class')        
+        self._property_changed('asset_class')
+        self.__asset_class = get_enum_value(MqexsAssetClassExt, value)        
 
     @property
     def created_by_id(self) -> str:
@@ -718,8 +728,8 @@ class MqexsTradeExt(Base):
 
     @created_by_id.setter
     def created_by_id(self, value: str):
-        self.__created_by_id = value
-        self._property_changed('created_by_id')        
+        self._property_changed('created_by_id')
+        self.__created_by_id = value        
 
     @property
     def created_time(self) -> datetime.datetime:
@@ -728,8 +738,8 @@ class MqexsTradeExt(Base):
 
     @created_time.setter
     def created_time(self, value: datetime.datetime):
-        self.__created_time = value
-        self._property_changed('created_time')        
+        self._property_changed('created_time')
+        self.__created_time = value        
 
     @property
     def last_updated_time(self) -> datetime.datetime:
@@ -738,8 +748,8 @@ class MqexsTradeExt(Base):
 
     @last_updated_time.setter
     def last_updated_time(self, value: datetime.datetime):
-        self.__last_updated_time = value
-        self._property_changed('last_updated_time')        
+        self._property_changed('last_updated_time')
+        self.__last_updated_time = value        
 
     @property
     def last_updated_by_id(self) -> str:
@@ -748,8 +758,8 @@ class MqexsTradeExt(Base):
 
     @last_updated_by_id.setter
     def last_updated_by_id(self, value: str):
-        self.__last_updated_by_id = value
-        self._property_changed('last_updated_by_id')        
+        self._property_changed('last_updated_by_id')
+        self.__last_updated_by_id = value        
 
 
 class MqexsTradesWErrorExt(Base):
@@ -757,14 +767,17 @@ class MqexsTradesWErrorExt(Base):
     """List of trade objects returned as a server response with specific error code and
        message in case of a server error."""
        
+    @camel_case_translate
     def __init__(
         self,
         trades: Tuple[MqexsTradeExt, ...] = None,
-        errors: Tuple[MqexsErrorInfo, ...] = None
+        errors: Tuple[MqexsErrorInfo, ...] = None,
+        name: str = None
     ):        
         super().__init__()
         self.trades = trades
         self.errors = errors
+        self.name = name
 
     @property
     def trades(self) -> Tuple[MqexsTradeExt, ...]:
@@ -773,8 +786,8 @@ class MqexsTradesWErrorExt(Base):
 
     @trades.setter
     def trades(self, value: Tuple[MqexsTradeExt, ...]):
-        self.__trades = value
-        self._property_changed('trades')        
+        self._property_changed('trades')
+        self.__trades = value        
 
     @property
     def errors(self) -> Tuple[MqexsErrorInfo, ...]:
@@ -783,5 +796,5 @@ class MqexsTradesWErrorExt(Base):
 
     @errors.setter
     def errors(self, value: Tuple[MqexsErrorInfo, ...]):
-        self.__errors = value
-        self._property_changed('errors')        
+        self._property_changed('errors')
+        self.__errors = value        
