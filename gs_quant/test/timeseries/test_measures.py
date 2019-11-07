@@ -220,6 +220,7 @@ def mock_eq(_cls, _q):
         'impliedCorrelation': [5, 1, 2],
         'averageImpliedVolatility': [5, 1, 2],
         'averageImpliedVariance': [5, 1, 2],
+        'impliedVolatilityByDeltaStrike': [5, 1, 2]
     }
     return pd.DataFrame(data=d, index=_index * 3)
 
@@ -394,6 +395,19 @@ def test_impl_corr():
     assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='impliedCorrelation'), actual)
     with pytest.raises(NotImplementedError):
         tm.implied_correlation(..., '1m', tm.EdrDataReference.DELTA_PUT, 75, real_time=True)
+    replace.restore()
+
+
+def test_cds_implied_vol():
+    replace = Replacer()
+    mock_cds = Index('MA890', AssetClass.Equity, 'CDS')
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_eq)
+    actual = tm.cds_implied_volatility(mock_cds, '1m', '5y', tm.CdsVolReference.DELTA_CALL, 10)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='impliedVolatilityByDeltaStrike'), actual)
+    actual = tm.cds_implied_volatility(mock_cds, '1m', '5y', tm.CdsVolReference.FORWARD, 100)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='impliedVolatilityByDeltaStrike'), actual)
+    with pytest.raises(NotImplementedError):
+        tm.cds_implied_volatility(..., '1m', '5y', tm.CdsVolReference.DELTA_PUT, 75, real_time=True)
     replace.restore()
 
 

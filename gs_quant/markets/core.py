@@ -13,15 +13,16 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+from abc import ABCMeta
 from concurrent.futures import Future, ThreadPoolExecutor
 import copy
 import datetime as dt
 import functools
 import inflection
 import logging
-from typing import Optional, Tuple, Union
-
 import pandas as pd
+from typing import Iterable, Optional, Tuple, Union
+import weakref
 
 from gs_quant.base import Priceable
 from gs_quant.context_base import ContextBaseWithDefault
@@ -40,6 +41,71 @@ class MarketDataCoordinate(__MarketDataCoordinate):
                                           '_'.join(self.mkt_point or ()), self.mkt_quoting_style))
 
 
+class PricingCache(metaclass=ABCMeta):
+    """
+    Weakref cache for instrument calcs
+    """
+    __cache = weakref.WeakKeyDictionary()
+
+    @classmethod
+    def clear(cls):
+        __cache = weakref.WeakKeyDictionary()
+
+    @classmethod
+    def dates(cls,
+              priceable: Priceable,
+              location: str,
+              risk_measure: RiskMeasure) -> Tuple[dt.date, ...]:
+        if priceable in cls.__cache and (location, risk_measure) in cls.__cache[priceable]:
+            return tuple(sorted(cls.__cache[priceable][(location, risk_measure)].keys()))
+
+    @classmethod
+    def get(cls,
+            priceable: Priceable,
+            location: str,
+            risk_measure: RiskMeasure,
+            dates: Union[dt.date, Iterable[dt.date]]):
+        if priceable not in cls.__cache or (location, risk_measure) not in cls.__cache[priceable]:
+            return
+
+        results = cls.__cache[priceable][(location, risk_measure)]
+
+        if not results:
+            return None
+        elif isinstance(dates, dt.date):
+            return results.get(dates)
+        else:
+            if isinstance(next(iter(results.values())), pd.DataFrame):
+                dfs = [results[date].assign(date=date) for date in dates if date in results]
+                ret = pd.concat(dfs)
+                return ret.set_index('date')
+            else:
+                ret = pd.Series({date: results[date] for date in dates if date in results})
+                return ret.sort_index()
+
+    @classmethod
+    def put(cls,
+            priceable: Priceable,
+            location: str,
+            risk_measure: RiskMeasure,
+            result: Union[float, str, pd.DataFrame, pd.Series]):
+        cache_results = {}
+
+        if isinstance(result, pd.Series):
+            cache_results = dict(zip(result.index.unique(), (result.loc[d] for d in result.index.values)))
+        elif isinstance(result, pd.DataFrame) and len(result.index.values):
+            cache_results = dict(zip(result.index.unique(), (result.loc[d].reset_index(drop=True) for d in result.index.values)))
+        else:
+            cache_results[PricingContext.current.pricing_date] = result
+
+        cls.__cache.setdefault(priceable, {}).setdefault((location, risk_measure), {}).update(cache_results)
+
+    @classmethod
+    def drop(cls, priceable: Priceable):
+        if priceable in cls.__cache:
+            cls.__cache.pop(priceable)
+
+
 class PricingContext(ContextBaseWithDefault):
 
     """
@@ -51,7 +117,8 @@ class PricingContext(ContextBaseWithDefault):
                  market_data_as_of: Optional[Union[dt.date, dt.datetime]] = None,
                  market_data_location: Optional[str] = None,
                  is_async: bool = False,
-                 is_batch: bool = False):
+                 is_batch: bool = False,
+                 use_cache: bool = False):
         """
         The methods on this class should not be called directly. Instead, use the methods on the instruments, as per the examples
 
@@ -60,6 +127,7 @@ class PricingContext(ContextBaseWithDefault):
         :param market_data_location: the location for sourcing market data ('NYC', 'LDN' or 'HKG'. Default is NYC
         :param is_async: if True, return (a future) immediately. If False, block
         :param is_batch: use for calculations expected to run longer than 3 mins, to avoid timeouts. It can be used with is_aync=True|False
+        :param use_cache: store results in the pricing cache
 
         **Examples**
 
@@ -97,6 +165,7 @@ class PricingContext(ContextBaseWithDefault):
         self.__is_batch = is_batch
         self.__risk_measures_by_provider_and_position = {}
         self.__futures = {}
+        self.__use_cache = use_cache
 
     def _on_exit(self, exc_type, exc_val, exc_tb):
         self._calc()
@@ -140,7 +209,7 @@ class PricingContext(ContextBaseWithDefault):
             for risk_measures, positions in positions_by_risk_measures.items():
                 risk_request = RiskRequest(
                     tuple(positions),
-                    risk_measures,
+                    tuple(sorted(risk_measures, key=lambda m: m.name)),
                     wait_for_results=not self.__is_batch,
                     pricing_location=self.market_data_location,
                     scenario=ScenarioContext.current if ScenarioContext.current.scenario is not None else None,
@@ -166,12 +235,23 @@ class PricingContext(ContextBaseWithDefault):
     def _handle_results(self, results: dict):
         for risk_measure, position_results in results.items():
             for position, result in position_results.items():
+                if self.__use_cache:
+                    PricingCache.put(position.instrument, self.market_data_location, risk_measure, result)
+                    result = PricingCache.get(position.instrument, self.market_data_location, risk_measure, self.pricing_date)
+
                 positions_for_measure = self.__futures[risk_measure]
-                future = positions_for_measure.pop(position)
-                future.set_result(result)
+                positions_for_measure.pop(position).set_result(result)
 
                 if not positions_for_measure:
                     self.__futures.pop(risk_measure)
+
+        # Now set an error string for any futures for which results were not returned
+        result = 'Error: no value returned'
+        while self.__futures:
+            _, positions_for_measure = self.__futures.popitem()
+            while positions_for_measure:
+                _, future = positions_for_measure.popitem()
+                future.set_result(result)
 
     @property
     def _pricing_market_data_as_of(self) -> Tuple[PricingDateAndMarketDataAsOf, ...]:
@@ -197,8 +277,13 @@ class PricingContext(ContextBaseWithDefault):
         """Market data location"""
         return self.__market_data_location
 
-    def calc(self, priceable: Priceable,
-             risk_measure: RiskMeasure) -> Union[float, dict, pd.DataFrame, pd.Series, Future]:
+    @property
+    def use_cache(self) -> bool:
+        """Cache results"""
+        return self.__use_cache
+
+    def calc(self, priceable: Priceable, risk_measure: Union[RiskMeasure, Iterable[RiskMeasure]])\
+            -> Union[dict, float, str, pd.DataFrame, pd.Series, Future]:
         """
         Calculate the risk measure for the priceable instrument. Do not use directly, use via instruments
 
@@ -211,20 +296,40 @@ class PricingContext(ContextBaseWithDefault):
         >>> from gs_quant.instrument import IRSwap
         >>> from gs_quant.risk import IRDelta
         >>>
-        >>> swap = IRSwap('Pay', '10y', 'USD', fixedRate=0.03)
+        >>> swap = IRSwap('Pay', '10y', 'USD', fixed_rate=0.01)
         >>> delta = swap.calc(IRDelta)
         """
-        position = RiskPosition(priceable, priceable.get_quantity())
-        future = self.__futures.get(risk_measure, {}).get(position)
-        if future is None:
-            future = Future()
-            self.__risk_measures_by_provider_and_position.setdefault(
-                priceable.provider(), {}).setdefault(
-                position, set()).add(risk_measure)
-            self.__futures.setdefault(risk_measure, {})[position] = future
+        from gs_quant.risk.results import MultipleRiskMeasureFuture
 
-        if not self._is_entered and not self.__is_async:
-            self._calc()
+        position = RiskPosition(priceable, priceable.get_quantity())
+        multiple_measures = not isinstance(risk_measure, RiskMeasure)
+        futures = {}
+
+        for measure in risk_measure if multiple_measures else (risk_measure,):
+            measure_future = self.__futures.get(measure, {}).get(position)
+
+            if measure_future is None:
+                measure_future = Future()
+                if self.__use_cache:
+                    cached_result = PricingCache.get(priceable, self.market_data_location, risk_measure,
+                                                     self.pricing_date)
+                    if cached_result:
+                        measure_future.set_result(cached_result)
+
+                if not measure_future.done():
+                    self.__risk_measures_by_provider_and_position.setdefault(
+                        priceable.provider(), {}).setdefault(
+                        position, set()).add(measure)
+                    self.__futures.setdefault(measure, {})[position] = measure_future
+
+            futures[measure] = measure_future
+
+        future = MultipleRiskMeasureFuture(futures) if multiple_measures else futures[risk_measure]
+
+        if not (self._is_entered or self.__is_async):
+            if not future.done():
+                self._calc()
+
             return future.result()
         else:
             return future
@@ -241,14 +346,14 @@ class PricingContext(ContextBaseWithDefault):
         >>> from gs_quant.instrument import IRSwap
         >>>
         >>> swap = IRSwap('Pay', '10y', 'USD')
-        >>> rate = swap.fixedRate
+        >>> rate = swap.fixed_rate
 
         fixedRate is None
 
         >>> swap.resolve()
-        >>> rate = swap.fixedRate
+        >>> rate = swap.fixed_rate
 
-        fixedRate is now the solved value
+        fixed_rate is now the solved value
         """
         # TODO Handle these correctly in the risk service
         invalid_defaults = ('-- N/A --', 'NaN')

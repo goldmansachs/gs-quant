@@ -13,7 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-
+import gs_quant
 import os
 import setuptools
 import shutil
@@ -40,7 +40,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="gs_quant",
-    version="0.8.70",
+    version=gs_quant.__version__,
     author="Goldman Sachs",
     author_email="developer@gs.com",
     description="Goldman Sachs Quant",

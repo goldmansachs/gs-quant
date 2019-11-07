@@ -27,17 +27,11 @@ def classes(module_name) -> list:
     return [m for n, m in inspect.getmembers(module) if inspect.isclass(m) and issubclass(m, Base)]
 
 
-def new_instance(typ: type) -> Base:
-    args = [k for k, v in inspect.signature(typ.__init__).parameters.items()
-            if v.default == inspect.Parameter.empty][1:]
-    return typ(**{a: None for a in args})
-
-
 def test_classes():
     for module_name in ('assets', 'backtests', 'common', 'content', 'data', 'indices',
                         'instrument', 'monitor', 'portfolios', 'reports', 'risk', 'trades'):
         for typ in classes(module_name):
-            obj = new_instance(typ)
+            obj = typ.default_instance()
 
             for prop_name in obj.properties():
                 _ = object.__getattribute__(obj, prop_name)

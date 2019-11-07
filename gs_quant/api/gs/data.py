@@ -51,6 +51,7 @@ class QueryType(Enum):
     CAP_FLOOR_ATM_FWD_RATE = "Cap Floor Atm Fwd Rate"
     SPREAD_OPTION_ATM_FWD_RATE = "Spread Option Atm Fwd Rate"
     FORECAST = "Forecast"
+    IMPLIED_VOLATILITY_BY_DELTA_STRIKE = "Implied Volatility By Delta Strike"
 
 
 class GsDataApi(DataApi):

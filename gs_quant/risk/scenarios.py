@@ -13,16 +13,16 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+from abc import ABCMeta
 from typing import Mapping, Union
 
-from gs_quant.base import BaseMeta
 from gs_quant.context_base import ContextBaseWithDefault, ContextMeta
 from gs_quant.markets.core import PricingContext
 from gs_quant.target.risk import CarryScenario, CurveScenario, MarketDataScenario, MarketDataPattern, MarketDataShock,\
     MarketDataPatternAndShock, MarketDataShockBasedScenario as __MarketDataShockBasedScenario
 
 
-class __ScenarioMeta(BaseMeta, ContextMeta):
+class __ScenarioMeta(ABCMeta, ContextMeta):
     pass
 
 

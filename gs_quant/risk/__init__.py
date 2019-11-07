@@ -15,9 +15,9 @@ under the License.
 """
 
 from .core import *
-from .risk_measure_mappings import get_specific_risk_measure
 from .scenarios import MarketDataShockBasedScenario, ScenarioContext
-from gs_quant.target.risk import CoordinatesRequest, CarryScenario, CurveScenario, LiquidityRequest, LiquidityResponse,\
+from gs_quant.target.portfolios import LiquidityRequest
+from gs_quant.target.risk import CoordinatesRequest, CarryScenario, CurveScenario, LiquidityResponse,\
     RiskMeasure, RiskModelRequest, RiskPosition, RiskRequest, MarketDataPattern, MarketDataScenario, MarketDataShock,\
     MarketDataShockType, MarketDataTypeAndAsset
 

@@ -17,7 +17,7 @@ under the License.
 import datetime
 from typing import Tuple, Union
 from enum import Enum
-from gs_quant.base import Base, EnumBase, Priceable, get_enum_value
+from gs_quant.base import Base, EnumBase, Priceable, camel_case_translate, get_enum_value
 
 
 class AssetClass(EnumBase, Enum):    
@@ -837,36 +837,6 @@ class IndexCreateSource(EnumBase, Enum):
         return self.value
 
 
-class LiquidityMeasure(EnumBase, Enum):    
-    
-    """A list of the different liquidity measures to choose from."""
-
-    Summary = 'Summary'
-    Constituent_Transaction_Costs = 'Constituent Transaction Costs'
-    Constituents = 'Constituents'
-    Largest_Holdings_By_Weight = 'Largest Holdings By Weight'
-    Least_Liquid_Holdings = 'Least Liquid Holdings'
-    ADV_Percent_Buckets = 'ADV Percent Buckets'
-    Market_Cap_Buckets = 'Market Cap Buckets'
-    Region_Buckets = 'Region Buckets'
-    Country_Buckets = 'Country Buckets'
-    Sector_Buckets = 'Sector Buckets'
-    Industry_Buckets = 'Industry Buckets'
-    Risk_Buckets = 'Risk Buckets'
-    Factor_Risk_Buckets = 'Factor Risk Buckets'
-    Exposure_Buckets = 'Exposure Buckets'
-    Factor_Exposure_Buckets = 'Factor Exposure Buckets'
-    Percent_Of_Trade_Complete_Over_Time = 'Percent Of Trade Complete Over Time'
-    Execution_Cost_With_Different_Time_Horizons = 'Execution Cost With Different Time Horizons'
-    Participation_Rate_With_Different_Time_Horizons = 'Participation Rate With Different Time Horizons'
-    Risk_With_Different_Time_Horizons = 'Risk With Different Time Horizons'
-    Historical_ADV_Percent_Curve = 'Historical ADV Percent Curve'
-    Time_Series_Data = 'Time Series Data'
-    
-    def __repr__(self):
-        return self.value
-
-
 class MarketDataShockType(EnumBase, Enum):    
     
     """Market data shock type"""
@@ -903,6 +873,9 @@ class MarketDataVendor(EnumBase, Enum):
     Iowa_Electronic_Markets = 'Iowa Electronic Markets'
     RealClearPolitics = 'RealClearPolitics'
     _538 = '538'
+    Opinium = 'Opinium'
+    YouGov = 'YouGov'
+    Survation = 'Survation'
     
     def __repr__(self):
         return self.value
@@ -1117,12 +1090,15 @@ class AssetIdPriceable(Priceable):
         
     """An object to hold assetId when it can't be passed as a string."""
        
+    @camel_case_translate
     def __init__(
         self,
-        asset_id: str = None
+        asset_id: str = None,
+        name: str = None
     ):        
         super().__init__()
         self.asset_id = asset_id
+        self.name = name
 
     @property
     def asset_id(self) -> str:
@@ -1131,20 +1107,23 @@ class AssetIdPriceable(Priceable):
 
     @asset_id.setter
     def asset_id(self, value: str):
-        self.__asset_id = value
-        self._property_changed('asset_id')        
+        self._property_changed('asset_id')
+        self.__asset_id = value        
 
 
 class CSLDate(Base):
         
     """A date"""
        
+    @camel_case_translate
     def __init__(
         self,
-        date_value: datetime.date = None
+        date_value: datetime.date = None,
+        name: str = None
     ):        
         super().__init__()
         self.date_value = date_value
+        self.name = name
 
     @property
     def date_value(self) -> datetime.date:
@@ -1153,20 +1132,23 @@ class CSLDate(Base):
 
     @date_value.setter
     def date_value(self, value: datetime.date):
-        self.__date_value = value
-        self._property_changed('date_value')        
+        self._property_changed('date_value')
+        self.__date_value = value        
 
 
 class CSLDouble(Base):
         
     """A double"""
        
+    @camel_case_translate
     def __init__(
         self,
-        double_value: float = None
+        double_value: float = None,
+        name: str = None
     ):        
         super().__init__()
         self.double_value = double_value
+        self.name = name
 
     @property
     def double_value(self) -> float:
@@ -1175,20 +1157,23 @@ class CSLDouble(Base):
 
     @double_value.setter
     def double_value(self, value: float):
-        self.__double_value = value
-        self._property_changed('double_value')        
+        self._property_changed('double_value')
+        self.__double_value = value        
 
 
 class CSLFXCross(Base):
         
     """An FX cross"""
        
+    @camel_case_translate
     def __init__(
         self,
-        string_value: str = None
+        string_value: str = None,
+        name: str = None
     ):        
         super().__init__()
         self.string_value = string_value
+        self.name = name
 
     @property
     def string_value(self) -> str:
@@ -1197,20 +1182,23 @@ class CSLFXCross(Base):
 
     @string_value.setter
     def string_value(self, value: str):
-        self.__string_value = value
-        self._property_changed('string_value')        
+        self._property_changed('string_value')
+        self.__string_value = value        
 
 
 class CSLIndex(Base):
         
     """An index"""
        
+    @camel_case_translate
     def __init__(
         self,
-        string_value: str = None
+        string_value: str = None,
+        name: str = None
     ):        
         super().__init__()
         self.string_value = string_value
+        self.name = name
 
     @property
     def string_value(self) -> str:
@@ -1219,22 +1207,25 @@ class CSLIndex(Base):
 
     @string_value.setter
     def string_value(self, value: str):
-        self.__string_value = value
-        self._property_changed('string_value')        
+        self._property_changed('string_value')
+        self.__string_value = value        
 
 
 class CSLSimpleSchedule(Base):
         
     """A fixing date, settlement date pair"""
        
+    @camel_case_translate
     def __init__(
         self,
         fixing_date: datetime.date = None,
-        settlement_date: datetime.date = None
+        settlement_date: datetime.date = None,
+        name: str = None
     ):        
         super().__init__()
         self.fixing_date = fixing_date
         self.settlement_date = settlement_date
+        self.name = name
 
     @property
     def fixing_date(self) -> datetime.date:
@@ -1243,8 +1234,8 @@ class CSLSimpleSchedule(Base):
 
     @fixing_date.setter
     def fixing_date(self, value: datetime.date):
-        self.__fixing_date = value
-        self._property_changed('fixing_date')        
+        self._property_changed('fixing_date')
+        self.__fixing_date = value        
 
     @property
     def settlement_date(self) -> datetime.date:
@@ -1253,20 +1244,23 @@ class CSLSimpleSchedule(Base):
 
     @settlement_date.setter
     def settlement_date(self, value: datetime.date):
-        self.__settlement_date = value
-        self._property_changed('settlement_date')        
+        self._property_changed('settlement_date')
+        self.__settlement_date = value        
 
 
 class CSLStock(Base):
         
     """A stock"""
        
+    @camel_case_translate
     def __init__(
         self,
-        string_value: str = None
+        string_value: str = None,
+        name: str = None
     ):        
         super().__init__()
         self.string_value = string_value
+        self.name = name
 
     @property
     def string_value(self) -> str:
@@ -1275,20 +1269,23 @@ class CSLStock(Base):
 
     @string_value.setter
     def string_value(self, value: str):
-        self.__string_value = value
-        self._property_changed('string_value')        
+        self._property_changed('string_value')
+        self.__string_value = value        
 
 
 class CSLString(Base):
         
     """A string"""
        
+    @camel_case_translate
     def __init__(
         self,
-        string_value: str = None
+        string_value: str = None,
+        name: str = None
     ):        
         super().__init__()
         self.string_value = string_value
+        self.name = name
 
     @property
     def string_value(self) -> str:
@@ -1297,14 +1294,15 @@ class CSLString(Base):
 
     @string_value.setter
     def string_value(self, value: str):
-        self.__string_value = value
-        self._property_changed('string_value')        
+        self._property_changed('string_value')
+        self.__string_value = value        
 
 
 class CSLSymCaseNamedParam(Base):
         
     """A named case-sensitive string."""
        
+    @camel_case_translate
     def __init__(
         self,
         sym_case_value: str = None,
@@ -1321,8 +1319,8 @@ class CSLSymCaseNamedParam(Base):
 
     @sym_case_value.setter
     def sym_case_value(self, value: str):
-        self.__sym_case_value = value
-        self._property_changed('sym_case_value')        
+        self._property_changed('sym_case_value')
+        self.__sym_case_value = value        
 
     @property
     def name(self) -> str:
@@ -1331,22 +1329,25 @@ class CSLSymCaseNamedParam(Base):
 
     @name.setter
     def name(self, value: str):
-        self.__name = value
-        self._property_changed('name')        
+        self._property_changed('name')
+        self.__name = value        
 
 
 class CarryScenario(Base):
         
     """A scenario to manipulate time along the forward curve"""
        
+    @camel_case_translate
     def __init__(
         self,
         time_shift: int = None,
-        roll_fwd_no_d_left: bool = False
+        roll_fwd_no_d_left: bool = False,
+        name: str = None
     ):        
         super().__init__()
         self.time_shift = time_shift
         self.roll_fwd_no_d_left = roll_fwd_no_d_left
+        self.name = name
 
     @property
     def scenario_type(self) -> str:
@@ -1360,8 +1361,8 @@ class CarryScenario(Base):
 
     @time_shift.setter
     def time_shift(self, value: int):
-        self.__time_shift = value
-        self._property_changed('time_shift')        
+        self._property_changed('time_shift')
+        self.__time_shift = value        
 
     @property
     def roll_fwd_no_d_left(self) -> bool:
@@ -1370,20 +1371,23 @@ class CarryScenario(Base):
 
     @roll_fwd_no_d_left.setter
     def roll_fwd_no_d_left(self, value: bool):
-        self.__roll_fwd_no_d_left = value
-        self._property_changed('roll_fwd_no_d_left')        
+        self._property_changed('roll_fwd_no_d_left')
+        self.__roll_fwd_no_d_left = value        
 
 
 class DateRange(Base):
                
+    @camel_case_translate
     def __init__(
         self,
         end_date: datetime.date = None,
-        start_date: datetime.date = None
+        start_date: datetime.date = None,
+        name: str = None
     ):        
         super().__init__()
         self.end_date = end_date
         self.start_date = start_date
+        self.name = name
 
     @property
     def end_date(self) -> datetime.date:
@@ -1392,8 +1396,8 @@ class DateRange(Base):
 
     @end_date.setter
     def end_date(self, value: datetime.date):
-        self.__end_date = value
-        self._property_changed('end_date')        
+        self._property_changed('end_date')
+        self.__end_date = value        
 
     @property
     def start_date(self) -> datetime.date:
@@ -1402,14 +1406,15 @@ class DateRange(Base):
 
     @start_date.setter
     def start_date(self, value: datetime.date):
-        self.__start_date = value
-        self._property_changed('start_date')        
+        self._property_changed('start_date')
+        self.__start_date = value        
 
 
 class EntitlementExclusions(Base):
         
     """Defines the exclusion entitlements of a given resource"""
        
+    @camel_case_translate
     def __init__(
         self,
         view: Tuple[Tuple[str, ...], ...] = None,
@@ -1420,7 +1425,8 @@ class EntitlementExclusions(Base):
         upload: Tuple[Tuple[str, ...], ...] = None,
         query: Tuple[Tuple[str, ...], ...] = None,
         performance_details: Tuple[Tuple[str, ...], ...] = None,
-        plot: Tuple[Tuple[str, ...], ...] = None
+        plot: Tuple[Tuple[str, ...], ...] = None,
+        name: str = None
     ):        
         super().__init__()
         self.view = view
@@ -1432,6 +1438,7 @@ class EntitlementExclusions(Base):
         self.query = query
         self.performance_details = performance_details
         self.plot = plot
+        self.name = name
 
     @property
     def view(self) -> Tuple[Tuple[str, ...], ...]:
@@ -1439,8 +1446,8 @@ class EntitlementExclusions(Base):
 
     @view.setter
     def view(self, value: Tuple[Tuple[str, ...], ...]):
-        self.__view = value
-        self._property_changed('view')        
+        self._property_changed('view')
+        self.__view = value        
 
     @property
     def edit(self) -> Tuple[Tuple[str, ...], ...]:
@@ -1448,8 +1455,8 @@ class EntitlementExclusions(Base):
 
     @edit.setter
     def edit(self, value: Tuple[Tuple[str, ...], ...]):
-        self.__edit = value
-        self._property_changed('edit')        
+        self._property_changed('edit')
+        self.__edit = value        
 
     @property
     def admin(self) -> Tuple[Tuple[str, ...], ...]:
@@ -1457,8 +1464,8 @@ class EntitlementExclusions(Base):
 
     @admin.setter
     def admin(self, value: Tuple[Tuple[str, ...], ...]):
-        self.__admin = value
-        self._property_changed('admin')        
+        self._property_changed('admin')
+        self.__admin = value        
 
     @property
     def rebalance(self) -> Tuple[Tuple[str, ...], ...]:
@@ -1466,8 +1473,8 @@ class EntitlementExclusions(Base):
 
     @rebalance.setter
     def rebalance(self, value: Tuple[Tuple[str, ...], ...]):
-        self.__rebalance = value
-        self._property_changed('rebalance')        
+        self._property_changed('rebalance')
+        self.__rebalance = value        
 
     @property
     def trade(self) -> Tuple[Tuple[str, ...], ...]:
@@ -1475,8 +1482,8 @@ class EntitlementExclusions(Base):
 
     @trade.setter
     def trade(self, value: Tuple[Tuple[str, ...], ...]):
-        self.__trade = value
-        self._property_changed('trade')        
+        self._property_changed('trade')
+        self.__trade = value        
 
     @property
     def upload(self) -> Tuple[Tuple[str, ...], ...]:
@@ -1484,8 +1491,8 @@ class EntitlementExclusions(Base):
 
     @upload.setter
     def upload(self, value: Tuple[Tuple[str, ...], ...]):
-        self.__upload = value
-        self._property_changed('upload')        
+        self._property_changed('upload')
+        self.__upload = value        
 
     @property
     def query(self) -> Tuple[Tuple[str, ...], ...]:
@@ -1493,8 +1500,8 @@ class EntitlementExclusions(Base):
 
     @query.setter
     def query(self, value: Tuple[Tuple[str, ...], ...]):
-        self.__query = value
-        self._property_changed('query')        
+        self._property_changed('query')
+        self.__query = value        
 
     @property
     def performance_details(self) -> Tuple[Tuple[str, ...], ...]:
@@ -1502,8 +1509,8 @@ class EntitlementExclusions(Base):
 
     @performance_details.setter
     def performance_details(self, value: Tuple[Tuple[str, ...], ...]):
-        self.__performance_details = value
-        self._property_changed('performance_details')        
+        self._property_changed('performance_details')
+        self.__performance_details = value        
 
     @property
     def plot(self) -> Tuple[Tuple[str, ...], ...]:
@@ -1511,14 +1518,15 @@ class EntitlementExclusions(Base):
 
     @plot.setter
     def plot(self, value: Tuple[Tuple[str, ...], ...]):
-        self.__plot = value
-        self._property_changed('plot')        
+        self._property_changed('plot')
+        self.__plot = value        
 
 
 class Entitlements(Base):
         
     """Defines the entitlements of a given resource"""
        
+    @camel_case_translate
     def __init__(
         self,
         view: Tuple[str, ...] = None,
@@ -1529,7 +1537,8 @@ class Entitlements(Base):
         upload: Tuple[str, ...] = None,
         query: Tuple[str, ...] = None,
         performance_details: Tuple[str, ...] = None,
-        plot: Tuple[str, ...] = None
+        plot: Tuple[str, ...] = None,
+        name: str = None
     ):        
         super().__init__()
         self.view = view
@@ -1541,6 +1550,7 @@ class Entitlements(Base):
         self.query = query
         self.performance_details = performance_details
         self.plot = plot
+        self.name = name
 
     @property
     def view(self) -> Tuple[str, ...]:
@@ -1549,8 +1559,8 @@ class Entitlements(Base):
 
     @view.setter
     def view(self, value: Tuple[str, ...]):
-        self.__view = value
-        self._property_changed('view')        
+        self._property_changed('view')
+        self.__view = value        
 
     @property
     def edit(self) -> Tuple[str, ...]:
@@ -1560,8 +1570,8 @@ class Entitlements(Base):
 
     @edit.setter
     def edit(self, value: Tuple[str, ...]):
-        self.__edit = value
-        self._property_changed('edit')        
+        self._property_changed('edit')
+        self.__edit = value        
 
     @property
     def admin(self) -> Tuple[str, ...]:
@@ -1571,8 +1581,8 @@ class Entitlements(Base):
 
     @admin.setter
     def admin(self, value: Tuple[str, ...]):
-        self.__admin = value
-        self._property_changed('admin')        
+        self._property_changed('admin')
+        self.__admin = value        
 
     @property
     def rebalance(self) -> Tuple[str, ...]:
@@ -1581,8 +1591,8 @@ class Entitlements(Base):
 
     @rebalance.setter
     def rebalance(self, value: Tuple[str, ...]):
-        self.__rebalance = value
-        self._property_changed('rebalance')        
+        self._property_changed('rebalance')
+        self.__rebalance = value        
 
     @property
     def trade(self) -> Tuple[str, ...]:
@@ -1591,8 +1601,8 @@ class Entitlements(Base):
 
     @trade.setter
     def trade(self, value: Tuple[str, ...]):
-        self.__trade = value
-        self._property_changed('trade')        
+        self._property_changed('trade')
+        self.__trade = value        
 
     @property
     def upload(self) -> Tuple[str, ...]:
@@ -1601,8 +1611,8 @@ class Entitlements(Base):
 
     @upload.setter
     def upload(self, value: Tuple[str, ...]):
-        self.__upload = value
-        self._property_changed('upload')        
+        self._property_changed('upload')
+        self.__upload = value        
 
     @property
     def query(self) -> Tuple[str, ...]:
@@ -1611,8 +1621,8 @@ class Entitlements(Base):
 
     @query.setter
     def query(self, value: Tuple[str, ...]):
-        self.__query = value
-        self._property_changed('query')        
+        self._property_changed('query')
+        self.__query = value        
 
     @property
     def performance_details(self) -> Tuple[str, ...]:
@@ -1621,8 +1631,8 @@ class Entitlements(Base):
 
     @performance_details.setter
     def performance_details(self, value: Tuple[str, ...]):
-        self.__performance_details = value
-        self._property_changed('performance_details')        
+        self._property_changed('performance_details')
+        self.__performance_details = value        
 
     @property
     def plot(self) -> Tuple[str, ...]:
@@ -1631,20 +1641,23 @@ class Entitlements(Base):
 
     @plot.setter
     def plot(self, value: Tuple[str, ...]):
-        self.__plot = value
-        self._property_changed('plot')        
+        self._property_changed('plot')
+        self.__plot = value        
 
 
 class ISelectNewUnit(Base):
                
+    @camel_case_translate
     def __init__(
         self,
         id_: str,
-        new_units: float = None
+        new_units: float = None,
+        name: str = None
     ):        
         super().__init__()
         self.__id = id_
         self.new_units = new_units
+        self.name = name
 
     @property
     def id(self) -> str:
@@ -1652,8 +1665,8 @@ class ISelectNewUnit(Base):
 
     @id.setter
     def id(self, value: str):
-        self.__id = value
-        self._property_changed('id')        
+        self._property_changed('id')
+        self.__id = value        
 
     @property
     def new_units(self) -> float:
@@ -1661,20 +1674,23 @@ class ISelectNewUnit(Base):
 
     @new_units.setter
     def new_units(self, value: float):
-        self.__new_units = value
-        self._property_changed('new_units')        
+        self._property_changed('new_units')
+        self.__new_units = value        
 
 
 class ISelectNewWeight(Base):
                
+    @camel_case_translate
     def __init__(
         self,
         id_: str,
-        new_weight: float = None
+        new_weight: float = None,
+        name: str = None
     ):        
         super().__init__()
         self.__id = id_
         self.new_weight = new_weight
+        self.name = name
 
     @property
     def id(self) -> str:
@@ -1682,8 +1698,8 @@ class ISelectNewWeight(Base):
 
     @id.setter
     def id(self, value: str):
-        self.__id = value
-        self._property_changed('id')        
+        self._property_changed('id')
+        self.__id = value        
 
     @property
     def new_weight(self) -> float:
@@ -1691,20 +1707,23 @@ class ISelectNewWeight(Base):
 
     @new_weight.setter
     def new_weight(self, value: float):
-        self.__new_weight = value
-        self._property_changed('new_weight')        
+        self._property_changed('new_weight')
+        self.__new_weight = value        
 
 
 class Identifier(Base):
                
+    @camel_case_translate
     def __init__(
         self,
         type_: str = None,
-        value: str = None
+        value: str = None,
+        name: str = None
     ):        
         super().__init__()
         self.__type = type_
         self.value = value
+        self.name = name
 
     @property
     def type(self) -> str:
@@ -1713,8 +1732,8 @@ class Identifier(Base):
 
     @type.setter
     def type(self, value: str):
-        self.__type = value
-        self._property_changed('type')        
+        self._property_changed('type')
+        self.__type = value        
 
     @property
     def value(self) -> str:
@@ -1723,22 +1742,25 @@ class Identifier(Base):
 
     @value.setter
     def value(self, value: str):
-        self.__value = value
-        self._property_changed('value')        
+        self._property_changed('value')
+        self.__value = value        
 
 
 class Link(Base):
         
     """Hyperlink"""
        
+    @camel_case_translate
     def __init__(
         self,
         title: str = None,
-        source: str = None
+        source: str = None,
+        name: str = None
     ):        
         super().__init__()
         self.title = title
         self.source = source
+        self.name = name
 
     @property
     def title(self) -> str:
@@ -1747,8 +1769,8 @@ class Link(Base):
 
     @title.setter
     def title(self, value: str):
-        self.__title = value
-        self._property_changed('title')        
+        self._property_changed('title')
+        self.__title = value        
 
     @property
     def source(self) -> str:
@@ -1757,131 +1779,31 @@ class Link(Base):
 
     @source.setter
     def source(self, value: str):
-        self.__source = value
-        self._property_changed('source')        
-
-
-class LiquidityReportParameters(Base):
-        
-    """Parameters to be used on liquidity reports"""
-       
-    def __init__(
-        self,
-        title: str = None,
-        email: str = None,
-        trading_desk: str = None
-    ):        
-        super().__init__()
-        self.title = title
-        self.email = email
-        self.trading_desk = trading_desk
-
-    @property
-    def title(self) -> str:
-        """Report title"""
-        return self.__title
-
-    @title.setter
-    def title(self, value: str):
-        self.__title = value
-        self._property_changed('title')        
-
-    @property
-    def email(self) -> str:
-        return self.__email
-
-    @email.setter
-    def email(self, value: str):
-        self.__email = value
-        self._property_changed('email')        
-
-    @property
-    def trading_desk(self) -> str:
-        return self.__trading_desk
-
-    @trading_desk.setter
-    def trading_desk(self, value: str):
-        self.__trading_desk = value
-        self._property_changed('trading_desk')        
+        self._property_changed('source')
+        self.__source = value        
 
 
 class MarketDataCoordinate(Base):
         
     """Object representation of a market data coordinate"""
        
+    @camel_case_translate
     def __init__(
         self,
-        market_data_type: str = None,
-        market_data_asset: str = None,
-        point_class: str = None,
-        market_data_point: Tuple[str, ...] = None,
-        quoting_style: str = None,
         mkt_type: str = None,
         mkt_asset: str = None,
         mkt_class: str = None,
         mkt_point: Tuple[str, ...] = None,
-        mkt_quoting_style: str = None
+        mkt_quoting_style: str = None,
+        name: str = None
     ):        
         super().__init__()
-        self.market_data_type = market_data_type
-        self.market_data_asset = market_data_asset
-        self.point_class = point_class
-        self.market_data_point = market_data_point
-        self.quoting_style = quoting_style
         self.mkt_type = mkt_type
         self.mkt_asset = mkt_asset
         self.mkt_class = mkt_class
         self.mkt_point = mkt_point
         self.mkt_quoting_style = mkt_quoting_style
-
-    @property
-    def market_data_type(self) -> str:
-        """The Market Data Type, e.g. IR, IR_BASIS, FX, FX_Vol"""
-        return self.__market_data_type
-
-    @market_data_type.setter
-    def market_data_type(self, value: str):
-        self.__market_data_type = value
-        self._property_changed('market_data_type')        
-
-    @property
-    def market_data_asset(self) -> str:
-        """The specific asset, e.g. USD, EUR-EURIBOR-Telerate, WTI"""
-        return self.__market_data_asset
-
-    @market_data_asset.setter
-    def market_data_asset(self, value: str):
-        self.__market_data_asset = value
-        self._property_changed('market_data_asset')        
-
-    @property
-    def point_class(self) -> str:
-        """The market data pointClass, e.g. Swap, Cash."""
-        return self.__point_class
-
-    @point_class.setter
-    def point_class(self, value: str):
-        self.__point_class = value
-        self._property_changed('point_class')        
-
-    @property
-    def market_data_point(self) -> Tuple[str, ...]:
-        """The specific point, e.g. 3m, 10y, 11y, Dec19"""
-        return self.__market_data_point
-
-    @market_data_point.setter
-    def market_data_point(self, value: Tuple[str, ...]):
-        self.__market_data_point = value
-        self._property_changed('market_data_point')        
-
-    @property
-    def quoting_style(self) -> str:
-        return self.__quoting_style
-
-    @quoting_style.setter
-    def quoting_style(self, value: str):
-        self.__quoting_style = value
-        self._property_changed('quoting_style')        
+        self.name = name
 
     @property
     def mkt_type(self) -> str:
@@ -1890,8 +1812,8 @@ class MarketDataCoordinate(Base):
 
     @mkt_type.setter
     def mkt_type(self, value: str):
-        self.__mkt_type = value
-        self._property_changed('mkt_type')        
+        self._property_changed('mkt_type')
+        self.__mkt_type = value        
 
     @property
     def mkt_asset(self) -> str:
@@ -1900,8 +1822,8 @@ class MarketDataCoordinate(Base):
 
     @mkt_asset.setter
     def mkt_asset(self, value: str):
-        self.__mkt_asset = value
-        self._property_changed('mkt_asset')        
+        self._property_changed('mkt_asset')
+        self.__mkt_asset = value        
 
     @property
     def mkt_class(self) -> str:
@@ -1910,8 +1832,8 @@ class MarketDataCoordinate(Base):
 
     @mkt_class.setter
     def mkt_class(self, value: str):
-        self.__mkt_class = value
-        self._property_changed('mkt_class')        
+        self._property_changed('mkt_class')
+        self.__mkt_class = value        
 
     @property
     def mkt_point(self) -> Tuple[str, ...]:
@@ -1920,8 +1842,8 @@ class MarketDataCoordinate(Base):
 
     @mkt_point.setter
     def mkt_point(self, value: Tuple[str, ...]):
-        self.__mkt_point = value
-        self._property_changed('mkt_point')        
+        self._property_changed('mkt_point')
+        self.__mkt_point = value        
 
     @property
     def mkt_quoting_style(self) -> str:
@@ -1929,22 +1851,25 @@ class MarketDataCoordinate(Base):
 
     @mkt_quoting_style.setter
     def mkt_quoting_style(self, value: str):
-        self.__mkt_quoting_style = value
-        self._property_changed('mkt_quoting_style')        
+        self._property_changed('mkt_quoting_style')
+        self.__mkt_quoting_style = value        
 
 
 class MarketDataTypeAndAsset(Base):
         
     """Market data type and asset, e.g. type=IR, asset=USD"""
        
+    @camel_case_translate
     def __init__(
         self,
         type_: str,
-        asset: str
+        asset: str,
+        name: str = None
     ):        
         super().__init__()
         self.__type = type_
         self.asset = asset
+        self.name = name
 
     @property
     def type(self) -> str:
@@ -1953,8 +1878,8 @@ class MarketDataTypeAndAsset(Base):
 
     @type.setter
     def type(self, value: str):
-        self.__type = value
-        self._property_changed('type')        
+        self._property_changed('type')
+        self.__type = value        
 
     @property
     def asset(self) -> str:
@@ -1963,26 +1888,29 @@ class MarketDataTypeAndAsset(Base):
 
     @asset.setter
     def asset(self, value: str):
-        self.__asset = value
-        self._property_changed('asset')        
+        self._property_changed('asset')
+        self.__asset = value        
 
 
 class Op(Base):
         
     """Operations for searches."""
        
+    @camel_case_translate
     def __init__(
         self,
         gte: Union[datetime.date, float] = None,
         lte: Union[datetime.date, float] = None,
         lt: Union[datetime.date, float] = None,
-        gt: Union[datetime.date, float] = None
+        gt: Union[datetime.date, float] = None,
+        name: str = None
     ):        
         super().__init__()
         self.gte = gte
         self.lte = lte
         self.lt = lt
         self.gt = gt
+        self.name = name
 
     @property
     def gte(self) -> Union[datetime.date, float]:
@@ -1991,8 +1919,8 @@ class Op(Base):
 
     @gte.setter
     def gte(self, value: Union[datetime.date, float]):
-        self.__gte = value
-        self._property_changed('gte')        
+        self._property_changed('gte')
+        self.__gte = value        
 
     @property
     def lte(self) -> Union[datetime.date, float]:
@@ -2001,8 +1929,8 @@ class Op(Base):
 
     @lte.setter
     def lte(self, value: Union[datetime.date, float]):
-        self.__lte = value
-        self._property_changed('lte')        
+        self._property_changed('lte')
+        self.__lte = value        
 
     @property
     def lt(self) -> Union[datetime.date, float]:
@@ -2011,8 +1939,8 @@ class Op(Base):
 
     @lt.setter
     def lt(self, value: Union[datetime.date, float]):
-        self.__lt = value
-        self._property_changed('lt')        
+        self._property_changed('lt')
+        self.__lt = value        
 
     @property
     def gt(self) -> Union[datetime.date, float]:
@@ -2021,14 +1949,15 @@ class Op(Base):
 
     @gt.setter
     def gt(self, value: Union[datetime.date, float]):
-        self.__gt = value
-        self._property_changed('gt')        
+        self._property_changed('gt')
+        self.__gt = value        
 
 
 class PerformanceStats(Base):
         
     """Performance statistics."""
        
+    @camel_case_translate
     def __init__(
         self,
         alpha: float = None,
@@ -2061,7 +1990,8 @@ class PerformanceStats(Base):
         worst_month: float = None,
         worst_month_date: datetime.date = None,
         total_return: float = None,
-        volume: float = None
+        volume: float = None,
+        name: str = None
     ):        
         super().__init__()
         self.alpha = alpha
@@ -2095,6 +2025,7 @@ class PerformanceStats(Base):
         self.worst_month_date = worst_month_date
         self.total_return = total_return
         self.volume = volume
+        self.name = name
 
     @property
     def alpha(self) -> float:
@@ -2103,8 +2034,8 @@ class PerformanceStats(Base):
 
     @alpha.setter
     def alpha(self, value: float):
-        self.__alpha = value
-        self._property_changed('alpha')        
+        self._property_changed('alpha')
+        self.__alpha = value        
 
     @property
     def annualized_return(self) -> float:
@@ -2113,8 +2044,8 @@ class PerformanceStats(Base):
 
     @annualized_return.setter
     def annualized_return(self, value: float):
-        self.__annualized_return = value
-        self._property_changed('annualized_return')        
+        self._property_changed('annualized_return')
+        self.__annualized_return = value        
 
     @property
     def annualized_volatility(self) -> float:
@@ -2123,8 +2054,8 @@ class PerformanceStats(Base):
 
     @annualized_volatility.setter
     def annualized_volatility(self, value: float):
-        self.__annualized_volatility = value
-        self._property_changed('annualized_volatility')        
+        self._property_changed('annualized_volatility')
+        self.__annualized_volatility = value        
 
     @property
     def average_return(self) -> float:
@@ -2133,8 +2064,8 @@ class PerformanceStats(Base):
 
     @average_return.setter
     def average_return(self, value: float):
-        self.__average_return = value
-        self._property_changed('average_return')        
+        self._property_changed('average_return')
+        self.__average_return = value        
 
     @property
     def average_value(self) -> float:
@@ -2143,8 +2074,8 @@ class PerformanceStats(Base):
 
     @average_value.setter
     def average_value(self, value: float):
-        self.__average_value = value
-        self._property_changed('average_value')        
+        self._property_changed('average_value')
+        self.__average_value = value        
 
     @property
     def average_volume_last_month(self) -> float:
@@ -2153,8 +2084,8 @@ class PerformanceStats(Base):
 
     @average_volume_last_month.setter
     def average_volume_last_month(self, value: float):
-        self.__average_volume_last_month = value
-        self._property_changed('average_volume_last_month')        
+        self._property_changed('average_volume_last_month')
+        self.__average_volume_last_month = value        
 
     @property
     def best_month(self) -> float:
@@ -2163,8 +2094,8 @@ class PerformanceStats(Base):
 
     @best_month.setter
     def best_month(self, value: float):
-        self.__best_month = value
-        self._property_changed('best_month')        
+        self._property_changed('best_month')
+        self.__best_month = value        
 
     @property
     def best_month_date(self) -> datetime.date:
@@ -2173,8 +2104,8 @@ class PerformanceStats(Base):
 
     @best_month_date.setter
     def best_month_date(self, value: datetime.date):
-        self.__best_month_date = value
-        self._property_changed('best_month_date')        
+        self._property_changed('best_month_date')
+        self.__best_month_date = value        
 
     @property
     def beta(self) -> float:
@@ -2183,8 +2114,8 @@ class PerformanceStats(Base):
 
     @beta.setter
     def beta(self, value: float):
-        self.__beta = value
-        self._property_changed('beta')        
+        self._property_changed('beta')
+        self.__beta = value        
 
     @property
     def close_price(self) -> float:
@@ -2193,8 +2124,8 @@ class PerformanceStats(Base):
 
     @close_price.setter
     def close_price(self, value: float):
-        self.__close_price = value
-        self._property_changed('close_price')        
+        self._property_changed('close_price')
+        self.__close_price = value        
 
     @property
     def correlation(self) -> float:
@@ -2203,8 +2134,8 @@ class PerformanceStats(Base):
 
     @correlation.setter
     def correlation(self, value: float):
-        self.__correlation = value
-        self._property_changed('correlation')        
+        self._property_changed('correlation')
+        self.__correlation = value        
 
     @property
     def current_value(self) -> float:
@@ -2213,8 +2144,8 @@ class PerformanceStats(Base):
 
     @current_value.setter
     def current_value(self, value: float):
-        self.__current_value = value
-        self._property_changed('current_value')        
+        self._property_changed('current_value')
+        self.__current_value = value        
 
     @property
     def drawdown_over_return(self) -> float:
@@ -2223,8 +2154,8 @@ class PerformanceStats(Base):
 
     @drawdown_over_return.setter
     def drawdown_over_return(self, value: float):
-        self.__drawdown_over_return = value
-        self._property_changed('drawdown_over_return')        
+        self._property_changed('drawdown_over_return')
+        self.__drawdown_over_return = value        
 
     @property
     def high(self) -> float:
@@ -2233,8 +2164,8 @@ class PerformanceStats(Base):
 
     @high.setter
     def high(self, value: float):
-        self.__high = value
-        self._property_changed('high')        
+        self._property_changed('high')
+        self.__high = value        
 
     @property
     def high_eod(self) -> float:
@@ -2243,8 +2174,8 @@ class PerformanceStats(Base):
 
     @high_eod.setter
     def high_eod(self, value: float):
-        self.__high_eod = value
-        self._property_changed('high_eod')        
+        self._property_changed('high_eod')
+        self.__high_eod = value        
 
     @property
     def last_change(self) -> float:
@@ -2253,8 +2184,8 @@ class PerformanceStats(Base):
 
     @last_change.setter
     def last_change(self, value: float):
-        self.__last_change = value
-        self._property_changed('last_change')        
+        self._property_changed('last_change')
+        self.__last_change = value        
 
     @property
     def last_change_pct(self) -> float:
@@ -2263,8 +2194,8 @@ class PerformanceStats(Base):
 
     @last_change_pct.setter
     def last_change_pct(self, value: float):
-        self.__last_change_pct = value
-        self._property_changed('last_change_pct')        
+        self._property_changed('last_change_pct')
+        self.__last_change_pct = value        
 
     @property
     def last_date(self) -> datetime.date:
@@ -2273,8 +2204,8 @@ class PerformanceStats(Base):
 
     @last_date.setter
     def last_date(self, value: datetime.date):
-        self.__last_date = value
-        self._property_changed('last_date')        
+        self._property_changed('last_date')
+        self.__last_date = value        
 
     @property
     def last_value(self) -> float:
@@ -2283,8 +2214,8 @@ class PerformanceStats(Base):
 
     @last_value.setter
     def last_value(self, value: float):
-        self.__last_value = value
-        self._property_changed('last_value')        
+        self._property_changed('last_value')
+        self.__last_value = value        
 
     @property
     def low(self) -> float:
@@ -2293,8 +2224,8 @@ class PerformanceStats(Base):
 
     @low.setter
     def low(self, value: float):
-        self.__low = value
-        self._property_changed('low')        
+        self._property_changed('low')
+        self.__low = value        
 
     @property
     def low_eod(self) -> float:
@@ -2303,8 +2234,8 @@ class PerformanceStats(Base):
 
     @low_eod.setter
     def low_eod(self, value: float):
-        self.__low_eod = value
-        self._property_changed('low_eod')        
+        self._property_changed('low_eod')
+        self.__low_eod = value        
 
     @property
     def max_draw_down(self) -> float:
@@ -2313,8 +2244,8 @@ class PerformanceStats(Base):
 
     @max_draw_down.setter
     def max_draw_down(self, value: float):
-        self.__max_draw_down = value
-        self._property_changed('max_draw_down')        
+        self._property_changed('max_draw_down')
+        self.__max_draw_down = value        
 
     @property
     def max_draw_down_duration(self) -> int:
@@ -2323,8 +2254,8 @@ class PerformanceStats(Base):
 
     @max_draw_down_duration.setter
     def max_draw_down_duration(self, value: int):
-        self.__max_draw_down_duration = value
-        self._property_changed('max_draw_down_duration')        
+        self._property_changed('max_draw_down_duration')
+        self.__max_draw_down_duration = value        
 
     @property
     def open_price(self) -> float:
@@ -2333,8 +2264,8 @@ class PerformanceStats(Base):
 
     @open_price.setter
     def open_price(self, value: float):
-        self.__open_price = value
-        self._property_changed('open_price')        
+        self._property_changed('open_price')
+        self.__open_price = value        
 
     @property
     def positive_months(self) -> float:
@@ -2343,8 +2274,8 @@ class PerformanceStats(Base):
 
     @positive_months.setter
     def positive_months(self, value: float):
-        self.__positive_months = value
-        self._property_changed('positive_months')        
+        self._property_changed('positive_months')
+        self.__positive_months = value        
 
     @property
     def sharpe_ratio(self) -> float:
@@ -2354,8 +2285,8 @@ class PerformanceStats(Base):
 
     @sharpe_ratio.setter
     def sharpe_ratio(self, value: float):
-        self.__sharpe_ratio = value
-        self._property_changed('sharpe_ratio')        
+        self._property_changed('sharpe_ratio')
+        self.__sharpe_ratio = value        
 
     @property
     def sortino_ratio(self) -> float:
@@ -2365,8 +2296,8 @@ class PerformanceStats(Base):
 
     @sortino_ratio.setter
     def sortino_ratio(self, value: float):
-        self.__sortino_ratio = value
-        self._property_changed('sortino_ratio')        
+        self._property_changed('sortino_ratio')
+        self.__sortino_ratio = value        
 
     @property
     def worst_month(self) -> float:
@@ -2375,8 +2306,8 @@ class PerformanceStats(Base):
 
     @worst_month.setter
     def worst_month(self, value: float):
-        self.__worst_month = value
-        self._property_changed('worst_month')        
+        self._property_changed('worst_month')
+        self.__worst_month = value        
 
     @property
     def worst_month_date(self) -> datetime.date:
@@ -2385,8 +2316,8 @@ class PerformanceStats(Base):
 
     @worst_month_date.setter
     def worst_month_date(self, value: datetime.date):
-        self.__worst_month_date = value
-        self._property_changed('worst_month_date')        
+        self._property_changed('worst_month_date')
+        self.__worst_month_date = value        
 
     @property
     def total_return(self) -> float:
@@ -2395,8 +2326,8 @@ class PerformanceStats(Base):
 
     @total_return.setter
     def total_return(self, value: float):
-        self.__total_return = value
-        self._property_changed('total_return')        
+        self._property_changed('total_return')
+        self.__total_return = value        
 
     @property
     def volume(self) -> float:
@@ -2405,20 +2336,23 @@ class PerformanceStats(Base):
 
     @volume.setter
     def volume(self, value: float):
-        self.__volume = value
-        self._property_changed('volume')        
+        self._property_changed('volume')
+        self.__volume = value        
 
 
 class Position(Base):
                
+    @camel_case_translate
     def __init__(
         self,
         asset_id: str = None,
-        quantity: float = None
+        quantity: float = None,
+        name: str = None
     ):        
         super().__init__()
         self.asset_id = asset_id
         self.quantity = quantity
+        self.name = name
 
     @property
     def asset_id(self) -> str:
@@ -2427,8 +2361,8 @@ class Position(Base):
 
     @asset_id.setter
     def asset_id(self, value: str):
-        self.__asset_id = value
-        self._property_changed('asset_id')        
+        self._property_changed('asset_id')
+        self.__asset_id = value        
 
     @property
     def quantity(self) -> float:
@@ -2437,22 +2371,25 @@ class Position(Base):
 
     @quantity.setter
     def quantity(self, value: float):
-        self.__quantity = value
-        self._property_changed('quantity')        
+        self._property_changed('quantity')
+        self.__quantity = value        
 
 
 class PricingDateAndMarketDataAsOf(Base):
         
     """Pricing date and market data as of (date or time)"""
        
+    @camel_case_translate
     def __init__(
         self,
         pricing_date: datetime.date,
-        market_data_as_of: Union[datetime.date, datetime.datetime]
+        market_data_as_of: Union[datetime.date, datetime.datetime],
+        name: str = None
     ):        
         super().__init__()
         self.pricing_date = pricing_date
         self.market_data_as_of = market_data_as_of
+        self.name = name
 
     @property
     def pricing_date(self) -> datetime.date:
@@ -2461,8 +2398,8 @@ class PricingDateAndMarketDataAsOf(Base):
 
     @pricing_date.setter
     def pricing_date(self, value: datetime.date):
-        self.__pricing_date = value
-        self._property_changed('pricing_date')        
+        self._property_changed('pricing_date')
+        self.__pricing_date = value        
 
     @property
     def market_data_as_of(self) -> Union[datetime.date, datetime.datetime]:
@@ -2471,20 +2408,23 @@ class PricingDateAndMarketDataAsOf(Base):
 
     @market_data_as_of.setter
     def market_data_as_of(self, value: Union[datetime.date, datetime.datetime]):
-        self.__market_data_as_of = value
-        self._property_changed('market_data_as_of')        
+        self._property_changed('market_data_as_of')
+        self.__market_data_as_of = value        
 
 
 class RiskRequestParameters(Base):
         
     """Parameters for the risk request"""
        
+    @camel_case_translate
     def __init__(
         self,
-        csa_term: str = None
+        csa_term: str = None,
+        name: str = None
     ):        
         super().__init__()
         self.csa_term = csa_term
+        self.name = name
 
     @property
     def csa_term(self) -> str:
@@ -2493,44 +2433,13 @@ class RiskRequestParameters(Base):
 
     @csa_term.setter
     def csa_term(self, value: str):
-        self.__csa_term = value
-        self._property_changed('csa_term')        
-
-
-class WeightedPosition(Base):
-               
-    def __init__(
-        self,
-        asset_id: str,
-        weight: float
-    ):        
-        super().__init__()
-        self.asset_id = asset_id
-        self.weight = weight
-
-    @property
-    def asset_id(self) -> str:
-        """Marquee unique identifier"""
-        return self.__asset_id
-
-    @asset_id.setter
-    def asset_id(self, value: str):
-        self.__asset_id = value
-        self._property_changed('asset_id')        
-
-    @property
-    def weight(self) -> float:
-        """Relative net weight of the given position"""
-        return self.__weight
-
-    @weight.setter
-    def weight(self, value: float):
-        self.__weight = value
-        self._property_changed('weight')        
+        self._property_changed('csa_term')
+        self.__csa_term = value        
 
 
 class XRef(Priceable):
                
+    @camel_case_translate
     def __init__(
         self,
         ric: str = None,
@@ -2566,7 +2475,8 @@ class XRef(Priceable):
         dollar_cross: str = None,
         mq_symbol: str = None,
         primary_country_ric: str = None,
-        pnode_id: str = None
+        pnode_id: str = None,
+        name: str = None
     ):        
         super().__init__()
         self.ric = ric
@@ -2603,6 +2513,7 @@ class XRef(Priceable):
         self.mq_symbol = mq_symbol
         self.primary_country_ric = primary_country_ric
         self.pnode_id = pnode_id
+        self.name = name
 
     @property
     def ric(self) -> str:
@@ -2611,8 +2522,8 @@ class XRef(Priceable):
 
     @ric.setter
     def ric(self, value: str):
-        self.__ric = value
-        self._property_changed('ric')        
+        self._property_changed('ric')
+        self.__ric = value        
 
     @property
     def rcic(self) -> str:
@@ -2621,8 +2532,8 @@ class XRef(Priceable):
 
     @rcic.setter
     def rcic(self, value: str):
-        self.__rcic = value
-        self._property_changed('rcic')        
+        self._property_changed('rcic')
+        self.__rcic = value        
 
     @property
     def eid(self) -> str:
@@ -2631,8 +2542,8 @@ class XRef(Priceable):
 
     @eid.setter
     def eid(self, value: str):
-        self.__eid = value
-        self._property_changed('eid')        
+        self._property_changed('eid')
+        self.__eid = value        
 
     @property
     def gsideid(self) -> str:
@@ -2641,8 +2552,8 @@ class XRef(Priceable):
 
     @gsideid.setter
     def gsideid(self, value: str):
-        self.__gsideid = value
-        self._property_changed('gsideid')        
+        self._property_changed('gsideid')
+        self.__gsideid = value        
 
     @property
     def gsid(self) -> str:
@@ -2651,8 +2562,8 @@ class XRef(Priceable):
 
     @gsid.setter
     def gsid(self, value: str):
-        self.__gsid = value
-        self._property_changed('gsid')        
+        self._property_changed('gsid')
+        self.__gsid = value        
 
     @property
     def cid(self) -> str:
@@ -2661,8 +2572,8 @@ class XRef(Priceable):
 
     @cid.setter
     def cid(self, value: str):
-        self.__cid = value
-        self._property_changed('cid')        
+        self._property_changed('cid')
+        self.__cid = value        
 
     @property
     def bbid(self) -> str:
@@ -2671,8 +2582,8 @@ class XRef(Priceable):
 
     @bbid.setter
     def bbid(self, value: str):
-        self.__bbid = value
-        self._property_changed('bbid')        
+        self._property_changed('bbid')
+        self.__bbid = value        
 
     @property
     def bcid(self) -> str:
@@ -2681,8 +2592,8 @@ class XRef(Priceable):
 
     @bcid.setter
     def bcid(self, value: str):
-        self.__bcid = value
-        self._property_changed('bcid')        
+        self._property_changed('bcid')
+        self.__bcid = value        
 
     @property
     def delisted(self) -> str:
@@ -2691,8 +2602,8 @@ class XRef(Priceable):
 
     @delisted.setter
     def delisted(self, value: str):
-        self.__delisted = value
-        self._property_changed('delisted')        
+        self._property_changed('delisted')
+        self.__delisted = value        
 
     @property
     def bbid_equivalent(self) -> str:
@@ -2701,8 +2612,8 @@ class XRef(Priceable):
 
     @bbid_equivalent.setter
     def bbid_equivalent(self, value: str):
-        self.__bbid_equivalent = value
-        self._property_changed('bbid_equivalent')        
+        self._property_changed('bbid_equivalent')
+        self.__bbid_equivalent = value        
 
     @property
     def cusip(self) -> str:
@@ -2711,8 +2622,8 @@ class XRef(Priceable):
 
     @cusip.setter
     def cusip(self, value: str):
-        self.__cusip = value
-        self._property_changed('cusip')        
+        self._property_changed('cusip')
+        self.__cusip = value        
 
     @property
     def gss(self) -> str:
@@ -2721,8 +2632,8 @@ class XRef(Priceable):
 
     @gss.setter
     def gss(self, value: str):
-        self.__gss = value
-        self._property_changed('gss')        
+        self._property_changed('gss')
+        self.__gss = value        
 
     @property
     def isin(self) -> str:
@@ -2731,8 +2642,8 @@ class XRef(Priceable):
 
     @isin.setter
     def isin(self, value: str):
-        self.__isin = value
-        self._property_changed('isin')        
+        self._property_changed('isin')
+        self.__isin = value        
 
     @property
     def jsn(self) -> str:
@@ -2741,8 +2652,8 @@ class XRef(Priceable):
 
     @jsn.setter
     def jsn(self, value: str):
-        self.__jsn = value
-        self._property_changed('jsn')        
+        self._property_changed('jsn')
+        self.__jsn = value        
 
     @property
     def prime_id(self) -> str:
@@ -2751,8 +2662,8 @@ class XRef(Priceable):
 
     @prime_id.setter
     def prime_id(self, value: str):
-        self.__prime_id = value
-        self._property_changed('prime_id')        
+        self._property_changed('prime_id')
+        self.__prime_id = value        
 
     @property
     def sedol(self) -> str:
@@ -2761,8 +2672,8 @@ class XRef(Priceable):
 
     @sedol.setter
     def sedol(self, value: str):
-        self.__sedol = value
-        self._property_changed('sedol')        
+        self._property_changed('sedol')
+        self.__sedol = value        
 
     @property
     def ticker(self) -> str:
@@ -2771,8 +2682,8 @@ class XRef(Priceable):
 
     @ticker.setter
     def ticker(self, value: str):
-        self.__ticker = value
-        self._property_changed('ticker')        
+        self._property_changed('ticker')
+        self.__ticker = value        
 
     @property
     def valoren(self) -> str:
@@ -2781,8 +2692,8 @@ class XRef(Priceable):
 
     @valoren.setter
     def valoren(self, value: str):
-        self.__valoren = value
-        self._property_changed('valoren')        
+        self._property_changed('valoren')
+        self.__valoren = value        
 
     @property
     def wpk(self) -> str:
@@ -2791,8 +2702,8 @@ class XRef(Priceable):
 
     @wpk.setter
     def wpk(self, value: str):
-        self.__wpk = value
-        self._property_changed('wpk')        
+        self._property_changed('wpk')
+        self.__wpk = value        
 
     @property
     def gsn(self) -> str:
@@ -2801,8 +2712,8 @@ class XRef(Priceable):
 
     @gsn.setter
     def gsn(self, value: str):
-        self.__gsn = value
-        self._property_changed('gsn')        
+        self._property_changed('gsn')
+        self.__gsn = value        
 
     @property
     def sec_name(self) -> str:
@@ -2811,8 +2722,8 @@ class XRef(Priceable):
 
     @sec_name.setter
     def sec_name(self, value: str):
-        self.__sec_name = value
-        self._property_changed('sec_name')        
+        self._property_changed('sec_name')
+        self.__sec_name = value        
 
     @property
     def cross(self) -> str:
@@ -2821,8 +2732,8 @@ class XRef(Priceable):
 
     @cross.setter
     def cross(self, value: str):
-        self.__cross = value
-        self._property_changed('cross')        
+        self._property_changed('cross')
+        self.__cross = value        
 
     @property
     def simon_id(self) -> str:
@@ -2831,8 +2742,8 @@ class XRef(Priceable):
 
     @simon_id.setter
     def simon_id(self, value: str):
-        self.__simon_id = value
-        self._property_changed('simon_id')        
+        self._property_changed('simon_id')
+        self.__simon_id = value        
 
     @property
     def em_id(self) -> str:
@@ -2841,8 +2752,8 @@ class XRef(Priceable):
 
     @em_id.setter
     def em_id(self, value: str):
-        self.__em_id = value
-        self._property_changed('em_id')        
+        self._property_changed('em_id')
+        self.__em_id = value        
 
     @property
     def cm_id(self) -> str:
@@ -2851,8 +2762,8 @@ class XRef(Priceable):
 
     @cm_id.setter
     def cm_id(self, value: str):
-        self.__cm_id = value
-        self._property_changed('cm_id')        
+        self._property_changed('cm_id')
+        self.__cm_id = value        
 
     @property
     def lms_id(self) -> str:
@@ -2861,8 +2772,8 @@ class XRef(Priceable):
 
     @lms_id.setter
     def lms_id(self, value: str):
-        self.__lms_id = value
-        self._property_changed('lms_id')        
+        self._property_changed('lms_id')
+        self.__lms_id = value        
 
     @property
     def mdapi(self) -> str:
@@ -2871,8 +2782,8 @@ class XRef(Priceable):
 
     @mdapi.setter
     def mdapi(self, value: str):
-        self.__mdapi = value
-        self._property_changed('mdapi')        
+        self._property_changed('mdapi')
+        self.__mdapi = value        
 
     @property
     def mdapi_class(self) -> str:
@@ -2881,8 +2792,8 @@ class XRef(Priceable):
 
     @mdapi_class.setter
     def mdapi_class(self, value: str):
-        self.__mdapi_class = value
-        self._property_changed('mdapi_class')        
+        self._property_changed('mdapi_class')
+        self.__mdapi_class = value        
 
     @property
     def mic(self) -> str:
@@ -2891,8 +2802,8 @@ class XRef(Priceable):
 
     @mic.setter
     def mic(self, value: str):
-        self.__mic = value
-        self._property_changed('mic')        
+        self._property_changed('mic')
+        self.__mic = value        
 
     @property
     def sf_id(self) -> str:
@@ -2901,8 +2812,8 @@ class XRef(Priceable):
 
     @sf_id.setter
     def sf_id(self, value: str):
-        self.__sf_id = value
-        self._property_changed('sf_id')        
+        self._property_changed('sf_id')
+        self.__sf_id = value        
 
     @property
     def dollar_cross(self) -> str:
@@ -2911,8 +2822,8 @@ class XRef(Priceable):
 
     @dollar_cross.setter
     def dollar_cross(self, value: str):
-        self.__dollar_cross = value
-        self._property_changed('dollar_cross')        
+        self._property_changed('dollar_cross')
+        self.__dollar_cross = value        
 
     @property
     def mq_symbol(self) -> str:
@@ -2921,8 +2832,8 @@ class XRef(Priceable):
 
     @mq_symbol.setter
     def mq_symbol(self, value: str):
-        self.__mq_symbol = value
-        self._property_changed('mq_symbol')        
+        self._property_changed('mq_symbol')
+        self.__mq_symbol = value        
 
     @property
     def primary_country_ric(self) -> str:
@@ -2931,30 +2842,33 @@ class XRef(Priceable):
 
     @primary_country_ric.setter
     def primary_country_ric(self, value: str):
-        self.__primary_country_ric = value
-        self._property_changed('primary_country_ric')        
+        self._property_changed('primary_country_ric')
+        self.__primary_country_ric = value        
 
     @property
     def pnode_id(self) -> str:
-        """Pricing node identifier sourced from Morningstart"""
+        """Pricing node identifier sourced from Morningstar"""
         return self.__pnode_id
 
     @pnode_id.setter
     def pnode_id(self, value: str):
-        self.__pnode_id = value
-        self._property_changed('pnode_id')        
+        self._property_changed('pnode_id')
+        self.__pnode_id = value        
 
 
 class CSLCurrency(Base):
         
     """A currency"""
        
+    @camel_case_translate
     def __init__(
         self,
-        string_value: Union[Currency, str] = None
+        string_value: Union[Currency, str] = None,
+        name: str = None
     ):        
         super().__init__()
         self.string_value = string_value
+        self.name = name
 
     @property
     def string_value(self) -> Union[Currency, str]:
@@ -2963,36 +2877,15 @@ class CSLCurrency(Base):
 
     @string_value.setter
     def string_value(self, value: Union[Currency, str]):
-        self.__string_value = get_enum_value(Currency, value)
-        self._property_changed('string_value')        
+        self._property_changed('string_value')
+        self.__string_value = get_enum_value(Currency, value)        
 
 
 class CSLDateArray(Base):
         
     """An array of dates"""
        
-    def __init__(
-        self,
-        date_values: Tuple[CSLDate, ...] = None
-    ):        
-        super().__init__()
-        self.date_values = date_values
-
-    @property
-    def date_values(self) -> Tuple[CSLDate, ...]:
-        """A date"""
-        return self.__date_values
-
-    @date_values.setter
-    def date_values(self, value: Tuple[CSLDate, ...]):
-        self.__date_values = value
-        self._property_changed('date_values')        
-
-
-class CSLDateArrayNamedParam(Base):
-        
-    """A named array of dates"""
-       
+    @camel_case_translate
     def __init__(
         self,
         date_values: Tuple[CSLDate, ...] = None,
@@ -3009,8 +2902,33 @@ class CSLDateArrayNamedParam(Base):
 
     @date_values.setter
     def date_values(self, value: Tuple[CSLDate, ...]):
-        self.__date_values = value
-        self._property_changed('date_values')        
+        self._property_changed('date_values')
+        self.__date_values = value        
+
+
+class CSLDateArrayNamedParam(Base):
+        
+    """A named array of dates"""
+       
+    @camel_case_translate
+    def __init__(
+        self,
+        date_values: Tuple[CSLDate, ...] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.date_values = date_values
+        self.name = name
+
+    @property
+    def date_values(self) -> Tuple[CSLDate, ...]:
+        """A date"""
+        return self.__date_values
+
+    @date_values.setter
+    def date_values(self, value: Tuple[CSLDate, ...]):
+        self._property_changed('date_values')
+        self.__date_values = value        
 
     @property
     def name(self) -> str:
@@ -3019,20 +2937,23 @@ class CSLDateArrayNamedParam(Base):
 
     @name.setter
     def name(self, value: str):
-        self.__name = value
-        self._property_changed('name')        
+        self._property_changed('name')
+        self.__name = value        
 
 
 class CSLDoubleArray(Base):
         
     """An array of doubles"""
        
+    @camel_case_translate
     def __init__(
         self,
-        double_values: Tuple[CSLDouble, ...] = None
+        double_values: Tuple[CSLDouble, ...] = None,
+        name: str = None
     ):        
         super().__init__()
         self.double_values = double_values
+        self.name = name
 
     @property
     def double_values(self) -> Tuple[CSLDouble, ...]:
@@ -3041,20 +2962,23 @@ class CSLDoubleArray(Base):
 
     @double_values.setter
     def double_values(self, value: Tuple[CSLDouble, ...]):
-        self.__double_values = value
-        self._property_changed('double_values')        
+        self._property_changed('double_values')
+        self.__double_values = value        
 
 
 class CSLFXCrossArray(Base):
         
     """An array of FX crosses"""
        
+    @camel_case_translate
     def __init__(
         self,
-        fx_cross_values: Tuple[CSLFXCross, ...] = None
+        fx_cross_values: Tuple[CSLFXCross, ...] = None,
+        name: str = None
     ):        
         super().__init__()
         self.fx_cross_values = fx_cross_values
+        self.name = name
 
     @property
     def fx_cross_values(self) -> Tuple[CSLFXCross, ...]:
@@ -3063,20 +2987,23 @@ class CSLFXCrossArray(Base):
 
     @fx_cross_values.setter
     def fx_cross_values(self, value: Tuple[CSLFXCross, ...]):
-        self.__fx_cross_values = value
-        self._property_changed('fx_cross_values')        
+        self._property_changed('fx_cross_values')
+        self.__fx_cross_values = value        
 
 
 class CSLIndexArray(Base):
         
     """An array of indices"""
        
+    @camel_case_translate
     def __init__(
         self,
-        index_values: Tuple[CSLIndex, ...] = None
+        index_values: Tuple[CSLIndex, ...] = None,
+        name: str = None
     ):        
         super().__init__()
         self.index_values = index_values
+        self.name = name
 
     @property
     def index_values(self) -> Tuple[CSLIndex, ...]:
@@ -3085,20 +3012,23 @@ class CSLIndexArray(Base):
 
     @index_values.setter
     def index_values(self, value: Tuple[CSLIndex, ...]):
-        self.__index_values = value
-        self._property_changed('index_values')        
+        self._property_changed('index_values')
+        self.__index_values = value        
 
 
 class CSLSimpleScheduleArray(Base):
         
     """An array of simple schedules"""
        
+    @camel_case_translate
     def __init__(
         self,
-        simple_schedule_values: Tuple[CSLSimpleSchedule, ...] = None
+        simple_schedule_values: Tuple[CSLSimpleSchedule, ...] = None,
+        name: str = None
     ):        
         super().__init__()
         self.simple_schedule_values = simple_schedule_values
+        self.name = name
 
     @property
     def simple_schedule_values(self) -> Tuple[CSLSimpleSchedule, ...]:
@@ -3107,20 +3037,23 @@ class CSLSimpleScheduleArray(Base):
 
     @simple_schedule_values.setter
     def simple_schedule_values(self, value: Tuple[CSLSimpleSchedule, ...]):
-        self.__simple_schedule_values = value
-        self._property_changed('simple_schedule_values')        
+        self._property_changed('simple_schedule_values')
+        self.__simple_schedule_values = value        
 
 
 class CSLStockArray(Base):
         
     """An array of stocks"""
        
+    @camel_case_translate
     def __init__(
         self,
-        stock_values: Tuple[CSLStock, ...] = None
+        stock_values: Tuple[CSLStock, ...] = None,
+        name: str = None
     ):        
         super().__init__()
         self.stock_values = stock_values
+        self.name = name
 
     @property
     def stock_values(self) -> Tuple[CSLStock, ...]:
@@ -3129,20 +3062,23 @@ class CSLStockArray(Base):
 
     @stock_values.setter
     def stock_values(self, value: Tuple[CSLStock, ...]):
-        self.__stock_values = value
-        self._property_changed('stock_values')        
+        self._property_changed('stock_values')
+        self.__stock_values = value        
 
 
 class CSLStringArray(Base):
         
     """An array of strings"""
        
+    @camel_case_translate
     def __init__(
         self,
-        string_values: Tuple[CSLString, ...] = None
+        string_values: Tuple[CSLString, ...] = None,
+        name: str = None
     ):        
         super().__init__()
         self.string_values = string_values
+        self.name = name
 
     @property
     def string_values(self) -> Tuple[CSLString, ...]:
@@ -3151,21 +3087,23 @@ class CSLStringArray(Base):
 
     @string_values.setter
     def string_values(self, value: Tuple[CSLString, ...]):
-        self.__string_values = value
-        self._property_changed('string_values')        
+        self._property_changed('string_values')
+        self.__string_values = value        
 
 
 class CurveScenario(Base):
         
     """A scenario to manipulate curve shape"""
        
+    @camel_case_translate
     def __init__(
         self,
         market_data_types_and_assets: Tuple[MarketDataTypeAndAsset, ...] = None,
         annualised_parallel_shift: float = None,
         annualised_slope_shift: float = None,
         pivot_point: float = None,
-        cutoff: float = None
+        cutoff: float = None,
+        name: str = None
     ):        
         super().__init__()
         self.market_data_types_and_assets = market_data_types_and_assets
@@ -3173,6 +3111,7 @@ class CurveScenario(Base):
         self.annualised_slope_shift = annualised_slope_shift
         self.pivot_point = pivot_point
         self.cutoff = cutoff
+        self.name = name
 
     @property
     def scenario_type(self) -> str:
@@ -3187,8 +3126,8 @@ class CurveScenario(Base):
 
     @market_data_types_and_assets.setter
     def market_data_types_and_assets(self, value: Tuple[MarketDataTypeAndAsset, ...]):
-        self.__market_data_types_and_assets = value
-        self._property_changed('market_data_types_and_assets')        
+        self._property_changed('market_data_types_and_assets')
+        self.__market_data_types_and_assets = value        
 
     @property
     def annualised_parallel_shift(self) -> float:
@@ -3197,8 +3136,8 @@ class CurveScenario(Base):
 
     @annualised_parallel_shift.setter
     def annualised_parallel_shift(self, value: float):
-        self.__annualised_parallel_shift = value
-        self._property_changed('annualised_parallel_shift')        
+        self._property_changed('annualised_parallel_shift')
+        self.__annualised_parallel_shift = value        
 
     @property
     def annualised_slope_shift(self) -> float:
@@ -3207,8 +3146,8 @@ class CurveScenario(Base):
 
     @annualised_slope_shift.setter
     def annualised_slope_shift(self, value: float):
-        self.__annualised_slope_shift = value
-        self._property_changed('annualised_slope_shift')        
+        self._property_changed('annualised_slope_shift')
+        self.__annualised_slope_shift = value        
 
     @property
     def pivot_point(self) -> float:
@@ -3217,8 +3156,8 @@ class CurveScenario(Base):
 
     @pivot_point.setter
     def pivot_point(self, value: float):
-        self.__pivot_point = value
-        self._property_changed('pivot_point')        
+        self._property_changed('pivot_point')
+        self.__pivot_point = value        
 
     @property
     def cutoff(self) -> float:
@@ -3227,18 +3166,21 @@ class CurveScenario(Base):
 
     @cutoff.setter
     def cutoff(self, value: float):
-        self.__cutoff = value
-        self._property_changed('cutoff')        
+        self._property_changed('cutoff')
+        self.__cutoff = value        
 
 
 class GIRDomain(Base):
                
+    @camel_case_translate
     def __init__(
         self,
-        document_links: Tuple[Link, ...] = None
+        document_links: Tuple[Link, ...] = None,
+        name: str = None
     ):        
         super().__init__()
         self.document_links = document_links
+        self.name = name
 
     @property
     def document_links(self) -> Tuple[Link, ...]:
@@ -3247,12 +3189,13 @@ class GIRDomain(Base):
 
     @document_links.setter
     def document_links(self, value: Tuple[Link, ...]):
-        self.__document_links = value
-        self._property_changed('document_links')        
+        self._property_changed('document_links')
+        self.__document_links = value        
 
 
 class ISelectNewParameter(Base):
                
+    @camel_case_translate
     def __init__(
         self,
         early_unwind_after: float = None,
@@ -3282,7 +3225,8 @@ class ISelectNewParameter(Base):
         new_min_weight: float = None,
         new_max_weight: float = None,
         min_weight: float = None,
-        max_weight: float = None
+        max_weight: float = None,
+        name: str = None
     ):        
         super().__init__()
         self.early_unwind_after = early_unwind_after
@@ -3313,6 +3257,7 @@ class ISelectNewParameter(Base):
         self.new_max_weight = new_max_weight
         self.min_weight = min_weight
         self.max_weight = max_weight
+        self.name = name
 
     @property
     def early_unwind_after(self) -> float:
@@ -3320,8 +3265,8 @@ class ISelectNewParameter(Base):
 
     @early_unwind_after.setter
     def early_unwind_after(self, value: float):
-        self.__early_unwind_after = value
-        self._property_changed('early_unwind_after')        
+        self._property_changed('early_unwind_after')
+        self.__early_unwind_after = value        
 
     @property
     def early_unwind_applicable(self) -> str:
@@ -3330,8 +3275,8 @@ class ISelectNewParameter(Base):
 
     @early_unwind_applicable.setter
     def early_unwind_applicable(self, value: str):
-        self.__early_unwind_applicable = value
-        self._property_changed('early_unwind_applicable')        
+        self._property_changed('early_unwind_applicable')
+        self.__early_unwind_applicable = value        
 
     @property
     def expiry_date_rule(self) -> str:
@@ -3341,8 +3286,8 @@ class ISelectNewParameter(Base):
 
     @expiry_date_rule.setter
     def expiry_date_rule(self, value: str):
-        self.__expiry_date_rule = value
-        self._property_changed('expiry_date_rule')        
+        self._property_changed('expiry_date_rule')
+        self.__expiry_date_rule = value        
 
     @property
     def option_target_expiry_parameter(self) -> float:
@@ -3350,8 +3295,8 @@ class ISelectNewParameter(Base):
 
     @option_target_expiry_parameter.setter
     def option_target_expiry_parameter(self, value: float):
-        self.__option_target_expiry_parameter = value
-        self._property_changed('option_target_expiry_parameter')        
+        self._property_changed('option_target_expiry_parameter')
+        self.__option_target_expiry_parameter = value        
 
     @property
     def option_early_unwind_days(self) -> float:
@@ -3359,8 +3304,8 @@ class ISelectNewParameter(Base):
 
     @option_early_unwind_days.setter
     def option_early_unwind_days(self, value: float):
-        self.__option_early_unwind_days = value
-        self._property_changed('option_early_unwind_days')        
+        self._property_changed('option_early_unwind_days')
+        self.__option_early_unwind_days = value        
 
     @property
     def in_alpha(self) -> bool:
@@ -3368,8 +3313,8 @@ class ISelectNewParameter(Base):
 
     @in_alpha.setter
     def in_alpha(self, value: bool):
-        self.__in_alpha = value
-        self._property_changed('in_alpha')        
+        self._property_changed('in_alpha')
+        self.__in_alpha = value        
 
     @property
     def is_fsr_target_factor(self) -> bool:
@@ -3377,8 +3322,8 @@ class ISelectNewParameter(Base):
 
     @is_fsr_target_factor.setter
     def is_fsr_target_factor(self, value: bool):
-        self.__is_fsr_target_factor = value
-        self._property_changed('is_fsr_target_factor')        
+        self._property_changed('is_fsr_target_factor')
+        self.__is_fsr_target_factor = value        
 
     @property
     def fsr_max_ratio(self) -> float:
@@ -3386,8 +3331,8 @@ class ISelectNewParameter(Base):
 
     @fsr_max_ratio.setter
     def fsr_max_ratio(self, value: float):
-        self.__fsr_max_ratio = value
-        self._property_changed('fsr_max_ratio')        
+        self._property_changed('fsr_max_ratio')
+        self.__fsr_max_ratio = value        
 
     @property
     def fsr_min_ratio(self) -> float:
@@ -3395,8 +3340,8 @@ class ISelectNewParameter(Base):
 
     @fsr_min_ratio.setter
     def fsr_min_ratio(self, value: float):
-        self.__fsr_min_ratio = value
-        self._property_changed('fsr_min_ratio')        
+        self._property_changed('fsr_min_ratio')
+        self.__fsr_min_ratio = value        
 
     @property
     def module_enabled(self) -> bool:
@@ -3405,8 +3350,8 @@ class ISelectNewParameter(Base):
 
     @module_enabled.setter
     def module_enabled(self, value: bool):
-        self.__module_enabled = value
-        self._property_changed('module_enabled')        
+        self._property_changed('module_enabled')
+        self.__module_enabled = value        
 
     @property
     def module_name(self) -> str:
@@ -3416,8 +3361,8 @@ class ISelectNewParameter(Base):
 
     @module_name.setter
     def module_name(self, value: str):
-        self.__module_name = value
-        self._property_changed('module_name')        
+        self._property_changed('module_name')
+        self.__module_name = value        
 
     @property
     def target_strike(self) -> float:
@@ -3425,8 +3370,8 @@ class ISelectNewParameter(Base):
 
     @target_strike.setter
     def target_strike(self, value: float):
-        self.__target_strike = value
-        self._property_changed('target_strike')        
+        self._property_changed('target_strike')
+        self.__target_strike = value        
 
     @property
     def strike_method(self) -> Union[StrikeMethodType, str]:
@@ -3434,8 +3379,8 @@ class ISelectNewParameter(Base):
 
     @strike_method.setter
     def strike_method(self, value: Union[StrikeMethodType, str]):
-        self.__strike_method = get_enum_value(StrikeMethodType, value)
-        self._property_changed('strike_method')        
+        self._property_changed('strike_method')
+        self.__strike_method = get_enum_value(StrikeMethodType, value)        
 
     @property
     def option_expiry(self) -> Union[OptionExpiryType, str]:
@@ -3443,8 +3388,8 @@ class ISelectNewParameter(Base):
 
     @option_expiry.setter
     def option_expiry(self, value: Union[OptionExpiryType, str]):
-        self.__option_expiry = get_enum_value(OptionExpiryType, value)
-        self._property_changed('option_expiry')        
+        self._property_changed('option_expiry')
+        self.__option_expiry = get_enum_value(OptionExpiryType, value)        
 
     @property
     def bloomberg_id(self) -> str:
@@ -3452,8 +3397,8 @@ class ISelectNewParameter(Base):
 
     @bloomberg_id.setter
     def bloomberg_id(self, value: str):
-        self.__bloomberg_id = value
-        self._property_changed('bloomberg_id')        
+        self._property_changed('bloomberg_id')
+        self.__bloomberg_id = value        
 
     @property
     def stock_id(self) -> str:
@@ -3461,8 +3406,8 @@ class ISelectNewParameter(Base):
 
     @stock_id.setter
     def stock_id(self, value: str):
-        self.__stock_id = value
-        self._property_changed('stock_id')        
+        self._property_changed('stock_id')
+        self.__stock_id = value        
 
     @property
     def new_weight(self) -> float:
@@ -3470,8 +3415,8 @@ class ISelectNewParameter(Base):
 
     @new_weight.setter
     def new_weight(self, value: float):
-        self.__new_weight = value
-        self._property_changed('new_weight')        
+        self._property_changed('new_weight')
+        self.__new_weight = value        
 
     @property
     def notional(self) -> float:
@@ -3479,8 +3424,8 @@ class ISelectNewParameter(Base):
 
     @notional.setter
     def notional(self, value: float):
-        self.__notional = value
-        self._property_changed('notional')        
+        self._property_changed('notional')
+        self.__notional = value        
 
     @property
     def option_type(self) -> Union[OptionType, str]:
@@ -3488,8 +3433,8 @@ class ISelectNewParameter(Base):
 
     @option_type.setter
     def option_type(self, value: Union[OptionType, str]):
-        self.__option_type = get_enum_value(OptionType, value)
-        self._property_changed('option_type')        
+        self._property_changed('option_type')
+        self.__option_type = get_enum_value(OptionType, value)        
 
     @property
     def option_strike_type(self) -> Union[OptionStrikeType, str]:
@@ -3497,8 +3442,8 @@ class ISelectNewParameter(Base):
 
     @option_strike_type.setter
     def option_strike_type(self, value: Union[OptionStrikeType, str]):
-        self.__option_strike_type = get_enum_value(OptionStrikeType, value)
-        self._property_changed('option_strike_type')        
+        self._property_changed('option_strike_type')
+        self.__option_strike_type = get_enum_value(OptionStrikeType, value)        
 
     @property
     def strike_relative(self) -> float:
@@ -3506,8 +3451,8 @@ class ISelectNewParameter(Base):
 
     @strike_relative.setter
     def strike_relative(self, value: float):
-        self.__strike_relative = value
-        self._property_changed('strike_relative')        
+        self._property_changed('strike_relative')
+        self.__strike_relative = value        
 
     @property
     def trade_type(self) -> Union[TradeType, str]:
@@ -3516,8 +3461,8 @@ class ISelectNewParameter(Base):
 
     @trade_type.setter
     def trade_type(self, value: Union[TradeType, str]):
-        self.__trade_type = get_enum_value(TradeType, value)
-        self._property_changed('trade_type')        
+        self._property_changed('trade_type')
+        self.__trade_type = get_enum_value(TradeType, value)        
 
     @property
     def signal(self) -> float:
@@ -3525,8 +3470,8 @@ class ISelectNewParameter(Base):
 
     @signal.setter
     def signal(self, value: float):
-        self.__signal = value
-        self._property_changed('signal')        
+        self._property_changed('signal')
+        self.__signal = value        
 
     @property
     def new_signal(self) -> float:
@@ -3534,8 +3479,8 @@ class ISelectNewParameter(Base):
 
     @new_signal.setter
     def new_signal(self, value: float):
-        self.__new_signal = value
-        self._property_changed('new_signal')        
+        self._property_changed('new_signal')
+        self.__new_signal = value        
 
     @property
     def new_min_weight(self) -> float:
@@ -3543,8 +3488,8 @@ class ISelectNewParameter(Base):
 
     @new_min_weight.setter
     def new_min_weight(self, value: float):
-        self.__new_min_weight = value
-        self._property_changed('new_min_weight')        
+        self._property_changed('new_min_weight')
+        self.__new_min_weight = value        
 
     @property
     def new_max_weight(self) -> float:
@@ -3552,8 +3497,8 @@ class ISelectNewParameter(Base):
 
     @new_max_weight.setter
     def new_max_weight(self, value: float):
-        self.__new_max_weight = value
-        self._property_changed('new_max_weight')        
+        self._property_changed('new_max_weight')
+        self.__new_max_weight = value        
 
     @property
     def min_weight(self) -> float:
@@ -3561,8 +3506,8 @@ class ISelectNewParameter(Base):
 
     @min_weight.setter
     def min_weight(self, value: float):
-        self.__min_weight = value
-        self._property_changed('min_weight')        
+        self._property_changed('min_weight')
+        self.__min_weight = value        
 
     @property
     def max_weight(self) -> float:
@@ -3570,14 +3515,15 @@ class ISelectNewParameter(Base):
 
     @max_weight.setter
     def max_weight(self, value: float):
-        self.__max_weight = value
-        self._property_changed('max_weight')        
+        self._property_changed('max_weight')
+        self.__max_weight = value        
 
 
 class MarketDataPattern(Base):
         
     """A pattern used to match market coordinates"""
        
+    @camel_case_translate
     def __init__(
         self,
         market_data_type: str = None,
@@ -3592,7 +3538,8 @@ class MarketDataPattern(Base):
         gics_sector: str = None,
         gics_industry_group: str = None,
         gics_industry: str = None,
-        gics_sub_industry: str = None
+        gics_sub_industry: str = None,
+        name: str = None
     ):        
         super().__init__()
         self.market_data_type = market_data_type
@@ -3608,6 +3555,7 @@ class MarketDataPattern(Base):
         self.gics_industry_group = gics_industry_group
         self.gics_industry = gics_industry
         self.gics_sub_industry = gics_sub_industry
+        self.name = name
 
     @property
     def market_data_type(self) -> str:
@@ -3616,8 +3564,8 @@ class MarketDataPattern(Base):
 
     @market_data_type.setter
     def market_data_type(self, value: str):
-        self.__market_data_type = value
-        self._property_changed('market_data_type')        
+        self._property_changed('market_data_type')
+        self.__market_data_type = value        
 
     @property
     def market_data_asset(self) -> str:
@@ -3626,8 +3574,8 @@ class MarketDataPattern(Base):
 
     @market_data_asset.setter
     def market_data_asset(self, value: str):
-        self.__market_data_asset = value
-        self._property_changed('market_data_asset')        
+        self._property_changed('market_data_asset')
+        self.__market_data_asset = value        
 
     @property
     def point_class(self) -> str:
@@ -3636,8 +3584,8 @@ class MarketDataPattern(Base):
 
     @point_class.setter
     def point_class(self, value: str):
-        self.__point_class = value
-        self._property_changed('point_class')        
+        self._property_changed('point_class')
+        self.__point_class = value        
 
     @property
     def market_data_point(self) -> Tuple[str, ...]:
@@ -3646,8 +3594,8 @@ class MarketDataPattern(Base):
 
     @market_data_point.setter
     def market_data_point(self, value: Tuple[str, ...]):
-        self.__market_data_point = value
-        self._property_changed('market_data_point')        
+        self._property_changed('market_data_point')
+        self.__market_data_point = value        
 
     @property
     def quoting_style(self) -> str:
@@ -3655,8 +3603,8 @@ class MarketDataPattern(Base):
 
     @quoting_style.setter
     def quoting_style(self, value: str):
-        self.__quoting_style = value
-        self._property_changed('quoting_style')        
+        self._property_changed('quoting_style')
+        self.__quoting_style = value        
 
     @property
     def is_active(self) -> bool:
@@ -3665,8 +3613,8 @@ class MarketDataPattern(Base):
 
     @is_active.setter
     def is_active(self, value: bool):
-        self.__is_active = value
-        self._property_changed('is_active')        
+        self._property_changed('is_active')
+        self.__is_active = value        
 
     @property
     def is_investment_grade(self) -> bool:
@@ -3675,8 +3623,8 @@ class MarketDataPattern(Base):
 
     @is_investment_grade.setter
     def is_investment_grade(self, value: bool):
-        self.__is_investment_grade = value
-        self._property_changed('is_investment_grade')        
+        self._property_changed('is_investment_grade')
+        self.__is_investment_grade = value        
 
     @property
     def currency(self) -> Union[Currency, str]:
@@ -3685,8 +3633,8 @@ class MarketDataPattern(Base):
 
     @currency.setter
     def currency(self, value: Union[Currency, str]):
-        self.__currency = get_enum_value(Currency, value)
-        self._property_changed('currency')        
+        self._property_changed('currency')
+        self.__currency = get_enum_value(Currency, value)        
 
     @property
     def country_code(self) -> Union[CountryCode, str]:
@@ -3695,8 +3643,8 @@ class MarketDataPattern(Base):
 
     @country_code.setter
     def country_code(self, value: Union[CountryCode, str]):
-        self.__country_code = get_enum_value(CountryCode, value)
-        self._property_changed('country_code')        
+        self._property_changed('country_code')
+        self.__country_code = get_enum_value(CountryCode, value)        
 
     @property
     def gics_sector(self) -> str:
@@ -3705,8 +3653,8 @@ class MarketDataPattern(Base):
 
     @gics_sector.setter
     def gics_sector(self, value: str):
-        self.__gics_sector = value
-        self._property_changed('gics_sector')        
+        self._property_changed('gics_sector')
+        self.__gics_sector = value        
 
     @property
     def gics_industry_group(self) -> str:
@@ -3715,8 +3663,8 @@ class MarketDataPattern(Base):
 
     @gics_industry_group.setter
     def gics_industry_group(self, value: str):
-        self.__gics_industry_group = value
-        self._property_changed('gics_industry_group')        
+        self._property_changed('gics_industry_group')
+        self.__gics_industry_group = value        
 
     @property
     def gics_industry(self) -> str:
@@ -3725,8 +3673,8 @@ class MarketDataPattern(Base):
 
     @gics_industry.setter
     def gics_industry(self, value: str):
-        self.__gics_industry = value
-        self._property_changed('gics_industry')        
+        self._property_changed('gics_industry')
+        self.__gics_industry = value        
 
     @property
     def gics_sub_industry(self) -> str:
@@ -3735,14 +3683,15 @@ class MarketDataPattern(Base):
 
     @gics_sub_industry.setter
     def gics_sub_industry(self, value: str):
-        self.__gics_sub_industry = value
-        self._property_changed('gics_sub_industry')        
+        self._property_changed('gics_sub_industry')
+        self.__gics_sub_industry = value        
 
 
 class MarketDataShock(Base):
         
     """A shock to apply to market coordinate values"""
        
+    @camel_case_translate
     def __init__(
         self,
         shock_type: Union[MarketDataShockType, str],
@@ -3751,7 +3700,8 @@ class MarketDataShock(Base):
         cap: float = None,
         floor: float = None,
         coordinate_cap: float = None,
-        coordinate_floor: float = None
+        coordinate_floor: float = None,
+        name: str = None
     ):        
         super().__init__()
         self.shock_type = shock_type
@@ -3761,6 +3711,7 @@ class MarketDataShock(Base):
         self.floor = floor
         self.coordinate_cap = coordinate_cap
         self.coordinate_floor = coordinate_floor
+        self.name = name
 
     @property
     def shock_type(self) -> Union[MarketDataShockType, str]:
@@ -3769,8 +3720,8 @@ class MarketDataShock(Base):
 
     @shock_type.setter
     def shock_type(self, value: Union[MarketDataShockType, str]):
-        self.__shock_type = get_enum_value(MarketDataShockType, value)
-        self._property_changed('shock_type')        
+        self._property_changed('shock_type')
+        self.__shock_type = get_enum_value(MarketDataShockType, value)        
 
     @property
     def value(self) -> float:
@@ -3779,8 +3730,8 @@ class MarketDataShock(Base):
 
     @value.setter
     def value(self, value: float):
-        self.__value = value
-        self._property_changed('value')        
+        self._property_changed('value')
+        self.__value = value        
 
     @property
     def precision(self) -> float:
@@ -3789,8 +3740,8 @@ class MarketDataShock(Base):
 
     @precision.setter
     def precision(self, value: float):
-        self.__precision = value
-        self._property_changed('precision')        
+        self._property_changed('precision')
+        self.__precision = value        
 
     @property
     def cap(self) -> float:
@@ -3799,8 +3750,8 @@ class MarketDataShock(Base):
 
     @cap.setter
     def cap(self, value: float):
-        self.__cap = value
-        self._property_changed('cap')        
+        self._property_changed('cap')
+        self.__cap = value        
 
     @property
     def floor(self) -> float:
@@ -3809,8 +3760,8 @@ class MarketDataShock(Base):
 
     @floor.setter
     def floor(self, value: float):
-        self.__floor = value
-        self._property_changed('floor')        
+        self._property_changed('floor')
+        self.__floor = value        
 
     @property
     def coordinate_cap(self) -> float:
@@ -3819,8 +3770,8 @@ class MarketDataShock(Base):
 
     @coordinate_cap.setter
     def coordinate_cap(self, value: float):
-        self.__coordinate_cap = value
-        self._property_changed('coordinate_cap')        
+        self._property_changed('coordinate_cap')
+        self.__coordinate_cap = value        
 
     @property
     def coordinate_floor(self) -> float:
@@ -3829,8 +3780,8 @@ class MarketDataShock(Base):
 
     @coordinate_floor.setter
     def coordinate_floor(self, value: float):
-        self.__coordinate_floor = value
-        self._property_changed('coordinate_floor')        
+        self._property_changed('coordinate_floor')
+        self.__coordinate_floor = value        
 
 
 class RiskMeasure(Base):
@@ -3838,18 +3789,21 @@ class RiskMeasure(Base):
     """The measure to perform risk on. Each risk measure consists of an asset class, a
        measure type, and a unit."""
        
+    @camel_case_translate
     def __init__(
         self,
         asset_class: Union[AssetClass, str] = None,
         measure_type: Union[RiskMeasureType, str] = None,
         unit: Union[RiskMeasureUnit, str] = None,
-        value: Union[float, str] = None
+        value: Union[float, str] = None,
+        name: str = None
     ):        
         super().__init__()
         self.asset_class = asset_class
         self.measure_type = measure_type
         self.unit = unit
         self.value = value
+        self.name = name
 
     @property
     def asset_class(self) -> Union[AssetClass, str]:
@@ -3860,8 +3814,8 @@ class RiskMeasure(Base):
 
     @asset_class.setter
     def asset_class(self, value: Union[AssetClass, str]):
-        self.__asset_class = get_enum_value(AssetClass, value)
-        self._property_changed('asset_class')        
+        self._property_changed('asset_class')
+        self.__asset_class = get_enum_value(AssetClass, value)        
 
     @property
     def measure_type(self) -> Union[RiskMeasureType, str]:
@@ -3870,8 +3824,8 @@ class RiskMeasure(Base):
 
     @measure_type.setter
     def measure_type(self, value: Union[RiskMeasureType, str]):
-        self.__measure_type = get_enum_value(RiskMeasureType, value)
-        self._property_changed('measure_type')        
+        self._property_changed('measure_type')
+        self.__measure_type = get_enum_value(RiskMeasureType, value)        
 
     @property
     def unit(self) -> Union[RiskMeasureUnit, str]:
@@ -3880,8 +3834,8 @@ class RiskMeasure(Base):
 
     @unit.setter
     def unit(self, value: Union[RiskMeasureUnit, str]):
-        self.__unit = get_enum_value(RiskMeasureUnit, value)
-        self._property_changed('unit')        
+        self._property_changed('unit')
+        self.__unit = get_enum_value(RiskMeasureUnit, value)        
 
     @property
     def value(self) -> Union[float, str]:
@@ -3890,20 +3844,23 @@ class RiskMeasure(Base):
 
     @value.setter
     def value(self, value: Union[float, str]):
-        self.__value = value
-        self._property_changed('value')        
+        self._property_changed('value')
+        self.__value = value        
 
 
 class CSLCurrencyArray(Base):
         
     """An array of currencies"""
        
+    @camel_case_translate
     def __init__(
         self,
-        currency_values: Tuple[CSLCurrency, ...] = None
+        currency_values: Tuple[CSLCurrency, ...] = None,
+        name: str = None
     ):        
         super().__init__()
         self.currency_values = currency_values
+        self.name = name
 
     @property
     def currency_values(self) -> Tuple[CSLCurrency, ...]:
@@ -3912,14 +3869,15 @@ class CSLCurrencyArray(Base):
 
     @currency_values.setter
     def currency_values(self, value: Tuple[CSLCurrency, ...]):
-        self.__currency_values = value
-        self._property_changed('currency_values')        
+        self._property_changed('currency_values')
+        self.__currency_values = value        
 
 
 class CSLSchedule(Base):
         
     """A schedule"""
        
+    @camel_case_translate
     def __init__(
         self,
         first_date: datetime.date = None,
@@ -3935,7 +3893,8 @@ class CSLSchedule(Base):
         has_reset_date: bool = None,
         term_formula: str = None,
         extra_dates: Tuple[CSLDateArrayNamedParam, ...] = None,
-        extra_dates_by_offset: Tuple[CSLSymCaseNamedParam, ...] = None
+        extra_dates_by_offset: Tuple[CSLSymCaseNamedParam, ...] = None,
+        name: str = None
     ):        
         super().__init__()
         self.first_date = first_date
@@ -3952,6 +3911,7 @@ class CSLSchedule(Base):
         self.term_formula = term_formula
         self.extra_dates = extra_dates
         self.extra_dates_by_offset = extra_dates_by_offset
+        self.name = name
 
     @property
     def first_date(self) -> datetime.date:
@@ -3960,8 +3920,8 @@ class CSLSchedule(Base):
 
     @first_date.setter
     def first_date(self, value: datetime.date):
-        self.__first_date = value
-        self._property_changed('first_date')        
+        self._property_changed('first_date')
+        self.__first_date = value        
 
     @property
     def last_date(self) -> datetime.date:
@@ -3970,8 +3930,8 @@ class CSLSchedule(Base):
 
     @last_date.setter
     def last_date(self, value: datetime.date):
-        self.__last_date = value
-        self._property_changed('last_date')        
+        self._property_changed('last_date')
+        self.__last_date = value        
 
     @property
     def calendar_name(self) -> str:
@@ -3980,8 +3940,8 @@ class CSLSchedule(Base):
 
     @calendar_name.setter
     def calendar_name(self, value: str):
-        self.__calendar_name = value
-        self._property_changed('calendar_name')        
+        self._property_changed('calendar_name')
+        self.__calendar_name = value        
 
     @property
     def period(self) -> str:
@@ -3990,8 +3950,8 @@ class CSLSchedule(Base):
 
     @period.setter
     def period(self, value: str):
-        self.__period = value
-        self._property_changed('period')        
+        self._property_changed('period')
+        self.__period = value        
 
     @property
     def delay(self) -> str:
@@ -4000,8 +3960,8 @@ class CSLSchedule(Base):
 
     @delay.setter
     def delay(self, value: str):
-        self.__delay = value
-        self._property_changed('delay')        
+        self._property_changed('delay')
+        self.__delay = value        
 
     @property
     def business_day_convention(self) -> str:
@@ -4009,8 +3969,8 @@ class CSLSchedule(Base):
 
     @business_day_convention.setter
     def business_day_convention(self, value: str):
-        self.__business_day_convention = value
-        self._property_changed('business_day_convention')        
+        self._property_changed('business_day_convention')
+        self.__business_day_convention = value        
 
     @property
     def day_count_convention(self) -> str:
@@ -4018,8 +3978,8 @@ class CSLSchedule(Base):
 
     @day_count_convention.setter
     def day_count_convention(self, value: str):
-        self.__day_count_convention = value
-        self._property_changed('day_count_convention')        
+        self._property_changed('day_count_convention')
+        self.__day_count_convention = value        
 
     @property
     def days_per_term(self) -> str:
@@ -4027,8 +3987,8 @@ class CSLSchedule(Base):
 
     @days_per_term.setter
     def days_per_term(self, value: str):
-        self.__days_per_term = value
-        self._property_changed('days_per_term')        
+        self._property_changed('days_per_term')
+        self.__days_per_term = value        
 
     @property
     def delay_business_day_convention(self) -> str:
@@ -4036,8 +3996,8 @@ class CSLSchedule(Base):
 
     @delay_business_day_convention.setter
     def delay_business_day_convention(self, value: str):
-        self.__delay_business_day_convention = value
-        self._property_changed('delay_business_day_convention')        
+        self._property_changed('delay_business_day_convention')
+        self.__delay_business_day_convention = value        
 
     @property
     def delay_calendar_name(self) -> str:
@@ -4046,8 +4006,8 @@ class CSLSchedule(Base):
 
     @delay_calendar_name.setter
     def delay_calendar_name(self, value: str):
-        self.__delay_calendar_name = value
-        self._property_changed('delay_calendar_name')        
+        self._property_changed('delay_calendar_name')
+        self.__delay_calendar_name = value        
 
     @property
     def has_reset_date(self) -> bool:
@@ -4055,8 +4015,8 @@ class CSLSchedule(Base):
 
     @has_reset_date.setter
     def has_reset_date(self, value: bool):
-        self.__has_reset_date = value
-        self._property_changed('has_reset_date')        
+        self._property_changed('has_reset_date')
+        self.__has_reset_date = value        
 
     @property
     def term_formula(self) -> str:
@@ -4064,8 +4024,8 @@ class CSLSchedule(Base):
 
     @term_formula.setter
     def term_formula(self, value: str):
-        self.__term_formula = value
-        self._property_changed('term_formula')        
+        self._property_changed('term_formula')
+        self.__term_formula = value        
 
     @property
     def extra_dates(self) -> Tuple[CSLDateArrayNamedParam, ...]:
@@ -4074,8 +4034,8 @@ class CSLSchedule(Base):
 
     @extra_dates.setter
     def extra_dates(self, value: Tuple[CSLDateArrayNamedParam, ...]):
-        self.__extra_dates = value
-        self._property_changed('extra_dates')        
+        self._property_changed('extra_dates')
+        self.__extra_dates = value        
 
     @property
     def extra_dates_by_offset(self) -> Tuple[CSLSymCaseNamedParam, ...]:
@@ -4084,26 +4044,29 @@ class CSLSchedule(Base):
 
     @extra_dates_by_offset.setter
     def extra_dates_by_offset(self, value: Tuple[CSLSymCaseNamedParam, ...]):
-        self.__extra_dates_by_offset = value
-        self._property_changed('extra_dates_by_offset')        
+        self._property_changed('extra_dates_by_offset')
+        self.__extra_dates_by_offset = value        
 
 
 class DataSetFieldMap(Base):
         
     """The mapping between data set field and risk measure type"""
        
+    @camel_case_translate
     def __init__(
         self,
         data_set_id: str,
         field: str,
         results_field: str,
-        risk_measure: RiskMeasure
+        risk_measure: RiskMeasure,
+        name: str = None
     ):        
         super().__init__()
         self.data_set_id = data_set_id
         self.field = field
         self.results_field = results_field
         self.risk_measure = risk_measure
+        self.name = name
 
     @property
     def data_set_id(self) -> str:
@@ -4112,8 +4075,8 @@ class DataSetFieldMap(Base):
 
     @data_set_id.setter
     def data_set_id(self, value: str):
-        self.__data_set_id = value
-        self._property_changed('data_set_id')        
+        self._property_changed('data_set_id')
+        self.__data_set_id = value        
 
     @property
     def field(self) -> str:
@@ -4122,8 +4085,8 @@ class DataSetFieldMap(Base):
 
     @field.setter
     def field(self, value: str):
-        self.__field = value
-        self._property_changed('field')        
+        self._property_changed('field')
+        self.__field = value        
 
     @property
     def results_field(self) -> str:
@@ -4132,8 +4095,8 @@ class DataSetFieldMap(Base):
 
     @results_field.setter
     def results_field(self, value: str):
-        self.__results_field = value
-        self._property_changed('results_field')        
+        self._property_changed('results_field')
+        self.__results_field = value        
 
     @property
     def risk_measure(self) -> RiskMeasure:
@@ -4143,12 +4106,13 @@ class DataSetFieldMap(Base):
 
     @risk_measure.setter
     def risk_measure(self, value: RiskMeasure):
-        self.__risk_measure = value
-        self._property_changed('risk_measure')        
+        self._property_changed('risk_measure')
+        self.__risk_measure = value        
 
 
 class FieldFilterMap(Base):
                
+    @camel_case_translate
     def __init__(
         self,
         **kwargs
@@ -4158,6 +4122,7 @@ class FieldFilterMap(Base):
         self.year = kwargs.get('year')
         self.investment_rate = kwargs.get('investment_rate')
         self.mdapi_class = kwargs.get('mdapi_class')
+        self.data_set_ids = kwargs.get('data_set_ids')
         self.bid_unadjusted = kwargs.get('bid_unadjusted')
         self.economic_terms_hash = kwargs.get('economic_terms_hash')
         self.available_inventory = kwargs.get('available_inventory')
@@ -4178,6 +4143,7 @@ class FieldFilterMap(Base):
         self.correlation = kwargs.get('correlation')
         self.exposure = kwargs.get('exposure')
         self.market_data_asset = kwargs.get('market_data_asset')
+        self.earnings_per_share_positive = kwargs.get('earnings_per_share_positive')
         self.unadjusted_high = kwargs.get('unadjusted_high')
         self.source_importance = kwargs.get('source_importance')
         self.eid = kwargs.get('eid')
@@ -4404,6 +4370,7 @@ class FieldFilterMap(Base):
         self.given_plus_paid = kwargs.get('given_plus_paid')
         self.close_location = kwargs.get('close_location')
         self.short_conviction_small = kwargs.get('short_conviction_small')
+        self.price_to_earnings_positive = kwargs.get('price_to_earnings_positive')
         self.forecast = kwargs.get('forecast')
         self.pnl = kwargs.get('pnl')
         self.upfront_payment_currency = kwargs.get('upfront_payment_currency')
@@ -4485,6 +4452,7 @@ class FieldFilterMap(Base):
         self.corporate_spread_contribution = kwargs.get('corporate_spread_contribution')
         self.market_value = kwargs.get('market_value')
         self.notional_currency1 = kwargs.get('notional_currency1')
+        self.net_debt_to_ebitda = kwargs.get('net_debt_to_ebitda')
         self.notional_currency2 = kwargs.get('notional_currency2')
         self.multiple_score = kwargs.get('multiple_score')
         self.beta_adjusted_exposure = kwargs.get('beta_adjusted_exposure')
@@ -4549,7 +4517,10 @@ class FieldFilterMap(Base):
         self.price_forming_continuation_data = kwargs.get('price_forming_continuation_data')
         self.adjusted_short_interest = kwargs.get('adjusted_short_interest')
         self.group = kwargs.get('group')
+        self.asset_parameters_strike = kwargs.get('asset_parameters_strike')
+        self.asset_parameters_termination_date = kwargs.get('asset_parameters_termination_date')
         self.estimated_spread = kwargs.get('estimated_spread')
+        self.asset_parameters_effective_date = kwargs.get('asset_parameters_effective_date')
         self.ann_return10_year = kwargs.get('ann_return10_year')
         self.tcm_cost = kwargs.get('tcm_cost')
         self.sustain_japan = kwargs.get('sustain_japan')
@@ -4624,6 +4595,7 @@ class FieldFilterMap(Base):
         self.tenor = kwargs.get('tenor')
         self.es_policy_percentile = kwargs.get('es_policy_percentile')
         self.term = kwargs.get('term')
+        self.asset_parameters_clearing_house = kwargs.get('asset_parameters_clearing_house')
         self.tcm_cost_participation_rate100_pct = kwargs.get('tcm_cost_participation_rate100_pct')
         self.disclaimer = kwargs.get('disclaimer')
         self.measure_idx = kwargs.get('measure_idx')
@@ -4636,11 +4608,13 @@ class FieldFilterMap(Base):
         self.leg_two_delivery_point = kwargs.get('leg_two_delivery_point')
         self.funding_bid_price = kwargs.get('funding_bid_price')
         self.series = kwargs.get('series')
+        self.price_to_sales = kwargs.get('price_to_sales')
         self.closing_auction = kwargs.get('closing_auction')
         self.new_ideas_qtd = kwargs.get('new_ideas_qtd')
         self.adjusted_ask_price = kwargs.get('adjusted_ask_price')
         self.quarter = kwargs.get('quarter')
         self.factor_universe = kwargs.get('factor_universe')
+        self.asset_parameters_floating_rate_option = kwargs.get('asset_parameters_floating_rate_option')
         self.arrival_rt = kwargs.get('arrival_rt')
         self.vote_share = kwargs.get('vote_share')
         self.transaction_cost = kwargs.get('transaction_cost')
@@ -4663,6 +4637,7 @@ class FieldFilterMap(Base):
         self.sts_fx_currency = kwargs.get('sts_fx_currency')
         self.wpk = kwargs.get('wpk')
         self.bid_change = kwargs.get('bid_change')
+        self.asset_parameters_expiration_date = kwargs.get('asset_parameters_expiration_date')
         self.expiration = kwargs.get('expiration')
         self.country_name = kwargs.get('country_name')
         self.starting_date = kwargs.get('starting_date')
@@ -4719,7 +4694,9 @@ class FieldFilterMap(Base):
         self.arrival_haircut_vwap_normalized = kwargs.get('arrival_haircut_vwap_normalized')
         self.price_component = kwargs.get('price_component')
         self.queue_clock_time_description = kwargs.get('queue_clock_time_description')
+        self.maturity = kwargs.get('maturity')
         self.delta_strike = kwargs.get('delta_strike')
+        self.asset_parameters_notional_currency = kwargs.get('asset_parameters_notional_currency')
         self.value_actual = kwargs.get('value_actual')
         self.upi = kwargs.get('upi')
         self.bcid = kwargs.get('bcid')
@@ -4763,6 +4740,7 @@ class FieldFilterMap(Base):
         self.leg_one_delivery_point = kwargs.get('leg_one_delivery_point')
         self.asset_classifications_risk_country_code = kwargs.get('asset_classifications_risk_country_code')
         self.event_status = kwargs.get('event_status')
+        self.asset_parameters_settlement = kwargs.get('asset_parameters_settlement')
         self.__return = kwargs.get('return_')
         self.max_temperature = kwargs.get('max_temperature')
         self.acquirer_shareholder_meeting_date = kwargs.get('acquirer_shareholder_meeting_date')
@@ -4774,6 +4752,7 @@ class FieldFilterMap(Base):
         self.high = kwargs.get('high')
         self.source_last_update = kwargs.get('source_last_update')
         self.quantity_mw = kwargs.get('quantity_mw')
+        self.pnode_id = kwargs.get('pnode_id')
         self.event_name = kwargs.get('event_name')
         self.indication_of_other_price_affecting_term = kwargs.get('indication_of_other_price_affecting_term')
         self.unadjusted_bid = kwargs.get('unadjusted_bid')
@@ -4825,6 +4804,7 @@ class FieldFilterMap(Base):
         self.dollar_return = kwargs.get('dollar_return')
         self.es_numeric_score = kwargs.get('es_numeric_score')
         self.in_benchmark = kwargs.get('in_benchmark')
+        self.return_on_equity = kwargs.get('return_on_equity')
         self.action_sdr = kwargs.get('action_sdr')
         self.queue_in_lots_description = kwargs.get('queue_in_lots_description')
         self.objective = kwargs.get('objective')
@@ -4835,11 +4815,14 @@ class FieldFilterMap(Base):
         self.beta_adjusted_net_exposure = kwargs.get('beta_adjusted_net_exposure')
         self.expiry = kwargs.get('expiry')
         self.avg_monthly_yield = kwargs.get('avg_monthly_yield')
+        self.period_direction = kwargs.get('period_direction')
+        self.earnings_per_share = kwargs.get('earnings_per_share')
         self.strike_percentage = kwargs.get('strike_percentage')
         self.excess_return_price = kwargs.get('excess_return_price')
         self.prev_close_bid = kwargs.get('prev_close_bid')
         self.fx_pnl = kwargs.get('fx_pnl')
         self.tcm_cost_horizon16_day = kwargs.get('tcm_cost_horizon16_day')
+        self.sales_per_share = kwargs.get('sales_per_share')
         self.asset_classifications_gics_industry_group = kwargs.get('asset_classifications_gics_industry_group')
         self.unadjusted_close = kwargs.get('unadjusted_close')
         self.lending_sec_id = kwargs.get('lending_sec_id')
@@ -4886,6 +4869,7 @@ class FieldFilterMap(Base):
         self.asset_count = kwargs.get('asset_count')
         self.provide_non_display_tape_b = kwargs.get('provide_non_display_tape_b')
         self.sector = kwargs.get('sector')
+        self.fundamental_metric = kwargs.get('fundamental_metric')
         self.absolute_value = kwargs.get('absolute_value')
         self.closing_report = kwargs.get('closing_report')
         self.long_tenor = kwargs.get('long_tenor')
@@ -4986,12 +4970,14 @@ class FieldFilterMap(Base):
         self.source_category = kwargs.get('source_category')
         self.tv_product_mnemonic = kwargs.get('tv_product_mnemonic')
         self.volume_unadjusted = kwargs.get('volume_unadjusted')
+        self.price_to_earnings = kwargs.get('price_to_earnings')
         self.avg_trade_rate_label = kwargs.get('avg_trade_rate_label')
         self.ann_yield3_month = kwargs.get('ann_yield3_month')
         self.encoded_stats = kwargs.get('encoded_stats')
         self.ask_size = kwargs.get('ask_size')
         self.std30_days_unsubsidized_yield = kwargs.get('std30_days_unsubsidized_yield')
         self.resource = kwargs.get('resource')
+        self.price_to_cash = kwargs.get('price_to_cash')
         self.average_realized_volatility = kwargs.get('average_realized_volatility')
         self.nav_spread = kwargs.get('nav_spread')
         self.bid_price = kwargs.get('bid_price')
@@ -5020,6 +5006,7 @@ class FieldFilterMap(Base):
         self.valuation_date = kwargs.get('valuation_date')
         self.tcm_cost_horizon6_hour = kwargs.get('tcm_cost_horizon6_hour')
         self.liq_dly = kwargs.get('liq_dly')
+        self.price_to_book = kwargs.get('price_to_book')
         self.isin = kwargs.get('isin')
 
     @property
@@ -5028,8 +5015,8 @@ class FieldFilterMap(Base):
 
     @collateral_value_variance.setter
     def collateral_value_variance(self, value: dict):
-        self.__collateral_value_variance = value
-        self._property_changed('collateral_value_variance')        
+        self._property_changed('collateral_value_variance')
+        self.__collateral_value_variance = value        
 
     @property
     def year(self) -> dict:
@@ -5037,8 +5024,8 @@ class FieldFilterMap(Base):
 
     @year.setter
     def year(self, value: dict):
-        self.__year = value
-        self._property_changed('year')        
+        self._property_changed('year')
+        self.__year = value        
 
     @property
     def investment_rate(self) -> dict:
@@ -5046,8 +5033,8 @@ class FieldFilterMap(Base):
 
     @investment_rate.setter
     def investment_rate(self, value: dict):
-        self.__investment_rate = value
-        self._property_changed('investment_rate')        
+        self._property_changed('investment_rate')
+        self.__investment_rate = value        
 
     @property
     def mdapi_class(self) -> dict:
@@ -5055,8 +5042,17 @@ class FieldFilterMap(Base):
 
     @mdapi_class.setter
     def mdapi_class(self, value: dict):
-        self.__mdapi_class = value
-        self._property_changed('mdapi_class')        
+        self._property_changed('mdapi_class')
+        self.__mdapi_class = value        
+
+    @property
+    def data_set_ids(self) -> dict:
+        return self.__data_set_ids
+
+    @data_set_ids.setter
+    def data_set_ids(self, value: dict):
+        self._property_changed('data_set_ids')
+        self.__data_set_ids = value        
 
     @property
     def bid_unadjusted(self) -> dict:
@@ -5064,8 +5060,8 @@ class FieldFilterMap(Base):
 
     @bid_unadjusted.setter
     def bid_unadjusted(self, value: dict):
-        self.__bid_unadjusted = value
-        self._property_changed('bid_unadjusted')        
+        self._property_changed('bid_unadjusted')
+        self.__bid_unadjusted = value        
 
     @property
     def economic_terms_hash(self) -> dict:
@@ -5073,8 +5069,8 @@ class FieldFilterMap(Base):
 
     @economic_terms_hash.setter
     def economic_terms_hash(self, value: dict):
-        self.__economic_terms_hash = value
-        self._property_changed('economic_terms_hash')        
+        self._property_changed('economic_terms_hash')
+        self.__economic_terms_hash = value        
 
     @property
     def available_inventory(self) -> dict:
@@ -5082,8 +5078,8 @@ class FieldFilterMap(Base):
 
     @available_inventory.setter
     def available_inventory(self, value: dict):
-        self.__available_inventory = value
-        self._property_changed('available_inventory')        
+        self._property_changed('available_inventory')
+        self.__available_inventory = value        
 
     @property
     def est1_day_complete_pct(self) -> dict:
@@ -5091,8 +5087,8 @@ class FieldFilterMap(Base):
 
     @est1_day_complete_pct.setter
     def est1_day_complete_pct(self, value: dict):
-        self.__est1_day_complete_pct = value
-        self._property_changed('est1_day_complete_pct')        
+        self._property_changed('est1_day_complete_pct')
+        self.__est1_day_complete_pct = value        
 
     @property
     def created_by_id(self) -> dict:
@@ -5100,8 +5096,8 @@ class FieldFilterMap(Base):
 
     @created_by_id.setter
     def created_by_id(self, value: dict):
-        self.__created_by_id = value
-        self._property_changed('created_by_id')        
+        self._property_changed('created_by_id')
+        self.__created_by_id = value        
 
     @property
     def vehicle_type(self) -> dict:
@@ -5109,8 +5105,8 @@ class FieldFilterMap(Base):
 
     @vehicle_type.setter
     def vehicle_type(self, value: dict):
-        self.__vehicle_type = value
-        self._property_changed('vehicle_type')        
+        self._property_changed('vehicle_type')
+        self.__vehicle_type = value        
 
     @property
     def daily_risk(self) -> dict:
@@ -5118,8 +5114,8 @@ class FieldFilterMap(Base):
 
     @daily_risk.setter
     def daily_risk(self, value: dict):
-        self.__daily_risk = value
-        self._property_changed('daily_risk')        
+        self._property_changed('daily_risk')
+        self.__daily_risk = value        
 
     @property
     def energy(self) -> dict:
@@ -5127,8 +5123,8 @@ class FieldFilterMap(Base):
 
     @energy.setter
     def energy(self, value: dict):
-        self.__energy = value
-        self._property_changed('energy')        
+        self._property_changed('energy')
+        self.__energy = value        
 
     @property
     def market_data_type(self) -> dict:
@@ -5136,8 +5132,8 @@ class FieldFilterMap(Base):
 
     @market_data_type.setter
     def market_data_type(self, value: dict):
-        self.__market_data_type = value
-        self._property_changed('market_data_type')        
+        self._property_changed('market_data_type')
+        self.__market_data_type = value        
 
     @property
     def real_short_rates_contribution(self) -> dict:
@@ -5145,8 +5141,8 @@ class FieldFilterMap(Base):
 
     @real_short_rates_contribution.setter
     def real_short_rates_contribution(self, value: dict):
-        self.__real_short_rates_contribution = value
-        self._property_changed('real_short_rates_contribution')        
+        self._property_changed('real_short_rates_contribution')
+        self.__real_short_rates_contribution = value        
 
     @property
     def sentiment_score(self) -> dict:
@@ -5154,8 +5150,8 @@ class FieldFilterMap(Base):
 
     @sentiment_score.setter
     def sentiment_score(self, value: dict):
-        self.__sentiment_score = value
-        self._property_changed('sentiment_score')        
+        self._property_changed('sentiment_score')
+        self.__sentiment_score = value        
 
     @property
     def leg_one_payment_type(self) -> dict:
@@ -5163,8 +5159,8 @@ class FieldFilterMap(Base):
 
     @leg_one_payment_type.setter
     def leg_one_payment_type(self, value: dict):
-        self.__leg_one_payment_type = value
-        self._property_changed('leg_one_payment_type')        
+        self._property_changed('leg_one_payment_type')
+        self.__leg_one_payment_type = value        
 
     @property
     def provide_tape_c(self) -> dict:
@@ -5172,8 +5168,8 @@ class FieldFilterMap(Base):
 
     @provide_tape_c.setter
     def provide_tape_c(self, value: dict):
-        self.__provide_tape_c = value
-        self._property_changed('provide_tape_c')        
+        self._property_changed('provide_tape_c')
+        self.__provide_tape_c = value        
 
     @property
     def value_previous(self) -> dict:
@@ -5181,8 +5177,8 @@ class FieldFilterMap(Base):
 
     @value_previous.setter
     def value_previous(self, value: dict):
-        self.__value_previous = value
-        self._property_changed('value_previous')        
+        self._property_changed('value_previous')
+        self.__value_previous = value        
 
     @property
     def avg_trade_rate(self) -> dict:
@@ -5190,8 +5186,8 @@ class FieldFilterMap(Base):
 
     @avg_trade_rate.setter
     def avg_trade_rate(self, value: dict):
-        self.__avg_trade_rate = value
-        self._property_changed('avg_trade_rate')        
+        self._property_changed('avg_trade_rate')
+        self.__avg_trade_rate = value        
 
     @property
     def short_level(self) -> dict:
@@ -5199,8 +5195,8 @@ class FieldFilterMap(Base):
 
     @short_level.setter
     def short_level(self, value: dict):
-        self.__short_level = value
-        self._property_changed('short_level')        
+        self._property_changed('short_level')
+        self.__short_level = value        
 
     @property
     def version(self) -> dict:
@@ -5208,8 +5204,8 @@ class FieldFilterMap(Base):
 
     @version.setter
     def version(self, value: dict):
-        self.__version = value
-        self._property_changed('version')        
+        self._property_changed('version')
+        self.__version = value        
 
     @property
     def correlation(self) -> dict:
@@ -5217,8 +5213,8 @@ class FieldFilterMap(Base):
 
     @correlation.setter
     def correlation(self, value: dict):
-        self.__correlation = value
-        self._property_changed('correlation')        
+        self._property_changed('correlation')
+        self.__correlation = value        
 
     @property
     def exposure(self) -> dict:
@@ -5226,8 +5222,8 @@ class FieldFilterMap(Base):
 
     @exposure.setter
     def exposure(self, value: dict):
-        self.__exposure = value
-        self._property_changed('exposure')        
+        self._property_changed('exposure')
+        self.__exposure = value        
 
     @property
     def market_data_asset(self) -> dict:
@@ -5235,8 +5231,17 @@ class FieldFilterMap(Base):
 
     @market_data_asset.setter
     def market_data_asset(self, value: dict):
-        self.__market_data_asset = value
-        self._property_changed('market_data_asset')        
+        self._property_changed('market_data_asset')
+        self.__market_data_asset = value        
+
+    @property
+    def earnings_per_share_positive(self) -> dict:
+        return self.__earnings_per_share_positive
+
+    @earnings_per_share_positive.setter
+    def earnings_per_share_positive(self, value: dict):
+        self._property_changed('earnings_per_share_positive')
+        self.__earnings_per_share_positive = value        
 
     @property
     def unadjusted_high(self) -> dict:
@@ -5244,8 +5249,8 @@ class FieldFilterMap(Base):
 
     @unadjusted_high.setter
     def unadjusted_high(self, value: dict):
-        self.__unadjusted_high = value
-        self._property_changed('unadjusted_high')        
+        self._property_changed('unadjusted_high')
+        self.__unadjusted_high = value        
 
     @property
     def source_importance(self) -> dict:
@@ -5253,8 +5258,8 @@ class FieldFilterMap(Base):
 
     @source_importance.setter
     def source_importance(self, value: dict):
-        self.__source_importance = value
-        self._property_changed('source_importance')        
+        self._property_changed('source_importance')
+        self.__source_importance = value        
 
     @property
     def eid(self) -> dict:
@@ -5262,8 +5267,8 @@ class FieldFilterMap(Base):
 
     @eid.setter
     def eid(self, value: dict):
-        self.__eid = value
-        self._property_changed('eid')        
+        self._property_changed('eid')
+        self.__eid = value        
 
     @property
     def relative_return_qtd(self) -> dict:
@@ -5271,8 +5276,8 @@ class FieldFilterMap(Base):
 
     @relative_return_qtd.setter
     def relative_return_qtd(self, value: dict):
-        self.__relative_return_qtd = value
-        self._property_changed('relative_return_qtd')        
+        self._property_changed('relative_return_qtd')
+        self.__relative_return_qtd = value        
 
     @property
     def display_name(self) -> dict:
@@ -5280,8 +5285,8 @@ class FieldFilterMap(Base):
 
     @display_name.setter
     def display_name(self, value: dict):
-        self.__display_name = value
-        self._property_changed('display_name')        
+        self._property_changed('display_name')
+        self.__display_name = value        
 
     @property
     def minutes_to_trade100_pct(self) -> dict:
@@ -5289,8 +5294,8 @@ class FieldFilterMap(Base):
 
     @minutes_to_trade100_pct.setter
     def minutes_to_trade100_pct(self, value: dict):
-        self.__minutes_to_trade100_pct = value
-        self._property_changed('minutes_to_trade100_pct')        
+        self._property_changed('minutes_to_trade100_pct')
+        self.__minutes_to_trade100_pct = value        
 
     @property
     def mkt_quoting_style(self) -> dict:
@@ -5298,8 +5303,8 @@ class FieldFilterMap(Base):
 
     @mkt_quoting_style.setter
     def mkt_quoting_style(self, value: dict):
-        self.__mkt_quoting_style = value
-        self._property_changed('mkt_quoting_style')        
+        self._property_changed('mkt_quoting_style')
+        self.__mkt_quoting_style = value        
 
     @property
     def market_model_id(self) -> dict:
@@ -5307,8 +5312,8 @@ class FieldFilterMap(Base):
 
     @market_model_id.setter
     def market_model_id(self, value: dict):
-        self.__market_model_id = value
-        self._property_changed('market_model_id')        
+        self._property_changed('market_model_id')
+        self.__market_model_id = value        
 
     @property
     def realized_correlation(self) -> dict:
@@ -5316,8 +5321,8 @@ class FieldFilterMap(Base):
 
     @realized_correlation.setter
     def realized_correlation(self, value: dict):
-        self.__realized_correlation = value
-        self._property_changed('realized_correlation')        
+        self._property_changed('realized_correlation')
+        self.__realized_correlation = value        
 
     @property
     def collateral_value_actual(self) -> dict:
@@ -5325,8 +5330,8 @@ class FieldFilterMap(Base):
 
     @collateral_value_actual.setter
     def collateral_value_actual(self, value: dict):
-        self.__collateral_value_actual = value
-        self._property_changed('collateral_value_actual')        
+        self._property_changed('collateral_value_actual')
+        self.__collateral_value_actual = value        
 
     @property
     def upfront_payment(self) -> dict:
@@ -5334,8 +5339,8 @@ class FieldFilterMap(Base):
 
     @upfront_payment.setter
     def upfront_payment(self, value: dict):
-        self.__upfront_payment = value
-        self._property_changed('upfront_payment')        
+        self._property_changed('upfront_payment')
+        self.__upfront_payment = value        
 
     @property
     def atm_fwd_rate(self) -> dict:
@@ -5343,8 +5348,8 @@ class FieldFilterMap(Base):
 
     @atm_fwd_rate.setter
     def atm_fwd_rate(self, value: dict):
-        self.__atm_fwd_rate = value
-        self._property_changed('atm_fwd_rate')        
+        self._property_changed('atm_fwd_rate')
+        self.__atm_fwd_rate = value        
 
     @property
     def provide_tape_a(self) -> dict:
@@ -5352,8 +5357,8 @@ class FieldFilterMap(Base):
 
     @provide_tape_a.setter
     def provide_tape_a(self, value: dict):
-        self.__provide_tape_a = value
-        self._property_changed('provide_tape_a')        
+        self._property_changed('provide_tape_a')
+        self.__provide_tape_a = value        
 
     @property
     def provide_tape_b(self) -> dict:
@@ -5361,8 +5366,8 @@ class FieldFilterMap(Base):
 
     @provide_tape_b.setter
     def provide_tape_b(self, value: dict):
-        self.__provide_tape_b = value
-        self._property_changed('provide_tape_b')        
+        self._property_changed('provide_tape_b')
+        self.__provide_tape_b = value        
 
     @property
     def tcm_cost_participation_rate75_pct(self) -> dict:
@@ -5370,8 +5375,8 @@ class FieldFilterMap(Base):
 
     @tcm_cost_participation_rate75_pct.setter
     def tcm_cost_participation_rate75_pct(self, value: dict):
-        self.__tcm_cost_participation_rate75_pct = value
-        self._property_changed('tcm_cost_participation_rate75_pct')        
+        self._property_changed('tcm_cost_participation_rate75_pct')
+        self.__tcm_cost_participation_rate75_pct = value        
 
     @property
     def close(self) -> dict:
@@ -5379,8 +5384,8 @@ class FieldFilterMap(Base):
 
     @close.setter
     def close(self, value: dict):
-        self.__close = value
-        self._property_changed('close')        
+        self._property_changed('close')
+        self.__close = value        
 
     @property
     def a(self) -> dict:
@@ -5388,8 +5393,8 @@ class FieldFilterMap(Base):
 
     @a.setter
     def a(self, value: dict):
-        self.__a = value
-        self._property_changed('a')        
+        self._property_changed('a')
+        self.__a = value        
 
     @property
     def b(self) -> dict:
@@ -5397,8 +5402,8 @@ class FieldFilterMap(Base):
 
     @b.setter
     def b(self, value: dict):
-        self.__b = value
-        self._property_changed('b')        
+        self._property_changed('b')
+        self.__b = value        
 
     @property
     def c(self) -> dict:
@@ -5406,8 +5411,8 @@ class FieldFilterMap(Base):
 
     @c.setter
     def c(self, value: dict):
-        self.__c = value
-        self._property_changed('c')        
+        self._property_changed('c')
+        self.__c = value        
 
     @property
     def equity_vega(self) -> dict:
@@ -5415,8 +5420,8 @@ class FieldFilterMap(Base):
 
     @equity_vega.setter
     def equity_vega(self, value: dict):
-        self.__equity_vega = value
-        self._property_changed('equity_vega')        
+        self._property_changed('equity_vega')
+        self.__equity_vega = value        
 
     @property
     def leg_one_spread(self) -> dict:
@@ -5424,8 +5429,8 @@ class FieldFilterMap(Base):
 
     @leg_one_spread.setter
     def leg_one_spread(self, value: dict):
-        self.__leg_one_spread = value
-        self._property_changed('leg_one_spread')        
+        self._property_changed('leg_one_spread')
+        self.__leg_one_spread = value        
 
     @property
     def lender_payment(self) -> dict:
@@ -5433,8 +5438,8 @@ class FieldFilterMap(Base):
 
     @lender_payment.setter
     def lender_payment(self, value: dict):
-        self.__lender_payment = value
-        self._property_changed('lender_payment')        
+        self._property_changed('lender_payment')
+        self.__lender_payment = value        
 
     @property
     def five_day_move(self) -> dict:
@@ -5442,8 +5447,8 @@ class FieldFilterMap(Base):
 
     @five_day_move.setter
     def five_day_move(self, value: dict):
-        self.__five_day_move = value
-        self._property_changed('five_day_move')        
+        self._property_changed('five_day_move')
+        self.__five_day_move = value        
 
     @property
     def borrower(self) -> dict:
@@ -5451,8 +5456,8 @@ class FieldFilterMap(Base):
 
     @borrower.setter
     def borrower(self, value: dict):
-        self.__borrower = value
-        self._property_changed('borrower')        
+        self._property_changed('borrower')
+        self.__borrower = value        
 
     @property
     def value_format(self) -> dict:
@@ -5460,8 +5465,8 @@ class FieldFilterMap(Base):
 
     @value_format.setter
     def value_format(self, value: dict):
-        self.__value_format = value
-        self._property_changed('value_format')        
+        self._property_changed('value_format')
+        self.__value_format = value        
 
     @property
     def performance_contribution(self) -> dict:
@@ -5469,8 +5474,8 @@ class FieldFilterMap(Base):
 
     @performance_contribution.setter
     def performance_contribution(self, value: dict):
-        self.__performance_contribution = value
-        self._property_changed('performance_contribution')        
+        self._property_changed('performance_contribution')
+        self.__performance_contribution = value        
 
     @property
     def target_notional(self) -> dict:
@@ -5478,8 +5483,8 @@ class FieldFilterMap(Base):
 
     @target_notional.setter
     def target_notional(self, value: dict):
-        self.__target_notional = value
-        self._property_changed('target_notional')        
+        self._property_changed('target_notional')
+        self.__target_notional = value        
 
     @property
     def fill_leg_id(self) -> dict:
@@ -5487,8 +5492,8 @@ class FieldFilterMap(Base):
 
     @fill_leg_id.setter
     def fill_leg_id(self, value: dict):
-        self.__fill_leg_id = value
-        self._property_changed('fill_leg_id')        
+        self._property_changed('fill_leg_id')
+        self.__fill_leg_id = value        
 
     @property
     def rationale(self) -> dict:
@@ -5496,8 +5501,8 @@ class FieldFilterMap(Base):
 
     @rationale.setter
     def rationale(self, value: dict):
-        self.__rationale = value
-        self._property_changed('rationale')        
+        self._property_changed('rationale')
+        self.__rationale = value        
 
     @property
     def mkt_class(self) -> dict:
@@ -5505,8 +5510,8 @@ class FieldFilterMap(Base):
 
     @mkt_class.setter
     def mkt_class(self, value: dict):
-        self.__mkt_class = value
-        self._property_changed('mkt_class')        
+        self._property_changed('mkt_class')
+        self.__mkt_class = value        
 
     @property
     def last_updated_since(self) -> dict:
@@ -5514,8 +5519,8 @@ class FieldFilterMap(Base):
 
     @last_updated_since.setter
     def last_updated_since(self, value: dict):
-        self.__last_updated_since = value
-        self._property_changed('last_updated_since')        
+        self._property_changed('last_updated_since')
+        self.__last_updated_since = value        
 
     @property
     def equities_contribution(self) -> dict:
@@ -5523,8 +5528,8 @@ class FieldFilterMap(Base):
 
     @equities_contribution.setter
     def equities_contribution(self, value: dict):
-        self.__equities_contribution = value
-        self._property_changed('equities_contribution')        
+        self._property_changed('equities_contribution')
+        self.__equities_contribution = value        
 
     @property
     def simon_id(self) -> dict:
@@ -5532,8 +5537,8 @@ class FieldFilterMap(Base):
 
     @simon_id.setter
     def simon_id(self, value: dict):
-        self.__simon_id = value
-        self._property_changed('simon_id')        
+        self._property_changed('simon_id')
+        self.__simon_id = value        
 
     @property
     def congestion(self) -> dict:
@@ -5541,8 +5546,8 @@ class FieldFilterMap(Base):
 
     @congestion.setter
     def congestion(self, value: dict):
-        self.__congestion = value
-        self._property_changed('congestion')        
+        self._property_changed('congestion')
+        self.__congestion = value        
 
     @property
     def event_category(self) -> dict:
@@ -5550,8 +5555,8 @@ class FieldFilterMap(Base):
 
     @event_category.setter
     def event_category(self, value: dict):
-        self.__event_category = value
-        self._property_changed('event_category')        
+        self._property_changed('event_category')
+        self.__event_category = value        
 
     @property
     def short_rates_contribution(self) -> dict:
@@ -5559,8 +5564,8 @@ class FieldFilterMap(Base):
 
     @short_rates_contribution.setter
     def short_rates_contribution(self, value: dict):
-        self.__short_rates_contribution = value
-        self._property_changed('short_rates_contribution')        
+        self._property_changed('short_rates_contribution')
+        self.__short_rates_contribution = value        
 
     @property
     def implied_normal_volatility(self) -> dict:
@@ -5568,8 +5573,8 @@ class FieldFilterMap(Base):
 
     @implied_normal_volatility.setter
     def implied_normal_volatility(self, value: dict):
-        self.__implied_normal_volatility = value
-        self._property_changed('implied_normal_volatility')        
+        self._property_changed('implied_normal_volatility')
+        self.__implied_normal_volatility = value        
 
     @property
     def unadjusted_open(self) -> dict:
@@ -5577,8 +5582,8 @@ class FieldFilterMap(Base):
 
     @unadjusted_open.setter
     def unadjusted_open(self, value: dict):
-        self.__unadjusted_open = value
-        self._property_changed('unadjusted_open')        
+        self._property_changed('unadjusted_open')
+        self.__unadjusted_open = value        
 
     @property
     def criticality(self) -> dict:
@@ -5586,8 +5591,8 @@ class FieldFilterMap(Base):
 
     @criticality.setter
     def criticality(self, value: dict):
-        self.__criticality = value
-        self._property_changed('criticality')        
+        self._property_changed('criticality')
+        self.__criticality = value        
 
     @property
     def mtm_price(self) -> dict:
@@ -5595,8 +5600,8 @@ class FieldFilterMap(Base):
 
     @mtm_price.setter
     def mtm_price(self, value: dict):
-        self.__mtm_price = value
-        self._property_changed('mtm_price')        
+        self._property_changed('mtm_price')
+        self.__mtm_price = value        
 
     @property
     def bid_ask_spread(self) -> dict:
@@ -5604,8 +5609,8 @@ class FieldFilterMap(Base):
 
     @bid_ask_spread.setter
     def bid_ask_spread(self, value: dict):
-        self.__bid_ask_spread = value
-        self._property_changed('bid_ask_spread')        
+        self._property_changed('bid_ask_spread')
+        self.__bid_ask_spread = value        
 
     @property
     def leg_one_averaging_method(self) -> dict:
@@ -5613,8 +5618,8 @@ class FieldFilterMap(Base):
 
     @leg_one_averaging_method.setter
     def leg_one_averaging_method(self, value: dict):
-        self.__leg_one_averaging_method = value
-        self._property_changed('leg_one_averaging_method')        
+        self._property_changed('leg_one_averaging_method')
+        self.__leg_one_averaging_method = value        
 
     @property
     def option_type(self) -> dict:
@@ -5622,8 +5627,8 @@ class FieldFilterMap(Base):
 
     @option_type.setter
     def option_type(self, value: dict):
-        self.__option_type = value
-        self._property_changed('option_type')        
+        self._property_changed('option_type')
+        self.__option_type = value        
 
     @property
     def portfolio_assets(self) -> dict:
@@ -5631,8 +5636,8 @@ class FieldFilterMap(Base):
 
     @portfolio_assets.setter
     def portfolio_assets(self, value: dict):
-        self.__portfolio_assets = value
-        self._property_changed('portfolio_assets')        
+        self._property_changed('portfolio_assets')
+        self.__portfolio_assets = value        
 
     @property
     def tcm_cost_horizon3_hour(self) -> dict:
@@ -5640,8 +5645,8 @@ class FieldFilterMap(Base):
 
     @tcm_cost_horizon3_hour.setter
     def tcm_cost_horizon3_hour(self, value: dict):
-        self.__tcm_cost_horizon3_hour = value
-        self._property_changed('tcm_cost_horizon3_hour')        
+        self._property_changed('tcm_cost_horizon3_hour')
+        self.__tcm_cost_horizon3_hour = value        
 
     @property
     def credit_limit(self) -> dict:
@@ -5649,8 +5654,8 @@ class FieldFilterMap(Base):
 
     @credit_limit.setter
     def credit_limit(self, value: dict):
-        self.__credit_limit = value
-        self._property_changed('credit_limit')        
+        self._property_changed('credit_limit')
+        self.__credit_limit = value        
 
     @property
     def number_of_positions(self) -> dict:
@@ -5658,8 +5663,8 @@ class FieldFilterMap(Base):
 
     @number_of_positions.setter
     def number_of_positions(self, value: dict):
-        self.__number_of_positions = value
-        self._property_changed('number_of_positions')        
+        self._property_changed('number_of_positions')
+        self.__number_of_positions = value        
 
     @property
     def open_unadjusted(self) -> dict:
@@ -5667,8 +5672,8 @@ class FieldFilterMap(Base):
 
     @open_unadjusted.setter
     def open_unadjusted(self, value: dict):
-        self.__open_unadjusted = value
-        self._property_changed('open_unadjusted')        
+        self._property_changed('open_unadjusted')
+        self.__open_unadjusted = value        
 
     @property
     def ask_price(self) -> dict:
@@ -5676,8 +5681,8 @@ class FieldFilterMap(Base):
 
     @ask_price.setter
     def ask_price(self, value: dict):
-        self.__ask_price = value
-        self._property_changed('ask_price')        
+        self._property_changed('ask_price')
+        self.__ask_price = value        
 
     @property
     def event_id(self) -> dict:
@@ -5685,8 +5690,8 @@ class FieldFilterMap(Base):
 
     @event_id.setter
     def event_id(self, value: dict):
-        self.__event_id = value
-        self._property_changed('event_id')        
+        self._property_changed('event_id')
+        self.__event_id = value        
 
     @property
     def sectors(self) -> dict:
@@ -5694,8 +5699,8 @@ class FieldFilterMap(Base):
 
     @sectors.setter
     def sectors(self, value: dict):
-        self.__sectors = value
-        self._property_changed('sectors')        
+        self._property_changed('sectors')
+        self.__sectors = value        
 
     @property
     def std30_days_subsidized_yield(self) -> dict:
@@ -5703,8 +5708,8 @@ class FieldFilterMap(Base):
 
     @std30_days_subsidized_yield.setter
     def std30_days_subsidized_yield(self, value: dict):
-        self.__std30_days_subsidized_yield = value
-        self._property_changed('std30_days_subsidized_yield')        
+        self._property_changed('std30_days_subsidized_yield')
+        self.__std30_days_subsidized_yield = value        
 
     @property
     def annualized_tracking_error(self) -> dict:
@@ -5712,8 +5717,8 @@ class FieldFilterMap(Base):
 
     @annualized_tracking_error.setter
     def annualized_tracking_error(self, value: dict):
-        self.__annualized_tracking_error = value
-        self._property_changed('annualized_tracking_error')        
+        self._property_changed('annualized_tracking_error')
+        self.__annualized_tracking_error = value        
 
     @property
     def additional_price_notation_type(self) -> dict:
@@ -5721,8 +5726,8 @@ class FieldFilterMap(Base):
 
     @additional_price_notation_type.setter
     def additional_price_notation_type(self, value: dict):
-        self.__additional_price_notation_type = value
-        self._property_changed('additional_price_notation_type')        
+        self._property_changed('additional_price_notation_type')
+        self.__additional_price_notation_type = value        
 
     @property
     def vol_swap(self) -> dict:
@@ -5730,8 +5735,8 @@ class FieldFilterMap(Base):
 
     @vol_swap.setter
     def vol_swap(self, value: dict):
-        self.__vol_swap = value
-        self._property_changed('vol_swap')        
+        self._property_changed('vol_swap')
+        self.__vol_swap = value        
 
     @property
     def real_fci(self) -> dict:
@@ -5739,8 +5744,8 @@ class FieldFilterMap(Base):
 
     @real_fci.setter
     def real_fci(self, value: dict):
-        self.__real_fci = value
-        self._property_changed('real_fci')        
+        self._property_changed('real_fci')
+        self.__real_fci = value        
 
     @property
     def annualized_risk(self) -> dict:
@@ -5748,8 +5753,8 @@ class FieldFilterMap(Base):
 
     @annualized_risk.setter
     def annualized_risk(self, value: dict):
-        self.__annualized_risk = value
-        self._property_changed('annualized_risk')        
+        self._property_changed('annualized_risk')
+        self.__annualized_risk = value        
 
     @property
     def block_trades_and_large_notional_off_facility_swaps(self) -> dict:
@@ -5757,8 +5762,8 @@ class FieldFilterMap(Base):
 
     @block_trades_and_large_notional_off_facility_swaps.setter
     def block_trades_and_large_notional_off_facility_swaps(self, value: dict):
-        self.__block_trades_and_large_notional_off_facility_swaps = value
-        self._property_changed('block_trades_and_large_notional_off_facility_swaps')        
+        self._property_changed('block_trades_and_large_notional_off_facility_swaps')
+        self.__block_trades_and_large_notional_off_facility_swaps = value        
 
     @property
     def leg_one_fixed_payment_currency(self) -> dict:
@@ -5766,8 +5771,8 @@ class FieldFilterMap(Base):
 
     @leg_one_fixed_payment_currency.setter
     def leg_one_fixed_payment_currency(self, value: dict):
-        self.__leg_one_fixed_payment_currency = value
-        self._property_changed('leg_one_fixed_payment_currency')        
+        self._property_changed('leg_one_fixed_payment_currency')
+        self.__leg_one_fixed_payment_currency = value        
 
     @property
     def gross_exposure(self) -> dict:
@@ -5775,8 +5780,8 @@ class FieldFilterMap(Base):
 
     @gross_exposure.setter
     def gross_exposure(self, value: dict):
-        self.__gross_exposure = value
-        self._property_changed('gross_exposure')        
+        self._property_changed('gross_exposure')
+        self.__gross_exposure = value        
 
     @property
     def volume_composite(self) -> dict:
@@ -5784,8 +5789,8 @@ class FieldFilterMap(Base):
 
     @volume_composite.setter
     def volume_composite(self, value: dict):
-        self.__volume_composite = value
-        self._property_changed('volume_composite')        
+        self._property_changed('volume_composite')
+        self.__volume_composite = value        
 
     @property
     def volume(self) -> dict:
@@ -5793,8 +5798,8 @@ class FieldFilterMap(Base):
 
     @volume.setter
     def volume(self, value: dict):
-        self.__volume = value
-        self._property_changed('volume')        
+        self._property_changed('volume')
+        self.__volume = value        
 
     @property
     def adv(self) -> dict:
@@ -5802,8 +5807,8 @@ class FieldFilterMap(Base):
 
     @adv.setter
     def adv(self, value: dict):
-        self.__adv = value
-        self._property_changed('adv')        
+        self._property_changed('adv')
+        self.__adv = value        
 
     @property
     def external(self) -> dict:
@@ -5811,8 +5816,8 @@ class FieldFilterMap(Base):
 
     @external.setter
     def external(self, value: dict):
-        self.__external = value
-        self._property_changed('external')        
+        self._property_changed('external')
+        self.__external = value        
 
     @property
     def short_conviction_medium(self) -> dict:
@@ -5820,8 +5825,8 @@ class FieldFilterMap(Base):
 
     @short_conviction_medium.setter
     def short_conviction_medium(self, value: dict):
-        self.__short_conviction_medium = value
-        self._property_changed('short_conviction_medium')        
+        self._property_changed('short_conviction_medium')
+        self.__short_conviction_medium = value        
 
     @property
     def exchange(self) -> dict:
@@ -5829,8 +5834,8 @@ class FieldFilterMap(Base):
 
     @exchange.setter
     def exchange(self, value: dict):
-        self.__exchange = value
-        self._property_changed('exchange')        
+        self._property_changed('exchange')
+        self.__exchange = value        
 
     @property
     def trade_price(self) -> dict:
@@ -5838,8 +5843,8 @@ class FieldFilterMap(Base):
 
     @trade_price.setter
     def trade_price(self, value: dict):
-        self.__trade_price = value
-        self._property_changed('trade_price')        
+        self._property_changed('trade_price')
+        self.__trade_price = value        
 
     @property
     def cleared(self) -> dict:
@@ -5847,8 +5852,8 @@ class FieldFilterMap(Base):
 
     @cleared.setter
     def cleared(self, value: dict):
-        self.__cleared = value
-        self._property_changed('cleared')        
+        self._property_changed('cleared')
+        self.__cleared = value        
 
     @property
     def es_policy_score(self) -> dict:
@@ -5856,8 +5861,8 @@ class FieldFilterMap(Base):
 
     @es_policy_score.setter
     def es_policy_score(self, value: dict):
-        self.__es_policy_score = value
-        self._property_changed('es_policy_score')        
+        self._property_changed('es_policy_score')
+        self.__es_policy_score = value        
 
     @property
     def prime_id_numeric(self) -> dict:
@@ -5865,8 +5870,8 @@ class FieldFilterMap(Base):
 
     @prime_id_numeric.setter
     def prime_id_numeric(self, value: dict):
-        self.__prime_id_numeric = value
-        self._property_changed('prime_id_numeric')        
+        self._property_changed('prime_id_numeric')
+        self.__prime_id_numeric = value        
 
     @property
     def cid(self) -> dict:
@@ -5874,8 +5879,8 @@ class FieldFilterMap(Base):
 
     @cid.setter
     def cid(self, value: dict):
-        self.__cid = value
-        self._property_changed('cid')        
+        self._property_changed('cid')
+        self.__cid = value        
 
     @property
     def leg_one_index(self) -> dict:
@@ -5883,8 +5888,8 @@ class FieldFilterMap(Base):
 
     @leg_one_index.setter
     def leg_one_index(self, value: dict):
-        self.__leg_one_index = value
-        self._property_changed('leg_one_index')        
+        self._property_changed('leg_one_index')
+        self.__leg_one_index = value        
 
     @property
     def bid_high(self) -> dict:
@@ -5892,8 +5897,8 @@ class FieldFilterMap(Base):
 
     @bid_high.setter
     def bid_high(self, value: dict):
-        self.__bid_high = value
-        self._property_changed('bid_high')        
+        self._property_changed('bid_high')
+        self.__bid_high = value        
 
     @property
     def fair_variance(self) -> dict:
@@ -5901,8 +5906,8 @@ class FieldFilterMap(Base):
 
     @fair_variance.setter
     def fair_variance(self, value: dict):
-        self.__fair_variance = value
-        self._property_changed('fair_variance')        
+        self._property_changed('fair_variance')
+        self.__fair_variance = value        
 
     @property
     def hit_rate_wtd(self) -> dict:
@@ -5910,8 +5915,8 @@ class FieldFilterMap(Base):
 
     @hit_rate_wtd.setter
     def hit_rate_wtd(self, value: dict):
-        self.__hit_rate_wtd = value
-        self._property_changed('hit_rate_wtd')        
+        self._property_changed('hit_rate_wtd')
+        self.__hit_rate_wtd = value        
 
     @property
     def bos_in_bps_description(self) -> dict:
@@ -5919,8 +5924,8 @@ class FieldFilterMap(Base):
 
     @bos_in_bps_description.setter
     def bos_in_bps_description(self, value: dict):
-        self.__bos_in_bps_description = value
-        self._property_changed('bos_in_bps_description')        
+        self._property_changed('bos_in_bps_description')
+        self.__bos_in_bps_description = value        
 
     @property
     def low_price(self) -> dict:
@@ -5928,8 +5933,8 @@ class FieldFilterMap(Base):
 
     @low_price.setter
     def low_price(self, value: dict):
-        self.__low_price = value
-        self._property_changed('low_price')        
+        self._property_changed('low_price')
+        self.__low_price = value        
 
     @property
     def realized_volatility(self) -> dict:
@@ -5937,8 +5942,8 @@ class FieldFilterMap(Base):
 
     @realized_volatility.setter
     def realized_volatility(self, value: dict):
-        self.__realized_volatility = value
-        self._property_changed('realized_volatility')        
+        self._property_changed('realized_volatility')
+        self.__realized_volatility = value        
 
     @property
     def adv22_day_pct(self) -> dict:
@@ -5946,8 +5951,8 @@ class FieldFilterMap(Base):
 
     @adv22_day_pct.setter
     def adv22_day_pct(self, value: dict):
-        self.__adv22_day_pct = value
-        self._property_changed('adv22_day_pct')        
+        self._property_changed('adv22_day_pct')
+        self.__adv22_day_pct = value        
 
     @property
     def clone_parent_id(self) -> dict:
@@ -5955,8 +5960,8 @@ class FieldFilterMap(Base):
 
     @clone_parent_id.setter
     def clone_parent_id(self, value: dict):
-        self.__clone_parent_id = value
-        self._property_changed('clone_parent_id')        
+        self._property_changed('clone_parent_id')
+        self.__clone_parent_id = value        
 
     @property
     def price_range_in_ticks_label(self) -> tuple:
@@ -5964,8 +5969,8 @@ class FieldFilterMap(Base):
 
     @price_range_in_ticks_label.setter
     def price_range_in_ticks_label(self, value: tuple):
-        self.__price_range_in_ticks_label = value
-        self._property_changed('price_range_in_ticks_label')        
+        self._property_changed('price_range_in_ticks_label')
+        self.__price_range_in_ticks_label = value        
 
     @property
     def ticker(self) -> dict:
@@ -5973,8 +5978,8 @@ class FieldFilterMap(Base):
 
     @ticker.setter
     def ticker(self, value: dict):
-        self.__ticker = value
-        self._property_changed('ticker')        
+        self._property_changed('ticker')
+        self.__ticker = value        
 
     @property
     def tcm_cost_horizon1_day(self) -> dict:
@@ -5982,8 +5987,8 @@ class FieldFilterMap(Base):
 
     @tcm_cost_horizon1_day.setter
     def tcm_cost_horizon1_day(self, value: dict):
-        self.__tcm_cost_horizon1_day = value
-        self._property_changed('tcm_cost_horizon1_day')        
+        self._property_changed('tcm_cost_horizon1_day')
+        self.__tcm_cost_horizon1_day = value        
 
     @property
     def approval(self) -> dict:
@@ -5991,8 +5996,8 @@ class FieldFilterMap(Base):
 
     @approval.setter
     def approval(self, value: dict):
-        self.__approval = value
-        self._property_changed('approval')        
+        self._property_changed('approval')
+        self.__approval = value        
 
     @property
     def file_location(self) -> dict:
@@ -6000,8 +6005,8 @@ class FieldFilterMap(Base):
 
     @file_location.setter
     def file_location(self, value: dict):
-        self.__file_location = value
-        self._property_changed('file_location')        
+        self._property_changed('file_location')
+        self.__file_location = value        
 
     @property
     def sts_rates_country(self) -> dict:
@@ -6009,8 +6014,8 @@ class FieldFilterMap(Base):
 
     @sts_rates_country.setter
     def sts_rates_country(self, value: dict):
-        self.__sts_rates_country = value
-        self._property_changed('sts_rates_country')        
+        self._property_changed('sts_rates_country')
+        self.__sts_rates_country = value        
 
     @property
     def leg_two_payment_type(self) -> dict:
@@ -6018,8 +6023,8 @@ class FieldFilterMap(Base):
 
     @leg_two_payment_type.setter
     def leg_two_payment_type(self, value: dict):
-        self.__leg_two_payment_type = value
-        self._property_changed('leg_two_payment_type')        
+        self._property_changed('leg_two_payment_type')
+        self.__leg_two_payment_type = value        
 
     @property
     def horizon(self) -> dict:
@@ -6027,8 +6032,8 @@ class FieldFilterMap(Base):
 
     @horizon.setter
     def horizon(self, value: dict):
-        self.__horizon = value
-        self._property_changed('horizon')        
+        self._property_changed('horizon')
+        self.__horizon = value        
 
     @property
     def source_value_forecast(self) -> dict:
@@ -6036,8 +6041,8 @@ class FieldFilterMap(Base):
 
     @source_value_forecast.setter
     def source_value_forecast(self, value: dict):
-        self.__source_value_forecast = value
-        self._property_changed('source_value_forecast')        
+        self._property_changed('source_value_forecast')
+        self.__source_value_forecast = value        
 
     @property
     def short_conviction_large(self) -> dict:
@@ -6045,8 +6050,8 @@ class FieldFilterMap(Base):
 
     @short_conviction_large.setter
     def short_conviction_large(self, value: dict):
-        self.__short_conviction_large = value
-        self._property_changed('short_conviction_large')        
+        self._property_changed('short_conviction_large')
+        self.__short_conviction_large = value        
 
     @property
     def counter_party_status(self) -> dict:
@@ -6054,8 +6059,8 @@ class FieldFilterMap(Base):
 
     @counter_party_status.setter
     def counter_party_status(self, value: dict):
-        self.__counter_party_status = value
-        self._property_changed('counter_party_status')        
+        self._property_changed('counter_party_status')
+        self.__counter_party_status = value        
 
     @property
     def composite22_day_adv(self) -> dict:
@@ -6063,8 +6068,8 @@ class FieldFilterMap(Base):
 
     @composite22_day_adv.setter
     def composite22_day_adv(self, value: dict):
-        self.__composite22_day_adv = value
-        self._property_changed('composite22_day_adv')        
+        self._property_changed('composite22_day_adv')
+        self.__composite22_day_adv = value        
 
     @property
     def dollar_excess_return(self) -> dict:
@@ -6072,8 +6077,8 @@ class FieldFilterMap(Base):
 
     @dollar_excess_return.setter
     def dollar_excess_return(self, value: dict):
-        self.__dollar_excess_return = value
-        self._property_changed('dollar_excess_return')        
+        self._property_changed('dollar_excess_return')
+        self.__dollar_excess_return = value        
 
     @property
     def gsn(self) -> dict:
@@ -6081,8 +6086,8 @@ class FieldFilterMap(Base):
 
     @gsn.setter
     def gsn(self, value: dict):
-        self.__gsn = value
-        self._property_changed('gsn')        
+        self._property_changed('gsn')
+        self.__gsn = value        
 
     @property
     def gss(self) -> dict:
@@ -6090,8 +6095,8 @@ class FieldFilterMap(Base):
 
     @gss.setter
     def gss(self, value: dict):
-        self.__gss = value
-        self._property_changed('gss')        
+        self._property_changed('gss')
+        self.__gss = value        
 
     @property
     def percent_of_mediandv1m(self) -> dict:
@@ -6099,8 +6104,8 @@ class FieldFilterMap(Base):
 
     @percent_of_mediandv1m.setter
     def percent_of_mediandv1m(self, value: dict):
-        self.__percent_of_mediandv1m = value
-        self._property_changed('percent_of_mediandv1m')        
+        self._property_changed('percent_of_mediandv1m')
+        self.__percent_of_mediandv1m = value        
 
     @property
     def lendables(self) -> dict:
@@ -6108,8 +6113,8 @@ class FieldFilterMap(Base):
 
     @lendables.setter
     def lendables(self, value: dict):
-        self.__lendables = value
-        self._property_changed('lendables')        
+        self._property_changed('lendables')
+        self.__lendables = value        
 
     @property
     def asset_class(self) -> dict:
@@ -6117,8 +6122,8 @@ class FieldFilterMap(Base):
 
     @asset_class.setter
     def asset_class(self, value: dict):
-        self.__asset_class = value
-        self._property_changed('asset_class')        
+        self._property_changed('asset_class')
+        self.__asset_class = value        
 
     @property
     def sovereign_spread_contribution(self) -> dict:
@@ -6126,8 +6131,8 @@ class FieldFilterMap(Base):
 
     @sovereign_spread_contribution.setter
     def sovereign_spread_contribution(self, value: dict):
-        self.__sovereign_spread_contribution = value
-        self._property_changed('sovereign_spread_contribution')        
+        self._property_changed('sovereign_spread_contribution')
+        self.__sovereign_spread_contribution = value        
 
     @property
     def bos_in_ticks_label(self) -> tuple:
@@ -6135,8 +6140,8 @@ class FieldFilterMap(Base):
 
     @bos_in_ticks_label.setter
     def bos_in_ticks_label(self, value: tuple):
-        self.__bos_in_ticks_label = value
-        self._property_changed('bos_in_ticks_label')        
+        self._property_changed('bos_in_ticks_label')
+        self.__bos_in_ticks_label = value        
 
     @property
     def ric(self) -> dict:
@@ -6144,8 +6149,8 @@ class FieldFilterMap(Base):
 
     @ric.setter
     def ric(self, value: dict):
-        self.__ric = value
-        self._property_changed('ric')        
+        self._property_changed('ric')
+        self.__ric = value        
 
     @property
     def position_source_id(self) -> dict:
@@ -6153,8 +6158,8 @@ class FieldFilterMap(Base):
 
     @position_source_id.setter
     def position_source_id(self, value: dict):
-        self.__position_source_id = value
-        self._property_changed('position_source_id')        
+        self._property_changed('position_source_id')
+        self.__position_source_id = value        
 
     @property
     def rate_type(self) -> dict:
@@ -6162,8 +6167,8 @@ class FieldFilterMap(Base):
 
     @rate_type.setter
     def rate_type(self, value: dict):
-        self.__rate_type = value
-        self._property_changed('rate_type')        
+        self._property_changed('rate_type')
+        self.__rate_type = value        
 
     @property
     def gs_sustain_region(self) -> dict:
@@ -6171,8 +6176,8 @@ class FieldFilterMap(Base):
 
     @gs_sustain_region.setter
     def gs_sustain_region(self, value: dict):
-        self.__gs_sustain_region = value
-        self._property_changed('gs_sustain_region')        
+        self._property_changed('gs_sustain_region')
+        self.__gs_sustain_region = value        
 
     @property
     def deployment_id(self) -> dict:
@@ -6180,8 +6185,8 @@ class FieldFilterMap(Base):
 
     @deployment_id.setter
     def deployment_id(self, value: dict):
-        self.__deployment_id = value
-        self._property_changed('deployment_id')        
+        self._property_changed('deployment_id')
+        self.__deployment_id = value        
 
     @property
     def loan_status(self) -> dict:
@@ -6189,8 +6194,8 @@ class FieldFilterMap(Base):
 
     @loan_status.setter
     def loan_status(self, value: dict):
-        self.__loan_status = value
-        self._property_changed('loan_status')        
+        self._property_changed('loan_status')
+        self.__loan_status = value        
 
     @property
     def short_weight(self) -> dict:
@@ -6198,8 +6203,8 @@ class FieldFilterMap(Base):
 
     @short_weight.setter
     def short_weight(self, value: dict):
-        self.__short_weight = value
-        self._property_changed('short_weight')        
+        self._property_changed('short_weight')
+        self.__short_weight = value        
 
     @property
     def loan_rebate(self) -> dict:
@@ -6207,8 +6212,8 @@ class FieldFilterMap(Base):
 
     @loan_rebate.setter
     def loan_rebate(self, value: dict):
-        self.__loan_rebate = value
-        self._property_changed('loan_rebate')        
+        self._property_changed('loan_rebate')
+        self.__loan_rebate = value        
 
     @property
     def period(self) -> dict:
@@ -6216,8 +6221,8 @@ class FieldFilterMap(Base):
 
     @period.setter
     def period(self, value: dict):
-        self.__period = value
-        self._property_changed('period')        
+        self._property_changed('period')
+        self.__period = value        
 
     @property
     def index_create_source(self) -> dict:
@@ -6225,8 +6230,8 @@ class FieldFilterMap(Base):
 
     @index_create_source.setter
     def index_create_source(self, value: dict):
-        self.__index_create_source = value
-        self._property_changed('index_create_source')        
+        self._property_changed('index_create_source')
+        self.__index_create_source = value        
 
     @property
     def fiscal_quarter(self) -> dict:
@@ -6234,8 +6239,8 @@ class FieldFilterMap(Base):
 
     @fiscal_quarter.setter
     def fiscal_quarter(self, value: dict):
-        self.__fiscal_quarter = value
-        self._property_changed('fiscal_quarter')        
+        self._property_changed('fiscal_quarter')
+        self.__fiscal_quarter = value        
 
     @property
     def real_twi_contribution(self) -> dict:
@@ -6243,8 +6248,8 @@ class FieldFilterMap(Base):
 
     @real_twi_contribution.setter
     def real_twi_contribution(self, value: dict):
-        self.__real_twi_contribution = value
-        self._property_changed('real_twi_contribution')        
+        self._property_changed('real_twi_contribution')
+        self.__real_twi_contribution = value        
 
     @property
     def market_impact(self) -> dict:
@@ -6252,8 +6257,8 @@ class FieldFilterMap(Base):
 
     @market_impact.setter
     def market_impact(self, value: dict):
-        self.__market_impact = value
-        self._property_changed('market_impact')        
+        self._property_changed('market_impact')
+        self.__market_impact = value        
 
     @property
     def event_type(self) -> dict:
@@ -6261,8 +6266,8 @@ class FieldFilterMap(Base):
 
     @event_type.setter
     def event_type(self, value: dict):
-        self.__event_type = value
-        self._property_changed('event_type')        
+        self._property_changed('event_type')
+        self.__event_type = value        
 
     @property
     def mkt_asset(self) -> dict:
@@ -6270,8 +6275,8 @@ class FieldFilterMap(Base):
 
     @mkt_asset.setter
     def mkt_asset(self, value: dict):
-        self.__mkt_asset = value
-        self._property_changed('mkt_asset')        
+        self._property_changed('mkt_asset')
+        self.__mkt_asset = value        
 
     @property
     def asset_count_long(self) -> dict:
@@ -6279,8 +6284,8 @@ class FieldFilterMap(Base):
 
     @asset_count_long.setter
     def asset_count_long(self, value: dict):
-        self.__asset_count_long = value
-        self._property_changed('asset_count_long')        
+        self._property_changed('asset_count_long')
+        self.__asset_count_long = value        
 
     @property
     def spot(self) -> dict:
@@ -6288,8 +6293,8 @@ class FieldFilterMap(Base):
 
     @spot.setter
     def spot(self, value: dict):
-        self.__spot = value
-        self._property_changed('spot')        
+        self._property_changed('spot')
+        self.__spot = value        
 
     @property
     def loan_value(self) -> dict:
@@ -6297,8 +6302,8 @@ class FieldFilterMap(Base):
 
     @loan_value.setter
     def loan_value(self, value: dict):
-        self.__loan_value = value
-        self._property_changed('loan_value')        
+        self._property_changed('loan_value')
+        self.__loan_value = value        
 
     @property
     def swap_spread(self) -> dict:
@@ -6306,8 +6311,8 @@ class FieldFilterMap(Base):
 
     @swap_spread.setter
     def swap_spread(self, value: dict):
-        self.__swap_spread = value
-        self._property_changed('swap_spread')        
+        self._property_changed('swap_spread')
+        self.__swap_spread = value        
 
     @property
     def trading_restriction(self) -> dict:
@@ -6315,8 +6320,8 @@ class FieldFilterMap(Base):
 
     @trading_restriction.setter
     def trading_restriction(self, value: dict):
-        self.__trading_restriction = value
-        self._property_changed('trading_restriction')        
+        self._property_changed('trading_restriction')
+        self.__trading_restriction = value        
 
     @property
     def price_spot_entry_unit(self) -> dict:
@@ -6324,8 +6329,8 @@ class FieldFilterMap(Base):
 
     @price_spot_entry_unit.setter
     def price_spot_entry_unit(self, value: dict):
-        self.__price_spot_entry_unit = value
-        self._property_changed('price_spot_entry_unit')        
+        self._property_changed('price_spot_entry_unit')
+        self.__price_spot_entry_unit = value        
 
     @property
     def total_return_price(self) -> dict:
@@ -6333,8 +6338,8 @@ class FieldFilterMap(Base):
 
     @total_return_price.setter
     def total_return_price(self, value: dict):
-        self.__total_return_price = value
-        self._property_changed('total_return_price')        
+        self._property_changed('total_return_price')
+        self.__total_return_price = value        
 
     @property
     def city(self) -> dict:
@@ -6342,8 +6347,8 @@ class FieldFilterMap(Base):
 
     @city.setter
     def city(self, value: dict):
-        self.__city = value
-        self._property_changed('city')        
+        self._property_changed('city')
+        self.__city = value        
 
     @property
     def election_period(self) -> dict:
@@ -6351,8 +6356,8 @@ class FieldFilterMap(Base):
 
     @election_period.setter
     def election_period(self, value: dict):
-        self.__election_period = value
-        self._property_changed('election_period')        
+        self._property_changed('election_period')
+        self.__election_period = value        
 
     @property
     def funding_ask_price(self) -> dict:
@@ -6360,8 +6365,8 @@ class FieldFilterMap(Base):
 
     @funding_ask_price.setter
     def funding_ask_price(self, value: dict):
-        self.__funding_ask_price = value
-        self._property_changed('funding_ask_price')        
+        self._property_changed('funding_ask_price')
+        self.__funding_ask_price = value        
 
     @property
     def historical_beta(self) -> dict:
@@ -6369,8 +6374,8 @@ class FieldFilterMap(Base):
 
     @historical_beta.setter
     def historical_beta(self, value: dict):
-        self.__historical_beta = value
-        self._property_changed('historical_beta')        
+        self._property_changed('historical_beta')
+        self.__historical_beta = value        
 
     @property
     def dissemination_id(self) -> dict:
@@ -6378,8 +6383,8 @@ class FieldFilterMap(Base):
 
     @dissemination_id.setter
     def dissemination_id(self, value: dict):
-        self.__dissemination_id = value
-        self._property_changed('dissemination_id')        
+        self._property_changed('dissemination_id')
+        self.__dissemination_id = value        
 
     @property
     def leg_two_fixed_payment(self) -> dict:
@@ -6387,8 +6392,8 @@ class FieldFilterMap(Base):
 
     @leg_two_fixed_payment.setter
     def leg_two_fixed_payment(self, value: dict):
-        self.__leg_two_fixed_payment = value
-        self._property_changed('leg_two_fixed_payment')        
+        self._property_changed('leg_two_fixed_payment')
+        self.__leg_two_fixed_payment = value        
 
     @property
     def hit_rate_ytd(self) -> dict:
@@ -6396,8 +6401,8 @@ class FieldFilterMap(Base):
 
     @hit_rate_ytd.setter
     def hit_rate_ytd(self, value: dict):
-        self.__hit_rate_ytd = value
-        self._property_changed('hit_rate_ytd')        
+        self._property_changed('hit_rate_ytd')
+        self.__hit_rate_ytd = value        
 
     @property
     def valid(self) -> dict:
@@ -6405,8 +6410,8 @@ class FieldFilterMap(Base):
 
     @valid.setter
     def valid(self, value: dict):
-        self.__valid = value
-        self._property_changed('valid')        
+        self._property_changed('valid')
+        self.__valid = value        
 
     @property
     def sts_commodity(self) -> dict:
@@ -6414,8 +6419,8 @@ class FieldFilterMap(Base):
 
     @sts_commodity.setter
     def sts_commodity(self, value: dict):
-        self.__sts_commodity = value
-        self._property_changed('sts_commodity')        
+        self._property_changed('sts_commodity')
+        self.__sts_commodity = value        
 
     @property
     def indication_of_end_user_exception(self) -> dict:
@@ -6423,8 +6428,8 @@ class FieldFilterMap(Base):
 
     @indication_of_end_user_exception.setter
     def indication_of_end_user_exception(self, value: dict):
-        self.__indication_of_end_user_exception = value
-        self._property_changed('indication_of_end_user_exception')        
+        self._property_changed('indication_of_end_user_exception')
+        self.__indication_of_end_user_exception = value        
 
     @property
     def es_score(self) -> dict:
@@ -6432,8 +6437,8 @@ class FieldFilterMap(Base):
 
     @es_score.setter
     def es_score(self, value: dict):
-        self.__es_score = value
-        self._property_changed('es_score')        
+        self._property_changed('es_score')
+        self.__es_score = value        
 
     @property
     def price_range_in_ticks(self) -> dict:
@@ -6441,8 +6446,8 @@ class FieldFilterMap(Base):
 
     @price_range_in_ticks.setter
     def price_range_in_ticks(self, value: dict):
-        self.__price_range_in_ticks = value
-        self._property_changed('price_range_in_ticks')        
+        self._property_changed('price_range_in_ticks')
+        self.__price_range_in_ticks = value        
 
     @property
     def expense_ratio_gross_bps(self) -> dict:
@@ -6450,8 +6455,8 @@ class FieldFilterMap(Base):
 
     @expense_ratio_gross_bps.setter
     def expense_ratio_gross_bps(self, value: dict):
-        self.__expense_ratio_gross_bps = value
-        self._property_changed('expense_ratio_gross_bps')        
+        self._property_changed('expense_ratio_gross_bps')
+        self.__expense_ratio_gross_bps = value        
 
     @property
     def pct_change(self) -> dict:
@@ -6459,8 +6464,8 @@ class FieldFilterMap(Base):
 
     @pct_change.setter
     def pct_change(self, value: dict):
-        self.__pct_change = value
-        self._property_changed('pct_change')        
+        self._property_changed('pct_change')
+        self.__pct_change = value        
 
     @property
     def number_of_rolls(self) -> dict:
@@ -6468,8 +6473,8 @@ class FieldFilterMap(Base):
 
     @number_of_rolls.setter
     def number_of_rolls(self, value: dict):
-        self.__number_of_rolls = value
-        self._property_changed('number_of_rolls')        
+        self._property_changed('number_of_rolls')
+        self.__number_of_rolls = value        
 
     @property
     def agent_lender_fee(self) -> dict:
@@ -6477,8 +6482,8 @@ class FieldFilterMap(Base):
 
     @agent_lender_fee.setter
     def agent_lender_fee(self, value: dict):
-        self.__agent_lender_fee = value
-        self._property_changed('agent_lender_fee')        
+        self._property_changed('agent_lender_fee')
+        self.__agent_lender_fee = value        
 
     @property
     def bbid(self) -> dict:
@@ -6486,8 +6491,8 @@ class FieldFilterMap(Base):
 
     @bbid.setter
     def bbid(self, value: dict):
-        self.__bbid = value
-        self._property_changed('bbid')        
+        self._property_changed('bbid')
+        self.__bbid = value        
 
     @property
     def option_strike_price(self) -> dict:
@@ -6495,8 +6500,8 @@ class FieldFilterMap(Base):
 
     @option_strike_price.setter
     def option_strike_price(self, value: dict):
-        self.__option_strike_price = value
-        self._property_changed('option_strike_price')        
+        self._property_changed('option_strike_price')
+        self.__option_strike_price = value        
 
     @property
     def arrival_mid_normalized(self) -> dict:
@@ -6504,8 +6509,8 @@ class FieldFilterMap(Base):
 
     @arrival_mid_normalized.setter
     def arrival_mid_normalized(self, value: dict):
-        self.__arrival_mid_normalized = value
-        self._property_changed('arrival_mid_normalized')        
+        self._property_changed('arrival_mid_normalized')
+        self.__arrival_mid_normalized = value        
 
     @property
     def underlying_asset2(self) -> dict:
@@ -6513,8 +6518,8 @@ class FieldFilterMap(Base):
 
     @underlying_asset2.setter
     def underlying_asset2(self, value: dict):
-        self.__underlying_asset2 = value
-        self._property_changed('underlying_asset2')        
+        self._property_changed('underlying_asset2')
+        self.__underlying_asset2 = value        
 
     @property
     def underlying_asset1(self) -> dict:
@@ -6522,8 +6527,8 @@ class FieldFilterMap(Base):
 
     @underlying_asset1.setter
     def underlying_asset1(self, value: dict):
-        self.__underlying_asset1 = value
-        self._property_changed('underlying_asset1')        
+        self._property_changed('underlying_asset1')
+        self.__underlying_asset1 = value        
 
     @property
     def capped(self) -> dict:
@@ -6531,8 +6536,8 @@ class FieldFilterMap(Base):
 
     @capped.setter
     def capped(self, value: dict):
-        self.__capped = value
-        self._property_changed('capped')        
+        self._property_changed('capped')
+        self.__capped = value        
 
     @property
     def rating(self) -> dict:
@@ -6540,8 +6545,8 @@ class FieldFilterMap(Base):
 
     @rating.setter
     def rating(self, value: dict):
-        self.__rating = value
-        self._property_changed('rating')        
+        self._property_changed('rating')
+        self.__rating = value        
 
     @property
     def option_currency(self) -> dict:
@@ -6549,8 +6554,8 @@ class FieldFilterMap(Base):
 
     @option_currency.setter
     def option_currency(self, value: dict):
-        self.__option_currency = value
-        self._property_changed('option_currency')        
+        self._property_changed('option_currency')
+        self.__option_currency = value        
 
     @property
     def volatility(self) -> dict:
@@ -6558,8 +6563,8 @@ class FieldFilterMap(Base):
 
     @volatility.setter
     def volatility(self, value: dict):
-        self.__volatility = value
-        self._property_changed('volatility')        
+        self._property_changed('volatility')
+        self.__volatility = value        
 
     @property
     def legal_entity(self) -> dict:
@@ -6567,8 +6572,8 @@ class FieldFilterMap(Base):
 
     @legal_entity.setter
     def legal_entity(self, value: dict):
-        self.__legal_entity = value
-        self._property_changed('legal_entity')        
+        self._property_changed('legal_entity')
+        self.__legal_entity = value        
 
     @property
     def performance_fee(self) -> dict:
@@ -6576,8 +6581,8 @@ class FieldFilterMap(Base):
 
     @performance_fee.setter
     def performance_fee(self, value: dict):
-        self.__performance_fee = value
-        self._property_changed('performance_fee')        
+        self._property_changed('performance_fee')
+        self.__performance_fee = value        
 
     @property
     def underlying_asset_ids(self) -> dict:
@@ -6585,8 +6590,8 @@ class FieldFilterMap(Base):
 
     @underlying_asset_ids.setter
     def underlying_asset_ids(self, value: dict):
-        self.__underlying_asset_ids = value
-        self._property_changed('underlying_asset_ids')        
+        self._property_changed('underlying_asset_ids')
+        self.__underlying_asset_ids = value        
 
     @property
     def queue_in_lots_label(self) -> tuple:
@@ -6594,8 +6599,8 @@ class FieldFilterMap(Base):
 
     @queue_in_lots_label.setter
     def queue_in_lots_label(self, value: tuple):
-        self.__queue_in_lots_label = value
-        self._property_changed('queue_in_lots_label')        
+        self._property_changed('queue_in_lots_label')
+        self.__queue_in_lots_label = value        
 
     @property
     def adv10_day_pct(self) -> dict:
@@ -6603,8 +6608,8 @@ class FieldFilterMap(Base):
 
     @adv10_day_pct.setter
     def adv10_day_pct(self, value: dict):
-        self.__adv10_day_pct = value
-        self._property_changed('adv10_day_pct')        
+        self._property_changed('adv10_day_pct')
+        self.__adv10_day_pct = value        
 
     @property
     def long_conviction_medium(self) -> dict:
@@ -6612,8 +6617,8 @@ class FieldFilterMap(Base):
 
     @long_conviction_medium.setter
     def long_conviction_medium(self, value: dict):
-        self.__long_conviction_medium = value
-        self._property_changed('long_conviction_medium')        
+        self._property_changed('long_conviction_medium')
+        self.__long_conviction_medium = value        
 
     @property
     def annual_risk(self) -> dict:
@@ -6621,8 +6626,8 @@ class FieldFilterMap(Base):
 
     @annual_risk.setter
     def annual_risk(self, value: dict):
-        self.__annual_risk = value
-        self._property_changed('annual_risk')        
+        self._property_changed('annual_risk')
+        self.__annual_risk = value        
 
     @property
     def eti(self) -> dict:
@@ -6630,8 +6635,8 @@ class FieldFilterMap(Base):
 
     @eti.setter
     def eti(self, value: dict):
-        self.__eti = value
-        self._property_changed('eti')        
+        self._property_changed('eti')
+        self.__eti = value        
 
     @property
     def daily_tracking_error(self) -> dict:
@@ -6639,8 +6644,8 @@ class FieldFilterMap(Base):
 
     @daily_tracking_error.setter
     def daily_tracking_error(self, value: dict):
-        self.__daily_tracking_error = value
-        self._property_changed('daily_tracking_error')        
+        self._property_changed('daily_tracking_error')
+        self.__daily_tracking_error = value        
 
     @property
     def leg_two_index(self) -> dict:
@@ -6648,8 +6653,8 @@ class FieldFilterMap(Base):
 
     @leg_two_index.setter
     def leg_two_index(self, value: dict):
-        self.__leg_two_index = value
-        self._property_changed('leg_two_index')        
+        self._property_changed('leg_two_index')
+        self.__leg_two_index = value        
 
     @property
     def market_buffer(self) -> dict:
@@ -6657,8 +6662,8 @@ class FieldFilterMap(Base):
 
     @market_buffer.setter
     def market_buffer(self, value: dict):
-        self.__market_buffer = value
-        self._property_changed('market_buffer')        
+        self._property_changed('market_buffer')
+        self.__market_buffer = value        
 
     @property
     def market_cap(self) -> dict:
@@ -6666,8 +6671,8 @@ class FieldFilterMap(Base):
 
     @market_cap.setter
     def market_cap(self, value: dict):
-        self.__market_cap = value
-        self._property_changed('market_cap')        
+        self._property_changed('market_cap')
+        self.__market_cap = value        
 
     @property
     def oe_id(self) -> dict:
@@ -6675,8 +6680,8 @@ class FieldFilterMap(Base):
 
     @oe_id.setter
     def oe_id(self, value: dict):
-        self.__oe_id = value
-        self._property_changed('oe_id')        
+        self._property_changed('oe_id')
+        self.__oe_id = value        
 
     @property
     def cluster_region(self) -> tuple:
@@ -6684,8 +6689,8 @@ class FieldFilterMap(Base):
 
     @cluster_region.setter
     def cluster_region(self, value: tuple):
-        self.__cluster_region = value
-        self._property_changed('cluster_region')        
+        self._property_changed('cluster_region')
+        self.__cluster_region = value        
 
     @property
     def bbid_equivalent(self) -> dict:
@@ -6693,8 +6698,8 @@ class FieldFilterMap(Base):
 
     @bbid_equivalent.setter
     def bbid_equivalent(self, value: dict):
-        self.__bbid_equivalent = value
-        self._property_changed('bbid_equivalent')        
+        self._property_changed('bbid_equivalent')
+        self.__bbid_equivalent = value        
 
     @property
     def valoren(self) -> dict:
@@ -6702,8 +6707,8 @@ class FieldFilterMap(Base):
 
     @valoren.setter
     def valoren(self, value: dict):
-        self.__valoren = value
-        self._property_changed('valoren')        
+        self._property_changed('valoren')
+        self.__valoren = value        
 
     @property
     def basis(self) -> dict:
@@ -6711,8 +6716,8 @@ class FieldFilterMap(Base):
 
     @basis.setter
     def basis(self, value: dict):
-        self.__basis = value
-        self._property_changed('basis')        
+        self._property_changed('basis')
+        self.__basis = value        
 
     @property
     def ext_mkt_class(self) -> dict:
@@ -6720,8 +6725,8 @@ class FieldFilterMap(Base):
 
     @ext_mkt_class.setter
     def ext_mkt_class(self, value: dict):
-        self.__ext_mkt_class = value
-        self._property_changed('ext_mkt_class')        
+        self._property_changed('ext_mkt_class')
+        self.__ext_mkt_class = value        
 
     @property
     def price_currency(self) -> dict:
@@ -6729,8 +6734,8 @@ class FieldFilterMap(Base):
 
     @price_currency.setter
     def price_currency(self, value: dict):
-        self.__price_currency = value
-        self._property_changed('price_currency')        
+        self._property_changed('price_currency')
+        self.__price_currency = value        
 
     @property
     def hedge_id(self) -> dict:
@@ -6738,8 +6743,8 @@ class FieldFilterMap(Base):
 
     @hedge_id.setter
     def hedge_id(self, value: dict):
-        self.__hedge_id = value
-        self._property_changed('hedge_id')        
+        self._property_changed('hedge_id')
+        self.__hedge_id = value        
 
     @property
     def tcm_cost_horizon8_day(self) -> dict:
@@ -6747,8 +6752,8 @@ class FieldFilterMap(Base):
 
     @tcm_cost_horizon8_day.setter
     def tcm_cost_horizon8_day(self, value: dict):
-        self.__tcm_cost_horizon8_day = value
-        self._property_changed('tcm_cost_horizon8_day')        
+        self._property_changed('tcm_cost_horizon8_day')
+        self.__tcm_cost_horizon8_day = value        
 
     @property
     def residual_variance(self) -> dict:
@@ -6756,8 +6761,8 @@ class FieldFilterMap(Base):
 
     @residual_variance.setter
     def residual_variance(self, value: dict):
-        self.__residual_variance = value
-        self._property_changed('residual_variance')        
+        self._property_changed('residual_variance')
+        self.__residual_variance = value        
 
     @property
     def supra_strategy(self) -> dict:
@@ -6765,8 +6770,8 @@ class FieldFilterMap(Base):
 
     @supra_strategy.setter
     def supra_strategy(self, value: dict):
-        self.__supra_strategy = value
-        self._property_changed('supra_strategy')        
+        self._property_changed('supra_strategy')
+        self.__supra_strategy = value        
 
     @property
     def day_count_convention(self) -> dict:
@@ -6774,8 +6779,8 @@ class FieldFilterMap(Base):
 
     @day_count_convention.setter
     def day_count_convention(self, value: dict):
-        self.__day_count_convention = value
-        self._property_changed('day_count_convention')        
+        self._property_changed('day_count_convention')
+        self.__day_count_convention = value        
 
     @property
     def rounded_notional_amount1(self) -> dict:
@@ -6783,8 +6788,8 @@ class FieldFilterMap(Base):
 
     @rounded_notional_amount1.setter
     def rounded_notional_amount1(self, value: dict):
-        self.__rounded_notional_amount1 = value
-        self._property_changed('rounded_notional_amount1')        
+        self._property_changed('rounded_notional_amount1')
+        self.__rounded_notional_amount1 = value        
 
     @property
     def adv5_day_pct(self) -> dict:
@@ -6792,8 +6797,8 @@ class FieldFilterMap(Base):
 
     @adv5_day_pct.setter
     def adv5_day_pct(self, value: dict):
-        self.__adv5_day_pct = value
-        self._property_changed('adv5_day_pct')        
+        self._property_changed('adv5_day_pct')
+        self.__adv5_day_pct = value        
 
     @property
     def rounded_notional_amount2(self) -> dict:
@@ -6801,8 +6806,8 @@ class FieldFilterMap(Base):
 
     @rounded_notional_amount2.setter
     def rounded_notional_amount2(self, value: dict):
-        self.__rounded_notional_amount2 = value
-        self._property_changed('rounded_notional_amount2')        
+        self._property_changed('rounded_notional_amount2')
+        self.__rounded_notional_amount2 = value        
 
     @property
     def factor_source(self) -> dict:
@@ -6810,8 +6815,8 @@ class FieldFilterMap(Base):
 
     @factor_source.setter
     def factor_source(self, value: dict):
-        self.__factor_source = value
-        self._property_changed('factor_source')        
+        self._property_changed('factor_source')
+        self.__factor_source = value        
 
     @property
     def leverage(self) -> dict:
@@ -6819,8 +6824,8 @@ class FieldFilterMap(Base):
 
     @leverage.setter
     def leverage(self, value: dict):
-        self.__leverage = value
-        self._property_changed('leverage')        
+        self._property_changed('leverage')
+        self.__leverage = value        
 
     @property
     def option_family(self) -> dict:
@@ -6828,8 +6833,8 @@ class FieldFilterMap(Base):
 
     @option_family.setter
     def option_family(self, value: dict):
-        self.__option_family = value
-        self._property_changed('option_family')        
+        self._property_changed('option_family')
+        self.__option_family = value        
 
     @property
     def price_spot_stop_loss_value(self) -> dict:
@@ -6837,8 +6842,8 @@ class FieldFilterMap(Base):
 
     @price_spot_stop_loss_value.setter
     def price_spot_stop_loss_value(self, value: dict):
-        self.__price_spot_stop_loss_value = value
-        self._property_changed('price_spot_stop_loss_value')        
+        self._property_changed('price_spot_stop_loss_value')
+        self.__price_spot_stop_loss_value = value        
 
     @property
     def fwd_points(self) -> dict:
@@ -6846,8 +6851,8 @@ class FieldFilterMap(Base):
 
     @fwd_points.setter
     def fwd_points(self, value: dict):
-        self.__fwd_points = value
-        self._property_changed('fwd_points')        
+        self._property_changed('fwd_points')
+        self.__fwd_points = value        
 
     @property
     def kpi_id(self) -> dict:
@@ -6855,8 +6860,8 @@ class FieldFilterMap(Base):
 
     @kpi_id.setter
     def kpi_id(self, value: dict):
-        self.__kpi_id = value
-        self._property_changed('kpi_id')        
+        self._property_changed('kpi_id')
+        self.__kpi_id = value        
 
     @property
     def relative_return_wtd(self) -> dict:
@@ -6864,8 +6869,8 @@ class FieldFilterMap(Base):
 
     @relative_return_wtd.setter
     def relative_return_wtd(self, value: dict):
-        self.__relative_return_wtd = value
-        self._property_changed('relative_return_wtd')        
+        self._property_changed('relative_return_wtd')
+        self.__relative_return_wtd = value        
 
     @property
     def borrow_cost(self) -> dict:
@@ -6873,8 +6878,8 @@ class FieldFilterMap(Base):
 
     @borrow_cost.setter
     def borrow_cost(self, value: dict):
-        self.__borrow_cost = value
-        self._property_changed('borrow_cost')        
+        self._property_changed('borrow_cost')
+        self.__borrow_cost = value        
 
     @property
     def asset_classifications_risk_country_name(self) -> dict:
@@ -6882,8 +6887,8 @@ class FieldFilterMap(Base):
 
     @asset_classifications_risk_country_name.setter
     def asset_classifications_risk_country_name(self, value: dict):
-        self.__asset_classifications_risk_country_name = value
-        self._property_changed('asset_classifications_risk_country_name')        
+        self._property_changed('asset_classifications_risk_country_name')
+        self.__asset_classifications_risk_country_name = value        
 
     @property
     def risk_model(self) -> dict:
@@ -6891,8 +6896,8 @@ class FieldFilterMap(Base):
 
     @risk_model.setter
     def risk_model(self, value: dict):
-        self.__risk_model = value
-        self._property_changed('risk_model')        
+        self._property_changed('risk_model')
+        self.__risk_model = value        
 
     @property
     def average_implied_volatility(self) -> dict:
@@ -6900,8 +6905,8 @@ class FieldFilterMap(Base):
 
     @average_implied_volatility.setter
     def average_implied_volatility(self, value: dict):
-        self.__average_implied_volatility = value
-        self._property_changed('average_implied_volatility')        
+        self._property_changed('average_implied_volatility')
+        self.__average_implied_volatility = value        
 
     @property
     def fair_value(self) -> dict:
@@ -6909,8 +6914,8 @@ class FieldFilterMap(Base):
 
     @fair_value.setter
     def fair_value(self, value: dict):
-        self.__fair_value = value
-        self._property_changed('fair_value')        
+        self._property_changed('fair_value')
+        self.__fair_value = value        
 
     @property
     def adjusted_high_price(self) -> dict:
@@ -6918,8 +6923,8 @@ class FieldFilterMap(Base):
 
     @adjusted_high_price.setter
     def adjusted_high_price(self, value: dict):
-        self.__adjusted_high_price = value
-        self._property_changed('adjusted_high_price')        
+        self._property_changed('adjusted_high_price')
+        self.__adjusted_high_price = value        
 
     @property
     def ext_mkt_point1(self) -> dict:
@@ -6927,8 +6932,8 @@ class FieldFilterMap(Base):
 
     @ext_mkt_point1.setter
     def ext_mkt_point1(self, value: dict):
-        self.__ext_mkt_point1 = value
-        self._property_changed('ext_mkt_point1')        
+        self._property_changed('ext_mkt_point1')
+        self.__ext_mkt_point1 = value        
 
     @property
     def direction(self) -> dict:
@@ -6936,8 +6941,8 @@ class FieldFilterMap(Base):
 
     @direction.setter
     def direction(self, value: dict):
-        self.__direction = value
-        self._property_changed('direction')        
+        self._property_changed('direction')
+        self.__direction = value        
 
     @property
     def ext_mkt_point2(self) -> dict:
@@ -6945,8 +6950,8 @@ class FieldFilterMap(Base):
 
     @ext_mkt_point2.setter
     def ext_mkt_point2(self, value: dict):
-        self.__ext_mkt_point2 = value
-        self._property_changed('ext_mkt_point2')        
+        self._property_changed('ext_mkt_point2')
+        self.__ext_mkt_point2 = value        
 
     @property
     def sub_region_code(self) -> dict:
@@ -6954,8 +6959,8 @@ class FieldFilterMap(Base):
 
     @sub_region_code.setter
     def sub_region_code(self, value: dict):
-        self.__sub_region_code = value
-        self._property_changed('sub_region_code')        
+        self._property_changed('sub_region_code')
+        self.__sub_region_code = value        
 
     @property
     def value_forecast(self) -> dict:
@@ -6963,8 +6968,8 @@ class FieldFilterMap(Base):
 
     @value_forecast.setter
     def value_forecast(self, value: dict):
-        self.__value_forecast = value
-        self._property_changed('value_forecast')        
+        self._property_changed('value_forecast')
+        self.__value_forecast = value        
 
     @property
     def execution_venue(self) -> dict:
@@ -6972,8 +6977,8 @@ class FieldFilterMap(Base):
 
     @execution_venue.setter
     def execution_venue(self, value: dict):
-        self.__execution_venue = value
-        self._property_changed('execution_venue')        
+        self._property_changed('execution_venue')
+        self.__execution_venue = value        
 
     @property
     def position_source_type(self) -> dict:
@@ -6981,8 +6986,8 @@ class FieldFilterMap(Base):
 
     @position_source_type.setter
     def position_source_type(self, value: dict):
-        self.__position_source_type = value
-        self._property_changed('position_source_type')        
+        self._property_changed('position_source_type')
+        self.__position_source_type = value        
 
     @property
     def adjusted_close_price(self) -> dict:
@@ -6990,8 +6995,8 @@ class FieldFilterMap(Base):
 
     @adjusted_close_price.setter
     def adjusted_close_price(self, value: dict):
-        self.__adjusted_close_price = value
-        self._property_changed('adjusted_close_price')        
+        self._property_changed('adjusted_close_price')
+        self.__adjusted_close_price = value        
 
     @property
     def lms_id(self) -> dict:
@@ -6999,8 +7004,8 @@ class FieldFilterMap(Base):
 
     @lms_id.setter
     def lms_id(self, value: dict):
-        self.__lms_id = value
-        self._property_changed('lms_id')        
+        self._property_changed('lms_id')
+        self.__lms_id = value        
 
     @property
     def rebate_rate(self) -> dict:
@@ -7008,8 +7013,8 @@ class FieldFilterMap(Base):
 
     @rebate_rate.setter
     def rebate_rate(self, value: dict):
-        self.__rebate_rate = value
-        self._property_changed('rebate_rate')        
+        self._property_changed('rebate_rate')
+        self.__rebate_rate = value        
 
     @property
     def participation_rate(self) -> dict:
@@ -7017,8 +7022,8 @@ class FieldFilterMap(Base):
 
     @participation_rate.setter
     def participation_rate(self, value: dict):
-        self.__participation_rate = value
-        self._property_changed('participation_rate')        
+        self._property_changed('participation_rate')
+        self.__participation_rate = value        
 
     @property
     def obfr(self) -> dict:
@@ -7026,8 +7031,8 @@ class FieldFilterMap(Base):
 
     @obfr.setter
     def obfr(self, value: dict):
-        self.__obfr = value
-        self._property_changed('obfr')        
+        self._property_changed('obfr')
+        self.__obfr = value        
 
     @property
     def option_lock_period(self) -> dict:
@@ -7035,8 +7040,8 @@ class FieldFilterMap(Base):
 
     @option_lock_period.setter
     def option_lock_period(self, value: dict):
-        self.__option_lock_period = value
-        self._property_changed('option_lock_period')        
+        self._property_changed('option_lock_period')
+        self.__option_lock_period = value        
 
     @property
     def es_momentum_percentile(self) -> dict:
@@ -7044,8 +7049,8 @@ class FieldFilterMap(Base):
 
     @es_momentum_percentile.setter
     def es_momentum_percentile(self, value: dict):
-        self.__es_momentum_percentile = value
-        self._property_changed('es_momentum_percentile')        
+        self._property_changed('es_momentum_percentile')
+        self.__es_momentum_percentile = value        
 
     @property
     def price_notation(self) -> dict:
@@ -7053,8 +7058,8 @@ class FieldFilterMap(Base):
 
     @price_notation.setter
     def price_notation(self, value: dict):
-        self.__price_notation = value
-        self._property_changed('price_notation')        
+        self._property_changed('price_notation')
+        self.__price_notation = value        
 
     @property
     def strategy(self) -> dict:
@@ -7062,8 +7067,8 @@ class FieldFilterMap(Base):
 
     @strategy.setter
     def strategy(self, value: dict):
-        self.__strategy = value
-        self._property_changed('strategy')        
+        self._property_changed('strategy')
+        self.__strategy = value        
 
     @property
     def position_type(self) -> dict:
@@ -7071,8 +7076,8 @@ class FieldFilterMap(Base):
 
     @position_type.setter
     def position_type(self, value: dict):
-        self.__position_type = value
-        self._property_changed('position_type')        
+        self._property_changed('position_type')
+        self.__position_type = value        
 
     @property
     def lender_income(self) -> dict:
@@ -7080,8 +7085,8 @@ class FieldFilterMap(Base):
 
     @lender_income.setter
     def lender_income(self, value: dict):
-        self.__lender_income = value
-        self._property_changed('lender_income')        
+        self._property_changed('lender_income')
+        self.__lender_income = value        
 
     @property
     def sub_asset_class(self) -> dict:
@@ -7089,8 +7094,8 @@ class FieldFilterMap(Base):
 
     @sub_asset_class.setter
     def sub_asset_class(self, value: dict):
-        self.__sub_asset_class = value
-        self._property_changed('sub_asset_class')        
+        self._property_changed('sub_asset_class')
+        self.__sub_asset_class = value        
 
     @property
     def provide_mpl_tape_b(self) -> dict:
@@ -7098,8 +7103,8 @@ class FieldFilterMap(Base):
 
     @provide_mpl_tape_b.setter
     def provide_mpl_tape_b(self, value: dict):
-        self.__provide_mpl_tape_b = value
-        self._property_changed('provide_mpl_tape_b')        
+        self._property_changed('provide_mpl_tape_b')
+        self.__provide_mpl_tape_b = value        
 
     @property
     def short_interest(self) -> dict:
@@ -7107,8 +7112,8 @@ class FieldFilterMap(Base):
 
     @short_interest.setter
     def short_interest(self, value: dict):
-        self.__short_interest = value
-        self._property_changed('short_interest')        
+        self._property_changed('short_interest')
+        self.__short_interest = value        
 
     @property
     def reference_period(self) -> dict:
@@ -7116,8 +7121,8 @@ class FieldFilterMap(Base):
 
     @reference_period.setter
     def reference_period(self, value: dict):
-        self.__reference_period = value
-        self._property_changed('reference_period')        
+        self._property_changed('reference_period')
+        self.__reference_period = value        
 
     @property
     def provide_mpl_tape_c(self) -> dict:
@@ -7125,8 +7130,8 @@ class FieldFilterMap(Base):
 
     @provide_mpl_tape_c.setter
     def provide_mpl_tape_c(self, value: dict):
-        self.__provide_mpl_tape_c = value
-        self._property_changed('provide_mpl_tape_c')        
+        self._property_changed('provide_mpl_tape_c')
+        self.__provide_mpl_tape_c = value        
 
     @property
     def adjusted_volume(self) -> dict:
@@ -7134,8 +7139,8 @@ class FieldFilterMap(Base):
 
     @adjusted_volume.setter
     def adjusted_volume(self, value: dict):
-        self.__adjusted_volume = value
-        self._property_changed('adjusted_volume')        
+        self._property_changed('adjusted_volume')
+        self.__adjusted_volume = value        
 
     @property
     def provide_mpl_tape_a(self) -> dict:
@@ -7143,8 +7148,8 @@ class FieldFilterMap(Base):
 
     @provide_mpl_tape_a.setter
     def provide_mpl_tape_a(self, value: dict):
-        self.__provide_mpl_tape_a = value
-        self._property_changed('provide_mpl_tape_a')        
+        self._property_changed('provide_mpl_tape_a')
+        self.__provide_mpl_tape_a = value        
 
     @property
     def pb_client_id(self) -> dict:
@@ -7152,8 +7157,8 @@ class FieldFilterMap(Base):
 
     @pb_client_id.setter
     def pb_client_id(self, value: dict):
-        self.__pb_client_id = value
-        self._property_changed('pb_client_id')        
+        self._property_changed('pb_client_id')
+        self.__pb_client_id = value        
 
     @property
     def owner_id(self) -> dict:
@@ -7161,8 +7166,8 @@ class FieldFilterMap(Base):
 
     @owner_id.setter
     def owner_id(self, value: dict):
-        self.__owner_id = value
-        self._property_changed('owner_id')        
+        self._property_changed('owner_id')
+        self.__owner_id = value        
 
     @property
     def sec_db(self) -> dict:
@@ -7170,8 +7175,8 @@ class FieldFilterMap(Base):
 
     @sec_db.setter
     def sec_db(self, value: dict):
-        self.__sec_db = value
-        self._property_changed('sec_db')        
+        self._property_changed('sec_db')
+        self.__sec_db = value        
 
     @property
     def composite10_day_adv(self) -> dict:
@@ -7179,8 +7184,8 @@ class FieldFilterMap(Base):
 
     @composite10_day_adv.setter
     def composite10_day_adv(self, value: dict):
-        self.__composite10_day_adv = value
-        self._property_changed('composite10_day_adv')        
+        self._property_changed('composite10_day_adv')
+        self.__composite10_day_adv = value        
 
     @property
     def bpe_quality_stars(self) -> dict:
@@ -7188,8 +7193,8 @@ class FieldFilterMap(Base):
 
     @bpe_quality_stars.setter
     def bpe_quality_stars(self, value: dict):
-        self.__bpe_quality_stars = value
-        self._property_changed('bpe_quality_stars')        
+        self._property_changed('bpe_quality_stars')
+        self.__bpe_quality_stars = value        
 
     @property
     def idea_activity_type(self) -> dict:
@@ -7197,8 +7202,8 @@ class FieldFilterMap(Base):
 
     @idea_activity_type.setter
     def idea_activity_type(self, value: dict):
-        self.__idea_activity_type = value
-        self._property_changed('idea_activity_type')        
+        self._property_changed('idea_activity_type')
+        self.__idea_activity_type = value        
 
     @property
     def idea_source(self) -> dict:
@@ -7206,8 +7211,8 @@ class FieldFilterMap(Base):
 
     @idea_source.setter
     def idea_source(self, value: dict):
-        self.__idea_source = value
-        self._property_changed('idea_source')        
+        self._property_changed('idea_source')
+        self.__idea_source = value        
 
     @property
     def unadjusted_ask(self) -> dict:
@@ -7215,8 +7220,8 @@ class FieldFilterMap(Base):
 
     @unadjusted_ask.setter
     def unadjusted_ask(self, value: dict):
-        self.__unadjusted_ask = value
-        self._property_changed('unadjusted_ask')        
+        self._property_changed('unadjusted_ask')
+        self.__unadjusted_ask = value        
 
     @property
     def trading_pnl(self) -> dict:
@@ -7224,8 +7229,8 @@ class FieldFilterMap(Base):
 
     @trading_pnl.setter
     def trading_pnl(self, value: dict):
-        self.__trading_pnl = value
-        self._property_changed('trading_pnl')        
+        self._property_changed('trading_pnl')
+        self.__trading_pnl = value        
 
     @property
     def collateral_value_required(self) -> dict:
@@ -7233,8 +7238,8 @@ class FieldFilterMap(Base):
 
     @collateral_value_required.setter
     def collateral_value_required(self, value: dict):
-        self.__collateral_value_required = value
-        self._property_changed('collateral_value_required')        
+        self._property_changed('collateral_value_required')
+        self.__collateral_value_required = value        
 
     @property
     def given_plus_paid(self) -> dict:
@@ -7242,8 +7247,8 @@ class FieldFilterMap(Base):
 
     @given_plus_paid.setter
     def given_plus_paid(self, value: dict):
-        self.__given_plus_paid = value
-        self._property_changed('given_plus_paid')        
+        self._property_changed('given_plus_paid')
+        self.__given_plus_paid = value        
 
     @property
     def close_location(self) -> dict:
@@ -7251,8 +7256,8 @@ class FieldFilterMap(Base):
 
     @close_location.setter
     def close_location(self, value: dict):
-        self.__close_location = value
-        self._property_changed('close_location')        
+        self._property_changed('close_location')
+        self.__close_location = value        
 
     @property
     def short_conviction_small(self) -> dict:
@@ -7260,8 +7265,17 @@ class FieldFilterMap(Base):
 
     @short_conviction_small.setter
     def short_conviction_small(self, value: dict):
-        self.__short_conviction_small = value
-        self._property_changed('short_conviction_small')        
+        self._property_changed('short_conviction_small')
+        self.__short_conviction_small = value        
+
+    @property
+    def price_to_earnings_positive(self) -> dict:
+        return self.__price_to_earnings_positive
+
+    @price_to_earnings_positive.setter
+    def price_to_earnings_positive(self, value: dict):
+        self._property_changed('price_to_earnings_positive')
+        self.__price_to_earnings_positive = value        
 
     @property
     def forecast(self) -> dict:
@@ -7269,8 +7283,8 @@ class FieldFilterMap(Base):
 
     @forecast.setter
     def forecast(self, value: dict):
-        self.__forecast = value
-        self._property_changed('forecast')        
+        self._property_changed('forecast')
+        self.__forecast = value        
 
     @property
     def pnl(self) -> dict:
@@ -7278,8 +7292,8 @@ class FieldFilterMap(Base):
 
     @pnl.setter
     def pnl(self, value: dict):
-        self.__pnl = value
-        self._property_changed('pnl')        
+        self._property_changed('pnl')
+        self.__pnl = value        
 
     @property
     def upfront_payment_currency(self) -> dict:
@@ -7287,8 +7301,8 @@ class FieldFilterMap(Base):
 
     @upfront_payment_currency.setter
     def upfront_payment_currency(self, value: dict):
-        self.__upfront_payment_currency = value
-        self._property_changed('upfront_payment_currency')        
+        self._property_changed('upfront_payment_currency')
+        self.__upfront_payment_currency = value        
 
     @property
     def date_index(self) -> dict:
@@ -7296,8 +7310,8 @@ class FieldFilterMap(Base):
 
     @date_index.setter
     def date_index(self, value: dict):
-        self.__date_index = value
-        self._property_changed('date_index')        
+        self._property_changed('date_index')
+        self.__date_index = value        
 
     @property
     def tcm_cost_horizon4_day(self) -> dict:
@@ -7305,8 +7319,8 @@ class FieldFilterMap(Base):
 
     @tcm_cost_horizon4_day.setter
     def tcm_cost_horizon4_day(self, value: dict):
-        self.__tcm_cost_horizon4_day = value
-        self._property_changed('tcm_cost_horizon4_day')        
+        self._property_changed('tcm_cost_horizon4_day')
+        self.__tcm_cost_horizon4_day = value        
 
     @property
     def asset_classifications_is_primary(self) -> dict:
@@ -7314,8 +7328,8 @@ class FieldFilterMap(Base):
 
     @asset_classifications_is_primary.setter
     def asset_classifications_is_primary(self, value: dict):
-        self.__asset_classifications_is_primary = value
-        self._property_changed('asset_classifications_is_primary')        
+        self._property_changed('asset_classifications_is_primary')
+        self.__asset_classifications_is_primary = value        
 
     @property
     def styles(self) -> dict:
@@ -7323,8 +7337,8 @@ class FieldFilterMap(Base):
 
     @styles.setter
     def styles(self, value: dict):
-        self.__styles = value
-        self._property_changed('styles')        
+        self._property_changed('styles')
+        self.__styles = value        
 
     @property
     def short_name(self) -> dict:
@@ -7332,8 +7346,8 @@ class FieldFilterMap(Base):
 
     @short_name.setter
     def short_name(self, value: dict):
-        self.__short_name = value
-        self._property_changed('short_name')        
+        self._property_changed('short_name')
+        self.__short_name = value        
 
     @property
     def dwi_contribution(self) -> dict:
@@ -7341,8 +7355,8 @@ class FieldFilterMap(Base):
 
     @dwi_contribution.setter
     def dwi_contribution(self, value: dict):
-        self.__dwi_contribution = value
-        self._property_changed('dwi_contribution')        
+        self._property_changed('dwi_contribution')
+        self.__dwi_contribution = value        
 
     @property
     def reset_frequency1(self) -> dict:
@@ -7350,8 +7364,8 @@ class FieldFilterMap(Base):
 
     @reset_frequency1.setter
     def reset_frequency1(self, value: dict):
-        self.__reset_frequency1 = value
-        self._property_changed('reset_frequency1')        
+        self._property_changed('reset_frequency1')
+        self.__reset_frequency1 = value        
 
     @property
     def reset_frequency2(self) -> dict:
@@ -7359,8 +7373,8 @@ class FieldFilterMap(Base):
 
     @reset_frequency2.setter
     def reset_frequency2(self, value: dict):
-        self.__reset_frequency2 = value
-        self._property_changed('reset_frequency2')        
+        self._property_changed('reset_frequency2')
+        self.__reset_frequency2 = value        
 
     @property
     def average_fill_price(self) -> dict:
@@ -7368,8 +7382,8 @@ class FieldFilterMap(Base):
 
     @average_fill_price.setter
     def average_fill_price(self, value: dict):
-        self.__average_fill_price = value
-        self._property_changed('average_fill_price')        
+        self._property_changed('average_fill_price')
+        self.__average_fill_price = value        
 
     @property
     def price_notation_type2(self) -> dict:
@@ -7377,8 +7391,8 @@ class FieldFilterMap(Base):
 
     @price_notation_type2.setter
     def price_notation_type2(self, value: dict):
-        self.__price_notation_type2 = value
-        self._property_changed('price_notation_type2')        
+        self._property_changed('price_notation_type2')
+        self.__price_notation_type2 = value        
 
     @property
     def price_notation_type3(self) -> dict:
@@ -7386,8 +7400,8 @@ class FieldFilterMap(Base):
 
     @price_notation_type3.setter
     def price_notation_type3(self, value: dict):
-        self.__price_notation_type3 = value
-        self._property_changed('price_notation_type3')        
+        self._property_changed('price_notation_type3')
+        self.__price_notation_type3 = value        
 
     @property
     def bid_gspread(self) -> dict:
@@ -7395,8 +7409,8 @@ class FieldFilterMap(Base):
 
     @bid_gspread.setter
     def bid_gspread(self, value: dict):
-        self.__bid_gspread = value
-        self._property_changed('bid_gspread')        
+        self._property_changed('bid_gspread')
+        self.__bid_gspread = value        
 
     @property
     def open_price(self) -> dict:
@@ -7404,8 +7418,8 @@ class FieldFilterMap(Base):
 
     @open_price.setter
     def open_price(self, value: dict):
-        self.__open_price = value
-        self._property_changed('open_price')        
+        self._property_changed('open_price')
+        self.__open_price = value        
 
     @property
     def depth_spread_score(self) -> dict:
@@ -7413,8 +7427,8 @@ class FieldFilterMap(Base):
 
     @depth_spread_score.setter
     def depth_spread_score(self, value: dict):
-        self.__depth_spread_score = value
-        self._property_changed('depth_spread_score')        
+        self._property_changed('depth_spread_score')
+        self.__depth_spread_score = value        
 
     @property
     def sub_account(self) -> dict:
@@ -7422,8 +7436,8 @@ class FieldFilterMap(Base):
 
     @sub_account.setter
     def sub_account(self, value: dict):
-        self.__sub_account = value
-        self._property_changed('sub_account')        
+        self._property_changed('sub_account')
+        self.__sub_account = value        
 
     @property
     def fair_volatility(self) -> dict:
@@ -7431,8 +7445,8 @@ class FieldFilterMap(Base):
 
     @fair_volatility.setter
     def fair_volatility(self, value: dict):
-        self.__fair_volatility = value
-        self._property_changed('fair_volatility')        
+        self._property_changed('fair_volatility')
+        self.__fair_volatility = value        
 
     @property
     def dollar_cross(self) -> dict:
@@ -7440,8 +7454,8 @@ class FieldFilterMap(Base):
 
     @dollar_cross.setter
     def dollar_cross(self, value: dict):
-        self.__dollar_cross = value
-        self._property_changed('dollar_cross')        
+        self._property_changed('dollar_cross')
+        self.__dollar_cross = value        
 
     @property
     def portfolio_type(self) -> dict:
@@ -7449,8 +7463,8 @@ class FieldFilterMap(Base):
 
     @portfolio_type.setter
     def portfolio_type(self, value: dict):
-        self.__portfolio_type = value
-        self._property_changed('portfolio_type')        
+        self._property_changed('portfolio_type')
+        self.__portfolio_type = value        
 
     @property
     def vendor(self) -> dict:
@@ -7458,8 +7472,8 @@ class FieldFilterMap(Base):
 
     @vendor.setter
     def vendor(self, value: dict):
-        self.__vendor = value
-        self._property_changed('vendor')        
+        self._property_changed('vendor')
+        self.__vendor = value        
 
     @property
     def currency(self) -> dict:
@@ -7467,8 +7481,8 @@ class FieldFilterMap(Base):
 
     @currency.setter
     def currency(self, value: dict):
-        self.__currency = value
-        self._property_changed('currency')        
+        self._property_changed('currency')
+        self.__currency = value        
 
     @property
     def cluster_class(self) -> dict:
@@ -7476,8 +7490,8 @@ class FieldFilterMap(Base):
 
     @cluster_class.setter
     def cluster_class(self, value: dict):
-        self.__cluster_class = value
-        self._property_changed('cluster_class')        
+        self._property_changed('cluster_class')
+        self.__cluster_class = value        
 
     @property
     def queueing_time(self) -> dict:
@@ -7485,8 +7499,8 @@ class FieldFilterMap(Base):
 
     @queueing_time.setter
     def queueing_time(self, value: dict):
-        self.__queueing_time = value
-        self._property_changed('queueing_time')        
+        self._property_changed('queueing_time')
+        self.__queueing_time = value        
 
     @property
     def ann_return5_year(self) -> dict:
@@ -7494,8 +7508,8 @@ class FieldFilterMap(Base):
 
     @ann_return5_year.setter
     def ann_return5_year(self, value: dict):
-        self.__ann_return5_year = value
-        self._property_changed('ann_return5_year')        
+        self._property_changed('ann_return5_year')
+        self.__ann_return5_year = value        
 
     @property
     def bid_size(self) -> dict:
@@ -7503,8 +7517,8 @@ class FieldFilterMap(Base):
 
     @bid_size.setter
     def bid_size(self, value: dict):
-        self.__bid_size = value
-        self._property_changed('bid_size')        
+        self._property_changed('bid_size')
+        self.__bid_size = value        
 
     @property
     def arrival_mid(self) -> dict:
@@ -7512,8 +7526,8 @@ class FieldFilterMap(Base):
 
     @arrival_mid.setter
     def arrival_mid(self, value: dict):
-        self.__arrival_mid = value
-        self._property_changed('arrival_mid')        
+        self._property_changed('arrival_mid')
+        self.__arrival_mid = value        
 
     @property
     def asset_parameters_exchange_currency(self) -> dict:
@@ -7521,8 +7535,8 @@ class FieldFilterMap(Base):
 
     @asset_parameters_exchange_currency.setter
     def asset_parameters_exchange_currency(self, value: dict):
-        self.__asset_parameters_exchange_currency = value
-        self._property_changed('asset_parameters_exchange_currency')        
+        self._property_changed('asset_parameters_exchange_currency')
+        self.__asset_parameters_exchange_currency = value        
 
     @property
     def unexplained(self) -> dict:
@@ -7530,8 +7544,8 @@ class FieldFilterMap(Base):
 
     @unexplained.setter
     def unexplained(self, value: dict):
-        self.__unexplained = value
-        self._property_changed('unexplained')        
+        self._property_changed('unexplained')
+        self.__unexplained = value        
 
     @property
     def candidate_name(self) -> dict:
@@ -7539,8 +7553,8 @@ class FieldFilterMap(Base):
 
     @candidate_name.setter
     def candidate_name(self, value: dict):
-        self.__candidate_name = value
-        self._property_changed('candidate_name')        
+        self._property_changed('candidate_name')
+        self.__candidate_name = value        
 
     @property
     def metric(self) -> dict:
@@ -7548,8 +7562,8 @@ class FieldFilterMap(Base):
 
     @metric.setter
     def metric(self, value: dict):
-        self.__metric = value
-        self._property_changed('metric')        
+        self._property_changed('metric')
+        self.__metric = value        
 
     @property
     def ask(self) -> dict:
@@ -7557,8 +7571,8 @@ class FieldFilterMap(Base):
 
     @ask.setter
     def ask(self, value: dict):
-        self.__ask = value
-        self._property_changed('ask')        
+        self._property_changed('ask')
+        self.__ask = value        
 
     @property
     def implied_lognormal_volatility(self) -> dict:
@@ -7566,8 +7580,8 @@ class FieldFilterMap(Base):
 
     @implied_lognormal_volatility.setter
     def implied_lognormal_volatility(self, value: dict):
-        self.__implied_lognormal_volatility = value
-        self._property_changed('implied_lognormal_volatility')        
+        self._property_changed('implied_lognormal_volatility')
+        self.__implied_lognormal_volatility = value        
 
     @property
     def close_price(self) -> dict:
@@ -7575,8 +7589,8 @@ class FieldFilterMap(Base):
 
     @close_price.setter
     def close_price(self, value: dict):
-        self.__close_price = value
-        self._property_changed('close_price')        
+        self._property_changed('close_price')
+        self.__close_price = value        
 
     @property
     def absolute_strike(self) -> dict:
@@ -7584,8 +7598,8 @@ class FieldFilterMap(Base):
 
     @absolute_strike.setter
     def absolute_strike(self, value: dict):
-        self.__absolute_strike = value
-        self._property_changed('absolute_strike')        
+        self._property_changed('absolute_strike')
+        self.__absolute_strike = value        
 
     @property
     def source(self) -> dict:
@@ -7593,8 +7607,8 @@ class FieldFilterMap(Base):
 
     @source.setter
     def source(self, value: dict):
-        self.__source = value
-        self._property_changed('source')        
+        self._property_changed('source')
+        self.__source = value        
 
     @property
     def asset_classifications_country_code(self) -> dict:
@@ -7602,8 +7616,8 @@ class FieldFilterMap(Base):
 
     @asset_classifications_country_code.setter
     def asset_classifications_country_code(self, value: dict):
-        self.__asset_classifications_country_code = value
-        self._property_changed('asset_classifications_country_code')        
+        self._property_changed('asset_classifications_country_code')
+        self.__asset_classifications_country_code = value        
 
     @property
     def expense_ratio_net_bps(self) -> dict:
@@ -7611,8 +7625,8 @@ class FieldFilterMap(Base):
 
     @expense_ratio_net_bps.setter
     def expense_ratio_net_bps(self, value: dict):
-        self.__expense_ratio_net_bps = value
-        self._property_changed('expense_ratio_net_bps')        
+        self._property_changed('expense_ratio_net_bps')
+        self.__expense_ratio_net_bps = value        
 
     @property
     def data_set_sub_category(self) -> dict:
@@ -7620,8 +7634,8 @@ class FieldFilterMap(Base):
 
     @data_set_sub_category.setter
     def data_set_sub_category(self, value: dict):
-        self.__data_set_sub_category = value
-        self._property_changed('data_set_sub_category')        
+        self._property_changed('data_set_sub_category')
+        self.__data_set_sub_category = value        
 
     @property
     def day_count_convention2(self) -> dict:
@@ -7629,8 +7643,8 @@ class FieldFilterMap(Base):
 
     @day_count_convention2.setter
     def day_count_convention2(self, value: dict):
-        self.__day_count_convention2 = value
-        self._property_changed('day_count_convention2')        
+        self._property_changed('day_count_convention2')
+        self.__day_count_convention2 = value        
 
     @property
     def quantity_bucket(self) -> dict:
@@ -7638,8 +7652,8 @@ class FieldFilterMap(Base):
 
     @quantity_bucket.setter
     def quantity_bucket(self, value: dict):
-        self.__quantity_bucket = value
-        self._property_changed('quantity_bucket')        
+        self._property_changed('quantity_bucket')
+        self.__quantity_bucket = value        
 
     @property
     def factor_two(self) -> dict:
@@ -7647,8 +7661,8 @@ class FieldFilterMap(Base):
 
     @factor_two.setter
     def factor_two(self, value: dict):
-        self.__factor_two = value
-        self._property_changed('factor_two')        
+        self._property_changed('factor_two')
+        self.__factor_two = value        
 
     @property
     def oe_name(self) -> dict:
@@ -7656,8 +7670,8 @@ class FieldFilterMap(Base):
 
     @oe_name.setter
     def oe_name(self, value: dict):
-        self.__oe_name = value
-        self._property_changed('oe_name')        
+        self._property_changed('oe_name')
+        self.__oe_name = value        
 
     @property
     def given(self) -> dict:
@@ -7665,8 +7679,8 @@ class FieldFilterMap(Base):
 
     @given.setter
     def given(self, value: dict):
-        self.__given = value
-        self._property_changed('given')        
+        self._property_changed('given')
+        self.__given = value        
 
     @property
     def delisting_date(self) -> dict:
@@ -7674,8 +7688,8 @@ class FieldFilterMap(Base):
 
     @delisting_date.setter
     def delisting_date(self, value: dict):
-        self.__delisting_date = value
-        self._property_changed('delisting_date')        
+        self._property_changed('delisting_date')
+        self.__delisting_date = value        
 
     @property
     def price_spot_target_value(self) -> dict:
@@ -7683,8 +7697,8 @@ class FieldFilterMap(Base):
 
     @price_spot_target_value.setter
     def price_spot_target_value(self, value: dict):
-        self.__price_spot_target_value = value
-        self._property_changed('price_spot_target_value')        
+        self._property_changed('price_spot_target_value')
+        self.__price_spot_target_value = value        
 
     @property
     def weight(self) -> dict:
@@ -7692,8 +7706,8 @@ class FieldFilterMap(Base):
 
     @weight.setter
     def weight(self, value: dict):
-        self.__weight = value
-        self._property_changed('weight')        
+        self._property_changed('weight')
+        self.__weight = value        
 
     @property
     def market_data_point(self) -> dict:
@@ -7701,8 +7715,8 @@ class FieldFilterMap(Base):
 
     @market_data_point.setter
     def market_data_point(self, value: dict):
-        self.__market_data_point = value
-        self._property_changed('market_data_point')        
+        self._property_changed('market_data_point')
+        self.__market_data_point = value        
 
     @property
     def absolute_weight(self) -> dict:
@@ -7710,8 +7724,8 @@ class FieldFilterMap(Base):
 
     @absolute_weight.setter
     def absolute_weight(self, value: dict):
-        self.__absolute_weight = value
-        self._property_changed('absolute_weight')        
+        self._property_changed('absolute_weight')
+        self.__absolute_weight = value        
 
     @property
     def measure(self) -> dict:
@@ -7719,8 +7733,8 @@ class FieldFilterMap(Base):
 
     @measure.setter
     def measure(self, value: dict):
-        self.__measure = value
-        self._property_changed('measure')        
+        self._property_changed('measure')
+        self.__measure = value        
 
     @property
     def hedge_annualized_volatility(self) -> dict:
@@ -7728,8 +7742,8 @@ class FieldFilterMap(Base):
 
     @hedge_annualized_volatility.setter
     def hedge_annualized_volatility(self, value: dict):
-        self.__hedge_annualized_volatility = value
-        self._property_changed('hedge_annualized_volatility')        
+        self._property_changed('hedge_annualized_volatility')
+        self.__hedge_annualized_volatility = value        
 
     @property
     def benchmark_currency(self) -> dict:
@@ -7737,8 +7751,8 @@ class FieldFilterMap(Base):
 
     @benchmark_currency.setter
     def benchmark_currency(self, value: dict):
-        self.__benchmark_currency = value
-        self._property_changed('benchmark_currency')        
+        self._property_changed('benchmark_currency')
+        self.__benchmark_currency = value        
 
     @property
     def futures_contract(self) -> dict:
@@ -7746,8 +7760,8 @@ class FieldFilterMap(Base):
 
     @futures_contract.setter
     def futures_contract(self, value: dict):
-        self.__futures_contract = value
-        self._property_changed('futures_contract')        
+        self._property_changed('futures_contract')
+        self.__futures_contract = value        
 
     @property
     def name(self) -> dict:
@@ -7755,8 +7769,8 @@ class FieldFilterMap(Base):
 
     @name.setter
     def name(self, value: dict):
-        self.__name = value
-        self._property_changed('name')        
+        self._property_changed('name')
+        self.__name = value        
 
     @property
     def aum(self) -> dict:
@@ -7764,8 +7778,8 @@ class FieldFilterMap(Base):
 
     @aum.setter
     def aum(self, value: dict):
-        self.__aum = value
-        self._property_changed('aum')        
+        self._property_changed('aum')
+        self.__aum = value        
 
     @property
     def folder_name(self) -> dict:
@@ -7773,8 +7787,8 @@ class FieldFilterMap(Base):
 
     @folder_name.setter
     def folder_name(self, value: dict):
-        self.__folder_name = value
-        self._property_changed('folder_name')        
+        self._property_changed('folder_name')
+        self.__folder_name = value        
 
     @property
     def swaption_atm_fwd_rate(self) -> dict:
@@ -7782,8 +7796,8 @@ class FieldFilterMap(Base):
 
     @swaption_atm_fwd_rate.setter
     def swaption_atm_fwd_rate(self, value: dict):
-        self.__swaption_atm_fwd_rate = value
-        self._property_changed('swaption_atm_fwd_rate')        
+        self._property_changed('swaption_atm_fwd_rate')
+        self.__swaption_atm_fwd_rate = value        
 
     @property
     def live_date(self) -> dict:
@@ -7791,8 +7805,8 @@ class FieldFilterMap(Base):
 
     @live_date.setter
     def live_date(self, value: dict):
-        self.__live_date = value
-        self._property_changed('live_date')        
+        self._property_changed('live_date')
+        self.__live_date = value        
 
     @property
     def ask_high(self) -> dict:
@@ -7800,8 +7814,8 @@ class FieldFilterMap(Base):
 
     @ask_high.setter
     def ask_high(self, value: dict):
-        self.__ask_high = value
-        self._property_changed('ask_high')        
+        self._property_changed('ask_high')
+        self.__ask_high = value        
 
     @property
     def corporate_action_type(self) -> dict:
@@ -7809,8 +7823,8 @@ class FieldFilterMap(Base):
 
     @corporate_action_type.setter
     def corporate_action_type(self, value: dict):
-        self.__corporate_action_type = value
-        self._property_changed('corporate_action_type')        
+        self._property_changed('corporate_action_type')
+        self.__corporate_action_type = value        
 
     @property
     def prime_id(self) -> dict:
@@ -7818,8 +7832,8 @@ class FieldFilterMap(Base):
 
     @prime_id.setter
     def prime_id(self, value: dict):
-        self.__prime_id = value
-        self._property_changed('prime_id')        
+        self._property_changed('prime_id')
+        self.__prime_id = value        
 
     @property
     def region_name(self) -> dict:
@@ -7827,8 +7841,8 @@ class FieldFilterMap(Base):
 
     @region_name.setter
     def region_name(self, value: dict):
-        self.__region_name = value
-        self._property_changed('region_name')        
+        self._property_changed('region_name')
+        self.__region_name = value        
 
     @property
     def description(self) -> dict:
@@ -7836,8 +7850,8 @@ class FieldFilterMap(Base):
 
     @description.setter
     def description(self, value: dict):
-        self.__description = value
-        self._property_changed('description')        
+        self._property_changed('description')
+        self.__description = value        
 
     @property
     def asset_classifications_is_country_primary(self) -> dict:
@@ -7845,8 +7859,8 @@ class FieldFilterMap(Base):
 
     @asset_classifications_is_country_primary.setter
     def asset_classifications_is_country_primary(self, value: dict):
-        self.__asset_classifications_is_country_primary = value
-        self._property_changed('asset_classifications_is_country_primary')        
+        self._property_changed('asset_classifications_is_country_primary')
+        self.__asset_classifications_is_country_primary = value        
 
     @property
     def value_revised(self) -> dict:
@@ -7854,8 +7868,8 @@ class FieldFilterMap(Base):
 
     @value_revised.setter
     def value_revised(self, value: dict):
-        self.__value_revised = value
-        self._property_changed('value_revised')        
+        self._property_changed('value_revised')
+        self.__value_revised = value        
 
     @property
     def adjusted_trade_price(self) -> dict:
@@ -7863,8 +7877,8 @@ class FieldFilterMap(Base):
 
     @adjusted_trade_price.setter
     def adjusted_trade_price(self, value: dict):
-        self.__adjusted_trade_price = value
-        self._property_changed('adjusted_trade_price')        
+        self._property_changed('adjusted_trade_price')
+        self.__adjusted_trade_price = value        
 
     @property
     def is_adr(self) -> dict:
@@ -7872,8 +7886,8 @@ class FieldFilterMap(Base):
 
     @is_adr.setter
     def is_adr(self, value: dict):
-        self.__is_adr = value
-        self._property_changed('is_adr')        
+        self._property_changed('is_adr')
+        self.__is_adr = value        
 
     @property
     def factor(self) -> dict:
@@ -7881,8 +7895,8 @@ class FieldFilterMap(Base):
 
     @factor.setter
     def factor(self, value: dict):
-        self.__factor = value
-        self._property_changed('factor')        
+        self._property_changed('factor')
+        self.__factor = value        
 
     @property
     def days_on_loan(self) -> dict:
@@ -7890,8 +7904,8 @@ class FieldFilterMap(Base):
 
     @days_on_loan.setter
     def days_on_loan(self, value: dict):
-        self.__days_on_loan = value
-        self._property_changed('days_on_loan')        
+        self._property_changed('days_on_loan')
+        self.__days_on_loan = value        
 
     @property
     def long_conviction_small(self) -> dict:
@@ -7899,8 +7913,8 @@ class FieldFilterMap(Base):
 
     @long_conviction_small.setter
     def long_conviction_small(self, value: dict):
-        self.__long_conviction_small = value
-        self._property_changed('long_conviction_small')        
+        self._property_changed('long_conviction_small')
+        self.__long_conviction_small = value        
 
     @property
     def service_id(self) -> dict:
@@ -7908,8 +7922,8 @@ class FieldFilterMap(Base):
 
     @service_id.setter
     def service_id(self, value: dict):
-        self.__service_id = value
-        self._property_changed('service_id')        
+        self._property_changed('service_id')
+        self.__service_id = value        
 
     @property
     def gsfeer(self) -> dict:
@@ -7917,8 +7931,8 @@ class FieldFilterMap(Base):
 
     @gsfeer.setter
     def gsfeer(self, value: dict):
-        self.__gsfeer = value
-        self._property_changed('gsfeer')        
+        self._property_changed('gsfeer')
+        self.__gsfeer = value        
 
     @property
     def wam(self) -> dict:
@@ -7926,8 +7940,8 @@ class FieldFilterMap(Base):
 
     @wam.setter
     def wam(self, value: dict):
-        self.__wam = value
-        self._property_changed('wam')        
+        self._property_changed('wam')
+        self.__wam = value        
 
     @property
     def wal(self) -> dict:
@@ -7935,8 +7949,8 @@ class FieldFilterMap(Base):
 
     @wal.setter
     def wal(self, value: dict):
-        self.__wal = value
-        self._property_changed('wal')        
+        self._property_changed('wal')
+        self.__wal = value        
 
     @property
     def backtest_id(self) -> dict:
@@ -7944,8 +7958,8 @@ class FieldFilterMap(Base):
 
     @backtest_id.setter
     def backtest_id(self, value: dict):
-        self.__backtest_id = value
-        self._property_changed('backtest_id')        
+        self._property_changed('backtest_id')
+        self.__backtest_id = value        
 
     @property
     def leg_two_index_location(self) -> dict:
@@ -7953,8 +7967,8 @@ class FieldFilterMap(Base):
 
     @leg_two_index_location.setter
     def leg_two_index_location(self, value: dict):
-        self.__leg_two_index_location = value
-        self._property_changed('leg_two_index_location')        
+        self._property_changed('leg_two_index_location')
+        self.__leg_two_index_location = value        
 
     @property
     def g_score(self) -> dict:
@@ -7962,8 +7976,8 @@ class FieldFilterMap(Base):
 
     @g_score.setter
     def g_score(self, value: dict):
-        self.__g_score = value
-        self._property_changed('g_score')        
+        self._property_changed('g_score')
+        self.__g_score = value        
 
     @property
     def corporate_spread_contribution(self) -> dict:
@@ -7971,8 +7985,8 @@ class FieldFilterMap(Base):
 
     @corporate_spread_contribution.setter
     def corporate_spread_contribution(self, value: dict):
-        self.__corporate_spread_contribution = value
-        self._property_changed('corporate_spread_contribution')        
+        self._property_changed('corporate_spread_contribution')
+        self.__corporate_spread_contribution = value        
 
     @property
     def market_value(self) -> dict:
@@ -7980,8 +7994,8 @@ class FieldFilterMap(Base):
 
     @market_value.setter
     def market_value(self, value: dict):
-        self.__market_value = value
-        self._property_changed('market_value')        
+        self._property_changed('market_value')
+        self.__market_value = value        
 
     @property
     def notional_currency1(self) -> dict:
@@ -7989,8 +8003,17 @@ class FieldFilterMap(Base):
 
     @notional_currency1.setter
     def notional_currency1(self, value: dict):
-        self.__notional_currency1 = value
-        self._property_changed('notional_currency1')        
+        self._property_changed('notional_currency1')
+        self.__notional_currency1 = value        
+
+    @property
+    def net_debt_to_ebitda(self) -> dict:
+        return self.__net_debt_to_ebitda
+
+    @net_debt_to_ebitda.setter
+    def net_debt_to_ebitda(self, value: dict):
+        self._property_changed('net_debt_to_ebitda')
+        self.__net_debt_to_ebitda = value        
 
     @property
     def notional_currency2(self) -> dict:
@@ -7998,8 +8021,8 @@ class FieldFilterMap(Base):
 
     @notional_currency2.setter
     def notional_currency2(self, value: dict):
-        self.__notional_currency2 = value
-        self._property_changed('notional_currency2')        
+        self._property_changed('notional_currency2')
+        self.__notional_currency2 = value        
 
     @property
     def multiple_score(self) -> dict:
@@ -8007,8 +8030,8 @@ class FieldFilterMap(Base):
 
     @multiple_score.setter
     def multiple_score(self, value: dict):
-        self.__multiple_score = value
-        self._property_changed('multiple_score')        
+        self._property_changed('multiple_score')
+        self.__multiple_score = value        
 
     @property
     def beta_adjusted_exposure(self) -> dict:
@@ -8016,8 +8039,8 @@ class FieldFilterMap(Base):
 
     @beta_adjusted_exposure.setter
     def beta_adjusted_exposure(self, value: dict):
-        self.__beta_adjusted_exposure = value
-        self._property_changed('beta_adjusted_exposure')        
+        self._property_changed('beta_adjusted_exposure')
+        self.__beta_adjusted_exposure = value        
 
     @property
     def dividend_points(self) -> dict:
@@ -8025,8 +8048,8 @@ class FieldFilterMap(Base):
 
     @dividend_points.setter
     def dividend_points(self, value: dict):
-        self.__dividend_points = value
-        self._property_changed('dividend_points')        
+        self._property_changed('dividend_points')
+        self.__dividend_points = value        
 
     @property
     def paid(self) -> dict:
@@ -8034,8 +8057,8 @@ class FieldFilterMap(Base):
 
     @paid.setter
     def paid(self, value: dict):
-        self.__paid = value
-        self._property_changed('paid')        
+        self._property_changed('paid')
+        self.__paid = value        
 
     @property
     def short(self) -> dict:
@@ -8043,8 +8066,8 @@ class FieldFilterMap(Base):
 
     @short.setter
     def short(self, value: dict):
-        self.__short = value
-        self._property_changed('short')        
+        self._property_changed('short')
+        self.__short = value        
 
     @property
     def bos_in_ticks_description(self) -> dict:
@@ -8052,8 +8075,8 @@ class FieldFilterMap(Base):
 
     @bos_in_ticks_description.setter
     def bos_in_ticks_description(self, value: dict):
-        self.__bos_in_ticks_description = value
-        self._property_changed('bos_in_ticks_description')        
+        self._property_changed('bos_in_ticks_description')
+        self.__bos_in_ticks_description = value        
 
     @property
     def implied_correlation(self) -> dict:
@@ -8061,8 +8084,8 @@ class FieldFilterMap(Base):
 
     @implied_correlation.setter
     def implied_correlation(self, value: dict):
-        self.__implied_correlation = value
-        self._property_changed('implied_correlation')        
+        self._property_changed('implied_correlation')
+        self.__implied_correlation = value        
 
     @property
     def normalized_performance(self) -> dict:
@@ -8070,8 +8093,8 @@ class FieldFilterMap(Base):
 
     @normalized_performance.setter
     def normalized_performance(self, value: dict):
-        self.__normalized_performance = value
-        self._property_changed('normalized_performance')        
+        self._property_changed('normalized_performance')
+        self.__normalized_performance = value        
 
     @property
     def cm_id(self) -> dict:
@@ -8079,8 +8102,8 @@ class FieldFilterMap(Base):
 
     @cm_id.setter
     def cm_id(self, value: dict):
-        self.__cm_id = value
-        self._property_changed('cm_id')        
+        self._property_changed('cm_id')
+        self.__cm_id = value        
 
     @property
     def taxonomy(self) -> dict:
@@ -8088,8 +8111,8 @@ class FieldFilterMap(Base):
 
     @taxonomy.setter
     def taxonomy(self, value: dict):
-        self.__taxonomy = value
-        self._property_changed('taxonomy')        
+        self._property_changed('taxonomy')
+        self.__taxonomy = value        
 
     @property
     def swaption_vol(self) -> dict:
@@ -8097,8 +8120,8 @@ class FieldFilterMap(Base):
 
     @swaption_vol.setter
     def swaption_vol(self, value: dict):
-        self.__swaption_vol = value
-        self._property_changed('swaption_vol')        
+        self._property_changed('swaption_vol')
+        self.__swaption_vol = value        
 
     @property
     def dividend_yield(self) -> dict:
@@ -8106,8 +8129,8 @@ class FieldFilterMap(Base):
 
     @dividend_yield.setter
     def dividend_yield(self, value: dict):
-        self.__dividend_yield = value
-        self._property_changed('dividend_yield')        
+        self._property_changed('dividend_yield')
+        self.__dividend_yield = value        
 
     @property
     def source_origin(self) -> dict:
@@ -8115,8 +8138,8 @@ class FieldFilterMap(Base):
 
     @source_origin.setter
     def source_origin(self, value: dict):
-        self.__source_origin = value
-        self._property_changed('source_origin')        
+        self._property_changed('source_origin')
+        self.__source_origin = value        
 
     @property
     def measures(self) -> dict:
@@ -8124,8 +8147,8 @@ class FieldFilterMap(Base):
 
     @measures.setter
     def measures(self, value: dict):
-        self.__measures = value
-        self._property_changed('measures')        
+        self._property_changed('measures')
+        self.__measures = value        
 
     @property
     def total_quantity(self) -> dict:
@@ -8133,8 +8156,8 @@ class FieldFilterMap(Base):
 
     @total_quantity.setter
     def total_quantity(self, value: dict):
-        self.__total_quantity = value
-        self._property_changed('total_quantity')        
+        self._property_changed('total_quantity')
+        self.__total_quantity = value        
 
     @property
     def internal_user(self) -> dict:
@@ -8142,8 +8165,8 @@ class FieldFilterMap(Base):
 
     @internal_user.setter
     def internal_user(self, value: dict):
-        self.__internal_user = value
-        self._property_changed('internal_user')        
+        self._property_changed('internal_user')
+        self.__internal_user = value        
 
     @property
     def underlyer(self) -> dict:
@@ -8151,8 +8174,8 @@ class FieldFilterMap(Base):
 
     @underlyer.setter
     def underlyer(self, value: dict):
-        self.__underlyer = value
-        self._property_changed('underlyer')        
+        self._property_changed('underlyer')
+        self.__underlyer = value        
 
     @property
     def identifier(self) -> dict:
@@ -8160,8 +8183,8 @@ class FieldFilterMap(Base):
 
     @identifier.setter
     def identifier(self, value: dict):
-        self.__identifier = value
-        self._property_changed('identifier')        
+        self._property_changed('identifier')
+        self.__identifier = value        
 
     @property
     def price_unit(self) -> dict:
@@ -8169,8 +8192,8 @@ class FieldFilterMap(Base):
 
     @price_unit.setter
     def price_unit(self, value: dict):
-        self.__price_unit = value
-        self._property_changed('price_unit')        
+        self._property_changed('price_unit')
+        self.__price_unit = value        
 
     @property
     def redemption_option(self) -> dict:
@@ -8178,8 +8201,8 @@ class FieldFilterMap(Base):
 
     @redemption_option.setter
     def redemption_option(self, value: dict):
-        self.__redemption_option = value
-        self._property_changed('redemption_option')        
+        self._property_changed('redemption_option')
+        self.__redemption_option = value        
 
     @property
     def notional_unit2(self) -> dict:
@@ -8187,8 +8210,8 @@ class FieldFilterMap(Base):
 
     @notional_unit2.setter
     def notional_unit2(self, value: dict):
-        self.__notional_unit2 = value
-        self._property_changed('notional_unit2')        
+        self._property_changed('notional_unit2')
+        self.__notional_unit2 = value        
 
     @property
     def unadjusted_low(self) -> dict:
@@ -8196,8 +8219,8 @@ class FieldFilterMap(Base):
 
     @unadjusted_low.setter
     def unadjusted_low(self, value: dict):
-        self.__unadjusted_low = value
-        self._property_changed('unadjusted_low')        
+        self._property_changed('unadjusted_low')
+        self.__unadjusted_low = value        
 
     @property
     def notional_unit1(self) -> dict:
@@ -8205,8 +8228,8 @@ class FieldFilterMap(Base):
 
     @notional_unit1.setter
     def notional_unit1(self, value: dict):
-        self.__notional_unit1 = value
-        self._property_changed('notional_unit1')        
+        self._property_changed('notional_unit1')
+        self.__notional_unit1 = value        
 
     @property
     def sedol(self) -> dict:
@@ -8214,8 +8237,8 @@ class FieldFilterMap(Base):
 
     @sedol.setter
     def sedol(self, value: dict):
-        self.__sedol = value
-        self._property_changed('sedol')        
+        self._property_changed('sedol')
+        self.__sedol = value        
 
     @property
     def rounding_cost_pnl(self) -> dict:
@@ -8223,8 +8246,8 @@ class FieldFilterMap(Base):
 
     @rounding_cost_pnl.setter
     def rounding_cost_pnl(self, value: dict):
-        self.__rounding_cost_pnl = value
-        self._property_changed('rounding_cost_pnl')        
+        self._property_changed('rounding_cost_pnl')
+        self.__rounding_cost_pnl = value        
 
     @property
     def sustain_global(self) -> dict:
@@ -8232,8 +8255,8 @@ class FieldFilterMap(Base):
 
     @sustain_global.setter
     def sustain_global(self, value: dict):
-        self.__sustain_global = value
-        self._property_changed('sustain_global')        
+        self._property_changed('sustain_global')
+        self.__sustain_global = value        
 
     @property
     def portfolio_id(self) -> dict:
@@ -8241,8 +8264,8 @@ class FieldFilterMap(Base):
 
     @portfolio_id.setter
     def portfolio_id(self, value: dict):
-        self.__portfolio_id = value
-        self._property_changed('portfolio_id')        
+        self._property_changed('portfolio_id')
+        self.__portfolio_id = value        
 
     @property
     def ending_date(self) -> dict:
@@ -8250,8 +8273,8 @@ class FieldFilterMap(Base):
 
     @ending_date.setter
     def ending_date(self, value: dict):
-        self.__ending_date = value
-        self._property_changed('ending_date')        
+        self._property_changed('ending_date')
+        self.__ending_date = value        
 
     @property
     def cap_floor_atm_fwd_rate(self) -> dict:
@@ -8259,8 +8282,8 @@ class FieldFilterMap(Base):
 
     @cap_floor_atm_fwd_rate.setter
     def cap_floor_atm_fwd_rate(self, value: dict):
-        self.__cap_floor_atm_fwd_rate = value
-        self._property_changed('cap_floor_atm_fwd_rate')        
+        self._property_changed('cap_floor_atm_fwd_rate')
+        self.__cap_floor_atm_fwd_rate = value        
 
     @property
     def es_percentile(self) -> dict:
@@ -8268,8 +8291,8 @@ class FieldFilterMap(Base):
 
     @es_percentile.setter
     def es_percentile(self, value: dict):
-        self.__es_percentile = value
-        self._property_changed('es_percentile')        
+        self._property_changed('es_percentile')
+        self.__es_percentile = value        
 
     @property
     def ann_return3_year(self) -> dict:
@@ -8277,8 +8300,8 @@ class FieldFilterMap(Base):
 
     @ann_return3_year.setter
     def ann_return3_year(self, value: dict):
-        self.__ann_return3_year = value
-        self._property_changed('ann_return3_year')        
+        self._property_changed('ann_return3_year')
+        self.__ann_return3_year = value        
 
     @property
     def rcic(self) -> dict:
@@ -8286,8 +8309,8 @@ class FieldFilterMap(Base):
 
     @rcic.setter
     def rcic(self, value: dict):
-        self.__rcic = value
-        self._property_changed('rcic')        
+        self._property_changed('rcic')
+        self.__rcic = value        
 
     @property
     def simon_asset_tags(self) -> dict:
@@ -8295,8 +8318,8 @@ class FieldFilterMap(Base):
 
     @simon_asset_tags.setter
     def simon_asset_tags(self, value: dict):
-        self.__simon_asset_tags = value
-        self._property_changed('simon_asset_tags')        
+        self._property_changed('simon_asset_tags')
+        self.__simon_asset_tags = value        
 
     @property
     def forward_point(self) -> dict:
@@ -8304,8 +8327,8 @@ class FieldFilterMap(Base):
 
     @forward_point.setter
     def forward_point(self, value: dict):
-        self.__forward_point = value
-        self._property_changed('forward_point')        
+        self._property_changed('forward_point')
+        self.__forward_point = value        
 
     @property
     def hit_rate_qtd(self) -> dict:
@@ -8313,8 +8336,8 @@ class FieldFilterMap(Base):
 
     @hit_rate_qtd.setter
     def hit_rate_qtd(self, value: dict):
-        self.__hit_rate_qtd = value
-        self._property_changed('hit_rate_qtd')        
+        self._property_changed('hit_rate_qtd')
+        self.__hit_rate_qtd = value        
 
     @property
     def fci(self) -> dict:
@@ -8322,8 +8345,8 @@ class FieldFilterMap(Base):
 
     @fci.setter
     def fci(self, value: dict):
-        self.__fci = value
-        self._property_changed('fci')        
+        self._property_changed('fci')
+        self.__fci = value        
 
     @property
     def recall_quantity(self) -> dict:
@@ -8331,8 +8354,8 @@ class FieldFilterMap(Base):
 
     @recall_quantity.setter
     def recall_quantity(self, value: dict):
-        self.__recall_quantity = value
-        self._property_changed('recall_quantity')        
+        self._property_changed('recall_quantity')
+        self.__recall_quantity = value        
 
     @property
     def premium(self) -> dict:
@@ -8340,8 +8363,8 @@ class FieldFilterMap(Base):
 
     @premium.setter
     def premium(self, value: dict):
-        self.__premium = value
-        self._property_changed('premium')        
+        self._property_changed('premium')
+        self.__premium = value        
 
     @property
     def low(self) -> dict:
@@ -8349,8 +8372,8 @@ class FieldFilterMap(Base):
 
     @low.setter
     def low(self, value: dict):
-        self.__low = value
-        self._property_changed('low')        
+        self._property_changed('low')
+        self.__low = value        
 
     @property
     def cross_group(self) -> dict:
@@ -8358,8 +8381,8 @@ class FieldFilterMap(Base):
 
     @cross_group.setter
     def cross_group(self, value: dict):
-        self.__cross_group = value
-        self._property_changed('cross_group')        
+        self._property_changed('cross_group')
+        self.__cross_group = value        
 
     @property
     def five_day_price_change_bps(self) -> dict:
@@ -8367,8 +8390,8 @@ class FieldFilterMap(Base):
 
     @five_day_price_change_bps.setter
     def five_day_price_change_bps(self, value: dict):
-        self.__five_day_price_change_bps = value
-        self._property_changed('five_day_price_change_bps')        
+        self._property_changed('five_day_price_change_bps')
+        self.__five_day_price_change_bps = value        
 
     @property
     def holdings(self) -> dict:
@@ -8376,8 +8399,8 @@ class FieldFilterMap(Base):
 
     @holdings.setter
     def holdings(self, value: dict):
-        self.__holdings = value
-        self._property_changed('holdings')        
+        self._property_changed('holdings')
+        self.__holdings = value        
 
     @property
     def price_method(self) -> dict:
@@ -8385,8 +8408,8 @@ class FieldFilterMap(Base):
 
     @price_method.setter
     def price_method(self, value: dict):
-        self.__price_method = value
-        self._property_changed('price_method')        
+        self._property_changed('price_method')
+        self.__price_method = value        
 
     @property
     def quoting_style(self) -> dict:
@@ -8394,8 +8417,8 @@ class FieldFilterMap(Base):
 
     @quoting_style.setter
     def quoting_style(self, value: dict):
-        self.__quoting_style = value
-        self._property_changed('quoting_style')        
+        self._property_changed('quoting_style')
+        self.__quoting_style = value        
 
     @property
     def error_message(self) -> dict:
@@ -8403,8 +8426,8 @@ class FieldFilterMap(Base):
 
     @error_message.setter
     def error_message(self, value: dict):
-        self.__error_message = value
-        self._property_changed('error_message')        
+        self._property_changed('error_message')
+        self.__error_message = value        
 
     @property
     def mid_price(self) -> dict:
@@ -8412,8 +8435,8 @@ class FieldFilterMap(Base):
 
     @mid_price.setter
     def mid_price(self, value: dict):
-        self.__mid_price = value
-        self._property_changed('mid_price')        
+        self._property_changed('mid_price')
+        self.__mid_price = value        
 
     @property
     def sts_em_dm(self) -> dict:
@@ -8421,8 +8444,8 @@ class FieldFilterMap(Base):
 
     @sts_em_dm.setter
     def sts_em_dm(self, value: dict):
-        self.__sts_em_dm = value
-        self._property_changed('sts_em_dm')        
+        self._property_changed('sts_em_dm')
+        self.__sts_em_dm = value        
 
     @property
     def tcm_cost_horizon2_day(self) -> dict:
@@ -8430,8 +8453,8 @@ class FieldFilterMap(Base):
 
     @tcm_cost_horizon2_day.setter
     def tcm_cost_horizon2_day(self, value: dict):
-        self.__tcm_cost_horizon2_day = value
-        self._property_changed('tcm_cost_horizon2_day')        
+        self._property_changed('tcm_cost_horizon2_day')
+        self.__tcm_cost_horizon2_day = value        
 
     @property
     def pending_loan_count(self) -> dict:
@@ -8439,8 +8462,8 @@ class FieldFilterMap(Base):
 
     @pending_loan_count.setter
     def pending_loan_count(self, value: dict):
-        self.__pending_loan_count = value
-        self._property_changed('pending_loan_count')        
+        self._property_changed('pending_loan_count')
+        self.__pending_loan_count = value        
 
     @property
     def price_spot_stop_loss_unit(self) -> dict:
@@ -8448,8 +8471,8 @@ class FieldFilterMap(Base):
 
     @price_spot_stop_loss_unit.setter
     def price_spot_stop_loss_unit(self, value: dict):
-        self.__price_spot_stop_loss_unit = value
-        self._property_changed('price_spot_stop_loss_unit')        
+        self._property_changed('price_spot_stop_loss_unit')
+        self.__price_spot_stop_loss_unit = value        
 
     @property
     def queue_in_lots(self) -> dict:
@@ -8457,8 +8480,8 @@ class FieldFilterMap(Base):
 
     @queue_in_lots.setter
     def queue_in_lots(self, value: dict):
-        self.__queue_in_lots = value
-        self._property_changed('queue_in_lots')        
+        self._property_changed('queue_in_lots')
+        self.__queue_in_lots = value        
 
     @property
     def price_range_in_ticks_description(self) -> dict:
@@ -8466,8 +8489,8 @@ class FieldFilterMap(Base):
 
     @price_range_in_ticks_description.setter
     def price_range_in_ticks_description(self, value: dict):
-        self.__price_range_in_ticks_description = value
-        self._property_changed('price_range_in_ticks_description')        
+        self._property_changed('price_range_in_ticks_description')
+        self.__price_range_in_ticks_description = value        
 
     @property
     def tender_offer_expiration_date(self) -> dict:
@@ -8475,8 +8498,8 @@ class FieldFilterMap(Base):
 
     @tender_offer_expiration_date.setter
     def tender_offer_expiration_date(self, value: dict):
-        self.__tender_offer_expiration_date = value
-        self._property_changed('tender_offer_expiration_date')        
+        self._property_changed('tender_offer_expiration_date')
+        self.__tender_offer_expiration_date = value        
 
     @property
     def primary_country_ric(self) -> dict:
@@ -8484,8 +8507,8 @@ class FieldFilterMap(Base):
 
     @primary_country_ric.setter
     def primary_country_ric(self, value: dict):
-        self.__primary_country_ric = value
-        self._property_changed('primary_country_ric')        
+        self._property_changed('primary_country_ric')
+        self.__primary_country_ric = value        
 
     @property
     def leg_one_fixed_payment(self) -> dict:
@@ -8493,8 +8516,8 @@ class FieldFilterMap(Base):
 
     @leg_one_fixed_payment.setter
     def leg_one_fixed_payment(self, value: dict):
-        self.__leg_one_fixed_payment = value
-        self._property_changed('leg_one_fixed_payment')        
+        self._property_changed('leg_one_fixed_payment')
+        self.__leg_one_fixed_payment = value        
 
     @property
     def option_expiration_frequency(self) -> dict:
@@ -8502,8 +8525,8 @@ class FieldFilterMap(Base):
 
     @option_expiration_frequency.setter
     def option_expiration_frequency(self, value: dict):
-        self.__option_expiration_frequency = value
-        self._property_changed('option_expiration_frequency')        
+        self._property_changed('option_expiration_frequency')
+        self.__option_expiration_frequency = value        
 
     @property
     def tcm_cost_participation_rate5_pct(self) -> dict:
@@ -8511,8 +8534,8 @@ class FieldFilterMap(Base):
 
     @tcm_cost_participation_rate5_pct.setter
     def tcm_cost_participation_rate5_pct(self, value: dict):
-        self.__tcm_cost_participation_rate5_pct = value
-        self._property_changed('tcm_cost_participation_rate5_pct')        
+        self._property_changed('tcm_cost_participation_rate5_pct')
+        self.__tcm_cost_participation_rate5_pct = value        
 
     @property
     def is_active(self) -> dict:
@@ -8520,8 +8543,8 @@ class FieldFilterMap(Base):
 
     @is_active.setter
     def is_active(self, value: dict):
-        self.__is_active = value
-        self._property_changed('is_active')        
+        self._property_changed('is_active')
+        self.__is_active = value        
 
     @property
     def growth_score(self) -> dict:
@@ -8529,8 +8552,8 @@ class FieldFilterMap(Base):
 
     @growth_score.setter
     def growth_score(self, value: dict):
-        self.__growth_score = value
-        self._property_changed('growth_score')        
+        self._property_changed('growth_score')
+        self.__growth_score = value        
 
     @property
     def buffer_threshold(self) -> dict:
@@ -8538,8 +8561,8 @@ class FieldFilterMap(Base):
 
     @buffer_threshold.setter
     def buffer_threshold(self, value: dict):
-        self.__buffer_threshold = value
-        self._property_changed('buffer_threshold')        
+        self._property_changed('buffer_threshold')
+        self.__buffer_threshold = value        
 
     @property
     def price_forming_continuation_data(self) -> dict:
@@ -8547,8 +8570,8 @@ class FieldFilterMap(Base):
 
     @price_forming_continuation_data.setter
     def price_forming_continuation_data(self, value: dict):
-        self.__price_forming_continuation_data = value
-        self._property_changed('price_forming_continuation_data')        
+        self._property_changed('price_forming_continuation_data')
+        self.__price_forming_continuation_data = value        
 
     @property
     def adjusted_short_interest(self) -> dict:
@@ -8556,8 +8579,8 @@ class FieldFilterMap(Base):
 
     @adjusted_short_interest.setter
     def adjusted_short_interest(self, value: dict):
-        self.__adjusted_short_interest = value
-        self._property_changed('adjusted_short_interest')        
+        self._property_changed('adjusted_short_interest')
+        self.__adjusted_short_interest = value        
 
     @property
     def group(self) -> dict:
@@ -8565,8 +8588,26 @@ class FieldFilterMap(Base):
 
     @group.setter
     def group(self, value: dict):
-        self.__group = value
-        self._property_changed('group')        
+        self._property_changed('group')
+        self.__group = value        
+
+    @property
+    def asset_parameters_strike(self) -> dict:
+        return self.__asset_parameters_strike
+
+    @asset_parameters_strike.setter
+    def asset_parameters_strike(self, value: dict):
+        self._property_changed('asset_parameters_strike')
+        self.__asset_parameters_strike = value        
+
+    @property
+    def asset_parameters_termination_date(self) -> dict:
+        return self.__asset_parameters_termination_date
+
+    @asset_parameters_termination_date.setter
+    def asset_parameters_termination_date(self, value: dict):
+        self._property_changed('asset_parameters_termination_date')
+        self.__asset_parameters_termination_date = value        
 
     @property
     def estimated_spread(self) -> dict:
@@ -8574,8 +8615,17 @@ class FieldFilterMap(Base):
 
     @estimated_spread.setter
     def estimated_spread(self, value: dict):
-        self.__estimated_spread = value
-        self._property_changed('estimated_spread')        
+        self._property_changed('estimated_spread')
+        self.__estimated_spread = value        
+
+    @property
+    def asset_parameters_effective_date(self) -> dict:
+        return self.__asset_parameters_effective_date
+
+    @asset_parameters_effective_date.setter
+    def asset_parameters_effective_date(self, value: dict):
+        self._property_changed('asset_parameters_effective_date')
+        self.__asset_parameters_effective_date = value        
 
     @property
     def ann_return10_year(self) -> dict:
@@ -8583,8 +8633,8 @@ class FieldFilterMap(Base):
 
     @ann_return10_year.setter
     def ann_return10_year(self, value: dict):
-        self.__ann_return10_year = value
-        self._property_changed('ann_return10_year')        
+        self._property_changed('ann_return10_year')
+        self.__ann_return10_year = value        
 
     @property
     def tcm_cost(self) -> dict:
@@ -8592,8 +8642,8 @@ class FieldFilterMap(Base):
 
     @tcm_cost.setter
     def tcm_cost(self, value: dict):
-        self.__tcm_cost = value
-        self._property_changed('tcm_cost')        
+        self._property_changed('tcm_cost')
+        self.__tcm_cost = value        
 
     @property
     def sustain_japan(self) -> dict:
@@ -8601,8 +8651,8 @@ class FieldFilterMap(Base):
 
     @sustain_japan.setter
     def sustain_japan(self, value: dict):
-        self.__sustain_japan = value
-        self._property_changed('sustain_japan')        
+        self._property_changed('sustain_japan')
+        self.__sustain_japan = value        
 
     @property
     def hedge_tracking_error(self) -> dict:
@@ -8610,8 +8660,8 @@ class FieldFilterMap(Base):
 
     @hedge_tracking_error.setter
     def hedge_tracking_error(self, value: dict):
-        self.__hedge_tracking_error = value
-        self._property_changed('hedge_tracking_error')        
+        self._property_changed('hedge_tracking_error')
+        self.__hedge_tracking_error = value        
 
     @property
     def market_cap_category(self) -> dict:
@@ -8619,8 +8669,8 @@ class FieldFilterMap(Base):
 
     @market_cap_category.setter
     def market_cap_category(self, value: dict):
-        self.__market_cap_category = value
-        self._property_changed('market_cap_category')        
+        self._property_changed('market_cap_category')
+        self.__market_cap_category = value        
 
     @property
     def historical_volume(self) -> dict:
@@ -8628,8 +8678,8 @@ class FieldFilterMap(Base):
 
     @historical_volume.setter
     def historical_volume(self, value: dict):
-        self.__historical_volume = value
-        self._property_changed('historical_volume')        
+        self._property_changed('historical_volume')
+        self.__historical_volume = value        
 
     @property
     def strike_price(self) -> dict:
@@ -8637,8 +8687,8 @@ class FieldFilterMap(Base):
 
     @strike_price.setter
     def strike_price(self, value: dict):
-        self.__strike_price = value
-        self._property_changed('strike_price')        
+        self._property_changed('strike_price')
+        self.__strike_price = value        
 
     @property
     def equity_gamma(self) -> dict:
@@ -8646,8 +8696,8 @@ class FieldFilterMap(Base):
 
     @equity_gamma.setter
     def equity_gamma(self, value: dict):
-        self.__equity_gamma = value
-        self._property_changed('equity_gamma')        
+        self._property_changed('equity_gamma')
+        self.__equity_gamma = value        
 
     @property
     def gross_income(self) -> dict:
@@ -8655,8 +8705,8 @@ class FieldFilterMap(Base):
 
     @gross_income.setter
     def gross_income(self, value: dict):
-        self.__gross_income = value
-        self._property_changed('gross_income')        
+        self._property_changed('gross_income')
+        self.__gross_income = value        
 
     @property
     def em_id(self) -> dict:
@@ -8664,8 +8714,8 @@ class FieldFilterMap(Base):
 
     @em_id.setter
     def em_id(self, value: dict):
-        self.__em_id = value
-        self._property_changed('em_id')        
+        self._property_changed('em_id')
+        self.__em_id = value        
 
     @property
     def adjusted_open_price(self) -> dict:
@@ -8673,8 +8723,8 @@ class FieldFilterMap(Base):
 
     @adjusted_open_price.setter
     def adjusted_open_price(self, value: dict):
-        self.__adjusted_open_price = value
-        self._property_changed('adjusted_open_price')        
+        self._property_changed('adjusted_open_price')
+        self.__adjusted_open_price = value        
 
     @property
     def asset_count_in_model(self) -> dict:
@@ -8682,8 +8732,8 @@ class FieldFilterMap(Base):
 
     @asset_count_in_model.setter
     def asset_count_in_model(self, value: dict):
-        self.__asset_count_in_model = value
-        self._property_changed('asset_count_in_model')        
+        self._property_changed('asset_count_in_model')
+        self.__asset_count_in_model = value        
 
     @property
     def sts_credit_region(self) -> dict:
@@ -8691,8 +8741,8 @@ class FieldFilterMap(Base):
 
     @sts_credit_region.setter
     def sts_credit_region(self, value: dict):
-        self.__sts_credit_region = value
-        self._property_changed('sts_credit_region')        
+        self._property_changed('sts_credit_region')
+        self.__sts_credit_region = value        
 
     @property
     def country_id(self) -> dict:
@@ -8700,8 +8750,8 @@ class FieldFilterMap(Base):
 
     @country_id.setter
     def country_id(self, value: dict):
-        self.__country_id = value
-        self._property_changed('country_id')        
+        self._property_changed('country_id')
+        self.__country_id = value        
 
     @property
     def point(self) -> dict:
@@ -8709,8 +8759,8 @@ class FieldFilterMap(Base):
 
     @point.setter
     def point(self, value: dict):
-        self.__point = value
-        self._property_changed('point')        
+        self._property_changed('point')
+        self.__point = value        
 
     @property
     def total_returns(self) -> dict:
@@ -8718,8 +8768,8 @@ class FieldFilterMap(Base):
 
     @total_returns.setter
     def total_returns(self, value: dict):
-        self.__total_returns = value
-        self._property_changed('total_returns')        
+        self._property_changed('total_returns')
+        self.__total_returns = value        
 
     @property
     def lender(self) -> dict:
@@ -8727,8 +8777,8 @@ class FieldFilterMap(Base):
 
     @lender.setter
     def lender(self, value: dict):
-        self.__lender = value
-        self._property_changed('lender')        
+        self._property_changed('lender')
+        self.__lender = value        
 
     @property
     def ann_return1_year(self) -> dict:
@@ -8736,8 +8786,8 @@ class FieldFilterMap(Base):
 
     @ann_return1_year.setter
     def ann_return1_year(self, value: dict):
-        self.__ann_return1_year = value
-        self._property_changed('ann_return1_year')        
+        self._property_changed('ann_return1_year')
+        self.__ann_return1_year = value        
 
     @property
     def min_temperature(self) -> dict:
@@ -8745,8 +8795,8 @@ class FieldFilterMap(Base):
 
     @min_temperature.setter
     def min_temperature(self, value: dict):
-        self.__min_temperature = value
-        self._property_changed('min_temperature')        
+        self._property_changed('min_temperature')
+        self.__min_temperature = value        
 
     @property
     def eff_yield7_day(self) -> dict:
@@ -8754,8 +8804,8 @@ class FieldFilterMap(Base):
 
     @eff_yield7_day.setter
     def eff_yield7_day(self, value: dict):
-        self.__eff_yield7_day = value
-        self._property_changed('eff_yield7_day')        
+        self._property_changed('eff_yield7_day')
+        self.__eff_yield7_day = value        
 
     @property
     def meeting_date(self) -> dict:
@@ -8763,8 +8813,8 @@ class FieldFilterMap(Base):
 
     @meeting_date.setter
     def meeting_date(self, value: dict):
-        self.__meeting_date = value
-        self._property_changed('meeting_date')        
+        self._property_changed('meeting_date')
+        self.__meeting_date = value        
 
     @property
     def relative_strike(self) -> dict:
@@ -8772,8 +8822,8 @@ class FieldFilterMap(Base):
 
     @relative_strike.setter
     def relative_strike(self, value: dict):
-        self.__relative_strike = value
-        self._property_changed('relative_strike')        
+        self._property_changed('relative_strike')
+        self.__relative_strike = value        
 
     @property
     def amount(self) -> dict:
@@ -8781,8 +8831,8 @@ class FieldFilterMap(Base):
 
     @amount.setter
     def amount(self, value: dict):
-        self.__amount = value
-        self._property_changed('amount')        
+        self._property_changed('amount')
+        self.__amount = value        
 
     @property
     def lending_fund_acct(self) -> dict:
@@ -8790,8 +8840,8 @@ class FieldFilterMap(Base):
 
     @lending_fund_acct.setter
     def lending_fund_acct(self, value: dict):
-        self.__lending_fund_acct = value
-        self._property_changed('lending_fund_acct')        
+        self._property_changed('lending_fund_acct')
+        self.__lending_fund_acct = value        
 
     @property
     def rebate(self) -> dict:
@@ -8799,8 +8849,8 @@ class FieldFilterMap(Base):
 
     @rebate.setter
     def rebate(self, value: dict):
-        self.__rebate = value
-        self._property_changed('rebate')        
+        self._property_changed('rebate')
+        self.__rebate = value        
 
     @property
     def flagship(self) -> dict:
@@ -8808,8 +8858,8 @@ class FieldFilterMap(Base):
 
     @flagship.setter
     def flagship(self, value: dict):
-        self.__flagship = value
-        self._property_changed('flagship')        
+        self._property_changed('flagship')
+        self.__flagship = value        
 
     @property
     def additional_price_notation(self) -> dict:
@@ -8817,8 +8867,8 @@ class FieldFilterMap(Base):
 
     @additional_price_notation.setter
     def additional_price_notation(self, value: dict):
-        self.__additional_price_notation = value
-        self._property_changed('additional_price_notation')        
+        self._property_changed('additional_price_notation')
+        self.__additional_price_notation = value        
 
     @property
     def factor_category(self) -> dict:
@@ -8826,8 +8876,8 @@ class FieldFilterMap(Base):
 
     @factor_category.setter
     def factor_category(self, value: dict):
-        self.__factor_category = value
-        self._property_changed('factor_category')        
+        self._property_changed('factor_category')
+        self.__factor_category = value        
 
     @property
     def election_type(self) -> dict:
@@ -8835,8 +8885,8 @@ class FieldFilterMap(Base):
 
     @election_type.setter
     def election_type(self, value: dict):
-        self.__election_type = value
-        self._property_changed('election_type')        
+        self._property_changed('election_type')
+        self.__election_type = value        
 
     @property
     def implied_volatility(self) -> dict:
@@ -8844,8 +8894,8 @@ class FieldFilterMap(Base):
 
     @implied_volatility.setter
     def implied_volatility(self, value: dict):
-        self.__implied_volatility = value
-        self._property_changed('implied_volatility')        
+        self._property_changed('implied_volatility')
+        self.__implied_volatility = value        
 
     @property
     def spread(self) -> dict:
@@ -8853,8 +8903,8 @@ class FieldFilterMap(Base):
 
     @spread.setter
     def spread(self, value: dict):
-        self.__spread = value
-        self._property_changed('spread')        
+        self._property_changed('spread')
+        self.__spread = value        
 
     @property
     def equity_delta(self) -> dict:
@@ -8862,8 +8912,8 @@ class FieldFilterMap(Base):
 
     @equity_delta.setter
     def equity_delta(self, value: dict):
-        self.__equity_delta = value
-        self._property_changed('equity_delta')        
+        self._property_changed('equity_delta')
+        self.__equity_delta = value        
 
     @property
     def gross_weight(self) -> dict:
@@ -8871,8 +8921,8 @@ class FieldFilterMap(Base):
 
     @gross_weight.setter
     def gross_weight(self, value: dict):
-        self.__gross_weight = value
-        self._property_changed('gross_weight')        
+        self._property_changed('gross_weight')
+        self.__gross_weight = value        
 
     @property
     def listed(self) -> dict:
@@ -8880,8 +8930,8 @@ class FieldFilterMap(Base):
 
     @listed.setter
     def listed(self, value: dict):
-        self.__listed = value
-        self._property_changed('listed')        
+        self._property_changed('listed')
+        self.__listed = value        
 
     @property
     def variance(self) -> dict:
@@ -8889,8 +8939,8 @@ class FieldFilterMap(Base):
 
     @variance.setter
     def variance(self, value: dict):
-        self.__variance = value
-        self._property_changed('variance')        
+        self._property_changed('variance')
+        self.__variance = value        
 
     @property
     def earnings_record_type(self) -> dict:
@@ -8898,8 +8948,8 @@ class FieldFilterMap(Base):
 
     @earnings_record_type.setter
     def earnings_record_type(self, value: dict):
-        self.__earnings_record_type = value
-        self._property_changed('earnings_record_type')        
+        self._property_changed('earnings_record_type')
+        self.__earnings_record_type = value        
 
     @property
     def g10_currency(self) -> dict:
@@ -8907,8 +8957,8 @@ class FieldFilterMap(Base):
 
     @g10_currency.setter
     def g10_currency(self, value: dict):
-        self.__g10_currency = value
-        self._property_changed('g10_currency')        
+        self._property_changed('g10_currency')
+        self.__g10_currency = value        
 
     @property
     def shock_style(self) -> dict:
@@ -8916,8 +8966,8 @@ class FieldFilterMap(Base):
 
     @shock_style.setter
     def shock_style(self, value: dict):
-        self.__shock_style = value
-        self._property_changed('shock_style')        
+        self._property_changed('shock_style')
+        self.__shock_style = value        
 
     @property
     def relative_period(self) -> dict:
@@ -8925,8 +8975,8 @@ class FieldFilterMap(Base):
 
     @relative_period.setter
     def relative_period(self, value: dict):
-        self.__relative_period = value
-        self._property_changed('relative_period')        
+        self._property_changed('relative_period')
+        self.__relative_period = value        
 
     @property
     def methodology(self) -> dict:
@@ -8934,8 +8984,8 @@ class FieldFilterMap(Base):
 
     @methodology.setter
     def methodology(self, value: dict):
-        self.__methodology = value
-        self._property_changed('methodology')        
+        self._property_changed('methodology')
+        self.__methodology = value        
 
     @property
     def queue_clock_time_label(self) -> tuple:
@@ -8943,8 +8993,8 @@ class FieldFilterMap(Base):
 
     @queue_clock_time_label.setter
     def queue_clock_time_label(self, value: tuple):
-        self.__queue_clock_time_label = value
-        self._property_changed('queue_clock_time_label')        
+        self._property_changed('queue_clock_time_label')
+        self.__queue_clock_time_label = value        
 
     @property
     def market_pnl(self) -> dict:
@@ -8952,8 +9002,8 @@ class FieldFilterMap(Base):
 
     @market_pnl.setter
     def market_pnl(self, value: dict):
-        self.__market_pnl = value
-        self._property_changed('market_pnl')        
+        self._property_changed('market_pnl')
+        self.__market_pnl = value        
 
     @property
     def sustain_asia_ex_japan(self) -> dict:
@@ -8961,8 +9011,8 @@ class FieldFilterMap(Base):
 
     @sustain_asia_ex_japan.setter
     def sustain_asia_ex_japan(self, value: dict):
-        self.__sustain_asia_ex_japan = value
-        self._property_changed('sustain_asia_ex_japan')        
+        self._property_changed('sustain_asia_ex_japan')
+        self.__sustain_asia_ex_japan = value        
 
     @property
     def asset_classifications_gics_sub_industry(self) -> dict:
@@ -8970,8 +9020,8 @@ class FieldFilterMap(Base):
 
     @asset_classifications_gics_sub_industry.setter
     def asset_classifications_gics_sub_industry(self, value: dict):
-        self.__asset_classifications_gics_sub_industry = value
-        self._property_changed('asset_classifications_gics_sub_industry')        
+        self._property_changed('asset_classifications_gics_sub_industry')
+        self.__asset_classifications_gics_sub_industry = value        
 
     @property
     def neighbour_asset_id(self) -> dict:
@@ -8979,8 +9029,8 @@ class FieldFilterMap(Base):
 
     @neighbour_asset_id.setter
     def neighbour_asset_id(self, value: dict):
-        self.__neighbour_asset_id = value
-        self._property_changed('neighbour_asset_id')        
+        self._property_changed('neighbour_asset_id')
+        self.__neighbour_asset_id = value        
 
     @property
     def simon_intl_asset_tags(self) -> dict:
@@ -8988,8 +9038,8 @@ class FieldFilterMap(Base):
 
     @simon_intl_asset_tags.setter
     def simon_intl_asset_tags(self, value: dict):
-        self.__simon_intl_asset_tags = value
-        self._property_changed('simon_intl_asset_tags')        
+        self._property_changed('simon_intl_asset_tags')
+        self.__simon_intl_asset_tags = value        
 
     @property
     def swap_rate(self) -> dict:
@@ -8997,8 +9047,8 @@ class FieldFilterMap(Base):
 
     @swap_rate.setter
     def swap_rate(self, value: dict):
-        self.__swap_rate = value
-        self._property_changed('swap_rate')        
+        self._property_changed('swap_rate')
+        self.__swap_rate = value        
 
     @property
     def path(self) -> dict:
@@ -9006,8 +9056,8 @@ class FieldFilterMap(Base):
 
     @path.setter
     def path(self, value: dict):
-        self.__path = value
-        self._property_changed('path')        
+        self._property_changed('path')
+        self.__path = value        
 
     @property
     def client_contact(self) -> dict:
@@ -9015,8 +9065,8 @@ class FieldFilterMap(Base):
 
     @client_contact.setter
     def client_contact(self, value: dict):
-        self.__client_contact = value
-        self._property_changed('client_contact')        
+        self._property_changed('client_contact')
+        self.__client_contact = value        
 
     @property
     def rank(self) -> dict:
@@ -9024,8 +9074,8 @@ class FieldFilterMap(Base):
 
     @rank.setter
     def rank(self, value: dict):
-        self.__rank = value
-        self._property_changed('rank')        
+        self._property_changed('rank')
+        self.__rank = value        
 
     @property
     def mixed_swap_other_reported_sdr(self) -> dict:
@@ -9033,8 +9083,8 @@ class FieldFilterMap(Base):
 
     @mixed_swap_other_reported_sdr.setter
     def mixed_swap_other_reported_sdr(self, value: dict):
-        self.__mixed_swap_other_reported_sdr = value
-        self._property_changed('mixed_swap_other_reported_sdr')        
+        self._property_changed('mixed_swap_other_reported_sdr')
+        self.__mixed_swap_other_reported_sdr = value        
 
     @property
     def data_set_category(self) -> dict:
@@ -9042,8 +9092,8 @@ class FieldFilterMap(Base):
 
     @data_set_category.setter
     def data_set_category(self, value: dict):
-        self.__data_set_category = value
-        self._property_changed('data_set_category')        
+        self._property_changed('data_set_category')
+        self.__data_set_category = value        
 
     @property
     def bos_in_bps_label(self) -> tuple:
@@ -9051,8 +9101,8 @@ class FieldFilterMap(Base):
 
     @bos_in_bps_label.setter
     def bos_in_bps_label(self, value: tuple):
-        self.__bos_in_bps_label = value
-        self._property_changed('bos_in_bps_label')        
+        self._property_changed('bos_in_bps_label')
+        self.__bos_in_bps_label = value        
 
     @property
     def bos_in_bps(self) -> dict:
@@ -9060,8 +9110,8 @@ class FieldFilterMap(Base):
 
     @bos_in_bps.setter
     def bos_in_bps(self, value: dict):
-        self.__bos_in_bps = value
-        self._property_changed('bos_in_bps')        
+        self._property_changed('bos_in_bps')
+        self.__bos_in_bps = value        
 
     @property
     def point_class(self) -> dict:
@@ -9069,8 +9119,8 @@ class FieldFilterMap(Base):
 
     @point_class.setter
     def point_class(self, value: dict):
-        self.__point_class = value
-        self._property_changed('point_class')        
+        self._property_changed('point_class')
+        self.__point_class = value        
 
     @property
     def fx_spot(self) -> dict:
@@ -9078,8 +9128,8 @@ class FieldFilterMap(Base):
 
     @fx_spot.setter
     def fx_spot(self, value: dict):
-        self.__fx_spot = value
-        self._property_changed('fx_spot')        
+        self._property_changed('fx_spot')
+        self.__fx_spot = value        
 
     @property
     def bid_low(self) -> dict:
@@ -9087,8 +9137,8 @@ class FieldFilterMap(Base):
 
     @bid_low.setter
     def bid_low(self, value: dict):
-        self.__bid_low = value
-        self._property_changed('bid_low')        
+        self._property_changed('bid_low')
+        self.__bid_low = value        
 
     @property
     def fair_variance_volatility(self) -> dict:
@@ -9096,8 +9146,8 @@ class FieldFilterMap(Base):
 
     @fair_variance_volatility.setter
     def fair_variance_volatility(self, value: dict):
-        self.__fair_variance_volatility = value
-        self._property_changed('fair_variance_volatility')        
+        self._property_changed('fair_variance_volatility')
+        self.__fair_variance_volatility = value        
 
     @property
     def hedge_volatility(self) -> dict:
@@ -9105,8 +9155,8 @@ class FieldFilterMap(Base):
 
     @hedge_volatility.setter
     def hedge_volatility(self, value: dict):
-        self.__hedge_volatility = value
-        self._property_changed('hedge_volatility')        
+        self._property_changed('hedge_volatility')
+        self.__hedge_volatility = value        
 
     @property
     def tags(self) -> dict:
@@ -9114,8 +9164,8 @@ class FieldFilterMap(Base):
 
     @tags.setter
     def tags(self, value: dict):
-        self.__tags = value
-        self._property_changed('tags')        
+        self._property_changed('tags')
+        self.__tags = value        
 
     @property
     def underlying_asset_id(self) -> dict:
@@ -9123,8 +9173,8 @@ class FieldFilterMap(Base):
 
     @underlying_asset_id.setter
     def underlying_asset_id(self, value: dict):
-        self.__underlying_asset_id = value
-        self._property_changed('underlying_asset_id')        
+        self._property_changed('underlying_asset_id')
+        self.__underlying_asset_id = value        
 
     @property
     def real_long_rates_contribution(self) -> dict:
@@ -9132,8 +9182,8 @@ class FieldFilterMap(Base):
 
     @real_long_rates_contribution.setter
     def real_long_rates_contribution(self, value: dict):
-        self.__real_long_rates_contribution = value
-        self._property_changed('real_long_rates_contribution')        
+        self._property_changed('real_long_rates_contribution')
+        self.__real_long_rates_contribution = value        
 
     @property
     def client_exposure(self) -> dict:
@@ -9141,8 +9191,8 @@ class FieldFilterMap(Base):
 
     @client_exposure.setter
     def client_exposure(self, value: dict):
-        self.__client_exposure = value
-        self._property_changed('client_exposure')        
+        self._property_changed('client_exposure')
+        self.__client_exposure = value        
 
     @property
     def gs_sustain_sub_sector(self) -> dict:
@@ -9150,8 +9200,8 @@ class FieldFilterMap(Base):
 
     @gs_sustain_sub_sector.setter
     def gs_sustain_sub_sector(self, value: dict):
-        self.__gs_sustain_sub_sector = value
-        self._property_changed('gs_sustain_sub_sector')        
+        self._property_changed('gs_sustain_sub_sector')
+        self.__gs_sustain_sub_sector = value        
 
     @property
     def domain(self) -> dict:
@@ -9159,8 +9209,8 @@ class FieldFilterMap(Base):
 
     @domain.setter
     def domain(self, value: dict):
-        self.__domain = value
-        self._property_changed('domain')        
+        self._property_changed('domain')
+        self.__domain = value        
 
     @property
     def forward_tenor(self) -> dict:
@@ -9168,8 +9218,8 @@ class FieldFilterMap(Base):
 
     @forward_tenor.setter
     def forward_tenor(self, value: dict):
-        self.__forward_tenor = value
-        self._property_changed('forward_tenor')        
+        self._property_changed('forward_tenor')
+        self.__forward_tenor = value        
 
     @property
     def jsn(self) -> dict:
@@ -9177,8 +9227,8 @@ class FieldFilterMap(Base):
 
     @jsn.setter
     def jsn(self, value: dict):
-        self.__jsn = value
-        self._property_changed('jsn')        
+        self._property_changed('jsn')
+        self.__jsn = value        
 
     @property
     def share_class_assets(self) -> dict:
@@ -9186,8 +9236,8 @@ class FieldFilterMap(Base):
 
     @share_class_assets.setter
     def share_class_assets(self, value: dict):
-        self.__share_class_assets = value
-        self._property_changed('share_class_assets')        
+        self._property_changed('share_class_assets')
+        self.__share_class_assets = value        
 
     @property
     def annuity(self) -> dict:
@@ -9195,8 +9245,8 @@ class FieldFilterMap(Base):
 
     @annuity.setter
     def annuity(self, value: dict):
-        self.__annuity = value
-        self._property_changed('annuity')        
+        self._property_changed('annuity')
+        self.__annuity = value        
 
     @property
     def quote_type(self) -> dict:
@@ -9204,8 +9254,8 @@ class FieldFilterMap(Base):
 
     @quote_type.setter
     def quote_type(self, value: dict):
-        self.__quote_type = value
-        self._property_changed('quote_type')        
+        self._property_changed('quote_type')
+        self.__quote_type = value        
 
     @property
     def uid(self) -> dict:
@@ -9213,8 +9263,8 @@ class FieldFilterMap(Base):
 
     @uid.setter
     def uid(self, value: dict):
-        self.__uid = value
-        self._property_changed('uid')        
+        self._property_changed('uid')
+        self.__uid = value        
 
     @property
     def tenor(self) -> dict:
@@ -9222,8 +9272,8 @@ class FieldFilterMap(Base):
 
     @tenor.setter
     def tenor(self, value: dict):
-        self.__tenor = value
-        self._property_changed('tenor')        
+        self._property_changed('tenor')
+        self.__tenor = value        
 
     @property
     def es_policy_percentile(self) -> dict:
@@ -9231,8 +9281,8 @@ class FieldFilterMap(Base):
 
     @es_policy_percentile.setter
     def es_policy_percentile(self, value: dict):
-        self.__es_policy_percentile = value
-        self._property_changed('es_policy_percentile')        
+        self._property_changed('es_policy_percentile')
+        self.__es_policy_percentile = value        
 
     @property
     def term(self) -> dict:
@@ -9240,8 +9290,17 @@ class FieldFilterMap(Base):
 
     @term.setter
     def term(self, value: dict):
-        self.__term = value
-        self._property_changed('term')        
+        self._property_changed('term')
+        self.__term = value        
+
+    @property
+    def asset_parameters_clearing_house(self) -> dict:
+        return self.__asset_parameters_clearing_house
+
+    @asset_parameters_clearing_house.setter
+    def asset_parameters_clearing_house(self, value: dict):
+        self._property_changed('asset_parameters_clearing_house')
+        self.__asset_parameters_clearing_house = value        
 
     @property
     def tcm_cost_participation_rate100_pct(self) -> dict:
@@ -9249,8 +9308,8 @@ class FieldFilterMap(Base):
 
     @tcm_cost_participation_rate100_pct.setter
     def tcm_cost_participation_rate100_pct(self, value: dict):
-        self.__tcm_cost_participation_rate100_pct = value
-        self._property_changed('tcm_cost_participation_rate100_pct')        
+        self._property_changed('tcm_cost_participation_rate100_pct')
+        self.__tcm_cost_participation_rate100_pct = value        
 
     @property
     def disclaimer(self) -> dict:
@@ -9258,8 +9317,8 @@ class FieldFilterMap(Base):
 
     @disclaimer.setter
     def disclaimer(self, value: dict):
-        self.__disclaimer = value
-        self._property_changed('disclaimer')        
+        self._property_changed('disclaimer')
+        self.__disclaimer = value        
 
     @property
     def measure_idx(self) -> dict:
@@ -9267,8 +9326,8 @@ class FieldFilterMap(Base):
 
     @measure_idx.setter
     def measure_idx(self, value: dict):
-        self.__measure_idx = value
-        self._property_changed('measure_idx')        
+        self._property_changed('measure_idx')
+        self.__measure_idx = value        
 
     @property
     def loan_fee(self) -> dict:
@@ -9276,8 +9335,8 @@ class FieldFilterMap(Base):
 
     @loan_fee.setter
     def loan_fee(self, value: dict):
-        self.__loan_fee = value
-        self._property_changed('loan_fee')        
+        self._property_changed('loan_fee')
+        self.__loan_fee = value        
 
     @property
     def deployment_version(self) -> dict:
@@ -9285,8 +9344,8 @@ class FieldFilterMap(Base):
 
     @deployment_version.setter
     def deployment_version(self, value: dict):
-        self.__deployment_version = value
-        self._property_changed('deployment_version')        
+        self._property_changed('deployment_version')
+        self.__deployment_version = value        
 
     @property
     def twi_contribution(self) -> dict:
@@ -9294,8 +9353,8 @@ class FieldFilterMap(Base):
 
     @twi_contribution.setter
     def twi_contribution(self, value: dict):
-        self.__twi_contribution = value
-        self._property_changed('twi_contribution')        
+        self._property_changed('twi_contribution')
+        self.__twi_contribution = value        
 
     @property
     def delisted(self) -> dict:
@@ -9303,8 +9362,8 @@ class FieldFilterMap(Base):
 
     @delisted.setter
     def delisted(self, value: dict):
-        self.__delisted = value
-        self._property_changed('delisted')        
+        self._property_changed('delisted')
+        self.__delisted = value        
 
     @property
     def regional_focus(self) -> dict:
@@ -9312,8 +9371,8 @@ class FieldFilterMap(Base):
 
     @regional_focus.setter
     def regional_focus(self, value: dict):
-        self.__regional_focus = value
-        self._property_changed('regional_focus')        
+        self._property_changed('regional_focus')
+        self.__regional_focus = value        
 
     @property
     def volume_primary(self) -> dict:
@@ -9321,8 +9380,8 @@ class FieldFilterMap(Base):
 
     @volume_primary.setter
     def volume_primary(self, value: dict):
-        self.__volume_primary = value
-        self._property_changed('volume_primary')        
+        self._property_changed('volume_primary')
+        self.__volume_primary = value        
 
     @property
     def leg_two_delivery_point(self) -> dict:
@@ -9330,8 +9389,8 @@ class FieldFilterMap(Base):
 
     @leg_two_delivery_point.setter
     def leg_two_delivery_point(self, value: dict):
-        self.__leg_two_delivery_point = value
-        self._property_changed('leg_two_delivery_point')        
+        self._property_changed('leg_two_delivery_point')
+        self.__leg_two_delivery_point = value        
 
     @property
     def funding_bid_price(self) -> dict:
@@ -9339,8 +9398,8 @@ class FieldFilterMap(Base):
 
     @funding_bid_price.setter
     def funding_bid_price(self, value: dict):
-        self.__funding_bid_price = value
-        self._property_changed('funding_bid_price')        
+        self._property_changed('funding_bid_price')
+        self.__funding_bid_price = value        
 
     @property
     def series(self) -> dict:
@@ -9348,8 +9407,17 @@ class FieldFilterMap(Base):
 
     @series.setter
     def series(self, value: dict):
-        self.__series = value
-        self._property_changed('series')        
+        self._property_changed('series')
+        self.__series = value        
+
+    @property
+    def price_to_sales(self) -> dict:
+        return self.__price_to_sales
+
+    @price_to_sales.setter
+    def price_to_sales(self, value: dict):
+        self._property_changed('price_to_sales')
+        self.__price_to_sales = value        
 
     @property
     def closing_auction(self) -> dict:
@@ -9357,8 +9425,8 @@ class FieldFilterMap(Base):
 
     @closing_auction.setter
     def closing_auction(self, value: dict):
-        self.__closing_auction = value
-        self._property_changed('closing_auction')        
+        self._property_changed('closing_auction')
+        self.__closing_auction = value        
 
     @property
     def new_ideas_qtd(self) -> dict:
@@ -9366,8 +9434,8 @@ class FieldFilterMap(Base):
 
     @new_ideas_qtd.setter
     def new_ideas_qtd(self, value: dict):
-        self.__new_ideas_qtd = value
-        self._property_changed('new_ideas_qtd')        
+        self._property_changed('new_ideas_qtd')
+        self.__new_ideas_qtd = value        
 
     @property
     def adjusted_ask_price(self) -> dict:
@@ -9375,8 +9443,8 @@ class FieldFilterMap(Base):
 
     @adjusted_ask_price.setter
     def adjusted_ask_price(self, value: dict):
-        self.__adjusted_ask_price = value
-        self._property_changed('adjusted_ask_price')        
+        self._property_changed('adjusted_ask_price')
+        self.__adjusted_ask_price = value        
 
     @property
     def quarter(self) -> dict:
@@ -9384,8 +9452,8 @@ class FieldFilterMap(Base):
 
     @quarter.setter
     def quarter(self, value: dict):
-        self.__quarter = value
-        self._property_changed('quarter')        
+        self._property_changed('quarter')
+        self.__quarter = value        
 
     @property
     def factor_universe(self) -> dict:
@@ -9393,8 +9461,17 @@ class FieldFilterMap(Base):
 
     @factor_universe.setter
     def factor_universe(self, value: dict):
-        self.__factor_universe = value
-        self._property_changed('factor_universe')        
+        self._property_changed('factor_universe')
+        self.__factor_universe = value        
+
+    @property
+    def asset_parameters_floating_rate_option(self) -> dict:
+        return self.__asset_parameters_floating_rate_option
+
+    @asset_parameters_floating_rate_option.setter
+    def asset_parameters_floating_rate_option(self, value: dict):
+        self._property_changed('asset_parameters_floating_rate_option')
+        self.__asset_parameters_floating_rate_option = value        
 
     @property
     def arrival_rt(self) -> dict:
@@ -9402,8 +9479,8 @@ class FieldFilterMap(Base):
 
     @arrival_rt.setter
     def arrival_rt(self, value: dict):
-        self.__arrival_rt = value
-        self._property_changed('arrival_rt')        
+        self._property_changed('arrival_rt')
+        self.__arrival_rt = value        
 
     @property
     def vote_share(self) -> dict:
@@ -9411,8 +9488,8 @@ class FieldFilterMap(Base):
 
     @vote_share.setter
     def vote_share(self, value: dict):
-        self.__vote_share = value
-        self._property_changed('vote_share')        
+        self._property_changed('vote_share')
+        self.__vote_share = value        
 
     @property
     def transaction_cost(self) -> dict:
@@ -9420,8 +9497,8 @@ class FieldFilterMap(Base):
 
     @transaction_cost.setter
     def transaction_cost(self, value: dict):
-        self.__transaction_cost = value
-        self._property_changed('transaction_cost')        
+        self._property_changed('transaction_cost')
+        self.__transaction_cost = value        
 
     @property
     def servicing_cost_short_pnl(self) -> dict:
@@ -9429,8 +9506,8 @@ class FieldFilterMap(Base):
 
     @servicing_cost_short_pnl.setter
     def servicing_cost_short_pnl(self, value: dict):
-        self.__servicing_cost_short_pnl = value
-        self._property_changed('servicing_cost_short_pnl')        
+        self._property_changed('servicing_cost_short_pnl')
+        self.__servicing_cost_short_pnl = value        
 
     @property
     def cluster_description(self) -> dict:
@@ -9438,8 +9515,8 @@ class FieldFilterMap(Base):
 
     @cluster_description.setter
     def cluster_description(self, value: dict):
-        self.__cluster_description = value
-        self._property_changed('cluster_description')        
+        self._property_changed('cluster_description')
+        self.__cluster_description = value        
 
     @property
     def position_amount(self) -> dict:
@@ -9447,8 +9524,8 @@ class FieldFilterMap(Base):
 
     @position_amount.setter
     def position_amount(self, value: dict):
-        self.__position_amount = value
-        self._property_changed('position_amount')        
+        self._property_changed('position_amount')
+        self.__position_amount = value        
 
     @property
     def wind_speed(self) -> dict:
@@ -9456,8 +9533,8 @@ class FieldFilterMap(Base):
 
     @wind_speed.setter
     def wind_speed(self, value: dict):
-        self.__wind_speed = value
-        self._property_changed('wind_speed')        
+        self._property_changed('wind_speed')
+        self.__wind_speed = value        
 
     @property
     def ma_rank(self) -> dict:
@@ -9465,8 +9542,8 @@ class FieldFilterMap(Base):
 
     @ma_rank.setter
     def ma_rank(self, value: dict):
-        self.__ma_rank = value
-        self._property_changed('ma_rank')        
+        self._property_changed('ma_rank')
+        self.__ma_rank = value        
 
     @property
     def borrower_id(self) -> dict:
@@ -9474,8 +9551,8 @@ class FieldFilterMap(Base):
 
     @borrower_id.setter
     def borrower_id(self, value: dict):
-        self.__borrower_id = value
-        self._property_changed('borrower_id')        
+        self._property_changed('borrower_id')
+        self.__borrower_id = value        
 
     @property
     def data_product(self) -> dict:
@@ -9483,8 +9560,8 @@ class FieldFilterMap(Base):
 
     @data_product.setter
     def data_product(self, value: dict):
-        self.__data_product = value
-        self._property_changed('data_product')        
+        self._property_changed('data_product')
+        self.__data_product = value        
 
     @property
     def implied_volatility_by_delta_strike(self) -> dict:
@@ -9492,8 +9569,8 @@ class FieldFilterMap(Base):
 
     @implied_volatility_by_delta_strike.setter
     def implied_volatility_by_delta_strike(self, value: dict):
-        self.__implied_volatility_by_delta_strike = value
-        self._property_changed('implied_volatility_by_delta_strike')        
+        self._property_changed('implied_volatility_by_delta_strike')
+        self.__implied_volatility_by_delta_strike = value        
 
     @property
     def mq_symbol(self) -> dict:
@@ -9501,8 +9578,8 @@ class FieldFilterMap(Base):
 
     @mq_symbol.setter
     def mq_symbol(self, value: dict):
-        self.__mq_symbol = value
-        self._property_changed('mq_symbol')        
+        self._property_changed('mq_symbol')
+        self.__mq_symbol = value        
 
     @property
     def bm_prime_id(self) -> dict:
@@ -9510,8 +9587,8 @@ class FieldFilterMap(Base):
 
     @bm_prime_id.setter
     def bm_prime_id(self, value: dict):
-        self.__bm_prime_id = value
-        self._property_changed('bm_prime_id')        
+        self._property_changed('bm_prime_id')
+        self.__bm_prime_id = value        
 
     @property
     def corporate_action(self) -> dict:
@@ -9519,8 +9596,8 @@ class FieldFilterMap(Base):
 
     @corporate_action.setter
     def corporate_action(self, value: dict):
-        self.__corporate_action = value
-        self._property_changed('corporate_action')        
+        self._property_changed('corporate_action')
+        self.__corporate_action = value        
 
     @property
     def conviction(self) -> dict:
@@ -9528,8 +9605,8 @@ class FieldFilterMap(Base):
 
     @conviction.setter
     def conviction(self, value: dict):
-        self.__conviction = value
-        self._property_changed('conviction')        
+        self._property_changed('conviction')
+        self.__conviction = value        
 
     @property
     def benchmark_maturity(self) -> dict:
@@ -9537,8 +9614,8 @@ class FieldFilterMap(Base):
 
     @benchmark_maturity.setter
     def benchmark_maturity(self, value: dict):
-        self.__benchmark_maturity = value
-        self._property_changed('benchmark_maturity')        
+        self._property_changed('benchmark_maturity')
+        self.__benchmark_maturity = value        
 
     @property
     def g_regional_score(self) -> dict:
@@ -9546,8 +9623,8 @@ class FieldFilterMap(Base):
 
     @g_regional_score.setter
     def g_regional_score(self, value: dict):
-        self.__g_regional_score = value
-        self._property_changed('g_regional_score')        
+        self._property_changed('g_regional_score')
+        self.__g_regional_score = value        
 
     @property
     def factor_id(self) -> dict:
@@ -9555,8 +9632,8 @@ class FieldFilterMap(Base):
 
     @factor_id.setter
     def factor_id(self, value: dict):
-        self.__factor_id = value
-        self._property_changed('factor_id')        
+        self._property_changed('factor_id')
+        self.__factor_id = value        
 
     @property
     def hard_to_borrow(self) -> dict:
@@ -9564,8 +9641,8 @@ class FieldFilterMap(Base):
 
     @hard_to_borrow.setter
     def hard_to_borrow(self, value: dict):
-        self.__hard_to_borrow = value
-        self._property_changed('hard_to_borrow')        
+        self._property_changed('hard_to_borrow')
+        self.__hard_to_borrow = value        
 
     @property
     def sts_fx_currency(self) -> dict:
@@ -9573,8 +9650,8 @@ class FieldFilterMap(Base):
 
     @sts_fx_currency.setter
     def sts_fx_currency(self, value: dict):
-        self.__sts_fx_currency = value
-        self._property_changed('sts_fx_currency')        
+        self._property_changed('sts_fx_currency')
+        self.__sts_fx_currency = value        
 
     @property
     def wpk(self) -> dict:
@@ -9582,8 +9659,8 @@ class FieldFilterMap(Base):
 
     @wpk.setter
     def wpk(self, value: dict):
-        self.__wpk = value
-        self._property_changed('wpk')        
+        self._property_changed('wpk')
+        self.__wpk = value        
 
     @property
     def bid_change(self) -> dict:
@@ -9591,8 +9668,17 @@ class FieldFilterMap(Base):
 
     @bid_change.setter
     def bid_change(self, value: dict):
-        self.__bid_change = value
-        self._property_changed('bid_change')        
+        self._property_changed('bid_change')
+        self.__bid_change = value        
+
+    @property
+    def asset_parameters_expiration_date(self) -> dict:
+        return self.__asset_parameters_expiration_date
+
+    @asset_parameters_expiration_date.setter
+    def asset_parameters_expiration_date(self, value: dict):
+        self._property_changed('asset_parameters_expiration_date')
+        self.__asset_parameters_expiration_date = value        
 
     @property
     def expiration(self) -> dict:
@@ -9600,8 +9686,8 @@ class FieldFilterMap(Base):
 
     @expiration.setter
     def expiration(self, value: dict):
-        self.__expiration = value
-        self._property_changed('expiration')        
+        self._property_changed('expiration')
+        self.__expiration = value        
 
     @property
     def country_name(self) -> dict:
@@ -9609,8 +9695,8 @@ class FieldFilterMap(Base):
 
     @country_name.setter
     def country_name(self, value: dict):
-        self.__country_name = value
-        self._property_changed('country_name')        
+        self._property_changed('country_name')
+        self.__country_name = value        
 
     @property
     def starting_date(self) -> dict:
@@ -9618,8 +9704,8 @@ class FieldFilterMap(Base):
 
     @starting_date.setter
     def starting_date(self, value: dict):
-        self.__starting_date = value
-        self._property_changed('starting_date')        
+        self._property_changed('starting_date')
+        self.__starting_date = value        
 
     @property
     def loan_id(self) -> dict:
@@ -9627,8 +9713,8 @@ class FieldFilterMap(Base):
 
     @loan_id.setter
     def loan_id(self, value: dict):
-        self.__loan_id = value
-        self._property_changed('loan_id')        
+        self._property_changed('loan_id')
+        self.__loan_id = value        
 
     @property
     def onboarded(self) -> dict:
@@ -9636,8 +9722,8 @@ class FieldFilterMap(Base):
 
     @onboarded.setter
     def onboarded(self, value: dict):
-        self.__onboarded = value
-        self._property_changed('onboarded')        
+        self._property_changed('onboarded')
+        self.__onboarded = value        
 
     @property
     def liquidity_score(self) -> dict:
@@ -9645,8 +9731,8 @@ class FieldFilterMap(Base):
 
     @liquidity_score.setter
     def liquidity_score(self, value: dict):
-        self.__liquidity_score = value
-        self._property_changed('liquidity_score')        
+        self._property_changed('liquidity_score')
+        self.__liquidity_score = value        
 
     @property
     def long_rates_contribution(self) -> dict:
@@ -9654,8 +9740,8 @@ class FieldFilterMap(Base):
 
     @long_rates_contribution.setter
     def long_rates_contribution(self, value: dict):
-        self.__long_rates_contribution = value
-        self._property_changed('long_rates_contribution')        
+        self._property_changed('long_rates_contribution')
+        self.__long_rates_contribution = value        
 
     @property
     def importance(self) -> dict:
@@ -9663,8 +9749,8 @@ class FieldFilterMap(Base):
 
     @importance.setter
     def importance(self, value: dict):
-        self.__importance = value
-        self._property_changed('importance')        
+        self._property_changed('importance')
+        self.__importance = value        
 
     @property
     def source_date_span(self) -> dict:
@@ -9672,8 +9758,8 @@ class FieldFilterMap(Base):
 
     @source_date_span.setter
     def source_date_span(self, value: dict):
-        self.__source_date_span = value
-        self._property_changed('source_date_span')        
+        self._property_changed('source_date_span')
+        self.__source_date_span = value        
 
     @property
     def asset_classifications_gics_sector(self) -> dict:
@@ -9681,8 +9767,8 @@ class FieldFilterMap(Base):
 
     @asset_classifications_gics_sector.setter
     def asset_classifications_gics_sector(self, value: dict):
-        self.__asset_classifications_gics_sector = value
-        self._property_changed('asset_classifications_gics_sector')        
+        self._property_changed('asset_classifications_gics_sector')
+        self.__asset_classifications_gics_sector = value        
 
     @property
     def ann_yield6_month(self) -> dict:
@@ -9690,8 +9776,8 @@ class FieldFilterMap(Base):
 
     @ann_yield6_month.setter
     def ann_yield6_month(self, value: dict):
-        self.__ann_yield6_month = value
-        self._property_changed('ann_yield6_month')        
+        self._property_changed('ann_yield6_month')
+        self.__ann_yield6_month = value        
 
     @property
     def underlying_data_set_id(self) -> dict:
@@ -9699,8 +9785,8 @@ class FieldFilterMap(Base):
 
     @underlying_data_set_id.setter
     def underlying_data_set_id(self, value: dict):
-        self.__underlying_data_set_id = value
-        self._property_changed('underlying_data_set_id')        
+        self._property_changed('underlying_data_set_id')
+        self.__underlying_data_set_id = value        
 
     @property
     def sts_asset_name(self) -> dict:
@@ -9708,8 +9794,8 @@ class FieldFilterMap(Base):
 
     @sts_asset_name.setter
     def sts_asset_name(self, value: dict):
-        self.__sts_asset_name = value
-        self._property_changed('sts_asset_name')        
+        self._property_changed('sts_asset_name')
+        self.__sts_asset_name = value        
 
     @property
     def close_unadjusted(self) -> dict:
@@ -9717,8 +9803,8 @@ class FieldFilterMap(Base):
 
     @close_unadjusted.setter
     def close_unadjusted(self, value: dict):
-        self.__close_unadjusted = value
-        self._property_changed('close_unadjusted')        
+        self._property_changed('close_unadjusted')
+        self.__close_unadjusted = value        
 
     @property
     def value_unit(self) -> dict:
@@ -9726,8 +9812,8 @@ class FieldFilterMap(Base):
 
     @value_unit.setter
     def value_unit(self, value: dict):
-        self.__value_unit = value
-        self._property_changed('value_unit')        
+        self._property_changed('value_unit')
+        self.__value_unit = value        
 
     @property
     def quantity_unit(self) -> dict:
@@ -9735,8 +9821,8 @@ class FieldFilterMap(Base):
 
     @quantity_unit.setter
     def quantity_unit(self, value: dict):
-        self.__quantity_unit = value
-        self._property_changed('quantity_unit')        
+        self._property_changed('quantity_unit')
+        self.__quantity_unit = value        
 
     @property
     def adjusted_low_price(self) -> dict:
@@ -9744,8 +9830,8 @@ class FieldFilterMap(Base):
 
     @adjusted_low_price.setter
     def adjusted_low_price(self, value: dict):
-        self.__adjusted_low_price = value
-        self._property_changed('adjusted_low_price')        
+        self._property_changed('adjusted_low_price')
+        self.__adjusted_low_price = value        
 
     @property
     def net_exposure_classification(self) -> dict:
@@ -9753,8 +9839,8 @@ class FieldFilterMap(Base):
 
     @net_exposure_classification.setter
     def net_exposure_classification(self, value: dict):
-        self.__net_exposure_classification = value
-        self._property_changed('net_exposure_classification')        
+        self._property_changed('net_exposure_classification')
+        self.__net_exposure_classification = value        
 
     @property
     def settlement_method(self) -> dict:
@@ -9762,8 +9848,8 @@ class FieldFilterMap(Base):
 
     @settlement_method.setter
     def settlement_method(self, value: dict):
-        self.__settlement_method = value
-        self._property_changed('settlement_method')        
+        self._property_changed('settlement_method')
+        self.__settlement_method = value        
 
     @property
     def long_conviction_large(self) -> dict:
@@ -9771,8 +9857,8 @@ class FieldFilterMap(Base):
 
     @long_conviction_large.setter
     def long_conviction_large(self, value: dict):
-        self.__long_conviction_large = value
-        self._property_changed('long_conviction_large')        
+        self._property_changed('long_conviction_large')
+        self.__long_conviction_large = value        
 
     @property
     def oad(self) -> dict:
@@ -9780,8 +9866,8 @@ class FieldFilterMap(Base):
 
     @oad.setter
     def oad(self, value: dict):
-        self.__oad = value
-        self._property_changed('oad')        
+        self._property_changed('oad')
+        self.__oad = value        
 
     @property
     def rate(self) -> dict:
@@ -9789,8 +9875,8 @@ class FieldFilterMap(Base):
 
     @rate.setter
     def rate(self, value: dict):
-        self.__rate = value
-        self._property_changed('rate')        
+        self._property_changed('rate')
+        self.__rate = value        
 
     @property
     def alpha(self) -> dict:
@@ -9798,8 +9884,8 @@ class FieldFilterMap(Base):
 
     @alpha.setter
     def alpha(self, value: dict):
-        self.__alpha = value
-        self._property_changed('alpha')        
+        self._property_changed('alpha')
+        self.__alpha = value        
 
     @property
     def client(self) -> dict:
@@ -9807,8 +9893,8 @@ class FieldFilterMap(Base):
 
     @client.setter
     def client(self, value: dict):
-        self.__client = value
-        self._property_changed('client')        
+        self._property_changed('client')
+        self.__client = value        
 
     @property
     def company(self) -> dict:
@@ -9816,8 +9902,8 @@ class FieldFilterMap(Base):
 
     @company.setter
     def company(self, value: dict):
-        self.__company = value
-        self._property_changed('company')        
+        self._property_changed('company')
+        self.__company = value        
 
     @property
     def conviction_list(self) -> dict:
@@ -9825,8 +9911,8 @@ class FieldFilterMap(Base):
 
     @conviction_list.setter
     def conviction_list(self, value: dict):
-        self.__conviction_list = value
-        self._property_changed('conviction_list')        
+        self._property_changed('conviction_list')
+        self.__conviction_list = value        
 
     @property
     def settlement_frequency(self) -> dict:
@@ -9834,8 +9920,8 @@ class FieldFilterMap(Base):
 
     @settlement_frequency.setter
     def settlement_frequency(self, value: dict):
-        self.__settlement_frequency = value
-        self._property_changed('settlement_frequency')        
+        self._property_changed('settlement_frequency')
+        self.__settlement_frequency = value        
 
     @property
     def dist_avg7_day(self) -> dict:
@@ -9843,8 +9929,8 @@ class FieldFilterMap(Base):
 
     @dist_avg7_day.setter
     def dist_avg7_day(self, value: dict):
-        self.__dist_avg7_day = value
-        self._property_changed('dist_avg7_day')        
+        self._property_changed('dist_avg7_day')
+        self.__dist_avg7_day = value        
 
     @property
     def remove_tape_c(self) -> dict:
@@ -9852,8 +9938,8 @@ class FieldFilterMap(Base):
 
     @remove_tape_c.setter
     def remove_tape_c(self, value: dict):
-        self.__remove_tape_c = value
-        self._property_changed('remove_tape_c')        
+        self._property_changed('remove_tape_c')
+        self.__remove_tape_c = value        
 
     @property
     def remove_tape_b(self) -> dict:
@@ -9861,8 +9947,8 @@ class FieldFilterMap(Base):
 
     @remove_tape_b.setter
     def remove_tape_b(self, value: dict):
-        self.__remove_tape_b = value
-        self._property_changed('remove_tape_b')        
+        self._property_changed('remove_tape_b')
+        self.__remove_tape_b = value        
 
     @property
     def in_risk_model(self) -> dict:
@@ -9870,8 +9956,8 @@ class FieldFilterMap(Base):
 
     @in_risk_model.setter
     def in_risk_model(self, value: dict):
-        self.__in_risk_model = value
-        self._property_changed('in_risk_model')        
+        self._property_changed('in_risk_model')
+        self.__in_risk_model = value        
 
     @property
     def daily_net_shareholder_flows_percent(self) -> dict:
@@ -9879,8 +9965,8 @@ class FieldFilterMap(Base):
 
     @daily_net_shareholder_flows_percent.setter
     def daily_net_shareholder_flows_percent(self, value: dict):
-        self.__daily_net_shareholder_flows_percent = value
-        self._property_changed('daily_net_shareholder_flows_percent')        
+        self._property_changed('daily_net_shareholder_flows_percent')
+        self.__daily_net_shareholder_flows_percent = value        
 
     @property
     def servicing_cost_long_pnl(self) -> dict:
@@ -9888,8 +9974,8 @@ class FieldFilterMap(Base):
 
     @servicing_cost_long_pnl.setter
     def servicing_cost_long_pnl(self, value: dict):
-        self.__servicing_cost_long_pnl = value
-        self._property_changed('servicing_cost_long_pnl')        
+        self._property_changed('servicing_cost_long_pnl')
+        self.__servicing_cost_long_pnl = value        
 
     @property
     def remove_tape_a(self) -> dict:
@@ -9897,8 +9983,8 @@ class FieldFilterMap(Base):
 
     @remove_tape_a.setter
     def remove_tape_a(self, value: dict):
-        self.__remove_tape_a = value
-        self._property_changed('remove_tape_a')        
+        self._property_changed('remove_tape_a')
+        self.__remove_tape_a = value        
 
     @property
     def meeting_number(self) -> dict:
@@ -9906,8 +9992,8 @@ class FieldFilterMap(Base):
 
     @meeting_number.setter
     def meeting_number(self, value: dict):
-        self.__meeting_number = value
-        self._property_changed('meeting_number')        
+        self._property_changed('meeting_number')
+        self.__meeting_number = value        
 
     @property
     def exchange_id(self) -> dict:
@@ -9915,8 +10001,8 @@ class FieldFilterMap(Base):
 
     @exchange_id.setter
     def exchange_id(self, value: dict):
-        self.__exchange_id = value
-        self._property_changed('exchange_id')        
+        self._property_changed('exchange_id')
+        self.__exchange_id = value        
 
     @property
     def mid_gspread(self) -> dict:
@@ -9924,8 +10010,8 @@ class FieldFilterMap(Base):
 
     @mid_gspread.setter
     def mid_gspread(self, value: dict):
-        self.__mid_gspread = value
-        self._property_changed('mid_gspread')        
+        self._property_changed('mid_gspread')
+        self.__mid_gspread = value        
 
     @property
     def tcm_cost_horizon20_day(self) -> dict:
@@ -9933,8 +10019,8 @@ class FieldFilterMap(Base):
 
     @tcm_cost_horizon20_day.setter
     def tcm_cost_horizon20_day(self, value: dict):
-        self.__tcm_cost_horizon20_day = value
-        self._property_changed('tcm_cost_horizon20_day')        
+        self._property_changed('tcm_cost_horizon20_day')
+        self.__tcm_cost_horizon20_day = value        
 
     @property
     def long_level(self) -> dict:
@@ -9942,8 +10028,8 @@ class FieldFilterMap(Base):
 
     @long_level.setter
     def long_level(self, value: dict):
-        self.__long_level = value
-        self._property_changed('long_level')        
+        self._property_changed('long_level')
+        self.__long_level = value        
 
     @property
     def realm(self) -> dict:
@@ -9951,8 +10037,8 @@ class FieldFilterMap(Base):
 
     @realm.setter
     def realm(self, value: dict):
-        self.__realm = value
-        self._property_changed('realm')        
+        self._property_changed('realm')
+        self.__realm = value        
 
     @property
     def bid(self) -> dict:
@@ -9960,8 +10046,8 @@ class FieldFilterMap(Base):
 
     @bid.setter
     def bid(self, value: dict):
-        self.__bid = value
-        self._property_changed('bid')        
+        self._property_changed('bid')
+        self.__bid = value        
 
     @property
     def data_description(self) -> dict:
@@ -9969,8 +10055,8 @@ class FieldFilterMap(Base):
 
     @data_description.setter
     def data_description(self, value: dict):
-        self.__data_description = value
-        self._property_changed('data_description')        
+        self._property_changed('data_description')
+        self.__data_description = value        
 
     @property
     def is_aggressive(self) -> dict:
@@ -9978,8 +10064,8 @@ class FieldFilterMap(Base):
 
     @is_aggressive.setter
     def is_aggressive(self, value: dict):
-        self.__is_aggressive = value
-        self._property_changed('is_aggressive')        
+        self._property_changed('is_aggressive')
+        self.__is_aggressive = value        
 
     @property
     def order_id(self) -> dict:
@@ -9987,8 +10073,8 @@ class FieldFilterMap(Base):
 
     @order_id.setter
     def order_id(self, value: dict):
-        self.__order_id = value
-        self._property_changed('order_id')        
+        self._property_changed('order_id')
+        self.__order_id = value        
 
     @property
     def gsideid(self) -> dict:
@@ -9996,8 +10082,8 @@ class FieldFilterMap(Base):
 
     @gsideid.setter
     def gsideid(self, value: dict):
-        self.__gsideid = value
-        self._property_changed('gsideid')        
+        self._property_changed('gsideid')
+        self.__gsideid = value        
 
     @property
     def repo_rate(self) -> dict:
@@ -10005,8 +10091,8 @@ class FieldFilterMap(Base):
 
     @repo_rate.setter
     def repo_rate(self, value: dict):
-        self.__repo_rate = value
-        self._property_changed('repo_rate')        
+        self._property_changed('repo_rate')
+        self.__repo_rate = value        
 
     @property
     def division(self) -> dict:
@@ -10014,8 +10100,8 @@ class FieldFilterMap(Base):
 
     @division.setter
     def division(self, value: dict):
-        self.__division = value
-        self._property_changed('division')        
+        self._property_changed('division')
+        self.__division = value        
 
     @property
     def market_cap_usd(self) -> dict:
@@ -10023,8 +10109,8 @@ class FieldFilterMap(Base):
 
     @market_cap_usd.setter
     def market_cap_usd(self, value: dict):
-        self.__market_cap_usd = value
-        self._property_changed('market_cap_usd')        
+        self._property_changed('market_cap_usd')
+        self.__market_cap_usd = value        
 
     @property
     def high_price(self) -> dict:
@@ -10032,8 +10118,8 @@ class FieldFilterMap(Base):
 
     @high_price.setter
     def high_price(self, value: dict):
-        self.__high_price = value
-        self._property_changed('high_price')        
+        self._property_changed('high_price')
+        self.__high_price = value        
 
     @property
     def absolute_shares(self) -> dict:
@@ -10041,8 +10127,8 @@ class FieldFilterMap(Base):
 
     @absolute_shares.setter
     def absolute_shares(self, value: dict):
-        self.__absolute_shares = value
-        self._property_changed('absolute_shares')        
+        self._property_changed('absolute_shares')
+        self.__absolute_shares = value        
 
     @property
     def action(self) -> dict:
@@ -10050,8 +10136,8 @@ class FieldFilterMap(Base):
 
     @action.setter
     def action(self, value: dict):
-        self.__action = value
-        self._property_changed('action')        
+        self._property_changed('action')
+        self.__action = value        
 
     @property
     def model(self) -> dict:
@@ -10059,8 +10145,8 @@ class FieldFilterMap(Base):
 
     @model.setter
     def model(self, value: dict):
-        self.__model = value
-        self._property_changed('model')        
+        self._property_changed('model')
+        self.__model = value        
 
     @property
     def id(self) -> dict:
@@ -10068,8 +10154,8 @@ class FieldFilterMap(Base):
 
     @id.setter
     def id(self, value: dict):
-        self.__id = value
-        self._property_changed('id')        
+        self._property_changed('id')
+        self.__id = value        
 
     @property
     def arrival_haircut_vwap_normalized(self) -> dict:
@@ -10077,8 +10163,8 @@ class FieldFilterMap(Base):
 
     @arrival_haircut_vwap_normalized.setter
     def arrival_haircut_vwap_normalized(self, value: dict):
-        self.__arrival_haircut_vwap_normalized = value
-        self._property_changed('arrival_haircut_vwap_normalized')        
+        self._property_changed('arrival_haircut_vwap_normalized')
+        self.__arrival_haircut_vwap_normalized = value        
 
     @property
     def price_component(self) -> dict:
@@ -10086,8 +10172,8 @@ class FieldFilterMap(Base):
 
     @price_component.setter
     def price_component(self, value: dict):
-        self.__price_component = value
-        self._property_changed('price_component')        
+        self._property_changed('price_component')
+        self.__price_component = value        
 
     @property
     def queue_clock_time_description(self) -> dict:
@@ -10095,8 +10181,17 @@ class FieldFilterMap(Base):
 
     @queue_clock_time_description.setter
     def queue_clock_time_description(self, value: dict):
-        self.__queue_clock_time_description = value
-        self._property_changed('queue_clock_time_description')        
+        self._property_changed('queue_clock_time_description')
+        self.__queue_clock_time_description = value        
+
+    @property
+    def maturity(self) -> dict:
+        return self.__maturity
+
+    @maturity.setter
+    def maturity(self, value: dict):
+        self._property_changed('maturity')
+        self.__maturity = value        
 
     @property
     def delta_strike(self) -> dict:
@@ -10104,8 +10199,17 @@ class FieldFilterMap(Base):
 
     @delta_strike.setter
     def delta_strike(self, value: dict):
-        self.__delta_strike = value
-        self._property_changed('delta_strike')        
+        self._property_changed('delta_strike')
+        self.__delta_strike = value        
+
+    @property
+    def asset_parameters_notional_currency(self) -> dict:
+        return self.__asset_parameters_notional_currency
+
+    @asset_parameters_notional_currency.setter
+    def asset_parameters_notional_currency(self, value: dict):
+        self._property_changed('asset_parameters_notional_currency')
+        self.__asset_parameters_notional_currency = value        
 
     @property
     def value_actual(self) -> dict:
@@ -10113,8 +10217,8 @@ class FieldFilterMap(Base):
 
     @value_actual.setter
     def value_actual(self, value: dict):
-        self.__value_actual = value
-        self._property_changed('value_actual')        
+        self._property_changed('value_actual')
+        self.__value_actual = value        
 
     @property
     def upi(self) -> dict:
@@ -10122,8 +10226,8 @@ class FieldFilterMap(Base):
 
     @upi.setter
     def upi(self, value: dict):
-        self.__upi = value
-        self._property_changed('upi')        
+        self._property_changed('upi')
+        self.__upi = value        
 
     @property
     def bcid(self) -> dict:
@@ -10131,8 +10235,8 @@ class FieldFilterMap(Base):
 
     @bcid.setter
     def bcid(self, value: dict):
-        self.__bcid = value
-        self._property_changed('bcid')        
+        self._property_changed('bcid')
+        self.__bcid = value        
 
     @property
     def mkt_point(self) -> dict:
@@ -10140,8 +10244,8 @@ class FieldFilterMap(Base):
 
     @mkt_point.setter
     def mkt_point(self, value: dict):
-        self.__mkt_point = value
-        self._property_changed('mkt_point')        
+        self._property_changed('mkt_point')
+        self.__mkt_point = value        
 
     @property
     def collateral_currency(self) -> dict:
@@ -10149,8 +10253,8 @@ class FieldFilterMap(Base):
 
     @collateral_currency.setter
     def collateral_currency(self, value: dict):
-        self.__collateral_currency = value
-        self._property_changed('collateral_currency')        
+        self._property_changed('collateral_currency')
+        self.__collateral_currency = value        
 
     @property
     def original_country(self) -> dict:
@@ -10158,8 +10262,8 @@ class FieldFilterMap(Base):
 
     @original_country.setter
     def original_country(self, value: dict):
-        self.__original_country = value
-        self._property_changed('original_country')        
+        self._property_changed('original_country')
+        self.__original_country = value        
 
     @property
     def touch_liquidity_score(self) -> dict:
@@ -10167,8 +10271,8 @@ class FieldFilterMap(Base):
 
     @touch_liquidity_score.setter
     def touch_liquidity_score(self, value: dict):
-        self.__touch_liquidity_score = value
-        self._property_changed('touch_liquidity_score')        
+        self._property_changed('touch_liquidity_score')
+        self.__touch_liquidity_score = value        
 
     @property
     def field(self) -> dict:
@@ -10176,8 +10280,8 @@ class FieldFilterMap(Base):
 
     @field.setter
     def field(self, value: dict):
-        self.__field = value
-        self._property_changed('field')        
+        self._property_changed('field')
+        self.__field = value        
 
     @property
     def factor_category_id(self) -> dict:
@@ -10185,8 +10289,8 @@ class FieldFilterMap(Base):
 
     @factor_category_id.setter
     def factor_category_id(self, value: dict):
-        self.__factor_category_id = value
-        self._property_changed('factor_category_id')        
+        self._property_changed('factor_category_id')
+        self.__factor_category_id = value        
 
     @property
     def expected_completion_date(self) -> dict:
@@ -10194,8 +10298,8 @@ class FieldFilterMap(Base):
 
     @expected_completion_date.setter
     def expected_completion_date(self, value: dict):
-        self.__expected_completion_date = value
-        self._property_changed('expected_completion_date')        
+        self._property_changed('expected_completion_date')
+        self.__expected_completion_date = value        
 
     @property
     def spread_option_vol(self) -> dict:
@@ -10203,8 +10307,8 @@ class FieldFilterMap(Base):
 
     @spread_option_vol.setter
     def spread_option_vol(self, value: dict):
-        self.__spread_option_vol = value
-        self._property_changed('spread_option_vol')        
+        self._property_changed('spread_option_vol')
+        self.__spread_option_vol = value        
 
     @property
     def inflation_swap_rate(self) -> dict:
@@ -10212,8 +10316,8 @@ class FieldFilterMap(Base):
 
     @inflation_swap_rate.setter
     def inflation_swap_rate(self, value: dict):
-        self.__inflation_swap_rate = value
-        self._property_changed('inflation_swap_rate')        
+        self._property_changed('inflation_swap_rate')
+        self.__inflation_swap_rate = value        
 
     @property
     def skew(self) -> dict:
@@ -10221,8 +10325,8 @@ class FieldFilterMap(Base):
 
     @skew.setter
     def skew(self, value: dict):
-        self.__skew = value
-        self._property_changed('skew')        
+        self._property_changed('skew')
+        self.__skew = value        
 
     @property
     def status(self) -> dict:
@@ -10230,8 +10334,8 @@ class FieldFilterMap(Base):
 
     @status.setter
     def status(self, value: dict):
-        self.__status = value
-        self._property_changed('status')        
+        self._property_changed('status')
+        self.__status = value        
 
     @property
     def sustain_emerging_markets(self) -> dict:
@@ -10239,8 +10343,8 @@ class FieldFilterMap(Base):
 
     @sustain_emerging_markets.setter
     def sustain_emerging_markets(self, value: dict):
-        self.__sustain_emerging_markets = value
-        self._property_changed('sustain_emerging_markets')        
+        self._property_changed('sustain_emerging_markets')
+        self.__sustain_emerging_markets = value        
 
     @property
     def total_price(self) -> dict:
@@ -10248,8 +10352,8 @@ class FieldFilterMap(Base):
 
     @total_price.setter
     def total_price(self, value: dict):
-        self.__total_price = value
-        self._property_changed('total_price')        
+        self._property_changed('total_price')
+        self.__total_price = value        
 
     @property
     def embeded_option(self) -> dict:
@@ -10257,8 +10361,8 @@ class FieldFilterMap(Base):
 
     @embeded_option.setter
     def embeded_option(self, value: dict):
-        self.__embeded_option = value
-        self._property_changed('embeded_option')        
+        self._property_changed('embeded_option')
+        self.__embeded_option = value        
 
     @property
     def event_source(self) -> dict:
@@ -10266,8 +10370,8 @@ class FieldFilterMap(Base):
 
     @event_source.setter
     def event_source(self, value: dict):
-        self.__event_source = value
-        self._property_changed('event_source')        
+        self._property_changed('event_source')
+        self.__event_source = value        
 
     @property
     def on_behalf_of(self) -> dict:
@@ -10275,8 +10379,8 @@ class FieldFilterMap(Base):
 
     @on_behalf_of.setter
     def on_behalf_of(self, value: dict):
-        self.__on_behalf_of = value
-        self._property_changed('on_behalf_of')        
+        self._property_changed('on_behalf_of')
+        self.__on_behalf_of = value        
 
     @property
     def qis_perm_no(self) -> dict:
@@ -10284,8 +10388,8 @@ class FieldFilterMap(Base):
 
     @qis_perm_no.setter
     def qis_perm_no(self, value: dict):
-        self.__qis_perm_no = value
-        self._property_changed('qis_perm_no')        
+        self._property_changed('qis_perm_no')
+        self.__qis_perm_no = value        
 
     @property
     def shareclass_id(self) -> dict:
@@ -10293,8 +10397,8 @@ class FieldFilterMap(Base):
 
     @shareclass_id.setter
     def shareclass_id(self, value: dict):
-        self.__shareclass_id = value
-        self._property_changed('shareclass_id')        
+        self._property_changed('shareclass_id')
+        self.__shareclass_id = value        
 
     @property
     def sts_commodity_sector(self) -> dict:
@@ -10302,8 +10406,8 @@ class FieldFilterMap(Base):
 
     @sts_commodity_sector.setter
     def sts_commodity_sector(self, value: dict):
-        self.__sts_commodity_sector = value
-        self._property_changed('sts_commodity_sector')        
+        self._property_changed('sts_commodity_sector')
+        self.__sts_commodity_sector = value        
 
     @property
     def exception_status(self) -> dict:
@@ -10311,8 +10415,8 @@ class FieldFilterMap(Base):
 
     @exception_status.setter
     def exception_status(self, value: dict):
-        self.__exception_status = value
-        self._property_changed('exception_status')        
+        self._property_changed('exception_status')
+        self.__exception_status = value        
 
     @property
     def sales_coverage(self) -> dict:
@@ -10320,8 +10424,8 @@ class FieldFilterMap(Base):
 
     @sales_coverage.setter
     def sales_coverage(self, value: dict):
-        self.__sales_coverage = value
-        self._property_changed('sales_coverage')        
+        self._property_changed('sales_coverage')
+        self.__sales_coverage = value        
 
     @property
     def short_exposure(self) -> dict:
@@ -10329,8 +10433,8 @@ class FieldFilterMap(Base):
 
     @short_exposure.setter
     def short_exposure(self, value: dict):
-        self.__short_exposure = value
-        self._property_changed('short_exposure')        
+        self._property_changed('short_exposure')
+        self.__short_exposure = value        
 
     @property
     def tcm_cost_participation_rate10_pct(self) -> dict:
@@ -10338,8 +10442,8 @@ class FieldFilterMap(Base):
 
     @tcm_cost_participation_rate10_pct.setter
     def tcm_cost_participation_rate10_pct(self, value: dict):
-        self.__tcm_cost_participation_rate10_pct = value
-        self._property_changed('tcm_cost_participation_rate10_pct')        
+        self._property_changed('tcm_cost_participation_rate10_pct')
+        self.__tcm_cost_participation_rate10_pct = value        
 
     @property
     def event_time(self) -> dict:
@@ -10347,8 +10451,8 @@ class FieldFilterMap(Base):
 
     @event_time.setter
     def event_time(self, value: dict):
-        self.__event_time = value
-        self._property_changed('event_time')        
+        self._property_changed('event_time')
+        self.__event_time = value        
 
     @property
     def position_source_name(self) -> dict:
@@ -10356,8 +10460,8 @@ class FieldFilterMap(Base):
 
     @position_source_name.setter
     def position_source_name(self, value: dict):
-        self.__position_source_name = value
-        self._property_changed('position_source_name')        
+        self._property_changed('position_source_name')
+        self.__position_source_name = value        
 
     @property
     def arrival_haircut_vwap(self) -> dict:
@@ -10365,8 +10469,8 @@ class FieldFilterMap(Base):
 
     @arrival_haircut_vwap.setter
     def arrival_haircut_vwap(self, value: dict):
-        self.__arrival_haircut_vwap = value
-        self._property_changed('arrival_haircut_vwap')        
+        self._property_changed('arrival_haircut_vwap')
+        self.__arrival_haircut_vwap = value        
 
     @property
     def interest_rate(self) -> dict:
@@ -10374,8 +10478,8 @@ class FieldFilterMap(Base):
 
     @interest_rate.setter
     def interest_rate(self, value: dict):
-        self.__interest_rate = value
-        self._property_changed('interest_rate')        
+        self._property_changed('interest_rate')
+        self.__interest_rate = value        
 
     @property
     def execution_days(self) -> dict:
@@ -10383,8 +10487,8 @@ class FieldFilterMap(Base):
 
     @execution_days.setter
     def execution_days(self, value: dict):
-        self.__execution_days = value
-        self._property_changed('execution_days')        
+        self._property_changed('execution_days')
+        self.__execution_days = value        
 
     @property
     def side(self) -> dict:
@@ -10392,8 +10496,8 @@ class FieldFilterMap(Base):
 
     @side.setter
     def side(self, value: dict):
-        self.__side = value
-        self._property_changed('side')        
+        self._property_changed('side')
+        self.__side = value        
 
     @property
     def compliance_restricted_status(self) -> dict:
@@ -10401,8 +10505,8 @@ class FieldFilterMap(Base):
 
     @compliance_restricted_status.setter
     def compliance_restricted_status(self, value: dict):
-        self.__compliance_restricted_status = value
-        self._property_changed('compliance_restricted_status')        
+        self._property_changed('compliance_restricted_status')
+        self.__compliance_restricted_status = value        
 
     @property
     def forward(self) -> dict:
@@ -10410,8 +10514,8 @@ class FieldFilterMap(Base):
 
     @forward.setter
     def forward(self, value: dict):
-        self.__forward = value
-        self._property_changed('forward')        
+        self._property_changed('forward')
+        self.__forward = value        
 
     @property
     def borrow_fee(self) -> dict:
@@ -10419,8 +10523,8 @@ class FieldFilterMap(Base):
 
     @borrow_fee.setter
     def borrow_fee(self, value: dict):
-        self.__borrow_fee = value
-        self._property_changed('borrow_fee')        
+        self._property_changed('borrow_fee')
+        self.__borrow_fee = value        
 
     @property
     def strike(self) -> dict:
@@ -10428,8 +10532,8 @@ class FieldFilterMap(Base):
 
     @strike.setter
     def strike(self, value: dict):
-        self.__strike = value
-        self._property_changed('strike')        
+        self._property_changed('strike')
+        self.__strike = value        
 
     @property
     def loan_spread(self) -> dict:
@@ -10437,8 +10541,8 @@ class FieldFilterMap(Base):
 
     @loan_spread.setter
     def loan_spread(self, value: dict):
-        self.__loan_spread = value
-        self._property_changed('loan_spread')        
+        self._property_changed('loan_spread')
+        self.__loan_spread = value        
 
     @property
     def tcm_cost_horizon12_hour(self) -> dict:
@@ -10446,8 +10550,8 @@ class FieldFilterMap(Base):
 
     @tcm_cost_horizon12_hour.setter
     def tcm_cost_horizon12_hour(self, value: dict):
-        self.__tcm_cost_horizon12_hour = value
-        self._property_changed('tcm_cost_horizon12_hour')        
+        self._property_changed('tcm_cost_horizon12_hour')
+        self.__tcm_cost_horizon12_hour = value        
 
     @property
     def dew_point(self) -> dict:
@@ -10455,8 +10559,8 @@ class FieldFilterMap(Base):
 
     @dew_point.setter
     def dew_point(self, value: dict):
-        self.__dew_point = value
-        self._property_changed('dew_point')        
+        self._property_changed('dew_point')
+        self.__dew_point = value        
 
     @property
     def research_commission(self) -> dict:
@@ -10464,8 +10568,8 @@ class FieldFilterMap(Base):
 
     @research_commission.setter
     def research_commission(self, value: dict):
-        self.__research_commission = value
-        self._property_changed('research_commission')        
+        self._property_changed('research_commission')
+        self.__research_commission = value        
 
     @property
     def leg_one_delivery_point(self) -> dict:
@@ -10473,8 +10577,8 @@ class FieldFilterMap(Base):
 
     @leg_one_delivery_point.setter
     def leg_one_delivery_point(self, value: dict):
-        self.__leg_one_delivery_point = value
-        self._property_changed('leg_one_delivery_point')        
+        self._property_changed('leg_one_delivery_point')
+        self.__leg_one_delivery_point = value        
 
     @property
     def asset_classifications_risk_country_code(self) -> dict:
@@ -10482,8 +10586,8 @@ class FieldFilterMap(Base):
 
     @asset_classifications_risk_country_code.setter
     def asset_classifications_risk_country_code(self, value: dict):
-        self.__asset_classifications_risk_country_code = value
-        self._property_changed('asset_classifications_risk_country_code')        
+        self._property_changed('asset_classifications_risk_country_code')
+        self.__asset_classifications_risk_country_code = value        
 
     @property
     def event_status(self) -> dict:
@@ -10491,8 +10595,17 @@ class FieldFilterMap(Base):
 
     @event_status.setter
     def event_status(self, value: dict):
-        self.__event_status = value
-        self._property_changed('event_status')        
+        self._property_changed('event_status')
+        self.__event_status = value        
+
+    @property
+    def asset_parameters_settlement(self) -> dict:
+        return self.__asset_parameters_settlement
+
+    @asset_parameters_settlement.setter
+    def asset_parameters_settlement(self, value: dict):
+        self._property_changed('asset_parameters_settlement')
+        self.__asset_parameters_settlement = value        
 
     @property
     def return_(self) -> dict:
@@ -10500,8 +10613,8 @@ class FieldFilterMap(Base):
 
     @return_.setter
     def return_(self, value: dict):
-        self.__return = value
-        self._property_changed('return_')        
+        self._property_changed('return_')
+        self.__return = value        
 
     @property
     def max_temperature(self) -> dict:
@@ -10509,8 +10622,8 @@ class FieldFilterMap(Base):
 
     @max_temperature.setter
     def max_temperature(self, value: dict):
-        self.__max_temperature = value
-        self._property_changed('max_temperature')        
+        self._property_changed('max_temperature')
+        self.__max_temperature = value        
 
     @property
     def acquirer_shareholder_meeting_date(self) -> dict:
@@ -10518,8 +10631,8 @@ class FieldFilterMap(Base):
 
     @acquirer_shareholder_meeting_date.setter
     def acquirer_shareholder_meeting_date(self, value: dict):
-        self.__acquirer_shareholder_meeting_date = value
-        self._property_changed('acquirer_shareholder_meeting_date')        
+        self._property_changed('acquirer_shareholder_meeting_date')
+        self.__acquirer_shareholder_meeting_date = value        
 
     @property
     def notional_amount(self) -> dict:
@@ -10527,8 +10640,8 @@ class FieldFilterMap(Base):
 
     @notional_amount.setter
     def notional_amount(self, value: dict):
-        self.__notional_amount = value
-        self._property_changed('notional_amount')        
+        self._property_changed('notional_amount')
+        self.__notional_amount = value        
 
     @property
     def arrival_rt_normalized(self) -> dict:
@@ -10536,8 +10649,8 @@ class FieldFilterMap(Base):
 
     @arrival_rt_normalized.setter
     def arrival_rt_normalized(self, value: dict):
-        self.__arrival_rt_normalized = value
-        self._property_changed('arrival_rt_normalized')        
+        self._property_changed('arrival_rt_normalized')
+        self.__arrival_rt_normalized = value        
 
     @property
     def report_type(self) -> dict:
@@ -10545,8 +10658,8 @@ class FieldFilterMap(Base):
 
     @report_type.setter
     def report_type(self, value: dict):
-        self.__report_type = value
-        self._property_changed('report_type')        
+        self._property_changed('report_type')
+        self.__report_type = value        
 
     @property
     def source_url(self) -> dict:
@@ -10554,8 +10667,8 @@ class FieldFilterMap(Base):
 
     @source_url.setter
     def source_url(self, value: dict):
-        self.__source_url = value
-        self._property_changed('source_url')        
+        self._property_changed('source_url')
+        self.__source_url = value        
 
     @property
     def estimated_return(self) -> dict:
@@ -10563,8 +10676,8 @@ class FieldFilterMap(Base):
 
     @estimated_return.setter
     def estimated_return(self, value: dict):
-        self.__estimated_return = value
-        self._property_changed('estimated_return')        
+        self._property_changed('estimated_return')
+        self.__estimated_return = value        
 
     @property
     def high(self) -> dict:
@@ -10572,8 +10685,8 @@ class FieldFilterMap(Base):
 
     @high.setter
     def high(self, value: dict):
-        self.__high = value
-        self._property_changed('high')        
+        self._property_changed('high')
+        self.__high = value        
 
     @property
     def source_last_update(self) -> dict:
@@ -10581,8 +10694,8 @@ class FieldFilterMap(Base):
 
     @source_last_update.setter
     def source_last_update(self, value: dict):
-        self.__source_last_update = value
-        self._property_changed('source_last_update')        
+        self._property_changed('source_last_update')
+        self.__source_last_update = value        
 
     @property
     def quantity_mw(self) -> dict:
@@ -10590,8 +10703,17 @@ class FieldFilterMap(Base):
 
     @quantity_mw.setter
     def quantity_mw(self, value: dict):
-        self.__quantity_mw = value
-        self._property_changed('quantity_mw')        
+        self._property_changed('quantity_mw')
+        self.__quantity_mw = value        
+
+    @property
+    def pnode_id(self) -> dict:
+        return self.__pnode_id
+
+    @pnode_id.setter
+    def pnode_id(self, value: dict):
+        self._property_changed('pnode_id')
+        self.__pnode_id = value        
 
     @property
     def event_name(self) -> dict:
@@ -10599,8 +10721,8 @@ class FieldFilterMap(Base):
 
     @event_name.setter
     def event_name(self, value: dict):
-        self.__event_name = value
-        self._property_changed('event_name')        
+        self._property_changed('event_name')
+        self.__event_name = value        
 
     @property
     def indication_of_other_price_affecting_term(self) -> dict:
@@ -10608,8 +10730,8 @@ class FieldFilterMap(Base):
 
     @indication_of_other_price_affecting_term.setter
     def indication_of_other_price_affecting_term(self, value: dict):
-        self.__indication_of_other_price_affecting_term = value
-        self._property_changed('indication_of_other_price_affecting_term')        
+        self._property_changed('indication_of_other_price_affecting_term')
+        self.__indication_of_other_price_affecting_term = value        
 
     @property
     def unadjusted_bid(self) -> dict:
@@ -10617,8 +10739,8 @@ class FieldFilterMap(Base):
 
     @unadjusted_bid.setter
     def unadjusted_bid(self, value: dict):
-        self.__unadjusted_bid = value
-        self._property_changed('unadjusted_bid')        
+        self._property_changed('unadjusted_bid')
+        self.__unadjusted_bid = value        
 
     @property
     def backtest_type(self) -> dict:
@@ -10626,8 +10748,8 @@ class FieldFilterMap(Base):
 
     @backtest_type.setter
     def backtest_type(self, value: dict):
-        self.__backtest_type = value
-        self._property_changed('backtest_type')        
+        self._property_changed('backtest_type')
+        self.__backtest_type = value        
 
     @property
     def gsdeer(self) -> dict:
@@ -10635,8 +10757,8 @@ class FieldFilterMap(Base):
 
     @gsdeer.setter
     def gsdeer(self, value: dict):
-        self.__gsdeer = value
-        self._property_changed('gsdeer')        
+        self._property_changed('gsdeer')
+        self.__gsdeer = value        
 
     @property
     def g_regional_percentile(self) -> dict:
@@ -10644,8 +10766,8 @@ class FieldFilterMap(Base):
 
     @g_regional_percentile.setter
     def g_regional_percentile(self, value: dict):
-        self.__g_regional_percentile = value
-        self._property_changed('g_regional_percentile')        
+        self._property_changed('g_regional_percentile')
+        self.__g_regional_percentile = value        
 
     @property
     def prev_close_ask(self) -> dict:
@@ -10653,8 +10775,8 @@ class FieldFilterMap(Base):
 
     @prev_close_ask.setter
     def prev_close_ask(self, value: dict):
-        self.__prev_close_ask = value
-        self._property_changed('prev_close_ask')        
+        self._property_changed('prev_close_ask')
+        self.__prev_close_ask = value        
 
     @property
     def level(self) -> dict:
@@ -10662,8 +10784,8 @@ class FieldFilterMap(Base):
 
     @level.setter
     def level(self, value: dict):
-        self.__level = value
-        self._property_changed('level')        
+        self._property_changed('level')
+        self.__level = value        
 
     @property
     def mnav(self) -> dict:
@@ -10671,8 +10793,8 @@ class FieldFilterMap(Base):
 
     @mnav.setter
     def mnav(self, value: dict):
-        self.__mnav = value
-        self._property_changed('mnav')        
+        self._property_changed('mnav')
+        self.__mnav = value        
 
     @property
     def es_momentum_score(self) -> dict:
@@ -10680,8 +10802,8 @@ class FieldFilterMap(Base):
 
     @es_momentum_score.setter
     def es_momentum_score(self, value: dict):
-        self.__es_momentum_score = value
-        self._property_changed('es_momentum_score')        
+        self._property_changed('es_momentum_score')
+        self.__es_momentum_score = value        
 
     @property
     def curr_yield7_day(self) -> dict:
@@ -10689,8 +10811,8 @@ class FieldFilterMap(Base):
 
     @curr_yield7_day.setter
     def curr_yield7_day(self, value: dict):
-        self.__curr_yield7_day = value
-        self._property_changed('curr_yield7_day')        
+        self._property_changed('curr_yield7_day')
+        self.__curr_yield7_day = value        
 
     @property
     def pressure(self) -> dict:
@@ -10698,8 +10820,8 @@ class FieldFilterMap(Base):
 
     @pressure.setter
     def pressure(self, value: dict):
-        self.__pressure = value
-        self._property_changed('pressure')        
+        self._property_changed('pressure')
+        self.__pressure = value        
 
     @property
     def short_description(self) -> dict:
@@ -10707,8 +10829,8 @@ class FieldFilterMap(Base):
 
     @short_description.setter
     def short_description(self, value: dict):
-        self.__short_description = value
-        self._property_changed('short_description')        
+        self._property_changed('short_description')
+        self.__short_description = value        
 
     @property
     def feed(self) -> dict:
@@ -10716,8 +10838,8 @@ class FieldFilterMap(Base):
 
     @feed.setter
     def feed(self, value: dict):
-        self.__feed = value
-        self._property_changed('feed')        
+        self._property_changed('feed')
+        self.__feed = value        
 
     @property
     def net_weight(self) -> dict:
@@ -10725,8 +10847,8 @@ class FieldFilterMap(Base):
 
     @net_weight.setter
     def net_weight(self, value: dict):
-        self.__net_weight = value
-        self._property_changed('net_weight')        
+        self._property_changed('net_weight')
+        self.__net_weight = value        
 
     @property
     def portfolio_managers(self) -> dict:
@@ -10734,8 +10856,8 @@ class FieldFilterMap(Base):
 
     @portfolio_managers.setter
     def portfolio_managers(self, value: dict):
-        self.__portfolio_managers = value
-        self._property_changed('portfolio_managers')        
+        self._property_changed('portfolio_managers')
+        self.__portfolio_managers = value        
 
     @property
     def asset_parameters_commodity_sector(self) -> dict:
@@ -10743,8 +10865,8 @@ class FieldFilterMap(Base):
 
     @asset_parameters_commodity_sector.setter
     def asset_parameters_commodity_sector(self, value: dict):
-        self.__asset_parameters_commodity_sector = value
-        self._property_changed('asset_parameters_commodity_sector')        
+        self._property_changed('asset_parameters_commodity_sector')
+        self.__asset_parameters_commodity_sector = value        
 
     @property
     def bos_in_ticks(self) -> dict:
@@ -10752,8 +10874,8 @@ class FieldFilterMap(Base):
 
     @bos_in_ticks.setter
     def bos_in_ticks(self, value: dict):
-        self.__bos_in_ticks = value
-        self._property_changed('bos_in_ticks')        
+        self._property_changed('bos_in_ticks')
+        self.__bos_in_ticks = value        
 
     @property
     def price_notation2(self) -> dict:
@@ -10761,8 +10883,8 @@ class FieldFilterMap(Base):
 
     @price_notation2.setter
     def price_notation2(self, value: dict):
-        self.__price_notation2 = value
-        self._property_changed('price_notation2')        
+        self._property_changed('price_notation2')
+        self.__price_notation2 = value        
 
     @property
     def market_buffer_threshold(self) -> dict:
@@ -10770,8 +10892,8 @@ class FieldFilterMap(Base):
 
     @market_buffer_threshold.setter
     def market_buffer_threshold(self, value: dict):
-        self.__market_buffer_threshold = value
-        self._property_changed('market_buffer_threshold')        
+        self._property_changed('market_buffer_threshold')
+        self.__market_buffer_threshold = value        
 
     @property
     def price_notation3(self) -> dict:
@@ -10779,8 +10901,8 @@ class FieldFilterMap(Base):
 
     @price_notation3.setter
     def price_notation3(self, value: dict):
-        self.__price_notation3 = value
-        self._property_changed('price_notation3')        
+        self._property_changed('price_notation3')
+        self.__price_notation3 = value        
 
     @property
     def cap_floor_vol(self) -> dict:
@@ -10788,8 +10910,8 @@ class FieldFilterMap(Base):
 
     @cap_floor_vol.setter
     def cap_floor_vol(self, value: dict):
-        self.__cap_floor_vol = value
-        self._property_changed('cap_floor_vol')        
+        self._property_changed('cap_floor_vol')
+        self.__cap_floor_vol = value        
 
     @property
     def submitter(self) -> dict:
@@ -10797,8 +10919,8 @@ class FieldFilterMap(Base):
 
     @submitter.setter
     def submitter(self, value: dict):
-        self.__submitter = value
-        self._property_changed('submitter')        
+        self._property_changed('submitter')
+        self.__submitter = value        
 
     @property
     def notional(self) -> dict:
@@ -10806,8 +10928,8 @@ class FieldFilterMap(Base):
 
     @notional.setter
     def notional(self, value: dict):
-        self.__notional = value
-        self._property_changed('notional')        
+        self._property_changed('notional')
+        self.__notional = value        
 
     @property
     def es_disclosure_percentage(self) -> dict:
@@ -10815,8 +10937,8 @@ class FieldFilterMap(Base):
 
     @es_disclosure_percentage.setter
     def es_disclosure_percentage(self, value: dict):
-        self.__es_disclosure_percentage = value
-        self._property_changed('es_disclosure_percentage')        
+        self._property_changed('es_disclosure_percentage')
+        self.__es_disclosure_percentage = value        
 
     @property
     def investment_income(self) -> dict:
@@ -10824,8 +10946,8 @@ class FieldFilterMap(Base):
 
     @investment_income.setter
     def investment_income(self, value: dict):
-        self.__investment_income = value
-        self._property_changed('investment_income')        
+        self._property_changed('investment_income')
+        self.__investment_income = value        
 
     @property
     def forward_point_imm(self) -> dict:
@@ -10833,8 +10955,8 @@ class FieldFilterMap(Base):
 
     @forward_point_imm.setter
     def forward_point_imm(self, value: dict):
-        self.__forward_point_imm = value
-        self._property_changed('forward_point_imm')        
+        self._property_changed('forward_point_imm')
+        self.__forward_point_imm = value        
 
     @property
     def client_short_name(self) -> dict:
@@ -10842,8 +10964,8 @@ class FieldFilterMap(Base):
 
     @client_short_name.setter
     def client_short_name(self, value: dict):
-        self.__client_short_name = value
-        self._property_changed('client_short_name')        
+        self._property_changed('client_short_name')
+        self.__client_short_name = value        
 
     @property
     def group_category(self) -> dict:
@@ -10851,8 +10973,8 @@ class FieldFilterMap(Base):
 
     @group_category.setter
     def group_category(self, value: dict):
-        self.__group_category = value
-        self._property_changed('group_category')        
+        self._property_changed('group_category')
+        self.__group_category = value        
 
     @property
     def bid_plus_ask(self) -> dict:
@@ -10860,8 +10982,8 @@ class FieldFilterMap(Base):
 
     @bid_plus_ask.setter
     def bid_plus_ask(self, value: dict):
-        self.__bid_plus_ask = value
-        self._property_changed('bid_plus_ask')        
+        self._property_changed('bid_plus_ask')
+        self.__bid_plus_ask = value        
 
     @property
     def election_odds(self) -> dict:
@@ -10869,8 +10991,8 @@ class FieldFilterMap(Base):
 
     @election_odds.setter
     def election_odds(self, value: dict):
-        self.__election_odds = value
-        self._property_changed('election_odds')        
+        self._property_changed('election_odds')
+        self.__election_odds = value        
 
     @property
     def total(self) -> dict:
@@ -10878,8 +11000,8 @@ class FieldFilterMap(Base):
 
     @total.setter
     def total(self, value: dict):
-        self.__total = value
-        self._property_changed('total')        
+        self._property_changed('total')
+        self.__total = value        
 
     @property
     def asset_id(self) -> dict:
@@ -10887,8 +11009,8 @@ class FieldFilterMap(Base):
 
     @asset_id.setter
     def asset_id(self, value: dict):
-        self.__asset_id = value
-        self._property_changed('asset_id')        
+        self._property_changed('asset_id')
+        self.__asset_id = value        
 
     @property
     def mkt_type(self) -> dict:
@@ -10896,8 +11018,8 @@ class FieldFilterMap(Base):
 
     @mkt_type.setter
     def mkt_type(self, value: dict):
-        self.__mkt_type = value
-        self._property_changed('mkt_type')        
+        self._property_changed('mkt_type')
+        self.__mkt_type = value        
 
     @property
     def pricing_location(self) -> dict:
@@ -10905,8 +11027,8 @@ class FieldFilterMap(Base):
 
     @pricing_location.setter
     def pricing_location(self, value: dict):
-        self.__pricing_location = value
-        self._property_changed('pricing_location')        
+        self._property_changed('pricing_location')
+        self.__pricing_location = value        
 
     @property
     def yield30_day(self) -> dict:
@@ -10914,8 +11036,8 @@ class FieldFilterMap(Base):
 
     @yield30_day.setter
     def yield30_day(self, value: dict):
-        self.__yield30_day = value
-        self._property_changed('yield30_day')        
+        self._property_changed('yield30_day')
+        self.__yield30_day = value        
 
     @property
     def beta(self) -> dict:
@@ -10923,8 +11045,8 @@ class FieldFilterMap(Base):
 
     @beta.setter
     def beta(self, value: dict):
-        self.__beta = value
-        self._property_changed('beta')        
+        self._property_changed('beta')
+        self.__beta = value        
 
     @property
     def long_exposure(self) -> dict:
@@ -10932,8 +11054,8 @@ class FieldFilterMap(Base):
 
     @long_exposure.setter
     def long_exposure(self, value: dict):
-        self.__long_exposure = value
-        self._property_changed('long_exposure')        
+        self._property_changed('long_exposure')
+        self.__long_exposure = value        
 
     @property
     def tcm_cost_participation_rate20_pct(self) -> dict:
@@ -10941,8 +11063,8 @@ class FieldFilterMap(Base):
 
     @tcm_cost_participation_rate20_pct.setter
     def tcm_cost_participation_rate20_pct(self, value: dict):
-        self.__tcm_cost_participation_rate20_pct = value
-        self._property_changed('tcm_cost_participation_rate20_pct')        
+        self._property_changed('tcm_cost_participation_rate20_pct')
+        self.__tcm_cost_participation_rate20_pct = value        
 
     @property
     def multi_asset_class_swap(self) -> dict:
@@ -10950,8 +11072,8 @@ class FieldFilterMap(Base):
 
     @multi_asset_class_swap.setter
     def multi_asset_class_swap(self, value: dict):
-        self.__multi_asset_class_swap = value
-        self._property_changed('multi_asset_class_swap')        
+        self._property_changed('multi_asset_class_swap')
+        self.__multi_asset_class_swap = value        
 
     @property
     def cross(self) -> dict:
@@ -10959,8 +11081,8 @@ class FieldFilterMap(Base):
 
     @cross.setter
     def cross(self, value: dict):
-        self.__cross = value
-        self._property_changed('cross')        
+        self._property_changed('cross')
+        self.__cross = value        
 
     @property
     def idea_status(self) -> dict:
@@ -10968,8 +11090,8 @@ class FieldFilterMap(Base):
 
     @idea_status.setter
     def idea_status(self, value: dict):
-        self.__idea_status = value
-        self._property_changed('idea_status')        
+        self._property_changed('idea_status')
+        self.__idea_status = value        
 
     @property
     def contract_subtype(self) -> dict:
@@ -10977,8 +11099,8 @@ class FieldFilterMap(Base):
 
     @contract_subtype.setter
     def contract_subtype(self, value: dict):
-        self.__contract_subtype = value
-        self._property_changed('contract_subtype')        
+        self._property_changed('contract_subtype')
+        self.__contract_subtype = value        
 
     @property
     def fx_forecast(self) -> dict:
@@ -10986,8 +11108,8 @@ class FieldFilterMap(Base):
 
     @fx_forecast.setter
     def fx_forecast(self, value: dict):
-        self.__fx_forecast = value
-        self._property_changed('fx_forecast')        
+        self._property_changed('fx_forecast')
+        self.__fx_forecast = value        
 
     @property
     def fixing_time_label(self) -> dict:
@@ -10995,8 +11117,8 @@ class FieldFilterMap(Base):
 
     @fixing_time_label.setter
     def fixing_time_label(self, value: dict):
-        self.__fixing_time_label = value
-        self._property_changed('fixing_time_label')        
+        self._property_changed('fixing_time_label')
+        self.__fixing_time_label = value        
 
     @property
     def implementation_id(self) -> dict:
@@ -11004,8 +11126,8 @@ class FieldFilterMap(Base):
 
     @implementation_id.setter
     def implementation_id(self, value: dict):
-        self.__implementation_id = value
-        self._property_changed('implementation_id')        
+        self._property_changed('implementation_id')
+        self.__implementation_id = value        
 
     @property
     def fill_id(self) -> dict:
@@ -11013,8 +11135,8 @@ class FieldFilterMap(Base):
 
     @fill_id.setter
     def fill_id(self, value: dict):
-        self.__fill_id = value
-        self._property_changed('fill_id')        
+        self._property_changed('fill_id')
+        self.__fill_id = value        
 
     @property
     def excess_returns(self) -> dict:
@@ -11022,8 +11144,8 @@ class FieldFilterMap(Base):
 
     @excess_returns.setter
     def excess_returns(self, value: dict):
-        self.__excess_returns = value
-        self._property_changed('excess_returns')        
+        self._property_changed('excess_returns')
+        self.__excess_returns = value        
 
     @property
     def dollar_return(self) -> dict:
@@ -11031,8 +11153,8 @@ class FieldFilterMap(Base):
 
     @dollar_return.setter
     def dollar_return(self, value: dict):
-        self.__dollar_return = value
-        self._property_changed('dollar_return')        
+        self._property_changed('dollar_return')
+        self.__dollar_return = value        
 
     @property
     def es_numeric_score(self) -> dict:
@@ -11040,8 +11162,8 @@ class FieldFilterMap(Base):
 
     @es_numeric_score.setter
     def es_numeric_score(self, value: dict):
-        self.__es_numeric_score = value
-        self._property_changed('es_numeric_score')        
+        self._property_changed('es_numeric_score')
+        self.__es_numeric_score = value        
 
     @property
     def in_benchmark(self) -> dict:
@@ -11049,8 +11171,17 @@ class FieldFilterMap(Base):
 
     @in_benchmark.setter
     def in_benchmark(self, value: dict):
-        self.__in_benchmark = value
-        self._property_changed('in_benchmark')        
+        self._property_changed('in_benchmark')
+        self.__in_benchmark = value        
+
+    @property
+    def return_on_equity(self) -> dict:
+        return self.__return_on_equity
+
+    @return_on_equity.setter
+    def return_on_equity(self, value: dict):
+        self._property_changed('return_on_equity')
+        self.__return_on_equity = value        
 
     @property
     def action_sdr(self) -> dict:
@@ -11058,8 +11189,8 @@ class FieldFilterMap(Base):
 
     @action_sdr.setter
     def action_sdr(self, value: dict):
-        self.__action_sdr = value
-        self._property_changed('action_sdr')        
+        self._property_changed('action_sdr')
+        self.__action_sdr = value        
 
     @property
     def queue_in_lots_description(self) -> dict:
@@ -11067,8 +11198,8 @@ class FieldFilterMap(Base):
 
     @queue_in_lots_description.setter
     def queue_in_lots_description(self, value: dict):
-        self.__queue_in_lots_description = value
-        self._property_changed('queue_in_lots_description')        
+        self._property_changed('queue_in_lots_description')
+        self.__queue_in_lots_description = value        
 
     @property
     def objective(self) -> dict:
@@ -11076,8 +11207,8 @@ class FieldFilterMap(Base):
 
     @objective.setter
     def objective(self, value: dict):
-        self.__objective = value
-        self._property_changed('objective')        
+        self._property_changed('objective')
+        self.__objective = value        
 
     @property
     def nav_price(self) -> dict:
@@ -11085,8 +11216,8 @@ class FieldFilterMap(Base):
 
     @nav_price.setter
     def nav_price(self, value: dict):
-        self.__nav_price = value
-        self._property_changed('nav_price')        
+        self._property_changed('nav_price')
+        self.__nav_price = value        
 
     @property
     def precipitation(self) -> dict:
@@ -11094,8 +11225,8 @@ class FieldFilterMap(Base):
 
     @precipitation.setter
     def precipitation(self, value: dict):
-        self.__precipitation = value
-        self._property_changed('precipitation')        
+        self._property_changed('precipitation')
+        self.__precipitation = value        
 
     @property
     def hedge_notional(self) -> dict:
@@ -11103,8 +11234,8 @@ class FieldFilterMap(Base):
 
     @hedge_notional.setter
     def hedge_notional(self, value: dict):
-        self.__hedge_notional = value
-        self._property_changed('hedge_notional')        
+        self._property_changed('hedge_notional')
+        self.__hedge_notional = value        
 
     @property
     def ask_low(self) -> dict:
@@ -11112,8 +11243,8 @@ class FieldFilterMap(Base):
 
     @ask_low.setter
     def ask_low(self, value: dict):
-        self.__ask_low = value
-        self._property_changed('ask_low')        
+        self._property_changed('ask_low')
+        self.__ask_low = value        
 
     @property
     def beta_adjusted_net_exposure(self) -> dict:
@@ -11121,8 +11252,8 @@ class FieldFilterMap(Base):
 
     @beta_adjusted_net_exposure.setter
     def beta_adjusted_net_exposure(self, value: dict):
-        self.__beta_adjusted_net_exposure = value
-        self._property_changed('beta_adjusted_net_exposure')        
+        self._property_changed('beta_adjusted_net_exposure')
+        self.__beta_adjusted_net_exposure = value        
 
     @property
     def expiry(self) -> dict:
@@ -11130,8 +11261,8 @@ class FieldFilterMap(Base):
 
     @expiry.setter
     def expiry(self, value: dict):
-        self.__expiry = value
-        self._property_changed('expiry')        
+        self._property_changed('expiry')
+        self.__expiry = value        
 
     @property
     def avg_monthly_yield(self) -> dict:
@@ -11139,8 +11270,26 @@ class FieldFilterMap(Base):
 
     @avg_monthly_yield.setter
     def avg_monthly_yield(self, value: dict):
-        self.__avg_monthly_yield = value
-        self._property_changed('avg_monthly_yield')        
+        self._property_changed('avg_monthly_yield')
+        self.__avg_monthly_yield = value        
+
+    @property
+    def period_direction(self) -> dict:
+        return self.__period_direction
+
+    @period_direction.setter
+    def period_direction(self, value: dict):
+        self._property_changed('period_direction')
+        self.__period_direction = value        
+
+    @property
+    def earnings_per_share(self) -> dict:
+        return self.__earnings_per_share
+
+    @earnings_per_share.setter
+    def earnings_per_share(self, value: dict):
+        self._property_changed('earnings_per_share')
+        self.__earnings_per_share = value        
 
     @property
     def strike_percentage(self) -> dict:
@@ -11148,8 +11297,8 @@ class FieldFilterMap(Base):
 
     @strike_percentage.setter
     def strike_percentage(self, value: dict):
-        self.__strike_percentage = value
-        self._property_changed('strike_percentage')        
+        self._property_changed('strike_percentage')
+        self.__strike_percentage = value        
 
     @property
     def excess_return_price(self) -> dict:
@@ -11157,8 +11306,8 @@ class FieldFilterMap(Base):
 
     @excess_return_price.setter
     def excess_return_price(self, value: dict):
-        self.__excess_return_price = value
-        self._property_changed('excess_return_price')        
+        self._property_changed('excess_return_price')
+        self.__excess_return_price = value        
 
     @property
     def prev_close_bid(self) -> dict:
@@ -11166,8 +11315,8 @@ class FieldFilterMap(Base):
 
     @prev_close_bid.setter
     def prev_close_bid(self, value: dict):
-        self.__prev_close_bid = value
-        self._property_changed('prev_close_bid')        
+        self._property_changed('prev_close_bid')
+        self.__prev_close_bid = value        
 
     @property
     def fx_pnl(self) -> dict:
@@ -11175,8 +11324,8 @@ class FieldFilterMap(Base):
 
     @fx_pnl.setter
     def fx_pnl(self, value: dict):
-        self.__fx_pnl = value
-        self._property_changed('fx_pnl')        
+        self._property_changed('fx_pnl')
+        self.__fx_pnl = value        
 
     @property
     def tcm_cost_horizon16_day(self) -> dict:
@@ -11184,8 +11333,17 @@ class FieldFilterMap(Base):
 
     @tcm_cost_horizon16_day.setter
     def tcm_cost_horizon16_day(self, value: dict):
-        self.__tcm_cost_horizon16_day = value
-        self._property_changed('tcm_cost_horizon16_day')        
+        self._property_changed('tcm_cost_horizon16_day')
+        self.__tcm_cost_horizon16_day = value        
+
+    @property
+    def sales_per_share(self) -> dict:
+        return self.__sales_per_share
+
+    @sales_per_share.setter
+    def sales_per_share(self, value: dict):
+        self._property_changed('sales_per_share')
+        self.__sales_per_share = value        
 
     @property
     def asset_classifications_gics_industry_group(self) -> dict:
@@ -11193,8 +11351,8 @@ class FieldFilterMap(Base):
 
     @asset_classifications_gics_industry_group.setter
     def asset_classifications_gics_industry_group(self, value: dict):
-        self.__asset_classifications_gics_industry_group = value
-        self._property_changed('asset_classifications_gics_industry_group')        
+        self._property_changed('asset_classifications_gics_industry_group')
+        self.__asset_classifications_gics_industry_group = value        
 
     @property
     def unadjusted_close(self) -> dict:
@@ -11202,8 +11360,8 @@ class FieldFilterMap(Base):
 
     @unadjusted_close.setter
     def unadjusted_close(self, value: dict):
-        self.__unadjusted_close = value
-        self._property_changed('unadjusted_close')        
+        self._property_changed('unadjusted_close')
+        self.__unadjusted_close = value        
 
     @property
     def lending_sec_id(self) -> dict:
@@ -11211,8 +11369,8 @@ class FieldFilterMap(Base):
 
     @lending_sec_id.setter
     def lending_sec_id(self, value: dict):
-        self.__lending_sec_id = value
-        self._property_changed('lending_sec_id')        
+        self._property_changed('lending_sec_id')
+        self.__lending_sec_id = value        
 
     @property
     def equity_theta(self) -> dict:
@@ -11220,8 +11378,8 @@ class FieldFilterMap(Base):
 
     @equity_theta.setter
     def equity_theta(self, value: dict):
-        self.__equity_theta = value
-        self._property_changed('equity_theta')        
+        self._property_changed('equity_theta')
+        self.__equity_theta = value        
 
     @property
     def execution_fee(self) -> dict:
@@ -11229,8 +11387,8 @@ class FieldFilterMap(Base):
 
     @execution_fee.setter
     def execution_fee(self, value: dict):
-        self.__execution_fee = value
-        self._property_changed('execution_fee')        
+        self._property_changed('execution_fee')
+        self.__execution_fee = value        
 
     @property
     def collateral_percentage_actual(self) -> dict:
@@ -11238,8 +11396,8 @@ class FieldFilterMap(Base):
 
     @collateral_percentage_actual.setter
     def collateral_percentage_actual(self, value: dict):
-        self.__collateral_percentage_actual = value
-        self._property_changed('collateral_percentage_actual')        
+        self._property_changed('collateral_percentage_actual')
+        self.__collateral_percentage_actual = value        
 
     @property
     def mixed_swap(self) -> dict:
@@ -11247,8 +11405,8 @@ class FieldFilterMap(Base):
 
     @mixed_swap.setter
     def mixed_swap(self, value: dict):
-        self.__mixed_swap = value
-        self._property_changed('mixed_swap')        
+        self._property_changed('mixed_swap')
+        self.__mixed_swap = value        
 
     @property
     def snowfall(self) -> dict:
@@ -11256,8 +11414,8 @@ class FieldFilterMap(Base):
 
     @snowfall.setter
     def snowfall(self, value: dict):
-        self.__snowfall = value
-        self._property_changed('snowfall')        
+        self._property_changed('snowfall')
+        self.__snowfall = value        
 
     @property
     def mic(self) -> dict:
@@ -11265,8 +11423,8 @@ class FieldFilterMap(Base):
 
     @mic.setter
     def mic(self, value: dict):
-        self.__mic = value
-        self._property_changed('mic')        
+        self._property_changed('mic')
+        self.__mic = value        
 
     @property
     def mid(self) -> dict:
@@ -11274,8 +11432,8 @@ class FieldFilterMap(Base):
 
     @mid.setter
     def mid(self, value: dict):
-        self.__mid = value
-        self._property_changed('mid')        
+        self._property_changed('mid')
+        self.__mid = value        
 
     @property
     def auto_exec_state(self) -> dict:
@@ -11283,8 +11441,8 @@ class FieldFilterMap(Base):
 
     @auto_exec_state.setter
     def auto_exec_state(self, value: dict):
-        self.__auto_exec_state = value
-        self._property_changed('auto_exec_state')        
+        self._property_changed('auto_exec_state')
+        self.__auto_exec_state = value        
 
     @property
     def relative_return_ytd(self) -> dict:
@@ -11292,8 +11450,8 @@ class FieldFilterMap(Base):
 
     @relative_return_ytd.setter
     def relative_return_ytd(self, value: dict):
-        self.__relative_return_ytd = value
-        self._property_changed('relative_return_ytd')        
+        self._property_changed('relative_return_ytd')
+        self.__relative_return_ytd = value        
 
     @property
     def long(self) -> dict:
@@ -11301,8 +11459,8 @@ class FieldFilterMap(Base):
 
     @long.setter
     def long(self, value: dict):
-        self.__long = value
-        self._property_changed('long')        
+        self._property_changed('long')
+        self.__long = value        
 
     @property
     def region_code(self) -> dict:
@@ -11310,8 +11468,8 @@ class FieldFilterMap(Base):
 
     @region_code.setter
     def region_code(self, value: dict):
-        self.__region_code = value
-        self._property_changed('region_code')        
+        self._property_changed('region_code')
+        self.__region_code = value        
 
     @property
     def long_weight(self) -> dict:
@@ -11319,8 +11477,8 @@ class FieldFilterMap(Base):
 
     @long_weight.setter
     def long_weight(self, value: dict):
-        self.__long_weight = value
-        self._property_changed('long_weight')        
+        self._property_changed('long_weight')
+        self.__long_weight = value        
 
     @property
     def calculation_time(self) -> dict:
@@ -11328,8 +11486,8 @@ class FieldFilterMap(Base):
 
     @calculation_time.setter
     def calculation_time(self, value: dict):
-        self.__calculation_time = value
-        self._property_changed('calculation_time')        
+        self._property_changed('calculation_time')
+        self.__calculation_time = value        
 
     @property
     def real_time_restriction_status(self) -> dict:
@@ -11337,8 +11495,8 @@ class FieldFilterMap(Base):
 
     @real_time_restriction_status.setter
     def real_time_restriction_status(self, value: dict):
-        self.__real_time_restriction_status = value
-        self._property_changed('real_time_restriction_status')        
+        self._property_changed('real_time_restriction_status')
+        self.__real_time_restriction_status = value        
 
     @property
     def average_realized_variance(self) -> dict:
@@ -11346,8 +11504,8 @@ class FieldFilterMap(Base):
 
     @average_realized_variance.setter
     def average_realized_variance(self, value: dict):
-        self.__average_realized_variance = value
-        self._property_changed('average_realized_variance')        
+        self._property_changed('average_realized_variance')
+        self.__average_realized_variance = value        
 
     @property
     def financial_returns_score(self) -> dict:
@@ -11355,8 +11513,8 @@ class FieldFilterMap(Base):
 
     @financial_returns_score.setter
     def financial_returns_score(self, value: dict):
-        self.__financial_returns_score = value
-        self._property_changed('financial_returns_score')        
+        self._property_changed('financial_returns_score')
+        self.__financial_returns_score = value        
 
     @property
     def net_change(self) -> dict:
@@ -11364,8 +11522,8 @@ class FieldFilterMap(Base):
 
     @net_change.setter
     def net_change(self, value: dict):
-        self.__net_change = value
-        self._property_changed('net_change')        
+        self._property_changed('net_change')
+        self.__net_change = value        
 
     @property
     def non_symbol_dimensions(self) -> dict:
@@ -11373,8 +11531,8 @@ class FieldFilterMap(Base):
 
     @non_symbol_dimensions.setter
     def non_symbol_dimensions(self, value: dict):
-        self.__non_symbol_dimensions = value
-        self._property_changed('non_symbol_dimensions')        
+        self._property_changed('non_symbol_dimensions')
+        self.__non_symbol_dimensions = value        
 
     @property
     def leg_two_fixed_payment_currency(self) -> dict:
@@ -11382,8 +11540,8 @@ class FieldFilterMap(Base):
 
     @leg_two_fixed_payment_currency.setter
     def leg_two_fixed_payment_currency(self, value: dict):
-        self.__leg_two_fixed_payment_currency = value
-        self._property_changed('leg_two_fixed_payment_currency')        
+        self._property_changed('leg_two_fixed_payment_currency')
+        self.__leg_two_fixed_payment_currency = value        
 
     @property
     def swap_type(self) -> dict:
@@ -11391,8 +11549,8 @@ class FieldFilterMap(Base):
 
     @swap_type.setter
     def swap_type(self, value: dict):
-        self.__swap_type = value
-        self._property_changed('swap_type')        
+        self._property_changed('swap_type')
+        self.__swap_type = value        
 
     @property
     def asset_classifications_country_name(self) -> dict:
@@ -11400,8 +11558,8 @@ class FieldFilterMap(Base):
 
     @asset_classifications_country_name.setter
     def asset_classifications_country_name(self, value: dict):
-        self.__asset_classifications_country_name = value
-        self._property_changed('asset_classifications_country_name')        
+        self._property_changed('asset_classifications_country_name')
+        self.__asset_classifications_country_name = value        
 
     @property
     def new_ideas_ytd(self) -> dict:
@@ -11409,8 +11567,8 @@ class FieldFilterMap(Base):
 
     @new_ideas_ytd.setter
     def new_ideas_ytd(self, value: dict):
-        self.__new_ideas_ytd = value
-        self._property_changed('new_ideas_ytd')        
+        self._property_changed('new_ideas_ytd')
+        self.__new_ideas_ytd = value        
 
     @property
     def management_fee(self) -> dict:
@@ -11418,8 +11576,8 @@ class FieldFilterMap(Base):
 
     @management_fee.setter
     def management_fee(self, value: dict):
-        self.__management_fee = value
-        self._property_changed('management_fee')        
+        self._property_changed('management_fee')
+        self.__management_fee = value        
 
     @property
     def open(self) -> dict:
@@ -11427,8 +11585,8 @@ class FieldFilterMap(Base):
 
     @open.setter
     def open(self, value: dict):
-        self.__open = value
-        self._property_changed('open')        
+        self._property_changed('open')
+        self.__open = value        
 
     @property
     def source_id(self) -> dict:
@@ -11436,8 +11594,8 @@ class FieldFilterMap(Base):
 
     @source_id.setter
     def source_id(self, value: dict):
-        self.__source_id = value
-        self._property_changed('source_id')        
+        self._property_changed('source_id')
+        self.__source_id = value        
 
     @property
     def country(self) -> dict:
@@ -11445,8 +11603,8 @@ class FieldFilterMap(Base):
 
     @country.setter
     def country(self, value: dict):
-        self.__country = value
-        self._property_changed('country')        
+        self._property_changed('country')
+        self.__country = value        
 
     @property
     def cusip(self) -> dict:
@@ -11454,8 +11612,8 @@ class FieldFilterMap(Base):
 
     @cusip.setter
     def cusip(self, value: dict):
-        self.__cusip = value
-        self._property_changed('cusip')        
+        self._property_changed('cusip')
+        self.__cusip = value        
 
     @property
     def touch_spread_score(self) -> dict:
@@ -11463,8 +11621,8 @@ class FieldFilterMap(Base):
 
     @touch_spread_score.setter
     def touch_spread_score(self, value: dict):
-        self.__touch_spread_score = value
-        self._property_changed('touch_spread_score')        
+        self._property_changed('touch_spread_score')
+        self.__touch_spread_score = value        
 
     @property
     def spread_option_atm_fwd_rate(self) -> dict:
@@ -11472,8 +11630,8 @@ class FieldFilterMap(Base):
 
     @spread_option_atm_fwd_rate.setter
     def spread_option_atm_fwd_rate(self, value: dict):
-        self.__spread_option_atm_fwd_rate = value
-        self._property_changed('spread_option_atm_fwd_rate')        
+        self._property_changed('spread_option_atm_fwd_rate')
+        self.__spread_option_atm_fwd_rate = value        
 
     @property
     def net_exposure(self) -> dict:
@@ -11481,8 +11639,8 @@ class FieldFilterMap(Base):
 
     @net_exposure.setter
     def net_exposure(self, value: dict):
-        self.__net_exposure = value
-        self._property_changed('net_exposure')        
+        self._property_changed('net_exposure')
+        self.__net_exposure = value        
 
     @property
     def frequency(self) -> dict:
@@ -11490,8 +11648,8 @@ class FieldFilterMap(Base):
 
     @frequency.setter
     def frequency(self, value: dict):
-        self.__frequency = value
-        self._property_changed('frequency')        
+        self._property_changed('frequency')
+        self.__frequency = value        
 
     @property
     def activity_id(self) -> dict:
@@ -11499,8 +11657,8 @@ class FieldFilterMap(Base):
 
     @activity_id.setter
     def activity_id(self, value: dict):
-        self.__activity_id = value
-        self._property_changed('activity_id')        
+        self._property_changed('activity_id')
+        self.__activity_id = value        
 
     @property
     def estimated_impact(self) -> dict:
@@ -11508,8 +11666,8 @@ class FieldFilterMap(Base):
 
     @estimated_impact.setter
     def estimated_impact(self, value: dict):
-        self.__estimated_impact = value
-        self._property_changed('estimated_impact')        
+        self._property_changed('estimated_impact')
+        self.__estimated_impact = value        
 
     @property
     def loan_spread_bucket(self) -> dict:
@@ -11517,8 +11675,8 @@ class FieldFilterMap(Base):
 
     @loan_spread_bucket.setter
     def loan_spread_bucket(self, value: dict):
-        self.__loan_spread_bucket = value
-        self._property_changed('loan_spread_bucket')        
+        self._property_changed('loan_spread_bucket')
+        self.__loan_spread_bucket = value        
 
     @property
     def asset_parameters_pricing_location(self) -> dict:
@@ -11526,8 +11684,8 @@ class FieldFilterMap(Base):
 
     @asset_parameters_pricing_location.setter
     def asset_parameters_pricing_location(self, value: dict):
-        self.__asset_parameters_pricing_location = value
-        self._property_changed('asset_parameters_pricing_location')        
+        self._property_changed('asset_parameters_pricing_location')
+        self.__asset_parameters_pricing_location = value        
 
     @property
     def event_description(self) -> dict:
@@ -11535,8 +11693,8 @@ class FieldFilterMap(Base):
 
     @event_description.setter
     def event_description(self, value: dict):
-        self.__event_description = value
-        self._property_changed('event_description')        
+        self._property_changed('event_description')
+        self.__event_description = value        
 
     @property
     def provide_non_display_tape_a(self) -> dict:
@@ -11544,8 +11702,8 @@ class FieldFilterMap(Base):
 
     @provide_non_display_tape_a.setter
     def provide_non_display_tape_a(self, value: dict):
-        self.__provide_non_display_tape_a = value
-        self._property_changed('provide_non_display_tape_a')        
+        self._property_changed('provide_non_display_tape_a')
+        self.__provide_non_display_tape_a = value        
 
     @property
     def strike_reference(self) -> dict:
@@ -11553,8 +11711,8 @@ class FieldFilterMap(Base):
 
     @strike_reference.setter
     def strike_reference(self, value: dict):
-        self.__strike_reference = value
-        self._property_changed('strike_reference')        
+        self._property_changed('strike_reference')
+        self.__strike_reference = value        
 
     @property
     def details(self) -> dict:
@@ -11562,8 +11720,8 @@ class FieldFilterMap(Base):
 
     @details.setter
     def details(self, value: dict):
-        self.__details = value
-        self._property_changed('details')        
+        self._property_changed('details')
+        self.__details = value        
 
     @property
     def provide_non_display_tape_c(self) -> dict:
@@ -11571,8 +11729,8 @@ class FieldFilterMap(Base):
 
     @provide_non_display_tape_c.setter
     def provide_non_display_tape_c(self, value: dict):
-        self.__provide_non_display_tape_c = value
-        self._property_changed('provide_non_display_tape_c')        
+        self._property_changed('provide_non_display_tape_c')
+        self.__provide_non_display_tape_c = value        
 
     @property
     def asset_count(self) -> dict:
@@ -11580,8 +11738,8 @@ class FieldFilterMap(Base):
 
     @asset_count.setter
     def asset_count(self, value: dict):
-        self.__asset_count = value
-        self._property_changed('asset_count')        
+        self._property_changed('asset_count')
+        self.__asset_count = value        
 
     @property
     def provide_non_display_tape_b(self) -> dict:
@@ -11589,8 +11747,8 @@ class FieldFilterMap(Base):
 
     @provide_non_display_tape_b.setter
     def provide_non_display_tape_b(self, value: dict):
-        self.__provide_non_display_tape_b = value
-        self._property_changed('provide_non_display_tape_b')        
+        self._property_changed('provide_non_display_tape_b')
+        self.__provide_non_display_tape_b = value        
 
     @property
     def sector(self) -> dict:
@@ -11598,8 +11756,17 @@ class FieldFilterMap(Base):
 
     @sector.setter
     def sector(self, value: dict):
-        self.__sector = value
-        self._property_changed('sector')        
+        self._property_changed('sector')
+        self.__sector = value        
+
+    @property
+    def fundamental_metric(self) -> dict:
+        return self.__fundamental_metric
+
+    @fundamental_metric.setter
+    def fundamental_metric(self, value: dict):
+        self._property_changed('fundamental_metric')
+        self.__fundamental_metric = value        
 
     @property
     def absolute_value(self) -> dict:
@@ -11607,8 +11774,8 @@ class FieldFilterMap(Base):
 
     @absolute_value.setter
     def absolute_value(self, value: dict):
-        self.__absolute_value = value
-        self._property_changed('absolute_value')        
+        self._property_changed('absolute_value')
+        self.__absolute_value = value        
 
     @property
     def closing_report(self) -> dict:
@@ -11616,8 +11783,8 @@ class FieldFilterMap(Base):
 
     @closing_report.setter
     def closing_report(self, value: dict):
-        self.__closing_report = value
-        self._property_changed('closing_report')        
+        self._property_changed('closing_report')
+        self.__closing_report = value        
 
     @property
     def long_tenor(self) -> dict:
@@ -11625,8 +11792,8 @@ class FieldFilterMap(Base):
 
     @long_tenor.setter
     def long_tenor(self, value: dict):
-        self.__long_tenor = value
-        self._property_changed('long_tenor')        
+        self._property_changed('long_tenor')
+        self.__long_tenor = value        
 
     @property
     def mctr(self) -> dict:
@@ -11634,8 +11801,8 @@ class FieldFilterMap(Base):
 
     @mctr.setter
     def mctr(self, value: dict):
-        self.__mctr = value
-        self._property_changed('mctr')        
+        self._property_changed('mctr')
+        self.__mctr = value        
 
     @property
     def historical_close(self) -> dict:
@@ -11643,8 +11810,8 @@ class FieldFilterMap(Base):
 
     @historical_close.setter
     def historical_close(self, value: dict):
-        self.__historical_close = value
-        self._property_changed('historical_close')        
+        self._property_changed('historical_close')
+        self.__historical_close = value        
 
     @property
     def asset_count_priced(self) -> dict:
@@ -11652,8 +11819,8 @@ class FieldFilterMap(Base):
 
     @asset_count_priced.setter
     def asset_count_priced(self, value: dict):
-        self.__asset_count_priced = value
-        self._property_changed('asset_count_priced')        
+        self._property_changed('asset_count_priced')
+        self.__asset_count_priced = value        
 
     @property
     def idea_id(self) -> dict:
@@ -11661,8 +11828,8 @@ class FieldFilterMap(Base):
 
     @idea_id.setter
     def idea_id(self, value: dict):
-        self.__idea_id = value
-        self._property_changed('idea_id')        
+        self._property_changed('idea_id')
+        self.__idea_id = value        
 
     @property
     def comment_status(self) -> dict:
@@ -11670,8 +11837,8 @@ class FieldFilterMap(Base):
 
     @comment_status.setter
     def comment_status(self, value: dict):
-        self.__comment_status = value
-        self._property_changed('comment_status')        
+        self._property_changed('comment_status')
+        self.__comment_status = value        
 
     @property
     def marginal_cost(self) -> dict:
@@ -11679,8 +11846,8 @@ class FieldFilterMap(Base):
 
     @marginal_cost.setter
     def marginal_cost(self, value: dict):
-        self.__marginal_cost = value
-        self._property_changed('marginal_cost')        
+        self._property_changed('marginal_cost')
+        self.__marginal_cost = value        
 
     @property
     def settlement_currency(self) -> dict:
@@ -11688,8 +11855,8 @@ class FieldFilterMap(Base):
 
     @settlement_currency.setter
     def settlement_currency(self, value: dict):
-        self.__settlement_currency = value
-        self._property_changed('settlement_currency')        
+        self._property_changed('settlement_currency')
+        self.__settlement_currency = value        
 
     @property
     def client_weight(self) -> dict:
@@ -11697,8 +11864,8 @@ class FieldFilterMap(Base):
 
     @client_weight.setter
     def client_weight(self, value: dict):
-        self.__client_weight = value
-        self._property_changed('client_weight')        
+        self._property_changed('client_weight')
+        self.__client_weight = value        
 
     @property
     def indication_of_collateralization(self) -> dict:
@@ -11706,8 +11873,8 @@ class FieldFilterMap(Base):
 
     @indication_of_collateralization.setter
     def indication_of_collateralization(self, value: dict):
-        self.__indication_of_collateralization = value
-        self._property_changed('indication_of_collateralization')        
+        self._property_changed('indication_of_collateralization')
+        self.__indication_of_collateralization = value        
 
     @property
     def liq_wkly(self) -> dict:
@@ -11715,8 +11882,8 @@ class FieldFilterMap(Base):
 
     @liq_wkly.setter
     def liq_wkly(self, value: dict):
-        self.__liq_wkly = value
-        self._property_changed('liq_wkly')        
+        self._property_changed('liq_wkly')
+        self.__liq_wkly = value        
 
     @property
     def lending_partner_fee(self) -> dict:
@@ -11724,8 +11891,8 @@ class FieldFilterMap(Base):
 
     @lending_partner_fee.setter
     def lending_partner_fee(self, value: dict):
-        self.__lending_partner_fee = value
-        self._property_changed('lending_partner_fee')        
+        self._property_changed('lending_partner_fee')
+        self.__lending_partner_fee = value        
 
     @property
     def region(self) -> dict:
@@ -11733,8 +11900,8 @@ class FieldFilterMap(Base):
 
     @region.setter
     def region(self, value: dict):
-        self.__region = value
-        self._property_changed('region')        
+        self._property_changed('region')
+        self.__region = value        
 
     @property
     def tenor2(self) -> dict:
@@ -11742,8 +11909,8 @@ class FieldFilterMap(Base):
 
     @tenor2.setter
     def tenor2(self, value: dict):
-        self.__tenor2 = value
-        self._property_changed('tenor2')        
+        self._property_changed('tenor2')
+        self.__tenor2 = value        
 
     @property
     def option_premium(self) -> dict:
@@ -11751,8 +11918,8 @@ class FieldFilterMap(Base):
 
     @option_premium.setter
     def option_premium(self, value: dict):
-        self.__option_premium = value
-        self._property_changed('option_premium')        
+        self._property_changed('option_premium')
+        self.__option_premium = value        
 
     @property
     def owner_name(self) -> dict:
@@ -11760,8 +11927,8 @@ class FieldFilterMap(Base):
 
     @owner_name.setter
     def owner_name(self, value: dict):
-        self.__owner_name = value
-        self._property_changed('owner_name')        
+        self._property_changed('owner_name')
+        self.__owner_name = value        
 
     @property
     def last_updated_by_id(self) -> dict:
@@ -11769,8 +11936,8 @@ class FieldFilterMap(Base):
 
     @last_updated_by_id.setter
     def last_updated_by_id(self, value: dict):
-        self.__last_updated_by_id = value
-        self._property_changed('last_updated_by_id')        
+        self._property_changed('last_updated_by_id')
+        self.__last_updated_by_id = value        
 
     @property
     def z_score(self) -> dict:
@@ -11778,8 +11945,8 @@ class FieldFilterMap(Base):
 
     @z_score.setter
     def z_score(self, value: dict):
-        self.__z_score = value
-        self._property_changed('z_score')        
+        self._property_changed('z_score')
+        self.__z_score = value        
 
     @property
     def legal_entity_acct(self) -> dict:
@@ -11787,8 +11954,8 @@ class FieldFilterMap(Base):
 
     @legal_entity_acct.setter
     def legal_entity_acct(self, value: dict):
-        self.__legal_entity_acct = value
-        self._property_changed('legal_entity_acct')        
+        self._property_changed('legal_entity_acct')
+        self.__legal_entity_acct = value        
 
     @property
     def target_shareholder_meeting_date(self) -> dict:
@@ -11796,8 +11963,8 @@ class FieldFilterMap(Base):
 
     @target_shareholder_meeting_date.setter
     def target_shareholder_meeting_date(self, value: dict):
-        self.__target_shareholder_meeting_date = value
-        self._property_changed('target_shareholder_meeting_date')        
+        self._property_changed('target_shareholder_meeting_date')
+        self.__target_shareholder_meeting_date = value        
 
     @property
     def event_start_time(self) -> dict:
@@ -11805,8 +11972,8 @@ class FieldFilterMap(Base):
 
     @event_start_time.setter
     def event_start_time(self, value: dict):
-        self.__event_start_time = value
-        self._property_changed('event_start_time')        
+        self._property_changed('event_start_time')
+        self.__event_start_time = value        
 
     @property
     def turnover(self) -> dict:
@@ -11814,8 +11981,8 @@ class FieldFilterMap(Base):
 
     @turnover.setter
     def turnover(self, value: dict):
-        self.__turnover = value
-        self._property_changed('turnover')        
+        self._property_changed('turnover')
+        self.__turnover = value        
 
     @property
     def price_spot_target_unit(self) -> dict:
@@ -11823,8 +11990,8 @@ class FieldFilterMap(Base):
 
     @price_spot_target_unit.setter
     def price_spot_target_unit(self, value: dict):
-        self.__price_spot_target_unit = value
-        self._property_changed('price_spot_target_unit')        
+        self._property_changed('price_spot_target_unit')
+        self.__price_spot_target_unit = value        
 
     @property
     def leg_one_type(self) -> dict:
@@ -11832,8 +11999,8 @@ class FieldFilterMap(Base):
 
     @leg_one_type.setter
     def leg_one_type(self, value: dict):
-        self.__leg_one_type = value
-        self._property_changed('leg_one_type')        
+        self._property_changed('leg_one_type')
+        self.__leg_one_type = value        
 
     @property
     def leg_two_spread(self) -> dict:
@@ -11841,8 +12008,8 @@ class FieldFilterMap(Base):
 
     @leg_two_spread.setter
     def leg_two_spread(self, value: dict):
-        self.__leg_two_spread = value
-        self._property_changed('leg_two_spread')        
+        self._property_changed('leg_two_spread')
+        self.__leg_two_spread = value        
 
     @property
     def coverage(self) -> dict:
@@ -11850,8 +12017,8 @@ class FieldFilterMap(Base):
 
     @coverage.setter
     def coverage(self, value: dict):
-        self.__coverage = value
-        self._property_changed('coverage')        
+        self._property_changed('coverage')
+        self.__coverage = value        
 
     @property
     def g_percentile(self) -> dict:
@@ -11859,8 +12026,8 @@ class FieldFilterMap(Base):
 
     @g_percentile.setter
     def g_percentile(self, value: dict):
-        self.__g_percentile = value
-        self._property_changed('g_percentile')        
+        self._property_changed('g_percentile')
+        self.__g_percentile = value        
 
     @property
     def lending_fund_nav(self) -> dict:
@@ -11868,8 +12035,8 @@ class FieldFilterMap(Base):
 
     @lending_fund_nav.setter
     def lending_fund_nav(self, value: dict):
-        self.__lending_fund_nav = value
-        self._property_changed('lending_fund_nav')        
+        self._property_changed('lending_fund_nav')
+        self.__lending_fund_nav = value        
 
     @property
     def source_original_category(self) -> dict:
@@ -11877,8 +12044,8 @@ class FieldFilterMap(Base):
 
     @source_original_category.setter
     def source_original_category(self, value: dict):
-        self.__source_original_category = value
-        self._property_changed('source_original_category')        
+        self._property_changed('source_original_category')
+        self.__source_original_category = value        
 
     @property
     def composite5_day_adv(self) -> dict:
@@ -11886,8 +12053,8 @@ class FieldFilterMap(Base):
 
     @composite5_day_adv.setter
     def composite5_day_adv(self, value: dict):
-        self.__composite5_day_adv = value
-        self._property_changed('composite5_day_adv')        
+        self._property_changed('composite5_day_adv')
+        self.__composite5_day_adv = value        
 
     @property
     def new_ideas_wtd(self) -> dict:
@@ -11895,8 +12062,8 @@ class FieldFilterMap(Base):
 
     @new_ideas_wtd.setter
     def new_ideas_wtd(self, value: dict):
-        self.__new_ideas_wtd = value
-        self._property_changed('new_ideas_wtd')        
+        self._property_changed('new_ideas_wtd')
+        self.__new_ideas_wtd = value        
 
     @property
     def asset_class_sdr(self) -> dict:
@@ -11904,8 +12071,8 @@ class FieldFilterMap(Base):
 
     @asset_class_sdr.setter
     def asset_class_sdr(self, value: dict):
-        self.__asset_class_sdr = value
-        self._property_changed('asset_class_sdr')        
+        self._property_changed('asset_class_sdr')
+        self.__asset_class_sdr = value        
 
     @property
     def location(self) -> dict:
@@ -11913,8 +12080,8 @@ class FieldFilterMap(Base):
 
     @location.setter
     def location(self, value: dict):
-        self.__location = value
-        self._property_changed('location')        
+        self._property_changed('location')
+        self.__location = value        
 
     @property
     def comment(self) -> dict:
@@ -11922,8 +12089,8 @@ class FieldFilterMap(Base):
 
     @comment.setter
     def comment(self, value: dict):
-        self.__comment = value
-        self._property_changed('comment')        
+        self._property_changed('comment')
+        self.__comment = value        
 
     @property
     def source_symbol(self) -> dict:
@@ -11931,8 +12098,8 @@ class FieldFilterMap(Base):
 
     @source_symbol.setter
     def source_symbol(self, value: dict):
-        self.__source_symbol = value
-        self._property_changed('source_symbol')        
+        self._property_changed('source_symbol')
+        self.__source_symbol = value        
 
     @property
     def scenario_id(self) -> dict:
@@ -11940,8 +12107,8 @@ class FieldFilterMap(Base):
 
     @scenario_id.setter
     def scenario_id(self, value: dict):
-        self.__scenario_id = value
-        self._property_changed('scenario_id')        
+        self._property_changed('scenario_id')
+        self.__scenario_id = value        
 
     @property
     def ask_unadjusted(self) -> dict:
@@ -11949,8 +12116,8 @@ class FieldFilterMap(Base):
 
     @ask_unadjusted.setter
     def ask_unadjusted(self, value: dict):
-        self.__ask_unadjusted = value
-        self._property_changed('ask_unadjusted')        
+        self._property_changed('ask_unadjusted')
+        self.__ask_unadjusted = value        
 
     @property
     def queue_clock_time(self) -> dict:
@@ -11958,8 +12125,8 @@ class FieldFilterMap(Base):
 
     @queue_clock_time.setter
     def queue_clock_time(self, value: dict):
-        self.__queue_clock_time = value
-        self._property_changed('queue_clock_time')        
+        self._property_changed('queue_clock_time')
+        self.__queue_clock_time = value        
 
     @property
     def ask_change(self) -> dict:
@@ -11967,8 +12134,8 @@ class FieldFilterMap(Base):
 
     @ask_change.setter
     def ask_change(self, value: dict):
-        self.__ask_change = value
-        self._property_changed('ask_change')        
+        self._property_changed('ask_change')
+        self.__ask_change = value        
 
     @property
     def tcm_cost_participation_rate50_pct(self) -> dict:
@@ -11976,8 +12143,8 @@ class FieldFilterMap(Base):
 
     @tcm_cost_participation_rate50_pct.setter
     def tcm_cost_participation_rate50_pct(self, value: dict):
-        self.__tcm_cost_participation_rate50_pct = value
-        self._property_changed('tcm_cost_participation_rate50_pct')        
+        self._property_changed('tcm_cost_participation_rate50_pct')
+        self.__tcm_cost_participation_rate50_pct = value        
 
     @property
     def contract_type(self) -> dict:
@@ -11985,8 +12152,8 @@ class FieldFilterMap(Base):
 
     @contract_type.setter
     def contract_type(self, value: dict):
-        self.__contract_type = value
-        self._property_changed('contract_type')        
+        self._property_changed('contract_type')
+        self.__contract_type = value        
 
     @property
     def type(self) -> dict:
@@ -11994,8 +12161,8 @@ class FieldFilterMap(Base):
 
     @type.setter
     def type(self, value: dict):
-        self.__type = value
-        self._property_changed('type')        
+        self._property_changed('type')
+        self.__type = value        
 
     @property
     def mdapi(self) -> dict:
@@ -12003,8 +12170,8 @@ class FieldFilterMap(Base):
 
     @mdapi.setter
     def mdapi(self, value: dict):
-        self.__mdapi = value
-        self._property_changed('mdapi')        
+        self._property_changed('mdapi')
+        self.__mdapi = value        
 
     @property
     def cumulative_pnl(self) -> dict:
@@ -12012,8 +12179,8 @@ class FieldFilterMap(Base):
 
     @cumulative_pnl.setter
     def cumulative_pnl(self, value: dict):
-        self.__cumulative_pnl = value
-        self._property_changed('cumulative_pnl')        
+        self._property_changed('cumulative_pnl')
+        self.__cumulative_pnl = value        
 
     @property
     def short_tenor(self) -> dict:
@@ -12021,8 +12188,8 @@ class FieldFilterMap(Base):
 
     @short_tenor.setter
     def short_tenor(self, value: dict):
-        self.__short_tenor = value
-        self._property_changed('short_tenor')        
+        self._property_changed('short_tenor')
+        self.__short_tenor = value        
 
     @property
     def loss(self) -> dict:
@@ -12030,8 +12197,8 @@ class FieldFilterMap(Base):
 
     @loss.setter
     def loss(self, value: dict):
-        self.__loss = value
-        self._property_changed('loss')        
+        self._property_changed('loss')
+        self.__loss = value        
 
     @property
     def unadjusted_volume(self) -> dict:
@@ -12039,8 +12206,8 @@ class FieldFilterMap(Base):
 
     @unadjusted_volume.setter
     def unadjusted_volume(self, value: dict):
-        self.__unadjusted_volume = value
-        self._property_changed('unadjusted_volume')        
+        self._property_changed('unadjusted_volume')
+        self.__unadjusted_volume = value        
 
     @property
     def midcurve_vol(self) -> dict:
@@ -12048,8 +12215,8 @@ class FieldFilterMap(Base):
 
     @midcurve_vol.setter
     def midcurve_vol(self, value: dict):
-        self.__midcurve_vol = value
-        self._property_changed('midcurve_vol')        
+        self._property_changed('midcurve_vol')
+        self.__midcurve_vol = value        
 
     @property
     def trading_cost_pnl(self) -> dict:
@@ -12057,8 +12224,8 @@ class FieldFilterMap(Base):
 
     @trading_cost_pnl.setter
     def trading_cost_pnl(self, value: dict):
-        self.__trading_cost_pnl = value
-        self._property_changed('trading_cost_pnl')        
+        self._property_changed('trading_cost_pnl')
+        self.__trading_cost_pnl = value        
 
     @property
     def price_notation_type(self) -> dict:
@@ -12066,8 +12233,8 @@ class FieldFilterMap(Base):
 
     @price_notation_type.setter
     def price_notation_type(self, value: dict):
-        self.__price_notation_type = value
-        self._property_changed('price_notation_type')        
+        self._property_changed('price_notation_type')
+        self.__price_notation_type = value        
 
     @property
     def price(self) -> dict:
@@ -12075,8 +12242,8 @@ class FieldFilterMap(Base):
 
     @price.setter
     def price(self, value: dict):
-        self.__price = value
-        self._property_changed('price')        
+        self._property_changed('price')
+        self.__price = value        
 
     @property
     def payment_quantity(self) -> dict:
@@ -12084,8 +12251,8 @@ class FieldFilterMap(Base):
 
     @payment_quantity.setter
     def payment_quantity(self, value: dict):
-        self.__payment_quantity = value
-        self._property_changed('payment_quantity')        
+        self._property_changed('payment_quantity')
+        self.__payment_quantity = value        
 
     @property
     def position_idx(self) -> dict:
@@ -12093,8 +12260,8 @@ class FieldFilterMap(Base):
 
     @position_idx.setter
     def position_idx(self, value: dict):
-        self.__position_idx = value
-        self._property_changed('position_idx')        
+        self._property_changed('position_idx')
+        self.__position_idx = value        
 
     @property
     def sec_name(self) -> dict:
@@ -12102,8 +12269,8 @@ class FieldFilterMap(Base):
 
     @sec_name.setter
     def sec_name(self, value: dict):
-        self.__sec_name = value
-        self._property_changed('sec_name')        
+        self._property_changed('sec_name')
+        self.__sec_name = value        
 
     @property
     def implied_volatility_by_relative_strike(self) -> dict:
@@ -12111,8 +12278,8 @@ class FieldFilterMap(Base):
 
     @implied_volatility_by_relative_strike.setter
     def implied_volatility_by_relative_strike(self, value: dict):
-        self.__implied_volatility_by_relative_strike = value
-        self._property_changed('implied_volatility_by_relative_strike')        
+        self._property_changed('implied_volatility_by_relative_strike')
+        self.__implied_volatility_by_relative_strike = value        
 
     @property
     def percent_adv(self) -> dict:
@@ -12120,8 +12287,8 @@ class FieldFilterMap(Base):
 
     @percent_adv.setter
     def percent_adv(self, value: dict):
-        self.__percent_adv = value
-        self._property_changed('percent_adv')        
+        self._property_changed('percent_adv')
+        self.__percent_adv = value        
 
     @property
     def sub_region(self) -> dict:
@@ -12129,8 +12296,8 @@ class FieldFilterMap(Base):
 
     @sub_region.setter
     def sub_region(self, value: dict):
-        self.__sub_region = value
-        self._property_changed('sub_region')        
+        self._property_changed('sub_region')
+        self.__sub_region = value        
 
     @property
     def contract(self) -> dict:
@@ -12138,8 +12305,8 @@ class FieldFilterMap(Base):
 
     @contract.setter
     def contract(self, value: dict):
-        self.__contract = value
-        self._property_changed('contract')        
+        self._property_changed('contract')
+        self.__contract = value        
 
     @property
     def payment_frequency1(self) -> dict:
@@ -12147,8 +12314,8 @@ class FieldFilterMap(Base):
 
     @payment_frequency1.setter
     def payment_frequency1(self, value: dict):
-        self.__payment_frequency1 = value
-        self._property_changed('payment_frequency1')        
+        self._property_changed('payment_frequency1')
+        self.__payment_frequency1 = value        
 
     @property
     def payment_frequency2(self) -> dict:
@@ -12156,8 +12323,8 @@ class FieldFilterMap(Base):
 
     @payment_frequency2.setter
     def payment_frequency2(self, value: dict):
-        self.__payment_frequency2 = value
-        self._property_changed('payment_frequency2')        
+        self._property_changed('payment_frequency2')
+        self.__payment_frequency2 = value        
 
     @property
     def bespoke(self) -> dict:
@@ -12165,8 +12332,8 @@ class FieldFilterMap(Base):
 
     @bespoke.setter
     def bespoke(self, value: dict):
-        self.__bespoke = value
-        self._property_changed('bespoke')        
+        self._property_changed('bespoke')
+        self.__bespoke = value        
 
     @property
     def repo_tenor(self) -> dict:
@@ -12174,8 +12341,8 @@ class FieldFilterMap(Base):
 
     @repo_tenor.setter
     def repo_tenor(self, value: dict):
-        self.__repo_tenor = value
-        self._property_changed('repo_tenor')        
+        self._property_changed('repo_tenor')
+        self.__repo_tenor = value        
 
     @property
     def quality_stars(self) -> dict:
@@ -12183,8 +12350,8 @@ class FieldFilterMap(Base):
 
     @quality_stars.setter
     def quality_stars(self, value: dict):
-        self.__quality_stars = value
-        self._property_changed('quality_stars')        
+        self._property_changed('quality_stars')
+        self.__quality_stars = value        
 
     @property
     def source_ticker(self) -> dict:
@@ -12192,8 +12359,8 @@ class FieldFilterMap(Base):
 
     @source_ticker.setter
     def source_ticker(self, value: dict):
-        self.__source_ticker = value
-        self._property_changed('source_ticker')        
+        self._property_changed('source_ticker')
+        self.__source_ticker = value        
 
     @property
     def gsid(self) -> dict:
@@ -12201,8 +12368,8 @@ class FieldFilterMap(Base):
 
     @gsid.setter
     def gsid(self, value: dict):
-        self.__gsid = value
-        self._property_changed('gsid')        
+        self._property_changed('gsid')
+        self.__gsid = value        
 
     @property
     def lending_fund(self) -> dict:
@@ -12210,8 +12377,8 @@ class FieldFilterMap(Base):
 
     @lending_fund.setter
     def lending_fund(self, value: dict):
-        self.__lending_fund = value
-        self._property_changed('lending_fund')        
+        self._property_changed('lending_fund')
+        self.__lending_fund = value        
 
     @property
     def tcm_cost_participation_rate15_pct(self) -> dict:
@@ -12219,8 +12386,8 @@ class FieldFilterMap(Base):
 
     @tcm_cost_participation_rate15_pct.setter
     def tcm_cost_participation_rate15_pct(self, value: dict):
-        self.__tcm_cost_participation_rate15_pct = value
-        self._property_changed('tcm_cost_participation_rate15_pct')        
+        self._property_changed('tcm_cost_participation_rate15_pct')
+        self.__tcm_cost_participation_rate15_pct = value        
 
     @property
     def sensitivity(self) -> dict:
@@ -12228,8 +12395,8 @@ class FieldFilterMap(Base):
 
     @sensitivity.setter
     def sensitivity(self, value: dict):
-        self.__sensitivity = value
-        self._property_changed('sensitivity')        
+        self._property_changed('sensitivity')
+        self.__sensitivity = value        
 
     @property
     def fiscal_year(self) -> dict:
@@ -12237,8 +12404,8 @@ class FieldFilterMap(Base):
 
     @fiscal_year.setter
     def fiscal_year(self, value: dict):
-        self.__fiscal_year = value
-        self._property_changed('fiscal_year')        
+        self._property_changed('fiscal_year')
+        self.__fiscal_year = value        
 
     @property
     def internal(self) -> dict:
@@ -12246,8 +12413,8 @@ class FieldFilterMap(Base):
 
     @internal.setter
     def internal(self, value: dict):
-        self.__internal = value
-        self._property_changed('internal')        
+        self._property_changed('internal')
+        self.__internal = value        
 
     @property
     def asset_classifications_gics_industry(self) -> dict:
@@ -12255,8 +12422,8 @@ class FieldFilterMap(Base):
 
     @asset_classifications_gics_industry.setter
     def asset_classifications_gics_industry(self, value: dict):
-        self.__asset_classifications_gics_industry = value
-        self._property_changed('asset_classifications_gics_industry')        
+        self._property_changed('asset_classifications_gics_industry')
+        self.__asset_classifications_gics_industry = value        
 
     @property
     def adjusted_bid_price(self) -> dict:
@@ -12264,8 +12431,8 @@ class FieldFilterMap(Base):
 
     @adjusted_bid_price.setter
     def adjusted_bid_price(self, value: dict):
-        self.__adjusted_bid_price = value
-        self._property_changed('adjusted_bid_price')        
+        self._property_changed('adjusted_bid_price')
+        self.__adjusted_bid_price = value        
 
     @property
     def var_swap(self) -> dict:
@@ -12273,8 +12440,8 @@ class FieldFilterMap(Base):
 
     @var_swap.setter
     def var_swap(self, value: dict):
-        self.__var_swap = value
-        self._property_changed('var_swap')        
+        self._property_changed('var_swap')
+        self.__var_swap = value        
 
     @property
     def low_unadjusted(self) -> dict:
@@ -12282,8 +12449,8 @@ class FieldFilterMap(Base):
 
     @low_unadjusted.setter
     def low_unadjusted(self, value: dict):
-        self.__low_unadjusted = value
-        self._property_changed('low_unadjusted')        
+        self._property_changed('low_unadjusted')
+        self.__low_unadjusted = value        
 
     @property
     def original_dissemination_id(self) -> dict:
@@ -12291,8 +12458,8 @@ class FieldFilterMap(Base):
 
     @original_dissemination_id.setter
     def original_dissemination_id(self, value: dict):
-        self.__original_dissemination_id = value
-        self._property_changed('original_dissemination_id')        
+        self._property_changed('original_dissemination_id')
+        self.__original_dissemination_id = value        
 
     @property
     def macs_secondary_asset_class(self) -> dict:
@@ -12300,8 +12467,8 @@ class FieldFilterMap(Base):
 
     @macs_secondary_asset_class.setter
     def macs_secondary_asset_class(self, value: dict):
-        self.__macs_secondary_asset_class = value
-        self._property_changed('macs_secondary_asset_class')        
+        self._property_changed('macs_secondary_asset_class')
+        self.__macs_secondary_asset_class = value        
 
     @property
     def leg_two_averaging_method(self) -> dict:
@@ -12309,8 +12476,8 @@ class FieldFilterMap(Base):
 
     @leg_two_averaging_method.setter
     def leg_two_averaging_method(self, value: dict):
-        self.__leg_two_averaging_method = value
-        self._property_changed('leg_two_averaging_method')        
+        self._property_changed('leg_two_averaging_method')
+        self.__leg_two_averaging_method = value        
 
     @property
     def sectors_raw(self) -> dict:
@@ -12318,8 +12485,8 @@ class FieldFilterMap(Base):
 
     @sectors_raw.setter
     def sectors_raw(self, value: dict):
-        self.__sectors_raw = value
-        self._property_changed('sectors_raw')        
+        self._property_changed('sectors_raw')
+        self.__sectors_raw = value        
 
     @property
     def shareclass_price(self) -> dict:
@@ -12327,8 +12494,8 @@ class FieldFilterMap(Base):
 
     @shareclass_price.setter
     def shareclass_price(self, value: dict):
-        self.__shareclass_price = value
-        self._property_changed('shareclass_price')        
+        self._property_changed('shareclass_price')
+        self.__shareclass_price = value        
 
     @property
     def integrated_score(self) -> dict:
@@ -12336,8 +12503,8 @@ class FieldFilterMap(Base):
 
     @integrated_score.setter
     def integrated_score(self, value: dict):
-        self.__integrated_score = value
-        self._property_changed('integrated_score')        
+        self._property_changed('integrated_score')
+        self.__integrated_score = value        
 
     @property
     def trade_size(self) -> dict:
@@ -12345,8 +12512,8 @@ class FieldFilterMap(Base):
 
     @trade_size.setter
     def trade_size(self, value: dict):
-        self.__trade_size = value
-        self._property_changed('trade_size')        
+        self._property_changed('trade_size')
+        self.__trade_size = value        
 
     @property
     def price_spot_entry_value(self) -> dict:
@@ -12354,8 +12521,8 @@ class FieldFilterMap(Base):
 
     @price_spot_entry_value.setter
     def price_spot_entry_value(self, value: dict):
-        self.__price_spot_entry_value = value
-        self._property_changed('price_spot_entry_value')        
+        self._property_changed('price_spot_entry_value')
+        self.__price_spot_entry_value = value        
 
     @property
     def symbol_dimensions(self) -> dict:
@@ -12363,8 +12530,8 @@ class FieldFilterMap(Base):
 
     @symbol_dimensions.setter
     def symbol_dimensions(self, value: dict):
-        self.__symbol_dimensions = value
-        self._property_changed('symbol_dimensions')        
+        self._property_changed('symbol_dimensions')
+        self.__symbol_dimensions = value        
 
     @property
     def option_type_sdr(self) -> dict:
@@ -12372,8 +12539,8 @@ class FieldFilterMap(Base):
 
     @option_type_sdr.setter
     def option_type_sdr(self, value: dict):
-        self.__option_type_sdr = value
-        self._property_changed('option_type_sdr')        
+        self._property_changed('option_type_sdr')
+        self.__option_type_sdr = value        
 
     @property
     def scenario_group_id(self) -> dict:
@@ -12381,8 +12548,8 @@ class FieldFilterMap(Base):
 
     @scenario_group_id.setter
     def scenario_group_id(self, value: dict):
-        self.__scenario_group_id = value
-        self._property_changed('scenario_group_id')        
+        self._property_changed('scenario_group_id')
+        self.__scenario_group_id = value        
 
     @property
     def avg_yield7_day(self) -> dict:
@@ -12390,8 +12557,8 @@ class FieldFilterMap(Base):
 
     @avg_yield7_day.setter
     def avg_yield7_day(self, value: dict):
-        self.__avg_yield7_day = value
-        self._property_changed('avg_yield7_day')        
+        self._property_changed('avg_yield7_day')
+        self.__avg_yield7_day = value        
 
     @property
     def average_implied_variance(self) -> dict:
@@ -12399,8 +12566,8 @@ class FieldFilterMap(Base):
 
     @average_implied_variance.setter
     def average_implied_variance(self, value: dict):
-        self.__average_implied_variance = value
-        self._property_changed('average_implied_variance')        
+        self._property_changed('average_implied_variance')
+        self.__average_implied_variance = value        
 
     @property
     def avg_trade_rate_description(self) -> dict:
@@ -12408,8 +12575,8 @@ class FieldFilterMap(Base):
 
     @avg_trade_rate_description.setter
     def avg_trade_rate_description(self, value: dict):
-        self.__avg_trade_rate_description = value
-        self._property_changed('avg_trade_rate_description')        
+        self._property_changed('avg_trade_rate_description')
+        self.__avg_trade_rate_description = value        
 
     @property
     def fraction(self) -> dict:
@@ -12417,8 +12584,8 @@ class FieldFilterMap(Base):
 
     @fraction.setter
     def fraction(self, value: dict):
-        self.__fraction = value
-        self._property_changed('fraction')        
+        self._property_changed('fraction')
+        self.__fraction = value        
 
     @property
     def sts_credit_market(self) -> dict:
@@ -12426,8 +12593,8 @@ class FieldFilterMap(Base):
 
     @sts_credit_market.setter
     def sts_credit_market(self, value: dict):
-        self.__sts_credit_market = value
-        self._property_changed('sts_credit_market')        
+        self._property_changed('sts_credit_market')
+        self.__sts_credit_market = value        
 
     @property
     def asset_count_short(self) -> dict:
@@ -12435,8 +12602,8 @@ class FieldFilterMap(Base):
 
     @asset_count_short.setter
     def asset_count_short(self, value: dict):
-        self.__asset_count_short = value
-        self._property_changed('asset_count_short')        
+        self._property_changed('asset_count_short')
+        self.__asset_count_short = value        
 
     @property
     def collateral_percentage_required(self) -> dict:
@@ -12444,8 +12611,8 @@ class FieldFilterMap(Base):
 
     @collateral_percentage_required.setter
     def collateral_percentage_required(self, value: dict):
-        self.__collateral_percentage_required = value
-        self._property_changed('collateral_percentage_required')        
+        self._property_changed('collateral_percentage_required')
+        self.__collateral_percentage_required = value        
 
     @property
     def opening_auction(self) -> dict:
@@ -12453,8 +12620,8 @@ class FieldFilterMap(Base):
 
     @opening_auction.setter
     def opening_auction(self, value: dict):
-        self.__opening_auction = value
-        self._property_changed('opening_auction')        
+        self._property_changed('opening_auction')
+        self.__opening_auction = value        
 
     @property
     def total_std_return_since_inception(self) -> dict:
@@ -12462,8 +12629,8 @@ class FieldFilterMap(Base):
 
     @total_std_return_since_inception.setter
     def total_std_return_since_inception(self, value: dict):
-        self.__total_std_return_since_inception = value
-        self._property_changed('total_std_return_since_inception')        
+        self._property_changed('total_std_return_since_inception')
+        self.__total_std_return_since_inception = value        
 
     @property
     def high_unadjusted(self) -> dict:
@@ -12471,8 +12638,8 @@ class FieldFilterMap(Base):
 
     @high_unadjusted.setter
     def high_unadjusted(self, value: dict):
-        self.__high_unadjusted = value
-        self._property_changed('high_unadjusted')        
+        self._property_changed('high_unadjusted')
+        self.__high_unadjusted = value        
 
     @property
     def source_category(self) -> dict:
@@ -12480,8 +12647,8 @@ class FieldFilterMap(Base):
 
     @source_category.setter
     def source_category(self, value: dict):
-        self.__source_category = value
-        self._property_changed('source_category')        
+        self._property_changed('source_category')
+        self.__source_category = value        
 
     @property
     def tv_product_mnemonic(self) -> dict:
@@ -12489,8 +12656,8 @@ class FieldFilterMap(Base):
 
     @tv_product_mnemonic.setter
     def tv_product_mnemonic(self, value: dict):
-        self.__tv_product_mnemonic = value
-        self._property_changed('tv_product_mnemonic')        
+        self._property_changed('tv_product_mnemonic')
+        self.__tv_product_mnemonic = value        
 
     @property
     def volume_unadjusted(self) -> dict:
@@ -12498,8 +12665,17 @@ class FieldFilterMap(Base):
 
     @volume_unadjusted.setter
     def volume_unadjusted(self, value: dict):
-        self.__volume_unadjusted = value
-        self._property_changed('volume_unadjusted')        
+        self._property_changed('volume_unadjusted')
+        self.__volume_unadjusted = value        
+
+    @property
+    def price_to_earnings(self) -> dict:
+        return self.__price_to_earnings
+
+    @price_to_earnings.setter
+    def price_to_earnings(self, value: dict):
+        self._property_changed('price_to_earnings')
+        self.__price_to_earnings = value        
 
     @property
     def avg_trade_rate_label(self) -> tuple:
@@ -12507,8 +12683,8 @@ class FieldFilterMap(Base):
 
     @avg_trade_rate_label.setter
     def avg_trade_rate_label(self, value: tuple):
-        self.__avg_trade_rate_label = value
-        self._property_changed('avg_trade_rate_label')        
+        self._property_changed('avg_trade_rate_label')
+        self.__avg_trade_rate_label = value        
 
     @property
     def ann_yield3_month(self) -> dict:
@@ -12516,8 +12692,8 @@ class FieldFilterMap(Base):
 
     @ann_yield3_month.setter
     def ann_yield3_month(self, value: dict):
-        self.__ann_yield3_month = value
-        self._property_changed('ann_yield3_month')        
+        self._property_changed('ann_yield3_month')
+        self.__ann_yield3_month = value        
 
     @property
     def encoded_stats(self) -> dict:
@@ -12525,8 +12701,8 @@ class FieldFilterMap(Base):
 
     @encoded_stats.setter
     def encoded_stats(self, value: dict):
-        self.__encoded_stats = value
-        self._property_changed('encoded_stats')        
+        self._property_changed('encoded_stats')
+        self.__encoded_stats = value        
 
     @property
     def ask_size(self) -> dict:
@@ -12534,8 +12710,8 @@ class FieldFilterMap(Base):
 
     @ask_size.setter
     def ask_size(self, value: dict):
-        self.__ask_size = value
-        self._property_changed('ask_size')        
+        self._property_changed('ask_size')
+        self.__ask_size = value        
 
     @property
     def std30_days_unsubsidized_yield(self) -> dict:
@@ -12543,8 +12719,8 @@ class FieldFilterMap(Base):
 
     @std30_days_unsubsidized_yield.setter
     def std30_days_unsubsidized_yield(self, value: dict):
-        self.__std30_days_unsubsidized_yield = value
-        self._property_changed('std30_days_unsubsidized_yield')        
+        self._property_changed('std30_days_unsubsidized_yield')
+        self.__std30_days_unsubsidized_yield = value        
 
     @property
     def resource(self) -> dict:
@@ -12552,8 +12728,17 @@ class FieldFilterMap(Base):
 
     @resource.setter
     def resource(self, value: dict):
-        self.__resource = value
-        self._property_changed('resource')        
+        self._property_changed('resource')
+        self.__resource = value        
+
+    @property
+    def price_to_cash(self) -> dict:
+        return self.__price_to_cash
+
+    @price_to_cash.setter
+    def price_to_cash(self, value: dict):
+        self._property_changed('price_to_cash')
+        self.__price_to_cash = value        
 
     @property
     def average_realized_volatility(self) -> dict:
@@ -12561,8 +12746,8 @@ class FieldFilterMap(Base):
 
     @average_realized_volatility.setter
     def average_realized_volatility(self, value: dict):
-        self.__average_realized_volatility = value
-        self._property_changed('average_realized_volatility')        
+        self._property_changed('average_realized_volatility')
+        self.__average_realized_volatility = value        
 
     @property
     def nav_spread(self) -> dict:
@@ -12570,8 +12755,8 @@ class FieldFilterMap(Base):
 
     @nav_spread.setter
     def nav_spread(self, value: dict):
-        self.__nav_spread = value
-        self._property_changed('nav_spread')        
+        self._property_changed('nav_spread')
+        self.__nav_spread = value        
 
     @property
     def bid_price(self) -> dict:
@@ -12579,8 +12764,8 @@ class FieldFilterMap(Base):
 
     @bid_price.setter
     def bid_price(self, value: dict):
-        self.__bid_price = value
-        self._property_changed('bid_price')        
+        self._property_changed('bid_price')
+        self.__bid_price = value        
 
     @property
     def dollar_total_return(self) -> dict:
@@ -12588,8 +12773,8 @@ class FieldFilterMap(Base):
 
     @dollar_total_return.setter
     def dollar_total_return(self, value: dict):
-        self.__dollar_total_return = value
-        self._property_changed('dollar_total_return')        
+        self._property_changed('dollar_total_return')
+        self.__dollar_total_return = value        
 
     @property
     def block_unit(self) -> dict:
@@ -12597,8 +12782,8 @@ class FieldFilterMap(Base):
 
     @block_unit.setter
     def block_unit(self, value: dict):
-        self.__block_unit = value
-        self._property_changed('block_unit')        
+        self._property_changed('block_unit')
+        self.__block_unit = value        
 
     @property
     def es_numeric_percentile(self) -> dict:
@@ -12606,8 +12791,8 @@ class FieldFilterMap(Base):
 
     @es_numeric_percentile.setter
     def es_numeric_percentile(self, value: dict):
-        self.__es_numeric_percentile = value
-        self._property_changed('es_numeric_percentile')        
+        self._property_changed('es_numeric_percentile')
+        self.__es_numeric_percentile = value        
 
     @property
     def repurchase_rate(self) -> dict:
@@ -12615,8 +12800,8 @@ class FieldFilterMap(Base):
 
     @repurchase_rate.setter
     def repurchase_rate(self, value: dict):
-        self.__repurchase_rate = value
-        self._property_changed('repurchase_rate')        
+        self._property_changed('repurchase_rate')
+        self.__repurchase_rate = value        
 
     @property
     def csa_terms(self) -> dict:
@@ -12624,8 +12809,8 @@ class FieldFilterMap(Base):
 
     @csa_terms.setter
     def csa_terms(self, value: dict):
-        self.__csa_terms = value
-        self._property_changed('csa_terms')        
+        self._property_changed('csa_terms')
+        self.__csa_terms = value        
 
     @property
     def daily_net_shareholder_flows(self) -> dict:
@@ -12633,8 +12818,8 @@ class FieldFilterMap(Base):
 
     @daily_net_shareholder_flows.setter
     def daily_net_shareholder_flows(self, value: dict):
-        self.__daily_net_shareholder_flows = value
-        self._property_changed('daily_net_shareholder_flows')        
+        self._property_changed('daily_net_shareholder_flows')
+        self.__daily_net_shareholder_flows = value        
 
     @property
     def ask_gspread(self) -> dict:
@@ -12642,8 +12827,8 @@ class FieldFilterMap(Base):
 
     @ask_gspread.setter
     def ask_gspread(self, value: dict):
-        self.__ask_gspread = value
-        self._property_changed('ask_gspread')        
+        self._property_changed('ask_gspread')
+        self.__ask_gspread = value        
 
     @property
     def cal_spread_mis_pricing(self) -> dict:
@@ -12651,8 +12836,8 @@ class FieldFilterMap(Base):
 
     @cal_spread_mis_pricing.setter
     def cal_spread_mis_pricing(self, value: dict):
-        self.__cal_spread_mis_pricing = value
-        self._property_changed('cal_spread_mis_pricing')        
+        self._property_changed('cal_spread_mis_pricing')
+        self.__cal_spread_mis_pricing = value        
 
     @property
     def leg_two_type(self) -> dict:
@@ -12660,8 +12845,8 @@ class FieldFilterMap(Base):
 
     @leg_two_type.setter
     def leg_two_type(self, value: dict):
-        self.__leg_two_type = value
-        self._property_changed('leg_two_type')        
+        self._property_changed('leg_two_type')
+        self.__leg_two_type = value        
 
     @property
     def rate366(self) -> dict:
@@ -12669,8 +12854,8 @@ class FieldFilterMap(Base):
 
     @rate366.setter
     def rate366(self, value: dict):
-        self.__rate366 = value
-        self._property_changed('rate366')        
+        self._property_changed('rate366')
+        self.__rate366 = value        
 
     @property
     def rate365(self) -> dict:
@@ -12678,8 +12863,8 @@ class FieldFilterMap(Base):
 
     @rate365.setter
     def rate365(self, value: dict):
-        self.__rate365 = value
-        self._property_changed('rate365')        
+        self._property_changed('rate365')
+        self.__rate365 = value        
 
     @property
     def rate360(self) -> dict:
@@ -12687,8 +12872,8 @@ class FieldFilterMap(Base):
 
     @rate360.setter
     def rate360(self, value: dict):
-        self.__rate360 = value
-        self._property_changed('rate360')        
+        self._property_changed('rate360')
+        self.__rate360 = value        
 
     @property
     def opening_report(self) -> dict:
@@ -12696,8 +12881,8 @@ class FieldFilterMap(Base):
 
     @opening_report.setter
     def opening_report(self, value: dict):
-        self.__opening_report = value
-        self._property_changed('opening_report')        
+        self._property_changed('opening_report')
+        self.__opening_report = value        
 
     @property
     def value(self) -> dict:
@@ -12705,8 +12890,8 @@ class FieldFilterMap(Base):
 
     @value.setter
     def value(self, value: dict):
-        self.__value = value
-        self._property_changed('value')        
+        self._property_changed('value')
+        self.__value = value        
 
     @property
     def leg_one_index_location(self) -> dict:
@@ -12714,8 +12899,8 @@ class FieldFilterMap(Base):
 
     @leg_one_index_location.setter
     def leg_one_index_location(self, value: dict):
-        self.__leg_one_index_location = value
-        self._property_changed('leg_one_index_location')        
+        self._property_changed('leg_one_index_location')
+        self.__leg_one_index_location = value        
 
     @property
     def quantity(self) -> dict:
@@ -12723,8 +12908,8 @@ class FieldFilterMap(Base):
 
     @quantity.setter
     def quantity(self, value: dict):
-        self.__quantity = value
-        self._property_changed('quantity')        
+        self._property_changed('quantity')
+        self.__quantity = value        
 
     @property
     def report_id(self) -> dict:
@@ -12732,8 +12917,8 @@ class FieldFilterMap(Base):
 
     @report_id.setter
     def report_id(self, value: dict):
-        self.__report_id = value
-        self._property_changed('report_id')        
+        self._property_changed('report_id')
+        self.__report_id = value        
 
     @property
     def index_weight(self) -> dict:
@@ -12741,8 +12926,8 @@ class FieldFilterMap(Base):
 
     @index_weight.setter
     def index_weight(self, value: dict):
-        self.__index_weight = value
-        self._property_changed('index_weight')        
+        self._property_changed('index_weight')
+        self.__index_weight = value        
 
     @property
     def macs_primary_asset_class(self) -> dict:
@@ -12750,8 +12935,8 @@ class FieldFilterMap(Base):
 
     @macs_primary_asset_class.setter
     def macs_primary_asset_class(self, value: dict):
-        self.__macs_primary_asset_class = value
-        self._property_changed('macs_primary_asset_class')        
+        self._property_changed('macs_primary_asset_class')
+        self.__macs_primary_asset_class = value        
 
     @property
     def midcurve_atm_fwd_rate(self) -> dict:
@@ -12759,8 +12944,8 @@ class FieldFilterMap(Base):
 
     @midcurve_atm_fwd_rate.setter
     def midcurve_atm_fwd_rate(self, value: dict):
-        self.__midcurve_atm_fwd_rate = value
-        self._property_changed('midcurve_atm_fwd_rate')        
+        self._property_changed('midcurve_atm_fwd_rate')
+        self.__midcurve_atm_fwd_rate = value        
 
     @property
     def trader(self) -> dict:
@@ -12768,8 +12953,8 @@ class FieldFilterMap(Base):
 
     @trader.setter
     def trader(self, value: dict):
-        self.__trader = value
-        self._property_changed('trader')        
+        self._property_changed('trader')
+        self.__trader = value        
 
     @property
     def sts_rates_maturity(self) -> dict:
@@ -12777,8 +12962,8 @@ class FieldFilterMap(Base):
 
     @sts_rates_maturity.setter
     def sts_rates_maturity(self, value: dict):
-        self.__sts_rates_maturity = value
-        self._property_changed('sts_rates_maturity')        
+        self._property_changed('sts_rates_maturity')
+        self.__sts_rates_maturity = value        
 
     @property
     def valuation_date(self) -> dict:
@@ -12786,8 +12971,8 @@ class FieldFilterMap(Base):
 
     @valuation_date.setter
     def valuation_date(self, value: dict):
-        self.__valuation_date = value
-        self._property_changed('valuation_date')        
+        self._property_changed('valuation_date')
+        self.__valuation_date = value        
 
     @property
     def tcm_cost_horizon6_hour(self) -> dict:
@@ -12795,8 +12980,8 @@ class FieldFilterMap(Base):
 
     @tcm_cost_horizon6_hour.setter
     def tcm_cost_horizon6_hour(self, value: dict):
-        self.__tcm_cost_horizon6_hour = value
-        self._property_changed('tcm_cost_horizon6_hour')        
+        self._property_changed('tcm_cost_horizon6_hour')
+        self.__tcm_cost_horizon6_hour = value        
 
     @property
     def liq_dly(self) -> dict:
@@ -12804,8 +12989,17 @@ class FieldFilterMap(Base):
 
     @liq_dly.setter
     def liq_dly(self, value: dict):
-        self.__liq_dly = value
-        self._property_changed('liq_dly')        
+        self._property_changed('liq_dly')
+        self.__liq_dly = value        
+
+    @property
+    def price_to_book(self) -> dict:
+        return self.__price_to_book
+
+    @price_to_book.setter
+    def price_to_book(self, value: dict):
+        self._property_changed('price_to_book')
+        self.__price_to_book = value        
 
     @property
     def isin(self) -> dict:
@@ -12813,12 +13007,13 @@ class FieldFilterMap(Base):
 
     @isin.setter
     def isin(self, value: dict):
-        self.__isin = value
-        self._property_changed('isin')        
+        self._property_changed('isin')
+        self.__isin = value        
 
 
 class FieldValueMap(Base):
                
+    @camel_case_translate
     def __init__(
         self,
         **kwargs
@@ -12827,6 +13022,7 @@ class FieldValueMap(Base):
         self.collateral_value_variance = kwargs.get('collateral_value_variance')
         self.year = kwargs.get('year')
         self.investment_rate = kwargs.get('investment_rate')
+        self.data_set_ids = kwargs.get('data_set_ids')
         self.bid_unadjusted = kwargs.get('bid_unadjusted')
         self.available_inventory = kwargs.get('available_inventory')
         self.est1_day_complete_pct = kwargs.get('est1_day_complete_pct')
@@ -12845,6 +13041,7 @@ class FieldValueMap(Base):
         self.version = kwargs.get('version')
         self.exposure = kwargs.get('exposure')
         self.market_data_asset = kwargs.get('market_data_asset')
+        self.earnings_per_share_positive = kwargs.get('earnings_per_share_positive')
         self.unadjusted_high = kwargs.get('unadjusted_high')
         self.source_importance = kwargs.get('source_importance')
         self.relative_return_qtd = kwargs.get('relative_return_qtd')
@@ -13058,6 +13255,7 @@ class FieldValueMap(Base):
         self.given_plus_paid = kwargs.get('given_plus_paid')
         self.close_location = kwargs.get('close_location')
         self.short_conviction_small = kwargs.get('short_conviction_small')
+        self.price_to_earnings_positive = kwargs.get('price_to_earnings_positive')
         self.forecast = kwargs.get('forecast')
         self.pnl = kwargs.get('pnl')
         self.upfront_payment_currency = kwargs.get('upfront_payment_currency')
@@ -13140,6 +13338,7 @@ class FieldValueMap(Base):
         self.corporate_spread_contribution = kwargs.get('corporate_spread_contribution')
         self.market_value = kwargs.get('market_value')
         self.notional_currency1 = kwargs.get('notional_currency1')
+        self.net_debt_to_ebitda = kwargs.get('net_debt_to_ebitda')
         self.notional_currency2 = kwargs.get('notional_currency2')
         self.multiple_score = kwargs.get('multiple_score')
         self.beta_adjusted_exposure = kwargs.get('beta_adjusted_exposure')
@@ -13197,7 +13396,10 @@ class FieldValueMap(Base):
         self.buffer_threshold = kwargs.get('buffer_threshold')
         self.price_forming_continuation_data = kwargs.get('price_forming_continuation_data')
         self.adjusted_short_interest = kwargs.get('adjusted_short_interest')
+        self.asset_parameters_strike = kwargs.get('asset_parameters_strike')
+        self.asset_parameters_termination_date = kwargs.get('asset_parameters_termination_date')
         self.estimated_spread = kwargs.get('estimated_spread')
+        self.asset_parameters_effective_date = kwargs.get('asset_parameters_effective_date')
         self.ann_return10_year = kwargs.get('ann_return10_year')
         self.created = kwargs.get('created')
         self.tcm_cost = kwargs.get('tcm_cost')
@@ -13257,6 +13459,7 @@ class FieldValueMap(Base):
         self.uid = kwargs.get('uid')
         self.es_policy_percentile = kwargs.get('es_policy_percentile')
         self.term = kwargs.get('term')
+        self.asset_parameters_clearing_house = kwargs.get('asset_parameters_clearing_house')
         self.tcm_cost_participation_rate100_pct = kwargs.get('tcm_cost_participation_rate100_pct')
         self.disclaimer = kwargs.get('disclaimer')
         self.measure_idx = kwargs.get('measure_idx')
@@ -13268,11 +13471,13 @@ class FieldValueMap(Base):
         self.volume_primary = kwargs.get('volume_primary')
         self.leg_two_delivery_point = kwargs.get('leg_two_delivery_point')
         self.funding_bid_price = kwargs.get('funding_bid_price')
+        self.price_to_sales = kwargs.get('price_to_sales')
         self.closing_auction = kwargs.get('closing_auction')
         self.new_ideas_qtd = kwargs.get('new_ideas_qtd')
         self.adjusted_ask_price = kwargs.get('adjusted_ask_price')
         self.quarter = kwargs.get('quarter')
         self.factor_universe = kwargs.get('factor_universe')
+        self.asset_parameters_floating_rate_option = kwargs.get('asset_parameters_floating_rate_option')
         self.arrival_rt = kwargs.get('arrival_rt')
         self.vote_share = kwargs.get('vote_share')
         self.transaction_cost = kwargs.get('transaction_cost')
@@ -13292,6 +13497,7 @@ class FieldValueMap(Base):
         self.hard_to_borrow = kwargs.get('hard_to_borrow')
         self.wpk = kwargs.get('wpk')
         self.bid_change = kwargs.get('bid_change')
+        self.asset_parameters_expiration_date = kwargs.get('asset_parameters_expiration_date')
         self.expiration = kwargs.get('expiration')
         self.country_name = kwargs.get('country_name')
         self.starting_date = kwargs.get('starting_date')
@@ -13339,7 +13545,9 @@ class FieldValueMap(Base):
         self.arrival_haircut_vwap_normalized = kwargs.get('arrival_haircut_vwap_normalized')
         self.price_component = kwargs.get('price_component')
         self.queue_clock_time_description = kwargs.get('queue_clock_time_description')
+        self.maturity = kwargs.get('maturity')
         self.delta_strike = kwargs.get('delta_strike')
+        self.asset_parameters_notional_currency = kwargs.get('asset_parameters_notional_currency')
         self.value_actual = kwargs.get('value_actual')
         self.upi = kwargs.get('upi')
         self.bcid = kwargs.get('bcid')
@@ -13383,6 +13591,7 @@ class FieldValueMap(Base):
         self.leg_one_delivery_point = kwargs.get('leg_one_delivery_point')
         self.event_status = kwargs.get('event_status')
         self.sell_date = kwargs.get('sell_date')
+        self.asset_parameters_settlement = kwargs.get('asset_parameters_settlement')
         self.__return = kwargs.get('return_')
         self.max_temperature = kwargs.get('max_temperature')
         self.acquirer_shareholder_meeting_date = kwargs.get('acquirer_shareholder_meeting_date')
@@ -13394,6 +13603,7 @@ class FieldValueMap(Base):
         self.high = kwargs.get('high')
         self.source_last_update = kwargs.get('source_last_update')
         self.quantity_mw = kwargs.get('quantity_mw')
+        self.pnode_id = kwargs.get('pnode_id')
         self.event_name = kwargs.get('event_name')
         self.indication_of_other_price_affecting_term = kwargs.get('indication_of_other_price_affecting_term')
         self.unadjusted_bid = kwargs.get('unadjusted_bid')
@@ -13443,6 +13653,7 @@ class FieldValueMap(Base):
         self.dollar_return = kwargs.get('dollar_return')
         self.es_numeric_score = kwargs.get('es_numeric_score')
         self.in_benchmark = kwargs.get('in_benchmark')
+        self.return_on_equity = kwargs.get('return_on_equity')
         self.action_sdr = kwargs.get('action_sdr')
         self.restriction_end_date = kwargs.get('restriction_end_date')
         self.queue_in_lots_description = kwargs.get('queue_in_lots_description')
@@ -13453,11 +13664,14 @@ class FieldValueMap(Base):
         self.ask_low = kwargs.get('ask_low')
         self.beta_adjusted_net_exposure = kwargs.get('beta_adjusted_net_exposure')
         self.avg_monthly_yield = kwargs.get('avg_monthly_yield')
+        self.period_direction = kwargs.get('period_direction')
+        self.earnings_per_share = kwargs.get('earnings_per_share')
         self.strike_percentage = kwargs.get('strike_percentage')
         self.excess_return_price = kwargs.get('excess_return_price')
         self.prev_close_bid = kwargs.get('prev_close_bid')
         self.fx_pnl = kwargs.get('fx_pnl')
         self.tcm_cost_horizon16_day = kwargs.get('tcm_cost_horizon16_day')
+        self.sales_per_share = kwargs.get('sales_per_share')
         self.unadjusted_close = kwargs.get('unadjusted_close')
         self.loan_date = kwargs.get('loan_date')
         self.lending_sec_id = kwargs.get('lending_sec_id')
@@ -13502,6 +13716,7 @@ class FieldValueMap(Base):
         self.asset_count = kwargs.get('asset_count')
         self.provide_non_display_tape_b = kwargs.get('provide_non_display_tape_b')
         self.sector = kwargs.get('sector')
+        self.fundamental_metric = kwargs.get('fundamental_metric')
         self.absolute_value = kwargs.get('absolute_value')
         self.closing_report = kwargs.get('closing_report')
         self.mctr = kwargs.get('mctr')
@@ -13598,12 +13813,14 @@ class FieldValueMap(Base):
         self.source_category = kwargs.get('source_category')
         self.tv_product_mnemonic = kwargs.get('tv_product_mnemonic')
         self.volume_unadjusted = kwargs.get('volume_unadjusted')
+        self.price_to_earnings = kwargs.get('price_to_earnings')
         self.avg_trade_rate_label = kwargs.get('avg_trade_rate_label')
         self.ann_yield3_month = kwargs.get('ann_yield3_month')
         self.ask_size = kwargs.get('ask_size')
         self.std30_days_unsubsidized_yield = kwargs.get('std30_days_unsubsidized_yield')
         self.resource = kwargs.get('resource')
         self.dissemination_time = kwargs.get('dissemination_time')
+        self.price_to_cash = kwargs.get('price_to_cash')
         self.average_realized_volatility = kwargs.get('average_realized_volatility')
         self.nav_spread = kwargs.get('nav_spread')
         self.bid_price = kwargs.get('bid_price')
@@ -13630,6 +13847,7 @@ class FieldValueMap(Base):
         self.valuation_date = kwargs.get('valuation_date')
         self.tcm_cost_horizon6_hour = kwargs.get('tcm_cost_horizon6_hour')
         self.liq_dly = kwargs.get('liq_dly')
+        self.price_to_book = kwargs.get('price_to_book')
         self.isin = kwargs.get('isin')
 
     @property
@@ -13639,8 +13857,8 @@ class FieldValueMap(Base):
 
     @collateral_value_variance.setter
     def collateral_value_variance(self, value: float):
-        self.__collateral_value_variance = value
-        self._property_changed('collateral_value_variance')        
+        self._property_changed('collateral_value_variance')
+        self.__collateral_value_variance = value        
 
     @property
     def year(self) -> str:
@@ -13649,8 +13867,8 @@ class FieldValueMap(Base):
 
     @year.setter
     def year(self, value: str):
-        self.__year = value
-        self._property_changed('year')        
+        self._property_changed('year')
+        self.__year = value        
 
     @property
     def investment_rate(self) -> float:
@@ -13661,8 +13879,18 @@ class FieldValueMap(Base):
 
     @investment_rate.setter
     def investment_rate(self, value: float):
-        self.__investment_rate = value
-        self._property_changed('investment_rate')        
+        self._property_changed('investment_rate')
+        self.__investment_rate = value        
+
+    @property
+    def data_set_ids(self) -> Tuple[Tuple[str, ...], ...]:
+        """The dataset Ids."""
+        return self.__data_set_ids
+
+    @data_set_ids.setter
+    def data_set_ids(self, value: Tuple[Tuple[str, ...], ...]):
+        self._property_changed('data_set_ids')
+        self.__data_set_ids = value        
 
     @property
     def bid_unadjusted(self) -> float:
@@ -13672,8 +13900,8 @@ class FieldValueMap(Base):
 
     @bid_unadjusted.setter
     def bid_unadjusted(self, value: float):
-        self.__bid_unadjusted = value
-        self._property_changed('bid_unadjusted')        
+        self._property_changed('bid_unadjusted')
+        self.__bid_unadjusted = value        
 
     @property
     def available_inventory(self) -> float:
@@ -13683,8 +13911,8 @@ class FieldValueMap(Base):
 
     @available_inventory.setter
     def available_inventory(self, value: float):
-        self.__available_inventory = value
-        self._property_changed('available_inventory')        
+        self._property_changed('available_inventory')
+        self.__available_inventory = value        
 
     @property
     def est1_day_complete_pct(self) -> float:
@@ -13693,8 +13921,8 @@ class FieldValueMap(Base):
 
     @est1_day_complete_pct.setter
     def est1_day_complete_pct(self, value: float):
-        self.__est1_day_complete_pct = value
-        self._property_changed('est1_day_complete_pct')        
+        self._property_changed('est1_day_complete_pct')
+        self.__est1_day_complete_pct = value        
 
     @property
     def created_by_id(self) -> str:
@@ -13703,8 +13931,8 @@ class FieldValueMap(Base):
 
     @created_by_id.setter
     def created_by_id(self, value: str):
-        self.__created_by_id = value
-        self._property_changed('created_by_id')        
+        self._property_changed('created_by_id')
+        self.__created_by_id = value        
 
     @property
     def vehicle_type(self) -> str:
@@ -13714,8 +13942,8 @@ class FieldValueMap(Base):
 
     @vehicle_type.setter
     def vehicle_type(self, value: str):
-        self.__vehicle_type = value
-        self._property_changed('vehicle_type')        
+        self._property_changed('vehicle_type')
+        self.__vehicle_type = value        
 
     @property
     def daily_risk(self) -> float:
@@ -13724,8 +13952,8 @@ class FieldValueMap(Base):
 
     @daily_risk.setter
     def daily_risk(self, value: float):
-        self.__daily_risk = value
-        self._property_changed('daily_risk')        
+        self._property_changed('daily_risk')
+        self.__daily_risk = value        
 
     @property
     def energy(self) -> float:
@@ -13734,8 +13962,8 @@ class FieldValueMap(Base):
 
     @energy.setter
     def energy(self, value: float):
-        self.__energy = value
-        self._property_changed('energy')        
+        self._property_changed('energy')
+        self.__energy = value        
 
     @property
     def market_data_type(self) -> str:
@@ -13745,8 +13973,8 @@ class FieldValueMap(Base):
 
     @market_data_type.setter
     def market_data_type(self, value: str):
-        self.__market_data_type = value
-        self._property_changed('market_data_type')        
+        self._property_changed('market_data_type')
+        self.__market_data_type = value        
 
     @property
     def real_short_rates_contribution(self) -> float:
@@ -13755,8 +13983,8 @@ class FieldValueMap(Base):
 
     @real_short_rates_contribution.setter
     def real_short_rates_contribution(self, value: float):
-        self.__real_short_rates_contribution = value
-        self._property_changed('real_short_rates_contribution')        
+        self._property_changed('real_short_rates_contribution')
+        self.__real_short_rates_contribution = value        
 
     @property
     def sentiment_score(self) -> float:
@@ -13765,8 +13993,8 @@ class FieldValueMap(Base):
 
     @sentiment_score.setter
     def sentiment_score(self, value: float):
-        self.__sentiment_score = value
-        self._property_changed('sentiment_score')        
+        self._property_changed('sentiment_score')
+        self.__sentiment_score = value        
 
     @property
     def leg_one_payment_type(self) -> str:
@@ -13775,8 +14003,8 @@ class FieldValueMap(Base):
 
     @leg_one_payment_type.setter
     def leg_one_payment_type(self, value: str):
-        self.__leg_one_payment_type = value
-        self._property_changed('leg_one_payment_type')        
+        self._property_changed('leg_one_payment_type')
+        self.__leg_one_payment_type = value        
 
     @property
     def provide_tape_c(self) -> float:
@@ -13785,8 +14013,8 @@ class FieldValueMap(Base):
 
     @provide_tape_c.setter
     def provide_tape_c(self, value: float):
-        self.__provide_tape_c = value
-        self._property_changed('provide_tape_c')        
+        self._property_changed('provide_tape_c')
+        self.__provide_tape_c = value        
 
     @property
     def value_previous(self) -> str:
@@ -13795,8 +14023,8 @@ class FieldValueMap(Base):
 
     @value_previous.setter
     def value_previous(self, value: str):
-        self.__value_previous = value
-        self._property_changed('value_previous')        
+        self._property_changed('value_previous')
+        self.__value_previous = value        
 
     @property
     def avg_trade_rate(self) -> float:
@@ -13805,8 +14033,8 @@ class FieldValueMap(Base):
 
     @avg_trade_rate.setter
     def avg_trade_rate(self, value: float):
-        self.__avg_trade_rate = value
-        self._property_changed('avg_trade_rate')        
+        self._property_changed('avg_trade_rate')
+        self.__avg_trade_rate = value        
 
     @property
     def short_level(self) -> float:
@@ -13815,8 +14043,8 @@ class FieldValueMap(Base):
 
     @short_level.setter
     def short_level(self, value: float):
-        self.__short_level = value
-        self._property_changed('short_level')        
+        self._property_changed('short_level')
+        self.__short_level = value        
 
     @property
     def version(self) -> float:
@@ -13825,8 +14053,8 @@ class FieldValueMap(Base):
 
     @version.setter
     def version(self, value: float):
-        self.__version = value
-        self._property_changed('version')        
+        self._property_changed('version')
+        self.__version = value        
 
     @property
     def exposure(self) -> float:
@@ -13836,8 +14064,8 @@ class FieldValueMap(Base):
 
     @exposure.setter
     def exposure(self, value: float):
-        self.__exposure = value
-        self._property_changed('exposure')        
+        self._property_changed('exposure')
+        self.__exposure = value        
 
     @property
     def market_data_asset(self) -> str:
@@ -13846,8 +14074,18 @@ class FieldValueMap(Base):
 
     @market_data_asset.setter
     def market_data_asset(self, value: str):
-        self.__market_data_asset = value
-        self._property_changed('market_data_asset')        
+        self._property_changed('market_data_asset')
+        self.__market_data_asset = value        
+
+    @property
+    def earnings_per_share_positive(self) -> float:
+        """Earnings per share positive."""
+        return self.__earnings_per_share_positive
+
+    @earnings_per_share_positive.setter
+    def earnings_per_share_positive(self, value: float):
+        self._property_changed('earnings_per_share_positive')
+        self.__earnings_per_share_positive = value        
 
     @property
     def unadjusted_high(self) -> float:
@@ -13857,8 +14095,8 @@ class FieldValueMap(Base):
 
     @unadjusted_high.setter
     def unadjusted_high(self, value: float):
-        self.__unadjusted_high = value
-        self._property_changed('unadjusted_high')        
+        self._property_changed('unadjusted_high')
+        self.__unadjusted_high = value        
 
     @property
     def source_importance(self) -> float:
@@ -13867,8 +14105,8 @@ class FieldValueMap(Base):
 
     @source_importance.setter
     def source_importance(self, value: float):
-        self.__source_importance = value
-        self._property_changed('source_importance')        
+        self._property_changed('source_importance')
+        self.__source_importance = value        
 
     @property
     def relative_return_qtd(self) -> float:
@@ -13877,8 +14115,8 @@ class FieldValueMap(Base):
 
     @relative_return_qtd.setter
     def relative_return_qtd(self, value: float):
-        self.__relative_return_qtd = value
-        self._property_changed('relative_return_qtd')        
+        self._property_changed('relative_return_qtd')
+        self.__relative_return_qtd = value        
 
     @property
     def minutes_to_trade100_pct(self) -> float:
@@ -13887,8 +14125,8 @@ class FieldValueMap(Base):
 
     @minutes_to_trade100_pct.setter
     def minutes_to_trade100_pct(self, value: float):
-        self.__minutes_to_trade100_pct = value
-        self._property_changed('minutes_to_trade100_pct')        
+        self._property_changed('minutes_to_trade100_pct')
+        self.__minutes_to_trade100_pct = value        
 
     @property
     def market_model_id(self) -> str:
@@ -13897,8 +14135,8 @@ class FieldValueMap(Base):
 
     @market_model_id.setter
     def market_model_id(self, value: str):
-        self.__market_model_id = value
-        self._property_changed('market_model_id')        
+        self._property_changed('market_model_id')
+        self.__market_model_id = value        
 
     @property
     def realized_correlation(self) -> float:
@@ -13907,8 +14145,8 @@ class FieldValueMap(Base):
 
     @realized_correlation.setter
     def realized_correlation(self, value: float):
-        self.__realized_correlation = value
-        self._property_changed('realized_correlation')        
+        self._property_changed('realized_correlation')
+        self.__realized_correlation = value        
 
     @property
     def collateral_value_actual(self) -> float:
@@ -13917,8 +14155,8 @@ class FieldValueMap(Base):
 
     @collateral_value_actual.setter
     def collateral_value_actual(self, value: float):
-        self.__collateral_value_actual = value
-        self._property_changed('collateral_value_actual')        
+        self._property_changed('collateral_value_actual')
+        self.__collateral_value_actual = value        
 
     @property
     def upfront_payment(self) -> float:
@@ -13927,8 +14165,8 @@ class FieldValueMap(Base):
 
     @upfront_payment.setter
     def upfront_payment(self, value: float):
-        self.__upfront_payment = value
-        self._property_changed('upfront_payment')        
+        self._property_changed('upfront_payment')
+        self.__upfront_payment = value        
 
     @property
     def atm_fwd_rate(self) -> float:
@@ -13937,8 +14175,8 @@ class FieldValueMap(Base):
 
     @atm_fwd_rate.setter
     def atm_fwd_rate(self, value: float):
-        self.__atm_fwd_rate = value
-        self._property_changed('atm_fwd_rate')        
+        self._property_changed('atm_fwd_rate')
+        self.__atm_fwd_rate = value        
 
     @property
     def provide_tape_a(self) -> float:
@@ -13947,8 +14185,8 @@ class FieldValueMap(Base):
 
     @provide_tape_a.setter
     def provide_tape_a(self, value: float):
-        self.__provide_tape_a = value
-        self._property_changed('provide_tape_a')        
+        self._property_changed('provide_tape_a')
+        self.__provide_tape_a = value        
 
     @property
     def provide_tape_b(self) -> float:
@@ -13957,8 +14195,8 @@ class FieldValueMap(Base):
 
     @provide_tape_b.setter
     def provide_tape_b(self, value: float):
-        self.__provide_tape_b = value
-        self._property_changed('provide_tape_b')        
+        self._property_changed('provide_tape_b')
+        self.__provide_tape_b = value        
 
     @property
     def tcm_cost_participation_rate75_pct(self) -> float:
@@ -13967,8 +14205,8 @@ class FieldValueMap(Base):
 
     @tcm_cost_participation_rate75_pct.setter
     def tcm_cost_participation_rate75_pct(self, value: float):
-        self.__tcm_cost_participation_rate75_pct = value
-        self._property_changed('tcm_cost_participation_rate75_pct')        
+        self._property_changed('tcm_cost_participation_rate75_pct')
+        self.__tcm_cost_participation_rate75_pct = value        
 
     @property
     def close(self) -> float:
@@ -13978,8 +14216,8 @@ class FieldValueMap(Base):
 
     @close.setter
     def close(self, value: float):
-        self.__close = value
-        self._property_changed('close')        
+        self._property_changed('close')
+        self.__close = value        
 
     @property
     def a(self) -> float:
@@ -13988,8 +14226,8 @@ class FieldValueMap(Base):
 
     @a.setter
     def a(self, value: float):
-        self.__a = value
-        self._property_changed('a')        
+        self._property_changed('a')
+        self.__a = value        
 
     @property
     def b(self) -> float:
@@ -13998,8 +14236,8 @@ class FieldValueMap(Base):
 
     @b.setter
     def b(self, value: float):
-        self.__b = value
-        self._property_changed('b')        
+        self._property_changed('b')
+        self.__b = value        
 
     @property
     def c(self) -> float:
@@ -14008,8 +14246,8 @@ class FieldValueMap(Base):
 
     @c.setter
     def c(self, value: float):
-        self.__c = value
-        self._property_changed('c')        
+        self._property_changed('c')
+        self.__c = value        
 
     @property
     def equity_vega(self) -> float:
@@ -14018,8 +14256,8 @@ class FieldValueMap(Base):
 
     @equity_vega.setter
     def equity_vega(self, value: float):
-        self.__equity_vega = value
-        self._property_changed('equity_vega')        
+        self._property_changed('equity_vega')
+        self.__equity_vega = value        
 
     @property
     def leg_one_spread(self) -> float:
@@ -14028,8 +14266,8 @@ class FieldValueMap(Base):
 
     @leg_one_spread.setter
     def leg_one_spread(self, value: float):
-        self.__leg_one_spread = value
-        self._property_changed('leg_one_spread')        
+        self._property_changed('leg_one_spread')
+        self.__leg_one_spread = value        
 
     @property
     def lender_payment(self) -> float:
@@ -14039,8 +14277,8 @@ class FieldValueMap(Base):
 
     @lender_payment.setter
     def lender_payment(self, value: float):
-        self.__lender_payment = value
-        self._property_changed('lender_payment')        
+        self._property_changed('lender_payment')
+        self.__lender_payment = value        
 
     @property
     def five_day_move(self) -> float:
@@ -14049,8 +14287,8 @@ class FieldValueMap(Base):
 
     @five_day_move.setter
     def five_day_move(self, value: float):
-        self.__five_day_move = value
-        self._property_changed('five_day_move')        
+        self._property_changed('five_day_move')
+        self.__five_day_move = value        
 
     @property
     def borrower(self) -> str:
@@ -14059,8 +14297,8 @@ class FieldValueMap(Base):
 
     @borrower.setter
     def borrower(self, value: str):
-        self.__borrower = value
-        self._property_changed('borrower')        
+        self._property_changed('borrower')
+        self.__borrower = value        
 
     @property
     def value_format(self) -> float:
@@ -14069,8 +14307,8 @@ class FieldValueMap(Base):
 
     @value_format.setter
     def value_format(self, value: float):
-        self.__value_format = value
-        self._property_changed('value_format')        
+        self._property_changed('value_format')
+        self.__value_format = value        
 
     @property
     def performance_contribution(self) -> float:
@@ -14079,8 +14317,8 @@ class FieldValueMap(Base):
 
     @performance_contribution.setter
     def performance_contribution(self, value: float):
-        self.__performance_contribution = value
-        self._property_changed('performance_contribution')        
+        self._property_changed('performance_contribution')
+        self.__performance_contribution = value        
 
     @property
     def target_notional(self) -> float:
@@ -14089,8 +14327,8 @@ class FieldValueMap(Base):
 
     @target_notional.setter
     def target_notional(self, value: float):
-        self.__target_notional = value
-        self._property_changed('target_notional')        
+        self._property_changed('target_notional')
+        self.__target_notional = value        
 
     @property
     def fill_leg_id(self) -> str:
@@ -14099,8 +14337,8 @@ class FieldValueMap(Base):
 
     @fill_leg_id.setter
     def fill_leg_id(self, value: str):
-        self.__fill_leg_id = value
-        self._property_changed('fill_leg_id')        
+        self._property_changed('fill_leg_id')
+        self.__fill_leg_id = value        
 
     @property
     def rationale(self) -> str:
@@ -14109,8 +14347,8 @@ class FieldValueMap(Base):
 
     @rationale.setter
     def rationale(self, value: str):
-        self.__rationale = value
-        self._property_changed('rationale')        
+        self._property_changed('rationale')
+        self.__rationale = value        
 
     @property
     def mkt_class(self) -> str:
@@ -14119,8 +14357,8 @@ class FieldValueMap(Base):
 
     @mkt_class.setter
     def mkt_class(self, value: str):
-        self.__mkt_class = value
-        self._property_changed('mkt_class')        
+        self._property_changed('mkt_class')
+        self.__mkt_class = value        
 
     @property
     def last_updated_since(self) -> datetime.datetime:
@@ -14129,8 +14367,8 @@ class FieldValueMap(Base):
 
     @last_updated_since.setter
     def last_updated_since(self, value: datetime.datetime):
-        self.__last_updated_since = value
-        self._property_changed('last_updated_since')        
+        self._property_changed('last_updated_since')
+        self.__last_updated_since = value        
 
     @property
     def equities_contribution(self) -> float:
@@ -14139,8 +14377,8 @@ class FieldValueMap(Base):
 
     @equities_contribution.setter
     def equities_contribution(self, value: float):
-        self.__equities_contribution = value
-        self._property_changed('equities_contribution')        
+        self._property_changed('equities_contribution')
+        self.__equities_contribution = value        
 
     @property
     def congestion(self) -> float:
@@ -14149,8 +14387,8 @@ class FieldValueMap(Base):
 
     @congestion.setter
     def congestion(self, value: float):
-        self.__congestion = value
-        self._property_changed('congestion')        
+        self._property_changed('congestion')
+        self.__congestion = value        
 
     @property
     def event_category(self) -> str:
@@ -14159,8 +14397,8 @@ class FieldValueMap(Base):
 
     @event_category.setter
     def event_category(self, value: str):
-        self.__event_category = value
-        self._property_changed('event_category')        
+        self._property_changed('event_category')
+        self.__event_category = value        
 
     @property
     def short_rates_contribution(self) -> float:
@@ -14169,8 +14407,8 @@ class FieldValueMap(Base):
 
     @short_rates_contribution.setter
     def short_rates_contribution(self, value: float):
-        self.__short_rates_contribution = value
-        self._property_changed('short_rates_contribution')        
+        self._property_changed('short_rates_contribution')
+        self.__short_rates_contribution = value        
 
     @property
     def unadjusted_open(self) -> float:
@@ -14180,8 +14418,8 @@ class FieldValueMap(Base):
 
     @unadjusted_open.setter
     def unadjusted_open(self, value: float):
-        self.__unadjusted_open = value
-        self._property_changed('unadjusted_open')        
+        self._property_changed('unadjusted_open')
+        self.__unadjusted_open = value        
 
     @property
     def criticality(self) -> float:
@@ -14190,8 +14428,8 @@ class FieldValueMap(Base):
 
     @criticality.setter
     def criticality(self, value: float):
-        self.__criticality = value
-        self._property_changed('criticality')        
+        self._property_changed('criticality')
+        self.__criticality = value        
 
     @property
     def mtm_price(self) -> float:
@@ -14200,8 +14438,8 @@ class FieldValueMap(Base):
 
     @mtm_price.setter
     def mtm_price(self, value: float):
-        self.__mtm_price = value
-        self._property_changed('mtm_price')        
+        self._property_changed('mtm_price')
+        self.__mtm_price = value        
 
     @property
     def bid_ask_spread(self) -> float:
@@ -14210,8 +14448,8 @@ class FieldValueMap(Base):
 
     @bid_ask_spread.setter
     def bid_ask_spread(self, value: float):
-        self.__bid_ask_spread = value
-        self._property_changed('bid_ask_spread')        
+        self._property_changed('bid_ask_spread')
+        self.__bid_ask_spread = value        
 
     @property
     def leg_one_averaging_method(self) -> str:
@@ -14220,8 +14458,8 @@ class FieldValueMap(Base):
 
     @leg_one_averaging_method.setter
     def leg_one_averaging_method(self, value: str):
-        self.__leg_one_averaging_method = value
-        self._property_changed('leg_one_averaging_method')        
+        self._property_changed('leg_one_averaging_method')
+        self.__leg_one_averaging_method = value        
 
     @property
     def option_type(self) -> str:
@@ -14230,8 +14468,8 @@ class FieldValueMap(Base):
 
     @option_type.setter
     def option_type(self, value: str):
-        self.__option_type = value
-        self._property_changed('option_type')        
+        self._property_changed('option_type')
+        self.__option_type = value        
 
     @property
     def portfolio_assets(self) -> float:
@@ -14240,8 +14478,8 @@ class FieldValueMap(Base):
 
     @portfolio_assets.setter
     def portfolio_assets(self, value: float):
-        self.__portfolio_assets = value
-        self._property_changed('portfolio_assets')        
+        self._property_changed('portfolio_assets')
+        self.__portfolio_assets = value        
 
     @property
     def termination_date(self) -> datetime.date:
@@ -14250,8 +14488,8 @@ class FieldValueMap(Base):
 
     @termination_date.setter
     def termination_date(self, value: datetime.date):
-        self.__termination_date = value
-        self._property_changed('termination_date')        
+        self._property_changed('termination_date')
+        self.__termination_date = value        
 
     @property
     def tcm_cost_horizon3_hour(self) -> float:
@@ -14260,8 +14498,8 @@ class FieldValueMap(Base):
 
     @tcm_cost_horizon3_hour.setter
     def tcm_cost_horizon3_hour(self, value: float):
-        self.__tcm_cost_horizon3_hour = value
-        self._property_changed('tcm_cost_horizon3_hour')        
+        self._property_changed('tcm_cost_horizon3_hour')
+        self.__tcm_cost_horizon3_hour = value        
 
     @property
     def credit_limit(self) -> float:
@@ -14270,8 +14508,8 @@ class FieldValueMap(Base):
 
     @credit_limit.setter
     def credit_limit(self, value: float):
-        self.__credit_limit = value
-        self._property_changed('credit_limit')        
+        self._property_changed('credit_limit')
+        self.__credit_limit = value        
 
     @property
     def number_of_positions(self) -> float:
@@ -14280,8 +14518,8 @@ class FieldValueMap(Base):
 
     @number_of_positions.setter
     def number_of_positions(self, value: float):
-        self.__number_of_positions = value
-        self._property_changed('number_of_positions')        
+        self._property_changed('number_of_positions')
+        self.__number_of_positions = value        
 
     @property
     def open_unadjusted(self) -> float:
@@ -14291,8 +14529,8 @@ class FieldValueMap(Base):
 
     @open_unadjusted.setter
     def open_unadjusted(self, value: float):
-        self.__open_unadjusted = value
-        self._property_changed('open_unadjusted')        
+        self._property_changed('open_unadjusted')
+        self.__open_unadjusted = value        
 
     @property
     def ask_price(self) -> float:
@@ -14301,8 +14539,8 @@ class FieldValueMap(Base):
 
     @ask_price.setter
     def ask_price(self, value: float):
-        self.__ask_price = value
-        self._property_changed('ask_price')        
+        self._property_changed('ask_price')
+        self.__ask_price = value        
 
     @property
     def event_id(self) -> str:
@@ -14311,8 +14549,8 @@ class FieldValueMap(Base):
 
     @event_id.setter
     def event_id(self, value: str):
-        self.__event_id = value
-        self._property_changed('event_id')        
+        self._property_changed('event_id')
+        self.__event_id = value        
 
     @property
     def sectors(self) -> Tuple[str, ...]:
@@ -14321,8 +14559,8 @@ class FieldValueMap(Base):
 
     @sectors.setter
     def sectors(self, value: Tuple[str, ...]):
-        self.__sectors = value
-        self._property_changed('sectors')        
+        self._property_changed('sectors')
+        self.__sectors = value        
 
     @property
     def std30_days_subsidized_yield(self) -> float:
@@ -14332,8 +14570,8 @@ class FieldValueMap(Base):
 
     @std30_days_subsidized_yield.setter
     def std30_days_subsidized_yield(self, value: float):
-        self.__std30_days_subsidized_yield = value
-        self._property_changed('std30_days_subsidized_yield')        
+        self._property_changed('std30_days_subsidized_yield')
+        self.__std30_days_subsidized_yield = value        
 
     @property
     def annualized_tracking_error(self) -> float:
@@ -14342,8 +14580,8 @@ class FieldValueMap(Base):
 
     @annualized_tracking_error.setter
     def annualized_tracking_error(self, value: float):
-        self.__annualized_tracking_error = value
-        self._property_changed('annualized_tracking_error')        
+        self._property_changed('annualized_tracking_error')
+        self.__annualized_tracking_error = value        
 
     @property
     def additional_price_notation_type(self) -> str:
@@ -14353,8 +14591,8 @@ class FieldValueMap(Base):
 
     @additional_price_notation_type.setter
     def additional_price_notation_type(self, value: str):
-        self.__additional_price_notation_type = value
-        self._property_changed('additional_price_notation_type')        
+        self._property_changed('additional_price_notation_type')
+        self.__additional_price_notation_type = value        
 
     @property
     def vol_swap(self) -> float:
@@ -14363,8 +14601,8 @@ class FieldValueMap(Base):
 
     @vol_swap.setter
     def vol_swap(self, value: float):
-        self.__vol_swap = value
-        self._property_changed('vol_swap')        
+        self._property_changed('vol_swap')
+        self.__vol_swap = value        
 
     @property
     def real_fci(self) -> float:
@@ -14373,8 +14611,8 @@ class FieldValueMap(Base):
 
     @real_fci.setter
     def real_fci(self, value: float):
-        self.__real_fci = value
-        self._property_changed('real_fci')        
+        self._property_changed('real_fci')
+        self.__real_fci = value        
 
     @property
     def annualized_risk(self) -> float:
@@ -14383,8 +14621,8 @@ class FieldValueMap(Base):
 
     @annualized_risk.setter
     def annualized_risk(self, value: float):
-        self.__annualized_risk = value
-        self._property_changed('annualized_risk')        
+        self._property_changed('annualized_risk')
+        self.__annualized_risk = value        
 
     @property
     def block_trades_and_large_notional_off_facility_swaps(self) -> str:
@@ -14393,8 +14631,8 @@ class FieldValueMap(Base):
 
     @block_trades_and_large_notional_off_facility_swaps.setter
     def block_trades_and_large_notional_off_facility_swaps(self, value: str):
-        self.__block_trades_and_large_notional_off_facility_swaps = value
-        self._property_changed('block_trades_and_large_notional_off_facility_swaps')        
+        self._property_changed('block_trades_and_large_notional_off_facility_swaps')
+        self.__block_trades_and_large_notional_off_facility_swaps = value        
 
     @property
     def leg_one_fixed_payment_currency(self) -> str:
@@ -14403,8 +14641,8 @@ class FieldValueMap(Base):
 
     @leg_one_fixed_payment_currency.setter
     def leg_one_fixed_payment_currency(self, value: str):
-        self.__leg_one_fixed_payment_currency = value
-        self._property_changed('leg_one_fixed_payment_currency')        
+        self._property_changed('leg_one_fixed_payment_currency')
+        self.__leg_one_fixed_payment_currency = value        
 
     @property
     def gross_exposure(self) -> float:
@@ -14414,8 +14652,8 @@ class FieldValueMap(Base):
 
     @gross_exposure.setter
     def gross_exposure(self, value: float):
-        self.__gross_exposure = value
-        self._property_changed('gross_exposure')        
+        self._property_changed('gross_exposure')
+        self.__gross_exposure = value        
 
     @property
     def volume_composite(self) -> float:
@@ -14425,8 +14663,8 @@ class FieldValueMap(Base):
 
     @volume_composite.setter
     def volume_composite(self, value: float):
-        self.__volume_composite = value
-        self._property_changed('volume_composite')        
+        self._property_changed('volume_composite')
+        self.__volume_composite = value        
 
     @property
     def volume(self) -> float:
@@ -14436,8 +14674,8 @@ class FieldValueMap(Base):
 
     @volume.setter
     def volume(self, value: float):
-        self.__volume = value
-        self._property_changed('volume')        
+        self._property_changed('volume')
+        self.__volume = value        
 
     @property
     def adv(self) -> float:
@@ -14446,8 +14684,8 @@ class FieldValueMap(Base):
 
     @adv.setter
     def adv(self, value: float):
-        self.__adv = value
-        self._property_changed('adv')        
+        self._property_changed('adv')
+        self.__adv = value        
 
     @property
     def external(self) -> bool:
@@ -14456,8 +14694,8 @@ class FieldValueMap(Base):
 
     @external.setter
     def external(self, value: bool):
-        self.__external = value
-        self._property_changed('external')        
+        self._property_changed('external')
+        self.__external = value        
 
     @property
     def short_conviction_medium(self) -> float:
@@ -14466,8 +14704,8 @@ class FieldValueMap(Base):
 
     @short_conviction_medium.setter
     def short_conviction_medium(self, value: float):
-        self.__short_conviction_medium = value
-        self._property_changed('short_conviction_medium')        
+        self._property_changed('short_conviction_medium')
+        self.__short_conviction_medium = value        
 
     @property
     def exchange(self) -> str:
@@ -14476,8 +14714,8 @@ class FieldValueMap(Base):
 
     @exchange.setter
     def exchange(self, value: str):
-        self.__exchange = value
-        self._property_changed('exchange')        
+        self._property_changed('exchange')
+        self.__exchange = value        
 
     @property
     def trade_price(self) -> float:
@@ -14486,8 +14724,8 @@ class FieldValueMap(Base):
 
     @trade_price.setter
     def trade_price(self, value: float):
-        self.__trade_price = value
-        self._property_changed('trade_price')        
+        self._property_changed('trade_price')
+        self.__trade_price = value        
 
     @property
     def cleared(self) -> str:
@@ -14497,8 +14735,8 @@ class FieldValueMap(Base):
 
     @cleared.setter
     def cleared(self, value: str):
-        self.__cleared = value
-        self._property_changed('cleared')        
+        self._property_changed('cleared')
+        self.__cleared = value        
 
     @property
     def es_policy_score(self) -> float:
@@ -14507,8 +14745,8 @@ class FieldValueMap(Base):
 
     @es_policy_score.setter
     def es_policy_score(self, value: float):
-        self.__es_policy_score = value
-        self._property_changed('es_policy_score')        
+        self._property_changed('es_policy_score')
+        self.__es_policy_score = value        
 
     @property
     def prime_id_numeric(self) -> float:
@@ -14517,8 +14755,8 @@ class FieldValueMap(Base):
 
     @prime_id_numeric.setter
     def prime_id_numeric(self, value: float):
-        self.__prime_id_numeric = value
-        self._property_changed('prime_id_numeric')        
+        self._property_changed('prime_id_numeric')
+        self.__prime_id_numeric = value        
 
     @property
     def leg_one_index(self) -> str:
@@ -14527,8 +14765,8 @@ class FieldValueMap(Base):
 
     @leg_one_index.setter
     def leg_one_index(self, value: str):
-        self.__leg_one_index = value
-        self._property_changed('leg_one_index')        
+        self._property_changed('leg_one_index')
+        self.__leg_one_index = value        
 
     @property
     def bid_high(self) -> float:
@@ -14537,8 +14775,8 @@ class FieldValueMap(Base):
 
     @bid_high.setter
     def bid_high(self, value: float):
-        self.__bid_high = value
-        self._property_changed('bid_high')        
+        self._property_changed('bid_high')
+        self.__bid_high = value        
 
     @property
     def fair_variance(self) -> float:
@@ -14548,8 +14786,8 @@ class FieldValueMap(Base):
 
     @fair_variance.setter
     def fair_variance(self, value: float):
-        self.__fair_variance = value
-        self._property_changed('fair_variance')        
+        self._property_changed('fair_variance')
+        self.__fair_variance = value        
 
     @property
     def hit_rate_wtd(self) -> float:
@@ -14558,8 +14796,8 @@ class FieldValueMap(Base):
 
     @hit_rate_wtd.setter
     def hit_rate_wtd(self, value: float):
-        self.__hit_rate_wtd = value
-        self._property_changed('hit_rate_wtd')        
+        self._property_changed('hit_rate_wtd')
+        self.__hit_rate_wtd = value        
 
     @property
     def bos_in_bps_description(self) -> str:
@@ -14569,8 +14807,8 @@ class FieldValueMap(Base):
 
     @bos_in_bps_description.setter
     def bos_in_bps_description(self, value: str):
-        self.__bos_in_bps_description = value
-        self._property_changed('bos_in_bps_description')        
+        self._property_changed('bos_in_bps_description')
+        self.__bos_in_bps_description = value        
 
     @property
     def low_price(self) -> float:
@@ -14580,8 +14818,8 @@ class FieldValueMap(Base):
 
     @low_price.setter
     def low_price(self, value: float):
-        self.__low_price = value
-        self._property_changed('low_price')        
+        self._property_changed('low_price')
+        self.__low_price = value        
 
     @property
     def realized_volatility(self) -> float:
@@ -14590,8 +14828,8 @@ class FieldValueMap(Base):
 
     @realized_volatility.setter
     def realized_volatility(self, value: float):
-        self.__realized_volatility = value
-        self._property_changed('realized_volatility')        
+        self._property_changed('realized_volatility')
+        self.__realized_volatility = value        
 
     @property
     def adv22_day_pct(self) -> float:
@@ -14600,8 +14838,8 @@ class FieldValueMap(Base):
 
     @adv22_day_pct.setter
     def adv22_day_pct(self, value: float):
-        self.__adv22_day_pct = value
-        self._property_changed('adv22_day_pct')        
+        self._property_changed('adv22_day_pct')
+        self.__adv22_day_pct = value        
 
     @property
     def clone_parent_id(self) -> str:
@@ -14610,8 +14848,8 @@ class FieldValueMap(Base):
 
     @clone_parent_id.setter
     def clone_parent_id(self, value: str):
-        self.__clone_parent_id = value
-        self._property_changed('clone_parent_id')        
+        self._property_changed('clone_parent_id')
+        self.__clone_parent_id = value        
 
     @property
     def price_range_in_ticks_label(self):
@@ -14619,8 +14857,8 @@ class FieldValueMap(Base):
 
     @price_range_in_ticks_label.setter
     def price_range_in_ticks_label(self, value):
-        self.__price_range_in_ticks_label = value
-        self._property_changed('price_range_in_ticks_label')        
+        self._property_changed('price_range_in_ticks_label')
+        self.__price_range_in_ticks_label = value        
 
     @property
     def ticker(self) -> str:
@@ -14629,8 +14867,8 @@ class FieldValueMap(Base):
 
     @ticker.setter
     def ticker(self, value: str):
-        self.__ticker = value
-        self._property_changed('ticker')        
+        self._property_changed('ticker')
+        self.__ticker = value        
 
     @property
     def tcm_cost_horizon1_day(self) -> float:
@@ -14639,8 +14877,8 @@ class FieldValueMap(Base):
 
     @tcm_cost_horizon1_day.setter
     def tcm_cost_horizon1_day(self, value: float):
-        self.__tcm_cost_horizon1_day = value
-        self._property_changed('tcm_cost_horizon1_day')        
+        self._property_changed('tcm_cost_horizon1_day')
+        self.__tcm_cost_horizon1_day = value        
 
     @property
     def approval(self) -> float:
@@ -14649,8 +14887,8 @@ class FieldValueMap(Base):
 
     @approval.setter
     def approval(self, value: float):
-        self.__approval = value
-        self._property_changed('approval')        
+        self._property_changed('approval')
+        self.__approval = value        
 
     @property
     def file_location(self) -> str:
@@ -14658,8 +14896,8 @@ class FieldValueMap(Base):
 
     @file_location.setter
     def file_location(self, value: str):
-        self.__file_location = value
-        self._property_changed('file_location')        
+        self._property_changed('file_location')
+        self.__file_location = value        
 
     @property
     def leg_two_payment_type(self) -> str:
@@ -14668,8 +14906,8 @@ class FieldValueMap(Base):
 
     @leg_two_payment_type.setter
     def leg_two_payment_type(self, value: str):
-        self.__leg_two_payment_type = value
-        self._property_changed('leg_two_payment_type')        
+        self._property_changed('leg_two_payment_type')
+        self.__leg_two_payment_type = value        
 
     @property
     def horizon(self) -> str:
@@ -14679,8 +14917,8 @@ class FieldValueMap(Base):
 
     @horizon.setter
     def horizon(self, value: str):
-        self.__horizon = value
-        self._property_changed('horizon')        
+        self._property_changed('horizon')
+        self.__horizon = value        
 
     @property
     def source_value_forecast(self) -> str:
@@ -14689,8 +14927,8 @@ class FieldValueMap(Base):
 
     @source_value_forecast.setter
     def source_value_forecast(self, value: str):
-        self.__source_value_forecast = value
-        self._property_changed('source_value_forecast')        
+        self._property_changed('source_value_forecast')
+        self.__source_value_forecast = value        
 
     @property
     def short_conviction_large(self) -> float:
@@ -14699,8 +14937,8 @@ class FieldValueMap(Base):
 
     @short_conviction_large.setter
     def short_conviction_large(self, value: float):
-        self.__short_conviction_large = value
-        self._property_changed('short_conviction_large')        
+        self._property_changed('short_conviction_large')
+        self.__short_conviction_large = value        
 
     @property
     def counter_party_status(self) -> str:
@@ -14709,8 +14947,8 @@ class FieldValueMap(Base):
 
     @counter_party_status.setter
     def counter_party_status(self, value: str):
-        self.__counter_party_status = value
-        self._property_changed('counter_party_status')        
+        self._property_changed('counter_party_status')
+        self.__counter_party_status = value        
 
     @property
     def composite22_day_adv(self) -> float:
@@ -14719,8 +14957,8 @@ class FieldValueMap(Base):
 
     @composite22_day_adv.setter
     def composite22_day_adv(self, value: float):
-        self.__composite22_day_adv = value
-        self._property_changed('composite22_day_adv')        
+        self._property_changed('composite22_day_adv')
+        self.__composite22_day_adv = value        
 
     @property
     def dollar_excess_return(self) -> float:
@@ -14729,8 +14967,8 @@ class FieldValueMap(Base):
 
     @dollar_excess_return.setter
     def dollar_excess_return(self, value: float):
-        self.__dollar_excess_return = value
-        self._property_changed('dollar_excess_return')        
+        self._property_changed('dollar_excess_return')
+        self.__dollar_excess_return = value        
 
     @property
     def trade_end_date(self) -> datetime.date:
@@ -14739,8 +14977,8 @@ class FieldValueMap(Base):
 
     @trade_end_date.setter
     def trade_end_date(self, value: datetime.date):
-        self.__trade_end_date = value
-        self._property_changed('trade_end_date')        
+        self._property_changed('trade_end_date')
+        self.__trade_end_date = value        
 
     @property
     def percent_of_mediandv1m(self) -> float:
@@ -14750,8 +14988,8 @@ class FieldValueMap(Base):
 
     @percent_of_mediandv1m.setter
     def percent_of_mediandv1m(self, value: float):
-        self.__percent_of_mediandv1m = value
-        self._property_changed('percent_of_mediandv1m')        
+        self._property_changed('percent_of_mediandv1m')
+        self.__percent_of_mediandv1m = value        
 
     @property
     def lendables(self) -> float:
@@ -14760,8 +14998,8 @@ class FieldValueMap(Base):
 
     @lendables.setter
     def lendables(self, value: float):
-        self.__lendables = value
-        self._property_changed('lendables')        
+        self._property_changed('lendables')
+        self.__lendables = value        
 
     @property
     def asset_class(self) -> str:
@@ -14772,8 +15010,8 @@ class FieldValueMap(Base):
 
     @asset_class.setter
     def asset_class(self, value: str):
-        self.__asset_class = value
-        self._property_changed('asset_class')        
+        self._property_changed('asset_class')
+        self.__asset_class = value        
 
     @property
     def sovereign_spread_contribution(self) -> float:
@@ -14783,8 +15021,8 @@ class FieldValueMap(Base):
 
     @sovereign_spread_contribution.setter
     def sovereign_spread_contribution(self, value: float):
-        self.__sovereign_spread_contribution = value
-        self._property_changed('sovereign_spread_contribution')        
+        self._property_changed('sovereign_spread_contribution')
+        self.__sovereign_spread_contribution = value        
 
     @property
     def bos_in_ticks_label(self):
@@ -14792,8 +15030,8 @@ class FieldValueMap(Base):
 
     @bos_in_ticks_label.setter
     def bos_in_ticks_label(self, value):
-        self.__bos_in_ticks_label = value
-        self._property_changed('bos_in_ticks_label')        
+        self._property_changed('bos_in_ticks_label')
+        self.__bos_in_ticks_label = value        
 
     @property
     def ric(self) -> str:
@@ -14802,8 +15040,8 @@ class FieldValueMap(Base):
 
     @ric.setter
     def ric(self, value: str):
-        self.__ric = value
-        self._property_changed('ric')        
+        self._property_changed('ric')
+        self.__ric = value        
 
     @property
     def position_source_id(self) -> str:
@@ -14812,8 +15050,8 @@ class FieldValueMap(Base):
 
     @position_source_id.setter
     def position_source_id(self, value: str):
-        self.__position_source_id = value
-        self._property_changed('position_source_id')        
+        self._property_changed('position_source_id')
+        self.__position_source_id = value        
 
     @property
     def rate_type(self) -> str:
@@ -14824,8 +15062,8 @@ class FieldValueMap(Base):
 
     @rate_type.setter
     def rate_type(self, value: str):
-        self.__rate_type = value
-        self._property_changed('rate_type')        
+        self._property_changed('rate_type')
+        self.__rate_type = value        
 
     @property
     def gs_sustain_region(self) -> str:
@@ -14834,8 +15072,8 @@ class FieldValueMap(Base):
 
     @gs_sustain_region.setter
     def gs_sustain_region(self, value: str):
-        self.__gs_sustain_region = value
-        self._property_changed('gs_sustain_region')        
+        self._property_changed('gs_sustain_region')
+        self.__gs_sustain_region = value        
 
     @property
     def deployment_id(self) -> float:
@@ -14844,8 +15082,8 @@ class FieldValueMap(Base):
 
     @deployment_id.setter
     def deployment_id(self, value: float):
-        self.__deployment_id = value
-        self._property_changed('deployment_id')        
+        self._property_changed('deployment_id')
+        self.__deployment_id = value        
 
     @property
     def loan_status(self) -> str:
@@ -14854,8 +15092,8 @@ class FieldValueMap(Base):
 
     @loan_status.setter
     def loan_status(self, value: str):
-        self.__loan_status = value
-        self._property_changed('loan_status')        
+        self._property_changed('loan_status')
+        self.__loan_status = value        
 
     @property
     def short_weight(self) -> float:
@@ -14867,8 +15105,8 @@ class FieldValueMap(Base):
 
     @short_weight.setter
     def short_weight(self, value: float):
-        self.__short_weight = value
-        self._property_changed('short_weight')        
+        self._property_changed('short_weight')
+        self.__short_weight = value        
 
     @property
     def loan_rebate(self) -> float:
@@ -14877,18 +15115,18 @@ class FieldValueMap(Base):
 
     @loan_rebate.setter
     def loan_rebate(self, value: float):
-        self.__loan_rebate = value
-        self._property_changed('loan_rebate')        
+        self._property_changed('loan_rebate')
+        self.__loan_rebate = value        
 
     @property
     def period(self) -> str:
-        """Period for the relevant metric, such as 12MF (12 Months Forward)."""
+        """Period for the relevant metric, such as 1y (1 year)."""
         return self.__period
 
     @period.setter
     def period(self, value: str):
-        self.__period = value
-        self._property_changed('period')        
+        self._property_changed('period')
+        self.__period = value        
 
     @property
     def index_create_source(self) -> str:
@@ -14897,8 +15135,8 @@ class FieldValueMap(Base):
 
     @index_create_source.setter
     def index_create_source(self, value: str):
-        self.__index_create_source = value
-        self._property_changed('index_create_source')        
+        self._property_changed('index_create_source')
+        self.__index_create_source = value        
 
     @property
     def fiscal_quarter(self) -> str:
@@ -14907,8 +15145,8 @@ class FieldValueMap(Base):
 
     @fiscal_quarter.setter
     def fiscal_quarter(self, value: str):
-        self.__fiscal_quarter = value
-        self._property_changed('fiscal_quarter')        
+        self._property_changed('fiscal_quarter')
+        self.__fiscal_quarter = value        
 
     @property
     def real_twi_contribution(self) -> float:
@@ -14917,8 +15155,8 @@ class FieldValueMap(Base):
 
     @real_twi_contribution.setter
     def real_twi_contribution(self, value: float):
-        self.__real_twi_contribution = value
-        self._property_changed('real_twi_contribution')        
+        self._property_changed('real_twi_contribution')
+        self.__real_twi_contribution = value        
 
     @property
     def market_impact(self) -> float:
@@ -14928,8 +15166,8 @@ class FieldValueMap(Base):
 
     @market_impact.setter
     def market_impact(self, value: float):
-        self.__market_impact = value
-        self._property_changed('market_impact')        
+        self._property_changed('market_impact')
+        self.__market_impact = value        
 
     @property
     def event_type(self) -> str:
@@ -14942,8 +15180,8 @@ class FieldValueMap(Base):
 
     @event_type.setter
     def event_type(self, value: str):
-        self.__event_type = value
-        self._property_changed('event_type')        
+        self._property_changed('event_type')
+        self.__event_type = value        
 
     @property
     def mkt_asset(self) -> str:
@@ -14952,8 +15190,8 @@ class FieldValueMap(Base):
 
     @mkt_asset.setter
     def mkt_asset(self, value: str):
-        self.__mkt_asset = value
-        self._property_changed('mkt_asset')        
+        self._property_changed('mkt_asset')
+        self.__mkt_asset = value        
 
     @property
     def asset_count_long(self) -> float:
@@ -14962,8 +15200,8 @@ class FieldValueMap(Base):
 
     @asset_count_long.setter
     def asset_count_long(self, value: float):
-        self.__asset_count_long = value
-        self._property_changed('asset_count_long')        
+        self._property_changed('asset_count_long')
+        self.__asset_count_long = value        
 
     @property
     def spot(self) -> float:
@@ -14972,8 +15210,8 @@ class FieldValueMap(Base):
 
     @spot.setter
     def spot(self, value: float):
-        self.__spot = value
-        self._property_changed('spot')        
+        self._property_changed('spot')
+        self.__spot = value        
 
     @property
     def loan_value(self) -> float:
@@ -14983,8 +15221,8 @@ class FieldValueMap(Base):
 
     @loan_value.setter
     def loan_value(self, value: float):
-        self.__loan_value = value
-        self._property_changed('loan_value')        
+        self._property_changed('loan_value')
+        self.__loan_value = value        
 
     @property
     def swap_spread(self) -> float:
@@ -14993,8 +15231,8 @@ class FieldValueMap(Base):
 
     @swap_spread.setter
     def swap_spread(self, value: float):
-        self.__swap_spread = value
-        self._property_changed('swap_spread')        
+        self._property_changed('swap_spread')
+        self.__swap_spread = value        
 
     @property
     def trading_restriction(self) -> bool:
@@ -15003,8 +15241,8 @@ class FieldValueMap(Base):
 
     @trading_restriction.setter
     def trading_restriction(self, value: bool):
-        self.__trading_restriction = value
-        self._property_changed('trading_restriction')        
+        self._property_changed('trading_restriction')
+        self.__trading_restriction = value        
 
     @property
     def price_spot_entry_unit(self) -> str:
@@ -15013,8 +15251,8 @@ class FieldValueMap(Base):
 
     @price_spot_entry_unit.setter
     def price_spot_entry_unit(self, value: str):
-        self.__price_spot_entry_unit = value
-        self._property_changed('price_spot_entry_unit')        
+        self._property_changed('price_spot_entry_unit')
+        self.__price_spot_entry_unit = value        
 
     @property
     def total_return_price(self) -> float:
@@ -15023,8 +15261,8 @@ class FieldValueMap(Base):
 
     @total_return_price.setter
     def total_return_price(self, value: float):
-        self.__total_return_price = value
-        self._property_changed('total_return_price')        
+        self._property_changed('total_return_price')
+        self.__total_return_price = value        
 
     @property
     def election_period(self) -> str:
@@ -15033,8 +15271,8 @@ class FieldValueMap(Base):
 
     @election_period.setter
     def election_period(self, value: str):
-        self.__election_period = value
-        self._property_changed('election_period')        
+        self._property_changed('election_period')
+        self.__election_period = value        
 
     @property
     def funding_ask_price(self) -> float:
@@ -15043,8 +15281,8 @@ class FieldValueMap(Base):
 
     @funding_ask_price.setter
     def funding_ask_price(self, value: float):
-        self.__funding_ask_price = value
-        self._property_changed('funding_ask_price')        
+        self._property_changed('funding_ask_price')
+        self.__funding_ask_price = value        
 
     @property
     def historical_beta(self) -> float:
@@ -15053,8 +15291,8 @@ class FieldValueMap(Base):
 
     @historical_beta.setter
     def historical_beta(self, value: float):
-        self.__historical_beta = value
-        self._property_changed('historical_beta')        
+        self._property_changed('historical_beta')
+        self.__historical_beta = value        
 
     @property
     def dissemination_id(self) -> str:
@@ -15063,8 +15301,8 @@ class FieldValueMap(Base):
 
     @dissemination_id.setter
     def dissemination_id(self, value: str):
-        self.__dissemination_id = value
-        self._property_changed('dissemination_id')        
+        self._property_changed('dissemination_id')
+        self.__dissemination_id = value        
 
     @property
     def leg_two_fixed_payment(self) -> float:
@@ -15074,8 +15312,8 @@ class FieldValueMap(Base):
 
     @leg_two_fixed_payment.setter
     def leg_two_fixed_payment(self, value: float):
-        self.__leg_two_fixed_payment = value
-        self._property_changed('leg_two_fixed_payment')        
+        self._property_changed('leg_two_fixed_payment')
+        self.__leg_two_fixed_payment = value        
 
     @property
     def hit_rate_ytd(self) -> float:
@@ -15084,8 +15322,8 @@ class FieldValueMap(Base):
 
     @hit_rate_ytd.setter
     def hit_rate_ytd(self, value: float):
-        self.__hit_rate_ytd = value
-        self._property_changed('hit_rate_ytd')        
+        self._property_changed('hit_rate_ytd')
+        self.__hit_rate_ytd = value        
 
     @property
     def valid(self) -> float:
@@ -15094,8 +15332,8 @@ class FieldValueMap(Base):
 
     @valid.setter
     def valid(self, value: float):
-        self.__valid = value
-        self._property_changed('valid')        
+        self._property_changed('valid')
+        self.__valid = value        
 
     @property
     def indication_of_end_user_exception(self) -> str:
@@ -15104,8 +15342,8 @@ class FieldValueMap(Base):
 
     @indication_of_end_user_exception.setter
     def indication_of_end_user_exception(self, value: str):
-        self.__indication_of_end_user_exception = value
-        self._property_changed('indication_of_end_user_exception')        
+        self._property_changed('indication_of_end_user_exception')
+        self.__indication_of_end_user_exception = value        
 
     @property
     def es_score(self) -> float:
@@ -15114,8 +15352,8 @@ class FieldValueMap(Base):
 
     @es_score.setter
     def es_score(self, value: float):
-        self.__es_score = value
-        self._property_changed('es_score')        
+        self._property_changed('es_score')
+        self.__es_score = value        
 
     @property
     def price_range_in_ticks(self) -> float:
@@ -15124,8 +15362,8 @@ class FieldValueMap(Base):
 
     @price_range_in_ticks.setter
     def price_range_in_ticks(self, value: float):
-        self.__price_range_in_ticks = value
-        self._property_changed('price_range_in_ticks')        
+        self._property_changed('price_range_in_ticks')
+        self.__price_range_in_ticks = value        
 
     @property
     def expense_ratio_gross_bps(self) -> float:
@@ -15134,8 +15372,8 @@ class FieldValueMap(Base):
 
     @expense_ratio_gross_bps.setter
     def expense_ratio_gross_bps(self, value: float):
-        self.__expense_ratio_gross_bps = value
-        self._property_changed('expense_ratio_gross_bps')        
+        self._property_changed('expense_ratio_gross_bps')
+        self.__expense_ratio_gross_bps = value        
 
     @property
     def pct_change(self) -> float:
@@ -15145,8 +15383,8 @@ class FieldValueMap(Base):
 
     @pct_change.setter
     def pct_change(self, value: float):
-        self.__pct_change = value
-        self._property_changed('pct_change')        
+        self._property_changed('pct_change')
+        self.__pct_change = value        
 
     @property
     def number_of_rolls(self) -> int:
@@ -15155,8 +15393,8 @@ class FieldValueMap(Base):
 
     @number_of_rolls.setter
     def number_of_rolls(self, value: int):
-        self.__number_of_rolls = value
-        self._property_changed('number_of_rolls')        
+        self._property_changed('number_of_rolls')
+        self.__number_of_rolls = value        
 
     @property
     def agent_lender_fee(self) -> float:
@@ -15165,8 +15403,8 @@ class FieldValueMap(Base):
 
     @agent_lender_fee.setter
     def agent_lender_fee(self, value: float):
-        self.__agent_lender_fee = value
-        self._property_changed('agent_lender_fee')        
+        self._property_changed('agent_lender_fee')
+        self.__agent_lender_fee = value        
 
     @property
     def bbid(self) -> str:
@@ -15175,8 +15413,8 @@ class FieldValueMap(Base):
 
     @bbid.setter
     def bbid(self, value: str):
-        self.__bbid = value
-        self._property_changed('bbid')        
+        self._property_changed('bbid')
+        self.__bbid = value        
 
     @property
     def option_strike_price(self) -> float:
@@ -15185,8 +15423,8 @@ class FieldValueMap(Base):
 
     @option_strike_price.setter
     def option_strike_price(self, value: float):
-        self.__option_strike_price = value
-        self._property_changed('option_strike_price')        
+        self._property_changed('option_strike_price')
+        self.__option_strike_price = value        
 
     @property
     def effective_date(self) -> datetime.date:
@@ -15195,8 +15433,8 @@ class FieldValueMap(Base):
 
     @effective_date.setter
     def effective_date(self, value: datetime.date):
-        self.__effective_date = value
-        self._property_changed('effective_date')        
+        self._property_changed('effective_date')
+        self.__effective_date = value        
 
     @property
     def arrival_mid_normalized(self) -> float:
@@ -15205,8 +15443,8 @@ class FieldValueMap(Base):
 
     @arrival_mid_normalized.setter
     def arrival_mid_normalized(self, value: float):
-        self.__arrival_mid_normalized = value
-        self._property_changed('arrival_mid_normalized')        
+        self._property_changed('arrival_mid_normalized')
+        self.__arrival_mid_normalized = value        
 
     @property
     def underlying_asset2(self) -> str:
@@ -15215,8 +15453,8 @@ class FieldValueMap(Base):
 
     @underlying_asset2.setter
     def underlying_asset2(self, value: str):
-        self.__underlying_asset2 = value
-        self._property_changed('underlying_asset2')        
+        self._property_changed('underlying_asset2')
+        self.__underlying_asset2 = value        
 
     @property
     def underlying_asset1(self) -> str:
@@ -15226,8 +15464,8 @@ class FieldValueMap(Base):
 
     @underlying_asset1.setter
     def underlying_asset1(self, value: str):
-        self.__underlying_asset1 = value
-        self._property_changed('underlying_asset1')        
+        self._property_changed('underlying_asset1')
+        self.__underlying_asset1 = value        
 
     @property
     def capped(self) -> str:
@@ -15236,8 +15474,8 @@ class FieldValueMap(Base):
 
     @capped.setter
     def capped(self, value: str):
-        self.__capped = value
-        self._property_changed('capped')        
+        self._property_changed('capped')
+        self.__capped = value        
 
     @property
     def rating(self) -> str:
@@ -15246,8 +15484,8 @@ class FieldValueMap(Base):
 
     @rating.setter
     def rating(self, value: str):
-        self.__rating = value
-        self._property_changed('rating')        
+        self._property_changed('rating')
+        self.__rating = value        
 
     @property
     def option_currency(self) -> str:
@@ -15256,8 +15494,8 @@ class FieldValueMap(Base):
 
     @option_currency.setter
     def option_currency(self, value: str):
-        self.__option_currency = value
-        self._property_changed('option_currency')        
+        self._property_changed('option_currency')
+        self.__option_currency = value        
 
     @property
     def legal_entity(self) -> str:
@@ -15266,8 +15504,8 @@ class FieldValueMap(Base):
 
     @legal_entity.setter
     def legal_entity(self, value: str):
-        self.__legal_entity = value
-        self._property_changed('legal_entity')        
+        self._property_changed('legal_entity')
+        self.__legal_entity = value        
 
     @property
     def performance_fee(self) -> Union[Op, float]:
@@ -15275,8 +15513,8 @@ class FieldValueMap(Base):
 
     @performance_fee.setter
     def performance_fee(self, value: Union[Op, float]):
-        self.__performance_fee = value
-        self._property_changed('performance_fee')        
+        self._property_changed('performance_fee')
+        self.__performance_fee = value        
 
     @property
     def underlying_asset_ids(self) -> Tuple[str, ...]:
@@ -15285,8 +15523,8 @@ class FieldValueMap(Base):
 
     @underlying_asset_ids.setter
     def underlying_asset_ids(self, value: Tuple[str, ...]):
-        self.__underlying_asset_ids = value
-        self._property_changed('underlying_asset_ids')        
+        self._property_changed('underlying_asset_ids')
+        self.__underlying_asset_ids = value        
 
     @property
     def queue_in_lots_label(self):
@@ -15294,8 +15532,8 @@ class FieldValueMap(Base):
 
     @queue_in_lots_label.setter
     def queue_in_lots_label(self, value):
-        self.__queue_in_lots_label = value
-        self._property_changed('queue_in_lots_label')        
+        self._property_changed('queue_in_lots_label')
+        self.__queue_in_lots_label = value        
 
     @property
     def adv10_day_pct(self) -> float:
@@ -15304,8 +15542,8 @@ class FieldValueMap(Base):
 
     @adv10_day_pct.setter
     def adv10_day_pct(self, value: float):
-        self.__adv10_day_pct = value
-        self._property_changed('adv10_day_pct')        
+        self._property_changed('adv10_day_pct')
+        self.__adv10_day_pct = value        
 
     @property
     def long_conviction_medium(self) -> float:
@@ -15314,8 +15552,8 @@ class FieldValueMap(Base):
 
     @long_conviction_medium.setter
     def long_conviction_medium(self, value: float):
-        self.__long_conviction_medium = value
-        self._property_changed('long_conviction_medium')        
+        self._property_changed('long_conviction_medium')
+        self.__long_conviction_medium = value        
 
     @property
     def annual_risk(self) -> float:
@@ -15325,8 +15563,8 @@ class FieldValueMap(Base):
 
     @annual_risk.setter
     def annual_risk(self, value: float):
-        self.__annual_risk = value
-        self._property_changed('annual_risk')        
+        self._property_changed('annual_risk')
+        self.__annual_risk = value        
 
     @property
     def eti(self) -> str:
@@ -15335,8 +15573,8 @@ class FieldValueMap(Base):
 
     @eti.setter
     def eti(self, value: str):
-        self.__eti = value
-        self._property_changed('eti')        
+        self._property_changed('eti')
+        self.__eti = value        
 
     @property
     def daily_tracking_error(self) -> float:
@@ -15345,8 +15583,8 @@ class FieldValueMap(Base):
 
     @daily_tracking_error.setter
     def daily_tracking_error(self, value: float):
-        self.__daily_tracking_error = value
-        self._property_changed('daily_tracking_error')        
+        self._property_changed('daily_tracking_error')
+        self.__daily_tracking_error = value        
 
     @property
     def leg_two_index(self) -> str:
@@ -15355,8 +15593,8 @@ class FieldValueMap(Base):
 
     @leg_two_index.setter
     def leg_two_index(self, value: str):
-        self.__leg_two_index = value
-        self._property_changed('leg_two_index')        
+        self._property_changed('leg_two_index')
+        self.__leg_two_index = value        
 
     @property
     def market_buffer(self) -> float:
@@ -15365,8 +15603,8 @@ class FieldValueMap(Base):
 
     @market_buffer.setter
     def market_buffer(self, value: float):
-        self.__market_buffer = value
-        self._property_changed('market_buffer')        
+        self._property_changed('market_buffer')
+        self.__market_buffer = value        
 
     @property
     def market_cap(self) -> float:
@@ -15375,8 +15613,8 @@ class FieldValueMap(Base):
 
     @market_cap.setter
     def market_cap(self, value: float):
-        self.__market_cap = value
-        self._property_changed('market_cap')        
+        self._property_changed('market_cap')
+        self.__market_cap = value        
 
     @property
     def oe_id(self) -> str:
@@ -15385,8 +15623,8 @@ class FieldValueMap(Base):
 
     @oe_id.setter
     def oe_id(self, value: str):
-        self.__oe_id = value
-        self._property_changed('oe_id')        
+        self._property_changed('oe_id')
+        self.__oe_id = value        
 
     @property
     def cluster_region(self):
@@ -15394,8 +15632,8 @@ class FieldValueMap(Base):
 
     @cluster_region.setter
     def cluster_region(self, value):
-        self.__cluster_region = value
-        self._property_changed('cluster_region')        
+        self._property_changed('cluster_region')
+        self.__cluster_region = value        
 
     @property
     def bbid_equivalent(self) -> str:
@@ -15405,8 +15643,8 @@ class FieldValueMap(Base):
 
     @bbid_equivalent.setter
     def bbid_equivalent(self, value: str):
-        self.__bbid_equivalent = value
-        self._property_changed('bbid_equivalent')        
+        self._property_changed('bbid_equivalent')
+        self.__bbid_equivalent = value        
 
     @property
     def valoren(self) -> str:
@@ -15416,8 +15654,8 @@ class FieldValueMap(Base):
 
     @valoren.setter
     def valoren(self, value: str):
-        self.__valoren = value
-        self._property_changed('valoren')        
+        self._property_changed('valoren')
+        self.__valoren = value        
 
     @property
     def basis(self) -> float:
@@ -15426,8 +15664,8 @@ class FieldValueMap(Base):
 
     @basis.setter
     def basis(self, value: float):
-        self.__basis = value
-        self._property_changed('basis')        
+        self._property_changed('basis')
+        self.__basis = value        
 
     @property
     def ext_mkt_class(self) -> str:
@@ -15436,8 +15674,8 @@ class FieldValueMap(Base):
 
     @ext_mkt_class.setter
     def ext_mkt_class(self, value: str):
-        self.__ext_mkt_class = value
-        self._property_changed('ext_mkt_class')        
+        self._property_changed('ext_mkt_class')
+        self.__ext_mkt_class = value        
 
     @property
     def price_currency(self) -> str:
@@ -15446,8 +15684,8 @@ class FieldValueMap(Base):
 
     @price_currency.setter
     def price_currency(self, value: str):
-        self.__price_currency = value
-        self._property_changed('price_currency')        
+        self._property_changed('price_currency')
+        self.__price_currency = value        
 
     @property
     def hedge_id(self) -> str:
@@ -15456,8 +15694,8 @@ class FieldValueMap(Base):
 
     @hedge_id.setter
     def hedge_id(self, value: str):
-        self.__hedge_id = value
-        self._property_changed('hedge_id')        
+        self._property_changed('hedge_id')
+        self.__hedge_id = value        
 
     @property
     def tcm_cost_horizon8_day(self) -> float:
@@ -15466,8 +15704,8 @@ class FieldValueMap(Base):
 
     @tcm_cost_horizon8_day.setter
     def tcm_cost_horizon8_day(self, value: float):
-        self.__tcm_cost_horizon8_day = value
-        self._property_changed('tcm_cost_horizon8_day')        
+        self._property_changed('tcm_cost_horizon8_day')
+        self.__tcm_cost_horizon8_day = value        
 
     @property
     def residual_variance(self) -> float:
@@ -15476,8 +15714,8 @@ class FieldValueMap(Base):
 
     @residual_variance.setter
     def residual_variance(self, value: float):
-        self.__residual_variance = value
-        self._property_changed('residual_variance')        
+        self._property_changed('residual_variance')
+        self.__residual_variance = value        
 
     @property
     def supra_strategy(self) -> str:
@@ -15487,8 +15725,8 @@ class FieldValueMap(Base):
 
     @supra_strategy.setter
     def supra_strategy(self, value: str):
-        self.__supra_strategy = value
-        self._property_changed('supra_strategy')        
+        self._property_changed('supra_strategy')
+        self.__supra_strategy = value        
 
     @property
     def day_count_convention(self) -> str:
@@ -15497,8 +15735,8 @@ class FieldValueMap(Base):
 
     @day_count_convention.setter
     def day_count_convention(self, value: str):
-        self.__day_count_convention = value
-        self._property_changed('day_count_convention')        
+        self._property_changed('day_count_convention')
+        self.__day_count_convention = value        
 
     @property
     def rounded_notional_amount1(self) -> float:
@@ -15507,8 +15745,8 @@ class FieldValueMap(Base):
 
     @rounded_notional_amount1.setter
     def rounded_notional_amount1(self, value: float):
-        self.__rounded_notional_amount1 = value
-        self._property_changed('rounded_notional_amount1')        
+        self._property_changed('rounded_notional_amount1')
+        self.__rounded_notional_amount1 = value        
 
     @property
     def adv5_day_pct(self) -> float:
@@ -15517,8 +15755,8 @@ class FieldValueMap(Base):
 
     @adv5_day_pct.setter
     def adv5_day_pct(self, value: float):
-        self.__adv5_day_pct = value
-        self._property_changed('adv5_day_pct')        
+        self._property_changed('adv5_day_pct')
+        self.__adv5_day_pct = value        
 
     @property
     def rounded_notional_amount2(self) -> float:
@@ -15527,8 +15765,8 @@ class FieldValueMap(Base):
 
     @rounded_notional_amount2.setter
     def rounded_notional_amount2(self, value: float):
-        self.__rounded_notional_amount2 = value
-        self._property_changed('rounded_notional_amount2')        
+        self._property_changed('rounded_notional_amount2')
+        self.__rounded_notional_amount2 = value        
 
     @property
     def leverage(self) -> float:
@@ -15537,8 +15775,8 @@ class FieldValueMap(Base):
 
     @leverage.setter
     def leverage(self, value: float):
-        self.__leverage = value
-        self._property_changed('leverage')        
+        self._property_changed('leverage')
+        self.__leverage = value        
 
     @property
     def option_family(self) -> str:
@@ -15547,8 +15785,8 @@ class FieldValueMap(Base):
 
     @option_family.setter
     def option_family(self, value: str):
-        self.__option_family = value
-        self._property_changed('option_family')        
+        self._property_changed('option_family')
+        self.__option_family = value        
 
     @property
     def price_spot_stop_loss_value(self) -> float:
@@ -15557,8 +15795,8 @@ class FieldValueMap(Base):
 
     @price_spot_stop_loss_value.setter
     def price_spot_stop_loss_value(self, value: float):
-        self.__price_spot_stop_loss_value = value
-        self._property_changed('price_spot_stop_loss_value')        
+        self._property_changed('price_spot_stop_loss_value')
+        self.__price_spot_stop_loss_value = value        
 
     @property
     def kpi_id(self) -> str:
@@ -15567,8 +15805,8 @@ class FieldValueMap(Base):
 
     @kpi_id.setter
     def kpi_id(self, value: str):
-        self.__kpi_id = value
-        self._property_changed('kpi_id')        
+        self._property_changed('kpi_id')
+        self.__kpi_id = value        
 
     @property
     def relative_return_wtd(self) -> float:
@@ -15577,8 +15815,8 @@ class FieldValueMap(Base):
 
     @relative_return_wtd.setter
     def relative_return_wtd(self, value: float):
-        self.__relative_return_wtd = value
-        self._property_changed('relative_return_wtd')        
+        self._property_changed('relative_return_wtd')
+        self.__relative_return_wtd = value        
 
     @property
     def borrow_cost(self) -> float:
@@ -15588,8 +15826,8 @@ class FieldValueMap(Base):
 
     @borrow_cost.setter
     def borrow_cost(self, value: float):
-        self.__borrow_cost = value
-        self._property_changed('borrow_cost')        
+        self._property_changed('borrow_cost')
+        self.__borrow_cost = value        
 
     @property
     def average_implied_volatility(self) -> float:
@@ -15598,8 +15836,8 @@ class FieldValueMap(Base):
 
     @average_implied_volatility.setter
     def average_implied_volatility(self, value: float):
-        self.__average_implied_volatility = value
-        self._property_changed('average_implied_volatility')        
+        self._property_changed('average_implied_volatility')
+        self.__average_implied_volatility = value        
 
     @property
     def fair_value(self) -> float:
@@ -15608,8 +15846,8 @@ class FieldValueMap(Base):
 
     @fair_value.setter
     def fair_value(self, value: float):
-        self.__fair_value = value
-        self._property_changed('fair_value')        
+        self._property_changed('fair_value')
+        self.__fair_value = value        
 
     @property
     def adjusted_high_price(self) -> float:
@@ -15619,8 +15857,8 @@ class FieldValueMap(Base):
 
     @adjusted_high_price.setter
     def adjusted_high_price(self, value: float):
-        self.__adjusted_high_price = value
-        self._property_changed('adjusted_high_price')        
+        self._property_changed('adjusted_high_price')
+        self.__adjusted_high_price = value        
 
     @property
     def open_time(self) -> datetime.datetime:
@@ -15629,8 +15867,8 @@ class FieldValueMap(Base):
 
     @open_time.setter
     def open_time(self, value: datetime.datetime):
-        self.__open_time = value
-        self._property_changed('open_time')        
+        self._property_changed('open_time')
+        self.__open_time = value        
 
     @property
     def ext_mkt_point1(self) -> str:
@@ -15639,8 +15877,8 @@ class FieldValueMap(Base):
 
     @ext_mkt_point1.setter
     def ext_mkt_point1(self, value: str):
-        self.__ext_mkt_point1 = value
-        self._property_changed('ext_mkt_point1')        
+        self._property_changed('ext_mkt_point1')
+        self.__ext_mkt_point1 = value        
 
     @property
     def direction(self) -> str:
@@ -15649,8 +15887,8 @@ class FieldValueMap(Base):
 
     @direction.setter
     def direction(self, value: str):
-        self.__direction = value
-        self._property_changed('direction')        
+        self._property_changed('direction')
+        self.__direction = value        
 
     @property
     def ext_mkt_point2(self) -> str:
@@ -15659,8 +15897,8 @@ class FieldValueMap(Base):
 
     @ext_mkt_point2.setter
     def ext_mkt_point2(self, value: str):
-        self.__ext_mkt_point2 = value
-        self._property_changed('ext_mkt_point2')        
+        self._property_changed('ext_mkt_point2')
+        self.__ext_mkt_point2 = value        
 
     @property
     def sub_region_code(self) -> str:
@@ -15669,8 +15907,8 @@ class FieldValueMap(Base):
 
     @sub_region_code.setter
     def sub_region_code(self, value: str):
-        self.__sub_region_code = value
-        self._property_changed('sub_region_code')        
+        self._property_changed('sub_region_code')
+        self.__sub_region_code = value        
 
     @property
     def value_forecast(self) -> str:
@@ -15679,8 +15917,8 @@ class FieldValueMap(Base):
 
     @value_forecast.setter
     def value_forecast(self, value: str):
-        self.__value_forecast = value
-        self._property_changed('value_forecast')        
+        self._property_changed('value_forecast')
+        self.__value_forecast = value        
 
     @property
     def execution_venue(self) -> str:
@@ -15691,8 +15929,8 @@ class FieldValueMap(Base):
 
     @execution_venue.setter
     def execution_venue(self, value: str):
-        self.__execution_venue = value
-        self._property_changed('execution_venue')        
+        self._property_changed('execution_venue')
+        self.__execution_venue = value        
 
     @property
     def position_source_type(self) -> str:
@@ -15701,8 +15939,8 @@ class FieldValueMap(Base):
 
     @position_source_type.setter
     def position_source_type(self, value: str):
-        self.__position_source_type = value
-        self._property_changed('position_source_type')        
+        self._property_changed('position_source_type')
+        self.__position_source_type = value        
 
     @property
     def adjusted_close_price(self) -> float:
@@ -15711,8 +15949,8 @@ class FieldValueMap(Base):
 
     @adjusted_close_price.setter
     def adjusted_close_price(self, value: float):
-        self.__adjusted_close_price = value
-        self._property_changed('adjusted_close_price')        
+        self._property_changed('adjusted_close_price')
+        self.__adjusted_close_price = value        
 
     @property
     def lms_id(self) -> str:
@@ -15721,8 +15959,8 @@ class FieldValueMap(Base):
 
     @lms_id.setter
     def lms_id(self, value: str):
-        self.__lms_id = value
-        self._property_changed('lms_id')        
+        self._property_changed('lms_id')
+        self.__lms_id = value        
 
     @property
     def rebate_rate(self) -> float:
@@ -15733,8 +15971,8 @@ class FieldValueMap(Base):
 
     @rebate_rate.setter
     def rebate_rate(self, value: float):
-        self.__rebate_rate = value
-        self._property_changed('rebate_rate')        
+        self._property_changed('rebate_rate')
+        self.__rebate_rate = value        
 
     @property
     def participation_rate(self) -> float:
@@ -15743,8 +15981,8 @@ class FieldValueMap(Base):
 
     @participation_rate.setter
     def participation_rate(self, value: float):
-        self.__participation_rate = value
-        self._property_changed('participation_rate')        
+        self._property_changed('participation_rate')
+        self.__participation_rate = value        
 
     @property
     def obfr(self) -> float:
@@ -15753,8 +15991,8 @@ class FieldValueMap(Base):
 
     @obfr.setter
     def obfr(self, value: float):
-        self.__obfr = value
-        self._property_changed('obfr')        
+        self._property_changed('obfr')
+        self.__obfr = value        
 
     @property
     def option_lock_period(self) -> str:
@@ -15763,8 +16001,8 @@ class FieldValueMap(Base):
 
     @option_lock_period.setter
     def option_lock_period(self, value: str):
-        self.__option_lock_period = value
-        self._property_changed('option_lock_period')        
+        self._property_changed('option_lock_period')
+        self.__option_lock_period = value        
 
     @property
     def es_momentum_percentile(self) -> float:
@@ -15774,8 +16012,8 @@ class FieldValueMap(Base):
 
     @es_momentum_percentile.setter
     def es_momentum_percentile(self, value: float):
-        self.__es_momentum_percentile = value
-        self._property_changed('es_momentum_percentile')        
+        self._property_changed('es_momentum_percentile')
+        self.__es_momentum_percentile = value        
 
     @property
     def price_notation(self) -> float:
@@ -15785,8 +16023,8 @@ class FieldValueMap(Base):
 
     @price_notation.setter
     def price_notation(self, value: float):
-        self.__price_notation = value
-        self._property_changed('price_notation')        
+        self._property_changed('price_notation')
+        self.__price_notation = value        
 
     @property
     def strategy(self) -> str:
@@ -15796,8 +16034,8 @@ class FieldValueMap(Base):
 
     @strategy.setter
     def strategy(self, value: str):
-        self.__strategy = value
-        self._property_changed('strategy')        
+        self._property_changed('strategy')
+        self.__strategy = value        
 
     @property
     def forecast_date(self) -> datetime.date:
@@ -15806,8 +16044,8 @@ class FieldValueMap(Base):
 
     @forecast_date.setter
     def forecast_date(self, value: datetime.date):
-        self.__forecast_date = value
-        self._property_changed('forecast_date')        
+        self._property_changed('forecast_date')
+        self.__forecast_date = value        
 
     @property
     def position_type(self) -> str:
@@ -15816,8 +16054,8 @@ class FieldValueMap(Base):
 
     @position_type.setter
     def position_type(self, value: str):
-        self.__position_type = value
-        self._property_changed('position_type')        
+        self._property_changed('position_type')
+        self.__position_type = value        
 
     @property
     def lender_income(self) -> float:
@@ -15826,8 +16064,8 @@ class FieldValueMap(Base):
 
     @lender_income.setter
     def lender_income(self, value: float):
-        self.__lender_income = value
-        self._property_changed('lender_income')        
+        self._property_changed('lender_income')
+        self.__lender_income = value        
 
     @property
     def sub_asset_class(self) -> str:
@@ -15836,8 +16074,8 @@ class FieldValueMap(Base):
 
     @sub_asset_class.setter
     def sub_asset_class(self, value: str):
-        self.__sub_asset_class = value
-        self._property_changed('sub_asset_class')        
+        self._property_changed('sub_asset_class')
+        self.__sub_asset_class = value        
 
     @property
     def provide_mpl_tape_b(self) -> float:
@@ -15846,8 +16084,8 @@ class FieldValueMap(Base):
 
     @provide_mpl_tape_b.setter
     def provide_mpl_tape_b(self, value: float):
-        self.__provide_mpl_tape_b = value
-        self._property_changed('provide_mpl_tape_b')        
+        self._property_changed('provide_mpl_tape_b')
+        self.__provide_mpl_tape_b = value        
 
     @property
     def short_interest(self) -> float:
@@ -15856,8 +16094,8 @@ class FieldValueMap(Base):
 
     @short_interest.setter
     def short_interest(self, value: float):
-        self.__short_interest = value
-        self._property_changed('short_interest')        
+        self._property_changed('short_interest')
+        self.__short_interest = value        
 
     @property
     def reference_period(self) -> str:
@@ -15866,8 +16104,8 @@ class FieldValueMap(Base):
 
     @reference_period.setter
     def reference_period(self, value: str):
-        self.__reference_period = value
-        self._property_changed('reference_period')        
+        self._property_changed('reference_period')
+        self.__reference_period = value        
 
     @property
     def provide_mpl_tape_c(self) -> float:
@@ -15876,8 +16114,8 @@ class FieldValueMap(Base):
 
     @provide_mpl_tape_c.setter
     def provide_mpl_tape_c(self, value: float):
-        self.__provide_mpl_tape_c = value
-        self._property_changed('provide_mpl_tape_c')        
+        self._property_changed('provide_mpl_tape_c')
+        self.__provide_mpl_tape_c = value        
 
     @property
     def adjusted_volume(self) -> float:
@@ -15887,8 +16125,8 @@ class FieldValueMap(Base):
 
     @adjusted_volume.setter
     def adjusted_volume(self, value: float):
-        self.__adjusted_volume = value
-        self._property_changed('adjusted_volume')        
+        self._property_changed('adjusted_volume')
+        self.__adjusted_volume = value        
 
     @property
     def provide_mpl_tape_a(self) -> float:
@@ -15897,8 +16135,8 @@ class FieldValueMap(Base):
 
     @provide_mpl_tape_a.setter
     def provide_mpl_tape_a(self, value: float):
-        self.__provide_mpl_tape_a = value
-        self._property_changed('provide_mpl_tape_a')        
+        self._property_changed('provide_mpl_tape_a')
+        self.__provide_mpl_tape_a = value        
 
     @property
     def owner_id(self) -> str:
@@ -15907,8 +16145,8 @@ class FieldValueMap(Base):
 
     @owner_id.setter
     def owner_id(self, value: str):
-        self.__owner_id = value
-        self._property_changed('owner_id')        
+        self._property_changed('owner_id')
+        self.__owner_id = value        
 
     @property
     def composite10_day_adv(self) -> float:
@@ -15917,8 +16155,8 @@ class FieldValueMap(Base):
 
     @composite10_day_adv.setter
     def composite10_day_adv(self, value: float):
-        self.__composite10_day_adv = value
-        self._property_changed('composite10_day_adv')        
+        self._property_changed('composite10_day_adv')
+        self.__composite10_day_adv = value        
 
     @property
     def bpe_quality_stars(self) -> float:
@@ -15927,8 +16165,8 @@ class FieldValueMap(Base):
 
     @bpe_quality_stars.setter
     def bpe_quality_stars(self, value: float):
-        self.__bpe_quality_stars = value
-        self._property_changed('bpe_quality_stars')        
+        self._property_changed('bpe_quality_stars')
+        self.__bpe_quality_stars = value        
 
     @property
     def idea_activity_type(self) -> str:
@@ -15940,8 +16178,8 @@ class FieldValueMap(Base):
 
     @idea_activity_type.setter
     def idea_activity_type(self, value: str):
-        self.__idea_activity_type = value
-        self._property_changed('idea_activity_type')        
+        self._property_changed('idea_activity_type')
+        self.__idea_activity_type = value        
 
     @property
     def idea_source(self) -> str:
@@ -15951,8 +16189,8 @@ class FieldValueMap(Base):
 
     @idea_source.setter
     def idea_source(self, value: str):
-        self.__idea_source = value
-        self._property_changed('idea_source')        
+        self._property_changed('idea_source')
+        self.__idea_source = value        
 
     @property
     def unadjusted_ask(self) -> float:
@@ -15962,8 +16200,8 @@ class FieldValueMap(Base):
 
     @unadjusted_ask.setter
     def unadjusted_ask(self, value: float):
-        self.__unadjusted_ask = value
-        self._property_changed('unadjusted_ask')        
+        self._property_changed('unadjusted_ask')
+        self.__unadjusted_ask = value        
 
     @property
     def trading_pnl(self) -> float:
@@ -15972,8 +16210,8 @@ class FieldValueMap(Base):
 
     @trading_pnl.setter
     def trading_pnl(self, value: float):
-        self.__trading_pnl = value
-        self._property_changed('trading_pnl')        
+        self._property_changed('trading_pnl')
+        self.__trading_pnl = value        
 
     @property
     def collateral_value_required(self) -> float:
@@ -15982,8 +16220,8 @@ class FieldValueMap(Base):
 
     @collateral_value_required.setter
     def collateral_value_required(self, value: float):
-        self.__collateral_value_required = value
-        self._property_changed('collateral_value_required')        
+        self._property_changed('collateral_value_required')
+        self.__collateral_value_required = value        
 
     @property
     def given_plus_paid(self) -> float:
@@ -15992,8 +16230,8 @@ class FieldValueMap(Base):
 
     @given_plus_paid.setter
     def given_plus_paid(self, value: float):
-        self.__given_plus_paid = value
-        self._property_changed('given_plus_paid')        
+        self._property_changed('given_plus_paid')
+        self.__given_plus_paid = value        
 
     @property
     def close_location(self) -> str:
@@ -16002,8 +16240,8 @@ class FieldValueMap(Base):
 
     @close_location.setter
     def close_location(self, value: str):
-        self.__close_location = value
-        self._property_changed('close_location')        
+        self._property_changed('close_location')
+        self.__close_location = value        
 
     @property
     def short_conviction_small(self) -> float:
@@ -16012,8 +16250,18 @@ class FieldValueMap(Base):
 
     @short_conviction_small.setter
     def short_conviction_small(self, value: float):
-        self.__short_conviction_small = value
-        self._property_changed('short_conviction_small')        
+        self._property_changed('short_conviction_small')
+        self.__short_conviction_small = value        
+
+    @property
+    def price_to_earnings_positive(self) -> float:
+        """Price to earnings positive."""
+        return self.__price_to_earnings_positive
+
+    @price_to_earnings_positive.setter
+    def price_to_earnings_positive(self, value: float):
+        self._property_changed('price_to_earnings_positive')
+        self.__price_to_earnings_positive = value        
 
     @property
     def forecast(self) -> float:
@@ -16022,8 +16270,8 @@ class FieldValueMap(Base):
 
     @forecast.setter
     def forecast(self, value: float):
-        self.__forecast = value
-        self._property_changed('forecast')        
+        self._property_changed('forecast')
+        self.__forecast = value        
 
     @property
     def pnl(self) -> float:
@@ -16032,8 +16280,8 @@ class FieldValueMap(Base):
 
     @pnl.setter
     def pnl(self, value: float):
-        self.__pnl = value
-        self._property_changed('pnl')        
+        self._property_changed('pnl')
+        self.__pnl = value        
 
     @property
     def upfront_payment_currency(self) -> str:
@@ -16042,8 +16290,8 @@ class FieldValueMap(Base):
 
     @upfront_payment_currency.setter
     def upfront_payment_currency(self, value: str):
-        self.__upfront_payment_currency = value
-        self._property_changed('upfront_payment_currency')        
+        self._property_changed('upfront_payment_currency')
+        self.__upfront_payment_currency = value        
 
     @property
     def date_index(self) -> float:
@@ -16052,8 +16300,8 @@ class FieldValueMap(Base):
 
     @date_index.setter
     def date_index(self, value: float):
-        self.__date_index = value
-        self._property_changed('date_index')        
+        self._property_changed('date_index')
+        self.__date_index = value        
 
     @property
     def tcm_cost_horizon4_day(self) -> float:
@@ -16062,8 +16310,8 @@ class FieldValueMap(Base):
 
     @tcm_cost_horizon4_day.setter
     def tcm_cost_horizon4_day(self, value: float):
-        self.__tcm_cost_horizon4_day = value
-        self._property_changed('tcm_cost_horizon4_day')        
+        self._property_changed('tcm_cost_horizon4_day')
+        self.__tcm_cost_horizon4_day = value        
 
     @property
     def asset_classifications_is_primary(self) -> bool:
@@ -16072,8 +16320,8 @@ class FieldValueMap(Base):
 
     @asset_classifications_is_primary.setter
     def asset_classifications_is_primary(self, value: bool):
-        self.__asset_classifications_is_primary = value
-        self._property_changed('asset_classifications_is_primary')        
+        self._property_changed('asset_classifications_is_primary')
+        self.__asset_classifications_is_primary = value        
 
     @property
     def styles(self) -> Tuple[Tuple[str, ...], ...]:
@@ -16082,8 +16330,8 @@ class FieldValueMap(Base):
 
     @styles.setter
     def styles(self, value: Tuple[Tuple[str, ...], ...]):
-        self.__styles = value
-        self._property_changed('styles')        
+        self._property_changed('styles')
+        self.__styles = value        
 
     @property
     def short_name(self) -> str:
@@ -16092,8 +16340,8 @@ class FieldValueMap(Base):
 
     @short_name.setter
     def short_name(self, value: str):
-        self.__short_name = value
-        self._property_changed('short_name')        
+        self._property_changed('short_name')
+        self.__short_name = value        
 
     @property
     def dwi_contribution(self) -> float:
@@ -16103,8 +16351,8 @@ class FieldValueMap(Base):
 
     @dwi_contribution.setter
     def dwi_contribution(self, value: float):
-        self.__dwi_contribution = value
-        self._property_changed('dwi_contribution')        
+        self._property_changed('dwi_contribution')
+        self.__dwi_contribution = value        
 
     @property
     def reset_frequency1(self) -> str:
@@ -16116,8 +16364,8 @@ class FieldValueMap(Base):
 
     @reset_frequency1.setter
     def reset_frequency1(self, value: str):
-        self.__reset_frequency1 = value
-        self._property_changed('reset_frequency1')        
+        self._property_changed('reset_frequency1')
+        self.__reset_frequency1 = value        
 
     @property
     def reset_frequency2(self) -> str:
@@ -16126,8 +16374,8 @@ class FieldValueMap(Base):
 
     @reset_frequency2.setter
     def reset_frequency2(self, value: str):
-        self.__reset_frequency2 = value
-        self._property_changed('reset_frequency2')        
+        self._property_changed('reset_frequency2')
+        self.__reset_frequency2 = value        
 
     @property
     def average_fill_price(self) -> float:
@@ -16136,8 +16384,8 @@ class FieldValueMap(Base):
 
     @average_fill_price.setter
     def average_fill_price(self, value: float):
-        self.__average_fill_price = value
-        self._property_changed('average_fill_price')        
+        self._property_changed('average_fill_price')
+        self.__average_fill_price = value        
 
     @property
     def price_notation_type2(self) -> str:
@@ -16147,8 +16395,8 @@ class FieldValueMap(Base):
 
     @price_notation_type2.setter
     def price_notation_type2(self, value: str):
-        self.__price_notation_type2 = value
-        self._property_changed('price_notation_type2')        
+        self._property_changed('price_notation_type2')
+        self.__price_notation_type2 = value        
 
     @property
     def price_notation_type3(self) -> str:
@@ -16158,8 +16406,8 @@ class FieldValueMap(Base):
 
     @price_notation_type3.setter
     def price_notation_type3(self, value: str):
-        self.__price_notation_type3 = value
-        self._property_changed('price_notation_type3')        
+        self._property_changed('price_notation_type3')
+        self.__price_notation_type3 = value        
 
     @property
     def bid_gspread(self) -> float:
@@ -16168,8 +16416,8 @@ class FieldValueMap(Base):
 
     @bid_gspread.setter
     def bid_gspread(self, value: float):
-        self.__bid_gspread = value
-        self._property_changed('bid_gspread')        
+        self._property_changed('bid_gspread')
+        self.__bid_gspread = value        
 
     @property
     def open_price(self) -> float:
@@ -16179,8 +16427,8 @@ class FieldValueMap(Base):
 
     @open_price.setter
     def open_price(self, value: float):
-        self.__open_price = value
-        self._property_changed('open_price')        
+        self._property_changed('open_price')
+        self.__open_price = value        
 
     @property
     def depth_spread_score(self) -> float:
@@ -16190,8 +16438,8 @@ class FieldValueMap(Base):
 
     @depth_spread_score.setter
     def depth_spread_score(self, value: float):
-        self.__depth_spread_score = value
-        self._property_changed('depth_spread_score')        
+        self._property_changed('depth_spread_score')
+        self.__depth_spread_score = value        
 
     @property
     def sub_account(self) -> str:
@@ -16200,8 +16448,8 @@ class FieldValueMap(Base):
 
     @sub_account.setter
     def sub_account(self, value: str):
-        self.__sub_account = value
-        self._property_changed('sub_account')        
+        self._property_changed('sub_account')
+        self.__sub_account = value        
 
     @property
     def fair_volatility(self) -> float:
@@ -16210,8 +16458,8 @@ class FieldValueMap(Base):
 
     @fair_volatility.setter
     def fair_volatility(self, value: float):
-        self.__fair_volatility = value
-        self._property_changed('fair_volatility')        
+        self._property_changed('fair_volatility')
+        self.__fair_volatility = value        
 
     @property
     def portfolio_type(self) -> str:
@@ -16220,8 +16468,8 @@ class FieldValueMap(Base):
 
     @portfolio_type.setter
     def portfolio_type(self, value: str):
-        self.__portfolio_type = value
-        self._property_changed('portfolio_type')        
+        self._property_changed('portfolio_type')
+        self.__portfolio_type = value        
 
     @property
     def vendor(self) -> Union[Union[MarketDataVendor, str], Union[RiskModelVendor, str]]:
@@ -16229,8 +16477,8 @@ class FieldValueMap(Base):
 
     @vendor.setter
     def vendor(self, value: Union[Union[MarketDataVendor, str], Union[RiskModelVendor, str]]):
-        self.__vendor = value
-        self._property_changed('vendor')        
+        self._property_changed('vendor')
+        self.__vendor = value        
 
     @property
     def currency(self) -> str:
@@ -16239,8 +16487,8 @@ class FieldValueMap(Base):
 
     @currency.setter
     def currency(self, value: str):
-        self.__currency = value
-        self._property_changed('currency')        
+        self._property_changed('currency')
+        self.__currency = value        
 
     @property
     def cluster_class(self) -> str:
@@ -16250,8 +16498,8 @@ class FieldValueMap(Base):
 
     @cluster_class.setter
     def cluster_class(self, value: str):
-        self.__cluster_class = value
-        self._property_changed('cluster_class')        
+        self._property_changed('cluster_class')
+        self.__cluster_class = value        
 
     @property
     def queueing_time(self) -> int:
@@ -16260,8 +16508,8 @@ class FieldValueMap(Base):
 
     @queueing_time.setter
     def queueing_time(self, value: int):
-        self.__queueing_time = value
-        self._property_changed('queueing_time')        
+        self._property_changed('queueing_time')
+        self.__queueing_time = value        
 
     @property
     def ann_return5_year(self) -> float:
@@ -16271,8 +16519,8 @@ class FieldValueMap(Base):
 
     @ann_return5_year.setter
     def ann_return5_year(self, value: float):
-        self.__ann_return5_year = value
-        self._property_changed('ann_return5_year')        
+        self._property_changed('ann_return5_year')
+        self.__ann_return5_year = value        
 
     @property
     def bid_size(self) -> float:
@@ -16281,8 +16529,8 @@ class FieldValueMap(Base):
 
     @bid_size.setter
     def bid_size(self, value: float):
-        self.__bid_size = value
-        self._property_changed('bid_size')        
+        self._property_changed('bid_size')
+        self.__bid_size = value        
 
     @property
     def arrival_mid(self) -> float:
@@ -16291,8 +16539,8 @@ class FieldValueMap(Base):
 
     @arrival_mid.setter
     def arrival_mid(self, value: float):
-        self.__arrival_mid = value
-        self._property_changed('arrival_mid')        
+        self._property_changed('arrival_mid')
+        self.__arrival_mid = value        
 
     @property
     def asset_parameters_exchange_currency(self) -> str:
@@ -16301,8 +16549,8 @@ class FieldValueMap(Base):
 
     @asset_parameters_exchange_currency.setter
     def asset_parameters_exchange_currency(self, value: str):
-        self.__asset_parameters_exchange_currency = value
-        self._property_changed('asset_parameters_exchange_currency')        
+        self._property_changed('asset_parameters_exchange_currency')
+        self.__asset_parameters_exchange_currency = value        
 
     @property
     def unexplained(self) -> float:
@@ -16311,8 +16559,8 @@ class FieldValueMap(Base):
 
     @unexplained.setter
     def unexplained(self, value: float):
-        self.__unexplained = value
-        self._property_changed('unexplained')        
+        self._property_changed('unexplained')
+        self.__unexplained = value        
 
     @property
     def candidate_name(self) -> str:
@@ -16321,8 +16569,8 @@ class FieldValueMap(Base):
 
     @candidate_name.setter
     def candidate_name(self, value: str):
-        self.__candidate_name = value
-        self._property_changed('candidate_name')        
+        self._property_changed('candidate_name')
+        self.__candidate_name = value        
 
     @property
     def metric(self) -> str:
@@ -16331,8 +16579,8 @@ class FieldValueMap(Base):
 
     @metric.setter
     def metric(self, value: str):
-        self.__metric = value
-        self._property_changed('metric')        
+        self._property_changed('metric')
+        self.__metric = value        
 
     @property
     def ask(self) -> float:
@@ -16341,8 +16589,8 @@ class FieldValueMap(Base):
 
     @ask.setter
     def ask(self, value: float):
-        self.__ask = value
-        self._property_changed('ask')        
+        self._property_changed('ask')
+        self.__ask = value        
 
     @property
     def close_price(self) -> float:
@@ -16352,8 +16600,8 @@ class FieldValueMap(Base):
 
     @close_price.setter
     def close_price(self, value: float):
-        self.__close_price = value
-        self._property_changed('close_price')        
+        self._property_changed('close_price')
+        self.__close_price = value        
 
     @property
     def end_time(self) -> datetime.datetime:
@@ -16362,8 +16610,8 @@ class FieldValueMap(Base):
 
     @end_time.setter
     def end_time(self, value: datetime.datetime):
-        self.__end_time = value
-        self._property_changed('end_time')        
+        self._property_changed('end_time')
+        self.__end_time = value        
 
     @property
     def execution_timestamp(self) -> datetime.datetime:
@@ -16373,8 +16621,8 @@ class FieldValueMap(Base):
 
     @execution_timestamp.setter
     def execution_timestamp(self, value: datetime.datetime):
-        self.__execution_timestamp = value
-        self._property_changed('execution_timestamp')        
+        self._property_changed('execution_timestamp')
+        self.__execution_timestamp = value        
 
     @property
     def source(self) -> str:
@@ -16383,8 +16631,8 @@ class FieldValueMap(Base):
 
     @source.setter
     def source(self, value: str):
-        self.__source = value
-        self._property_changed('source')        
+        self._property_changed('source')
+        self.__source = value        
 
     @property
     def expense_ratio_net_bps(self) -> float:
@@ -16393,8 +16641,8 @@ class FieldValueMap(Base):
 
     @expense_ratio_net_bps.setter
     def expense_ratio_net_bps(self, value: float):
-        self.__expense_ratio_net_bps = value
-        self._property_changed('expense_ratio_net_bps')        
+        self._property_changed('expense_ratio_net_bps')
+        self.__expense_ratio_net_bps = value        
 
     @property
     def data_set_sub_category(self) -> str:
@@ -16403,8 +16651,8 @@ class FieldValueMap(Base):
 
     @data_set_sub_category.setter
     def data_set_sub_category(self, value: str):
-        self.__data_set_sub_category = value
-        self._property_changed('data_set_sub_category')        
+        self._property_changed('data_set_sub_category')
+        self.__data_set_sub_category = value        
 
     @property
     def day_count_convention2(self) -> str:
@@ -16413,8 +16661,8 @@ class FieldValueMap(Base):
 
     @day_count_convention2.setter
     def day_count_convention2(self, value: str):
-        self.__day_count_convention2 = value
-        self._property_changed('day_count_convention2')        
+        self._property_changed('day_count_convention2')
+        self.__day_count_convention2 = value        
 
     @property
     def quantity_bucket(self) -> str:
@@ -16423,8 +16671,8 @@ class FieldValueMap(Base):
 
     @quantity_bucket.setter
     def quantity_bucket(self, value: str):
-        self.__quantity_bucket = value
-        self._property_changed('quantity_bucket')        
+        self._property_changed('quantity_bucket')
+        self.__quantity_bucket = value        
 
     @property
     def factor_two(self) -> str:
@@ -16436,8 +16684,8 @@ class FieldValueMap(Base):
 
     @factor_two.setter
     def factor_two(self, value: str):
-        self.__factor_two = value
-        self._property_changed('factor_two')        
+        self._property_changed('factor_two')
+        self.__factor_two = value        
 
     @property
     def oe_name(self) -> str:
@@ -16446,8 +16694,8 @@ class FieldValueMap(Base):
 
     @oe_name.setter
     def oe_name(self, value: str):
-        self.__oe_name = value
-        self._property_changed('oe_name')        
+        self._property_changed('oe_name')
+        self.__oe_name = value        
 
     @property
     def given(self) -> float:
@@ -16456,8 +16704,8 @@ class FieldValueMap(Base):
 
     @given.setter
     def given(self, value: float):
-        self.__given = value
-        self._property_changed('given')        
+        self._property_changed('given')
+        self.__given = value        
 
     @property
     def delisting_date(self) -> str:
@@ -16466,8 +16714,8 @@ class FieldValueMap(Base):
 
     @delisting_date.setter
     def delisting_date(self, value: str):
-        self.__delisting_date = value
-        self._property_changed('delisting_date')        
+        self._property_changed('delisting_date')
+        self.__delisting_date = value        
 
     @property
     def price_spot_target_value(self) -> float:
@@ -16476,8 +16724,8 @@ class FieldValueMap(Base):
 
     @price_spot_target_value.setter
     def price_spot_target_value(self, value: float):
-        self.__price_spot_target_value = value
-        self._property_changed('price_spot_target_value')        
+        self._property_changed('price_spot_target_value')
+        self.__price_spot_target_value = value        
 
     @property
     def weight(self) -> float:
@@ -16487,8 +16735,8 @@ class FieldValueMap(Base):
 
     @weight.setter
     def weight(self, value: float):
-        self.__weight = value
-        self._property_changed('weight')        
+        self._property_changed('weight')
+        self.__weight = value        
 
     @property
     def market_data_point(self) -> Tuple[Tuple[str, ...], ...]:
@@ -16497,8 +16745,8 @@ class FieldValueMap(Base):
 
     @market_data_point.setter
     def market_data_point(self, value: Tuple[Tuple[str, ...], ...]):
-        self.__market_data_point = value
-        self._property_changed('market_data_point')        
+        self._property_changed('market_data_point')
+        self.__market_data_point = value        
 
     @property
     def absolute_weight(self) -> float:
@@ -16507,8 +16755,8 @@ class FieldValueMap(Base):
 
     @absolute_weight.setter
     def absolute_weight(self, value: float):
-        self.__absolute_weight = value
-        self._property_changed('absolute_weight')        
+        self._property_changed('absolute_weight')
+        self.__absolute_weight = value        
 
     @property
     def trade_time(self) -> datetime.datetime:
@@ -16517,8 +16765,8 @@ class FieldValueMap(Base):
 
     @trade_time.setter
     def trade_time(self, value: datetime.datetime):
-        self.__trade_time = value
-        self._property_changed('trade_time')        
+        self._property_changed('trade_time')
+        self.__trade_time = value        
 
     @property
     def measure(self) -> str:
@@ -16527,8 +16775,8 @@ class FieldValueMap(Base):
 
     @measure.setter
     def measure(self, value: str):
-        self.__measure = value
-        self._property_changed('measure')        
+        self._property_changed('measure')
+        self.__measure = value        
 
     @property
     def hedge_annualized_volatility(self) -> float:
@@ -16537,8 +16785,8 @@ class FieldValueMap(Base):
 
     @hedge_annualized_volatility.setter
     def hedge_annualized_volatility(self, value: float):
-        self.__hedge_annualized_volatility = value
-        self._property_changed('hedge_annualized_volatility')        
+        self._property_changed('hedge_annualized_volatility')
+        self.__hedge_annualized_volatility = value        
 
     @property
     def benchmark_currency(self) -> str:
@@ -16547,8 +16795,8 @@ class FieldValueMap(Base):
 
     @benchmark_currency.setter
     def benchmark_currency(self, value: str):
-        self.__benchmark_currency = value
-        self._property_changed('benchmark_currency')        
+        self._property_changed('benchmark_currency')
+        self.__benchmark_currency = value        
 
     @property
     def futures_contract(self) -> str:
@@ -16557,8 +16805,8 @@ class FieldValueMap(Base):
 
     @futures_contract.setter
     def futures_contract(self, value: str):
-        self.__futures_contract = value
-        self._property_changed('futures_contract')        
+        self._property_changed('futures_contract')
+        self.__futures_contract = value        
 
     @property
     def name(self) -> str:
@@ -16567,8 +16815,8 @@ class FieldValueMap(Base):
 
     @name.setter
     def name(self, value: str):
-        self.__name = value
-        self._property_changed('name')        
+        self._property_changed('name')
+        self.__name = value        
 
     @property
     def aum(self) -> Union[Op, float]:
@@ -16576,8 +16824,8 @@ class FieldValueMap(Base):
 
     @aum.setter
     def aum(self, value: Union[Op, float]):
-        self.__aum = value
-        self._property_changed('aum')        
+        self._property_changed('aum')
+        self.__aum = value        
 
     @property
     def folder_name(self) -> str:
@@ -16586,8 +16834,8 @@ class FieldValueMap(Base):
 
     @folder_name.setter
     def folder_name(self, value: str):
-        self.__folder_name = value
-        self._property_changed('folder_name')        
+        self._property_changed('folder_name')
+        self.__folder_name = value        
 
     @property
     def option_expiration_date(self) -> datetime.date:
@@ -16596,8 +16844,8 @@ class FieldValueMap(Base):
 
     @option_expiration_date.setter
     def option_expiration_date(self, value: datetime.date):
-        self.__option_expiration_date = value
-        self._property_changed('option_expiration_date')        
+        self._property_changed('option_expiration_date')
+        self.__option_expiration_date = value        
 
     @property
     def swaption_atm_fwd_rate(self) -> float:
@@ -16606,8 +16854,8 @@ class FieldValueMap(Base):
 
     @swaption_atm_fwd_rate.setter
     def swaption_atm_fwd_rate(self, value: float):
-        self.__swaption_atm_fwd_rate = value
-        self._property_changed('swaption_atm_fwd_rate')        
+        self._property_changed('swaption_atm_fwd_rate')
+        self.__swaption_atm_fwd_rate = value        
 
     @property
     def live_date(self) -> Union[Op, datetime.date]:
@@ -16615,8 +16863,8 @@ class FieldValueMap(Base):
 
     @live_date.setter
     def live_date(self, value: Union[Op, datetime.date]):
-        self.__live_date = value
-        self._property_changed('live_date')        
+        self._property_changed('live_date')
+        self.__live_date = value        
 
     @property
     def ask_high(self) -> float:
@@ -16625,8 +16873,8 @@ class FieldValueMap(Base):
 
     @ask_high.setter
     def ask_high(self, value: float):
-        self.__ask_high = value
-        self._property_changed('ask_high')        
+        self._property_changed('ask_high')
+        self.__ask_high = value        
 
     @property
     def corporate_action_type(self) -> str:
@@ -16635,8 +16883,8 @@ class FieldValueMap(Base):
 
     @corporate_action_type.setter
     def corporate_action_type(self, value: str):
-        self.__corporate_action_type = value
-        self._property_changed('corporate_action_type')        
+        self._property_changed('corporate_action_type')
+        self.__corporate_action_type = value        
 
     @property
     def prime_id(self) -> str:
@@ -16645,8 +16893,8 @@ class FieldValueMap(Base):
 
     @prime_id.setter
     def prime_id(self, value: str):
-        self.__prime_id = value
-        self._property_changed('prime_id')        
+        self._property_changed('prime_id')
+        self.__prime_id = value        
 
     @property
     def region_name(self) -> str:
@@ -16656,8 +16904,8 @@ class FieldValueMap(Base):
 
     @region_name.setter
     def region_name(self, value: str):
-        self.__region_name = value
-        self._property_changed('region_name')        
+        self._property_changed('region_name')
+        self.__region_name = value        
 
     @property
     def description(self) -> str:
@@ -16666,8 +16914,8 @@ class FieldValueMap(Base):
 
     @description.setter
     def description(self, value: str):
-        self.__description = value
-        self._property_changed('description')        
+        self._property_changed('description')
+        self.__description = value        
 
     @property
     def asset_classifications_is_country_primary(self) -> bool:
@@ -16676,8 +16924,8 @@ class FieldValueMap(Base):
 
     @asset_classifications_is_country_primary.setter
     def asset_classifications_is_country_primary(self, value: bool):
-        self.__asset_classifications_is_country_primary = value
-        self._property_changed('asset_classifications_is_country_primary')        
+        self._property_changed('asset_classifications_is_country_primary')
+        self.__asset_classifications_is_country_primary = value        
 
     @property
     def value_revised(self) -> str:
@@ -16686,8 +16934,8 @@ class FieldValueMap(Base):
 
     @value_revised.setter
     def value_revised(self, value: str):
-        self.__value_revised = value
-        self._property_changed('value_revised')        
+        self._property_changed('value_revised')
+        self.__value_revised = value        
 
     @property
     def adjusted_trade_price(self) -> float:
@@ -16696,8 +16944,8 @@ class FieldValueMap(Base):
 
     @adjusted_trade_price.setter
     def adjusted_trade_price(self, value: float):
-        self.__adjusted_trade_price = value
-        self._property_changed('adjusted_trade_price')        
+        self._property_changed('adjusted_trade_price')
+        self.__adjusted_trade_price = value        
 
     @property
     def forecast_time(self) -> datetime.datetime:
@@ -16706,8 +16954,8 @@ class FieldValueMap(Base):
 
     @forecast_time.setter
     def forecast_time(self, value: datetime.datetime):
-        self.__forecast_time = value
-        self._property_changed('forecast_time')        
+        self._property_changed('forecast_time')
+        self.__forecast_time = value        
 
     @property
     def is_adr(self) -> bool:
@@ -16716,8 +16964,8 @@ class FieldValueMap(Base):
 
     @is_adr.setter
     def is_adr(self, value: bool):
-        self.__is_adr = value
-        self._property_changed('is_adr')        
+        self._property_changed('is_adr')
+        self.__is_adr = value        
 
     @property
     def factor(self) -> str:
@@ -16729,8 +16977,8 @@ class FieldValueMap(Base):
 
     @factor.setter
     def factor(self, value: str):
-        self.__factor = value
-        self._property_changed('factor')        
+        self._property_changed('factor')
+        self.__factor = value        
 
     @property
     def days_on_loan(self) -> float:
@@ -16739,8 +16987,8 @@ class FieldValueMap(Base):
 
     @days_on_loan.setter
     def days_on_loan(self, value: float):
-        self.__days_on_loan = value
-        self._property_changed('days_on_loan')        
+        self._property_changed('days_on_loan')
+        self.__days_on_loan = value        
 
     @property
     def long_conviction_small(self) -> float:
@@ -16749,8 +16997,8 @@ class FieldValueMap(Base):
 
     @long_conviction_small.setter
     def long_conviction_small(self, value: float):
-        self.__long_conviction_small = value
-        self._property_changed('long_conviction_small')        
+        self._property_changed('long_conviction_small')
+        self.__long_conviction_small = value        
 
     @property
     def service_id(self) -> str:
@@ -16759,8 +17007,8 @@ class FieldValueMap(Base):
 
     @service_id.setter
     def service_id(self, value: str):
-        self.__service_id = value
-        self._property_changed('service_id')        
+        self._property_changed('service_id')
+        self.__service_id = value        
 
     @property
     def gsfeer(self) -> float:
@@ -16769,8 +17017,8 @@ class FieldValueMap(Base):
 
     @gsfeer.setter
     def gsfeer(self, value: float):
-        self.__gsfeer = value
-        self._property_changed('gsfeer')        
+        self._property_changed('gsfeer')
+        self.__gsfeer = value        
 
     @property
     def wam(self) -> float:
@@ -16780,8 +17028,8 @@ class FieldValueMap(Base):
 
     @wam.setter
     def wam(self, value: float):
-        self.__wam = value
-        self._property_changed('wam')        
+        self._property_changed('wam')
+        self.__wam = value        
 
     @property
     def wal(self) -> float:
@@ -16790,8 +17038,8 @@ class FieldValueMap(Base):
 
     @wal.setter
     def wal(self, value: float):
-        self.__wal = value
-        self._property_changed('wal')        
+        self._property_changed('wal')
+        self.__wal = value        
 
     @property
     def backtest_id(self) -> str:
@@ -16800,8 +17048,8 @@ class FieldValueMap(Base):
 
     @backtest_id.setter
     def backtest_id(self, value: str):
-        self.__backtest_id = value
-        self._property_changed('backtest_id')        
+        self._property_changed('backtest_id')
+        self.__backtest_id = value        
 
     @property
     def leg_two_index_location(self) -> str:
@@ -16810,8 +17058,8 @@ class FieldValueMap(Base):
 
     @leg_two_index_location.setter
     def leg_two_index_location(self, value: str):
-        self.__leg_two_index_location = value
-        self._property_changed('leg_two_index_location')        
+        self._property_changed('leg_two_index_location')
+        self.__leg_two_index_location = value        
 
     @property
     def g_score(self) -> float:
@@ -16820,8 +17068,8 @@ class FieldValueMap(Base):
 
     @g_score.setter
     def g_score(self, value: float):
-        self.__g_score = value
-        self._property_changed('g_score')        
+        self._property_changed('g_score')
+        self.__g_score = value        
 
     @property
     def corporate_spread_contribution(self) -> float:
@@ -16830,8 +17078,8 @@ class FieldValueMap(Base):
 
     @corporate_spread_contribution.setter
     def corporate_spread_contribution(self, value: float):
-        self.__corporate_spread_contribution = value
-        self._property_changed('corporate_spread_contribution')        
+        self._property_changed('corporate_spread_contribution')
+        self.__corporate_spread_contribution = value        
 
     @property
     def market_value(self) -> float:
@@ -16841,8 +17089,8 @@ class FieldValueMap(Base):
 
     @market_value.setter
     def market_value(self, value: float):
-        self.__market_value = value
-        self._property_changed('market_value')        
+        self._property_changed('market_value')
+        self.__market_value = value        
 
     @property
     def notional_currency1(self) -> str:
@@ -16851,8 +17099,18 @@ class FieldValueMap(Base):
 
     @notional_currency1.setter
     def notional_currency1(self, value: str):
-        self.__notional_currency1 = value
-        self._property_changed('notional_currency1')        
+        self._property_changed('notional_currency1')
+        self.__notional_currency1 = value        
+
+    @property
+    def net_debt_to_ebitda(self) -> float:
+        """Net Debt to EBITDA."""
+        return self.__net_debt_to_ebitda
+
+    @net_debt_to_ebitda.setter
+    def net_debt_to_ebitda(self, value: float):
+        self._property_changed('net_debt_to_ebitda')
+        self.__net_debt_to_ebitda = value        
 
     @property
     def notional_currency2(self) -> str:
@@ -16861,8 +17119,8 @@ class FieldValueMap(Base):
 
     @notional_currency2.setter
     def notional_currency2(self, value: str):
-        self.__notional_currency2 = value
-        self._property_changed('notional_currency2')        
+        self._property_changed('notional_currency2')
+        self.__notional_currency2 = value        
 
     @property
     def multiple_score(self) -> float:
@@ -16872,8 +17130,8 @@ class FieldValueMap(Base):
 
     @multiple_score.setter
     def multiple_score(self, value: float):
-        self.__multiple_score = value
-        self._property_changed('multiple_score')        
+        self._property_changed('multiple_score')
+        self.__multiple_score = value        
 
     @property
     def beta_adjusted_exposure(self) -> float:
@@ -16882,8 +17140,8 @@ class FieldValueMap(Base):
 
     @beta_adjusted_exposure.setter
     def beta_adjusted_exposure(self, value: float):
-        self.__beta_adjusted_exposure = value
-        self._property_changed('beta_adjusted_exposure')        
+        self._property_changed('beta_adjusted_exposure')
+        self.__beta_adjusted_exposure = value        
 
     @property
     def paid(self) -> float:
@@ -16892,8 +17150,8 @@ class FieldValueMap(Base):
 
     @paid.setter
     def paid(self, value: float):
-        self.__paid = value
-        self._property_changed('paid')        
+        self._property_changed('paid')
+        self.__paid = value        
 
     @property
     def short(self) -> float:
@@ -16902,8 +17160,8 @@ class FieldValueMap(Base):
 
     @short.setter
     def short(self, value: float):
-        self.__short = value
-        self._property_changed('short')        
+        self._property_changed('short')
+        self.__short = value        
 
     @property
     def bos_in_ticks_description(self) -> str:
@@ -16912,8 +17170,8 @@ class FieldValueMap(Base):
 
     @bos_in_ticks_description.setter
     def bos_in_ticks_description(self, value: str):
-        self.__bos_in_ticks_description = value
-        self._property_changed('bos_in_ticks_description')        
+        self._property_changed('bos_in_ticks_description')
+        self.__bos_in_ticks_description = value        
 
     @property
     def time(self) -> datetime.datetime:
@@ -16922,8 +17180,8 @@ class FieldValueMap(Base):
 
     @time.setter
     def time(self, value: datetime.datetime):
-        self.__time = value
-        self._property_changed('time')        
+        self._property_changed('time')
+        self.__time = value        
 
     @property
     def implied_correlation(self) -> float:
@@ -16932,8 +17190,8 @@ class FieldValueMap(Base):
 
     @implied_correlation.setter
     def implied_correlation(self, value: float):
-        self.__implied_correlation = value
-        self._property_changed('implied_correlation')        
+        self._property_changed('implied_correlation')
+        self.__implied_correlation = value        
 
     @property
     def normalized_performance(self) -> float:
@@ -16942,8 +17200,8 @@ class FieldValueMap(Base):
 
     @normalized_performance.setter
     def normalized_performance(self, value: float):
-        self.__normalized_performance = value
-        self._property_changed('normalized_performance')        
+        self._property_changed('normalized_performance')
+        self.__normalized_performance = value        
 
     @property
     def taxonomy(self) -> str:
@@ -16952,8 +17210,8 @@ class FieldValueMap(Base):
 
     @taxonomy.setter
     def taxonomy(self, value: str):
-        self.__taxonomy = value
-        self._property_changed('taxonomy')        
+        self._property_changed('taxonomy')
+        self.__taxonomy = value        
 
     @property
     def swaption_vol(self) -> float:
@@ -16962,8 +17220,8 @@ class FieldValueMap(Base):
 
     @swaption_vol.setter
     def swaption_vol(self, value: float):
-        self.__swaption_vol = value
-        self._property_changed('swaption_vol')        
+        self._property_changed('swaption_vol')
+        self.__swaption_vol = value        
 
     @property
     def source_origin(self) -> str:
@@ -16972,8 +17230,8 @@ class FieldValueMap(Base):
 
     @source_origin.setter
     def source_origin(self, value: str):
-        self.__source_origin = value
-        self._property_changed('source_origin')        
+        self._property_changed('source_origin')
+        self.__source_origin = value        
 
     @property
     def measures(self) -> Tuple[str, ...]:
@@ -16982,8 +17240,8 @@ class FieldValueMap(Base):
 
     @measures.setter
     def measures(self, value: Tuple[str, ...]):
-        self.__measures = value
-        self._property_changed('measures')        
+        self._property_changed('measures')
+        self.__measures = value        
 
     @property
     def total_quantity(self) -> float:
@@ -16992,8 +17250,8 @@ class FieldValueMap(Base):
 
     @total_quantity.setter
     def total_quantity(self, value: float):
-        self.__total_quantity = value
-        self._property_changed('total_quantity')        
+        self._property_changed('total_quantity')
+        self.__total_quantity = value        
 
     @property
     def internal_user(self) -> bool:
@@ -17002,8 +17260,8 @@ class FieldValueMap(Base):
 
     @internal_user.setter
     def internal_user(self, value: bool):
-        self.__internal_user = value
-        self._property_changed('internal_user')        
+        self._property_changed('internal_user')
+        self.__internal_user = value        
 
     @property
     def created_time(self) -> datetime.datetime:
@@ -17012,8 +17270,8 @@ class FieldValueMap(Base):
 
     @created_time.setter
     def created_time(self, value: datetime.datetime):
-        self.__created_time = value
-        self._property_changed('created_time')        
+        self._property_changed('created_time')
+        self.__created_time = value        
 
     @property
     def identifier(self) -> str:
@@ -17022,8 +17280,8 @@ class FieldValueMap(Base):
 
     @identifier.setter
     def identifier(self, value: str):
-        self.__identifier = value
-        self._property_changed('identifier')        
+        self._property_changed('identifier')
+        self.__identifier = value        
 
     @property
     def price_unit(self) -> str:
@@ -17032,8 +17290,8 @@ class FieldValueMap(Base):
 
     @price_unit.setter
     def price_unit(self, value: str):
-        self.__price_unit = value
-        self._property_changed('price_unit')        
+        self._property_changed('price_unit')
+        self.__price_unit = value        
 
     @property
     def redemption_option(self) -> str:
@@ -17042,8 +17300,8 @@ class FieldValueMap(Base):
 
     @redemption_option.setter
     def redemption_option(self, value: str):
-        self.__redemption_option = value
-        self._property_changed('redemption_option')        
+        self._property_changed('redemption_option')
+        self.__redemption_option = value        
 
     @property
     def notional_unit2(self) -> str:
@@ -17052,8 +17310,8 @@ class FieldValueMap(Base):
 
     @notional_unit2.setter
     def notional_unit2(self, value: str):
-        self.__notional_unit2 = value
-        self._property_changed('notional_unit2')        
+        self._property_changed('notional_unit2')
+        self.__notional_unit2 = value        
 
     @property
     def unadjusted_low(self) -> float:
@@ -17063,8 +17321,8 @@ class FieldValueMap(Base):
 
     @unadjusted_low.setter
     def unadjusted_low(self, value: float):
-        self.__unadjusted_low = value
-        self._property_changed('unadjusted_low')        
+        self._property_changed('unadjusted_low')
+        self.__unadjusted_low = value        
 
     @property
     def notional_unit1(self) -> str:
@@ -17073,8 +17331,8 @@ class FieldValueMap(Base):
 
     @notional_unit1.setter
     def notional_unit1(self, value: str):
-        self.__notional_unit1 = value
-        self._property_changed('notional_unit1')        
+        self._property_changed('notional_unit1')
+        self.__notional_unit1 = value        
 
     @property
     def sedol(self) -> str:
@@ -17083,8 +17341,8 @@ class FieldValueMap(Base):
 
     @sedol.setter
     def sedol(self, value: str):
-        self.__sedol = value
-        self._property_changed('sedol')        
+        self._property_changed('sedol')
+        self.__sedol = value        
 
     @property
     def rounding_cost_pnl(self) -> float:
@@ -17093,8 +17351,8 @@ class FieldValueMap(Base):
 
     @rounding_cost_pnl.setter
     def rounding_cost_pnl(self, value: float):
-        self.__rounding_cost_pnl = value
-        self._property_changed('rounding_cost_pnl')        
+        self._property_changed('rounding_cost_pnl')
+        self.__rounding_cost_pnl = value        
 
     @property
     def sustain_global(self) -> bool:
@@ -17105,8 +17363,8 @@ class FieldValueMap(Base):
 
     @sustain_global.setter
     def sustain_global(self, value: bool):
-        self.__sustain_global = value
-        self._property_changed('sustain_global')        
+        self._property_changed('sustain_global')
+        self.__sustain_global = value        
 
     @property
     def portfolio_id(self) -> str:
@@ -17115,8 +17373,8 @@ class FieldValueMap(Base):
 
     @portfolio_id.setter
     def portfolio_id(self, value: str):
-        self.__portfolio_id = value
-        self._property_changed('portfolio_id')        
+        self._property_changed('portfolio_id')
+        self.__portfolio_id = value        
 
     @property
     def ending_date(self) -> str:
@@ -17125,8 +17383,8 @@ class FieldValueMap(Base):
 
     @ending_date.setter
     def ending_date(self, value: str):
-        self.__ending_date = value
-        self._property_changed('ending_date')        
+        self._property_changed('ending_date')
+        self.__ending_date = value        
 
     @property
     def cap_floor_atm_fwd_rate(self) -> float:
@@ -17135,8 +17393,8 @@ class FieldValueMap(Base):
 
     @cap_floor_atm_fwd_rate.setter
     def cap_floor_atm_fwd_rate(self, value: float):
-        self.__cap_floor_atm_fwd_rate = value
-        self._property_changed('cap_floor_atm_fwd_rate')        
+        self._property_changed('cap_floor_atm_fwd_rate')
+        self.__cap_floor_atm_fwd_rate = value        
 
     @property
     def es_percentile(self) -> float:
@@ -17145,8 +17403,8 @@ class FieldValueMap(Base):
 
     @es_percentile.setter
     def es_percentile(self, value: float):
-        self.__es_percentile = value
-        self._property_changed('es_percentile')        
+        self._property_changed('es_percentile')
+        self.__es_percentile = value        
 
     @property
     def ann_return3_year(self) -> float:
@@ -17156,8 +17414,8 @@ class FieldValueMap(Base):
 
     @ann_return3_year.setter
     def ann_return3_year(self, value: float):
-        self.__ann_return3_year = value
-        self._property_changed('ann_return3_year')        
+        self._property_changed('ann_return3_year')
+        self.__ann_return3_year = value        
 
     @property
     def rcic(self) -> str:
@@ -17166,8 +17424,8 @@ class FieldValueMap(Base):
 
     @rcic.setter
     def rcic(self, value: str):
-        self.__rcic = value
-        self._property_changed('rcic')        
+        self._property_changed('rcic')
+        self.__rcic = value        
 
     @property
     def hit_rate_qtd(self) -> float:
@@ -17176,8 +17434,8 @@ class FieldValueMap(Base):
 
     @hit_rate_qtd.setter
     def hit_rate_qtd(self, value: float):
-        self.__hit_rate_qtd = value
-        self._property_changed('hit_rate_qtd')        
+        self._property_changed('hit_rate_qtd')
+        self.__hit_rate_qtd = value        
 
     @property
     def fci(self) -> float:
@@ -17186,8 +17444,8 @@ class FieldValueMap(Base):
 
     @fci.setter
     def fci(self, value: float):
-        self.__fci = value
-        self._property_changed('fci')        
+        self._property_changed('fci')
+        self.__fci = value        
 
     @property
     def recall_quantity(self) -> float:
@@ -17196,8 +17454,8 @@ class FieldValueMap(Base):
 
     @recall_quantity.setter
     def recall_quantity(self, value: float):
-        self.__recall_quantity = value
-        self._property_changed('recall_quantity')        
+        self._property_changed('recall_quantity')
+        self.__recall_quantity = value        
 
     @property
     def premium(self) -> float:
@@ -17206,8 +17464,8 @@ class FieldValueMap(Base):
 
     @premium.setter
     def premium(self, value: float):
-        self.__premium = value
-        self._property_changed('premium')        
+        self._property_changed('premium')
+        self.__premium = value        
 
     @property
     def low(self) -> float:
@@ -17217,8 +17475,8 @@ class FieldValueMap(Base):
 
     @low.setter
     def low(self, value: float):
-        self.__low = value
-        self._property_changed('low')        
+        self._property_changed('low')
+        self.__low = value        
 
     @property
     def cross_group(self) -> str:
@@ -17227,8 +17485,8 @@ class FieldValueMap(Base):
 
     @cross_group.setter
     def cross_group(self, value: str):
-        self.__cross_group = value
-        self._property_changed('cross_group')        
+        self._property_changed('cross_group')
+        self.__cross_group = value        
 
     @property
     def report_run_time(self) -> datetime.datetime:
@@ -17237,8 +17495,8 @@ class FieldValueMap(Base):
 
     @report_run_time.setter
     def report_run_time(self, value: datetime.datetime):
-        self.__report_run_time = value
-        self._property_changed('report_run_time')        
+        self._property_changed('report_run_time')
+        self.__report_run_time = value        
 
     @property
     def five_day_price_change_bps(self) -> float:
@@ -17247,8 +17505,8 @@ class FieldValueMap(Base):
 
     @five_day_price_change_bps.setter
     def five_day_price_change_bps(self, value: float):
-        self.__five_day_price_change_bps = value
-        self._property_changed('five_day_price_change_bps')        
+        self._property_changed('five_day_price_change_bps')
+        self.__five_day_price_change_bps = value        
 
     @property
     def holdings(self) -> float:
@@ -17257,8 +17515,8 @@ class FieldValueMap(Base):
 
     @holdings.setter
     def holdings(self, value: float):
-        self.__holdings = value
-        self._property_changed('holdings')        
+        self._property_changed('holdings')
+        self.__holdings = value        
 
     @property
     def price_method(self) -> str:
@@ -17267,8 +17525,8 @@ class FieldValueMap(Base):
 
     @price_method.setter
     def price_method(self, value: str):
-        self.__price_method = value
-        self._property_changed('price_method')        
+        self._property_changed('price_method')
+        self.__price_method = value        
 
     @property
     def mid_price(self) -> float:
@@ -17277,8 +17535,8 @@ class FieldValueMap(Base):
 
     @mid_price.setter
     def mid_price(self, value: float):
-        self.__mid_price = value
-        self._property_changed('mid_price')        
+        self._property_changed('mid_price')
+        self.__mid_price = value        
 
     @property
     def tcm_cost_horizon2_day(self) -> float:
@@ -17287,8 +17545,8 @@ class FieldValueMap(Base):
 
     @tcm_cost_horizon2_day.setter
     def tcm_cost_horizon2_day(self, value: float):
-        self.__tcm_cost_horizon2_day = value
-        self._property_changed('tcm_cost_horizon2_day')        
+        self._property_changed('tcm_cost_horizon2_day')
+        self.__tcm_cost_horizon2_day = value        
 
     @property
     def pending_loan_count(self) -> float:
@@ -17297,8 +17555,8 @@ class FieldValueMap(Base):
 
     @pending_loan_count.setter
     def pending_loan_count(self, value: float):
-        self.__pending_loan_count = value
-        self._property_changed('pending_loan_count')        
+        self._property_changed('pending_loan_count')
+        self.__pending_loan_count = value        
 
     @property
     def price_spot_stop_loss_unit(self) -> str:
@@ -17307,8 +17565,8 @@ class FieldValueMap(Base):
 
     @price_spot_stop_loss_unit.setter
     def price_spot_stop_loss_unit(self, value: str):
-        self.__price_spot_stop_loss_unit = value
-        self._property_changed('price_spot_stop_loss_unit')        
+        self._property_changed('price_spot_stop_loss_unit')
+        self.__price_spot_stop_loss_unit = value        
 
     @property
     def queue_in_lots(self) -> float:
@@ -17317,8 +17575,8 @@ class FieldValueMap(Base):
 
     @queue_in_lots.setter
     def queue_in_lots(self, value: float):
-        self.__queue_in_lots = value
-        self._property_changed('queue_in_lots')        
+        self._property_changed('queue_in_lots')
+        self.__queue_in_lots = value        
 
     @property
     def price_range_in_ticks_description(self) -> str:
@@ -17327,8 +17585,8 @@ class FieldValueMap(Base):
 
     @price_range_in_ticks_description.setter
     def price_range_in_ticks_description(self, value: str):
-        self.__price_range_in_ticks_description = value
-        self._property_changed('price_range_in_ticks_description')        
+        self._property_changed('price_range_in_ticks_description')
+        self.__price_range_in_ticks_description = value        
 
     @property
     def tender_offer_expiration_date(self) -> str:
@@ -17337,8 +17595,8 @@ class FieldValueMap(Base):
 
     @tender_offer_expiration_date.setter
     def tender_offer_expiration_date(self, value: str):
-        self.__tender_offer_expiration_date = value
-        self._property_changed('tender_offer_expiration_date')        
+        self._property_changed('tender_offer_expiration_date')
+        self.__tender_offer_expiration_date = value        
 
     @property
     def primary_country_ric(self) -> str:
@@ -17347,8 +17605,8 @@ class FieldValueMap(Base):
 
     @primary_country_ric.setter
     def primary_country_ric(self, value: str):
-        self.__primary_country_ric = value
-        self._property_changed('primary_country_ric')        
+        self._property_changed('primary_country_ric')
+        self.__primary_country_ric = value        
 
     @property
     def leg_one_fixed_payment(self) -> float:
@@ -17358,8 +17616,8 @@ class FieldValueMap(Base):
 
     @leg_one_fixed_payment.setter
     def leg_one_fixed_payment(self, value: float):
-        self.__leg_one_fixed_payment = value
-        self._property_changed('leg_one_fixed_payment')        
+        self._property_changed('leg_one_fixed_payment')
+        self.__leg_one_fixed_payment = value        
 
     @property
     def option_expiration_frequency(self) -> str:
@@ -17368,8 +17626,8 @@ class FieldValueMap(Base):
 
     @option_expiration_frequency.setter
     def option_expiration_frequency(self, value: str):
-        self.__option_expiration_frequency = value
-        self._property_changed('option_expiration_frequency')        
+        self._property_changed('option_expiration_frequency')
+        self.__option_expiration_frequency = value        
 
     @property
     def tcm_cost_participation_rate5_pct(self) -> float:
@@ -17378,8 +17636,8 @@ class FieldValueMap(Base):
 
     @tcm_cost_participation_rate5_pct.setter
     def tcm_cost_participation_rate5_pct(self, value: float):
-        self.__tcm_cost_participation_rate5_pct = value
-        self._property_changed('tcm_cost_participation_rate5_pct')        
+        self._property_changed('tcm_cost_participation_rate5_pct')
+        self.__tcm_cost_participation_rate5_pct = value        
 
     @property
     def is_active(self) -> bool:
@@ -17388,8 +17646,8 @@ class FieldValueMap(Base):
 
     @is_active.setter
     def is_active(self, value: bool):
-        self.__is_active = value
-        self._property_changed('is_active')        
+        self._property_changed('is_active')
+        self.__is_active = value        
 
     @property
     def growth_score(self) -> float:
@@ -17399,8 +17657,8 @@ class FieldValueMap(Base):
 
     @growth_score.setter
     def growth_score(self, value: float):
-        self.__growth_score = value
-        self._property_changed('growth_score')        
+        self._property_changed('growth_score')
+        self.__growth_score = value        
 
     @property
     def buffer_threshold(self) -> float:
@@ -17409,8 +17667,8 @@ class FieldValueMap(Base):
 
     @buffer_threshold.setter
     def buffer_threshold(self, value: float):
-        self.__buffer_threshold = value
-        self._property_changed('buffer_threshold')        
+        self._property_changed('buffer_threshold')
+        self.__buffer_threshold = value        
 
     @property
     def price_forming_continuation_data(self) -> str:
@@ -17422,8 +17680,8 @@ class FieldValueMap(Base):
 
     @price_forming_continuation_data.setter
     def price_forming_continuation_data(self, value: str):
-        self.__price_forming_continuation_data = value
-        self._property_changed('price_forming_continuation_data')        
+        self._property_changed('price_forming_continuation_data')
+        self.__price_forming_continuation_data = value        
 
     @property
     def adjusted_short_interest(self) -> float:
@@ -17432,8 +17690,28 @@ class FieldValueMap(Base):
 
     @adjusted_short_interest.setter
     def adjusted_short_interest(self, value: float):
-        self.__adjusted_short_interest = value
-        self._property_changed('adjusted_short_interest')        
+        self._property_changed('adjusted_short_interest')
+        self.__adjusted_short_interest = value        
+
+    @property
+    def asset_parameters_strike(self) -> str:
+        """Strike of the asset."""
+        return self.__asset_parameters_strike
+
+    @asset_parameters_strike.setter
+    def asset_parameters_strike(self, value: str):
+        self._property_changed('asset_parameters_strike')
+        self.__asset_parameters_strike = value        
+
+    @property
+    def asset_parameters_termination_date(self) -> str:
+        """Relative termination date."""
+        return self.__asset_parameters_termination_date
+
+    @asset_parameters_termination_date.setter
+    def asset_parameters_termination_date(self, value: str):
+        self._property_changed('asset_parameters_termination_date')
+        self.__asset_parameters_termination_date = value        
 
     @property
     def estimated_spread(self) -> float:
@@ -17443,8 +17721,18 @@ class FieldValueMap(Base):
 
     @estimated_spread.setter
     def estimated_spread(self, value: float):
-        self.__estimated_spread = value
-        self._property_changed('estimated_spread')        
+        self._property_changed('estimated_spread')
+        self.__estimated_spread = value        
+
+    @property
+    def asset_parameters_effective_date(self) -> str:
+        """Relative effective date."""
+        return self.__asset_parameters_effective_date
+
+    @asset_parameters_effective_date.setter
+    def asset_parameters_effective_date(self, value: str):
+        self._property_changed('asset_parameters_effective_date')
+        self.__asset_parameters_effective_date = value        
 
     @property
     def ann_return10_year(self) -> float:
@@ -17454,8 +17742,8 @@ class FieldValueMap(Base):
 
     @ann_return10_year.setter
     def ann_return10_year(self, value: float):
-        self.__ann_return10_year = value
-        self._property_changed('ann_return10_year')        
+        self._property_changed('ann_return10_year')
+        self.__ann_return10_year = value        
 
     @property
     def created(self) -> datetime.datetime:
@@ -17464,8 +17752,8 @@ class FieldValueMap(Base):
 
     @created.setter
     def created(self, value: datetime.datetime):
-        self.__created = value
-        self._property_changed('created')        
+        self._property_changed('created')
+        self.__created = value        
 
     @property
     def tcm_cost(self) -> float:
@@ -17474,8 +17762,8 @@ class FieldValueMap(Base):
 
     @tcm_cost.setter
     def tcm_cost(self, value: float):
-        self.__tcm_cost = value
-        self._property_changed('tcm_cost')        
+        self._property_changed('tcm_cost')
+        self.__tcm_cost = value        
 
     @property
     def sustain_japan(self) -> bool:
@@ -17486,8 +17774,8 @@ class FieldValueMap(Base):
 
     @sustain_japan.setter
     def sustain_japan(self, value: bool):
-        self.__sustain_japan = value
-        self._property_changed('sustain_japan')        
+        self._property_changed('sustain_japan')
+        self.__sustain_japan = value        
 
     @property
     def hedge_tracking_error(self) -> float:
@@ -17497,8 +17785,8 @@ class FieldValueMap(Base):
 
     @hedge_tracking_error.setter
     def hedge_tracking_error(self, value: float):
-        self.__hedge_tracking_error = value
-        self._property_changed('hedge_tracking_error')        
+        self._property_changed('hedge_tracking_error')
+        self.__hedge_tracking_error = value        
 
     @property
     def market_cap_category(self) -> str:
@@ -17508,8 +17796,8 @@ class FieldValueMap(Base):
 
     @market_cap_category.setter
     def market_cap_category(self, value: str):
-        self.__market_cap_category = value
-        self._property_changed('market_cap_category')        
+        self._property_changed('market_cap_category')
+        self.__market_cap_category = value        
 
     @property
     def historical_volume(self) -> float:
@@ -17518,8 +17806,8 @@ class FieldValueMap(Base):
 
     @historical_volume.setter
     def historical_volume(self, value: float):
-        self.__historical_volume = value
-        self._property_changed('historical_volume')        
+        self._property_changed('historical_volume')
+        self.__historical_volume = value        
 
     @property
     def strike_price(self) -> float:
@@ -17528,8 +17816,8 @@ class FieldValueMap(Base):
 
     @strike_price.setter
     def strike_price(self, value: float):
-        self.__strike_price = value
-        self._property_changed('strike_price')        
+        self._property_changed('strike_price')
+        self.__strike_price = value        
 
     @property
     def event_start_date(self) -> datetime.date:
@@ -17539,8 +17827,8 @@ class FieldValueMap(Base):
 
     @event_start_date.setter
     def event_start_date(self, value: datetime.date):
-        self.__event_start_date = value
-        self._property_changed('event_start_date')        
+        self._property_changed('event_start_date')
+        self.__event_start_date = value        
 
     @property
     def equity_gamma(self) -> float:
@@ -17549,8 +17837,8 @@ class FieldValueMap(Base):
 
     @equity_gamma.setter
     def equity_gamma(self, value: float):
-        self.__equity_gamma = value
-        self._property_changed('equity_gamma')        
+        self._property_changed('equity_gamma')
+        self.__equity_gamma = value        
 
     @property
     def gross_income(self) -> float:
@@ -17560,8 +17848,8 @@ class FieldValueMap(Base):
 
     @gross_income.setter
     def gross_income(self, value: float):
-        self.__gross_income = value
-        self._property_changed('gross_income')        
+        self._property_changed('gross_income')
+        self.__gross_income = value        
 
     @property
     def adjusted_open_price(self) -> float:
@@ -17571,8 +17859,8 @@ class FieldValueMap(Base):
 
     @adjusted_open_price.setter
     def adjusted_open_price(self, value: float):
-        self.__adjusted_open_price = value
-        self._property_changed('adjusted_open_price')        
+        self._property_changed('adjusted_open_price')
+        self.__adjusted_open_price = value        
 
     @property
     def asset_count_in_model(self) -> float:
@@ -17581,8 +17869,8 @@ class FieldValueMap(Base):
 
     @asset_count_in_model.setter
     def asset_count_in_model(self, value: float):
-        self.__asset_count_in_model = value
-        self._property_changed('asset_count_in_model')        
+        self._property_changed('asset_count_in_model')
+        self.__asset_count_in_model = value        
 
     @property
     def country_id(self) -> str:
@@ -17591,8 +17879,8 @@ class FieldValueMap(Base):
 
     @country_id.setter
     def country_id(self, value: str):
-        self.__country_id = value
-        self._property_changed('country_id')        
+        self._property_changed('country_id')
+        self.__country_id = value        
 
     @property
     def total_returns(self) -> float:
@@ -17601,8 +17889,8 @@ class FieldValueMap(Base):
 
     @total_returns.setter
     def total_returns(self, value: float):
-        self.__total_returns = value
-        self._property_changed('total_returns')        
+        self._property_changed('total_returns')
+        self.__total_returns = value        
 
     @property
     def lender(self) -> str:
@@ -17611,8 +17899,8 @@ class FieldValueMap(Base):
 
     @lender.setter
     def lender(self, value: str):
-        self.__lender = value
-        self._property_changed('lender')        
+        self._property_changed('lender')
+        self.__lender = value        
 
     @property
     def ann_return1_year(self) -> float:
@@ -17622,8 +17910,8 @@ class FieldValueMap(Base):
 
     @ann_return1_year.setter
     def ann_return1_year(self, value: float):
-        self.__ann_return1_year = value
-        self._property_changed('ann_return1_year')        
+        self._property_changed('ann_return1_year')
+        self.__ann_return1_year = value        
 
     @property
     def min_temperature(self) -> float:
@@ -17632,8 +17920,8 @@ class FieldValueMap(Base):
 
     @min_temperature.setter
     def min_temperature(self, value: float):
-        self.__min_temperature = value
-        self._property_changed('min_temperature')        
+        self._property_changed('min_temperature')
+        self.__min_temperature = value        
 
     @property
     def eff_yield7_day(self) -> float:
@@ -17644,8 +17932,8 @@ class FieldValueMap(Base):
 
     @eff_yield7_day.setter
     def eff_yield7_day(self, value: float):
-        self.__eff_yield7_day = value
-        self._property_changed('eff_yield7_day')        
+        self._property_changed('eff_yield7_day')
+        self.__eff_yield7_day = value        
 
     @property
     def meeting_date(self) -> str:
@@ -17654,8 +17942,8 @@ class FieldValueMap(Base):
 
     @meeting_date.setter
     def meeting_date(self, value: str):
-        self.__meeting_date = value
-        self._property_changed('meeting_date')        
+        self._property_changed('meeting_date')
+        self.__meeting_date = value        
 
     @property
     def close_time(self) -> datetime.datetime:
@@ -17664,8 +17952,8 @@ class FieldValueMap(Base):
 
     @close_time.setter
     def close_time(self, value: datetime.datetime):
-        self.__close_time = value
-        self._property_changed('close_time')        
+        self._property_changed('close_time')
+        self.__close_time = value        
 
     @property
     def amount(self) -> float:
@@ -17674,8 +17962,8 @@ class FieldValueMap(Base):
 
     @amount.setter
     def amount(self, value: float):
-        self.__amount = value
-        self._property_changed('amount')        
+        self._property_changed('amount')
+        self.__amount = value        
 
     @property
     def lending_fund_acct(self) -> str:
@@ -17684,8 +17972,8 @@ class FieldValueMap(Base):
 
     @lending_fund_acct.setter
     def lending_fund_acct(self, value: str):
-        self.__lending_fund_acct = value
-        self._property_changed('lending_fund_acct')        
+        self._property_changed('lending_fund_acct')
+        self.__lending_fund_acct = value        
 
     @property
     def rebate(self) -> float:
@@ -17695,8 +17983,8 @@ class FieldValueMap(Base):
 
     @rebate.setter
     def rebate(self, value: float):
-        self.__rebate = value
-        self._property_changed('rebate')        
+        self._property_changed('rebate')
+        self.__rebate = value        
 
     @property
     def flagship(self) -> bool:
@@ -17705,8 +17993,8 @@ class FieldValueMap(Base):
 
     @flagship.setter
     def flagship(self, value: bool):
-        self.__flagship = value
-        self._property_changed('flagship')        
+        self._property_changed('flagship')
+        self.__flagship = value        
 
     @property
     def additional_price_notation(self) -> float:
@@ -17718,8 +18006,8 @@ class FieldValueMap(Base):
 
     @additional_price_notation.setter
     def additional_price_notation(self, value: float):
-        self.__additional_price_notation = value
-        self._property_changed('additional_price_notation')        
+        self._property_changed('additional_price_notation')
+        self.__additional_price_notation = value        
 
     @property
     def election_type(self) -> str:
@@ -17728,8 +18016,8 @@ class FieldValueMap(Base):
 
     @election_type.setter
     def election_type(self, value: str):
-        self.__election_type = value
-        self._property_changed('election_type')        
+        self._property_changed('election_type')
+        self.__election_type = value        
 
     @property
     def implied_volatility(self) -> float:
@@ -17738,8 +18026,8 @@ class FieldValueMap(Base):
 
     @implied_volatility.setter
     def implied_volatility(self, value: float):
-        self.__implied_volatility = value
-        self._property_changed('implied_volatility')        
+        self._property_changed('implied_volatility')
+        self.__implied_volatility = value        
 
     @property
     def spread(self) -> float:
@@ -17749,8 +18037,8 @@ class FieldValueMap(Base):
 
     @spread.setter
     def spread(self, value: float):
-        self.__spread = value
-        self._property_changed('spread')        
+        self._property_changed('spread')
+        self.__spread = value        
 
     @property
     def equity_delta(self) -> float:
@@ -17759,8 +18047,8 @@ class FieldValueMap(Base):
 
     @equity_delta.setter
     def equity_delta(self, value: float):
-        self.__equity_delta = value
-        self._property_changed('equity_delta')        
+        self._property_changed('equity_delta')
+        self.__equity_delta = value        
 
     @property
     def gross_weight(self) -> float:
@@ -17772,8 +18060,8 @@ class FieldValueMap(Base):
 
     @gross_weight.setter
     def gross_weight(self, value: float):
-        self.__gross_weight = value
-        self._property_changed('gross_weight')        
+        self._property_changed('gross_weight')
+        self.__gross_weight = value        
 
     @property
     def listed(self) -> bool:
@@ -17782,8 +18070,8 @@ class FieldValueMap(Base):
 
     @listed.setter
     def listed(self, value: bool):
-        self.__listed = value
-        self._property_changed('listed')        
+        self._property_changed('listed')
+        self.__listed = value        
 
     @property
     def earnings_record_type(self) -> str:
@@ -17792,8 +18080,8 @@ class FieldValueMap(Base):
 
     @earnings_record_type.setter
     def earnings_record_type(self, value: str):
-        self.__earnings_record_type = value
-        self._property_changed('earnings_record_type')        
+        self._property_changed('earnings_record_type')
+        self.__earnings_record_type = value        
 
     @property
     def g10_currency(self) -> bool:
@@ -17802,8 +18090,8 @@ class FieldValueMap(Base):
 
     @g10_currency.setter
     def g10_currency(self, value: bool):
-        self.__g10_currency = value
-        self._property_changed('g10_currency')        
+        self._property_changed('g10_currency')
+        self.__g10_currency = value        
 
     @property
     def shock_style(self) -> str:
@@ -17812,8 +18100,8 @@ class FieldValueMap(Base):
 
     @shock_style.setter
     def shock_style(self, value: str):
-        self.__shock_style = value
-        self._property_changed('shock_style')        
+        self._property_changed('shock_style')
+        self.__shock_style = value        
 
     @property
     def relative_period(self) -> str:
@@ -17822,8 +18110,8 @@ class FieldValueMap(Base):
 
     @relative_period.setter
     def relative_period(self, value: str):
-        self.__relative_period = value
-        self._property_changed('relative_period')        
+        self._property_changed('relative_period')
+        self.__relative_period = value        
 
     @property
     def methodology(self) -> str:
@@ -17832,8 +18120,8 @@ class FieldValueMap(Base):
 
     @methodology.setter
     def methodology(self, value: str):
-        self.__methodology = value
-        self._property_changed('methodology')        
+        self._property_changed('methodology')
+        self.__methodology = value        
 
     @property
     def queue_clock_time_label(self):
@@ -17841,8 +18129,8 @@ class FieldValueMap(Base):
 
     @queue_clock_time_label.setter
     def queue_clock_time_label(self, value):
-        self.__queue_clock_time_label = value
-        self._property_changed('queue_clock_time_label')        
+        self._property_changed('queue_clock_time_label')
+        self.__queue_clock_time_label = value        
 
     @property
     def market_pnl(self) -> float:
@@ -17851,8 +18139,8 @@ class FieldValueMap(Base):
 
     @market_pnl.setter
     def market_pnl(self, value: float):
-        self.__market_pnl = value
-        self._property_changed('market_pnl')        
+        self._property_changed('market_pnl')
+        self.__market_pnl = value        
 
     @property
     def sustain_asia_ex_japan(self) -> bool:
@@ -17863,8 +18151,8 @@ class FieldValueMap(Base):
 
     @sustain_asia_ex_japan.setter
     def sustain_asia_ex_japan(self, value: bool):
-        self.__sustain_asia_ex_japan = value
-        self._property_changed('sustain_asia_ex_japan')        
+        self._property_changed('sustain_asia_ex_japan')
+        self.__sustain_asia_ex_japan = value        
 
     @property
     def swap_rate(self) -> float:
@@ -17873,8 +18161,8 @@ class FieldValueMap(Base):
 
     @swap_rate.setter
     def swap_rate(self, value: float):
-        self.__swap_rate = value
-        self._property_changed('swap_rate')        
+        self._property_changed('swap_rate')
+        self.__swap_rate = value        
 
     @property
     def mixed_swap_other_reported_sdr(self) -> str:
@@ -17883,8 +18171,8 @@ class FieldValueMap(Base):
 
     @mixed_swap_other_reported_sdr.setter
     def mixed_swap_other_reported_sdr(self, value: str):
-        self.__mixed_swap_other_reported_sdr = value
-        self._property_changed('mixed_swap_other_reported_sdr')        
+        self._property_changed('mixed_swap_other_reported_sdr')
+        self.__mixed_swap_other_reported_sdr = value        
 
     @property
     def data_set_category(self) -> str:
@@ -17893,8 +18181,8 @@ class FieldValueMap(Base):
 
     @data_set_category.setter
     def data_set_category(self, value: str):
-        self.__data_set_category = value
-        self._property_changed('data_set_category')        
+        self._property_changed('data_set_category')
+        self.__data_set_category = value        
 
     @property
     def bos_in_bps_label(self):
@@ -17902,8 +18190,8 @@ class FieldValueMap(Base):
 
     @bos_in_bps_label.setter
     def bos_in_bps_label(self, value):
-        self.__bos_in_bps_label = value
-        self._property_changed('bos_in_bps_label')        
+        self._property_changed('bos_in_bps_label')
+        self.__bos_in_bps_label = value        
 
     @property
     def bos_in_bps(self) -> float:
@@ -17912,8 +18200,8 @@ class FieldValueMap(Base):
 
     @bos_in_bps.setter
     def bos_in_bps(self, value: float):
-        self.__bos_in_bps = value
-        self._property_changed('bos_in_bps')        
+        self._property_changed('bos_in_bps')
+        self.__bos_in_bps = value        
 
     @property
     def fx_spot(self) -> float:
@@ -17922,8 +18210,8 @@ class FieldValueMap(Base):
 
     @fx_spot.setter
     def fx_spot(self, value: float):
-        self.__fx_spot = value
-        self._property_changed('fx_spot')        
+        self._property_changed('fx_spot')
+        self.__fx_spot = value        
 
     @property
     def bid_low(self) -> float:
@@ -17932,8 +18220,8 @@ class FieldValueMap(Base):
 
     @bid_low.setter
     def bid_low(self, value: float):
-        self.__bid_low = value
-        self._property_changed('bid_low')        
+        self._property_changed('bid_low')
+        self.__bid_low = value        
 
     @property
     def fair_variance_volatility(self) -> float:
@@ -17942,8 +18230,8 @@ class FieldValueMap(Base):
 
     @fair_variance_volatility.setter
     def fair_variance_volatility(self, value: float):
-        self.__fair_variance_volatility = value
-        self._property_changed('fair_variance_volatility')        
+        self._property_changed('fair_variance_volatility')
+        self.__fair_variance_volatility = value        
 
     @property
     def hedge_volatility(self) -> float:
@@ -17952,8 +18240,8 @@ class FieldValueMap(Base):
 
     @hedge_volatility.setter
     def hedge_volatility(self, value: float):
-        self.__hedge_volatility = value
-        self._property_changed('hedge_volatility')        
+        self._property_changed('hedge_volatility')
+        self.__hedge_volatility = value        
 
     @property
     def tags(self) -> Tuple[str, ...]:
@@ -17962,8 +18250,8 @@ class FieldValueMap(Base):
 
     @tags.setter
     def tags(self, value: Tuple[str, ...]):
-        self.__tags = value
-        self._property_changed('tags')        
+        self._property_changed('tags')
+        self.__tags = value        
 
     @property
     def real_long_rates_contribution(self) -> float:
@@ -17972,8 +18260,8 @@ class FieldValueMap(Base):
 
     @real_long_rates_contribution.setter
     def real_long_rates_contribution(self, value: float):
-        self.__real_long_rates_contribution = value
-        self._property_changed('real_long_rates_contribution')        
+        self._property_changed('real_long_rates_contribution')
+        self.__real_long_rates_contribution = value        
 
     @property
     def client_exposure(self) -> float:
@@ -17982,8 +18270,8 @@ class FieldValueMap(Base):
 
     @client_exposure.setter
     def client_exposure(self, value: float):
-        self.__client_exposure = value
-        self._property_changed('client_exposure')        
+        self._property_changed('client_exposure')
+        self.__client_exposure = value        
 
     @property
     def gs_sustain_sub_sector(self) -> str:
@@ -17992,8 +18280,8 @@ class FieldValueMap(Base):
 
     @gs_sustain_sub_sector.setter
     def gs_sustain_sub_sector(self, value: str):
-        self.__gs_sustain_sub_sector = value
-        self._property_changed('gs_sustain_sub_sector')        
+        self._property_changed('gs_sustain_sub_sector')
+        self.__gs_sustain_sub_sector = value        
 
     @property
     def domain(self) -> str:
@@ -18002,8 +18290,8 @@ class FieldValueMap(Base):
 
     @domain.setter
     def domain(self, value: str):
-        self.__domain = value
-        self._property_changed('domain')        
+        self._property_changed('domain')
+        self.__domain = value        
 
     @property
     def share_class_assets(self) -> float:
@@ -18012,8 +18300,8 @@ class FieldValueMap(Base):
 
     @share_class_assets.setter
     def share_class_assets(self, value: float):
-        self.__share_class_assets = value
-        self._property_changed('share_class_assets')        
+        self._property_changed('share_class_assets')
+        self.__share_class_assets = value        
 
     @property
     def annuity(self) -> float:
@@ -18022,8 +18310,8 @@ class FieldValueMap(Base):
 
     @annuity.setter
     def annuity(self, value: float):
-        self.__annuity = value
-        self._property_changed('annuity')        
+        self._property_changed('annuity')
+        self.__annuity = value        
 
     @property
     def uid(self) -> str:
@@ -18035,8 +18323,8 @@ class FieldValueMap(Base):
 
     @uid.setter
     def uid(self, value: str):
-        self.__uid = value
-        self._property_changed('uid')        
+        self._property_changed('uid')
+        self.__uid = value        
 
     @property
     def es_policy_percentile(self) -> float:
@@ -18045,8 +18333,8 @@ class FieldValueMap(Base):
 
     @es_policy_percentile.setter
     def es_policy_percentile(self, value: float):
-        self.__es_policy_percentile = value
-        self._property_changed('es_policy_percentile')        
+        self._property_changed('es_policy_percentile')
+        self.__es_policy_percentile = value        
 
     @property
     def term(self) -> str:
@@ -18055,8 +18343,18 @@ class FieldValueMap(Base):
 
     @term.setter
     def term(self, value: str):
-        self.__term = value
-        self._property_changed('term')        
+        self._property_changed('term')
+        self.__term = value        
+
+    @property
+    def asset_parameters_clearing_house(self) -> str:
+        """Clearing house."""
+        return self.__asset_parameters_clearing_house
+
+    @asset_parameters_clearing_house.setter
+    def asset_parameters_clearing_house(self, value: str):
+        self._property_changed('asset_parameters_clearing_house')
+        self.__asset_parameters_clearing_house = value        
 
     @property
     def tcm_cost_participation_rate100_pct(self) -> float:
@@ -18065,8 +18363,8 @@ class FieldValueMap(Base):
 
     @tcm_cost_participation_rate100_pct.setter
     def tcm_cost_participation_rate100_pct(self, value: float):
-        self.__tcm_cost_participation_rate100_pct = value
-        self._property_changed('tcm_cost_participation_rate100_pct')        
+        self._property_changed('tcm_cost_participation_rate100_pct')
+        self.__tcm_cost_participation_rate100_pct = value        
 
     @property
     def disclaimer(self) -> str:
@@ -18075,8 +18373,8 @@ class FieldValueMap(Base):
 
     @disclaimer.setter
     def disclaimer(self, value: str):
-        self.__disclaimer = value
-        self._property_changed('disclaimer')        
+        self._property_changed('disclaimer')
+        self.__disclaimer = value        
 
     @property
     def measure_idx(self) -> int:
@@ -18085,8 +18383,8 @@ class FieldValueMap(Base):
 
     @measure_idx.setter
     def measure_idx(self, value: int):
-        self.__measure_idx = value
-        self._property_changed('measure_idx')        
+        self._property_changed('measure_idx')
+        self.__measure_idx = value        
 
     @property
     def loan_fee(self) -> float:
@@ -18096,8 +18394,8 @@ class FieldValueMap(Base):
 
     @loan_fee.setter
     def loan_fee(self, value: float):
-        self.__loan_fee = value
-        self._property_changed('loan_fee')        
+        self._property_changed('loan_fee')
+        self.__loan_fee = value        
 
     @property
     def deployment_version(self) -> str:
@@ -18106,8 +18404,8 @@ class FieldValueMap(Base):
 
     @deployment_version.setter
     def deployment_version(self, value: str):
-        self.__deployment_version = value
-        self._property_changed('deployment_version')        
+        self._property_changed('deployment_version')
+        self.__deployment_version = value        
 
     @property
     def twi_contribution(self) -> float:
@@ -18116,8 +18414,8 @@ class FieldValueMap(Base):
 
     @twi_contribution.setter
     def twi_contribution(self, value: float):
-        self.__twi_contribution = value
-        self._property_changed('twi_contribution')        
+        self._property_changed('twi_contribution')
+        self.__twi_contribution = value        
 
     @property
     def delisted(self) -> str:
@@ -18126,8 +18424,8 @@ class FieldValueMap(Base):
 
     @delisted.setter
     def delisted(self, value: str):
-        self.__delisted = value
-        self._property_changed('delisted')        
+        self._property_changed('delisted')
+        self.__delisted = value        
 
     @property
     def regional_focus(self) -> str:
@@ -18137,8 +18435,8 @@ class FieldValueMap(Base):
 
     @regional_focus.setter
     def regional_focus(self, value: str):
-        self.__regional_focus = value
-        self._property_changed('regional_focus')        
+        self._property_changed('regional_focus')
+        self.__regional_focus = value        
 
     @property
     def volume_primary(self) -> float:
@@ -18148,8 +18446,8 @@ class FieldValueMap(Base):
 
     @volume_primary.setter
     def volume_primary(self, value: float):
-        self.__volume_primary = value
-        self._property_changed('volume_primary')        
+        self._property_changed('volume_primary')
+        self.__volume_primary = value        
 
     @property
     def leg_two_delivery_point(self) -> str:
@@ -18158,8 +18456,8 @@ class FieldValueMap(Base):
 
     @leg_two_delivery_point.setter
     def leg_two_delivery_point(self, value: str):
-        self.__leg_two_delivery_point = value
-        self._property_changed('leg_two_delivery_point')        
+        self._property_changed('leg_two_delivery_point')
+        self.__leg_two_delivery_point = value        
 
     @property
     def funding_bid_price(self) -> float:
@@ -18168,8 +18466,18 @@ class FieldValueMap(Base):
 
     @funding_bid_price.setter
     def funding_bid_price(self, value: float):
-        self.__funding_bid_price = value
-        self._property_changed('funding_bid_price')        
+        self._property_changed('funding_bid_price')
+        self.__funding_bid_price = value        
+
+    @property
+    def price_to_sales(self) -> float:
+        """Price to sales."""
+        return self.__price_to_sales
+
+    @price_to_sales.setter
+    def price_to_sales(self, value: float):
+        self._property_changed('price_to_sales')
+        self.__price_to_sales = value        
 
     @property
     def closing_auction(self) -> float:
@@ -18178,8 +18486,8 @@ class FieldValueMap(Base):
 
     @closing_auction.setter
     def closing_auction(self, value: float):
-        self.__closing_auction = value
-        self._property_changed('closing_auction')        
+        self._property_changed('closing_auction')
+        self.__closing_auction = value        
 
     @property
     def new_ideas_qtd(self) -> float:
@@ -18188,8 +18496,8 @@ class FieldValueMap(Base):
 
     @new_ideas_qtd.setter
     def new_ideas_qtd(self, value: float):
-        self.__new_ideas_qtd = value
-        self._property_changed('new_ideas_qtd')        
+        self._property_changed('new_ideas_qtd')
+        self.__new_ideas_qtd = value        
 
     @property
     def adjusted_ask_price(self) -> float:
@@ -18198,8 +18506,8 @@ class FieldValueMap(Base):
 
     @adjusted_ask_price.setter
     def adjusted_ask_price(self, value: float):
-        self.__adjusted_ask_price = value
-        self._property_changed('adjusted_ask_price')        
+        self._property_changed('adjusted_ask_price')
+        self.__adjusted_ask_price = value        
 
     @property
     def quarter(self) -> str:
@@ -18208,8 +18516,8 @@ class FieldValueMap(Base):
 
     @quarter.setter
     def quarter(self, value: str):
-        self.__quarter = value
-        self._property_changed('quarter')        
+        self._property_changed('quarter')
+        self.__quarter = value        
 
     @property
     def factor_universe(self) -> str:
@@ -18218,8 +18526,19 @@ class FieldValueMap(Base):
 
     @factor_universe.setter
     def factor_universe(self, value: str):
-        self.__factor_universe = value
-        self._property_changed('factor_universe')        
+        self._property_changed('factor_universe')
+        self.__factor_universe = value        
+
+    @property
+    def asset_parameters_floating_rate_option(self) -> str:
+        """The underlying benchmark for the floating rate, e.g. USD-LIBOR-BBA, EUR-EURIBOR-
+           TELERATE."""
+        return self.__asset_parameters_floating_rate_option
+
+    @asset_parameters_floating_rate_option.setter
+    def asset_parameters_floating_rate_option(self, value: str):
+        self._property_changed('asset_parameters_floating_rate_option')
+        self.__asset_parameters_floating_rate_option = value        
 
     @property
     def arrival_rt(self) -> float:
@@ -18228,8 +18547,8 @@ class FieldValueMap(Base):
 
     @arrival_rt.setter
     def arrival_rt(self, value: float):
-        self.__arrival_rt = value
-        self._property_changed('arrival_rt')        
+        self._property_changed('arrival_rt')
+        self.__arrival_rt = value        
 
     @property
     def vote_share(self) -> float:
@@ -18238,8 +18557,8 @@ class FieldValueMap(Base):
 
     @vote_share.setter
     def vote_share(self, value: float):
-        self.__vote_share = value
-        self._property_changed('vote_share')        
+        self._property_changed('vote_share')
+        self.__vote_share = value        
 
     @property
     def transaction_cost(self) -> float:
@@ -18248,8 +18567,8 @@ class FieldValueMap(Base):
 
     @transaction_cost.setter
     def transaction_cost(self, value: float):
-        self.__transaction_cost = value
-        self._property_changed('transaction_cost')        
+        self._property_changed('transaction_cost')
+        self.__transaction_cost = value        
 
     @property
     def servicing_cost_short_pnl(self) -> float:
@@ -18258,8 +18577,8 @@ class FieldValueMap(Base):
 
     @servicing_cost_short_pnl.setter
     def servicing_cost_short_pnl(self, value: float):
-        self.__servicing_cost_short_pnl = value
-        self._property_changed('servicing_cost_short_pnl')        
+        self._property_changed('servicing_cost_short_pnl')
+        self.__servicing_cost_short_pnl = value        
 
     @property
     def cluster_description(self) -> str:
@@ -18268,8 +18587,8 @@ class FieldValueMap(Base):
 
     @cluster_description.setter
     def cluster_description(self, value: str):
-        self.__cluster_description = value
-        self._property_changed('cluster_description')        
+        self._property_changed('cluster_description')
+        self.__cluster_description = value        
 
     @property
     def position_amount(self) -> float:
@@ -18278,8 +18597,8 @@ class FieldValueMap(Base):
 
     @position_amount.setter
     def position_amount(self, value: float):
-        self.__position_amount = value
-        self._property_changed('position_amount')        
+        self._property_changed('position_amount')
+        self.__position_amount = value        
 
     @property
     def wind_speed(self) -> float:
@@ -18288,8 +18607,8 @@ class FieldValueMap(Base):
 
     @wind_speed.setter
     def wind_speed(self, value: float):
-        self.__wind_speed = value
-        self._property_changed('wind_speed')        
+        self._property_changed('wind_speed')
+        self.__wind_speed = value        
 
     @property
     def event_start_date_time(self) -> datetime.datetime:
@@ -18299,8 +18618,8 @@ class FieldValueMap(Base):
 
     @event_start_date_time.setter
     def event_start_date_time(self, value: datetime.datetime):
-        self.__event_start_date_time = value
-        self._property_changed('event_start_date_time')        
+        self._property_changed('event_start_date_time')
+        self.__event_start_date_time = value        
 
     @property
     def borrower_id(self) -> str:
@@ -18309,8 +18628,8 @@ class FieldValueMap(Base):
 
     @borrower_id.setter
     def borrower_id(self, value: str):
-        self.__borrower_id = value
-        self._property_changed('borrower_id')        
+        self._property_changed('borrower_id')
+        self.__borrower_id = value        
 
     @property
     def data_product(self) -> str:
@@ -18319,8 +18638,8 @@ class FieldValueMap(Base):
 
     @data_product.setter
     def data_product(self, value: str):
-        self.__data_product = value
-        self._property_changed('data_product')        
+        self._property_changed('data_product')
+        self.__data_product = value        
 
     @property
     def implied_volatility_by_delta_strike(self) -> float:
@@ -18329,8 +18648,8 @@ class FieldValueMap(Base):
 
     @implied_volatility_by_delta_strike.setter
     def implied_volatility_by_delta_strike(self, value: float):
-        self.__implied_volatility_by_delta_strike = value
-        self._property_changed('implied_volatility_by_delta_strike')        
+        self._property_changed('implied_volatility_by_delta_strike')
+        self.__implied_volatility_by_delta_strike = value        
 
     @property
     def bm_prime_id(self) -> float:
@@ -18339,8 +18658,8 @@ class FieldValueMap(Base):
 
     @bm_prime_id.setter
     def bm_prime_id(self, value: float):
-        self.__bm_prime_id = value
-        self._property_changed('bm_prime_id')        
+        self._property_changed('bm_prime_id')
+        self.__bm_prime_id = value        
 
     @property
     def corporate_action(self) -> bool:
@@ -18349,8 +18668,8 @@ class FieldValueMap(Base):
 
     @corporate_action.setter
     def corporate_action(self, value: bool):
-        self.__corporate_action = value
-        self._property_changed('corporate_action')        
+        self._property_changed('corporate_action')
+        self.__corporate_action = value        
 
     @property
     def conviction(self) -> str:
@@ -18359,8 +18678,8 @@ class FieldValueMap(Base):
 
     @conviction.setter
     def conviction(self, value: str):
-        self.__conviction = value
-        self._property_changed('conviction')        
+        self._property_changed('conviction')
+        self.__conviction = value        
 
     @property
     def g_regional_score(self) -> float:
@@ -18369,8 +18688,8 @@ class FieldValueMap(Base):
 
     @g_regional_score.setter
     def g_regional_score(self, value: float):
-        self.__g_regional_score = value
-        self._property_changed('g_regional_score')        
+        self._property_changed('g_regional_score')
+        self.__g_regional_score = value        
 
     @property
     def factor_id(self) -> str:
@@ -18379,8 +18698,8 @@ class FieldValueMap(Base):
 
     @factor_id.setter
     def factor_id(self, value: str):
-        self.__factor_id = value
-        self._property_changed('factor_id')        
+        self._property_changed('factor_id')
+        self.__factor_id = value        
 
     @property
     def hard_to_borrow(self) -> bool:
@@ -18389,8 +18708,8 @@ class FieldValueMap(Base):
 
     @hard_to_borrow.setter
     def hard_to_borrow(self, value: bool):
-        self.__hard_to_borrow = value
-        self._property_changed('hard_to_borrow')        
+        self._property_changed('hard_to_borrow')
+        self.__hard_to_borrow = value        
 
     @property
     def wpk(self) -> str:
@@ -18400,8 +18719,8 @@ class FieldValueMap(Base):
 
     @wpk.setter
     def wpk(self, value: str):
-        self.__wpk = value
-        self._property_changed('wpk')        
+        self._property_changed('wpk')
+        self.__wpk = value        
 
     @property
     def bid_change(self) -> float:
@@ -18410,8 +18729,18 @@ class FieldValueMap(Base):
 
     @bid_change.setter
     def bid_change(self, value: float):
-        self.__bid_change = value
-        self._property_changed('bid_change')        
+        self._property_changed('bid_change')
+        self.__bid_change = value        
+
+    @property
+    def asset_parameters_expiration_date(self) -> str:
+        """Relative expiration date."""
+        return self.__asset_parameters_expiration_date
+
+    @asset_parameters_expiration_date.setter
+    def asset_parameters_expiration_date(self, value: str):
+        self._property_changed('asset_parameters_expiration_date')
+        self.__asset_parameters_expiration_date = value        
 
     @property
     def expiration(self) -> str:
@@ -18420,8 +18749,8 @@ class FieldValueMap(Base):
 
     @expiration.setter
     def expiration(self, value: str):
-        self.__expiration = value
-        self._property_changed('expiration')        
+        self._property_changed('expiration')
+        self.__expiration = value        
 
     @property
     def country_name(self) -> str:
@@ -18430,8 +18759,8 @@ class FieldValueMap(Base):
 
     @country_name.setter
     def country_name(self, value: str):
-        self.__country_name = value
-        self._property_changed('country_name')        
+        self._property_changed('country_name')
+        self.__country_name = value        
 
     @property
     def starting_date(self) -> str:
@@ -18440,8 +18769,8 @@ class FieldValueMap(Base):
 
     @starting_date.setter
     def starting_date(self, value: str):
-        self.__starting_date = value
-        self._property_changed('starting_date')        
+        self._property_changed('starting_date')
+        self.__starting_date = value        
 
     @property
     def onboarded(self) -> bool:
@@ -18450,8 +18779,8 @@ class FieldValueMap(Base):
 
     @onboarded.setter
     def onboarded(self, value: bool):
-        self.__onboarded = value
-        self._property_changed('onboarded')        
+        self._property_changed('onboarded')
+        self.__onboarded = value        
 
     @property
     def liquidity_score(self) -> float:
@@ -18461,8 +18790,8 @@ class FieldValueMap(Base):
 
     @liquidity_score.setter
     def liquidity_score(self, value: float):
-        self.__liquidity_score = value
-        self._property_changed('liquidity_score')        
+        self._property_changed('liquidity_score')
+        self.__liquidity_score = value        
 
     @property
     def long_rates_contribution(self) -> float:
@@ -18471,8 +18800,8 @@ class FieldValueMap(Base):
 
     @long_rates_contribution.setter
     def long_rates_contribution(self, value: float):
-        self.__long_rates_contribution = value
-        self._property_changed('long_rates_contribution')        
+        self._property_changed('long_rates_contribution')
+        self.__long_rates_contribution = value        
 
     @property
     def importance(self) -> float:
@@ -18481,8 +18810,8 @@ class FieldValueMap(Base):
 
     @importance.setter
     def importance(self, value: float):
-        self.__importance = value
-        self._property_changed('importance')        
+        self._property_changed('importance')
+        self.__importance = value        
 
     @property
     def source_date_span(self) -> float:
@@ -18491,8 +18820,8 @@ class FieldValueMap(Base):
 
     @source_date_span.setter
     def source_date_span(self, value: float):
-        self.__source_date_span = value
-        self._property_changed('source_date_span')        
+        self._property_changed('source_date_span')
+        self.__source_date_span = value        
 
     @property
     def ann_yield6_month(self) -> float:
@@ -18501,8 +18830,8 @@ class FieldValueMap(Base):
 
     @ann_yield6_month.setter
     def ann_yield6_month(self, value: float):
-        self.__ann_yield6_month = value
-        self._property_changed('ann_yield6_month')        
+        self._property_changed('ann_yield6_month')
+        self.__ann_yield6_month = value        
 
     @property
     def underlying_data_set_id(self) -> str:
@@ -18511,8 +18840,8 @@ class FieldValueMap(Base):
 
     @underlying_data_set_id.setter
     def underlying_data_set_id(self, value: str):
-        self.__underlying_data_set_id = value
-        self._property_changed('underlying_data_set_id')        
+        self._property_changed('underlying_data_set_id')
+        self.__underlying_data_set_id = value        
 
     @property
     def close_unadjusted(self) -> float:
@@ -18522,8 +18851,8 @@ class FieldValueMap(Base):
 
     @close_unadjusted.setter
     def close_unadjusted(self, value: float):
-        self.__close_unadjusted = value
-        self._property_changed('close_unadjusted')        
+        self._property_changed('close_unadjusted')
+        self.__close_unadjusted = value        
 
     @property
     def value_unit(self) -> str:
@@ -18532,8 +18861,8 @@ class FieldValueMap(Base):
 
     @value_unit.setter
     def value_unit(self, value: str):
-        self.__value_unit = value
-        self._property_changed('value_unit')        
+        self._property_changed('value_unit')
+        self.__value_unit = value        
 
     @property
     def quantity_unit(self) -> str:
@@ -18542,8 +18871,8 @@ class FieldValueMap(Base):
 
     @quantity_unit.setter
     def quantity_unit(self, value: str):
-        self.__quantity_unit = value
-        self._property_changed('quantity_unit')        
+        self._property_changed('quantity_unit')
+        self.__quantity_unit = value        
 
     @property
     def adjusted_low_price(self) -> float:
@@ -18553,8 +18882,8 @@ class FieldValueMap(Base):
 
     @adjusted_low_price.setter
     def adjusted_low_price(self, value: float):
-        self.__adjusted_low_price = value
-        self._property_changed('adjusted_low_price')        
+        self._property_changed('adjusted_low_price')
+        self.__adjusted_low_price = value        
 
     @property
     def net_exposure_classification(self) -> str:
@@ -18563,8 +18892,8 @@ class FieldValueMap(Base):
 
     @net_exposure_classification.setter
     def net_exposure_classification(self, value: str):
-        self.__net_exposure_classification = value
-        self._property_changed('net_exposure_classification')        
+        self._property_changed('net_exposure_classification')
+        self.__net_exposure_classification = value        
 
     @property
     def settlement_method(self) -> str:
@@ -18573,8 +18902,8 @@ class FieldValueMap(Base):
 
     @settlement_method.setter
     def settlement_method(self, value: str):
-        self.__settlement_method = value
-        self._property_changed('settlement_method')        
+        self._property_changed('settlement_method')
+        self.__settlement_method = value        
 
     @property
     def long_conviction_large(self) -> float:
@@ -18583,8 +18912,8 @@ class FieldValueMap(Base):
 
     @long_conviction_large.setter
     def long_conviction_large(self, value: float):
-        self.__long_conviction_large = value
-        self._property_changed('long_conviction_large')        
+        self._property_changed('long_conviction_large')
+        self.__long_conviction_large = value        
 
     @property
     def alpha(self) -> float:
@@ -18593,8 +18922,8 @@ class FieldValueMap(Base):
 
     @alpha.setter
     def alpha(self, value: float):
-        self.__alpha = value
-        self._property_changed('alpha')        
+        self._property_changed('alpha')
+        self.__alpha = value        
 
     @property
     def company(self) -> str:
@@ -18603,8 +18932,8 @@ class FieldValueMap(Base):
 
     @company.setter
     def company(self, value: str):
-        self.__company = value
-        self._property_changed('company')        
+        self._property_changed('company')
+        self.__company = value        
 
     @property
     def conviction_list(self) -> bool:
@@ -18616,8 +18945,8 @@ class FieldValueMap(Base):
 
     @conviction_list.setter
     def conviction_list(self, value: bool):
-        self.__conviction_list = value
-        self._property_changed('conviction_list')        
+        self._property_changed('conviction_list')
+        self.__conviction_list = value        
 
     @property
     def settlement_frequency(self) -> str:
@@ -18626,8 +18955,8 @@ class FieldValueMap(Base):
 
     @settlement_frequency.setter
     def settlement_frequency(self, value: str):
-        self.__settlement_frequency = value
-        self._property_changed('settlement_frequency')        
+        self._property_changed('settlement_frequency')
+        self.__settlement_frequency = value        
 
     @property
     def dist_avg7_day(self) -> float:
@@ -18638,8 +18967,8 @@ class FieldValueMap(Base):
 
     @dist_avg7_day.setter
     def dist_avg7_day(self, value: float):
-        self.__dist_avg7_day = value
-        self._property_changed('dist_avg7_day')        
+        self._property_changed('dist_avg7_day')
+        self.__dist_avg7_day = value        
 
     @property
     def remove_tape_c(self) -> float:
@@ -18648,8 +18977,8 @@ class FieldValueMap(Base):
 
     @remove_tape_c.setter
     def remove_tape_c(self, value: float):
-        self.__remove_tape_c = value
-        self._property_changed('remove_tape_c')        
+        self._property_changed('remove_tape_c')
+        self.__remove_tape_c = value        
 
     @property
     def remove_tape_b(self) -> float:
@@ -18658,8 +18987,8 @@ class FieldValueMap(Base):
 
     @remove_tape_b.setter
     def remove_tape_b(self, value: float):
-        self.__remove_tape_b = value
-        self._property_changed('remove_tape_b')        
+        self._property_changed('remove_tape_b')
+        self.__remove_tape_b = value        
 
     @property
     def in_risk_model(self) -> bool:
@@ -18668,8 +18997,8 @@ class FieldValueMap(Base):
 
     @in_risk_model.setter
     def in_risk_model(self, value: bool):
-        self.__in_risk_model = value
-        self._property_changed('in_risk_model')        
+        self._property_changed('in_risk_model')
+        self.__in_risk_model = value        
 
     @property
     def daily_net_shareholder_flows_percent(self) -> float:
@@ -18678,8 +19007,8 @@ class FieldValueMap(Base):
 
     @daily_net_shareholder_flows_percent.setter
     def daily_net_shareholder_flows_percent(self, value: float):
-        self.__daily_net_shareholder_flows_percent = value
-        self._property_changed('daily_net_shareholder_flows_percent')        
+        self._property_changed('daily_net_shareholder_flows_percent')
+        self.__daily_net_shareholder_flows_percent = value        
 
     @property
     def servicing_cost_long_pnl(self) -> float:
@@ -18688,8 +19017,8 @@ class FieldValueMap(Base):
 
     @servicing_cost_long_pnl.setter
     def servicing_cost_long_pnl(self, value: float):
-        self.__servicing_cost_long_pnl = value
-        self._property_changed('servicing_cost_long_pnl')        
+        self._property_changed('servicing_cost_long_pnl')
+        self.__servicing_cost_long_pnl = value        
 
     @property
     def remove_tape_a(self) -> float:
@@ -18698,8 +19027,8 @@ class FieldValueMap(Base):
 
     @remove_tape_a.setter
     def remove_tape_a(self, value: float):
-        self.__remove_tape_a = value
-        self._property_changed('remove_tape_a')        
+        self._property_changed('remove_tape_a')
+        self.__remove_tape_a = value        
 
     @property
     def meeting_number(self) -> float:
@@ -18708,8 +19037,8 @@ class FieldValueMap(Base):
 
     @meeting_number.setter
     def meeting_number(self, value: float):
-        self.__meeting_number = value
-        self._property_changed('meeting_number')        
+        self._property_changed('meeting_number')
+        self.__meeting_number = value        
 
     @property
     def exchange_id(self) -> str:
@@ -18718,8 +19047,8 @@ class FieldValueMap(Base):
 
     @exchange_id.setter
     def exchange_id(self, value: str):
-        self.__exchange_id = value
-        self._property_changed('exchange_id')        
+        self._property_changed('exchange_id')
+        self.__exchange_id = value        
 
     @property
     def mid_gspread(self) -> float:
@@ -18728,8 +19057,8 @@ class FieldValueMap(Base):
 
     @mid_gspread.setter
     def mid_gspread(self, value: float):
-        self.__mid_gspread = value
-        self._property_changed('mid_gspread')        
+        self._property_changed('mid_gspread')
+        self.__mid_gspread = value        
 
     @property
     def tcm_cost_horizon20_day(self) -> float:
@@ -18738,8 +19067,8 @@ class FieldValueMap(Base):
 
     @tcm_cost_horizon20_day.setter
     def tcm_cost_horizon20_day(self, value: float):
-        self.__tcm_cost_horizon20_day = value
-        self._property_changed('tcm_cost_horizon20_day')        
+        self._property_changed('tcm_cost_horizon20_day')
+        self.__tcm_cost_horizon20_day = value        
 
     @property
     def long_level(self) -> float:
@@ -18748,8 +19077,8 @@ class FieldValueMap(Base):
 
     @long_level.setter
     def long_level(self, value: float):
-        self.__long_level = value
-        self._property_changed('long_level')        
+        self._property_changed('long_level')
+        self.__long_level = value        
 
     @property
     def realm(self) -> str:
@@ -18758,8 +19087,8 @@ class FieldValueMap(Base):
 
     @realm.setter
     def realm(self, value: str):
-        self.__realm = value
-        self._property_changed('realm')        
+        self._property_changed('realm')
+        self.__realm = value        
 
     @property
     def bid(self) -> float:
@@ -18768,8 +19097,8 @@ class FieldValueMap(Base):
 
     @bid.setter
     def bid(self, value: float):
-        self.__bid = value
-        self._property_changed('bid')        
+        self._property_changed('bid')
+        self.__bid = value        
 
     @property
     def is_aggressive(self) -> float:
@@ -18778,8 +19107,8 @@ class FieldValueMap(Base):
 
     @is_aggressive.setter
     def is_aggressive(self, value: float):
-        self.__is_aggressive = value
-        self._property_changed('is_aggressive')        
+        self._property_changed('is_aggressive')
+        self.__is_aggressive = value        
 
     @property
     def order_id(self) -> str:
@@ -18788,8 +19117,8 @@ class FieldValueMap(Base):
 
     @order_id.setter
     def order_id(self, value: str):
-        self.__order_id = value
-        self._property_changed('order_id')        
+        self._property_changed('order_id')
+        self.__order_id = value        
 
     @property
     def repo_rate(self) -> float:
@@ -18798,8 +19127,8 @@ class FieldValueMap(Base):
 
     @repo_rate.setter
     def repo_rate(self, value: float):
-        self.__repo_rate = value
-        self._property_changed('repo_rate')        
+        self._property_changed('repo_rate')
+        self.__repo_rate = value        
 
     @property
     def market_cap_usd(self) -> float:
@@ -18808,8 +19137,8 @@ class FieldValueMap(Base):
 
     @market_cap_usd.setter
     def market_cap_usd(self, value: float):
-        self.__market_cap_usd = value
-        self._property_changed('market_cap_usd')        
+        self._property_changed('market_cap_usd')
+        self.__market_cap_usd = value        
 
     @property
     def high_price(self) -> float:
@@ -18819,8 +19148,8 @@ class FieldValueMap(Base):
 
     @high_price.setter
     def high_price(self, value: float):
-        self.__high_price = value
-        self._property_changed('high_price')        
+        self._property_changed('high_price')
+        self.__high_price = value        
 
     @property
     def absolute_shares(self) -> float:
@@ -18829,8 +19158,8 @@ class FieldValueMap(Base):
 
     @absolute_shares.setter
     def absolute_shares(self, value: float):
-        self.__absolute_shares = value
-        self._property_changed('absolute_shares')        
+        self._property_changed('absolute_shares')
+        self.__absolute_shares = value        
 
     @property
     def action(self) -> str:
@@ -18839,8 +19168,8 @@ class FieldValueMap(Base):
 
     @action.setter
     def action(self, value: str):
-        self.__action = value
-        self._property_changed('action')        
+        self._property_changed('action')
+        self.__action = value        
 
     @property
     def model(self) -> str:
@@ -18849,8 +19178,8 @@ class FieldValueMap(Base):
 
     @model.setter
     def model(self, value: str):
-        self.__model = value
-        self._property_changed('model')        
+        self._property_changed('model')
+        self.__model = value        
 
     @property
     def id(self) -> str:
@@ -18859,8 +19188,8 @@ class FieldValueMap(Base):
 
     @id.setter
     def id(self, value: str):
-        self.__id = value
-        self._property_changed('id')        
+        self._property_changed('id')
+        self.__id = value        
 
     @property
     def arrival_haircut_vwap_normalized(self) -> float:
@@ -18869,8 +19198,8 @@ class FieldValueMap(Base):
 
     @arrival_haircut_vwap_normalized.setter
     def arrival_haircut_vwap_normalized(self, value: float):
-        self.__arrival_haircut_vwap_normalized = value
-        self._property_changed('arrival_haircut_vwap_normalized')        
+        self._property_changed('arrival_haircut_vwap_normalized')
+        self.__arrival_haircut_vwap_normalized = value        
 
     @property
     def price_component(self) -> str:
@@ -18879,8 +19208,8 @@ class FieldValueMap(Base):
 
     @price_component.setter
     def price_component(self, value: str):
-        self.__price_component = value
-        self._property_changed('price_component')        
+        self._property_changed('price_component')
+        self.__price_component = value        
 
     @property
     def queue_clock_time_description(self) -> str:
@@ -18889,8 +19218,18 @@ class FieldValueMap(Base):
 
     @queue_clock_time_description.setter
     def queue_clock_time_description(self, value: str):
-        self.__queue_clock_time_description = value
-        self._property_changed('queue_clock_time_description')        
+        self._property_changed('queue_clock_time_description')
+        self.__queue_clock_time_description = value        
+
+    @property
+    def maturity(self) -> str:
+        """Maturity of instrument."""
+        return self.__maturity
+
+    @maturity.setter
+    def maturity(self, value: str):
+        self._property_changed('maturity')
+        self.__maturity = value        
 
     @property
     def delta_strike(self) -> str:
@@ -18899,8 +19238,18 @@ class FieldValueMap(Base):
 
     @delta_strike.setter
     def delta_strike(self, value: str):
-        self.__delta_strike = value
-        self._property_changed('delta_strike')        
+        self._property_changed('delta_strike')
+        self.__delta_strike = value        
+
+    @property
+    def asset_parameters_notional_currency(self) -> str:
+        """Notional currency."""
+        return self.__asset_parameters_notional_currency
+
+    @asset_parameters_notional_currency.setter
+    def asset_parameters_notional_currency(self, value: str):
+        self._property_changed('asset_parameters_notional_currency')
+        self.__asset_parameters_notional_currency = value        
 
     @property
     def value_actual(self) -> str:
@@ -18909,8 +19258,8 @@ class FieldValueMap(Base):
 
     @value_actual.setter
     def value_actual(self, value: str):
-        self.__value_actual = value
-        self._property_changed('value_actual')        
+        self._property_changed('value_actual')
+        self.__value_actual = value        
 
     @property
     def upi(self) -> str:
@@ -18919,8 +19268,8 @@ class FieldValueMap(Base):
 
     @upi.setter
     def upi(self, value: str):
-        self.__upi = value
-        self._property_changed('upi')        
+        self._property_changed('upi')
+        self.__upi = value        
 
     @property
     def bcid(self) -> str:
@@ -18929,8 +19278,8 @@ class FieldValueMap(Base):
 
     @bcid.setter
     def bcid(self, value: str):
-        self.__bcid = value
-        self._property_changed('bcid')        
+        self._property_changed('bcid')
+        self.__bcid = value        
 
     @property
     def mkt_point(self) -> Tuple[str, ...]:
@@ -18939,8 +19288,8 @@ class FieldValueMap(Base):
 
     @mkt_point.setter
     def mkt_point(self, value: Tuple[str, ...]):
-        self.__mkt_point = value
-        self._property_changed('mkt_point')        
+        self._property_changed('mkt_point')
+        self.__mkt_point = value        
 
     @property
     def collateral_currency(self) -> str:
@@ -18949,8 +19298,8 @@ class FieldValueMap(Base):
 
     @collateral_currency.setter
     def collateral_currency(self, value: str):
-        self.__collateral_currency = value
-        self._property_changed('collateral_currency')        
+        self._property_changed('collateral_currency')
+        self.__collateral_currency = value        
 
     @property
     def restriction_start_date(self) -> datetime.date:
@@ -18959,8 +19308,8 @@ class FieldValueMap(Base):
 
     @restriction_start_date.setter
     def restriction_start_date(self, value: datetime.date):
-        self.__restriction_start_date = value
-        self._property_changed('restriction_start_date')        
+        self._property_changed('restriction_start_date')
+        self.__restriction_start_date = value        
 
     @property
     def original_country(self) -> str:
@@ -18969,8 +19318,8 @@ class FieldValueMap(Base):
 
     @original_country.setter
     def original_country(self, value: str):
-        self.__original_country = value
-        self._property_changed('original_country')        
+        self._property_changed('original_country')
+        self.__original_country = value        
 
     @property
     def touch_liquidity_score(self) -> float:
@@ -18980,8 +19329,8 @@ class FieldValueMap(Base):
 
     @touch_liquidity_score.setter
     def touch_liquidity_score(self, value: float):
-        self.__touch_liquidity_score = value
-        self._property_changed('touch_liquidity_score')        
+        self._property_changed('touch_liquidity_score')
+        self.__touch_liquidity_score = value        
 
     @property
     def field(self) -> str:
@@ -18991,8 +19340,8 @@ class FieldValueMap(Base):
 
     @field.setter
     def field(self, value: str):
-        self.__field = value
-        self._property_changed('field')        
+        self._property_changed('field')
+        self.__field = value        
 
     @property
     def factor_category_id(self) -> str:
@@ -19001,8 +19350,8 @@ class FieldValueMap(Base):
 
     @factor_category_id.setter
     def factor_category_id(self, value: str):
-        self.__factor_category_id = value
-        self._property_changed('factor_category_id')        
+        self._property_changed('factor_category_id')
+        self.__factor_category_id = value        
 
     @property
     def expected_completion_date(self) -> str:
@@ -19011,8 +19360,8 @@ class FieldValueMap(Base):
 
     @expected_completion_date.setter
     def expected_completion_date(self, value: str):
-        self.__expected_completion_date = value
-        self._property_changed('expected_completion_date')        
+        self._property_changed('expected_completion_date')
+        self.__expected_completion_date = value        
 
     @property
     def spread_option_vol(self) -> float:
@@ -19022,8 +19371,8 @@ class FieldValueMap(Base):
 
     @spread_option_vol.setter
     def spread_option_vol(self, value: float):
-        self.__spread_option_vol = value
-        self._property_changed('spread_option_vol')        
+        self._property_changed('spread_option_vol')
+        self.__spread_option_vol = value        
 
     @property
     def inflation_swap_rate(self) -> float:
@@ -19032,8 +19381,8 @@ class FieldValueMap(Base):
 
     @inflation_swap_rate.setter
     def inflation_swap_rate(self, value: float):
-        self.__inflation_swap_rate = value
-        self._property_changed('inflation_swap_rate')        
+        self._property_changed('inflation_swap_rate')
+        self.__inflation_swap_rate = value        
 
     @property
     def skew(self) -> float:
@@ -19042,8 +19391,8 @@ class FieldValueMap(Base):
 
     @skew.setter
     def skew(self, value: float):
-        self.__skew = value
-        self._property_changed('skew')        
+        self._property_changed('skew')
+        self.__skew = value        
 
     @property
     def status(self) -> str:
@@ -19052,8 +19401,8 @@ class FieldValueMap(Base):
 
     @status.setter
     def status(self, value: str):
-        self.__status = value
-        self._property_changed('status')        
+        self._property_changed('status')
+        self.__status = value        
 
     @property
     def sustain_emerging_markets(self) -> bool:
@@ -19064,8 +19413,8 @@ class FieldValueMap(Base):
 
     @sustain_emerging_markets.setter
     def sustain_emerging_markets(self, value: bool):
-        self.__sustain_emerging_markets = value
-        self._property_changed('sustain_emerging_markets')        
+        self._property_changed('sustain_emerging_markets')
+        self.__sustain_emerging_markets = value        
 
     @property
     def event_date_time(self) -> datetime.datetime:
@@ -19076,8 +19425,8 @@ class FieldValueMap(Base):
 
     @event_date_time.setter
     def event_date_time(self, value: datetime.datetime):
-        self.__event_date_time = value
-        self._property_changed('event_date_time')        
+        self._property_changed('event_date_time')
+        self.__event_date_time = value        
 
     @property
     def total_price(self) -> float:
@@ -19086,8 +19435,8 @@ class FieldValueMap(Base):
 
     @total_price.setter
     def total_price(self, value: float):
-        self.__total_price = value
-        self._property_changed('total_price')        
+        self._property_changed('total_price')
+        self.__total_price = value        
 
     @property
     def embeded_option(self) -> str:
@@ -19096,8 +19445,8 @@ class FieldValueMap(Base):
 
     @embeded_option.setter
     def embeded_option(self, value: str):
-        self.__embeded_option = value
-        self._property_changed('embeded_option')        
+        self._property_changed('embeded_option')
+        self.__embeded_option = value        
 
     @property
     def event_source(self) -> str:
@@ -19108,8 +19457,8 @@ class FieldValueMap(Base):
 
     @event_source.setter
     def event_source(self, value: str):
-        self.__event_source = value
-        self._property_changed('event_source')        
+        self._property_changed('event_source')
+        self.__event_source = value        
 
     @property
     def on_behalf_of(self) -> str:
@@ -19118,8 +19467,8 @@ class FieldValueMap(Base):
 
     @on_behalf_of.setter
     def on_behalf_of(self, value: str):
-        self.__on_behalf_of = value
-        self._property_changed('on_behalf_of')        
+        self._property_changed('on_behalf_of')
+        self.__on_behalf_of = value        
 
     @property
     def qis_perm_no(self) -> str:
@@ -19128,8 +19477,8 @@ class FieldValueMap(Base):
 
     @qis_perm_no.setter
     def qis_perm_no(self, value: str):
-        self.__qis_perm_no = value
-        self._property_changed('qis_perm_no')        
+        self._property_changed('qis_perm_no')
+        self.__qis_perm_no = value        
 
     @property
     def shareclass_id(self) -> str:
@@ -19138,8 +19487,8 @@ class FieldValueMap(Base):
 
     @shareclass_id.setter
     def shareclass_id(self, value: str):
-        self.__shareclass_id = value
-        self._property_changed('shareclass_id')        
+        self._property_changed('shareclass_id')
+        self.__shareclass_id = value        
 
     @property
     def exception_status(self) -> str:
@@ -19148,8 +19497,8 @@ class FieldValueMap(Base):
 
     @exception_status.setter
     def exception_status(self, value: str):
-        self.__exception_status = value
-        self._property_changed('exception_status')        
+        self._property_changed('exception_status')
+        self.__exception_status = value        
 
     @property
     def short_exposure(self) -> float:
@@ -19159,8 +19508,8 @@ class FieldValueMap(Base):
 
     @short_exposure.setter
     def short_exposure(self, value: float):
-        self.__short_exposure = value
-        self._property_changed('short_exposure')        
+        self._property_changed('short_exposure')
+        self.__short_exposure = value        
 
     @property
     def tcm_cost_participation_rate10_pct(self) -> float:
@@ -19169,8 +19518,8 @@ class FieldValueMap(Base):
 
     @tcm_cost_participation_rate10_pct.setter
     def tcm_cost_participation_rate10_pct(self, value: float):
-        self.__tcm_cost_participation_rate10_pct = value
-        self._property_changed('tcm_cost_participation_rate10_pct')        
+        self._property_changed('tcm_cost_participation_rate10_pct')
+        self.__tcm_cost_participation_rate10_pct = value        
 
     @property
     def event_time(self) -> str:
@@ -19182,8 +19531,8 @@ class FieldValueMap(Base):
 
     @event_time.setter
     def event_time(self, value: str):
-        self.__event_time = value
-        self._property_changed('event_time')        
+        self._property_changed('event_time')
+        self.__event_time = value        
 
     @property
     def delivery_date(self) -> datetime.date:
@@ -19193,8 +19542,8 @@ class FieldValueMap(Base):
 
     @delivery_date.setter
     def delivery_date(self, value: datetime.date):
-        self.__delivery_date = value
-        self._property_changed('delivery_date')        
+        self._property_changed('delivery_date')
+        self.__delivery_date = value        
 
     @property
     def arrival_haircut_vwap(self) -> float:
@@ -19203,8 +19552,8 @@ class FieldValueMap(Base):
 
     @arrival_haircut_vwap.setter
     def arrival_haircut_vwap(self, value: float):
-        self.__arrival_haircut_vwap = value
-        self._property_changed('arrival_haircut_vwap')        
+        self._property_changed('arrival_haircut_vwap')
+        self.__arrival_haircut_vwap = value        
 
     @property
     def interest_rate(self) -> float:
@@ -19213,8 +19562,8 @@ class FieldValueMap(Base):
 
     @interest_rate.setter
     def interest_rate(self, value: float):
-        self.__interest_rate = value
-        self._property_changed('interest_rate')        
+        self._property_changed('interest_rate')
+        self.__interest_rate = value        
 
     @property
     def execution_days(self) -> float:
@@ -19223,8 +19572,8 @@ class FieldValueMap(Base):
 
     @execution_days.setter
     def execution_days(self, value: float):
-        self.__execution_days = value
-        self._property_changed('execution_days')        
+        self._property_changed('execution_days')
+        self.__execution_days = value        
 
     @property
     def recall_due_date(self) -> datetime.date:
@@ -19234,8 +19583,8 @@ class FieldValueMap(Base):
 
     @recall_due_date.setter
     def recall_due_date(self, value: datetime.date):
-        self.__recall_due_date = value
-        self._property_changed('recall_due_date')        
+        self._property_changed('recall_due_date')
+        self.__recall_due_date = value        
 
     @property
     def side(self) -> str:
@@ -19244,8 +19593,8 @@ class FieldValueMap(Base):
 
     @side.setter
     def side(self, value: str):
-        self.__side = value
-        self._property_changed('side')        
+        self._property_changed('side')
+        self.__side = value        
 
     @property
     def forward(self) -> float:
@@ -19254,8 +19603,8 @@ class FieldValueMap(Base):
 
     @forward.setter
     def forward(self, value: float):
-        self.__forward = value
-        self._property_changed('forward')        
+        self._property_changed('forward')
+        self.__forward = value        
 
     @property
     def borrow_fee(self) -> float:
@@ -19266,8 +19615,8 @@ class FieldValueMap(Base):
 
     @borrow_fee.setter
     def borrow_fee(self, value: float):
-        self.__borrow_fee = value
-        self._property_changed('borrow_fee')        
+        self._property_changed('borrow_fee')
+        self.__borrow_fee = value        
 
     @property
     def update_time(self) -> datetime.datetime:
@@ -19276,8 +19625,8 @@ class FieldValueMap(Base):
 
     @update_time.setter
     def update_time(self, value: datetime.datetime):
-        self.__update_time = value
-        self._property_changed('update_time')        
+        self._property_changed('update_time')
+        self.__update_time = value        
 
     @property
     def loan_spread(self) -> float:
@@ -19287,8 +19636,8 @@ class FieldValueMap(Base):
 
     @loan_spread.setter
     def loan_spread(self, value: float):
-        self.__loan_spread = value
-        self._property_changed('loan_spread')        
+        self._property_changed('loan_spread')
+        self.__loan_spread = value        
 
     @property
     def tcm_cost_horizon12_hour(self) -> float:
@@ -19297,8 +19646,8 @@ class FieldValueMap(Base):
 
     @tcm_cost_horizon12_hour.setter
     def tcm_cost_horizon12_hour(self, value: float):
-        self.__tcm_cost_horizon12_hour = value
-        self._property_changed('tcm_cost_horizon12_hour')        
+        self._property_changed('tcm_cost_horizon12_hour')
+        self.__tcm_cost_horizon12_hour = value        
 
     @property
     def dew_point(self) -> float:
@@ -19307,8 +19656,8 @@ class FieldValueMap(Base):
 
     @dew_point.setter
     def dew_point(self, value: float):
-        self.__dew_point = value
-        self._property_changed('dew_point')        
+        self._property_changed('dew_point')
+        self.__dew_point = value        
 
     @property
     def research_commission(self) -> float:
@@ -19317,8 +19666,8 @@ class FieldValueMap(Base):
 
     @research_commission.setter
     def research_commission(self, value: float):
-        self.__research_commission = value
-        self._property_changed('research_commission')        
+        self._property_changed('research_commission')
+        self.__research_commission = value        
 
     @property
     def leg_one_delivery_point(self) -> str:
@@ -19327,8 +19676,8 @@ class FieldValueMap(Base):
 
     @leg_one_delivery_point.setter
     def leg_one_delivery_point(self, value: str):
-        self.__leg_one_delivery_point = value
-        self._property_changed('leg_one_delivery_point')        
+        self._property_changed('leg_one_delivery_point')
+        self.__leg_one_delivery_point = value        
 
     @property
     def event_status(self) -> str:
@@ -19338,8 +19687,8 @@ class FieldValueMap(Base):
 
     @event_status.setter
     def event_status(self, value: str):
-        self.__event_status = value
-        self._property_changed('event_status')        
+        self._property_changed('event_status')
+        self.__event_status = value        
 
     @property
     def sell_date(self) -> datetime.date:
@@ -19348,8 +19697,18 @@ class FieldValueMap(Base):
 
     @sell_date.setter
     def sell_date(self, value: datetime.date):
-        self.__sell_date = value
-        self._property_changed('sell_date')        
+        self._property_changed('sell_date')
+        self.__sell_date = value        
+
+    @property
+    def asset_parameters_settlement(self) -> str:
+        """Settlement type."""
+        return self.__asset_parameters_settlement
+
+    @asset_parameters_settlement.setter
+    def asset_parameters_settlement(self, value: str):
+        self._property_changed('asset_parameters_settlement')
+        self.__asset_parameters_settlement = value        
 
     @property
     def return_(self) -> float:
@@ -19358,8 +19717,8 @@ class FieldValueMap(Base):
 
     @return_.setter
     def return_(self, value: float):
-        self.__return = value
-        self._property_changed('return_')        
+        self._property_changed('return_')
+        self.__return = value        
 
     @property
     def max_temperature(self) -> float:
@@ -19368,8 +19727,8 @@ class FieldValueMap(Base):
 
     @max_temperature.setter
     def max_temperature(self, value: float):
-        self.__max_temperature = value
-        self._property_changed('max_temperature')        
+        self._property_changed('max_temperature')
+        self.__max_temperature = value        
 
     @property
     def acquirer_shareholder_meeting_date(self) -> str:
@@ -19378,8 +19737,8 @@ class FieldValueMap(Base):
 
     @acquirer_shareholder_meeting_date.setter
     def acquirer_shareholder_meeting_date(self, value: str):
-        self.__acquirer_shareholder_meeting_date = value
-        self._property_changed('acquirer_shareholder_meeting_date')        
+        self._property_changed('acquirer_shareholder_meeting_date')
+        self.__acquirer_shareholder_meeting_date = value        
 
     @property
     def notional_amount(self) -> float:
@@ -19388,8 +19747,8 @@ class FieldValueMap(Base):
 
     @notional_amount.setter
     def notional_amount(self, value: float):
-        self.__notional_amount = value
-        self._property_changed('notional_amount')        
+        self._property_changed('notional_amount')
+        self.__notional_amount = value        
 
     @property
     def arrival_rt_normalized(self) -> float:
@@ -19398,8 +19757,8 @@ class FieldValueMap(Base):
 
     @arrival_rt_normalized.setter
     def arrival_rt_normalized(self, value: float):
-        self.__arrival_rt_normalized = value
-        self._property_changed('arrival_rt_normalized')        
+        self._property_changed('arrival_rt_normalized')
+        self.__arrival_rt_normalized = value        
 
     @property
     def report_type(self) -> str:
@@ -19408,8 +19767,8 @@ class FieldValueMap(Base):
 
     @report_type.setter
     def report_type(self, value: str):
-        self.__report_type = value
-        self._property_changed('report_type')        
+        self._property_changed('report_type')
+        self.__report_type = value        
 
     @property
     def source_url(self) -> str:
@@ -19418,8 +19777,8 @@ class FieldValueMap(Base):
 
     @source_url.setter
     def source_url(self, value: str):
-        self.__source_url = value
-        self._property_changed('source_url')        
+        self._property_changed('source_url')
+        self.__source_url = value        
 
     @property
     def estimated_return(self) -> float:
@@ -19428,8 +19787,8 @@ class FieldValueMap(Base):
 
     @estimated_return.setter
     def estimated_return(self, value: float):
-        self.__estimated_return = value
-        self._property_changed('estimated_return')        
+        self._property_changed('estimated_return')
+        self.__estimated_return = value        
 
     @property
     def high(self) -> float:
@@ -19439,8 +19798,8 @@ class FieldValueMap(Base):
 
     @high.setter
     def high(self, value: float):
-        self.__high = value
-        self._property_changed('high')        
+        self._property_changed('high')
+        self.__high = value        
 
     @property
     def source_last_update(self) -> str:
@@ -19449,8 +19808,8 @@ class FieldValueMap(Base):
 
     @source_last_update.setter
     def source_last_update(self, value: str):
-        self.__source_last_update = value
-        self._property_changed('source_last_update')        
+        self._property_changed('source_last_update')
+        self.__source_last_update = value        
 
     @property
     def quantity_mw(self) -> float:
@@ -19459,8 +19818,18 @@ class FieldValueMap(Base):
 
     @quantity_mw.setter
     def quantity_mw(self, value: float):
-        self.__quantity_mw = value
-        self._property_changed('quantity_mw')        
+        self._property_changed('quantity_mw')
+        self.__quantity_mw = value        
+
+    @property
+    def pnode_id(self) -> str:
+        """Pricing node identifier sourced from Morningstar."""
+        return self.__pnode_id
+
+    @pnode_id.setter
+    def pnode_id(self, value: str):
+        self._property_changed('pnode_id')
+        self.__pnode_id = value        
 
     @property
     def event_name(self) -> str:
@@ -19469,8 +19838,8 @@ class FieldValueMap(Base):
 
     @event_name.setter
     def event_name(self, value: str):
-        self.__event_name = value
-        self._property_changed('event_name')        
+        self._property_changed('event_name')
+        self.__event_name = value        
 
     @property
     def indication_of_other_price_affecting_term(self) -> str:
@@ -19482,8 +19851,8 @@ class FieldValueMap(Base):
 
     @indication_of_other_price_affecting_term.setter
     def indication_of_other_price_affecting_term(self, value: str):
-        self.__indication_of_other_price_affecting_term = value
-        self._property_changed('indication_of_other_price_affecting_term')        
+        self._property_changed('indication_of_other_price_affecting_term')
+        self.__indication_of_other_price_affecting_term = value        
 
     @property
     def unadjusted_bid(self) -> float:
@@ -19493,8 +19862,8 @@ class FieldValueMap(Base):
 
     @unadjusted_bid.setter
     def unadjusted_bid(self, value: float):
-        self.__unadjusted_bid = value
-        self._property_changed('unadjusted_bid')        
+        self._property_changed('unadjusted_bid')
+        self.__unadjusted_bid = value        
 
     @property
     def backtest_type(self) -> str:
@@ -19503,8 +19872,8 @@ class FieldValueMap(Base):
 
     @backtest_type.setter
     def backtest_type(self, value: str):
-        self.__backtest_type = value
-        self._property_changed('backtest_type')        
+        self._property_changed('backtest_type')
+        self.__backtest_type = value        
 
     @property
     def gsdeer(self) -> float:
@@ -19513,8 +19882,8 @@ class FieldValueMap(Base):
 
     @gsdeer.setter
     def gsdeer(self, value: float):
-        self.__gsdeer = value
-        self._property_changed('gsdeer')        
+        self._property_changed('gsdeer')
+        self.__gsdeer = value        
 
     @property
     def g_regional_percentile(self) -> float:
@@ -19523,8 +19892,8 @@ class FieldValueMap(Base):
 
     @g_regional_percentile.setter
     def g_regional_percentile(self, value: float):
-        self.__g_regional_percentile = value
-        self._property_changed('g_regional_percentile')        
+        self._property_changed('g_regional_percentile')
+        self.__g_regional_percentile = value        
 
     @property
     def prev_close_ask(self) -> float:
@@ -19533,8 +19902,8 @@ class FieldValueMap(Base):
 
     @prev_close_ask.setter
     def prev_close_ask(self, value: float):
-        self.__prev_close_ask = value
-        self._property_changed('prev_close_ask')        
+        self._property_changed('prev_close_ask')
+        self.__prev_close_ask = value        
 
     @property
     def level(self) -> float:
@@ -19543,8 +19912,8 @@ class FieldValueMap(Base):
 
     @level.setter
     def level(self, value: float):
-        self.__level = value
-        self._property_changed('level')        
+        self._property_changed('level')
+        self.__level = value        
 
     @property
     def mnav(self) -> float:
@@ -19554,8 +19923,8 @@ class FieldValueMap(Base):
 
     @mnav.setter
     def mnav(self, value: float):
-        self.__mnav = value
-        self._property_changed('mnav')        
+        self._property_changed('mnav')
+        self.__mnav = value        
 
     @property
     def es_momentum_score(self) -> float:
@@ -19564,8 +19933,8 @@ class FieldValueMap(Base):
 
     @es_momentum_score.setter
     def es_momentum_score(self, value: float):
-        self.__es_momentum_score = value
-        self._property_changed('es_momentum_score')        
+        self._property_changed('es_momentum_score')
+        self.__es_momentum_score = value        
 
     @property
     def curr_yield7_day(self) -> float:
@@ -19576,8 +19945,8 @@ class FieldValueMap(Base):
 
     @curr_yield7_day.setter
     def curr_yield7_day(self, value: float):
-        self.__curr_yield7_day = value
-        self._property_changed('curr_yield7_day')        
+        self._property_changed('curr_yield7_day')
+        self.__curr_yield7_day = value        
 
     @property
     def pressure(self) -> float:
@@ -19586,8 +19955,8 @@ class FieldValueMap(Base):
 
     @pressure.setter
     def pressure(self, value: float):
-        self.__pressure = value
-        self._property_changed('pressure')        
+        self._property_changed('pressure')
+        self.__pressure = value        
 
     @property
     def short_description(self) -> str:
@@ -19596,8 +19965,8 @@ class FieldValueMap(Base):
 
     @short_description.setter
     def short_description(self, value: str):
-        self.__short_description = value
-        self._property_changed('short_description')        
+        self._property_changed('short_description')
+        self.__short_description = value        
 
     @property
     def feed(self) -> str:
@@ -19606,8 +19975,8 @@ class FieldValueMap(Base):
 
     @feed.setter
     def feed(self, value: str):
-        self.__feed = value
-        self._property_changed('feed')        
+        self._property_changed('feed')
+        self.__feed = value        
 
     @property
     def net_weight(self) -> float:
@@ -19618,8 +19987,8 @@ class FieldValueMap(Base):
 
     @net_weight.setter
     def net_weight(self, value: float):
-        self.__net_weight = value
-        self._property_changed('net_weight')        
+        self._property_changed('net_weight')
+        self.__net_weight = value        
 
     @property
     def portfolio_managers(self) -> Tuple[str, ...]:
@@ -19628,8 +19997,8 @@ class FieldValueMap(Base):
 
     @portfolio_managers.setter
     def portfolio_managers(self, value: Tuple[str, ...]):
-        self.__portfolio_managers = value
-        self._property_changed('portfolio_managers')        
+        self._property_changed('portfolio_managers')
+        self.__portfolio_managers = value        
 
     @property
     def asset_parameters_commodity_sector(self) -> str:
@@ -19638,8 +20007,8 @@ class FieldValueMap(Base):
 
     @asset_parameters_commodity_sector.setter
     def asset_parameters_commodity_sector(self, value: str):
-        self.__asset_parameters_commodity_sector = value
-        self._property_changed('asset_parameters_commodity_sector')        
+        self._property_changed('asset_parameters_commodity_sector')
+        self.__asset_parameters_commodity_sector = value        
 
     @property
     def bos_in_ticks(self) -> float:
@@ -19648,8 +20017,8 @@ class FieldValueMap(Base):
 
     @bos_in_ticks.setter
     def bos_in_ticks(self, value: float):
-        self.__bos_in_ticks = value
-        self._property_changed('bos_in_ticks')        
+        self._property_changed('bos_in_ticks')
+        self.__bos_in_ticks = value        
 
     @property
     def price_notation2(self) -> float:
@@ -19659,8 +20028,8 @@ class FieldValueMap(Base):
 
     @price_notation2.setter
     def price_notation2(self, value: float):
-        self.__price_notation2 = value
-        self._property_changed('price_notation2')        
+        self._property_changed('price_notation2')
+        self.__price_notation2 = value        
 
     @property
     def market_buffer_threshold(self) -> float:
@@ -19669,8 +20038,8 @@ class FieldValueMap(Base):
 
     @market_buffer_threshold.setter
     def market_buffer_threshold(self, value: float):
-        self.__market_buffer_threshold = value
-        self._property_changed('market_buffer_threshold')        
+        self._property_changed('market_buffer_threshold')
+        self.__market_buffer_threshold = value        
 
     @property
     def price_notation3(self) -> float:
@@ -19680,8 +20049,8 @@ class FieldValueMap(Base):
 
     @price_notation3.setter
     def price_notation3(self, value: float):
-        self.__price_notation3 = value
-        self._property_changed('price_notation3')        
+        self._property_changed('price_notation3')
+        self.__price_notation3 = value        
 
     @property
     def cap_floor_vol(self) -> float:
@@ -19691,8 +20060,8 @@ class FieldValueMap(Base):
 
     @cap_floor_vol.setter
     def cap_floor_vol(self, value: float):
-        self.__cap_floor_vol = value
-        self._property_changed('cap_floor_vol')        
+        self._property_changed('cap_floor_vol')
+        self.__cap_floor_vol = value        
 
     @property
     def notional(self) -> float:
@@ -19701,8 +20070,8 @@ class FieldValueMap(Base):
 
     @notional.setter
     def notional(self, value: float):
-        self.__notional = value
-        self._property_changed('notional')        
+        self._property_changed('notional')
+        self.__notional = value        
 
     @property
     def es_disclosure_percentage(self) -> float:
@@ -19711,8 +20080,8 @@ class FieldValueMap(Base):
 
     @es_disclosure_percentage.setter
     def es_disclosure_percentage(self, value: float):
-        self.__es_disclosure_percentage = value
-        self._property_changed('es_disclosure_percentage')        
+        self._property_changed('es_disclosure_percentage')
+        self.__es_disclosure_percentage = value        
 
     @property
     def investment_income(self) -> float:
@@ -19721,8 +20090,8 @@ class FieldValueMap(Base):
 
     @investment_income.setter
     def investment_income(self, value: float):
-        self.__investment_income = value
-        self._property_changed('investment_income')        
+        self._property_changed('investment_income')
+        self.__investment_income = value        
 
     @property
     def client_short_name(self) -> str:
@@ -19731,8 +20100,8 @@ class FieldValueMap(Base):
 
     @client_short_name.setter
     def client_short_name(self, value: str):
-        self.__client_short_name = value
-        self._property_changed('client_short_name')        
+        self._property_changed('client_short_name')
+        self.__client_short_name = value        
 
     @property
     def bid_plus_ask(self) -> float:
@@ -19741,8 +20110,8 @@ class FieldValueMap(Base):
 
     @bid_plus_ask.setter
     def bid_plus_ask(self, value: float):
-        self.__bid_plus_ask = value
-        self._property_changed('bid_plus_ask')        
+        self._property_changed('bid_plus_ask')
+        self.__bid_plus_ask = value        
 
     @property
     def election_odds(self) -> float:
@@ -19751,8 +20120,8 @@ class FieldValueMap(Base):
 
     @election_odds.setter
     def election_odds(self, value: float):
-        self.__election_odds = value
-        self._property_changed('election_odds')        
+        self._property_changed('election_odds')
+        self.__election_odds = value        
 
     @property
     def total(self) -> float:
@@ -19761,8 +20130,8 @@ class FieldValueMap(Base):
 
     @total.setter
     def total(self, value: float):
-        self.__total = value
-        self._property_changed('total')        
+        self._property_changed('total')
+        self.__total = value        
 
     @property
     def asset_id(self) -> str:
@@ -19771,8 +20140,8 @@ class FieldValueMap(Base):
 
     @asset_id.setter
     def asset_id(self, value: str):
-        self.__asset_id = value
-        self._property_changed('asset_id')        
+        self._property_changed('asset_id')
+        self.__asset_id = value        
 
     @property
     def mkt_type(self) -> str:
@@ -19781,8 +20150,8 @@ class FieldValueMap(Base):
 
     @mkt_type.setter
     def mkt_type(self, value: str):
-        self.__mkt_type = value
-        self._property_changed('mkt_type')        
+        self._property_changed('mkt_type')
+        self.__mkt_type = value        
 
     @property
     def last_updated_time(self) -> datetime.datetime:
@@ -19791,8 +20160,8 @@ class FieldValueMap(Base):
 
     @last_updated_time.setter
     def last_updated_time(self, value: datetime.datetime):
-        self.__last_updated_time = value
-        self._property_changed('last_updated_time')        
+        self._property_changed('last_updated_time')
+        self.__last_updated_time = value        
 
     @property
     def pricing_location(self) -> str:
@@ -19801,8 +20170,8 @@ class FieldValueMap(Base):
 
     @pricing_location.setter
     def pricing_location(self, value: str):
-        self.__pricing_location = value
-        self._property_changed('pricing_location')        
+        self._property_changed('pricing_location')
+        self.__pricing_location = value        
 
     @property
     def yield30_day(self) -> float:
@@ -19811,8 +20180,8 @@ class FieldValueMap(Base):
 
     @yield30_day.setter
     def yield30_day(self, value: float):
-        self.__yield30_day = value
-        self._property_changed('yield30_day')        
+        self._property_changed('yield30_day')
+        self.__yield30_day = value        
 
     @property
     def beta(self) -> float:
@@ -19821,8 +20190,8 @@ class FieldValueMap(Base):
 
     @beta.setter
     def beta(self, value: float):
-        self.__beta = value
-        self._property_changed('beta')        
+        self._property_changed('beta')
+        self.__beta = value        
 
     @property
     def upfront_payment_date(self) -> datetime.date:
@@ -19831,8 +20200,8 @@ class FieldValueMap(Base):
 
     @upfront_payment_date.setter
     def upfront_payment_date(self, value: datetime.date):
-        self.__upfront_payment_date = value
-        self._property_changed('upfront_payment_date')        
+        self._property_changed('upfront_payment_date')
+        self.__upfront_payment_date = value        
 
     @property
     def long_exposure(self) -> float:
@@ -19842,8 +20211,8 @@ class FieldValueMap(Base):
 
     @long_exposure.setter
     def long_exposure(self, value: float):
-        self.__long_exposure = value
-        self._property_changed('long_exposure')        
+        self._property_changed('long_exposure')
+        self.__long_exposure = value        
 
     @property
     def tcm_cost_participation_rate20_pct(self) -> float:
@@ -19852,8 +20221,8 @@ class FieldValueMap(Base):
 
     @tcm_cost_participation_rate20_pct.setter
     def tcm_cost_participation_rate20_pct(self, value: float):
-        self.__tcm_cost_participation_rate20_pct = value
-        self._property_changed('tcm_cost_participation_rate20_pct')        
+        self._property_changed('tcm_cost_participation_rate20_pct')
+        self.__tcm_cost_participation_rate20_pct = value        
 
     @property
     def multi_asset_class_swap(self) -> str:
@@ -19862,8 +20231,8 @@ class FieldValueMap(Base):
 
     @multi_asset_class_swap.setter
     def multi_asset_class_swap(self, value: str):
-        self.__multi_asset_class_swap = value
-        self._property_changed('multi_asset_class_swap')        
+        self._property_changed('multi_asset_class_swap')
+        self.__multi_asset_class_swap = value        
 
     @property
     def idea_status(self) -> str:
@@ -19872,8 +20241,8 @@ class FieldValueMap(Base):
 
     @idea_status.setter
     def idea_status(self, value: str):
-        self.__idea_status = value
-        self._property_changed('idea_status')        
+        self._property_changed('idea_status')
+        self.__idea_status = value        
 
     @property
     def contract_subtype(self) -> str:
@@ -19882,8 +20251,8 @@ class FieldValueMap(Base):
 
     @contract_subtype.setter
     def contract_subtype(self, value: str):
-        self.__contract_subtype = value
-        self._property_changed('contract_subtype')        
+        self._property_changed('contract_subtype')
+        self.__contract_subtype = value        
 
     @property
     def fx_forecast(self) -> float:
@@ -19892,8 +20261,8 @@ class FieldValueMap(Base):
 
     @fx_forecast.setter
     def fx_forecast(self, value: float):
-        self.__fx_forecast = value
-        self._property_changed('fx_forecast')        
+        self._property_changed('fx_forecast')
+        self.__fx_forecast = value        
 
     @property
     def fixing_time_label(self) -> str:
@@ -19902,8 +20271,8 @@ class FieldValueMap(Base):
 
     @fixing_time_label.setter
     def fixing_time_label(self, value: str):
-        self.__fixing_time_label = value
-        self._property_changed('fixing_time_label')        
+        self._property_changed('fixing_time_label')
+        self.__fixing_time_label = value        
 
     @property
     def implementation_id(self) -> str:
@@ -19912,8 +20281,8 @@ class FieldValueMap(Base):
 
     @implementation_id.setter
     def implementation_id(self, value: str):
-        self.__implementation_id = value
-        self._property_changed('implementation_id')        
+        self._property_changed('implementation_id')
+        self.__implementation_id = value        
 
     @property
     def fill_id(self) -> str:
@@ -19922,8 +20291,8 @@ class FieldValueMap(Base):
 
     @fill_id.setter
     def fill_id(self, value: str):
-        self.__fill_id = value
-        self._property_changed('fill_id')        
+        self._property_changed('fill_id')
+        self.__fill_id = value        
 
     @property
     def excess_returns(self) -> float:
@@ -19932,8 +20301,8 @@ class FieldValueMap(Base):
 
     @excess_returns.setter
     def excess_returns(self, value: float):
-        self.__excess_returns = value
-        self._property_changed('excess_returns')        
+        self._property_changed('excess_returns')
+        self.__excess_returns = value        
 
     @property
     def dollar_return(self) -> float:
@@ -19942,8 +20311,8 @@ class FieldValueMap(Base):
 
     @dollar_return.setter
     def dollar_return(self, value: float):
-        self.__dollar_return = value
-        self._property_changed('dollar_return')        
+        self._property_changed('dollar_return')
+        self.__dollar_return = value        
 
     @property
     def es_numeric_score(self) -> float:
@@ -19952,8 +20321,8 @@ class FieldValueMap(Base):
 
     @es_numeric_score.setter
     def es_numeric_score(self, value: float):
-        self.__es_numeric_score = value
-        self._property_changed('es_numeric_score')        
+        self._property_changed('es_numeric_score')
+        self.__es_numeric_score = value        
 
     @property
     def in_benchmark(self) -> bool:
@@ -19962,8 +20331,18 @@ class FieldValueMap(Base):
 
     @in_benchmark.setter
     def in_benchmark(self, value: bool):
-        self.__in_benchmark = value
-        self._property_changed('in_benchmark')        
+        self._property_changed('in_benchmark')
+        self.__in_benchmark = value        
+
+    @property
+    def return_on_equity(self) -> float:
+        """Return on equity."""
+        return self.__return_on_equity
+
+    @return_on_equity.setter
+    def return_on_equity(self, value: float):
+        self._property_changed('return_on_equity')
+        self.__return_on_equity = value        
 
     @property
     def action_sdr(self) -> str:
@@ -19974,8 +20353,8 @@ class FieldValueMap(Base):
 
     @action_sdr.setter
     def action_sdr(self, value: str):
-        self.__action_sdr = value
-        self._property_changed('action_sdr')        
+        self._property_changed('action_sdr')
+        self.__action_sdr = value        
 
     @property
     def restriction_end_date(self) -> datetime.date:
@@ -19984,8 +20363,8 @@ class FieldValueMap(Base):
 
     @restriction_end_date.setter
     def restriction_end_date(self, value: datetime.date):
-        self.__restriction_end_date = value
-        self._property_changed('restriction_end_date')        
+        self._property_changed('restriction_end_date')
+        self.__restriction_end_date = value        
 
     @property
     def queue_in_lots_description(self) -> str:
@@ -19995,8 +20374,8 @@ class FieldValueMap(Base):
 
     @queue_in_lots_description.setter
     def queue_in_lots_description(self, value: str):
-        self.__queue_in_lots_description = value
-        self._property_changed('queue_in_lots_description')        
+        self._property_changed('queue_in_lots_description')
+        self.__queue_in_lots_description = value        
 
     @property
     def objective(self) -> str:
@@ -20005,8 +20384,8 @@ class FieldValueMap(Base):
 
     @objective.setter
     def objective(self, value: str):
-        self.__objective = value
-        self._property_changed('objective')        
+        self._property_changed('objective')
+        self.__objective = value        
 
     @property
     def nav_price(self) -> float:
@@ -20016,8 +20395,8 @@ class FieldValueMap(Base):
 
     @nav_price.setter
     def nav_price(self, value: float):
-        self.__nav_price = value
-        self._property_changed('nav_price')        
+        self._property_changed('nav_price')
+        self.__nav_price = value        
 
     @property
     def precipitation(self) -> float:
@@ -20026,8 +20405,8 @@ class FieldValueMap(Base):
 
     @precipitation.setter
     def precipitation(self, value: float):
-        self.__precipitation = value
-        self._property_changed('precipitation')        
+        self._property_changed('precipitation')
+        self.__precipitation = value        
 
     @property
     def hedge_notional(self) -> float:
@@ -20036,8 +20415,8 @@ class FieldValueMap(Base):
 
     @hedge_notional.setter
     def hedge_notional(self, value: float):
-        self.__hedge_notional = value
-        self._property_changed('hedge_notional')        
+        self._property_changed('hedge_notional')
+        self.__hedge_notional = value        
 
     @property
     def ask_low(self) -> float:
@@ -20046,8 +20425,8 @@ class FieldValueMap(Base):
 
     @ask_low.setter
     def ask_low(self, value: float):
-        self.__ask_low = value
-        self._property_changed('ask_low')        
+        self._property_changed('ask_low')
+        self.__ask_low = value        
 
     @property
     def beta_adjusted_net_exposure(self) -> float:
@@ -20056,8 +20435,8 @@ class FieldValueMap(Base):
 
     @beta_adjusted_net_exposure.setter
     def beta_adjusted_net_exposure(self, value: float):
-        self.__beta_adjusted_net_exposure = value
-        self._property_changed('beta_adjusted_net_exposure')        
+        self._property_changed('beta_adjusted_net_exposure')
+        self.__beta_adjusted_net_exposure = value        
 
     @property
     def avg_monthly_yield(self) -> float:
@@ -20067,8 +20446,28 @@ class FieldValueMap(Base):
 
     @avg_monthly_yield.setter
     def avg_monthly_yield(self, value: float):
-        self.__avg_monthly_yield = value
-        self._property_changed('avg_monthly_yield')        
+        self._property_changed('avg_monthly_yield')
+        self.__avg_monthly_yield = value        
+
+    @property
+    def period_direction(self) -> str:
+        """Direction of the outlook period."""
+        return self.__period_direction
+
+    @period_direction.setter
+    def period_direction(self, value: str):
+        self._property_changed('period_direction')
+        self.__period_direction = value        
+
+    @property
+    def earnings_per_share(self) -> float:
+        """Earnings per share."""
+        return self.__earnings_per_share
+
+    @earnings_per_share.setter
+    def earnings_per_share(self, value: float):
+        self._property_changed('earnings_per_share')
+        self.__earnings_per_share = value        
 
     @property
     def strike_percentage(self) -> float:
@@ -20077,8 +20476,8 @@ class FieldValueMap(Base):
 
     @strike_percentage.setter
     def strike_percentage(self, value: float):
-        self.__strike_percentage = value
-        self._property_changed('strike_percentage')        
+        self._property_changed('strike_percentage')
+        self.__strike_percentage = value        
 
     @property
     def excess_return_price(self) -> float:
@@ -20087,8 +20486,8 @@ class FieldValueMap(Base):
 
     @excess_return_price.setter
     def excess_return_price(self, value: float):
-        self.__excess_return_price = value
-        self._property_changed('excess_return_price')        
+        self._property_changed('excess_return_price')
+        self.__excess_return_price = value        
 
     @property
     def prev_close_bid(self) -> float:
@@ -20097,8 +20496,8 @@ class FieldValueMap(Base):
 
     @prev_close_bid.setter
     def prev_close_bid(self, value: float):
-        self.__prev_close_bid = value
-        self._property_changed('prev_close_bid')        
+        self._property_changed('prev_close_bid')
+        self.__prev_close_bid = value        
 
     @property
     def fx_pnl(self) -> float:
@@ -20107,8 +20506,8 @@ class FieldValueMap(Base):
 
     @fx_pnl.setter
     def fx_pnl(self, value: float):
-        self.__fx_pnl = value
-        self._property_changed('fx_pnl')        
+        self._property_changed('fx_pnl')
+        self.__fx_pnl = value        
 
     @property
     def tcm_cost_horizon16_day(self) -> float:
@@ -20117,8 +20516,18 @@ class FieldValueMap(Base):
 
     @tcm_cost_horizon16_day.setter
     def tcm_cost_horizon16_day(self, value: float):
-        self.__tcm_cost_horizon16_day = value
-        self._property_changed('tcm_cost_horizon16_day')        
+        self._property_changed('tcm_cost_horizon16_day')
+        self.__tcm_cost_horizon16_day = value        
+
+    @property
+    def sales_per_share(self) -> float:
+        """Sales per share."""
+        return self.__sales_per_share
+
+    @sales_per_share.setter
+    def sales_per_share(self, value: float):
+        self._property_changed('sales_per_share')
+        self.__sales_per_share = value        
 
     @property
     def unadjusted_close(self) -> float:
@@ -20128,8 +20537,8 @@ class FieldValueMap(Base):
 
     @unadjusted_close.setter
     def unadjusted_close(self, value: float):
-        self.__unadjusted_close = value
-        self._property_changed('unadjusted_close')        
+        self._property_changed('unadjusted_close')
+        self.__unadjusted_close = value        
 
     @property
     def loan_date(self) -> datetime.date:
@@ -20138,8 +20547,8 @@ class FieldValueMap(Base):
 
     @loan_date.setter
     def loan_date(self, value: datetime.date):
-        self.__loan_date = value
-        self._property_changed('loan_date')        
+        self._property_changed('loan_date')
+        self.__loan_date = value        
 
     @property
     def lending_sec_id(self) -> str:
@@ -20148,8 +20557,8 @@ class FieldValueMap(Base):
 
     @lending_sec_id.setter
     def lending_sec_id(self, value: str):
-        self.__lending_sec_id = value
-        self._property_changed('lending_sec_id')        
+        self._property_changed('lending_sec_id')
+        self.__lending_sec_id = value        
 
     @property
     def equity_theta(self) -> float:
@@ -20158,8 +20567,8 @@ class FieldValueMap(Base):
 
     @equity_theta.setter
     def equity_theta(self, value: float):
-        self.__equity_theta = value
-        self._property_changed('equity_theta')        
+        self._property_changed('equity_theta')
+        self.__equity_theta = value        
 
     @property
     def execution_fee(self) -> float:
@@ -20169,8 +20578,8 @@ class FieldValueMap(Base):
 
     @execution_fee.setter
     def execution_fee(self, value: float):
-        self.__execution_fee = value
-        self._property_changed('execution_fee')        
+        self._property_changed('execution_fee')
+        self.__execution_fee = value        
 
     @property
     def start_date(self) -> datetime.date:
@@ -20179,8 +20588,8 @@ class FieldValueMap(Base):
 
     @start_date.setter
     def start_date(self, value: datetime.date):
-        self.__start_date = value
-        self._property_changed('start_date')        
+        self._property_changed('start_date')
+        self.__start_date = value        
 
     @property
     def collateral_percentage_actual(self) -> float:
@@ -20189,8 +20598,8 @@ class FieldValueMap(Base):
 
     @collateral_percentage_actual.setter
     def collateral_percentage_actual(self, value: float):
-        self.__collateral_percentage_actual = value
-        self._property_changed('collateral_percentage_actual')        
+        self._property_changed('collateral_percentage_actual')
+        self.__collateral_percentage_actual = value        
 
     @property
     def mixed_swap(self) -> str:
@@ -20199,8 +20608,8 @@ class FieldValueMap(Base):
 
     @mixed_swap.setter
     def mixed_swap(self, value: str):
-        self.__mixed_swap = value
-        self._property_changed('mixed_swap')        
+        self._property_changed('mixed_swap')
+        self.__mixed_swap = value        
 
     @property
     def snowfall(self) -> float:
@@ -20209,8 +20618,8 @@ class FieldValueMap(Base):
 
     @snowfall.setter
     def snowfall(self, value: float):
-        self.__snowfall = value
-        self._property_changed('snowfall')        
+        self._property_changed('snowfall')
+        self.__snowfall = value        
 
     @property
     def mic(self) -> str:
@@ -20219,8 +20628,8 @@ class FieldValueMap(Base):
 
     @mic.setter
     def mic(self, value: str):
-        self.__mic = value
-        self._property_changed('mic')        
+        self._property_changed('mic')
+        self.__mic = value        
 
     @property
     def mid(self) -> float:
@@ -20229,8 +20638,8 @@ class FieldValueMap(Base):
 
     @mid.setter
     def mid(self, value: float):
-        self.__mid = value
-        self._property_changed('mid')        
+        self._property_changed('mid')
+        self.__mid = value        
 
     @property
     def relative_return_ytd(self) -> float:
@@ -20239,8 +20648,8 @@ class FieldValueMap(Base):
 
     @relative_return_ytd.setter
     def relative_return_ytd(self, value: float):
-        self.__relative_return_ytd = value
-        self._property_changed('relative_return_ytd')        
+        self._property_changed('relative_return_ytd')
+        self.__relative_return_ytd = value        
 
     @property
     def long(self) -> float:
@@ -20249,8 +20658,8 @@ class FieldValueMap(Base):
 
     @long.setter
     def long(self, value: float):
-        self.__long = value
-        self._property_changed('long')        
+        self._property_changed('long')
+        self.__long = value        
 
     @property
     def region_code(self) -> str:
@@ -20259,8 +20668,8 @@ class FieldValueMap(Base):
 
     @region_code.setter
     def region_code(self, value: str):
-        self.__region_code = value
-        self._property_changed('region_code')        
+        self._property_changed('region_code')
+        self.__region_code = value        
 
     @property
     def long_weight(self) -> float:
@@ -20272,8 +20681,8 @@ class FieldValueMap(Base):
 
     @long_weight.setter
     def long_weight(self, value: float):
-        self.__long_weight = value
-        self._property_changed('long_weight')        
+        self._property_changed('long_weight')
+        self.__long_weight = value        
 
     @property
     def calculation_time(self) -> int:
@@ -20282,8 +20691,8 @@ class FieldValueMap(Base):
 
     @calculation_time.setter
     def calculation_time(self, value: int):
-        self.__calculation_time = value
-        self._property_changed('calculation_time')        
+        self._property_changed('calculation_time')
+        self.__calculation_time = value        
 
     @property
     def average_realized_variance(self) -> float:
@@ -20292,8 +20701,8 @@ class FieldValueMap(Base):
 
     @average_realized_variance.setter
     def average_realized_variance(self, value: float):
-        self.__average_realized_variance = value
-        self._property_changed('average_realized_variance')        
+        self._property_changed('average_realized_variance')
+        self.__average_realized_variance = value        
 
     @property
     def financial_returns_score(self) -> float:
@@ -20303,8 +20712,8 @@ class FieldValueMap(Base):
 
     @financial_returns_score.setter
     def financial_returns_score(self, value: float):
-        self.__financial_returns_score = value
-        self._property_changed('financial_returns_score')        
+        self._property_changed('financial_returns_score')
+        self.__financial_returns_score = value        
 
     @property
     def net_change(self) -> float:
@@ -20314,8 +20723,8 @@ class FieldValueMap(Base):
 
     @net_change.setter
     def net_change(self, value: float):
-        self.__net_change = value
-        self._property_changed('net_change')        
+        self._property_changed('net_change')
+        self.__net_change = value        
 
     @property
     def non_symbol_dimensions(self) -> Tuple[str, ...]:
@@ -20324,8 +20733,8 @@ class FieldValueMap(Base):
 
     @non_symbol_dimensions.setter
     def non_symbol_dimensions(self, value: Tuple[str, ...]):
-        self.__non_symbol_dimensions = value
-        self._property_changed('non_symbol_dimensions')        
+        self._property_changed('non_symbol_dimensions')
+        self.__non_symbol_dimensions = value        
 
     @property
     def leg_two_fixed_payment_currency(self) -> str:
@@ -20334,8 +20743,8 @@ class FieldValueMap(Base):
 
     @leg_two_fixed_payment_currency.setter
     def leg_two_fixed_payment_currency(self, value: str):
-        self.__leg_two_fixed_payment_currency = value
-        self._property_changed('leg_two_fixed_payment_currency')        
+        self._property_changed('leg_two_fixed_payment_currency')
+        self.__leg_two_fixed_payment_currency = value        
 
     @property
     def swap_type(self) -> str:
@@ -20344,8 +20753,8 @@ class FieldValueMap(Base):
 
     @swap_type.setter
     def swap_type(self, value: str):
-        self.__swap_type = value
-        self._property_changed('swap_type')        
+        self._property_changed('swap_type')
+        self.__swap_type = value        
 
     @property
     def sell_settle_date(self) -> datetime.date:
@@ -20354,8 +20763,8 @@ class FieldValueMap(Base):
 
     @sell_settle_date.setter
     def sell_settle_date(self, value: datetime.date):
-        self.__sell_settle_date = value
-        self._property_changed('sell_settle_date')        
+        self._property_changed('sell_settle_date')
+        self.__sell_settle_date = value        
 
     @property
     def new_ideas_ytd(self) -> float:
@@ -20364,8 +20773,8 @@ class FieldValueMap(Base):
 
     @new_ideas_ytd.setter
     def new_ideas_ytd(self, value: float):
-        self.__new_ideas_ytd = value
-        self._property_changed('new_ideas_ytd')        
+        self._property_changed('new_ideas_ytd')
+        self.__new_ideas_ytd = value        
 
     @property
     def management_fee(self) -> Union[Op, float]:
@@ -20373,8 +20782,8 @@ class FieldValueMap(Base):
 
     @management_fee.setter
     def management_fee(self, value: Union[Op, float]):
-        self.__management_fee = value
-        self._property_changed('management_fee')        
+        self._property_changed('management_fee')
+        self.__management_fee = value        
 
     @property
     def open(self) -> float:
@@ -20384,8 +20793,8 @@ class FieldValueMap(Base):
 
     @open.setter
     def open(self, value: float):
-        self.__open = value
-        self._property_changed('open')        
+        self._property_changed('open')
+        self.__open = value        
 
     @property
     def source_id(self) -> str:
@@ -20394,8 +20803,8 @@ class FieldValueMap(Base):
 
     @source_id.setter
     def source_id(self, value: str):
-        self.__source_id = value
-        self._property_changed('source_id')        
+        self._property_changed('source_id')
+        self.__source_id = value        
 
     @property
     def cusip(self) -> str:
@@ -20405,8 +20814,8 @@ class FieldValueMap(Base):
 
     @cusip.setter
     def cusip(self, value: str):
-        self.__cusip = value
-        self._property_changed('cusip')        
+        self._property_changed('cusip')
+        self.__cusip = value        
 
     @property
     def idea_activity_time(self) -> datetime.datetime:
@@ -20417,8 +20826,8 @@ class FieldValueMap(Base):
 
     @idea_activity_time.setter
     def idea_activity_time(self, value: datetime.datetime):
-        self.__idea_activity_time = value
-        self._property_changed('idea_activity_time')        
+        self._property_changed('idea_activity_time')
+        self.__idea_activity_time = value        
 
     @property
     def touch_spread_score(self) -> float:
@@ -20427,8 +20836,8 @@ class FieldValueMap(Base):
 
     @touch_spread_score.setter
     def touch_spread_score(self, value: float):
-        self.__touch_spread_score = value
-        self._property_changed('touch_spread_score')        
+        self._property_changed('touch_spread_score')
+        self.__touch_spread_score = value        
 
     @property
     def spread_option_atm_fwd_rate(self) -> float:
@@ -20437,8 +20846,8 @@ class FieldValueMap(Base):
 
     @spread_option_atm_fwd_rate.setter
     def spread_option_atm_fwd_rate(self, value: float):
-        self.__spread_option_atm_fwd_rate = value
-        self._property_changed('spread_option_atm_fwd_rate')        
+        self._property_changed('spread_option_atm_fwd_rate')
+        self.__spread_option_atm_fwd_rate = value        
 
     @property
     def net_exposure(self) -> float:
@@ -20448,8 +20857,8 @@ class FieldValueMap(Base):
 
     @net_exposure.setter
     def net_exposure(self, value: float):
-        self.__net_exposure = value
-        self._property_changed('net_exposure')        
+        self._property_changed('net_exposure')
+        self.__net_exposure = value        
 
     @property
     def frequency(self) -> str:
@@ -20458,8 +20867,8 @@ class FieldValueMap(Base):
 
     @frequency.setter
     def frequency(self, value: str):
-        self.__frequency = value
-        self._property_changed('frequency')        
+        self._property_changed('frequency')
+        self.__frequency = value        
 
     @property
     def activity_id(self) -> str:
@@ -20468,8 +20877,8 @@ class FieldValueMap(Base):
 
     @activity_id.setter
     def activity_id(self, value: str):
-        self.__activity_id = value
-        self._property_changed('activity_id')        
+        self._property_changed('activity_id')
+        self.__activity_id = value        
 
     @property
     def estimated_impact(self) -> float:
@@ -20481,8 +20890,8 @@ class FieldValueMap(Base):
 
     @estimated_impact.setter
     def estimated_impact(self, value: float):
-        self.__estimated_impact = value
-        self._property_changed('estimated_impact')        
+        self._property_changed('estimated_impact')
+        self.__estimated_impact = value        
 
     @property
     def loan_spread_bucket(self) -> str:
@@ -20492,8 +20901,8 @@ class FieldValueMap(Base):
 
     @loan_spread_bucket.setter
     def loan_spread_bucket(self, value: str):
-        self.__loan_spread_bucket = value
-        self._property_changed('loan_spread_bucket')        
+        self._property_changed('loan_spread_bucket')
+        self.__loan_spread_bucket = value        
 
     @property
     def event_description(self) -> str:
@@ -20503,8 +20912,8 @@ class FieldValueMap(Base):
 
     @event_description.setter
     def event_description(self, value: str):
-        self.__event_description = value
-        self._property_changed('event_description')        
+        self._property_changed('event_description')
+        self.__event_description = value        
 
     @property
     def provide_non_display_tape_a(self) -> float:
@@ -20513,8 +20922,8 @@ class FieldValueMap(Base):
 
     @provide_non_display_tape_a.setter
     def provide_non_display_tape_a(self, value: float):
-        self.__provide_non_display_tape_a = value
-        self._property_changed('provide_non_display_tape_a')        
+        self._property_changed('provide_non_display_tape_a')
+        self.__provide_non_display_tape_a = value        
 
     @property
     def strike_reference(self) -> str:
@@ -20523,8 +20932,8 @@ class FieldValueMap(Base):
 
     @strike_reference.setter
     def strike_reference(self, value: str):
-        self.__strike_reference = value
-        self._property_changed('strike_reference')        
+        self._property_changed('strike_reference')
+        self.__strike_reference = value        
 
     @property
     def details(self) -> str:
@@ -20533,8 +20942,8 @@ class FieldValueMap(Base):
 
     @details.setter
     def details(self, value: str):
-        self.__details = value
-        self._property_changed('details')        
+        self._property_changed('details')
+        self.__details = value        
 
     @property
     def provide_non_display_tape_c(self) -> float:
@@ -20543,8 +20952,8 @@ class FieldValueMap(Base):
 
     @provide_non_display_tape_c.setter
     def provide_non_display_tape_c(self, value: float):
-        self.__provide_non_display_tape_c = value
-        self._property_changed('provide_non_display_tape_c')        
+        self._property_changed('provide_non_display_tape_c')
+        self.__provide_non_display_tape_c = value        
 
     @property
     def asset_count(self) -> float:
@@ -20553,8 +20962,8 @@ class FieldValueMap(Base):
 
     @asset_count.setter
     def asset_count(self, value: float):
-        self.__asset_count = value
-        self._property_changed('asset_count')        
+        self._property_changed('asset_count')
+        self.__asset_count = value        
 
     @property
     def provide_non_display_tape_b(self) -> float:
@@ -20563,8 +20972,8 @@ class FieldValueMap(Base):
 
     @provide_non_display_tape_b.setter
     def provide_non_display_tape_b(self, value: float):
-        self.__provide_non_display_tape_b = value
-        self._property_changed('provide_non_display_tape_b')        
+        self._property_changed('provide_non_display_tape_b')
+        self.__provide_non_display_tape_b = value        
 
     @property
     def sector(self) -> str:
@@ -20573,8 +20982,18 @@ class FieldValueMap(Base):
 
     @sector.setter
     def sector(self, value: str):
-        self.__sector = value
-        self._property_changed('sector')        
+        self._property_changed('sector')
+        self.__sector = value        
+
+    @property
+    def fundamental_metric(self) -> float:
+        """Fundamental metric value."""
+        return self.__fundamental_metric
+
+    @fundamental_metric.setter
+    def fundamental_metric(self, value: float):
+        self._property_changed('fundamental_metric')
+        self.__fundamental_metric = value        
 
     @property
     def absolute_value(self) -> float:
@@ -20583,8 +21002,8 @@ class FieldValueMap(Base):
 
     @absolute_value.setter
     def absolute_value(self, value: float):
-        self.__absolute_value = value
-        self._property_changed('absolute_value')        
+        self._property_changed('absolute_value')
+        self.__absolute_value = value        
 
     @property
     def closing_report(self) -> str:
@@ -20593,8 +21012,8 @@ class FieldValueMap(Base):
 
     @closing_report.setter
     def closing_report(self, value: str):
-        self.__closing_report = value
-        self._property_changed('closing_report')        
+        self._property_changed('closing_report')
+        self.__closing_report = value        
 
     @property
     def mctr(self) -> float:
@@ -20604,8 +21023,8 @@ class FieldValueMap(Base):
 
     @mctr.setter
     def mctr(self, value: float):
-        self.__mctr = value
-        self._property_changed('mctr')        
+        self._property_changed('mctr')
+        self.__mctr = value        
 
     @property
     def historical_close(self) -> float:
@@ -20614,8 +21033,8 @@ class FieldValueMap(Base):
 
     @historical_close.setter
     def historical_close(self, value: float):
-        self.__historical_close = value
-        self._property_changed('historical_close')        
+        self._property_changed('historical_close')
+        self.__historical_close = value        
 
     @property
     def asset_count_priced(self) -> float:
@@ -20624,8 +21043,8 @@ class FieldValueMap(Base):
 
     @asset_count_priced.setter
     def asset_count_priced(self, value: float):
-        self.__asset_count_priced = value
-        self._property_changed('asset_count_priced')        
+        self._property_changed('asset_count_priced')
+        self.__asset_count_priced = value        
 
     @property
     def idea_id(self) -> str:
@@ -20634,8 +21053,8 @@ class FieldValueMap(Base):
 
     @idea_id.setter
     def idea_id(self, value: str):
-        self.__idea_id = value
-        self._property_changed('idea_id')        
+        self._property_changed('idea_id')
+        self.__idea_id = value        
 
     @property
     def comment_status(self) -> str:
@@ -20644,8 +21063,8 @@ class FieldValueMap(Base):
 
     @comment_status.setter
     def comment_status(self, value: str):
-        self.__comment_status = value
-        self._property_changed('comment_status')        
+        self._property_changed('comment_status')
+        self.__comment_status = value        
 
     @property
     def marginal_cost(self) -> float:
@@ -20654,8 +21073,8 @@ class FieldValueMap(Base):
 
     @marginal_cost.setter
     def marginal_cost(self, value: float):
-        self.__marginal_cost = value
-        self._property_changed('marginal_cost')        
+        self._property_changed('marginal_cost')
+        self.__marginal_cost = value        
 
     @property
     def settlement_currency(self) -> str:
@@ -20664,8 +21083,8 @@ class FieldValueMap(Base):
 
     @settlement_currency.setter
     def settlement_currency(self, value: str):
-        self.__settlement_currency = value
-        self._property_changed('settlement_currency')        
+        self._property_changed('settlement_currency')
+        self.__settlement_currency = value        
 
     @property
     def indication_of_collateralization(self) -> str:
@@ -20676,8 +21095,8 @@ class FieldValueMap(Base):
 
     @indication_of_collateralization.setter
     def indication_of_collateralization(self, value: str):
-        self.__indication_of_collateralization = value
-        self._property_changed('indication_of_collateralization')        
+        self._property_changed('indication_of_collateralization')
+        self.__indication_of_collateralization = value        
 
     @property
     def liq_wkly(self) -> float:
@@ -20687,8 +21106,8 @@ class FieldValueMap(Base):
 
     @liq_wkly.setter
     def liq_wkly(self, value: float):
-        self.__liq_wkly = value
-        self._property_changed('liq_wkly')        
+        self._property_changed('liq_wkly')
+        self.__liq_wkly = value        
 
     @property
     def lending_partner_fee(self) -> float:
@@ -20697,8 +21116,8 @@ class FieldValueMap(Base):
 
     @lending_partner_fee.setter
     def lending_partner_fee(self, value: float):
-        self.__lending_partner_fee = value
-        self._property_changed('lending_partner_fee')        
+        self._property_changed('lending_partner_fee')
+        self.__lending_partner_fee = value        
 
     @property
     def region(self) -> str:
@@ -20707,8 +21126,8 @@ class FieldValueMap(Base):
 
     @region.setter
     def region(self, value: str):
-        self.__region = value
-        self._property_changed('region')        
+        self._property_changed('region')
+        self.__region = value        
 
     @property
     def option_premium(self) -> float:
@@ -20717,8 +21136,8 @@ class FieldValueMap(Base):
 
     @option_premium.setter
     def option_premium(self, value: float):
-        self.__option_premium = value
-        self._property_changed('option_premium')        
+        self._property_changed('option_premium')
+        self.__option_premium = value        
 
     @property
     def owner_name(self) -> str:
@@ -20727,8 +21146,8 @@ class FieldValueMap(Base):
 
     @owner_name.setter
     def owner_name(self, value: str):
-        self.__owner_name = value
-        self._property_changed('owner_name')        
+        self._property_changed('owner_name')
+        self.__owner_name = value        
 
     @property
     def last_updated_by_id(self) -> str:
@@ -20737,8 +21156,8 @@ class FieldValueMap(Base):
 
     @last_updated_by_id.setter
     def last_updated_by_id(self, value: str):
-        self.__last_updated_by_id = value
-        self._property_changed('last_updated_by_id')        
+        self._property_changed('last_updated_by_id')
+        self.__last_updated_by_id = value        
 
     @property
     def z_score(self) -> float:
@@ -20747,8 +21166,8 @@ class FieldValueMap(Base):
 
     @z_score.setter
     def z_score(self, value: float):
-        self.__z_score = value
-        self._property_changed('z_score')        
+        self._property_changed('z_score')
+        self.__z_score = value        
 
     @property
     def legal_entity_acct(self) -> str:
@@ -20757,8 +21176,8 @@ class FieldValueMap(Base):
 
     @legal_entity_acct.setter
     def legal_entity_acct(self, value: str):
-        self.__legal_entity_acct = value
-        self._property_changed('legal_entity_acct')        
+        self._property_changed('legal_entity_acct')
+        self.__legal_entity_acct = value        
 
     @property
     def target_shareholder_meeting_date(self) -> str:
@@ -20767,8 +21186,8 @@ class FieldValueMap(Base):
 
     @target_shareholder_meeting_date.setter
     def target_shareholder_meeting_date(self, value: str):
-        self.__target_shareholder_meeting_date = value
-        self._property_changed('target_shareholder_meeting_date')        
+        self._property_changed('target_shareholder_meeting_date')
+        self.__target_shareholder_meeting_date = value        
 
     @property
     def event_start_time(self) -> str:
@@ -20779,8 +21198,8 @@ class FieldValueMap(Base):
 
     @event_start_time.setter
     def event_start_time(self, value: str):
-        self.__event_start_time = value
-        self._property_changed('event_start_time')        
+        self._property_changed('event_start_time')
+        self.__event_start_time = value        
 
     @property
     def turnover(self) -> float:
@@ -20789,8 +21208,8 @@ class FieldValueMap(Base):
 
     @turnover.setter
     def turnover(self, value: float):
-        self.__turnover = value
-        self._property_changed('turnover')        
+        self._property_changed('turnover')
+        self.__turnover = value        
 
     @property
     def price_spot_target_unit(self) -> str:
@@ -20799,8 +21218,8 @@ class FieldValueMap(Base):
 
     @price_spot_target_unit.setter
     def price_spot_target_unit(self, value: str):
-        self.__price_spot_target_unit = value
-        self._property_changed('price_spot_target_unit')        
+        self._property_changed('price_spot_target_unit')
+        self.__price_spot_target_unit = value        
 
     @property
     def compliance_effective_time(self) -> datetime.datetime:
@@ -20809,8 +21228,8 @@ class FieldValueMap(Base):
 
     @compliance_effective_time.setter
     def compliance_effective_time(self, value: datetime.datetime):
-        self.__compliance_effective_time = value
-        self._property_changed('compliance_effective_time')        
+        self._property_changed('compliance_effective_time')
+        self.__compliance_effective_time = value        
 
     @property
     def expiration_date(self) -> datetime.date:
@@ -20819,8 +21238,8 @@ class FieldValueMap(Base):
 
     @expiration_date.setter
     def expiration_date(self, value: datetime.date):
-        self.__expiration_date = value
-        self._property_changed('expiration_date')        
+        self._property_changed('expiration_date')
+        self.__expiration_date = value        
 
     @property
     def leg_one_type(self) -> str:
@@ -20829,8 +21248,8 @@ class FieldValueMap(Base):
 
     @leg_one_type.setter
     def leg_one_type(self, value: str):
-        self.__leg_one_type = value
-        self._property_changed('leg_one_type')        
+        self._property_changed('leg_one_type')
+        self.__leg_one_type = value        
 
     @property
     def leg_two_spread(self) -> float:
@@ -20839,8 +21258,8 @@ class FieldValueMap(Base):
 
     @leg_two_spread.setter
     def leg_two_spread(self, value: float):
-        self.__leg_two_spread = value
-        self._property_changed('leg_two_spread')        
+        self._property_changed('leg_two_spread')
+        self.__leg_two_spread = value        
 
     @property
     def coverage(self) -> str:
@@ -20849,8 +21268,8 @@ class FieldValueMap(Base):
 
     @coverage.setter
     def coverage(self, value: str):
-        self.__coverage = value
-        self._property_changed('coverage')        
+        self._property_changed('coverage')
+        self.__coverage = value        
 
     @property
     def g_percentile(self) -> float:
@@ -20859,8 +21278,8 @@ class FieldValueMap(Base):
 
     @g_percentile.setter
     def g_percentile(self, value: float):
-        self.__g_percentile = value
-        self._property_changed('g_percentile')        
+        self._property_changed('g_percentile')
+        self.__g_percentile = value        
 
     @property
     def lending_fund_nav(self) -> float:
@@ -20869,8 +21288,8 @@ class FieldValueMap(Base):
 
     @lending_fund_nav.setter
     def lending_fund_nav(self, value: float):
-        self.__lending_fund_nav = value
-        self._property_changed('lending_fund_nav')        
+        self._property_changed('lending_fund_nav')
+        self.__lending_fund_nav = value        
 
     @property
     def source_original_category(self) -> str:
@@ -20879,8 +21298,8 @@ class FieldValueMap(Base):
 
     @source_original_category.setter
     def source_original_category(self, value: str):
-        self.__source_original_category = value
-        self._property_changed('source_original_category')        
+        self._property_changed('source_original_category')
+        self.__source_original_category = value        
 
     @property
     def composite5_day_adv(self) -> float:
@@ -20889,8 +21308,8 @@ class FieldValueMap(Base):
 
     @composite5_day_adv.setter
     def composite5_day_adv(self, value: float):
-        self.__composite5_day_adv = value
-        self._property_changed('composite5_day_adv')        
+        self._property_changed('composite5_day_adv')
+        self.__composite5_day_adv = value        
 
     @property
     def latest_execution_time(self) -> datetime.datetime:
@@ -20899,8 +21318,8 @@ class FieldValueMap(Base):
 
     @latest_execution_time.setter
     def latest_execution_time(self, value: datetime.datetime):
-        self.__latest_execution_time = value
-        self._property_changed('latest_execution_time')        
+        self._property_changed('latest_execution_time')
+        self.__latest_execution_time = value        
 
     @property
     def close_date(self) -> datetime.date:
@@ -20909,8 +21328,8 @@ class FieldValueMap(Base):
 
     @close_date.setter
     def close_date(self, value: datetime.date):
-        self.__close_date = value
-        self._property_changed('close_date')        
+        self._property_changed('close_date')
+        self.__close_date = value        
 
     @property
     def new_ideas_wtd(self) -> float:
@@ -20919,8 +21338,8 @@ class FieldValueMap(Base):
 
     @new_ideas_wtd.setter
     def new_ideas_wtd(self, value: float):
-        self.__new_ideas_wtd = value
-        self._property_changed('new_ideas_wtd')        
+        self._property_changed('new_ideas_wtd')
+        self.__new_ideas_wtd = value        
 
     @property
     def asset_class_sdr(self) -> str:
@@ -20930,8 +21349,8 @@ class FieldValueMap(Base):
 
     @asset_class_sdr.setter
     def asset_class_sdr(self, value: str):
-        self.__asset_class_sdr = value
-        self._property_changed('asset_class_sdr')        
+        self._property_changed('asset_class_sdr')
+        self.__asset_class_sdr = value        
 
     @property
     def comment(self) -> str:
@@ -20940,8 +21359,8 @@ class FieldValueMap(Base):
 
     @comment.setter
     def comment(self, value: str):
-        self.__comment = value
-        self._property_changed('comment')        
+        self._property_changed('comment')
+        self.__comment = value        
 
     @property
     def source_symbol(self) -> str:
@@ -20950,8 +21369,8 @@ class FieldValueMap(Base):
 
     @source_symbol.setter
     def source_symbol(self, value: str):
-        self.__source_symbol = value
-        self._property_changed('source_symbol')        
+        self._property_changed('source_symbol')
+        self.__source_symbol = value        
 
     @property
     def scenario_id(self) -> str:
@@ -20960,8 +21379,8 @@ class FieldValueMap(Base):
 
     @scenario_id.setter
     def scenario_id(self, value: str):
-        self.__scenario_id = value
-        self._property_changed('scenario_id')        
+        self._property_changed('scenario_id')
+        self.__scenario_id = value        
 
     @property
     def ask_unadjusted(self) -> float:
@@ -20971,8 +21390,8 @@ class FieldValueMap(Base):
 
     @ask_unadjusted.setter
     def ask_unadjusted(self, value: float):
-        self.__ask_unadjusted = value
-        self._property_changed('ask_unadjusted')        
+        self._property_changed('ask_unadjusted')
+        self.__ask_unadjusted = value        
 
     @property
     def queue_clock_time(self) -> float:
@@ -20981,8 +21400,8 @@ class FieldValueMap(Base):
 
     @queue_clock_time.setter
     def queue_clock_time(self, value: float):
-        self.__queue_clock_time = value
-        self._property_changed('queue_clock_time')        
+        self._property_changed('queue_clock_time')
+        self.__queue_clock_time = value        
 
     @property
     def ask_change(self) -> float:
@@ -20991,8 +21410,8 @@ class FieldValueMap(Base):
 
     @ask_change.setter
     def ask_change(self, value: float):
-        self.__ask_change = value
-        self._property_changed('ask_change')        
+        self._property_changed('ask_change')
+        self.__ask_change = value        
 
     @property
     def tcm_cost_participation_rate50_pct(self) -> float:
@@ -21001,8 +21420,8 @@ class FieldValueMap(Base):
 
     @tcm_cost_participation_rate50_pct.setter
     def tcm_cost_participation_rate50_pct(self, value: float):
-        self.__tcm_cost_participation_rate50_pct = value
-        self._property_changed('tcm_cost_participation_rate50_pct')        
+        self._property_changed('tcm_cost_participation_rate50_pct')
+        self.__tcm_cost_participation_rate50_pct = value        
 
     @property
     def end_date(self) -> datetime.date:
@@ -21011,8 +21430,8 @@ class FieldValueMap(Base):
 
     @end_date.setter
     def end_date(self, value: datetime.date):
-        self.__end_date = value
-        self._property_changed('end_date')        
+        self._property_changed('end_date')
+        self.__end_date = value        
 
     @property
     def contract_type(self) -> str:
@@ -21021,8 +21440,8 @@ class FieldValueMap(Base):
 
     @contract_type.setter
     def contract_type(self, value: str):
-        self.__contract_type = value
-        self._property_changed('contract_type')        
+        self._property_changed('contract_type')
+        self.__contract_type = value        
 
     @property
     def type(self) -> str:
@@ -21031,8 +21450,8 @@ class FieldValueMap(Base):
 
     @type.setter
     def type(self, value: str):
-        self.__type = value
-        self._property_changed('type')        
+        self._property_changed('type')
+        self.__type = value        
 
     @property
     def cumulative_pnl(self) -> float:
@@ -21041,8 +21460,8 @@ class FieldValueMap(Base):
 
     @cumulative_pnl.setter
     def cumulative_pnl(self, value: float):
-        self.__cumulative_pnl = value
-        self._property_changed('cumulative_pnl')        
+        self._property_changed('cumulative_pnl')
+        self.__cumulative_pnl = value        
 
     @property
     def loss(self) -> float:
@@ -21051,8 +21470,8 @@ class FieldValueMap(Base):
 
     @loss.setter
     def loss(self, value: float):
-        self.__loss = value
-        self._property_changed('loss')        
+        self._property_changed('loss')
+        self.__loss = value        
 
     @property
     def unadjusted_volume(self) -> float:
@@ -21061,8 +21480,8 @@ class FieldValueMap(Base):
 
     @unadjusted_volume.setter
     def unadjusted_volume(self, value: float):
-        self.__unadjusted_volume = value
-        self._property_changed('unadjusted_volume')        
+        self._property_changed('unadjusted_volume')
+        self.__unadjusted_volume = value        
 
     @property
     def midcurve_vol(self) -> float:
@@ -21071,8 +21490,8 @@ class FieldValueMap(Base):
 
     @midcurve_vol.setter
     def midcurve_vol(self, value: float):
-        self.__midcurve_vol = value
-        self._property_changed('midcurve_vol')        
+        self._property_changed('midcurve_vol')
+        self.__midcurve_vol = value        
 
     @property
     def trading_cost_pnl(self) -> float:
@@ -21081,8 +21500,8 @@ class FieldValueMap(Base):
 
     @trading_cost_pnl.setter
     def trading_cost_pnl(self, value: float):
-        self.__trading_cost_pnl = value
-        self._property_changed('trading_cost_pnl')        
+        self._property_changed('trading_cost_pnl')
+        self.__trading_cost_pnl = value        
 
     @property
     def price_notation_type(self) -> str:
@@ -21092,8 +21511,8 @@ class FieldValueMap(Base):
 
     @price_notation_type.setter
     def price_notation_type(self, value: str):
-        self.__price_notation_type = value
-        self._property_changed('price_notation_type')        
+        self._property_changed('price_notation_type')
+        self.__price_notation_type = value        
 
     @property
     def payment_quantity(self) -> float:
@@ -21102,8 +21521,8 @@ class FieldValueMap(Base):
 
     @payment_quantity.setter
     def payment_quantity(self, value: float):
-        self.__payment_quantity = value
-        self._property_changed('payment_quantity')        
+        self._property_changed('payment_quantity')
+        self.__payment_quantity = value        
 
     @property
     def position_idx(self) -> int:
@@ -21112,8 +21531,8 @@ class FieldValueMap(Base):
 
     @position_idx.setter
     def position_idx(self, value: int):
-        self.__position_idx = value
-        self._property_changed('position_idx')        
+        self._property_changed('position_idx')
+        self.__position_idx = value        
 
     @property
     def implied_volatility_by_relative_strike(self) -> float:
@@ -21122,8 +21541,8 @@ class FieldValueMap(Base):
 
     @implied_volatility_by_relative_strike.setter
     def implied_volatility_by_relative_strike(self, value: float):
-        self.__implied_volatility_by_relative_strike = value
-        self._property_changed('implied_volatility_by_relative_strike')        
+        self._property_changed('implied_volatility_by_relative_strike')
+        self.__implied_volatility_by_relative_strike = value        
 
     @property
     def percent_adv(self) -> float:
@@ -21132,8 +21551,8 @@ class FieldValueMap(Base):
 
     @percent_adv.setter
     def percent_adv(self, value: float):
-        self.__percent_adv = value
-        self._property_changed('percent_adv')        
+        self._property_changed('percent_adv')
+        self.__percent_adv = value        
 
     @property
     def sub_region(self) -> str:
@@ -21142,8 +21561,8 @@ class FieldValueMap(Base):
 
     @sub_region.setter
     def sub_region(self, value: str):
-        self.__sub_region = value
-        self._property_changed('sub_region')        
+        self._property_changed('sub_region')
+        self.__sub_region = value        
 
     @property
     def contract(self) -> str:
@@ -21152,8 +21571,8 @@ class FieldValueMap(Base):
 
     @contract.setter
     def contract(self, value: str):
-        self.__contract = value
-        self._property_changed('contract')        
+        self._property_changed('contract')
+        self.__contract = value        
 
     @property
     def payment_frequency1(self) -> str:
@@ -21165,8 +21584,8 @@ class FieldValueMap(Base):
 
     @payment_frequency1.setter
     def payment_frequency1(self, value: str):
-        self.__payment_frequency1 = value
-        self._property_changed('payment_frequency1')        
+        self._property_changed('payment_frequency1')
+        self.__payment_frequency1 = value        
 
     @property
     def payment_frequency2(self) -> str:
@@ -21175,8 +21594,8 @@ class FieldValueMap(Base):
 
     @payment_frequency2.setter
     def payment_frequency2(self, value: str):
-        self.__payment_frequency2 = value
-        self._property_changed('payment_frequency2')        
+        self._property_changed('payment_frequency2')
+        self.__payment_frequency2 = value        
 
     @property
     def bespoke(self) -> str:
@@ -21185,8 +21604,8 @@ class FieldValueMap(Base):
 
     @bespoke.setter
     def bespoke(self, value: str):
-        self.__bespoke = value
-        self._property_changed('bespoke')        
+        self._property_changed('bespoke')
+        self.__bespoke = value        
 
     @property
     def repo_tenor(self) -> str:
@@ -21195,8 +21614,8 @@ class FieldValueMap(Base):
 
     @repo_tenor.setter
     def repo_tenor(self, value: str):
-        self.__repo_tenor = value
-        self._property_changed('repo_tenor')        
+        self._property_changed('repo_tenor')
+        self.__repo_tenor = value        
 
     @property
     def quality_stars(self) -> float:
@@ -21205,8 +21624,8 @@ class FieldValueMap(Base):
 
     @quality_stars.setter
     def quality_stars(self, value: float):
-        self.__quality_stars = value
-        self._property_changed('quality_stars')        
+        self._property_changed('quality_stars')
+        self.__quality_stars = value        
 
     @property
     def source_ticker(self) -> str:
@@ -21215,8 +21634,8 @@ class FieldValueMap(Base):
 
     @source_ticker.setter
     def source_ticker(self, value: str):
-        self.__source_ticker = value
-        self._property_changed('source_ticker')        
+        self._property_changed('source_ticker')
+        self.__source_ticker = value        
 
     @property
     def lending_fund(self) -> str:
@@ -21225,8 +21644,8 @@ class FieldValueMap(Base):
 
     @lending_fund.setter
     def lending_fund(self, value: str):
-        self.__lending_fund = value
-        self._property_changed('lending_fund')        
+        self._property_changed('lending_fund')
+        self.__lending_fund = value        
 
     @property
     def tcm_cost_participation_rate15_pct(self) -> float:
@@ -21235,8 +21654,8 @@ class FieldValueMap(Base):
 
     @tcm_cost_participation_rate15_pct.setter
     def tcm_cost_participation_rate15_pct(self, value: float):
-        self.__tcm_cost_participation_rate15_pct = value
-        self._property_changed('tcm_cost_participation_rate15_pct')        
+        self._property_changed('tcm_cost_participation_rate15_pct')
+        self.__tcm_cost_participation_rate15_pct = value        
 
     @property
     def sensitivity(self) -> float:
@@ -21245,8 +21664,8 @@ class FieldValueMap(Base):
 
     @sensitivity.setter
     def sensitivity(self, value: float):
-        self.__sensitivity = value
-        self._property_changed('sensitivity')        
+        self._property_changed('sensitivity')
+        self.__sensitivity = value        
 
     @property
     def fiscal_year(self) -> str:
@@ -21255,8 +21674,8 @@ class FieldValueMap(Base):
 
     @fiscal_year.setter
     def fiscal_year(self, value: str):
-        self.__fiscal_year = value
-        self._property_changed('fiscal_year')        
+        self._property_changed('fiscal_year')
+        self.__fiscal_year = value        
 
     @property
     def recall_date(self) -> datetime.date:
@@ -21265,8 +21684,8 @@ class FieldValueMap(Base):
 
     @recall_date.setter
     def recall_date(self, value: datetime.date):
-        self.__recall_date = value
-        self._property_changed('recall_date')        
+        self._property_changed('recall_date')
+        self.__recall_date = value        
 
     @property
     def internal(self) -> bool:
@@ -21275,8 +21694,8 @@ class FieldValueMap(Base):
 
     @internal.setter
     def internal(self, value: bool):
-        self.__internal = value
-        self._property_changed('internal')        
+        self._property_changed('internal')
+        self.__internal = value        
 
     @property
     def adjusted_bid_price(self) -> float:
@@ -21285,8 +21704,8 @@ class FieldValueMap(Base):
 
     @adjusted_bid_price.setter
     def adjusted_bid_price(self, value: float):
-        self.__adjusted_bid_price = value
-        self._property_changed('adjusted_bid_price')        
+        self._property_changed('adjusted_bid_price')
+        self.__adjusted_bid_price = value        
 
     @property
     def var_swap(self) -> float:
@@ -21296,8 +21715,8 @@ class FieldValueMap(Base):
 
     @var_swap.setter
     def var_swap(self, value: float):
-        self.__var_swap = value
-        self._property_changed('var_swap')        
+        self._property_changed('var_swap')
+        self.__var_swap = value        
 
     @property
     def low_unadjusted(self) -> float:
@@ -21307,8 +21726,8 @@ class FieldValueMap(Base):
 
     @low_unadjusted.setter
     def low_unadjusted(self, value: float):
-        self.__low_unadjusted = value
-        self._property_changed('low_unadjusted')        
+        self._property_changed('low_unadjusted')
+        self.__low_unadjusted = value        
 
     @property
     def original_dissemination_id(self) -> str:
@@ -21318,8 +21737,8 @@ class FieldValueMap(Base):
 
     @original_dissemination_id.setter
     def original_dissemination_id(self, value: str):
-        self.__original_dissemination_id = value
-        self._property_changed('original_dissemination_id')        
+        self._property_changed('original_dissemination_id')
+        self.__original_dissemination_id = value        
 
     @property
     def macs_secondary_asset_class(self) -> str:
@@ -21328,8 +21747,8 @@ class FieldValueMap(Base):
 
     @macs_secondary_asset_class.setter
     def macs_secondary_asset_class(self, value: str):
-        self.__macs_secondary_asset_class = value
-        self._property_changed('macs_secondary_asset_class')        
+        self._property_changed('macs_secondary_asset_class')
+        self.__macs_secondary_asset_class = value        
 
     @property
     def leg_two_averaging_method(self) -> str:
@@ -21338,8 +21757,8 @@ class FieldValueMap(Base):
 
     @leg_two_averaging_method.setter
     def leg_two_averaging_method(self, value: str):
-        self.__leg_two_averaging_method = value
-        self._property_changed('leg_two_averaging_method')        
+        self._property_changed('leg_two_averaging_method')
+        self.__leg_two_averaging_method = value        
 
     @property
     def sectors_raw(self) -> Tuple[str, ...]:
@@ -21348,8 +21767,8 @@ class FieldValueMap(Base):
 
     @sectors_raw.setter
     def sectors_raw(self, value: Tuple[str, ...]):
-        self.__sectors_raw = value
-        self._property_changed('sectors_raw')        
+        self._property_changed('sectors_raw')
+        self.__sectors_raw = value        
 
     @property
     def shareclass_price(self) -> float:
@@ -21358,8 +21777,8 @@ class FieldValueMap(Base):
 
     @shareclass_price.setter
     def shareclass_price(self, value: float):
-        self.__shareclass_price = value
-        self._property_changed('shareclass_price')        
+        self._property_changed('shareclass_price')
+        self.__shareclass_price = value        
 
     @property
     def integrated_score(self) -> float:
@@ -21369,8 +21788,8 @@ class FieldValueMap(Base):
 
     @integrated_score.setter
     def integrated_score(self, value: float):
-        self.__integrated_score = value
-        self._property_changed('integrated_score')        
+        self._property_changed('integrated_score')
+        self.__integrated_score = value        
 
     @property
     def trade_size(self) -> float:
@@ -21379,8 +21798,8 @@ class FieldValueMap(Base):
 
     @trade_size.setter
     def trade_size(self, value: float):
-        self.__trade_size = value
-        self._property_changed('trade_size')        
+        self._property_changed('trade_size')
+        self.__trade_size = value        
 
     @property
     def price_spot_entry_value(self) -> float:
@@ -21389,8 +21808,8 @@ class FieldValueMap(Base):
 
     @price_spot_entry_value.setter
     def price_spot_entry_value(self, value: float):
-        self.__price_spot_entry_value = value
-        self._property_changed('price_spot_entry_value')        
+        self._property_changed('price_spot_entry_value')
+        self.__price_spot_entry_value = value        
 
     @property
     def symbol_dimensions(self) -> Tuple[str, ...]:
@@ -21399,8 +21818,8 @@ class FieldValueMap(Base):
 
     @symbol_dimensions.setter
     def symbol_dimensions(self, value: Tuple[str, ...]):
-        self.__symbol_dimensions = value
-        self._property_changed('symbol_dimensions')        
+        self._property_changed('symbol_dimensions')
+        self.__symbol_dimensions = value        
 
     @property
     def option_type_sdr(self) -> str:
@@ -21409,8 +21828,8 @@ class FieldValueMap(Base):
 
     @option_type_sdr.setter
     def option_type_sdr(self, value: str):
-        self.__option_type_sdr = value
-        self._property_changed('option_type_sdr')        
+        self._property_changed('option_type_sdr')
+        self.__option_type_sdr = value        
 
     @property
     def scenario_group_id(self) -> str:
@@ -21419,8 +21838,8 @@ class FieldValueMap(Base):
 
     @scenario_group_id.setter
     def scenario_group_id(self, value: str):
-        self.__scenario_group_id = value
-        self._property_changed('scenario_group_id')        
+        self._property_changed('scenario_group_id')
+        self.__scenario_group_id = value        
 
     @property
     def avg_yield7_day(self) -> float:
@@ -21430,8 +21849,8 @@ class FieldValueMap(Base):
 
     @avg_yield7_day.setter
     def avg_yield7_day(self, value: float):
-        self.__avg_yield7_day = value
-        self._property_changed('avg_yield7_day')        
+        self._property_changed('avg_yield7_day')
+        self.__avg_yield7_day = value        
 
     @property
     def average_implied_variance(self) -> float:
@@ -21440,8 +21859,8 @@ class FieldValueMap(Base):
 
     @average_implied_variance.setter
     def average_implied_variance(self, value: float):
-        self.__average_implied_variance = value
-        self._property_changed('average_implied_variance')        
+        self._property_changed('average_implied_variance')
+        self.__average_implied_variance = value        
 
     @property
     def avg_trade_rate_description(self) -> str:
@@ -21450,8 +21869,8 @@ class FieldValueMap(Base):
 
     @avg_trade_rate_description.setter
     def avg_trade_rate_description(self, value: str):
-        self.__avg_trade_rate_description = value
-        self._property_changed('avg_trade_rate_description')        
+        self._property_changed('avg_trade_rate_description')
+        self.__avg_trade_rate_description = value        
 
     @property
     def fraction(self) -> float:
@@ -21460,8 +21879,8 @@ class FieldValueMap(Base):
 
     @fraction.setter
     def fraction(self, value: float):
-        self.__fraction = value
-        self._property_changed('fraction')        
+        self._property_changed('fraction')
+        self.__fraction = value        
 
     @property
     def asset_count_short(self) -> float:
@@ -21470,8 +21889,8 @@ class FieldValueMap(Base):
 
     @asset_count_short.setter
     def asset_count_short(self, value: float):
-        self.__asset_count_short = value
-        self._property_changed('asset_count_short')        
+        self._property_changed('asset_count_short')
+        self.__asset_count_short = value        
 
     @property
     def collateral_percentage_required(self) -> float:
@@ -21480,8 +21899,8 @@ class FieldValueMap(Base):
 
     @collateral_percentage_required.setter
     def collateral_percentage_required(self, value: float):
-        self.__collateral_percentage_required = value
-        self._property_changed('collateral_percentage_required')        
+        self._property_changed('collateral_percentage_required')
+        self.__collateral_percentage_required = value        
 
     @property
     def opening_auction(self) -> float:
@@ -21490,8 +21909,8 @@ class FieldValueMap(Base):
 
     @opening_auction.setter
     def opening_auction(self, value: float):
-        self.__opening_auction = value
-        self._property_changed('opening_auction')        
+        self._property_changed('opening_auction')
+        self.__opening_auction = value        
 
     @property
     def date(self) -> datetime.date:
@@ -21500,8 +21919,8 @@ class FieldValueMap(Base):
 
     @date.setter
     def date(self, value: datetime.date):
-        self.__date = value
-        self._property_changed('date')        
+        self._property_changed('date')
+        self.__date = value        
 
     @property
     def total_std_return_since_inception(self) -> float:
@@ -21510,8 +21929,8 @@ class FieldValueMap(Base):
 
     @total_std_return_since_inception.setter
     def total_std_return_since_inception(self, value: float):
-        self.__total_std_return_since_inception = value
-        self._property_changed('total_std_return_since_inception')        
+        self._property_changed('total_std_return_since_inception')
+        self.__total_std_return_since_inception = value        
 
     @property
     def high_unadjusted(self) -> float:
@@ -21521,8 +21940,8 @@ class FieldValueMap(Base):
 
     @high_unadjusted.setter
     def high_unadjusted(self, value: float):
-        self.__high_unadjusted = value
-        self._property_changed('high_unadjusted')        
+        self._property_changed('high_unadjusted')
+        self.__high_unadjusted = value        
 
     @property
     def source_category(self) -> str:
@@ -21531,8 +21950,8 @@ class FieldValueMap(Base):
 
     @source_category.setter
     def source_category(self, value: str):
-        self.__source_category = value
-        self._property_changed('source_category')        
+        self._property_changed('source_category')
+        self.__source_category = value        
 
     @property
     def tv_product_mnemonic(self) -> str:
@@ -21541,8 +21960,8 @@ class FieldValueMap(Base):
 
     @tv_product_mnemonic.setter
     def tv_product_mnemonic(self, value: str):
-        self.__tv_product_mnemonic = value
-        self._property_changed('tv_product_mnemonic')        
+        self._property_changed('tv_product_mnemonic')
+        self.__tv_product_mnemonic = value        
 
     @property
     def volume_unadjusted(self) -> float:
@@ -21551,8 +21970,18 @@ class FieldValueMap(Base):
 
     @volume_unadjusted.setter
     def volume_unadjusted(self, value: float):
-        self.__volume_unadjusted = value
-        self._property_changed('volume_unadjusted')        
+        self._property_changed('volume_unadjusted')
+        self.__volume_unadjusted = value        
+
+    @property
+    def price_to_earnings(self) -> float:
+        """Price to earnings."""
+        return self.__price_to_earnings
+
+    @price_to_earnings.setter
+    def price_to_earnings(self, value: float):
+        self._property_changed('price_to_earnings')
+        self.__price_to_earnings = value        
 
     @property
     def avg_trade_rate_label(self):
@@ -21560,8 +21989,8 @@ class FieldValueMap(Base):
 
     @avg_trade_rate_label.setter
     def avg_trade_rate_label(self, value):
-        self.__avg_trade_rate_label = value
-        self._property_changed('avg_trade_rate_label')        
+        self._property_changed('avg_trade_rate_label')
+        self.__avg_trade_rate_label = value        
 
     @property
     def ann_yield3_month(self) -> float:
@@ -21570,8 +21999,8 @@ class FieldValueMap(Base):
 
     @ann_yield3_month.setter
     def ann_yield3_month(self, value: float):
-        self.__ann_yield3_month = value
-        self._property_changed('ann_yield3_month')        
+        self._property_changed('ann_yield3_month')
+        self.__ann_yield3_month = value        
 
     @property
     def ask_size(self) -> float:
@@ -21580,8 +22009,8 @@ class FieldValueMap(Base):
 
     @ask_size.setter
     def ask_size(self, value: float):
-        self.__ask_size = value
-        self._property_changed('ask_size')        
+        self._property_changed('ask_size')
+        self.__ask_size = value        
 
     @property
     def std30_days_unsubsidized_yield(self) -> float:
@@ -21590,8 +22019,8 @@ class FieldValueMap(Base):
 
     @std30_days_unsubsidized_yield.setter
     def std30_days_unsubsidized_yield(self, value: float):
-        self.__std30_days_unsubsidized_yield = value
-        self._property_changed('std30_days_unsubsidized_yield')        
+        self._property_changed('std30_days_unsubsidized_yield')
+        self.__std30_days_unsubsidized_yield = value        
 
     @property
     def resource(self) -> str:
@@ -21600,8 +22029,8 @@ class FieldValueMap(Base):
 
     @resource.setter
     def resource(self, value: str):
-        self.__resource = value
-        self._property_changed('resource')        
+        self._property_changed('resource')
+        self.__resource = value        
 
     @property
     def dissemination_time(self) -> datetime.datetime:
@@ -21610,8 +22039,18 @@ class FieldValueMap(Base):
 
     @dissemination_time.setter
     def dissemination_time(self, value: datetime.datetime):
-        self.__dissemination_time = value
-        self._property_changed('dissemination_time')        
+        self._property_changed('dissemination_time')
+        self.__dissemination_time = value        
+
+    @property
+    def price_to_cash(self) -> float:
+        """Price to cash."""
+        return self.__price_to_cash
+
+    @price_to_cash.setter
+    def price_to_cash(self, value: float):
+        self._property_changed('price_to_cash')
+        self.__price_to_cash = value        
 
     @property
     def average_realized_volatility(self) -> float:
@@ -21620,8 +22059,8 @@ class FieldValueMap(Base):
 
     @average_realized_volatility.setter
     def average_realized_volatility(self, value: float):
-        self.__average_realized_volatility = value
-        self._property_changed('average_realized_volatility')        
+        self._property_changed('average_realized_volatility')
+        self.__average_realized_volatility = value        
 
     @property
     def nav_spread(self) -> float:
@@ -21631,8 +22070,8 @@ class FieldValueMap(Base):
 
     @nav_spread.setter
     def nav_spread(self, value: float):
-        self.__nav_spread = value
-        self._property_changed('nav_spread')        
+        self._property_changed('nav_spread')
+        self.__nav_spread = value        
 
     @property
     def bid_price(self) -> float:
@@ -21641,8 +22080,8 @@ class FieldValueMap(Base):
 
     @bid_price.setter
     def bid_price(self, value: float):
-        self.__bid_price = value
-        self._property_changed('bid_price')        
+        self._property_changed('bid_price')
+        self.__bid_price = value        
 
     @property
     def dollar_total_return(self) -> float:
@@ -21651,8 +22090,8 @@ class FieldValueMap(Base):
 
     @dollar_total_return.setter
     def dollar_total_return(self, value: float):
-        self.__dollar_total_return = value
-        self._property_changed('dollar_total_return')        
+        self._property_changed('dollar_total_return')
+        self.__dollar_total_return = value        
 
     @property
     def block_unit(self) -> str:
@@ -21661,8 +22100,8 @@ class FieldValueMap(Base):
 
     @block_unit.setter
     def block_unit(self, value: str):
-        self.__block_unit = value
-        self._property_changed('block_unit')        
+        self._property_changed('block_unit')
+        self.__block_unit = value        
 
     @property
     def es_numeric_percentile(self) -> float:
@@ -21671,8 +22110,8 @@ class FieldValueMap(Base):
 
     @es_numeric_percentile.setter
     def es_numeric_percentile(self, value: float):
-        self.__es_numeric_percentile = value
-        self._property_changed('es_numeric_percentile')        
+        self._property_changed('es_numeric_percentile')
+        self.__es_numeric_percentile = value        
 
     @property
     def repurchase_rate(self) -> float:
@@ -21681,8 +22120,8 @@ class FieldValueMap(Base):
 
     @repurchase_rate.setter
     def repurchase_rate(self, value: float):
-        self.__repurchase_rate = value
-        self._property_changed('repurchase_rate')        
+        self._property_changed('repurchase_rate')
+        self.__repurchase_rate = value        
 
     @property
     def csa_terms(self) -> str:
@@ -21691,8 +22130,8 @@ class FieldValueMap(Base):
 
     @csa_terms.setter
     def csa_terms(self, value: str):
-        self.__csa_terms = value
-        self._property_changed('csa_terms')        
+        self._property_changed('csa_terms')
+        self.__csa_terms = value        
 
     @property
     def daily_net_shareholder_flows(self) -> float:
@@ -21701,8 +22140,8 @@ class FieldValueMap(Base):
 
     @daily_net_shareholder_flows.setter
     def daily_net_shareholder_flows(self, value: float):
-        self.__daily_net_shareholder_flows = value
-        self._property_changed('daily_net_shareholder_flows')        
+        self._property_changed('daily_net_shareholder_flows')
+        self.__daily_net_shareholder_flows = value        
 
     @property
     def ask_gspread(self) -> float:
@@ -21711,8 +22150,8 @@ class FieldValueMap(Base):
 
     @ask_gspread.setter
     def ask_gspread(self, value: float):
-        self.__ask_gspread = value
-        self._property_changed('ask_gspread')        
+        self._property_changed('ask_gspread')
+        self.__ask_gspread = value        
 
     @property
     def cal_spread_mis_pricing(self) -> float:
@@ -21723,8 +22162,8 @@ class FieldValueMap(Base):
 
     @cal_spread_mis_pricing.setter
     def cal_spread_mis_pricing(self, value: float):
-        self.__cal_spread_mis_pricing = value
-        self._property_changed('cal_spread_mis_pricing')        
+        self._property_changed('cal_spread_mis_pricing')
+        self.__cal_spread_mis_pricing = value        
 
     @property
     def leg_two_type(self) -> str:
@@ -21733,8 +22172,8 @@ class FieldValueMap(Base):
 
     @leg_two_type.setter
     def leg_two_type(self, value: str):
-        self.__leg_two_type = value
-        self._property_changed('leg_two_type')        
+        self._property_changed('leg_two_type')
+        self.__leg_two_type = value        
 
     @property
     def rate366(self) -> float:
@@ -21744,8 +22183,8 @@ class FieldValueMap(Base):
 
     @rate366.setter
     def rate366(self, value: float):
-        self.__rate366 = value
-        self._property_changed('rate366')        
+        self._property_changed('rate366')
+        self.__rate366 = value        
 
     @property
     def rate365(self) -> float:
@@ -21755,8 +22194,8 @@ class FieldValueMap(Base):
 
     @rate365.setter
     def rate365(self, value: float):
-        self.__rate365 = value
-        self._property_changed('rate365')        
+        self._property_changed('rate365')
+        self.__rate365 = value        
 
     @property
     def rate360(self) -> float:
@@ -21766,8 +22205,8 @@ class FieldValueMap(Base):
 
     @rate360.setter
     def rate360(self, value: float):
-        self.__rate360 = value
-        self._property_changed('rate360')        
+        self._property_changed('rate360')
+        self.__rate360 = value        
 
     @property
     def opening_report(self) -> str:
@@ -21776,8 +22215,8 @@ class FieldValueMap(Base):
 
     @opening_report.setter
     def opening_report(self, value: str):
-        self.__opening_report = value
-        self._property_changed('opening_report')        
+        self._property_changed('opening_report')
+        self.__opening_report = value        
 
     @property
     def value(self) -> float:
@@ -21786,8 +22225,8 @@ class FieldValueMap(Base):
 
     @value.setter
     def value(self, value: float):
-        self.__value = value
-        self._property_changed('value')        
+        self._property_changed('value')
+        self.__value = value        
 
     @property
     def leg_one_index_location(self) -> str:
@@ -21796,8 +22235,8 @@ class FieldValueMap(Base):
 
     @leg_one_index_location.setter
     def leg_one_index_location(self, value: str):
-        self.__leg_one_index_location = value
-        self._property_changed('leg_one_index_location')        
+        self._property_changed('leg_one_index_location')
+        self.__leg_one_index_location = value        
 
     @property
     def quantity(self) -> float:
@@ -21806,8 +22245,8 @@ class FieldValueMap(Base):
 
     @quantity.setter
     def quantity(self, value: float):
-        self.__quantity = value
-        self._property_changed('quantity')        
+        self._property_changed('quantity')
+        self.__quantity = value        
 
     @property
     def report_id(self) -> str:
@@ -21816,8 +22255,8 @@ class FieldValueMap(Base):
 
     @report_id.setter
     def report_id(self, value: str):
-        self.__report_id = value
-        self._property_changed('report_id')        
+        self._property_changed('report_id')
+        self.__report_id = value        
 
     @property
     def macs_primary_asset_class(self) -> str:
@@ -21826,8 +22265,8 @@ class FieldValueMap(Base):
 
     @macs_primary_asset_class.setter
     def macs_primary_asset_class(self, value: str):
-        self.__macs_primary_asset_class = value
-        self._property_changed('macs_primary_asset_class')        
+        self._property_changed('macs_primary_asset_class')
+        self.__macs_primary_asset_class = value        
 
     @property
     def midcurve_atm_fwd_rate(self) -> float:
@@ -21836,8 +22275,8 @@ class FieldValueMap(Base):
 
     @midcurve_atm_fwd_rate.setter
     def midcurve_atm_fwd_rate(self, value: float):
-        self.__midcurve_atm_fwd_rate = value
-        self._property_changed('midcurve_atm_fwd_rate')        
+        self._property_changed('midcurve_atm_fwd_rate')
+        self.__midcurve_atm_fwd_rate = value        
 
     @property
     def trader(self) -> str:
@@ -21846,8 +22285,8 @@ class FieldValueMap(Base):
 
     @trader.setter
     def trader(self, value: str):
-        self.__trader = value
-        self._property_changed('trader')        
+        self._property_changed('trader')
+        self.__trader = value        
 
     @property
     def valuation_date(self) -> str:
@@ -21856,8 +22295,8 @@ class FieldValueMap(Base):
 
     @valuation_date.setter
     def valuation_date(self, value: str):
-        self.__valuation_date = value
-        self._property_changed('valuation_date')        
+        self._property_changed('valuation_date')
+        self.__valuation_date = value        
 
     @property
     def tcm_cost_horizon6_hour(self) -> float:
@@ -21866,8 +22305,8 @@ class FieldValueMap(Base):
 
     @tcm_cost_horizon6_hour.setter
     def tcm_cost_horizon6_hour(self, value: float):
-        self.__tcm_cost_horizon6_hour = value
-        self._property_changed('tcm_cost_horizon6_hour')        
+        self._property_changed('tcm_cost_horizon6_hour')
+        self.__tcm_cost_horizon6_hour = value        
 
     @property
     def liq_dly(self) -> float:
@@ -21877,8 +22316,18 @@ class FieldValueMap(Base):
 
     @liq_dly.setter
     def liq_dly(self, value: float):
-        self.__liq_dly = value
-        self._property_changed('liq_dly')        
+        self._property_changed('liq_dly')
+        self.__liq_dly = value        
+
+    @property
+    def price_to_book(self) -> float:
+        """Price to book."""
+        return self.__price_to_book
+
+    @price_to_book.setter
+    def price_to_book(self, value: float):
+        self._property_changed('price_to_book')
+        self.__price_to_book = value        
 
     @property
     def isin(self) -> str:
@@ -21887,221 +22336,25 @@ class FieldValueMap(Base):
 
     @isin.setter
     def isin(self, value: str):
-        self.__isin = value
-        self._property_changed('isin')        
-
-
-class LiquidityRequest(Base):
-        
-    """Required parameters in order to get liquidity information on a set of positions"""
-       
-    def __init__(
-        self,
-        notional: float = None,
-        positions: dict = None,
-        risk_model: str = None,
-        date: datetime.date = None,
-        currency: Union[Currency, str] = None,
-        participation_rate: float = None,
-        execution_horizon: float = None,
-        execution_start_time: datetime.datetime = None,
-        execution_end_time: datetime.datetime = None,
-        benchmark_id: str = None,
-        measures: Tuple[Union[LiquidityMeasure, str], ...] = None,
-        time_series_benchmark_ids: Tuple[str, ...] = None,
-        time_series_start_date: datetime.date = None,
-        time_series_end_date: datetime.date = None,
-        format_: Union[Format, str] = None,
-        report_parameters: LiquidityReportParameters = None
-    ):        
-        super().__init__()
-        self.notional = notional
-        self.positions = positions
-        self.risk_model = risk_model
-        self.date = date
-        self.currency = currency
-        self.participation_rate = participation_rate
-        self.execution_horizon = execution_horizon
-        self.execution_start_time = execution_start_time
-        self.execution_end_time = execution_end_time
-        self.benchmark_id = benchmark_id
-        self.measures = measures
-        self.time_series_benchmark_ids = time_series_benchmark_ids
-        self.time_series_start_date = time_series_start_date
-        self.time_series_end_date = time_series_end_date
-        self.__format = get_enum_value(Format, format_)
-        self.report_parameters = report_parameters
-
-    @property
-    def notional(self) -> float:
-        """Notional value of the positions."""
-        return self.__notional
-
-    @notional.setter
-    def notional(self, value: float):
-        self.__notional = value
-        self._property_changed('notional')        
-
-    @property
-    def positions(self) -> dict:
-        """A set of quantity or weighted positions."""
-        return self.__positions
-
-    @positions.setter
-    def positions(self, value: dict):
-        self.__positions = value
-        self._property_changed('positions')        
-
-    @property
-    def risk_model(self) -> str:
-        """Marquee unique risk model identifier"""
-        return self.__risk_model
-
-    @risk_model.setter
-    def risk_model(self, value: str):
-        self.__risk_model = value
-        self._property_changed('risk_model')        
-
-    @property
-    def date(self) -> datetime.date:
-        """ISO 8601-formatted date"""
-        return self.__date
-
-    @date.setter
-    def date(self, value: datetime.date):
-        self.__date = value
-        self._property_changed('date')        
-
-    @property
-    def currency(self) -> Union[Currency, str]:
-        """Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)"""
-        return self.__currency
-
-    @currency.setter
-    def currency(self, value: Union[Currency, str]):
-        self.__currency = get_enum_value(Currency, value)
-        self._property_changed('currency')        
-
-    @property
-    def participation_rate(self) -> float:
-        return self.__participation_rate
-
-    @participation_rate.setter
-    def participation_rate(self, value: float):
-        self.__participation_rate = value
-        self._property_changed('participation_rate')        
-
-    @property
-    def execution_horizon(self) -> float:
-        return self.__execution_horizon
-
-    @execution_horizon.setter
-    def execution_horizon(self, value: float):
-        self.__execution_horizon = value
-        self._property_changed('execution_horizon')        
-
-    @property
-    def execution_start_time(self) -> datetime.datetime:
-        """ISO 8601-formatted timestamp"""
-        return self.__execution_start_time
-
-    @execution_start_time.setter
-    def execution_start_time(self, value: datetime.datetime):
-        self.__execution_start_time = value
-        self._property_changed('execution_start_time')        
-
-    @property
-    def execution_end_time(self) -> datetime.datetime:
-        """ISO 8601-formatted timestamp"""
-        return self.__execution_end_time
-
-    @execution_end_time.setter
-    def execution_end_time(self, value: datetime.datetime):
-        self.__execution_end_time = value
-        self._property_changed('execution_end_time')        
-
-    @property
-    def benchmark_id(self) -> str:
-        """Marquee unique asset identifier of the benchmark."""
-        return self.__benchmark_id
-
-    @benchmark_id.setter
-    def benchmark_id(self, value: str):
-        self.__benchmark_id = value
-        self._property_changed('benchmark_id')        
-
-    @property
-    def measures(self) -> Tuple[Union[LiquidityMeasure, str], ...]:
-        return self.__measures
-
-    @measures.setter
-    def measures(self, value: Tuple[Union[LiquidityMeasure, str], ...]):
-        self.__measures = value
-        self._property_changed('measures')        
-
-    @property
-    def time_series_benchmark_ids(self) -> Tuple[str, ...]:
-        """Marquee unique identifiers of assets to be used as benchmarks."""
-        return self.__time_series_benchmark_ids
-
-    @time_series_benchmark_ids.setter
-    def time_series_benchmark_ids(self, value: Tuple[str, ...]):
-        self.__time_series_benchmark_ids = value
-        self._property_changed('time_series_benchmark_ids')        
-
-    @property
-    def time_series_start_date(self) -> datetime.date:
-        """ISO 8601-formatted date"""
-        return self.__time_series_start_date
-
-    @time_series_start_date.setter
-    def time_series_start_date(self, value: datetime.date):
-        self.__time_series_start_date = value
-        self._property_changed('time_series_start_date')        
-
-    @property
-    def time_series_end_date(self) -> datetime.date:
-        """ISO 8601-formatted date"""
-        return self.__time_series_end_date
-
-    @time_series_end_date.setter
-    def time_series_end_date(self, value: datetime.date):
-        self.__time_series_end_date = value
-        self._property_changed('time_series_end_date')        
-
-    @property
-    def format(self) -> Union[Format, str]:
-        """Alternative format for data to be returned in"""
-        return self.__format
-
-    @format.setter
-    def format(self, value: Union[Format, str]):
-        self.__format = get_enum_value(Format, value)
-        self._property_changed('format')        
-
-    @property
-    def report_parameters(self) -> LiquidityReportParameters:
-        """Parameters to be used on liquidity reports"""
-        return self.__report_parameters
-
-    @report_parameters.setter
-    def report_parameters(self, value: LiquidityReportParameters):
-        self.__report_parameters = value
-        self._property_changed('report_parameters')        
+        self._property_changed('isin')
+        self.__isin = value        
 
 
 class MarketDataPatternAndShock(Base):
         
     """A shock to apply to market coordinate values matching the supplied pattern"""
        
+    @camel_case_translate
     def __init__(
         self,
         pattern: MarketDataPattern,
-        shock: MarketDataShock
+        shock: MarketDataShock,
+        name: str = None
     ):        
         super().__init__()
         self.pattern = pattern
         self.shock = shock
+        self.name = name
 
     @property
     def pattern(self) -> MarketDataPattern:
@@ -22110,8 +22363,8 @@ class MarketDataPatternAndShock(Base):
 
     @pattern.setter
     def pattern(self, value: MarketDataPattern):
-        self.__pattern = value
-        self._property_changed('pattern')        
+        self._property_changed('pattern')
+        self.__pattern = value        
 
     @property
     def shock(self) -> MarketDataShock:
@@ -22120,12 +22373,13 @@ class MarketDataPatternAndShock(Base):
 
     @shock.setter
     def shock(self, value: MarketDataShock):
-        self.__shock = value
-        self._property_changed('shock')        
+        self._property_changed('shock')
+        self.__shock = value        
 
 
 class PositionSet(Base):
                
+    @camel_case_translate
     def __init__(
         self,
         id_: str = None,
@@ -22134,7 +22388,8 @@ class PositionSet(Base):
         positions: Tuple[Position, ...] = None,
         type_: str = None,
         divisor: float = None,
-        last_updated_time: datetime.datetime = None
+        last_updated_time: datetime.datetime = None,
+        name: str = None
     ):        
         super().__init__()
         self.__id = id_
@@ -22144,6 +22399,7 @@ class PositionSet(Base):
         self.__type = type_
         self.divisor = divisor
         self.last_updated_time = last_updated_time
+        self.name = name
 
     @property
     def id(self) -> str:
@@ -22152,8 +22408,8 @@ class PositionSet(Base):
 
     @id.setter
     def id(self, value: str):
-        self.__id = value
-        self._property_changed('id')        
+        self._property_changed('id')
+        self.__id = value        
 
     @property
     def position_date(self) -> datetime.date:
@@ -22162,8 +22418,8 @@ class PositionSet(Base):
 
     @position_date.setter
     def position_date(self, value: datetime.date):
-        self.__position_date = value
-        self._property_changed('position_date')        
+        self._property_changed('position_date')
+        self.__position_date = value        
 
     @property
     def last_update_time(self) -> datetime.datetime:
@@ -22172,8 +22428,8 @@ class PositionSet(Base):
 
     @last_update_time.setter
     def last_update_time(self, value: datetime.datetime):
-        self.__last_update_time = value
-        self._property_changed('last_update_time')        
+        self._property_changed('last_update_time')
+        self.__last_update_time = value        
 
     @property
     def positions(self) -> Tuple[Position, ...]:
@@ -22182,8 +22438,8 @@ class PositionSet(Base):
 
     @positions.setter
     def positions(self, value: Tuple[Position, ...]):
-        self.__positions = value
-        self._property_changed('positions')        
+        self._property_changed('positions')
+        self.__positions = value        
 
     @property
     def type(self) -> str:
@@ -22192,8 +22448,8 @@ class PositionSet(Base):
 
     @type.setter
     def type(self, value: str):
-        self.__type = value
-        self._property_changed('type')        
+        self._property_changed('type')
+        self.__type = value        
 
     @property
     def divisor(self) -> float:
@@ -22202,8 +22458,8 @@ class PositionSet(Base):
 
     @divisor.setter
     def divisor(self, value: float):
-        self.__divisor = value
-        self._property_changed('divisor')        
+        self._property_changed('divisor')
+        self.__divisor = value        
 
     @property
     def last_updated_time(self) -> datetime.datetime:
@@ -22212,20 +22468,23 @@ class PositionSet(Base):
 
     @last_updated_time.setter
     def last_updated_time(self, value: datetime.datetime):
-        self.__last_updated_time = value
-        self._property_changed('last_updated_time')        
+        self._property_changed('last_updated_time')
+        self.__last_updated_time = value        
 
 
 class CSLScheduleArray(Base):
         
     """An array of schedules"""
        
+    @camel_case_translate
     def __init__(
         self,
-        schedule_values: Tuple[CSLSchedule, ...] = None
+        schedule_values: Tuple[CSLSchedule, ...] = None,
+        name: str = None
     ):        
         super().__init__()
         self.schedule_values = schedule_values
+        self.name = name
 
     @property
     def schedule_values(self) -> Tuple[CSLSchedule, ...]:
@@ -22234,20 +22493,23 @@ class CSLScheduleArray(Base):
 
     @schedule_values.setter
     def schedule_values(self, value: Tuple[CSLSchedule, ...]):
-        self.__schedule_values = value
-        self._property_changed('schedule_values')        
+        self._property_changed('schedule_values')
+        self.__schedule_values = value        
 
 
 class MarketDataShockBasedScenario(Base):
         
     """A scenario comprised of user-defined market data shocks"""
        
+    @camel_case_translate
     def __init__(
         self,
-        shocks: Tuple[MarketDataPatternAndShock, ...]
+        shocks: Tuple[MarketDataPatternAndShock, ...],
+        name: str = None
     ):        
         super().__init__()
         self.shocks = shocks
+        self.name = name
 
     @property
     def scenario_type(self) -> str:
@@ -22261,22 +22523,25 @@ class MarketDataShockBasedScenario(Base):
 
     @shocks.setter
     def shocks(self, value: Tuple[MarketDataPatternAndShock, ...]):
-        self.__shocks = value
-        self._property_changed('shocks')        
+        self._property_changed('shocks')
+        self.__shocks = value        
 
 
 class MarketDataScenario(Base):
         
     """A market data scenario to apply to the calculation"""
        
+    @camel_case_translate
     def __init__(
         self,
         scenario: Union[CarryScenario, CurveScenario, MarketDataShockBasedScenario],
-        subtract_base: bool = False
+        subtract_base: bool = False,
+        name: str = None
     ):        
         super().__init__()
         self.scenario = scenario
         self.subtract_base = subtract_base
+        self.name = name
 
     @property
     def scenario(self) -> Union[CarryScenario, CurveScenario, MarketDataShockBasedScenario]:
@@ -22285,8 +22550,8 @@ class MarketDataScenario(Base):
 
     @scenario.setter
     def scenario(self, value: Union[CarryScenario, CurveScenario, MarketDataShockBasedScenario]):
-        self.__scenario = value
-        self._property_changed('scenario')        
+        self._property_changed('scenario')
+        self.__scenario = value        
 
     @property
     def subtract_base(self) -> bool:
@@ -22296,20 +22561,23 @@ class MarketDataScenario(Base):
 
     @subtract_base.setter
     def subtract_base(self, value: bool):
-        self.__subtract_base = value
-        self._property_changed('subtract_base')        
+        self._property_changed('subtract_base')
+        self.__subtract_base = value        
 
 
 class RiskPosition(Base):
                
+    @camel_case_translate
     def __init__(
         self,
         instrument: Priceable,
-        quantity: float = None
+        quantity: float = None,
+        name: str = None
     ):        
         super().__init__()
         self.instrument = instrument
         self.quantity = quantity
+        self.name = name
 
     @property
     def instrument(self) -> Priceable:
@@ -22321,8 +22589,8 @@ class RiskPosition(Base):
 
     @instrument.setter
     def instrument(self, value: Priceable):
-        self.__instrument = value
-        self._property_changed('instrument')        
+        self._property_changed('instrument')
+        self.__instrument = value        
 
     @property
     def quantity(self) -> float:
@@ -22331,14 +22599,15 @@ class RiskPosition(Base):
 
     @quantity.setter
     def quantity(self, value: float):
-        self.__quantity = value
-        self._property_changed('quantity')        
+        self._property_changed('quantity')
+        self.__quantity = value        
 
 
 class RiskRequest(Base):
         
     """Object representation of a risk calculation request"""
        
+    @camel_case_translate
     def __init__(
         self,
         positions: Tuple[RiskPosition, ...],
@@ -22350,7 +22619,8 @@ class RiskRequest(Base):
         scenario: MarketDataScenario = None,
         report_id: str = None,
         data_set_field_maps: Tuple[DataSetFieldMap, ...] = None,
-        parameters: RiskRequestParameters = None
+        parameters: RiskRequestParameters = None,
+        name: str = None
     ):        
         super().__init__()
         self.positions = positions
@@ -22363,6 +22633,7 @@ class RiskRequest(Base):
         self.report_id = report_id
         self.data_set_field_maps = data_set_field_maps
         self.parameters = parameters
+        self.name = name
 
     @property
     def positions(self) -> Tuple[RiskPosition, ...]:
@@ -22371,8 +22642,8 @@ class RiskRequest(Base):
 
     @positions.setter
     def positions(self, value: Tuple[RiskPosition, ...]):
-        self.__positions = value
-        self._property_changed('positions')        
+        self._property_changed('positions')
+        self.__positions = value        
 
     @property
     def measures(self) -> Tuple[RiskMeasure, ...]:
@@ -22382,8 +22653,8 @@ class RiskRequest(Base):
 
     @measures.setter
     def measures(self, value: Tuple[RiskMeasure, ...]):
-        self.__measures = value
-        self._property_changed('measures')        
+        self._property_changed('measures')
+        self.__measures = value        
 
     @property
     def pricing_and_market_data_as_of(self) -> Tuple[PricingDateAndMarketDataAsOf, ...]:
@@ -22392,8 +22663,8 @@ class RiskRequest(Base):
 
     @pricing_and_market_data_as_of.setter
     def pricing_and_market_data_as_of(self, value: Tuple[PricingDateAndMarketDataAsOf, ...]):
-        self.__pricing_and_market_data_as_of = value
-        self._property_changed('pricing_and_market_data_as_of')        
+        self._property_changed('pricing_and_market_data_as_of')
+        self.__pricing_and_market_data_as_of = value        
 
     @property
     def pricing_location(self) -> Union[PricingLocation, str]:
@@ -22402,8 +22673,8 @@ class RiskRequest(Base):
 
     @pricing_location.setter
     def pricing_location(self, value: Union[PricingLocation, str]):
-        self.__pricing_location = get_enum_value(PricingLocation, value)
-        self._property_changed('pricing_location')        
+        self._property_changed('pricing_location')
+        self.__pricing_location = get_enum_value(PricingLocation, value)        
 
     @property
     def market_data_vendor(self) -> Union[MarketDataVendor, str]:
@@ -22412,8 +22683,8 @@ class RiskRequest(Base):
 
     @market_data_vendor.setter
     def market_data_vendor(self, value: Union[MarketDataVendor, str]):
-        self.__market_data_vendor = get_enum_value(MarketDataVendor, value)
-        self._property_changed('market_data_vendor')        
+        self._property_changed('market_data_vendor')
+        self.__market_data_vendor = get_enum_value(MarketDataVendor, value)        
 
     @property
     def wait_for_results(self) -> bool:
@@ -22424,8 +22695,8 @@ class RiskRequest(Base):
 
     @wait_for_results.setter
     def wait_for_results(self, value: bool):
-        self.__wait_for_results = value
-        self._property_changed('wait_for_results')        
+        self._property_changed('wait_for_results')
+        self.__wait_for_results = value        
 
     @property
     def scenario(self) -> MarketDataScenario:
@@ -22434,8 +22705,8 @@ class RiskRequest(Base):
 
     @scenario.setter
     def scenario(self, value: MarketDataScenario):
-        self.__scenario = value
-        self._property_changed('scenario')        
+        self._property_changed('scenario')
+        self.__scenario = value        
 
     @property
     def report_id(self) -> str:
@@ -22444,8 +22715,8 @@ class RiskRequest(Base):
 
     @report_id.setter
     def report_id(self, value: str):
-        self.__report_id = value
-        self._property_changed('report_id')        
+        self._property_changed('report_id')
+        self.__report_id = value        
 
     @property
     def data_set_field_maps(self) -> Tuple[DataSetFieldMap, ...]:
@@ -22454,8 +22725,8 @@ class RiskRequest(Base):
 
     @data_set_field_maps.setter
     def data_set_field_maps(self, value: Tuple[DataSetFieldMap, ...]):
-        self.__data_set_field_maps = value
-        self._property_changed('data_set_field_maps')        
+        self._property_changed('data_set_field_maps')
+        self.__data_set_field_maps = value        
 
     @property
     def parameters(self) -> RiskRequestParameters:
@@ -22464,5 +22735,5 @@ class RiskRequest(Base):
 
     @parameters.setter
     def parameters(self, value: RiskRequestParameters):
-        self.__parameters = value
-        self._property_changed('parameters')        
+        self._property_changed('parameters')
+        self.__parameters = value        

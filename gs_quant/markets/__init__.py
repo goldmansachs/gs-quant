@@ -15,5 +15,3 @@ under the License.
 """
 from .core import *
 from .historical import HistoricalPricingContext
-
-name = "markets"
