@@ -132,7 +132,3 @@ def test_failed_get_data_series(mocker):
     mocker.patch('requests.get', side_effect = ValueError(_mock_requests_response(status=404)))
     with pytest.raises(ValueError):
       fred_data.get_data_series(field="GDP", series_ids=["GDP"])
-
-
-if __name__ == "__main__":
-    pytest.main(args=["test_fred.py"])
