@@ -492,6 +492,8 @@ def zscores(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     if x.size < 1:
         return x
 
+    if isinstance(w, int):
+        w = Window(w=w, r=w)
     if not w.w:
         if x.size == 1:
             return pd.Series([0.0], index=x.index)

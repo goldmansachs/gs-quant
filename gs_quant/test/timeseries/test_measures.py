@@ -220,7 +220,8 @@ def mock_eq(_cls, _q):
         'impliedCorrelation': [5, 1, 2],
         'averageImpliedVolatility': [5, 1, 2],
         'averageImpliedVariance': [5, 1, 2],
-        'impliedVolatilityByDeltaStrike': [5, 1, 2]
+        'impliedVolatilityByDeltaStrike': [5, 1, 2],
+        'fundamentalMetric': [5, 1, 2]
     }
     return pd.DataFrame(data=d, index=_index * 3)
 
@@ -1079,6 +1080,71 @@ def test_bucketize_price():
 
         with pytest.raises(ValueError):
             tm.bucketize_price(mock_pjm, 'LMP', granularity='yearly')
+
+    replace.restore()
+
+
+def test_fundamental_metrics():
+    replace = Replacer()
+    mock_spx = Index('MA890', AssetClass.Equity, 'SPX')
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_eq)
+    period = tm.FundamentalMetricPeriod.ONE_YEAR
+    direction = tm.FundamentalMetricPeriodDirection.FORWARD
+
+    actual = tm.dividend_yield(mock_spx, period, direction)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='fundamentalMetric'), actual)
+    with pytest.raises(NotImplementedError):
+        tm.dividend_yield(..., period, direction, real_time=True)
+
+    actual = tm.earnings_per_share(mock_spx, period, direction)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='fundamentalMetric'), actual)
+    with pytest.raises(NotImplementedError):
+        tm.earnings_per_share(..., period, direction, real_time=True)
+
+    actual = tm.earnings_per_share_positive(mock_spx, period, direction)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='fundamentalMetric'), actual)
+    with pytest.raises(NotImplementedError):
+        tm.earnings_per_share_positive(..., period, direction, real_time=True)
+
+    actual = tm.net_debt_to_ebitda(mock_spx, period, direction)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='fundamentalMetric'), actual)
+    with pytest.raises(NotImplementedError):
+        tm.net_debt_to_ebitda(..., period, direction, real_time=True)
+
+    actual = tm.price_to_book(mock_spx, period, direction)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='fundamentalMetric'), actual)
+    with pytest.raises(NotImplementedError):
+        tm.price_to_book(..., period, direction, real_time=True)
+
+    actual = tm.price_to_cash(mock_spx, period, direction)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='fundamentalMetric'), actual)
+    with pytest.raises(NotImplementedError):
+        tm.price_to_cash(..., period, direction, real_time=True)
+
+    actual = tm.price_to_earnings(mock_spx, period, direction)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='fundamentalMetric'), actual)
+    with pytest.raises(NotImplementedError):
+        tm.price_to_earnings(..., period, direction, real_time=True)
+
+    actual = tm.price_to_earnings_positive(mock_spx, period, direction)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='fundamentalMetric'), actual)
+    with pytest.raises(NotImplementedError):
+        tm.price_to_earnings_positive(..., period, direction, real_time=True)
+
+    actual = tm.price_to_sales(mock_spx, period, direction)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='fundamentalMetric'), actual)
+    with pytest.raises(NotImplementedError):
+        tm.price_to_sales(..., period, direction, real_time=True)
+
+    actual = tm.return_on_equity(mock_spx, period, direction)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='fundamentalMetric'), actual)
+    with pytest.raises(NotImplementedError):
+        tm.return_on_equity(..., period, direction, real_time=True)
+
+    actual = tm.sales_per_share(mock_spx, period, direction)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='fundamentalMetric'), actual)
+    with pytest.raises(NotImplementedError):
+        tm.sales_per_share(..., period, direction, real_time=True)
 
     replace.restore()
 

@@ -45,6 +45,7 @@ class BacktestType(EnumBase, Enum):
     Volatility = 'Volatility'
     Volatility_Flow = 'Volatility Flow'
     Enhanced_Beta = 'Enhanced Beta'
+    ISelect = 'ISelect'
     
     def __repr__(self):
         return self.value
@@ -79,7 +80,7 @@ class FlowVolBacktestMeasure(EnumBase, Enum):
 class BacktestComparison(Base):
         
     """Comparison object for backtests"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -116,7 +117,7 @@ class BacktestComparison(Base):
 class BacktestPerformanceDecomposition(Base):
         
     """Decomposition of backtest performance"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -151,7 +152,7 @@ class BacktestPerformanceDecomposition(Base):
 class BacktestRebalanceParameters(Base):
         
     """Parameters relating to the backtest's rebalance"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -213,7 +214,7 @@ class BacktestRebalanceParameters(Base):
 class BacktestRisk(Base):
         
     """Risks of the backtest portfolio"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -234,11 +235,11 @@ class BacktestRisk(Base):
 
 
 class BacktestRiskPosition(Base):
-               
+        
     @camel_case_translate
     def __init__(
         self,
-        instrument: EqOption,
+        instrument: dict,
         quantity: float = None,
         name: str = None
     ):        
@@ -248,11 +249,11 @@ class BacktestRiskPosition(Base):
         self.name = name
 
     @property
-    def instrument(self) -> EqOption:
+    def instrument(self) -> dict:
         return self.__instrument
 
     @instrument.setter
-    def instrument(self, value: EqOption):
+    def instrument(self, value: dict):
         self._property_changed('instrument')
         self.__instrument = value        
 
@@ -270,7 +271,7 @@ class BacktestRiskPosition(Base):
 class BacktestTradingParameters(Base):
         
     """Trading Information for the Backtesting Strategy"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -343,7 +344,7 @@ class BacktestTradingParameters(Base):
 class BaseIndexRefData(Base):
         
     """Base index reference data object."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -380,7 +381,7 @@ class BaseIndexRefData(Base):
 class BuySellRefData(Base):
         
     """Buy Sell reference data object."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -417,7 +418,7 @@ class BuySellRefData(Base):
 class ComparisonBacktestResult(Base):
         
     """Comparisons of backtest results"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -454,7 +455,7 @@ class ComparisonBacktestResult(Base):
 class CurrencyRefData(Base):
         
     """Currency Reference Data"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -491,7 +492,7 @@ class CurrencyRefData(Base):
 class DeltaHedgeParameters(Base):
         
     """Parameters for delta hedging a backtest strategy"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -545,7 +546,7 @@ class DeltaHedgeParameters(Base):
 class DeltaHedgingParameters(Base):
         
     """Parameters for delta hedging an option."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -606,7 +607,7 @@ class DeltaHedgingParameters(Base):
 class EnhancedBetaUnderlier(Base):
         
     """Underlying asset and corresponding nearby adder and valid months"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -680,7 +681,7 @@ class EnhancedBetaUnderlier(Base):
 class EnhancedBetaUnderlierRefData(Base):
         
     """Enhanced Beta Underlier reference data object."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -729,7 +730,7 @@ class EnhancedBetaUnderlierRefData(Base):
 class EntityCorrelation(Base):
         
     """entity correlation"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -778,7 +779,7 @@ class EntityCorrelation(Base):
 class ExpirationRefData(Base):
         
     """Expiration reference data object."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -815,7 +816,7 @@ class ExpirationRefData(Base):
 class FixingTimeRefData(Base):
         
     """Fixing Time reference data object."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -852,7 +853,7 @@ class FixingTimeRefData(Base):
 class FrequencyRefData(Base):
         
     """Frequency reference data object."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -886,10 +887,60 @@ class FrequencyRefData(Base):
         self.__enum = value        
 
 
+class HistoricalUnderlier(Base):
+        
+    """Underlying asset only without any other info"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        asset_id: str,
+        weight: float = None,
+        date: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.asset_id = asset_id
+        self.weight = weight
+        self.date = date
+        self.name = name
+
+    @property
+    def asset_id(self) -> str:
+        """Marquee unique asset identifier."""
+        return self.__asset_id
+
+    @asset_id.setter
+    def asset_id(self, value: str):
+        self._property_changed('asset_id')
+        self.__asset_id = value        
+
+    @property
+    def weight(self) -> float:
+        """Weight as a percentage of notional assigned to the underlier for a particular
+           date"""
+        return self.__weight
+
+    @weight.setter
+    def weight(self, value: float):
+        self._property_changed('weight')
+        self.__weight = value        
+
+    @property
+    def date(self) -> str:
+        """Date to apply the weight for a particular underlier"""
+        return self.__date
+
+    @date.setter
+    def date(self, value: str):
+        self._property_changed('date')
+        self.__date = value        
+
+
 class LookBackPeriodRefData(Base):
         
     """Look back period reference data object."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -926,7 +977,7 @@ class LookBackPeriodRefData(Base):
 class NotionalPercentageRefData(Base):
         
     """Notional Percentage Reference Data"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -975,7 +1026,7 @@ class NotionalPercentageRefData(Base):
 class OptionStrikeTypeRefData(Base):
         
     """Option strike type reference data object."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1012,7 +1063,7 @@ class OptionStrikeTypeRefData(Base):
 class OptionTypeRefData(Base):
         
     """Option Type reference data object."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1049,7 +1100,7 @@ class OptionTypeRefData(Base):
 class PerformanceRange(Base):
         
     """a unit of performance"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1086,7 +1137,7 @@ class PerformanceRange(Base):
 class ScalingMethodRefData(Base):
         
     """Scaling Method Reference Data"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1123,7 +1174,7 @@ class ScalingMethodRefData(Base):
 class StrikeRefData(Base):
         
     """Strike reference data object."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1172,7 +1223,7 @@ class StrikeRefData(Base):
 class TradeInMethodRefData(Base):
         
     """Trade In Method Reference Data"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1209,7 +1260,7 @@ class TradeInMethodRefData(Base):
 class TradeInTimeRefData(Base):
         
     """Trade In Time Reference Data"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1246,7 +1297,7 @@ class TradeInTimeRefData(Base):
 class Underlier(Base):
         
     """Underlying asset and corresponding weight"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1283,7 +1334,7 @@ class Underlier(Base):
 class VolatilityWeightedWeightingModifier(Base):
         
     """Volatility Weighted backtest weighting modifier."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1337,7 +1388,7 @@ class VolatilityWeightedWeightingModifier(Base):
 class VolatilityWeightedWeightingModifierRefData(Base):
         
     """Volatility Weighted Weighting Modifier reference data object."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1375,7 +1426,7 @@ class VolatilityWeightedWeightingModifierRefData(Base):
 class BacktestResult(Base):
         
     """backtest result"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1496,7 +1547,7 @@ class BacktestResult(Base):
 class BacktestRiskRequest(Base):
         
     """Request to compute Backtest Price and Risk"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1559,7 +1610,7 @@ class BacktestRiskRequest(Base):
 class BacktestStrategyUnderlierHedge(Base):
         
     """Hedge information for the backtest underlier"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1596,7 +1647,7 @@ class BacktestStrategyUnderlierHedge(Base):
 class BasketBacktestParameters(Base):
         
     """Parameters of a Basket backtest."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1657,7 +1708,7 @@ class BasketBacktestParameters(Base):
 class BasketBacktestRefData(Base):
         
     """Basket backtest reference data"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1718,7 +1769,7 @@ class BasketBacktestRefData(Base):
 class DeltaHedgingRefData(Base):
         
     """Delta Hedging Reference Data"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1767,7 +1818,7 @@ class DeltaHedgingRefData(Base):
 class EnhancedBetaBacktestParameters(Base):
         
     """Parameters of an Enhanced Beta backtest."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1828,7 +1879,7 @@ class EnhancedBetaBacktestParameters(Base):
 class EnhancedBetaRefData(Base):
         
     """Enhanced Beta backtest reference data"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1896,10 +1947,60 @@ class EnhancedBetaRefData(Base):
         self.__MAAHST8JED9B607H = value        
 
 
+class ISelectBacktestParameters(Base):
+        
+    """Parameters of an ISelect backtest."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        max_leverage: float,
+        start_date: str,
+        underliers: Tuple[HistoricalUnderlier, ...],
+        name: str = None
+    ):        
+        super().__init__()
+        self.max_leverage = max_leverage
+        self.start_date = start_date
+        self.underliers = underliers
+        self.name = name
+
+    @property
+    def max_leverage(self) -> float:
+        """Maximum leverage that can be used for the ISelect backtest"""
+        return self.__max_leverage
+
+    @max_leverage.setter
+    def max_leverage(self, value: float):
+        self._property_changed('max_leverage')
+        self.__max_leverage = value        
+
+    @property
+    def start_date(self) -> str:
+        """Date from which we want to start backtesting"""
+        return self.__start_date
+
+    @start_date.setter
+    def start_date(self, value: str):
+        self._property_changed('start_date')
+        self.__start_date = value        
+
+    @property
+    def underliers(self) -> Tuple[HistoricalUnderlier, ...]:
+        """The underliers, the historical weights and dates that the client has chosen for
+           their backtest"""
+        return self.__underliers
+
+    @underliers.setter
+    def underliers(self, value: Tuple[HistoricalUnderlier, ...]):
+        self._property_changed('underliers')
+        self.__underliers = value        
+
+
 class OptionBacktestUnderlier(Base):
         
     """Option Backtest Undelier."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -2020,7 +2121,7 @@ class OptionBacktestUnderlier(Base):
 class UnderlyingAssetIdDataRefData(Base):
         
     """Underlying asset id data reference data object."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -2069,7 +2170,7 @@ class UnderlyingAssetIdDataRefData(Base):
 class BacktestStrategyUnderlier(Base):
         
     """Backtest Strategy Undelier."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -2140,7 +2241,7 @@ class BacktestStrategyUnderlier(Base):
 class UnderlyingAssetIdRefData(Base):
         
     """Underlying asset id reference data object."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -2189,7 +2290,7 @@ class UnderlyingAssetIdRefData(Base):
 class VolatilityBacktestParameters(Base):
         
     """Parameters of a Volatility backtest."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -2238,7 +2339,7 @@ class VolatilityBacktestParameters(Base):
 class VolBacktestRefData(Base):
         
     """Volatility backtest reference data"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -2431,7 +2532,7 @@ class VolBacktestRefData(Base):
 class VolatilityFlowBacktestParameters(Base):
         
     """Parameters of a Volatility Flow Backtest."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -2493,7 +2594,7 @@ class VolatilityFlowBacktestParameters(Base):
 class Backtest(Base):
         
     """A backtest"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -2733,7 +2834,7 @@ class Backtest(Base):
 class BacktestRefData(Base):
         
     """Backtest reference data"""
-       
+
     @camel_case_translate
     def __init__(
         self,

@@ -16,3 +16,15 @@ under the License.
 
 from gs_quant.target.common import BusinessDayConvention, Currency, DayCountFraction, AssetClass, AssetType, OptionStyle, OptionType, PayReceive, XRef
 from gs_quant.target.risk import CountryCode
+from enum import Enum
+
+
+class PositionType(Enum):
+    """Position type enumeration
+
+    Enumeration of different position types for a portfolio or index
+
+    """
+
+    OPEN = "open"  #: Open positions (corporate action adjusted)
+    CLOSE = "close"  #: Close positions (reflect trading activity on the close)

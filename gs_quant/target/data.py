@@ -57,7 +57,7 @@ class MeasureEntityType(EnumBase, Enum):
 class AdvancedFilter(Base):
         
     """Advanced filter for numeric fields."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -106,7 +106,7 @@ class AdvancedFilter(Base):
 class DataFilter(Base):
         
     """Filter on specified field."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -155,7 +155,7 @@ class DataFilter(Base):
 class DataGroup(Base):
         
     """Dataset grouped by context (key dimensions)"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -166,7 +166,7 @@ class DataGroup(Base):
 
 
 class DataQuery(Base):
-               
+        
     @camel_case_translate
     def __init__(
         self,
@@ -194,6 +194,7 @@ class DataQuery(Base):
         grouped: bool = None,
         fields: Tuple[Union[dict, str], ...] = None,
         restrict_fields: bool = False,
+        entity_filter: FieldFilterMap = None,
         name: str = None
     ):        
         super().__init__()
@@ -221,6 +222,7 @@ class DataQuery(Base):
         self.grouped = grouped
         self.fields = fields
         self.restrict_fields = restrict_fields
+        self.entity_filter = entity_filter
         self.name = name
 
     @property
@@ -467,11 +469,23 @@ class DataQuery(Base):
         self._property_changed('restrict_fields')
         self.__restrict_fields = value        
 
+    @property
+    def entity_filter(self) -> FieldFilterMap:
+        """Filters that are applied only to entities i.e Asset. It is used for querying by
+           asset parameters to return data for assets matching a certain
+           criteria i.e floatingRateOption = LIBOR."""
+        return self.__entity_filter
+
+    @entity_filter.setter
+    def entity_filter(self, value: FieldFilterMap):
+        self._property_changed('entity_filter')
+        self.__entity_filter = value        
+
 
 class DataSetDefaults(Base):
         
     """Default settings."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -520,7 +534,7 @@ class DataSetDefaults(Base):
 class DataSetDelay(Base):
         
     """Specifies the delayed data properties."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -583,7 +597,7 @@ class DataSetDelay(Base):
 class DataSetParameters(Base):
         
     """Dataset parameters."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -951,7 +965,7 @@ class DataSetParameters(Base):
 class FieldLinkSelector(Base):
         
     """Stores selector and name how field is presented in dataset."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -988,7 +1002,7 @@ class FieldLinkSelector(Base):
 class MDAPI(Base):
         
     """Defines MDAPI fields."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1035,7 +1049,7 @@ class MDAPI(Base):
 
 
 class MDAPIDataQuery(Base):
-               
+        
     @camel_case_translate
     def __init__(
         self,
@@ -1105,7 +1119,7 @@ class MDAPIDataQuery(Base):
 
 
 class MDAPIDataQueryResponse(Base):
-               
+        
     @camel_case_translate
     def __init__(
         self,
@@ -1128,7 +1142,7 @@ class MDAPIDataQueryResponse(Base):
 
 
 class MarketDataField(Base):
-               
+        
     @camel_case_translate
     def __init__(
         self,
@@ -1159,7 +1173,7 @@ class MarketDataField(Base):
 
 
 class MarketDataFilteredField(Base):
-               
+        
     @camel_case_translate
     def __init__(
         self,
@@ -1232,7 +1246,7 @@ class MarketDataFilteredField(Base):
 class MeasureBacktest(Base):
         
     """Describes backtests that should be associated with a measure."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1245,7 +1259,7 @@ class MeasureBacktest(Base):
 class MeasureKpi(Base):
         
     """Describes KPIs that should be associated with a measure."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1258,7 +1272,7 @@ class MeasureKpi(Base):
 class MidPrice(Base):
         
     """Specification for a mid price column derived from bid and ask columns."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1307,7 +1321,7 @@ class MidPrice(Base):
 class ParserEntity(Base):
         
     """Settings for a parser processor"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1356,7 +1370,7 @@ class ParserEntity(Base):
 class SymbolFilterLink(Base):
         
     """The entity type and field used to filter symbols."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1386,7 +1400,7 @@ class SymbolFilterLink(Base):
 class TimeFilter(Base):
         
     """Filter to restrict data to a range of hours per day."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1438,7 +1452,7 @@ class TimeFilter(Base):
 class ComplexFilter(Base):
         
     """A compound filter for data requests."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1472,7 +1486,7 @@ class ComplexFilter(Base):
 
 
 class DataQueryResponse(Base):
-               
+        
     @camel_case_translate
     def __init__(
         self,
@@ -1592,7 +1606,7 @@ class FieldLink(Base):
     """Link the dataset field to an entity to also fetch its fields. It has two
        mutually exclusive modes of operation: prefixing or explicit inclusion
        entity fields."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1649,7 +1663,7 @@ class FieldLink(Base):
 class HistoryFilter(Base):
         
     """Restricts queries against dataset to a time range."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1720,7 +1734,7 @@ class HistoryFilter(Base):
 
 
 class MDAPIDataBatchResponse(Base):
-               
+        
     @camel_case_translate
     def __init__(
         self,
@@ -1755,7 +1769,7 @@ class MDAPIDataBatchResponse(Base):
 
 
 class MarketDataMapping(Base):
-               
+        
     @camel_case_translate
     def __init__(
         self,
@@ -1942,7 +1956,7 @@ class MarketDataMapping(Base):
 class ProcessorEntity(Base):
         
     """Query processors for dataset."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1991,7 +2005,7 @@ class ProcessorEntity(Base):
 class SymbolFilterDimension(Base):
         
     """Map the dataset field with an entity for filtering arctic symbols."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -2040,7 +2054,7 @@ class SymbolFilterDimension(Base):
 class EntityFilter(Base):
         
     """Filter on entities."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -2088,7 +2102,7 @@ class EntityFilter(Base):
 class FieldColumnPair(Base):
         
     """Map from fields to database columns."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -2149,7 +2163,7 @@ class FieldColumnPair(Base):
 class DataSetDimensions(Base):
         
     """Dataset dimensions."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -2271,7 +2285,7 @@ class DataSetDimensions(Base):
 class DataSetFilters(Base):
         
     """Filters to restrict the set of data returned."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -2342,7 +2356,7 @@ class DataSetFilters(Base):
 
 
 class DataSetEntity(Base):
-               
+        
     @camel_case_translate
     def __init__(
         self,

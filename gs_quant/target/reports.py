@@ -124,7 +124,7 @@ class ScenarioType(EnumBase, Enum):
 class ReportParameters(Base):
         
     """Parameters specific to the report type"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -485,7 +485,7 @@ class ReportParameters(Base):
 
 
 class Report(Base):
-               
+        
     @camel_case_translate
     def __init__(
         self,

@@ -52,6 +52,7 @@ class QueryType(Enum):
     SPREAD_OPTION_ATM_FWD_RATE = "Spread Option Atm Fwd Rate"
     FORECAST = "Forecast"
     IMPLIED_VOLATILITY_BY_DELTA_STRIKE = "Implied Volatility By Delta Strike"
+    FUNDAMENTAL_METRIC = "Fundamental Metric"
 
 
 class GsDataApi(DataApi):

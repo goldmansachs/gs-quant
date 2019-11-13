@@ -118,16 +118,21 @@ class PricingContext(ContextBaseWithDefault):
                  market_data_location: Optional[str] = None,
                  is_async: bool = False,
                  is_batch: bool = False,
-                 use_cache: bool = False):
+                 use_cache: bool = False,
+                 visible_to_gs: bool = False):
         """
-        The methods on this class should not be called directly. Instead, use the methods on the instruments, as per the examples
+        The methods on this class should not be called directly. Instead, use the methods on the instruments,
+        as per the examples
 
         :param pricing_date: the date for pricing calculations. Default is today
-        :param market_data_as_of: the date/datetime for sourcing market data. Default is 1 business day before pricing_date
-        :param market_data_location: the location for sourcing market data ('NYC', 'LDN' or 'HKG'. Default is NYC
-        :param is_async: if True, return (a future) immediately. If False, block
-        :param is_batch: use for calculations expected to run longer than 3 mins, to avoid timeouts. It can be used with is_aync=True|False
-        :param use_cache: store results in the pricing cache
+        :param market_data_as_of: the date/datetime for sourcing market data
+        (defaults to 1 business day before pricing_date)
+        :param market_data_location: the location for sourcing market data ('NYC', 'LDN' or 'HKG' (defaults to LDN)
+        :param is_async: if True, return (a future) immediately. If False, block (defaults to False)
+        :param is_batch: use for calculations expected to run longer than 3 mins, to avoid timeouts.
+        It can be used with is_aync=True|False (defaults to False)
+        :param use_cache: store results in the pricing cache (defaults to False)
+        :param visible_to_gs: are the contents of risk requests visible to GS (defaults to False)
 
         **Examples**
 
@@ -166,6 +171,7 @@ class PricingContext(ContextBaseWithDefault):
         self.__risk_measures_by_provider_and_position = {}
         self.__futures = {}
         self.__use_cache = use_cache
+        self.__visible_to_gs = visible_to_gs
 
     def _on_exit(self, exc_type, exc_val, exc_tb):
         self._calc()
@@ -213,7 +219,8 @@ class PricingContext(ContextBaseWithDefault):
                     wait_for_results=not self.__is_batch,
                     pricing_location=self.market_data_location,
                     scenario=ScenarioContext.current if ScenarioContext.current.scenario is not None else None,
-                    pricing_and_market_data_as_of=self._pricing_market_data_as_of
+                    pricing_and_market_data_as_of=self._pricing_market_data_as_of,
+                    request_visible_to_gs=self.__visible_to_gs
                 )
 
                 if self.__is_batch:
@@ -281,6 +288,11 @@ class PricingContext(ContextBaseWithDefault):
     def use_cache(self) -> bool:
         """Cache results"""
         return self.__use_cache
+
+    @property
+    def visible_to_gs(self) -> bool:
+        """Request contents visible to GS"""
+        return self.__visible_to_gs
 
     def calc(self, priceable: Priceable, risk_measure: Union[RiskMeasure, Iterable[RiskMeasure]])\
             -> Union[dict, float, str, pd.DataFrame, pd.Series, Future]:

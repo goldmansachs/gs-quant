@@ -59,7 +59,7 @@ class IndicesCurrency(EnumBase, Enum):
 class ApprovalAction(Base):
         
     """Comments for the approval action"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -83,7 +83,7 @@ class ApprovalAction(Base):
 class CustomBasketsResponse(Base):
         
     """Rebalance custom basket response"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -143,7 +143,7 @@ class CustomBasketsResponse(Base):
 
 
 class ISelectConstituentColumn(Base):
-               
+        
     @camel_case_translate
     def __init__(
         self,
@@ -295,7 +295,7 @@ class ISelectConstituentColumn(Base):
 
 
 class ISelectIndexParameters(Base):
-               
+        
     @camel_case_translate
     def __init__(
         self,
@@ -326,7 +326,7 @@ class ISelectIndexParameters(Base):
 
 
 class ISelectSeries(Base):
-               
+        
     @camel_case_translate
     def __init__(
         self,
@@ -379,7 +379,7 @@ class ISelectSeries(Base):
 
 
 class PositionPriceInput(Base):
-               
+        
     @camel_case_translate
     def __init__(
         self,
@@ -441,7 +441,7 @@ class PublishParameters(Base):
         
     """Publishing parameters to determine where and how to publish indices, default all
        to false"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -490,7 +490,7 @@ class PublishParameters(Base):
 class CustomBasketsEditInputs(Base):
         
     """parameters used to edit a basket"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -560,7 +560,7 @@ class CustomBasketsEditInputs(Base):
 
 
 class ISelectRebalance(Base):
-               
+        
     @camel_case_translate
     def __init__(
         self,
@@ -619,7 +619,7 @@ class ISelectRebalance(Base):
 
 
 class ISelectResponse(Base):
-               
+        
     @camel_case_translate
     def __init__(
         self,
@@ -967,7 +967,7 @@ class ISelectResponse(Base):
 class IndicesPriceParameters(Base):
         
     """Parameters for pricing indices"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1055,7 +1055,7 @@ class IndicesPriceParameters(Base):
 class CustomBasketsRebalanceInputs(Base):
         
     """Inputs used to rebalance a custom basket"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1105,7 +1105,7 @@ class CustomBasketsRebalanceInputs(Base):
 class IndicesCreateInputs(Base):
         
     """Inputs used to create an index"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1250,7 +1250,7 @@ class IndicesCreateInputs(Base):
 
 
 class IndicesEditInputs(Base):
-               
+        
     @camel_case_translate
     def __init__(
         self,
@@ -1273,7 +1273,7 @@ class IndicesEditInputs(Base):
 
 
 class IndicesRebalanceInputs(Base):
-               
+        
     @camel_case_translate
     def __init__(
         self,

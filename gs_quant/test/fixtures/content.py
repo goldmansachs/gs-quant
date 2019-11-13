@@ -65,20 +65,20 @@ class ContentFixtures:
     @classmethod
     def _get_content_response(cls):
         return ContentResponse(
-            cls._data['id'],
-            cls._data['version'],
-            cls._data['name'],
-            Entitlements(
+            id=cls._data['id'],
+            version=cls._data['version'],
+            name=cls._data['name'],
+            entitlements=Entitlements(
                 cls._data['entitlements']['view'],
                 cls._data['entitlements']['edit'],
                 cls._data['entitlements']['admin'],
                 cls._data['entitlements']['delete']
             ),
-            cls._data['createdById'],
-            cls._data['createdTime'],
-            cls._data['lastUpdatedTime'],
-            cls._data['channels'],
-            Content(
+            created_by_id=cls._data['createdById'],
+            created_time=cls._data['createdTime'],
+            last_updated_time=cls._data['lastUpdatedTime'],
+            channels=cls._data['channels'],
+            content=Content(
                 cls._data['content']['body'],
                 cls._data['content']['mimeType'],
                 cls._data['content']['encoding']

@@ -217,3 +217,54 @@ def test_get_asset_positions_for_date(mocker):
 
     GsSession.current._get.assert_called_with('/assets/{id}/positions/{date}?type=close'.format(
         id=marquee_id, date=position_date))
+
+
+def test_get_asset_positions_data(mocker):
+    marquee_id = 'MQA1234567890'
+    position_date = dt.date(2019, 2, 19)
+
+    mock_response = {'results': [
+        {
+            'underlyingAssetId': 'MA4B66MW5E27UAFU2CD',
+            'divisor': 8305900333.262549,
+            'quantity': 0.016836826158,
+            'positionType': 'close',
+            'bbid': 'EXPE UW',
+            'assetId': 'MA4B66MW5E27U8P32SB',
+            'positionDate': '2019-11-07',
+            'assetClassificationsGicsSector': 'Consumer Discretionary',
+            'closePrice': 98.29,
+            'ric': 'EXPE.OQ'
+        },
+    ]}
+
+    expected_response = [
+        {
+            'underlyingAssetId': 'MA4B66MW5E27UAFU2CD',
+            'divisor': 8305900333.262549,
+            'quantity': 0.016836826158,
+            'positionType': 'close',
+            'bbid': 'EXPE UW',
+            'assetId': 'MA4B66MW5E27U8P32SB',
+            'positionDate': '2019-11-07',
+            'assetClassificationsGicsSector': 'Consumer Discretionary',
+            'closePrice': 98.29,
+            'ric': 'EXPE.OQ'
+        },
+    ]
+
+    # mock GsSession
+    mocker.patch.object(GsSession.__class__, 'current',
+                        return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+
+    # run test
+    response = GsAssetApi.get_asset_positions_data(marquee_id, position_date, position_date)
+
+    position_date_str = position_date.isoformat()
+    GsSession.current._get.assert_called_with('/assets/{id}/positions/data?startDate={start_date}&endDate={end_date}'.
+                                              format(id=marquee_id,
+                                                     start_date=position_date_str,
+                                                     end_date=position_date_str))
+
+    testfixtures.compare(response, expected_response)
