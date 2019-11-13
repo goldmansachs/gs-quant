@@ -433,7 +433,7 @@ class MqexsSide(EnumBase, Enum):
 class MqexsErrorInfo(Base):
         
     """Service specific error code and message returned as a server response"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -497,7 +497,7 @@ class MqexsErrorInfo(Base):
 class MqexsProductDetails(Base):
         
     """Details specific to the product type."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -556,7 +556,7 @@ class MqexsProductDetails(Base):
 class MqexsTradeDetails(Base):
         
     """Details specific to the trade type."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -642,7 +642,7 @@ class MqexsTradeDetails(Base):
 class MqexsTradeExt(Base):
         
     """Trade Object Model"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -766,7 +766,7 @@ class MqexsTradesWErrorExt(Base):
         
     """List of trade objects returned as a server response with specific error code and
        message in case of a server error."""
-       
+
     @camel_case_translate
     def __init__(
         self,

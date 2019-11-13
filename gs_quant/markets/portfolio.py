@@ -19,6 +19,8 @@ from gs_quant.markets import PricingContext
 from gs_quant.priceable import PriceableImpl
 from gs_quant.risk import RiskMeasure
 from gs_quant.risk.results import PortfolioRiskResult
+from gs_quant.api.gs.portfolios import GsPortfolioApi
+from gs_quant.api.gs.assets import GsAssetApi
 
 import copy
 from typing import Iterable, Optional, Tuple, Union
@@ -60,6 +62,12 @@ class Portfolio(PriceableImpl):
         self.__instruments = None
         self.__instruments_lookup = None
         self.__instruments_by_name = None
+
+    @staticmethod
+    def load_from_portfolio_id(portfolio_id):
+        positions = GsPortfolioApi.get_latest_positions(portfolio_id)
+        instruments = GsAssetApi.get_instruments_for_positions(positions.positions)
+        return Portfolio(instruments)
 
     def index(self, key: Union[str, Instrument]) -> Union[int, Tuple[int, ...]]:
         if isinstance(key, str):

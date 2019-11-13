@@ -195,6 +195,9 @@ class Base(metaclass=ABCMeta):
 
     def __from_dict(self, values: dict):
         for prop in self.properties():
+            if getattr(type(self), prop).fset is None:
+                continue
+
             prop_value = values.get(prop, values.get(inflection.camelize(prop, uppercase_first_letter=False)))
 
             if prop_value is not None:

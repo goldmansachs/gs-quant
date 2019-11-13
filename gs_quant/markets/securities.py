@@ -24,6 +24,7 @@ import pytz
 
 from gs_quant.api.gs.assets import GsAssetApi, GsAsset, AssetClass, AssetType as GsAssetType, PositionSet
 from gs_quant.base import get_enum_value
+from gs_quant.common import PositionType
 from gs_quant.markets import PricingContext
 
 
@@ -257,17 +258,6 @@ class Currency(Asset):
 
     def get_type(self) -> AssetType:
         return AssetType.CURRENCY
-
-
-class PositionType(Enum):
-    """Position type enumeration
-
-    Enumeration of different position types for a portfolio or index
-
-    """
-
-    OPEN = "open"  #: Open positions (corporate action adjusted)
-    CLOSE = "close"  #: Close positions (reflect trading activity on the close)
 
 
 class IndexConstituentProvider(metaclass=ABCMeta):

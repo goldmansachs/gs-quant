@@ -38,8 +38,8 @@ class HistoricalPricingContext(PricingContext):
             dates: Optional[Iterable[dt.date]] = None,
             is_async: bool = False,
             is_batch: bool = False,
-            use_cache: bool = False
-    ):
+            use_cache: bool = False,
+            visible_to_gs: bool = False):
         """
         A context for producing valuations over multiple dates
 
@@ -47,10 +47,11 @@ class HistoricalPricingContext(PricingContext):
         :param end: end date (defaults to today)
         :param calendars: holiday calendars
         :param dates: a custom iterable of dates
-        :param is_async: return immediately (True) or wait for results (False). Defaults to False
+        :param is_async: return immediately (True) or wait for results (False) (defaults to False)
         :param is_batch: use for calculations expected to run longer than 3 mins, to avoid timeouts.
-        It can be used with is_async=True|False
-        :param use_cache: store results in the pricing cache
+        It can be used with is_async=True|False (defaults to False)
+        :param use_cache: store results in the pricing cache (defaults to False)
+        :param visible_to_gs: are the contents of risk requests visible to GS (defaults to False)
 
         **Examples**
 
@@ -62,7 +63,7 @@ class HistoricalPricingContext(PricingContext):
         >>>
         >>> price_series = price_f.result()
         """
-        super().__init__(is_async=is_async, is_batch=is_batch, use_cache=use_cache)
+        super().__init__(is_async=is_async, is_batch=is_batch, use_cache=use_cache, visible_to_gs=visible_to_gs)
         self.__calc_dates = None
 
         if start is not None:

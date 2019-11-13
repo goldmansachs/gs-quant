@@ -122,6 +122,17 @@ class BenchmarkType(Enum):
     OIS = 'OIS'
 
 
+class FundamentalMetricPeriod(Enum):
+    ONE_YEAR = '1y'
+    TWO_YEAR = '2y'
+    THREE_YEAR = '3y'
+
+
+class FundamentalMetricPeriodDirection(Enum):
+    FORWARD = 'forward'
+    TRAILING = 'trailing'
+
+
 class RatesConversionType(Enum):
     DEFAULT_BENCHMARK_RATE = auto()
     INFLATION_BENCHMARK_RATE = auto()
@@ -1388,3 +1399,462 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
     df.index = df.index.date
     df = df.loc[start_date: end_date]
     return df
+
+
+@plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
+def dividend_yield(asset: Asset, period: FundamentalMetricPeriod, period_direction: FundamentalMetricPeriodDirection,
+                   *, source: str = None, real_time: bool = False) -> Series:
+    """
+    Dividend Yield of the single stock or the asset-weighted average of dividend yields of a composite's underliers.
+
+    1y forward: time-weighted average of one fiscal year (FY1) and two fiscal year (FY2) fwd-looking estimates.
+    2y forward: time-weighted average of two fiscal year (FY2) and three fiscal year (FY3) fwd-looking estimates.
+    3y forward: time-weighted average of three fiscal year (FY3) and four fiscal year (FY4) fwd-looking estimates.
+    1y trailing: time-weighted average of latest reported fiscal year (FY0) data and one fiscal year (FY1) fwd-looking
+    estimate.
+
+    :param asset: asset object loaded from security master
+    :param period: the relative fiscal period from now. e.g. 1y
+    :param period_direction: whether the period is forward-looking or backward-looking e.g. forward
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: dividend yield
+    """
+    if real_time:
+        raise NotImplementedError('real-time dividend_yield not implemented')
+
+    mqid = asset.get_marquee_id()
+    metric = "Dividend Yield"
+
+    _logger.debug('where assetId=%s, metric=%s, period=%s, periodDirection=%s', mqid, metric, period, period_direction)
+
+    q = GsDataApi.build_market_data_query(
+        [mqid],
+        QueryType.FUNDAMENTAL_METRIC,
+        where=FieldFilterMap(metric=metric, period=period.value, periodDirection=period_direction.value),
+        source=source,
+        real_time=real_time
+    )
+
+    q['queries'][0]['vendor'] = 'Goldman Sachs'
+    _logger.debug('q %s', q)
+    df = _market_data_timed(q)
+    return Series() if df.empty else df['fundamentalMetric']
+
+
+@plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
+def earnings_per_share(asset: Asset,
+                       period: FundamentalMetricPeriod,
+                       period_direction: FundamentalMetricPeriodDirection,
+                       *, source: str = None, real_time: bool = False) -> Series:
+    """
+    Earnings Per Share (EPS) of the single stock or the asset-weighted average EPS  of a composite's underliers.
+
+    1y forward: time-weighted average of one fiscal year (FY1) and two fiscal year (FY2) fwd-looking estimates.
+    2y forward: time-weighted average of two fiscal year (FY2) and three fiscal year (FY3) fwd-looking estimates.
+    3y forward: time-weighted average of three fiscal year (FY3) and four fiscal year (FY4) fwd-looking estimates.
+    1y trailing: time-weighted average of latest reported fiscal year (FY0) data and one fiscal year (FY1) fwd-looking
+    estimate.
+
+    :param asset: asset object loaded from security master
+    :param period: the relative fiscal period from now. e.g. 1y
+    :param period_direction: whether the period is forward-looking or backward-looking e.g. forward
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: earnings per share
+    """
+    if real_time:
+        raise NotImplementedError('real-time earnings_per_share not implemented')
+
+    mqid = asset.get_marquee_id()
+    metric = "Earnings per Share"
+
+    _logger.debug('where assetId=%s, metric=%s, period=%s, periodDirection=%s', mqid, metric, period, period_direction)
+
+    q = GsDataApi.build_market_data_query(
+        [mqid],
+        QueryType.FUNDAMENTAL_METRIC,
+        where=FieldFilterMap(metric=metric, period=period.value, periodDirection=period_direction.value),
+        source=source,
+        real_time=real_time
+    )
+
+    q['queries'][0]['vendor'] = 'Goldman Sachs'
+    _logger.debug('q %s', q)
+    df = _market_data_timed(q)
+    return Series() if df.empty else df['fundamentalMetric']
+
+
+@plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
+def earnings_per_share_positive(asset: Asset,
+                                period: FundamentalMetricPeriod,
+                                period_direction: FundamentalMetricPeriodDirection,
+                                *, source: str = None, real_time: bool = False) -> Series:
+    """
+    Earnings Per Share Positive of the single stock or the asset-weighted average EPSP of a composite's underliers.
+
+    1y forward: time-weighted average of one fiscal year (FY1) and two fiscal year (FY2) fwd-looking estimates.
+    2y forward: time-weighted average of two fiscal year (FY2) and three fiscal year (FY3) fwd-looking estimates.
+    3y forward: time-weighted average of three fiscal year (FY3) and four fiscal year (FY4) fwd-looking estimates.
+    1y trailing: time-weighted average of latest reported fiscal year (FY0) data and one fiscal year (FY1) fwd-looking
+    estimate.
+
+    :param asset: asset object loaded from security master
+    :param period: the relative fiscal period from now. e.g. 1y
+    :param period_direction: whether the period is forward-looking or backward-looking e.g. forward
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: earnings per share positive
+    """
+    if real_time:
+        raise NotImplementedError('real-time earnings_per_share_positive not implemented')
+
+    mqid = asset.get_marquee_id()
+    metric = "Earnings per Share Positive"
+
+    _logger.debug('where assetId=%s, metric=%s, period=%s, periodDirection=%s', mqid, metric, period, period_direction)
+
+    q = GsDataApi.build_market_data_query(
+        [mqid],
+        QueryType.FUNDAMENTAL_METRIC,
+        where=FieldFilterMap(metric=metric, period=period.value, periodDirection=period_direction.value),
+        source=source,
+        real_time=real_time
+    )
+
+    q['queries'][0]['vendor'] = 'Goldman Sachs'
+    _logger.debug('q %s', q)
+    df = _market_data_timed(q)
+    return Series() if df.empty else df['fundamentalMetric']
+
+
+@plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
+def net_debt_to_ebitda(asset: Asset,
+                       period: FundamentalMetricPeriod,
+                       period_direction: FundamentalMetricPeriodDirection,
+                       *, source: str = None, real_time: bool = False) -> Series:
+    """
+    Net Debt to EBITDA of the single stock or the asset-weighted average value of a composite's underliers.
+
+    1y forward: time-weighted average of one fiscal year (FY1) and two fiscal year (FY2) fwd-looking estimates.
+    2y forward: time-weighted average of two fiscal year (FY2) and three fiscal year (FY3) fwd-looking estimates.
+    3y forward: time-weighted average of three fiscal year (FY3) and four fiscal year (FY4) fwd-looking estimates.
+    1y trailing: time-weighted average of latest reported fiscal year (FY0) data and one fiscal year (FY1) fwd-looking
+    estimate.
+
+    :param asset: asset object loaded from security master
+    :param period: the relative fiscal period from now. e.g. 1y
+    :param period_direction: whether the period is forward-looking or backward-looking e.g. forward
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: Net Debt to EBITDA
+    """
+    if real_time:
+        raise NotImplementedError('real-time net_debt_to_ebitda not implemented')
+
+    mqid = asset.get_marquee_id()
+    metric = "Net Debt to EBITDA"
+
+    _logger.debug('where assetId=%s, metric=%s, period=%s, periodDirection=%s', mqid, metric, period, period_direction)
+
+    q = GsDataApi.build_market_data_query(
+        [mqid],
+        QueryType.FUNDAMENTAL_METRIC,
+        where=FieldFilterMap(metric=metric, period=period.value, periodDirection=period_direction.value),
+        source=source,
+        real_time=real_time
+    )
+
+    q['queries'][0]['vendor'] = 'Goldman Sachs'
+    _logger.debug('q %s', q)
+    df = _market_data_timed(q)
+    return Series() if df.empty else df['fundamentalMetric']
+
+
+@plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
+def price_to_book(asset: Asset, period: FundamentalMetricPeriod, period_direction: FundamentalMetricPeriodDirection,
+                  *, source: str = None, real_time: bool = False) -> Series:
+    """
+    Price to Book of the single stock or the asset-weighted average value of a composite's underliers.
+
+    1y forward: time-weighted average of one fiscal year (FY1) and two fiscal year (FY2) fwd-looking estimates.
+    2y forward: time-weighted average of two fiscal year (FY2) and three fiscal year (FY3) fwd-looking estimates.
+    3y forward: time-weighted average of three fiscal year (FY3) and four fiscal year (FY4) fwd-looking estimates.
+    1y trailing: time-weighted average of latest reported fiscal year (FY0) data and one fiscal year (FY1) fwd-looking
+    estimate.
+
+    :param asset: asset object loaded from security master
+    :param period: the relative fiscal period from now. e.g. 1y
+    :param period_direction: whether the period is forward-looking or backward-looking e.g. forward
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: Price to Book
+    """
+    if real_time:
+        raise NotImplementedError('real-time price_to_book not implemented')
+
+    mqid = asset.get_marquee_id()
+    metric = "Price to Book"
+
+    _logger.debug('where assetId=%s, metric=%s, period=%s, periodDirection=%s', mqid, metric, period, period_direction)
+
+    q = GsDataApi.build_market_data_query(
+        [mqid],
+        QueryType.FUNDAMENTAL_METRIC,
+        where=FieldFilterMap(metric=metric, period=period.value, periodDirection=period_direction.value),
+        source=source,
+        real_time=real_time
+    )
+
+    q['queries'][0]['vendor'] = 'Goldman Sachs'
+    _logger.debug('q %s', q)
+    df = _market_data_timed(q)
+    return Series() if df.empty else df['fundamentalMetric']
+
+
+@plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
+def price_to_cash(asset: Asset, period: FundamentalMetricPeriod, period_direction: FundamentalMetricPeriodDirection,
+                  *, source: str = None, real_time: bool = False) -> Series:
+    """
+    Price to Cash of the single stock or the asset-weighted average value of a composite's underliers.
+
+    1y forward: time-weighted average of one fiscal year (FY1) and two fiscal year (FY2) fwd-looking estimates.
+    2y forward: time-weighted average of two fiscal year (FY2) and three fiscal year (FY3) fwd-looking estimates.
+    3y forward: time-weighted average of three fiscal year (FY3) and four fiscal year (FY4) fwd-looking estimates.
+    1y trailing: time-weighted average of latest reported fiscal year (FY0) data and one fiscal year (FY1) fwd-looking
+    estimate.
+
+    :param asset: asset object loaded from security master
+    :param period: the relative fiscal period from now. e.g. 1y
+    :param period_direction: whether the period is forward-looking or backward-looking e.g. forward
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: Price to Cash
+    """
+    if real_time:
+        raise NotImplementedError('real-time price_to_cash not implemented')
+
+    mqid = asset.get_marquee_id()
+    metric = "Price to Cash"
+
+    _logger.debug('where assetId=%s, metric=%s, period=%s, periodDirection=%s', mqid, metric, period, period_direction)
+
+    q = GsDataApi.build_market_data_query(
+        [mqid],
+        QueryType.FUNDAMENTAL_METRIC,
+        where=FieldFilterMap(metric=metric, period=period.value, periodDirection=period_direction.value),
+        source=source,
+        real_time=real_time
+    )
+
+    q['queries'][0]['vendor'] = 'Goldman Sachs'
+    _logger.debug('q %s', q)
+    df = _market_data_timed(q)
+    return Series() if df.empty else df['fundamentalMetric']
+
+
+@plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
+def price_to_earnings(asset: Asset, period: FundamentalMetricPeriod, period_direction: FundamentalMetricPeriodDirection,
+                      *, source: str = None, real_time: bool = False) -> Series:
+    """
+    Price to Earnings of the single stock or the asset-weighted average value of a composite's underliers.
+
+    1y forward: time-weighted average of one fiscal year (FY1) and two fiscal year (FY2) fwd-looking estimates.
+    2y forward: time-weighted average of two fiscal year (FY2) and three fiscal year (FY3) fwd-looking estimates.
+    3y forward: time-weighted average of three fiscal year (FY3) and four fiscal year (FY4) fwd-looking estimates.
+    1y trailing: time-weighted average of latest reported fiscal year (FY0) data and one fiscal year (FY1) fwd-looking
+    estimate.
+
+    :param asset: asset object loaded from security master
+    :param period: the relative fiscal period from now. e.g. 1y
+    :param period_direction: whether the period is forward-looking or backward-looking e.g. forward
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: Price to Earnings
+    """
+    if real_time:
+        raise NotImplementedError('real-time price_to_earnings not implemented')
+
+    mqid = asset.get_marquee_id()
+    metric = "Price to Earnings"
+
+    _logger.debug('where assetId=%s, metric=%s, period=%s, periodDirection=%s', mqid, metric, period, period_direction)
+
+    q = GsDataApi.build_market_data_query(
+        [mqid],
+        QueryType.FUNDAMENTAL_METRIC,
+        where=FieldFilterMap(metric=metric, period=period.value, periodDirection=period_direction.value),
+        source=source,
+        real_time=real_time
+    )
+
+    q['queries'][0]['vendor'] = 'Goldman Sachs'
+    _logger.debug('q %s', q)
+    df = _market_data_timed(q)
+    return Series() if df.empty else df['fundamentalMetric']
+
+
+@plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
+def price_to_earnings_positive(asset: Asset,
+                               period: FundamentalMetricPeriod,
+                               period_direction: FundamentalMetricPeriodDirection,
+                               *, source: str = None, real_time: bool = False) -> Series:
+    """
+    Price to Earnings Positive of the single stock or the asset-weighted average value of a composite's underliers.
+
+    1y forward: time-weighted average of one fiscal year (FY1) and two fiscal year (FY2) fwd-looking estimates.
+    2y forward: time-weighted average of two fiscal year (FY2) and three fiscal year (FY3) fwd-looking estimates.
+    3y forward: time-weighted average of three fiscal year (FY3) and four fiscal year (FY4) fwd-looking estimates.
+    1y trailing: time-weighted average of latest reported fiscal year (FY0) data and one fiscal year (FY1) fwd-looking
+    estimate.
+
+    :param asset: asset object loaded from security master
+    :param period: the relative fiscal period from now. e.g. 1y
+    :param period_direction: whether the period is forward-looking or backward-looking e.g. forward
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: Price to Earnings Positive
+    """
+    if real_time:
+        raise NotImplementedError('real-time price_to_earnings_positive not implemented')
+
+    mqid = asset.get_marquee_id()
+    metric = "Price to Earnings Positive"
+
+    _logger.debug('where assetId=%s, metric=%s, period=%s, periodDirection=%s', mqid, metric, period, period_direction)
+
+    q = GsDataApi.build_market_data_query(
+        [mqid],
+        QueryType.FUNDAMENTAL_METRIC,
+        where=FieldFilterMap(metric=metric, period=period.value, periodDirection=period_direction.value),
+        source=source,
+        real_time=real_time
+    )
+
+    q['queries'][0]['vendor'] = 'Goldman Sachs'
+    _logger.debug('q %s', q)
+    df = _market_data_timed(q)
+    return Series() if df.empty else df['fundamentalMetric']
+
+
+@plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
+def price_to_sales(asset: Asset, period: FundamentalMetricPeriod, period_direction: FundamentalMetricPeriodDirection,
+                   *, source: str = None, real_time: bool = False) -> Series:
+    """
+    Price to Sales of the single stock or the asset-weighted average value of a composite's underliers.
+
+    1y forward: time-weighted average of one fiscal year (FY1) and two fiscal year (FY2) fwd-looking estimates.
+    2y forward: time-weighted average of two fiscal year (FY2) and three fiscal year (FY3) fwd-looking estimates.
+    3y forward: time-weighted average of three fiscal year (FY3) and four fiscal year (FY4) fwd-looking estimates.
+    1y trailing: time-weighted average of latest reported fiscal year (FY0) data and one fiscal year (FY1) fwd-looking
+    estimate.
+
+    :param asset: asset object loaded from security master
+    :param period: the relative fiscal period from now. e.g. 1y
+    :param period_direction: whether the period is forward-looking or backward-looking e.g. forward
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: Price to Sales
+    """
+    if real_time:
+        raise NotImplementedError('real-time price_to_sales not implemented')
+
+    mqid = asset.get_marquee_id()
+    metric = "Price to Sales"
+
+    _logger.debug('where assetId=%s, metric=%s, period=%s, periodDirection=%s', mqid, metric, period, period_direction)
+
+    q = GsDataApi.build_market_data_query(
+        [mqid],
+        QueryType.FUNDAMENTAL_METRIC,
+        where=FieldFilterMap(metric=metric, period=period.value, periodDirection=period_direction.value),
+        source=source,
+        real_time=real_time
+    )
+
+    q['queries'][0]['vendor'] = 'Goldman Sachs'
+    _logger.debug('q %s', q)
+    df = _market_data_timed(q)
+    return Series() if df.empty else df['fundamentalMetric']
+
+
+@plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
+def return_on_equity(asset: Asset, period: FundamentalMetricPeriod, period_direction: FundamentalMetricPeriodDirection,
+                     *, source: str = None, real_time: bool = False) -> Series:
+    """
+    Return on Equity of the single stock or the asset-weighted average value of a composite's underliers.
+
+    1y forward: time-weighted average of one fiscal year (FY1) and two fiscal year (FY2) fwd-looking estimates.
+    2y forward: time-weighted average of two fiscal year (FY2) and three fiscal year (FY3) fwd-looking estimates.
+    3y forward: time-weighted average of three fiscal year (FY3) and four fiscal year (FY4) fwd-looking estimates.
+    1y trailing: time-weighted average of latest reported fiscal year (FY0) data and one fiscal year (FY1) fwd-looking
+    estimate.
+
+    :param asset: asset object loaded from security master
+    :param period: the relative fiscal period from now. e.g. 1y
+    :param period_direction: whether the period is forward-looking or backward-looking e.g. forward
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: Return on Equity
+    """
+    if real_time:
+        raise NotImplementedError('real-time return_on_equity not implemented')
+
+    mqid = asset.get_marquee_id()
+    metric = "Return on Equity"
+
+    _logger.debug('where assetId=%s, metric=%s, period=%s, periodDirection=%s', mqid, metric, period, period_direction)
+
+    q = GsDataApi.build_market_data_query(
+        [mqid],
+        QueryType.FUNDAMENTAL_METRIC,
+        where=FieldFilterMap(metric=metric, period=period.value, periodDirection=period_direction.value),
+        source=source,
+        real_time=real_time
+    )
+
+    q['queries'][0]['vendor'] = 'Goldman Sachs'
+    _logger.debug('q %s', q)
+    df = _market_data_timed(q)
+    return Series() if df.empty else df['fundamentalMetric']
+
+
+@plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
+def sales_per_share(asset: Asset, period: FundamentalMetricPeriod, period_direction: FundamentalMetricPeriodDirection,
+                    *, source: str = None, real_time: bool = False) -> Series:
+    """
+    Sales per Share of the single stock or the asset-weighted average value of a composite's underliers.
+
+    1y forward: time-weighted average of one fiscal year (FY1) and two fiscal year (FY2) fwd-looking estimates.
+    2y forward: time-weighted average of two fiscal year (FY2) and three fiscal year (FY3) fwd-looking estimates.
+    3y forward: time-weighted average of three fiscal year (FY3) and four fiscal year (FY4) fwd-looking estimates.
+    1y trailing: time-weighted average of latest reported fiscal year (FY0) data and one fiscal year (FY1) fwd-looking
+    estimate.
+
+    :param asset: asset object loaded from security master
+    :param period: the relative fiscal period from now. e.g. 1y
+    :param period_direction: whether the period is forward-looking or backward-looking e.g. forward
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: Sales per Share
+    """
+    if real_time:
+        raise NotImplementedError('real-time sales_per_share not implemented')
+
+    mqid = asset.get_marquee_id()
+    metric = "Sales per Share"
+
+    _logger.debug('where assetId=%s, metric=%s, period=%s, periodDirection=%s', mqid, metric, period, period_direction)
+
+    q = GsDataApi.build_market_data_query(
+        [mqid],
+        QueryType.FUNDAMENTAL_METRIC,
+        where=FieldFilterMap(metric=metric, period=period.value, periodDirection=period_direction.value),
+        source=source,
+        real_time=real_time
+    )
+
+    q['queries'][0]['vendor'] = 'Goldman Sachs'
+    _logger.debug('q %s', q)
+    df = _market_data_timed(q)
+    return Series() if df.empty else df['fundamentalMetric']

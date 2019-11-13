@@ -269,7 +269,7 @@ class SupraStrategy(EnumBase, Enum):
 
 
 class AssetClassifications(Base):
-               
+        
     @camel_case_translate
     def __init__(
         self,
@@ -414,7 +414,7 @@ class AssetClassifications(Base):
 class AssetToInstrumentResponse(Base):
         
     """Resolution of assetId to instrument"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -473,7 +473,7 @@ class AssetToInstrumentResponse(Base):
 class Benchmark(Base):
         
     """Reference rate that can based on an absolute value or absolute value + index"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -520,7 +520,7 @@ class Benchmark(Base):
 class NumberRange(Base):
         
     """lower and upper bound to define a number range"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -557,7 +557,7 @@ class NumberRange(Base):
 class People(Base):
         
     """People associated with an asset"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -582,7 +582,7 @@ class People(Base):
 class PerformanceStatsRequest(Base):
         
     """Performance statistics."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -715,7 +715,7 @@ class PerformanceStatsRequest(Base):
 class SecuritiesLendingLoan(Base):
         
     """Parameters specific to a securities lending loan"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -920,7 +920,7 @@ class SecuritiesLendingLoan(Base):
 
 
 class SocialDomain(Base):
-               
+        
     @camel_case_translate
     def __init__(
         self,
@@ -942,7 +942,7 @@ class SocialDomain(Base):
 
 
 class TemporalXRef(Base):
-               
+        
     @camel_case_translate
     def __init__(
         self,
@@ -990,7 +990,7 @@ class TemporalXRef(Base):
 class AssetParameters(Base):
         
     """Parameters specific to the asset type"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1851,7 +1851,7 @@ class AssetParameters(Base):
 class AssetStats(Base):
         
     """Performance statistics."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1911,7 +1911,7 @@ class AssetStats(Base):
 class AssetStatsRequest(Base):
         
     """Performance statistics."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1971,7 +1971,7 @@ class AssetStatsRequest(Base):
 class CommodConfigParameters(Base):
         
     """Commodity configuration parameters"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -2006,7 +2006,7 @@ class CommodConfigParameters(Base):
 class HedgeFundParameters(Base):
         
     """Asset parameters specific to hedge funds"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -2279,7 +2279,7 @@ class HedgeFundParameters(Base):
 class ShareClassParameters(Base):
         
     """Attributes specific to share class assets"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -2654,7 +2654,7 @@ class ShareClassParameters(Base):
 class TemporalPeople(Base):
         
     """People associated with an asset during a certain date range"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -2706,7 +2706,7 @@ class Asset(Base):
        stock or a bond) or a publically identifiable object with observable
        market data fixings which can be referenced in derivative transations
        (for example the SPX Index)"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -3031,7 +3031,7 @@ class Asset(Base):
 
 
 class EntityQuery(Base):
-               
+        
     @camel_case_translate
     def __init__(
         self,

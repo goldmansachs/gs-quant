@@ -239,24 +239,21 @@ def test_get_latest_portfolio_positions(mocker):
     id_1 = 'MP1'
     date = dt.date(2019, 2, 18)
 
-    mock_response = {'results': (
-        PositionSet.from_dict({
-            'id': 'mock1',
-            'positionDate': '2019-02-18',
-            'lastUpdateTime': '2019-02-19T12:10:32.401Z',
-            'positions': [
-                {'assetId': 'MQA123', 'quantity': 0.3},
-                {'assetId': 'MQA456', 'quantity': 0.7}
-            ]
-        }),
-    )}
+    mock_response = {'results': PositionSet.from_dict({
+        'id': 'mock1',
+        'positionDate': '2019-02-18',
+        'lastUpdateTime': '2019-02-19T12:10:32.401Z',
+        'positions': [
+            {'assetId': 'MQA123', 'quantity': 0.3},
+            {'assetId': 'MQA456', 'quantity': 0.7}
+        ]
+    }),
+    }
 
-    expected_response = (
-        PositionSet('mock1', date, dup.parse('2019-02-19T12:10:32.401Z'), (
-            Position(assetId='MQA123', quantity=0.3),
-            Position(assetId='MQA456', quantity=0.7)
-        ))
-    )
+    expected_response = PositionSet('mock1', date, dup.parse('2019-02-19T12:10:32.401Z'), (
+        Position(assetId='MQA123', quantity=0.3),
+        Position(assetId='MQA456', quantity=0.7)
+    ))
 
     # mock GsSession
     mocker.patch.object(

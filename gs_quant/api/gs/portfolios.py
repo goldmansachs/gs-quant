@@ -74,13 +74,13 @@ class GsPortfolioApi:
     @classmethod
     def get_latest_positions(cls, portfolio_id: str, position_type: str = 'close') -> PositionSet:
         url = '/portfolios/{id}/positions/last?type={ptype}'.format(id=portfolio_id, ptype=position_type)
-        position_sets = GsSession.current._get(url, cls=PositionSet)['results']
-        return position_sets[0] if len(position_sets) > 0 else PositionSet()
+        position_set = GsSession.current._get(url, cls=PositionSet)['results']
+        return position_set if position_set else PositionSet()
 
     @classmethod
     def get_position_dates(cls, portfolio_id: str) -> Tuple[dt.date, ...]:
         position_dates = GsSession.current._get('/portfolios/{id}/positions/dates'.format(id=portfolio_id))['results']
-        return tuple([dt.datetime.strptime(d, '%Y-%m-%d').date() for d in position_dates])
+        return tuple(dt.datetime.strptime(d, '%Y-%m-%d').date() for d in position_dates)
 
     @classmethod
     def update_positions(cls, portfolio_id: str, position_sets: Tuple[PositionSet, ...]) -> float:

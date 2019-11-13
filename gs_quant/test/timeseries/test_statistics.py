@@ -325,6 +325,7 @@ def test_zscores():
     result = zscores(x, Window(2, 0))
     expected = pd.Series([0.0, -0.707107, 0.707107, -0.707107, 0.707107, 0.707107], index=dates)
     assert_series_equal(result, expected, obj="z-score window 2", check_less_precise=True)
+    assert_series_equal(zscores(x, Window(5, 5)), zscores(x, 5))
 
 
 def test_winsorize():

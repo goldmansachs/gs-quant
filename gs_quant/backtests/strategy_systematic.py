@@ -36,7 +36,7 @@ class StrategySystematic:
     """Equity back testing systematic strategy"""
 
     def __init__(self,
-                 underliers: Union[EqOption, Iterable[EqOption]],
+                 underliers: Union[EqOption, Iterable[EqOption], EqVarianceSwap, Iterable[EqVarianceSwap]],
                  quantity: float = 1,
                  quantity_type: Union[QuantityType, str] = QuantityType.Notional,
                  trade_in_method: Union[TradeInMethod, str] = TradeInMethod.FixedRoll,
@@ -62,7 +62,7 @@ class StrategySystematic:
 
         self.__underliers = []
 
-        if isinstance(underliers, EqOption):
+        if isinstance(underliers, (EqOption, EqVarianceSwap)):
             instrument = underliers
             notional_percentage = 100
             self.check_underlier_fields(instrument)
@@ -72,15 +72,17 @@ class StrategySystematic:
                 hedge=BacktestStrategyUnderlierHedge(risk_details=delta_hedge),
                 market_model=EQ_MARKET_MODEL))
         else:
-            for eq_option in underliers:
-                if isinstance(eq_option, tuple):
-                    instrument = eq_option[0]
-                    notional_percentage = eq_option[1]
-                elif isinstance(eq_option, EqOption):
-                    instrument = eq_option
-                    notional_percentage = 100
+            for underlier in underliers:
+                if isinstance(underlier, tuple):
+                    instrument = underlier[0]
+                    notional_percentage = underlier[1]
                 else:
-                    raise MqValueError('The format of the backtest asset is incorrect.')
+                    instrument = underlier
+                    notional_percentage = 100
+
+                if not isinstance(instrument, (EqOption, EqVarianceSwap)):
+                    raise MqValueError('The format of the backtest asset is inscorrect.')
+
                 self.check_underlier_fields(instrument)
                 self.__underliers.append(BacktestStrategyUnderlier(
                     instrument=instrument,
@@ -100,7 +102,7 @@ class StrategySystematic:
 
     @staticmethod
     def check_underlier_fields(
-            underlier: EqOption
+            underlier: Union[EqOption, EqVarianceSwap]
     ) -> bool:
         # validation for different fields
         if isinstance(underlier.expiration_date, datetime.date):

@@ -23,7 +23,7 @@ from gs_quant.base import Base, camel_case_translate, get_enum_value
 class Author(Base):
         
     """Object containing author data"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -67,7 +67,7 @@ class Author(Base):
 
 
 class BulkDeleteContentResponse(Base):
-               
+        
     @camel_case_translate
     def __init__(
         self,
@@ -116,7 +116,7 @@ class BulkDeleteContentResponse(Base):
 class Content(Base):
         
     """Body of the content piece"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -163,7 +163,7 @@ class Content(Base):
 
 
 class DeleteContentResponse(Base):
-               
+        
     @camel_case_translate
     def __init__(
         self,
@@ -212,7 +212,7 @@ class DeleteContentResponse(Base):
 class Disclaimer(Base):
         
     """Disclaimer associated with a content piece"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -245,7 +245,7 @@ class Disclaimer(Base):
 
 
 class Object(Base):
-               
+        
     @camel_case_translate
     def __init__(
         self,
@@ -258,7 +258,7 @@ class Object(Base):
 class Certification(Base):
         
     """Field to store SEAL certification object"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -341,7 +341,7 @@ class Certification(Base):
 
 
 class ContentResponse(Base):
-               
+        
     @camel_case_translate
     def __init__(
         self,
@@ -458,7 +458,7 @@ class ContentResponse(Base):
 
 
 class ContentUpdateRequest(Base):
-               
+        
     @camel_case_translate
     def __init__(
         self,
@@ -503,7 +503,7 @@ class ContentUpdateRequest(Base):
 
 
 class BulkContentUpdateRequestItem(Base):
-               
+        
     @camel_case_translate
     def __init__(
         self,
@@ -537,7 +537,7 @@ class BulkContentUpdateRequestItem(Base):
 
 
 class ContentAuditFields(Base):
-               
+        
     @camel_case_translate
     def __init__(
         self,
@@ -644,7 +644,7 @@ class ContentAuditFields(Base):
 class ContentParameters(Base):
         
     """Parameters of the content piece"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -787,7 +787,7 @@ class ContentParameters(Base):
 
 
 class GetManyContentsResponse(Base):
-               
+        
     @camel_case_translate
     def __init__(
         self,
@@ -834,7 +834,7 @@ class GetManyContentsResponse(Base):
 
 
 class BulkContentUpdateResponse(Base):
-               
+        
     @camel_case_translate
     def __init__(
         self,
@@ -881,7 +881,7 @@ class BulkContentUpdateResponse(Base):
 
 
 class ContentCreateRequest(Base):
-               
+        
     @camel_case_translate
     def __init__(
         self,
@@ -938,7 +938,7 @@ class ContentCreateRequest(Base):
 
 
 class ContentCreateResponse(Base):
-               
+        
     @camel_case_translate
     def __init__(
         self,
@@ -984,7 +984,7 @@ class ContentCreateResponse(Base):
 
 
 class ContentUpdateResponse(Base):
-               
+        
     @camel_case_translate
     def __init__(
         self,

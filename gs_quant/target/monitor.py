@@ -23,7 +23,7 @@ from gs_quant.base import Base, camel_case_translate, get_enum_value
 class ColumnFormat(Base):
         
     """Object used to specify the column formatting"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -72,7 +72,7 @@ class ColumnFormat(Base):
 class FunctionParameters(Base):
         
     """Function parameters to be passed into the relevant gs_quant function."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -159,7 +159,7 @@ class FunctionParameters(Base):
 class FunctionWhere(Base):
         
     """Parameters that will be passed into the data measure requests."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -208,7 +208,7 @@ class FunctionWhere(Base):
 class Historical(Base):
         
     """value and date for historical data"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -232,7 +232,7 @@ class Historical(Base):
 class MonitorResponseData(Base):
         
     """Monitor calculated response data"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -269,7 +269,7 @@ class Movers(Base):
         
     """Object that allows to specify the case in which we only want to return the n top
        or bottom entities"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -318,7 +318,7 @@ class Movers(Base):
 class Sort(Base):
         
     """Object used to define sorting"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -367,7 +367,7 @@ class Sort(Base):
 class WipiRequestFilter(Base):
         
     """A filter used for transforming data"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -429,7 +429,7 @@ class WipiRequestFilter(Base):
 class Function(Base):
         
     """Function or Measure to be applied to the column."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -573,7 +573,7 @@ class Function(Base):
 class RateRow(Base):
         
     """Rate row with calculated data"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -671,7 +671,7 @@ class RowGroup(Base):
         
     """Object specifying a group name and a list of assets to be calculated in a
        monitor"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -731,7 +731,7 @@ class RowGroup(Base):
 class ColumnDefinition(Base):
         
     """Object defining the columns to be calculated in the monitor"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -826,7 +826,7 @@ class ColumnDefinition(Base):
 class RatesResponseData(Base):
         
     """Rates calculated response data."""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -885,7 +885,7 @@ class RatesResponseData(Base):
 class MonitorParameters(Base):
         
     """Parameters provided for a monitor"""
-       
+
     @camel_case_translate
     def __init__(
         self,
@@ -1098,7 +1098,7 @@ class MonitorParameters(Base):
 class Monitor(Base):
         
     """A marquee monitor object"""
-       
+
     @camel_case_translate
     def __init__(
         self,

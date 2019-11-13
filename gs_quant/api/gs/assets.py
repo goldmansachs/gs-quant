@@ -18,11 +18,12 @@ import logging
 from enum import auto, Enum
 from typing import Iterable, List, Tuple, Optional, Union
 from gs_quant.target.assets import Asset as __Asset, AssetClass, AssetType, AssetToInstrumentResponse, TemporalXRef,\
-    Position, PositionSet, EntityQuery, PositionSet
+    Position, EntityQuery, PositionSet
 from gs_quant.target.common import FieldFilterMap
 from gs_quant.errors import MqValueError
 from gs_quant.instrument import Instrument, Security
 from gs_quant.session import GsSession
+from gs_quant.common import PositionType
 
 _logger = logging.getLogger(__name__)
 IdList = Union[Tuple[str, ...], List]
@@ -40,7 +41,6 @@ class GsIdType(Enum):
     mdapi = auto()
     primeId = auto()
     id = auto()
-
 
 class GsAsset(__Asset):
     """GS Asset API object model for an asset object"""
@@ -120,7 +120,7 @@ class GsAssetApi:
     def get_asset_positions_for_date(
             asset_id: str,
             position_date: dt.date,
-            position_type: str = None,
+            position_type: PositionType = None,
     ) -> Tuple[PositionSet, ...]:
         position_date_str = position_date.isoformat()
         url = '/assets/{id}/positions/{date}'.format(id=asset_id, date=position_date_str)
@@ -161,7 +161,29 @@ class GsAssetApi:
             else:
                 ret += (None,)
 
-        return tuple(ret)
+        return ret
+
+    @staticmethod
+    def get_asset_positions_data(
+            asset_id: str,
+            start_date: dt.date,
+            end_date: dt.date,
+            fields: IdList = None,
+            position_type: PositionType = None,
+    ) -> Tuple[PositionSet, ...]:
+        start_date_str = start_date.isoformat()
+        end_date_str = end_date.isoformat()
+        url = '/assets/{id}/positions/data?startDate={start_date}&endDate={end_date}'.format(id=asset_id,
+                                                                                             start_date=start_date_str,
+                                                                                             end_date=end_date_str)
+        if fields is not None:
+            url += '&fields='.join([''] + fields)
+
+        if position_type is not None:
+            url += '&type=' + position_type
+
+        results = GsSession.current._get(url)['results']
+        return results
 
     @classmethod
     def map_identifiers(
