@@ -33,8 +33,10 @@ import textwrap
 """
 Fred Data API that provides functions to query the Fred dataset. 
 You need to specify a valid API key by passing in the string via api_key. 
-You can sign up for a free API key on the Fred website at http://research.stlouisfed.org/fred2/
+You can sign up for a free API key on the Fred website at:
+http://research.stlouisfed.org/fred2/
 """
+
 
 class FredDataApi(object):
     earliest_realtime_start = '1776-07-04'
@@ -71,8 +73,10 @@ class FredDataApi(object):
         :return: a url string of the requested data
         """
 
-        assert(isinstance(end, (dt.date, dt.datetime, type(None)))), 'end must be a date or datetime!'
-        assert(isinstance(start, (dt.date, dt.datetime, type(None)))), 'start must be a date or datetime!'
+        assert(isinstance(end, (dt.date, dt.datetime, type(None)))), \
+                'end must be a date or datetime!'
+        assert(isinstance(start, (dt.date, dt.datetime, type(None)))), \
+            'start must be a date or datetime!'
 
         if start is not None and end is not None:
             if type(start) != type(end):
@@ -120,7 +124,8 @@ class FredDataApi(object):
         except HTTPError as e:
             raise ValueError(response.json()['error_message'])
         if not len(json_data['observations']):
-            raise ValueError('No data exists for {} for the provided paramters... '.format(id))
+            raise ValueError('No data exists for {} for \
+                              the provided paramters... '.format(id))
         
         data = pd.DataFrame(json_data['observations'])[['date', 'value']]
         data['date'] = pd.to_datetime(data['date'])
@@ -162,32 +167,46 @@ class FredDataApi(object):
              raise ValueError(json.loads(response.text)['error_message'])
          return data
 
-    def __get_search_results(self, url, limit, order_by=None, sort_order=None, filter=None):
+    def __get_search_results(
+        self, 
+        url, 
+        limit, 
+        order_by=None, 
+        sort_order=None, 
+        filter=None
+    ) -> pd.DataFrame:
         """
-        helper function for getting search results up to specified limit on the number of results. The Fred HTTP API
-        returns max of 1000 results per request, so this may issue multiple HTTP requests to obtain results until limit is reached.
+        Helper function for getting search results up to specified limit on 
+        the number of results. The Fred API returns a max of 1000 results 
+        per request, so this will issue multiple HTTP requests to obtain 
+        results until limit is reached.
         """
-        order_by_options = ['search_rank', 'series_id', 'title', 'units', 'frequency',
-                            'seasonal_adjustment', 'realtime_start', 'realtime_end', 'last_updated',
-                            'observation_start', 'observation_end', 'popularity']
+        order_by_options = ['search_rank', 'series_id', 'title', 'units', 
+                            'frequency', 'seasonal_adjustment', 'last_updated',
+                            'realtime_start', 'realtime_end', 'popularity',
+                            'observation_start', 'observation_end', ]
         if order_by is not None:
             if order_by in order_by_options:
                 url = url + '&order_by=' + order_by
             else:
-                raise ValueError('{} is not in the valid list of order_by options: {}'.format(order_by, str(order_by_options)))
+                raise ValueError('{} is not valid order_by option: {}' \
+                                    .format(order_by, str(order_by_options)))
 
         if filter is not None:
             if len(filter) == 2:
-                url = url + '&filter_variable={}&filter_value={}'.format(filter[0], filter[1])
+                url = url + '&filter_variable={}&filter_value={}' \
+                                .format(filter[0], filter[1])
             else:
-                raise ValueError('Filter should be a 2 item tuple like (filter_variable, filter_value)')
+                raise ValueError('Filter should be a 2 item tuple: \
+                                     (filter_variable, filter_value)')
 
         sort_order_options = ['asc', 'desc']
         if sort_order is not None:
             if sort_order in sort_order_options:
                 url = url + '&sort_order=' + sort_order
             else:
-                raise ValueError('{} is not in the valid list of sort_order options: {}'.format(sort_order, str(sort_order_options)))
+                raise ValueError('{} is not in a valid sort_order option: {}' \
+                                    .format(sort_order, str(sort_order_options)))
         
         # Get first chunk
         data = self.__fetch_data(url)
@@ -195,7 +214,8 @@ class FredDataApi(object):
         if limit > 1000:
             for chunk in range(1, limit // 1000+1):
                 # Fetch data
-                next_data_chunk = self.__fetch_data(url + '&offset={}'.format(data.shape[0]))
+                next_data_chunk = self.__fetch_data(url + \
+                                        '&offset={}'.format(data.shape[0]))
                 next_data_chunk = pd.DataFrame(next_data_chunk['seriess'])
                 data = data.append(next_data_chunk)
         return data.head(limit)
@@ -209,10 +229,10 @@ class FredDataApi(object):
         **kwargs
     ) -> pd.DataFrame:
         """
-        Get the series covered in the FRED dataset by matching text, release id, or category id. 
+        Get the series covered in FRED by matching text, release id, or category id. 
 
         :param id: The dataset id
-        :param limit: The maximum number of results to return (value 0 returns all results)
+        :param limit: The maximum number of results to return
         :param offset: The offset
         :param fields: The fields to return, e.g. assetId
 
@@ -221,10 +241,12 @@ class FredDataApi(object):
                 Text, category_id or release_id to search 
             * *search_critera* (``str``) --
                 'text', 'release_id', or 'category_id'
-        :param order_by: Order the results by a criterion ('search_rank', 'field', 'title', 'units', 'frequency',
-            'seasonal_adjustment', 'realtime_start', 'realtime_end', 'last_updated', 'start', 'end',
-            'popularity')
-        :param filter: Filter the results by a criterion ('frequency', 'units', and 'seasonal_adjustment')
+        :param order_by: Order the results by a criterion: ('search_rank', 
+                         'field', 'title', 'units', 'frequency', 'last_updated'
+                         'seasonal_adjustment', 'realtime_start', 
+                         'realtime_end', 'popularity', 'start', 'end')
+        :param filter: Filter the results by a criterion:
+                         ('frequency', 'units', and 'seasonal_adjustment')
         :return: A DataFrame of the Fred series covered
 
         **Examples**
@@ -256,12 +278,14 @@ class FredDataApi(object):
         elif search_critera == 'category_id':
             url = '{}/category/series?category_id={}&limit=1000'.format(self.root_url, search_item)
         else:
-            raise ValueError("Please specify search_critera as: 'text', 'release_id', or 'category'!")
+            raise ValueError("Please specify search_critera as: \
+                                'text', 'release_id', or 'category'!")
         
         coverage = self.__get_search_results(url=url, limit=limit)
         
         if coverage is None:
-            raise ValueError('No series exists for text: {}'.format(str(search_item)))
+            raise ValueError('No series exist for text: {}' \
+                                .format(str(search_item)))
         
         return coverage
 

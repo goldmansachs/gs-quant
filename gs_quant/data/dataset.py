@@ -21,7 +21,6 @@ import pandas as pd
 
 from gs_quant.api.data import DataApi
 from gs_quant.data.fields import Fields
-from gs_quant.data.utils import construct_dataframe_with_types
 from gs_quant.errors import MqValueError
 
 
