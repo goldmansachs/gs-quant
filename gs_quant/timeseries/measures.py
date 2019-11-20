@@ -38,7 +38,7 @@ from gs_quant.datetime.point import relative_days_add
 from gs_quant.errors import MqTypeError, MqValueError
 from gs_quant.markets.securities import *
 from gs_quant.markets.securities import Asset, AssetIdentifier, SecurityMaster
-from gs_quant.target.common import AssetClass, FieldFilterMap, AssetType, Currency
+from gs_quant.target.common import AssetClass, FieldFilterMap, AssetType, Currency, PricingLocation
 from gs_quant.timeseries.helper import log_return, plot_measure
 
 GENERIC_DATE = Union[datetime.date, str]
@@ -120,6 +120,7 @@ class BenchmarkType(Enum):
     EURIBOR = 'EURIBOR'
     STIBOR = 'STIBOR'
     OIS = 'OIS'
+    CDKSDA = 'CDKSDA'
 
 
 class FundamentalMetricPeriod(Enum):
@@ -590,7 +591,7 @@ def average_implied_variance(asset: Asset, tenor: str, strike_reference: EdrData
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,), [QueryType.SWAP_RATE])
 def swap_rate(asset: Asset, tenor: str, benchmark_type: BenchmarkType = None, floating_index: str = None,
-              *, source: str = None, real_time: bool = False) -> Series:
+              pricing_location: PricingLocation = None, *, source: str = None, real_time: bool = False) -> Series:
     """
     GS end-of-day Fixed-Floating interest rate swap (IRS) curves across major currencies.
 
@@ -598,6 +599,7 @@ def swap_rate(asset: Asset, tenor: str, benchmark_type: BenchmarkType = None, fl
     :param tenor: relative date representation of expiration date e.g. 1m
     :param benchmark_type: benchmark type e.g. LIBOR
     :param floating_index: floating index rate
+    :param pricing_location: the pricing location (used for EOD data only)
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: swap rate curve
@@ -608,39 +610,56 @@ def swap_rate(asset: Asset, tenor: str, benchmark_type: BenchmarkType = None, fl
     currency = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
     currency = Currency(currency)
 
-    # default benchmark types
-    if benchmark_type is None:
-        if currency == Currency.EUR:
-            benchmark_type = BenchmarkType.EURIBOR
-        elif currency == Currency.SEK:
-            benchmark_type = BenchmarkType.STIBOR
-        else:
-            benchmark_type = BenchmarkType.LIBOR
+    if currency == Currency.KRW:
+        if benchmark_type not in (None, BenchmarkType.CDKSDA) or floating_index not in (None, '3m'):
+            raise NotImplementedError('Unsupported benchmark for {} swap rates'.format(currency.value))
 
-    over_nights = [BenchmarkType.OIS]
+        # default pricing location
+        pricing_location = pricing_location or PricingLocation.HKG
 
-    # default floating index
-    if floating_index is None:
-        if benchmark_type in over_nights:
-            floating_index = '1d'
-        else:
-            if currency in [Currency.USD]:
-                floating_index = '3m'
-            elif currency in [Currency.GBP, Currency.EUR, Currency.CHF, Currency.SEK]:
-                floating_index = '6m'
+        rate_mqid = asset.get_marquee_id()
+        where = FieldFilterMap(tenor=tenor, pricing_location=pricing_location.value)
 
-    mdapi_divider = " " if benchmark_type in over_nights else "-"
-    mdapi_floating_index = BenchmarkType.OIS.value if benchmark_type is BenchmarkType.OIS else floating_index
-    mdapi = currency.value + mdapi_divider + mdapi_floating_index
+        _logger.debug('where tenor=%s, pricingLocation=%s', tenor, pricing_location.value)
 
-    rate_mqid = GsAssetApi.map_identifiers(GsIdType.mdapi, GsIdType.id, [mdapi])[mdapi]
+    else:
+        if pricing_location not in (None, PricingLocation.LDN):
+            raise NotImplementedError('Unsupported pricing location {} for {} swap rates'.format(pricing_location.value,
+                                                                                                 currency.value))
+        # default benchmark types
+        if benchmark_type is None:
+            if currency == Currency.EUR:
+                benchmark_type = BenchmarkType.EURIBOR
+            elif currency == Currency.SEK:
+                benchmark_type = BenchmarkType.STIBOR
+            else:
+                benchmark_type = BenchmarkType.LIBOR
 
-    _logger.debug('where tenor=%s, floatingIndex=%s', tenor, floating_index)
+        over_nights = [BenchmarkType.OIS]
+
+        # default floating index
+        if floating_index is None:
+            if benchmark_type in over_nights:
+                floating_index = '1d'
+            else:
+                if currency in [Currency.USD]:
+                    floating_index = '3m'
+                elif currency in [Currency.GBP, Currency.EUR, Currency.CHF, Currency.SEK]:
+                    floating_index = '6m'
+
+        mdapi_divider = " " if benchmark_type in over_nights else "-"
+        mdapi_floating_index = BenchmarkType.OIS.value if benchmark_type is BenchmarkType.OIS else floating_index
+        mdapi = currency.value + mdapi_divider + mdapi_floating_index
+
+        rate_mqid = GsAssetApi.map_identifiers(GsIdType.mdapi, GsIdType.id, [mdapi])[mdapi]
+        where = FieldFilterMap(tenor=tenor)
+
+        _logger.debug('where tenor=%s, floatingIndex=%s', tenor, floating_index)
 
     q = GsDataApi.build_market_data_query(
         [rate_mqid],
         QueryType.SWAP_RATE,
-        where=FieldFilterMap(tenor=tenor),
+        where=where,
         source=source,
         real_time=real_time
     )
