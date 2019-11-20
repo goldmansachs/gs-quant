@@ -14,7 +14,6 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime as dt
-from unittest import mock
 
 import numpy as np
 from numpy import int64, float64, object, datetime64
@@ -148,6 +147,7 @@ test_data = [
 ]
 
 test_coverage_data = {'results': [{'gsid': 'gsid1'}]}
+
 
 def test_query_data(mocker):
     mocker.patch("gs_quant.api.gs.data.GsDataApi.query_data", return_value=test_data)

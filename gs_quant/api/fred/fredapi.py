@@ -16,9 +16,7 @@ under the License.
 //Portions copyright Maverick Lin. Licensed under Apache 2.0 license
 """
 
-import os
-import sys
-from typing import Iterable, List, Optional, Tuple, Union
+from typing import Iterable, List, Optional, Union
 
 import json
 import pandas as pd
@@ -30,9 +28,11 @@ from requests.exceptions import HTTPError
 from urllib.parse import urlencode
 import textwrap
 
+
+
 """
-Fred Data API that provides functions to query the Fred dataset. 
-You need to specify a valid API key by passing in the string via api_key. 
+Fred Data API that provides functions to query the Fred dataset.
+You need to specify a valid API key by passing in the string via api_key.
 You can sign up for a free API key on the Fred website at:
 http://research.stlouisfed.org/fred2/
 """
@@ -48,8 +48,8 @@ class FredDataApi(object):
             self.api_key = api_key
         else:
             raise ValueError(textwrap.dedent("""
-                    Please pass a string with your API key. You can sign up for 
-                    a free api key on the Fred website at 
+                    Please pass a string with your API key. You can sign up for
+                    a free api key on the Fred website at
                     http://research.stlouisfed.org/fred2/"""))
 
     def build_query(
@@ -60,7 +60,7 @@ class FredDataApi(object):
         since: Optional[dt.datetime] = None,
         fields: Optional[Iterable[str]] = None,
         **kwargs
-    ) -> str: 
+    ) -> str:
         """
         Builds a FRED URL to query.
 
@@ -74,14 +74,14 @@ class FredDataApi(object):
         """
 
         assert(isinstance(end, (dt.date, dt.datetime, type(None)))), \
-                'end must be a date or datetime!'
+            'end must be a date or datetime!'
         assert(isinstance(start, (dt.date, dt.datetime, type(None)))), \
             'start must be a date or datetime!'
 
         if start is not None and end is not None:
             if type(start) != type(end):
                 raise ValueError('Start and end types must match!')
-        
+
         url = ''
         date_dict = {
             'observation_start': start,
@@ -101,32 +101,32 @@ class FredDataApi(object):
         return final_url
 
     def query_data(
-        self, 
-        query: str, 
-        id: str, 
+        self,
+        query: str,
+        id: str,
         asset_id_type=None
     ) -> dict:
         """
-        Query data given a valid FRED series id and url. 
+        Query data given a valid FRED series id and url.
         Will raise an HTTPError if the response was an HTPP error.
 
         :param query: A url string of the requested data
-        :param id: A FRED series id 
+        :param id: A FRED series id
         :return: with id as key and requested DataFrame as value.
         """
 
         final_query = query.format(id)
         series_dict = {}
-        try: 
+        try:
             response = requests.get(final_query)
-            response.raise_for_status() 
+            response.raise_for_status()
             json_data = response.json()
-        except HTTPError as e:
+        except HTTPError:
             raise ValueError(response.json()['error_message'])
         if not len(json_data['observations']):
             raise ValueError('No data exists for {} for \
                               the provided paramters... '.format(id))
-        
+
         data = pd.DataFrame(json_data['observations'])[['date', 'value']]
         data['date'] = pd.to_datetime(data['date'])
         data = data.set_index('date')['value']
@@ -136,52 +136,52 @@ class FredDataApi(object):
 
     def last_data(
         self,
-        query: str, 
-        id: str, 
+        query: str,
+        id: str,
         **kwargs
     ) -> dict:
         """
         Get the last point for a data series, at or before as_of
 
         :param query: A url string of the requested data
-        :param id: A FRED series id 
+        :param id: A FRED series id
         :param kwargs: Extra query arguments
         :return: with id as key and last point for this DataSet as value.
         """
-        
+
         data = self.query_data(query, id)
-        last_data_chunk = {}
+
         return {id: datum.last('1D') for id, datum in data.items()}
 
     def __fetch_data(self, url: str):
-         """
-         Helper function for fetching data given a request URL.
-         Will raise an HTTPError if the response was an HTTP error.
-         """
-         url += '&api_key={}&file_type=json'.format(self.api_key)
-         try:
-             response = requests.get(url)
-             response.raise_for_status() 
-             data = json.loads(response.text)
-         except HTTPError as e:
-             raise ValueError(json.loads(response.text)['error_message'])
-         return data
+        """
+        Helper function for fetching data given a request URL.
+        Will raise an HTTPError if the response was an HTTP error.
+        """
+        url += '&api_key={}&file_type=json'.format(self.api_key)
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+            data = json.loads(response.text)
+        except HTTPError:
+            raise ValueError(json.loads(response.text)['error_message'])
+        return data
 
     def __get_search_results(
-        self, 
-        url, 
-        limit, 
-        order_by=None, 
-        sort_order=None, 
+        self,
+        url,
+        limit,
+        order_by=None,
+        sort_order=None,
         filter=None
     ) -> pd.DataFrame:
         """
-        Helper function for getting search results up to specified limit on 
-        the number of results. The Fred API returns a max of 1000 results 
-        per request, so this will issue multiple HTTP requests to obtain 
+        Helper function for getting search results up to specified limit on
+        the number of results. The Fred API returns a max of 1000 results
+        per request, so this will issue multiple HTTP requests to obtain
         results until limit is reached.
         """
-        order_by_options = ['search_rank', 'series_id', 'title', 'units', 
+        order_by_options = ['search_rank', 'series_id', 'title', 'units',
                             'frequency', 'seasonal_adjustment', 'last_updated',
                             'realtime_start', 'realtime_end', 'popularity',
                             'observation_start', 'observation_end', ]
@@ -189,13 +189,13 @@ class FredDataApi(object):
             if order_by in order_by_options:
                 url = url + '&order_by=' + order_by
             else:
-                raise ValueError('{} is not valid order_by option: {}' \
-                                    .format(order_by, str(order_by_options)))
+                raise ValueError('{} is not valid order_by option: {}'
+                                .format(order_by, str(order_by_options)))
 
         if filter is not None:
             if len(filter) == 2:
-                url = url + '&filter_variable={}&filter_value={}' \
-                                .format(filter[0], filter[1])
+                url = url + '&filter_variable={}&filter_value={}'.format(filter[0], filter[1])
+
             else:
                 raise ValueError('Filter should be a 2 item tuple: \
                                      (filter_variable, filter_value)')
@@ -205,17 +205,17 @@ class FredDataApi(object):
             if sort_order in sort_order_options:
                 url = url + '&sort_order=' + sort_order
             else:
-                raise ValueError('{} is not in a valid sort_order option: {}' \
-                                    .format(sort_order, str(sort_order_options)))
+                raise ValueError('{} is not in a valid sort_order option: {}'.format(sort_order, str(sort_order_options)))
         
+
         # Get first chunk
         data = self.__fetch_data(url)
         data = pd.DataFrame(data['seriess'])
         if limit > 1000:
-            for chunk in range(1, limit // 1000+1):
+            for chunk in range(1, limit // 1000 + 1):
                 # Fetch data
                 next_data_chunk = self.__fetch_data(url + \
-                                        '&offset={}'.format(data.shape[0]))
+                                    '&offset={}'.format(data.shape[0]))
                 next_data_chunk = pd.DataFrame(next_data_chunk['seriess'])
                 data = data.append(next_data_chunk)
         return data.head(limit)
@@ -229,7 +229,7 @@ class FredDataApi(object):
         **kwargs
     ) -> pd.DataFrame:
         """
-        Get the series covered in FRED by matching text, release id, or category id. 
+        Get the series covered in FRED by matching text, release id, or category id.
 
         :param id: The dataset id
         :param limit: The maximum number of results to return
@@ -238,12 +238,12 @@ class FredDataApi(object):
 
         :Keyword Arguments:
             * *search_item* (``Union[str, int]``) --
-                Text, category_id or release_id to search 
+                Text, category_id or release_id to search
             * *search_critera* (``str``) --
                 'text', 'release_id', or 'category_id'
-        :param order_by: Order the results by a criterion: ('search_rank', 
+        :param order_by: Order the results by a criterion: ('search_rank',
                          'field', 'title', 'units', 'frequency', 'last_updated'
-                         'seasonal_adjustment', 'realtime_start', 
+                         'seasonal_adjustment', 'realtime_start',
                          'realtime_end', 'popularity', 'start', 'end')
         :param filter: Filter the results by a criterion:
                          ('frequency', 'units', and 'seasonal_adjustment')
@@ -252,7 +252,7 @@ class FredDataApi(object):
         **Examples**
 
         >>> from gs_quant.api.fred import FredDataApi
-        >>> 
+        >>>
         >>> API_KEY = <YOUR API KEY>
         >>> fredAPI = FredDataApi(api_key = API_KEY)
         >>> fred_data = Dataset("FRED", fredAPI)
@@ -261,13 +261,13 @@ class FredDataApi(object):
         >>> fred_data.get_coverage(search_item=151, search_criteria="release_id")
         >>> fred_data.get_coverage(search_item=33058, search_criteria="category_id")
         """
-        
+
         assert('search_criteria' in kwargs)
         assert('search_item' in kwargs)
-        
+
         if limit is None:
             limit = 1000
-        
+
         search_critera = kwargs['search_criteria']
         search_item = kwargs['search_item']
 
@@ -280,23 +280,23 @@ class FredDataApi(object):
         else:
             raise ValueError("Please specify search_critera as: \
                                 'text', 'release_id', or 'category'!")
-        
+
         coverage = self.__get_search_results(url=url, limit=limit)
-        
+
         if coverage is None:
-            raise ValueError('No series exist for text: {}' \
-                                .format(str(search_item)))
-        
+            raise ValueError('No series exist for text: {}' 
+                            .format(str(search_item)))
+
         return coverage
 
     def construct_dataframe_with_types(
-        self, 
-        dataset_id: str, 
+        self,
+        dataset_id: str,
         data: dict
     ) -> pd.DataFrame:
         """
         Constructs a dataframe with correct date types.
-        
+
         :param data: Data to convert with correct types
         :return: Dataframe with correct types
         """
@@ -318,5 +318,5 @@ class FredDataApi(object):
         else:
             return pd.DataFrame({})
 
-    def symbol_dimensions(self, id:str) -> list:
+    def symbol_dimensions(self, id: str) -> list:
         return [None]

@@ -37,6 +37,7 @@ from .assets import GsAssetApi, GsIdType
 
 _logger = logging.getLogger(__name__)
 
+
 class QueryType(Enum):
     IMPLIED_VOLATILITY = "Implied Volatility"
     IMPLIED_CORRELATION = "Implied Correlation"

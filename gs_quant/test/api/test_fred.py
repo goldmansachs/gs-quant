@@ -32,103 +32,105 @@ import requests
 from unittest.mock import Mock
 from unittest.mock import patch
 
-fredAPI = FredDataApi(api_key=<YOUR API KEY>)
+fredAPI = FredDataApi(api_key = <YOUR API KEY>)
 fred_data = Dataset("GDP", fredAPI)
 
 GDP_data = {
-  "realtime_start":"2019-10-25",
-  "realtime_end":"2019-10-25",
-  "observation_start":"1600-01-01",
-  "observation_end":"9999-12-31",
-  "units":"lin","output_type":1,
-  "file_type":"json",
-  "order_by":"observation_date",
-  "sort_order":"asc",
-  "count":294,
-  "offset":0,
-  "limit":20,
-  "observations":[
-    {"realtime_start":"2019-10-25","realtime_end":"2019-10-25","date":"1946-01-01","value":"."},
-    {"realtime_start":"2019-10-25","realtime_end":"2019-10-25","date":"1946-04-01","value":"."},
-    {"realtime_start":"2019-10-25","realtime_end":"2019-10-25","date":"1946-07-01","value":"."},
-    {"realtime_start":"2019-10-25","realtime_end":"2019-10-25","date":"1946-10-01","value":"."},
-    {"realtime_start":"2019-10-25","realtime_end":"2019-10-25","date":"1947-01-01","value":"243.164"},
-    {"realtime_start":"2019-10-25","realtime_end":"2019-10-25","date":"1947-04-01","value":"245.968"},
-    {"realtime_start":"2019-10-25","realtime_end":"2019-10-25","date":"1947-07-01","value":"249.585"},
-    {"realtime_start":"2019-10-25","realtime_end":"2019-10-25","date":"1947-10-01","value":"259.745"},
-    {"realtime_start":"2019-10-25","realtime_end":"2019-10-25","date":"1948-01-01","value":"265.742"},
-    {"realtime_start":"2019-10-25","realtime_end":"2019-10-25","date":"1948-04-01","value":"272.567"},
-    {"realtime_start":"2019-10-25","realtime_end":"2019-10-25","date":"1948-07-01","value":"279.196"},
-    {"realtime_start":"2019-10-25","realtime_end":"2019-10-25","date":"1948-10-01","value":"280.366"},
-    {"realtime_start":"2019-10-25","realtime_end":"2019-10-25","date":"1949-01-01","value":"275.034"},
-    {"realtime_start":"2019-10-25","realtime_end":"2019-10-25","date":"1949-04-01","value":"271.351"},
-    {"realtime_start":"2019-10-25","realtime_end":"2019-10-25","date":"1949-07-01","value":"272.889"},
-    {"realtime_start":"2019-10-25","realtime_end":"2019-10-25","date":"1949-10-01","value":"270.627"},
-    {"realtime_start":"2019-10-25","realtime_end":"2019-10-25","date":"1950-01-01","value":"280.828"},
-    {"realtime_start":"2019-10-25","realtime_end":"2019-10-25","date":"1950-04-01","value":"290.383"},
-    {"realtime_start":"2019-10-25","realtime_end":"2019-10-25","date":"1950-07-01","value":"308.153"},
-    {"realtime_start":"2019-10-25","realtime_end":"2019-10-25","date":"1950-10-01","value":"319.945"}
-  ]
+    "realtime_start": "2019-10-25",
+    "realtime_end": "2019-10-25",
+    "observation_start": "1600-01-01",
+    "observation_end": "9999-12-31",
+    "units":" lin","output_type":1,
+    "file_type": "json",
+    "order_by": "observation_date",
+    "sort_order": "asc",
+    "count": 294,
+    "offset": 0,
+    "limit": 20,
+    "observations": [
+      {"realtime_start": "2019-10-25", "realtime_end": "2019-10-25","date": "1946-01-01", "value": "."},
+      {"realtime_start": "2019-10-25", "realtime_end": "2019-10-25","date": "1946-04-01", "value": "."},
+      {"realtime_start": "2019-10-25", "realtime_end": "2019-10-25","date": "1946-07-01", "value": "."},
+      {"realtime_start": "2019-10-25", "realtime_end": "2019-10-25","date": "1946-10-01", "value": "."},
+      {"realtime_start": "2019-10-25", "realtime_end": "2019-10-25","date": "1947-01-01", "value": "243.164"},
+      {"realtime_start": "2019-10-25", "realtime_end": "2019-10-25","date": "1947-04-01", "value": "245.968"},
+      {"realtime_start": "2019-10-25", "realtime_end": "2019-10-25","date": "1947-07-01", "value": "249.585"},
+      {"realtime_start": "2019-10-25", "realtime_end": "2019-10-25","date": "1947-10-01", "value": "259.745"},
+      {"realtime_start": "2019-10-25", "realtime_end": "2019-10-25","date": "1948-01-01", "value": "265.742"},
+      {"realtime_start": "2019-10-25", "realtime_end": "2019-10-25","date": "1948-04-01", "value": "272.567"},
+      {"realtime_start": "2019-10-25", "realtime_end": "2019-10-25","date": "1948-07-01", "value": "279.196"},
+      {"realtime_start": "2019-10-25", "realtime_end": "2019-10-25","date": "1948-10-01", "value": "280.366"},
+      {"realtime_start": "2019-10-25", "realtime_end": "2019-10-25","date": "1949-01-01", "value": "275.034"},
+      {"realtime_start": "2019-10-25", "realtime_end": "2019-10-25","date": "1949-04-01", "value": "271.351"},
+      {"realtime_start": "2019-10-25", "realtime_end": "2019-10-25","date": "1949-07-01", "value": "272.889"},
+      {"realtime_start": "2019-10-25", "realtime_end": "2019-10-25","date": "1949-10-01", "value": "270.627"},
+      {"realtime_start": "2019-10-25", "realtime_end": "2019-10-25","date": "1950-01-01", "value": "280.828"},
+      {"realtime_start": "2019-10-25", "realtime_end": "2019-10-25","date": "1950-04-01", "value": "290.383"},
+      {"realtime_start": "2019-10-25", "realtime_end": "2019-10-25","date": "1950-07-01", "value": "308.153"},
+      {"realtime_start": "2019-10-25", "realtime_end": "2019-10-25","date": "1950-10-01", "value": "319.945"}
+    ]
 }
+
 
 def _mock_requests_response(
     status=200,
     content="",
     json_data=None,
     raise_for_status=None):
-    """
-    Helper function to build mock requests responses.
-    """
+    """ Helper function to build mock requests responses."""
     mock_resp = Mock()
     mock_resp.status_code = status
     mock_resp.content = content
     mock_resp.raise_for_status = Mock()
 
-    if raise_for_status: 
-      mock_resp.raise_for_status.side_effect = raise_for_status
+    if raise_for_status:
+        mock_resp.raise_for_status.side_effect = raise_for_status
 
     if json_data:
-      mock_resp.json = Mock(return_value=json_data)
+        mock_resp.json = Mock(return_value=json_data)
     
     return mock_resp
 
+
 def test_get_data(mocker):
-  mocker.patch('requests.get', return_value = _mock_requests_response(json_data=GDP_data))
-  result = fred_data.get_data(series_ids=["GDP"])
+    mocker.patch('requests.get', return_value=_mock_requests_response(json_data=GDP_data))
+    result = fred_data.get_data(series_ids=["GDP"])
 
-  expected_result = pd.DataFrame(GDP_data["observations"])[["date", "value"]]
-  expected_result['date'] = pd.to_datetime(expected_result['date'])
+    expected_result = pd.DataFrame(GDP_data["observations"])[["date", "value"]]
+    expected_result['date'] = pd.to_datetime(expected_result['date'])
 
-  expected_result = expected_result.set_index('date')['value']
-  expected_result = expected_result.sort_index().groupby('date').tail(1)
-  expected_result = expected_result.to_frame()
-  expected_result.index.name = 'date'
-  expected_result.columns = ["GDP"]
-  assert_frame_equal(result, expected_result)
+    expected_result = expected_result.set_index('date')['value']
+    expected_result = expected_result.sort_index().groupby('date').tail(1)
+    expected_result = expected_result.to_frame()
+    expected_result.index.name = 'date'
+    expected_result.columns = ["GDP"]
+    assert_frame_equal(result, expected_result)
+
 
 def test_failed_get_data(mocker):
     """test case where FRED API is down"""
-    mocker.patch('requests.get', side_effect = ValueError(_mock_requests_response(status=404)))
+    mocker.patch('requests.get', side_effect=ValueError(_mock_requests_response(status=404)))
     with pytest.raises(ValueError):
-      fred_data.get_data(series_ids=["GDP"])
+        fred_data.get_data(series_ids=["GDP"])
 
 
 def test_get_data_series(mocker):
-  mocker.patch('requests.get', return_value = _mock_requests_response(json_data=GDP_data))
-  result = fred_data.get_data_series(field="GDP", series_ids=["GDP"])
+    mocker.patch('requests.get', return_value=_mock_requests_response(json_data=GDP_data))
+    result = fred_data.get_data_series(field="GDP", series_ids=["GDP"])
 
-  expected_result = pd.DataFrame(GDP_data["observations"])[["date", "value"]]
-  expected_result['date'] = pd.to_datetime(expected_result['date'])
+    expected_result = pd.DataFrame(GDP_data["observations"])[["date", "value"]]
+    expected_result['date'] = pd.to_datetime(expected_result['date'])
 
-  expected_result = expected_result.set_index('date')['value']
-  expected_result = expected_result.sort_index().groupby('date').tail(1)
-  expected_result.index.name = 'date'
-  expected_result.columns = ["GDP"]
-  expected_result = expected_result.rename(None)
-  assert_series_equal(result, expected_result)
+    expected_result = expected_result.set_index('date')['value']
+    expected_result = expected_result.sort_index().groupby('date').tail(1)
+    expected_result.index.name = 'date'
+    expected_result.columns = ["GDP"]
+    expected_result = expected_result.rename(None)
+    assert_series_equal(result, expected_result)
+
 
 def test_failed_get_data_series(mocker):
     """test case where FRED API is down"""
-    mocker.patch('requests.get', side_effect = ValueError(_mock_requests_response(status=404)))
+    mocker.patch('requests.get', side_effect=ValueError(_mock_requests_response(status=404)))
     with pytest.raises(ValueError):
-      fred_data.get_data_series(field="GDP", series_ids=["GDP"])
+        fred_data.get_data_series(field="GDP", series_ids=["GDP"])
