@@ -13,9 +13,14 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import cachetools
+import cachetools.keys
 import datetime as dt
 import logging
+import os
+import threading
 from enum import auto, Enum
+from functools import wraps
 from typing import Iterable, List, Tuple, Optional, Union
 from gs_quant.target.assets import Asset as __Asset, AssetClass, AssetType, AssetToInstrumentResponse, TemporalXRef,\
     Position, EntityQuery, PositionSet
@@ -27,6 +32,37 @@ from gs_quant.common import PositionType
 
 _logger = logging.getLogger(__name__)
 IdList = Union[Tuple[str, ...], List]
+
+metalock = threading.Lock()
+invocation_locks = cachetools.LRUCache(1024)  # prevent collection from growing without bound
+
+
+def _cached(fn):
+    _fn_cache_lock = threading.Lock()
+    # short-term cache to avoid retrieving the same data several times in succession
+    cache = cachetools.TTLCache(1024, 30) if os.environ.get('GSQ_SEC_MASTER_CACHE') else None
+
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        if cache is not None:
+            args = [tuple(x) if isinstance(x, list) else x for x in args]  # tuples are hashable
+            k = cachetools.keys.hashkey(GsSession.current, *args, **kwargs)
+            with metalock:
+                invocation_lock = invocation_locks.setdefault(f'{fn.__name__}:{k}', threading.Lock())
+            with invocation_lock:
+                with _fn_cache_lock:
+                    result = cache.get(k)
+                if result:
+                    _logger.debug('%s cache hit: %s, %s', fn.__name__, str(args), str(kwargs))
+                    return result
+                result = fn(*args, **kwargs)
+                with _fn_cache_lock:
+                    cache[k] = result
+        else:
+            result = fn(*args, **kwargs)
+        return result
+
+    return wrapper
 
 
 class GsIdType(Enum):
@@ -41,6 +77,7 @@ class GsIdType(Enum):
     mdapi = auto()
     primeId = auto()
     id = auto()
+
 
 class GsAsset(__Asset):
     """GS Asset API object model for an asset object"""
@@ -78,6 +115,7 @@ class GsAssetApi:
         )
 
     @classmethod
+    @_cached
     def get_many_assets(
             cls,
             fields: IdList = None,
@@ -90,6 +128,7 @@ class GsAssetApi:
         return response['results']
 
     @classmethod
+    @_cached
     def get_many_assets_data(
             cls,
             fields: IdList = None,
@@ -102,6 +141,7 @@ class GsAssetApi:
         return response['results']
 
     @classmethod
+    @_cached
     def get_asset_xrefs(
             cls,
             asset_id: str
@@ -110,6 +150,7 @@ class GsAssetApi:
         return tuple(GsTemporalXRef.from_dict(x) for x in response.get('xrefs', ()))
 
     @classmethod
+    @_cached
     def get_asset(
             cls,
             asset_id: str,
@@ -186,6 +227,7 @@ class GsAssetApi:
         return results
 
     @classmethod
+    @_cached
     def map_identifiers(
             cls,
             input_type: Union[GsIdType, str],

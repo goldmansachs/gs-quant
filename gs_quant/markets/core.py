@@ -215,7 +215,7 @@ class PricingContext(ContextBaseWithDefault):
             for risk_measures, positions in positions_by_risk_measures.items():
                 risk_request = RiskRequest(
                     tuple(positions),
-                    tuple(sorted(risk_measures, key=lambda m: m.name)),
+                    tuple(sorted(risk_measures, key=lambda m: m.name or m.measure_type)),
                     wait_for_results=not self.__is_batch,
                     pricing_location=self.market_data_location,
                     scenario=ScenarioContext.current if ScenarioContext.current.scenario is not None else None,

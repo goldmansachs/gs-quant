@@ -10364,7 +10364,7 @@ class FieldFilterMap(Base):
     @maturity.setter
     def maturity(self, value: dict):
         self._property_changed('maturity')
-        self.__maturity = value        
+        self.__maturity = value
 
     @property
     def delta_strike(self) -> dict:

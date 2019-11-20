@@ -19,7 +19,7 @@ import inflection
 from typing import Optional, Union
 
 from gs_quant.target.common import FieldFilterMap
-from gs_quant.target.data import DataQuery
+from gs_quant.target.data import DataQuery, MDAPIDataQuery
 
 
 class DataApi(metaclass=ABCMeta):
@@ -47,26 +47,34 @@ class DataApi(metaclass=ABCMeta):
             since: Optional[dt.datetime] = None,
             **kwargs
     ):
-        from gs_quant.api.gs.data import DataQuery
-
         end_is_time = isinstance(end, dt.datetime)
         start_is_time = isinstance(start, dt.datetime)
 
-        if start_is_time and end is not None and not end_is_time:
-            raise ValueError('If start is of type datetime, so must end be!')
+        if kwargs.get('market_data_coordinates'):
+            if not (start is None or start_is_time) and (end is None or end_is_time):
+                raise NotImplementedError('EOD coordinates data not implemented')
 
-        if isinstance(start, dt.date) and end is not None and not isinstance(end, dt.date):
-            raise ValueError('If start is of type date, so must end be!')
+            query = MDAPIDataQuery(
+                start_time=start,
+                end_time=end,
+                format="MessagePack"
+            )
+        else:
+            if start_is_time and end is not None and not end_is_time:
+                raise ValueError('If start is of type datetime, so must end be!')
 
-        query = DataQuery(
-            start_date=start if not start_is_time else None,
-            start_time=start if start_is_time else None,
-            end_date=end if not end_is_time else None,
-            end_time=end if end_is_time else None,
-            as_of_time=as_of,
-            since=since,
-            format="MessagePack"
-        )
+            if isinstance(start, dt.date) and end is not None and not isinstance(end, dt.date):
+                raise ValueError('If start is of type date, so must end be!')
+
+            query = DataQuery(
+                start_date=start if not start_is_time else None,
+                start_time=start if start_is_time else None,
+                end_date=end if not end_is_time else None,
+                end_time=end if end_is_time else None,
+                as_of_time=as_of,
+                since=since,
+                format="MessagePack"
+            )
 
         where = FieldFilterMap()
         query_properties = query.properties()
@@ -78,10 +86,8 @@ class DataApi(metaclass=ABCMeta):
                 setattr(query, snake_case_field, value)
             elif snake_case_field in where_properties:
                 setattr(where, snake_case_field, value)
+                query.where = where
             else:
                 raise ValueError('Invalid query field: ' + field)
-
-        if where:
-            query.where = where
 
         return query

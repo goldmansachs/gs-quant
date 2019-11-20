@@ -28,13 +28,14 @@ from testfixtures.mock import Mock
 
 import gs_quant.timeseries.measures as tm
 from gs_quant.api.gs.assets import GsTemporalXRef, GsAssetApi, GsIdType, IdList
+from gs_quant.api.gs.data import GsDataApi
 from gs_quant.data.core import DataContext
 from gs_quant.errors import MqError
 from gs_quant.markets.securities import AssetClass, Cross, Index, Currency
 from gs_quant.session import GsSession, Environment
-from gs_quant.target.common import XRef
+from gs_quant.target.common import XRef, FieldFilterMap
 from gs_quant.test.timeseries.utils import mock_request
-from gs_quant.timeseries.measures import BenchmarkType
+from gs_quant.timeseries.measures import BenchmarkType, PricingLocation
 
 _index = [pd.Timestamp('2019-01-01')]
 
@@ -438,7 +439,7 @@ def test_avg_impl_var():
     replace.restore()
 
 
-def test_swap_rate():
+def test_swap_rate(mocker):
     replace = Replacer()
     mock_usd = Currency('MA890', 'USD')
 
@@ -446,7 +447,7 @@ def test_swap_rate():
     xrefs.return_value = [GsTemporalXRef(dt.date(2019, 1, 1), dt.date(2952, 12, 31), XRef(bbid='USD', ))]
     identifiers = replace('gs_quant.timeseries.measures.GsAssetApi.map_identifiers', Mock())
     identifiers.return_value = {'USD-3m': 'MA123'}
-    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_curr)
+    mocker.patch.object(GsDataApi, 'get_market_data', return_value=mock_curr(None, None))
     actual = tm.swap_rate(mock_usd, '1y')
     assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='swapRate'), actual)
 
@@ -472,7 +473,42 @@ def test_swap_rate():
     assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='swapRate'), actual)
 
     with pytest.raises(NotImplementedError):
+        tm.swap_rate(mock_sek, '1y', pricing_location=PricingLocation.NYC)
+
+    with pytest.raises(NotImplementedError):
         tm.swap_rate(..., '1y', real_time=True)
+
+    GsDataApi.get_market_data.reset_mock()
+    mock_krw = Currency('MA890', 'KRW')
+    xrefs = replace('gs_quant.timeseries.measures.GsAssetApi.get_asset_xrefs', Mock())
+    xrefs.return_value = [GsTemporalXRef(dt.date(2019, 1, 1), dt.date(2952, 12, 31), XRef(bbid='KRW', ))]
+    actual = tm.swap_rate(mock_krw, '1y')
+    assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='swapRate'), actual)
+    GsDataApi.get_market_data.assert_called_once_with(
+        GsDataApi.build_market_data_query(
+            ['MA890'],
+            tm.QueryType.SWAP_RATE,
+            where=FieldFilterMap(tenor='1y', pricing_location='HKG'),
+            source=None,
+            real_time=False
+        )
+    )
+
+    GsDataApi.get_market_data.reset_mock()
+    actual = tm.swap_rate(mock_krw, '2y', BenchmarkType.CDKSDA, '3m', PricingLocation.NYC)
+    assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='swapRate'), actual)
+    GsDataApi.get_market_data.assert_called_once_with(
+        GsDataApi.build_market_data_query(
+            ['MA890'],
+            tm.QueryType.SWAP_RATE,
+            where=FieldFilterMap(tenor='2y', pricing_location='NYC'),
+            source=None,
+            real_time=False
+        )
+    )
+
+    with pytest.raises(NotImplementedError):
+        tm.swap_rate(mock_krw, '1y', floating_index='1y')
 
     replace.restore()
 
