@@ -21,6 +21,7 @@ import pandas as pd
 
 from gs_quant.api.data import DataApi
 from gs_quant.data.fields import Fields
+from gs_quant.data.utils import construct_dataframe_with_types
 from gs_quant.errors import MqValueError
 
 
@@ -124,7 +125,7 @@ class Dataset:
         )
         data = self.provider.query_data(query, self.id, asset_id_type=asset_id_type)
 
-        return self.provider.construct_dataframe_with_types(self.id, data)
+        return construct_dataframe_with_types(self.id, data)
 
     def get_data_series(
             self,
@@ -173,14 +174,11 @@ class Dataset:
 
         symbol_dimension = symbol_dimensions[0]
         data = self.provider.query_data(query, self.id)
-        df = self.provider.construct_dataframe_with_types(self.id, data)
+        df = construct_dataframe_with_types(self.id, data)
 
-        from gs_quant.api.gs.data import GsDataApi
-
-        if isinstance(self.provider, GsDataApi):
-            gb = df.groupby(symbol_dimension)
-            if len(gb.groups) > 1:
-                raise MqValueError('Not a series for a single {}'.format(symbol_dimension))
+        gb = df.groupby(symbol_dimension)
+        if len(gb.groups) > 1:
+            raise MqValueError('Not a series for a single {}'.format(symbol_dimension))
 
         return pd.Series(index=df.index, data=df.loc[:, field_value].values)
 
@@ -216,14 +214,13 @@ class Dataset:
         )
 
         data = self.provider.last_data(query, self.id)
-        return self.provider.construct_dataframe_with_types(self.id, data)
+        return construct_dataframe_with_types(self.id, data)
 
     def get_coverage(
             self,
             limit: int = None,
             offset: int = None,
-            fields: List[str] = None,
-            **kwargs
+            fields: List[str] = None
     ) -> pd.DataFrame:
         """
         Get the assets covered by this DataSet
@@ -244,8 +241,7 @@ class Dataset:
             self.id,
             limit=limit,
             offset=offset,
-            fields=fields,
-            **kwargs
+            fields=fields
         )
 
         return pd.DataFrame(coverage)
