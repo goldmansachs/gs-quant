@@ -14,14 +14,15 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime as dt
-from unittest import mock
 
+import numpy as np
+from numpy import int64, float64, object, datetime64
 import pandas as pd
 import pytest
 
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.data import Dataset
-from gs_quant.data.utils import construct_dataframe_with_types
+
 
 test_types = {
     'date': 'date',
@@ -145,42 +146,37 @@ test_data = [
     }
 ]
 
+
 test_coverage_data = {'results': [{'gsid': 'gsid1'}]}
 
 
-@mock.patch("gs_quant.data.utils.get_types")
-@mock.patch.object(GsDataApi, 'query_data')
-def test_query_data(query_data, get_types):
-    query_data.return_value = test_data
-    get_types.return_value = test_types
+def test_query_data(mocker):
+    mocker.patch("gs_quant.api.gs.data.GsDataApi.query_data", return_value=test_data)
+    mocker.patch("gs_quant.api.gs.data.GsDataApi.get_types", return_value=test_types)
     dataset = Dataset(Dataset.TR.TREOD)
     data = dataset.get_data(dt.date(2019, 1, 2), dt.date(2019, 1, 9), assetId='MA4B66MW5E27U8P32SB')
-    assert data.equals(construct_dataframe_with_types(str(Dataset.TR.TREOD), test_data))
+    assert data.equals(GsDataApi.construct_dataframe_with_types(str(Dataset.TR.TREOD), test_data))
 
 
-@mock.patch("gs_quant.data.utils.get_types")
-@mock.patch.object(GsDataApi, 'query_data')
-def test_query_data_types(query_data, get_types):
-    query_data.return_value = test_data
-    get_types.return_value = test_types
+def test_query_data_types(mocker):
+    mocker.patch("gs_quant.api.gs.data.GsDataApi.query_data", return_value=test_data)
+    mocker.patch("gs_quant.api.gs.data.GsDataApi.get_types", return_value=test_types)
     dataset = Dataset(Dataset.TR.TREOD)
     data = dataset.get_data(dt.date(2019, 1, 2), dt.date(2019, 1, 9), assetId='MA4B66MW5E27U8P32SB')
-    assert data.equals(construct_dataframe_with_types(str(Dataset.TR.TREOD), test_data))
+    assert data.equals(GsDataApi.construct_dataframe_with_types(str(Dataset.TR.TREOD), test_data))
 
 
-@mock.patch("gs_quant.data.utils.get_types")
-@mock.patch.object(GsDataApi, 'last_data')
-def test_last_data(query_data, get_types):
-    query_data.return_value = [test_data[-1]]
-    get_types.return_value = test_types
+def test_last_data(mocker):
+    mocker.patch("gs_quant.api.gs.data.GsDataApi.last_data", return_value=[test_data[-1]])
+    mocker.patch("gs_quant.api.gs.data.GsDataApi.get_types", return_value=test_types)
     dataset = Dataset(Dataset.TR.TREOD)
     data = dataset.get_data_last(dt.date(2019, 1, 9), assetId='MA4B66MW5E27U8P32SB')
-    assert data.equals(construct_dataframe_with_types(str(Dataset.TR.TREOD), ([test_data[-1]])))
+    assert data.equals(GsDataApi.construct_dataframe_with_types(str(Dataset.TR.TREOD), ([test_data[-1]])))
 
 
 def test_get_data_series(mocker):
     field_value_maps = test_data
-    mocker.patch("gs_quant.data.utils.get_types", return_value=test_types)
+    mocker.patch("gs_quant.api.gs.data.GsDataApi.get_types", return_value=test_types)
     mocker.patch.object(GsDataApi, 'query_data', return_value=field_value_maps)
     mocker.patch.object(GsDataApi, 'symbol_dimensions', return_value=('assetId',))
 
@@ -196,14 +192,21 @@ def test_get_data_series(mocker):
     pd.testing.assert_series_equal(series, expected)
 
 
-@mock.patch("gs_quant.data.utils.get_types")
-@mock.patch.object(GsDataApi, 'get_coverage')
-def test_get_coverage(get_coverage, get_types):
-    get_coverage.return_value = test_coverage_data
-    get_types.return_value = {'gsid': 'string'}
+def test_get_coverage(mocker):
+    mocker.patch("gs_quant.api.gs.data.GsDataApi.get_coverage", return_value=test_coverage_data)
+    mocker.patch("gs_quant.api.gs.data.GsDataApi.get_types", return_value={'gsid': 'string'})
     data = Dataset(Dataset.TR.TREOD).get_coverage()
+    assert data.equals(GsDataApi.construct_dataframe_with_types(str(Dataset.TR.TREOD), test_coverage_data))
 
-    assert data.equals(construct_dataframe_with_types(str(Dataset.TR.TREOD), test_coverage_data))
+
+def test_construct_dataframe_with_types(mocker):
+    mocker.patch("gs_quant.api.gs.data.GsDataApi.get_types", return_value=test_types)
+    df = GsDataApi.construct_dataframe_with_types(str(Dataset.TR.TREOD), [test_data[0]])
+    assert np.issubdtype(df.index.dtype, datetime64)
+    assert df['adjustedAskPrice'].dtype == int64
+    assert df['adjustedBidPrice'].dtype == float64
+    assert df['assetId'].dtype == object  # https://pbpython.com/pandas_dtypes.html python str == dtype object
+    assert np.issubdtype(df['updateTime'].dtype, datetime64)
 
 
 if __name__ == "__main__":

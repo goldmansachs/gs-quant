@@ -18,8 +18,13 @@ from enum import Enum
 from itertools import chain
 from typing import Iterable, List, Optional, Tuple, Union
 
+import logging
+import cachetools
+import numpy
 import pandas as pd
+from cachetools import TTLCache
 
+from gs_quant.base import Base
 from gs_quant.api.data import DataApi
 from gs_quant.data.core import DataContext
 from gs_quant.errors import MqValueError
@@ -29,6 +34,8 @@ from gs_quant.target.common import FieldFilterMap, XRef
 from gs_quant.target.data import DataQuery, DataQueryResponse, MDAPIDataBatchResponse, MDAPIDataQueryResponse
 from gs_quant.target.data import DataSetEntity
 from .assets import GsAssetApi, GsIdType
+
+_logger = logging.getLogger(__name__)
 
 
 class QueryType(Enum):
@@ -386,3 +393,43 @@ class GsDataApi(DataApi):
             return ret[0]
         else:
             return ret
+
+    @staticmethod
+    @cachetools.cached(TTLCache(ttl=3600, maxsize=128))
+    def get_types(dataset_id: str):
+        results = GsSession.current._get(f'/data/catalog/{dataset_id}')
+        fields = results.get("fields")
+        if fields:
+            field_types = {}
+            for key, value in fields.items():
+                field_type = value.get('type')
+                field_format = value.get('format')
+                field_types[key] = field_format or field_type
+            return field_types
+        raise RuntimeError(f"Unable to get Dataset schema for {dataset_id}")
+
+    @classmethod
+    def construct_dataframe_with_types(cls, dataset_id: str, data: Union[Base, list, tuple]) -> pd.DataFrame:
+        """
+        Constructs a dataframe with correct date types.
+        :param data: data to convert with correct types
+        :return: dataframe with correct types
+        """
+        if len(data):
+            dataset_types = cls.get_types(dataset_id)
+            df = pd.DataFrame(data)
+
+            for field_name, type_name in dataset_types.items():
+                if df.get(type_name) is not None and type_name in ('date', 'date-time'):
+                    df = df.astype({field_name: numpy.datetime64})
+
+            field_names = dataset_types.keys()
+
+            if 'date' in field_names:
+                df = df.set_index('date')
+            elif 'time' in field_names:
+                df = df.set_index('time')
+
+            return df
+        else:
+            return pd.DataFrame({})

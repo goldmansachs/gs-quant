@@ -259,6 +259,11 @@ FXDelta = __risk_measure_with_doc_string('FXDelta', 'FX Delta', RiskMeasureType.
 FXGamma = __risk_measure_with_doc_string('FXGamma', 'FX Gamma', RiskMeasureType.Gamma, asset_class=AssetClass.FX)
 FXVega = __risk_measure_with_doc_string('FXVega', 'FX Vega', RiskMeasureType.Vega, asset_class=AssetClass.FX)
 FXSpot = __risk_measure_with_doc_string('FXSpot', 'FX Spot Rate', RiskMeasureType.Spot, asset_class=AssetClass.FX)
+IRBasis = __risk_measure_with_doc_string(
+    'IRBasis',
+    'Interest Rate Basis',
+    RiskMeasureType.Basis,
+    asset_class=AssetClass.Rates)
 IRDelta = __risk_measure_with_doc_string(
     'IRDelta',
     'Interest Rate Delta',
@@ -358,11 +363,12 @@ Formatters = {
     FXGamma: structured_formatter,
     FXVega: structured_formatter,
     FXSpot: scalar_formatter,
+    IRBasis: structured_formatter,
     IRDelta: structured_formatter,
     IRDeltaParallel: scalar_formatter,
     IRDeltaLocalCcy: structured_formatter,
     IRDeltaParallelLocalCcy: scalar_formatter,
-    IRGamma: structured_formatter,
+    IRGamma: scalar_formatter,
     IRVega: structured_formatter,
     IRVegaParallel: scalar_formatter,
     IRVegaLocalCcy: structured_formatter,

@@ -1743,8 +1743,6 @@ class LiquidityResponse(Base):
     @camel_case_translate
     def __init__(
         self,
-        assets_not_in_risk_model: Tuple[str, ...] = None,
-        assets_not_in_cost_predict_model: Tuple[str, ...] = None,
         as_of_date: datetime.date = None,
         risk_model: str = None,
         notional: float = None,
@@ -1771,12 +1769,13 @@ class LiquidityResponse(Base):
         exposure_buckets: Tuple[LiquidityFactor, ...] = None,
         factor_exposure_buckets: Tuple[LiquidityFactorCategory, ...] = None,
         timeseries_data: Tuple[LiquidityTimeSeriesItem, ...] = None,
+        assets_not_in_risk_model: Tuple[str, ...] = None,
+        assets_not_in_cost_predict_model: Tuple[str, ...] = None,
+        assets_without_compositions: Tuple[str, ...] = None,
         error_message: str = None,
         name: str = None
     ):        
         super().__init__()
-        self.assets_not_in_risk_model = assets_not_in_risk_model
-        self.assets_not_in_cost_predict_model = assets_not_in_cost_predict_model
         self.as_of_date = as_of_date
         self.risk_model = risk_model
         self.notional = notional
@@ -1803,28 +1802,11 @@ class LiquidityResponse(Base):
         self.exposure_buckets = exposure_buckets
         self.factor_exposure_buckets = factor_exposure_buckets
         self.timeseries_data = timeseries_data
+        self.assets_not_in_risk_model = assets_not_in_risk_model
+        self.assets_not_in_cost_predict_model = assets_not_in_cost_predict_model
+        self.assets_without_compositions = assets_without_compositions
         self.error_message = error_message
         self.name = name
-
-    @property
-    def assets_not_in_risk_model(self) -> Tuple[str, ...]:
-        """Assets in the the portfolio that are not covered in the risk model."""
-        return self.__assets_not_in_risk_model
-
-    @assets_not_in_risk_model.setter
-    def assets_not_in_risk_model(self, value: Tuple[str, ...]):
-        self._property_changed('assets_not_in_risk_model')
-        self.__assets_not_in_risk_model = value        
-
-    @property
-    def assets_not_in_cost_predict_model(self) -> Tuple[str, ...]:
-        """Assets in the the portfolio that are not covered in the cost prediction model."""
-        return self.__assets_not_in_cost_predict_model
-
-    @assets_not_in_cost_predict_model.setter
-    def assets_not_in_cost_predict_model(self, value: Tuple[str, ...]):
-        self._property_changed('assets_not_in_cost_predict_model')
-        self.__assets_not_in_cost_predict_model = value        
 
     @property
     def as_of_date(self) -> datetime.date:
@@ -1858,7 +1840,6 @@ class LiquidityResponse(Base):
 
     @property
     def currency(self) -> Union[Currency, str]:
-        """Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)"""
         return self.__currency
 
     @currency.setter
@@ -2085,6 +2066,37 @@ class LiquidityResponse(Base):
     def timeseries_data(self, value: Tuple[LiquidityTimeSeriesItem, ...]):
         self._property_changed('timeseries_data')
         self.__timeseries_data = value        
+
+    @property
+    def assets_not_in_risk_model(self) -> Tuple[str, ...]:
+        """Assets in the the portfolio that are not covered in the risk model."""
+        return self.__assets_not_in_risk_model
+
+    @assets_not_in_risk_model.setter
+    def assets_not_in_risk_model(self, value: Tuple[str, ...]):
+        self._property_changed('assets_not_in_risk_model')
+        self.__assets_not_in_risk_model = value        
+
+    @property
+    def assets_not_in_cost_predict_model(self) -> Tuple[str, ...]:
+        """Assets in the the portfolio that are not covered in the cost prediction model."""
+        return self.__assets_not_in_cost_predict_model
+
+    @assets_not_in_cost_predict_model.setter
+    def assets_not_in_cost_predict_model(self, value: Tuple[str, ...]):
+        self._property_changed('assets_not_in_cost_predict_model')
+        self.__assets_not_in_cost_predict_model = value        
+
+    @property
+    def assets_without_compositions(self) -> Tuple[str, ...]:
+        """Assets in the portfolio that do not have composition info needed for certain
+           statistics."""
+        return self.__assets_without_compositions
+
+    @assets_without_compositions.setter
+    def assets_without_compositions(self, value: Tuple[str, ...]):
+        self._property_changed('assets_without_compositions')
+        self.__assets_without_compositions = value        
 
     @property
     def error_message(self) -> str:

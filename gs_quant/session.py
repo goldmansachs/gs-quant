@@ -108,10 +108,12 @@ class GsSession(ContextBase):
 
     def close(self):
         self._session: requests.Session
-        # don't close a shared adapter
-        if self.http_adapter is None:
-            self._session.close()
-        self._session = None
+
+        if self._session:
+            # don't close a shared adapter
+            if self.http_adapter is None:
+                self._session.close()
+            self._session = None
 
     def __del__(self):
         self.close()
