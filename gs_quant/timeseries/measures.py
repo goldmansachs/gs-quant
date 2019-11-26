@@ -19,11 +19,11 @@ import time
 from collections import namedtuple
 from enum import auto
 from numbers import Real
-from dateutil import tz
 
 import cachetools.func
 import numpy as np
 import pandas as pd
+from dateutil import tz
 from pandas import Series
 from pandas.tseries.holiday import Holiday, AbstractHolidayCalendar, USMemorialDay, USLaborDay, USThanksgivingDay, \
     nearest_workday
@@ -427,33 +427,21 @@ def implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference,
         raise MqValueError('Relative strike must be provided if your strike reference is not delta_neutral')
 
     if asset.asset_class == AssetClass.FX:
-        if strike_reference == VolReference.DELTA_NEUTRAL:
-            delta_strike = 'DN'
-        elif strike_reference == VolReference.DELTA_CALL:
-            delta_strike = f'{relative_strike}DC'
-        elif strike_reference == VolReference.DELTA_PUT:
-            delta_strike = f'{relative_strike}DP'
-        elif strike_reference == VolReference.FORWARD:
-            if relative_strike == 100:
-                delta_strike = 'ATMF'
-            else:
+        if strike_reference == VolReference.FORWARD:
+            if relative_strike != 100:
                 raise MqValueError('Relative strike must be 100 for Forward strike reference')
         elif strike_reference == VolReference.SPOT:
-            if relative_strike == 100:
-                delta_strike = 'ATMS'
-            else:
+            if relative_strike != 100:
                 raise MqValueError('Relative strike must be 100 for Spot strike reference')
-        else:
+        elif strike_reference not in VolReference or strike_reference == VolReference.NORMALIZED:
             raise MqValueError('strikeReference: ' + strike_reference.value + ' not supported for FX')
 
         asset_id = cross_stored_direction_for_fx_vol(asset.get_marquee_id())
-
-        _logger.debug('where tenor=%s, deltaStrike=%s, location=NYC', tenor, delta_strike)
-
+        _logger.debug('where tenor=%s, strikeRef=%s, relativeStrike=%s', tenor, strike_reference.value, relative_strike)
         q = GsDataApi.build_market_data_query(
             [asset_id],
             QueryType.IMPLIED_VOLATILITY,
-            where=FieldFilterMap(tenor=tenor, deltaStrike=delta_strike, location='NYC'),
+            where=FieldFilterMap(tenor=tenor, strikeRef=strike_reference.value, relativeStrike=relative_strike),
             source=source,
             real_time=real_time
         )
@@ -1197,7 +1185,7 @@ def _tenor_to_month(relative_date: str) -> int:
 
 
 def _month_to_tenor(months: int) -> str:
-    return f'{months//12}y' if months % 12 == 0 else f'{months}m'
+    return f'{months // 12}y' if months % 12 == 0 else f'{months}m'
 
 
 @plot_measure((AssetClass.Equity, AssetClass.Commod), None, [QueryType.VAR_SWAP])
@@ -1358,7 +1346,7 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
     # in local time and then converted to UTC time
     # End time is constructed by combining end date with 23:59:59 timestamp
     # in local time and then converted to UTC time
-    start_time = datetime.datetime.combine(start_date, datetime.datetime.min.time(), tzinfo=from_zone)\
+    start_time = datetime.datetime.combine(start_date, datetime.datetime.min.time(), tzinfo=from_zone) \
         .astimezone(to_zone)
     end_time = datetime.datetime.combine(end_date, datetime.datetime.max.time(), tzinfo=from_zone).astimezone(to_zone)
 
@@ -1399,7 +1387,7 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
         df = df.loc[df['date'].isin(holidays) |
                     df['day'].isin(weekends) |
                     (~df['date'].isin(holidays) & ~df['day'].isin(weekends) &
-                        ((df['hour'] < peak_start) | (df['hour'] > peak_end - 1)))]
+                     ((df['hour'] < peak_start) | (df['hour'] > peak_end - 1)))]
     # peak: 7am to 11pm on weekdays
     elif bucket.lower() == 'peak':
         df = df.loc[(~df['date'].isin(holidays)) & (~df['day'].isin(weekends)) & (df['hour'] > peak_start - 1) &

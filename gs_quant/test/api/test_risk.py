@@ -134,7 +134,7 @@ def test_structured_calc(mocker):
 
     for priceable in priceables:
         if priceable.assetClass == AssetClass.Rates:
-            for measure in (risk.IRDelta, risk.IRGamma, risk.IRVega):
+            for measure in (risk.IRDelta, risk.IRVega):
                 structured_calc(mocker, priceable, measure)
         elif priceable.assetClass == AssetClass.FX:
             for measure in (risk.FXDelta, risk.FXGamma, risk.FXVega):

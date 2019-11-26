@@ -27,6 +27,7 @@ class QuantityType(EnumBase, Enum):
     Notional = 'notional'
     Quantity = 'quantity'
     Vega = 'vega'
+    Gamma = 'gamma'
 
 
 class TradeInMethod(EnumBase, Enum):

@@ -55,6 +55,7 @@ setuptools.setup(
         "backoff",
         "cachetools",
         "configparser",
+        "dataclasses;python_version<'3.7'",
         "funcsigs",
         "future",
         "inflection",

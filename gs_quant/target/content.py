@@ -349,6 +349,7 @@ class ContentResponse(Base):
         version: str = None,
         name: str = None,
         entitlements: Entitlements = None,
+        entitlement_exclusions: EntitlementExclusions = None,
         created_by_id: str = None,
         created_time: datetime.datetime = None,
         last_updated_time: datetime.datetime = None,
@@ -360,6 +361,7 @@ class ContentResponse(Base):
         self.version = version
         self.name = name
         self.entitlements = entitlements
+        self.entitlement_exclusions = entitlement_exclusions
         self.created_by_id = created_by_id
         self.created_time = created_time
         self.last_updated_time = last_updated_time
@@ -405,6 +407,16 @@ class ContentResponse(Base):
     def entitlements(self, value: Entitlements):
         self._property_changed('entitlements')
         self.__entitlements = value        
+
+    @property
+    def entitlement_exclusions(self) -> EntitlementExclusions:
+        """Entitlement exclusions for a content piece"""
+        return self.__entitlement_exclusions
+
+    @entitlement_exclusions.setter
+    def entitlement_exclusions(self, value: EntitlementExclusions):
+        self._property_changed('entitlement_exclusions')
+        self.__entitlement_exclusions = value        
 
     @property
     def created_by_id(self) -> str:
@@ -464,11 +476,13 @@ class ContentUpdateRequest(Base):
         self,
         name: str = None,
         entitlements: Entitlements = None,
+        entitlement_exclusions: EntitlementExclusions = None,
         content: Content = None
     ):        
         super().__init__()
         self.name = name
         self.entitlements = entitlements
+        self.entitlement_exclusions = entitlement_exclusions
         self.content = content
 
     @property
@@ -490,6 +504,16 @@ class ContentUpdateRequest(Base):
     def entitlements(self, value: Entitlements):
         self._property_changed('entitlements')
         self.__entitlements = value        
+
+    @property
+    def entitlement_exclusions(self) -> EntitlementExclusions:
+        """Entitlement exclusions for a content piece"""
+        return self.__entitlement_exclusions
+
+    @entitlement_exclusions.setter
+    def entitlement_exclusions(self, value: EntitlementExclusions):
+        self._property_changed('entitlement_exclusions')
+        self.__entitlement_exclusions = value        
 
     @property
     def content(self) -> Content:
@@ -545,6 +569,7 @@ class ContentAuditFields(Base):
         version: str = None,
         name: str = None,
         entitlements: Entitlements = None,
+        entitlement_exclusions: EntitlementExclusions = None,
         created_by_id: str = None,
         authors: Tuple[Author, ...] = None,
         created_time: datetime.datetime = None,
@@ -555,6 +580,7 @@ class ContentAuditFields(Base):
         self.version = version
         self.name = name
         self.entitlements = entitlements
+        self.entitlement_exclusions = entitlement_exclusions
         self.created_by_id = created_by_id
         self.authors = authors
         self.created_time = created_time
@@ -599,6 +625,16 @@ class ContentAuditFields(Base):
     def entitlements(self, value: Entitlements):
         self._property_changed('entitlements')
         self.__entitlements = value        
+
+    @property
+    def entitlement_exclusions(self) -> EntitlementExclusions:
+        """Entitlement exclusions for a content piece"""
+        return self.__entitlement_exclusions
+
+    @entitlement_exclusions.setter
+    def entitlement_exclusions(self, value: EntitlementExclusions):
+        self._property_changed('entitlement_exclusions')
+        self.__entitlement_exclusions = value        
 
     @property
     def created_by_id(self) -> str:
@@ -887,12 +923,14 @@ class ContentCreateRequest(Base):
         self,
         name: str,
         entitlements: Entitlements,
+        entitlement_exclusions: EntitlementExclusions,
         content: Content,
         parameters: ContentParameters
     ):        
         super().__init__()
         self.name = name
         self.entitlements = entitlements
+        self.entitlement_exclusions = entitlement_exclusions
         self.content = content
         self.parameters = parameters
 
@@ -915,6 +953,16 @@ class ContentCreateRequest(Base):
     def entitlements(self, value: Entitlements):
         self._property_changed('entitlements')
         self.__entitlements = value        
+
+    @property
+    def entitlement_exclusions(self) -> EntitlementExclusions:
+        """Entitlement exclusions for a content piece"""
+        return self.__entitlement_exclusions
+
+    @entitlement_exclusions.setter
+    def entitlement_exclusions(self, value: EntitlementExclusions):
+        self._property_changed('entitlement_exclusions')
+        self.__entitlement_exclusions = value        
 
     @property
     def content(self) -> Content:

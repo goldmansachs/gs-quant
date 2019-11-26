@@ -1053,8 +1053,8 @@ class MDAPIDataQuery(Base):
     @camel_case_translate
     def __init__(
         self,
+        market_data_coordinates: Tuple[MarketDataCoordinate, ...] = (),
         format_: Union[Format, str] = None,
-        market_data_coordinates: Tuple[MarketDataCoordinate, ...] = None,
         vendor: Union[MarketDataVendor, str] = None,
         start_time: datetime.datetime = None,
         end_time: datetime.datetime = None,
@@ -2254,6 +2254,8 @@ class DataSetDimensions(Base):
 
     @property
     def key_dimensions(self) -> Tuple[str, ...]:
+        """Fields to slice dataset by. Used for query results where same symbolDimension
+           has multiple updateTimes."""
         return self.__key_dimensions
 
     @key_dimensions.setter
