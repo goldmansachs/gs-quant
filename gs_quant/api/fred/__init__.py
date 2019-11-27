@@ -1,5 +1,5 @@
 """
-Copyright 2018 Goldman Sachs.
+Copyright 2019 Goldman Sachs.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -12,7 +12,13 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
-"""
-name = "gs_quant"
 
-__version__ = "0.8.82"
+This product uses the FRED® API but is not endorsed or certified
+by the Federal Reserve Bank of St. Louis. FRED terms of use
+available at https://research.stlouisfed.org/docs/api/terms_of_use.html
+
+Portions copyright Maverick Lin. Licensed under Apache 2.0 license
+
+"""
+
+__name__ = 'fred'
