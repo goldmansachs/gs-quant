@@ -11,7 +11,7 @@ See also Getting Started notebook in the gs_quant folder or package.
 * Python 3.6 or greater
 * Access to PIP package manager
 
-You can verity your Python version with the command python --version.
+You can verify your Python version with the command python --version.
 
 Any Python-ready IDE will work. However, most of our team uses PyCharm.
 
