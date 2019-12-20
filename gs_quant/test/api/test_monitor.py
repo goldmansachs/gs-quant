@@ -103,7 +103,7 @@ def test_update_monitor(mocker):
     assert response == monitor
 
 
-def test_delete_portfolio(mocker):
+def test_delete_monitor(mocker):
     monitor_id = 'abc'
 
     mock_response = True

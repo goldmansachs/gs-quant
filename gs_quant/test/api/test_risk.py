@@ -22,10 +22,11 @@ import gs_quant.risk as risk
 from gs_quant.api.gs.risk import GsRiskApi, RiskModelRequest
 from gs_quant.base import Priceable
 from gs_quant.common import AssetClass
-from gs_quant.instrument import CommodSwap, EqForward, EqOption, FXOption, IRBasisSwap, IRSwap, IRSwaption, IRCap, \
+from gs_quant.instrument import CommodSwap, EqForward, EqOption, FXOption, IRBasisSwap, IRSwap, IRSwaption, IRCap,\
     IRFloor
 from gs_quant.markets import PricingContext
 from gs_quant.session import Environment, GsSession
+from gs_quant.target.risk import RiskRequestParameters
 
 priceables = (
     CommodSwap('Electricity', '1y'),
@@ -33,7 +34,7 @@ priceables = (
     EqOption('GS.N', '3m', 'ATMF', 'Call', 'European'),
     FXOption('EUR', 'USD', '1y', 'Call', strike='ATMF'),
     IRSwap('Pay', '10y', 'USD'),
-    IRBasisSwap('10y', 'USD', 'EUR'),
+    IRBasisSwap('10y', 'USD'),
     IRSwaption('Pay', '10y', 'USD'),
     IRCap('10y', 'EUR'),
     IRFloor('10y', 'EUR')
@@ -61,9 +62,10 @@ def structured_calc(mocker, priceable: Priceable, measure: risk.RiskMeasure):
     risk_request = risk.RiskRequest(
         positions=(risk.RiskPosition(priceable, 1),),
         measures=(measure,),
-        pricingLocation=PricingContext.current.market_data_location,
-        pricingAndMarketDataAsOf=PricingContext.current._pricing_market_data_as_of,
-        waitForResults=True)
+        pricing_location=PricingContext.current.market_data_location,
+        pricing_and_market_data_as_of=PricingContext.current._pricing_market_data_as_of,
+        parameters=RiskRequestParameters(),
+        wait_for_results=True)
     mocker.assert_called_with(risk_request)
 
 
@@ -76,9 +78,10 @@ def scalar_calc(mocker, priceable: Priceable, measure: risk.RiskMeasure):
     risk_request = risk.RiskRequest(
         positions=(risk.RiskPosition(priceable, 1),),
         measures=(measure,),
-        pricingLocation=PricingContext.current.market_data_location,
-        pricingAndMarketDataAsOf=PricingContext.current._pricing_market_data_as_of,
-        waitForResults=True)
+        pricing_location=PricingContext.current.market_data_location,
+        pricing_and_market_data_as_of=PricingContext.current._pricing_market_data_as_of,
+        parameters=RiskRequestParameters(),
+        wait_for_results=True)
     mocker.assert_called_with(risk_request)
 
 
@@ -91,9 +94,10 @@ def price(mocker, priceable: Priceable):
     risk_request = risk.RiskRequest(
         positions=(risk.RiskPosition(priceable, 1),),
         measures=(risk.DollarPrice,),
-        pricingLocation=PricingContext.current.market_data_location,
-        pricingAndMarketDataAsOf=PricingContext.current._pricing_market_data_as_of,
-        waitForResults=True)
+        pricing_location=PricingContext.current.market_data_location,
+        pricing_and_market_data_as_of=PricingContext.current._pricing_market_data_as_of,
+        parameters=RiskRequestParameters(),
+        wait_for_results=True)
     mocker.assert_called_with(risk_request)
 
 

@@ -18,7 +18,7 @@ from gs_quant.target.common import *
 import datetime
 from typing import Tuple, Union
 from gs_quant.instrument import Instrument
-from gs_quant.base import camel_case_translate, get_enum_value
+from gs_quant.base import InstrumentBase, camel_case_translate, get_enum_value
 
 
 class CSLPython(Instrument):

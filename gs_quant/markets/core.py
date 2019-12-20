@@ -24,12 +24,14 @@ import pandas as pd
 from typing import Iterable, Optional, Tuple, Union
 import weakref
 
-from gs_quant.base import Priceable
+from gs_quant.base import Priceable, Scenario
 from gs_quant.context_base import ContextBaseWithDefault
 from gs_quant.datetime.date import business_day_offset
 from gs_quant.session import GsSession
-from gs_quant.target.common import MarketDataCoordinate as __MarketDataCoordinate
-from gs_quant.target.risk import PricingDateAndMarketDataAsOf, RiskMeasure, RiskPosition, RiskRequest
+from gs_quant.target.data import MarketDataCoordinate as __MarketDataCoordinate
+from gs_quant.target.risk import PricingDateAndMarketDataAsOf, RiskMeasure, RiskPosition, RiskRequest, \
+    RiskRequestParameters, MarketDataScenario
+
 
 _logger = logging.getLogger(__name__)
 
@@ -94,7 +96,8 @@ class PricingCache(metaclass=ABCMeta):
         if isinstance(result, pd.Series):
             cache_results = dict(zip(result.index.unique(), (result.loc[d] for d in result.index.values)))
         elif isinstance(result, pd.DataFrame) and len(result.index.values):
-            cache_results = dict(zip(result.index.unique(), (result.loc[d].reset_index(drop=True) for d in result.index.values)))
+            cache_results = dict(zip(result.index.unique(), (result.loc[d].reset_index(drop=True)
+                                                             for d in result.index.values)))
         else:
             cache_results[PricingContext.current.pricing_date] = result
 
@@ -119,7 +122,9 @@ class PricingContext(ContextBaseWithDefault):
                  is_async: bool = False,
                  is_batch: bool = False,
                  use_cache: bool = False,
-                 visible_to_gs: bool = False):
+                 visible_to_gs: bool = False,
+                 csa_term: Optional[str] = None
+                 ):
         """
         The methods on this class should not be called directly. Instead, use the methods on the instruments,
         as per the examples
@@ -133,6 +138,7 @@ class PricingContext(ContextBaseWithDefault):
         It can be used with is_aync=True|False (defaults to False)
         :param use_cache: store results in the pricing cache (defaults to False)
         :param visible_to_gs: are the contents of risk requests visible to GS (defaults to False)
+        :param csa_term: the csa under which the calculations are made. Default is local ccy ois index
 
         **Examples**
 
@@ -163,6 +169,7 @@ class PricingContext(ContextBaseWithDefault):
         """
         super().__init__()
         self.__pricing_date = pricing_date or dt.date.today()
+        self.__csa_term = csa_term
         self.__market_data_as_of = market_data_as_of
         self.__market_data_location = market_data_location or (
             self.__class__.current.market_data_location if self.__class__.default_is_set else 'LDN')
@@ -177,8 +184,6 @@ class PricingContext(ContextBaseWithDefault):
         self._calc()
 
     def _calc(self):
-        from gs_quant.risk import ScenarioContext
-
         def run_request(request: RiskRequest, session: GsSession):
             calc_result = {}
 
@@ -216,9 +221,10 @@ class PricingContext(ContextBaseWithDefault):
                 risk_request = RiskRequest(
                     tuple(positions),
                     tuple(sorted(risk_measures, key=lambda m: m.name or m.measure_type.value)),
+                    parameters=RiskRequestParameters(self.__csa_term),
                     wait_for_results=not self.__is_batch,
                     pricing_location=self.market_data_location,
-                    scenario=ScenarioContext.current if ScenarioContext.current.scenario is not None else None,
+                    scenario=MarketDataScenario(scenario=Scenario.current) if Scenario.current_is_set else None,
                     pricing_and_market_data_as_of=self._pricing_market_data_as_of,
                     request_visible_to_gs=self.__visible_to_gs
                 )
@@ -244,7 +250,8 @@ class PricingContext(ContextBaseWithDefault):
             for position, result in position_results.items():
                 if self.__use_cache:
                     PricingCache.put(position.instrument, self.market_data_location, risk_measure, result)
-                    result = PricingCache.get(position.instrument, self.market_data_location, risk_measure, self.pricing_date)
+                    result = PricingCache.get(position.instrument, self.market_data_location, risk_measure,
+                                              self.pricing_date)
 
                 positions_for_measure = self.__futures[risk_measure]
                 positions_for_measure.pop(position).set_result(result)
@@ -387,9 +394,17 @@ class PricingContext(ContextBaseWithDefault):
                 if len(field_values) == 1:
                     field_values = field_values[0]
                 else:
-                    future.set_result(
-                        {dt.date.fromtimestamp(fv['date'] / 1e9): apply_field_values(fv, priceable_inst)
-                         for fv in field_values})
+                    res = {}
+                    for fv in field_values:
+                        date = dt.date.fromtimestamp(fv['date'] / 1e9)
+                        date_resolution_info = {
+                            'pricing_date': date,
+                            'market_data_as_of': fv['date'],
+                            'market_data_location': resolution_info['market_data_location']
+                        }
+                        res[date] = apply_field_values(fv, priceable_inst, date_resolution_info)
+
+                    future.set_result(res)
                     return
 
             field_values = {field: value_mappings.get(value, value) for field, value in field_values.items()

@@ -39,7 +39,8 @@ class HistoricalPricingContext(PricingContext):
             is_async: bool = False,
             is_batch: bool = False,
             use_cache: bool = False,
-            visible_to_gs: bool = False):
+            visible_to_gs: bool = False,
+            csa_term: str = None):
         """
         A context for producing valuations over multiple dates
 
@@ -52,6 +53,7 @@ class HistoricalPricingContext(PricingContext):
         It can be used with is_async=True|False (defaults to False)
         :param use_cache: store results in the pricing cache (defaults to False)
         :param visible_to_gs: are the contents of risk requests visible to GS (defaults to False)
+        :param csa_term: the csa under which the calculations are made. Default is local ccy ois index
 
         **Examples**
 
@@ -63,7 +65,8 @@ class HistoricalPricingContext(PricingContext):
         >>>
         >>> price_series = price_f.result()
         """
-        super().__init__(is_async=is_async, is_batch=is_batch, use_cache=use_cache, visible_to_gs=visible_to_gs)
+        super().__init__(is_async=is_async, is_batch=is_batch, use_cache=use_cache, visible_to_gs=visible_to_gs,
+                         csa_term=csa_term)
         self.__calc_dates = None
 
         if start is not None:

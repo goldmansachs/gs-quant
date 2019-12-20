@@ -24,7 +24,7 @@ from gs_quant.backtests.core import Backtest, QuantityType, TradeInMethod
 from gs_quant.errors import MqValueError
 from gs_quant.markets import PricingContext
 from gs_quant.target.backtests import *
-from gs_quant.target.instrument import EqOption
+from gs_quant.target.instrument import EqOption, EqVarianceSwap
 
 _logger = logging.getLogger(__name__)
 

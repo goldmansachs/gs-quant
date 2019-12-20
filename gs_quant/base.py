@@ -26,6 +26,7 @@ import keyword
 import logging
 from typing import Union, get_type_hints
 
+from gs_quant.context_base import ContextBase, ContextMeta
 
 _logger = logging.getLogger(__name__)
 
@@ -117,7 +118,7 @@ class Base(metaclass=ABCMeta):
     def __hash__(self) -> int:
         if not self._hash_is_calced:
             calced_hash = hash(self.name)
-            for prop in self.properties():
+            for prop in sorted(self.properties()):
                 calced_hash ^= hash(super().__getattribute__(prop))
 
             self.__calced_hash = calced_hash
@@ -414,6 +415,18 @@ class Priceable(Base, metaclass=ABCMeta):
         usd_delta_f and eur_delta_f are futures, usd_delta and eur_delta are dataframes
         """
         raise NotImplementedError
+
+
+class __ScenarioMeta(ABCMeta, ContextMeta):
+    pass
+
+
+class Scenario(Base, ContextBase, metaclass=__ScenarioMeta):
+    pass
+
+
+class InstrumentBase(Base):
+    pass
 
 
 def get_enum_value(enum_type: EnumMeta, value: Union[EnumBase, str]):

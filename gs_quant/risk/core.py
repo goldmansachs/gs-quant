@@ -264,6 +264,21 @@ IRBasis = __risk_measure_with_doc_string(
     'Interest Rate Basis',
     RiskMeasureType.Basis,
     asset_class=AssetClass.Rates)
+InflationDelta = __risk_measure_with_doc_string(
+    'InflationDelta',
+    'Inflation Delta',
+    RiskMeasureType.InflationDelta,
+    asset_class=AssetClass.Rates)
+InflationDeltaParallel = __risk_measure_with_doc_string(
+    'InflationDeltaParallel',
+    'Inflation Parallel Delta',
+    RiskMeasureType.ParallelInflationDelta,
+    asset_class=AssetClass.Rates)
+InflationDeltaParallelLocalCcy = __risk_measure_with_doc_string(
+    'InflationDeltaParallelLocalCcy',
+    'Inflation Parallel Delta (Local Ccy)',
+    RiskMeasureType.ParallelInflationDeltaLocalCcy,
+    asset_class=AssetClass.Rates)
 IRDelta = __risk_measure_with_doc_string(
     'IRDelta',
     'Interest Rate Delta',
@@ -284,10 +299,15 @@ IRDeltaParallelLocalCcy = __risk_measure_with_doc_string(
     'Interest Rate Parallel Delta (Local Ccy)',
     RiskMeasureType.ParallelDeltaLocalCcy,
     asset_class=AssetClass.Rates)
-IRGamma = __risk_measure_with_doc_string(
-    'IRGamma',
-    'Interest Rate Gamma',
-    RiskMeasureType.Gamma,
+IRGammaParallel = __risk_measure_with_doc_string(
+    'IRGammaParallel',
+    'Interest Rate Parallel Gamma',
+    RiskMeasureType.ParallelGamma,
+    asset_class=AssetClass.Rates)
+IRGammaParallelLocalCcy = __risk_measure_with_doc_string(
+    'IRGammaParallelLocalCcy',
+    'Interest Rate Parallel Gamma (Local Ccy)',
+    RiskMeasureType.ParallelGammaLocalCcy,
     asset_class=AssetClass.Rates)
 IRVega = __risk_measure_with_doc_string(
     'IRVega',
@@ -364,11 +384,15 @@ Formatters = {
     FXVega: structured_formatter,
     FXSpot: scalar_formatter,
     IRBasis: structured_formatter,
+    InflationDelta: structured_formatter,
+    InflationDeltaParallel: scalar_formatter,
+    InflationDeltaParallelLocalCcy: scalar_formatter,
     IRDelta: structured_formatter,
     IRDeltaParallel: scalar_formatter,
     IRDeltaLocalCcy: structured_formatter,
     IRDeltaParallelLocalCcy: scalar_formatter,
-    IRGamma: scalar_formatter,
+    IRGammaParallel: scalar_formatter,
+    IRGammaParallelLocalCcy: scalar_formatter,
     IRVega: structured_formatter,
     IRVegaParallel: scalar_formatter,
     IRVegaLocalCcy: structured_formatter,

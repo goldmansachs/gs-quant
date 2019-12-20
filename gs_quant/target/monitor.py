@@ -17,7 +17,7 @@ under the License.
 from gs_quant.target.common import *
 import datetime
 from typing import Tuple, Union
-from gs_quant.base import Base, camel_case_translate, get_enum_value
+from gs_quant.base import Base, InstrumentBase, camel_case_translate, get_enum_value
 
 
 class ColumnFormat(Base):
@@ -67,6 +67,107 @@ class ColumnFormat(Base):
     def human_readable(self, value: bool):
         self._property_changed('human_readable')
         self.__human_readable = value        
+
+
+class ColumnMappingParameters(Base):
+        
+    """Object used to apply parameters to a column."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        name: str = None
+    ):        
+        super().__init__()
+        self.name = name
+
+
+class ColumnProperty(Base):
+        
+    """Object used to reference a column mapping"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        column_name: str = None,
+        property_: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.column_name = column_name
+        self.__property = property_
+        self.name = name
+
+    @property
+    def column_name(self) -> str:
+        """Name of the column to get property"""
+        return self.__column_name
+
+    @column_name.setter
+    def column_name(self, value: str):
+        self._property_changed('column_name')
+        self.__column_name = value        
+
+    @property
+    def property(self) -> str:
+        """Name of the property to get from column mapping"""
+        return self.__property
+
+    @property.setter
+    def property(self, value: str):
+        self._property_changed('property')
+        self.__property = value        
+
+
+class Entitlements(Base):
+        
+    """Defines the entitlements of a given resource"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        view: Tuple[str, ...],
+        edit: Tuple[str, ...],
+        admin: Tuple[str, ...],
+        name: str = None
+    ):        
+        super().__init__()
+        self.view = view
+        self.edit = edit
+        self.admin = admin
+        self.name = name
+
+    @property
+    def view(self) -> Tuple[str, ...]:
+        """Permission to view the resource and its contents"""
+        return self.__view
+
+    @view.setter
+    def view(self, value: Tuple[str, ...]):
+        self._property_changed('view')
+        self.__view = value        
+
+    @property
+    def edit(self) -> Tuple[str, ...]:
+        """Permission to edit details about the resource content, excluding entitlements.
+           Can also delete the resource"""
+        return self.__edit
+
+    @edit.setter
+    def edit(self, value: Tuple[str, ...]):
+        self._property_changed('edit')
+        self.__edit = value        
+
+    @property
+    def admin(self) -> Tuple[str, ...]:
+        """Permission to edit all details of the resource, including entitlements. Can also
+           delete the resource"""
+        return self.__admin
+
+    @admin.setter
+    def admin(self, value: Tuple[str, ...]):
+        self._property_changed('admin')
+        self.__admin = value        
 
 
 class FunctionParameters(Base):
@@ -426,6 +527,43 @@ class WipiRequestFilter(Base):
         self.__type = value        
 
 
+class ColumnMappings(Base):
+        
+    """Object used to map parameters to a column"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        column_name: str = None,
+        parameters: ColumnMappingParameters = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.column_name = column_name
+        self.parameters = parameters
+        self.name = name
+
+    @property
+    def column_name(self) -> str:
+        """Required small string with a length from empty string to 50 characters"""
+        return self.__column_name
+
+    @column_name.setter
+    def column_name(self, value: str):
+        self._property_changed('column_name')
+        self.__column_name = value        
+
+    @property
+    def parameters(self) -> ColumnMappingParameters:
+        """Object used to apply parameters to a column."""
+        return self.__parameters
+
+    @parameters.setter
+    def parameters(self, value: ColumnMappingParameters):
+        self._property_changed('parameters')
+        self.__parameters = value        
+
+
 class Function(Base):
         
     """Function or Measure to be applied to the column."""
@@ -443,7 +581,8 @@ class Function(Base):
         fields: Tuple[str, ...] = None,
         parameters: FunctionParameters = None,
         where: FunctionWhere = None,
-        vendor: str = None
+        vendor: str = None,
+        data_set_id: str = None
     ):        
         super().__init__()
         self.name = name
@@ -457,6 +596,7 @@ class Function(Base):
         self.parameters = parameters
         self.where = where
         self.vendor = vendor
+        self.data_set_id = data_set_id
 
     @property
     def name(self) -> str:
@@ -569,6 +709,16 @@ class Function(Base):
         self._property_changed('vendor')
         self.__vendor = value        
 
+    @property
+    def data_set_id(self) -> str:
+        """The name of a DataSet to directly query."""
+        return self.__data_set_id
+
+    @data_set_id.setter
+    def data_set_id(self, value: str):
+        self._property_changed('data_set_id')
+        self.__data_set_id = value        
+
 
 class RateRow(Base):
         
@@ -667,67 +817,6 @@ class RateRow(Base):
         self.__slope = value        
 
 
-class RowGroup(Base):
-        
-    """Object specifying a group name and a list of assets to be calculated in a
-       monitor"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        name: str,
-        entity_ids: Tuple[str, ...],
-        movers: Movers = None,
-        sort: Sort = None
-    ):        
-        super().__init__()
-        self.name = name
-        self.movers = movers
-        self.entity_ids = entity_ids
-        self.sort = sort
-
-    @property
-    def name(self) -> str:
-        """Group name"""
-        return self.__name
-
-    @name.setter
-    def name(self, value: str):
-        self._property_changed('name')
-        self.__name = value        
-
-    @property
-    def movers(self) -> Movers:
-        """Object that allows to specify the case in which we only want to return the n top
-           or bottom entities"""
-        return self.__movers
-
-    @movers.setter
-    def movers(self, value: Movers):
-        self._property_changed('movers')
-        self.__movers = value        
-
-    @property
-    def entity_ids(self) -> Tuple[str, ...]:
-        """Array of entities that belong to the group"""
-        return self.__entity_ids
-
-    @entity_ids.setter
-    def entity_ids(self, value: Tuple[str, ...]):
-        self._property_changed('entity_ids')
-        self.__entity_ids = value        
-
-    @property
-    def sort(self) -> Sort:
-        """Object used to define sorting"""
-        return self.__sort
-
-    @sort.setter
-    def sort(self, value: Sort):
-        self._property_changed('sort')
-        self.__sort = value        
-
-
 class ColumnDefinition(Base):
         
     """Object defining the columns to be calculated in the monitor"""
@@ -741,7 +830,8 @@ class ColumnDefinition(Base):
         entity_property=None,
         function: Function = None,
         format_: ColumnFormat = None,
-        width: float = None
+        width: float = None,
+        column_property: ColumnProperty = None
     ):        
         super().__init__()
         self.enable_cell_flashing = enable_cell_flashing
@@ -751,6 +841,7 @@ class ColumnDefinition(Base):
         self.function = function
         self.__format = format_
         self.width = width
+        self.column_property = column_property
 
     @property
     def enable_cell_flashing(self) -> bool:
@@ -822,6 +913,53 @@ class ColumnDefinition(Base):
         self._property_changed('width')
         self.__width = value        
 
+    @property
+    def column_property(self) -> ColumnProperty:
+        """Column name"""
+        return self.__column_property
+
+    @column_property.setter
+    def column_property(self, value: ColumnProperty):
+        self._property_changed('column_property')
+        self.__column_property = value        
+
+
+class EntityId(Base):
+        
+    """Object used to define entities"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        id_: str = None,
+        column_mappings: Tuple[ColumnMappings, ...] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.__id = id_
+        self.column_mappings = column_mappings
+        self.name = name
+
+    @property
+    def id(self) -> str:
+        """Marquee unique identifier"""
+        return self.__id
+
+    @id.setter
+    def id(self, value: str):
+        self._property_changed('id')
+        self.__id = value        
+
+    @property
+    def column_mappings(self) -> Tuple[ColumnMappings, ...]:
+        """Array of column mappings for the entity"""
+        return self.__column_mappings
+
+    @column_mappings.setter
+    def column_mappings(self, value: Tuple[ColumnMappings, ...]):
+        self._property_changed('column_mappings')
+        self.__column_mappings = value        
+
 
 class RatesResponseData(Base):
         
@@ -880,6 +1018,67 @@ class RatesResponseData(Base):
     def rows(self, value: Tuple[RateRow, ...]):
         self._property_changed('rows')
         self.__rows = value        
+
+
+class RowGroup(Base):
+        
+    """Object specifying a group name and a list of assets to be calculated in a
+       monitor"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        name: str,
+        entity_ids: Tuple[EntityId, ...],
+        movers: Movers = None,
+        sort: Sort = None
+    ):        
+        super().__init__()
+        self.name = name
+        self.movers = movers
+        self.entity_ids = entity_ids
+        self.sort = sort
+
+    @property
+    def name(self) -> str:
+        """Group name"""
+        return self.__name
+
+    @name.setter
+    def name(self, value: str):
+        self._property_changed('name')
+        self.__name = value        
+
+    @property
+    def movers(self) -> Movers:
+        """Object that allows to specify the case in which we only want to return the n top
+           or bottom entities"""
+        return self.__movers
+
+    @movers.setter
+    def movers(self, value: Movers):
+        self._property_changed('movers')
+        self.__movers = value        
+
+    @property
+    def entity_ids(self) -> Tuple[EntityId, ...]:
+        """Array of entity objects that belong to the group"""
+        return self.__entity_ids
+
+    @entity_ids.setter
+    def entity_ids(self, value: Tuple[EntityId, ...]):
+        self._property_changed('entity_ids')
+        self.__entity_ids = value        
+
+    @property
+    def sort(self) -> Sort:
+        """Object used to define sorting"""
+        return self.__sort
+
+    @sort.setter
+    def sort(self, value: Sort):
+        self._property_changed('sort')
+        self.__sort = value        
 
 
 class MonitorParameters(Base):

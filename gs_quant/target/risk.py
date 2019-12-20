@@ -18,7 +18,7 @@ from gs_quant.target.common import *
 import datetime
 from typing import Tuple, Union
 from enum import Enum
-from gs_quant.base import Base, EnumBase, camel_case_translate, get_enum_value
+from gs_quant.base import Base, EnumBase, InstrumentBase, camel_case_translate, get_enum_value
 
 
 class SortByTerm(EnumBase, Enum):    
@@ -65,66 +65,6 @@ class AdvCurveTick(Base):
     def value(self, value: float):
         self._property_changed('value')
         self.__value = value        
-
-
-class CoordinatesRequest(Base):
-        
-    @camel_case_translate
-    def __init__(
-        self,
-        as_of: datetime.date,
-        instruments: Tuple[Priceable, ...],
-        name: str = None
-    ):        
-        super().__init__()
-        self.as_of = as_of
-        self.instruments = instruments
-        self.name = name
-
-    @property
-    def as_of(self) -> datetime.date:
-        return self.__as_of
-
-    @as_of.setter
-    def as_of(self, value: datetime.date):
-        self._property_changed('as_of')
-        self.__as_of = value        
-
-    @property
-    def instruments(self) -> Tuple[Priceable, ...]:
-        """Instrument or Id   To specify a Marquee asset use the asset Id. For listed
-           products use an XRef, e.g. { 'bid': 'NGZ19 Comdty' }, { 'isin':
-           'US912810SD19' }. To specify an instrument use one of the listed
-           types"""
-        return self.__instruments
-
-    @instruments.setter
-    def instruments(self, value: Tuple[Priceable, ...]):
-        self._property_changed('instruments')
-        self.__instruments = value        
-
-
-class CoordinatesResponse(Base):
-        
-    @camel_case_translate
-    def __init__(
-        self,
-        results: Tuple[MarketDataCoordinate, ...],
-        name: str = None
-    ):        
-        super().__init__()
-        self.results = results
-        self.name = name
-
-    @property
-    def results(self) -> Tuple[MarketDataCoordinate, ...]:
-        """Object representation of a market data coordinate"""
-        return self.__results
-
-    @results.setter
-    def results(self, value: Tuple[MarketDataCoordinate, ...]):
-        self._property_changed('results')
-        self.__results = value        
 
 
 class ExecutionCostForHorizon(Base):
@@ -587,6 +527,7 @@ class LiquidityConstituent(Base):
 
     @property
     def exchange(self) -> str:
+        """Name of marketplace where security, derivative or other instrument is traded"""
         return self.__exchange
 
     @exchange.setter

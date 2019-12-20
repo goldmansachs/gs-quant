@@ -58,6 +58,22 @@ def map_identifiers_default_mocker(input_type: Union[GsIdType, str],
         return {"JPY-LIBOR-BBA": "MABMVE27EM8YZK33"}
 
 
+def map_identifiers_swap_rate_mocker(input_type: Union[GsIdType, str],
+                                     output_type: Union[GsIdType, str],
+                                     ids: IdList,
+                                     as_of: dt.datetime = None,
+                                     multimap: bool = False,
+                                     limit: int = None,
+                                     **kwargs
+                                     ) -> dict:
+    if "USD-3m" in ids:
+        return {"USD-3m": "MAAXGV0GZTW4GFNC"}
+    elif "EUR-6m" in ids:
+        return {"EUR-6m": "MA5WM2QWRVMYKDK0"}
+    elif "KRW" in ids:
+        return {"KRW": 'MAJ6SEQH3GT0GA2Z'}
+
+
 def map_identifiers_inflation_mocker(input_type: Union[GsIdType, str],
                                      output_type: Union[GsIdType, str],
                                      ids: IdList,
@@ -101,6 +117,20 @@ def test_currency_to_default_benchmark_rate(mocker):
     with tm.PricingContext(dt.date.today()):
         for i in range(len(asset_id_list)):
             correct_id = tm.currency_to_default_benchmark_rate(asset_id_list[i])
+            assert correct_id == correct_mapping[i]
+
+
+def test_currency_to_default_swap_rate_asset(mocker):
+    mocker.patch.object(GsSession.__class__, 'current',
+                        return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
+    mocker.patch.object(GsAssetApi, 'map_identifiers', side_effect=map_identifiers_swap_rate_mocker)
+
+    asset_id_list = ['MAZ7RWC904JYHYPS', 'MAJNQPFGN1EBDHAE', 'MAJ6SEQH3GT0GA2Z']
+    correct_mapping = ['MAAXGV0GZTW4GFNC', 'MA5WM2QWRVMYKDK0', 'MAJ6SEQH3GT0GA2Z']
+    with tm.PricingContext(dt.date.today()):
+        for i in range(len(asset_id_list)):
+            correct_id = tm.currency_to_default_swap_rate_asset(asset_id_list[i])
             assert correct_id == correct_mapping[i]
 
 
