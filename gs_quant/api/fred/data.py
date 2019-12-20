@@ -22,8 +22,8 @@ from typing import Iterable, Optional, Union
 
 import pandas as pd
 import datetime as dt
-import requests
 import textwrap
+from gs_quant.api.utils import handle_proxy
 
 from requests.exceptions import HTTPError
 
@@ -89,9 +89,8 @@ class FredDataApi(DataApi):
         :param id: A FRED series id
         :return: with id as key and requested DataFrame as value.
         """
-
         request = replace(query, api_key=self.api_key, series_id=dataset_id)
-        response = requests.get(self.root_url, params=asdict(request))
+        response = handle_proxy(self.root_url, asdict(request))
         handled = self.__handle_response(response)
         handled.name = dataset_id
         return handled

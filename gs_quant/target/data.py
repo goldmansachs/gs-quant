@@ -18,7 +18,7 @@ from gs_quant.target.common import *
 import datetime
 from typing import Tuple, Union
 from enum import Enum
-from gs_quant.base import Base, EnumBase, camel_case_translate, get_enum_value
+from gs_quant.base import Base, EnumBase, InstrumentBase, camel_case_translate, get_enum_value
 
 
 class MarketDataFrequency(EnumBase, Enum):    
@@ -56,49 +56,57 @@ class MeasureEntityType(EnumBase, Enum):
 
 class AdvancedFilter(Base):
         
-    """Advanced filter for numeric fields."""
+    """Advanced filters for the Dataset."""
 
     @camel_case_translate
     def __init__(
         self,
-        column: str,
-        value: float,
-        operator: str,
+        column,
+        operator,
+        value=None,
+        values=None,
         name: str = None
     ):        
         super().__init__()
         self.column = column
         self.value = value
+        self.values = values
         self.operator = operator
         self.name = name
 
     @property
-    def column(self) -> str:
-        """Database column to filter on."""
+    def column(self):
         return self.__column
 
     @column.setter
-    def column(self, value: str):
+    def column(self, value):
         self._property_changed('column')
         self.__column = value        
 
     @property
-    def value(self) -> float:
-        """Value to compare against."""
+    def value(self):
         return self.__value
 
     @value.setter
-    def value(self, value: float):
+    def value(self, value):
         self._property_changed('value')
         self.__value = value        
 
     @property
-    def operator(self) -> str:
-        """Comparison operator."""
+    def values(self):
+        return self.__values
+
+    @values.setter
+    def values(self, value):
+        self._property_changed('values')
+        self.__values = value        
+
+    @property
+    def operator(self):
         return self.__operator
 
     @operator.setter
-    def operator(self, value: str):
+    def operator(self, value):
         self._property_changed('operator')
         self.__operator = value        
 
@@ -165,321 +173,66 @@ class DataGroup(Base):
         self.name = name
 
 
-class DataQuery(Base):
+class DataSetCondition(Base):
         
+    """Condition for Dataset Transformations and Filters."""
+
     @camel_case_translate
     def __init__(
         self,
-        id_: str = None,
-        data_set_id: str = None,
-        format_: Union[Format, str] = None,
-        market_data_coordinates: Tuple[MarketDataCoordinate, ...] = None,
-        where: FieldFilterMap = None,
-        vendor: Union[MarketDataVendor, str] = None,
-        start_date: datetime.date = None,
-        end_date: datetime.date = None,
-        start_time: datetime.datetime = None,
-        end_time: datetime.datetime = None,
-        as_of_time: datetime.datetime = None,
-        id_as_of_date: datetime.date = None,
-        use_temporal_x_ref: bool = False,
-        since: datetime.datetime = None,
-        dates: Tuple[datetime.date, ...] = None,
-        times: Tuple[datetime.datetime, ...] = None,
-        delay: int = None,
-        intervals: int = None,
-        samples: int = None,
-        limit: int = None,
-        polling_interval: int = None,
-        grouped: bool = None,
-        fields: Tuple[Union[dict, str], ...] = None,
-        restrict_fields: bool = False,
-        entity_filter: FieldFilterMap = None,
+        column: str,
+        operator: str,
+        value: float = None,
+        values: Tuple[str, ...] = None,
         name: str = None
     ):        
         super().__init__()
-        self.__id = id_
-        self.data_set_id = data_set_id
-        self.__format = get_enum_value(Format, format_)
-        self.market_data_coordinates = market_data_coordinates
-        self.where = where
-        self.vendor = vendor
-        self.start_date = start_date
-        self.end_date = end_date
-        self.start_time = start_time
-        self.end_time = end_time
-        self.as_of_time = as_of_time
-        self.id_as_of_date = id_as_of_date
-        self.use_temporal_x_ref = use_temporal_x_ref
-        self.since = since
-        self.dates = dates
-        self.times = times
-        self.delay = delay
-        self.intervals = intervals
-        self.samples = samples
-        self.limit = limit
-        self.polling_interval = polling_interval
-        self.grouped = grouped
-        self.fields = fields
-        self.restrict_fields = restrict_fields
-        self.entity_filter = entity_filter
+        self.column = column
+        self.value = value
+        self.values = values
+        self.operator = operator
         self.name = name
 
     @property
-    def id(self) -> str:
-        """Marquee unique identifier"""
-        return self.__id
+    def column(self) -> str:
+        """Database column to match against."""
+        return self.__column
 
-    @id.setter
-    def id(self, value: str):
-        self._property_changed('id')
-        self.__id = value        
-
-    @property
-    def data_set_id(self) -> str:
-        """Marquee unique identifier"""
-        return self.__data_set_id
-
-    @data_set_id.setter
-    def data_set_id(self, value: str):
-        self._property_changed('data_set_id')
-        self.__data_set_id = value        
+    @column.setter
+    def column(self, value: str):
+        self._property_changed('column')
+        self.__column = value        
 
     @property
-    def format(self) -> Union[Format, str]:
-        """Alternative format for data to be returned in"""
-        return self.__format
+    def value(self) -> float:
+        """Numeric value to compare against. Cannot be used with 'in' and 'notIn'
+           operators."""
+        return self.__value
 
-    @format.setter
-    def format(self, value: Union[Format, str]):
-        self._property_changed('format')
-        self.__format = get_enum_value(Format, value)        
-
-    @property
-    def market_data_coordinates(self) -> Tuple[MarketDataCoordinate, ...]:
-        """Object representation of a market data coordinate"""
-        return self.__market_data_coordinates
-
-    @market_data_coordinates.setter
-    def market_data_coordinates(self, value: Tuple[MarketDataCoordinate, ...]):
-        self._property_changed('market_data_coordinates')
-        self.__market_data_coordinates = value        
+    @value.setter
+    def value(self, value: float):
+        self._property_changed('value')
+        self.__value = value        
 
     @property
-    def where(self) -> FieldFilterMap:
-        """Filters on data fields."""
-        return self.__where
+    def values(self) -> Tuple[str, ...]:
+        """Values to compare against. Can only be used with 'in' and 'notIn' operators."""
+        return self.__values
 
-    @where.setter
-    def where(self, value: FieldFilterMap):
-        self._property_changed('where')
-        self.__where = value        
-
-    @property
-    def vendor(self) -> Union[MarketDataVendor, str]:
-        return self.__vendor
-
-    @vendor.setter
-    def vendor(self, value: Union[MarketDataVendor, str]):
-        self._property_changed('vendor')
-        self.__vendor = get_enum_value(MarketDataVendor, value)        
+    @values.setter
+    def values(self, value: Tuple[str, ...]):
+        self._property_changed('values')
+        self.__values = value        
 
     @property
-    def start_date(self) -> datetime.date:
-        """ISO 8601-formatted date"""
-        return self.__start_date
+    def operator(self) -> str:
+        """Comparison operator."""
+        return self.__operator
 
-    @start_date.setter
-    def start_date(self, value: datetime.date):
-        self._property_changed('start_date')
-        self.__start_date = value        
-
-    @property
-    def end_date(self) -> datetime.date:
-        """ISO 8601-formatted date"""
-        return self.__end_date
-
-    @end_date.setter
-    def end_date(self, value: datetime.date):
-        self._property_changed('end_date')
-        self.__end_date = value        
-
-    @property
-    def start_time(self) -> datetime.datetime:
-        """ISO 8601-formatted timestamp"""
-        return self.__start_time
-
-    @start_time.setter
-    def start_time(self, value: datetime.datetime):
-        self._property_changed('start_time')
-        self.__start_time = value        
-
-    @property
-    def end_time(self) -> datetime.datetime:
-        """ISO 8601-formatted timestamp"""
-        return self.__end_time
-
-    @end_time.setter
-    def end_time(self, value: datetime.datetime):
-        self._property_changed('end_time')
-        self.__end_time = value        
-
-    @property
-    def as_of_time(self) -> datetime.datetime:
-        """ISO 8601-formatted timestamp"""
-        return self.__as_of_time
-
-    @as_of_time.setter
-    def as_of_time(self, value: datetime.datetime):
-        self._property_changed('as_of_time')
-        self.__as_of_time = value        
-
-    @property
-    def id_as_of_date(self) -> datetime.date:
-        """ISO 8601-formatted date"""
-        return self.__id_as_of_date
-
-    @id_as_of_date.setter
-    def id_as_of_date(self, value: datetime.date):
-        self._property_changed('id_as_of_date')
-        self.__id_as_of_date = value        
-
-    @property
-    def use_temporal_x_ref(self) -> bool:
-        """Set to true when xrefs provided in the query should be treated in a temporal way
-           (e.g. get data points which had a certain BCID at some point in time,
-           not which currently have it)."""
-        return self.__use_temporal_x_ref
-
-    @use_temporal_x_ref.setter
-    def use_temporal_x_ref(self, value: bool):
-        self._property_changed('use_temporal_x_ref')
-        self.__use_temporal_x_ref = value        
-
-    @property
-    def since(self) -> datetime.datetime:
-        """ISO 8601-formatted timestamp"""
-        return self.__since
-
-    @since.setter
-    def since(self, value: datetime.datetime):
-        self._property_changed('since')
-        self.__since = value        
-
-    @property
-    def dates(self) -> Tuple[datetime.date, ...]:
-        """Select and return specific dates from dataset query results."""
-        return self.__dates
-
-    @dates.setter
-    def dates(self, value: Tuple[datetime.date, ...]):
-        self._property_changed('dates')
-        self.__dates = value        
-
-    @property
-    def times(self) -> Tuple[datetime.datetime, ...]:
-        """Select and return specific times from dataset query results."""
-        return self.__times
-
-    @times.setter
-    def times(self, value: Tuple[datetime.datetime, ...]):
-        self._property_changed('times')
-        self.__times = value        
-
-    @property
-    def delay(self) -> int:
-        """Number of minutes to delay returning data."""
-        return self.__delay
-
-    @delay.setter
-    def delay(self, value: int):
-        self._property_changed('delay')
-        self.__delay = value        
-
-    @property
-    def intervals(self) -> int:
-        """Number of intervals for which to return output times, for example if 10, it will
-           return 10 data points evenly spaced over the time/date range."""
-        return self.__intervals
-
-    @intervals.setter
-    def intervals(self, value: int):
-        self._property_changed('intervals')
-        self.__intervals = value        
-
-    @property
-    def samples(self) -> int:
-        """Number of points to down sample the data, for example if 10, it will return at
-           most 10 sample data points evenly spaced over the time/date range"""
-        return self.__samples
-
-    @samples.setter
-    def samples(self, value: int):
-        self._property_changed('samples')
-        self.__samples = value        
-
-    @property
-    def limit(self) -> int:
-        """Maximum number of rows for each asset to return."""
-        return self.__limit
-
-    @limit.setter
-    def limit(self, value: int):
-        self._property_changed('limit')
-        self.__limit = value        
-
-    @property
-    def polling_interval(self) -> int:
-        """When streaming, wait for this number of seconds between poll attempts."""
-        return self.__polling_interval
-
-    @polling_interval.setter
-    def polling_interval(self, value: int):
-        self._property_changed('polling_interval')
-        self.__polling_interval = value        
-
-    @property
-    def grouped(self) -> bool:
-        """Set to true to return results grouped by a given context (set of dimensions)."""
-        return self.__grouped
-
-    @grouped.setter
-    def grouped(self, value: bool):
-        self._property_changed('grouped')
-        self.__grouped = value        
-
-    @property
-    def fields(self) -> Tuple[Union[dict, str], ...]:
-        """Fields to be returned."""
-        return self.__fields
-
-    @fields.setter
-    def fields(self, value: Tuple[Union[dict, str], ...]):
-        self._property_changed('fields')
-        self.__fields = value        
-
-    @property
-    def restrict_fields(self) -> bool:
-        """Whether to return only the fields which are requested and suppress every other
-           field"""
-        return self.__restrict_fields
-
-    @restrict_fields.setter
-    def restrict_fields(self, value: bool):
-        self._property_changed('restrict_fields')
-        self.__restrict_fields = value        
-
-    @property
-    def entity_filter(self) -> FieldFilterMap:
-        """Filters that are applied only to entities i.e Asset. It is used for querying by
-           asset parameters to return data for assets matching a certain
-           criteria i.e floatingRateOption = LIBOR."""
-        return self.__entity_filter
-
-    @entity_filter.setter
-    def entity_filter(self, value: FieldFilterMap):
-        self._property_changed('entity_filter')
-        self.__entity_filter = value        
+    @operator.setter
+    def operator(self, value: str):
+        self._property_changed('operator')
+        self.__operator = value        
 
 
 class DataSetDefaults(Base):
@@ -962,6 +715,31 @@ class DataSetParameters(Base):
         self.__coverage_enabled = value        
 
 
+class DataSetTransforms(Base):
+        
+    """Dataset transformation specifiers."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        redact_columns: Tuple[str, ...] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.redact_columns = redact_columns
+        self.name = name
+
+    @property
+    def redact_columns(self) -> Tuple[str, ...]:
+        """Redact (exclude) a list of database columns."""
+        return self.__redact_columns
+
+    @redact_columns.setter
+    def redact_columns(self, value: Tuple[str, ...]):
+        self._property_changed('redact_columns')
+        self.__redact_columns = value        
+
+
 class FieldLinkSelector(Base):
         
     """Stores selector and name how field is presented in dataset."""
@@ -1048,76 +826,6 @@ class MDAPI(Base):
         self.__quoting_styles = value        
 
 
-class MDAPIDataQuery(Base):
-        
-    @camel_case_translate
-    def __init__(
-        self,
-        market_data_coordinates: Tuple[MarketDataCoordinate, ...] = (),
-        format_: Union[Format, str] = None,
-        vendor: Union[MarketDataVendor, str] = None,
-        start_time: datetime.datetime = None,
-        end_time: datetime.datetime = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.__format = get_enum_value(Format, format_)
-        self.market_data_coordinates = market_data_coordinates
-        self.vendor = vendor
-        self.start_time = start_time
-        self.end_time = end_time
-        self.name = name
-
-    @property
-    def format(self) -> Union[Format, str]:
-        """Alternative format for data to be returned in"""
-        return self.__format
-
-    @format.setter
-    def format(self, value: Union[Format, str]):
-        self._property_changed('format')
-        self.__format = get_enum_value(Format, value)        
-
-    @property
-    def market_data_coordinates(self) -> Tuple[MarketDataCoordinate, ...]:
-        """Object representation of a market data coordinate"""
-        return self.__market_data_coordinates
-
-    @market_data_coordinates.setter
-    def market_data_coordinates(self, value: Tuple[MarketDataCoordinate, ...]):
-        self._property_changed('market_data_coordinates')
-        self.__market_data_coordinates = value        
-
-    @property
-    def vendor(self) -> Union[MarketDataVendor, str]:
-        return self.__vendor
-
-    @vendor.setter
-    def vendor(self, value: Union[MarketDataVendor, str]):
-        self._property_changed('vendor')
-        self.__vendor = get_enum_value(MarketDataVendor, value)        
-
-    @property
-    def start_time(self) -> datetime.datetime:
-        """ISO 8601-formatted timestamp"""
-        return self.__start_time
-
-    @start_time.setter
-    def start_time(self, value: datetime.datetime):
-        self._property_changed('start_time')
-        self.__start_time = value        
-
-    @property
-    def end_time(self) -> datetime.datetime:
-        """ISO 8601-formatted timestamp"""
-        return self.__end_time
-
-    @end_time.setter
-    def end_time(self, value: datetime.datetime):
-        self._property_changed('end_time')
-        self.__end_time = value        
-
-
 class MDAPIDataQueryResponse(Base):
         
     @camel_case_translate
@@ -1139,6 +847,78 @@ class MDAPIDataQueryResponse(Base):
     def data(self, value: Tuple[FieldValueMap, ...]):
         self._property_changed('data')
         self.__data = value        
+
+
+class MarketDataCoordinate(Base):
+        
+    """Object representation of a market data coordinate"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        mkt_type: str = None,
+        mkt_asset: str = None,
+        mkt_class: str = None,
+        mkt_point: Tuple[str, ...] = None,
+        mkt_quoting_style: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.mkt_type = mkt_type
+        self.mkt_asset = mkt_asset
+        self.mkt_class = mkt_class
+        self.mkt_point = mkt_point
+        self.mkt_quoting_style = mkt_quoting_style
+        self.name = name
+
+    @property
+    def mkt_type(self) -> str:
+        """The MDAPI Type, e.g. IR, IR_BASIS, FX, FX_Vol"""
+        return self.__mkt_type
+
+    @mkt_type.setter
+    def mkt_type(self, value: str):
+        self._property_changed('mkt_type')
+        self.__mkt_type = value        
+
+    @property
+    def mkt_asset(self) -> str:
+        """The MDAPI Asset, e.g. USD, EUR-EURIBOR-Telerate, WTI"""
+        return self.__mkt_asset
+
+    @mkt_asset.setter
+    def mkt_asset(self, value: str):
+        self._property_changed('mkt_asset')
+        self.__mkt_asset = value        
+
+    @property
+    def mkt_class(self) -> str:
+        """The MDAPI Class, e.g. Swap, Cash."""
+        return self.__mkt_class
+
+    @mkt_class.setter
+    def mkt_class(self, value: str):
+        self._property_changed('mkt_class')
+        self.__mkt_class = value        
+
+    @property
+    def mkt_point(self) -> Tuple[str, ...]:
+        """The MDAPI Point, e.g. 3m, 10y, 11y, Dec19"""
+        return self.__mkt_point
+
+    @mkt_point.setter
+    def mkt_point(self, value: Tuple[str, ...]):
+        self._property_changed('mkt_point')
+        self.__mkt_point = value        
+
+    @property
+    def mkt_quoting_style(self) -> str:
+        return self.__mkt_quoting_style
+
+    @mkt_quoting_style.setter
+    def mkt_quoting_style(self, value: str):
+        self._property_changed('mkt_quoting_style')
+        self.__mkt_quoting_style = value        
 
 
 class MarketDataField(Base):
@@ -1485,6 +1265,323 @@ class ComplexFilter(Base):
         self.__simple_filters = value        
 
 
+class DataQuery(Base):
+        
+    @camel_case_translate
+    def __init__(
+        self,
+        id_: str = None,
+        data_set_id: str = None,
+        format_: Union[Format, str] = None,
+        market_data_coordinates: Tuple[MarketDataCoordinate, ...] = None,
+        where: FieldFilterMap = None,
+        vendor: Union[MarketDataVendor, str] = None,
+        start_date: datetime.date = None,
+        end_date: datetime.date = None,
+        start_time: datetime.datetime = None,
+        end_time: datetime.datetime = None,
+        as_of_time: datetime.datetime = None,
+        id_as_of_date: datetime.date = None,
+        use_temporal_x_ref: bool = False,
+        since: datetime.datetime = None,
+        dates: Tuple[datetime.date, ...] = None,
+        times: Tuple[datetime.datetime, ...] = None,
+        delay: int = None,
+        intervals: int = None,
+        samples: int = None,
+        limit: int = None,
+        polling_interval: int = None,
+        grouped: bool = None,
+        fields: Tuple[Union[dict, str], ...] = None,
+        restrict_fields: bool = False,
+        entity_filter: FieldFilterMap = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.__id = id_
+        self.data_set_id = data_set_id
+        self.__format = get_enum_value(Format, format_)
+        self.market_data_coordinates = market_data_coordinates
+        self.where = where
+        self.vendor = vendor
+        self.start_date = start_date
+        self.end_date = end_date
+        self.start_time = start_time
+        self.end_time = end_time
+        self.as_of_time = as_of_time
+        self.id_as_of_date = id_as_of_date
+        self.use_temporal_x_ref = use_temporal_x_ref
+        self.since = since
+        self.dates = dates
+        self.times = times
+        self.delay = delay
+        self.intervals = intervals
+        self.samples = samples
+        self.limit = limit
+        self.polling_interval = polling_interval
+        self.grouped = grouped
+        self.fields = fields
+        self.restrict_fields = restrict_fields
+        self.entity_filter = entity_filter
+        self.name = name
+
+    @property
+    def id(self) -> str:
+        """Marquee unique identifier"""
+        return self.__id
+
+    @id.setter
+    def id(self, value: str):
+        self._property_changed('id')
+        self.__id = value        
+
+    @property
+    def data_set_id(self) -> str:
+        """Marquee unique identifier"""
+        return self.__data_set_id
+
+    @data_set_id.setter
+    def data_set_id(self, value: str):
+        self._property_changed('data_set_id')
+        self.__data_set_id = value        
+
+    @property
+    def format(self) -> Union[Format, str]:
+        """Alternative format for data to be returned in"""
+        return self.__format
+
+    @format.setter
+    def format(self, value: Union[Format, str]):
+        self._property_changed('format')
+        self.__format = get_enum_value(Format, value)        
+
+    @property
+    def market_data_coordinates(self) -> Tuple[MarketDataCoordinate, ...]:
+        """Object representation of a market data coordinate"""
+        return self.__market_data_coordinates
+
+    @market_data_coordinates.setter
+    def market_data_coordinates(self, value: Tuple[MarketDataCoordinate, ...]):
+        self._property_changed('market_data_coordinates')
+        self.__market_data_coordinates = value        
+
+    @property
+    def where(self) -> FieldFilterMap:
+        """Filters on data fields."""
+        return self.__where
+
+    @where.setter
+    def where(self, value: FieldFilterMap):
+        self._property_changed('where')
+        self.__where = value        
+
+    @property
+    def vendor(self) -> Union[MarketDataVendor, str]:
+        return self.__vendor
+
+    @vendor.setter
+    def vendor(self, value: Union[MarketDataVendor, str]):
+        self._property_changed('vendor')
+        self.__vendor = get_enum_value(MarketDataVendor, value)        
+
+    @property
+    def start_date(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__start_date
+
+    @start_date.setter
+    def start_date(self, value: datetime.date):
+        self._property_changed('start_date')
+        self.__start_date = value        
+
+    @property
+    def end_date(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__end_date
+
+    @end_date.setter
+    def end_date(self, value: datetime.date):
+        self._property_changed('end_date')
+        self.__end_date = value        
+
+    @property
+    def start_time(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
+        return self.__start_time
+
+    @start_time.setter
+    def start_time(self, value: datetime.datetime):
+        self._property_changed('start_time')
+        self.__start_time = value        
+
+    @property
+    def end_time(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
+        return self.__end_time
+
+    @end_time.setter
+    def end_time(self, value: datetime.datetime):
+        self._property_changed('end_time')
+        self.__end_time = value        
+
+    @property
+    def as_of_time(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
+        return self.__as_of_time
+
+    @as_of_time.setter
+    def as_of_time(self, value: datetime.datetime):
+        self._property_changed('as_of_time')
+        self.__as_of_time = value        
+
+    @property
+    def id_as_of_date(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__id_as_of_date
+
+    @id_as_of_date.setter
+    def id_as_of_date(self, value: datetime.date):
+        self._property_changed('id_as_of_date')
+        self.__id_as_of_date = value        
+
+    @property
+    def use_temporal_x_ref(self) -> bool:
+        """Set to true when xrefs provided in the query should be treated in a temporal way
+           (e.g. get data points which had a certain BCID at some point in time,
+           not which currently have it)."""
+        return self.__use_temporal_x_ref
+
+    @use_temporal_x_ref.setter
+    def use_temporal_x_ref(self, value: bool):
+        self._property_changed('use_temporal_x_ref')
+        self.__use_temporal_x_ref = value        
+
+    @property
+    def since(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
+        return self.__since
+
+    @since.setter
+    def since(self, value: datetime.datetime):
+        self._property_changed('since')
+        self.__since = value        
+
+    @property
+    def dates(self) -> Tuple[datetime.date, ...]:
+        """Select and return specific dates from dataset query results."""
+        return self.__dates
+
+    @dates.setter
+    def dates(self, value: Tuple[datetime.date, ...]):
+        self._property_changed('dates')
+        self.__dates = value        
+
+    @property
+    def times(self) -> Tuple[datetime.datetime, ...]:
+        """Select and return specific times from dataset query results."""
+        return self.__times
+
+    @times.setter
+    def times(self, value: Tuple[datetime.datetime, ...]):
+        self._property_changed('times')
+        self.__times = value        
+
+    @property
+    def delay(self) -> int:
+        """Number of minutes to delay returning data."""
+        return self.__delay
+
+    @delay.setter
+    def delay(self, value: int):
+        self._property_changed('delay')
+        self.__delay = value        
+
+    @property
+    def intervals(self) -> int:
+        """Number of intervals for which to return output times, for example if 10, it will
+           return 10 data points evenly spaced over the time/date range."""
+        return self.__intervals
+
+    @intervals.setter
+    def intervals(self, value: int):
+        self._property_changed('intervals')
+        self.__intervals = value        
+
+    @property
+    def samples(self) -> int:
+        """Number of points to down sample the data, for example if 10, it will return at
+           most 10 sample data points evenly spaced over the time/date range"""
+        return self.__samples
+
+    @samples.setter
+    def samples(self, value: int):
+        self._property_changed('samples')
+        self.__samples = value        
+
+    @property
+    def limit(self) -> int:
+        """Maximum number of rows for each asset to return."""
+        return self.__limit
+
+    @limit.setter
+    def limit(self, value: int):
+        self._property_changed('limit')
+        self.__limit = value        
+
+    @property
+    def polling_interval(self) -> int:
+        """When streaming, wait for this number of seconds between poll attempts."""
+        return self.__polling_interval
+
+    @polling_interval.setter
+    def polling_interval(self, value: int):
+        self._property_changed('polling_interval')
+        self.__polling_interval = value        
+
+    @property
+    def grouped(self) -> bool:
+        """Set to true to return results grouped by a given context (set of dimensions)."""
+        return self.__grouped
+
+    @grouped.setter
+    def grouped(self, value: bool):
+        self._property_changed('grouped')
+        self.__grouped = value        
+
+    @property
+    def fields(self) -> Tuple[Union[dict, str], ...]:
+        """Fields to be returned."""
+        return self.__fields
+
+    @fields.setter
+    def fields(self, value: Tuple[Union[dict, str], ...]):
+        self._property_changed('fields')
+        self.__fields = value        
+
+    @property
+    def restrict_fields(self) -> bool:
+        """Whether to return only the fields which are requested and suppress every other
+           field"""
+        return self.__restrict_fields
+
+    @restrict_fields.setter
+    def restrict_fields(self, value: bool):
+        self._property_changed('restrict_fields')
+        self.__restrict_fields = value        
+
+    @property
+    def entity_filter(self) -> FieldFilterMap:
+        """Filters that are applied only to entities i.e Asset. It is used for querying by
+           asset parameters to return data for assets matching a certain
+           criteria i.e floatingRateOption = LIBOR."""
+        return self.__entity_filter
+
+    @entity_filter.setter
+    def entity_filter(self, value: FieldFilterMap):
+        self._property_changed('entity_filter')
+        self.__entity_filter = value        
+
+
 class DataQueryResponse(Base):
         
     @camel_case_translate
@@ -1599,6 +1696,43 @@ class DataQueryResponse(Base):
     def groups(self, value: Tuple[DataGroup, ...]):
         self._property_changed('groups')
         self.__groups = value        
+
+
+class DataSetTransformation(Base):
+        
+    """Transform the Dataset output. Can be used with or without certain conditions."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        transforms: DataSetTransforms,
+        condition: DataSetCondition = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.condition = condition
+        self.transforms = transforms
+        self.name = name
+
+    @property
+    def condition(self) -> DataSetCondition:
+        """Condition to match before applying the transformations."""
+        return self.__condition
+
+    @condition.setter
+    def condition(self, value: DataSetCondition):
+        self._property_changed('condition')
+        self.__condition = value        
+
+    @property
+    def transforms(self) -> DataSetTransforms:
+        """Series of transformation actions to perform."""
+        return self.__transforms
+
+    @transforms.setter
+    def transforms(self, value: DataSetTransforms):
+        self._property_changed('transforms')
+        self.__transforms = value        
 
 
 class FieldLink(Base):
@@ -1766,6 +1900,101 @@ class MDAPIDataBatchResponse(Base):
     def responses(self, value: Tuple[MDAPIDataQueryResponse, ...]):
         self._property_changed('responses')
         self.__responses = value        
+
+
+class MDAPIDataQuery(Base):
+        
+    @camel_case_translate
+    def __init__(
+        self,
+        market_data_coordinates: Tuple[MarketDataCoordinate, ...],
+        format_: Union[Format, str] = None,
+        selector_function: str = None,
+        samples: int = None,
+        vendor: Union[MarketDataVendor, str] = None,
+        start_time: datetime.datetime = None,
+        end_time: datetime.datetime = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.__format = get_enum_value(Format, format_)
+        self.market_data_coordinates = market_data_coordinates
+        self.selector_function = selector_function
+        self.samples = samples
+        self.vendor = vendor
+        self.start_time = start_time
+        self.end_time = end_time
+        self.name = name
+
+    @property
+    def format(self) -> Union[Format, str]:
+        """Alternative format for data to be returned in"""
+        return self.__format
+
+    @format.setter
+    def format(self, value: Union[Format, str]):
+        self._property_changed('format')
+        self.__format = get_enum_value(Format, value)        
+
+    @property
+    def market_data_coordinates(self) -> Tuple[MarketDataCoordinate, ...]:
+        """Object representation of a market data coordinate"""
+        return self.__market_data_coordinates
+
+    @market_data_coordinates.setter
+    def market_data_coordinates(self, value: Tuple[MarketDataCoordinate, ...]):
+        self._property_changed('market_data_coordinates')
+        self.__market_data_coordinates = value        
+
+    @property
+    def selector_function(self) -> str:
+        """Aggregation function to be applied to value fields"""
+        return self.__selector_function
+
+    @selector_function.setter
+    def selector_function(self, value: str):
+        self._property_changed('selector_function')
+        self.__selector_function = value        
+
+    @property
+    def samples(self) -> int:
+        """Number of points to down sample the data, for example if 10, it will return at
+           most 10 sample data points evenly spaced over the time/date range"""
+        return self.__samples
+
+    @samples.setter
+    def samples(self, value: int):
+        self._property_changed('samples')
+        self.__samples = value        
+
+    @property
+    def vendor(self) -> Union[MarketDataVendor, str]:
+        return self.__vendor
+
+    @vendor.setter
+    def vendor(self, value: Union[MarketDataVendor, str]):
+        self._property_changed('vendor')
+        self.__vendor = get_enum_value(MarketDataVendor, value)        
+
+    @property
+    def start_time(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
+        return self.__start_time
+
+    @start_time.setter
+    def start_time(self, value: datetime.datetime):
+        self._property_changed('start_time')
+        self.__start_time = value        
+
+    @property
+    def end_time(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
+        return self.__end_time
+
+    @end_time.setter
+    def end_time(self, value: datetime.datetime):
+        self._property_changed('end_time')
+        self.__end_time = value        
 
 
 class MarketDataMapping(Base):
@@ -2328,7 +2557,7 @@ class DataSetFilters(Base):
 
     @property
     def advanced_filters(self) -> Tuple[AdvancedFilter, ...]:
-        """Advanced filter for numeric fields."""
+        """Advanced filters for the Dataset."""
         return self.__advanced_filters
 
     @advanced_filters.setter
@@ -2379,6 +2608,7 @@ class DataSetEntity(Base):
         query_processors: ProcessorEntity = None,
         defaults: DataSetDefaults = None,
         filters: DataSetFilters = None,
+        transformations: Tuple[DataSetTransformation, ...] = None,
         created_by_id: str = None,
         created_time: datetime.datetime = None,
         last_updated_by_id: str = None,
@@ -2403,6 +2633,7 @@ class DataSetEntity(Base):
         self.dimensions = dimensions
         self.defaults = defaults
         self.filters = filters
+        self.transformations = transformations
         self.created_by_id = created_by_id
         self.created_time = created_time
         self.last_updated_by_id = last_updated_by_id
@@ -2577,6 +2808,15 @@ class DataSetEntity(Base):
     def filters(self, value: DataSetFilters):
         self._property_changed('filters')
         self.__filters = value        
+
+    @property
+    def transformations(self) -> Tuple[DataSetTransformation, ...]:
+        return self.__transformations
+
+    @transformations.setter
+    def transformations(self, value: Tuple[DataSetTransformation, ...]):
+        self._property_changed('transformations')
+        self.__transformations = value        
 
     @property
     def created_by_id(self) -> str:

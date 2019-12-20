@@ -18,8 +18,7 @@ from gs_quant.target.common import *
 import datetime
 from typing import Tuple, Union
 from enum import Enum
-from gs_quant.instrument import Instrument
-from gs_quant.base import Base, EnumBase, camel_case_translate, get_enum_value
+from gs_quant.base import Base, EnumBase, InstrumentBase, camel_case_translate, get_enum_value
 
 
 class AllocatorType(EnumBase, Enum):    
@@ -420,7 +419,7 @@ class AssetToInstrumentResponse(Base):
         self,
         asset_id: str,
         name: str,
-        instrument: Instrument,
+        instrument: InstrumentBase,
         size_field: str
     ):        
         super().__init__()
@@ -450,12 +449,12 @@ class AssetToInstrumentResponse(Base):
         self.__name = value        
 
     @property
-    def instrument(self) -> Instrument:
+    def instrument(self) -> InstrumentBase:
         """Derivative instruments"""
         return self.__instrument
 
     @instrument.setter
-    def instrument(self, value: Instrument):
+    def instrument(self, value: InstrumentBase):
         self._property_changed('instrument')
         self.__instrument = value        
 
@@ -1065,6 +1064,7 @@ class AssetParameters(Base):
         clone_parent_id: str = None,
         on_behalf_of: str = None,
         index_calculation_agent: str = None,
+        product_type: str = None,
         name: str = None
     ):        
         super().__init__()
@@ -1139,6 +1139,7 @@ class AssetParameters(Base):
         self.clone_parent_id = clone_parent_id
         self.on_behalf_of = on_behalf_of
         self.index_calculation_agent = index_calculation_agent
+        self.product_type = product_type
         self.name = name
 
     @property
@@ -1846,6 +1847,16 @@ class AssetParameters(Base):
     def index_calculation_agent(self, value: str):
         self._property_changed('index_calculation_agent')
         self.__index_calculation_agent = value        
+
+    @property
+    def product_type(self) -> str:
+        """Basket Product Type."""
+        return self.__product_type
+
+    @product_type.setter
+    def product_type(self, value: str):
+        self._property_changed('product_type')
+        self.__product_type = value        
 
 
 class AssetStats(Base):

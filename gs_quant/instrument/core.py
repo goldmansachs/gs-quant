@@ -13,7 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from gs_quant.base import get_enum_value
+from gs_quant.base import get_enum_value, InstrumentBase
 from gs_quant.common import AssetClass, AssetType, XRef
 from gs_quant.priceable import PriceableImpl
 
@@ -21,7 +21,7 @@ from abc import ABCMeta
 import inspect
 
 
-class Instrument(PriceableImpl, metaclass=ABCMeta):
+class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
 
     __instrument_mappings = {}
 

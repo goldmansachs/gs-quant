@@ -93,8 +93,21 @@ class ContextBase(metaclass=ContextMeta):
 
     @property
     def _cls(self) -> ContextMeta:
-        cls = next(b for b in self.__class__.__bases__ if issubclass(b, ContextBase))
-        return self.__class__ if cls.__name__ in ('ContextBase', 'ContextBaseWithDefault') else cls
+        seen = set()
+        stack = [self.__class__]
+        cls = None
+
+        while stack:
+            base = stack.pop()
+            if ContextBase in base.__bases__ or ContextBaseWithDefault in base.__bases__:
+                cls = base
+                break
+
+            if base not in seen:
+                seen.add(base)
+                stack.extend(b for b in base.__bases__ if issubclass(b, ContextBase))
+
+        return cls or self.__class__
 
     @property
     def _is_entered(self) -> bool:

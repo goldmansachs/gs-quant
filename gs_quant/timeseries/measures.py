@@ -136,6 +136,7 @@ class FundamentalMetricPeriodDirection(Enum):
 
 class RatesConversionType(Enum):
     DEFAULT_BENCHMARK_RATE = auto()
+    DEFAULT_SWAP_RATE_ASSET = auto()
     INFLATION_BENCHMARK_RATE = auto()
     CROSS_CURRENCY_BASIS = auto()
 
@@ -207,6 +208,11 @@ def currency_to_default_benchmark_rate(asset_id: str) -> str:
     return result
 
 
+def currency_to_default_swap_rate_asset(asset_id: str) -> str:
+    asset = SecurityMaster.get_asset(asset_id, AssetIdentifier.MARQUEE_ID)
+    return convert_asset_for_rates_data_set(asset, RatesConversionType.DEFAULT_SWAP_RATE_ASSET)
+
+
 def currency_to_inflation_benchmark_rate(asset_id: str) -> str:
     try:
         asset = SecurityMaster.get_asset(asset_id, AssetIdentifier.MARQUEE_ID)
@@ -233,6 +239,9 @@ def convert_asset_for_rates_data_set(from_asset: Asset, c_type: RatesConversionT
 
         if c_type is RatesConversionType.DEFAULT_BENCHMARK_RATE:
             to_asset = CURRENCY_TO_DEFAULT_RATE_BENCHMARK[bbid]
+        elif c_type is RatesConversionType.DEFAULT_SWAP_RATE_ASSET:
+            to_asset = (bbid + '-3m') if bbid == "USD" else (bbid + '-6m') if bbid in ['GBP', 'EUR', 'CHF', 'SEK'] \
+                else bbid
         elif c_type is RatesConversionType.INFLATION_BENCHMARK_RATE:
             to_asset = CURRENCY_TO_INFLATION_RATE_BENCHMARK[bbid]
         else:
@@ -577,7 +586,8 @@ def average_implied_variance(asset: Asset, tenor: str, strike_reference: EdrData
     return Series() if df.empty else df['averageImpliedVariance']
 
 
-@plot_measure((AssetClass.Cash,), (AssetType.Currency,), [QueryType.SWAP_RATE])
+@plot_measure((AssetClass.Cash,), (AssetType.Currency,),
+              [MeasureDependency(id_provider=currency_to_default_swap_rate_asset, query_type=QueryType.SWAP_RATE)])
 def swap_rate(asset: Asset, tenor: str, benchmark_type: BenchmarkType = None, floating_index: str = None,
               pricing_location: PricingLocation = None, *, source: str = None, real_time: bool = False) -> Series:
     """

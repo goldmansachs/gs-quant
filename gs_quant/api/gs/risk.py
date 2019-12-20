@@ -14,13 +14,10 @@ specific language governing permissions and limitations
 under the License.
 """
 import time
-from typing import Iterable, Tuple, Union
+from typing import Iterable, Union
 
 from gs_quant.api.risk import RiskApi
-from gs_quant.base import Priceable
-from gs_quant.markets.core import MarketDataCoordinate
-from gs_quant.risk import CoordinatesRequest, RiskRequest, PricingContext, \
-    LiquidityRequest, LiquidityResponse, RiskModelRequest
+from gs_quant.risk import RiskRequest, LiquidityRequest, LiquidityResponse, RiskModelRequest
 from gs_quant.session import GsSession
 
 
@@ -50,18 +47,6 @@ class GsRiskApi(RiskApi):
                 time.sleep(1)
 
         return results
-
-    @classmethod
-    def coordinates(cls, priceables: Iterable[Priceable]) -> Tuple[MarketDataCoordinate, ...]:
-        coordinates_request = CoordinatesRequest(PricingContext.current.pricing_date, instruments=tuple(priceables))
-        response = GsSession.current._post(r'/risk/coordinates', coordinates_request)
-
-        return tuple(MarketDataCoordinate(
-            mkt_type=r.get('marketDataType'),
-            mkt_class=r.get('pointClass'),
-            mkt_point=tuple(r.get('marketDataPoint', r.get('point', '')).split('_')),
-            mkt_quoting_style=r.get('field', r.get('quotingStyle')))
-            for r in response)  # TODO use 'quotingStyle' after changing risk definition in slang
 
     @classmethod
     def liquidity(cls, request: LiquidityRequest) -> LiquidityResponse:

@@ -321,7 +321,7 @@ class GsDataApi(DataApi):
     def coordinates_last(
             cls,
             coordinates: Union[Iterable[str], Iterable[MarketDataCoordinate]],
-            as_of: Union[dt.date, dt.datetime],
+            as_of: Optional[dt.datetime] = None,
             vendor: str = 'Goldman Sachs',
             as_dataframe: bool = False,
     ) -> Union[dict, pd.DataFrame]:
@@ -352,12 +352,12 @@ class GsDataApi(DataApi):
     def coordinates_data(
             cls,
             coordinates: Union[str, MarketDataCoordinate, Iterable[str], Iterable[MarketDataCoordinate]],
-            start: Optional[Union[dt.date, dt.datetime]] = None,
-            end: Optional[Union[dt.date, dt.datetime]] = None,
+            start: Optional[dt.datetime] = None,
+            end: Optional[dt.datetime] = None,
             vendor: str = 'Goldman Sachs',
             as_multiple_dataframes: bool = False
     ) -> Union[pd.DataFrame, Tuple[pd.DataFrame]]:
-        coordinates_iterable = (coordinates, ) if isinstance(coordinates, (MarketDataCoordinate, str)) else coordinates
+        coordinates_iterable = (coordinates,) if isinstance(coordinates, (MarketDataCoordinate, str)) else coordinates
         query = cls.build_query(
             market_data_coordinates=tuple(cls._coordinate_from_str(coord) if isinstance(coord, str) else coord
                                           for coord in coordinates_iterable),
@@ -377,8 +377,8 @@ class GsDataApi(DataApi):
     def coordinates_data_series(
             cls,
             coordinates: Union[str, MarketDataCoordinate, Iterable[str], Iterable[MarketDataCoordinate]],
-            start: Optional[Union[dt.date, dt.datetime]] = None,
-            end: Optional[Union[dt.date, dt.datetime]] = None,
+            start: Optional[dt.datetime] = None,
+            end: Optional[dt.datetime] = None,
             vendor: str = 'Goldman Sachs',
     ) -> Union[pd.Series, Tuple[pd.Series]]:
         dfs = cls.coordinates_data(

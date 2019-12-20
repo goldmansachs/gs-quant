@@ -21,6 +21,7 @@ import gs_quant.target.backtests as backtests
 from gs_quant.api.gs.backtests import GsBacktestApi
 from gs_quant.backtests.core import Backtest, QuantityType, TradeInMethod
 from gs_quant.backtests.strategy_systematic import StrategySystematic
+from gs_quant.instrument import EqOption
 from gs_quant.session import *
 from gs_quant.target.backtests import *
 
