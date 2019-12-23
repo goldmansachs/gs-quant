@@ -118,7 +118,7 @@ class Base(metaclass=ABCMeta):
     def __hash__(self) -> int:
         if not self._hash_is_calced:
             calced_hash = hash(self.name)
-            for prop in sorted(self.properties()):
+            for prop in self.properties():
                 calced_hash ^= hash(super().__getattribute__(prop))
 
             self.__calced_hash = calced_hash
