@@ -15,4 +15,4 @@ under the License.
 """
 name = "gs_quant"
 
-__version__ = "0.8.85"
+__version__ = "0.8.86"
