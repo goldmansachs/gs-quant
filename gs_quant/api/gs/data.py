@@ -19,6 +19,8 @@ from itertools import chain
 from typing import Iterable, List, Optional, Tuple, Union
 
 import logging
+from urllib.parse import urlencode
+
 import cachetools
 import numpy
 import pandas as pd
@@ -208,6 +210,21 @@ class GsDataApi(DataApi):
             cls.__definitions[dataset_id] = definition
 
         return definition
+
+    @classmethod
+    def get_many_definitions(cls,
+                             limit: int = 100,
+                             dataset_id: str = None,
+                             owner_id: str = None,
+                             name: str = None,
+                             mq_symbol: str = None) -> Tuple[DataSetEntity, ...]:
+
+        query_string = urlencode(dict(filter(lambda item: item[1] is not None,
+                                             dict(id=dataset_id, ownerId=owner_id, name=name,
+                                                  mqSymbol=mq_symbol, limit=limit).items())))
+
+        res = GsSession.current._get('/data/datasets?{query}'.format(query=query_string), cls=DataSetEntity)['results']
+        return res
 
     @staticmethod
     def build_market_data_query(asset_ids: List[str], query_type: QueryType, where: Union[FieldFilterMap] = None,

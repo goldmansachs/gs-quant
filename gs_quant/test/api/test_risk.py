@@ -32,7 +32,7 @@ priceables = (
     CommodSwap('Electricity', '1y'),
     EqForward('GS.N', '1y', 100.0),
     EqOption('GS.N', '3m', 'ATMF', 'Call', 'European'),
-    FXOption('EUR', 'USD', '1y', 'Call', strike='ATMF'),
+    FXOption('EUR', 'USD', '1y', 'Call', strike_price='ATMF'),
     IRSwap('Pay', '10y', 'USD'),
     IRBasisSwap('10y', 'USD'),
     IRSwaption('Pay', '10y', 'USD'),

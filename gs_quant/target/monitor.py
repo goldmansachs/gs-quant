@@ -119,57 +119,6 @@ class ColumnProperty(Base):
         self.__property = value        
 
 
-class Entitlements(Base):
-        
-    """Defines the entitlements of a given resource"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        view: Tuple[str, ...],
-        edit: Tuple[str, ...],
-        admin: Tuple[str, ...],
-        name: str = None
-    ):        
-        super().__init__()
-        self.view = view
-        self.edit = edit
-        self.admin = admin
-        self.name = name
-
-    @property
-    def view(self) -> Tuple[str, ...]:
-        """Permission to view the resource and its contents"""
-        return self.__view
-
-    @view.setter
-    def view(self, value: Tuple[str, ...]):
-        self._property_changed('view')
-        self.__view = value        
-
-    @property
-    def edit(self) -> Tuple[str, ...]:
-        """Permission to edit details about the resource content, excluding entitlements.
-           Can also delete the resource"""
-        return self.__edit
-
-    @edit.setter
-    def edit(self, value: Tuple[str, ...]):
-        self._property_changed('edit')
-        self.__edit = value        
-
-    @property
-    def admin(self) -> Tuple[str, ...]:
-        """Permission to edit all details of the resource, including entitlements. Can also
-           delete the resource"""
-        return self.__admin
-
-    @admin.setter
-    def admin(self, value: Tuple[str, ...]):
-        self._property_changed('admin')
-        self.__admin = value        
-
-
 class FunctionParameters(Base):
         
     """Function parameters to be passed into the relevant gs_quant function."""
@@ -267,12 +216,14 @@ class FunctionWhere(Base):
         participation_rate: float = None,
         percent_adv: float = None,
         strike_reference: str = None,
+        group: str = None,
         name: str = None
     ):        
         super().__init__()
         self.participation_rate = participation_rate
         self.percent_adv = percent_adv
         self.strike_reference = strike_reference
+        self.group = group
         self.name = name
 
     @property
@@ -304,6 +255,16 @@ class FunctionWhere(Base):
     def strike_reference(self, value: str):
         self._property_changed('strike_reference')
         self.__strike_reference = value        
+
+    @property
+    def group(self) -> str:
+        """Group for the request."""
+        return self.__group
+
+    @group.setter
+    def group(self, value: str):
+        self._property_changed('group')
+        self.__group = value        
 
 
 class Historical(Base):

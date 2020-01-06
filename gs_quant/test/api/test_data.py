@@ -24,7 +24,7 @@ from gs_quant.context_base import ContextMeta
 from gs_quant.errors import MqValueError
 from gs_quant.markets import MarketDataCoordinate
 from gs_quant.session import GsSession, Environment
-from gs_quant.target.data import MDAPIDataQuery, MarketDataVendor
+from gs_quant.target.data import MDAPIDataQuery, MarketDataVendor, DataSetEntity
 
 test_coordinates = (
     MarketDataCoordinate(mkt_type='Prime', mkt_quoting_style='price', mkt_asset='335320934'),
@@ -35,6 +35,41 @@ test_str_coordinates = (
     'Prime_335320934_.price',
     'IR_USD_Swap_2Y'
 )
+
+test_defn_dict = {'id': 'EXAMPLE_FROM_SLANG',
+                  'name': 'Example DataSet',
+                  'description': 'This is a test.',
+                  'shortDescription': '',
+                  'vendor': 'Goldman Sachs',
+                  'dataProduct': 'TEST',
+                  'entitlements': {'query': ['internal'],
+                                   'view': ['internal', 'role:DataServiceView', 'role:DataServiceAdmin'],
+                                   'upload': ['internal'],
+                                   'admin': ['internal', 'role:DataServiceAdmin'],
+                                   'edit': ['internal', 'role:DataServiceAdmin']},
+                  'parameters': {'methodology': '',
+                                 'coverage': '',
+                                 'notes': '',
+                                 'history': '',
+                                 'frequency': '',
+                                 'applyMarketDataEntitlements': False,
+                                 'uploadDataPolicy': 'DEFAULT_POLICY',
+                                 'logicalDb': 'STUDIO_DAILY',
+                                 'symbolStrategy': 'ARCTIC_LINK',
+                                 'immutable': False,
+                                 'includeInCatalog': False,
+                                 'coverageEnabled': True},
+                  'dimensions': {'timeField': 'date',
+                                 'transactionTimeField': 'updateTime',
+                                 'symbolDimensions': ['assetId'],
+                                 'nonSymbolDimensions': [{'field': 'price', 'column': 'PRICE'}],
+                                 'measures': [{'field': 'updateTime', 'column': 'UPDATE_TIME'}],
+                                 'entityDimension': 'assetId'},
+                  'defaults': {'startSeconds': 2592000.0},
+                  'createdById': '9eb7226166a44236905cae2913cfbd3c',
+                  'createdTime': '2018-07-24T00:32:25.77Z',
+                  'lastUpdatedById': '4ad8ebb6480d49e6b2e9eea9210685cf',
+                  'lastUpdatedTime': '2019-10-24T14:20:13.653Z'}
 
 bond_data = [
     {
@@ -236,6 +271,23 @@ def test_get_coverage_api(mocker):
     data = GsDataApi.get_coverage('MA_RANK')
 
     assert [{'gsid': 'gsid1'}] == data
+
+
+def test_get_many_defns_api(mocker):
+    test_defn = DataSetEntity.from_dict(test_defn_dict)
+    mock_response = {'results': (test_defn,), 'totalResults': 1}
+
+    expected_response = (test_defn,)
+
+    # mock GsSession
+    mocker.patch.object(GsSession.__class__, 'current',
+                        return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+
+    # run test
+    response = GsDataApi.get_many_definitions()
+    GsSession.current._get.assert_called_with('/data/datasets?limit=100', cls=DataSetEntity)
+    assert response == expected_response
 
 
 def test_coordinates_converter():

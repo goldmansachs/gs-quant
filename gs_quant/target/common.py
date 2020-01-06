@@ -24561,6 +24561,16 @@ class Position(Base):
         party_from: SimpleParty = None,
         external_ids: Tuple[dict, ...] = None,
         asset_info: InstrumentBase = None,
+        notional: float = None,
+        claim_type: Union[ClaimType, str] = None,
+        currency: Union[Currency, str] = None,
+        counter_party_book_name: str = None,
+        description: str = None,
+        effective_date: datetime.date = None,
+        expiration_date: datetime.date = None,
+        external_trade_id: str = None,
+        parent_security_type: str = None,
+        termination_date: datetime.date = None,
         name: str = None
     ):        
         super().__init__()
@@ -24570,6 +24580,16 @@ class Position(Base):
         self.party_from = party_from
         self.external_ids = external_ids
         self.asset_info = asset_info
+        self.notional = notional
+        self.claim_type = claim_type
+        self.currency = currency
+        self.counter_party_book_name = counter_party_book_name
+        self.description = description
+        self.effective_date = effective_date
+        self.expiration_date = expiration_date
+        self.external_trade_id = external_trade_id
+        self.parent_security_type = parent_security_type
+        self.termination_date = termination_date
         self.name = name
 
     @property
@@ -24629,6 +24649,111 @@ class Position(Base):
     def asset_info(self, value: InstrumentBase):
         self._property_changed('asset_info')
         self.__asset_info = value        
+
+    @property
+    def notional(self) -> float:
+        """Notional value of the positions."""
+        return self.__notional
+
+    @notional.setter
+    def notional(self, value: float):
+        self._property_changed('notional')
+        self.__notional = value        
+
+    @property
+    def claim_type(self) -> Union[ClaimType, str]:
+        """Claim Type with reference to a position."""
+        return self.__claim_type
+
+    @claim_type.setter
+    def claim_type(self, value: Union[ClaimType, str]):
+        self._property_changed('claim_type')
+        self.__claim_type = get_enum_value(ClaimType, value)        
+
+    @property
+    def clearing_house(self) -> str:
+        """Clearing house for a trade settlement."""
+        return 'LCH'        
+
+    @property
+    def currency(self) -> Union[Currency, str]:
+        """Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)"""
+        return self.__currency
+
+    @currency.setter
+    def currency(self, value: Union[Currency, str]):
+        self._property_changed('currency')
+        self.__currency = get_enum_value(Currency, value)        
+
+    @property
+    def counter_party_book_name(self) -> str:
+        """Counter Party for a trade or position."""
+        return self.__counter_party_book_name
+
+    @counter_party_book_name.setter
+    def counter_party_book_name(self, value: str):
+        self._property_changed('counter_party_book_name')
+        self.__counter_party_book_name = value        
+
+    @property
+    def description(self) -> str:
+        """Description of a particular trade or position."""
+        return self.__description
+
+    @description.setter
+    def description(self, value: str):
+        self._property_changed('description')
+        self.__description = value        
+
+    @property
+    def effective_date(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__effective_date
+
+    @effective_date.setter
+    def effective_date(self, value: datetime.date):
+        self._property_changed('effective_date')
+        self.__effective_date = value        
+
+    @property
+    def expiration_date(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__expiration_date
+
+    @expiration_date.setter
+    def expiration_date(self, value: datetime.date):
+        self._property_changed('expiration_date')
+        self.__expiration_date = value        
+
+    @property
+    def external_trade_id(self) -> str:
+        """External Trade Id for a particular trade."""
+        return self.__external_trade_id
+
+    @external_trade_id.setter
+    def external_trade_id(self, value: str):
+        self._property_changed('external_trade_id')
+        self.__external_trade_id = value        
+
+    @property
+    def parent_security_type(self) -> str:
+        """Security type of the parent trade for a position."""
+        return self.__parent_security_type
+
+    @parent_security_type.setter
+    def parent_security_type(self, value: str):
+        self._property_changed('parent_security_type')
+        self.__parent_security_type = value        
+
+    @property
+    def termination_date(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__termination_date
+
+    @termination_date.setter
+    def termination_date(self, value: datetime.date):
+        self._property_changed('termination_date')
+        self.__termination_date = value        
 
 
 class LiquidityRequest(Base):
