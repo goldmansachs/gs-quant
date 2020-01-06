@@ -32,6 +32,31 @@ class PortfolioType(EnumBase, Enum):
         return self.value
 
 
+class GRDBPortfolioParameters(Base):
+        
+    """Parameters required for a GRDB portfolio."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        oe_id: str,
+        name: str = None
+    ):        
+        super().__init__()
+        self.oe_id = oe_id
+        self.name = name
+
+    @property
+    def oe_id(self) -> str:
+        """Marquee unique identifier"""
+        return self.__oe_id
+
+    @oe_id.setter
+    def oe_id(self, value: str):
+        self._property_changed('oe_id')
+        self.__oe_id = value        
+
+
 class SecDbBookDetail(Base):
         
     """Details about SecDb Book"""

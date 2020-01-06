@@ -28,12 +28,12 @@ class GsBacktestApi:
     """GS Backtest API client implementation"""
 
     @classmethod
-    def get_backtests(cls,
-                      limit: int = 100,
-                      backtest_id: str = None,
-                      owner_id: str = None,
-                      name: str = None,
-                      mq_symbol: str = None) -> Tuple[Backtest, ...]:
+    def get_many_backtests(cls,
+                           limit: int = 100,
+                           backtest_id: str = None,
+                           owner_id: str = None,
+                           name: str = None,
+                           mq_symbol: str = None) -> Tuple[Backtest, ...]:
         query_string = urlencode(dict(filter(lambda item: item[1] is not None,
                                              dict(id=backtest_id, ownerId=owner_id, name=name,
                                                   mqSymbol=mq_symbol, limit=limit).items())))

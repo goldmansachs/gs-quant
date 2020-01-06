@@ -39,7 +39,7 @@ def test_get_many_backtests(mocker):
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
     # run test
-    response = GsBacktestApi.get_backtests()
+    response = GsBacktestApi.get_many_backtests()
     GsSession.current._get.assert_called_with('/backtests?limit=100', cls=Backtest)
     assert response == expected_response
 
