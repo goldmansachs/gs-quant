@@ -16,6 +16,7 @@ under the License.
 
 from unittest import mock
 
+import copy
 import pandas as pd
 
 import gs_quant.risk as risk
@@ -30,7 +31,7 @@ from gs_quant.target.risk import RiskRequestParameters
 
 priceables = (
     CommodSwap('Electricity', '1y'),
-    EqForward('GS.N', '1y', 100.0),
+    EqForward('GS.N', '1y'),
     EqOption('GS.N', '3m', 'ATMF', 'Call', 'European'),
     FXOption('EUR', 'USD', '1y', 'Call', strike_price='ATMF'),
     IRSwap('Pay', '10y', 'USD'),
@@ -151,7 +152,7 @@ def test_structured_calc(mocker):
 
     mocker.return_value = [[values] * len(priceables)]
 
-    with risk.PricingContext():
+    with PricingContext():
         delta_f = [p.calc(risk.IRDelta) for p in priceables]
 
     delta = risk.aggregate_risk(delta_f, threshold=0)
@@ -177,8 +178,44 @@ def test_async_calc(mocker):
     results = [[{'value': 0.01 * idx}] for idx in range(len(priceables))]
     mocker.return_value = [results]
 
-    with risk.PricingContext():
+    with PricingContext():
         dollar_price_f = [p.dollar_price() for p in priceables]
 
     prices = tuple(f.result() for f in dollar_price_f)
     assert prices == tuple(0.01 * i for i in range(len(priceables)))
+
+
+@mock.patch.object(GsRiskApi, '_exec')
+def test_disjoint_priceables_measures(mocker):
+    set_session()
+
+    swap = priceables[4]
+    swaption = priceables[6]
+
+    mocker.return_value = [[[{'value': 0.01}]]]
+
+    with PricingContext():
+        swap_price_f = swap.price()
+        swaption_dollar_price_f = swaption.dollar_price()
+
+    assert swap_price_f.result() == 0.01
+    assert swaption_dollar_price_f.result() == 0.01
+
+
+def test_resolution():
+    set_session()
+
+    swap = copy.copy(priceables[4])
+
+    assert 'fixed_rate' not in swap.as_dict()
+
+    with mock.patch('gs_quant.api.gs.risk.GsRiskApi._exec') as mocker:
+        mocker.return_value = [[[{'fixedRate': 0.01}]]]
+        assert swap.fixed_rate == 0.01
+
+    swap.notional_currency = 'GBP'
+    assert 'fixed_rate' not in swap.as_dict()
+
+    with mock.patch('gs_quant.api.gs.risk.GsRiskApi._exec') as mocker:
+        mocker.return_value = [[[{'fixedRate': 0.007}]]]
+        assert swap.fixed_rate == 0.007

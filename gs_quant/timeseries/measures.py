@@ -31,6 +31,7 @@ from pandas.tseries.holiday import Holiday, AbstractHolidayCalendar, USMemorialD
 from gs_quant.api.gs.assets import GsIdType
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.api.gs.data import QueryType
+from gs_quant.data import Dataset
 from gs_quant.data.core import DataContext
 from gs_quant.data.fields import Fields
 from gs_quant.datetime.gscalendar import GsCalendar
@@ -43,6 +44,8 @@ from gs_quant.timeseries.helper import log_return, plot_measure
 
 GENERIC_DATE = Union[datetime.date, str]
 TD_ONE = datetime.timedelta(days=1)
+CENTRAL_BANK_WATCH_START_DATE = datetime.date(2016, 1, 1)
+
 _logger = logging.getLogger(__name__)
 
 MeasureDependency: namedtuple = namedtuple("MeasureDependency", ["id_provider", "query_type"])
@@ -58,18 +61,6 @@ class NercCalendar(AbstractHolidayCalendar):
         USThanksgivingDay,
         Holiday('Christmas', month=12, day=25, observance=nearest_workday)
     ]
-
-
-def _to_fx_strikes(strikes):
-    out = []
-    for strike in strikes:
-        if strike == 50:
-            out.append('ATMS')
-        elif strike < 50:
-            out.append(f'{round(strike)}DC')
-        else:
-            out.append(f'{round(abs(100 - strike))}DP')
-    return out
 
 
 class SkewReference(Enum):
@@ -139,7 +130,26 @@ class RatesConversionType(Enum):
     DEFAULT_SWAP_RATE_ASSET = auto()
     INFLATION_BENCHMARK_RATE = auto()
     CROSS_CURRENCY_BASIS = auto()
+    OIS_BENCHMARK_RATE = auto()
 
+
+class MeetingType(Enum):
+    MEETING_FORWARD = 'Meeting Forward'
+    EOY_FORWARD = 'EOY Forward'
+    SPOT = 'Spot'
+
+
+CURRENCY_TO_OIS_RATE_BENCHMARK = {
+    'AUD': 'AUD OIS',
+    'USD': 'USD OIS',
+    'EUR': 'EUR OIS',
+    'GBP': 'GBP OIS',
+    'JPY': 'JPY OIS',
+    'CAD': 'CAD OIS',
+    'NOK': 'NOK OIS',
+    'NZD': 'NZD OIS',
+    'SEK': 'SEK OIS'
+}
 
 CURRENCY_TO_DEFAULT_RATE_BENCHMARK = {
     'USD': 'USD-LIBOR-BBA',
@@ -244,6 +254,8 @@ def convert_asset_for_rates_data_set(from_asset: Asset, c_type: RatesConversionT
                 else bbid
         elif c_type is RatesConversionType.INFLATION_BENCHMARK_RATE:
             to_asset = CURRENCY_TO_INFLATION_RATE_BENCHMARK[bbid]
+        elif c_type is RatesConversionType.OIS_BENCHMARK_RATE:
+            to_asset = CURRENCY_TO_OIS_RATE_BENCHMARK[bbid]
         else:
             to_asset = CROSS_TO_CROSS_CURRENCY_BASIS[bbid]
 
@@ -251,13 +263,26 @@ def convert_asset_for_rates_data_set(from_asset: Asset, c_type: RatesConversionT
 
     except KeyError:
         logging.info(f'Unsupported currency or cross ${bbid}')
-        raise from_asset.get_marquee_id()
+        return from_asset.get_marquee_id()
 
 
 def _get_custom_bd(exchange):
     from pandas.tseries.offsets import CustomBusinessDay
     calendar = GsCalendar.get(exchange).business_day_calendar()
     return CustomBusinessDay(calendar=calendar)
+
+
+def parse_meeting_date(meeting_str: str = '2019-01-01'):
+    if not isinstance(meeting_str, str):
+        return ''
+    elif meeting_str == '':
+        return ''
+
+    try:
+        year, month, day = meeting_str.split('-')
+        return dt.date(int(year), int(month), int(day))
+    except ValueError:
+        return ''
 
 
 @log_return(_logger, 'trying pricing dates')
@@ -327,36 +352,37 @@ def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Re
     if real_time:
         raise MqValueError('real-time skew not supported')
 
-    if strike_reference in (SkewReference.DELTA, None):
-        b = 50
-    elif strike_reference == SkewReference.NORMALIZED:
-        b = 0
-    else:
-        b = 100
-
-    kwargs = {}
-    if strike_reference in (SkewReference.DELTA, None):
-        # using delta call strikes so X DP is represented as (100 - X) DC
-        q_strikes = [100 - distance, distance, b]
-    else:
-        q_strikes = [b - distance, b + distance, b]
-
     asset_id = asset.get_marquee_id()
+    kwargs = {}
 
     if asset.asset_class == AssetClass.FX:
         asset_id = cross_stored_direction_for_fx_vol(asset_id)
-        q_strikes = _to_fx_strikes(q_strikes)
-        kwargs['location'] = location
-        column = 'deltaStrike'  # should use SkewReference.DELTA for FX
+        if strike_reference == SkewReference.DELTA:
+            q_strikes = [0 - distance, distance, 0]
+        else:
+            raise MqValueError('strike_reference has to be delta to get skew for FX options')
     else:
         assert asset.asset_class == AssetClass.Equity
+        if strike_reference in (SkewReference.DELTA, None):
+            b = 50
+        elif strike_reference == SkewReference.NORMALIZED:
+            b = 0
+        else:
+            b = 100
+
+        if strike_reference in (SkewReference.DELTA, None):
+            # using delta call strikes so X DP is represented as (100 - X) DC for Equity options
+            q_strikes = [100 - distance, distance, b]
+        else:
+            q_strikes = [b - distance, b + distance, b]
+
         if not strike_reference:
             raise MqTypeError('strike reference required for equities')
         if strike_reference != SkewReference.NORMALIZED:
             q_strikes = [x / 100 for x in q_strikes]
-        kwargs['strikeReference'] = strike_reference.value
-        column = 'relativeStrike'
 
+    kwargs['strikeReference'] = strike_reference.value
+    column = 'relativeStrike'
     kwargs[column] = q_strikes
     _logger.debug('where tenor=%s and %s', tenor, kwargs)
     where = FieldFilterMap(tenor=tenor, **kwargs)
@@ -436,42 +462,34 @@ def implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference,
         raise MqValueError('Relative strike must be provided if your strike reference is not delta_neutral')
 
     if asset.asset_class == AssetClass.FX:
-        if strike_reference == VolReference.FORWARD:
+        if strike_reference == VolReference.DELTA_NEUTRAL:
+            relative_strike = 0
+        elif strike_reference == VolReference.FORWARD or strike_reference == VolReference.SPOT:
             if relative_strike != 100:
-                raise MqValueError('Relative strike must be 100 for Forward strike reference')
-        elif strike_reference == VolReference.SPOT:
-            if relative_strike != 100:
-                raise MqValueError('Relative strike must be 100 for Spot strike reference')
+                raise MqValueError('Relative strike must be 100 for Spot or Forward strike reference')
+        elif strike_reference == VolReference.DELTA_PUT:
+            relative_strike = -1 * relative_strike
         elif strike_reference not in VolReference or strike_reference == VolReference.NORMALIZED:
             raise MqValueError('strikeReference: ' + strike_reference.value + ' not supported for FX')
 
         asset_id = cross_stored_direction_for_fx_vol(asset.get_marquee_id())
-        _logger.debug('where tenor=%s, strikeRef=%s, relativeStrike=%s', tenor, strike_reference.value, relative_strike)
-        q = GsDataApi.build_market_data_query(
-            [asset_id],
-            QueryType.IMPLIED_VOLATILITY,
-            where=FieldFilterMap(tenor=tenor, strikeRef=strike_reference.value, relativeStrike=relative_strike),
-            source=source,
-            real_time=real_time
-        )
-        _logger.debug('q %s', q)
-        df = _market_data_timed(q)
     else:
         if strike_reference == VolReference.DELTA_NEUTRAL:
-            raise NotImplementedError('delta_neutral strike reference is not supported for equities.')
+            raise MqValueError('delta_neutral strike reference is not supported for equities.')
 
         if strike_reference == VolReference.DELTA_PUT:
             relative_strike = abs(100 - relative_strike)
         relative_strike = relative_strike if strike_reference == VolReference.NORMALIZED else relative_strike / 100
-        ref_string = "delta" if strike_reference in (VolReference.DELTA_CALL,
-                                                     VolReference.DELTA_PUT) else strike_reference.value
+        asset_id = asset.get_marquee_id()
 
-        _logger.debug('where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, ref_string, relative_strike)
-        where = FieldFilterMap(tenor=tenor, strikeReference=ref_string, relativeStrike=relative_strike)
-        q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.IMPLIED_VOLATILITY,
-                                              where=where, source=source, real_time=real_time)
-        _logger.debug('q %s', q)
-        df = _market_data_timed(q)
+    ref_string = "delta" if strike_reference in (VolReference.DELTA_CALL, VolReference.DELTA_PUT,
+                                                 VolReference.DELTA_NEUTRAL) else strike_reference.value
+    _logger.debug('where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, ref_string, relative_strike)
+    where = FieldFilterMap(tenor=tenor, strikeReference=ref_string, relativeStrike=relative_strike)
+    q = GsDataApi.build_market_data_query([asset_id], QueryType.IMPLIED_VOLATILITY,
+                                          where=where, source=source, real_time=real_time)
+    _logger.debug('q %s', q)
+    df = _market_data_timed(q)
     return Series() if df.empty else df['impliedVolatility']
 
 
@@ -1416,6 +1434,135 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
     df.index = df.index.date
     df = df.loc[start_date: end_date]
     return df
+
+
+@plot_measure((AssetClass.Cash,), (AssetType.Currency,),
+              [MeasureDependency(id_provider=currency_to_default_benchmark_rate,
+                                 query_type=QueryType.CENTRAL_BANK_SWAP_RATE)])
+def central_bank_swap_rate(asset: Asset, rate_type: MeetingType = MeetingType.MEETING_FORWARD,
+                           level_type: str = 'absolute',
+                           valuation_date: GENERIC_DATE = datetime.date.today() - datetime.timedelta(days=1), *,
+                           source: str = None, real_time: bool = False) -> pd.Series:
+    """'
+    OIS Swap rate for a swap structured between consecutive Central Bank meeting dates or End Of Year Dates.
+
+    :param asset: asset object loaded from security master
+    :param rate_type: Spot= Effective Policy rate, Meeting = Forward Policy rate expectations,
+                    EOY = Policy rate expectations at EOY for the next 5 years
+    :param level_type: absolute, relative
+    :param valuation_date:  reference date on which all future expectations are calculated
+    :param source: name of function caller: default source = None
+    :param real_time: whether to retrieve intraday data instead of EOD: default value = False
+    :return: OIS Swap rate for swap structured between consecutive CB meeting dates
+    """
+
+    if real_time:
+        raise NotImplementedError('real-time central bank swap rate not implemented')
+    if not isinstance(valuation_date, (dt.date, str)):
+        raise MqValueError('valuation_date must be of type datetime.date or string YYYY-MM-DD')
+    if rate_type not in MeetingType:
+        raise MqValueError('rate_type must be one of Spot, Meeting Forward and EOY Forward')
+    if level_type not in ['relative', 'absolute']:
+        raise MqValueError('level_type must be either absolute or relative')
+
+    if isinstance(valuation_date, str):
+        valuation_date = parse_meeting_date(valuation_date)
+        if valuation_date == '':
+            raise MqValueError('Valuation date string must be of the format: YYYY-MM-DD')
+
+    mqid = convert_asset_for_rates_data_set(asset, RatesConversionType.OIS_BENCHMARK_RATE)
+
+    _logger.debug('where assetId=%s, metric=Central Bank Swap Rate, rate_type=%s, level_type=%s, valuation date=%s',
+                  mqid, rate_type, level_type, str(valuation_date))
+
+    ds = Dataset('CENTRAL_BANK_WATCH')
+    if rate_type == MeetingType.SPOT:
+        if level_type == 'relative':
+            raise MqValueError('level_type must be absolute for rate_type = Spot')
+        else:
+            df = ds.get_data(assetId=[mqid], rateType=rate_type, start=CENTRAL_BANK_WATCH_START_DATE)
+    else:
+        df = ds.get_data(assetId=[mqid], rateType=rate_type, valuationDate=valuation_date,
+                         start=CENTRAL_BANK_WATCH_START_DATE)
+
+    if level_type == 'relative':
+        # df = remove_dates_with_null_entries(df)
+        spot = df[df['meetingNumber'] == 0]['value'][0]
+        df['value'] = df['value'] - spot
+    df = df.reset_index()
+    df = df.set_index('meetingDate')
+    df = df['value']
+    return df
+
+
+@plot_measure((AssetClass.Cash,), (AssetType.Currency,),
+              [MeasureDependency(id_provider=currency_to_default_benchmark_rate,
+                                 query_type=QueryType.POLICY_RATE_EXPECTATION)])
+def policy_rate_expectation(asset: Asset, rate_type: MeetingType = MeetingType.MEETING_FORWARD,
+                            level_type: str = 'absolute',
+                            meeting_date: Union[datetime.date, int, str] = 0,
+                            *, source: str = None, real_time: bool = False) -> pd.Series:
+    """'
+    Historical policy rate expectations for a given meeting date or end of year OIS rate expectations.
+
+    :param asset: asset object loaded from security master
+    :param meeting_date: Actual meeting date / can also input meeting number standing today : 0 for last, 1 for next ,
+                                        2 for meeting after next and so on
+    :param level_type: absolute, relative
+    :param rate_type: meeting, eoy
+    :param source: name of function caller: default source = None
+    :param real_time: whether to retrieve intraday data instead of EOD: default value = False
+    :return: historical policy rate expectations for a given CB meeting date
+    """
+
+    if real_time:
+        raise NotImplementedError('real-time central bank swap rate not implemented')
+    if rate_type not in [MeetingType.MEETING_FORWARD, MeetingType.EOY_FORWARD]:
+        raise MqValueError('invalid rate_type specified, \'Meeting Forward\' or \'EOY Forward\' allowed')
+    if level_type not in ['relative', 'absolute']:
+        raise MqValueError('level_type must be either absolute or relative')
+    if not isinstance(meeting_date, (dt.date, str, int)):
+        raise MqValueError('valuation_date must be of type datetime.date or string YYYY-MM-DD or integer')
+
+    mqid = convert_asset_for_rates_data_set(asset, RatesConversionType.OIS_BENCHMARK_RATE)
+
+    _logger.debug('where assetId=%s, metric=Policy Rate Expectation, meeting_date=%s, level_type=%s',
+                  mqid, str(meeting_date), level_type)
+
+    ds = Dataset('CENTRAL_BANK_WATCH')
+    if isinstance(meeting_date, int):
+        meeting_number = meeting_date
+        if meeting_number < 0 or meeting_number > 20:
+            raise MqValueError('meeting_number has to be an integer between 0 and 20 where 0 is the '
+                               'last meeting and 1 is the next meeting')
+
+        cbw_df = ds.get_data(assetId=[mqid], rateType=rate_type, meetingNumber=meeting_number,
+                             start=CENTRAL_BANK_WATCH_START_DATE)
+    elif isinstance(meeting_date, str):
+        meeting_date = parse_meeting_date(meeting_date)
+        if meeting_date == '':
+            raise MqValueError('Meeting date string must be of the format: YYYY-MM-DD')
+        cbw_df = ds.get_data(assetId=[mqid], rateType=rate_type, meeting_date=meeting_date,
+                             start=CENTRAL_BANK_WATCH_START_DATE)
+    else:
+        cbw_df = ds.get_data(assetId=[mqid], rateType=rate_type, meeting_date=meeting_date,
+                             start=CENTRAL_BANK_WATCH_START_DATE)
+
+    if cbw_df.empty:
+        raise MqValueError('meeting date specified returned no data')
+
+    if level_type == 'relative':
+        spot_df = ds.get_data(assetId=[mqid], rateType=rate_type, meetingNumber=0,
+                              start=CENTRAL_BANK_WATCH_START_DATE).rename(columns={'value': 'spotValue'})
+        if spot_df.empty:
+            raise MqValueError('no spot data returned to rebase')
+        joined_df = cbw_df.merge(spot_df, on=['date', 'assetId', 'rateType', 'location', 'valuationDate'], how='inner')
+        joined_df = joined_df.set_index('valuationDate')
+        joined_df['relValue'] = (joined_df['value'] - joined_df['spotValue'])
+        return joined_df['relValue']
+    cbw_df = cbw_df.set_index('valuationDate')
+    cbw_df = cbw_df['value']
+    return cbw_df
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
