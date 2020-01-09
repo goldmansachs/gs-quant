@@ -108,8 +108,8 @@ class HistoricalPricingContext(PricingContext):
     def calc(self, priceable: Priceable, risk_measure: Union[RiskMeasure, Iterable[RiskMeasure]])\
             -> Union[pd.DataFrame, pd.Series, Future]:
         if self.use_cache:
-            cached_dates = PricingCache.dates(priceable, self.market_data_location, risk_measure) or ()
-            calc_dates = set(self.__date_range).difference(cached_dates)
+            missing_keys = PricingCache.missing_pricing_keys(priceable, risk_measure, self.pricing_key) or ()
+            calc_dates = set(k.pricing_market_data_as_of[0].pricing_date for k in missing_keys)
             self.__calc_dates = calc_dates if self.__calc_dates is None else self.__calc_dates | calc_dates
 
         return super().calc(priceable, risk_measure)

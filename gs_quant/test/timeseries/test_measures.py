@@ -21,6 +21,7 @@ from typing import Union
 
 import pandas as pd
 import pytest
+from numpy.testing import assert_allclose
 from pandas.testing import assert_series_equal
 from pytz import timezone
 from testfixtures import Replacer
@@ -30,6 +31,8 @@ import gs_quant.timeseries.measures as tm
 from gs_quant.api.gs.assets import GsTemporalXRef, GsAssetApi, GsIdType, IdList
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.data.core import DataContext
+from gs_quant.data.dataset import Dataset
+from gs_quant.data.fields import Fields
 from gs_quant.errors import MqError
 from gs_quant.markets.securities import AssetClass, Cross, Index, Currency
 from gs_quant.session import GsSession, Environment
@@ -56,6 +59,8 @@ def map_identifiers_default_mocker(input_type: Union[GsIdType, str],
         return {"GBP-LIBOR-BBA": "MAFYB8Z4R1377A19"}
     elif "JPY-LIBOR-BBA" in ids:
         return {"JPY-LIBOR-BBA": "MABMVE27EM8YZK33"}
+    elif "EUR OIS" in ids:
+        return {"EUR OIS": "MARFAGXDQRWM07Y2"}
 
 
 def map_identifiers_swap_rate_mocker(input_type: Union[GsIdType, str],
@@ -104,6 +109,30 @@ def map_identifiers_cross_basis_mocker(input_type: Union[GsIdType, str],
         return {"GBP-3m/USD-3m": "MA8BZHQV3W32V63B"}
 
 
+def get_data_policy_rate_expectation_mocker(
+        start: Union[dt.date, dt.datetime] = None,
+        end: Union[dt.date, dt.datetime] = None,
+        as_of: dt.datetime = None,
+        since: dt.datetime = None,
+        fields: Union[str, Fields] = None,
+        asset_id_type: str = None,
+        **kwargs) -> pd.DataFrame:
+    if 'meetingNumber' in kwargs:
+        if kwargs['meetingNumber'] == 0:
+            return mock_meeting_spot()
+    elif 'meeting_date' in kwargs:
+        if kwargs['meeting_date'] == dt.date(2019, 10, 24):
+            return mock_meeting_spot()
+    return mock_meeting_expectation()
+
+
+def test_parse_meeting_date(mocker):
+    assert tm.parse_meeting_date(5) == ''
+    assert tm.parse_meeting_date('') == ''
+    assert tm.parse_meeting_date('test') == ''
+    assert tm.parse_meeting_date('2019-09-01') == dt.date(2019, 9, 1)
+
+
 def test_currency_to_default_benchmark_rate(mocker):
     mocker.patch.object(GsSession.__class__, 'current',
                         return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
@@ -147,6 +176,10 @@ def test_currency_to_inflation_benchmark_rate(mocker):
             correct_id = tm.currency_to_inflation_benchmark_rate(asset_id_list[i])
             assert correct_id == correct_mapping[i]
 
+        # Test that the same id is returned when a TypeError is raised
+        mocker.patch.object(GsAssetApi, 'map_identifiers', side_effect=TypeError('Test'))
+        assert tm.currency_to_inflation_benchmark_rate('MA66CZBQJST05XKG') == 'MA66CZBQJST05XKG'
+
 
 def test_cross_to_basis(mocker):
     mocker.patch.object(GsSession.__class__, 'current',
@@ -160,6 +193,10 @@ def test_cross_to_basis(mocker):
         for i in range(len(asset_id_list)):
             correct_id = tm.cross_to_basis(asset_id_list[i])
             assert correct_id == correct_mapping[i]
+
+        # Test that the same id is returned when a TypeError is raised
+        mocker.patch.object(GsAssetApi, 'map_identifiers', side_effect=TypeError('Test'))
+        assert tm.cross_to_basis('MAYJPCVVF2RWXCES') == 'MAYJPCVVF2RWXCES'
 
 
 def test_cross_stored_direction_for_fx_vol(mocker):
@@ -199,8 +236,18 @@ def mock_commod(_cls, _q):
 
 def mock_fx(_cls, _q):
     d = {
-        'deltaStrike': ['25DP', '25DC', 'ATMS'],
+        'strikeReference': ['delta', 'spot', 'forward'],
+        'relativeStrike': [25, 100, 100],
         'impliedVolatility': [5, 1, 2],
+        'forecast': [1.1, 1.1, 1.1]
+    }
+    return pd.DataFrame(data=d, index=_index * 3)
+
+
+def mock_fx_delta(_cls, _q):
+    d = {
+        'relativeStrike': [25, -25, 0],
+        'impliedVolatility': [1, 5, 2],
         'forecast': [1.1, 1.1, 1.1]
     }
     return pd.DataFrame(data=d, index=_index * 3)
@@ -208,7 +255,8 @@ def mock_fx(_cls, _q):
 
 def mock_fx_empty(_cls, _q):
     d = {
-        'deltaStrike': [],
+        'strikeReference': [],
+        'relativeStrike': [],
         'impliedVolatility': []
     }
     return pd.DataFrame(data=d, index=[])
@@ -281,6 +329,67 @@ def mock_inc(_cls, _q):
     return pd.DataFrame(data=d, index=_index * 2)
 
 
+def mock_meeting_expectation():
+    data_dict = pd.DataFrame({'date': [dt.date(2019, 12, 6)],
+                              'assetId': ['MARFAGXDQRWM07Y2'],
+                              'location': ['NYC'],
+                              'rateType': ['Meeting Forward'],
+                              'startingDate': [dt.date(2020, 1, 29)],
+                              'endingDate': [dt.date(2020, 1, 29)],
+                              'meetingNumber': [2],
+                              'valuationDate': [dt.date(2019, 12, 6)],
+                              'meetingDate': [dt.date(2020, 1, 23)],
+                              'value': [-0.004550907771]})
+    return data_dict
+
+
+def mock_meeting_spot():
+    data_dict = pd.DataFrame({'date': [dt.date(2019, 12, 6)],
+                              'assetId': ['MARFAGXDQRWM07Y2'],
+                              'location': ['NYC'],
+                              'rateType': ['Meeting Forward'],
+                              'startingDate': [dt.date(2019, 10, 30)],
+                              'endingDate': [dt.date(2019, 12, 18)],
+                              'meetingNumber': [0],
+                              'valuationDate': [dt.date(2019, 12, 6)],
+                              'meetingDate': [dt.date(2019, 10, 24)],
+                              'value': [-0.004522570525]})
+    return data_dict
+
+
+def mock_meeting_empty():
+    data_dict = pd.DataFrame()
+    return data_dict
+
+
+def mock_meeting_absolute():
+    data_dict = pd.DataFrame({'date': [datetime.date(2019, 12, 6), datetime.date(2019, 12, 6)],
+                              'assetId': ['MARFAGXDQRWM07Y2', 'MARFAGXDQRWM07Y2'],
+                              'location': ['NYC', 'NYC'],
+                              'rateType': ['Meeting Forward', 'Meeting Forward'],
+                              'startingDate': [datetime.date(2019, 10, 30), datetime.date(2020, 1, 29)],
+                              'endingDate': [datetime.date(2019, 10, 30), datetime.date(2020, 1, 29)],
+                              'meetingNumber': [0, 2],
+                              'valuationDate': [datetime.date(2019, 12, 6), datetime.date(2019, 12, 6)],
+                              'meetingDate': [datetime.date(2019, 10, 24), datetime.date(2020, 1, 23)],
+                              'value': [-0.004522570525, -0.004550907771]})
+    return data_dict
+
+
+def mock_ois_spot():
+    data_dict = pd.DataFrame({'date': [datetime.date(2019, 12, 6)],
+                              'assetId': ['MARFAGXDQRWM07Y2'],
+                              'location': ['NYC'],
+                              'rateType': ['Spot'],
+                              'startingDate': [datetime.date(2019, 12, 6)],
+                              'endingDate': [datetime.date(2019, 12, 7)],
+                              'meetingNumber': [-1],
+                              'valuationDate': [datetime.date(2019, 12, 6)],
+                              'meetingDate': [datetime.date(2019, 12, 6)],
+                              'value': [-0.00455]})
+    return data_dict
+
+
 def test_skew():
     replace = Replacer()
 
@@ -319,10 +428,20 @@ def test_skew_fx():
     xrefs = replace('gs_quant.timeseries.measures.GsAssetApi.get_asset_xrefs', Mock())
     xrefs.return_value = [GsTemporalXRef(dt.date(2019, 1, 1), dt.date(2952, 12, 31), XRef(bbid='EURUSD', ))]
     replace('gs_quant.markets.securities.SecurityMaster.get_asset', mock)
-    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_fx)
-    actual = tm.skew(Cross('MAA0NE9QX2ABETG6', 'USD/EUR'), '1m', None, 25)
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_fx_delta)
+    actual = tm.skew(mock, '1m', tm.SkewReference.DELTA, 25)
     assert_series_equal(pd.Series([2.0], index=_index, name='impliedVolatility'), actual)
-    replace.restore()
+
+    with pytest.raises(MqError):
+        tm.skew(mock, '1m', tm.SkewReference.DELTA, 25, real_time=True)
+    with pytest.raises(MqError):
+        tm.skew(mock, '1m', tm.SkewReference.SPOT, 25)
+    with pytest.raises(MqError):
+        tm.skew(mock, '1m', tm.SkewReference.FORWARD, 25)
+    with pytest.raises(MqError):
+        tm.skew(mock, '1m', tm.SkewReference.NORMALIZED, 25)
+    with pytest.raises(MqError):
+        tm.skew(mock, '1m', None, 25)
 
 
 def test_vol():
@@ -333,7 +452,7 @@ def test_vol():
     assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='impliedVolatility'), actual)
     actual = tm.implied_volatility(mock_spx, '1m', tm.VolReference.DELTA_PUT, 75)
     assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='impliedVolatility'), actual)
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(MqError):
         tm.implied_volatility(mock_spx, '1m', tm.VolReference.DELTA_NEUTRAL)
     replace.restore()
 
@@ -1211,6 +1330,124 @@ def test_fundamental_metrics():
     assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='fundamentalMetric'), actual)
     with pytest.raises(NotImplementedError):
         tm.sales_per_share(..., period, direction, real_time=True)
+
+    replace.restore()
+
+
+def test_central_bank_swap_rate(mocker):
+    target = {
+        'meeting_absolute': -0.004550907771,
+        'meeting_relative': -0.00002833724599999969,
+        'eoy_absolute': -0.003359767756,
+        'eoy_relative': 0.001162802769,
+        'spot': -0.00455
+    }
+    mock_eur = Currency('MARFAGXDQRWM07Y2', 'EUR')
+
+    with DataContext(dt.date(2019, 12, 6), dt.date(2019, 12, 6)):
+        replace = Replacer()
+        xrefs = replace('gs_quant.timeseries.measures.GsAssetApi.get_asset_xrefs', Mock())
+        xrefs.return_value = [GsTemporalXRef(dt.date(2019, 1, 1), dt.date(2952, 12, 31), XRef(bbid='EUR', ))]
+        mocker.patch.object(GsAssetApi, 'map_identifiers', side_effect=map_identifiers_default_mocker)
+
+        mock_get_data = replace('gs_quant.data.dataset.Dataset.get_data', Mock())
+        mock_get_data.return_value = mock_meeting_absolute()
+
+        actual_abs = tm.central_bank_swap_rate(mock_eur, tm.MeetingType.MEETING_FORWARD, 'absolute',
+                                               dt.date(2019, 12, 6))
+        assert (target['meeting_absolute'] == actual_abs.loc[dt.date(2020, 1, 23)])
+
+        actual_rel = tm.central_bank_swap_rate(mock_eur, tm.MeetingType.MEETING_FORWARD, 'relative',
+                                               dt.date(2019, 12, 6))
+        assert (target['meeting_relative'] == actual_rel.loc[dt.date(2020, 1, 23)])
+
+        mock_get_data.return_value = mock_ois_spot()
+        actual_spot = tm.central_bank_swap_rate(mock_eur, tm.MeetingType.SPOT, 'absolute', dt.date(2019, 12, 6))
+        assert (target['spot'] == actual_spot.loc[dt.date(2019, 12, 6)])
+
+        with pytest.raises(MqError):
+            tm.central_bank_swap_rate(mock_eur, 'meeting_forward')
+
+        with pytest.raises(MqError):
+            tm.central_bank_swap_rate(mock_eur, tm.MeetingType.MEETING_FORWARD, 'normalized', '2019-09-01')
+
+        with pytest.raises(MqError):
+            tm.central_bank_swap_rate(mock_eur, tm.MeetingType.MEETING_FORWARD, 'absolute', 5)
+
+        with pytest.raises(MqError):
+            tm.central_bank_swap_rate(mock_eur, tm.MeetingType.MEETING_FORWARD, 'absolute', '01-09-2019')
+
+        with pytest.raises(MqError):
+            tm.central_bank_swap_rate(mock_eur, tm.MeetingType.SPOT, 'relative')
+
+        with pytest.raises(NotImplementedError):
+            tm.central_bank_swap_rate(mock_eur, tm.MeetingType.SPOT, 'absolute', real_time=True)
+
+    replace.restore()
+
+
+def test_policy_rate_expectation(mocker):
+    target = {
+        'meeting_number_absolute': -0.004550907771,
+        'meeting_number_relative': -0.000028337246,
+        'meeting_date_relative': -0.000028337246,
+        'meeting_number_spot': -0.004522570525
+    }
+    mock_eur = Currency('MARFAGXDQRWM07Y2', 'EUR')
+
+    with DataContext(dt.date(2019, 12, 6), dt.date(2019, 12, 6)):
+        replace = Replacer()
+        xrefs = replace('gs_quant.timeseries.measures.GsAssetApi.get_asset_xrefs', Mock())
+        xrefs.return_value = [GsTemporalXRef(dt.date(2019, 1, 1), dt.date(2952, 12, 31), XRef(bbid='EUR', ))]
+        mocker.patch.object(GsAssetApi, 'map_identifiers', side_effect=map_identifiers_default_mocker)
+        mocker.patch.object(Dataset, 'get_data', side_effect=get_data_policy_rate_expectation_mocker)
+
+        actual_num = tm.policy_rate_expectation(mock_eur, tm.MeetingType.MEETING_FORWARD, 'absolute', 2)
+        assert (target['meeting_number_absolute'] == actual_num.loc[dt.date(2019, 12, 6)])
+
+        actual_date = tm.policy_rate_expectation(mock_eur, tm.MeetingType.MEETING_FORWARD, 'absolute',
+                                                 dt.date(2020, 1, 23))
+        assert (target['meeting_number_absolute'] == actual_date.loc[dt.date(2019, 12, 6)])
+
+        actual_num = tm.policy_rate_expectation(mock_eur, tm.MeetingType.MEETING_FORWARD, 'relative', 2)
+        assert_allclose([target['meeting_number_relative']], [actual_num.loc[dt.date(2019, 12, 6)]],
+                        rtol=1e-9, atol=1e-15)
+
+        actual_num = tm.policy_rate_expectation(mock_eur, tm.MeetingType.MEETING_FORWARD, 'absolute', 0)
+        assert (target['meeting_number_spot'] == actual_num.loc[dt.date(2019, 12, 6)])
+
+        actual_date = tm.policy_rate_expectation(mock_eur, tm.MeetingType.MEETING_FORWARD, 'absolute', '2019-10-24')
+        assert (target['meeting_number_spot'] == actual_date.loc[dt.date(2019, 12, 6)])
+
+        mocker.patch.object(Dataset, 'get_data', side_effect=[mock_meeting_expectation(), mock_meeting_empty()])
+        with pytest.raises(MqError):
+            tm.policy_rate_expectation(mock_eur, tm.MeetingType.MEETING_FORWARD, 'relative', 2)
+
+        with pytest.raises(MqError):
+            tm.policy_rate_expectation(mock_eur, tm.MeetingType.SPOT)
+
+        with pytest.raises(MqError):
+            tm.policy_rate_expectation(mock_eur, tm.MeetingType.MEETING_FORWARD, 'relative', '5')
+
+        with pytest.raises(MqError):
+            tm.policy_rate_expectation(mock_eur, tm.MeetingType.MEETING_FORWARD, 'absolute', 5.5)
+
+        with pytest.raises(MqError):
+            tm.policy_rate_expectation(mock_eur, tm.MeetingType.MEETING_FORWARD, 'absolute', '01-09-2019')
+
+        with pytest.raises(MqError):
+            tm.policy_rate_expectation(mock_eur, tm.MeetingType.MEETING_FORWARD, 'normalized', dt.date(2019, 9, 1))
+
+        with pytest.raises(MqError):
+            tm.policy_rate_expectation(mock_eur, tm.MeetingType.MEETING_FORWARD, 'relative', -2)
+
+        with pytest.raises(NotImplementedError):
+            tm.policy_rate_expectation(mock_eur, tm.MeetingType.SPOT, 'absolute', real_time=True)
+
+        mock_get_data = replace('gs_quant.data.dataset.Dataset.get_data', Mock())
+        mock_get_data.return_value = pd.DataFrame()
+        with pytest.raises(MqError):
+            tm.policy_rate_expectation(mock_eur, tm.MeetingType.MEETING_FORWARD, 'absolute', 2)
 
     replace.restore()
 

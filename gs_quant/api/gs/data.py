@@ -62,6 +62,8 @@ class QueryType(Enum):
     FORECAST = "Forecast"
     IMPLIED_VOLATILITY_BY_DELTA_STRIKE = "Implied Volatility By Delta Strike"
     FUNDAMENTAL_METRIC = "Fundamental Metric"
+    POLICY_RATE_EXPECTATION = "Policy Rate Expectation"
+    CENTRAL_BANK_SWAP_RATE = "Central Bank Swap Rate"
 
 
 class GsDataApi(DataApi):

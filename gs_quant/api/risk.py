@@ -16,6 +16,7 @@ under the License.
 from abc import ABCMeta, abstractmethod
 from typing import Iterable, Union
 
+from gs_quant.base import PricingKey
 from gs_quant.risk import Formatters, RiskRequest
 
 
@@ -35,12 +36,19 @@ class RiskApi(metaclass=ABCMeta):
     def _handle_results(cls, request: RiskRequest, results: Iterable) -> dict:
         formatted_results = {}
 
+        pricing_key = PricingKey(
+            request.pricing_and_market_data_as_of,
+            request.pricing_location.value,
+            request.parameters,
+            request.scenario
+        )
+
         for measure_idx, position_results in enumerate(results):
             risk_measure = request.measures[measure_idx]
             formatter = Formatters.get(risk_measure)
             for position_idx, result in enumerate(position_results):
                 position = request.positions[position_idx]
-                result = formatter(result) if formatter else result
+                result = formatter(result, pricing_key) if formatter else result
                 formatted_results.setdefault(risk_measure, {})[position] = result
 
         return formatted_results

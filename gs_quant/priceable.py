@@ -13,7 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from gs_quant.base import Priceable
+from gs_quant.base import Priceable, PricingKey
 from gs_quant.markets import PricingCache, PricingContext
 from gs_quant.risk import DollarPrice, Price, RiskMeasure
 from gs_quant.session import GsSession
@@ -22,7 +22,6 @@ from abc import ABCMeta
 from concurrent.futures import Future
 import pandas as pd
 from typing import Iterable, Optional, Tuple, Union
-
 
 __asset_class_and_type_to_instrument = {}
 
@@ -54,14 +53,14 @@ class PriceableImpl(Priceable, metaclass=ABCMeta):
 
     def __init__(self):
         super().__init__()
-        self._resolution_info: dict = None
+        self.resolution_key: PricingKey = None
         self.unresolved: Priceable = None
 
     def __getattribute__(self, name):
         resolved = False
 
         try:
-            resolved = super().__getattribute__('_resolution_info') is not None
+            resolved = super().__getattribute__('resolution_key') is not None
         except AttributeError:
             pass
 
@@ -77,7 +76,11 @@ class PriceableImpl(Priceable, metaclass=ABCMeta):
             PricingCache.drop(self)
 
         super()._property_changed(prop)
-        self._resolution_info = None
+
+        if self.resolution_key and self.unresolved:
+            self.resolution_key = None
+            self.from_instance(self.unresolved)
+            self.unresolved = None
 
     def get_quantity(self) -> float:
         """

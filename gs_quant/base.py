@@ -15,6 +15,7 @@ under the License.
 """
 from abc import ABCMeta
 import builtins
+from collections import namedtuple
 import copy
 import datetime as dt
 import dateutil
@@ -60,6 +61,29 @@ def camel_case_translate(f):
         return f(*args, **normalised_kwargs)
 
     return wrapper
+
+
+class PricingKey(
+    namedtuple('_PricingKey', ('pricing_market_data_as_of', 'market_data_location', 'parameters', 'scenario'))
+):
+
+    def __iter__(self):
+        if len(self.pricing_market_data_as_of) > 1:
+            return iter(self.clone(pricing_market_data_as_of=(as_of,)) for as_of in self.pricing_market_data_as_of)
+        else:
+            return iter([self])
+
+    def clone(self, **kwargs):
+        dict = {f: getattr(self, f, None) for f in super()._fields}
+        dict.update(kwargs)
+        return PricingKey(**dict)
+
+    def for_pricing_date(self, pricing_date: dt.date):
+        as_of = next((a for a in self.pricing_market_data_as_of if a.pricing_date == pricing_date), None)
+        if as_of is None:
+            raise ValueError('{} not found'.format(pricing_date))
+
+        return self.clone(pricing_market_data_as_of=(as_of,))
 
 
 class EnumBase:
@@ -287,6 +311,20 @@ class Base(metaclass=ABCMeta):
         required = {a: None for a in args}
         return cls(**required)
 
+    def from_instance(self, instance):
+        """
+        Copy the values from an existing instance of the same type to our self
+        :param instance: from which to copy:
+        :return:
+        """
+        if not isinstance(instance, type(self)):
+            raise ValueError('Can only use from_instance with an object of the same type')
+
+        for prop in self.properties():
+            attr = getattr(super().__getattribute__('__class__'), prop)
+            if attr.fset:
+                super(Base, self).__setattr__(prop, super(Base, instance).__getattribute__(prop))
+
 
 class Priceable(Base, metaclass=ABCMeta):
 
@@ -346,7 +384,7 @@ class Priceable(Base, metaclass=ABCMeta):
         >>> cap_usd = IRCap('1y', 'USD')
         >>> cap_eur = IRCap('1y', 'EUR')
         >>>
-        >>> from gs_quant.risk import PricingContext
+        >>> from gs_quant.markets import PricingContext
         >>>
         >>> with PricingContext():
         >>>     price_usd_f = cap_usd.dollar_price()
@@ -400,7 +438,7 @@ class Priceable(Base, metaclass=ABCMeta):
 
         delta is a float
 
-        >>> from gs_quant.risk import PricingContext
+        >>> from gs_quant.markets import PricingContext
         >>>
         >>> cap_usd = IRCap('1y', 'USD')
         >>> cap_eur = IRCap('1y', 'EUR')

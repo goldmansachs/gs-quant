@@ -24,12 +24,13 @@ import pandas as pd
 from typing import Iterable, Optional, Tuple, Union
 import weakref
 
-from gs_quant.base import Priceable, Scenario
+from gs_quant.base import Priceable, PricingKey, Scenario
 from gs_quant.context_base import ContextBaseWithDefault
 from gs_quant.datetime.date import business_day_offset
+from gs_quant.risk import DataFrameWithInfo, ErrorValue, FloatWithInfo, SeriesWithInfo
 from gs_quant.session import GsSession
 from gs_quant.target.data import MarketDataCoordinate as __MarketDataCoordinate
-from gs_quant.target.risk import PricingDateAndMarketDataAsOf, RiskMeasure, RiskPosition, RiskRequest, \
+from gs_quant.target.risk import PricingDateAndMarketDataAsOf, RiskMeasure, RiskPosition, RiskRequest,\
     RiskRequestParameters, MarketDataScenario
 
 
@@ -54,54 +55,48 @@ class PricingCache(metaclass=ABCMeta):
         __cache = weakref.WeakKeyDictionary()
 
     @classmethod
-    def dates(cls,
-              priceable: Priceable,
-              location: str,
-              risk_measure: RiskMeasure) -> Tuple[dt.date, ...]:
-        if priceable in cls.__cache and (location, risk_measure) in cls.__cache[priceable]:
-            return tuple(sorted(cls.__cache[priceable][(location, risk_measure)].keys()))
+    def missing_pricing_keys(cls,
+                             priceable: Priceable,
+                             risk_measure: RiskMeasure,
+                             pricing_key: Optional[PricingKey] = None) -> Tuple[PricingKey, ...]:
+        pricing_key = pricing_key or PricingContext.current.pricing_key
+
+        if priceable in cls.__cache and risk_measure in cls.__cache[priceable]:
+            cached = cls.__cache[priceable][risk_measure]
+            return tuple(k for k in pricing_key if k not in cached)
+        else:
+            return pricing_key
 
     @classmethod
     def get(cls,
             priceable: Priceable,
-            location: str,
             risk_measure: RiskMeasure,
-            dates: Union[dt.date, Iterable[dt.date]]):
-        if priceable not in cls.__cache or (location, risk_measure) not in cls.__cache[priceable]:
+            pricing_key: Optional[PricingKey] = None,
+            return_partial: bool = False) -> Optional[Union[DataFrameWithInfo, FloatWithInfo, SeriesWithInfo]]:
+        if priceable not in cls.__cache or risk_measure not in cls.__cache[priceable]:
             return
 
-        results = cls.__cache[priceable][(location, risk_measure)]
+        pricing_key = pricing_key or PricingContext.current.pricing_key
+        cached = cls.__cache[priceable][risk_measure]
 
-        if not results:
-            return None
-        elif isinstance(dates, dt.date):
-            return results.get(dates)
+        if len(pricing_key.pricing_market_data_as_of) > 1:
+            values = [cached[k] for k in pricing_key if k in cached]
+            if values and (return_partial or len(values) == len(pricing_key.pricing_market_data_as_of)):
+                return values[0].compose(values, pricing_key)
         else:
-            if isinstance(next(iter(results.values())), pd.DataFrame):
-                dfs = [results[date].assign(date=date) for date in dates if date in results]
-                ret = pd.concat(dfs)
-                return ret.set_index('date')
-            else:
-                ret = pd.Series({date: results[date] for date in dates if date in results})
-                return ret.sort_index()
+            return cached.get(pricing_key)
 
     @classmethod
     def put(cls,
             priceable: Priceable,
-            location: str,
             risk_measure: RiskMeasure,
-            result: Union[float, str, pd.DataFrame, pd.Series]):
-        cache_results = {}
+            result: Union[DataFrameWithInfo, FloatWithInfo, SeriesWithInfo],
+            pricing_key: Optional[PricingKey] = None):
+        pricing_key = pricing_key or PricingContext.current.pricing_key
 
-        if isinstance(result, pd.Series):
-            cache_results = dict(zip(result.index.unique(), (result.loc[d] for d in result.index.values)))
-        elif isinstance(result, pd.DataFrame) and len(result.index.values):
-            cache_results = dict(zip(result.index.unique(), (result.loc[d].reset_index(drop=True)
-                                                             for d in result.index.values)))
-        else:
-            cache_results[PricingContext.current.pricing_date] = result
-
-        cls.__cache.setdefault(priceable, {}).setdefault((location, risk_measure), {}).update(cache_results)
+        if isinstance(result, (DataFrameWithInfo, FloatWithInfo, SeriesWithInfo)):
+            cls.__cache.setdefault(priceable, {}).setdefault(risk_measure, {}).update(
+                {k: result.for_pricing_key(k) for k in pricing_key})
 
     @classmethod
     def drop(cls, priceable: Priceable):
@@ -144,7 +139,7 @@ class PricingContext(ContextBaseWithDefault):
 
         To change the market data location of the default context:
 
-        >>> from gs_quant.risk import PricingContext
+        >>> from gs_quant.markets import PricingContext
         >>> import datetime as dt
         >>>
         >>> PricingContext.current = PricingContext(market_data_location='LDN')
@@ -184,6 +179,8 @@ class PricingContext(ContextBaseWithDefault):
         self._calc()
 
     def _calc(self):
+        from gs_quant.api.risk import RiskApi
+
         def run_request(request: RiskRequest, session: GsSession):
             calc_result = {}
 
@@ -194,13 +191,20 @@ class PricingContext(ContextBaseWithDefault):
                 for risk_measure in request.measures:
                     measure_results = {}
                     for result_position in risk_request.positions:
-                        measure_results[result_position] = str(e)
+                        measure_results[result_position] = ErrorValue(self.pricing_key, str(e))
 
                     calc_result[risk_measure] = measure_results
             finally:
                 self._handle_results(calc_result)
 
-        from gs_quant.api.risk import RiskApi
+        def set_missing_results():
+            # Set an error string for any futures for which results were not returned
+            result = 'Error: no value returned'
+            while self.__futures:
+                _, positions_for_measure = self.__futures.popitem()
+                while positions_for_measure:
+                    _, future = positions_for_measure.popitem()
+                    future.set_result(result)
 
         def get_batch_results(request: RiskRequest, session: GsSession,
                               batch_provider: RiskApi, batch_result_id: str):
@@ -221,10 +225,10 @@ class PricingContext(ContextBaseWithDefault):
                 risk_request = RiskRequest(
                     tuple(positions),
                     tuple(sorted(risk_measures, key=lambda m: m.name or m.measure_type.value)),
-                    parameters=RiskRequestParameters(self.__csa_term),
+                    parameters=self.__parameters,
                     wait_for_results=not self.__is_batch,
-                    pricing_location=self.market_data_location,
-                    scenario=MarketDataScenario(scenario=Scenario.current) if Scenario.current_is_set else None,
+                    pricing_location=self.__market_data_location,
+                    scenario=self.__scenario,
                     pricing_and_market_data_as_of=self._pricing_market_data_as_of,
                     request_visible_to_gs=self.__visible_to_gs
                 )
@@ -243,15 +247,17 @@ class PricingContext(ContextBaseWithDefault):
                 get_batch_results(risk_request, GsSession.current, provider, result_id)
 
         if pool:
+            pool.submit(set_missing_results)
             pool.shutdown(wait=not self.__is_async)
+        else:
+            set_missing_results()
 
     def _handle_results(self, results: dict):
         for risk_measure, position_results in results.items():
             for position, result in position_results.items():
                 if self.__use_cache:
-                    PricingCache.put(position.instrument, self.market_data_location, risk_measure, result)
-                    result = PricingCache.get(position.instrument, self.market_data_location, risk_measure,
-                                              self.pricing_date)
+                    PricingCache.put(position.instrument, risk_measure, result)
+                    result = PricingCache.get(position.instrument, risk_measure)
 
                 positions_for_measure = self.__futures[risk_measure]
                 positions_for_measure.pop(position).set_result(result)
@@ -259,13 +265,13 @@ class PricingContext(ContextBaseWithDefault):
                 if not positions_for_measure:
                     self.__futures.pop(risk_measure)
 
-        # Now set an error string for any futures for which results were not returned
-        result = 'Error: no value returned'
-        while self.__futures:
-            _, positions_for_measure = self.__futures.popitem()
-            while positions_for_measure:
-                _, future = positions_for_measure.popitem()
-                future.set_result(result)
+    @property
+    def __parameters(self) -> RiskRequestParameters:
+        return RiskRequestParameters(self.__csa_term)
+
+    @property
+    def __scenario(self) -> MarketDataScenario:
+        return MarketDataScenario(scenario=Scenario.current) if Scenario.current_is_set else None
 
     @property
     def _pricing_market_data_as_of(self) -> Tuple[PricingDateAndMarketDataAsOf, ...]:
@@ -301,6 +307,15 @@ class PricingContext(ContextBaseWithDefault):
         """Request contents visible to GS"""
         return self.__visible_to_gs
 
+    @property
+    def pricing_key(self) -> PricingKey:
+        """A key representing information about the pricing environment"""
+        return PricingKey(
+            self._pricing_market_data_as_of,
+            self.__market_data_location,
+            self.__parameters,
+            self.__scenario)
+
     def calc(self, priceable: Priceable, risk_measure: Union[RiskMeasure, Iterable[RiskMeasure]])\
             -> Union[dict, float, str, pd.DataFrame, pd.Series, Future]:
         """
@@ -330,8 +345,7 @@ class PricingContext(ContextBaseWithDefault):
             if measure_future is None:
                 measure_future = Future()
                 if self.__use_cache:
-                    cached_result = PricingCache.get(priceable, self.market_data_location, risk_measure,
-                                                     self.pricing_date)
+                    cached_result = PricingCache.get(priceable, risk_measure)
                     if cached_result:
                         measure_future.set_result(cached_result)
 
@@ -377,11 +391,11 @@ class PricingContext(ContextBaseWithDefault):
         # TODO Handle these correctly in the risk service
         invalid_defaults = ('-- N/A --', 'NaN')
         value_mappings = {'Payer': 'Pay', 'Rec': 'Receive', 'Receiver': 'Receive'}
+        resolution_key = self.pricing_key
 
         def apply_field_values(
             field_values: Union[dict, list, tuple, Future],
             priceable_inst: Priceable,
-            resolution_info: dict,
             future: Optional[Future] = None
         ):
             if isinstance(field_values, str):
@@ -394,17 +408,14 @@ class PricingContext(ContextBaseWithDefault):
                 if len(field_values) == 1:
                     field_values = field_values[0]
                 else:
-                    res = {}
+                    date_result = {}
                     for fv in field_values:
                         date = dt.date.fromtimestamp(fv['date'] / 1e9)
-                        date_resolution_info = {
-                            'pricing_date': date,
-                            'market_data_as_of': fv['date'],
-                            'market_data_location': resolution_info['market_data_location']
-                        }
-                        res[date] = apply_field_values(fv, priceable_inst, date_resolution_info)
+                        as_of = next(a for a in resolution_key.pricing_market_data_as_of if date == a.pricing_date)
+                        date_key = resolution_key.clone(pricing_market_data_as_of=as_of)
+                        date_result[date] = apply_field_values(fv, priceable_inst, date_key)
 
-                    future.set_result(res)
+                    future.set_result(date_result)
                     return
 
             field_values = {field: value_mappings.get(value, value) for field, value in field_values.items()
@@ -412,41 +423,34 @@ class PricingContext(ContextBaseWithDefault):
 
             if in_place and not future:
                 priceable_inst.unresolved = copy.copy(priceable_inst)
+
                 for field, value in field_values.items():
                     setattr(priceable_inst, field, value)
 
-                priceable_inst._resolution_info = resolution_info
+                priceable_inst.resolution_key = resolution_key
             else:
                 new_inst = priceable_inst._from_dict(field_values)
                 new_inst.unresolved = priceable_inst
-                new_inst._resolution_info = resolution_info
+                new_inst.resolution_key = resolution_key
 
                 if future:
                     future.set_result(new_inst)
                 else:
                     return new_inst
 
-        resolution_info = {
-            'pricing_date': self.pricing_date,
-            'market_data_as_of': self.market_data_as_of,
-            'market_data_location': self.market_data_location}
-
-        if priceable._resolution_info:
+        if priceable.resolution_key:
             if in_place:
-                if resolution_info != priceable._resolution_info:
+                if resolution_key != priceable.resolution_key:
                     _logger.warning('Calling resolve() on an instrument which was already resolved under a difference PricingContext')
 
                 return
-            elif resolution_info == priceable._resolution_info:
+            elif resolution_key == priceable.resolution_key:
                 return copy.copy(priceable)
 
         res = self.calc(priceable, RiskMeasure(measure_type='Resolved Instrument Values'))
         if isinstance(res, Future):
             ret = Future() if not in_place else None
-            res.add_done_callback(functools.partial(apply_field_values,
-                                                    priceable_inst=priceable,
-                                                    resolution_info=resolution_info,
-                                                    future=ret))
+            res.add_done_callback(functools.partial(apply_field_values, priceable_inst=priceable, future=ret))
             return ret
         else:
-            return apply_field_values(res, priceable, resolution_info)
+            return apply_field_values(res, priceable)

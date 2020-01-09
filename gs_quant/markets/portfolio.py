@@ -52,10 +52,10 @@ class Portfolio(PriceableImpl):
         self.__instruments_lookup = {}
         self.__instruments_by_name = {}
 
-        for idx, p in enumerate(self.__instruments):
-            self.__instruments_lookup.setdefault(p, []).append(idx)
-            if p.name:
-                self.__instruments_by_name.setdefault(p.name, []).append(idx)
+        for idx, i in enumerate(self.__instruments):
+            self.__instruments_lookup.setdefault(copy.copy(i), []).append(idx)
+            if i.name:
+                self.__instruments_by_name.setdefault(i.name, []).append(idx)
 
     @instruments.deleter
     def instruments(self):
@@ -73,18 +73,18 @@ class Portfolio(PriceableImpl):
         if isinstance(key, str):
             idx = self.__instruments_by_name.get(key)
             if idx is None:
-                raise ValueError('No instrument named {} exists'.format(key))
+                raise KeyError('No instrument named {} exists'.format(key))
             return tuple(idx) if len(idx) > 1 else idx[0]
         elif isinstance(key, Instrument):
             idx = self.__instruments_lookup.get(key)
             if idx is None:
-                raise ValueError('Instrument not in portfolio')
+                raise KeyError('Instrument not in portfolio')
             return tuple(idx) if len(idx) > 1 else idx[0]
         else:
             raise ValueError('key must be either a name or Instrument')
 
     def resolve(self, in_place: bool = True) -> Optional[dict]:
-        with copy.copy(PricingContext.current):
+        with PricingContext.current if not PricingContext.current._is_entered else nullcontext():
             futures = [i.resolve(in_place) for i in self.__instruments]
 
         return dict(zip(self.__instruments, (f.result() for f in futures))) if not in_place else None
@@ -93,4 +93,4 @@ class Portfolio(PriceableImpl):
         with PricingContext.current if not PricingContext.current._is_entered else nullcontext():
             return PortfolioRiskResult(self,
                                        (risk_measure,) if isinstance(risk_measure, RiskMeasure) else risk_measure,
-                                       [p.calc(risk_measure) for p in self.__instruments])
+                                       [i.calc(risk_measure) for i in self.__instruments])
