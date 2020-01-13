@@ -118,7 +118,8 @@ class GsSession(ContextBase):
     def __del__(self):
         self.close()
 
-    def __unpack(self, results: Union[dict, list], cls: type) -> Union[Base, tuple, dict]:
+    @staticmethod
+    def __unpack(results: Union[dict, list], cls: type) -> Union[Base, tuple, dict]:
         if issubclass(cls, Base):
             if isinstance(results, list):
                 return tuple(None if r is None else cls.from_dict(r) for r in results)

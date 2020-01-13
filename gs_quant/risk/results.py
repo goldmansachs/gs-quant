@@ -13,9 +13,8 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from gs_quant.priceable import RiskResult
-from gs_quant.instrument import Instrument
-from gs_quant.risk import RiskMeasure, aggregate_results
+from gs_quant.base import Priceable
+from gs_quant.risk import RiskMeasure, RiskResult, aggregate_results
 
 from collections import namedtuple
 from concurrent.futures import Future
@@ -76,20 +75,6 @@ class MultipleRiskMeasureFuture(CompositeResultFuture):
         self._result_future.set_result(dict(zip(self.__risk_measures, (f.result() for f in self.futures))))
 
 
-class InstrumentMeasureRiskResult(MeasureResult):
-
-    def __repr__(self):
-        return repr(self.value)
-
-
-class InstrumentRiskResult(RiskResult):
-
-    def __init__(self,
-                 risk_measures: Iterable[RiskMeasure],
-                 future: Future):
-        super().__init__(future, tuple(risk_measures))
-
-
 class PortfolioRiskResult(RiskResult):
 
     def __init__(self,
@@ -118,51 +103,40 @@ class PortfolioRiskResult(RiskResult):
         return iter(self.__results())
 
     def subset(self,
-               instruments: Optional[Iterable[Union[int, str, Instrument]]]):
+               instruments: Optional[Iterable[Union[int, str, Priceable]]]):
         return PortfolioRiskResult(self.__portfolio, self.risk_measures, self.__futures(instruments))
 
     def aggregate(self) -> Union[float, pd.DataFrame, pd.Series]:
         return aggregate_results(self.__results())
 
     def __futures(self,
-                  instruments: Optional[Union[int, slice, str, Instrument, Iterable[Union[int, str, Instrument]]]]) ->\
+                  instruments: Optional[Union[int, slice, str, Priceable, Iterable[Union[int, str, Priceable]]]]) ->\
             Union[Future, Tuple[Future, ...]]:
         futures = self._result.futures
 
         if isinstance(instruments, (int, slice)):
             return futures[instruments]
-        elif isinstance(instruments, (str, Instrument)):
+        elif isinstance(instruments, (str, Priceable)):
             idx = None
-            resolution_key = None
 
             try:
                 idx = self.__portfolio.index(instruments)
             except KeyError:
                 # See if we have priced then resolved
-                if isinstance(instruments, Instrument) and instruments.unresolved:
+                if isinstance(instruments, Priceable) and instruments.unresolved:
                     idx = self.__portfolio.index(instruments.unresolved)
-                    resolution_key = instruments.resolution_key
-
-            def future(idx: int):
-                # Ensure that, if we priced then resolved, the resolution key matches the pricing key
-                if resolution_key:
-                    results = futures[idx].result()
-                    result = next(iter(results.values())) if isinstance(results, dict) else results
-                    if result.pricing_key != resolution_key:
-                        raise KeyError('Instrument was resolved under a difference pricing context than the result')
-                return futures[idx]
 
             if idx is None:
                 raise KeyError('Instrument not in portfolio')
             elif isinstance(idx, int):
-                return future(idx)
+                return futures[idx]
             else:
-                return tuple(future(i) for i in idx)
+                return tuple(futures[i] for i in idx)
         else:
             return tuple(chain.from_iterable(self.__futures(i) for i in instruments))
 
     def __results(self,
-                  instruments: Optional[Union[int, slice, str, Instrument, Iterable[Union[int, str, Instrument]]]] = (),
+                  instruments: Optional[Union[int, slice, str, Priceable, Iterable[Union[int, str, Priceable]]]] = (),
                   risk_measure: Optional[RiskMeasure] = None):
         futures = self.__futures(instruments) if instruments or instruments == 0 else self._result.futures
         scalar = isinstance(futures, (Future, MultipleRiskMeasureFuture))

@@ -24,8 +24,8 @@ from gs_quant.datetime.gscalendar import GsCalendar
 DateOrDates = Union[dt.date, Iterable[dt.date]]
 
 
-def is_business_day(dates: DateOrDates, calendars: Union[str, Tuple[str, ...]] = (
-), week_mask: Optional[str] = None) -> Union[bool, Tuple[bool]]:
+def is_business_day(dates: DateOrDates, calendars: Union[str, Tuple[str, ...]] = (), week_mask: Optional[str] = None)\
+        -> Union[bool, Tuple[bool]]:
     """
     Determine whether each date in dates is a business day
 
@@ -37,9 +37,8 @@ def is_business_day(dates: DateOrDates, calendars: Union[str, Tuple[str, ...]] =
     **Examples**
 
     >>> import datetime as dt
-    >>> is_bus_date = is_business_day(dt.date.today())
-    >>>
-    >>> is_bus_date = is_business_day(dt.date(2019, 7, 4), calendars=('NYSE',))
+    >>> is_business_day(dt.date.today())
+    >>> is_business_day(dt.date(2019, 7, 4), calendars=('NYSE',))
     """
     calendar = GsCalendar.get(calendars)
     res = np.is_busday(dates, busdaycal=calendar.business_day_calendar(week_mask))

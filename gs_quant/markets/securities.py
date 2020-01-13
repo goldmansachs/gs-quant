@@ -121,11 +121,11 @@ class Asset(metaclass=ABCMeta):
 
         Get identifiers as of 1Jan18:
 
-        >>> gs.get_identifiers(date(2018,1,1))
+        >>> gs.get_identifiers(dt.date(2018,1,1))
 
         Use PricingContext to determine as of date:
 
-        >>> with PricingContext(date(2018,1,1)) as ctx:
+        >>> with PricingContext(dt.date(2018,1,1)) as ctx:
         >>>     gs.get_identifiers()
 
         **See also**
@@ -171,16 +171,18 @@ class Asset(metaclass=ABCMeta):
 
         Get current SEDOL:
 
+        >>> import datetime as dt
+        >>>
         >>> gs = SecurityMaster.get_asset("GS", AssetIdentifier.TICKER)
         >>> gs.get_identifier(AssetIdentifier.SEDOL)
 
         Get SEDOL as of 1Jan18:
 
-        >>> gs.get_identifier(AssetIdentifier.SEDOL, as_of=date(2018,1,1))
+        >>> gs.get_identifier(AssetIdentifier.SEDOL, as_of=dt.date(2018,1,1))
 
         Use PricingContext to determine as of date:
 
-        >>> with PricingContext(date(2018,1,1)) as ctx:
+        >>> with PricingContext(dt.date(2018,1,1)) as ctx:
         >>>     gs.get_identifier(AssetIdentifier.SEDOL)
 
         **See also**
@@ -282,16 +284,18 @@ class IndexConstituentProvider(metaclass=ABCMeta):
 
         Get current index constituents (defaults to close):
 
-        >>> gs = SecurityMaster.get_asset("GSTHHVIP", AssetIdentifier.TICKER)
+        >>> import datetime as dt
+        >>>
+        >>> gs = SecurityMaster.get_asset('GSTHHVIP', AssetIdentifier.TICKER)
         >>> gs.get_constituents()
 
         Get constituents as of market open on 3Jan18:
 
-        >>> gs.get_constituents(date(2018,1,3), PositionType.OPEN)
+        >>> gs.get_constituents(dt.date(2018,1,3), PositionType.OPEN)
 
         Use PricingContext to determine as of date:
 
-        >>> with PricingContext(date(2018,1,1)) as ctx:
+        >>> with PricingContext(dt.date(2018,1,1)) as ctx:
         >>>     gs.get_constituents()
 
         **See also**

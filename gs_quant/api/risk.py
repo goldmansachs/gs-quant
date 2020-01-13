@@ -14,7 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 from abc import ABCMeta, abstractmethod
-from typing import Iterable, Union
+from typing import Iterable, Mapping, Union
 
 from gs_quant.base import PricingKey
 from gs_quant.risk import Formatters, RiskRequest
@@ -29,7 +29,7 @@ class RiskApi(metaclass=ABCMeta):
 
     @classmethod
     @abstractmethod
-    def get_results(cls, risk_request: RiskRequest, result_id: str) -> dict:
+    def get_results(cls, ids_to_requests: Mapping[str, RiskRequest]) -> Mapping[str, dict]:
         raise NotImplementedError('Must implement get_results')
 
     @classmethod

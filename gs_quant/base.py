@@ -303,7 +303,7 @@ class Base(metaclass=ABCMeta):
         return cls._from_dict(values)
 
     @classmethod
-    def default_instance(cls) -> 'Base':
+    def default_instance(cls):
         """
         Construct a default instance of this type
         """
