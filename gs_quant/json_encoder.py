@@ -15,12 +15,13 @@ under the License.
 """
 
 import datetime
+from enum import Enum
 import json
 import re
 
 import pandas as pd
 
-from gs_quant.base import Base, EnumBase
+from gs_quant.base import Base
 
 
 class JSONEncoder(json.JSONEncoder):
@@ -30,7 +31,7 @@ class JSONEncoder(json.JSONEncoder):
             return o.strftime('%Y-%m-%dT%H:%M:%S.') + '{:06d}'.format(o.microsecond)[:-3] + 'Z'
         if isinstance(o, datetime.date):
             return o.isoformat()
-        elif isinstance(o, EnumBase):
+        elif isinstance(o, Enum):
             return o.value
         elif isinstance(o, pd.DataFrame):
             return o.to_json()

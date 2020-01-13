@@ -14,7 +14,8 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.target.common import BusinessDayConvention, Currency, DayCountFraction, AssetClass, AssetType, OptionStyle, OptionType, PayReceive, XRef
+from gs_quant.target.common import BusinessDayConvention, Currency, DayCountFraction, AssetClass, AssetType,\
+    OptionStyle, OptionType, PayReceive, XRef
 from gs_quant.target.risk import CountryCode
 from enum import Enum
 

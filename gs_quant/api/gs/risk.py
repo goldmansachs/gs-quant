@@ -14,7 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 import time
-from typing import Iterable, Union
+from typing import Iterable, Mapping, Union
 
 from gs_quant.api.risk import RiskApi
 from gs_quant.risk import RiskRequest, LiquidityRequest, LiquidityResponse, RiskModelRequest
@@ -33,18 +33,23 @@ class GsRiskApi(RiskApi):
         return GsSession.current._post(r'/risk/calculate', request)
 
     @classmethod
-    def get_results(cls, risk_request: RiskRequest, result_id: str) -> dict:
+    def get_results(cls, ids_to_requests: Mapping[str, RiskRequest]) -> Mapping[str, dict]:
         session = GsSession.current
-        url = '/risk/calculate/{}/results'.format(result_id)
+        result_ids = tuple(ids_to_requests.keys())
+        num_results = len(result_ids)
+        urls = {i: '/risk/calculate/{}/results'.format(i) for i in result_ids}
         results = {}
 
-        while not results:
-            result = session._get(url)
+        while len(results) < num_results:
+            for result_id, url in urls.items():
+                if result_id in results:
+                    continue
 
-            if isinstance(result, list):
-                results = cls._handle_results(risk_request, result)
-            else:
-                time.sleep(1)
+                result = session._get(url)
+                if isinstance(result, list):
+                    results[result_id] = cls._handle_results(ids_to_requests[result_id], result)
+
+            time.sleep(1)
 
         return results
 

@@ -109,7 +109,7 @@ def test_portfolio(mocker):
 
     expected = risk.aggregate_risk([risk.DataFrameWithInfo(PricingContext.current.pricing_key, pd.DataFrame(v))
                                    for v in dollar_price_ir_delta_values[1]]).reset_index(drop=True)
-    actual = result[risk.IRDelta].aggregate().value
+    actual = result[risk.IRDelta].aggregate().raw_value
     assert actual.equals(expected)
 
     prices_only = result[risk.DollarPrice]

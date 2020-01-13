@@ -43,7 +43,7 @@ PricerCoordRegII = r"^(Pricer )([0-9]*)$"
 PricerBFReg = r"^([-]*[0-9]+[mydwbfMYDWBFM])([-]*[0-9]+[mydwbfMYDWBF])([-]*[0-9]+[mydwbfMYDWBF])?$"
 PricerBondSpreadReg = r"^[0-9][SQHT]([0-9]{2})[/][0-9][SQHT]([0-9]{2})"
 SeasonalFrontReg = r"(Front|Back)"
-InflVolReg = r"(Caplet|ZCCap|Swaption|ZCSwo)"
+infl_volReg = r"(Caplet|ZCCap|Swaption|ZCSwo)"
 MMMReg = r"^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)$"
 MMMYYReg = r"^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC) ([0-9]{2})"
 DatePairReg = r"^([0-9]{8})/([0-9]{8})$"
@@ -95,8 +95,6 @@ def relative_days_add(date_rule: str, strict: bool = False) -> float:
     if re.search(DateRuleReg, date_rule) is not None:
         res = re.search(DateRuleReg, date_rule)
         date_str = res.group(1)
-        scale = 0
-        num = 0
         if date_str[0] == '-':
             num = float(date_str[1:-1])
             days = '-'
@@ -161,29 +159,26 @@ def point_sort_order(point: str, ref_date: dt.date = dt.date.today()) -> float:
         days = 0.1
     elif point == 'Out':
         days = 0.2
-    elif re.search(InflVolReg, point) is not None:
-        # TODO: check whether required
-        res = re.search(InflVolReg, point)
-        inflVol = res.group(1)
-        if inflVol == 'Caplet':
+    elif re.search(infl_volReg, point) is not None:
+        res = re.search(infl_volReg, point)
+        infl_vol = res.group(1)
+        if infl_vol == 'Caplet':
             days = 0
-        elif inflVol == 'ZCCap':
+        elif infl_vol == 'ZCCap':
             days = 1
-        elif inflVol == 'Swaption':
+        elif infl_vol == 'Swaption':
             days = 2
-        elif inflVol == 'ZCSwo':
+        elif infl_vol == 'ZCSwo':
             days = 3
     elif re.search(CopulaReg, point) is not None:
         pass
     elif re.search(SeasonalFrontReg, point) is not None:
-        # TODO: check whether required
         res = re.search(SeasonalFrontReg, point)
         if res.group(1) == 'Front':
             days = 0
         else:
             days = 1
     elif re.search(MMMReg, point) is not None:
-        # TODO: to confirm the behavior
         res = re.search(MMMReg, point)
         date_str = '1' + res.group(1) + '2000'
         format_str = '%d%b%Y'
@@ -211,15 +206,17 @@ def point_sort_order(point: str, ref_date: dt.date = dt.date.today()) -> float:
         days = relative_days_add(date_str)
     elif re.search(SpikeQEReg, point) is not None:
         res = re.search(SpikeQEReg, point)
-        QE = res.group(1)
-        if QE == 'QE1':
+        qe = res.group(1)
+        if qe == 'QE1':
             month = "Mar"
-        elif QE == 'QE2':
+        elif qe == 'QE2':
             month = "Jun"
-        elif QE == 'QE3':
+        elif qe == 'QE3':
             month = "Sep"
-        elif QE == 'QE4':
-            month = "Dec"
+        elif qe == 'QE4':
+            month = 'Dec'
+        else:
+            month = 'Dec'
         date_str = "1" + month + res.group(2)
         format_str = '%d%b%Y'
         days = (dt.datetime.strptime(date_str, format_str).date() - ref_date).days
@@ -278,17 +275,15 @@ def point_sort_order(point: str, ref_date: dt.date = dt.date.today()) -> float:
         format_str = '%d/%m/%Y'
         days = (dt.datetime.strptime(date_str, format_str).date() - ref_date).days
     elif re.search(BondFutReg, point) is not None:
-        # TODO: to confirm the behavior
         res = re.search(BondFutReg, point)
         month = FutMonth.find(res.group(1)) + 1
-        date_str = str(ref_date.year) + "-" + str(month) + "-1"
+        date_str = str(ref_date.year) + '-' + str(month) + '-1'
         format_str = '%Y-%m-%d'
         days = (dt.datetime.strptime(date_str, format_str).date() - ref_date).days
     elif re.search(FFFutReg, point) is not None:
-        # TODO: to confirm the behavior
         res = re.search(FFFutReg, point)
         month = FutMonth.find(res.group(1)) + 1
-        date_str = str(ref_date.year) + "-" + str(month) + "-1"
+        date_str = str(ref_date.year) + '-' + str(month) + '-1'
         format_str = '%Y-%m-%d'
         days = (dt.datetime.strptime(date_str, format_str).date() - ref_date).days
     elif re.search(RepoGCReg, point) is not None:

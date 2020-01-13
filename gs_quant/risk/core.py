@@ -35,6 +35,25 @@ __risk_columns = ('date', 'time', 'marketDataType', 'assetId', 'pointClass', 'po
 __crif_columns = ('date', 'time', 'riskType', 'amountCurrency', 'qualifier', 'bucket', 'label1', 'label2')
 
 
+class RiskResult:
+
+    def __init__(self, result, risk_measures: Iterable[RiskMeasure]):
+        self.__risk_measures = tuple(risk_measures)
+        self.__result = result
+
+    @property
+    def done(self) -> bool:
+        return self.__result.done()
+
+    @property
+    def risk_measures(self) -> Tuple[RiskMeasure]:
+        return self.__risk_measures
+
+    @property
+    def _result(self):
+        return self.__result
+
+
 class ResultInfo(metaclass=ABCMeta):
 
     def __init__(
@@ -53,7 +72,7 @@ class ResultInfo(metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def value(self):
+    def raw_value(self):
         ...
 
     @property
@@ -91,10 +110,10 @@ class ErrorValue(ResultInfo):
         super().__init__(pricing_key, error=error)
 
     def __repr__(self):
-        return repr(self.error)
+        return self.error
 
     @property
-    def value(self):
+    def raw_value(self):
         return None
 
     def for_pricing_key(self, pricing_key: PricingKey):
@@ -129,8 +148,11 @@ class FloatWithInfo(float, ResultInfo):
             calculation_time=calculation_time,
             queueing_time=queueing_time)
 
+    def __repr__(self):
+        return self.error if self.error else float.__repr__(self)
+
     @property
-    def value(self) -> float:
+    def raw_value(self) -> float:
         return float(self)
 
     def for_pricing_key(self, pricing_key: PricingKey):
@@ -151,7 +173,7 @@ class FloatWithInfo(float, ResultInfo):
             as_of += component.pricing_key.pricing_market_data_as_of
             date = component.pricing_key.pricing_market_data_as_of[0].pricing_date
             dates.append(date)
-            values.append(component.value)
+            values.append(component.raw_value)
 
             if component.error:
                 error[date] = component.error
@@ -186,8 +208,11 @@ class SeriesWithInfo(pd.Series, ResultInfo):
 
         self.index.name = 'date'
 
+    def __repr__(self):
+        return self.error if self.error else pd.Series.__repr__(self)
+
     @property
-    def value(self) -> pd.Series:
+    def raw_value(self) -> pd.Series:
         return pd.Series(self)
 
     def for_pricing_key(self, pricing_key: PricingKey):
@@ -215,7 +240,8 @@ class DataFrameWithInfo(pd.DataFrame, ResultInfo):
             **kwargs
     ):
         pd.DataFrame.__init__(self, *args, **kwargs)
-        internal_names = ['_ResultInfo__' + i for i in dir(ResultInfo) if isinstance(getattr(ResultInfo, i), property)]
+        properties = [i for i in dir(ResultInfo) if isinstance(getattr(ResultInfo, i), property)]
+        internal_names = properties + ['_ResultInfo__' + i for i in properties if i != 'raw_value']
         self._internal_names.append(internal_names)
         self._internal_names_set.update(internal_names)
         ResultInfo.__init__(
@@ -226,8 +252,11 @@ class DataFrameWithInfo(pd.DataFrame, ResultInfo):
             calculation_time=calculation_time,
             queueing_time=queueing_time)
 
+    def __repr__(self):
+        return self.error if self.error else pd.DataFrame.__repr__(self)
+
     @property
-    def value(self) -> pd.DataFrame:
+    def raw_value(self) -> pd.DataFrame:
         return pd.DataFrame(self)
 
     def for_pricing_key(self, pricing_key: PricingKey):
@@ -255,7 +284,7 @@ class DataFrameWithInfo(pd.DataFrame, ResultInfo):
             as_of += component.pricing_key.pricing_market_data_as_of
             date = component.pricing_key.pricing_market_data_as_of[0].pricing_date
 
-            df = component.value
+            df = component.raw_value
             if df.index.name != 'date' and 'date' not in df:
                 df = df.assign(date=date)
 
@@ -305,7 +334,7 @@ def __float_with_info_from_result(result: dict, pricing_key: PricingKey):
         pricing_key,
         result.get('value', 'Nan'),
         unit=result.get('unit'),
-        error=result.get('error'),
+        error=result.get('errorMessage'),
         calculation_time=result.get('calculationTime'),
         queueing_time=result.get('queueingTime'))
 
@@ -335,13 +364,13 @@ def __dataframe_formatter(result: List, pricing_key: PricingKey, columns: Tuple[
     queueing_time = df.queueingTime.unique().sum() if 'calculationTime' in df else 0
     error = None
 
-    if 'error' in df:
-        error = dict(zip(df.index, df.error))
+    if 'errorMessage' in df:
+        error = dict(zip(df.index, df.errorMessage))
 
     if 'value' in df:
         df = df[df.value.abs() > 1e-6]
 
-    df.drop(columns=['calculationTime', 'queueingTime'], inplace=True, errors='ignore')
+    df.drop(columns=['calculationTime', 'queueingTime', 'errorMessage'], inplace=True, errors='ignore')
 
     if len(df.index.unique()) == 1:
         df.reset_index(drop=True, inplace=True)
@@ -373,9 +402,17 @@ def aggregate_risk(results: Iterable[Union[DataFrameWithInfo, Future]], threshol
 
     **Examples**
 
+    >>> from gs_quant.instrument import IRCap, IRFloor
+    >>> from gs_quant.markets import PricingContext
+    >>> from gs_quant.risk import IRDelta, IRVega
+    >>>
+    >>> cap = IRCap('5y', 'GBP')
+    >>> floor = IRFloor('5y', 'GBP')
+    >>> instruments = (cap, floor)
+    >>>
     >>> with PricingContext():
-    >>>     delta_f = [inst.calc(risk.IRDelta) for inst in instruments]
-    >>>     vega_f = [inst.calc(risk.IRVega) for inst in instruments]
+    >>>     delta_f = [inst.calc(IRDelta) for inst in instruments]
+    >>>     vega_f = [inst.calc(IRVega) for inst in (cap, floor)]
     >>>
     >>> delta = aggregate_risk(delta_f, threshold=0.1)
     >>> vega = aggregate_risk(vega_f)
@@ -383,7 +420,7 @@ def aggregate_risk(results: Iterable[Union[DataFrameWithInfo, Future]], threshol
     delta_f and vega_f are lists of futures, where the result will be a Dataframe
     delta and vega are Dataframes, representing the merged risk of the individual instruments
     """
-    dfs = [r.result().value if isinstance(r, Future) else r.value for r in results]
+    dfs = [r.result().raw_value if isinstance(r, Future) else r.raw_value for r in results]
     result = pd.concat(dfs)
     result = result.groupby([c for c in result.columns if c != 'value']).sum()
     result = pd.DataFrame.from_records(result.to_records())
@@ -398,6 +435,7 @@ def aggregate_results(results: Iterable[Union[dict, DataFrameWithInfo, FloatWith
         -> Union[dict, DataFrameWithInfo, FloatWithInfo, SeriesWithInfo]:
     unit = None
     pricing_key = None
+    results = tuple(results)
 
     for result in results:
         if result.error:
@@ -436,11 +474,17 @@ def subtract_risk(left: DataFrameWithInfo, right: DataFrameWithInfo) -> pd.DataF
 
     **Examples**
 
-    >>> ir_swap = IRSwap('Pay', '10y', 'USD')
-    >>> delta_today = ir_swap.calc(risk.IRDelta)
+    >>> from gs_quant.datetime.date import business_day_offset
+    >>> from gs_quant.instrument IRSwap
+    >>> from gs_quant.markets import PricingContext
+    >>> from gs_quant.risk import IRDelta
+    >>> import datetime as dt
     >>>
-    >>> with PricingContext(pricing_date=business_day_offset(datetime.date.today(), -1, roll='preceding')):
-    >>>     delta_yday_f = ir_swap.calc(risk.IRDelta)
+    >>> ir_swap = IRSwap('Pay', '10y', 'USD')
+    >>> delta_today = ir_swap.calc(IRDelta)
+    >>>
+    >>> with PricingContext(pricing_date=business_day_offset(dt.date.today(), -1, roll='preceding')):
+    >>>     delta_yday_f = ir_swap.calc(IRDelta)
     >>>
     >>> delta_diff = subtract_risk(delta_today, delta_yday_f.result())
     """
@@ -676,7 +720,7 @@ Formatters = {
     InflationDeltaParallel: scalar_formatter,
     InflationDeltaParallelLocalCcy: scalar_formatter,
     IRDelta: structured_formatter,
-    IRDeltaParallel: scalar_formatter,
+    IRDeltaParallel: sum_formatter,
     IRDeltaLocalCcy: structured_formatter,
     IRDeltaParallelLocalCcy: scalar_formatter,
     IRGammaParallel: scalar_formatter,
