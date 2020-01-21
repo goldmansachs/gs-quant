@@ -14,10 +14,14 @@ specific language governing permissions and limitations
 under the License.
 """
 from abc import ABCMeta, abstractmethod
+import logging
 from typing import Iterable, Mapping, Union
 
 from gs_quant.base import PricingKey
-from gs_quant.risk import Formatters, RiskRequest
+from gs_quant.risk import ErrorValue, Formatters, RiskRequest
+
+
+_logger = logging.getLogger(__name__)
 
 
 class RiskApi(metaclass=ABCMeta):
@@ -48,7 +52,14 @@ class RiskApi(metaclass=ABCMeta):
             formatter = Formatters.get(risk_measure)
             for position_idx, result in enumerate(position_results):
                 position = request.positions[position_idx]
-                result = formatter(result, pricing_key) if formatter else result
+
+                try:
+                    result = formatter(result, pricing_key, position.instrument) if formatter else result
+                except Exception as e:
+                    error_string = str(e)
+                    result = ErrorValue(pricing_key, error_string)
+                    _logger.error(error_string)
+
                 formatted_results.setdefault(risk_measure, {})[position] = result
 
         return formatted_results

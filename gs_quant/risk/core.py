@@ -16,15 +16,17 @@ under the License.
 from abc import ABCMeta, abstractmethod
 from concurrent.futures import Future
 from copy import copy
+import datetime as dt
 from typing import Iterable, List, Optional, Tuple, Union
 
 import dateutil
 import pandas as pd
 
-from gs_quant.base import PricingKey
+from gs_quant.base import InstrumentBase, PricingKey
 from gs_quant.common import AssetClass
 from gs_quant.datetime import point_sort_order
-from gs_quant.target.risk import RiskMeasure, RiskMeasureType, RiskMeasureUnit
+from gs_quant.target.risk import RiskMeasure, RiskMeasureType, RiskMeasureUnit, \
+    PricingDateAndMarketDataAsOf as __PricingDateAndMarketDataAsOf
 
 __column_sort_fns = {
     'label1': point_sort_order,
@@ -304,7 +306,13 @@ class DataFrameWithInfo(pd.DataFrame, ResultInfo):
             error=error)
 
 
-def sum_formatter(result: List, pricing_key: PricingKey) -> float:
+class PricingDateAndMarketDataAsOf(__PricingDateAndMarketDataAsOf):
+
+    def __repr__(self):
+        return '{} : {}'.format(self.pricing_date, self.market_data_as_of)
+
+
+def sum_formatter(result: List, pricing_key: PricingKey, _instrument: InstrumentBase) -> float:
     result = __flatten_result(result)
 
     return FloatWithInfo(
@@ -339,14 +347,17 @@ def __float_with_info_from_result(result: dict, pricing_key: PricingKey):
         queueing_time=result.get('queueingTime'))
 
 
-def scalar_formatter(result: List, pricing_key: PricingKey) -> Optional[Union[FloatWithInfo, SeriesWithInfo]]:
+def scalar_formatter(result: List, pricing_key: PricingKey, _instrument: InstrumentBase)\
+        -> Optional[Union[FloatWithInfo, SeriesWithInfo]]:
     if not result:
         return None
 
     result = __flatten_result(result)
 
     if len(result) > 1 and 'date' in result[0]:
-        r = [__float_with_info_from_result(r, pricing_key.for_pricing_date(r['date'])) for r in result]
+        columns = [x for x in result[0].keys() if x != 'value']
+        compressed_results = pd.DataFrame(result).groupby(columns).sum().reset_index().to_dict('records')
+        r = [__float_with_info_from_result(r, pricing_key.for_pricing_date(r['date'])) for r in compressed_results]
         return FloatWithInfo.compose(
             r,
             pricing_key)
@@ -367,9 +378,6 @@ def __dataframe_formatter(result: List, pricing_key: PricingKey, columns: Tuple[
     if 'errorMessage' in df:
         error = dict(zip(df.index, df.errorMessage))
 
-    if 'value' in df:
-        df = df[df.value.abs() > 1e-6]
-
     df.drop(columns=['calculationTime', 'queueingTime', 'errorMessage'], inplace=True, errors='ignore')
 
     if len(df.index.unique()) == 1:
@@ -383,20 +391,48 @@ def __dataframe_formatter(result: List, pricing_key: PricingKey, columns: Tuple[
         queueing_time=queueing_time)
 
 
-def structured_formatter(result: List, pricing_key: PricingKey) -> Optional[pd.DataFrame]:
+def structured_formatter(result: List, pricing_key: PricingKey, _instrument: InstrumentBase) -> Optional[pd.DataFrame]:
     return __dataframe_formatter(result, pricing_key, __risk_columns)
 
 
-def crif_formatter(result: List, pricing_key: PricingKey) -> Optional[pd.DataFrame]:
+def crif_formatter(result: List, pricing_key: PricingKey, _instrument: InstrumentBase) -> Optional[pd.DataFrame]:
     return __dataframe_formatter(result, pricing_key, __crif_columns)
+
+
+def instrument_formatter(result: List, pricing_key: PricingKey, instrument: InstrumentBase):
+    # TODO Handle these correctly in the risk service
+    invalid_defaults = ('-- N/A --', 'NaN')
+    value_mappings = {'Payer': 'Pay', 'Rec': 'Receive', 'Receiver': 'Receive'}
+    instruments_by_date = {}
+
+    for field_values in result:
+        field_values = {field: value_mappings.get(value, value) for field, value in field_values.items()
+                        if value not in invalid_defaults}
+
+        new_instrument = instrument.from_dict(field_values)
+        new_instrument.unresolved = instrument
+
+        if len(result) > 1 and 'date' in field_values:
+            date = dt.date.fromtimestamp(field_values['date'] / 1e9) + dt.timedelta(days=1)
+            as_of = next((a for a in pricing_key.pricing_market_data_as_of if date == a.pricing_date), None)
+
+            if as_of:
+                date_key = pricing_key.clone(pricing_market_data_as_of=as_of)
+                new_instrument.resolution_key = date_key
+                instruments_by_date[date] = new_instrument
+        else:
+            new_instrument.resolution_key = pricing_key
+            return new_instrument
+
+    return instruments_by_date
 
 
 def aggregate_risk(results: Iterable[Union[DataFrameWithInfo, Future]], threshold: Optional[float] = None)\
         -> pd.DataFrame:
     """
-    Combine the results of multiple Instrument.calc() calls, into a single result
+    Combine the results of multiple InstrumentBase.calc() calls, into a single result
 
-    :param results: An iterable of Dataframes and/or Futures (returned by Instrument.calc())
+    :param results: An iterable of Dataframes and/or Futures (returned by InstrumentBase.calc())
     :param threshold: exclude values whose absolute value falls below this threshold
     :return: A Dataframe with the aggregated results
 
@@ -695,6 +731,11 @@ CRIFIRCurve = __risk_measure_with_doc_string(
     'CRIFIRCurve',
     'CRIF IR Curve',
     RiskMeasureType.CRIF_IRCurve)
+ResolvedInstrumentValues = __risk_measure_with_doc_string(
+    'ResolvedInstrumentBaseValues',
+    'Resolved InstrumentBase Values',
+    RiskMeasureType.Resolved_Instrument_Values
+)
 
 Formatters = {
     DollarPrice: scalar_formatter,
@@ -720,7 +761,7 @@ Formatters = {
     InflationDeltaParallel: scalar_formatter,
     InflationDeltaParallelLocalCcy: scalar_formatter,
     IRDelta: structured_formatter,
-    IRDeltaParallel: sum_formatter,
+    IRDeltaParallel: scalar_formatter,
     IRDeltaLocalCcy: structured_formatter,
     IRDeltaParallelLocalCcy: scalar_formatter,
     IRGammaParallel: scalar_formatter,
@@ -734,5 +775,6 @@ Formatters = {
     IRAnnualATMImpliedVol: scalar_formatter,
     IRSpotRate: scalar_formatter,
     IRFwdRate: scalar_formatter,
-    CRIFIRCurve: crif_formatter
+    CRIFIRCurve: crif_formatter,
+    ResolvedInstrumentValues: instrument_formatter
 }

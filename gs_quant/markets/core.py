@@ -17,8 +17,6 @@ from abc import ABCMeta
 from concurrent.futures import Future, ThreadPoolExecutor
 import copy
 import datetime as dt
-import functools
-import inflection
 import itertools
 import logging
 from threading import Lock
@@ -29,15 +27,43 @@ from gs_quant.api.risk import RiskApi
 from gs_quant.base import Priceable, PricingKey, Scenario
 from gs_quant.context_base import ContextBaseWithDefault
 from gs_quant.datetime.date import business_day_offset, is_business_day
-from gs_quant.risk import DataFrameWithInfo, ErrorValue, FloatWithInfo, SeriesWithInfo
+from gs_quant.risk import DataFrameWithInfo, ErrorValue, FloatWithInfo, MarketDataScenario,\
+    PricingDateAndMarketDataAsOf,\
+    ResolvedInstrumentValues, RiskMeasure, RiskPosition, RiskRequest,\
+    RiskRequestParameters, SeriesWithInfo
 from gs_quant.risk.results import MultipleRiskMeasureFuture
 from gs_quant.session import GsSession
 from gs_quant.target.data import MarketDataCoordinate as __MarketDataCoordinate
-from gs_quant.target.risk import PricingDateAndMarketDataAsOf, RiskMeasure, RiskPosition, RiskRequest,\
-    RiskRequestParameters, MarketDataScenario
 
 
 _logger = logging.getLogger(__name__)
+
+
+class PricingFuture(Future):
+
+    def __init__(self, pricing_context):
+        super().__init__()
+        self.__pricing_context = pricing_context
+
+    def result(self, timeout=None):
+        """Return the result of the call that the future represents.
+
+        :param timeout: The number of seconds to wait for the result if the future isn't done.
+        If None, then there is no limit on the wait time.
+
+        Returns:
+            The result of the call that the future represents.
+
+        Raises:
+            CancelledError: If the future was cancelled.
+            TimeoutError: If the future didn't finish executing before the given timeout.
+
+        Exception: If the call raised then that exception will be raised.
+        """
+        if not self.done() and PricingContext.current == self.__pricing_context and self.__pricing_context.is_entered:
+            raise RuntimeError('Cannot evaluate results under the same pricing context being used to produce them')
+
+        return super().result(timeout=timeout)
 
 
 class MarketDataCoordinate(__MarketDataCoordinate):
@@ -198,6 +224,7 @@ class PricingContext(ContextBaseWithDefault):
                 with session:
                     handle_results(provider_.calc(request_), request_, provider_)
             except Exception as e:
+                _logger.error(str(e))
                 handle_results(e, request_, provider_)
 
         def get_batch_results_if_ready(provider_: RiskApi):
@@ -209,6 +236,7 @@ class PricingContext(ContextBaseWithDefault):
                     with session:
                         return provider_.get_results(provider_requests), provider_requests, provider_
                 except Exception as e:
+                    _logger.error(str(e))
                     return e, provider_requests, provider_
 
             with self.__lock:
@@ -397,7 +425,7 @@ class PricingContext(ContextBaseWithDefault):
                 measure_future = self.__futures.get((scenario, measure), {}).get(position)
 
                 if measure_future is None:
-                    measure_future = Future()
+                    measure_future = PricingFuture(self)
                     if self.__use_cache:
                         cached_result = PricingCache.get(priceable, risk_measure)
                         if cached_result:
@@ -411,9 +439,10 @@ class PricingContext(ContextBaseWithDefault):
 
                 futures[measure] = measure_future
 
-        future = MultipleRiskMeasureFuture(futures) if multiple_measures else futures[risk_measure]
+        future = MultipleRiskMeasureFuture(futures, result_future=PricingFuture(self)) if multiple_measures else\
+            futures[risk_measure]
 
-        if not (self._is_entered or self.__is_async):
+        if not (self.is_entered or self.__is_async):
             if not future.done():
                 self._calc()
 
@@ -442,56 +471,7 @@ class PricingContext(ContextBaseWithDefault):
 
         fixed_rate is now the solved value
         """
-        # TODO Handle these correctly in the risk service
-        invalid_defaults = ('-- N/A --', 'NaN')
-        value_mappings = {'Payer': 'Pay', 'Rec': 'Receive', 'Receiver': 'Receive'}
         resolution_key = self.pricing_key
-
-        def apply_field_values(
-            field_values: Union[list, Future],
-            priceable_inst: Priceable,
-            future: Optional[Future] = None
-        ):
-            if isinstance(field_values, ErrorValue):
-                raise RuntimeError(field_values.error)
-
-            if isinstance(field_values, Future):
-                field_values = field_values.result()
-
-            if isinstance(field_values, (list, tuple)):
-                if len(field_values) == 1:
-                    field_values = field_values[0]
-                else:
-                    date_result = {}
-                    for fv in field_values:
-                        date = dt.date.fromtimestamp(fv['date'] / 1e9)
-                        as_of = next(a for a in resolution_key.pricing_market_data_as_of if date == a.pricing_date)
-                        date_key = resolution_key.clone(pricing_market_data_as_of=as_of)
-                        date_result[date] = apply_field_values(fv, priceable_inst, date_key)
-
-                    future.set_result(date_result)
-                    return
-
-            field_values = {field: value_mappings.get(value, value) for field, value in field_values.items()
-                            if inflection.underscore(field) in priceable_inst.properties()
-                            and value not in invalid_defaults}
-
-            if in_place and not future:
-                priceable_inst.unresolved = copy.copy(priceable_inst)
-
-                for field, value in field_values.items():
-                    setattr(priceable_inst, field, value)
-
-                priceable_inst.resolution_key = resolution_key
-            else:
-                new_inst = priceable_inst._from_dict(field_values)
-                new_inst.unresolved = priceable_inst
-                new_inst.resolution_key = resolution_key
-
-                if future:
-                    future.set_result(new_inst)
-                else:
-                    return new_inst
 
         if priceable.resolution_key:
             if in_place:
@@ -503,10 +483,17 @@ class PricingContext(ContextBaseWithDefault):
             elif resolution_key == priceable.resolution_key:
                 return copy.copy(priceable)
 
-        res = self.calc(priceable, RiskMeasure(measure_type='Resolved Instrument Values'))
-        if isinstance(res, Future):
-            ret = Future() if not in_place else None
-            res.add_done_callback(functools.partial(apply_field_values, priceable_inst=priceable, future=ret))
-            return ret
-        else:
-            return apply_field_values(res, priceable)
+        result = self.calc(priceable, ResolvedInstrumentValues)
+        if in_place:
+            def handle_result(result_):
+                priceable.unresolved = copy.copy(priceable)
+                priceable.from_instance(result_)
+                priceable.resolution_key = result_.resolution_key
+
+            if isinstance(result, Future):
+                result.add_done_callback(lambda f: handle_result(f.result()))
+            else:
+                handle_result(result)
+                return
+
+        return result

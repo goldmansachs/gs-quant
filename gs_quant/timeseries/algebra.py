@@ -554,6 +554,7 @@ def filter_(x: pd.Series, operator: Optional[FilterOperator] = None, value: Opti
     """
     Removes values where comparison with the operator and value combination results in true, defaults to removing
     missing values from the series
+
     :param x: timeseries
     :param operator: FilterOperator describing logic for value removal, e.g 'less_than'
     :param value: number indicating value(s) to remove from the series

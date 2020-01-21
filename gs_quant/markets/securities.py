@@ -71,6 +71,9 @@ class AssetType(Enum):
     #: Currency
     CURRENCY = "Currency"
 
+    #: Rate
+    RATE = "Rate"
+
 
 class AssetIdentifier(Enum):
     """Asset type enumeration
@@ -262,6 +265,21 @@ class Currency(Asset):
         return AssetType.CURRENCY
 
 
+class Rate(Asset):
+    """Base Security Type
+
+    Represents a financial asset which can be held in a portfolio, or has an observable price fixing which can be
+    referenced in a derivative transaction
+
+    """
+
+    def __init__(self, id_: str, name: str):
+        Asset.__init__(self, id_, AssetClass.Rates, name)
+
+    def get_type(self) -> AssetType:
+        return AssetType.RATE
+
+
 class IndexConstituentProvider(metaclass=ABCMeta):
     def __init__(self, id_: str):
         self.__id = id_
@@ -401,6 +419,9 @@ class SecurityMaster:
         if asset_type in (GsAssetType.Currency.value,):
             return Currency(gs_asset.id, gs_asset.name)
 
+        if asset_type in (GsAssetType.Rate.value,):
+            return Rate(gs_asset.id, gs_asset.name)
+
         raise TypeError(f'unsupported asset type {asset_type}')
 
     @classmethod
@@ -412,6 +433,7 @@ class SecurityMaster:
             AssetType.ETF: (GsAssetType.ETF, GsAssetType.ETN),
             AssetType.BASKET: (GsAssetType.Custom_Basket, GsAssetType.Research_Basket),
             AssetType.FUTURE: (GsAssetType.Future,),
+            AssetType.RATE: (GsAssetType.Rate,),
         }
 
         return asset_map.get(asset_type)

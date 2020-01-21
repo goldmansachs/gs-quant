@@ -15,9 +15,9 @@ under the License.
 """
 from gs_quant.context_base import nullcontext
 from gs_quant.instrument import Instrument
-from gs_quant.markets import PricingContext
+from gs_quant.markets import PricingContext, PricingFuture
 from gs_quant.priceable import PriceableImpl
-from gs_quant.risk import RiskMeasure
+from gs_quant.risk import ResolvedInstrumentValues, RiskMeasure
 from gs_quant.risk.results import PortfolioRiskResult
 from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.api.gs.assets import GsAssetApi
@@ -41,6 +41,10 @@ class Portfolio(PriceableImpl):
         else:
             idx = self.index(item)
             return self.__instruments[idx] if isinstance(idx, int) else tuple(self.__instruments[i] for i in idx)
+
+    @property
+    def __pricing_context(self) -> PricingContext:
+        return PricingContext.current if not PricingContext.current.is_entered else nullcontext()
 
     @property
     def instruments(self) -> Tuple[Instrument, ...]:
@@ -84,13 +88,18 @@ class Portfolio(PriceableImpl):
             raise ValueError('key must be either a name or Instrument')
 
     def resolve(self, in_place: bool = True) -> Optional[dict]:
-        with PricingContext.current if not PricingContext.current._is_entered else nullcontext():
+        with self.__pricing_context:
             futures = [i.resolve(in_place) for i in self.__instruments]
 
-        return dict(zip(self.__instruments, (f.result() for f in futures))) if not in_place else None
+        if not in_place:
+            return PortfolioRiskResult(self,
+                                       (ResolvedInstrumentValues,),
+                                       futures,
+                                       result_future=PricingFuture(PricingContext.current))
 
     def calc(self, risk_measure: Union[RiskMeasure, Iterable[RiskMeasure]]) -> PortfolioRiskResult:
-        with PricingContext.current if not PricingContext.current._is_entered else nullcontext():
+        with self.__pricing_context:
             return PortfolioRiskResult(self,
                                        (risk_measure,) if isinstance(risk_measure, RiskMeasure) else risk_measure,
-                                       [i.calc(risk_measure) for i in self.__instruments])
+                                       [i.calc(risk_measure) for i in self.__instruments],
+                                       result_future=PricingFuture(PricingContext.current))
