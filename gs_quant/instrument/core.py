@@ -43,13 +43,16 @@ class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
     @classmethod
     def from_dict(cls, values: dict):
         if values:
-            asset_class_field = next((f for f in ('asset_class', 'assetClass') if f in values), None)
-            if not asset_class_field:
-                raise ValueError('assetClass/asset_class not specified')
+            if hasattr(cls, 'asset_class'):
+                return cls._from_dict(values)
+            else:
+                asset_class_field = next((f for f in ('asset_class', 'assetClass') if f in values), None)
+                if not asset_class_field:
+                    raise ValueError('assetClass/asset_class not specified')
 
-            return cls.__asset_class_and_type_to_instrument().get((
-                get_enum_value(AssetClass, values.pop(asset_class_field)),
-                get_enum_value(AssetType, values.pop('type'))), Security)._from_dict(values)
+                return cls.__asset_class_and_type_to_instrument().get((
+                    get_enum_value(AssetClass, values.pop(asset_class_field)),
+                    get_enum_value(AssetType, values.pop('type'))), Security)._from_dict(values)
 
 
 class Security(XRef, Instrument):

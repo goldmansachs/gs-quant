@@ -110,7 +110,7 @@ class ContextBase(metaclass=ContextMeta):
         return cls or self.__class__
 
     @property
-    def _is_entered(self) -> bool:
+    def is_entered(self) -> bool:
         return getattr(thread_local, '{}_entered'.format(self._cls.__name__), False)
 
     def _on_enter(self):

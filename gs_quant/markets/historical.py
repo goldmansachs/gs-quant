@@ -20,7 +20,7 @@ from typing import Iterable, Optional, Tuple, Union
 
 from gs_quant.base import Priceable
 from gs_quant.datetime.date import business_day_offset, date_range
-from gs_quant.target.risk import PricingDateAndMarketDataAsOf, RiskMeasure
+from gs_quant.risk import PricingDateAndMarketDataAsOf, RiskMeasure
 from .core import PricingCache, PricingContext
 
 
@@ -40,7 +40,8 @@ class HistoricalPricingContext(PricingContext):
             is_batch: bool = False,
             use_cache: bool = False,
             visible_to_gs: bool = False,
-            csa_term: str = None):
+            csa_term: str = None,
+            market_data_location: Optional[str] = None):
         """
         A context for producing valuations over multiple dates
 
@@ -54,6 +55,7 @@ class HistoricalPricingContext(PricingContext):
         :param use_cache: store results in the pricing cache (defaults to False)
         :param visible_to_gs: are the contents of risk requests visible to GS (defaults to False)
         :param csa_term: the csa under which the calculations are made. Default is local ccy ois index
+        :param market_data_location: the location for sourcing market data ('NYC', 'LDN' or 'HKG' (defaults to LDN)
 
         **Examples**
 
@@ -66,7 +68,7 @@ class HistoricalPricingContext(PricingContext):
         >>> price_series = price_f.result()
         """
         super().__init__(is_async=is_async, is_batch=is_batch, use_cache=use_cache, visible_to_gs=visible_to_gs,
-                         csa_term=csa_term)
+                         csa_term=csa_term, market_data_location=market_data_location)
         self.__calc_dates = None
 
         if start is not None:
