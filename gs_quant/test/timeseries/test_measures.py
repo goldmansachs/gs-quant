@@ -34,7 +34,7 @@ from gs_quant.data.core import DataContext
 from gs_quant.data.dataset import Dataset
 from gs_quant.data.fields import Fields
 from gs_quant.errors import MqError
-from gs_quant.markets.securities import AssetClass, Cross, Index, Currency
+from gs_quant.markets.securities import AssetClass, Cross, Index, Currency, SecurityMaster
 from gs_quant.session import GsSession, Environment
 from gs_quant.target.common import XRef, FieldFilterMap
 from gs_quant.test.timeseries.utils import mock_request
@@ -223,6 +223,36 @@ def test_cross_to_usd_based_cross_for_fx_forecast(mocker):
         for i in range(len(asset_id_list)):
             correct_id = tm.cross_to_usd_based_cross(asset_id_list[i])
             assert correct_id == correct_mapping[i]
+
+
+def test_cross_to_used_based_cross(mocker):
+    mocker.patch.object(GsSession.__class__, 'current',
+                        return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
+    mocker.patch.object(GsSession.current, '_post', side_effect=mock_request)
+    mocker.patch.object(SecurityMaster, 'get_asset', side_effect=TypeError('unsupported'))
+
+    replace = Replacer()
+    bbid_mock = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+    bbid_mock.return_value = 'HELLO'
+
+    assert 'FUN' == tm.cross_to_usd_based_cross(Cross('FUN', 'EURUSD'))
+    replace.restore()
+
+
+def test_cross_stored_direction(mocker):
+    mocker.patch.object(GsSession.__class__, 'current',
+                        return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
+    mocker.patch.object(GsSession.current, '_post', side_effect=mock_request)
+    mocker.patch.object(SecurityMaster, 'get_asset', side_effect=TypeError('unsupported'))
+
+    replace = Replacer()
+    bbid_mock = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+    bbid_mock.return_value = 'HELLO'
+
+    assert 'FUN' == tm.cross_stored_direction_for_fx_vol(Cross('FUN', 'EURUSD'))
+    replace.restore()
 
 
 def mock_commod(_cls, _q):
@@ -424,14 +454,15 @@ def test_skew():
 
 def test_skew_fx():
     replace = Replacer()
-    mock = Cross('MAA0NE9QX2ABETG6', 'USD/EUR')
+    cross = Cross('MAA0NE9QX2ABETG6', 'USD/EUR')
     xrefs = replace('gs_quant.timeseries.measures.GsAssetApi.get_asset_xrefs', Mock())
     xrefs.return_value = [GsTemporalXRef(dt.date(2019, 1, 1), dt.date(2952, 12, 31), XRef(bbid='EURUSD', ))]
-    replace('gs_quant.markets.securities.SecurityMaster.get_asset', mock)
+    replace('gs_quant.markets.securities.SecurityMaster.get_asset', Mock()).return_value = cross
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_fx_delta)
+    mock = cross
+
     actual = tm.skew(mock, '1m', tm.SkewReference.DELTA, 25)
     assert_series_equal(pd.Series([2.0], index=_index, name='impliedVolatility'), actual)
-
     with pytest.raises(MqError):
         tm.skew(mock, '1m', tm.SkewReference.DELTA, 25, real_time=True)
     with pytest.raises(MqError):
@@ -442,6 +473,8 @@ def test_skew_fx():
         tm.skew(mock, '1m', tm.SkewReference.NORMALIZED, 25)
     with pytest.raises(MqError):
         tm.skew(mock, '1m', None, 25)
+
+    replace.restore()
 
 
 def test_vol():
@@ -463,7 +496,7 @@ def test_vol_fx():
     mock = Cross('MAA0NE9QX2ABETG6', 'USD/EUR')
     xrefs = replace('gs_quant.timeseries.measures.GsAssetApi.get_asset_xrefs', Mock())
     xrefs.return_value = [GsTemporalXRef(dt.date(2019, 1, 1), dt.date(2952, 12, 31), XRef(bbid='EURUSD', ))]
-    replace('gs_quant.markets.securities.SecurityMaster.get_asset', mock)
+    replace('gs_quant.markets.securities.SecurityMaster.get_asset', Mock()).return_value = mock
 
     # for different delta strikes
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_fx)
@@ -477,6 +510,7 @@ def test_vol_fx():
     assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='impliedVolatility'), actual)
     actual = tm.implied_volatility(mock, '1m', tm.VolReference.SPOT, 100)
     assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='impliedVolatility'), actual)
+
     # NORMALIZED not supported
     with pytest.raises(MqError):
         tm.implied_volatility(mock, '1m', tm.VolReference.DELTA_CALL)
@@ -494,8 +528,9 @@ def test_vol_forecast():
     mock = Cross('MAA0NE9QX2ABETG6', 'USD/EUR')
     xrefs = replace('gs_quant.timeseries.measures.GsAssetApi.get_asset_xrefs', Mock())
     xrefs.return_value = [GsTemporalXRef(dt.date(2019, 1, 1), dt.date(2952, 12, 31), XRef(bbid='EURUSD', ))]
-    replace('gs_quant.markets.securities.SecurityMaster.get_asset', mock)
+    replace('gs_quant.markets.securities.SecurityMaster.get_asset', Mock()).return_value = mock
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_fx)
+
     actual = tm.forecast(mock, '1y')
     assert_series_equal(pd.Series([1.1, 1.1, 1.1], index=_index * 3, name='forecast'), actual)
     actual = tm.forecast(mock, '3m')
@@ -601,23 +636,23 @@ def test_swap_rate(mocker):
     assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='swapRate'), actual)
 
     identifiers = replace('gs_quant.timeseries.measures.GsAssetApi.map_identifiers', Mock())
-    identifiers.return_value = {'USD OIS': 'MA123'}
+    identifiers.return_value = {'USD OIS': 'MA124'}
     actual = tm.swap_rate(mock_usd, '1y', BenchmarkType.OIS)
     assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='swapRate'), actual)
 
-    mock_eur = Currency('MA890', 'EUR')
+    mock_eur = Currency('MA891', 'EUR')
     xrefs = replace('gs_quant.timeseries.measures.GsAssetApi.get_asset_xrefs', Mock())
     xrefs.return_value = [GsTemporalXRef(dt.date(2019, 1, 1), dt.date(2952, 12, 31), XRef(bbid='EUR', ))]
     identifiers = replace('gs_quant.timeseries.measures.GsAssetApi.map_identifiers', Mock())
-    identifiers.return_value = {'EUR-6m': 'MA123'}
+    identifiers.return_value = {'EUR-6m': 'MA125'}
     actual = tm.swap_rate(mock_eur, '1y')
     assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='swapRate'), actual)
 
-    mock_sek = Currency('MA890', 'SEK')
+    mock_sek = Currency('MA892', 'SEK')
     xrefs = replace('gs_quant.timeseries.measures.GsAssetApi.get_asset_xrefs', Mock())
     xrefs.return_value = [GsTemporalXRef(dt.date(2019, 1, 1), dt.date(2952, 12, 31), XRef(bbid='SEK', ))]
     identifiers = replace('gs_quant.timeseries.measures.GsAssetApi.map_identifiers', Mock())
-    identifiers.return_value = {'SEK-6m': 'MA123'}
+    identifiers.return_value = {'SEK-6m': 'MA126'}
     actual = tm.swap_rate(mock_sek, '1y')
     assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='swapRate'), actual)
 
@@ -628,14 +663,14 @@ def test_swap_rate(mocker):
         tm.swap_rate(..., '1y', real_time=True)
 
     GsDataApi.get_market_data.reset_mock()
-    mock_krw = Currency('MA890', 'KRW')
+    mock_krw = Currency('MA893', 'KRW')
     xrefs = replace('gs_quant.timeseries.measures.GsAssetApi.get_asset_xrefs', Mock())
     xrefs.return_value = [GsTemporalXRef(dt.date(2019, 1, 1), dt.date(2952, 12, 31), XRef(bbid='KRW', ))]
     actual = tm.swap_rate(mock_krw, '1y')
     assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='swapRate'), actual)
     GsDataApi.get_market_data.assert_called_once_with(
         GsDataApi.build_market_data_query(
-            ['MA890'],
+            ['MA893'],
             tm.QueryType.SWAP_RATE,
             where=FieldFilterMap(tenor='1y', pricing_location='HKG'),
             source=None,
@@ -648,7 +683,7 @@ def test_swap_rate(mocker):
     assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='swapRate'), actual)
     GsDataApi.get_market_data.assert_called_once_with(
         GsDataApi.build_market_data_query(
-            ['MA890'],
+            ['MA893'],
             tm.QueryType.SWAP_RATE,
             where=FieldFilterMap(tenor='2y', pricing_location='NYC'),
             source=None,

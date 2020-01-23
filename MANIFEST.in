@@ -3,5 +3,7 @@ include gs_quant/resources/asset-service.json
 include gs_quant/resources/data-service.json
 include gs_quant/resources/risk-service.json
 include gs_quant/resources/certificates/*
-include gs_quant/notebooks/*
+include gs_quant/examples/*
+include gs_quant/guides/*
+include gs_quant/tutorials/*
 include gs_quant/docs/*

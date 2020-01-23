@@ -43,6 +43,7 @@ from gs_quant.target.common import AssetClass, FieldFilterMap, AssetType, Curren
 from gs_quant.timeseries.helper import log_return, plot_measure
 
 GENERIC_DATE = Union[datetime.date, str]
+ASSET_SPEC = Union[Asset, str]
 TD_ONE = datetime.timedelta(days=1)
 CENTRAL_BANK_WATCH_START_DATE = datetime.date(2016, 1, 1)
 
@@ -173,11 +174,16 @@ CROSS_TO_CROSS_CURRENCY_BASIS = {
 }
 
 
-def cross_stored_direction_for_fx_vol(asset_id: str) -> str:
+def _asset_from_spec(asset_spec: ASSET_SPEC) -> Asset:
+    return asset_spec if isinstance(asset_spec, Asset) else SecurityMaster.get_asset(asset_spec,
+                                                                                     AssetIdentifier.MARQUEE_ID)
+
+
+def cross_stored_direction_for_fx_vol(asset_spec: ASSET_SPEC) -> str:
+    asset = _asset_from_spec(asset_spec)
+    asset_id = asset.get_marquee_id()
     result_id = asset_id
     try:
-        asset = SecurityMaster.get_asset(asset_id, AssetIdentifier.MARQUEE_ID)
-
         if asset.asset_class is AssetClass.FX:
             bbid = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
             if bbid is not None:
@@ -194,10 +200,11 @@ def cross_stored_direction_for_fx_vol(asset_id: str) -> str:
     return result_id
 
 
-def cross_to_usd_based_cross(asset_id: str) -> str:
+def cross_to_usd_based_cross(asset_spec: ASSET_SPEC) -> str:
+    asset = _asset_from_spec(asset_spec)
+    asset_id = asset.get_marquee_id()
     result_id = asset_id
     try:
-        asset = SecurityMaster.get_asset(asset_id, AssetIdentifier.MARQUEE_ID)
         if asset.asset_class is AssetClass.FX:
             bbid = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
             if bbid is not None and not str.startswith(bbid, "USD"):
@@ -209,35 +216,36 @@ def cross_to_usd_based_cross(asset_id: str) -> str:
     return result_id
 
 
-def currency_to_default_benchmark_rate(asset_id: str) -> str:
+def currency_to_default_benchmark_rate(asset_spec: ASSET_SPEC) -> str:
+    asset = _asset_from_spec(asset_spec)
+    asset_id = asset.get_marquee_id()
     try:
-        asset = SecurityMaster.get_asset(asset_id, AssetIdentifier.MARQUEE_ID)
         result = convert_asset_for_rates_data_set(asset, RatesConversionType.DEFAULT_BENCHMARK_RATE)
     except TypeError:
         result = asset_id
     return result
 
 
-def currency_to_default_swap_rate_asset(asset_id: str) -> str:
-    asset = SecurityMaster.get_asset(asset_id, AssetIdentifier.MARQUEE_ID)
+def currency_to_default_swap_rate_asset(asset_spec: ASSET_SPEC) -> str:
+    asset = _asset_from_spec(asset_spec)
     return convert_asset_for_rates_data_set(asset, RatesConversionType.DEFAULT_SWAP_RATE_ASSET)
 
 
-def currency_to_inflation_benchmark_rate(asset_id: str) -> str:
+def currency_to_inflation_benchmark_rate(asset_spec: ASSET_SPEC) -> str:
+    asset = _asset_from_spec(asset_spec)
     try:
-        asset = SecurityMaster.get_asset(asset_id, AssetIdentifier.MARQUEE_ID)
         result = convert_asset_for_rates_data_set(asset, RatesConversionType.INFLATION_BENCHMARK_RATE)
     except TypeError:
-        result = asset_id
+        result = asset.get_marquee_id()
     return result
 
 
-def cross_to_basis(asset_id: str) -> str:
+def cross_to_basis(asset_spec: ASSET_SPEC) -> str:
+    asset = _asset_from_spec(asset_spec)
     try:
-        asset = SecurityMaster.get_asset(asset_id, AssetIdentifier.MARQUEE_ID)
         result = convert_asset_for_rates_data_set(asset, RatesConversionType.CROSS_CURRENCY_BASIS)
     except TypeError:
-        result = asset_id
+        result = asset.get_marquee_id()
     return result
 
 

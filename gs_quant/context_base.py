@@ -22,6 +22,11 @@ from gs_quant.errors import MqUninitialisedError
 thread_local = threading.local()
 
 
+def do_not_serialise(func):
+    func.do_not_serialise = True
+    return func
+
+
 class ContextMeta(type, metaclass=ABCMeta):
 
     @classmethod
@@ -29,6 +34,7 @@ class ContextMeta(type, metaclass=ABCMeta):
         return False
 
     @property
+    @do_not_serialise
     def current(cls) -> 'ContextBase':
         """
         The current instance of this context
@@ -44,10 +50,12 @@ class ContextMeta(type, metaclass=ABCMeta):
         setattr(thread_local, '{}_current'.format(cls.__name__), current)
 
     @property
+    @do_not_serialise
     def current_is_set(cls) -> bool:
         return getattr(thread_local, '{}_current'.format(cls.__name__), None) is not None or cls.default_is_set
 
     @property
+    @do_not_serialise
     def default(cls) -> 'ContextBase':
         attr_name = '{}_default'.format(cls.__name__)
         default = getattr(thread_local, attr_name, None)
@@ -58,6 +66,7 @@ class ContextMeta(type, metaclass=ABCMeta):
         return default
 
     @property
+    @do_not_serialise
     def default_is_set(cls) -> bool:
         return getattr(thread_local, '{}_default'.format(cls.__name__), None) is not None
 
@@ -92,6 +101,7 @@ class ContextBase(metaclass=ContextMeta):
             setattr(thread_local, '{}_entered'.format(clz.__name__), False)
 
     @property
+    @do_not_serialise
     def _cls(self) -> ContextMeta:
         seen = set()
         stack = [self.__class__]
@@ -110,6 +120,7 @@ class ContextBase(metaclass=ContextMeta):
         return cls or self.__class__
 
     @property
+    @do_not_serialise
     def is_entered(self) -> bool:
         return getattr(thread_local, '{}_entered'.format(self._cls.__name__), False)
 

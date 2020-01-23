@@ -15,11 +15,13 @@ under the License.
 """
 
 import datetime as dt
+import threading
 from abc import ABCMeta, abstractmethod
 from enum import Enum
 from typing import Tuple, Optional
 from typing import Union
 
+import cachetools
 import pytz
 
 from gs_quant.api.gs.assets import GsAssetApi, GsAsset, AssetClass, AssetType as GsAssetType, PositionSet
@@ -156,6 +158,9 @@ class Asset(metaclass=ABCMeta):
 
         return identifiers
 
+    @cachetools.cached(cachetools.TTLCache(256, 600),
+                       lambda s, id_type, as_of=None: cachetools.keys.hashkey(s.get_marquee_id(), id_type, as_of),
+                       threading.RLock())
     def get_identifier(self, id_type: AssetIdentifier, as_of: dt.date = None):
         """
         Get asset identifier
