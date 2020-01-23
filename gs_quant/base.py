@@ -189,7 +189,8 @@ class Base(metaclass=ABCMeta):
         """The public property names of this class"""
         if not cls.__properties:
             cls.__properties = set(i for i in dir(cls) if isinstance(getattr(cls, i), property)
-                                   and not i.startswith('_'))
+                                   and not i.startswith('_') and not
+                                   getattr(getattr(cls, i).fget, 'do_not_serialise', False))
         return cls.__properties
 
     def as_dict(self, as_camel_case: bool=False) -> dict:
