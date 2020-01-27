@@ -64,6 +64,7 @@ class QueryType(Enum):
     FUNDAMENTAL_METRIC = "Fundamental Metric"
     POLICY_RATE_EXPECTATION = "Policy Rate Expectation"
     CENTRAL_BANK_SWAP_RATE = "Central Bank Swap Rate"
+    FORWARD_PRICE = "Forward Price"
 
 
 class GsDataApi(DataApi):

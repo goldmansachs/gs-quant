@@ -19,6 +19,7 @@ import time
 from collections import namedtuple
 from enum import auto
 from numbers import Real
+import calendar
 
 import cachetools.func
 import numpy as np
@@ -27,6 +28,7 @@ from dateutil import tz
 from pandas import Series
 from pandas.tseries.holiday import Holiday, AbstractHolidayCalendar, USMemorialDay, USLaborDay, USThanksgivingDay, \
     nearest_workday
+from dateutil.relativedelta import relativedelta
 
 from gs_quant.api.gs.assets import GsIdType
 from gs_quant.api.gs.data import GsDataApi
@@ -1331,6 +1333,199 @@ def var_swap(asset: Asset, tenor: str, forward_start_date: Optional[str] = None,
         return (z * zg - y * yg) / x
 
 
+def _get_iso_data(region: str):
+    timezone = 'US/Eastern'
+    peak_start = 7
+    peak_end = 23
+    weekends = [5, 6]
+
+    if region in ['MISO', 'ERCOT', 'SPP']:
+        timezone = 'US/Central'
+        peak_start = 6
+        peak_end = 22
+    if region == 'CAISO':
+        timezone = 'US/Pacific'
+        weekends = [6]
+
+    return timezone, peak_start, peak_end, weekends
+
+
+def _filter_by_bucket(df, bucket, holidays, region):
+    # TODO: get frequency definition from SecDB
+    timezone, peak_start, peak_end, weekends = _get_iso_data(region)
+    if bucket.lower() == '7x24':
+        pass
+    # offpeak: 11pm-7am & weekend & holiday
+    elif bucket.lower() == 'offpeak':
+        df = df.loc[df['date'].isin(holidays) |
+                    df['day'].isin(weekends) |
+                    (~df['date'].isin(holidays) & ~df['day'].isin(weekends) &
+                     ((df['hour'] < peak_start) | (df['hour'] > peak_end - 1)))]
+    # peak: 7am to 11pm on weekdays
+    elif bucket.lower() == 'peak':
+        df = df.loc[(~df['date'].isin(holidays)) & (~df['day'].isin(weekends)) & (df['hour'] > peak_start - 1) &
+                    (df['hour'] < peak_end)]
+    # 7x8: 11pm to 7am
+    elif bucket.lower() == '7x8':
+        df = df.loc[(df['hour'] < peak_start) | (df['hour'] > peak_end - 1)]
+    # 2x16h: weekends & holidays
+    elif bucket.lower() == '2x16h' or bucket.lower() == 'suh1x16':
+        df = df.loc[((df['date'].isin(holidays)) | df['day'].isin(weekends)) & ((df['hour'] > peak_start - 1) &
+                                                                                (df['hour'] < peak_end))]
+    else:
+        raise ValueError('Invalid bucket: ' + bucket + '. Expected Value: peak, offpeak, 7x24, 7x8, 2x16h.')
+    return df
+
+
+# Slang Date::Interval implementation
+# Accept months (e.g. F07), quarters (e.g. 4Q06),
+# half-years (e.g. 1H07), and years (e.g. Cal07 or 2007)
+def _string_to_date_interval(interval: str, contract_months):
+    if interval[-2:].isdigit():
+        YS = interval[-2:]
+        year = int("20" + YS) if int(YS) <= 51 else int("19" + YS)
+    else:
+        return "Invalid year"
+
+    if len(interval) > 4 and interval[-4:].isdigit():
+        YS = interval[-4:]
+        year = int(YS)
+
+    start_year = datetime.date(year, 1, 1)
+    if len(interval) == 1 + len(YS):
+        if interval[0] in contract_months:
+            month_index = contract_months.index(interval[0]) + 1
+            start_date = datetime.date(year, month_index, 1)
+            end_date = datetime.date(year, month_index, calendar.monthrange(year, month_index)[1])
+        else:
+            return "Invalid month"
+    elif (len(interval) == 2 + len(YS) and interval.isdigit()) or (
+            interval.casefold().startswith("Cal".casefold()) and len(interval) == 3 + len(YS)):
+        start_date = datetime.date(year, 1, 1)
+        end_date = datetime.date(year, 12, 31)
+    elif len(interval) == 2 + len(YS):
+        if interval[0].isdigit():
+            num = int(interval[0])
+        else:
+            return "Invalid num"
+        if interval[1] == "Q":
+            if 1 <= num <= 4:
+                start_date = (start_year + relativedelta(months=+(3 * (num - 1))))
+                end_date = start_year + relativedelta(months=+(3 * num), days=-1)
+            else:
+                return "Invalid Quarter"
+        if interval[1] == "H":
+            if 1 <= num <= 2:
+                start_date = start_year + relativedelta(months=+(6 * (num - 1)))
+                end_date = start_year + relativedelta(months=+(6 * num), days=-1)
+            else:
+                return "Invalid Half Year"
+    elif len(interval) >= 3 + len(YS):
+        left = interval[0:len(interval) - len(YS)]
+        if left.isalpha():
+            if left in calendar.month_name:
+                month_index = {v: k for k, v in enumerate(calendar.month_name)}[left]
+            elif left in calendar.month_abbr:
+                month_index = {v: k for k, v in enumerate(calendar.month_abbr)}[left]
+            else:
+                return "Invalid date code"
+            start_date = datetime.date(year, month_index, 1)
+            end_date = datetime.date(year, month_index, calendar.monthrange(year, month_index)[1])
+        else:
+            return "Invalid date code"
+    else:
+        return "Unknown date code"
+    return {'start_date': start_date, 'end_date': end_date}
+
+
+@plot_measure((AssetClass.Commod,), None, [QueryType.FORWARD_PRICE])
+def forwards(asset: Asset, price_method: str = 'LMP', bucket: str = 'PEAK',
+             contract_range: str = 'F20', *, source: str = None, real_time: bool = False) -> pd.Series:
+    """'
+    Us Power Forward Prices
+
+    :param asset: asset object loaded from security master
+    :param price_method: price method between LMP, MCP, SPP, energy, loss, congestion: Default value = LMP
+    :param bucket: bucket type among '7x24', 'peak', 'offpeak', '2x16h' and '7x8': Default value = 7x24
+    :param contract_range: e.g. inputs - Cal20, F20, 2Q20, 2H20 : Default Value = F20
+    :param source: name of function caller: default source = None
+    :param real_time: whether to retrieve intraday data instead of EOD: default value = False
+    :return: Us Power Forward Prices
+    """
+    if real_time:
+        raise ValueError('Use daily frequency instead of intraday')
+
+    bbid = Asset.get_identifier(asset, AssetIdentifier.BLOOMBERG_ID)
+
+    def _get_weight_for_bucket(df, bucket, holidays, region):
+        df = _filter_by_bucket(df, bucket, holidays, region)
+        weights_df = df.groupby('contract_month').size()
+        weights_df = pd.DataFrame({'contract': weights_df.index, 'weight': weights_df.values})
+        weights_df['quantityBucket'] = bucket
+        return weights_df
+
+    contract_months = ["F", "G", "H", "J", "K", "M", "N", "Q", "U", "V", "X", "Z"]
+    start_date_interval = _string_to_date_interval(contract_range.split("-")[0], contract_months)
+    if type(start_date_interval) == str:
+        raise ValueError(start_date_interval)
+    start_contract_range = start_date_interval['start_date']
+    if "-" in contract_range:
+        end_date_interval = _string_to_date_interval(contract_range.split("-")[1], contract_months)
+        if type(end_date_interval) == str:
+            raise ValueError(end_date_interval)
+        end_contract_range = end_date_interval['end_date']
+    else:
+        end_contract_range = start_date_interval['end_date']
+
+    region = bbid.split(" ")[0]
+    timezone = _get_iso_data(region)[0]
+
+    weekend_offpeak = "SUH1X16" if region == 'CAISO' else "2X16H"
+    QBT_mapping = {"OFFPEAK": [weekend_offpeak, "7X8"], "7X16": ["PEAK", weekend_offpeak],
+                   "7X24": ["PEAK", "7X8", weekend_offpeak]}
+
+    dates_contract_range = pd.date_range(start=start_contract_range,
+                                         end=end_contract_range + datetime.timedelta(days=1), freq='H',
+                                         closed='left',
+                                         tz=timezone).to_frame()
+    dates_contract_range['date'] = dates_contract_range.index.date
+    dates_contract_range['hour'] = dates_contract_range.index.hour
+    dates_contract_range['day'] = dates_contract_range.index.dayofweek
+    dates_contract_range['month'] = dates_contract_range.index.month - 1
+    dates_contract_range['year'] = dates_contract_range.index.year
+    dates_contract_range['contract_month'] = dates_contract_range.apply(
+        lambda row: contract_months[row['month']] + str(row['year'])[-2:], axis=1)
+    holidays = NercCalendar().holidays(start=start_contract_range, end=end_contract_range).date
+
+    weights = []
+    buckets_QBT = QBT_mapping[bucket.upper()] if bucket.upper() in QBT_mapping else [bucket.upper()]
+    for bucket_QBT in buckets_QBT:
+        weight = _get_weight_for_bucket(dates_contract_range, bucket_QBT, holidays, region)
+        weights.append(weight)
+    weights = pd.concat(weights)
+
+    start, end = DataContext.current.start_date, DataContext.current.end_date
+
+    where = FieldFilterMap(priceMethod=price_method)
+    with DataContext(start, end):
+        q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.FORWARD_PRICE,
+                                              where=where, source=None,
+                                              real_time=False)
+        forwards_data = _market_data_timed(q)
+        forwards_data['date'] = forwards_data.index.date
+        print('q %s', q)
+
+    result_df = pd.merge(weights, forwards_data, how='left', on=['quantityBucket', 'contract'])
+    result_df['weighted_price'] = result_df['weight'] * result_df['forwardPrice']
+    result_df = result_df.groupby('date').agg({'weight': 'sum',
+                                               'weighted_price': 'sum'})
+    result_df['price'] = result_df['weighted_price'] / result_df['weight']
+
+    result = pd.Series(result_df['price'], index=result_df.index)
+    result = result.rename_axis(None, axis='index')
+    return result
+
+
 @plot_measure((AssetClass.Commod,), None, [QueryType.PRICE])
 def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
                     granularity: str = 'daily', *, source: str = None, real_time: bool = False) -> pd.Series:
@@ -1357,27 +1552,15 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
         raise ValueError('Invalid granularity: ' + granularity + '. Expected Value: daily or monthly.')
 
     bbid = Asset.get_identifier(asset, AssetIdentifier.BLOOMBERG_ID)
-
-    # TODO: get timezone info from Asset
-    # default frequency definition
-    timezone = 'US/Eastern'
-    peak_start = 7
-    peak_end = 23
-    weekends = [5, 6]
-
-    if bbid.split(" ")[0] in ['MISO', 'ERCOT', 'SPP']:
-        timezone = 'US/Central'
-        peak_start = 6
-        peak_end = 22
-    if bbid.split(" ")[0] == 'CAISO':
-        timezone = 'US/Pacific'
-        weekends = [6]
+    region = bbid.split(" ")[0]
+    timezone = _get_iso_data(region)[0]
 
     to_zone = tz.gettz('UTC')
     from_zone = tz.gettz(timezone)
 
     # Start date and end date are considered to be in ISO's local timezone
     start_date, end_date = DataContext.current.start_date, DataContext.current.end_date
+    holidays = NercCalendar().holidays(start=start_date, end=end_date).date
     # Start time is constructed by combining start date with 00:00:00 timestamp
     # in local time and then converted to UTC time
     # End time is constructed by combining end date with 23:59:59 timestamp
@@ -1399,7 +1582,6 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
     df['date'] = df.index.date
     df['day'] = df.index.dayofweek
     df['hour'] = df.index.hour
-    holidays = NercCalendar().holidays(start=start_date, end=end_date).date
 
     # freq is the frequency at which the ISO publishes data for e.g. 15 min, 1hr
     freq = int(min(np.diff(df.index) / np.timedelta64(1, 's')))
@@ -1415,29 +1597,7 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
     if granularity == 'M':
         df = df.loc[(~df['month'].isin(missing_months))]
 
-    # TODO: get frequency definition from SecDB
-    if bucket.lower() == '7x24':
-        pass
-    # offpeak: 11pm-7am & weekend & holiday
-    elif bucket.lower() == 'offpeak':
-        df = df.loc[df['date'].isin(holidays) |
-                    df['day'].isin(weekends) |
-                    (~df['date'].isin(holidays) & ~df['day'].isin(weekends) &
-                     ((df['hour'] < peak_start) | (df['hour'] > peak_end - 1)))]
-    # peak: 7am to 11pm on weekdays
-    elif bucket.lower() == 'peak':
-        df = df.loc[(~df['date'].isin(holidays)) & (~df['day'].isin(weekends)) & (df['hour'] > peak_start - 1) &
-                    (df['hour'] < peak_end)]
-    # 7x8: 11pm to 7am
-    elif bucket.lower() == '7x8':
-        df = df.loc[(df['hour'] < peak_start) | (df['hour'] > peak_end - 1)]
-    # 2x16h: weekends & holidays
-    elif bucket.lower() == '2x16h':
-        df = df.loc[((df['date'].isin(holidays)) | df['day'].isin(weekends)) & ((df['hour'] > peak_start - 1) &
-                                                                                (df['hour'] < peak_end))]
-    else:
-        raise ValueError('Invalid bucket: ' + bucket + '. Expected Value: peak, offpeak, 7x24, 7x8, 2x16h.')
-
+    df = _filter_by_bucket(df, bucket, holidays, region)
     df = df['price'].resample(granularity).mean()
     df.index = df.index.date
     df = df.loc[start_date: end_date]

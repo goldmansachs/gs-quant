@@ -264,6 +264,48 @@ def mock_commod(_cls, _q):
     return pd.DataFrame(data=d, index=pd.date_range('2019-05-01', periods=31, freq='H', tz=timezone('UTC')))
 
 
+def mock_forward_price(_cls, _q):
+    d = {
+        'forwardPrice': [
+            22.0039,
+            24.8436,
+            24.8436,
+            11.9882,
+            14.0188,
+            11.6311,
+            18.9234,
+            21.3654,
+            21.3654,
+        ],
+        'quantityBucket': [
+            "PEAK",
+            "PEAK",
+            "PEAK",
+            "7X8",
+            "7X8",
+            "7X8",
+            "2X16H",
+            "2X16H",
+            "2X16H",
+
+        ],
+        'contract': [
+
+            "J20",
+            "K20",
+            "M20",
+            "J20",
+            "K20",
+            "M20",
+            "J20",
+            "K20",
+            "M20",
+        ]
+
+    }
+    return pd.DataFrame(data=d, index=pd.to_datetime([datetime.date(2019, 1, 2)] * 9))
+
+
 def mock_fx(_cls, _q):
     d = {
         'strikeReference': ['delta', 'spot', 'forward'],
@@ -1302,6 +1344,173 @@ def test_bucketize_price():
             tm.bucketize_price(mock_pjm, 'LMP', granularity='yearly')
 
     replace.restore()
+
+
+def test_forwards():
+    target = {
+        '7x24': [19.46101],
+        'peak': [23.86745],
+        'J20 7x24': [18.11768888888889],
+        'J20-K20 7x24': [19.283921311475414],
+        'J20-K20 offpeak': [15.82870707070707],
+        'J20-K20 7x8': [13.020144262295084],
+    }
+    replace = Replacer()
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_forward_price)
+    mock_spp = Index('MA001', AssetClass.Commod, 'SPP')
+
+    with DataContext(datetime.date(2019, 1, 2), datetime.date(2019, 1, 2)):
+        bbid_mock = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+        bbid_mock.return_value = 'SPP'
+
+        actual = tm.forwards(mock_spp,
+                             price_method='LMP',
+                             contract_range='2Q20',
+                             bucket='7x24'
+                             )
+        assert_series_equal(pd.Series(target['7x24'],
+                                      index=[datetime.date(2019, 1, 2)],
+                                      name='price'),
+                            actual)
+
+        actual = tm.forwards(mock_spp,
+                             price_method='LMP',
+                             contract_range='J20',
+                             bucket='7x24'
+                             )
+        assert_series_equal(pd.Series(target['J20 7x24'],
+                                      index=[datetime.date(2019, 1, 2)],
+                                      name='price'),
+                            actual)
+
+        actual = tm.forwards(mock_spp,
+                             price_method='LMP',
+                             contract_range='2Q20',
+                             bucket='PEAK'
+                             )
+        assert_series_equal(pd.Series(target['peak'],
+                                      index=[datetime.date(2019, 1, 2)],
+                                      name='price'),
+                            actual)
+
+        actual = tm.forwards(mock_spp,
+                             price_method='LMP',
+                             contract_range='J20-K20',
+                             bucket='7x24'
+                             )
+        assert_series_equal(pd.Series(target['J20-K20 7x24'],
+                                      index=[datetime.date(2019, 1, 2)],
+                                      name='price'),
+                            actual)
+
+        actual = tm.forwards(mock_spp,
+                             price_method='LMP',
+                             contract_range='J20-K20',
+                             bucket='offpeak'
+                             )
+        assert_series_equal(pd.Series(target['J20-K20 offpeak'],
+                                      index=[datetime.date(2019, 1, 2)],
+                                      name='price'),
+                            actual)
+
+        actual = tm.forwards(mock_spp,
+                             price_method='LMP',
+                             contract_range='J20-K20',
+                             bucket='7x8'
+                             )
+        assert_series_equal(pd.Series(target['J20-K20 7x8'],
+                                      index=[datetime.date(2019, 1, 2)],
+                                      name='price'),
+                            actual)
+
+        with pytest.raises(ValueError):
+            tm.forwards(mock_spp,
+                        price_method='LMP',
+                        contract_range='5Q20',
+                        bucket='PEAK'
+                        )
+
+        with pytest.raises(ValueError):
+            tm.forwards(mock_spp,
+                        price_method='LMP',
+                        contract_range='Invalid',
+                        bucket='PEAK'
+                        )
+        with pytest.raises(ValueError):
+            tm.forwards(mock_spp,
+                        price_method='LMP',
+                        contract_range='3H20',
+                        bucket='7x24'
+                        )
+
+        with pytest.raises(ValueError):
+            tm.forwards(mock_spp,
+                        price_method='LMP',
+                        contract_range='F20-I20',
+                        bucket='7x24'
+                        )
+
+        with pytest.raises(ValueError):
+            tm.forwards(mock_spp,
+                        price_method='LMP',
+                        contract_range='2H20',
+                        bucket='7x24',
+                        real_time=True
+                        )
+
+        replace.restore()
+
+
+def test_get_iso_data():
+    tz_map = {'MISO': 'US/Central', 'CAISO': 'US/Pacific'}
+    for key in tz_map:
+        assert(tm._get_iso_data(key)[0] == tz_map[key])
+
+
+def test_string_to_date_interval():
+    contract_months = ["F", "G", "H", "J", "K", "M", "N", "Q", "U", "V", "X", "Z"]
+    assert(tm._string_to_date_interval("K20", contract_months)['start_date'] == datetime.date(2020, 5, 1))
+    assert (tm._string_to_date_interval("K20", contract_months)['end_date'] == datetime.date(2020, 5, 31))
+
+    assert (tm._string_to_date_interval("Cal22", contract_months)['start_date'] == datetime.date(2022, 1, 1))
+    assert (tm._string_to_date_interval("Cal22", contract_months)['end_date'] == datetime.date(2022, 12, 31))
+
+    assert (tm._string_to_date_interval("Cal2012", contract_months)['start_date'] == datetime.date(2012, 1, 1))
+    assert (tm._string_to_date_interval("Cal2012", contract_months)['end_date'] == datetime.date(2012, 12, 31))
+
+    assert (tm._string_to_date_interval("Cal53", contract_months)['start_date'] == datetime.date(1953, 1, 1))
+    assert (tm._string_to_date_interval("Cal53", contract_months)['end_date'] == datetime.date(1953, 12, 31))
+
+    assert (tm._string_to_date_interval("2010", contract_months)['start_date'] == datetime.date(2010, 1, 1))
+    assert (tm._string_to_date_interval("2010", contract_months)['end_date'] == datetime.date(2010, 12, 31))
+
+    assert (tm._string_to_date_interval("3Q20", contract_months)['start_date'] == datetime.date(2020, 7, 1))
+    assert (tm._string_to_date_interval("3Q20", contract_months)['end_date'] == datetime.date(2020, 9, 30))
+
+    assert (tm._string_to_date_interval("2H2021", contract_months)['start_date'] == datetime.date(2021, 7, 1))
+    assert (tm._string_to_date_interval("2H2021", contract_months)['end_date'] == datetime.date(2021, 12, 31))
+
+    assert (tm._string_to_date_interval("Mar2021", contract_months)['start_date'] == datetime.date(2021, 3, 1))
+    assert (tm._string_to_date_interval("Mar2021", contract_months)['end_date'] == datetime.date(2021, 3, 31))
+
+    assert (tm._string_to_date_interval("March2021", contract_months)['start_date'] == datetime.date(2021, 3, 1))
+    assert (tm._string_to_date_interval("March2021", contract_months)['end_date'] == datetime.date(2021, 3, 31))
+
+    assert (tm._string_to_date_interval("5Q20", contract_months) == "Invalid Quarter")
+
+    assert (tm._string_to_date_interval("HH2021", contract_months) == "Invalid num")
+
+    assert (tm._string_to_date_interval("3H2021", contract_months) == "Invalid Half Year")
+
+    assert (tm._string_to_date_interval("Cal2a", contract_months) == "Invalid year")
+
+    assert (tm._string_to_date_interval("Marc2021", contract_months) == "Invalid date code")
+
+    assert (tm._string_to_date_interval("M1a2021", contract_months) == "Invalid date code")
+
+    assert (tm._string_to_date_interval("I20", contract_months) == "Invalid month")
+
+    assert (tm._string_to_date_interval("20", contract_months) == "Unknown date code")
 
 
 def test_fundamental_metrics():
