@@ -31,9 +31,21 @@ class Portfolio(PriceableImpl):
     A collection of instruments
     """
 
-    def __init__(self, instruments: Union[Instrument, Iterable[Instrument]]):
+    def __init__(self, instruments: Optional[Union[Instrument, Iterable[Instrument], dict]] = ()):
+        """
+        Creates a portfolio object which can be used to hold instruments
+        :param instruments: constructed with an instrument, a list or tuple of instruments or a dictionary where
+                            key is instrument name and value is an instrument
+        """
         super().__init__()
-        self.instruments = instruments
+        if isinstance(instruments, dict):
+            inst_list = []
+            for k, v in instruments.items():
+                v.name = k
+                inst_list.append(v)
+            self.instruments = inst_list
+        else:
+            self.instruments = instruments
 
     def __getitem__(self, item):
         if isinstance(item, (int, slice)):
@@ -41,6 +53,9 @@ class Portfolio(PriceableImpl):
         else:
             idx = self.index(item)
             return self.__instruments[idx] if isinstance(idx, int) else tuple(self.__instruments[i] for i in idx)
+
+    def __len__(self):
+        return len(self.instruments)
 
     @property
     def __pricing_context(self) -> PricingContext:
@@ -72,6 +87,15 @@ class Portfolio(PriceableImpl):
         positions = GsPortfolioApi.get_latest_positions(portfolio_id)
         instruments = GsAssetApi.get_instruments_for_positions(positions.positions)
         return Portfolio(instruments)
+
+    def append(self, instruments: Union[Instrument, Iterable[Instrument]]):
+        self.instruments = self.instruments + ((instruments,) if isinstance(instruments, Instrument)
+                                               else tuple(instruments))
+
+    def pop(self, item):
+        instrument = self[item]
+        self.instruments = [inst for inst in self.instruments if inst != instrument]
+        return instrument
 
     def index(self, key: Union[str, Instrument]) -> Union[int, Tuple[int, ...]]:
         if isinstance(key, str):

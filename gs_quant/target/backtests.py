@@ -31,6 +31,8 @@ class BacktestRiskMeasureType(EnumBase, Enum):
     Vega = 'Vega'
     Forward = 'Forward'
     Volatility = 'Volatility'
+    Implied_Volatility = 'Implied Volatility'
+    Fair_Variance = 'Fair Variance'
     
     def __repr__(self):
         return self.value

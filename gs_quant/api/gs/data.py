@@ -258,7 +258,7 @@ class GsDataApi(DataApi):
         body = GsSession.current._post('/data/markets', payload=query)
         container = body['responses'][0]['queryResponse'][0]
         if 'errorMessages' in container:
-            raise MqValueError(container['errorMessages'])
+            raise MqValueError(f"market data request {body['requestId']} failed: {container['errorMessages']}")
         if 'response' not in container:
             return pd.DataFrame()
         df = pd.DataFrame(container['response']['data'])

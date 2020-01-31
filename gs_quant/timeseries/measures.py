@@ -296,22 +296,23 @@ def parse_meeting_date(meeting_str: str = '2019-01-01'):
 
 
 @log_return(_logger, 'trying pricing dates')
-def _range_from_pricing_date(exchange, pricing_date: Optional[GENERIC_DATE] = None):
+def _range_from_pricing_date(exchange, pricing_date: Optional[GENERIC_DATE] = None, buffer: int = 0):
     if isinstance(pricing_date, datetime.date):
         return pricing_date, pricing_date
 
     today = pd.Timestamp.today().normalize()
+    bd = _get_custom_bd(exchange)
     if pricing_date is None:
-        t1 = today - _get_custom_bd(exchange)
-        return t1, t1
+        t1 = today - bd
+        return t1 - (buffer * bd), t1
 
     assert isinstance(pricing_date, str)
     matcher = re.fullmatch('(\\d+)b', pricing_date)
     if matcher:
-        start = end = today - _get_custom_bd(exchange) * int(matcher.group(1))
+        start = end = today - bd * int(matcher.group(1))
     else:
         end = today - datetime.timedelta(days=relative_days_add(pricing_date, True))
-        start = end - _get_custom_bd(exchange)
+        start = end - bd
     return start, end
 
 
@@ -731,6 +732,54 @@ def swaption_vol(asset: Asset, expiration_tenor: str, termination_tenor: str, re
 
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
+              [MeasureDependency(id_provider=currency_to_default_benchmark_rate, query_type=QueryType.SWAPTION_VOL)])
+def swaption_vol_term(asset: Asset, termination_tenor: str, relative_strike: float,
+                      pricing_date: Optional[GENERIC_DATE] = None, *, source: str = None,
+                      real_time: bool = False) -> Series:
+    """
+    Term structure of GS end-of-day implied normal volatility for swaption vol matrices.
+
+    :param asset: an asset
+    :param termination_tenor: relative date representation of the instrument's expiration date e.g. 1y
+    :param relative_strike: strike level relative to at the money e.g. 10
+    :param pricing_date: YYYY-MM-DD or relative date
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: swaption implied normal volatility term structure
+    """
+    if real_time:
+        raise NotImplementedError('realtime swaption_vol_term not implemented')
+
+    rate_benchmark_mqid = convert_asset_for_rates_data_set(asset, RatesConversionType.DEFAULT_BENCHMARK_RATE)
+    start, end = _range_from_pricing_date(asset.exchange, pricing_date)
+    with DataContext(start, end):
+        _logger.debug('where tenor=%s, strike=%s', termination_tenor, relative_strike)
+        where = FieldFilterMap(tenor=termination_tenor, strike=relative_strike)
+        q = GsDataApi.build_market_data_query(
+            [rate_benchmark_mqid],
+            QueryType.SWAPTION_VOL,
+            where=where,
+            source=source,
+            real_time=real_time
+        )
+        _logger.debug('q %s', q)
+        df = _market_data_timed(q)
+
+    if df.empty:
+        return pd.Series()
+
+    latest = df.index.max()
+    _logger.info('selected pricing date %s', latest)
+    df = df.loc[latest]
+    business_day = _get_custom_bd(asset.exchange)
+    df = df.assign(expirationDate=df.index + df['expiry'].map(_to_offset) + business_day - business_day)
+    df = df.set_index('expirationDate')
+    df.sort_index(inplace=True)
+    df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
+    return df['swaptionVol'] if not df.empty else pd.Series()
+
+
+@plot_measure((AssetClass.Cash,), (AssetType.Currency,),
               [MeasureDependency(id_provider=currency_to_default_benchmark_rate, query_type=QueryType.ATM_FWD_RATE)])
 def swaption_atm_fwd_rate(asset: Asset, expiration_tenor: str, termination_tenor: str, *, source: str = None,
                           real_time: bool = False) -> Series:
@@ -1074,7 +1123,7 @@ def forecast(asset: Asset, forecast_horizon: str, *, source: str = None, real_ti
     return series
 
 
-@plot_measure((AssetClass.Equity, AssetClass.Commod), None, [QueryType.IMPLIED_VOLATILITY])
+@plot_measure((AssetClass.Equity, AssetClass.Commod, AssetClass.FX), None, [QueryType.IMPLIED_VOLATILITY])
 def vol_term(asset: Asset, strike_reference: SkewReference, relative_strike: Real,
              pricing_date: Optional[GENERIC_DATE] = None, *, source: str = None, real_time: bool = False) -> pd.Series:
     """
@@ -1091,14 +1140,24 @@ def vol_term(asset: Asset, strike_reference: SkewReference, relative_strike: Rea
     if real_time:
         raise NotImplementedError('realtime forward term not implemented')  # TODO
 
-    if strike_reference != SkewReference.NORMALIZED:
-        relative_strike /= 100
+    if asset.asset_class == AssetClass.FX:
+        if strike_reference in (SkewReference.FORWARD, SkewReference.SPOT) and relative_strike != 100:
+            raise MqValueError('relative strike must be 100 for Spot or Forward strike reference')
+        if strike_reference == SkewReference.NORMALIZED:
+            raise MqValueError(f'strike reference {strike_reference} not supported for FX')
+        asset_id = cross_stored_direction_for_fx_vol(asset)
+        buffer = 1  # FX vol data is loaded later
+    else:
+        if strike_reference != SkewReference.NORMALIZED:
+            relative_strike /= 100
+        asset_id = asset.get_marquee_id()
+        buffer = 0
 
-    start, end = _range_from_pricing_date(asset.exchange, pricing_date)
+    start, end = _range_from_pricing_date(asset.exchange, pricing_date, buffer=buffer)
     with DataContext(start, end):
         _logger.debug('where strikeReference=%s, relativeStrike=%s', strike_reference.value, relative_strike)
         where = FieldFilterMap(strikeReference=strike_reference.value, relativeStrike=relative_strike)
-        q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.IMPLIED_VOLATILITY, where=where,
+        q = GsDataApi.build_market_data_query([asset_id], QueryType.IMPLIED_VOLATILITY, where=where,
                                               source=source,
                                               real_time=real_time)
         _logger.debug('q %s', q)
