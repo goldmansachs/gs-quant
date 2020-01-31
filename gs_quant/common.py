@@ -15,7 +15,7 @@ under the License.
 """
 
 from gs_quant.target.common import BusinessDayConvention, Currency, DayCountFraction, AssetClass, AssetType,\
-    OptionStyle, OptionType, PayReceive, XRef
+    OptionStyle, OptionType, PayReceive, XRef, SwapClearingHouse, SwapSettlement
 from gs_quant.target.risk import CountryCode
 from enum import Enum
 

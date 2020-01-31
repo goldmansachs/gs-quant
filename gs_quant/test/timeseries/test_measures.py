@@ -758,6 +758,31 @@ def test_swaption_vol():
     replace.restore()
 
 
+def test_swaption_vol_term():
+    with pytest.raises(NotImplementedError):
+        tm.swaption_vol_term(..., '1y', 0, real_time=True)
+
+    replace = Replacer()
+    replace('gs_quant.timeseries.measures.convert_asset_for_rates_data_set', Mock()).return_value = 'MA31BT4WD1SVNYA0'
+
+    d = {
+        'expiry': ['1m', '6m', '1y'],
+        'swaptionVol': [1, 2, 3]
+    }
+    df = pd.DataFrame(data=d, index=_index * 3)
+    market_data_mock = replace('gs_quant.timeseries.measures._market_data_timed', Mock())
+    market_data_mock.return_value = df
+
+    with DataContext('2019-01-01', '2025-01-01'):
+        actual = tm.swaption_vol_term(Currency('MA123', 'EUR'), '5y', 0)
+    expected = pd.Series([1, 2, 3], index=pd.to_datetime(['2019-02-01', '2019-07-01', '2020-01-01']))
+    assert_series_equal(expected, actual, check_names=False)
+
+    market_data_mock.return_value = pd.DataFrame()
+    assert tm.swaption_vol_term(Currency('MA123', 'EUR'), '5y', 0).empty
+    replace.restore()
+
+
 def test_swaption_atm_fwd_rate():
     replace = Replacer()
     mock_usd = Currency('MA890', 'USD')
@@ -1193,6 +1218,47 @@ def test_vol_term():
         assert out.empty
     with pytest.raises(NotImplementedError):
         tm.vol_term(..., tm.SkewReference.SPOT, 100, real_time=True)
+
+
+def _vol_term_fx(reference, value):
+    from gs_quant.target.common import FieldFilterMap
+
+    assert DataContext.current_is_set
+    data = {
+        'tenor': ['1w', '2w', '1y', '2y'],
+        'impliedVolatility': [1, 2, 3, 4]
+    }
+    out = pd.DataFrame(data=data, index=pd.DatetimeIndex(['2018-01-01'] * 4))
+
+    replace = Replacer()
+    market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    market_mock.return_value = out
+    ffm_mock = replace('gs_quant.timeseries.measures.FieldFilterMap', Mock(spec=FieldFilterMap))
+    cross_mock = replace('gs_quant.timeseries.measures.cross_stored_direction_for_fx_vol', Mock())
+    cross_mock.return_value = 'EURUSD'
+
+    actual = tm.vol_term(Cross('ABCDE', 'EURUSD'), reference, value)
+    idx = pd.DatetimeIndex(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
+    expected = pd.Series([1, 2, 3, 4], name='impliedVolatility', index=idx)
+    expected = expected.loc[DataContext.current.start_date: DataContext.current.end_date]
+
+    if expected.empty:
+        assert actual.empty
+    else:
+        assert_series_equal(expected, actual)
+    market_mock.assert_called_once()
+    ffm_mock.assert_called_once_with(relativeStrike=value, strikeReference=reference.value)
+    replace.restore()
+    return actual
+
+
+def test_vol_term_fx():
+    with pytest.raises(MqError):
+        tm.vol_term(Cross('MABLUE', 'BLUE'), tm.SkewReference.SPOT, 50)
+    with pytest.raises(MqError):
+        tm.vol_term(Cross('MABLUE', 'BLUE'), tm.SkewReference.NORMALIZED, 1)
+    with DataContext('2018-01-01', '2019-01-01'):
+        _vol_term_fx(tm.SkewReference.DELTA, 50)
 
 
 def _fwd_term_typical():

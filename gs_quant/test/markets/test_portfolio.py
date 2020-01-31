@@ -115,6 +115,21 @@ def test_portfolio(mocker):
     prices_only = result[risk.DollarPrice]
     assert tuple(prices) == tuple(prices_only)
 
+    swap4 = IRSwap('Pay', '10y', 'USD', fixed_rate=0.01, name='swap4')
+    portfolio.append(swap4)
+    assert len(portfolio.instruments) == 4
+
+    extracted_swap = portfolio.pop('swap2')
+    assert extracted_swap == swap2
+    assert len(portfolio.instruments) == 3
+
+    swap_dict = {'swap_5': swap1,
+                 'swap_6': swap2,
+                 'swap_7': swap3}
+
+    portfolio = Portfolio(swap_dict)
+    assert len(portfolio) == 3
+
 
 @mock.patch.object(GsRiskApi, '_exec')
 def test_historical_pricing(mocker):

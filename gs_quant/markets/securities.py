@@ -18,8 +18,7 @@ import datetime as dt
 import threading
 from abc import ABCMeta, abstractmethod
 from enum import Enum
-from typing import Tuple, Optional
-from typing import Union
+from typing import Callable, Optional, Tuple, Union
 
 import cachetools
 import pytz
@@ -449,7 +448,8 @@ class SecurityMaster:
                   id_type: AssetIdentifier,
                   as_of: Union[dt.date, dt.datetime] = None,
                   exchange_code: ExchangeCode = None,
-                  asset_type: AssetType = None) -> Asset:
+                  asset_type: AssetType = None,
+                  key: Optional[Callable] = None) -> Asset:
         """
         Get an asset by identifier and identifier type
 
@@ -458,12 +458,14 @@ class SecurityMaster:
         :param exchange_code: exchange code
         :param asset_type: asset type
         :param as_of: As of date for query
+        :param key: key function to sort assets
         :return: Asset object or None
 
         **Usage**
 
         Get asset object using a specified identifier and identifier type. Where the identifiers are temporal (and can
-        change over time), will use the current MarketContext to evaluate based on the specified date.
+        change over time), will use the current MarketContext to evaluate based on the specified date. If multiple
+        assets are found, the first one is returned (caller can provide a key function to sort them).
 
         **Examples**
 
@@ -505,6 +507,8 @@ class SecurityMaster:
             query['type'] = [t.value for t in cls.__asset_type_to_gs_types(asset_type)]
 
         results = GsAssetApi.get_many_assets(as_of=as_of, **query)
+        if key is not None:
+            results = sorted(results, key=key)
         result = next(iter(results), None)
 
         if result:

@@ -60,7 +60,7 @@ setuptools.setup(
         "future",
         "inflection",
         "msgpack",
-        "pandas",
+        "pandas<1.0.0",
         "python-dateutil>=2.7.0",
         "requests",
         "scipy",
