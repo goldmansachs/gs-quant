@@ -1909,21 +1909,29 @@ class MDAPIDataQuery(Base):
         self,
         market_data_coordinates: Tuple[MarketDataCoordinate, ...],
         format_: Union[Format, str] = None,
+        pricing_location: str = None,
         selector_function: str = None,
         samples: int = None,
         vendor: Union[MarketDataVendor, str] = None,
         start_time: datetime.datetime = None,
         end_time: datetime.datetime = None,
+        start_date: datetime.date = None,
+        end_date: datetime.date = None,
+        real_time: bool = True,
         name: str = None
     ):        
         super().__init__()
         self.__format = get_enum_value(Format, format_)
         self.market_data_coordinates = market_data_coordinates
+        self.pricing_location = pricing_location
         self.selector_function = selector_function
         self.samples = samples
         self.vendor = vendor
         self.start_time = start_time
         self.end_time = end_time
+        self.start_date = start_date
+        self.end_date = end_date
+        self.real_time = real_time
         self.name = name
 
     @property
@@ -1945,6 +1953,16 @@ class MDAPIDataQuery(Base):
     def market_data_coordinates(self, value: Tuple[MarketDataCoordinate, ...]):
         self._property_changed('market_data_coordinates')
         self.__market_data_coordinates = value        
+
+    @property
+    def pricing_location(self) -> str:
+        """Pricing location of end-of-day data (not used for real-time query)."""
+        return self.__pricing_location
+
+    @pricing_location.setter
+    def pricing_location(self, value: str):
+        self._property_changed('pricing_location')
+        self.__pricing_location = value
 
     @property
     def selector_function(self) -> str:
@@ -1995,6 +2013,36 @@ class MDAPIDataQuery(Base):
     def end_time(self, value: datetime.datetime):
         self._property_changed('end_time')
         self.__end_time = value        
+
+    @property
+    def start_date(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__start_date
+
+    @start_date.setter
+    def start_date(self, value: datetime.date):
+        self._property_changed('start_date')
+        self.__start_date = value
+
+    @property
+    def end_date(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__end_date
+
+    @end_date.setter
+    def end_date(self, value: datetime.date):
+        self._property_changed('end_date')
+        self.__end_date = value
+
+    @property
+    def real_time(self) -> bool:
+        """Intraday or end of day data"""
+        return self.__real_time
+
+    @real_time.setter
+    def real_time(self, value: bool):
+        self._property_changed('real_time')
+        self.__real_time = value
 
 
 class MarketDataMapping(Base):

@@ -712,7 +712,7 @@ IRAnnualATMImpliedVol = __risk_measure_with_doc_string(
 IRDailyImpliedVol = __risk_measure_with_doc_string(
     'IRDailyImpliedVol',
     'Interest Rate Daily Implied Volatility (bps)',
-    RiskMeasureType.Annual_ATMF_Implied_Volatility,
+    RiskMeasureType.Daily_Implied_Volatility,
     asset_class=AssetClass.Rates,
     unit=RiskMeasureUnit.BPS)
 IRSpotRate = __risk_measure_with_doc_string(
