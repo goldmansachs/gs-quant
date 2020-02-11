@@ -23,6 +23,8 @@ from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.api.gs.assets import GsAssetApi
 
 import copy
+import pandas as pd
+from itertools import chain
 from typing import Iterable, Optional, Tuple, Union
 
 
@@ -96,6 +98,10 @@ class Portfolio(PriceableImpl):
         instrument = self[item]
         self.instruments = [inst for inst in self.instruments if inst != instrument]
         return instrument
+
+    def to_frame(self) -> pd.DataFrame:
+        inst_list = [dict(chain(inst.as_dict().items(), (('instrument', inst),))) for inst in self.instruments]
+        return pd.DataFrame(inst_list).set_index('instrument')
 
     def index(self, key: Union[str, Instrument]) -> Union[int, Tuple[int, ...]]:
         if isinstance(key, str):

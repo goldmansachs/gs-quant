@@ -447,3 +447,21 @@ def test_filter():
         filter_(zero_neg_pos, 0, 0)
     with pytest.raises(MqValueError):
         filter_(zero_neg_pos, 0)
+
+
+def test_repeat():
+    with pytest.raises(MqError):
+        repeat(pd.Series, 0)
+    with pytest.raises(MqError):
+        repeat(pd.Series, 367)
+
+    sparse_index = pd.to_datetime(['2020-01-01', '2020-01-02', '2020-01-04', '2020-01-07'])
+    s = pd.Series([1, 2, 3, 4], index=sparse_index)
+
+    actual = repeat(s)
+    expected = pd.Series([1, 2, 2, 3, 3, 3, 4], index=pd.date_range(start='2020-01-01', end='2020-01-07', freq='D'))
+    assert_series_equal(actual, expected)
+
+    actual = repeat(s, 2)
+    expected = pd.Series([1, 2, 3, 4], index=pd.date_range(start='2020-01-01', end='2020-01-07', freq='2D'))
+    assert_series_equal(actual, expected)

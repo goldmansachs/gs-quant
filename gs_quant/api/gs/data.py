@@ -32,7 +32,7 @@ from gs_quant.data.core import DataContext
 from gs_quant.errors import MqValueError
 from gs_quant.markets import MarketDataCoordinate
 from gs_quant.session import GsSession
-from gs_quant.target.common import FieldFilterMap, XRef
+from gs_quant.target.common import FieldFilterMap, XRef, MarketDataVendor
 from gs_quant.target.data import DataQuery, DataQueryResponse, MDAPIDataBatchResponse, MDAPIDataQueryResponse
 from gs_quant.target.data import DataSetEntity
 from .assets import GsAssetApi, GsIdType
@@ -65,6 +65,7 @@ class QueryType(Enum):
     POLICY_RATE_EXPECTATION = "Policy Rate Expectation"
     CENTRAL_BANK_SWAP_RATE = "Central Bank Swap Rate"
     FORWARD_PRICE = "Forward Price"
+    SPOT = "Spot"
 
 
 class GsDataApi(DataApi):
@@ -341,17 +342,34 @@ class GsDataApi(DataApi):
     def coordinates_last(
             cls,
             coordinates: Union[Iterable[str], Iterable[MarketDataCoordinate]],
-            as_of: Optional[dt.datetime] = None,
-            vendor: str = 'Goldman Sachs',
+            as_of: Union[dt.datetime, dt.date] = None,
+            vendor: MarketDataVendor = MarketDataVendor.Goldman_Sachs,
             as_dataframe: bool = False,
+            pricing_location: Optional[str] = None
     ) -> Union[dict, pd.DataFrame]:
+        """
+        Get last value of coordinates data
+
+        :param coordinates: market data coordinate(s)
+        :param as_of: snapshot date or time
+        :param vendor: data vendor
+        :param as_dataframe: whether to return the result as Dataframe
+        :param pricing_location: the location where close data has been recorded (not used for real-time query)
+        :return: Dataframe or dictionary of the returned data
+
+        **Examples**
+
+        >>> coordinate = ("FX Fwd_USD/EUR_Fwd Pt_2y",)
+        >>> data = GsDataApi.coordinates_last(coordinate, dt.datetime(2019, 11, 19))
+        """
         market_data_coordinates = tuple(cls._coordinate_from_str(coord) if isinstance(coord, str) else coord
                                         for coord in coordinates)
         ret = {coordinate: None for coordinate in market_data_coordinates}
         query = cls.build_query(
             end=as_of,
             market_data_coordinates=market_data_coordinates,
-            vendor=vendor
+            vendor=vendor,
+            pricing_location=pricing_location
         )
 
         data = cls.last_data(query)
@@ -372,18 +390,36 @@ class GsDataApi(DataApi):
     def coordinates_data(
             cls,
             coordinates: Union[str, MarketDataCoordinate, Iterable[str], Iterable[MarketDataCoordinate]],
-            start: Optional[dt.datetime] = None,
-            end: Optional[dt.datetime] = None,
-            vendor: str = 'Goldman Sachs',
-            as_multiple_dataframes: bool = False
+            start: Union[dt.datetime, dt.date] = None,
+            end: Union[dt.datetime, dt.date] = None,
+            vendor: MarketDataVendor = MarketDataVendor.Goldman_Sachs,
+            as_multiple_dataframes: bool = False,
+            pricing_location: Optional[str] = None
     ) -> Union[pd.DataFrame, Tuple[pd.DataFrame]]:
+        """
+        Get coordinates data
+
+        :param coordinates: market data coordinate(s)
+        :param start: start date or time
+        :param end: end date or time
+        :param vendor: data vendor
+        :param as_multiple_dataframes: whether to return the result as one or multiple Dataframe(s)
+        :param pricing_location: the location where close data has been recorded (not used for real-time query)
+        :return: Dataframe(s) of the returned data
+
+        **Examples**
+
+        >>> coordinate = ("FX Fwd_USD/EUR_Fwd Pt_2y",)
+        >>> data = GsDataApi.coordinates_data(coordinate, dt.datetime(2019, 11, 18), dt.datetime(2019, 11, 19))
+        """
         coordinates_iterable = (coordinates,) if isinstance(coordinates, (MarketDataCoordinate, str)) else coordinates
         query = cls.build_query(
             market_data_coordinates=tuple(cls._coordinate_from_str(coord) if isinstance(coord, str) else coord
                                           for coord in coordinates_iterable),
             vendor=vendor,
             start=start,
-            end=end
+            end=end,
+            pricing_location=pricing_location
         )
 
         results = cls.__normalise_coordinate_data(cls.query_data(query))
@@ -397,14 +433,31 @@ class GsDataApi(DataApi):
     def coordinates_data_series(
             cls,
             coordinates: Union[str, MarketDataCoordinate, Iterable[str], Iterable[MarketDataCoordinate]],
-            start: Optional[dt.datetime] = None,
-            end: Optional[dt.datetime] = None,
-            vendor: str = 'Goldman Sachs',
+            start: Union[dt.datetime, dt.date] = None,
+            end: Union[dt.datetime, dt.date] = None,
+            vendor: MarketDataVendor = MarketDataVendor.Goldman_Sachs,
+            pricing_location: Optional[str] = None
     ) -> Union[pd.Series, Tuple[pd.Series]]:
+        """
+        Get coordinates data series
+
+        :param coordinates: market data coordinate(s)
+        :param start: start date or time
+        :param end: end date or time
+        :param vendor: data vendor
+        :param pricing_location: the location where close data has been recorded (not used for real-time query)
+        :return: Series of the returned data
+
+        **Examples**
+
+        >>> coordinate = ("FX Fwd_USD/EUR_Fwd Pt_2y",)
+        >>> data = GsDataApi.coordinates_data_series(coordinate, dt.datetime(2019, 11, 18), dt.datetime(2019, 11, 19))
+        """
         dfs = cls.coordinates_data(
             coordinates,
             start=start,
             end=end,
+            pricing_location=pricing_location,
             vendor=vendor,
             as_multiple_dataframes=True)
 

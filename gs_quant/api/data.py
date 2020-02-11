@@ -57,14 +57,15 @@ class DataApi(metaclass=ABCMeta):
         start_is_time = isinstance(start, dt.datetime)
 
         if kwargs.get('market_data_coordinates'):
-            if not ((start is None or start_is_time) and (end is None or end_is_time)):
-                raise NotImplementedError('EOD coordinates data not implemented')
-
+            real_time = ((start is None or start_is_time) and (end is None or end_is_time))
             query = MDAPIDataQuery(
-                market_data_coordinates=kwargs.get('market_data_coordinates'),
-                start_time=start,
-                end_time=end,
-                format="MessagePack"
+                start_time=start if real_time else None,
+                end_time=end if real_time else None,
+                start_date=start if not real_time else None,
+                end_date=end if not real_time else None,
+                format='MessagePack',
+                real_time=real_time,
+                **kwargs
             )
         else:
             if start_is_time and end is not None and not end_is_time:

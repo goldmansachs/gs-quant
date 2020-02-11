@@ -14,7 +14,7 @@
 # Marquee Plot Service will attempt to make public functions (not prefixed with _) from this module available.
 # Such functions should be fully documented: docstrings should describe parameters and the return value, and provide
 # a 1-line description. Type annotations should be provided for parameters.
-
+from gs_quant.timeseries import diff
 from .statistics import *
 
 """
@@ -108,3 +108,106 @@ def bollinger_bands(x: pd.Series, w: Union[Window, int] = Window(None, 0), k: fl
     lower = avg - k * sigma_t
 
     return pd.concat([lower, upper], axis=1)
+
+
+@plot_function
+def smoothed_moving_average(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
+    """
+    Smoothed moving average over specified window
+
+    :param x: time series of prices
+    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+     and 10 the ramp up value. Window size defaults to length of series.
+    :return: date-based time series of return
+
+    **Usage**
+
+    A modified moving average (MMA), running moving average (RMA), or smoothed moving average (SMMA) is defined as:
+
+    :math:`P_MM,today = \\frac{(N_1)P_MM,yesterday + P_today}{N}`
+
+    where N is the number of observations in each rolling window, :math:`w`. If window is not provided, computes
+    rolling mean over the full series
+
+    See `Modified moving average <https://en.wikipedia.org/wiki/Moving_average#Modified_moving_average>`
+    _ for more information
+
+
+    **Examples**
+
+    Generate price series with 100 observations starting from today's date:
+
+    >>> prices = generate_series(100)
+    >>> smoothed_moving_average(prices, 22)
+
+    **See also**
+
+    :func:`mean` :func:'moving_average'
+
+    """
+    w = normalize_window(x, w)
+    window = w.w
+    ramp = w.r
+    initial_moving_average = apply_ramp(mean(x, Window(window, 0)), w)[0]
+    if ramp > 0:
+        x = apply_ramp(x, w)
+
+    smoothed_moving_averages = x.copy()
+    smoothed_moving_averages *= 0
+    smoothed_moving_averages[0] = initial_moving_average
+    for i in range(1, len(x)):
+        smoothed_moving_averages[i] = ((window - 1) * smoothed_moving_averages[i - 1] + x[i]) / window
+    return smoothed_moving_averages
+
+
+@plot_function
+def relative_strength_index(x: pd.Series, w: Union[Window, int] = 14) -> pd.DataFrame:
+    """
+    Relative Strength Index
+
+    :param x: time series of prices
+    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+    and 10 the ramp up value. Window size defaults to length of series.
+    :return: date-based time series of RSI
+
+    **Usage**
+
+    The RSI computes momentum as the ratio of higher closes to lower closes: stocks which have had more or stronger
+    positive changes have a higher RSI than stocks which have had more or stronger negative changes.
+
+    See `RSI <https://en.wikipedia.org/wiki/Relative_strength_index>`_ for more information
+
+    **Examples**
+
+    Compute relative strength index over a :math:`14` day window:
+
+    >>> prices = generate_series(100)
+    >>> relative_strength_index(prices, 14)
+
+    **See also**
+
+    :func:`moving_average` :func:`std` :func:`smoothed_moving_average`
+    """
+    w = normalize_window(x, w)
+    one_period_change = diff(x, 1)[1:]
+    gains = one_period_change.copy()
+    losses = one_period_change.copy()
+    gains[gains < 0] = 0
+    losses[losses > 0] = 0
+    losses[losses < 0] *= -1
+
+    moving_avg_gains = smoothed_moving_average(gains, w)
+    moving_avg_losses = smoothed_moving_average(losses, w)
+
+    rsi_len = len(moving_avg_gains)
+    rsi = moving_avg_gains.copy()
+    rsi *= 0
+
+    for index in range(0, rsi_len):
+        if moving_avg_losses[index] == 0:
+            rsi[index] = 100
+        else:
+            relative_strength = moving_avg_gains[index] / moving_avg_losses[index]
+            rsi[index] = 100 - (100 / (1 + relative_strength))
+
+    return rsi

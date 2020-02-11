@@ -42,6 +42,7 @@ from gs_quant.errors import MqTypeError, MqValueError
 from gs_quant.markets.securities import *
 from gs_quant.markets.securities import Asset, AssetIdentifier, SecurityMaster
 from gs_quant.target.common import AssetClass, FieldFilterMap, AssetType, Currency, PricingLocation
+from gs_quant.timeseries import volatility, Window, Returns
 from gs_quant.timeseries.helper import log_return, plot_measure
 
 GENERIC_DATE = Union[datetime.date, str]
@@ -115,12 +116,6 @@ class BenchmarkType(Enum):
     STIBOR = 'STIBOR'
     OIS = 'OIS'
     CDKSDA = 'CDKSDA'
-
-
-class FundamentalMetricPeriod(Enum):
-    ONE_YEAR = '1y'
-    TWO_YEAR = '2y'
-    THREE_YEAR = '3y'
 
 
 class FundamentalMetricPeriodDirection(Enum):
@@ -1124,7 +1119,7 @@ def forecast(asset: Asset, forecast_horizon: str, *, source: str = None, real_ti
 
 
 @plot_measure((AssetClass.Equity, AssetClass.Commod, AssetClass.FX), None, [QueryType.IMPLIED_VOLATILITY])
-def vol_term(asset: Asset, strike_reference: SkewReference, relative_strike: Real,
+def vol_term(asset: Asset, strike_reference: VolReference, relative_strike: Real,
              pricing_date: Optional[GENERIC_DATE] = None, *, source: str = None, real_time: bool = False) -> pd.Series:
     """
     Volatility term structure. Uses most recent date available if pricing_date is not provided.
@@ -1141,22 +1136,33 @@ def vol_term(asset: Asset, strike_reference: SkewReference, relative_strike: Rea
         raise NotImplementedError('realtime forward term not implemented')  # TODO
 
     if asset.asset_class == AssetClass.FX:
-        if strike_reference in (SkewReference.FORWARD, SkewReference.SPOT) and relative_strike != 100:
+        if strike_reference in (VolReference.FORWARD, VolReference.SPOT) and relative_strike != 100:
             raise MqValueError('relative strike must be 100 for Spot or Forward strike reference')
-        if strike_reference == SkewReference.NORMALIZED:
+        if strike_reference == VolReference.NORMALIZED:
             raise MqValueError(f'strike reference {strike_reference} not supported for FX')
+        if strike_reference == VolReference.DELTA_NEUTRAL and relative_strike != 0:
+            raise MqValueError(f'relative_strike must be 0 for delta_neutral')
+
+        if strike_reference == VolReference.DELTA_PUT:
+            relative_strike *= -1
         asset_id = cross_stored_direction_for_fx_vol(asset)
         buffer = 1  # FX vol data is loaded later
     else:
-        if strike_reference != SkewReference.NORMALIZED:
-            relative_strike /= 100
+        if strike_reference == VolReference.DELTA_NEUTRAL:
+            raise MqValueError('delta_neutral strike reference is not supported for equities')
+
+        if strike_reference == VolReference.DELTA_PUT:
+            relative_strike = abs(100 - relative_strike)
+        relative_strike = relative_strike if strike_reference == VolReference.NORMALIZED else relative_strike / 100
         asset_id = asset.get_marquee_id()
         buffer = 0
 
     start, end = _range_from_pricing_date(asset.exchange, pricing_date, buffer=buffer)
     with DataContext(start, end):
-        _logger.debug('where strikeReference=%s, relativeStrike=%s', strike_reference.value, relative_strike)
-        where = FieldFilterMap(strikeReference=strike_reference.value, relativeStrike=relative_strike)
+        sr_string = 'delta' if strike_reference in (
+            VolReference.DELTA_CALL, VolReference.DELTA_PUT, VolReference.DELTA_NEUTRAL) else strike_reference.value
+        _logger.debug('where strikeReference=%s, relativeStrike=%s', sr_string, relative_strike)
+        where = FieldFilterMap(strikeReference=sr_string, relativeStrike=relative_strike)
         q = GsDataApi.build_market_data_query([asset_id], QueryType.IMPLIED_VOLATILITY, where=where,
                                               source=source,
                                               real_time=real_time)
@@ -1452,8 +1458,8 @@ def _string_to_date_interval(interval: str, contract_months):
 
     start_year = datetime.date(year, 1, 1)
     if len(interval) == 1 + len(YS):
-        if interval[0] in contract_months:
-            month_index = contract_months.index(interval[0]) + 1
+        if interval[0].upper() in contract_months:
+            month_index = contract_months.index(interval[0].upper()) + 1
             start_date = datetime.date(year, month_index, 1)
             end_date = datetime.date(year, month_index, calendar.monthrange(year, month_index)[1])
         else:
@@ -1467,13 +1473,13 @@ def _string_to_date_interval(interval: str, contract_months):
             num = int(interval[0])
         else:
             return "Invalid num"
-        if interval[1] == "Q":
+        if interval[1].upper() == "Q":
             if 1 <= num <= 4:
                 start_date = (start_year + relativedelta(months=+(3 * (num - 1))))
                 end_date = start_year + relativedelta(months=+(3 * num), days=-1)
             else:
                 return "Invalid Quarter"
-        if interval[1] == "H":
+        if interval[1].upper() == "H":
             if 1 <= num <= 2:
                 start_date = start_year + relativedelta(months=+(6 * (num - 1)))
                 end_date = start_year + relativedelta(months=+(6 * num), days=-1)
@@ -1498,15 +1504,15 @@ def _string_to_date_interval(interval: str, contract_months):
 
 
 @plot_measure((AssetClass.Commod,), None, [QueryType.FORWARD_PRICE])
-def forwards(asset: Asset, price_method: str = 'LMP', bucket: str = 'PEAK',
-             contract_range: str = 'F20', *, source: str = None, real_time: bool = False) -> pd.Series:
+def forward_price(asset: Asset, price_method: str = 'LMP', bucket: str = 'PEAK',
+                  contract_range: str = 'F20', *, source: str = None, real_time: bool = False) -> pd.Series:
     """'
     Us Power Forward Prices
 
     :param asset: asset object loaded from security master
-    :param price_method: price method between LMP, MCP, SPP, energy, loss, congestion: Default value = LMP
-    :param bucket: bucket type among '7x24', 'peak', 'offpeak', '2x16h' and '7x8': Default value = 7x24
-    :param contract_range: e.g. inputs - Cal20, F20, 2Q20, 2H20 : Default Value = F20
+    :param price_method: price method between LMP, MCP, SPP: Default value = LMP
+    :param bucket: bucket type among '7x24', 'peak', 'offpeak', '2x16h', '7x16' and '7x8': Default value = 7x24
+    :param contract_range: e.g. inputs - 'Cal20', 'F20-G20', '2Q20', '2H20', 'Cal20-Cal21': Default Value = F20
     :param source: name of function caller: default source = None
     :param real_time: whether to retrieve intraday data instead of EOD: default value = False
     :return: Us Power Forward Prices
@@ -1565,7 +1571,7 @@ def forwards(asset: Asset, price_method: str = 'LMP', bucket: str = 'PEAK',
 
     start, end = DataContext.current.start_date, DataContext.current.end_date
 
-    where = FieldFilterMap(priceMethod=price_method)
+    where = FieldFilterMap(priceMethod=price_method.upper())
     with DataContext(start, end):
         q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.FORWARD_PRICE,
                                               where=where, source=None,
@@ -1628,7 +1634,7 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
         .astimezone(to_zone)
     end_time = datetime.datetime.combine(end_date, datetime.datetime.max.time(), tzinfo=from_zone).astimezone(to_zone)
 
-    where = FieldFilterMap(priceMethod=price_method)
+    where = FieldFilterMap(priceMethod=price_method.upper())
     with DataContext(start_time, end_time):
         q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.PRICE, where=where, source=source,
                                               real_time=True)
@@ -1793,7 +1799,7 @@ def policy_rate_expectation(asset: Asset, rate_type: MeetingType = MeetingType.M
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
-def dividend_yield(asset: Asset, period: FundamentalMetricPeriod, period_direction: FundamentalMetricPeriodDirection,
+def dividend_yield(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
                    *, source: str = None, real_time: bool = False) -> Series:
     """
     Dividend Yield of the single stock or the asset-weighted average of dividend yields of a composite's underliers.
@@ -1822,7 +1828,7 @@ def dividend_yield(asset: Asset, period: FundamentalMetricPeriod, period_directi
     q = GsDataApi.build_market_data_query(
         [mqid],
         QueryType.FUNDAMENTAL_METRIC,
-        where=FieldFilterMap(metric=metric, period=period.value, periodDirection=period_direction.value),
+        where=FieldFilterMap(metric=metric, period=period, periodDirection=period_direction.value),
         source=source,
         real_time=real_time
     )
@@ -1835,7 +1841,7 @@ def dividend_yield(asset: Asset, period: FundamentalMetricPeriod, period_directi
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
 def earnings_per_share(asset: Asset,
-                       period: FundamentalMetricPeriod,
+                       period: str,
                        period_direction: FundamentalMetricPeriodDirection,
                        *, source: str = None, real_time: bool = False) -> Series:
     """
@@ -1865,7 +1871,7 @@ def earnings_per_share(asset: Asset,
     q = GsDataApi.build_market_data_query(
         [mqid],
         QueryType.FUNDAMENTAL_METRIC,
-        where=FieldFilterMap(metric=metric, period=period.value, periodDirection=period_direction.value),
+        where=FieldFilterMap(metric=metric, period=period, periodDirection=period_direction.value),
         source=source,
         real_time=real_time
     )
@@ -1878,7 +1884,7 @@ def earnings_per_share(asset: Asset,
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
 def earnings_per_share_positive(asset: Asset,
-                                period: FundamentalMetricPeriod,
+                                period: str,
                                 period_direction: FundamentalMetricPeriodDirection,
                                 *, source: str = None, real_time: bool = False) -> Series:
     """
@@ -1908,7 +1914,7 @@ def earnings_per_share_positive(asset: Asset,
     q = GsDataApi.build_market_data_query(
         [mqid],
         QueryType.FUNDAMENTAL_METRIC,
-        where=FieldFilterMap(metric=metric, period=period.value, periodDirection=period_direction.value),
+        where=FieldFilterMap(metric=metric, period=period, periodDirection=period_direction.value),
         source=source,
         real_time=real_time
     )
@@ -1921,7 +1927,7 @@ def earnings_per_share_positive(asset: Asset,
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
 def net_debt_to_ebitda(asset: Asset,
-                       period: FundamentalMetricPeriod,
+                       period: str,
                        period_direction: FundamentalMetricPeriodDirection,
                        *, source: str = None, real_time: bool = False) -> Series:
     """
@@ -1951,7 +1957,7 @@ def net_debt_to_ebitda(asset: Asset,
     q = GsDataApi.build_market_data_query(
         [mqid],
         QueryType.FUNDAMENTAL_METRIC,
-        where=FieldFilterMap(metric=metric, period=period.value, periodDirection=period_direction.value),
+        where=FieldFilterMap(metric=metric, period=period, periodDirection=period_direction.value),
         source=source,
         real_time=real_time
     )
@@ -1963,7 +1969,7 @@ def net_debt_to_ebitda(asset: Asset,
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
-def price_to_book(asset: Asset, period: FundamentalMetricPeriod, period_direction: FundamentalMetricPeriodDirection,
+def price_to_book(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
                   *, source: str = None, real_time: bool = False) -> Series:
     """
     Price to Book of the single stock or the asset-weighted average value of a composite's underliers.
@@ -1992,7 +1998,7 @@ def price_to_book(asset: Asset, period: FundamentalMetricPeriod, period_directio
     q = GsDataApi.build_market_data_query(
         [mqid],
         QueryType.FUNDAMENTAL_METRIC,
-        where=FieldFilterMap(metric=metric, period=period.value, periodDirection=period_direction.value),
+        where=FieldFilterMap(metric=metric, period=period, periodDirection=period_direction.value),
         source=source,
         real_time=real_time
     )
@@ -2004,7 +2010,7 @@ def price_to_book(asset: Asset, period: FundamentalMetricPeriod, period_directio
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
-def price_to_cash(asset: Asset, period: FundamentalMetricPeriod, period_direction: FundamentalMetricPeriodDirection,
+def price_to_cash(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
                   *, source: str = None, real_time: bool = False) -> Series:
     """
     Price to Cash of the single stock or the asset-weighted average value of a composite's underliers.
@@ -2033,7 +2039,7 @@ def price_to_cash(asset: Asset, period: FundamentalMetricPeriod, period_directio
     q = GsDataApi.build_market_data_query(
         [mqid],
         QueryType.FUNDAMENTAL_METRIC,
-        where=FieldFilterMap(metric=metric, period=period.value, periodDirection=period_direction.value),
+        where=FieldFilterMap(metric=metric, period=period, periodDirection=period_direction.value),
         source=source,
         real_time=real_time
     )
@@ -2045,7 +2051,7 @@ def price_to_cash(asset: Asset, period: FundamentalMetricPeriod, period_directio
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
-def price_to_earnings(asset: Asset, period: FundamentalMetricPeriod, period_direction: FundamentalMetricPeriodDirection,
+def price_to_earnings(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
                       *, source: str = None, real_time: bool = False) -> Series:
     """
     Price to Earnings of the single stock or the asset-weighted average value of a composite's underliers.
@@ -2074,7 +2080,7 @@ def price_to_earnings(asset: Asset, period: FundamentalMetricPeriod, period_dire
     q = GsDataApi.build_market_data_query(
         [mqid],
         QueryType.FUNDAMENTAL_METRIC,
-        where=FieldFilterMap(metric=metric, period=period.value, periodDirection=period_direction.value),
+        where=FieldFilterMap(metric=metric, period=period, periodDirection=period_direction.value),
         source=source,
         real_time=real_time
     )
@@ -2087,7 +2093,7 @@ def price_to_earnings(asset: Asset, period: FundamentalMetricPeriod, period_dire
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
 def price_to_earnings_positive(asset: Asset,
-                               period: FundamentalMetricPeriod,
+                               period: str,
                                period_direction: FundamentalMetricPeriodDirection,
                                *, source: str = None, real_time: bool = False) -> Series:
     """
@@ -2117,7 +2123,7 @@ def price_to_earnings_positive(asset: Asset,
     q = GsDataApi.build_market_data_query(
         [mqid],
         QueryType.FUNDAMENTAL_METRIC,
-        where=FieldFilterMap(metric=metric, period=period.value, periodDirection=period_direction.value),
+        where=FieldFilterMap(metric=metric, period=period, periodDirection=period_direction.value),
         source=source,
         real_time=real_time
     )
@@ -2129,7 +2135,7 @@ def price_to_earnings_positive(asset: Asset,
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
-def price_to_sales(asset: Asset, period: FundamentalMetricPeriod, period_direction: FundamentalMetricPeriodDirection,
+def price_to_sales(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
                    *, source: str = None, real_time: bool = False) -> Series:
     """
     Price to Sales of the single stock or the asset-weighted average value of a composite's underliers.
@@ -2158,7 +2164,7 @@ def price_to_sales(asset: Asset, period: FundamentalMetricPeriod, period_directi
     q = GsDataApi.build_market_data_query(
         [mqid],
         QueryType.FUNDAMENTAL_METRIC,
-        where=FieldFilterMap(metric=metric, period=period.value, periodDirection=period_direction.value),
+        where=FieldFilterMap(metric=metric, period=period, periodDirection=period_direction.value),
         source=source,
         real_time=real_time
     )
@@ -2170,7 +2176,7 @@ def price_to_sales(asset: Asset, period: FundamentalMetricPeriod, period_directi
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
-def return_on_equity(asset: Asset, period: FundamentalMetricPeriod, period_direction: FundamentalMetricPeriodDirection,
+def return_on_equity(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
                      *, source: str = None, real_time: bool = False) -> Series:
     """
     Return on Equity of the single stock or the asset-weighted average value of a composite's underliers.
@@ -2199,7 +2205,7 @@ def return_on_equity(asset: Asset, period: FundamentalMetricPeriod, period_direc
     q = GsDataApi.build_market_data_query(
         [mqid],
         QueryType.FUNDAMENTAL_METRIC,
-        where=FieldFilterMap(metric=metric, period=period.value, periodDirection=period_direction.value),
+        where=FieldFilterMap(metric=metric, period=period, periodDirection=period_direction.value),
         source=source,
         real_time=real_time
     )
@@ -2211,7 +2217,7 @@ def return_on_equity(asset: Asset, period: FundamentalMetricPeriod, period_direc
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
-def sales_per_share(asset: Asset, period: FundamentalMetricPeriod, period_direction: FundamentalMetricPeriodDirection,
+def sales_per_share(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
                     *, source: str = None, real_time: bool = False) -> Series:
     """
     Sales per Share of the single stock or the asset-weighted average value of a composite's underliers.
@@ -2240,7 +2246,7 @@ def sales_per_share(asset: Asset, period: FundamentalMetricPeriod, period_direct
     q = GsDataApi.build_market_data_query(
         [mqid],
         QueryType.FUNDAMENTAL_METRIC,
-        where=FieldFilterMap(metric=metric, period=period.value, periodDirection=period_direction.value),
+        where=FieldFilterMap(metric=metric, period=period, periodDirection=period_direction.value),
         source=source,
         real_time=real_time
     )
@@ -2249,3 +2255,27 @@ def sales_per_share(asset: Asset, period: FundamentalMetricPeriod, period_direct
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
     return Series() if df.empty else df['fundamentalMetric']
+
+
+@plot_measure((AssetClass.Commod, AssetClass.Equity, AssetClass.FX), None, [QueryType.SPOT])
+def realized_volatility(asset: Asset, w: Union[Window, int] = Window(None, 0), returns_type: Returns = Returns.SIMPLE,
+                        *, source: str = None, real_time: bool = False) -> Series:
+    """
+    Realized volatility for an asset.
+
+    :param asset: asset object loaded from security master
+    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+    and 10 the ramp up value. Window size defaults to length of series.
+    :param returns_type: returns type
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: date-based time series of return
+    """
+    q = GsDataApi.build_market_data_query(
+        [asset.get_marquee_id()],
+        QueryType.SPOT,
+        source=source,
+        real_time=real_time
+    )
+    df = _market_data_timed(q)
+    return volatility(df['spot'], w, returns_type)

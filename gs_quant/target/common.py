@@ -1427,8 +1427,14 @@ class CSLSymCaseNamedParam(Base):
 
 
 class CarryScenario(Scenario):
-        
-    """A scenario to manipulate time along the forward curve"""
+    """A scenario that moves market data forward in time
+
+    Keyword arguments:
+        time_shift (int) -- number of business days to roll forward market data
+        roll_to_fwds (bool) -- assumption the forward curve is realized (True)
+            the current spot curve realizes (False) (default True)
+        name (string) -- name of CarryScenario instance
+    """
 
     @camel_case_translate
     def __init__(
