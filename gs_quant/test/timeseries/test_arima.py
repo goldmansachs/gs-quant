@@ -14,6 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 from datetime import date
+from math import isclose
 
 import pytest
 import pandas as pd
@@ -155,24 +156,24 @@ def test_arima_fit():
                     Timestamp('1989-01-30 00:00:00'): 0.14398930966854095}}
     test_df = pd.DataFrame(test_dict)
     arima = ts.arima()
-    arima.fit(test_df, train_size=0.8, freq='B')
+    arima.fit(test_df, train_size=0.8, freq='B', q_vals=[0])
     transformed_test_df = arima.transform(test_df)
 
     for col in transformed_test_df.keys():
-        count_nans = arima.best_params[col]['p'] + arima.best_params[col]['d']
+        count_nans = arima.best_params[col].p + arima.best_params[col].d
         assert(count_nans == transformed_test_df[col].isna().sum())
 
     # Test (1,1,0) Model
     diff_test_df_high = test_df['High'].diff()
-    assert(transformed_test_df['High'][2] == (arima.best_params['High']['best_params']['const'] + diff_test_df_high[1] * arima.best_params['High']['best_params']['ar.L1.D.High']))
-    assert(transformed_test_df['High'][3] == (arima.best_params['High']['best_params']['const'] + diff_test_df_high[2] * arima.best_params['High']['best_params']['ar.L1.D.High']))
-    assert(transformed_test_df['High'][-1] == (arima.best_params['High']['best_params']['const'] + diff_test_df_high[-2] * arima.best_params['High']['best_params']['ar.L1.D.High']))
+    assert(transformed_test_df['High'][2] == (arima.best_params['High'].const + diff_test_df_high[1] * arima.best_params['High'].ar_coef[0]))
+    assert(transformed_test_df['High'][3] == (arima.best_params['High'].const + diff_test_df_high[2] * arima.best_params['High'].ar_coef[0]))
+    assert(transformed_test_df['High'][-1] == (arima.best_params['High'].const + diff_test_df_high[-2] * arima.best_params['High'].ar_coef[0]))
 
     # Test (2,1,0) Model
     diff_test_df_low = test_df['Low'].diff()
-    assert(transformed_test_df['Low'][3] == (arima.best_params['Low']['best_params']['const'] + diff_test_df_low[2] * arima.best_params['Low']['best_params']['ar.L1.D.Low'] +  diff_test_df_low[1] * arima.best_params['Low']['best_params']['ar.L2.D.Low']))
-    assert(transformed_test_df['Low'][4] == (arima.best_params['Low']['best_params']['const'] + diff_test_df_low[3] * arima.best_params['Low']['best_params']['ar.L1.D.Low'] +  diff_test_df_low[2] * arima.best_params['Low']['best_params']['ar.L2.D.Low']))
-    assert(transformed_test_df['Low'][-1] == (arima.best_params['Low']['best_params']['const'] + diff_test_df_low[-2] * arima.best_params['Low']['best_params']['ar.L1.D.Low'] +  diff_test_df_low[-3] * arima.best_params['Low']['best_params']['ar.L2.D.Low']))
+    assert(isclose(transformed_test_df['Low'][3], (arima.best_params['Low'].const + diff_test_df_low[2] * arima.best_params['Low'].ar_coef[0] +  diff_test_df_low[1] * arima.best_params['Low'].ar_coef[1]), abs_tol=1e-8))
+    assert(isclose(transformed_test_df['Low'][4], (arima.best_params['Low'].const + diff_test_df_low[3] * arima.best_params['Low'].ar_coef[0] +  diff_test_df_low[2] * arima.best_params['Low'].ar_coef[1]), abs_tol=1e-8))
+    assert(isclose(transformed_test_df['Low'][-1], (arima.best_params['Low'].const + diff_test_df_low[-2] * arima.best_params['Low'].ar_coef[0] +  diff_test_df_low[-3] * arima.best_params['Low'].ar_coef[1]), abs_tol=1e-8))
 
     # Test (1,2,0) Model
     diff_test_df_close = test_df['Close'].diff()[1:].diff()
@@ -182,9 +183,9 @@ def test_arima_fit():
     diff_test_df_close = pd.concat([first_day, diff_test_df_close])  
     diff_test_df_close.index.name = "Date"
 
-    assert(transformed_test_df['Close'][4] == (arima.best_params['Close']['best_params']['const'] + diff_test_df_close[3] * arima.best_params['Close']['best_params']['ar.L1.D2.Close']))
-    assert(transformed_test_df['Close'][5] == (arima.best_params['Close']['best_params']['const'] + diff_test_df_close[4] * arima.best_params['Close']['best_params']['ar.L1.D2.Close']))
-    assert(transformed_test_df['Close'][-1] == (arima.best_params['Close']['best_params']['const'] + diff_test_df_close[-2] * arima.best_params['Close']['best_params']['ar.L1.D2.Close']))
+    assert(transformed_test_df['Close'][4] == (arima.best_params['Close'].const + diff_test_df_close[3] * arima.best_params['Close'].ar_coef[0]))
+    assert(transformed_test_df['Close'][5] == (arima.best_params['Close'].const + diff_test_df_close[4] * arima.best_params['Close'].ar_coef[0]))
+    assert(transformed_test_df['Close'][-1] == (arima.best_params['Close'].const+ diff_test_df_close[-2] * arima.best_params['Close'].ar_coef[0]))
     
     # Test (0,2,0) Model
     diff_test_df_volumne = test_df['Volume'].diff()[1:].diff()
@@ -193,4 +194,6 @@ def test_arima_fit():
     first_day.name = 'Volume'
     diff_test_df_volumne = pd.concat([first_day, diff_test_df_volumne])  
     diff_test_df_volumne.index.name = "Date"
-    assert(transformed_test_df['Volume'][2] == + diff_test_df_volumne[2])
+    assert(transformed_test_df['Volume'][2] == arima.best_params['Volume'].const + diff_test_df_volumne[2])
+
+test_arima_fit()
