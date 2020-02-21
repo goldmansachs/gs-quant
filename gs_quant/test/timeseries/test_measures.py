@@ -33,8 +33,8 @@ from gs_quant.api.gs.data import GsDataApi
 from gs_quant.data.core import DataContext
 from gs_quant.data.dataset import Dataset
 from gs_quant.data.fields import Fields
-from gs_quant.errors import MqError
-from gs_quant.markets.securities import AssetClass, Cross, Index, Currency, SecurityMaster
+from gs_quant.errors import MqError, MqValueError
+from gs_quant.markets.securities import AssetClass, Cross, Index, Currency, SecurityMaster, Stock
 from gs_quant.session import GsSession, Environment
 from gs_quant.target.common import XRef, FieldFilterMap
 from gs_quant.test.timeseries.utils import mock_request
@@ -460,6 +460,25 @@ def mock_ois_spot():
                               'meetingDate': [datetime.date(2019, 12, 6)],
                               'value': [-0.00455]})
     return data_dict
+
+
+def mock_esg(_cls, _q):
+    d = {
+        'esNumericScore': [2, 4, 6],
+        "esNumericPercentile": [81.2, 75.4, 65.7],
+        "esPolicyScore": [2, 4, 6],
+        "esPolicyPercentile": [81.2, 75.4, 65.7],
+        "esScore": [2, 4, 6],
+        "esPercentile": [81.2, 75.4, 65.7],
+        "gScore": [2, 4, 6],
+        "gPercentile": [81.2, 75.4, 65.7],
+        "esMomentumScore": [2, 4, 6],
+        "esMomentumPercentile": [81.2, 75.4, 65.7],
+        "gRegionalScore": [2, 4, 6],
+        "gRegionalPercentile": [81.2, 75.4, 65.7],
+        "esDisclosurePercentage": [49.2, 55.7, 98.4]
+    }
+    return pd.DataFrame(data=d, index=_index * 3)
 
 
 def test_skew():
@@ -1806,6 +1825,65 @@ def test_realized_volatility():
     expected = volatility(random, window, type_)
     actual = tm.realized_volatility(Cross('MA123', 'ABCXYZ'), window, type_)
     assert_series_equal(expected, actual)
+    replace.restore()
+
+
+def test_esg_aggregrate():
+    replace = Replacer()
+
+    mock_aapl = Stock('MA4B66MW5E27U9VBB94', 'AAPL')
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_esg)
+    actual = tm.esg_aggregate(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_NUMERIC, tm.EsgValueUnit.SCORE)
+    assert_series_equal(pd.Series([2, 4, 6], index=_index * 3, name='esNumericScore'), actual)
+
+    actual = tm.esg_aggregate(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_POLICY, tm.EsgValueUnit.SCORE)
+    assert_series_equal(pd.Series([2, 4, 6], index=_index * 3, name='esPolicyScore'), actual)
+
+    actual = tm.esg_aggregate(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_AGGREGATE, tm.EsgValueUnit.SCORE)
+    assert_series_equal(pd.Series([2, 4, 6], index=_index * 3, name='esScore'), actual)
+
+    actual = tm.esg_aggregate(mock_aapl, tm.EsgMetric.GOVERNANCE_AGGREGATE, tm.EsgValueUnit.SCORE)
+    assert_series_equal(pd.Series([2, 4, 6], index=_index * 3, name='gScore'), actual)
+
+    actual = tm.esg_aggregate(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_MOMENTUM, tm.EsgValueUnit.SCORE)
+    assert_series_equal(pd.Series([2, 4, 6], index=_index * 3, name='esMomentumScore'), actual)
+
+    actual = tm.esg_aggregate(mock_aapl, tm.EsgMetric.GOVERNANCE_REGIONAL, tm.EsgValueUnit.SCORE)
+    assert_series_equal(pd.Series([2, 4, 6], index=_index * 3, name='gRegionalScore'), actual)
+
+    actual = tm.esg_aggregate(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_NUMERIC, tm.EsgValueUnit.PERCENTILE)
+    assert_series_equal(pd.Series([81.2, 75.4, 65.7], index=_index * 3, name='esNumericPercentile'), actual)
+
+    actual = tm.esg_aggregate(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_POLICY, tm.EsgValueUnit.PERCENTILE)
+    assert_series_equal(pd.Series([81.2, 75.4, 65.7], index=_index * 3, name='esPolicyPercentile'), actual)
+
+    actual = tm.esg_aggregate(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_AGGREGATE, tm.EsgValueUnit.PERCENTILE)
+    assert_series_equal(pd.Series([81.2, 75.4, 65.7], index=_index * 3, name='esPercentile'), actual)
+
+    actual = tm.esg_aggregate(mock_aapl, tm.EsgMetric.GOVERNANCE_AGGREGATE, tm.EsgValueUnit.PERCENTILE)
+    assert_series_equal(pd.Series([81.2, 75.4, 65.7], index=_index * 3, name='gPercentile'), actual)
+
+    actual = tm.esg_aggregate(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_MOMENTUM, tm.EsgValueUnit.PERCENTILE)
+    assert_series_equal(pd.Series([81.2, 75.4, 65.7], index=_index * 3, name='esMomentumPercentile'), actual)
+
+    actual = tm.esg_aggregate(mock_aapl, tm.EsgMetric.GOVERNANCE_REGIONAL, tm.EsgValueUnit.PERCENTILE)
+    assert_series_equal(pd.Series([81.2, 75.4, 65.7], index=_index * 3, name='gRegionalPercentile'), actual)
+
+    actual = tm.esg_aggregate(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_DISCLOSURE, tm.EsgValueUnit.SCORE)
+    assert_series_equal(pd.Series([49.2, 55.7, 98.4], index=_index * 3, name='esDisclosurePercentage'), actual)
+
+    actual = tm.esg_aggregate(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_DISCLOSURE, tm.EsgValueUnit.PERCENTILE)
+    assert_series_equal(pd.Series([49.2, 55.7, 98.4], index=_index * 3, name='esDisclosurePercentage'), actual)
+
+    actual = tm.esg_aggregate(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_DISCLOSURE)
+    assert_series_equal(pd.Series([49.2, 55.7, 98.4], index=_index * 3, name='esDisclosurePercentage'), actual)
+
+    with pytest.raises(MqValueError):
+        tm.esg_aggregate(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_NUMERIC)
+
+    with pytest.raises(NotImplementedError):
+        tm.esg_aggregate(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_NUMERIC, tm.EsgValueUnit.SCORE, real_time=True)
+
     replace.restore()
 
 

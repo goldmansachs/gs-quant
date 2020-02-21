@@ -301,7 +301,7 @@ def volatility(x: pd.Series, w: Union[Window, int] = Window(None, 0),
 
     :param x: time series of prices
     :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-    and 10 the ramp up value. Window size defaults to length of series.
+              and 10 the ramp up value. Window size defaults to length of series.
     :param returns_type: returns type
     :return: date-based time series of return
 

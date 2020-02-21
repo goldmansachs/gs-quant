@@ -271,7 +271,7 @@ class Base(metaclass=ABCMeta):
 
     @classmethod
     def _from_dict(cls, values: dict) -> 'Base':
-        args = [k for k, v in signature(cls.__init__).parameters.items() if k != 'kwargs'
+        args = [k for k, v in signature(cls.__init__).parameters.items() if k not in ('kwargs', '_kwargs')
                 and v.default == Parameter.empty][1:]
         required = {}
 
@@ -283,7 +283,12 @@ class Base(metaclass=ABCMeta):
             if prop_type:
                 if issubclass(prop_type, Base):
                     if isinstance(value, dict):
-                        value = prop_type.from_dict(value)
+                        if prop_type is InstrumentBase:
+                            # TODO Fix this
+                            from .instrument import Instrument
+                            value = Instrument.from_dict(value)
+                        else:
+                            value = prop_type.from_dict(value)
                 elif issubclass(prop_type, EnumBase):
                     value = get_enum_value(prop_type, value)
 

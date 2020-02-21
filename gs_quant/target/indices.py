@@ -35,6 +35,7 @@ class IndicesCurrency(EnumBase, Enum):
     DKK = 'DKK'
     HKD = 'HKD'
     IDR = 'IDR'
+    ILS = 'ILS'
     INR = 'INR'
     JPY = 'JPY'
     KRW = 'KRW'
@@ -568,6 +569,7 @@ class ISelectRebalance(Base):
         rebalance_date: str = None,
         new_parameters: Tuple[ISelectNewParameter, ...] = None,
         index_parameters: Tuple[ISelectIndexParameters, ...] = None,
+        waiver_requested: bool = None,
         name: str = None
     ):        
         super().__init__()
@@ -575,6 +577,7 @@ class ISelectRebalance(Base):
         self.rebalance_date = rebalance_date
         self.new_parameters = new_parameters
         self.index_parameters = index_parameters
+        self.waiver_requested = waiver_requested
         self.name = name
 
     @property
@@ -616,6 +619,16 @@ class ISelectRebalance(Base):
     def index_parameters(self, value: Tuple[ISelectIndexParameters, ...]):
         self._property_changed('index_parameters')
         self.__index_parameters = value        
+
+    @property
+    def waiver_requested(self) -> bool:
+        """Flag to see if client requested waiver"""
+        return self.__waiver_requested
+
+    @waiver_requested.setter
+    def waiver_requested(self, value: bool):
+        self._property_changed('waiver_requested')
+        self.__waiver_requested = value        
 
 
 class ISelectResponse(Base):

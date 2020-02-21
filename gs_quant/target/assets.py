@@ -36,6 +36,7 @@ class AllocatorType(EnumBase, Enum):
     Outsourced_CIO = 'Outsourced CIO'
     Pension_Private = 'Pension (Private)'
     Pension_Public = 'Pension (Public)'
+    Platform = 'Platform'
     Private_Bank = 'Private Bank'
     Prop_Capital_OVER_Commercial_Bank = 'Prop Capital/Commercial Bank'
     Sovereign_Wealth_Fund = 'Sovereign Wealth Fund'
@@ -282,6 +283,14 @@ class AssetClassifications(Base):
         gics_industry_group: str = None,
         gics_industry: str = None,
         gics_sub_industry: str = None,
+        bbg_industry_sector: str = None,
+        bbg_industry_group: str = None,
+        bbg_industry_sub_group: str = None,
+        rating_moodys: str = None,
+        rating_fitch: str = None,
+        rating_standard_and_poors: str = None,
+        rating_second_highest: str = None,
+        rating_linear: float = None,
         commod_template: str = None,
         name: str = None
     ):        
@@ -296,6 +305,14 @@ class AssetClassifications(Base):
         self.gics_industry_group = gics_industry_group
         self.gics_industry = gics_industry
         self.gics_sub_industry = gics_sub_industry
+        self.bbg_industry_sector = bbg_industry_sector
+        self.bbg_industry_group = bbg_industry_group
+        self.bbg_industry_sub_group = bbg_industry_sub_group
+        self.rating_moodys = rating_moodys
+        self.rating_fitch = rating_fitch
+        self.rating_standard_and_poors = rating_standard_and_poors
+        self.rating_second_highest = rating_second_highest
+        self.rating_linear = rating_linear
         self.commod_template = commod_template
         self.name = name
 
@@ -398,6 +415,86 @@ class AssetClassifications(Base):
     def gics_sub_industry(self, value: str):
         self._property_changed('gics_sub_industry')
         self.__gics_sub_industry = value        
+
+    @property
+    def bbg_industry_sector(self) -> str:
+        """BBG Industry Sector"""
+        return self.__bbg_industry_sector
+
+    @bbg_industry_sector.setter
+    def bbg_industry_sector(self, value: str):
+        self._property_changed('bbg_industry_sector')
+        self.__bbg_industry_sector = value        
+
+    @property
+    def bbg_industry_group(self) -> str:
+        """BBG Industry Group"""
+        return self.__bbg_industry_group
+
+    @bbg_industry_group.setter
+    def bbg_industry_group(self, value: str):
+        self._property_changed('bbg_industry_group')
+        self.__bbg_industry_group = value        
+
+    @property
+    def bbg_industry_sub_group(self) -> str:
+        """BBG Industry Sub Group"""
+        return self.__bbg_industry_sub_group
+
+    @bbg_industry_sub_group.setter
+    def bbg_industry_sub_group(self, value: str):
+        self._property_changed('bbg_industry_sub_group')
+        self.__bbg_industry_sub_group = value        
+
+    @property
+    def rating_moodys(self) -> str:
+        """Bond rating from Moody's"""
+        return self.__rating_moodys
+
+    @rating_moodys.setter
+    def rating_moodys(self, value: str):
+        self._property_changed('rating_moodys')
+        self.__rating_moodys = value        
+
+    @property
+    def rating_fitch(self) -> str:
+        """Bond rating from Fitch"""
+        return self.__rating_fitch
+
+    @rating_fitch.setter
+    def rating_fitch(self, value: str):
+        self._property_changed('rating_fitch')
+        self.__rating_fitch = value        
+
+    @property
+    def rating_standard_and_poors(self) -> str:
+        """Bond rating from Standard And Poor's"""
+        return self.__rating_standard_and_poors
+
+    @rating_standard_and_poors.setter
+    def rating_standard_and_poors(self, value: str):
+        self._property_changed('rating_standard_and_poors')
+        self.__rating_standard_and_poors = value        
+
+    @property
+    def rating_second_highest(self) -> str:
+        """Second highest bond rating between Moody's, Fitch, and Standard and Poor's"""
+        return self.__rating_second_highest
+
+    @rating_second_highest.setter
+    def rating_second_highest(self, value: str):
+        self._property_changed('rating_second_highest')
+        self.__rating_second_highest = value        
+
+    @property
+    def rating_linear(self) -> float:
+        """Rating of the bond in linear form"""
+        return self.__rating_linear
+
+    @rating_linear.setter
+    def rating_linear(self, value: float):
+        self._property_changed('rating_linear')
+        self.__rating_linear = value        
 
     @property
     def commod_template(self) -> str:
@@ -1065,6 +1162,22 @@ class AssetParameters(Base):
         on_behalf_of: str = None,
         index_calculation_agent: str = None,
         product_type: str = None,
+        call_first_date: datetime.date = None,
+        call_last_date: datetime.date = None,
+        amount_outstanding: float = None,
+        covered_bond: bool = None,
+        issue_status: str = None,
+        issue_status_date: datetime.date = None,
+        issue_price: float = None,
+        sinkable: bool = None,
+        sink_factor: float = None,
+        accrued_interest_standard: float = None,
+        redemption_date: datetime.date = None,
+        redemption_price: float = None,
+        private_placement_type: str = None,
+        minimum_piece: float = None,
+        minimum_increment: float = None,
+        minimum_denomination: float = None,
         name: str = None
     ):        
         super().__init__()
@@ -1140,6 +1253,22 @@ class AssetParameters(Base):
         self.on_behalf_of = on_behalf_of
         self.index_calculation_agent = index_calculation_agent
         self.product_type = product_type
+        self.call_first_date = call_first_date
+        self.call_last_date = call_last_date
+        self.amount_outstanding = amount_outstanding
+        self.covered_bond = covered_bond
+        self.issue_status = issue_status
+        self.issue_status_date = issue_status_date
+        self.issue_price = issue_price
+        self.sinkable = sinkable
+        self.sink_factor = sink_factor
+        self.accrued_interest_standard = accrued_interest_standard
+        self.redemption_date = redemption_date
+        self.redemption_price = redemption_price
+        self.private_placement_type = private_placement_type
+        self.minimum_piece = minimum_piece
+        self.minimum_increment = minimum_increment
+        self.minimum_denomination = minimum_denomination
         self.name = name
 
     @property
@@ -1858,6 +1987,175 @@ class AssetParameters(Base):
         self._property_changed('product_type')
         self.__product_type = value        
 
+    @property
+    def call_first_date(self) -> datetime.date:
+        """The first date which you call the bond."""
+        return self.__call_first_date
+
+    @call_first_date.setter
+    def call_first_date(self, value: datetime.date):
+        self._property_changed('call_first_date')
+        self.__call_first_date = value        
+
+    @property
+    def call_last_date(self) -> datetime.date:
+        """The first date which you call the bond."""
+        return self.__call_last_date
+
+    @call_last_date.setter
+    def call_last_date(self, value: datetime.date):
+        self._property_changed('call_last_date')
+        self.__call_last_date = value        
+
+    @property
+    def amount_outstanding(self) -> float:
+        """The aggregate principal amount of the total number of bonds not redeemed or
+           otherwise discharged."""
+        return self.__amount_outstanding
+
+    @amount_outstanding.setter
+    def amount_outstanding(self, value: float):
+        self._property_changed('amount_outstanding')
+        self.__amount_outstanding = value        
+
+    @property
+    def covered_bond(self) -> bool:
+        """Whether the debt security is collateralized against a pool of assets that, in
+           case of failure of the issuer, can cover claims at any point of time."""
+        return self.__covered_bond
+
+    @covered_bond.setter
+    def covered_bond(self, value: bool):
+        self._property_changed('covered_bond')
+        self.__covered_bond = value        
+
+    @property
+    def issue_status(self) -> str:
+        """Status of the issue."""
+        return self.__issue_status
+
+    @issue_status.setter
+    def issue_status(self, value: str):
+        self._property_changed('issue_status')
+        self.__issue_status = value        
+
+    @property
+    def issue_status_date(self) -> datetime.date:
+        """Date at which the status was given to the issue."""
+        return self.__issue_status_date
+
+    @issue_status_date.setter
+    def issue_status_date(self, value: datetime.date):
+        self._property_changed('issue_status_date')
+        self.__issue_status_date = value        
+
+    @property
+    def issue_price(self) -> float:
+        """The price for which the instrument is issued"""
+        return self.__issue_price
+
+    @issue_price.setter
+    def issue_price(self, value: float):
+        self._property_changed('issue_price')
+        self.__issue_price = value        
+
+    @property
+    def sinkable(self) -> bool:
+        """A bond that is protected by a fund (called a sinking fund) that sets aside money
+           to ensure principal and interest payments are made by the issuer as
+           promised."""
+        return self.__sinkable
+
+    @sinkable.setter
+    def sinkable(self, value: bool):
+        self._property_changed('sinkable')
+        self.__sinkable = value        
+
+    @property
+    def sink_factor(self) -> float:
+        """The level to which a sinkable bond has currently sunk."""
+        return self.__sink_factor
+
+    @sink_factor.setter
+    def sink_factor(self, value: float):
+        self._property_changed('sink_factor')
+        self.__sink_factor = value        
+
+    @property
+    def accrued_interest_standard(self) -> float:
+        """The accrued interest paid on the bond if it is settled two business days after
+           the trade date."""
+        return self.__accrued_interest_standard
+
+    @accrued_interest_standard.setter
+    def accrued_interest_standard(self, value: float):
+        self._property_changed('accrued_interest_standard')
+        self.__accrued_interest_standard = value        
+
+    @property
+    def redemption_date(self) -> datetime.date:
+        """The date on which a bond's face value is repaid to bondholders."""
+        return self.__redemption_date
+
+    @redemption_date.setter
+    def redemption_date(self, value: datetime.date):
+        self._property_changed('redemption_date')
+        self.__redemption_date = value        
+
+    @property
+    def redemption_price(self) -> float:
+        """The price for which the issuer will repurchase the security for at the
+           redemption date."""
+        return self.__redemption_price
+
+    @redemption_price.setter
+    def redemption_price(self, value: float):
+        self._property_changed('redemption_price')
+        self.__redemption_price = value        
+
+    @property
+    def private_placement_type(self) -> str:
+        """Regulation that applies to a bond."""
+        return self.__private_placement_type
+
+    @private_placement_type.setter
+    def private_placement_type(self, value: str):
+        self._property_changed('private_placement_type')
+        self.__private_placement_type = value        
+
+    @property
+    def minimum_piece(self) -> float:
+        """The lowest denomination of an issue that can be purchased as authorized by the
+           bond documents"""
+        return self.__minimum_piece
+
+    @minimum_piece.setter
+    def minimum_piece(self, value: float):
+        self._property_changed('minimum_piece')
+        self.__minimum_piece = value        
+
+    @property
+    def minimum_increment(self) -> float:
+        """The minimum increment size of the bond purchase allowed above the minimum
+           denomination as authorized by the bond documents"""
+        return self.__minimum_increment
+
+    @minimum_increment.setter
+    def minimum_increment(self, value: float):
+        self._property_changed('minimum_increment')
+        self.__minimum_increment = value        
+
+    @property
+    def minimum_denomination(self) -> float:
+        """The lowest denomination of an issue that can be purchased as authorized by the
+           bond documents"""
+        return self.__minimum_denomination
+
+    @minimum_denomination.setter
+    def minimum_denomination(self, value: float):
+        self._property_changed('minimum_denomination')
+        self.__minimum_denomination = value        
+
 
 class AssetStats(Base):
         
@@ -1870,6 +2168,8 @@ class AssetStats(Base):
         period: Union[AssetStatsPeriod, str] = None,
         type_: Union[AssetStatsType, str] = None,
         stats: PerformanceStats = None,
+        start_date: datetime.date = None,
+        end_date: datetime.date = None,
         name: str = None
     ):        
         super().__init__()
@@ -1877,6 +2177,8 @@ class AssetStats(Base):
         self.period = period
         self.__type = get_enum_value(AssetStatsType, type_)
         self.stats = stats
+        self.start_date = start_date
+        self.end_date = end_date
         self.name = name
 
     @property
@@ -1917,6 +2219,26 @@ class AssetStats(Base):
     def stats(self, value: PerformanceStats):
         self._property_changed('stats')
         self.__stats = value        
+
+    @property
+    def start_date(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__start_date
+
+    @start_date.setter
+    def start_date(self, value: datetime.date):
+        self._property_changed('start_date')
+        self.__start_date = value        
+
+    @property
+    def end_date(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__end_date
+
+    @end_date.setter
+    def end_date(self, value: datetime.date):
+        self._property_changed('end_date')
+        self.__end_date = value        
 
 
 class AssetStatsRequest(Base):
@@ -2041,6 +2363,7 @@ class HedgeFundParameters(Base):
         turnover: str = None,
         vehicle_type: str = None,
         net_exposure_classification: Union[NetExposureClassification, str] = None,
+        last_returns_date: datetime.date = None,
         name: str = None
     ):        
         super().__init__()
@@ -2064,6 +2387,7 @@ class HedgeFundParameters(Base):
         self.turnover = turnover
         self.vehicle_type = vehicle_type
         self.net_exposure_classification = net_exposure_classification
+        self.last_returns_date = last_returns_date
         self.name = name
 
     @property
@@ -2285,6 +2609,16 @@ class HedgeFundParameters(Base):
     def net_exposure_classification(self, value: Union[NetExposureClassification, str]):
         self._property_changed('net_exposure_classification')
         self.__net_exposure_classification = get_enum_value(NetExposureClassification, value)        
+
+    @property
+    def last_returns_date(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__last_returns_date
+
+    @last_returns_date.setter
+    def last_returns_date(self, value: datetime.date):
+        self._property_changed('last_returns_date')
+        self.__last_returns_date = value        
 
 
 class ShareClassParameters(Base):

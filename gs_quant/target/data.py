@@ -21,15 +21,6 @@ from enum import Enum
 from gs_quant.base import Base, EnumBase, InstrumentBase, camel_case_translate, get_enum_value
 
 
-class MarketDataFrequency(EnumBase, Enum):    
-    
-    Real_Time = 'Real Time'
-    End_Of_Day = 'End Of Day'
-    
-    def __repr__(self):
-        return self.value
-
-
 class MarketDataMeasure(EnumBase, Enum):    
     
     Last = 'Last'
@@ -49,6 +40,7 @@ class MeasureEntityType(EnumBase, Enum):
     BACKTEST = 'BACKTEST'
     KPI = 'KPI'
     COUNTRY = 'COUNTRY'
+    SUBDIVISION = 'SUBDIVISION'
     
     def __repr__(self):
         return self.value
@@ -61,10 +53,10 @@ class AdvancedFilter(Base):
     @camel_case_translate
     def __init__(
         self,
-        column,
-        operator,
-        value=None,
-        values=None,
+        column: str,
+        operator: str,
+        value: float = None,
+        values: Tuple[str, ...] = None,
         name: str = None
     ):        
         super().__init__()
@@ -75,73 +67,8 @@ class AdvancedFilter(Base):
         self.name = name
 
     @property
-    def column(self):
-        return self.__column
-
-    @column.setter
-    def column(self, value):
-        self._property_changed('column')
-        self.__column = value        
-
-    @property
-    def value(self):
-        return self.__value
-
-    @value.setter
-    def value(self, value):
-        self._property_changed('value')
-        self.__value = value        
-
-    @property
-    def values(self):
-        return self.__values
-
-    @values.setter
-    def values(self, value):
-        self._property_changed('values')
-        self.__values = value        
-
-    @property
-    def operator(self):
-        return self.__operator
-
-    @operator.setter
-    def operator(self, value):
-        self._property_changed('operator')
-        self.__operator = value        
-
-
-class DataFilter(Base):
-        
-    """Filter on specified field."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        field: str,
-        values: Tuple[str, ...],
-        column: str = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.field = field
-        self.column = column
-        self.values = values
-        self.name = name
-
-    @property
-    def field(self) -> str:
-        """Field to filter on."""
-        return self.__field
-
-    @field.setter
-    def field(self, value: str):
-        self._property_changed('field')
-        self.__field = value        
-
-    @property
     def column(self) -> str:
-        """Database column name."""
+        """Database column to match against."""
         return self.__column
 
     @column.setter
@@ -150,14 +77,35 @@ class DataFilter(Base):
         self.__column = value        
 
     @property
+    def value(self) -> float:
+        """Numeric value to compare against. Cannot be used with 'in' and 'notIn'
+           operators."""
+        return self.__value
+
+    @value.setter
+    def value(self, value: float):
+        self._property_changed('value')
+        self.__value = value        
+
+    @property
     def values(self) -> Tuple[str, ...]:
-        """Value(s) to match."""
+        """Values to compare against. Can only be used with 'in' and 'notIn' operators."""
         return self.__values
 
     @values.setter
     def values(self, value: Tuple[str, ...]):
         self._property_changed('values')
         self.__values = value        
+
+    @property
+    def operator(self) -> str:
+        """Comparison operator."""
+        return self.__operator
+
+    @operator.setter
+    def operator(self, value: str):
+        self._property_changed('operator')
+        self.__operator = value        
 
 
 class DataGroup(Base):
@@ -748,11 +696,13 @@ class FieldLinkSelector(Base):
     def __init__(
         self,
         field_selector: str = None,
+        description: str = None,
         display_name: str = None,
         name: str = None
     ):        
         super().__init__()
         self.field_selector = field_selector
+        self.description = description
         self.display_name = display_name
         self.name = name
 
@@ -767,8 +717,19 @@ class FieldLinkSelector(Base):
         self.__field_selector = value        
 
     @property
+    def description(self) -> str:
+        """Custom description (overrides field default)."""
+        return self.__description
+
+    @description.setter
+    def description(self, value: str):
+        self._property_changed('description')
+        self.__description = value        
+
+    @property
     def display_name(self) -> str:
-        """Name under which the captured field will be displayed"""
+        """Name under which the captured field will be displayed. The name must be
+           registered in fields."""
         return self.__display_name
 
     @display_name.setter
@@ -1229,40 +1190,65 @@ class TimeFilter(Base):
         self.__time_zone = value        
 
 
-class ComplexFilter(Base):
+class DataFilter(Base):
         
-    """A compound filter for data requests."""
+    """Filter on specified field."""
 
     @camel_case_translate
     def __init__(
         self,
-        operator: str,
-        simple_filters: Tuple[DataFilter, ...],
+        field: str,
+        values: Tuple[str, ...],
+        column: str = None,
+        where: DataSetCondition = None,
         name: str = None
     ):        
         super().__init__()
-        self.operator = operator
-        self.simple_filters = simple_filters
+        self.field = field
+        self.column = column
+        self.values = values
+        self.where = where
         self.name = name
 
     @property
-    def operator(self) -> str:
-        return self.__operator
+    def field(self) -> str:
+        """Field to filter on."""
+        return self.__field
 
-    @operator.setter
-    def operator(self, value: str):
-        self._property_changed('operator')
-        self.__operator = value        
+    @field.setter
+    def field(self, value: str):
+        self._property_changed('field')
+        self.__field = value        
 
     @property
-    def simple_filters(self) -> Tuple[DataFilter, ...]:
-        """Filter on specified field."""
-        return self.__simple_filters
+    def column(self) -> str:
+        """Database column name."""
+        return self.__column
 
-    @simple_filters.setter
-    def simple_filters(self, value: Tuple[DataFilter, ...]):
-        self._property_changed('simple_filters')
-        self.__simple_filters = value        
+    @column.setter
+    def column(self, value: str):
+        self._property_changed('column')
+        self.__column = value        
+
+    @property
+    def values(self) -> Tuple[str, ...]:
+        """Value(s) to match."""
+        return self.__values
+
+    @values.setter
+    def values(self, value: Tuple[str, ...]):
+        self._property_changed('values')
+        self.__values = value        
+
+    @property
+    def where(self) -> DataSetCondition:
+        """Only apply the filter where this condition matches."""
+        return self.__where
+
+    @where.setter
+    def where(self, value: DataSetCondition):
+        self._property_changed('where')
+        self.__where = value        
 
 
 class DataQuery(Base):
@@ -1909,7 +1895,7 @@ class MDAPIDataQuery(Base):
         self,
         market_data_coordinates: Tuple[MarketDataCoordinate, ...],
         format_: Union[Format, str] = None,
-        pricing_location: str = None,
+        pricing_location: Union[PricingLocation, str] = None,
         selector_function: str = None,
         samples: int = None,
         vendor: Union[MarketDataVendor, str] = None,
@@ -1955,14 +1941,14 @@ class MDAPIDataQuery(Base):
         self.__market_data_coordinates = value        
 
     @property
-    def pricing_location(self) -> str:
+    def pricing_location(self) -> Union[PricingLocation, str]:
         """Pricing location of end-of-day data (not used for real-time query)."""
         return self.__pricing_location
 
     @pricing_location.setter
-    def pricing_location(self, value: str):
+    def pricing_location(self, value: Union[PricingLocation, str]):
         self._property_changed('pricing_location')
-        self.__pricing_location = value
+        self.__pricing_location = get_enum_value(PricingLocation, value)        
 
     @property
     def selector_function(self) -> str:
@@ -2022,7 +2008,7 @@ class MDAPIDataQuery(Base):
     @start_date.setter
     def start_date(self, value: datetime.date):
         self._property_changed('start_date')
-        self.__start_date = value
+        self.__start_date = value        
 
     @property
     def end_date(self) -> datetime.date:
@@ -2032,7 +2018,7 @@ class MDAPIDataQuery(Base):
     @end_date.setter
     def end_date(self, value: datetime.date):
         self._property_changed('end_date')
-        self.__end_date = value
+        self.__end_date = value        
 
     @property
     def real_time(self) -> bool:
@@ -2042,7 +2028,7 @@ class MDAPIDataQuery(Base):
     @real_time.setter
     def real_time(self, value: bool):
         self._property_changed('real_time')
-        self.__real_time = value
+        self.__real_time = value        
 
 
 class MarketDataMapping(Base):
@@ -2328,22 +2314,20 @@ class SymbolFilterDimension(Base):
         self.__symbol_filter_link = value        
 
 
-class EntityFilter(Base):
+class ComplexFilter(Base):
         
-    """Filter on entities."""
+    """A compound filter for data requests."""
 
     @camel_case_translate
     def __init__(
         self,
-        operator: str = None,
-        simple_filters: Tuple[DataFilter, ...] = None,
-        complex_filters: Tuple[ComplexFilter, ...] = None,
+        operator: str,
+        simple_filters: Tuple[DataFilter, ...],
         name: str = None
     ):        
         super().__init__()
         self.operator = operator
         self.simple_filters = simple_filters
-        self.complex_filters = complex_filters
         self.name = name
 
     @property
@@ -2364,16 +2348,6 @@ class EntityFilter(Base):
     def simple_filters(self, value: Tuple[DataFilter, ...]):
         self._property_changed('simple_filters')
         self.__simple_filters = value        
-
-    @property
-    def complex_filters(self) -> Tuple[ComplexFilter, ...]:
-        """A compound filter for data requests."""
-        return self.__complex_filters
-
-    @complex_filters.setter
-    def complex_filters(self, value: Tuple[ComplexFilter, ...]):
-        self._property_changed('complex_filters')
-        self.__complex_filters = value        
 
 
 class FieldColumnPair(Base):
@@ -2449,6 +2423,7 @@ class DataSetDimensions(Base):
         symbol_dimensions: Tuple[str, ...] = None,
         non_symbol_dimensions: Tuple[FieldColumnPair, ...] = None,
         symbol_dimension_link: FieldLink = None,
+        linked_dimensions: Tuple[FieldLinkSelector, ...] = None,
         symbol_filter_dimensions: Tuple[SymbolFilterDimension, ...] = None,
         key_dimensions: Tuple[str, ...] = None,
         measures: Tuple[FieldColumnPair, ...] = None,
@@ -2461,6 +2436,7 @@ class DataSetDimensions(Base):
         self.symbol_dimensions = symbol_dimensions
         self.non_symbol_dimensions = non_symbol_dimensions
         self.symbol_dimension_link = symbol_dimension_link
+        self.linked_dimensions = linked_dimensions
         self.symbol_filter_dimensions = symbol_filter_dimensions
         self.key_dimensions = key_dimensions
         self.measures = measures
@@ -2509,15 +2485,23 @@ class DataSetDimensions(Base):
 
     @property
     def symbol_dimension_link(self) -> FieldLink:
-        """Link the dataset field to an entity to also fetch its fields. It has two
-           mutually exclusive modes of operation: prefixing or explicit
-           inclusion entity fields."""
+        """Deprecated - use linkedDimensions."""
         return self.__symbol_dimension_link
 
     @symbol_dimension_link.setter
     def symbol_dimension_link(self, value: FieldLink):
         self._property_changed('symbol_dimension_link')
         self.__symbol_dimension_link = value        
+
+    @property
+    def linked_dimensions(self) -> Tuple[FieldLinkSelector, ...]:
+        """Fields that are injected from entity into dataset."""
+        return self.__linked_dimensions
+
+    @linked_dimensions.setter
+    def linked_dimensions(self, value: Tuple[FieldLinkSelector, ...]):
+        self._property_changed('linked_dimensions')
+        self.__linked_dimensions = value        
 
     @property
     def symbol_filter_dimensions(self) -> Tuple[SymbolFilterDimension, ...]:
@@ -2559,6 +2543,54 @@ class DataSetDimensions(Base):
     def entity_dimension(self, value: str):
         self._property_changed('entity_dimension')
         self.__entity_dimension = value        
+
+
+class EntityFilter(Base):
+        
+    """Filter on entities."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        operator: str = None,
+        simple_filters: Tuple[DataFilter, ...] = None,
+        complex_filters: Tuple[ComplexFilter, ...] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.operator = operator
+        self.simple_filters = simple_filters
+        self.complex_filters = complex_filters
+        self.name = name
+
+    @property
+    def operator(self) -> str:
+        return self.__operator
+
+    @operator.setter
+    def operator(self, value: str):
+        self._property_changed('operator')
+        self.__operator = value        
+
+    @property
+    def simple_filters(self) -> Tuple[DataFilter, ...]:
+        """Filter on specified field."""
+        return self.__simple_filters
+
+    @simple_filters.setter
+    def simple_filters(self, value: Tuple[DataFilter, ...]):
+        self._property_changed('simple_filters')
+        self.__simple_filters = value        
+
+    @property
+    def complex_filters(self) -> Tuple[ComplexFilter, ...]:
+        """A compound filter for data requests."""
+        return self.__complex_filters
+
+    @complex_filters.setter
+    def complex_filters(self, value: Tuple[ComplexFilter, ...]):
+        self._property_changed('complex_filters')
+        self.__complex_filters = value        
 
 
 class DataSetFilters(Base):

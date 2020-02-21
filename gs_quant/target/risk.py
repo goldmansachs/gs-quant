@@ -17,19 +17,7 @@ under the License.
 from gs_quant.target.common import *
 import datetime
 from typing import Tuple, Union
-from enum import Enum
-from gs_quant.base import Base, EnumBase, InstrumentBase, camel_case_translate, get_enum_value
-
-
-class SortByTerm(EnumBase, Enum):    
-    
-    """Term to sort risk models by."""
-
-    Short = 'Short'
-    Medium = 'Medium'
-    
-    def __repr__(self):
-        return self.value
+from gs_quant.base import Base, InstrumentBase, camel_case_translate, get_enum_value
 
 
 class AdvCurveTick(Base):
@@ -527,7 +515,6 @@ class LiquidityConstituent(Base):
 
     @property
     def exchange(self) -> str:
-        """Name of marketplace where security, derivative or other instrument is traded"""
         return self.__exchange
 
     @exchange.setter
@@ -1628,55 +1615,6 @@ class LiquiditySummary(Base):
         self.__long_vs_short = value        
 
 
-class RiskModelRequest(Base):
-        
-    """Object representation of a risk model request"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        asset_ids: Tuple[str, ...] = None,
-        as_of_date: datetime.date = None,
-        sort_by_term: Union[SortByTerm, str] = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.asset_ids = asset_ids
-        self.as_of_date = as_of_date
-        self.sort_by_term = sort_by_term
-        self.name = name
-
-    @property
-    def asset_ids(self) -> Tuple[str, ...]:
-        """Assets to calculate on"""
-        return self.__asset_ids
-
-    @asset_ids.setter
-    def asset_ids(self, value: Tuple[str, ...]):
-        self._property_changed('asset_ids')
-        self.__asset_ids = value        
-
-    @property
-    def as_of_date(self) -> datetime.date:
-        """The date or time for which to check risk model availability"""
-        return self.__as_of_date
-
-    @as_of_date.setter
-    def as_of_date(self, value: datetime.date):
-        self._property_changed('as_of_date')
-        self.__as_of_date = value        
-
-    @property
-    def sort_by_term(self) -> Union[SortByTerm, str]:
-        """Term to sort risk models by."""
-        return self.__sort_by_term
-
-    @sort_by_term.setter
-    def sort_by_term(self, value: Union[SortByTerm, str]):
-        self._property_changed('sort_by_term')
-        self.__sort_by_term = get_enum_value(SortByTerm, value)        
-
-
 class LiquidityResponse(Base):
         
     """Liquidity information for a set of weighted positions."""
@@ -1781,7 +1719,6 @@ class LiquidityResponse(Base):
 
     @property
     def currency(self) -> Union[Currency, str]:
-        """Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)"""
         return self.__currency
 
     @currency.setter

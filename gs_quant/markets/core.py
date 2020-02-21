@@ -497,3 +497,26 @@ class PricingContext(ContextBaseWithDefault):
                 return
 
         return result
+
+
+class LivePricingContext(PricingContext):
+
+    def __init__(self,
+                 market_data_location: Optional[str] = None,
+                 is_async: bool = False,
+                 is_batch: bool = False,
+                 visible_to_gs: bool = False,
+                 csa_term: Optional[str] = None
+                 ):
+        # TODO we use 23:59:59.999999 as a sentinel value to indicate live pricing for now. Fix this
+        d = business_day_offset(dt.date.today(), -1, roll='preceding')
+        super().__init__(
+            pricing_date=dt.date.today(),
+            market_data_as_of=dt.datetime(d.year, d.month, d.day, 23, 59, 59, 999999),
+            market_data_location=market_data_location,
+            is_async=is_async,
+            is_batch=is_batch,
+            use_cache=False,
+            visible_to_gs=visible_to_gs,
+            csa_term=csa_term
+        )

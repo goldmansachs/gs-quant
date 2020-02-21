@@ -66,6 +66,19 @@ class QueryType(Enum):
     CENTRAL_BANK_SWAP_RATE = "Central Bank Swap Rate"
     FORWARD_PRICE = "Forward Price"
     SPOT = "Spot"
+    ES_NUMERIC_SCORE = "ES Numeric Score"
+    ES_NUMERIC_PERCENTILE = "ES Numeric Percentile"
+    ES_POLICY_SCORE = "ES Policy Score"
+    ES_POLICY_PERCENTILE = "ES Policy Percentile"
+    ES_SCORE = "ES Score"
+    ES_PERCENTILE = "ES Percentile"
+    G_SCORE = "G Score"
+    G_PERCENTILE = "G Percentile"
+    ES_MOMENTUM_SCORE = "ES Momentum Score"
+    ES_MOMENTUM_PERCENTILE = "ES Momentum Percentile"
+    G_REGIONAL_SCORE = "G Regional Score"
+    G_REGIONAL_PERCENTILE = "G Regional Percentile"
+    ES_DISCLOSURE_PERCENTAGE = "ES Disclosure Percentage"
 
 
 class GsDataApi(DataApi):
