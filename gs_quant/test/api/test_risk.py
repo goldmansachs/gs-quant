@@ -20,7 +20,7 @@ import copy
 import pandas as pd
 
 import gs_quant.risk as risk
-from gs_quant.api.gs.risk import GsRiskApi, RiskModelRequest
+from gs_quant.api.gs.risk import GsRiskApi
 from gs_quant.base import Priceable
 from gs_quant.common import AssetClass
 from gs_quant.instrument import CommodSwap, EqForward, EqOption, FXOption, IRBasisSwap, IRSwap, IRSwaption, IRCap,\
@@ -100,31 +100,6 @@ def price(mocker, priceable: Priceable):
         parameters=RiskRequestParameters(),
         wait_for_results=True)
     mocker.assert_called_with(risk_request)
-
-
-def test_suggest_risk_model(mocker):
-    set_session()
-
-    marquee_id_1 = 'MQA1234567890'
-    marquee_id_2 = 'MQA4567890123'
-
-    inputs = RiskModelRequest((marquee_id_1, marquee_id_2))
-
-    mock_response = {'results': [
-        {'model': 'AXUS4S', 'businessDate': '2019-03-04'},
-        {'model': 'AXWW21M', 'businessDate': '2019-03-04'}
-    ]}
-
-    expected_response = 'AXUS4S'
-
-    # mock GsSession
-    mocker.patch.object(GsSession.current, '_post', return_value=mock_response)
-    GsSession.current._post.risk_models('/risk/models', payload=inputs)
-
-    # run test
-    response = GsRiskApi._suggest_risk_model(inputs)
-
-    assert response == expected_response
 
 
 @mock.patch.object(GsRiskApi, '_exec')

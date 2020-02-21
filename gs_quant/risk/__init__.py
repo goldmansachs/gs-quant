@@ -19,5 +19,5 @@ from .scenarios import MarketDataShockBasedScenario
 from gs_quant.target.portfolios import LiquidityRequest
 from gs_quant.target.risk import CarryScenario, CurveScenario, LiquidityResponse,\
     MarketDataPattern, MarketDataScenario, MarketDataShock,\
-    MarketDataShockType, RiskMeasure, RiskModelRequest, RiskPosition, RiskRequest, RiskRequestParameters
+    MarketDataShockType, RiskMeasure, RiskPosition, RiskRequest, RiskRequestParameters
 

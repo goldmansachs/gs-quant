@@ -17,7 +17,7 @@ import time
 from typing import Iterable, Mapping, Union
 
 from gs_quant.api.risk import RiskApi
-from gs_quant.risk import RiskRequest, LiquidityRequest, LiquidityResponse, RiskModelRequest
+from gs_quant.risk import RiskRequest
 from gs_quant.session import GsSession
 
 
@@ -52,24 +52,3 @@ class GsRiskApi(RiskApi):
             time.sleep(1)
 
         return results
-
-    @classmethod
-    def liquidity(cls, request: LiquidityRequest) -> LiquidityResponse:
-        # Pick a risk model based on positions if not provided
-        if request.riskModel is None:
-            position_ids = tuple(p['assetId'] for p in request.positions)
-            request.riskModel = cls._suggest_risk_model(RiskModelRequest(position_ids))
-
-        return GsSession.current._post(r'/risk/liquidity', request)
-
-    @classmethod
-    def risk_models(cls, request: RiskModelRequest):
-        return GsSession.current._post(r'/risk/models', request)
-
-    @classmethod
-    def _suggest_risk_model(cls, request: RiskModelRequest):
-        models = GsRiskApi.risk_models(request)['results']
-        if len(models) > 0:
-            return models[0]['model']
-        else:
-            raise ValueError('There are no valid risk models for the set of assets provided.')

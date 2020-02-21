@@ -41,6 +41,7 @@ class PositionSourceType(EnumBase, Enum):
     Asset = 'Asset'
     Backtest = 'Backtest'
     RiskRequest = 'RiskRequest'
+    Hedge = 'Hedge'
     
     def __repr__(self):
         return self.value

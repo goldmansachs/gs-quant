@@ -82,6 +82,58 @@ class ColumnMappingParameters(Base):
         self.name = name
 
 
+class ColumnOperation(Base):
+        
+    """Object used to describe function chaining and column operations."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        column_names: Tuple[str, ...] = None,
+        function_name: str = None,
+        type_=None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.column_names = column_names
+        self.function_name = function_name
+        self.__type = type_
+        self.name = name
+
+    @property
+    def column_names(self) -> Tuple[str, ...]:
+        """Name of the columns to get results from in order and put into the given
+           function."""
+        return self.__column_names
+
+    @column_names.setter
+    def column_names(self, value: Tuple[str, ...]):
+        self._property_changed('column_names')
+        self.__column_names = value        
+
+    @property
+    def function_name(self) -> str:
+        """Name of the function to pass column results into."""
+        return self.__function_name
+
+    @function_name.setter
+    def function_name(self, value: str):
+        self._property_changed('function_name')
+        self.__function_name = value        
+
+    @property
+    def type(self):
+        """Type of inputs into the function. Series means pass the whole series into the
+           function, value means just gets the result of the column and pass it
+           into the given function"""
+        return self.__type
+
+    @type.setter
+    def type(self, value):
+        self._property_changed('type')
+        self.__type = value        
+
+
 class ColumnProperty(Base):
         
     """Object used to reference a column mapping"""
@@ -132,6 +184,7 @@ class FunctionParameters(Base):
         type_=None,
         w: int = None,
         entity_id: str = None,
+        returns: bool = None,
         name: str = None
     ):        
         super().__init__()
@@ -141,6 +194,7 @@ class FunctionParameters(Base):
         self.__type = type_
         self.w = w
         self.entity_id = entity_id
+        self.returns = returns
         self.name = name
 
     @property
@@ -204,6 +258,16 @@ class FunctionParameters(Base):
     def entity_id(self, value: str):
         self._property_changed('entity_id')
         self.__entity_id = value        
+
+    @property
+    def returns(self) -> bool:
+        """Whether pb_total_return custom function returns the sum or typical returns."""
+        return self.__returns
+
+    @returns.setter
+    def returns(self, value: bool):
+        self._property_changed('returns')
+        self.__returns = value        
 
 
 class FunctionWhere(Base):
@@ -792,7 +856,9 @@ class ColumnDefinition(Base):
         function: Function = None,
         format_: ColumnFormat = None,
         width: float = None,
-        column_property: ColumnProperty = None
+        column_property: ColumnProperty = None,
+        column_operation: ColumnOperation = None,
+        expression: str = None
     ):        
         super().__init__()
         self.enable_cell_flashing = enable_cell_flashing
@@ -803,6 +869,8 @@ class ColumnDefinition(Base):
         self.__format = format_
         self.width = width
         self.column_property = column_property
+        self.column_operation = column_operation
+        self.expression = expression
 
     @property
     def enable_cell_flashing(self) -> bool:
@@ -883,6 +951,26 @@ class ColumnDefinition(Base):
     def column_property(self, value: ColumnProperty):
         self._property_changed('column_property')
         self.__column_property = value        
+
+    @property
+    def column_operation(self) -> ColumnOperation:
+        """Object that describes function chaining and operations."""
+        return self.__column_operation
+
+    @column_operation.setter
+    def column_operation(self, value: ColumnOperation):
+        self._property_changed('column_operation')
+        self.__column_operation = value        
+
+    @property
+    def expression(self) -> str:
+        """String that represents the column in the form of a PlotTool expression."""
+        return self.__expression
+
+    @expression.setter
+    def expression(self, value: str):
+        self._property_changed('expression')
+        self.__expression = value        
 
 
 class EntityId(Base):

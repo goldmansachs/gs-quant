@@ -30,7 +30,6 @@ class BacktestRiskMeasureType(EnumBase, Enum):
     Gamma = 'Gamma'
     Vega = 'Vega'
     Forward = 'Forward'
-    Volatility = 'Volatility'
     Implied_Volatility = 'Implied Volatility'
     Fair_Variance = 'Fair Variance'
     

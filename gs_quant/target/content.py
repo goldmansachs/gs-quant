@@ -692,6 +692,7 @@ class ContentParameters(Base):
         slug: str = None,
         attachments: Tuple[Content, ...] = None,
         certification: Certification = None,
+        certification_type=None,
         asset_ids: Tuple[str, ...] = None,
         origin=None,
         disclaimers: Tuple[Disclaimer, ...] = None,
@@ -705,6 +706,7 @@ class ContentParameters(Base):
         self.author_ids = author_ids
         self.attachments = attachments
         self.certification = certification
+        self.certification_type = certification_type
         self.asset_ids = asset_ids
         self.origin = origin
         self.disclaimers = disclaimers
@@ -780,6 +782,16 @@ class ContentParameters(Base):
     def certification(self, value: Certification):
         self._property_changed('certification')
         self.__certification = value        
+
+    @property
+    def certification_type(self):
+        """Field to store certification type enum"""
+        return self.__certification_type
+
+    @certification_type.setter
+    def certification_type(self, value):
+        self._property_changed('certification_type')
+        self.__certification_type = value        
 
     @property
     def asset_ids(self) -> Tuple[str, ...]:

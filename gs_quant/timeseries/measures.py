@@ -20,14 +20,15 @@ from collections import namedtuple
 from enum import auto
 from numbers import Real
 import calendar
+import inflection
 
 import cachetools.func
 import numpy as np
 import pandas as pd
 from dateutil import tz
 from pandas import Series
-from pandas.tseries.holiday import Holiday, AbstractHolidayCalendar, USMemorialDay, USLaborDay, USThanksgivingDay, \
-    nearest_workday
+from pandas.tseries.holiday import Holiday, AbstractHolidayCalendar, USMemorialDay, USLaborDay, USThanksgivingDay,\
+    sunday_to_monday
 from dateutil.relativedelta import relativedelta
 
 from gs_quant.api.gs.assets import GsIdType
@@ -58,12 +59,12 @@ MeasureDependency: namedtuple = namedtuple("MeasureDependency", ["id_provider", 
 # TODO: get NERC Calendar from SecDB
 class NercCalendar(AbstractHolidayCalendar):
     rules = [
-        Holiday('New Years Day', month=1, day=1, observance=nearest_workday),
+        Holiday('New Years Day', month=1, day=1, observance=sunday_to_monday),
         USMemorialDay,
-        Holiday('July 4th', month=7, day=4, observance=nearest_workday),
+        Holiday('July 4th', month=7, day=4, observance=sunday_to_monday),
         USLaborDay,
         USThanksgivingDay,
-        Holiday('Christmas', month=12, day=25, observance=nearest_workday)
+        Holiday('Christmas', month=12, day=25, observance=sunday_to_monday)
     ]
 
 
@@ -135,6 +136,38 @@ class MeetingType(Enum):
     MEETING_FORWARD = 'Meeting Forward'
     EOY_FORWARD = 'EOY Forward'
     SPOT = 'Spot'
+
+
+class EsgMetric(Enum):
+    ENVIRONMENTAL_SOCIAL_NUMERIC = 'es_numeric'
+    ENVIRONMENTAL_SOCIAL_POLICY = 'es_policy'
+    ENVIRONMENTAL_SOCIAL_AGGREGATE = 'es'
+    GOVERNANCE_AGGREGATE = 'g'
+    ENVIRONMENTAL_SOCIAL_DISCLOSURE = 'es_disclosure_percentage'
+    ENVIRONMENTAL_SOCIAL_MOMENTUM = 'es_momentum'
+    GOVERNANCE_REGIONAL = 'g_regional'
+
+
+class EsgValueUnit(Enum):
+    PERCENTILE = 'percentile'
+    SCORE = 'score'
+
+
+ESG_METRIC_TO_QUERY_TYPE = {
+    "esNumericScore": QueryType.ES_NUMERIC_SCORE,
+    "esNumericPercentile": QueryType.ES_NUMERIC_PERCENTILE,
+    "esPolicyScore": QueryType.ES_POLICY_SCORE,
+    "esPolicyPercentile": QueryType.ES_POLICY_PERCENTILE,
+    "esScore": QueryType.ES_SCORE,
+    "esPercentile": QueryType.ES_PERCENTILE,
+    "gScore": QueryType.G_SCORE,
+    "gPercentile": QueryType.G_PERCENTILE,
+    "esMomentumScore": QueryType.ES_MOMENTUM_SCORE,
+    "esMomentumPercentile": QueryType.ES_MOMENTUM_PERCENTILE,
+    "gRegionalScore": QueryType.G_REGIONAL_SCORE,
+    "gRegionalPercentile": QueryType.G_REGIONAL_PERCENTILE,
+    "esDisclosurePercentage": QueryType.ES_DISCLOSURE_PERCENTAGE
+}
 
 
 CURRENCY_TO_OIS_RATE_BENCHMARK = {
@@ -1647,7 +1680,10 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
     df['date'] = df.index.date
     df['day'] = df.index.dayofweek
     df['hour'] = df.index.hour
+    df['timestamp'] = df.index
 
+    # This will remove any duplicate prices uploaded with the same timestamp
+    df = df.drop_duplicates()
     # freq is the frequency at which the ISO publishes data for e.g. 15 min, 1hr
     freq = int(min(np.diff(df.index) / np.timedelta64(1, 's')))
     # checking missing data points
@@ -2264,8 +2300,7 @@ def realized_volatility(asset: Asset, w: Union[Window, int] = Window(None, 0), r
     Realized volatility for an asset.
 
     :param asset: asset object loaded from security master
-    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-    and 10 the ramp up value. Window size defaults to length of series.
+    :param w: number of observations to use; defaults to length of series
     :param returns_type: returns type
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
@@ -2279,3 +2314,38 @@ def realized_volatility(asset: Asset, w: Union[Window, int] = Window(None, 0), r
     )
     df = _market_data_timed(q)
     return volatility(df['spot'], w, returns_type)
+
+
+@plot_measure((AssetClass.Equity,), None, [QueryType.ES_NUMERIC_SCORE])
+def esg_aggregate(asset: Asset, metric: EsgMetric, value_unit: Optional[EsgValueUnit] = None, *,
+                  source: str = None, real_time: bool = False) -> Series:
+    """
+    Environmental, Social, and Governance (ESG) scores and percentiles for a broad set of companies across the globe.
+    :param asset: asset object loaded from security master
+    :param metric: name of ESG metric
+    :param value_unit: the unit type of the metric value, one of percentile, score
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return:
+    """
+
+    if real_time:
+        raise NotImplementedError('real-time esg-aggregate not implemented')
+
+    if metric != EsgMetric.ENVIRONMENTAL_SOCIAL_DISCLOSURE and value_unit is None:
+        raise MqValueError("value_unit is required for metric {m}".format(m=metric.value))
+
+    mqid = asset.get_marquee_id()
+    if metric == EsgMetric.ENVIRONMENTAL_SOCIAL_DISCLOSURE:
+        query_metric = inflection.camelize(metric.value, False)
+    else:
+        query_metric = "{metric}{unit}".format(metric=inflection.camelize(metric.value, False),
+                                               unit=value_unit.value.capitalize())
+
+    query_type = ESG_METRIC_TO_QUERY_TYPE.get(query_metric)
+    _logger.debug('where assetId=%s, metric=%s, value_unit=%s, query_type=%s',
+                  mqid, metric.value, value_unit.value if value_unit is not None else None, query_type.value)
+    q = GsDataApi.build_market_data_query([mqid], query_type, source=source, real_time=real_time)
+    _logger.debug('q %s', q)
+    df = _market_data_timed(q)
+    return Series() if df.empty else df[query_metric]

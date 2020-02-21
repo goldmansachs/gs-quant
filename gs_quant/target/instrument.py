@@ -284,6 +284,186 @@ class CSLPython(Instrument):
         self.__fx_cross_array_params = value        
 
 
+class CommodOTCAPO(Instrument):
+        
+    """Object representation of a commodities OTC average price option"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        commodity: str = None,
+        commodity_reference_price: str = None,
+        start: Union[datetime.date, str] = None,
+        end: Union[datetime.date, str] = None,
+        number_of_periods: int = None,
+        contract: str = None,
+        strategy: str = None,
+        quantity: str = None,
+        fixing_currency: Union[CurrencyName, str] = None,
+        settlement: str = None,
+        leg_description: str = None,
+        option_type: str = None,
+        strike_price: Union[float, str] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.commodity = commodity
+        self.commodity_reference_price = commodity_reference_price
+        self.start = start
+        self.end = end
+        self.number_of_periods = number_of_periods
+        self.contract = contract
+        self.strategy = strategy
+        self.quantity = quantity
+        self.fixing_currency = fixing_currency
+        self.settlement = settlement
+        self.leg_description = leg_description
+        self.option_type = option_type
+        self.strike_price = strike_price
+        self.name = name
+
+    @property
+    def asset_class(self) -> AssetClass:
+        """Commod"""
+        return AssetClass.Commod        
+
+    @property
+    def type(self) -> AssetType:
+        """Option"""
+        return AssetType.Option        
+
+    @property
+    def commodity(self) -> str:
+        """Commodity asset"""
+        return self.__commodity
+
+    @commodity.setter
+    def commodity(self, value: str):
+        self._property_changed('commodity')
+        self.__commodity = value        
+
+    @property
+    def commodity_reference_price(self) -> str:
+        """The ISDA reference price"""
+        return self.__commodity_reference_price
+
+    @commodity_reference_price.setter
+    def commodity_reference_price(self, value: str):
+        self._property_changed('commodity_reference_price')
+        self.__commodity_reference_price = value        
+
+    @property
+    def start(self) -> Union[datetime.date, str]:
+        """Date or Contract Month"""
+        return self.__start
+
+    @start.setter
+    def start(self, value: Union[datetime.date, str]):
+        self._property_changed('start')
+        self.__start = value        
+
+    @property
+    def end(self) -> Union[datetime.date, str]:
+        """Date or Contract Month"""
+        return self.__end
+
+    @end.setter
+    def end(self, value: Union[datetime.date, str]):
+        self._property_changed('end')
+        self.__end = value        
+
+    @property
+    def number_of_periods(self) -> int:
+        """The number of settlement periods"""
+        return self.__number_of_periods
+
+    @number_of_periods.setter
+    def number_of_periods(self, value: int):
+        self._property_changed('number_of_periods')
+        self.__number_of_periods = value        
+
+    @property
+    def contract(self) -> str:
+        """The observed contract at each pricing date e.g First Nearby, Second Nearby"""
+        return self.__contract
+
+    @contract.setter
+    def contract(self, value: str):
+        self._property_changed('contract')
+        self.__contract = value        
+
+    @property
+    def strategy(self) -> str:
+        """Option Strategy"""
+        return self.__strategy
+
+    @strategy.setter
+    def strategy(self, value: str):
+        self._property_changed('strategy')
+        self.__strategy = value        
+
+    @property
+    def quantity(self) -> str:
+        """Commodity quantity allowing number, number units, or number units/period"""
+        return self.__quantity
+
+    @quantity.setter
+    def quantity(self, value: str):
+        self._property_changed('quantity')
+        self.__quantity = value        
+
+    @property
+    def fixing_currency(self) -> Union[CurrencyName, str]:
+        """Currency Names"""
+        return self.__fixing_currency
+
+    @fixing_currency.setter
+    def fixing_currency(self, value: Union[CurrencyName, str]):
+        self._property_changed('fixing_currency')
+        self.__fixing_currency = get_enum_value(CurrencyName, value)        
+
+    @property
+    def settlement(self) -> str:
+        """read only description in plain English of settlement terms"""
+        return self.__settlement
+
+    @settlement.setter
+    def settlement(self, value: str):
+        self._property_changed('settlement')
+        self.__settlement = value        
+
+    @property
+    def leg_description(self) -> str:
+        """The description in plain English of the averaging style"""
+        return self.__leg_description
+
+    @leg_description.setter
+    def leg_description(self, value: str):
+        self._property_changed('leg_description')
+        self.__leg_description = value        
+
+    @property
+    def option_type(self) -> str:
+        """Commodity option types C, P, C/P or P/P/P/P etc"""
+        return self.__option_type
+
+    @option_type.setter
+    def option_type(self, value: str):
+        self._property_changed('option_type')
+        self.__option_type = value        
+
+    @property
+    def strike_price(self) -> Union[float, str]:
+        """Strike as value, percent or at-the-money e.g. 62.5, 95%, ATM-25, ATMF, 10/vol,
+           100k/pv, $200K/BP, or multiple strikes 65.4/-45.8"""
+        return self.__strike_price
+
+    @strike_price.setter
+    def strike_price(self, value: Union[float, str]):
+        self._property_changed('strike_price')
+        self.__strike_price = value        
+
+
 class CommodSwap(Instrument):
         
     """Object representation of a commodities swap"""
@@ -291,10 +471,10 @@ class CommodSwap(Instrument):
     @camel_case_translate
     def __init__(
         self,
-        commodity: Union[CommodityAsset, str] = None,
+        commodity: str = None,
         start: Union[datetime.date, str] = None,
         commodity_reference_price: str = None,
-        notional_amount: float = 1000000.0,
+        notional_amount: Union[float, str] = None,
         currency: Union[Currency, str] = None,
         calculation_periods: int = None,
         calculation_period_frequency: Union[Frequency, str] = None,
@@ -321,14 +501,14 @@ class CommodSwap(Instrument):
         return AssetType.Swap        
 
     @property
-    def commodity(self) -> Union[CommodityAsset, str]:
+    def commodity(self) -> str:
         """Commodity asset"""
         return self.__commodity
 
     @commodity.setter
-    def commodity(self, value: Union[CommodityAsset, str]):
+    def commodity(self, value: str):
         self._property_changed('commodity')
-        self.__commodity = get_enum_value(CommodityAsset, value)        
+        self.__commodity = value        
 
     @property
     def start(self) -> Union[datetime.date, str]:
@@ -349,12 +529,12 @@ class CommodSwap(Instrument):
         self.__commodity_reference_price = value        
 
     @property
-    def notional_amount(self) -> float:
+    def notional_amount(self) -> Union[float, str]:
         """Notional amount"""
         return self.__notional_amount
 
     @notional_amount.setter
-    def notional_amount(self, value: float):
+    def notional_amount(self, value: Union[float, str]):
         self._property_changed('notional_amount')
         self.__notional_amount = value        
 
@@ -399,7 +579,7 @@ class CommodVarianceSwap(Instrument):
         side: Union[BuySell, str] = None,
         notional: float = 1,
         notional_currency: Union[Currency, str] = None,
-        asset: Union[CommodityAsset, str] = None,
+        asset: str = None,
         asset_fixing_source: str = None,
         contract: str = None,
         fixing_currency: Union[Currency, str] = None,
@@ -478,14 +658,14 @@ class CommodVarianceSwap(Instrument):
         self.__notional_currency = get_enum_value(Currency, value)        
 
     @property
-    def asset(self) -> Union[CommodityAsset, str]:
+    def asset(self) -> str:
         """Commodity asset"""
         return self.__asset
 
     @asset.setter
-    def asset(self, value: Union[CommodityAsset, str]):
+    def asset(self, value: str):
         self._property_changed('asset')
-        self.__asset = get_enum_value(CommodityAsset, value)        
+        self.__asset = value        
 
     @property
     def asset_fixing_source(self) -> str:
@@ -645,7 +825,7 @@ class EqCliquet(Instrument):
         global_floor: float = -1000000,
         global_cap: float = 1000000,
         last_valuation_date: datetime.date = None,
-        notional_amount: float = 1000000,
+        notional_amount: Union[float, str] = None,
         payment_frequency: str = 'Maturity',
         return_style: str = 'Rate of Return',
         return_type: str = 'Sum',
@@ -770,12 +950,12 @@ class EqCliquet(Instrument):
         self.__last_valuation_date = value        
 
     @property
-    def notional_amount(self) -> float:
+    def notional_amount(self) -> Union[float, str]:
         """Notional of this position"""
         return self.__notional_amount
 
     @notional_amount.setter
-    def notional_amount(self, value: float):
+    def notional_amount(self, value: Union[float, str]):
         self._property_changed('notional_amount')
         self.__notional_amount = value        
 
@@ -924,6 +1104,9 @@ class EqOption(Instrument):
         valuation_time: Union[ValuationTime, str] = None,
         method_of_settlement: Union[OptionSettlementMethod, str] = None,
         underlier_type: Union[UnderlierType, str] = None,
+        buy_sell: Union[BuySell, str] = None,
+        premium_currency: Union[Currency, str] = None,
+        trade_as: Union[TradeAs, str] = None,
         name: str = None
     ):        
         super().__init__()
@@ -942,6 +1125,9 @@ class EqOption(Instrument):
         self.valuation_time = valuation_time
         self.method_of_settlement = method_of_settlement
         self.underlier_type = underlier_type
+        self.buy_sell = buy_sell
+        self.premium_currency = premium_currency
+        self.trade_as = trade_as
         self.name = name
 
     @property
@@ -976,8 +1162,8 @@ class EqOption(Instrument):
 
     @property
     def strike_price(self) -> Union[float, str]:
-        """Strike as value, percent or string e.g. 62.5, 95%, ATM, ATMF, 25ATM,
-           20CallDelta, 10PutDelta, 10NS"""
+        """Strike as value, percent or at-the-money e.g. 62.5, 95%, ATM-25, ATMF, 10/vol,
+           100k/pv, $200K/BP, or multiple strikes 65.4/-45.8"""
         return self.__strike_price
 
     @strike_price.setter
@@ -1105,6 +1291,142 @@ class EqOption(Instrument):
         self._property_changed('underlier_type')
         self.__underlier_type = get_enum_value(UnderlierType, value)        
 
+    @property
+    def buy_sell(self) -> Union[BuySell, str]:
+        """Buy or Sell side of contract"""
+        return self.__buy_sell
+
+    @buy_sell.setter
+    def buy_sell(self, value: Union[BuySell, str]):
+        self._property_changed('buy_sell')
+        self.__buy_sell = get_enum_value(BuySell, value)        
+
+    @property
+    def premium_currency(self) -> Union[Currency, str]:
+        """Currency of the option premium"""
+        return self.__premium_currency
+
+    @premium_currency.setter
+    def premium_currency(self, value: Union[Currency, str]):
+        self._property_changed('premium_currency')
+        self.__premium_currency = get_enum_value(Currency, value)        
+
+    @property
+    def trade_as(self) -> Union[TradeAs, str]:
+        """Option trade as (i.e. listed v. nonlisted)"""
+        return self.__trade_as
+
+    @trade_as.setter
+    def trade_as(self, value: Union[TradeAs, str]):
+        self._property_changed('trade_as')
+        self.__trade_as = get_enum_value(TradeAs, value)        
+
+
+class EqSynthetic(Instrument):
+        
+    """Instrument definition for equity synthetics"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        underlier: str = None,
+        currency: Union[Currency, str] = None,
+        swap_type: str = 'Eq Swap',
+        effective_date: datetime.date = None,
+        strike_price: Union[float, str] = None,
+        notional_amount: float = None,
+        underlier_type: Union[UnderlierType, str] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.underlier = underlier
+        self.currency = currency
+        self.swap_type = swap_type
+        self.effective_date = effective_date
+        self.strike_price = strike_price
+        self.notional_amount = notional_amount
+        self.underlier_type = underlier_type
+        self.name = name
+
+    @property
+    def asset_class(self) -> AssetClass:
+        """Equity"""
+        return AssetClass.Equity        
+
+    @property
+    def type(self) -> AssetType:
+        """Synthetic"""
+        return AssetType.Synthetic        
+
+    @property
+    def underlier(self) -> str:
+        """Underlying stock or index"""
+        return self.__underlier
+
+    @underlier.setter
+    def underlier(self, value: str):
+        self._property_changed('underlier')
+        self.__underlier = value        
+
+    @property
+    def currency(self) -> Union[Currency, str]:
+        """Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)"""
+        return self.__currency
+
+    @currency.setter
+    def currency(self, value: Union[Currency, str]):
+        self._property_changed('currency')
+        self.__currency = get_enum_value(Currency, value)        
+
+    @property
+    def swap_type(self) -> str:
+        return self.__swap_type
+
+    @swap_type.setter
+    def swap_type(self, value: str):
+        self._property_changed('swap_type')
+        self.__swap_type = value        
+
+    @property
+    def effective_date(self) -> datetime.date:
+        """The date on which the synthetic becomes effective"""
+        return self.__effective_date
+
+    @effective_date.setter
+    def effective_date(self, value: datetime.date):
+        self._property_changed('effective_date')
+        self.__effective_date = value        
+
+    @property
+    def strike_price(self) -> Union[float, str]:
+        """Variance strike as value or percentage string e.g. 62.5, 95%"""
+        return self.__strike_price
+
+    @strike_price.setter
+    def strike_price(self, value: Union[float, str]):
+        self._property_changed('strike_price')
+        self.__strike_price = value        
+
+    @property
+    def notional_amount(self) -> float:
+        """Notional amount"""
+        return self.__notional_amount
+
+    @notional_amount.setter
+    def notional_amount(self, value: float):
+        self._property_changed('notional_amount')
+        self.__notional_amount = value        
+
+    @property
+    def underlier_type(self) -> Union[UnderlierType, str]:
+        """Type of underlyer"""
+        return self.__underlier_type
+
+    @underlier_type.setter
+    def underlier_type(self, value: Union[UnderlierType, str]):
+        self._property_changed('underlier_type')
+        self.__underlier_type = get_enum_value(UnderlierType, value)        
+
 
 class EqVarianceSwap(Instrument):
         
@@ -1119,7 +1441,7 @@ class EqVarianceSwap(Instrument):
         strike_price: Union[float, str] = None,
         variance_cap: float = None,
         settlement_date: Union[datetime.date, str] = None,
-        premium: float = None,
+        premium: Union[float, str] = None,
         name: str = None
     ):        
         super().__init__()
@@ -1203,12 +1525,12 @@ class EqVarianceSwap(Instrument):
         self.__settlement_date = value        
 
     @property
-    def premium(self) -> float:
+    def premium(self) -> Union[float, str]:
         """VarSwap premium"""
         return self.__premium
 
     @premium.setter
-    def premium(self, value: float):
+    def premium(self, value: Union[float, str]):
         self._property_changed('premium')
         self.__premium = value        
 
@@ -1223,7 +1545,7 @@ class FXForward(Instrument):
         pair: str = None,
         settlement_date: Union[datetime.date, str] = None,
         forward_rate: float = None,
-        notional_amount: float = None,
+        notional_amount: Union[float, str] = None,
         name: str = None
     ):        
         super().__init__()
@@ -1274,12 +1596,12 @@ class FXForward(Instrument):
         self.__forward_rate = value        
 
     @property
-    def notional_amount(self) -> float:
+    def notional_amount(self) -> Union[float, str]:
         """Notional amount"""
         return self.__notional_amount
 
     @notional_amount.setter
-    def notional_amount(self, value: float):
+    def notional_amount(self, value: Union[float, str]):
         self._property_changed('notional_amount')
         self.__notional_amount = value        
 
@@ -1295,10 +1617,10 @@ class FXOption(Instrument):
         put_currency: Union[Currency, str] = None,
         expiration_date: Union[datetime.date, str] = None,
         option_type: Union[OptionType, str] = None,
-        call_amount: float = None,
-        put_amount: float = None,
+        call_amount: Union[float, str] = None,
+        put_amount: Union[float, str] = None,
         strike_price: Union[float, str] = None,
-        premium: float = 0,
+        premium: Union[float, str] = None,
         premium_currency: Union[Currency, str] = None,
         premium_payment_date: Union[datetime.date, str] = None,
         settlement_date: Union[datetime.date, str] = None,
@@ -1307,6 +1629,7 @@ class FXOption(Instrument):
         method_of_settlement: Union[OptionSettlementMethod, str] = None,
         expiration_time: str = None,
         pair: str = None,
+        buy_sell: Union[BuySell, str] = None,
         name: str = None
     ):        
         super().__init__()
@@ -1326,6 +1649,7 @@ class FXOption(Instrument):
         self.method_of_settlement = method_of_settlement
         self.expiration_time = expiration_time
         self.pair = pair
+        self.buy_sell = buy_sell
         self.name = name
 
     @property
@@ -1379,28 +1703,29 @@ class FXOption(Instrument):
         self.__option_type = get_enum_value(OptionType, value)        
 
     @property
-    def call_amount(self) -> float:
+    def call_amount(self) -> Union[float, str]:
         """Amount of the call currency"""
         return self.__call_amount
 
     @call_amount.setter
-    def call_amount(self, value: float):
+    def call_amount(self, value: Union[float, str]):
         self._property_changed('call_amount')
         self.__call_amount = value        
 
     @property
-    def put_amount(self) -> float:
+    def put_amount(self) -> Union[float, str]:
         """Amount of the put currency"""
         return self.__put_amount
 
     @put_amount.setter
-    def put_amount(self, value: float):
+    def put_amount(self, value: Union[float, str]):
         self._property_changed('put_amount')
         self.__put_amount = value        
 
     @property
     def strike_price(self) -> Union[float, str]:
-        """Strike as value, percent or at-the-money e.g. 62.5, 95%, ATM-25, ATMF"""
+        """Strike as value, percent or at-the-money e.g. 62.5, 95%, ATM-25, ATMF, 10/vol,
+           100k/pv, $200K/BP, or multiple strikes 65.4/-45.8"""
         return self.__strike_price
 
     @strike_price.setter
@@ -1409,12 +1734,12 @@ class FXOption(Instrument):
         self.__strike_price = value        
 
     @property
-    def premium(self) -> float:
+    def premium(self) -> Union[float, str]:
         """Option premium"""
         return self.__premium
 
     @premium.setter
-    def premium(self, value: float):
+    def premium(self, value: Union[float, str]):
         self._property_changed('premium')
         self.__premium = value        
 
@@ -1498,6 +1823,16 @@ class FXOption(Instrument):
         self._property_changed('pair')
         self.__pair = value        
 
+    @property
+    def buy_sell(self) -> Union[BuySell, str]:
+        """Buy or Sell side of contract"""
+        return self.__buy_sell
+
+    @buy_sell.setter
+    def buy_sell(self, value: Union[BuySell, str]):
+        self._property_changed('buy_sell')
+        self.__buy_sell = get_enum_value(BuySell, value)        
+
 
 class Forward(Instrument):
         
@@ -1508,7 +1843,7 @@ class Forward(Instrument):
         self,
         currency: Union[Currency, str] = None,
         expiration_date: Union[datetime.date, str] = None,
-        notional_amount: float = None,
+        notional_amount: Union[float, str] = None,
         name: str = None
     ):        
         super().__init__()
@@ -1548,17 +1883,1459 @@ class Forward(Instrument):
         self.__expiration_date = value        
 
     @property
-    def notional_amount(self) -> float:
+    def notional_amount(self) -> Union[float, str]:
         """Notional amount"""
         return self.__notional_amount
 
     @notional_amount.setter
-    def notional_amount(self, value: float):
+    def notional_amount(self, value: Union[float, str]):
         self._property_changed('notional_amount')
         self.__notional_amount = value        
 
 
 class IRBasisSwap(Instrument):
+        
+    """An exchange of cashflows from different interest rate indices"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        termination_date: Union[Union[datetime.date, str], str] = None,
+        notional_currency: Union[Currency, str] = None,
+        notional_amount: Union[float, str] = None,
+        effective_date: Union[Union[datetime.date, str], str] = None,
+        payer_spread: Union[float, str] = None,
+        payer_rate_option: str = None,
+        payer_designated_maturity: str = None,
+        payer_frequency: str = None,
+        payer_day_count_fraction: Union[DayCountFraction, str] = None,
+        payer_business_day_convention: Union[BusinessDayConvention, str] = None,
+        receiver_spread: Union[float, str] = None,
+        receiver_rate_option: str = None,
+        receiver_designated_maturity: str = None,
+        receiver_frequency: str = None,
+        receiver_day_count_fraction: Union[DayCountFraction, str] = None,
+        receiver_business_day_convention: Union[BusinessDayConvention, str] = None,
+        fee: float = 0,
+        fee_currency: Union[Currency, str] = None,
+        fee_payment_date: Union[datetime.date, str] = None,
+        clearing_house: Union[SwapClearingHouse, str] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.termination_date = termination_date
+        self.notional_currency = notional_currency
+        self.notional_amount = notional_amount
+        self.effective_date = effective_date
+        self.payer_spread = payer_spread
+        self.payer_rate_option = payer_rate_option
+        self.payer_designated_maturity = payer_designated_maturity
+        self.payer_frequency = payer_frequency
+        self.payer_day_count_fraction = payer_day_count_fraction
+        self.payer_business_day_convention = payer_business_day_convention
+        self.receiver_spread = receiver_spread
+        self.receiver_rate_option = receiver_rate_option
+        self.receiver_designated_maturity = receiver_designated_maturity
+        self.receiver_frequency = receiver_frequency
+        self.receiver_day_count_fraction = receiver_day_count_fraction
+        self.receiver_business_day_convention = receiver_business_day_convention
+        self.fee = fee
+        self.fee_currency = fee_currency
+        self.fee_payment_date = fee_payment_date
+        self.clearing_house = clearing_house
+        self.name = name
+
+    @property
+    def asset_class(self) -> AssetClass:
+        """Rates"""
+        return AssetClass.Rates        
+
+    @property
+    def type(self) -> AssetType:
+        """BasisSwap"""
+        return AssetType.BasisSwap        
+
+    @property
+    def termination_date(self) -> Union[Union[datetime.date, str], str]:
+        """The termination of the swap, e.g. 2050-04-01, 10y"""
+        return self.__termination_date
+
+    @termination_date.setter
+    def termination_date(self, value: Union[Union[datetime.date, str], str]):
+        self._property_changed('termination_date')
+        self.__termination_date = value        
+
+    @property
+    def notional_currency(self) -> Union[Currency, str]:
+        """Notional currency"""
+        return self.__notional_currency
+
+    @notional_currency.setter
+    def notional_currency(self, value: Union[Currency, str]):
+        self._property_changed('notional_currency')
+        self.__notional_currency = get_enum_value(Currency, value)        
+
+    @property
+    def notional_amount(self) -> Union[float, str]:
+        """Notional amount"""
+        return self.__notional_amount
+
+    @notional_amount.setter
+    def notional_amount(self, value: Union[float, str]):
+        self._property_changed('notional_amount')
+        self.__notional_amount = value        
+
+    @property
+    def effective_date(self) -> Union[Union[datetime.date, str], str]:
+        """The date on which the swap becomes effective"""
+        return self.__effective_date
+
+    @effective_date.setter
+    def effective_date(self, value: Union[Union[datetime.date, str], str]):
+        self._property_changed('effective_date')
+        self.__effective_date = value        
+
+    @property
+    def payer_spread(self) -> Union[float, str]:
+        """Spread over the payer rate"""
+        return self.__payer_spread
+
+    @payer_spread.setter
+    def payer_spread(self, value: Union[float, str]):
+        self._property_changed('payer_spread')
+        self.__payer_spread = value        
+
+    @property
+    def payer_rate_option(self) -> str:
+        """The underlying benchmark for the payer, e.g. USD-LIBOR-BBA, EUR-EURIBOR-TELERATE"""
+        return self.__payer_rate_option
+
+    @payer_rate_option.setter
+    def payer_rate_option(self, value: str):
+        self._property_changed('payer_rate_option')
+        self.__payer_rate_option = value        
+
+    @property
+    def payer_designated_maturity(self) -> str:
+        """Tenor of the payerRateOption, e.g. 3m, 6m"""
+        return self.__payer_designated_maturity
+
+    @payer_designated_maturity.setter
+    def payer_designated_maturity(self, value: str):
+        self._property_changed('payer_designated_maturity')
+        self.__payer_designated_maturity = value        
+
+    @property
+    def payer_frequency(self) -> str:
+        """The frequency of payer payments, e.g. 6m"""
+        return self.__payer_frequency
+
+    @payer_frequency.setter
+    def payer_frequency(self, value: str):
+        self._property_changed('payer_frequency')
+        self.__payer_frequency = value        
+
+    @property
+    def payer_day_count_fraction(self) -> Union[DayCountFraction, str]:
+        """The day count fraction for the payer"""
+        return self.__payer_day_count_fraction
+
+    @payer_day_count_fraction.setter
+    def payer_day_count_fraction(self, value: Union[DayCountFraction, str]):
+        self._property_changed('payer_day_count_fraction')
+        self.__payer_day_count_fraction = get_enum_value(DayCountFraction, value)        
+
+    @property
+    def payer_business_day_convention(self) -> Union[BusinessDayConvention, str]:
+        """The business day convention for the payer"""
+        return self.__payer_business_day_convention
+
+    @payer_business_day_convention.setter
+    def payer_business_day_convention(self, value: Union[BusinessDayConvention, str]):
+        self._property_changed('payer_business_day_convention')
+        self.__payer_business_day_convention = get_enum_value(BusinessDayConvention, value)        
+
+    @property
+    def receiver_spread(self) -> Union[float, str]:
+        """Spread over the receiver rate"""
+        return self.__receiver_spread
+
+    @receiver_spread.setter
+    def receiver_spread(self, value: Union[float, str]):
+        self._property_changed('receiver_spread')
+        self.__receiver_spread = value        
+
+    @property
+    def receiver_rate_option(self) -> str:
+        """The underlying benchmark for the receiver, e.g. USD-LIBOR-BBA, EUR-EURIBOR-
+           TELERATE"""
+        return self.__receiver_rate_option
+
+    @receiver_rate_option.setter
+    def receiver_rate_option(self, value: str):
+        self._property_changed('receiver_rate_option')
+        self.__receiver_rate_option = value        
+
+    @property
+    def receiver_designated_maturity(self) -> str:
+        """Tenor of the receiverRateOption, e.g. 3m, 6m"""
+        return self.__receiver_designated_maturity
+
+    @receiver_designated_maturity.setter
+    def receiver_designated_maturity(self, value: str):
+        self._property_changed('receiver_designated_maturity')
+        self.__receiver_designated_maturity = value        
+
+    @property
+    def receiver_frequency(self) -> str:
+        """The frequency of receiver payments, e.g. 6m"""
+        return self.__receiver_frequency
+
+    @receiver_frequency.setter
+    def receiver_frequency(self, value: str):
+        self._property_changed('receiver_frequency')
+        self.__receiver_frequency = value        
+
+    @property
+    def receiver_day_count_fraction(self) -> Union[DayCountFraction, str]:
+        """The day count fraction for the receiver"""
+        return self.__receiver_day_count_fraction
+
+    @receiver_day_count_fraction.setter
+    def receiver_day_count_fraction(self, value: Union[DayCountFraction, str]):
+        self._property_changed('receiver_day_count_fraction')
+        self.__receiver_day_count_fraction = get_enum_value(DayCountFraction, value)        
+
+    @property
+    def receiver_business_day_convention(self) -> Union[BusinessDayConvention, str]:
+        """The business day convention for the receiver"""
+        return self.__receiver_business_day_convention
+
+    @receiver_business_day_convention.setter
+    def receiver_business_day_convention(self, value: Union[BusinessDayConvention, str]):
+        self._property_changed('receiver_business_day_convention')
+        self.__receiver_business_day_convention = get_enum_value(BusinessDayConvention, value)        
+
+    @property
+    def fee(self) -> float:
+        """The fee"""
+        return self.__fee
+
+    @fee.setter
+    def fee(self, value: float):
+        self._property_changed('fee')
+        self.__fee = value        
+
+    @property
+    def fee_currency(self) -> Union[Currency, str]:
+        """Currency of the fee"""
+        return self.__fee_currency
+
+    @fee_currency.setter
+    def fee_currency(self, value: Union[Currency, str]):
+        self._property_changed('fee_currency')
+        self.__fee_currency = get_enum_value(Currency, value)        
+
+    @property
+    def fee_payment_date(self) -> Union[datetime.date, str]:
+        """Payment date of the fee"""
+        return self.__fee_payment_date
+
+    @fee_payment_date.setter
+    def fee_payment_date(self, value: Union[datetime.date, str]):
+        self._property_changed('fee_payment_date')
+        self.__fee_payment_date = value        
+
+    @property
+    def clearing_house(self) -> Union[SwapClearingHouse, str]:
+        """Swap Clearing House"""
+        return self.__clearing_house
+
+    @clearing_house.setter
+    def clearing_house(self, value: Union[SwapClearingHouse, str]):
+        self._property_changed('clearing_house')
+        self.__clearing_house = get_enum_value(SwapClearingHouse, value)        
+
+
+class IRBondOption(Instrument):
+        
+    """Object representation of a bond option"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        underlier: str = None,
+        notional_amount: Union[float, str] = None,
+        expiration_date: Union[Union[datetime.date, str], str] = None,
+        put_call: str = None,
+        effective_date: Union[Union[datetime.date, str], str] = None,
+        strike: Union[float, str] = None,
+        strike_type: Union[BondStrikeType, str] = None,
+        premium: Union[float, str] = None,
+        premium_payment_date: Union[datetime.date, str] = None,
+        fee: float = 0,
+        fee_currency: Union[Currency, str] = None,
+        fee_payment_date: Union[datetime.date, str] = None,
+        settlement: Union[SwapSettlement, str] = None,
+        underlier_type: Union[UnderlierType, str] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.underlier = underlier
+        self.notional_amount = notional_amount
+        self.expiration_date = expiration_date
+        self.put_call = put_call
+        self.effective_date = effective_date
+        self.strike = strike
+        self.strike_type = strike_type
+        self.premium = premium
+        self.premium_payment_date = premium_payment_date
+        self.fee = fee
+        self.fee_currency = fee_currency
+        self.fee_payment_date = fee_payment_date
+        self.settlement = settlement
+        self.underlier_type = underlier_type
+        self.name = name
+
+    @property
+    def asset_class(self) -> AssetClass:
+        """Rates"""
+        return AssetClass.Rates        
+
+    @property
+    def type(self) -> AssetType:
+        """BondOption"""
+        return AssetType.BondOption        
+
+    @property
+    def underlier(self) -> str:
+        """Underlying Security Cusip or ISIN"""
+        return self.__underlier
+
+    @underlier.setter
+    def underlier(self, value: str):
+        self._property_changed('underlier')
+        self.__underlier = value        
+
+    @property
+    def notional_amount(self) -> Union[float, str]:
+        """Notional amount"""
+        return self.__notional_amount
+
+    @notional_amount.setter
+    def notional_amount(self, value: Union[float, str]):
+        self._property_changed('notional_amount')
+        self.__notional_amount = value        
+
+    @property
+    def expiration_date(self) -> Union[Union[datetime.date, str], str]:
+        """Bond option expiration date, 2020-05-01, 3m"""
+        return self.__expiration_date
+
+    @expiration_date.setter
+    def expiration_date(self, value: Union[Union[datetime.date, str], str]):
+        self._property_changed('expiration_date')
+        self.__expiration_date = value        
+
+    @property
+    def put_call(self) -> str:
+        """The claim type of the option"""
+        return self.__put_call
+
+    @put_call.setter
+    def put_call(self, value: str):
+        self._property_changed('put_call')
+        self.__put_call = value        
+
+    @property
+    def effective_date(self) -> Union[Union[datetime.date, str], str]:
+        """Bond option effective date, e.g. 2019-01-01, 10y"""
+        return self.__effective_date
+
+    @effective_date.setter
+    def effective_date(self, value: Union[Union[datetime.date, str], str]):
+        self._property_changed('effective_date')
+        self.__effective_date = value        
+
+    @property
+    def strike(self) -> Union[float, str]:
+        """The strike of the option"""
+        return self.__strike
+
+    @strike.setter
+    def strike(self, value: Union[float, str]):
+        self._property_changed('strike')
+        self.__strike = value        
+
+    @property
+    def strike_type(self) -> Union[BondStrikeType, str]:
+        """The type of the bond strike - price, yield etc"""
+        return self.__strike_type
+
+    @strike_type.setter
+    def strike_type(self, value: Union[BondStrikeType, str]):
+        self._property_changed('strike_type')
+        self.__strike_type = get_enum_value(BondStrikeType, value)        
+
+    @property
+    def premium(self) -> Union[float, str]:
+        """The premium"""
+        return self.__premium
+
+    @premium.setter
+    def premium(self, value: Union[float, str]):
+        self._property_changed('premium')
+        self.__premium = value        
+
+    @property
+    def premium_payment_date(self) -> Union[datetime.date, str]:
+        """Payment date of the premium"""
+        return self.__premium_payment_date
+
+    @premium_payment_date.setter
+    def premium_payment_date(self, value: Union[datetime.date, str]):
+        self._property_changed('premium_payment_date')
+        self.__premium_payment_date = value        
+
+    @property
+    def fee(self) -> float:
+        """The fee"""
+        return self.__fee
+
+    @fee.setter
+    def fee(self, value: float):
+        self._property_changed('fee')
+        self.__fee = value        
+
+    @property
+    def fee_currency(self) -> Union[Currency, str]:
+        """Currency of the fee"""
+        return self.__fee_currency
+
+    @fee_currency.setter
+    def fee_currency(self, value: Union[Currency, str]):
+        self._property_changed('fee_currency')
+        self.__fee_currency = get_enum_value(Currency, value)        
+
+    @property
+    def fee_payment_date(self) -> Union[datetime.date, str]:
+        """Payment date of the fee"""
+        return self.__fee_payment_date
+
+    @fee_payment_date.setter
+    def fee_payment_date(self, value: Union[datetime.date, str]):
+        self._property_changed('fee_payment_date')
+        self.__fee_payment_date = value        
+
+    @property
+    def settlement(self) -> Union[SwapSettlement, str]:
+        """Swap Settlement Type"""
+        return self.__settlement
+
+    @settlement.setter
+    def settlement(self, value: Union[SwapSettlement, str]):
+        self._property_changed('settlement')
+        self.__settlement = get_enum_value(SwapSettlement, value)        
+
+    @property
+    def underlier_type(self) -> Union[UnderlierType, str]:
+        """Type of underlyer"""
+        return self.__underlier_type
+
+    @underlier_type.setter
+    def underlier_type(self, value: Union[UnderlierType, str]):
+        self._property_changed('underlier_type')
+        self.__underlier_type = get_enum_value(UnderlierType, value)        
+
+
+class IRCap(Instrument):
+        
+    """Object representation of an interest rate cap"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        termination_date: Union[datetime.date, str] = None,
+        notional_currency: Union[Currency, str] = None,
+        notional_amount: Union[float, str] = None,
+        effective_date: Union[datetime.date, str] = None,
+        floating_rate_option: str = None,
+        floating_rate_designated_maturity: str = None,
+        floating_rate_frequency: str = None,
+        floating_rate_day_count_fraction: Union[DayCountFraction, str] = None,
+        floating_rate_business_day_convention: Union[BusinessDayConvention, str] = None,
+        cap_rate: Union[float, str] = None,
+        premium: Union[float, str] = None,
+        premium_payment_date: Union[datetime.date, str] = None,
+        fee: float = 0,
+        fee_currency: Union[Currency, str] = None,
+        fee_payment_date: Union[datetime.date, str] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.termination_date = termination_date
+        self.notional_currency = notional_currency
+        self.notional_amount = notional_amount
+        self.effective_date = effective_date
+        self.floating_rate_option = floating_rate_option
+        self.floating_rate_designated_maturity = floating_rate_designated_maturity
+        self.floating_rate_frequency = floating_rate_frequency
+        self.floating_rate_day_count_fraction = floating_rate_day_count_fraction
+        self.floating_rate_business_day_convention = floating_rate_business_day_convention
+        self.cap_rate = cap_rate
+        self.premium = premium
+        self.premium_payment_date = premium_payment_date
+        self.fee = fee
+        self.fee_currency = fee_currency
+        self.fee_payment_date = fee_payment_date
+        self.name = name
+
+    @property
+    def asset_class(self) -> AssetClass:
+        """Rates"""
+        return AssetClass.Rates        
+
+    @property
+    def type(self) -> AssetType:
+        """Cap"""
+        return AssetType.Cap        
+
+    @property
+    def termination_date(self) -> Union[datetime.date, str]:
+        """The termination of the cap, e.g. 2025-04-01, 2y"""
+        return self.__termination_date
+
+    @termination_date.setter
+    def termination_date(self, value: Union[datetime.date, str]):
+        self._property_changed('termination_date')
+        self.__termination_date = value        
+
+    @property
+    def notional_currency(self) -> Union[Currency, str]:
+        """Notional currency"""
+        return self.__notional_currency
+
+    @notional_currency.setter
+    def notional_currency(self, value: Union[Currency, str]):
+        self._property_changed('notional_currency')
+        self.__notional_currency = get_enum_value(Currency, value)        
+
+    @property
+    def notional_amount(self) -> Union[float, str]:
+        """Notional amount"""
+        return self.__notional_amount
+
+    @notional_amount.setter
+    def notional_amount(self, value: Union[float, str]):
+        self._property_changed('notional_amount')
+        self.__notional_amount = value        
+
+    @property
+    def effective_date(self) -> Union[datetime.date, str]:
+        """The date on which the cap becomes effective"""
+        return self.__effective_date
+
+    @effective_date.setter
+    def effective_date(self, value: Union[datetime.date, str]):
+        self._property_changed('effective_date')
+        self.__effective_date = value        
+
+    @property
+    def floating_rate_option(self) -> str:
+        """The underlying benchmark for the floating rate, e.g. USD-LIBOR-BBA, EUR-EURIBOR-
+           TELERATE"""
+        return self.__floating_rate_option
+
+    @floating_rate_option.setter
+    def floating_rate_option(self, value: str):
+        self._property_changed('floating_rate_option')
+        self.__floating_rate_option = value        
+
+    @property
+    def floating_rate_designated_maturity(self) -> str:
+        """Tenor of the floatingRateOption, e.g. 3m, 6m"""
+        return self.__floating_rate_designated_maturity
+
+    @floating_rate_designated_maturity.setter
+    def floating_rate_designated_maturity(self, value: str):
+        self._property_changed('floating_rate_designated_maturity')
+        self.__floating_rate_designated_maturity = value        
+
+    @property
+    def floating_rate_frequency(self) -> str:
+        """The frequency of floating payments, e.g. 3m"""
+        return self.__floating_rate_frequency
+
+    @floating_rate_frequency.setter
+    def floating_rate_frequency(self, value: str):
+        self._property_changed('floating_rate_frequency')
+        self.__floating_rate_frequency = value        
+
+    @property
+    def floating_rate_day_count_fraction(self) -> Union[DayCountFraction, str]:
+        """The day count fraction of the floating rate"""
+        return self.__floating_rate_day_count_fraction
+
+    @floating_rate_day_count_fraction.setter
+    def floating_rate_day_count_fraction(self, value: Union[DayCountFraction, str]):
+        self._property_changed('floating_rate_day_count_fraction')
+        self.__floating_rate_day_count_fraction = get_enum_value(DayCountFraction, value)        
+
+    @property
+    def floating_rate_business_day_convention(self) -> Union[BusinessDayConvention, str]:
+        """The business day convention of the floating rate"""
+        return self.__floating_rate_business_day_convention
+
+    @floating_rate_business_day_convention.setter
+    def floating_rate_business_day_convention(self, value: Union[BusinessDayConvention, str]):
+        self._property_changed('floating_rate_business_day_convention')
+        self.__floating_rate_business_day_convention = get_enum_value(BusinessDayConvention, value)        
+
+    @property
+    def cap_rate(self) -> Union[float, str]:
+        """The rate of this cap, as value, percent or at-the-money e.g. 62.5, 95%, ATM-25,
+           ATMF"""
+        return self.__cap_rate
+
+    @cap_rate.setter
+    def cap_rate(self, value: Union[float, str]):
+        self._property_changed('cap_rate')
+        self.__cap_rate = value        
+
+    @property
+    def premium(self) -> Union[float, str]:
+        """The premium"""
+        return self.__premium
+
+    @premium.setter
+    def premium(self, value: Union[float, str]):
+        self._property_changed('premium')
+        self.__premium = value        
+
+    @property
+    def premium_payment_date(self) -> Union[datetime.date, str]:
+        """Payment date of the premium"""
+        return self.__premium_payment_date
+
+    @premium_payment_date.setter
+    def premium_payment_date(self, value: Union[datetime.date, str]):
+        self._property_changed('premium_payment_date')
+        self.__premium_payment_date = value        
+
+    @property
+    def fee(self) -> float:
+        """The fee"""
+        return self.__fee
+
+    @fee.setter
+    def fee(self, value: float):
+        self._property_changed('fee')
+        self.__fee = value        
+
+    @property
+    def fee_currency(self) -> Union[Currency, str]:
+        """Currency of the fee"""
+        return self.__fee_currency
+
+    @fee_currency.setter
+    def fee_currency(self, value: Union[Currency, str]):
+        self._property_changed('fee_currency')
+        self.__fee_currency = get_enum_value(Currency, value)        
+
+    @property
+    def fee_payment_date(self) -> Union[datetime.date, str]:
+        """Payment date of the fee"""
+        return self.__fee_payment_date
+
+    @fee_payment_date.setter
+    def fee_payment_date(self, value: Union[datetime.date, str]):
+        self._property_changed('fee_payment_date')
+        self.__fee_payment_date = value        
+
+
+class IRFloor(Instrument):
+        
+    """Object representation of an interest rate floor"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        termination_date: Union[datetime.date, str] = None,
+        notional_currency: Union[Currency, str] = None,
+        notional_amount: Union[float, str] = None,
+        effective_date: Union[datetime.date, str] = None,
+        floating_rate_option: str = None,
+        floating_rate_designated_maturity: str = None,
+        floating_rate_frequency: str = None,
+        floating_rate_day_count_fraction: Union[DayCountFraction, str] = None,
+        floating_rate_business_day_convention: Union[BusinessDayConvention, str] = None,
+        floor_rate: Union[float, str] = None,
+        premium: Union[float, str] = None,
+        premium_payment_date: Union[datetime.date, str] = None,
+        fee: float = 0,
+        fee_currency: Union[Currency, str] = None,
+        fee_payment_date: Union[datetime.date, str] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.termination_date = termination_date
+        self.notional_currency = notional_currency
+        self.notional_amount = notional_amount
+        self.effective_date = effective_date
+        self.floating_rate_option = floating_rate_option
+        self.floating_rate_designated_maturity = floating_rate_designated_maturity
+        self.floating_rate_frequency = floating_rate_frequency
+        self.floating_rate_day_count_fraction = floating_rate_day_count_fraction
+        self.floating_rate_business_day_convention = floating_rate_business_day_convention
+        self.floor_rate = floor_rate
+        self.premium = premium
+        self.premium_payment_date = premium_payment_date
+        self.fee = fee
+        self.fee_currency = fee_currency
+        self.fee_payment_date = fee_payment_date
+        self.name = name
+
+    @property
+    def asset_class(self) -> AssetClass:
+        """Rates"""
+        return AssetClass.Rates        
+
+    @property
+    def type(self) -> AssetType:
+        """Floor"""
+        return AssetType.Floor        
+
+    @property
+    def termination_date(self) -> Union[datetime.date, str]:
+        """The termination of the floor, e.g. 2025-04-01, 2y"""
+        return self.__termination_date
+
+    @termination_date.setter
+    def termination_date(self, value: Union[datetime.date, str]):
+        self._property_changed('termination_date')
+        self.__termination_date = value        
+
+    @property
+    def notional_currency(self) -> Union[Currency, str]:
+        """Notional currency"""
+        return self.__notional_currency
+
+    @notional_currency.setter
+    def notional_currency(self, value: Union[Currency, str]):
+        self._property_changed('notional_currency')
+        self.__notional_currency = get_enum_value(Currency, value)        
+
+    @property
+    def notional_amount(self) -> Union[float, str]:
+        """Notional amount"""
+        return self.__notional_amount
+
+    @notional_amount.setter
+    def notional_amount(self, value: Union[float, str]):
+        self._property_changed('notional_amount')
+        self.__notional_amount = value        
+
+    @property
+    def effective_date(self) -> Union[datetime.date, str]:
+        """The date on which the floor becomes effective"""
+        return self.__effective_date
+
+    @effective_date.setter
+    def effective_date(self, value: Union[datetime.date, str]):
+        self._property_changed('effective_date')
+        self.__effective_date = value        
+
+    @property
+    def floating_rate_option(self) -> str:
+        """The underlying benchmark for the floating rate, e.g. USD-LIBOR-BBA, EUR-EURIBOR-
+           TELERATE"""
+        return self.__floating_rate_option
+
+    @floating_rate_option.setter
+    def floating_rate_option(self, value: str):
+        self._property_changed('floating_rate_option')
+        self.__floating_rate_option = value        
+
+    @property
+    def floating_rate_designated_maturity(self) -> str:
+        """Tenor of the floatingRateOption, e.g. 3m, 6m"""
+        return self.__floating_rate_designated_maturity
+
+    @floating_rate_designated_maturity.setter
+    def floating_rate_designated_maturity(self, value: str):
+        self._property_changed('floating_rate_designated_maturity')
+        self.__floating_rate_designated_maturity = value        
+
+    @property
+    def floating_rate_frequency(self) -> str:
+        """The frequency of floating payments, e.g. 3m"""
+        return self.__floating_rate_frequency
+
+    @floating_rate_frequency.setter
+    def floating_rate_frequency(self, value: str):
+        self._property_changed('floating_rate_frequency')
+        self.__floating_rate_frequency = value        
+
+    @property
+    def floating_rate_day_count_fraction(self) -> Union[DayCountFraction, str]:
+        """The day count fraction of the floating rate"""
+        return self.__floating_rate_day_count_fraction
+
+    @floating_rate_day_count_fraction.setter
+    def floating_rate_day_count_fraction(self, value: Union[DayCountFraction, str]):
+        self._property_changed('floating_rate_day_count_fraction')
+        self.__floating_rate_day_count_fraction = get_enum_value(DayCountFraction, value)        
+
+    @property
+    def floating_rate_business_day_convention(self) -> Union[BusinessDayConvention, str]:
+        """The business day convention of the floating rate"""
+        return self.__floating_rate_business_day_convention
+
+    @floating_rate_business_day_convention.setter
+    def floating_rate_business_day_convention(self, value: Union[BusinessDayConvention, str]):
+        self._property_changed('floating_rate_business_day_convention')
+        self.__floating_rate_business_day_convention = get_enum_value(BusinessDayConvention, value)        
+
+    @property
+    def floor_rate(self) -> Union[float, str]:
+        """The rate of this floor, as value, percent or at-the-money e.g. 62.5, 95%,
+           ATM-25, ATMF"""
+        return self.__floor_rate
+
+    @floor_rate.setter
+    def floor_rate(self, value: Union[float, str]):
+        self._property_changed('floor_rate')
+        self.__floor_rate = value        
+
+    @property
+    def premium(self) -> Union[float, str]:
+        """The premium"""
+        return self.__premium
+
+    @premium.setter
+    def premium(self, value: Union[float, str]):
+        self._property_changed('premium')
+        self.__premium = value        
+
+    @property
+    def premium_payment_date(self) -> Union[datetime.date, str]:
+        """Payment date of the premium"""
+        return self.__premium_payment_date
+
+    @premium_payment_date.setter
+    def premium_payment_date(self, value: Union[datetime.date, str]):
+        self._property_changed('premium_payment_date')
+        self.__premium_payment_date = value        
+
+    @property
+    def fee(self) -> float:
+        """The fee"""
+        return self.__fee
+
+    @fee.setter
+    def fee(self, value: float):
+        self._property_changed('fee')
+        self.__fee = value        
+
+    @property
+    def fee_currency(self) -> Union[Currency, str]:
+        """Currency of the fee"""
+        return self.__fee_currency
+
+    @fee_currency.setter
+    def fee_currency(self, value: Union[Currency, str]):
+        self._property_changed('fee_currency')
+        self.__fee_currency = get_enum_value(Currency, value)        
+
+    @property
+    def fee_payment_date(self) -> Union[datetime.date, str]:
+        """Payment date of the fee"""
+        return self.__fee_payment_date
+
+    @fee_payment_date.setter
+    def fee_payment_date(self, value: Union[datetime.date, str]):
+        self._property_changed('fee_payment_date')
+        self.__fee_payment_date = value        
+
+
+class IRSwap(Instrument):
+        
+    """A vanilla interest rate swap of fixed vs floating cashflows"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        pay_or_receive: Union[PayReceive, str] = None,
+        termination_date: Union[Union[datetime.date, str], str] = None,
+        notional_currency: Union[Currency, str] = None,
+        notional_amount: Union[float, str] = None,
+        effective_date: Union[Union[datetime.date, str], str] = None,
+        floating_rate_for_the_initial_calculation_period: float = None,
+        floating_rate_option: str = None,
+        floating_rate_designated_maturity: str = None,
+        floating_rate_spread: float = None,
+        floating_rate_frequency: str = None,
+        floating_rate_day_count_fraction: Union[DayCountFraction, str] = None,
+        floating_rate_business_day_convention: Union[BusinessDayConvention, str] = None,
+        fixed_rate: Union[float, str] = None,
+        fixed_rate_frequency: str = None,
+        fixed_rate_day_count_fraction: Union[DayCountFraction, str] = None,
+        fixed_rate_business_day_convention: Union[BusinessDayConvention, str] = None,
+        fee: float = 0,
+        fee_currency: Union[Currency, str] = None,
+        fee_payment_date: Union[datetime.date, str] = None,
+        clearing_house: Union[SwapClearingHouse, str] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.pay_or_receive = pay_or_receive
+        self.termination_date = termination_date
+        self.notional_currency = notional_currency
+        self.notional_amount = notional_amount
+        self.effective_date = effective_date
+        self.floating_rate_for_the_initial_calculation_period = floating_rate_for_the_initial_calculation_period
+        self.floating_rate_option = floating_rate_option
+        self.floating_rate_designated_maturity = floating_rate_designated_maturity
+        self.floating_rate_spread = floating_rate_spread
+        self.floating_rate_frequency = floating_rate_frequency
+        self.floating_rate_day_count_fraction = floating_rate_day_count_fraction
+        self.floating_rate_business_day_convention = floating_rate_business_day_convention
+        self.fixed_rate = fixed_rate
+        self.fixed_rate_frequency = fixed_rate_frequency
+        self.fixed_rate_day_count_fraction = fixed_rate_day_count_fraction
+        self.fixed_rate_business_day_convention = fixed_rate_business_day_convention
+        self.fee = fee
+        self.fee_currency = fee_currency
+        self.fee_payment_date = fee_payment_date
+        self.clearing_house = clearing_house
+        self.name = name
+
+    @property
+    def asset_class(self) -> AssetClass:
+        """Rates"""
+        return AssetClass.Rates        
+
+    @property
+    def type(self) -> AssetType:
+        """Swap"""
+        return AssetType.Swap        
+
+    @property
+    def pay_or_receive(self) -> Union[PayReceive, str]:
+        """Pay or receive fixed"""
+        return self.__pay_or_receive
+
+    @pay_or_receive.setter
+    def pay_or_receive(self, value: Union[PayReceive, str]):
+        self._property_changed('pay_or_receive')
+        self.__pay_or_receive = get_enum_value(PayReceive, value)        
+
+    @property
+    def termination_date(self) -> Union[Union[datetime.date, str], str]:
+        """The termination of the swap, e.g. 2050-04-01, 10y"""
+        return self.__termination_date
+
+    @termination_date.setter
+    def termination_date(self, value: Union[Union[datetime.date, str], str]):
+        self._property_changed('termination_date')
+        self.__termination_date = value        
+
+    @property
+    def notional_currency(self) -> Union[Currency, str]:
+        """Notional currency"""
+        return self.__notional_currency
+
+    @notional_currency.setter
+    def notional_currency(self, value: Union[Currency, str]):
+        self._property_changed('notional_currency')
+        self.__notional_currency = get_enum_value(Currency, value)        
+
+    @property
+    def notional_amount(self) -> Union[float, str]:
+        """Notional amount"""
+        return self.__notional_amount
+
+    @notional_amount.setter
+    def notional_amount(self, value: Union[float, str]):
+        self._property_changed('notional_amount')
+        self.__notional_amount = value        
+
+    @property
+    def effective_date(self) -> Union[Union[datetime.date, str], str]:
+        """The date on which the swap becomes effective"""
+        return self.__effective_date
+
+    @effective_date.setter
+    def effective_date(self, value: Union[Union[datetime.date, str], str]):
+        self._property_changed('effective_date')
+        self.__effective_date = value        
+
+    @property
+    def floating_rate_for_the_initial_calculation_period(self) -> float:
+        """First fixing"""
+        return self.__floating_rate_for_the_initial_calculation_period
+
+    @floating_rate_for_the_initial_calculation_period.setter
+    def floating_rate_for_the_initial_calculation_period(self, value: float):
+        self._property_changed('floating_rate_for_the_initial_calculation_period')
+        self.__floating_rate_for_the_initial_calculation_period = value        
+
+    @property
+    def floating_rate_option(self) -> str:
+        """The underlying benchmark for the floating rate, e.g. USD-LIBOR-BBA, EUR-EURIBOR-
+           TELERATE"""
+        return self.__floating_rate_option
+
+    @floating_rate_option.setter
+    def floating_rate_option(self, value: str):
+        self._property_changed('floating_rate_option')
+        self.__floating_rate_option = value        
+
+    @property
+    def floating_rate_designated_maturity(self) -> str:
+        """Tenor of the floatingRateOption, e.g. 3m, 6m"""
+        return self.__floating_rate_designated_maturity
+
+    @floating_rate_designated_maturity.setter
+    def floating_rate_designated_maturity(self, value: str):
+        self._property_changed('floating_rate_designated_maturity')
+        self.__floating_rate_designated_maturity = value        
+
+    @property
+    def floating_rate_spread(self) -> float:
+        """The spread over the floating rate"""
+        return self.__floating_rate_spread
+
+    @floating_rate_spread.setter
+    def floating_rate_spread(self, value: float):
+        self._property_changed('floating_rate_spread')
+        self.__floating_rate_spread = value        
+
+    @property
+    def floating_rate_frequency(self) -> str:
+        """The frequency of floating payments, e.g. 3m"""
+        return self.__floating_rate_frequency
+
+    @floating_rate_frequency.setter
+    def floating_rate_frequency(self, value: str):
+        self._property_changed('floating_rate_frequency')
+        self.__floating_rate_frequency = value        
+
+    @property
+    def floating_rate_day_count_fraction(self) -> Union[DayCountFraction, str]:
+        """The day count fraction of the floating rate"""
+        return self.__floating_rate_day_count_fraction
+
+    @floating_rate_day_count_fraction.setter
+    def floating_rate_day_count_fraction(self, value: Union[DayCountFraction, str]):
+        self._property_changed('floating_rate_day_count_fraction')
+        self.__floating_rate_day_count_fraction = get_enum_value(DayCountFraction, value)        
+
+    @property
+    def floating_rate_business_day_convention(self) -> Union[BusinessDayConvention, str]:
+        """The business day convention of the floating rate"""
+        return self.__floating_rate_business_day_convention
+
+    @floating_rate_business_day_convention.setter
+    def floating_rate_business_day_convention(self, value: Union[BusinessDayConvention, str]):
+        self._property_changed('floating_rate_business_day_convention')
+        self.__floating_rate_business_day_convention = get_enum_value(BusinessDayConvention, value)        
+
+    @property
+    def fixed_rate(self) -> Union[float, str]:
+        """The coupon of the fixed leg"""
+        return self.__fixed_rate
+
+    @fixed_rate.setter
+    def fixed_rate(self, value: Union[float, str]):
+        self._property_changed('fixed_rate')
+        self.__fixed_rate = value        
+
+    @property
+    def fixed_rate_frequency(self) -> str:
+        """The frequency of fixed payments, e.g. 6m"""
+        return self.__fixed_rate_frequency
+
+    @fixed_rate_frequency.setter
+    def fixed_rate_frequency(self, value: str):
+        self._property_changed('fixed_rate_frequency')
+        self.__fixed_rate_frequency = value        
+
+    @property
+    def fixed_rate_day_count_fraction(self) -> Union[DayCountFraction, str]:
+        """The day count fraction for the fixed rate"""
+        return self.__fixed_rate_day_count_fraction
+
+    @fixed_rate_day_count_fraction.setter
+    def fixed_rate_day_count_fraction(self, value: Union[DayCountFraction, str]):
+        self._property_changed('fixed_rate_day_count_fraction')
+        self.__fixed_rate_day_count_fraction = get_enum_value(DayCountFraction, value)        
+
+    @property
+    def fixed_rate_business_day_convention(self) -> Union[BusinessDayConvention, str]:
+        """The business day convention for the fixed rate"""
+        return self.__fixed_rate_business_day_convention
+
+    @fixed_rate_business_day_convention.setter
+    def fixed_rate_business_day_convention(self, value: Union[BusinessDayConvention, str]):
+        self._property_changed('fixed_rate_business_day_convention')
+        self.__fixed_rate_business_day_convention = get_enum_value(BusinessDayConvention, value)        
+
+    @property
+    def fee(self) -> float:
+        """The fee"""
+        return self.__fee
+
+    @fee.setter
+    def fee(self, value: float):
+        self._property_changed('fee')
+        self.__fee = value        
+
+    @property
+    def fee_currency(self) -> Union[Currency, str]:
+        """Currency of the fee"""
+        return self.__fee_currency
+
+    @fee_currency.setter
+    def fee_currency(self, value: Union[Currency, str]):
+        self._property_changed('fee_currency')
+        self.__fee_currency = get_enum_value(Currency, value)        
+
+    @property
+    def fee_payment_date(self) -> Union[datetime.date, str]:
+        """Payment date of the fee"""
+        return self.__fee_payment_date
+
+    @fee_payment_date.setter
+    def fee_payment_date(self, value: Union[datetime.date, str]):
+        self._property_changed('fee_payment_date')
+        self.__fee_payment_date = value        
+
+    @property
+    def clearing_house(self) -> Union[SwapClearingHouse, str]:
+        """Swap Clearing House"""
+        return self.__clearing_house
+
+    @clearing_house.setter
+    def clearing_house(self, value: Union[SwapClearingHouse, str]):
+        self._property_changed('clearing_house')
+        self.__clearing_house = get_enum_value(SwapClearingHouse, value)        
+
+
+class IRSwaption(Instrument):
+        
+    """Object representation of a swaption"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        pay_or_receive: str = None,
+        termination_date: Union[Union[datetime.date, str], str] = None,
+        notional_currency: Union[Currency, str] = None,
+        effective_date: Union[Union[datetime.date, str], str] = None,
+        notional_amount: Union[float, str] = None,
+        expiration_date: Union[Union[datetime.date, str], str] = None,
+        floating_rate_option: str = None,
+        floating_rate_designated_maturity: str = None,
+        floating_rate_spread: float = None,
+        floating_rate_frequency: str = None,
+        floating_rate_day_count_fraction: Union[DayCountFraction, str] = None,
+        floating_rate_business_day_convention: Union[BusinessDayConvention, str] = None,
+        fixed_rate_frequency: str = None,
+        fixed_rate_day_count_fraction: Union[DayCountFraction, str] = None,
+        fixed_rate_business_day_convention: Union[BusinessDayConvention, str] = None,
+        strike: Union[float, str] = None,
+        premium: Union[float, str] = None,
+        premium_payment_date: Union[datetime.date, str] = None,
+        fee: float = 0,
+        fee_currency: Union[Currency, str] = None,
+        fee_payment_date: Union[datetime.date, str] = None,
+        clearing_house: Union[SwapClearingHouse, str] = None,
+        settlement: Union[SwapSettlement, str] = None,
+        buy_sell: Union[BuySell, str] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.pay_or_receive = pay_or_receive
+        self.termination_date = termination_date
+        self.notional_currency = notional_currency
+        self.effective_date = effective_date
+        self.notional_amount = notional_amount
+        self.expiration_date = expiration_date
+        self.floating_rate_option = floating_rate_option
+        self.floating_rate_designated_maturity = floating_rate_designated_maturity
+        self.floating_rate_spread = floating_rate_spread
+        self.floating_rate_frequency = floating_rate_frequency
+        self.floating_rate_day_count_fraction = floating_rate_day_count_fraction
+        self.floating_rate_business_day_convention = floating_rate_business_day_convention
+        self.fixed_rate_frequency = fixed_rate_frequency
+        self.fixed_rate_day_count_fraction = fixed_rate_day_count_fraction
+        self.fixed_rate_business_day_convention = fixed_rate_business_day_convention
+        self.strike = strike
+        self.premium = premium
+        self.premium_payment_date = premium_payment_date
+        self.fee = fee
+        self.fee_currency = fee_currency
+        self.fee_payment_date = fee_payment_date
+        self.clearing_house = clearing_house
+        self.settlement = settlement
+        self.buy_sell = buy_sell
+        self.name = name
+
+    @property
+    def asset_class(self) -> AssetClass:
+        """Rates"""
+        return AssetClass.Rates        
+
+    @property
+    def type(self) -> AssetType:
+        """Swaption"""
+        return AssetType.Swaption        
+
+    @property
+    def pay_or_receive(self) -> str:
+        """Pay or receive fixed"""
+        return self.__pay_or_receive
+
+    @pay_or_receive.setter
+    def pay_or_receive(self, value: str):
+        self._property_changed('pay_or_receive')
+        self.__pay_or_receive = value        
+
+    @property
+    def termination_date(self) -> Union[Union[datetime.date, str], str]:
+        """Swaption termination date, e.g. 2030-05-01, 10y"""
+        return self.__termination_date
+
+    @termination_date.setter
+    def termination_date(self, value: Union[Union[datetime.date, str], str]):
+        self._property_changed('termination_date')
+        self.__termination_date = value        
+
+    @property
+    def notional_currency(self) -> Union[Currency, str]:
+        """Notional currency"""
+        return self.__notional_currency
+
+    @notional_currency.setter
+    def notional_currency(self, value: Union[Currency, str]):
+        self._property_changed('notional_currency')
+        self.__notional_currency = get_enum_value(Currency, value)        
+
+    @property
+    def effective_date(self) -> Union[Union[datetime.date, str], str]:
+        """Swaption effective date, e.g. 2019-01-01, 10y"""
+        return self.__effective_date
+
+    @effective_date.setter
+    def effective_date(self, value: Union[Union[datetime.date, str], str]):
+        self._property_changed('effective_date')
+        self.__effective_date = value        
+
+    @property
+    def notional_amount(self) -> Union[float, str]:
+        """Notional amount"""
+        return self.__notional_amount
+
+    @notional_amount.setter
+    def notional_amount(self, value: Union[float, str]):
+        self._property_changed('notional_amount')
+        self.__notional_amount = value        
+
+    @property
+    def expiration_date(self) -> Union[Union[datetime.date, str], str]:
+        """Swaption expiration date, 2020-05-01, 3m"""
+        return self.__expiration_date
+
+    @expiration_date.setter
+    def expiration_date(self, value: Union[Union[datetime.date, str], str]):
+        self._property_changed('expiration_date')
+        self.__expiration_date = value        
+
+    @property
+    def floating_rate_option(self) -> str:
+        """The underlying benchmark for the floating rate, e.g. USD-LIBOR-BBA, EUR-EURIBOR-
+           TELERATE"""
+        return self.__floating_rate_option
+
+    @floating_rate_option.setter
+    def floating_rate_option(self, value: str):
+        self._property_changed('floating_rate_option')
+        self.__floating_rate_option = value        
+
+    @property
+    def floating_rate_designated_maturity(self) -> str:
+        """Tenor"""
+        return self.__floating_rate_designated_maturity
+
+    @floating_rate_designated_maturity.setter
+    def floating_rate_designated_maturity(self, value: str):
+        self._property_changed('floating_rate_designated_maturity')
+        self.__floating_rate_designated_maturity = value        
+
+    @property
+    def floating_rate_spread(self) -> float:
+        """The spread over the floating rate"""
+        return self.__floating_rate_spread
+
+    @floating_rate_spread.setter
+    def floating_rate_spread(self, value: float):
+        self._property_changed('floating_rate_spread')
+        self.__floating_rate_spread = value        
+
+    @property
+    def floating_rate_frequency(self) -> str:
+        """The frequency of floating payments, e.g. 3m"""
+        return self.__floating_rate_frequency
+
+    @floating_rate_frequency.setter
+    def floating_rate_frequency(self, value: str):
+        self._property_changed('floating_rate_frequency')
+        self.__floating_rate_frequency = value        
+
+    @property
+    def floating_rate_day_count_fraction(self) -> Union[DayCountFraction, str]:
+        """The day count fraction of the floating rate"""
+        return self.__floating_rate_day_count_fraction
+
+    @floating_rate_day_count_fraction.setter
+    def floating_rate_day_count_fraction(self, value: Union[DayCountFraction, str]):
+        self._property_changed('floating_rate_day_count_fraction')
+        self.__floating_rate_day_count_fraction = get_enum_value(DayCountFraction, value)        
+
+    @property
+    def floating_rate_business_day_convention(self) -> Union[BusinessDayConvention, str]:
+        """The business day convention of the floating rate"""
+        return self.__floating_rate_business_day_convention
+
+    @floating_rate_business_day_convention.setter
+    def floating_rate_business_day_convention(self, value: Union[BusinessDayConvention, str]):
+        self._property_changed('floating_rate_business_day_convention')
+        self.__floating_rate_business_day_convention = get_enum_value(BusinessDayConvention, value)        
+
+    @property
+    def fixed_rate_frequency(self) -> str:
+        """The frequency of fixed payments, e.g. 6m"""
+        return self.__fixed_rate_frequency
+
+    @fixed_rate_frequency.setter
+    def fixed_rate_frequency(self, value: str):
+        self._property_changed('fixed_rate_frequency')
+        self.__fixed_rate_frequency = value        
+
+    @property
+    def fixed_rate_day_count_fraction(self) -> Union[DayCountFraction, str]:
+        """The day count fraction for the fixed rate"""
+        return self.__fixed_rate_day_count_fraction
+
+    @fixed_rate_day_count_fraction.setter
+    def fixed_rate_day_count_fraction(self, value: Union[DayCountFraction, str]):
+        self._property_changed('fixed_rate_day_count_fraction')
+        self.__fixed_rate_day_count_fraction = get_enum_value(DayCountFraction, value)        
+
+    @property
+    def fixed_rate_business_day_convention(self) -> Union[BusinessDayConvention, str]:
+        """The business day convention for the fixed rate"""
+        return self.__fixed_rate_business_day_convention
+
+    @fixed_rate_business_day_convention.setter
+    def fixed_rate_business_day_convention(self, value: Union[BusinessDayConvention, str]):
+        self._property_changed('fixed_rate_business_day_convention')
+        self.__fixed_rate_business_day_convention = get_enum_value(BusinessDayConvention, value)        
+
+    @property
+    def strike(self) -> Union[float, str]:
+        """Strike as value, percent or at-the-money e.g. 62.5, 95%, ATM-25, ATMF, 10/vol,
+           100k/pv, $200K/BP, or multiple strikes 65.4/-45.8"""
+        return self.__strike
+
+    @strike.setter
+    def strike(self, value: Union[float, str]):
+        self._property_changed('strike')
+        self.__strike = value        
+
+    @property
+    def premium(self) -> Union[float, str]:
+        """The premium"""
+        return self.__premium
+
+    @premium.setter
+    def premium(self, value: Union[float, str]):
+        self._property_changed('premium')
+        self.__premium = value        
+
+    @property
+    def premium_payment_date(self) -> Union[datetime.date, str]:
+        """Payment date of the premium"""
+        return self.__premium_payment_date
+
+    @premium_payment_date.setter
+    def premium_payment_date(self, value: Union[datetime.date, str]):
+        self._property_changed('premium_payment_date')
+        self.__premium_payment_date = value        
+
+    @property
+    def fee(self) -> float:
+        """The fee"""
+        return self.__fee
+
+    @fee.setter
+    def fee(self, value: float):
+        self._property_changed('fee')
+        self.__fee = value        
+
+    @property
+    def fee_currency(self) -> Union[Currency, str]:
+        """Currency of the fee"""
+        return self.__fee_currency
+
+    @fee_currency.setter
+    def fee_currency(self, value: Union[Currency, str]):
+        self._property_changed('fee_currency')
+        self.__fee_currency = get_enum_value(Currency, value)        
+
+    @property
+    def fee_payment_date(self) -> Union[datetime.date, str]:
+        """Payment date of the fee"""
+        return self.__fee_payment_date
+
+    @fee_payment_date.setter
+    def fee_payment_date(self, value: Union[datetime.date, str]):
+        self._property_changed('fee_payment_date')
+        self.__fee_payment_date = value        
+
+    @property
+    def clearing_house(self) -> Union[SwapClearingHouse, str]:
+        """Swap Clearing House"""
+        return self.__clearing_house
+
+    @clearing_house.setter
+    def clearing_house(self, value: Union[SwapClearingHouse, str]):
+        self._property_changed('clearing_house')
+        self.__clearing_house = get_enum_value(SwapClearingHouse, value)        
+
+    @property
+    def settlement(self) -> Union[SwapSettlement, str]:
+        """Swap Settlement Type"""
+        return self.__settlement
+
+    @settlement.setter
+    def settlement(self, value: Union[SwapSettlement, str]):
+        self._property_changed('settlement')
+        self.__settlement = get_enum_value(SwapSettlement, value)        
+
+    @property
+    def buy_sell(self) -> Union[BuySell, str]:
+        """Buy or Sell side of contract"""
+        return self.__buy_sell
+
+    @buy_sell.setter
+    def buy_sell(self, value: Union[BuySell, str]):
+        self._property_changed('buy_sell')
+        self.__buy_sell = get_enum_value(BuySell, value)        
+
+
+class IRXccySwap(Instrument):
         
     """An exchange of cashflows from different interest rate indices"""
 
@@ -1617,8 +3394,8 @@ class IRBasisSwap(Instrument):
 
     @property
     def type(self) -> AssetType:
-        """BasisSwap"""
-        return AssetType.BasisSwap        
+        """Mark-to-Market Currency Swap"""
+        return AssetType.Mark_to_Market_Currency_Swap
 
     @property
     def termination_date(self) -> Union[Union[datetime.date, str], str]:
@@ -1822,980 +3599,6 @@ class IRBasisSwap(Instrument):
         self.__clearing_house = get_enum_value(SwapClearingHouse, value)        
 
 
-class IRCap(Instrument):
-        
-    """Object representation of an interest rate cap"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        termination_date: Union[datetime.date, str] = None,
-        notional_currency: Union[Currency, str] = None,
-        notional_amount: float = 1000000.0,
-        effective_date: Union[datetime.date, str] = None,
-        floating_rate_option: str = None,
-        floating_rate_designated_maturity: str = None,
-        floating_rate_frequency: str = None,
-        floating_rate_day_count_fraction: Union[DayCountFraction, str] = None,
-        floating_rate_business_day_convention: Union[BusinessDayConvention, str] = None,
-        cap_rate: Union[float, str] = None,
-        premium: float = 0,
-        premium_payment_date: Union[datetime.date, str] = None,
-        fee: float = 0,
-        fee_currency: Union[Currency, str] = None,
-        fee_payment_date: Union[datetime.date, str] = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.termination_date = termination_date
-        self.notional_currency = notional_currency
-        self.notional_amount = notional_amount
-        self.effective_date = effective_date
-        self.floating_rate_option = floating_rate_option
-        self.floating_rate_designated_maturity = floating_rate_designated_maturity
-        self.floating_rate_frequency = floating_rate_frequency
-        self.floating_rate_day_count_fraction = floating_rate_day_count_fraction
-        self.floating_rate_business_day_convention = floating_rate_business_day_convention
-        self.cap_rate = cap_rate
-        self.premium = premium
-        self.premium_payment_date = premium_payment_date
-        self.fee = fee
-        self.fee_currency = fee_currency
-        self.fee_payment_date = fee_payment_date
-        self.name = name
-
-    @property
-    def asset_class(self) -> AssetClass:
-        """Rates"""
-        return AssetClass.Rates        
-
-    @property
-    def type(self) -> AssetType:
-        """Cap"""
-        return AssetType.Cap        
-
-    @property
-    def termination_date(self) -> Union[datetime.date, str]:
-        """The termination of the cap, e.g. 2025-04-01, 2y"""
-        return self.__termination_date
-
-    @termination_date.setter
-    def termination_date(self, value: Union[datetime.date, str]):
-        self._property_changed('termination_date')
-        self.__termination_date = value        
-
-    @property
-    def notional_currency(self) -> Union[Currency, str]:
-        """Notional currency"""
-        return self.__notional_currency
-
-    @notional_currency.setter
-    def notional_currency(self, value: Union[Currency, str]):
-        self._property_changed('notional_currency')
-        self.__notional_currency = get_enum_value(Currency, value)        
-
-    @property
-    def notional_amount(self) -> float:
-        """Notional amount"""
-        return self.__notional_amount
-
-    @notional_amount.setter
-    def notional_amount(self, value: float):
-        self._property_changed('notional_amount')
-        self.__notional_amount = value        
-
-    @property
-    def effective_date(self) -> Union[datetime.date, str]:
-        """The date on which the cap becomes effective"""
-        return self.__effective_date
-
-    @effective_date.setter
-    def effective_date(self, value: Union[datetime.date, str]):
-        self._property_changed('effective_date')
-        self.__effective_date = value        
-
-    @property
-    def floating_rate_option(self) -> str:
-        """The underlying benchmark for the floating rate, e.g. USD-LIBOR-BBA, EUR-EURIBOR-
-           TELERATE"""
-        return self.__floating_rate_option
-
-    @floating_rate_option.setter
-    def floating_rate_option(self, value: str):
-        self._property_changed('floating_rate_option')
-        self.__floating_rate_option = value        
-
-    @property
-    def floating_rate_designated_maturity(self) -> str:
-        """Tenor of the floatingRateOption, e.g. 3m, 6m"""
-        return self.__floating_rate_designated_maturity
-
-    @floating_rate_designated_maturity.setter
-    def floating_rate_designated_maturity(self, value: str):
-        self._property_changed('floating_rate_designated_maturity')
-        self.__floating_rate_designated_maturity = value        
-
-    @property
-    def floating_rate_frequency(self) -> str:
-        """The frequency of floating payments, e.g. 3m"""
-        return self.__floating_rate_frequency
-
-    @floating_rate_frequency.setter
-    def floating_rate_frequency(self, value: str):
-        self._property_changed('floating_rate_frequency')
-        self.__floating_rate_frequency = value        
-
-    @property
-    def floating_rate_day_count_fraction(self) -> Union[DayCountFraction, str]:
-        """The day count fraction of the floating rate"""
-        return self.__floating_rate_day_count_fraction
-
-    @floating_rate_day_count_fraction.setter
-    def floating_rate_day_count_fraction(self, value: Union[DayCountFraction, str]):
-        self._property_changed('floating_rate_day_count_fraction')
-        self.__floating_rate_day_count_fraction = get_enum_value(DayCountFraction, value)        
-
-    @property
-    def floating_rate_business_day_convention(self) -> Union[BusinessDayConvention, str]:
-        """The business day convention of the floating rate"""
-        return self.__floating_rate_business_day_convention
-
-    @floating_rate_business_day_convention.setter
-    def floating_rate_business_day_convention(self, value: Union[BusinessDayConvention, str]):
-        self._property_changed('floating_rate_business_day_convention')
-        self.__floating_rate_business_day_convention = get_enum_value(BusinessDayConvention, value)        
-
-    @property
-    def cap_rate(self) -> Union[float, str]:
-        """The rate of this cap, as value, percent or at-the-money e.g. 62.5, 95%, ATM-25,
-           ATMF"""
-        return self.__cap_rate
-
-    @cap_rate.setter
-    def cap_rate(self, value: Union[float, str]):
-        self._property_changed('cap_rate')
-        self.__cap_rate = value        
-
-    @property
-    def premium(self) -> float:
-        """The premium"""
-        return self.__premium
-
-    @premium.setter
-    def premium(self, value: float):
-        self._property_changed('premium')
-        self.__premium = value        
-
-    @property
-    def premium_payment_date(self) -> Union[datetime.date, str]:
-        """Payment date of the premium"""
-        return self.__premium_payment_date
-
-    @premium_payment_date.setter
-    def premium_payment_date(self, value: Union[datetime.date, str]):
-        self._property_changed('premium_payment_date')
-        self.__premium_payment_date = value        
-
-    @property
-    def fee(self) -> float:
-        """The fee"""
-        return self.__fee
-
-    @fee.setter
-    def fee(self, value: float):
-        self._property_changed('fee')
-        self.__fee = value        
-
-    @property
-    def fee_currency(self) -> Union[Currency, str]:
-        """Currency of the fee"""
-        return self.__fee_currency
-
-    @fee_currency.setter
-    def fee_currency(self, value: Union[Currency, str]):
-        self._property_changed('fee_currency')
-        self.__fee_currency = get_enum_value(Currency, value)        
-
-    @property
-    def fee_payment_date(self) -> Union[datetime.date, str]:
-        """Payment date of the fee"""
-        return self.__fee_payment_date
-
-    @fee_payment_date.setter
-    def fee_payment_date(self, value: Union[datetime.date, str]):
-        self._property_changed('fee_payment_date')
-        self.__fee_payment_date = value        
-
-
-class IRFloor(Instrument):
-        
-    """Object representation of an interest rate floor"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        termination_date: Union[datetime.date, str] = None,
-        notional_currency: Union[Currency, str] = None,
-        notional_amount: float = 1000000.0,
-        effective_date: Union[datetime.date, str] = None,
-        floating_rate_option: str = None,
-        floating_rate_designated_maturity: str = None,
-        floating_rate_frequency: str = None,
-        floating_rate_day_count_fraction: Union[DayCountFraction, str] = None,
-        floating_rate_business_day_convention: Union[BusinessDayConvention, str] = None,
-        floor_rate: Union[float, str] = None,
-        premium: float = 0,
-        premium_payment_date: Union[datetime.date, str] = None,
-        fee: float = 0,
-        fee_currency: Union[Currency, str] = None,
-        fee_payment_date: Union[datetime.date, str] = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.termination_date = termination_date
-        self.notional_currency = notional_currency
-        self.notional_amount = notional_amount
-        self.effective_date = effective_date
-        self.floating_rate_option = floating_rate_option
-        self.floating_rate_designated_maturity = floating_rate_designated_maturity
-        self.floating_rate_frequency = floating_rate_frequency
-        self.floating_rate_day_count_fraction = floating_rate_day_count_fraction
-        self.floating_rate_business_day_convention = floating_rate_business_day_convention
-        self.floor_rate = floor_rate
-        self.premium = premium
-        self.premium_payment_date = premium_payment_date
-        self.fee = fee
-        self.fee_currency = fee_currency
-        self.fee_payment_date = fee_payment_date
-        self.name = name
-
-    @property
-    def asset_class(self) -> AssetClass:
-        """Rates"""
-        return AssetClass.Rates        
-
-    @property
-    def type(self) -> AssetType:
-        """Floor"""
-        return AssetType.Floor        
-
-    @property
-    def termination_date(self) -> Union[datetime.date, str]:
-        """The termination of the floor, e.g. 2025-04-01, 2y"""
-        return self.__termination_date
-
-    @termination_date.setter
-    def termination_date(self, value: Union[datetime.date, str]):
-        self._property_changed('termination_date')
-        self.__termination_date = value        
-
-    @property
-    def notional_currency(self) -> Union[Currency, str]:
-        """Notional currency"""
-        return self.__notional_currency
-
-    @notional_currency.setter
-    def notional_currency(self, value: Union[Currency, str]):
-        self._property_changed('notional_currency')
-        self.__notional_currency = get_enum_value(Currency, value)        
-
-    @property
-    def notional_amount(self) -> float:
-        """Notional amount"""
-        return self.__notional_amount
-
-    @notional_amount.setter
-    def notional_amount(self, value: float):
-        self._property_changed('notional_amount')
-        self.__notional_amount = value        
-
-    @property
-    def effective_date(self) -> Union[datetime.date, str]:
-        """The date on which the floor becomes effective"""
-        return self.__effective_date
-
-    @effective_date.setter
-    def effective_date(self, value: Union[datetime.date, str]):
-        self._property_changed('effective_date')
-        self.__effective_date = value        
-
-    @property
-    def floating_rate_option(self) -> str:
-        """The underlying benchmark for the floating rate, e.g. USD-LIBOR-BBA, EUR-EURIBOR-
-           TELERATE"""
-        return self.__floating_rate_option
-
-    @floating_rate_option.setter
-    def floating_rate_option(self, value: str):
-        self._property_changed('floating_rate_option')
-        self.__floating_rate_option = value        
-
-    @property
-    def floating_rate_designated_maturity(self) -> str:
-        """Tenor of the floatingRateOption, e.g. 3m, 6m"""
-        return self.__floating_rate_designated_maturity
-
-    @floating_rate_designated_maturity.setter
-    def floating_rate_designated_maturity(self, value: str):
-        self._property_changed('floating_rate_designated_maturity')
-        self.__floating_rate_designated_maturity = value        
-
-    @property
-    def floating_rate_frequency(self) -> str:
-        """The frequency of floating payments, e.g. 3m"""
-        return self.__floating_rate_frequency
-
-    @floating_rate_frequency.setter
-    def floating_rate_frequency(self, value: str):
-        self._property_changed('floating_rate_frequency')
-        self.__floating_rate_frequency = value        
-
-    @property
-    def floating_rate_day_count_fraction(self) -> Union[DayCountFraction, str]:
-        """The day count fraction of the floating rate"""
-        return self.__floating_rate_day_count_fraction
-
-    @floating_rate_day_count_fraction.setter
-    def floating_rate_day_count_fraction(self, value: Union[DayCountFraction, str]):
-        self._property_changed('floating_rate_day_count_fraction')
-        self.__floating_rate_day_count_fraction = get_enum_value(DayCountFraction, value)        
-
-    @property
-    def floating_rate_business_day_convention(self) -> Union[BusinessDayConvention, str]:
-        """The business day convention of the floating rate"""
-        return self.__floating_rate_business_day_convention
-
-    @floating_rate_business_day_convention.setter
-    def floating_rate_business_day_convention(self, value: Union[BusinessDayConvention, str]):
-        self._property_changed('floating_rate_business_day_convention')
-        self.__floating_rate_business_day_convention = get_enum_value(BusinessDayConvention, value)        
-
-    @property
-    def floor_rate(self) -> Union[float, str]:
-        """The rate of this floor, as value, percent or at-the-money e.g. 62.5, 95%,
-           ATM-25, ATMF"""
-        return self.__floor_rate
-
-    @floor_rate.setter
-    def floor_rate(self, value: Union[float, str]):
-        self._property_changed('floor_rate')
-        self.__floor_rate = value        
-
-    @property
-    def premium(self) -> float:
-        """The premium"""
-        return self.__premium
-
-    @premium.setter
-    def premium(self, value: float):
-        self._property_changed('premium')
-        self.__premium = value        
-
-    @property
-    def premium_payment_date(self) -> Union[datetime.date, str]:
-        """Payment date of the premium"""
-        return self.__premium_payment_date
-
-    @premium_payment_date.setter
-    def premium_payment_date(self, value: Union[datetime.date, str]):
-        self._property_changed('premium_payment_date')
-        self.__premium_payment_date = value        
-
-    @property
-    def fee(self) -> float:
-        """The fee"""
-        return self.__fee
-
-    @fee.setter
-    def fee(self, value: float):
-        self._property_changed('fee')
-        self.__fee = value        
-
-    @property
-    def fee_currency(self) -> Union[Currency, str]:
-        """Currency of the fee"""
-        return self.__fee_currency
-
-    @fee_currency.setter
-    def fee_currency(self, value: Union[Currency, str]):
-        self._property_changed('fee_currency')
-        self.__fee_currency = get_enum_value(Currency, value)        
-
-    @property
-    def fee_payment_date(self) -> Union[datetime.date, str]:
-        """Payment date of the fee"""
-        return self.__fee_payment_date
-
-    @fee_payment_date.setter
-    def fee_payment_date(self, value: Union[datetime.date, str]):
-        self._property_changed('fee_payment_date')
-        self.__fee_payment_date = value        
-
-
-class IRSwap(Instrument):
-        
-    """A vanilla interest rate swap of fixed vs floating cashflows"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        pay_or_receive: Union[PayReceive, str] = None,
-        termination_date: Union[Union[datetime.date, str], str] = None,
-        notional_currency: Union[Currency, str] = None,
-        notional_amount: float = 1000000.0,
-        effective_date: Union[Union[datetime.date, str], str] = None,
-        floating_rate_for_the_initial_calculation_period: float = None,
-        floating_rate_option: str = None,
-        floating_rate_designated_maturity: str = None,
-        floating_rate_spread: float = None,
-        floating_rate_frequency: str = None,
-        floating_rate_day_count_fraction: Union[DayCountFraction, str] = None,
-        floating_rate_business_day_convention: Union[BusinessDayConvention, str] = None,
-        fixed_rate: Union[float, str] = None,
-        fixed_rate_frequency: str = None,
-        fixed_rate_day_count_fraction: Union[DayCountFraction, str] = None,
-        fixed_rate_business_day_convention: Union[BusinessDayConvention, str] = None,
-        fee: float = 0,
-        fee_currency: Union[Currency, str] = None,
-        fee_payment_date: Union[datetime.date, str] = None,
-        clearing_house: Union[SwapClearingHouse, str] = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.pay_or_receive = pay_or_receive
-        self.termination_date = termination_date
-        self.notional_currency = notional_currency
-        self.notional_amount = notional_amount
-        self.effective_date = effective_date
-        self.floating_rate_for_the_initial_calculation_period = floating_rate_for_the_initial_calculation_period
-        self.floating_rate_option = floating_rate_option
-        self.floating_rate_designated_maturity = floating_rate_designated_maturity
-        self.floating_rate_spread = floating_rate_spread
-        self.floating_rate_frequency = floating_rate_frequency
-        self.floating_rate_day_count_fraction = floating_rate_day_count_fraction
-        self.floating_rate_business_day_convention = floating_rate_business_day_convention
-        self.fixed_rate = fixed_rate
-        self.fixed_rate_frequency = fixed_rate_frequency
-        self.fixed_rate_day_count_fraction = fixed_rate_day_count_fraction
-        self.fixed_rate_business_day_convention = fixed_rate_business_day_convention
-        self.fee = fee
-        self.fee_currency = fee_currency
-        self.fee_payment_date = fee_payment_date
-        self.clearing_house = clearing_house
-        self.name = name
-
-    @property
-    def asset_class(self) -> AssetClass:
-        """Rates"""
-        return AssetClass.Rates        
-
-    @property
-    def type(self) -> AssetType:
-        """Swap"""
-        return AssetType.Swap        
-
-    @property
-    def pay_or_receive(self) -> Union[PayReceive, str]:
-        """Pay or receive fixed"""
-        return self.__pay_or_receive
-
-    @pay_or_receive.setter
-    def pay_or_receive(self, value: Union[PayReceive, str]):
-        self._property_changed('pay_or_receive')
-        self.__pay_or_receive = get_enum_value(PayReceive, value)        
-
-    @property
-    def termination_date(self) -> Union[Union[datetime.date, str], str]:
-        """The termination of the swap, e.g. 2050-04-01, 10y"""
-        return self.__termination_date
-
-    @termination_date.setter
-    def termination_date(self, value: Union[Union[datetime.date, str], str]):
-        self._property_changed('termination_date')
-        self.__termination_date = value        
-
-    @property
-    def notional_currency(self) -> Union[Currency, str]:
-        """Notional currency"""
-        return self.__notional_currency
-
-    @notional_currency.setter
-    def notional_currency(self, value: Union[Currency, str]):
-        self._property_changed('notional_currency')
-        self.__notional_currency = get_enum_value(Currency, value)        
-
-    @property
-    def notional_amount(self) -> float:
-        """Notional amount"""
-        return self.__notional_amount
-
-    @notional_amount.setter
-    def notional_amount(self, value: float):
-        self._property_changed('notional_amount')
-        self.__notional_amount = value        
-
-    @property
-    def effective_date(self) -> Union[Union[datetime.date, str], str]:
-        """The date on which the swap becomes effective"""
-        return self.__effective_date
-
-    @effective_date.setter
-    def effective_date(self, value: Union[Union[datetime.date, str], str]):
-        self._property_changed('effective_date')
-        self.__effective_date = value        
-
-    @property
-    def floating_rate_for_the_initial_calculation_period(self) -> float:
-        """First fixing"""
-        return self.__floating_rate_for_the_initial_calculation_period
-
-    @floating_rate_for_the_initial_calculation_period.setter
-    def floating_rate_for_the_initial_calculation_period(self, value: float):
-        self._property_changed('floating_rate_for_the_initial_calculation_period')
-        self.__floating_rate_for_the_initial_calculation_period = value        
-
-    @property
-    def floating_rate_option(self) -> str:
-        """The underlying benchmark for the floating rate, e.g. USD-LIBOR-BBA, EUR-EURIBOR-
-           TELERATE"""
-        return self.__floating_rate_option
-
-    @floating_rate_option.setter
-    def floating_rate_option(self, value: str):
-        self._property_changed('floating_rate_option')
-        self.__floating_rate_option = value        
-
-    @property
-    def floating_rate_designated_maturity(self) -> str:
-        """Tenor of the floatingRateOption, e.g. 3m, 6m"""
-        return self.__floating_rate_designated_maturity
-
-    @floating_rate_designated_maturity.setter
-    def floating_rate_designated_maturity(self, value: str):
-        self._property_changed('floating_rate_designated_maturity')
-        self.__floating_rate_designated_maturity = value        
-
-    @property
-    def floating_rate_spread(self) -> float:
-        """The spread over the floating rate"""
-        return self.__floating_rate_spread
-
-    @floating_rate_spread.setter
-    def floating_rate_spread(self, value: float):
-        self._property_changed('floating_rate_spread')
-        self.__floating_rate_spread = value        
-
-    @property
-    def floating_rate_frequency(self) -> str:
-        """The frequency of floating payments, e.g. 3m"""
-        return self.__floating_rate_frequency
-
-    @floating_rate_frequency.setter
-    def floating_rate_frequency(self, value: str):
-        self._property_changed('floating_rate_frequency')
-        self.__floating_rate_frequency = value        
-
-    @property
-    def floating_rate_day_count_fraction(self) -> Union[DayCountFraction, str]:
-        """The day count fraction of the floating rate"""
-        return self.__floating_rate_day_count_fraction
-
-    @floating_rate_day_count_fraction.setter
-    def floating_rate_day_count_fraction(self, value: Union[DayCountFraction, str]):
-        self._property_changed('floating_rate_day_count_fraction')
-        self.__floating_rate_day_count_fraction = get_enum_value(DayCountFraction, value)        
-
-    @property
-    def floating_rate_business_day_convention(self) -> Union[BusinessDayConvention, str]:
-        """The business day convention of the floating rate"""
-        return self.__floating_rate_business_day_convention
-
-    @floating_rate_business_day_convention.setter
-    def floating_rate_business_day_convention(self, value: Union[BusinessDayConvention, str]):
-        self._property_changed('floating_rate_business_day_convention')
-        self.__floating_rate_business_day_convention = get_enum_value(BusinessDayConvention, value)        
-
-    @property
-    def fixed_rate(self) -> Union[float, str]:
-        """The coupon of the fixed leg"""
-        return self.__fixed_rate
-
-    @fixed_rate.setter
-    def fixed_rate(self, value: Union[float, str]):
-        self._property_changed('fixed_rate')
-        self.__fixed_rate = value        
-
-    @property
-    def fixed_rate_frequency(self) -> str:
-        """The frequency of fixed payments, e.g. 6m"""
-        return self.__fixed_rate_frequency
-
-    @fixed_rate_frequency.setter
-    def fixed_rate_frequency(self, value: str):
-        self._property_changed('fixed_rate_frequency')
-        self.__fixed_rate_frequency = value        
-
-    @property
-    def fixed_rate_day_count_fraction(self) -> Union[DayCountFraction, str]:
-        """The day count fraction for the fixed rate"""
-        return self.__fixed_rate_day_count_fraction
-
-    @fixed_rate_day_count_fraction.setter
-    def fixed_rate_day_count_fraction(self, value: Union[DayCountFraction, str]):
-        self._property_changed('fixed_rate_day_count_fraction')
-        self.__fixed_rate_day_count_fraction = get_enum_value(DayCountFraction, value)        
-
-    @property
-    def fixed_rate_business_day_convention(self) -> Union[BusinessDayConvention, str]:
-        """The business day convention for the fixed rate"""
-        return self.__fixed_rate_business_day_convention
-
-    @fixed_rate_business_day_convention.setter
-    def fixed_rate_business_day_convention(self, value: Union[BusinessDayConvention, str]):
-        self._property_changed('fixed_rate_business_day_convention')
-        self.__fixed_rate_business_day_convention = get_enum_value(BusinessDayConvention, value)        
-
-    @property
-    def fee(self) -> float:
-        """The fee"""
-        return self.__fee
-
-    @fee.setter
-    def fee(self, value: float):
-        self._property_changed('fee')
-        self.__fee = value        
-
-    @property
-    def fee_currency(self) -> Union[Currency, str]:
-        """Currency of the fee"""
-        return self.__fee_currency
-
-    @fee_currency.setter
-    def fee_currency(self, value: Union[Currency, str]):
-        self._property_changed('fee_currency')
-        self.__fee_currency = get_enum_value(Currency, value)        
-
-    @property
-    def fee_payment_date(self) -> Union[datetime.date, str]:
-        """Payment date of the fee"""
-        return self.__fee_payment_date
-
-    @fee_payment_date.setter
-    def fee_payment_date(self, value: Union[datetime.date, str]):
-        self._property_changed('fee_payment_date')
-        self.__fee_payment_date = value        
-
-    @property
-    def clearing_house(self) -> Union[SwapClearingHouse, str]:
-        """Swap Clearing House"""
-        return self.__clearing_house
-
-    @clearing_house.setter
-    def clearing_house(self, value: Union[SwapClearingHouse, str]):
-        self._property_changed('clearing_house')
-        self.__clearing_house = get_enum_value(SwapClearingHouse, value)        
-
-
-class IRSwaption(Instrument):
-        
-    """Object representation of a swaption"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        pay_or_receive: str = None,
-        termination_date: Union[Union[datetime.date, str], str] = None,
-        notional_currency: Union[Currency, str] = None,
-        effective_date: Union[Union[datetime.date, str], str] = None,
-        notional_amount: float = 1000000.0,
-        expiration_date: Union[Union[datetime.date, str], str] = None,
-        floating_rate_option: str = None,
-        floating_rate_designated_maturity: str = None,
-        floating_rate_spread: float = None,
-        floating_rate_frequency: str = None,
-        floating_rate_day_count_fraction: Union[DayCountFraction, str] = None,
-        floating_rate_business_day_convention: Union[BusinessDayConvention, str] = None,
-        fixed_rate_frequency: str = None,
-        fixed_rate_day_count_fraction: Union[DayCountFraction, str] = None,
-        fixed_rate_business_day_convention: Union[BusinessDayConvention, str] = None,
-        strike: Union[float, str] = None,
-        premium: float = 0,
-        premium_payment_date: Union[datetime.date, str] = None,
-        fee: float = 0,
-        fee_currency: Union[Currency, str] = None,
-        fee_payment_date: Union[datetime.date, str] = None,
-        clearing_house: Union[SwapClearingHouse, str] = None,
-        settlement: Union[SwapSettlement, str] = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.pay_or_receive = pay_or_receive
-        self.termination_date = termination_date
-        self.notional_currency = notional_currency
-        self.effective_date = effective_date
-        self.notional_amount = notional_amount
-        self.expiration_date = expiration_date
-        self.floating_rate_option = floating_rate_option
-        self.floating_rate_designated_maturity = floating_rate_designated_maturity
-        self.floating_rate_spread = floating_rate_spread
-        self.floating_rate_frequency = floating_rate_frequency
-        self.floating_rate_day_count_fraction = floating_rate_day_count_fraction
-        self.floating_rate_business_day_convention = floating_rate_business_day_convention
-        self.fixed_rate_frequency = fixed_rate_frequency
-        self.fixed_rate_day_count_fraction = fixed_rate_day_count_fraction
-        self.fixed_rate_business_day_convention = fixed_rate_business_day_convention
-        self.strike = strike
-        self.premium = premium
-        self.premium_payment_date = premium_payment_date
-        self.fee = fee
-        self.fee_currency = fee_currency
-        self.fee_payment_date = fee_payment_date
-        self.clearing_house = clearing_house
-        self.settlement = settlement
-        self.name = name
-
-    @property
-    def asset_class(self) -> AssetClass:
-        """Rates"""
-        return AssetClass.Rates        
-
-    @property
-    def type(self) -> AssetType:
-        """Swaption"""
-        return AssetType.Swaption        
-
-    @property
-    def pay_or_receive(self) -> str:
-        """Pay or receive fixed"""
-        return self.__pay_or_receive
-
-    @pay_or_receive.setter
-    def pay_or_receive(self, value: str):
-        self._property_changed('pay_or_receive')
-        self.__pay_or_receive = value        
-
-    @property
-    def termination_date(self) -> Union[Union[datetime.date, str], str]:
-        """Swaption termination date, e.g. 2030-05-01, 10y"""
-        return self.__termination_date
-
-    @termination_date.setter
-    def termination_date(self, value: Union[Union[datetime.date, str], str]):
-        self._property_changed('termination_date')
-        self.__termination_date = value        
-
-    @property
-    def notional_currency(self) -> Union[Currency, str]:
-        """Notional currency"""
-        return self.__notional_currency
-
-    @notional_currency.setter
-    def notional_currency(self, value: Union[Currency, str]):
-        self._property_changed('notional_currency')
-        self.__notional_currency = get_enum_value(Currency, value)        
-
-    @property
-    def effective_date(self) -> Union[Union[datetime.date, str], str]:
-        """Swaption effective date, e.g. 2019-01-01, 10y"""
-        return self.__effective_date
-
-    @effective_date.setter
-    def effective_date(self, value: Union[Union[datetime.date, str], str]):
-        self._property_changed('effective_date')
-        self.__effective_date = value        
-
-    @property
-    def notional_amount(self) -> float:
-        """Notional amount"""
-        return self.__notional_amount
-
-    @notional_amount.setter
-    def notional_amount(self, value: float):
-        self._property_changed('notional_amount')
-        self.__notional_amount = value        
-
-    @property
-    def expiration_date(self) -> Union[Union[datetime.date, str], str]:
-        """Swaption expiration date, 2020-05-01, 3m"""
-        return self.__expiration_date
-
-    @expiration_date.setter
-    def expiration_date(self, value: Union[Union[datetime.date, str], str]):
-        self._property_changed('expiration_date')
-        self.__expiration_date = value        
-
-    @property
-    def floating_rate_option(self) -> str:
-        """The underlying benchmark for the floating rate, e.g. USD-LIBOR-BBA, EUR-EURIBOR-
-           TELERATE"""
-        return self.__floating_rate_option
-
-    @floating_rate_option.setter
-    def floating_rate_option(self, value: str):
-        self._property_changed('floating_rate_option')
-        self.__floating_rate_option = value        
-
-    @property
-    def floating_rate_designated_maturity(self) -> str:
-        """Tenor"""
-        return self.__floating_rate_designated_maturity
-
-    @floating_rate_designated_maturity.setter
-    def floating_rate_designated_maturity(self, value: str):
-        self._property_changed('floating_rate_designated_maturity')
-        self.__floating_rate_designated_maturity = value        
-
-    @property
-    def floating_rate_spread(self) -> float:
-        """The spread over the floating rate"""
-        return self.__floating_rate_spread
-
-    @floating_rate_spread.setter
-    def floating_rate_spread(self, value: float):
-        self._property_changed('floating_rate_spread')
-        self.__floating_rate_spread = value        
-
-    @property
-    def floating_rate_frequency(self) -> str:
-        """The frequency of floating payments, e.g. 3m"""
-        return self.__floating_rate_frequency
-
-    @floating_rate_frequency.setter
-    def floating_rate_frequency(self, value: str):
-        self._property_changed('floating_rate_frequency')
-        self.__floating_rate_frequency = value        
-
-    @property
-    def floating_rate_day_count_fraction(self) -> Union[DayCountFraction, str]:
-        """The day count fraction of the floating rate"""
-        return self.__floating_rate_day_count_fraction
-
-    @floating_rate_day_count_fraction.setter
-    def floating_rate_day_count_fraction(self, value: Union[DayCountFraction, str]):
-        self._property_changed('floating_rate_day_count_fraction')
-        self.__floating_rate_day_count_fraction = get_enum_value(DayCountFraction, value)        
-
-    @property
-    def floating_rate_business_day_convention(self) -> Union[BusinessDayConvention, str]:
-        """The business day convention of the floating rate"""
-        return self.__floating_rate_business_day_convention
-
-    @floating_rate_business_day_convention.setter
-    def floating_rate_business_day_convention(self, value: Union[BusinessDayConvention, str]):
-        self._property_changed('floating_rate_business_day_convention')
-        self.__floating_rate_business_day_convention = get_enum_value(BusinessDayConvention, value)        
-
-    @property
-    def fixed_rate_frequency(self) -> str:
-        """The frequency of fixed payments, e.g. 6m"""
-        return self.__fixed_rate_frequency
-
-    @fixed_rate_frequency.setter
-    def fixed_rate_frequency(self, value: str):
-        self._property_changed('fixed_rate_frequency')
-        self.__fixed_rate_frequency = value        
-
-    @property
-    def fixed_rate_day_count_fraction(self) -> Union[DayCountFraction, str]:
-        """The day count fraction for the fixed rate"""
-        return self.__fixed_rate_day_count_fraction
-
-    @fixed_rate_day_count_fraction.setter
-    def fixed_rate_day_count_fraction(self, value: Union[DayCountFraction, str]):
-        self._property_changed('fixed_rate_day_count_fraction')
-        self.__fixed_rate_day_count_fraction = get_enum_value(DayCountFraction, value)        
-
-    @property
-    def fixed_rate_business_day_convention(self) -> Union[BusinessDayConvention, str]:
-        """The business day convention for the fixed rate"""
-        return self.__fixed_rate_business_day_convention
-
-    @fixed_rate_business_day_convention.setter
-    def fixed_rate_business_day_convention(self, value: Union[BusinessDayConvention, str]):
-        self._property_changed('fixed_rate_business_day_convention')
-        self.__fixed_rate_business_day_convention = get_enum_value(BusinessDayConvention, value)        
-
-    @property
-    def strike(self) -> Union[float, str]:
-        """Strike as value, percent or at-the-money e.g. 62.5, 95%, ATM-25, ATMF"""
-        return self.__strike
-
-    @strike.setter
-    def strike(self, value: Union[float, str]):
-        self._property_changed('strike')
-        self.__strike = value        
-
-    @property
-    def premium(self) -> float:
-        """The premium"""
-        return self.__premium
-
-    @premium.setter
-    def premium(self, value: float):
-        self._property_changed('premium')
-        self.__premium = value        
-
-    @property
-    def premium_payment_date(self) -> Union[datetime.date, str]:
-        """Payment date of the premium"""
-        return self.__premium_payment_date
-
-    @premium_payment_date.setter
-    def premium_payment_date(self, value: Union[datetime.date, str]):
-        self._property_changed('premium_payment_date')
-        self.__premium_payment_date = value        
-
-    @property
-    def fee(self) -> float:
-        """The fee"""
-        return self.__fee
-
-    @fee.setter
-    def fee(self, value: float):
-        self._property_changed('fee')
-        self.__fee = value        
-
-    @property
-    def fee_currency(self) -> Union[Currency, str]:
-        """Currency of the fee"""
-        return self.__fee_currency
-
-    @fee_currency.setter
-    def fee_currency(self, value: Union[Currency, str]):
-        self._property_changed('fee_currency')
-        self.__fee_currency = get_enum_value(Currency, value)        
-
-    @property
-    def fee_payment_date(self) -> Union[datetime.date, str]:
-        """Payment date of the fee"""
-        return self.__fee_payment_date
-
-    @fee_payment_date.setter
-    def fee_payment_date(self, value: Union[datetime.date, str]):
-        self._property_changed('fee_payment_date')
-        self.__fee_payment_date = value        
-
-    @property
-    def clearing_house(self) -> Union[SwapClearingHouse, str]:
-        """Swap Clearing House"""
-        return self.__clearing_house
-
-    @clearing_house.setter
-    def clearing_house(self, value: Union[SwapClearingHouse, str]):
-        self._property_changed('clearing_house')
-        self.__clearing_house = get_enum_value(SwapClearingHouse, value)        
-
-    @property
-    def settlement(self) -> Union[SwapSettlement, str]:
-        """Swap Settlement Type"""
-        return self.__settlement
-
-    @settlement.setter
-    def settlement(self, value: Union[SwapSettlement, str]):
-        self._property_changed('settlement')
-        self.__settlement = get_enum_value(SwapSettlement, value)        
-
-
 class InflationSwap(Instrument):
         
     """A vanilla inflation swap of fixed vs floating cashflows adjusted to an inflation
@@ -2804,11 +3607,11 @@ class InflationSwap(Instrument):
     @camel_case_translate
     def __init__(
         self,
-        termination_date: Union[datetime.date, str] = None,
         pay_or_receive: Union[PayReceive, str] = None,
+        termination_date: Union[datetime.date, str] = None,
         notional_currency: Union[Currency, str] = None,
-        notional_amount: float = 1000000.0,
         effective_date: Union[datetime.date, str] = None,
+        notional_amount: Union[float, str] = None,
         index: str = None,
         floating_rate_business_day_convention: Union[BusinessDayConvention, str] = None,
         fixed_rate: Union[float, str] = None,
@@ -2817,11 +3620,11 @@ class InflationSwap(Instrument):
         name: str = None
     ):        
         super().__init__()
-        self.termination_date = termination_date
         self.pay_or_receive = pay_or_receive
+        self.termination_date = termination_date
         self.notional_currency = notional_currency
-        self.notional_amount = notional_amount
         self.effective_date = effective_date
+        self.notional_amount = notional_amount
         self.index = index
         self.floating_rate_business_day_convention = floating_rate_business_day_convention
         self.fixed_rate = fixed_rate
@@ -2840,16 +3643,6 @@ class InflationSwap(Instrument):
         return AssetType.InflationSwap        
 
     @property
-    def termination_date(self) -> Union[datetime.date, str]:
-        """The termination of the swap, e.g. 2050-04-01, 10y"""
-        return self.__termination_date
-
-    @termination_date.setter
-    def termination_date(self, value: Union[datetime.date, str]):
-        self._property_changed('termination_date')
-        self.__termination_date = value        
-
-    @property
     def pay_or_receive(self) -> Union[PayReceive, str]:
         """Pay or receive fixed"""
         return self.__pay_or_receive
@@ -2858,6 +3651,16 @@ class InflationSwap(Instrument):
     def pay_or_receive(self, value: Union[PayReceive, str]):
         self._property_changed('pay_or_receive')
         self.__pay_or_receive = get_enum_value(PayReceive, value)        
+
+    @property
+    def termination_date(self) -> Union[datetime.date, str]:
+        """The termination of the swap, e.g. 2050-04-01, 10y"""
+        return self.__termination_date
+
+    @termination_date.setter
+    def termination_date(self, value: Union[datetime.date, str]):
+        self._property_changed('termination_date')
+        self.__termination_date = value        
 
     @property
     def notional_currency(self) -> Union[Currency, str]:
@@ -2870,16 +3673,6 @@ class InflationSwap(Instrument):
         self.__notional_currency = get_enum_value(Currency, value)        
 
     @property
-    def notional_amount(self) -> float:
-        """Notional amount"""
-        return self.__notional_amount
-
-    @notional_amount.setter
-    def notional_amount(self, value: float):
-        self._property_changed('notional_amount')
-        self.__notional_amount = value        
-
-    @property
     def effective_date(self) -> Union[datetime.date, str]:
         """The date on which the swap becomes effective"""
         return self.__effective_date
@@ -2888,6 +3681,16 @@ class InflationSwap(Instrument):
     def effective_date(self, value: Union[datetime.date, str]):
         self._property_changed('effective_date')
         self.__effective_date = value        
+
+    @property
+    def notional_amount(self) -> Union[float, str]:
+        """Notional amount"""
+        return self.__notional_amount
+
+    @notional_amount.setter
+    def notional_amount(self, value: Union[float, str]):
+        self._property_changed('notional_amount')
+        self.__notional_amount = value        
 
     @property
     def index(self) -> str:
