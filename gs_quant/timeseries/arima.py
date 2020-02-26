@@ -9,11 +9,6 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
-#
-# Chart Service will attempt to make public functions (not prefixed with _) from this module available. Such functions
-# should be fully documented: docstrings should describe parameters and the return value, and provide a 1-line
-# description. Type annotations should be provided for parameters.
 
 from __future__ import annotations
 from dataclasses import dataclass
@@ -25,7 +20,7 @@ import pandas as pd
 import numpy as np
 from tqdm import tqdm
 from statsmodels.tsa.arima_model import ARIMA
-from sklearn.metrics import mean_squared_error
+from statsmodels.tools.eval_measures import mse
 
 
 @dataclass
@@ -40,54 +35,47 @@ class ARIMA_BestParams:
     resid: list = None
     series: pd.Series = None
 
-
-"""ARIMA is the Autoregressive Integrated Moving Average Model and is used 
-to normalize and forecast time series data. ARIMA has 3 parameters: (p, d, q)
-where:
-    :p is the number of autoregressive terms
-    :d is the number of nonseasonal differences
-    :q is the number of lagged forecast errors in the prediction equation
-    
-An ARIMA model is selected from the Catesian product of sets p, q, and d. The 
-time series is split into train and test sets and an ARIMA model is fit for 
-every combination on the training set. The model with the lowest mean-squared 
-error (MSE) on the test set is selected as the best model. The original 
-times series can then be transformed by the best model.
-
-Autoregressive components are past values of the variable of interest. An 
-AR(p) model with order p = 1 may be written as X(t) = A(1) * X(t-1) + E(t),
-where
-    :X(t) is the time series under investigation 
-    :A(1) is the autoregressive parameter
-    :X(t-1) is the time series lagged 1 period
-    :E(t) is the error term of the model or white noise
-
-In other words, any value in X(t) can be explained using a linear 
-combination of the past value T(t-1) plus some error term E(t). X(t)
-could also be a linear combination of more than one past value: 
-X(t) = A(1) * X(t-1) + A(2) * X(t-2) + E(t).
-
-Differencing is a way of making a non-stationary time series stationary. This 
-is done by computing the differences between consuective observations 
-(subtracting the observation from the current period from the previous one).
-Differencing can help stabilize the mean of a time series by removing changes 
-in the level of a time series, which reduces trend and seasonality. If the 
-transformation is done once, then the data has been "first differenced". The 
-same transformation can be done again, so the data would be "second 
-differenced".
-
-Moving average components uses past forecast errors E(t). In other words,
-X(t) can be thought of as a weighted moving average of the past forecast 
-errors: X(t) = c + E(t) + W(1)*E(t-1) + ... + W(q)*E(t-q).
-
-"""
-
-
 class arima():
     """
-    An ARIMA class used to normalize time series data.
-    """
+    ARIMA is the Autoregressive Integrated Moving Average Model and is used 
+    to normalize and forecast time series data. ARIMA has 3 parameters: (p, d, q)
+    where:
+        :p is the number of autoregressive terms
+        :d is the number of nonseasonal differences
+        :q is the number of lagged forecast errors in the prediction equation
+    
+    An ARIMA model is selected from the Catesian product of sets p, q, and d. The 
+    time series is split into train and test sets and an ARIMA model is fit for 
+    every combination on the training set. The model with the lowest mean-squared 
+    error (MSE) on the test set is selected as the best model. The original 
+    times series can then be transformed by the best model.
 
+    Autoregressive components are past values of the variable of interest. An 
+    AR(p) model with order p = 1 may be written as X(t) = A(1) * X(t-1) + E(t),
+    where
+        :X(t) is the time series under investigation 
+        :A(1) is the autoregressive parameter
+        :X(t-1) is the time series lagged 1 period
+        :E(t) is the error term of the model or white noise
+
+    In other words, any value in X(t) can be explained using a linear 
+    combination of the past value T(t-1) plus some error term E(t). X(t)
+    could also be a linear combination of more than one past value: 
+    X(t) = A(1) * X(t-1) + A(2) * X(t-2) + E(t).
+
+    Differencing is a way of making a non-stationary time series stationary. This 
+    is done by computing the differences between consuective observations 
+    (subtracting the observation from the current period from the previous one).
+    Differencing can help stabilize the mean of a time series by removing changes 
+    in the level of a time series, which reduces trend and seasonality. If the 
+    transformation is done once, then the data has been "first differenced". The 
+    same transformation can be done again, so the data would be "second 
+    differenced".
+
+    Moving average components uses past forecast errors E(t). In other words,
+    X(t) can be thought of as a weighted moving average of the past forecast 
+    errors: X(t) = c + E(t) + W(1)*E(t-1) + ... + W(q)*E(t-q).
+    """
 
     def __init__(self):
         self.best_params = {}
@@ -98,7 +86,7 @@ class arima():
         train, test = X[0:train_size].astype(float), X[train_size:].astype(float)
 
         model = ARIMA(train, order=arima_order, freq=freq)
-        model_fit = model.fit(disp=0)
+        model_fit = model.fit(disp=False, method='css', trend="nc")
         ar_coef = model_fit.arparams
         ma_coef = model_fit.maparams
         resid = model_fit.resid
@@ -108,7 +96,7 @@ class arima():
 
         # calculate test error
         yhat = model_fit.forecast(len(test))[0]
-        error = mean_squared_error(test, yhat)
+        error = mse(test, yhat)
 
         return error, const, ar_coef, ma_coef, resid
 
@@ -148,7 +136,7 @@ class arima():
                         print('   {}'.format(e))
                         continue
 
-                p, d, q = best_order[0], best_order[1], best_order[2]
+                p, d, q = best_order
                 assert(p == len(best_ar_coef))
 
                 self.best_params[series_id] = ARIMA_BestParams(freq=freq,
@@ -184,29 +172,43 @@ class arima():
             transformed_df = transformed_df.dot(ar_coef)
         return transformed_df
 
+    # Helper Function to Calculate Residuals/MA Component
+    def _calculate_residuals(self, X_ar: pd.Series, X_diff: pd.Series, p: int, d: int, q: int, ar_coef: list, ma_coef: list, freq: str):
+        ma_coef = ma_coef[::-1]
+        
+        resid = X_ar.copy(deep=True)
+        resid[:] = 0
+        
+        X_ma = X_ar.copy(deep=True)
+        X_ma[:] = np.nan
 
-    # Helper Function to Calculate Moving Average(MA) Component
-    def _moving_average(self, X: pd.Series, p: int, d: int, q: int, ma_coef: list, resid: list, freq: str):
-        raise NotImplementedError("MA Component Transformation Not Implemented!")
+        for x in range(p + d, len(X_ar)):
+            ma_component = resid[x-q: x].dot(ma_coef)
+            prediction = X_ar[x] + ma_component
+            residual = X_diff[x] - prediction
+            resid[x] = residual
+            X_ma[x] = prediction
+
+        return resid, X_ma
 
 
     # Helper Function to Transform Series
     def _arima_transform_series(self, X: pd.Series, p: int, d: int, q:int, const:float, ar_coef:list, ma_coef:list, resid:list, freq:str) -> pd.Series:
-        X_original = X.copy(deep=True)
         
         # Difference first
-        X_differenced = self._difference(X_original, d)
+        X_diff = self._difference(X, d)
         
         # Calculate Autoregressive Component
-        X_autoregressive = self._lagged_values(X_differenced, p, ar_coef)
+        X_diff_ar = self._lagged_values(X_diff, p, ar_coef)
+
+        # Caluclate Residuals and Moving Average Component
+        calcualted_resid, X_diff_ar_ma = self._calculate_residuals(X_diff_ar, X_diff, p, d, q, ar_coef, ma_coef, freq)
         
-        # Calculate MA Component
-        if q == 0:
-            ARIMA = const + X_autoregressive
-        else:
-            X_MA = self._moving_average(X, p, d, q, ma_coef, resid, freq)
-            ARIMA = const + X_autoregressive + X_MA
-        return ARIMA
+        # Check that calculated residuals are close with ARIMA statsmodels residuals
+        residuals_df = pd.concat([calcualted_resid, resid], axis=1, join='inner')
+        assert(np.allclose(residuals_df[residuals_df.columns[0]], residuals_df[residuals_df.columns[1]]))
+        
+        return X_diff_ar_ma
 
 
     # Helper Function to Transform DataFrame

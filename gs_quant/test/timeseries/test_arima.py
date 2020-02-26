@@ -163,10 +163,10 @@ def test_arima_fit():
         count_nans = arima.best_params[col].p + arima.best_params[col].d
         assert(count_nans == transformed_test_df[col].isna().sum())
 
-    # Test (1,1,0) Model
-    diff_test_df_high = test_df['High'].diff()
-    assert(transformed_test_df['High'][2] == (arima.best_params['High'].const + diff_test_df_high[1] * arima.best_params['High'].ar_coef[0]))
+    # Test (1,2,0) Model
+    diff_test_df_high = test_df['High'].diff().diff()
     assert(transformed_test_df['High'][3] == (arima.best_params['High'].const + diff_test_df_high[2] * arima.best_params['High'].ar_coef[0]))
+    assert(transformed_test_df['High'][4] == (arima.best_params['High'].const + diff_test_df_high[3] * arima.best_params['High'].ar_coef[0]))
     assert(transformed_test_df['High'][-1] == (arima.best_params['High'].const + diff_test_df_high[-2] * arima.best_params['High'].ar_coef[0]))
 
     # Test (2,1,0) Model
@@ -187,13 +187,13 @@ def test_arima_fit():
     assert(transformed_test_df['Close'][5] == (arima.best_params['Close'].const + diff_test_df_close[4] * arima.best_params['Close'].ar_coef[0]))
     assert(transformed_test_df['Close'][-1] == (arima.best_params['Close'].const+ diff_test_df_close[-2] * arima.best_params['Close'].ar_coef[0]))
     
-    # Test (0,2,0) Model
-    diff_test_df_volumne = test_df['Volume'].diff()[1:].diff()
-    first_day = pd.Series([np.nan])
-    first_day.index = [diff_test_df_volumne.index[0] - pd.DateOffset(days=1)]
-    first_day.name = 'Volume'
-    diff_test_df_volumne = pd.concat([first_day, diff_test_df_volumne])  
-    diff_test_df_volumne.index.name = "Date"
-    assert(transformed_test_df['Volume'][2] == arima.best_params['Volume'].const + diff_test_df_volumne[2])
+    # # Test (0,2,0) Model
+    # diff_test_df_volumne = test_df['Volume'].diff()[1:].diff()
+    # first_day = pd.Series([np.nan])
+    # first_day.index = [diff_test_df_volumne.index[0] - pd.DateOffset(days=1)]
+    # first_day.name = 'Volume'
+    # diff_test_df_volumne = pd.concat([first_day, diff_test_df_volumne])  
+    # diff_test_df_volumne.index.name = "Date"
+    # assert(transformed_test_df['Volume'][2] == arima.best_params['Volume'].const + diff_test_df_volumne[2])
 
 test_arima_fit()

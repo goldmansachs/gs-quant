@@ -63,7 +63,6 @@ setuptools.setup(
         "pandas",
         "python-dateutil>=2.7.0",
         "requests",
-        "scikit-learn",
         "scipy",
         "six",
         "statsmodels",
