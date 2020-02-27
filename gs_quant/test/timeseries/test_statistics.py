@@ -37,8 +37,8 @@ def test_min():
         date(2019, 1, 2),
         date(2019, 1, 3),
         date(2019, 1, 4),
-        date(2019, 1, 5),
-        date(2019, 1, 6),
+        date(2019, 1, 7),
+        date(2019, 1, 8),
     ]
 
     x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
@@ -55,6 +55,10 @@ def test_min():
     expected = pd.Series([3.0, 2.0, 2.0, 1.0, 1.0, 3.0], index=dates)
     assert_series_equal(result, expected, obj="Minimum window 2")
 
+    result = min_(x, Window('1w', 0))
+    expected = pd.Series([3.0, 2.0, 2.0, 1.0, 1.0, 1.0], index=dates)
+    assert_series_equal(result, expected, obj="Minimum with window 1w")
+
 
 def test_max():
 
@@ -63,8 +67,8 @@ def test_max():
         date(2019, 1, 2),
         date(2019, 1, 3),
         date(2019, 1, 4),
-        date(2019, 1, 5),
-        date(2019, 1, 6),
+        date(2019, 1, 7),
+        date(2019, 1, 8),
     ]
 
     x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
@@ -81,6 +85,10 @@ def test_max():
     expected = pd.Series([3.0, 3.0, 3.0, 3.0, 3.0, 6.0], index=dates)
     assert_series_equal(result, expected, obj="Maximum window 2")
 
+    result = max_(x, Window('2d', 0))
+    expected = pd.Series([3.0, 3.0, 3.0, 3.0, 3.0, 6.0], index=dates)
+    assert_series_equal(result, expected, obj="Maximum window 1w")
+
 
 def test_range():
 
@@ -89,8 +97,8 @@ def test_range():
         date(2019, 1, 2),
         date(2019, 1, 3),
         date(2019, 1, 4),
-        date(2019, 1, 5),
-        date(2019, 1, 6),
+        date(2019, 1, 7),
+        date(2019, 1, 8),
     ]
 
     x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
@@ -107,6 +115,10 @@ def test_range():
     expected = pd.Series([0.0, 1.0, 1.0, 2.0, 2.0, 3.0], index=dates)
     assert_series_equal(result, expected, obj="Range window 2")
 
+    result = range_(x, Window('1w', 0))
+    expected = pd.Series([0.0, 1.0, 1.0, 2.0, 2.0, 5.0], index=dates)
+    assert_series_equal(result, expected, obj="Range window 1w")
+
 
 def test_mean():
 
@@ -115,8 +127,8 @@ def test_mean():
         date(2019, 1, 2),
         date(2019, 1, 3),
         date(2019, 1, 4),
-        date(2019, 1, 5),
-        date(2019, 1, 6),
+        date(2019, 1, 7),
+        date(2019, 1, 8),
     ]
 
     x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
@@ -133,6 +145,10 @@ def test_mean():
     expected = pd.Series([3.0, 2.5, 2.5, 2.0, 2.0, 4.5], index=dates)
     assert_series_equal(result, expected, obj="Mean window 2")
 
+    result = mean(x, Window('1w', 0))
+    expected = pd.Series([3.0, 2.5, 8 / 3, 2.25, 2.4, 3.0], index=dates)
+    assert_series_equal(result, expected, obj="Mean window 1w")
+
 
 def test_median():
 
@@ -141,8 +157,8 @@ def test_median():
         date(2019, 1, 2),
         date(2019, 1, 3),
         date(2019, 1, 4),
-        date(2019, 1, 5),
-        date(2019, 1, 6),
+        date(2019, 1, 7),
+        date(2019, 1, 8),
     ]
 
     x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
@@ -159,6 +175,10 @@ def test_median():
     expected = pd.Series([3.0, 2.5, 2.5, 2.0, 2.0, 4.5], index=dates)
     assert_series_equal(result, expected, obj="Median window 2")
 
+    result = median(x, Window('1w', 0))
+    expected = pd.Series([3.0, 2.5, 3.0, 2.5, 3.0, 3.0], index=dates)
+    assert_series_equal(result, expected, obj="Median window 1w")
+
 
 def test_mode():
 
@@ -167,8 +187,8 @@ def test_mode():
         date(2019, 1, 2),
         date(2019, 1, 3),
         date(2019, 1, 4),
-        date(2019, 1, 5),
-        date(2019, 1, 6),
+        date(2019, 1, 7),
+        date(2019, 1, 8),
     ]
 
     x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
@@ -185,6 +205,10 @@ def test_mode():
     expected = pd.Series([3.0, 2.0, 2.0, 1.0, 1.0, 3.0], index=dates)
     assert_series_equal(result, expected, obj="mode window 2")
 
+    result = mode(x, Window('1w', 0))
+    expected = pd.Series([3.0, 2.0, 3.0, 3.0, 3.0, 3.0], index=dates)
+    assert_series_equal(result, expected, obj="Mode window 1w")
+
 
 def test_sum():
 
@@ -193,8 +217,8 @@ def test_sum():
         date(2019, 1, 2),
         date(2019, 1, 3),
         date(2019, 1, 4),
-        date(2019, 1, 5),
-        date(2019, 1, 6),
+        date(2019, 1, 7),
+        date(2019, 1, 8),
     ]
 
     x = pd.Series([1.0, 2.0, 3.0, 4.0, 5.0, 6.0], index=dates)
@@ -207,6 +231,10 @@ def test_sum():
     expected = pd.Series([1.0, 3.0, 5.0, 7.0, 9.0, 11.0], index=dates)
     assert_series_equal(result, expected, obj="Summation")
 
+    result = sum_(x, Window('1w', 0))
+    expected = pd.Series([1.0, 3.0, 6.0, 10.0, 15.0, 20.0], index=dates)
+    assert_series_equal(result, expected, obj="Sum window 1w")
+
 
 def test_product():
 
@@ -215,8 +243,8 @@ def test_product():
         date(2019, 1, 2),
         date(2019, 1, 3),
         date(2019, 1, 4),
-        date(2019, 1, 5),
-        date(2019, 1, 6),
+        date(2019, 1, 7),
+        date(2019, 1, 8),
     ]
 
     x = pd.Series([1.0, 2.0, 3.0, 4.0, 5.0, 6.0], index=dates)
@@ -229,6 +257,10 @@ def test_product():
     expected = pd.Series([1.0, 2.0, 6.0, 12.0, 20.0, 30.0], index=dates)
     assert_series_equal(result, expected, obj="Product")
 
+    result = product(x, Window('1w', 0))
+    expected = pd.Series([1.0, 2.0, 6.0, 24.0, 120.0, 720.0], index=dates)
+    assert_series_equal(result, expected, obj="Product window 1w")
+
 
 def test_std():
 
@@ -237,8 +269,8 @@ def test_std():
         date(2019, 1, 2),
         date(2019, 1, 3),
         date(2019, 1, 4),
-        date(2019, 1, 5),
-        date(2019, 1, 6),
+        date(2019, 1, 7),
+        date(2019, 1, 8),
     ]
 
     x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
@@ -251,6 +283,10 @@ def test_std():
     expected = pd.Series([np.nan, 0.707106, 0.707106, 1.414214, 1.414214, 2.121320], index=dates)
     assert_series_equal(result, expected, obj="std window 2", check_less_precise=True)
 
+    result = std(x, Window('1w', 0))
+    expected = pd.Series([np.nan, 0.707106, 0.577350, 0.957427, 0.894427, 1.870828], index=dates)
+    assert_series_equal(result, expected, obj="std window 1w", check_less_precise=True)
+
 
 def test_var():
 
@@ -259,8 +295,8 @@ def test_var():
         date(2019, 1, 2),
         date(2019, 1, 3),
         date(2019, 1, 4),
-        date(2019, 1, 5),
-        date(2019, 1, 6),
+        date(2019, 1, 7),
+        date(2019, 1, 8),
     ]
 
     x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
@@ -273,6 +309,10 @@ def test_var():
     expected = pd.Series([np.nan, 0.5, 0.5, 2.0, 2.0, 4.5], index=dates)
     assert_series_equal(result, expected, obj="var window 2", check_less_precise=True)
 
+    result = var(x, Window('1w', 0))
+    expected = pd.Series([np.nan, 0.500000, 0.333333, 0.916666, 0.800000, 3.500000], index=dates)
+    assert_series_equal(result, expected, obj="var window 1w", check_less_precise=True)
+
 
 def test_cov():
 
@@ -281,8 +321,8 @@ def test_cov():
         date(2019, 1, 2),
         date(2019, 1, 3),
         date(2019, 1, 4),
-        date(2019, 1, 5),
-        date(2019, 1, 6),
+        date(2019, 1, 7),
+        date(2019, 1, 8),
     ]
 
     x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
@@ -292,9 +332,13 @@ def test_cov():
     expected = pd.Series([np.nan, 0.850000, 0.466667, 0.950000, 0.825000, 2.700000], index=dates)
     assert_series_equal(result, expected, obj="cov", check_less_precise=True)
 
-    result = var(x, Window(2, 0))
-    expected = pd.Series([np.nan, 0.5, 0.5, 2.0, 2.0, 4.5], index=dates)
-    assert_series_equal(result, expected, obj="var window 2", check_less_precise=True)
+    result = cov(x, y, Window(2, 0))
+    expected = pd.Series([np.nan, 0.850000, 0.549999, 1.7000000, 1.900000, 4.200000], index=dates)
+    assert_series_equal(result, expected, obj="cov window 2", check_less_precise=True)
+
+    result = cov(x, y, Window('1w', 0))
+    expected = pd.Series([np.nan, 0.850000, 0.466667, 0.950000, 0.825000, 3.375000], index=dates)
+    assert_series_equal(result, expected, obj="cov window 1w", check_less_precise=True)
 
 
 def test_zscores():
@@ -310,8 +354,8 @@ def test_zscores():
         date(2019, 1, 2),
         date(2019, 1, 3),
         date(2019, 1, 4),
-        date(2019, 1, 5),
-        date(2019, 1, 6),
+        date(2019, 1, 7),
+        date(2019, 1, 8),
     ]
 
     x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
@@ -326,6 +370,10 @@ def test_zscores():
     expected = pd.Series([0.0, -0.707107, 0.707107, -0.707107, 0.707107, 0.707107], index=dates)
     assert_series_equal(result, expected, obj="z-score window 2", check_less_precise=True)
     assert_series_equal(zscores(x, Window(5, 5)), zscores(x, 5))
+
+    result = zscores(x, Window('1w', 0))
+    expected = pd.Series([0.0, -0.707106, 0.577350, -1.305582, 0.670820, 1.603567], index=dates)
+    assert_series_equal(result, expected, obj="z-score window 1w", check_less_precise=True)
 
 
 def test_winsorize():
@@ -374,8 +422,8 @@ def test_percentiles():
         date(2019, 1, 2),
         date(2019, 1, 3),
         date(2019, 1, 4),
-        date(2019, 1, 5),
-        date(2019, 1, 6),
+        date(2019, 1, 7),
+        date(2019, 1, 8),
     ]
 
     x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
@@ -392,6 +440,10 @@ def test_percentiles():
     result = percentiles(x, y, Window(2, 0))
     expected = pd.Series([100.0, 0.0, 50.0, 50.0, 100.0, 75.0], index=dates)
     assert_series_equal(result, expected, obj="percentiles with window 2 and ramp 0")
+
+    result = percentiles(x, y, Window('1w', 0))
+    expected = pd.Series([100.0, 0.0, 33.333333, 25.0, 100.0, 90.0], index=dates)
+    assert_series_equal(result, expected, obj="percentiles with window 1w")
 
     result = percentiles(x)
     expected = pd.Series([50.0, 25.0, 66.667, 12.500, 70.0, 91.667], index=dates)

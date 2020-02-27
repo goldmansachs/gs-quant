@@ -333,3 +333,32 @@ def test_quarter():
     result = quarter(x)
     expected = pd.Series([1, 2, 3, 4], index=dates)
     assert_series_equal(result, expected, obj="Quarter")
+
+
+def test_day_count_fractions():
+
+    dates = [
+        date(2019, 1, 1),
+        date(2019, 1, 2),
+        date(2019, 1, 3),
+        date(2019, 1, 4),
+        date(2019, 1, 5),
+        date(2019, 1, 6),
+    ]
+
+    x = pd.Series([])
+    assert_series_equal(x, day_count_fractions(x))
+
+    x = pd.Series([100.0, 101, 103.02, 100.9596, 100.9596, 102.978792], index=dates)
+
+    result = day_count_fractions(x, DayCountConvention.ACTUAL_360)
+    result2 = day_count_fractions(x.index, DayCountConvention.ACTUAL_360)
+    dcf = 1 / 360
+    expected = pd.Series([np.NaN, dcf, dcf, dcf, dcf, dcf], index=dates)
+    assert_series_equal(result, expected, obj="ACT/360")
+    assert_series_equal(result2, expected, obj="ACT/360")
+
+    result = day_count_fractions(x, DayCountConvention.ACTUAL_365F)
+    dcf = 1 / 365
+    expected = pd.Series([np.NaN, dcf, dcf, dcf, dcf, dcf], index=dates)
+    assert_series_equal(result, expected, obj="ACT/365")

@@ -36,13 +36,13 @@ def min_(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     Minimum value of series over given window
 
     :param x: series: timeseries
-    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-    and 10 the ramp up value. Window size defaults to length of series.
+    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+              and 10 the ramp up value. Window size defaults to length of series.
     :return: timeseries of minimum value
 
     **Usage**
 
-    Returns the minimum value of the series over each window:
+    Returns the minimum value of thee series over each window:
 
     :math:`R_t = min(X_{t-w+1}:X_t)`
 
@@ -63,7 +63,11 @@ def min_(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     """
     w = normalize_window(x, w)
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
-    return apply_ramp(x.rolling(w.w, 0).min(), w)
+    if isinstance(w.w, pd.DateOffset):
+        values = [x.loc[(x.index > idx - w.w) & (x.index <= idx)].min() for idx in x.index]
+        return apply_ramp(pd.Series(values, index=x.index), w)
+    else:
+        return apply_ramp(x.rolling(w.w, 0).min(), w)
 
 
 @plot_function
@@ -72,8 +76,8 @@ def max_(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     Maximum value of series over given window
 
     :param x: series: timeseries
-    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-    and 10 the ramp up value. Window size defaults to length of series.
+    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+              and 10 the ramp up value. Window size defaults to length of series.
     :return: timeseries of maximum value
 
     **Usage**
@@ -99,7 +103,11 @@ def max_(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     """
     w = normalize_window(x, w)
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
-    return apply_ramp(x.rolling(w.w, 0).max(), w)
+    if isinstance(w.w, pd.DateOffset):
+        values = [x.loc[(x.index > idx - w.w) & (x.index <= idx)].max() for idx in x.index]
+        return apply_ramp(pd.Series(values, index=x.index), w)
+    else:
+        return apply_ramp(x.rolling(w.w, 0).max(), w)
 
 
 @plot_function
@@ -108,8 +116,8 @@ def range_(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     Range of series over given window
 
     :param x: series: timeseries
-    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-    and 10 the ramp up value. Window size defaults to length of series.
+    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+              and 10 the ramp up value. Window size defaults to length of series.
     :return: timeseries of range
 
     **Usage**
@@ -148,8 +156,8 @@ def mean(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     Arithmetic mean of series over given window
 
     :param x: series: timeseries
-    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-    and 10 the ramp up value. Window size defaults to length of series.
+    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+              and 10 the ramp up value. Window size defaults to length of series.
     :return: timeseries of mean value
 
     **Usage**
@@ -176,7 +184,11 @@ def mean(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     """
     w = normalize_window(x, w)
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
-    return apply_ramp(x.rolling(w.w, 0).mean(), w)
+    if isinstance(w.w, pd.DateOffset):
+        values = [x.loc[(x.index > idx - w.w) & (x.index <= idx)].mean() for idx in x.index]
+        return apply_ramp(pd.Series(values, index=x.index), w)
+    else:
+        return apply_ramp(x.rolling(w.w, 0).mean(), w)
 
 
 @plot_function
@@ -185,8 +197,8 @@ def median(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     Median value of series over given window
 
     :param x: series: timeseries
-    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-    and 10 the ramp up value. Window size defaults to length of series.
+    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+              and 10 the ramp up value. Window size defaults to length of series.
     :return: timeseries of median value
 
     **Usage**
@@ -215,7 +227,11 @@ def median(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     """
     w = normalize_window(x, w)
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
-    return apply_ramp(x.rolling(w.w, 0).median(), w)
+    if isinstance(w.w, pd.DateOffset):
+        values = [x.loc[(x.index > idx - w.w) & (x.index <= idx)].median() for idx in x.index]
+        return apply_ramp(pd.Series(values, index=x.index), w)
+    else:
+        return apply_ramp(x.rolling(w.w, 0).median(), w)
 
 
 @plot_function
@@ -224,8 +240,8 @@ def mode(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     Most common value in series over given window
 
     :param x: series: timeseries
-    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-    and 10 the ramp up value. Window size defaults to length of series.
+    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+              and 10 the ramp up value. Window size defaults to length of series.
     :return: timeseries of mode value
 
     **Usage**
@@ -249,7 +265,11 @@ def mode(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     """
     w = normalize_window(x, w)
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
-    return apply_ramp(x.rolling(w.w, 0).apply(lambda y: stats.mode(y).mode, raw=True), w)
+    if isinstance(w.w, pd.DateOffset):
+        values = [stats.mode(x.loc[(x.index > idx - w.w) & (x.index <= idx)]).mode[0] for idx in x.index]
+        return apply_ramp(pd.Series(values, index=x.index), w)
+    else:
+        return apply_ramp(x.rolling(w.w, 0).apply(lambda y: stats.mode(y).mode, raw=True), w)
 
 
 @plot_function
@@ -258,8 +278,8 @@ def sum_(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     Rolling sum of series over given window
 
     :param x: series: timeseries
-    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-    and 10 the ramp up value. Window size defaults to length of series.
+    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+              and 10 the ramp up value. Window size defaults to length of series.
     :return: timeseries of rolling sum
 
     **Usage**
@@ -285,7 +305,11 @@ def sum_(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     """
     w = normalize_window(x, w)
     assert x.index.is_monotonic_increasing
-    return apply_ramp(x.rolling(w.w, 0).sum(), w)
+    if isinstance(w.w, pd.DateOffset):
+        values = [x.loc[(x.index > idx - w.w) & (x.index <= idx)].sum() for idx in x.index]
+        return apply_ramp(pd.Series(values, index=x.index), w)
+    else:
+        return apply_ramp(x.rolling(w.w, 0).sum(), w)
 
 
 @plot_function
@@ -294,8 +318,8 @@ def product(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     Rolling product of series over given window
 
     :param x: series: timeseries
-    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-    and 10 the ramp up value. Window size defaults to length of series.
+    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+              and 10 the ramp up value. Window size defaults to length of series.
     :return: timeseries of rolling product
 
     **Usage**
@@ -320,7 +344,11 @@ def product(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     """
     w = normalize_window(x, w)
     assert x.index.is_monotonic_increasing
-    return apply_ramp(x.rolling(w.w, 0).agg(pd.Series.prod), w)
+    if isinstance(w.w, pd.DateOffset):
+        values = [x.loc[(x.index > idx - w.w) & (x.index <= idx)].agg(pd.Series.prod) for idx in x.index]
+        return apply_ramp(pd.Series(values, index=x.index), w)
+    else:
+        return apply_ramp(x.rolling(w.w, 0).agg(pd.Series.prod), w)
 
 
 @plot_function
@@ -329,8 +357,8 @@ def std(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     Rolling standard deviation of series over given window
 
     :param x: series: timeseries
-    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-     and 10 the ramp up value. Window size defaults to length of series.
+    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+              and 10 the ramp up value. Window size defaults to length of series.
     :return: timeseries of standard deviation
 
     **Usage**
@@ -361,7 +389,11 @@ def std(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     """
     w = normalize_window(x, w)
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
-    return apply_ramp(x.rolling(w.w, 0).std(), w)
+    if isinstance(w.w, pd.DateOffset):
+        values = [x.loc[(x.index > idx - w.w) & (x.index <= idx)].std() for idx in x.index]
+        return apply_ramp(pd.Series(values, index=x.index), w)
+    else:
+        return apply_ramp(x.rolling(w.w, 0).std(), w)
 
 
 @plot_function
@@ -370,8 +402,8 @@ def var(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     Rolling variance of series over given window
 
     :param x: series: timeseries
-    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-    and 10 the ramp up value. Window size defaults to length of series.
+    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+              and 10 the ramp up value. Window size defaults to length of series.
     :return: timeseries of variance
 
     **Usage**
@@ -402,7 +434,11 @@ def var(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     """
     w = normalize_window(x, w)
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
-    return apply_ramp(x.rolling(w.w, 0).var(), w)
+    if isinstance(w.w, pd.DateOffset):
+        values = [x.loc[(x.index > idx - w.w) & (x.index <= idx)].var() for idx in x.index]
+        return apply_ramp(pd.Series(values, index=x.index), w)
+    else:
+        return apply_ramp(x.rolling(w.w, 0).var(), w)
 
 
 @plot_function
@@ -412,8 +448,8 @@ def cov(x: pd.Series, y: pd.Series, w: Union[Window, int] = Window(None, 0)) -> 
 
     :param x: series: timeseries
     :param y: series: timeseries
-    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-    and 10 the ramp up value. Window size defaults to length of series.
+    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+              and 10 the ramp up value. Window size defaults to length of series.
     :return: timeseries of covariance
 
     **Usage**
@@ -445,7 +481,11 @@ def cov(x: pd.Series, y: pd.Series, w: Union[Window, int] = Window(None, 0)) -> 
     """
     w = normalize_window(x, w)
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
-    return apply_ramp(x.rolling(w.w, 0).cov(y), w)
+    if isinstance(w.w, pd.DateOffset):
+        values = [x.loc[(x.index > idx - w.w) & (x.index <= idx)].cov(y) for idx in x.index]
+        return apply_ramp(pd.Series(values, index=x.index), w)
+    else:
+        return apply_ramp(x.rolling(w.w, 0).cov(y), w)
 
 
 def _zscore(x):
@@ -461,8 +501,8 @@ def zscores(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     Rolling z-scores over a given window
 
     :param x: time series of prices
-    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-    and 10 the ramp up value. Window size defaults to length of series.
+    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+              and 10 the ramp up value. Window size defaults to length of series.
     :return: timeseries of z-scores
 
     **Usage**
@@ -501,8 +541,12 @@ def zscores(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
         clean_series = x.dropna()
         zscore_series = pd.Series(stats.zscore(clean_series, ddof=1), clean_series.index)
         return interpolate(zscore_series, x, Interpolate.NAN)
-
-    return apply_ramp(x.rolling(w.w, 0).apply(_zscore, raw=False), w)
+    if not isinstance(w.w, int):
+        w = normalize_window(x, w)
+        values = [_zscore(x.loc[(x.index > idx - w.w) & (x.index <= idx)]) for idx in x.index]
+        return apply_ramp(pd.Series(values, index=x.index), w)
+    else:
+        return apply_ramp(x.rolling(w.w, 0).apply(_zscore, raw=False), w)
 
 
 @plot_function
@@ -512,8 +556,8 @@ def winsorize(x: pd.Series, limit: float = 2.5, w: Union[Window, int] = Window(N
 
     :param x: time series of prices
     :param limit: max z-score of values
-    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-    and 10 the ramp up value. Window size defaults to length of series.
+    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+              and 10 the ramp up value. Window size defaults to length of series.
     :return: timeseries of winsorized values
 
     **Usage**
@@ -615,8 +659,8 @@ def percentiles(x: pd.Series, y: pd.Series = None, w: Union[Window, int] = Windo
 
     :param x: value series
     :param y: distribution series
-    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-    and 10 the ramp up value. Window size defaults to length of series.
+    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+              and 10 the ramp up value. Window size defaults to length of series.
     :return: timeseries of percentiles
 
     **Usage**
@@ -652,7 +696,7 @@ def percentiles(x: pd.Series, y: pd.Series = None, w: Union[Window, int] = Windo
 
     res = pd.Series()
     for idx, val in y.iteritems():
-        sample = x[:idx][-w.w:]
+        sample = x.loc[(x.index > idx - w.w) & (x.index <= idx)] if isinstance(w.w, pd.DateOffset) else x[:idx][-w.w:]
         res.loc[idx] = percentileofscore(sample, val, kind='mean')
 
     return apply_ramp(res, w)
