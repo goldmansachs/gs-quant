@@ -30,12 +30,14 @@ class ColumnFormat(Base):
         precision: float,
         unit=None,
         human_readable: bool = None,
+        axis_key=None,
         name: str = None
     ):        
         super().__init__()
         self.precision = precision
         self.unit = unit
         self.human_readable = human_readable
+        self.axis_key = axis_key
         self.name = name
 
     @property
@@ -67,6 +69,17 @@ class ColumnFormat(Base):
     def human_readable(self, value: bool):
         self._property_changed('human_readable')
         self.__human_readable = value        
+
+    @property
+    def axis_key(self):
+        """Applicable for render type chart, determines line to be on the left or right
+           axis"""
+        return self.__axis_key
+
+    @axis_key.setter
+    def axis_key(self, value):
+        self._property_changed('axis_key')
+        self.__axis_key = value        
 
 
 class ColumnMappingParameters(Base):
@@ -1491,7 +1504,8 @@ class Monitor(Base):
 
     @property
     def polling_time(self) -> float:
-        """Polling time to use in milliseconds."""
+        """Polling time to use in milliseconds. A polling time of zero denotes no
+           streaming."""
         return self.__polling_time
 
     @polling_time.setter
