@@ -14,9 +14,14 @@
 # Chart Service will attempt to make public functions (not prefixed with _) from this module available. Such functions
 # should be fully documented: docstrings should describe parameters and the return value, and provide a 1-line
 # description. Type annotations should be provided for parameters.
-
 from .statistics import *
 from ..errors import *
+from gs_quant.api.gs.data import GsDataApi
+from gs_quant.data import DataContext
+from gs_quant.datetime.date import DayCountConvention
+from gs_quant.markets.securities import Asset
+from gs_quant.target.common import Currency
+from gs_quant.timeseries.datetime import align
 
 """
 Econometrics timeseries library is for standard economic and time series analytics operations, including returns,
@@ -31,6 +36,89 @@ class AnnualizationFactor(IntEnum):
     MONTHLY = 12
     QUARTERLY = 4
     ANNUALLY = 1
+
+
+class SharpeAssets(Enum):
+    USD = 'MAP35DA6K5B1YXGX'
+    AUD = 'MAFRZWJ790MQY0EW'
+    CHF = 'MAS0NN4ZX7NYXB36'
+    EUR = 'MA95W0N1214395N8'
+    GBP = 'MA41ZEFTWR8Q7HBM'
+    JPY = 'MA8GXV3SJ0TXH1JV'
+    SEK = 'MAGNZZY0GJ4TATNG'
+
+
+def excess_returns(price_series: pd.Series, benchmark_or_rate: Union[Asset, Currency, float], *,
+                   day_count_convention=DayCountConvention.ACTUAL_360) -> pd.Series:
+    if isinstance(benchmark_or_rate, float):
+        er = [price_series.iloc[0]]
+        for j in range(1, len(price_series)):
+            fraction = day_count_fraction(price_series.index[j - 1], price_series.index[j], day_count_convention)
+            er.append(er[-1] + price_series.iloc[j] - price_series.iloc[j - 1] * (1 + benchmark_or_rate * fraction))
+        return pd.Series(er, index=price_series.index)
+
+    if isinstance(benchmark_or_rate, Currency):
+        try:
+            marquee_id = SharpeAssets[benchmark_or_rate.value].value
+        except KeyError:
+            raise MqValueError(f"unsupported currency {benchmark_or_rate}")
+    else:
+        marquee_id = benchmark_or_rate.get_marquee_id()
+
+    with DataContext(price_series.index[0], price_series.index[-1]):
+        q = GsDataApi.build_market_data_query([marquee_id], QueryType.SPOT)
+        df = GsDataApi.get_market_data(q)
+    curve, bench_curve = align(price_series, df['spot'], Interpolate.INTERSECT)
+
+    e_returns = [curve.iloc[0]]
+    for i in range(1, len(curve)):
+        multiplier = 1 + curve.iloc[i] / curve.iloc[i - 1] - bench_curve.iloc[i] / bench_curve.iloc[i - 1]
+        e_returns.append(e_returns[-1] * multiplier)
+    return pd.Series(e_returns, index=curve.index)
+
+
+def _annualized_return(levels: pd.Series) -> pd.Series:
+    v0 = levels.iloc[0]
+    d0 = levels.index[0]
+    points = list(map(lambda d, v: pow(v / v0, 365.25 / (d - d0).days) - 1, levels.index[1:], levels.values[1:]))
+    points.insert(0, 0)
+    return pd.Series(points, index=levels.index)
+
+
+def _get_ratio(price_series: pd.Series, benchmark_or_rate: Union[Asset, float, str], *,
+               day_count_convention: DayCountConvention) -> pd.Series:
+    er = excess_returns(price_series, benchmark_or_rate, day_count_convention=day_count_convention)
+    ann_return = _annualized_return(er)
+    ann_vol = volatility(er) / 100
+    return ann_return / ann_vol
+
+
+@plot_session_function
+def sharpe_ratio(prices_: pd.Series, risk_free_rate: Union[Currency, float]) -> pd.Series:
+    """
+    Calculate Sharpe ratio
+
+    :param prices_: series of prices for an asset
+    :param risk_free_rate: a fixed rate or currency like USD
+    :return: Sharpe ratio
+
+    **Usage**
+
+    Given a price series and risk-free rate (a number, currency, or cash asset), returns the rolling Sharpe ratio.
+
+    For a fixed rate R, excess returns E are calculated as:
+
+    :math:`E_t = E_{t-1} + P_t - P_{t-1} * (1 + R * DCF_{t-1,t})`
+
+    Subscripts refers to dates in the price series.
+
+    P is a point in the price series.
+
+    DCF is the day count fraction using the Act/360 convention.
+    """
+    if not isinstance(risk_free_rate, (Currency, float)):
+        raise MqTypeError(f'{risk_free_rate} must be a currency or fixed interest rate')
+    return _get_ratio(prices_, risk_free_rate, day_count_convention=DayCountConvention.ACTUAL_360)
 
 
 @plot_function
@@ -300,7 +388,7 @@ def volatility(x: pd.Series, w: Union[Window, int] = Window(None, 0),
     Realized volatility of price series
 
     :param x: time series of prices
-    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
               and 10 the ramp up value. Window size defaults to length of series.
     :param returns_type: returns type
     :return: date-based time series of return
@@ -352,8 +440,8 @@ def correlation(x: pd.Series, y: pd.Series,
 
     :param x: price series
     :param y: price series
-    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-    and 10 the ramp up value. Window size defaults to length of series.
+    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+              and 10 the ramp up value. Window size defaults to length of series.
     :param type_: type of both input series
     :return: date-based time series of correlation
 
@@ -404,7 +492,12 @@ def correlation(x: pd.Series, y: pd.Series,
     clean_ret1 = ret_1.dropna()
     clean_ret2 = ret_2.dropna()
 
-    corr = clean_ret1.rolling(w.w, 0).corr(clean_ret2)
+    if isinstance(w.w, pd.DateOffset):
+        values = [clean_ret1.loc[(clean_ret1.index > idx - w.w) & (clean_ret1.index <= idx)].corr(clean_ret2)
+                  for idx in clean_ret1.index]
+        corr = pd.Series(values, index=clean_ret1.index)
+    else:
+        corr = clean_ret1.rolling(w.w, 0).corr(clean_ret2)
 
     return apply_ramp(interpolate(corr, x, Interpolate.NAN), w)
 
@@ -416,8 +509,8 @@ def beta(x: pd.Series, b: pd.Series, w: Union[Window, int] = Window(None, 0), pr
 
     :param x: time series of prices
     :param b: time series of benchmark prices
-    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-    and 10 the ramp up value. Window size defaults to length of series.
+    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+              and 10 the ramp up value. Window size defaults to length of series.
     :param prices: True if input series are prices, False if they are returns
     :return: date-based time series of beta
 
@@ -463,8 +556,14 @@ def beta(x: pd.Series, b: pd.Series, w: Union[Window, int] = Window(None, 0), pr
     ret_series = returns(x) if prices else x
     ret_benchmark = returns(b) if prices else b
 
-    cov = ret_series.rolling(w.w, 0).cov(ret_benchmark.rolling(w.w, 0))
-    result = cov / ret_benchmark.rolling(w.w, 0).var()
+    if isinstance(w.w, pd.DateOffset):
+        result = pd.Series([ret_series.loc[(ret_series.index > idx - w.w) & (ret_series.index <= idx)].cov(
+            ret_benchmark.loc[(ret_benchmark.index > idx - w.w) & (ret_benchmark.index <= idx)]
+        ) / ret_benchmark.loc[(ret_benchmark.index > idx - w.w) & (ret_benchmark.index <= idx)].var()
+            for idx in ret_series.index], index=ret_series.index)
+    else:
+        cov = ret_series.rolling(w.w, 0).cov(ret_benchmark.rolling(w.w, 0))
+        result = cov / ret_benchmark.rolling(w.w, 0).var()
 
     # do not compute initial values as they may be extreme when sample size is small
 
@@ -479,8 +578,8 @@ def max_drawdown(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Se
     Compute the maximum peak to trough drawdown over a rolling window.
 
     :param x: time series
-    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-    and 10 the ramp up value. Window size defaults to length of series.
+    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+              and 10 the ramp up value. Window size defaults to length of series.
     :return: time series of rolling maximum drawdown
 
     **Examples**
@@ -496,7 +595,12 @@ def max_drawdown(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Se
 
     """
     w = normalize_window(x, w)
-
-    rolling_max = x.rolling(w.w, 0).max()
-    result = (x / rolling_max - 1).rolling(w.w, 0).min()
+    if isinstance(w.w, pd.DateOffset):
+        scores = pd.Series([x[idx] / x.loc[(x.index > idx - w.w) & (x.index <= idx)].max() - 1 for idx in x.index],
+                           index=x.index)
+        result = pd.Series([scores.loc[(scores.index > idx - w.w) & (scores.index <= idx)].min()
+                            for idx in scores.index], index=scores.index)
+    else:
+        rolling_max = x.rolling(w.w, 0).max()
+        result = (x / rolling_max - 1).rolling(w.w, 0).min()
     return apply_ramp(result, w)

@@ -75,6 +75,9 @@ class AssetType(Enum):
     #: Rate
     RATE = "Rate"
 
+    #: Cash
+    CASH = "Cash"
+
 
 class AssetIdentifier(Enum):
     """Asset type enumeration
@@ -284,6 +287,21 @@ class Rate(Asset):
         return AssetType.RATE
 
 
+class Cash(Asset):
+    """Cash Security Type
+
+    Represents a financial asset which can be held in a portfolio, or has an observable price fixing which can be
+    referenced in a derivative transaction
+
+    """
+
+    def __init__(self, id_: str, name: str):
+        Asset.__init__(self, id_, AssetClass.Cash, name)
+
+    def get_type(self) -> AssetType:
+        return AssetType.CASH
+
+
 class IndexConstituentProvider(metaclass=ABCMeta):
     def __init__(self, id_: str):
         self.__id = id_
@@ -425,6 +443,9 @@ class SecurityMaster:
 
         if asset_type in (GsAssetType.Rate.value,):
             return Rate(gs_asset.id, gs_asset.name)
+
+        if asset_type in (GsAssetType.Cash.value,):
+            return Cash(gs_asset.id, gs_asset.name)
 
         raise TypeError(f'unsupported asset type {asset_type}')
 

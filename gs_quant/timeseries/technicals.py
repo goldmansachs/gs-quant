@@ -30,8 +30,8 @@ def moving_average(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.
     Moving average over specified window
 
     :param x: time series of prices
-    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-     and 10 the ramp up value. Window size defaults to length of series.
+    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+              and 10 the ramp up value. Window size defaults to length of series.
     :return: date-based time series of return
 
     **Usage**
@@ -69,8 +69,8 @@ def bollinger_bands(x: pd.Series, w: Union[Window, int] = Window(None, 0), k: fl
     Bollinger bands with given window and width
 
     :param x: time series of prices
-    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-    and 10 the ramp up value. Window size defaults to length of series.
+    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+              and 10 the ramp up value. Window size defaults to length of series.
     :param k: band width in standard deviations (default: 2)
     :return: date-based time series of return
 
@@ -116,8 +116,8 @@ def smoothed_moving_average(x: pd.Series, w: Union[Window, int] = Window(None, 0
     Smoothed moving average over specified window
 
     :param x: time series of prices
-    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-     and 10 the ramp up value. Window size defaults to length of series.
+    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+              and 10 the ramp up value. Window size defaults to length of series.
     :return: date-based time series of return
 
     **Usage**
@@ -166,8 +166,8 @@ def relative_strength_index(x: pd.Series, w: Union[Window, int] = 14) -> pd.Data
     Relative Strength Index
 
     :param x: time series of prices
-    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-    and 10 the ramp up value. Window size defaults to length of series.
+    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+              and 10 the ramp up value. Window size defaults to length of series.
     :return: date-based time series of RSI
 
     **Usage**

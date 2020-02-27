@@ -17,11 +17,10 @@
 
 from datetime import date, time
 from numbers import Real
-
 import numpy as np
-
 from .helper import *
 from ..errors import *
+from ..datetime.date import *
 
 """
 Date and time manipulation for timeseries, including date or time shifting, calendar operations, curve alignment and
@@ -395,3 +394,59 @@ def weekday(x: pd.Series) -> pd.Series:
 
     """
     return pd.to_datetime(x.index.to_series()).dt.weekday
+
+
+@plot_function
+def day_count_fractions(
+    dates: Union[List[date], pd.Series],
+    convention: DayCountConvention = DayCountConvention.ACTUAL_360,
+    frequency: PaymentFrequency = PaymentFrequency.MONTHLY
+) -> pd.Series:
+    """
+    Day count fractions between dates in series
+
+    :param dates: time series or array of dates
+    :param convention: day count convention (default: Actual/360 ISDA)
+    :param frequency: payment frequency of instrument (optional)
+    :return: series of day count fractions
+
+    **Usage**
+
+    Returns the day count fraction between dates in the series
+
+    :math:`Y_t = DCF(t_{-1}, t)`
+
+    Default is Actual/360 per ISDA specification:
+
+    :math:`Y_t = \frac{Days(t_{-1}, t)}{360}`
+
+    For a full list of available conventions, see
+    `Day Count Conventions <https://developer.gs.com/docs/gsquant/guides/Dates/1-day-count-conventions>`_.
+    For more information on day count conventions, see the
+    `day count conventions <https://en.wikipedia.org/wiki/Day_count_convention>`_ page on Wikipedia
+
+    **Examples**
+
+    Weekday for observations in series:
+
+    >>> series = generate_series(100)
+    >>> days = day_count_fractions(series)
+
+    **See also**
+
+    :func:`day` :func:`month` :func:`year`
+
+    """
+    if isinstance(dates, pd.Series):
+        date_list = list(dates.index)
+    else:
+        date_list = dates
+
+    if len(date_list) < 2:
+        return pd.Series([])
+
+    start_dates = date_list[0:-1]
+    end_dates = date_list[1:len(date_list)]
+
+    dcfs = map(lambda a, b: day_count_fraction(a, b, convention, frequency), start_dates, end_dates)
+    return pd.Series(data=[np.NaN] + list(dcfs), index=date_list[0:len(date_list)])

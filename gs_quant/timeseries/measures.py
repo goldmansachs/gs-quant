@@ -44,7 +44,7 @@ from gs_quant.markets.securities import *
 from gs_quant.markets.securities import Asset, AssetIdentifier, SecurityMaster
 from gs_quant.target.common import AssetClass, FieldFilterMap, AssetType, Currency, PricingLocation
 from gs_quant.timeseries import volatility, Window, Returns
-from gs_quant.timeseries.helper import log_return, plot_measure
+from gs_quant.timeseries.helper import log_return, plot_measure, _to_offset
 
 GENERIC_DATE = Union[datetime.date, str]
 ASSET_SPEC = Union[Asset, str]
@@ -342,27 +342,6 @@ def _range_from_pricing_date(exchange, pricing_date: Optional[GENERIC_DATE] = No
         end = today - datetime.timedelta(days=relative_days_add(pricing_date, True))
         start = end - bd
     return start, end
-
-
-def _to_offset(tenor: str) -> pd.DateOffset:
-    import re
-    matcher = re.fullmatch('(\\d+)([dwmy])', tenor)
-    if not matcher:
-        raise ValueError('invalid tenor ' + tenor)
-
-    ab = matcher.group(2)
-    if ab == 'd':
-        name = 'days'
-    elif ab == 'w':
-        name = 'weeks'
-    elif ab == 'm':
-        name = 'months'
-    else:
-        assert ab == 'y'
-        name = 'years'
-
-    kwarg = {name: int(matcher.group(1))}
-    return pd.DateOffset(**kwarg)
 
 
 def _market_data_timed(q):

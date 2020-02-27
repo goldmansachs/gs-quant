@@ -139,7 +139,9 @@ class PortfolioRiskResult(RiskResult):
             else:
                 return tuple(futures[i] for i in idx)
         else:
-            return tuple(chain.from_iterable(self.__futures(i) for i in instruments))
+            all_futures = [self.__futures(i) for i in instruments]
+            return tuple(chain.from_iterable((f,) if isinstance(f, (Future, MultipleRiskMeasureFuture)) else f
+                                             for f in all_futures))
 
     def __results(self,
                   instruments: Optional[Union[int, slice, str, Priceable, Iterable[Union[int, str, Priceable]]]] = (),
