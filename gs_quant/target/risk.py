@@ -515,6 +515,7 @@ class LiquidityConstituent(Base):
 
     @property
     def exchange(self) -> str:
+        """Name of marketplace where security, derivative or other instrument is traded"""
         return self.__exchange
 
     @exchange.setter
@@ -1719,6 +1720,7 @@ class LiquidityResponse(Base):
 
     @property
     def currency(self) -> Union[Currency, str]:
+        """Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)"""
         return self.__currency
 
     @currency.setter

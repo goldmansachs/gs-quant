@@ -1294,43 +1294,6 @@ class TradeInTimeRefData(Base):
         self.__enum = value        
 
 
-class Underlier(Base):
-        
-    """Underlying asset and corresponding weight"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        asset_id: str = None,
-        weight: float = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.asset_id = asset_id
-        self.weight = weight
-        self.name = name
-
-    @property
-    def asset_id(self) -> str:
-        """Marquee unique asset identifier."""
-        return self.__asset_id
-
-    @asset_id.setter
-    def asset_id(self, value: str):
-        self._property_changed('asset_id')
-        self.__asset_id = value        
-
-    @property
-    def weight(self) -> float:
-        """Percentage of notional."""
-        return self.__weight
-
-    @weight.setter
-    def weight(self, value: float):
-        self._property_changed('weight')
-        self.__weight = value        
-
-
 class VolatilityWeightedWeightingModifier(Base):
         
     """Volatility Weighted backtest weighting modifier."""
@@ -1651,7 +1614,7 @@ class BasketBacktestParameters(Base):
     @camel_case_translate
     def __init__(
         self,
-        underliers: Tuple[Underlier, ...],
+        underliers: Tuple[Union[float, str], ...],
         rebalance_parameters: BacktestRebalanceParameters = None,
         weighting_modifiers: Tuple[VolatilityWeightedWeightingModifier, ...] = None,
         weighting_strategy: str = None,
@@ -1675,12 +1638,12 @@ class BasketBacktestParameters(Base):
         self.__rebalance_parameters = value        
 
     @property
-    def underliers(self) -> Tuple[Underlier, ...]:
+    def underliers(self) -> Tuple[Union[float, str], ...]:
         """Underlying assets for the backtest"""
         return self.__underliers
 
     @underliers.setter
-    def underliers(self, value: Tuple[Underlier, ...]):
+    def underliers(self, value: Tuple[Union[float, str], ...]):
         self._property_changed('underliers')
         self.__underliers = value        
 

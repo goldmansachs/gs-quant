@@ -64,6 +64,7 @@ class AssetStatsType(EnumBase, Enum):
 
     Rolling = 'Rolling'
     Calendar = 'Calendar'
+    YTD = 'YTD'
     
     def __repr__(self):
         return self.value
