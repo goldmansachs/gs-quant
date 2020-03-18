@@ -65,6 +65,7 @@ setuptools.setup(
         "requests",
         "scipy",
         "six",
+        "statsmodels",
         "typing;python_version<'3.7'"
     ],
     extras_require={
