@@ -67,7 +67,6 @@ setuptools.setup(
         "six",
         "statsmodels",
         "typing;python_version<'3.7'"
-        "tqdm"
     ],
     extras_require={
         "internal": ["gs_quant_internal>=0.4.1", "requests_kerberos"],
