@@ -14,11 +14,14 @@ Algebra
    add
    ceil
    divide
-   exp 
+   exp
+   filter_
    floor
+   floordiv
    log
    multiply
    power
+   repeat
    sqrt
    subtract
 
@@ -36,6 +39,17 @@ Analysis
    last
    count
    lag
+
+
+Backtesting
+--------
+
+.. currentmodule:: gs_quant.timeseries.backtesting
+
+.. autosummary::
+   :toctree: functions
+
+   basket
 
 
 Date / Time
@@ -74,6 +88,7 @@ Econometrics
    max_drawdown
    prices
    returns
+   sharpe_ratio
    volatility
 
 

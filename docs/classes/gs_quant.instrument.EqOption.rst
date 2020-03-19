@@ -23,28 +23,28 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: exchange
    
    
-   .. autoattribute:: expirationDate
+   .. autoattribute:: expiration_date
    
    
    .. autoattribute:: multiplier
    
    
-   .. autoattribute:: numberOfOptions
+   .. autoattribute:: number_of_options
    
    
-   .. autoattribute:: optionStyle
+   .. autoattribute:: option_style
    
    
-   .. autoattribute:: optionType
+   .. autoattribute:: option_type
    
    
    .. autoattribute:: premium
    
    
-   .. autoattribute:: settlementDate
+   .. autoattribute:: settlement_date
    
    
-   .. autoattribute:: strikePrice
+   .. autoattribute:: strike_price
    
    
    

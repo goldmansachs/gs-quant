@@ -566,6 +566,7 @@ class MqexsTradeDetails(Base):
         unit_price: str,
         currency: Union[MqexsCurrencyExt, str],
         settlement_date: datetime.date = None,
+        quantity_lots: str = None,
         quantity_unit: str = None,
         name: str = None
     ):        
@@ -573,6 +574,7 @@ class MqexsTradeDetails(Base):
         self.settlement_date = settlement_date
         self.side = side
         self.quantity = quantity
+        self.quantity_lots = quantity_lots
         self.unit_price = unit_price
         self.quantity_unit = quantity_unit
         self.currency = currency
@@ -608,6 +610,17 @@ class MqexsTradeDetails(Base):
     def quantity(self, value: str):
         self._property_changed('quantity')
         self.__quantity = value        
+
+    @property
+    def quantity_lots(self) -> str:
+        """Quantity in lots of product being requested, as a string representation of the
+           double value"""
+        return self.__quantity_lots
+
+    @quantity_lots.setter
+    def quantity_lots(self, value: str):
+        self._property_changed('quantity_lots')
+        self.__quantity_lots = value        
 
     @property
     def unit_price(self) -> str:

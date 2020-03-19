@@ -1,4 +1,4 @@
-AssetType
+gs\_quant.markets.securities.AssetType
 ======================================
 
 .. currentmodule:: gs_quant.markets.securities
@@ -18,6 +18,8 @@ AssetType
    .. autosummary::
    
       ~AssetType.BASKET
+      ~AssetType.CROSS
+      ~AssetType.CURRENCY
       ~AssetType.ETF
       ~AssetType.FUTURE
       ~AssetType.INDEX

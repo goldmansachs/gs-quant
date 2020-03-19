@@ -871,7 +871,10 @@ class ColumnDefinition(Base):
         width: float = None,
         column_property: ColumnProperty = None,
         column_operation: ColumnOperation = None,
-        expression: str = None
+        expression: str = None,
+        expressions: Tuple[str, ...] = None,
+        start_date: str = None,
+        end_date: str = None
     ):        
         super().__init__()
         self.enable_cell_flashing = enable_cell_flashing
@@ -884,6 +887,9 @@ class ColumnDefinition(Base):
         self.column_property = column_property
         self.column_operation = column_operation
         self.expression = expression
+        self.expressions = expressions
+        self.start_date = start_date
+        self.end_date = end_date
 
     @property
     def enable_cell_flashing(self) -> bool:
@@ -984,6 +990,36 @@ class ColumnDefinition(Base):
     def expression(self, value: str):
         self._property_changed('expression')
         self.__expression = value        
+
+    @property
+    def expressions(self) -> Tuple[str, ...]:
+        """Array of PlotTool Expressions for /v1/plots/expansionRunner"""
+        return self.__expressions
+
+    @expressions.setter
+    def expressions(self, value: Tuple[str, ...]):
+        self._property_changed('expressions')
+        self.__expressions = value        
+
+    @property
+    def start_date(self) -> str:
+        """String that represents the start date for expressions."""
+        return self.__start_date
+
+    @start_date.setter
+    def start_date(self, value: str):
+        self._property_changed('start_date')
+        self.__start_date = value        
+
+    @property
+    def end_date(self) -> str:
+        """String that represents the end date for expressions"""
+        return self.__end_date
+
+    @end_date.setter
+    def end_date(self, value: str):
+        self._property_changed('end_date')
+        self.__end_date = value        
 
 
 class EntityId(Base):

@@ -10,7 +10,7 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. rubric:: Properties
    {% if attributes %}
    {% for item in attributes %}
-   {% if item not in ('assetClass', 'type', 'PROVIDER') %}
+   {% if item not in ('asset_class', 'type', 'PROVIDER') %}
    .. autoattribute:: {{ item }}
    {% endif %}
    {%- endfor %}

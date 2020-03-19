@@ -30,7 +30,7 @@ def test_get_many_monitors(mocker):
     )
 
     # mock GsSession
-    mocker.patch.object(GsSession.__class__, 'current',
+    mocker.patch.object(GsSession.__class__, 'default_value',
                         return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
@@ -57,7 +57,7 @@ def test_get_monitor(mocker):
     mock_response = Monitor(id=monitor_id, name='test', type='assets')
 
     # mock GsSession
-    mocker.patch.object(GsSession.__class__, 'current',
+    mocker.patch.object(GsSession.__class__, 'default_value',
                         return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
@@ -73,7 +73,7 @@ def test_create_monitor(mocker):
     monitor = Monitor(id=monitor_id, name='test', type='assets')
 
     # mock GsSession
-    mocker.patch.object(GsSession.__class__, 'current',
+    mocker.patch.object(GsSession.__class__, 'default_value',
                         return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
     mocker.patch.object(GsSession.current, '_post', return_value=monitor)
 
@@ -91,7 +91,7 @@ def test_update_monitor(mocker):
     monitor = Monitor(id=monitor_id, name='test', type='assets')
 
     # mock GsSession
-    mocker.patch.object(GsSession.__class__, 'current',
+    mocker.patch.object(GsSession.__class__, 'default_value',
                         return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
     mocker.patch.object(GsSession.current, '_put', return_value=monitor)
 
@@ -109,7 +109,7 @@ def test_delete_monitor(mocker):
     mock_response = True
 
     # mock GsSession
-    mocker.patch.object(GsSession.__class__, 'current',
+    mocker.patch.object(GsSession.__class__, 'default_value',
                         return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
     mocker.patch.object(GsSession.current, '_delete', return_value=mock_response)
 
@@ -150,7 +150,7 @@ def test_calculate_monitor(mocker):
     )
 
     # mock GsSession
-    mocker.patch.object(GsSession.__class__, 'current',
+    mocker.patch.object(GsSession.__class__, 'default_value',
                         return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 

@@ -46,6 +46,7 @@ class QueryType(Enum):
     AVERAGE_IMPLIED_VOLATILITY = "Average Implied Volatility"
     AVERAGE_IMPLIED_VARIANCE = "Average Implied Variance"
     SWAP_RATE = "Swap Rate"
+    BASIS_SWAP_RATE = "Basis Swap Rate"
     SWAPTION_VOL = "Swaption Vol"
     MIDCURVE_VOL = "Midcurve Vol"
     CAP_FLOOR_VOL = "Cap Floor Vol"

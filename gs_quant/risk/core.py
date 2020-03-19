@@ -35,6 +35,7 @@ __column_sort_fns = {
 }
 __risk_columns = ('date', 'time', 'marketDataType', 'assetId', 'pointClass', 'point')
 __crif_columns = ('date', 'time', 'riskType', 'amountCurrency', 'qualifier', 'bucket', 'label1', 'label2')
+__cashflows_columns = ('payment_date', 'payment_type', 'accrual_start_date', 'accrual_end_date', 'floating_rate_option', 'floating_rate_designated_maturity')
 
 
 class RiskResult:
@@ -399,6 +400,10 @@ def crif_formatter(result: List, pricing_key: PricingKey, _instrument: Instrumen
     return __dataframe_formatter(result, pricing_key, __crif_columns)
 
 
+def cashflows_formatter(result: List, pricing_key: PricingKey, _instrument: InstrumentBase) -> Optional[pd.DataFrame]:
+    return __dataframe_formatter(result, pricing_key, __cashflows_columns)
+
+
 def instrument_formatter(result: List, pricing_key: PricingKey, instrument: InstrumentBase):
     # TODO Handle these correctly in the risk service
     invalid_defaults = ('-- N/A --', 'NaN')
@@ -736,6 +741,11 @@ ResolvedInstrumentValues = __risk_measure_with_doc_string(
     'Resolved InstrumentBase Values',
     RiskMeasureType.Resolved_Instrument_Values
 )
+Cashflows = __risk_measure_with_doc_string(
+    'Cashflows',
+    'Cashflows',
+    RiskMeasureType.Cashflows
+)
 
 Formatters = {
     DollarPrice: scalar_formatter,
@@ -776,5 +786,6 @@ Formatters = {
     IRSpotRate: scalar_formatter,
     IRFwdRate: scalar_formatter,
     CRIFIRCurve: crif_formatter,
-    ResolvedInstrumentValues: instrument_formatter
+    ResolvedInstrumentValues: instrument_formatter,
+    Cashflows: cashflows_formatter
 }

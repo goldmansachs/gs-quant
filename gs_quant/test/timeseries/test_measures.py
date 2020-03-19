@@ -28,7 +28,8 @@ from testfixtures import Replacer
 from testfixtures.mock import Mock
 
 import gs_quant.timeseries.measures as tm
-from gs_quant.api.gs.assets import GsTemporalXRef, GsAssetApi, GsIdType, IdList
+import gs_quant.timeseries.measures_rates as tm_rates
+from gs_quant.api.gs.assets import GsTemporalXRef, GsAssetApi, GsIdType, IdList, GsAsset
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.data.core import DataContext
 from gs_quant.data.dataset import Dataset
@@ -36,7 +37,7 @@ from gs_quant.data.fields import Fields
 from gs_quant.errors import MqError, MqValueError
 from gs_quant.markets.securities import AssetClass, Cross, Index, Currency, SecurityMaster, Stock
 from gs_quant.session import GsSession, Environment
-from gs_quant.target.common import XRef, FieldFilterMap
+from gs_quant.target.common import XRef, FieldFilterMap, Currency as CurrEnum
 from gs_quant.test.timeseries.utils import mock_request
 from gs_quant.timeseries.measures import BenchmarkType, PricingLocation, VolReference
 
@@ -134,7 +135,7 @@ def test_parse_meeting_date(mocker):
 
 
 def test_currency_to_default_benchmark_rate(mocker):
-    mocker.patch.object(GsSession.__class__, 'current',
+    mocker.patch.object(GsSession.__class__, 'default_value',
                         return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
     mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
     mocker.patch.object(GsAssetApi, 'map_identifiers', side_effect=map_identifiers_default_mocker)
@@ -150,7 +151,7 @@ def test_currency_to_default_benchmark_rate(mocker):
 
 
 def test_currency_to_default_swap_rate_asset(mocker):
-    mocker.patch.object(GsSession.__class__, 'current',
+    mocker.patch.object(GsSession.__class__, 'default_value',
                         return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
     mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
     mocker.patch.object(GsAssetApi, 'map_identifiers', side_effect=map_identifiers_swap_rate_mocker)
@@ -164,7 +165,7 @@ def test_currency_to_default_swap_rate_asset(mocker):
 
 
 def test_currency_to_inflation_benchmark_rate(mocker):
-    mocker.patch.object(GsSession.__class__, 'current',
+    mocker.patch.object(GsSession.__class__, 'default_value',
                         return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
     mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
     mocker.patch.object(GsAssetApi, 'map_identifiers', side_effect=map_identifiers_inflation_mocker)
@@ -182,7 +183,7 @@ def test_currency_to_inflation_benchmark_rate(mocker):
 
 
 def test_cross_to_basis(mocker):
-    mocker.patch.object(GsSession.__class__, 'current',
+    mocker.patch.object(GsSession.__class__, 'default_value',
                         return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
     mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
     mocker.patch.object(GsAssetApi, 'map_identifiers', side_effect=map_identifiers_cross_basis_mocker)
@@ -199,8 +200,69 @@ def test_cross_to_basis(mocker):
         assert tm.cross_to_basis('MAYJPCVVF2RWXCES') == 'MAYJPCVVF2RWXCES'
 
 
-def test_cross_stored_direction_for_fx_vol(mocker):
+def test_currency_to_mdapi_swap_rate_asset(mocker):
+    replace = Replacer()
     mocker.patch.object(GsSession.__class__, 'current',
+                        return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
+    mocker.patch.object(SecurityMaster, 'get_asset', side_effect=mock_request)
+    bbid_mock = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+    with tm.PricingContext(dt.date.today()):
+        asset = Currency('MA890', 'NOK')
+        bbid_mock.return_value = 'NOK'
+        assert 'MA890' == tm_rates._currency_to_mdapi_swap_rate_asset(asset)
+        asset = Currency('MAZ7RWC904JYHYPS', 'USD')
+        bbid_mock.return_value = 'USD'
+        correct_id = tm_rates._currency_to_mdapi_swap_rate_asset(asset)
+        assert 'MAFRSWPAF5QPNTP2' == correct_id
+        bbid_mock.return_value = 'CHF'
+        correct_id = tm_rates._currency_to_mdapi_swap_rate_asset(asset)
+        assert 'MAW25BGQJH9P6DPT' == correct_id
+        bbid_mock.return_value = 'EUR'
+        correct_id = tm_rates._currency_to_mdapi_swap_rate_asset(asset)
+        assert 'MAA9MVX15AJNQCVG' == correct_id
+        bbid_mock.return_value = 'GBP'
+        correct_id = tm_rates._currency_to_mdapi_swap_rate_asset(asset)
+        assert 'MA6QCAP9B7ABS9HA' == correct_id
+        bbid_mock.return_value = 'JPY'
+        correct_id = tm_rates._currency_to_mdapi_swap_rate_asset(asset)
+        assert 'MAEE219J5ZP0ZKRK' == correct_id
+        bbid_mock.return_value = 'SEK'
+        correct_id = tm_rates._currency_to_mdapi_swap_rate_asset(asset)
+        assert 'MAETMVTPNP3199A5' == correct_id
+
+    replace.restore()
+
+
+def test_currency_to_mdapi_basis_swap_rate_asset(mocker):
+    replace = Replacer()
+    mocker.patch.object(GsSession.__class__, 'current',
+                        return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
+    mocker.patch.object(SecurityMaster, 'get_asset', side_effect=mock_request)
+    bbid_mock = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+    with tm.PricingContext(dt.date.today()):
+        asset = Currency('MA890', 'NOK')
+        bbid_mock.return_value = 'NOK'
+        assert 'MA890' == tm_rates._currency_to_mdapi_basis_swap_rate_asset(asset)
+        asset = Currency('MAZ7RWC904JYHYPS', 'USD')
+        bbid_mock.return_value = 'USD'
+        correct_id = tm_rates._currency_to_mdapi_basis_swap_rate_asset(asset)
+        assert 'MAQB1PGEJFCET3GG' == correct_id
+        bbid_mock.return_value = 'EUR'
+        correct_id = tm_rates._currency_to_mdapi_basis_swap_rate_asset(asset)
+        assert 'MAGRG2VT11GQ2RQ9' == correct_id
+        bbid_mock.return_value = 'GBP'
+        correct_id = tm_rates._currency_to_mdapi_basis_swap_rate_asset(asset)
+        assert 'MAHCYNB3V75JC5Q8' == correct_id
+        bbid_mock.return_value = 'JPY'
+        correct_id = tm_rates._currency_to_mdapi_basis_swap_rate_asset(asset)
+        assert 'MAXVRBEZCJVH0C4V' == correct_id
+    replace.restore()
+
+
+def test_cross_stored_direction_for_fx_vol(mocker):
+    mocker.patch.object(GsSession.__class__, 'default_value',
                         return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
     mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
     mocker.patch.object(GsSession.current, '_post', side_effect=mock_request)
@@ -213,7 +275,7 @@ def test_cross_stored_direction_for_fx_vol(mocker):
 
 
 def test_cross_to_usd_based_cross_for_fx_forecast(mocker):
-    mocker.patch.object(GsSession.__class__, 'current',
+    mocker.patch.object(GsSession.__class__, 'default_value',
                         return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
     mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
     mocker.patch.object(GsSession.current, '_post', side_effect=mock_request)
@@ -226,7 +288,7 @@ def test_cross_to_usd_based_cross_for_fx_forecast(mocker):
 
 
 def test_cross_to_used_based_cross(mocker):
-    mocker.patch.object(GsSession.__class__, 'current',
+    mocker.patch.object(GsSession.__class__, 'default_value',
                         return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
     mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
     mocker.patch.object(GsSession.current, '_post', side_effect=mock_request)
@@ -241,7 +303,7 @@ def test_cross_to_used_based_cross(mocker):
 
 
 def test_cross_stored_direction(mocker):
-    mocker.patch.object(GsSession.__class__, 'current',
+    mocker.patch.object(GsSession.__class__, 'default_value',
                         return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
     mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
     mocker.patch.object(GsSession.current, '_post', side_effect=mock_request)
@@ -253,6 +315,51 @@ def test_cross_stored_direction(mocker):
 
     assert 'FUN' == tm.cross_stored_direction_for_fx_vol(Cross('FUN', 'EURUSD'))
     replace.restore()
+
+
+def test_convert_asset_for_mdapi_swap_rates():
+    mock_asset_1 = GsAsset(asset_class='Rate', id='MAW25BGQJH9P6DPT', type_='Swap', name='Test_asset')
+    mock_asset_2 = GsAsset(asset_class='Rate', id='MAA9MVX15AJNQCVG', type_='Swap', name='Test_asset')
+
+    replace = Replacer()
+    assets = replace('gs_quant.timeseries.measures.GsAssetApi.get_many_assets', Mock())
+    assets.return_value = [mock_asset_1]
+    assert 'MAW25BGQJH9P6DPT' == tm_rates._convert_asset_for_mdapi_swap_rates()
+    replace.restore()
+
+    assets = replace('gs_quant.timeseries.measures.GsAssetApi.get_many_assets', Mock())
+    assets.return_value = [mock_asset_1, mock_asset_2]
+    with pytest.raises(MqValueError):
+        tm_rates._convert_asset_for_mdapi_swap_rates()
+    replace.restore()
+
+    assets = replace('gs_quant.timeseries.measures.GsAssetApi.get_many_assets', Mock())
+    assets.return_value = []
+    with pytest.raises(MqValueError):
+        tm_rates._convert_asset_for_mdapi_swap_rates()
+    replace.restore()
+
+
+def test_get_swap_leg_defaults(mocker):
+    result_dict = dict(currency=CurrEnum.JPY, benchmark_type='JPY-LIBOR-BBA', floating_rate_tenor='6m',
+                       pricing_location=PricingLocation.TKO)
+    defaults = tm_rates._get_swap_leg_defaults(CurrEnum.JPY)
+    assert result_dict == defaults
+
+    result_dict = dict(currency=CurrEnum.USD, benchmark_type='USD-LIBOR-BBA', floating_rate_tenor='3m',
+                       pricing_location=PricingLocation.NYC)
+    defaults = tm_rates._get_swap_leg_defaults(CurrEnum.USD)
+    assert result_dict == defaults
+
+    result_dict = dict(currency=CurrEnum.EUR, benchmark_type='EUR-EURIBOR-Telerate', floating_rate_tenor='6m',
+                       pricing_location=PricingLocation.LDN)
+    defaults = tm_rates._get_swap_leg_defaults(CurrEnum.EUR)
+    assert result_dict == defaults
+
+    result_dict = dict(currency=CurrEnum.SEK, benchmark_type='SEK-STIBOR-SIDE', floating_rate_tenor='6m',
+                       pricing_location=PricingLocation.LDN)
+    defaults = tm_rates._get_swap_leg_defaults(CurrEnum.SEK)
+    assert result_dict == defaults
 
 
 def mock_commod(_cls, _q):
@@ -344,6 +451,7 @@ def mock_fx_switch(_cls, _q, _n):
 def mock_curr(_cls, _q):
     d = {
         'swapRate': [1, 2, 3],
+        'basisSwapRate': [1, 2, 3],
         'swaptionVol': [1, 2, 3],
         'atmFwdRate': [1, 2, 3],
         'midcurveVol': [1, 2, 3],
@@ -411,7 +519,8 @@ def mock_meeting_expectation():
                               'meetingNumber': [2],
                               'valuationDate': [dt.date(2019, 12, 6)],
                               'meetingDate': [dt.date(2020, 1, 23)],
-                              'value': [-0.004550907771]})
+                              'value': [-0.004550907771]
+                              })
     return data_dict
 
 
@@ -425,7 +534,8 @@ def mock_meeting_spot():
                               'meetingNumber': [0],
                               'valuationDate': [dt.date(2019, 12, 6)],
                               'meetingDate': [dt.date(2019, 10, 24)],
-                              'value': [-0.004522570525]})
+                              'value': [-0.004522570525]
+                              })
     return data_dict
 
 
@@ -444,7 +554,8 @@ def mock_meeting_absolute():
                               'meetingNumber': [0, 2],
                               'valuationDate': [datetime.date(2019, 12, 6), datetime.date(2019, 12, 6)],
                               'meetingDate': [datetime.date(2019, 10, 24), datetime.date(2020, 1, 23)],
-                              'value': [-0.004522570525, -0.004550907771]})
+                              'value': [-0.004522570525, -0.004550907771]
+                              })
     return data_dict
 
 
@@ -458,7 +569,8 @@ def mock_ois_spot():
                               'meetingNumber': [-1],
                               'valuationDate': [datetime.date(2019, 12, 6)],
                               'meetingDate': [datetime.date(2019, 12, 6)],
-                              'value': [-0.00455]})
+                              'value': [-0.00455]
+                              })
     return data_dict
 
 
@@ -758,6 +870,257 @@ def test_swap_rate(mocker):
     replace.restore()
 
 
+def test_basis_swap_spread(mocker):
+    replace = Replacer()
+    args = dict(swap_tenor='10y', spread_benchmark_type=None, spread_tenor=None,
+                reference_benchmark_type=None, reference_tenor=None, forward_tenor='0b', real_time=False)
+
+    mock_nok = Currency('MA891', 'NOK')
+    xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+    xrefs.return_value = 'NOK'
+    args['asset'] = mock_nok
+    with pytest.raises(NotImplementedError):
+        tm_rates.basis_swap_spread(**args)
+
+    mock_usd = Currency('MAZ7RWC904JYHYPS', 'USD')
+    args['asset'] = mock_usd
+    xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+    xrefs.return_value = 'USD'
+    with pytest.raises(NotImplementedError):
+        tm_rates.basis_swap_spread(..., '1y', real_time=True)
+
+    args['swap_tenor'] = '5yr'
+    with pytest.raises(MqValueError):
+        tm_rates.basis_swap_spread(**args)
+    args['swap_tenor'] = '6y'
+
+    args['spread_tenor'] = '5yr'
+    with pytest.raises(MqValueError):
+        tm_rates.basis_swap_spread(**args)
+    args['spread_tenor'] = '3m'
+
+    args['reference_tenor'] = '5yr'
+    with pytest.raises(MqValueError):
+        tm_rates.basis_swap_spread(**args)
+    args['reference_tenor'] = '6m'
+
+    args['forward_tenor'] = '5yr'
+    with pytest.raises(MqValueError):
+        tm_rates.basis_swap_spread(**args)
+    args['forward_tenor'] = None
+
+    args['spread_benchmark_type'] = BenchmarkType.STIBOR
+    with pytest.raises(MqValueError):
+        tm_rates.basis_swap_spread(**args)
+    args['spread_benchmark_type'] = BenchmarkType.LIBOR
+
+    args['reference_benchmark_type'] = BenchmarkType.STIBOR
+    with pytest.raises(MqValueError):
+        tm_rates.basis_swap_spread(**args)
+    args['reference_benchmark_type'] = BenchmarkType.LIBOR
+
+    xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+    xrefs.return_value = 'USD'
+    identifiers = replace('gs_quant.timeseries.measures_rates._convert_asset_for_mdapi_swap_rates', Mock())
+    identifiers.return_value = {'MAQB1PGEJFCET3GG'}
+    mocker.patch.object(GsDataApi, 'get_market_data', return_value=mock_curr(None, None))
+    actual = tm_rates.basis_swap_spread(**args)
+    assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='basisSwapRate'), actual)
+
+    replace.restore()
+
+
+def test_swap_rate_2(mocker):
+    replace = Replacer()
+    args = dict(swap_tenor='10y', benchmark_type=None, floating_rate_tenor=None, forward_tenor='0b', real_time=False)
+
+    mock_nok = Currency('MA891', 'NOK')
+    xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+    xrefs.return_value = 'NOK'
+    args['asset'] = mock_nok
+    with pytest.raises(NotImplementedError):
+        tm_rates.swap_rate_2(**args)
+
+    mock_usd = Currency('MAZ7RWC904JYHYPS', 'USD')
+    args['asset'] = mock_usd
+    xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+    xrefs.return_value = 'USD'
+    with pytest.raises(NotImplementedError):
+        tm_rates.swap_rate_2(..., '1y', real_time=True)
+
+    args['swap_tenor'] = '5yr'
+    with pytest.raises(MqValueError):
+        tm_rates.swap_rate_2(**args)
+    args['swap_tenor'] = '10y'
+
+    args['floating_rate_tenor'] = '5yr'
+    with pytest.raises(MqValueError):
+        tm_rates.swap_rate_2(**args)
+    args['floating_rate_tenor'] = '3m'
+
+    args['forward_tenor'] = '5yr'
+    with pytest.raises(MqValueError):
+        tm_rates.swap_rate_2(**args)
+    args['forward_tenor'] = None
+
+    args['benchmark_type'] = BenchmarkType.STIBOR
+    with pytest.raises(MqValueError):
+        tm_rates.swap_rate_2(**args)
+    args['benchmark_type'] = BenchmarkType.LIBOR
+
+    xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+    xrefs.return_value = 'USD'
+    identifiers = replace('gs_quant.timeseries.measures_rates._convert_asset_for_mdapi_swap_rates', Mock())
+    identifiers.return_value = {'MAZ7RWC904JYHYPS'}
+    mocker.patch.object(GsDataApi, 'get_market_data', return_value=mock_curr(None, None))
+    actual = tm_rates.swap_rate_2(**args)
+    assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='swapRate'), actual)
+
+    replace.restore()
+
+
+def test_swap_term_structure(mocker):
+    replace = Replacer()
+    args = dict(benchmark_type=None, floating_rate_tenor=None, forward_tenor='0b', real_time=False)
+
+    mock_nok = Currency('MA891', 'NOK')
+    xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+    xrefs.return_value = 'NOK'
+    args['asset'] = mock_nok
+    with pytest.raises(NotImplementedError):
+        tm_rates.swap_term_structure(**args)
+
+    mock_usd = Currency('MAZ7RWC904JYHYPS', 'USD')
+    args['asset'] = mock_usd
+    xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+    xrefs.return_value = 'USD'
+    with pytest.raises(NotImplementedError):
+        tm_rates.swap_term_structure(..., '1y', real_time=True)
+
+    args['floating_rate_tenor'] = '5yr'
+    with pytest.raises(MqValueError):
+        tm_rates.swap_term_structure(**args)
+    args['floating_rate_tenor'] = '3m'
+
+    args['forward_tenor'] = '5yr'
+    with pytest.raises(MqValueError):
+        tm_rates.swap_term_structure(**args)
+    args['forward_tenor'] = None
+
+    args['benchmark_type'] = BenchmarkType.STIBOR
+    with pytest.raises(MqValueError):
+        tm_rates.swap_term_structure(**args)
+    args['benchmark_type'] = BenchmarkType.LIBOR
+
+    xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+    xrefs.return_value = 'USD'
+    identifiers_empty = replace('gs_quant.timeseries.measures.GsAssetApi.get_many_assets', Mock())
+    identifiers_empty.return_value = {}
+    with pytest.raises(MqValueError):
+        tm_rates.swap_term_structure(**args)
+
+    identifiers = replace('gs_quant.timeseries.measures.GsAssetApi.get_many_assets', Mock())
+    mock_asset = Currency('USD', name='USD')
+    mock_asset.id = 'MAEMPCXQG3T716EX'
+    mock_asset.exchange = 'OTC'
+    identifiers.return_value = [mock_asset]
+
+    d = {
+        'terminationTenor': ['1y', '2y', '3y', '4y'], 'swapRate': [1, 2, 3, 4],
+        'assetId': ['MAEMPCXQG3T716EX', 'MAFRSWPAF5QPNTP2', 'MA88BXZ3TCTXTFW1', 'MAC4KAG9B9ZAZHFT']
+    }
+
+    df = pd.DataFrame(data=d, index=_index * 4)
+    market_data_mock = replace('gs_quant.timeseries.measures_rates._market_data_timed', Mock())
+    market_data_mock.return_value = pd.DataFrame()
+    assert tm_rates.swap_term_structure(**args).empty
+
+    market_data_mock.return_value = df
+    with DataContext('2019-01-01', '2025-01-01'):
+        actual = tm_rates.swap_term_structure(**args)
+    expected = pd.Series([1, 2, 3, 4], index=pd.to_datetime(['2020-01-01', '2021-01-01', '2021-12-31', '2022-12-30']))
+    assert_series_equal(expected, actual, check_names=False)
+    replace.restore()
+
+
+def test_basis_swap_term_structure(mocker):
+    replace = Replacer()
+    range_mock = replace('gs_quant.timeseries.measures_rates._range_from_pricing_date', Mock())
+    range_mock.return_value = [datetime.date(2019, 1, 1), datetime.date(2019, 1, 1)]
+
+    args = dict(spread_benchmark_type=None, spread_tenor=None,
+                reference_benchmark_type=None, reference_tenor=None, forward_tenor='0b', real_time=False)
+
+    mock_nok = Currency('MA891', 'NOK')
+    xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+    xrefs.return_value = 'NOK'
+    args['asset'] = mock_nok
+    with pytest.raises(NotImplementedError):
+        tm_rates.basis_swap_term_structure(**args)
+
+    mock_usd = Currency('MAZ7RWC904JYHYPS', 'USD')
+    args['asset'] = mock_usd
+    xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+    xrefs.return_value = 'USD'
+    with pytest.raises(NotImplementedError):
+        tm_rates.basis_swap_term_structure(..., '1y', real_time=True)
+
+    args['spread_tenor'] = '5yr'
+    with pytest.raises(MqValueError):
+        tm_rates.basis_swap_term_structure(**args)
+    args['spread_tenor'] = '3m'
+
+    args['reference_tenor'] = '5yr'
+    with pytest.raises(MqValueError):
+        tm_rates.basis_swap_term_structure(**args)
+    args['reference_tenor'] = '6m'
+
+    args['forward_tenor'] = '5yr'
+    with pytest.raises(MqValueError):
+        tm_rates.basis_swap_term_structure(**args)
+    args['forward_tenor'] = None
+
+    args['spread_benchmark_type'] = BenchmarkType.STIBOR
+    with pytest.raises(MqValueError):
+        tm_rates.basis_swap_term_structure(**args)
+    args['spread_benchmark_type'] = BenchmarkType.LIBOR
+
+    args['reference_benchmark_type'] = BenchmarkType.STIBOR
+    with pytest.raises(MqValueError):
+        tm_rates.basis_swap_term_structure(**args)
+    args['reference_benchmark_type'] = BenchmarkType.LIBOR
+
+    xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+    xrefs.return_value = 'USD'
+    identifiers_empty = replace('gs_quant.timeseries.measures.GsAssetApi.get_many_assets', Mock())
+    identifiers_empty.return_value = {}
+    with pytest.raises(MqValueError):
+        tm_rates.basis_swap_term_structure(**args)
+
+    identifiers = replace('gs_quant.timeseries.measures.GsAssetApi.get_many_assets', Mock())
+    mock_asset = Currency('USD', name='USD')
+    mock_asset.id = 'MAEMPCXQG3T716EX'
+    mock_asset.exchange = 'OTC'
+    identifiers.return_value = [mock_asset]
+
+    d = {
+        'terminationTenor': ['1y', '2y', '3y', '4y'], 'basisSwapRate': [1, 2, 3, 4],
+        'assetId': ['MAEMPCXQG3T716EX', 'MAFRSWPAF5QPNTP2', 'MA88BXZ3TCTXTFW1', 'MAC4KAG9B9ZAZHFT']
+    }
+
+    df = pd.DataFrame(data=d, index=_index * 4)
+    market_data_mock = replace('gs_quant.timeseries.measures_rates._market_data_timed', Mock())
+    market_data_mock.return_value = pd.DataFrame()
+    assert tm_rates.basis_swap_term_structure(**args).empty
+
+    market_data_mock.return_value = df
+    with DataContext('2019-01-01', '2025-01-01'):
+        actual = tm_rates.basis_swap_term_structure(**args)
+    expected = pd.Series([1, 2, 3, 4], index=pd.to_datetime(['2020-01-01', '2021-01-01', '2021-12-31', '2022-12-30']))
+    assert_series_equal(expected, actual, check_names=False)
+    replace.restore()
+
+
 def test_swaption_vol():
     replace = Replacer()
     mock_usd = Currency('MA890', 'USD')
@@ -939,7 +1302,8 @@ def test_basis():
 
 def test_td():
     cases = {'3d': pd.DateOffset(days=3), '9w': pd.DateOffset(weeks=9), '2m': pd.DateOffset(months=2),
-             '10y': pd.DateOffset(years=10)}
+             '10y': pd.DateOffset(years=10)
+             }
     for k, v in cases.items():
         actual = tm._to_offset(k)
         assert v == actual, f'expected {v}, got actual {actual}'

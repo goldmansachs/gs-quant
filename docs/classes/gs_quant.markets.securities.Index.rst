@@ -1,4 +1,4 @@
-Index
+gs\_quant.markets.securities.Index
 ==================================
 
 .. currentmodule:: gs_quant.markets.securities
@@ -6,7 +6,7 @@ Index
 .. autoclass:: Index
 
    
-   .. automethod:: get_constituents
+   .. automethod:: __init__
 
    
    .. rubric:: Methods
@@ -15,7 +15,9 @@ Index
    
       ~Index.__init__
       ~Index.get_constituents
+      ~Index.get_identifier
       ~Index.get_identifiers
+      ~Index.get_marquee_id
       ~Index.get_type
    
    

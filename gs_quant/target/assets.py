@@ -181,6 +181,7 @@ class Strategy(EnumBase, Enum):
     """More specific descriptor of a fund's investment approach. Same view permissions
        as the asset"""
 
+    Active_Extension = 'Active Extension'
     Active_Trading = 'Active Trading'
     Activist = 'Activist'
     Co_Invest__OVER__SPV = 'Co-Invest / SPV'
@@ -3125,7 +3126,7 @@ class Asset(Base):
 
     @property
     def created_by_id(self) -> str:
-        """Unique identifier of user who created the object"""
+        """Unique identifier of user who created the object."""
         return self.__created_by_id
 
     @created_by_id.setter
@@ -3135,7 +3136,7 @@ class Asset(Base):
 
     @property
     def created_time(self) -> datetime.datetime:
-        """Time created. ISO 8601 formatted string"""
+        """Time created. ISO 8601 formatted string."""
         return self.__created_time
 
     @created_time.setter
@@ -3166,7 +3167,7 @@ class Asset(Base):
 
     @property
     def entitlements(self) -> Entitlements:
-        """Defines the entitlements of a given resource"""
+        """Defines the entitlements of a given resource."""
         return self.__entitlements
 
     @entitlements.setter
@@ -3176,7 +3177,7 @@ class Asset(Base):
 
     @property
     def entitlement_exclusions(self) -> EntitlementExclusions:
-        """Defines the exclusion entitlements of a given resource"""
+        """Defines the exclusion entitlements of a given resource."""
         return self.__entitlement_exclusions
 
     @entitlement_exclusions.setter
@@ -3217,7 +3218,7 @@ class Asset(Base):
 
     @property
     def last_updated_by_id(self) -> str:
-        """Unique identifier of user who last updated the object"""
+        """Unique identifier of user who last updated the object."""
         return self.__last_updated_by_id
 
     @last_updated_by_id.setter
@@ -3227,7 +3228,7 @@ class Asset(Base):
 
     @property
     def last_updated_time(self) -> datetime.datetime:
-        """Timestamp of when the object was last updated"""
+        """Timestamp of when the object was last updated."""
         return self.__last_updated_time
 
     @last_updated_time.setter

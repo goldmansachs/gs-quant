@@ -24,6 +24,7 @@ Instruments
    Forward
    FXForward
    FXOption
+   InflationSwap
    IRBasisSwap
    IRCap
    IRFloor

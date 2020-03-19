@@ -20,6 +20,7 @@ import datetime
 import numpy
 import scipy.stats.mstats as stats
 from scipy.stats import percentileofscore
+import statsmodels.api as sm
 
 from .algebra import *
 
@@ -700,3 +701,54 @@ def percentiles(x: pd.Series, y: pd.Series = None, w: Union[Window, int] = Windo
         res.loc[idx] = percentileofscore(sample, val, kind='mean')
 
     return apply_ramp(res, w)
+
+
+class LinearRegression:
+
+    """Ordinary least squares (OLS) Linear Regression"""
+
+    def __init__(self, X: Union[pd.Series, List[pd.Series]], y: pd.Series, fit_intercept: bool = True):
+        df = pd.concat(X, axis=1) if isinstance(X, list) else X.to_frame()
+        df = sm.add_constant(df) if fit_intercept else df
+        self._index_scope = range(0, len(df.columns)) if fit_intercept else range(1, len(df.columns) + 1)
+        self._res = sm.OLS(y, df).fit()
+        self._fit_intercept = fit_intercept
+
+    def _convert_index(self, i: int):
+        if i not in self._index_scope:
+            raise ValueError('index {} out of range'.format(i))
+        return 'const' if i == 0 else i - 1
+
+    @plot_method
+    def coefficient(self, i: int) -> float:
+        """
+        Estimated coefficient
+        :param i: coefficient of which predictor to get. If intercept is used, start from 0, else start from 1
+        :return: estimated coefficient of the i-th predictor
+        """
+        converted_i = self._convert_index(i)
+        return self._res.params[converted_i]
+
+    @plot_method
+    def r_squared(self) -> float:
+        """
+        Coefficient of determination (R Squared)
+        :return: R Squared
+        """
+        return self._res.rsquared
+
+    def fitted_values(self):
+        """
+        Fitted values
+        :return: fitted values
+        """
+        return self._res.fittedvalues
+
+    @plot_method
+    def predict(self, X_predict: Union[pd.Series, List[pd.Series]]) -> pd.Series:
+        """
+        :param X_predict: the values for which to predict
+        :return: predicted values
+        """
+        df = pd.concat(X_predict, axis=1) if isinstance(X_predict, list) else X_predict.to_frame()
+        return self._res.predict(sm.add_constant(df) if self._fit_intercept else df)

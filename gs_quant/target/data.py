@@ -121,6 +121,311 @@ class DataGroup(Base):
         self.name = name
 
 
+class DataQuery(Base):
+        
+    @camel_case_translate
+    def __init__(
+        self,
+        id_: str = None,
+        data_set_id: str = None,
+        format_: Union[Format, str] = None,
+        where: FieldFilterMap = None,
+        vendor: Union[MarketDataVendor, str] = None,
+        start_date: datetime.date = None,
+        end_date: datetime.date = None,
+        start_time: datetime.datetime = None,
+        end_time: datetime.datetime = None,
+        as_of_time: datetime.datetime = None,
+        id_as_of_date: datetime.date = None,
+        use_temporal_x_ref: bool = False,
+        since: datetime.datetime = None,
+        dates: Tuple[datetime.date, ...] = None,
+        times: Tuple[datetime.datetime, ...] = None,
+        delay: int = None,
+        intervals: int = None,
+        samples: int = None,
+        limit: int = None,
+        polling_interval: int = None,
+        grouped: bool = None,
+        fields: Tuple[Union[dict, str], ...] = None,
+        restrict_fields: bool = False,
+        entity_filter: FieldFilterMap = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.__id = id_
+        self.data_set_id = data_set_id
+        self.__format = get_enum_value(Format, format_)
+        self.where = where
+        self.vendor = vendor
+        self.start_date = start_date
+        self.end_date = end_date
+        self.start_time = start_time
+        self.end_time = end_time
+        self.as_of_time = as_of_time
+        self.id_as_of_date = id_as_of_date
+        self.use_temporal_x_ref = use_temporal_x_ref
+        self.since = since
+        self.dates = dates
+        self.times = times
+        self.delay = delay
+        self.intervals = intervals
+        self.samples = samples
+        self.limit = limit
+        self.polling_interval = polling_interval
+        self.grouped = grouped
+        self.fields = fields
+        self.restrict_fields = restrict_fields
+        self.entity_filter = entity_filter
+        self.name = name
+
+    @property
+    def id(self) -> str:
+        """Marquee unique identifier"""
+        return self.__id
+
+    @id.setter
+    def id(self, value: str):
+        self._property_changed('id')
+        self.__id = value        
+
+    @property
+    def data_set_id(self) -> str:
+        """Marquee unique identifier"""
+        return self.__data_set_id
+
+    @data_set_id.setter
+    def data_set_id(self, value: str):
+        self._property_changed('data_set_id')
+        self.__data_set_id = value        
+
+    @property
+    def format(self) -> Union[Format, str]:
+        """Alternative format for data to be returned in"""
+        return self.__format
+
+    @format.setter
+    def format(self, value: Union[Format, str]):
+        self._property_changed('format')
+        self.__format = get_enum_value(Format, value)        
+
+    @property
+    def where(self) -> FieldFilterMap:
+        """Filters on data fields."""
+        return self.__where
+
+    @where.setter
+    def where(self, value: FieldFilterMap):
+        self._property_changed('where')
+        self.__where = value        
+
+    @property
+    def vendor(self) -> Union[MarketDataVendor, str]:
+        return self.__vendor
+
+    @vendor.setter
+    def vendor(self, value: Union[MarketDataVendor, str]):
+        self._property_changed('vendor')
+        self.__vendor = get_enum_value(MarketDataVendor, value)        
+
+    @property
+    def start_date(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__start_date
+
+    @start_date.setter
+    def start_date(self, value: datetime.date):
+        self._property_changed('start_date')
+        self.__start_date = value        
+
+    @property
+    def end_date(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__end_date
+
+    @end_date.setter
+    def end_date(self, value: datetime.date):
+        self._property_changed('end_date')
+        self.__end_date = value        
+
+    @property
+    def start_time(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
+        return self.__start_time
+
+    @start_time.setter
+    def start_time(self, value: datetime.datetime):
+        self._property_changed('start_time')
+        self.__start_time = value        
+
+    @property
+    def end_time(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
+        return self.__end_time
+
+    @end_time.setter
+    def end_time(self, value: datetime.datetime):
+        self._property_changed('end_time')
+        self.__end_time = value        
+
+    @property
+    def as_of_time(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
+        return self.__as_of_time
+
+    @as_of_time.setter
+    def as_of_time(self, value: datetime.datetime):
+        self._property_changed('as_of_time')
+        self.__as_of_time = value        
+
+    @property
+    def id_as_of_date(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__id_as_of_date
+
+    @id_as_of_date.setter
+    def id_as_of_date(self, value: datetime.date):
+        self._property_changed('id_as_of_date')
+        self.__id_as_of_date = value        
+
+    @property
+    def use_temporal_x_ref(self) -> bool:
+        """Set to true when xrefs provided in the query should be treated in a temporal way
+           (e.g. get data points which had a certain BCID at some point in time,
+           not which currently have it)."""
+        return self.__use_temporal_x_ref
+
+    @use_temporal_x_ref.setter
+    def use_temporal_x_ref(self, value: bool):
+        self._property_changed('use_temporal_x_ref')
+        self.__use_temporal_x_ref = value        
+
+    @property
+    def since(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
+        return self.__since
+
+    @since.setter
+    def since(self, value: datetime.datetime):
+        self._property_changed('since')
+        self.__since = value        
+
+    @property
+    def dates(self) -> Tuple[datetime.date, ...]:
+        """Select and return specific dates from dataset query results."""
+        return self.__dates
+
+    @dates.setter
+    def dates(self, value: Tuple[datetime.date, ...]):
+        self._property_changed('dates')
+        self.__dates = value        
+
+    @property
+    def times(self) -> Tuple[datetime.datetime, ...]:
+        """Select and return specific times from dataset query results."""
+        return self.__times
+
+    @times.setter
+    def times(self, value: Tuple[datetime.datetime, ...]):
+        self._property_changed('times')
+        self.__times = value        
+
+    @property
+    def delay(self) -> int:
+        """Number of minutes to delay returning data."""
+        return self.__delay
+
+    @delay.setter
+    def delay(self, value: int):
+        self._property_changed('delay')
+        self.__delay = value        
+
+    @property
+    def intervals(self) -> int:
+        """Number of intervals for which to return output times, for example if 10, it will
+           return 10 data points evenly spaced over the time/date range."""
+        return self.__intervals
+
+    @intervals.setter
+    def intervals(self, value: int):
+        self._property_changed('intervals')
+        self.__intervals = value        
+
+    @property
+    def samples(self) -> int:
+        """Number of points to down sample the data, for example if 10, it will return at
+           most 10 sample data points evenly spaced over the time/date range"""
+        return self.__samples
+
+    @samples.setter
+    def samples(self, value: int):
+        self._property_changed('samples')
+        self.__samples = value        
+
+    @property
+    def limit(self) -> int:
+        """Maximum number of rows for each asset to return."""
+        return self.__limit
+
+    @limit.setter
+    def limit(self, value: int):
+        self._property_changed('limit')
+        self.__limit = value        
+
+    @property
+    def polling_interval(self) -> int:
+        """When streaming, wait for this number of seconds between poll attempts."""
+        return self.__polling_interval
+
+    @polling_interval.setter
+    def polling_interval(self, value: int):
+        self._property_changed('polling_interval')
+        self.__polling_interval = value        
+
+    @property
+    def grouped(self) -> bool:
+        """Set to true to return results grouped by a given context (set of dimensions)."""
+        return self.__grouped
+
+    @grouped.setter
+    def grouped(self, value: bool):
+        self._property_changed('grouped')
+        self.__grouped = value        
+
+    @property
+    def fields(self) -> Tuple[Union[dict, str], ...]:
+        """Fields to be returned."""
+        return self.__fields
+
+    @fields.setter
+    def fields(self, value: Tuple[Union[dict, str], ...]):
+        self._property_changed('fields')
+        self.__fields = value        
+
+    @property
+    def restrict_fields(self) -> bool:
+        """Whether to return only the fields which are requested and suppress every other
+           field"""
+        return self.__restrict_fields
+
+    @restrict_fields.setter
+    def restrict_fields(self, value: bool):
+        self._property_changed('restrict_fields')
+        self.__restrict_fields = value        
+
+    @property
+    def entity_filter(self) -> FieldFilterMap:
+        """Filters that are applied only to entities i.e Asset. It is used for querying by
+           asset parameters to return data for assets matching a certain
+           criteria i.e floatingRateOption = LIBOR."""
+        return self.__entity_filter
+
+    @entity_filter.setter
+    def entity_filter(self, value: FieldFilterMap):
+        self._property_changed('entity_filter')
+        self.__entity_filter = value        
+
+
 class DataSetCondition(Base):
         
     """Condition for Dataset Transformations and Filters."""
@@ -309,9 +614,6 @@ class DataSetParameters(Base):
         coverage: str,
         frequency: str,
         methodology: str,
-        asset_class: Union[AssetClass, str],
-        owner_ids: Tuple[str, ...],
-        support_distribution_list: Tuple[str, ...],
         category: str = None,
         sub_category: str = None,
         coverages: Tuple[Union[AssetType, str], ...] = None,
@@ -321,8 +623,11 @@ class DataSetParameters(Base):
         sample_end: datetime.datetime = None,
         published_date: datetime.datetime = None,
         history_date: datetime.datetime = None,
+        asset_class: Union[AssetClass, str] = None,
+        owner_ids: Tuple[str, ...] = None,
         approver_ids: Tuple[str, ...] = None,
         support_ids: Tuple[str, ...] = None,
+        support_distribution_list: Tuple[str, ...] = None,
         identifier_mapper_name: str = None,
         constant_symbols: Tuple[str, ...] = None,
         underlying_data_set_id: str = None,
@@ -736,6 +1041,666 @@ class FieldLinkSelector(Base):
     def display_name(self, value: str):
         self._property_changed('display_name')
         self.__display_name = value        
+
+
+class IdFieldProperties(Base):
+        
+    @camel_case_translate
+    def __init__(
+        self,
+        last_returns_start_date: Tuple[datetime.date, ...] = None,
+        created_by_id: Tuple[str, ...] = None,
+        vehicle_type: Tuple[str, ...] = None,
+        market_model_id: Tuple[str, ...] = None,
+        ticker: Tuple[str, ...] = None,
+        ric: Tuple[str, ...] = None,
+        position_source_id: Tuple[str, ...] = None,
+        bbid: Tuple[str, ...] = None,
+        bbid_equivalent: Tuple[str, ...] = None,
+        valoren: Tuple[str, ...] = None,
+        hedge_id: Tuple[str, ...] = None,
+        supra_strategy: Tuple[str, ...] = None,
+        kpi_id: Tuple[str, ...] = None,
+        lms_id: Tuple[str, ...] = None,
+        strategy: Tuple[str, ...] = None,
+        owner_id: Tuple[str, ...] = None,
+        asset2_id: Tuple[str, ...] = None,
+        data_set: Tuple[str, ...] = None,
+        prime_id: Tuple[str, ...] = None,
+        backtest_id: Tuple[str, ...] = None,
+        entity_id: Tuple[str, ...] = None,
+        identifier: Tuple[str, ...] = None,
+        subdivision_id: Tuple[str, ...] = None,
+        sedol: Tuple[str, ...] = None,
+        portfolio_id: Tuple[str, ...] = None,
+        rcic: Tuple[str, ...] = None,
+        primary_country_ric: Tuple[str, ...] = None,
+        market_cap_category: Tuple[str, ...] = None,
+        country_id: Tuple[str, ...] = None,
+        universe_id1: Tuple[str, ...] = None,
+        universe_id2: Tuple[str, ...] = None,
+        delisted: Tuple[str, ...] = None,
+        regional_focus: Tuple[str, ...] = None,
+        wpk: Tuple[str, ...] = None,
+        net_exposure_classification: Tuple[str, ...] = None,
+        order_id: Tuple[str, ...] = None,
+        id_: Tuple[str, ...] = None,
+        bcid: Tuple[str, ...] = None,
+        qis_perm_no: Tuple[str, ...] = None,
+        feed: Tuple[str, ...] = None,
+        asset_id: Tuple[str, ...] = None,
+        last_returns_end_date: Tuple[datetime.date, ...] = None,
+        implementation_id: Tuple[str, ...] = None,
+        mic: Tuple[str, ...] = None,
+        cusip: Tuple[str, ...] = None,
+        activity_id: Tuple[str, ...] = None,
+        idea_id: Tuple[str, ...] = None,
+        last_updated_by_id: Tuple[str, ...] = None,
+        scenario_id: Tuple[str, ...] = None,
+        scenario_group_id: Tuple[str, ...] = None,
+        report_id: Tuple[str, ...] = None,
+        isin: Tuple[str, ...] = None,
+        version: Tuple[float, ...] = None,
+        name: Tuple[str, ...] = None,
+        folder_name: Tuple[str, ...] = None,
+        description: Tuple[str, ...] = None,
+        tags: Tuple[str, ...] = None
+    ):        
+        super().__init__()
+        self.last_returns_start_date = last_returns_start_date
+        self.created_by_id = created_by_id
+        self.vehicle_type = vehicle_type
+        self.market_model_id = market_model_id
+        self.ticker = ticker
+        self.ric = ric
+        self.position_source_id = position_source_id
+        self.bbid = bbid
+        self.bbid_equivalent = bbid_equivalent
+        self.valoren = valoren
+        self.hedge_id = hedge_id
+        self.supra_strategy = supra_strategy
+        self.kpi_id = kpi_id
+        self.lms_id = lms_id
+        self.strategy = strategy
+        self.owner_id = owner_id
+        self.asset2_id = asset2_id
+        self.data_set = data_set
+        self.prime_id = prime_id
+        self.backtest_id = backtest_id
+        self.entity_id = entity_id
+        self.identifier = identifier
+        self.subdivision_id = subdivision_id
+        self.sedol = sedol
+        self.portfolio_id = portfolio_id
+        self.rcic = rcic
+        self.primary_country_ric = primary_country_ric
+        self.market_cap_category = market_cap_category
+        self.country_id = country_id
+        self.universe_id1 = universe_id1
+        self.universe_id2 = universe_id2
+        self.delisted = delisted
+        self.regional_focus = regional_focus
+        self.wpk = wpk
+        self.net_exposure_classification = net_exposure_classification
+        self.order_id = order_id
+        self.__id = id_
+        self.bcid = bcid
+        self.qis_perm_no = qis_perm_no
+        self.feed = feed
+        self.asset_id = asset_id
+        self.last_returns_end_date = last_returns_end_date
+        self.implementation_id = implementation_id
+        self.mic = mic
+        self.cusip = cusip
+        self.activity_id = activity_id
+        self.idea_id = idea_id
+        self.last_updated_by_id = last_updated_by_id
+        self.scenario_id = scenario_id
+        self.scenario_group_id = scenario_group_id
+        self.report_id = report_id
+        self.isin = isin
+        self.version = version
+        self.name = name
+        self.folder_name = folder_name
+        self.description = description
+        self.tags = tags
+
+    @property
+    def last_returns_start_date(self) -> Tuple[datetime.date, ...]:
+        return self.__last_returns_start_date
+
+    @last_returns_start_date.setter
+    def last_returns_start_date(self, value: Tuple[datetime.date, ...]):
+        self._property_changed('last_returns_start_date')
+        self.__last_returns_start_date = value        
+
+    @property
+    def created_by_id(self) -> Tuple[str, ...]:
+        """Filter by id of user who created the object"""
+        return self.__created_by_id
+
+    @created_by_id.setter
+    def created_by_id(self, value: Tuple[str, ...]):
+        self._property_changed('created_by_id')
+        self.__created_by_id = value        
+
+    @property
+    def vehicle_type(self) -> Tuple[str, ...]:
+        return self.__vehicle_type
+
+    @vehicle_type.setter
+    def vehicle_type(self, value: Tuple[str, ...]):
+        self._property_changed('vehicle_type')
+        self.__vehicle_type = value        
+
+    @property
+    def market_model_id(self) -> Tuple[str, ...]:
+        return self.__market_model_id
+
+    @market_model_id.setter
+    def market_model_id(self, value: Tuple[str, ...]):
+        self._property_changed('market_model_id')
+        self.__market_model_id = value        
+
+    @property
+    def ticker(self) -> Tuple[str, ...]:
+        """Filter by Ticker."""
+        return self.__ticker
+
+    @ticker.setter
+    def ticker(self, value: Tuple[str, ...]):
+        self._property_changed('ticker')
+        self.__ticker = value        
+
+    @property
+    def ric(self) -> Tuple[str, ...]:
+        """Filter by RIC (subject to licensing)."""
+        return self.__ric
+
+    @ric.setter
+    def ric(self, value: Tuple[str, ...]):
+        self._property_changed('ric')
+        self.__ric = value        
+
+    @property
+    def position_source_id(self) -> Tuple[str, ...]:
+        """Filter by id"""
+        return self.__position_source_id
+
+    @position_source_id.setter
+    def position_source_id(self, value: Tuple[str, ...]):
+        self._property_changed('position_source_id')
+        self.__position_source_id = value        
+
+    @property
+    def bbid(self) -> Tuple[str, ...]:
+        """Filter by Bloomberg ID."""
+        return self.__bbid
+
+    @bbid.setter
+    def bbid(self, value: Tuple[str, ...]):
+        self._property_changed('bbid')
+        self.__bbid = value        
+
+    @property
+    def bbid_equivalent(self) -> Tuple[str, ...]:
+        """Filter by Bloomberg equivalent ID."""
+        return self.__bbid_equivalent
+
+    @bbid_equivalent.setter
+    def bbid_equivalent(self, value: Tuple[str, ...]):
+        self._property_changed('bbid_equivalent')
+        self.__bbid_equivalent = value        
+
+    @property
+    def valoren(self) -> Tuple[str, ...]:
+        """Filter by Valoren (subject to licensing)."""
+        return self.__valoren
+
+    @valoren.setter
+    def valoren(self, value: Tuple[str, ...]):
+        self._property_changed('valoren')
+        self.__valoren = value        
+
+    @property
+    def hedge_id(self) -> Tuple[str, ...]:
+        """Filter by hedge id."""
+        return self.__hedge_id
+
+    @hedge_id.setter
+    def hedge_id(self, value: Tuple[str, ...]):
+        self._property_changed('hedge_id')
+        self.__hedge_id = value        
+
+    @property
+    def supra_strategy(self) -> Tuple[str, ...]:
+        return self.__supra_strategy
+
+    @supra_strategy.setter
+    def supra_strategy(self, value: Tuple[str, ...]):
+        self._property_changed('supra_strategy')
+        self.__supra_strategy = value        
+
+    @property
+    def kpi_id(self) -> Tuple[str, ...]:
+        return self.__kpi_id
+
+    @kpi_id.setter
+    def kpi_id(self, value: Tuple[str, ...]):
+        self._property_changed('kpi_id')
+        self.__kpi_id = value        
+
+    @property
+    def lms_id(self) -> Tuple[str, ...]:
+        return self.__lms_id
+
+    @lms_id.setter
+    def lms_id(self, value: Tuple[str, ...]):
+        self._property_changed('lms_id')
+        self.__lms_id = value        
+
+    @property
+    def strategy(self) -> Tuple[str, ...]:
+        return self.__strategy
+
+    @strategy.setter
+    def strategy(self, value: Tuple[str, ...]):
+        self._property_changed('strategy')
+        self.__strategy = value        
+
+    @property
+    def owner_id(self) -> Tuple[str, ...]:
+        """Filter by owner ID"""
+        return self.__owner_id
+
+    @owner_id.setter
+    def owner_id(self, value: Tuple[str, ...]):
+        self._property_changed('owner_id')
+        self.__owner_id = value        
+
+    @property
+    def asset2_id(self) -> Tuple[str, ...]:
+        return self.__asset2_id
+
+    @asset2_id.setter
+    def asset2_id(self, value: Tuple[str, ...]):
+        self._property_changed('asset2_id')
+        self.__asset2_id = value        
+
+    @property
+    def data_set(self) -> Tuple[str, ...]:
+        return self.__data_set
+
+    @data_set.setter
+    def data_set(self, value: Tuple[str, ...]):
+        self._property_changed('data_set')
+        self.__data_set = value        
+
+    @property
+    def prime_id(self) -> Tuple[str, ...]:
+        """Filter by primeId."""
+        return self.__prime_id
+
+    @prime_id.setter
+    def prime_id(self, value: Tuple[str, ...]):
+        self._property_changed('prime_id')
+        self.__prime_id = value        
+
+    @property
+    def backtest_id(self) -> Tuple[str, ...]:
+        return self.__backtest_id
+
+    @backtest_id.setter
+    def backtest_id(self, value: Tuple[str, ...]):
+        self._property_changed('backtest_id')
+        self.__backtest_id = value        
+
+    @property
+    def entity_id(self) -> Tuple[str, ...]:
+        return self.__entity_id
+
+    @entity_id.setter
+    def entity_id(self, value: Tuple[str, ...]):
+        self._property_changed('entity_id')
+        self.__entity_id = value        
+
+    @property
+    def identifier(self) -> Tuple[str, ...]:
+        return self.__identifier
+
+    @identifier.setter
+    def identifier(self, value: Tuple[str, ...]):
+        self._property_changed('identifier')
+        self.__identifier = value        
+
+    @property
+    def subdivision_id(self) -> Tuple[str, ...]:
+        return self.__subdivision_id
+
+    @subdivision_id.setter
+    def subdivision_id(self, value: Tuple[str, ...]):
+        self._property_changed('subdivision_id')
+        self.__subdivision_id = value        
+
+    @property
+    def sedol(self) -> Tuple[str, ...]:
+        """Filter by SEDOL (subject to licensing)."""
+        return self.__sedol
+
+    @sedol.setter
+    def sedol(self, value: Tuple[str, ...]):
+        self._property_changed('sedol')
+        self.__sedol = value        
+
+    @property
+    def portfolio_id(self) -> Tuple[str, ...]:
+        """Filter by portfolio id."""
+        return self.__portfolio_id
+
+    @portfolio_id.setter
+    def portfolio_id(self, value: Tuple[str, ...]):
+        self._property_changed('portfolio_id')
+        self.__portfolio_id = value        
+
+    @property
+    def rcic(self) -> Tuple[str, ...]:
+        """Filter by RCIC (subject to licensing)."""
+        return self.__rcic
+
+    @rcic.setter
+    def rcic(self, value: Tuple[str, ...]):
+        self._property_changed('rcic')
+        self.__rcic = value        
+
+    @property
+    def primary_country_ric(self) -> Tuple[str, ...]:
+        """Filter by Primary Country RIC (subject to licensing)."""
+        return self.__primary_country_ric
+
+    @primary_country_ric.setter
+    def primary_country_ric(self, value: Tuple[str, ...]):
+        self._property_changed('primary_country_ric')
+        self.__primary_country_ric = value        
+
+    @property
+    def market_cap_category(self) -> Tuple[str, ...]:
+        return self.__market_cap_category
+
+    @market_cap_category.setter
+    def market_cap_category(self, value: Tuple[str, ...]):
+        self._property_changed('market_cap_category')
+        self.__market_cap_category = value        
+
+    @property
+    def country_id(self) -> Tuple[str, ...]:
+        return self.__country_id
+
+    @country_id.setter
+    def country_id(self, value: Tuple[str, ...]):
+        self._property_changed('country_id')
+        self.__country_id = value        
+
+    @property
+    def universe_id1(self) -> Tuple[str, ...]:
+        return self.__universe_id1
+
+    @universe_id1.setter
+    def universe_id1(self, value: Tuple[str, ...]):
+        self._property_changed('universe_id1')
+        self.__universe_id1 = value        
+
+    @property
+    def universe_id2(self) -> Tuple[str, ...]:
+        return self.__universe_id2
+
+    @universe_id2.setter
+    def universe_id2(self, value: Tuple[str, ...]):
+        self._property_changed('universe_id2')
+        self.__universe_id2 = value        
+
+    @property
+    def delisted(self) -> Tuple[str, ...]:
+        """Filter by delisted status."""
+        return self.__delisted
+
+    @delisted.setter
+    def delisted(self, value: Tuple[str, ...]):
+        self._property_changed('delisted')
+        self.__delisted = value        
+
+    @property
+    def regional_focus(self) -> Tuple[str, ...]:
+        return self.__regional_focus
+
+    @regional_focus.setter
+    def regional_focus(self, value: Tuple[str, ...]):
+        self._property_changed('regional_focus')
+        self.__regional_focus = value        
+
+    @property
+    def wpk(self) -> Tuple[str, ...]:
+        """Filter by WPK (subject to licensing)."""
+        return self.__wpk
+
+    @wpk.setter
+    def wpk(self, value: Tuple[str, ...]):
+        self._property_changed('wpk')
+        self.__wpk = value        
+
+    @property
+    def net_exposure_classification(self) -> Tuple[str, ...]:
+        return self.__net_exposure_classification
+
+    @net_exposure_classification.setter
+    def net_exposure_classification(self, value: Tuple[str, ...]):
+        self._property_changed('net_exposure_classification')
+        self.__net_exposure_classification = value        
+
+    @property
+    def order_id(self) -> Tuple[str, ...]:
+        return self.__order_id
+
+    @order_id.setter
+    def order_id(self, value: Tuple[str, ...]):
+        self._property_changed('order_id')
+        self.__order_id = value        
+
+    @property
+    def id(self) -> Tuple[str, ...]:
+        """Filter by id"""
+        return self.__id
+
+    @id.setter
+    def id(self, value: Tuple[str, ...]):
+        self._property_changed('id')
+        self.__id = value        
+
+    @property
+    def bcid(self) -> Tuple[str, ...]:
+        """Filter by Bloomberg Composite ID."""
+        return self.__bcid
+
+    @bcid.setter
+    def bcid(self, value: Tuple[str, ...]):
+        self._property_changed('bcid')
+        self.__bcid = value        
+
+    @property
+    def qis_perm_no(self) -> Tuple[str, ...]:
+        return self.__qis_perm_no
+
+    @qis_perm_no.setter
+    def qis_perm_no(self, value: Tuple[str, ...]):
+        self._property_changed('qis_perm_no')
+        self.__qis_perm_no = value        
+
+    @property
+    def feed(self) -> Tuple[str, ...]:
+        return self.__feed
+
+    @feed.setter
+    def feed(self, value: Tuple[str, ...]):
+        self._property_changed('feed')
+        self.__feed = value        
+
+    @property
+    def asset_id(self) -> Tuple[str, ...]:
+        return self.__asset_id
+
+    @asset_id.setter
+    def asset_id(self, value: Tuple[str, ...]):
+        self._property_changed('asset_id')
+        self.__asset_id = value        
+
+    @property
+    def last_returns_end_date(self) -> Tuple[datetime.date, ...]:
+        return self.__last_returns_end_date
+
+    @last_returns_end_date.setter
+    def last_returns_end_date(self, value: Tuple[datetime.date, ...]):
+        self._property_changed('last_returns_end_date')
+        self.__last_returns_end_date = value        
+
+    @property
+    def implementation_id(self) -> Tuple[str, ...]:
+        return self.__implementation_id
+
+    @implementation_id.setter
+    def implementation_id(self, value: Tuple[str, ...]):
+        self._property_changed('implementation_id')
+        self.__implementation_id = value        
+
+    @property
+    def mic(self) -> Tuple[str, ...]:
+        return self.__mic
+
+    @mic.setter
+    def mic(self, value: Tuple[str, ...]):
+        self._property_changed('mic')
+        self.__mic = value        
+
+    @property
+    def cusip(self) -> Tuple[str, ...]:
+        """Filter by CUSIP (subject to licensing)."""
+        return self.__cusip
+
+    @cusip.setter
+    def cusip(self, value: Tuple[str, ...]):
+        self._property_changed('cusip')
+        self.__cusip = value        
+
+    @property
+    def activity_id(self) -> Tuple[str, ...]:
+        return self.__activity_id
+
+    @activity_id.setter
+    def activity_id(self, value: Tuple[str, ...]):
+        self._property_changed('activity_id')
+        self.__activity_id = value        
+
+    @property
+    def idea_id(self) -> Tuple[str, ...]:
+        return self.__idea_id
+
+    @idea_id.setter
+    def idea_id(self, value: Tuple[str, ...]):
+        self._property_changed('idea_id')
+        self.__idea_id = value        
+
+    @property
+    def last_updated_by_id(self) -> Tuple[str, ...]:
+        """Filter by last updated user id"""
+        return self.__last_updated_by_id
+
+    @last_updated_by_id.setter
+    def last_updated_by_id(self, value: Tuple[str, ...]):
+        self._property_changed('last_updated_by_id')
+        self.__last_updated_by_id = value        
+
+    @property
+    def scenario_id(self) -> Tuple[str, ...]:
+        return self.__scenario_id
+
+    @scenario_id.setter
+    def scenario_id(self, value: Tuple[str, ...]):
+        self._property_changed('scenario_id')
+        self.__scenario_id = value        
+
+    @property
+    def scenario_group_id(self) -> Tuple[str, ...]:
+        return self.__scenario_group_id
+
+    @scenario_group_id.setter
+    def scenario_group_id(self, value: Tuple[str, ...]):
+        self._property_changed('scenario_group_id')
+        self.__scenario_group_id = value        
+
+    @property
+    def report_id(self) -> Tuple[str, ...]:
+        return self.__report_id
+
+    @report_id.setter
+    def report_id(self, value: Tuple[str, ...]):
+        self._property_changed('report_id')
+        self.__report_id = value        
+
+    @property
+    def isin(self) -> Tuple[str, ...]:
+        """Filter by ISIN (subject to licensing)."""
+        return self.__isin
+
+    @isin.setter
+    def isin(self, value: Tuple[str, ...]):
+        self._property_changed('isin')
+        self.__isin = value        
+
+    @property
+    def version(self) -> Tuple[float, ...]:
+        return self.__version
+
+    @version.setter
+    def version(self, value: Tuple[float, ...]):
+        self._property_changed('version')
+        self.__version = value        
+
+    @property
+    def name(self) -> Tuple[str, ...]:
+        """Filter by name (exact match)."""
+        return self.__name
+
+    @name.setter
+    def name(self, value: Tuple[str, ...]):
+        self._property_changed('name')
+        self.__name = value        
+
+    @property
+    def folder_name(self) -> Tuple[str, ...]:
+        return self.__folder_name
+
+    @folder_name.setter
+    def folder_name(self, value: Tuple[str, ...]):
+        self._property_changed('folder_name')
+        self.__folder_name = value        
+
+    @property
+    def description(self) -> Tuple[str, ...]:
+        """Filter by asset description."""
+        return self.__description
+
+    @description.setter
+    def description(self, value: Tuple[str, ...]):
+        self._property_changed('description')
+        self.__description = value        
+
+    @property
+    def tags(self) -> Tuple[str, ...]:
+        """Filter by contents of tags, matches on words"""
+        return self.__tags
+
+    @tags.setter
+    def tags(self, value: Tuple[str, ...]):
+        self._property_changed('tags')
+        self.__tags = value        
 
 
 class MDAPI(Base):
@@ -1249,323 +2214,6 @@ class DataFilter(Base):
     def where(self, value: DataSetCondition):
         self._property_changed('where')
         self.__where = value        
-
-
-class DataQuery(Base):
-        
-    @camel_case_translate
-    def __init__(
-        self,
-        id_: str = None,
-        data_set_id: str = None,
-        format_: Union[Format, str] = None,
-        market_data_coordinates: Tuple[MarketDataCoordinate, ...] = None,
-        where: FieldFilterMap = None,
-        vendor: Union[MarketDataVendor, str] = None,
-        start_date: datetime.date = None,
-        end_date: datetime.date = None,
-        start_time: datetime.datetime = None,
-        end_time: datetime.datetime = None,
-        as_of_time: datetime.datetime = None,
-        id_as_of_date: datetime.date = None,
-        use_temporal_x_ref: bool = False,
-        since: datetime.datetime = None,
-        dates: Tuple[datetime.date, ...] = None,
-        times: Tuple[datetime.datetime, ...] = None,
-        delay: int = None,
-        intervals: int = None,
-        samples: int = None,
-        limit: int = None,
-        polling_interval: int = None,
-        grouped: bool = None,
-        fields: Tuple[Union[dict, str], ...] = None,
-        restrict_fields: bool = False,
-        entity_filter: FieldFilterMap = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.__id = id_
-        self.data_set_id = data_set_id
-        self.__format = get_enum_value(Format, format_)
-        self.market_data_coordinates = market_data_coordinates
-        self.where = where
-        self.vendor = vendor
-        self.start_date = start_date
-        self.end_date = end_date
-        self.start_time = start_time
-        self.end_time = end_time
-        self.as_of_time = as_of_time
-        self.id_as_of_date = id_as_of_date
-        self.use_temporal_x_ref = use_temporal_x_ref
-        self.since = since
-        self.dates = dates
-        self.times = times
-        self.delay = delay
-        self.intervals = intervals
-        self.samples = samples
-        self.limit = limit
-        self.polling_interval = polling_interval
-        self.grouped = grouped
-        self.fields = fields
-        self.restrict_fields = restrict_fields
-        self.entity_filter = entity_filter
-        self.name = name
-
-    @property
-    def id(self) -> str:
-        """Marquee unique identifier"""
-        return self.__id
-
-    @id.setter
-    def id(self, value: str):
-        self._property_changed('id')
-        self.__id = value        
-
-    @property
-    def data_set_id(self) -> str:
-        """Marquee unique identifier"""
-        return self.__data_set_id
-
-    @data_set_id.setter
-    def data_set_id(self, value: str):
-        self._property_changed('data_set_id')
-        self.__data_set_id = value        
-
-    @property
-    def format(self) -> Union[Format, str]:
-        """Alternative format for data to be returned in"""
-        return self.__format
-
-    @format.setter
-    def format(self, value: Union[Format, str]):
-        self._property_changed('format')
-        self.__format = get_enum_value(Format, value)        
-
-    @property
-    def market_data_coordinates(self) -> Tuple[MarketDataCoordinate, ...]:
-        """Object representation of a market data coordinate"""
-        return self.__market_data_coordinates
-
-    @market_data_coordinates.setter
-    def market_data_coordinates(self, value: Tuple[MarketDataCoordinate, ...]):
-        self._property_changed('market_data_coordinates')
-        self.__market_data_coordinates = value        
-
-    @property
-    def where(self) -> FieldFilterMap:
-        """Filters on data fields."""
-        return self.__where
-
-    @where.setter
-    def where(self, value: FieldFilterMap):
-        self._property_changed('where')
-        self.__where = value        
-
-    @property
-    def vendor(self) -> Union[MarketDataVendor, str]:
-        return self.__vendor
-
-    @vendor.setter
-    def vendor(self, value: Union[MarketDataVendor, str]):
-        self._property_changed('vendor')
-        self.__vendor = get_enum_value(MarketDataVendor, value)        
-
-    @property
-    def start_date(self) -> datetime.date:
-        """ISO 8601-formatted date"""
-        return self.__start_date
-
-    @start_date.setter
-    def start_date(self, value: datetime.date):
-        self._property_changed('start_date')
-        self.__start_date = value        
-
-    @property
-    def end_date(self) -> datetime.date:
-        """ISO 8601-formatted date"""
-        return self.__end_date
-
-    @end_date.setter
-    def end_date(self, value: datetime.date):
-        self._property_changed('end_date')
-        self.__end_date = value        
-
-    @property
-    def start_time(self) -> datetime.datetime:
-        """ISO 8601-formatted timestamp"""
-        return self.__start_time
-
-    @start_time.setter
-    def start_time(self, value: datetime.datetime):
-        self._property_changed('start_time')
-        self.__start_time = value        
-
-    @property
-    def end_time(self) -> datetime.datetime:
-        """ISO 8601-formatted timestamp"""
-        return self.__end_time
-
-    @end_time.setter
-    def end_time(self, value: datetime.datetime):
-        self._property_changed('end_time')
-        self.__end_time = value        
-
-    @property
-    def as_of_time(self) -> datetime.datetime:
-        """ISO 8601-formatted timestamp"""
-        return self.__as_of_time
-
-    @as_of_time.setter
-    def as_of_time(self, value: datetime.datetime):
-        self._property_changed('as_of_time')
-        self.__as_of_time = value        
-
-    @property
-    def id_as_of_date(self) -> datetime.date:
-        """ISO 8601-formatted date"""
-        return self.__id_as_of_date
-
-    @id_as_of_date.setter
-    def id_as_of_date(self, value: datetime.date):
-        self._property_changed('id_as_of_date')
-        self.__id_as_of_date = value        
-
-    @property
-    def use_temporal_x_ref(self) -> bool:
-        """Set to true when xrefs provided in the query should be treated in a temporal way
-           (e.g. get data points which had a certain BCID at some point in time,
-           not which currently have it)."""
-        return self.__use_temporal_x_ref
-
-    @use_temporal_x_ref.setter
-    def use_temporal_x_ref(self, value: bool):
-        self._property_changed('use_temporal_x_ref')
-        self.__use_temporal_x_ref = value        
-
-    @property
-    def since(self) -> datetime.datetime:
-        """ISO 8601-formatted timestamp"""
-        return self.__since
-
-    @since.setter
-    def since(self, value: datetime.datetime):
-        self._property_changed('since')
-        self.__since = value        
-
-    @property
-    def dates(self) -> Tuple[datetime.date, ...]:
-        """Select and return specific dates from dataset query results."""
-        return self.__dates
-
-    @dates.setter
-    def dates(self, value: Tuple[datetime.date, ...]):
-        self._property_changed('dates')
-        self.__dates = value        
-
-    @property
-    def times(self) -> Tuple[datetime.datetime, ...]:
-        """Select and return specific times from dataset query results."""
-        return self.__times
-
-    @times.setter
-    def times(self, value: Tuple[datetime.datetime, ...]):
-        self._property_changed('times')
-        self.__times = value        
-
-    @property
-    def delay(self) -> int:
-        """Number of minutes to delay returning data."""
-        return self.__delay
-
-    @delay.setter
-    def delay(self, value: int):
-        self._property_changed('delay')
-        self.__delay = value        
-
-    @property
-    def intervals(self) -> int:
-        """Number of intervals for which to return output times, for example if 10, it will
-           return 10 data points evenly spaced over the time/date range."""
-        return self.__intervals
-
-    @intervals.setter
-    def intervals(self, value: int):
-        self._property_changed('intervals')
-        self.__intervals = value        
-
-    @property
-    def samples(self) -> int:
-        """Number of points to down sample the data, for example if 10, it will return at
-           most 10 sample data points evenly spaced over the time/date range"""
-        return self.__samples
-
-    @samples.setter
-    def samples(self, value: int):
-        self._property_changed('samples')
-        self.__samples = value        
-
-    @property
-    def limit(self) -> int:
-        """Maximum number of rows for each asset to return."""
-        return self.__limit
-
-    @limit.setter
-    def limit(self, value: int):
-        self._property_changed('limit')
-        self.__limit = value        
-
-    @property
-    def polling_interval(self) -> int:
-        """When streaming, wait for this number of seconds between poll attempts."""
-        return self.__polling_interval
-
-    @polling_interval.setter
-    def polling_interval(self, value: int):
-        self._property_changed('polling_interval')
-        self.__polling_interval = value        
-
-    @property
-    def grouped(self) -> bool:
-        """Set to true to return results grouped by a given context (set of dimensions)."""
-        return self.__grouped
-
-    @grouped.setter
-    def grouped(self, value: bool):
-        self._property_changed('grouped')
-        self.__grouped = value        
-
-    @property
-    def fields(self) -> Tuple[Union[dict, str], ...]:
-        """Fields to be returned."""
-        return self.__fields
-
-    @fields.setter
-    def fields(self, value: Tuple[Union[dict, str], ...]):
-        self._property_changed('fields')
-        self.__fields = value        
-
-    @property
-    def restrict_fields(self) -> bool:
-        """Whether to return only the fields which are requested and suppress every other
-           field"""
-        return self.__restrict_fields
-
-    @restrict_fields.setter
-    def restrict_fields(self, value: bool):
-        self._property_changed('restrict_fields')
-        self.__restrict_fields = value        
-
-    @property
-    def entity_filter(self) -> FieldFilterMap:
-        """Filters that are applied only to entities i.e Asset. It is used for querying by
-           asset parameters to return data for assets matching a certain
-           criteria i.e floatingRateOption = LIBOR."""
-        return self.__entity_filter
-
-    @entity_filter.setter
-    def entity_filter(self, value: FieldFilterMap):
-        self._property_changed('entity_filter')
-        self.__entity_filter = value        
 
 
 class DataQueryResponse(Base):
@@ -2821,7 +3469,7 @@ class DataSetEntity(Base):
 
     @property
     def entitlements(self) -> Entitlements:
-        """Defines the entitlements of a given resource"""
+        """Defines the entitlements of a given resource."""
         return self.__entitlements
 
     @entitlements.setter
@@ -2831,7 +3479,7 @@ class DataSetEntity(Base):
 
     @property
     def entitlement_exclusions(self) -> EntitlementExclusions:
-        """Defines the exclusion entitlements of a given resource"""
+        """Defines the exclusion entitlements of a given resource."""
         return self.__entitlement_exclusions
 
     @entitlement_exclusions.setter
@@ -2900,7 +3548,7 @@ class DataSetEntity(Base):
 
     @property
     def created_by_id(self) -> str:
-        """Unique identifier of user who created the object"""
+        """Unique identifier of user who created the object."""
         return self.__created_by_id
 
     @created_by_id.setter
@@ -2910,7 +3558,7 @@ class DataSetEntity(Base):
 
     @property
     def created_time(self) -> datetime.datetime:
-        """Time created. ISO 8601 formatted string"""
+        """Time created. ISO 8601 formatted string."""
         return self.__created_time
 
     @created_time.setter
@@ -2920,7 +3568,7 @@ class DataSetEntity(Base):
 
     @property
     def last_updated_by_id(self) -> str:
-        """Unique identifier of user who last updated the object"""
+        """Unique identifier of user who last updated the object."""
         return self.__last_updated_by_id
 
     @last_updated_by_id.setter
@@ -2930,7 +3578,7 @@ class DataSetEntity(Base):
 
     @property
     def last_updated_time(self) -> datetime.datetime:
-        """Timestamp of when the object was last updated"""
+        """Timestamp of when the object was last updated."""
         return self.__last_updated_time
 
     @last_updated_time.setter

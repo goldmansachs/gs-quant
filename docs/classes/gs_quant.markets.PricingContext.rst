@@ -1,17 +1,33 @@
-PricingContext
-==============
+gs\_quant.markets.PricingContext
+================================
 
 .. currentmodule:: gs_quant.markets
 
 .. autoclass:: PricingContext
 
+   
    .. automethod:: __init__
 
+   
    .. rubric:: Methods
 
-   .. automethod:: calc
-   .. automethod:: resolve_fields
+   .. autosummary::
+   
+      ~PricingContext.__init__
+      ~PricingContext.calc
+      ~PricingContext.has_default
+      ~PricingContext.resolve_fields
+   
+   
 
-   .. rubric:: Properties
+   
+   
+   .. rubric:: Attributes
 
-   .. autoattribute:: pricing_date
+   .. autosummary::
+   
+      ~PricingContext.market_data_as_of
+      ~PricingContext.market_data_location
+      ~PricingContext.pricing_date
+   
+   

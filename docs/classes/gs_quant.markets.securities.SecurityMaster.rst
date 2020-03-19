@@ -1,4 +1,4 @@
-SecurityMaster
+gs\_quant.markets.securities.SecurityMaster
 ===========================================
 
 .. currentmodule:: gs_quant.markets.securities
@@ -13,6 +13,7 @@ SecurityMaster
 
    .. autosummary::
    
+      ~SecurityMaster.__init__
       ~SecurityMaster.get_asset
    
    

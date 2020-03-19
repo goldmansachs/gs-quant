@@ -12,6 +12,7 @@
 #
 # Plot Service will make use of appropriately decorated functions in this module.
 
+import calendar
 import datetime
 import logging
 import re
@@ -19,17 +20,16 @@ import time
 from collections import namedtuple
 from enum import auto
 from numbers import Real
-import calendar
-import inflection
 
 import cachetools.func
+import inflection
 import numpy as np
 import pandas as pd
 from dateutil import tz
-from pandas import Series
-from pandas.tseries.holiday import Holiday, AbstractHolidayCalendar, USMemorialDay, USLaborDay, USThanksgivingDay,\
-    sunday_to_monday
 from dateutil.relativedelta import relativedelta
+from pandas import Series
+from pandas.tseries.holiday import Holiday, AbstractHolidayCalendar, USMemorialDay, USLaborDay, USThanksgivingDay, \
+    sunday_to_monday
 
 from gs_quant.api.gs.assets import GsIdType
 from gs_quant.api.gs.data import GsDataApi
@@ -117,6 +117,12 @@ class BenchmarkType(Enum):
     STIBOR = 'STIBOR'
     OIS = 'OIS'
     CDKSDA = 'CDKSDA'
+    SOFR = 'SOFR'
+    SARON = 'SARON'
+    EONIA = 'EONIA'
+    SONIA = 'SONIA'
+    TONA = 'TONA'
+    Fed_Funds = 'Fed_Funds'
 
 
 class FundamentalMetricPeriodDirection(Enum):
@@ -168,7 +174,6 @@ ESG_METRIC_TO_QUERY_TYPE = {
     "gRegionalPercentile": QueryType.G_REGIONAL_PERCENTILE,
     "esDisclosurePercentage": QueryType.ES_DISCLOSURE_PERCENTAGE
 }
-
 
 CURRENCY_TO_OIS_RATE_BENCHMARK = {
     'AUD': 'AUD OIS',
@@ -300,7 +305,7 @@ def convert_asset_for_rates_data_set(from_asset: Asset, c_type: RatesConversionT
         return GsAssetApi.map_identifiers(GsIdType.mdapi, GsIdType.id, [to_asset])[to_asset]
 
     except KeyError:
-        logging.info(f'Unsupported currency or cross ${bbid}')
+        logging.info(f'Unsupported currency or cross')
         return from_asset.get_marquee_id()
 
 
@@ -2280,7 +2285,7 @@ def realized_volatility(asset: Asset, w: Union[Window, int] = Window(None, 0), r
 
     :param asset: asset object loaded from security master
     :param w: number of observations to use; defaults to length of series
-    :param returns_type: returns type
+    :param returns_type: returns type: simple or logarithmic
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: date-based time series of return

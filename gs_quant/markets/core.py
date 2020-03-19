@@ -13,28 +13,28 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from abc import ABCMeta
-from concurrent.futures import Future, ThreadPoolExecutor
 import copy
 import datetime as dt
 import itertools
 import logging
+import weakref
+from abc import ABCMeta
+from concurrent.futures import Future, ThreadPoolExecutor
 from threading import Lock
 from typing import Iterable, Optional, Tuple, Union
-import weakref
 
 from gs_quant.api.risk import RiskApi
 from gs_quant.base import Priceable, PricingKey, Scenario
 from gs_quant.context_base import ContextBaseWithDefault
 from gs_quant.datetime.date import business_day_offset, is_business_day
-from gs_quant.risk import DataFrameWithInfo, ErrorValue, FloatWithInfo, MarketDataScenario,\
-    PricingDateAndMarketDataAsOf,\
-    ResolvedInstrumentValues, RiskMeasure, RiskPosition, RiskRequest,\
+from gs_quant.risk import DataFrameWithInfo, ErrorValue, FloatWithInfo, MarketDataScenario, \
+    PricingDateAndMarketDataAsOf, \
+    ResolvedInstrumentValues, RiskMeasure, RiskPosition, RiskRequest, \
     RiskRequestParameters, SeriesWithInfo
 from gs_quant.risk.results import MultipleRiskMeasureFuture
+from gs_quant.risk import CompositeScenario
 from gs_quant.session import GsSession
 from gs_quant.target.data import MarketDataCoordinate as __MarketDataCoordinate
-
 
 _logger = logging.getLogger(__name__)
 
@@ -147,7 +147,9 @@ class PricingContext(ContextBaseWithDefault):
                  is_batch: bool = False,
                  use_cache: bool = False,
                  visible_to_gs: bool = False,
-                 csa_term: Optional[str] = None
+                 csa_term: Optional[str] = None,
+                 poll_for_batch_results: Optional[bool] = True,
+                 batch_results_timeout: Optional[int] = None
                  ):
         """
         The methods on this class should not be called directly. Instead, use the methods on the instruments,
@@ -201,10 +203,13 @@ class PricingContext(ContextBaseWithDefault):
         self.__pricing_date = pricing_date
         self.__csa_term = csa_term
         self.__market_data_as_of = market_data_as_of
+        # Do not use self.__class__.current - it will cause a cycle
         self.__market_data_location = market_data_location or (
-            self.__class__.current.market_data_location if self.__class__.default_is_set else 'LDN')
+            self.__class__.path[0].market_data_location if self.__class__.path else 'LDN')
         self.__is_async = is_async
         self.__is_batch = is_batch
+        self.__poll_for_batch_results = poll_for_batch_results
+        self.__batch_results_timeout = batch_results_timeout
         self.__risk_measures_in_scenario_by_provider_and_position = {}
         self.__futures = {}
         self.__use_cache = use_cache
@@ -222,9 +227,13 @@ class PricingContext(ContextBaseWithDefault):
         def run_request(request_: RiskRequest, provider_: RiskApi):
             try:
                 with session:
-                    handle_results(provider_.calc(request_), request_, provider_)
+                    results = provider_.calc(request_)
+                    handle_results(results, request_, provider_)
             except Exception as e:
                 _logger.error(str(e))
+                if self.__is_batch:
+                    batch_result.set_result(True)
+
                 handle_results(e, request_, provider_)
 
         def get_batch_results_if_ready(provider_: RiskApi):
@@ -234,7 +243,11 @@ class PricingContext(ContextBaseWithDefault):
 
                 try:
                     with session:
-                        return provider_.get_results(provider_requests), provider_requests, provider_
+                        results = provider_.get_results(
+                            provider_requests,
+                            self.__poll_for_batch_results,
+                            timeout=self.__batch_results_timeout)
+                        return results, provider_requests, provider_
                 except Exception as e:
                     _logger.error(str(e))
                     return e, provider_requests, provider_
@@ -254,11 +267,14 @@ class PricingContext(ContextBaseWithDefault):
         def handle_results(result: Union[Exception, dict, str], request_: RiskRequest, provider_: RiskApi):
             if isinstance(result, Exception):
                 # Set all the futures for this request to an error value
-                self._handle_results({}, request_, str(result))
-                if not request_.wait_for_results:
-                    # If it's a batch request check whether this was the last outstanding an retrieve results
-                    # for any not in error, if so
-                    get_batch_results_if_ready(provider_)
+                if isinstance(request_, dict):
+                    # Batch response results, handle each result ...
+                    for sub_request in request_.values():
+                        self._handle_results({}, sub_request, error=str(result))
+
+                    batch_result.set_result(True)
+                else:
+                    self._handle_results({}, request_, error=str(result))
             elif isinstance(result, str):
                 # It's a result id from a batch request, add it to the dict until we've received all we're expecting
                 with self.__lock:
@@ -268,7 +284,7 @@ class PricingContext(ContextBaseWithDefault):
                 if isinstance(request_, dict):
                     # Batch response results, handle each result ...
                     for result_id, sub_result in result.items():
-                        self._handle_results(sub_result, request_[result_id])
+                        handle_results(sub_result, request_[result_id], provider_)
 
                     # ... and signal completion
                     batch_result.set_result(True)
@@ -351,8 +367,13 @@ class PricingContext(ContextBaseWithDefault):
         return RiskRequestParameters(self.__csa_term)
 
     @property
-    def __scenario(self) -> MarketDataScenario:
-        return MarketDataScenario(scenario=Scenario.current) if Scenario.current_is_set else None
+    def __scenario(self) -> Optional[MarketDataScenario]:
+        scenarios = Scenario.path
+        if not scenarios:
+            return None
+
+        return MarketDataScenario(scenario=scenarios[0] if len(scenarios) == 1 else
+                                  CompositeScenario(scenarios=tuple(reversed(scenarios))))
 
     @property
     def _pricing_market_data_as_of(self) -> Tuple[PricingDateAndMarketDataAsOf, ...]:

@@ -40,7 +40,7 @@ def test_get_many_portfolios(mocker):
     # mock GsSession
     mocker.patch.object(
         GsSession.__class__,
-        'current',
+        'default_value',
         return_value=GsSession.get(
             Environment.QA,
             'client_id',
@@ -60,7 +60,7 @@ def test_get_portfolio(mocker):
     # mock GsSession
     mocker.patch.object(
         GsSession.__class__,
-        'current',
+        'default_value',
         return_value=GsSession.get(
             Environment.QA,
             'client_id',
@@ -81,7 +81,7 @@ def test_create_portfolio(mocker):
     # mock GsSession
     mocker.patch.object(
         GsSession.__class__,
-        'current',
+        'default_value',
         return_value=GsSession.get(
             Environment.QA,
             'client_id',
@@ -102,7 +102,7 @@ def test_update_portfolio(mocker):
     # mock GsSession
     mocker.patch.object(
         GsSession.__class__,
-        'current',
+        'default_value',
         return_value=GsSession.get(
             Environment.QA,
             'client_id',
@@ -123,7 +123,7 @@ def test_delete_portfolio(mocker):
     # mock GsSession
     mocker.patch.object(
         GsSession.__class__,
-        'current',
+        'default_value',
         return_value=GsSession.get(
             Environment.QA,
             'client_id',
@@ -163,20 +163,28 @@ def test_get_portfolio_positions(mocker):
     )}
 
     expected_response = (
-        PositionSet('mock1', start_date, dup.parse('2019-02-19T12:10:32.401Z'), (
-            Position(assetId='MQA123', quantity=0.3),
-            Position(assetId='MQA456', quantity=0.7)
-        )),
-        PositionSet('mock2', end_date, dup.parse('2019-02-20T05:04:32.981Z'), (
-            Position(assetId='MQA123', quantity=0.4),
-            Position(assetId='MQA456', quantity=0.6)
-        ))
+        PositionSet(
+            id_='mock1',
+            position_date=start_date,
+            last_update_time=dup.parse('2019-02-19T12:10:32.401Z'),
+            positions=(
+                Position(assetId='MQA123', quantity=0.3),
+                Position(assetId='MQA456', quantity=0.7)
+            )),
+        PositionSet(
+            id_='mock2',
+            position_date=end_date,
+            last_update_time=dup.parse('2019-02-20T05:04:32.981Z'),
+            positions=(
+                Position(assetId='MQA123', quantity=0.4),
+                Position(assetId='MQA456', quantity=0.6)
+            ))
     )
 
     # mock GsSession
     mocker.patch.object(
         GsSession.__class__,
-        'current',
+        'default_value',
         return_value=GsSession.get(
             Environment.QA,
             'client_id',
@@ -209,16 +217,20 @@ def test_get_portfolio_positions_for_date(mocker):
     )}
 
     expected_response = (
-        PositionSet('mock1', date, dup.parse('2019-02-19T12:10:32.401Z'), (
-            Position(assetId='MQA123', quantity=0.3),
-            Position(assetId='MQA456', quantity=0.7)
-        ))
+        PositionSet(
+            id_='mock1',
+            position_date=date,
+            last_update_time=dup.parse('2019-02-19T12:10:32.401Z'),
+            positions=(
+                Position(assetId='MQA123', quantity=0.3),
+                Position(assetId='MQA456', quantity=0.7)
+            ))
     )
 
     # mock GsSession
     mocker.patch.object(
         GsSession.__class__,
-        'current',
+        'default_value',
         return_value=GsSession.get(
             Environment.QA,
             'client_id',
@@ -250,15 +262,19 @@ def test_get_latest_portfolio_positions(mocker):
     }),
     }
 
-    expected_response = PositionSet('mock1', date, dup.parse('2019-02-19T12:10:32.401Z'), (
-        Position(assetId='MQA123', quantity=0.3),
-        Position(assetId='MQA456', quantity=0.7)
-    ))
+    expected_response = PositionSet(
+        id_='mock1',
+        position_date=date,
+        last_update_time=dup.parse('2019-02-19T12:10:32.401Z'),
+        positions=(
+            Position(assetId='MQA123', quantity=0.3),
+            Position(assetId='MQA456', quantity=0.7)
+        ))
 
     # mock GsSession
     mocker.patch.object(
         GsSession.__class__,
-        'current',
+        'default_value',
         return_value=GsSession.get(
             Environment.QA,
             'client_id',
@@ -269,8 +285,7 @@ def test_get_latest_portfolio_positions(mocker):
     response = GsPortfolioApi.get_latest_positions(id_1)
 
     GsSession.current._get.assert_called_with(
-        '/portfolios/{id}/positions/last?type=close'.format(id=id_1),
-        cls=PositionSet)
+        '/portfolios/{id}/positions/last?type=close'.format(id=id_1))
 
     assert response == expected_response
 
@@ -285,7 +300,7 @@ def test_get_portfolio_position_dates(mocker):
     # mock GsSession
     mocker.patch.object(
         GsSession.__class__,
-        'current',
+        'default_value',
         return_value=GsSession.get(
             Environment.QA,
             'client_id',

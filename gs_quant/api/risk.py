@@ -15,7 +15,7 @@ under the License.
 """
 from abc import ABCMeta, abstractmethod
 import logging
-from typing import Iterable, Mapping, Union
+from typing import Iterable, Mapping, Optional, Union
 
 from gs_quant.base import PricingKey
 from gs_quant.risk import ErrorValue, Formatters, RiskRequest
@@ -33,7 +33,8 @@ class RiskApi(metaclass=ABCMeta):
 
     @classmethod
     @abstractmethod
-    def get_results(cls, ids_to_requests: Mapping[str, RiskRequest]) -> Mapping[str, dict]:
+    def get_results(cls, ids_to_requests: Mapping[str, RiskRequest], poll: bool, timeout: Optional[int] = None)\
+            -> Mapping[str, dict]:
         raise NotImplementedError('Must implement get_results')
 
     @classmethod

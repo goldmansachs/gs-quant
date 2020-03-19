@@ -1,4 +1,4 @@
-Stock
+gs\_quant.markets.securities.Stock
 ==================================
 
 .. currentmodule:: gs_quant.markets.securities
@@ -14,7 +14,9 @@ Stock
    .. autosummary::
    
       ~Stock.__init__
+      ~Stock.get_identifier
       ~Stock.get_identifiers
+      ~Stock.get_marquee_id
       ~Stock.get_type
    
    
