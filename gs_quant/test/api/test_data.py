@@ -129,7 +129,7 @@ def test_coordinates_data(mocker):
     start = dt.datetime(2019, 1, 2, 1, 0)
     end = dt.datetime(2019, 1, 2, 1, 10)
     # mock GsSession and data response
-    mocker.patch.object(GsSession.__class__, 'current',
+    mocker.patch.object(GsSession.__class__, 'default_value',
                         return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
     mocker.patch.object(GsSession.current, '_post', side_effect=[{'responses': [{'data': bond_data}]},
                                                                  {'responses': [{'data': swap_data}]},
@@ -170,7 +170,7 @@ def test_coordinate_data_series(mocker):
     start = dt.datetime(2019, 1, 2, 1, 0)
     end = dt.datetime(2019, 1, 2, 1, 10)
     # mock GsSession and data response
-    mocker.patch.object(GsSession.__class__, 'current',
+    mocker.patch.object(GsSession.__class__, 'default_value',
                         return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
     mocker.patch.object(GsSession.current, '_post', side_effect=[{'responses': [{'data': bond_data}]},
                                                                  {'responses': [{'data': swap_data}]},
@@ -245,7 +245,7 @@ def test_coordinate_last(mocker):
     )
 
     # mock GsSession and data response
-    mocker.patch.object(GsSession.__class__, 'current',
+    mocker.patch.object(GsSession.__class__, 'default_value',
                         return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
     GsSession.current._post = mocker.Mock(return_value=data)
 
@@ -280,7 +280,7 @@ def test_get_many_defns_api(mocker):
     expected_response = (test_defn,)
 
     # mock GsSession
-    mocker.patch.object(GsSession.__class__, 'current',
+    mocker.patch.object(GsSession.__class__, 'default_value',
                         return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 

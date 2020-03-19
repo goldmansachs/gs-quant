@@ -59,6 +59,7 @@ class AssetType(EnumBase, Enum):
     Certificate = 'Certificate'
     CD = 'CD'
     Cliquet = 'Cliquet'
+    CMSOption = 'CMSOption'
     Commodity = 'Commodity'
     CommodVarianceSwap = 'CommodVarianceSwap'
     Company = 'Company'
@@ -1020,6 +1021,7 @@ class RiskMeasureType(EnumBase, Enum):
     AnnuityLocalCcy = 'AnnuityLocalCcy'
     Basis = 'Basis'
     CRIF_IRCurve = 'CRIF IRCurve'
+    Cashflows = 'Cashflows'
     Daily_Implied_Volatility = 'Daily Implied Volatility'
     Delta = 'Delta'
     DeltaLocalCcy = 'DeltaLocalCcy'
@@ -1475,6 +1477,36 @@ class CarryScenario(Scenario):
         self.__roll_to_fwds = value        
 
 
+class CompositeScenario(Base):
+        
+    """A scenario for composing scenarios"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        scenarios: tuple = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.scenarios = scenarios
+        self.name = name
+
+    @property
+    def scenario_type(self) -> str:
+        """CompositeScenario"""
+        return 'CompositeScenario'        
+
+    @property
+    def scenarios(self) -> tuple:
+        """The scenarios, in order"""
+        return self.__scenarios
+
+    @scenarios.setter
+    def scenarios(self, value: tuple):
+        self._property_changed('scenarios')
+        self.__scenarios = value        
+
+
 class DateRange(Base):
         
     @camel_case_translate
@@ -1512,7 +1544,7 @@ class DateRange(Base):
 
 class EntitlementExclusions(Base):
         
-    """Defines the exclusion entitlements of a given resource"""
+    """Defines the exclusion entitlements of a given resource."""
 
     @camel_case_translate
     def __init__(
@@ -1635,7 +1667,7 @@ class EntitlementExclusions(Base):
 
 class Entitlements(Base):
         
-    """Defines the entitlements of a given resource"""
+    """Defines the entitlements of a given resource."""
 
     @camel_case_translate
     def __init__(
@@ -4267,6 +4299,7 @@ class FieldFilterMap(Base):
         self.earnings_per_share_positive = kwargs.get('earnings_per_share_positive')
         self.unadjusted_high = kwargs.get('unadjusted_high')
         self.source_importance = kwargs.get('source_importance')
+        self.wind = kwargs.get('wind')
         self.eid = kwargs.get('eid')
         self.relative_return_qtd = kwargs.get('relative_return_qtd')
         self.display_name = kwargs.get('display_name')
@@ -4287,6 +4320,7 @@ class FieldFilterMap(Base):
         self.c = kwargs.get('c')
         self.equity_vega = kwargs.get('equity_vega')
         self.leg_one_spread = kwargs.get('leg_one_spread')
+        self.cloud_attribute = kwargs.get('cloud_attribute')
         self.lender_payment = kwargs.get('lender_payment')
         self.five_day_move = kwargs.get('five_day_move')
         self.geography_name = kwargs.get('geography_name')
@@ -4366,6 +4400,8 @@ class FieldFilterMap(Base):
         self.tcm_cost_horizon1_day = kwargs.get('tcm_cost_horizon1_day')
         self.asset_parameters_receiver_rate_option = kwargs.get('asset_parameters_receiver_rate_option')
         self.approval = kwargs.get('approval')
+        self.test_measure = kwargs.get('test_measure')
+        self.message = kwargs.get('message')
         self.sts_rates_country = kwargs.get('sts_rates_country')
         self.leg_two_payment_type = kwargs.get('leg_two_payment_type')
         self.horizon = kwargs.get('horizon')
@@ -4438,10 +4474,13 @@ class FieldFilterMap(Base):
         self.price_range_in_ticks = kwargs.get('price_range_in_ticks')
         self.expense_ratio_gross_bps = kwargs.get('expense_ratio_gross_bps')
         self.pct_change = kwargs.get('pct_change')
+        self.brightness_type = kwargs.get('brightness_type')
         self.number_of_rolls = kwargs.get('number_of_rolls')
         self.agent_lender_fee = kwargs.get('agent_lender_fee')
+        self.fuel_type = kwargs.get('fuel_type')
         self.bbid = kwargs.get('bbid')
         self.option_strike_price = kwargs.get('option_strike_price')
+        self.precipitation_type = kwargs.get('precipitation_type')
         self.effective_date = kwargs.get('effective_date')
         self.price_type_leg3 = kwargs.get('price_type_leg3')
         self.arrival_mid_normalized = kwargs.get('arrival_mid_normalized')
@@ -4485,6 +4524,7 @@ class FieldFilterMap(Base):
         self.ext_mkt_class = kwargs.get('ext_mkt_class')
         self.price_currency = kwargs.get('price_currency')
         self.hedge_id = kwargs.get('hedge_id')
+        self.failed_count = kwargs.get('failed_count')
         self.tcm_cost_horizon8_day = kwargs.get('tcm_cost_horizon8_day')
         self.residual_variance = kwargs.get('residual_variance')
         self.supra_strategy = kwargs.get('supra_strategy')
@@ -4496,7 +4536,9 @@ class FieldFilterMap(Base):
         self.factor_source = kwargs.get('factor_source')
         self.lending_sec_type = kwargs.get('lending_sec_type')
         self.leverage = kwargs.get('leverage')
+        self.forecast_day = kwargs.get('forecast_day')
         self.option_family = kwargs.get('option_family')
+        self.generator_output = kwargs.get('generator_output')
         self.price_spot_stop_loss_value = kwargs.get('price_spot_stop_loss_value')
         self.fwd_points = kwargs.get('fwd_points')
         self.kpi_id = kwargs.get('kpi_id')
@@ -4527,6 +4569,7 @@ class FieldFilterMap(Base):
         self.option_lock_period = kwargs.get('option_lock_period')
         self.strike_relative = kwargs.get('strike_relative')
         self.es_momentum_percentile = kwargs.get('es_momentum_percentile')
+        self.pressure_type = kwargs.get('pressure_type')
         self.price_notation = kwargs.get('price_notation')
         self.strategy = kwargs.get('strategy')
         self.forecast_date = kwargs.get('forecast_date')
@@ -4547,6 +4590,7 @@ class FieldFilterMap(Base):
         self.idea_source = kwargs.get('idea_source')
         self.unadjusted_ask = kwargs.get('unadjusted_ask')
         self.trading_pnl = kwargs.get('trading_pnl')
+        self.contribution_name = kwargs.get('contribution_name')
         self.collateral_value_required = kwargs.get('collateral_value_required')
         self.given_plus_paid = kwargs.get('given_plus_paid')
         self.short_conviction_small = kwargs.get('short_conviction_small')
@@ -4582,6 +4626,7 @@ class FieldFilterMap(Base):
         self.vendor = kwargs.get('vendor')
         self.currency = kwargs.get('currency')
         self.cluster_class = kwargs.get('cluster_class')
+        self.data_set = kwargs.get('data_set')
         self.queueing_time = kwargs.get('queueing_time')
         self.ann_return5_year = kwargs.get('ann_return5_year')
         self.bid_size = kwargs.get('bid_size')
@@ -4605,6 +4650,7 @@ class FieldFilterMap(Base):
         self.data_set_sub_category = kwargs.get('data_set_sub_category')
         self.day_count_convention2 = kwargs.get('day_count_convention2')
         self.quantity_bucket = kwargs.get('quantity_bucket')
+        self.degree_days = kwargs.get('degree_days')
         self.oe_name = kwargs.get('oe_name')
         self.given = kwargs.get('given')
         self.delisting_date = kwargs.get('delisting_date')
@@ -4648,18 +4694,21 @@ class FieldFilterMap(Base):
         self.g_score = kwargs.get('g_score')
         self.corporate_spread_contribution = kwargs.get('corporate_spread_contribution')
         self.market_value = kwargs.get('market_value')
+        self.entity_id = kwargs.get('entity_id')
         self.notional_currency1 = kwargs.get('notional_currency1')
         self.net_debt_to_ebitda = kwargs.get('net_debt_to_ebitda')
         self.notional_currency2 = kwargs.get('notional_currency2')
         self.multiple_score = kwargs.get('multiple_score')
         self.beta_adjusted_exposure = kwargs.get('beta_adjusted_exposure')
         self.dividend_points = kwargs.get('dividend_points')
+        self.brightness = kwargs.get('brightness')
         self.paid = kwargs.get('paid')
         self.fixed_rate = kwargs.get('fixed_rate')
         self.short = kwargs.get('short')
         self.asset_parameters_receiver_designated_maturity = kwargs.get(
             'asset_parameters_receiver_designated_maturity')
         self.bos_in_ticks_description = kwargs.get('bos_in_ticks_description')
+        self.test_id = kwargs.get('test_id')
         self.implied_correlation = kwargs.get('implied_correlation')
         self.normalized_performance = kwargs.get('normalized_performance')
         self.cm_id = kwargs.get('cm_id')
@@ -4721,6 +4770,7 @@ class FieldFilterMap(Base):
         self.use_machine_learning = kwargs.get('use_machine_learning')
         self.growth_score = kwargs.get('growth_score')
         self.buffer_threshold = kwargs.get('buffer_threshold')
+        self.cloud = kwargs.get('cloud')
         self.price_forming_continuation_data = kwargs.get('price_forming_continuation_data')
         self.adjusted_short_interest = kwargs.get('adjusted_short_interest')
         self.basis_swap_rate = kwargs.get('basis_swap_rate')
@@ -4732,6 +4782,7 @@ class FieldFilterMap(Base):
         self.ann_return10_year = kwargs.get('ann_return10_year')
         self.tcm_cost = kwargs.get('tcm_cost')
         self.sustain_japan = kwargs.get('sustain_japan')
+        self.history_start_date = kwargs.get('history_start_date')
         self.bid_spread = kwargs.get('bid_spread')
         self.fixed_payment_currency_leg1 = kwargs.get('fixed_payment_currency_leg1')
         self.hedge_tracking_error = kwargs.get('hedge_tracking_error')
@@ -4756,6 +4807,7 @@ class FieldFilterMap(Base):
         self.min_temperature = kwargs.get('min_temperature')
         self.eff_yield7_day = kwargs.get('eff_yield7_day')
         self.meeting_date = kwargs.get('meeting_date')
+        self.fail_pct = kwargs.get('fail_pct')
         self.relative_strike = kwargs.get('relative_strike')
         self.amount = kwargs.get('amount')
         self.lending_fund_acct = kwargs.get('lending_fund_acct')
@@ -4813,6 +4865,7 @@ class FieldFilterMap(Base):
         self.jsn = kwargs.get('jsn')
         self.share_class_assets = kwargs.get('share_class_assets')
         self.annuity = kwargs.get('annuity')
+        self.total_count = kwargs.get('total_count')
         self.quote_type = kwargs.get('quote_type')
         self.uid = kwargs.get('uid')
         self.tenor = kwargs.get('tenor')
@@ -4856,6 +4909,7 @@ class FieldFilterMap(Base):
         self.position_amount = kwargs.get('position_amount')
         self.wind_speed = kwargs.get('wind_speed')
         self.ma_rank = kwargs.get('ma_rank')
+        self.observation_hour = kwargs.get('observation_hour')
         self.borrower_id = kwargs.get('borrower_id')
         self.data_product = kwargs.get('data_product')
         self.implied_volatility_by_delta_strike = kwargs.get('implied_volatility_by_delta_strike')
@@ -4969,6 +5023,7 @@ class FieldFilterMap(Base):
         self.event_source = kwargs.get('event_source')
         self.on_behalf_of = kwargs.get('on_behalf_of')
         self.qis_perm_no = kwargs.get('qis_perm_no')
+        self.test_type = kwargs.get('test_type')
         self.accrued_interest_standard = kwargs.get('accrued_interest_standard')
         self.settlement = kwargs.get('settlement')
         self.shareclass_id = kwargs.get('shareclass_id')
@@ -5022,6 +5077,7 @@ class FieldFilterMap(Base):
         self.total_risk = kwargs.get('total_risk')
         self.level = kwargs.get('level')
         self.mnav = kwargs.get('mnav')
+        self.implied_volatility_by_expiration = kwargs.get('implied_volatility_by_expiration')
         self.asset_parameters_fixed_rate_day_count_fraction = kwargs.get(
             'asset_parameters_fixed_rate_day_count_fraction')
         self.es_momentum_score = kwargs.get('es_momentum_score')
@@ -5037,6 +5093,7 @@ class FieldFilterMap(Base):
         self.market_buffer_threshold = kwargs.get('market_buffer_threshold')
         self.price_notation3 = kwargs.get('price_notation3')
         self.cap_floor_vol = kwargs.get('cap_floor_vol')
+        self.degree_days_type = kwargs.get('degree_days_type')
         self.submitter = kwargs.get('submitter')
         self.no = kwargs.get('no')
         self.notional = kwargs.get('notional')
@@ -5051,6 +5108,7 @@ class FieldFilterMap(Base):
         self.require_anon_client_name = kwargs.get('require_anon_client_name')
         self.total = kwargs.get('total')
         self.asset_id = kwargs.get('asset_id')
+        self.test_status = kwargs.get('test_status')
         self.mkt_type = kwargs.get('mkt_type')
         self.pricing_location = kwargs.get('pricing_location')
         self.yield30_day = kwargs.get('yield30_day')
@@ -5108,6 +5166,7 @@ class FieldFilterMap(Base):
         self.snowfall = kwargs.get('snowfall')
         self.liquidity_bucket_buy = kwargs.get('liquidity_bucket_buy')
         self.mic = kwargs.get('mic')
+        self.metric_value = kwargs.get('metric_value')
         self.mid = kwargs.get('mid')
         self.auto_exec_state = kwargs.get('auto_exec_state')
         self.relative_return_ytd = kwargs.get('relative_return_ytd')
@@ -5139,6 +5198,7 @@ class FieldFilterMap(Base):
         self.source_id = kwargs.get('source_id')
         self.country = kwargs.get('country')
         self.cusip = kwargs.get('cusip')
+        self.wind_attribute = kwargs.get('wind_attribute')
         self.touch_spread_score = kwargs.get('touch_spread_score')
         self.spread_option_atm_fwd_rate = kwargs.get('spread_option_atm_fwd_rate')
         self.net_exposure = kwargs.get('net_exposure')
@@ -5313,11 +5373,13 @@ class FieldFilterMap(Base):
         self.rate360 = kwargs.get('rate360')
         self.delivery_point_leg1 = kwargs.get('delivery_point_leg1')
         self.station_name = kwargs.get('station_name')
+        self.pass_pct = kwargs.get('pass_pct')
         self.opening_report = kwargs.get('opening_report')
         self.value = kwargs.get('value')
         self.leg_one_index_location = kwargs.get('leg_one_index_location')
         self.payer_designated_maturity = kwargs.get('payer_designated_maturity')
         self.product_type = kwargs.get('product_type')
+        self.test_measure_label = kwargs.get('test_measure_label')
         self.quantity = kwargs.get('quantity')
         self.report_id = kwargs.get('report_id')
         self.index_weight = kwargs.get('index_weight')
@@ -5642,6 +5704,15 @@ class FieldFilterMap(Base):
         self.__source_importance = value        
 
     @property
+    def wind(self) -> dict:
+        return self.__wind
+
+    @wind.setter
+    def wind(self, value: dict):
+        self._property_changed('wind')
+        self.__wind = value        
+
+    @property
     def eid(self) -> dict:
         return self.__eid
 
@@ -5820,6 +5891,15 @@ class FieldFilterMap(Base):
     def leg_one_spread(self, value: dict):
         self._property_changed('leg_one_spread')
         self.__leg_one_spread = value        
+
+    @property
+    def cloud_attribute(self) -> dict:
+        return self.__cloud_attribute
+
+    @cloud_attribute.setter
+    def cloud_attribute(self, value: dict):
+        self._property_changed('cloud_attribute')
+        self.__cloud_attribute = value        
 
     @property
     def lender_payment(self) -> dict:
@@ -6524,6 +6604,24 @@ class FieldFilterMap(Base):
         self.__approval = value        
 
     @property
+    def test_measure(self) -> dict:
+        return self.__test_measure
+
+    @test_measure.setter
+    def test_measure(self, value: dict):
+        self._property_changed('test_measure')
+        self.__test_measure = value        
+
+    @property
+    def message(self) -> dict:
+        return self.__message
+
+    @message.setter
+    def message(self, value: dict):
+        self._property_changed('message')
+        self.__message = value        
+
+    @property
     def sts_rates_country(self) -> dict:
         return self.__sts_rates_country
 
@@ -7172,6 +7270,15 @@ class FieldFilterMap(Base):
         self.__pct_change = value        
 
     @property
+    def brightness_type(self) -> dict:
+        return self.__brightness_type
+
+    @brightness_type.setter
+    def brightness_type(self, value: dict):
+        self._property_changed('brightness_type')
+        self.__brightness_type = value        
+
+    @property
     def number_of_rolls(self) -> dict:
         return self.__number_of_rolls
 
@@ -7190,6 +7297,15 @@ class FieldFilterMap(Base):
         self.__agent_lender_fee = value        
 
     @property
+    def fuel_type(self) -> dict:
+        return self.__fuel_type
+
+    @fuel_type.setter
+    def fuel_type(self, value: dict):
+        self._property_changed('fuel_type')
+        self.__fuel_type = value        
+
+    @property
     def bbid(self) -> dict:
         return self.__bbid
 
@@ -7206,6 +7322,15 @@ class FieldFilterMap(Base):
     def option_strike_price(self, value: dict):
         self._property_changed('option_strike_price')
         self.__option_strike_price = value        
+
+    @property
+    def precipitation_type(self) -> dict:
+        return self.__precipitation_type
+
+    @precipitation_type.setter
+    def precipitation_type(self, value: dict):
+        self._property_changed('precipitation_type')
+        self.__precipitation_type = value        
 
     @property
     def effective_date(self) -> dict:
@@ -7595,6 +7720,15 @@ class FieldFilterMap(Base):
         self.__hedge_id = value        
 
     @property
+    def failed_count(self) -> dict:
+        return self.__failed_count
+
+    @failed_count.setter
+    def failed_count(self, value: dict):
+        self._property_changed('failed_count')
+        self.__failed_count = value        
+
+    @property
     def tcm_cost_horizon8_day(self) -> dict:
         return self.__tcm_cost_horizon8_day
 
@@ -7694,6 +7828,15 @@ class FieldFilterMap(Base):
         self.__leverage = value        
 
     @property
+    def forecast_day(self) -> dict:
+        return self.__forecast_day
+
+    @forecast_day.setter
+    def forecast_day(self, value: dict):
+        self._property_changed('forecast_day')
+        self.__forecast_day = value        
+
+    @property
     def option_family(self) -> dict:
         return self.__option_family
 
@@ -7701,6 +7844,15 @@ class FieldFilterMap(Base):
     def option_family(self, value: dict):
         self._property_changed('option_family')
         self.__option_family = value        
+
+    @property
+    def generator_output(self) -> dict:
+        return self.__generator_output
+
+    @generator_output.setter
+    def generator_output(self, value: dict):
+        self._property_changed('generator_output')
+        self.__generator_output = value        
 
     @property
     def price_spot_stop_loss_value(self) -> dict:
@@ -7973,6 +8125,15 @@ class FieldFilterMap(Base):
         self.__es_momentum_percentile = value        
 
     @property
+    def pressure_type(self) -> dict:
+        return self.__pressure_type
+
+    @pressure_type.setter
+    def pressure_type(self, value: dict):
+        self._property_changed('pressure_type')
+        self.__pressure_type = value        
+
+    @property
     def price_notation(self) -> dict:
         return self.__price_notation
 
@@ -8151,6 +8312,15 @@ class FieldFilterMap(Base):
     def trading_pnl(self, value: dict):
         self._property_changed('trading_pnl')
         self.__trading_pnl = value        
+
+    @property
+    def contribution_name(self) -> dict:
+        return self.__contribution_name
+
+    @contribution_name.setter
+    def contribution_name(self, value: dict):
+        self._property_changed('contribution_name')
+        self.__contribution_name = value        
 
     @property
     def collateral_value_required(self) -> dict:
@@ -8468,6 +8638,15 @@ class FieldFilterMap(Base):
         self.__cluster_class = value        
 
     @property
+    def data_set(self) -> dict:
+        return self.__data_set
+
+    @data_set.setter
+    def data_set(self, value: dict):
+        self._property_changed('data_set')
+        self.__data_set = value        
+
+    @property
     def queueing_time(self) -> dict:
         return self.__queueing_time
 
@@ -8664,6 +8843,15 @@ class FieldFilterMap(Base):
     def quantity_bucket(self, value: dict):
         self._property_changed('quantity_bucket')
         self.__quantity_bucket = value        
+
+    @property
+    def degree_days(self) -> dict:
+        return self.__degree_days
+
+    @degree_days.setter
+    def degree_days(self, value: dict):
+        self._property_changed('degree_days')
+        self.__degree_days = value        
 
     @property
     def oe_name(self) -> dict:
@@ -9053,6 +9241,15 @@ class FieldFilterMap(Base):
         self.__market_value = value        
 
     @property
+    def entity_id(self) -> dict:
+        return self.__entity_id
+
+    @entity_id.setter
+    def entity_id(self, value: dict):
+        self._property_changed('entity_id')
+        self.__entity_id = value        
+
+    @property
     def notional_currency1(self) -> dict:
         return self.__notional_currency1
 
@@ -9107,6 +9304,15 @@ class FieldFilterMap(Base):
         self.__dividend_points = value        
 
     @property
+    def brightness(self) -> dict:
+        return self.__brightness
+
+    @brightness.setter
+    def brightness(self, value: dict):
+        self._property_changed('brightness')
+        self.__brightness = value        
+
+    @property
     def paid(self) -> dict:
         return self.__paid
 
@@ -9150,6 +9356,15 @@ class FieldFilterMap(Base):
     def bos_in_ticks_description(self, value: dict):
         self._property_changed('bos_in_ticks_description')
         self.__bos_in_ticks_description = value        
+
+    @property
+    def test_id(self) -> dict:
+        return self.__test_id
+
+    @test_id.setter
+    def test_id(self, value: dict):
+        self._property_changed('test_id')
+        self.__test_id = value        
 
     @property
     def implied_correlation(self) -> dict:
@@ -9701,6 +9916,15 @@ class FieldFilterMap(Base):
         self.__buffer_threshold = value        
 
     @property
+    def cloud(self) -> dict:
+        return self.__cloud
+
+    @cloud.setter
+    def cloud(self, value: dict):
+        self._property_changed('cloud')
+        self.__cloud = value        
+
+    @property
     def price_forming_continuation_data(self) -> dict:
         return self.__price_forming_continuation_data
 
@@ -9798,6 +10022,15 @@ class FieldFilterMap(Base):
     def sustain_japan(self, value: dict):
         self._property_changed('sustain_japan')
         self.__sustain_japan = value        
+
+    @property
+    def history_start_date(self) -> dict:
+        return self.__history_start_date
+
+    @history_start_date.setter
+    def history_start_date(self, value: dict):
+        self._property_changed('history_start_date')
+        self.__history_start_date = value        
 
     @property
     def bid_spread(self) -> dict:
@@ -10014,6 +10247,15 @@ class FieldFilterMap(Base):
     def meeting_date(self, value: dict):
         self._property_changed('meeting_date')
         self.__meeting_date = value        
+
+    @property
+    def fail_pct(self) -> dict:
+        return self.__fail_pct
+
+    @fail_pct.setter
+    def fail_pct(self, value: dict):
+        self._property_changed('fail_pct')
+        self.__fail_pct = value        
 
     @property
     def relative_strike(self) -> dict:
@@ -10529,6 +10771,15 @@ class FieldFilterMap(Base):
         self.__annuity = value        
 
     @property
+    def total_count(self) -> dict:
+        return self.__total_count
+
+    @total_count.setter
+    def total_count(self, value: dict):
+        self._property_changed('total_count')
+        self.__total_count = value        
+
+    @property
     def quote_type(self) -> dict:
         return self.__quote_type
 
@@ -10914,6 +11165,15 @@ class FieldFilterMap(Base):
     def ma_rank(self, value: dict):
         self._property_changed('ma_rank')
         self.__ma_rank = value        
+
+    @property
+    def observation_hour(self) -> dict:
+        return self.__observation_hour
+
+    @observation_hour.setter
+    def observation_hour(self, value: dict):
+        self._property_changed('observation_hour')
+        self.__observation_hour = value        
 
     @property
     def borrower_id(self) -> dict:
@@ -11924,6 +12184,15 @@ class FieldFilterMap(Base):
         self.__qis_perm_no = value        
 
     @property
+    def test_type(self) -> dict:
+        return self.__test_type
+
+    @test_type.setter
+    def test_type(self, value: dict):
+        self._property_changed('test_type')
+        self.__test_type = value        
+
+    @property
     def accrued_interest_standard(self) -> dict:
         return self.__accrued_interest_standard
 
@@ -12401,6 +12670,15 @@ class FieldFilterMap(Base):
         self.__mnav = value        
 
     @property
+    def implied_volatility_by_expiration(self) -> dict:
+        return self.__implied_volatility_by_expiration
+
+    @implied_volatility_by_expiration.setter
+    def implied_volatility_by_expiration(self, value: dict):
+        self._property_changed('implied_volatility_by_expiration')
+        self.__implied_volatility_by_expiration = value        
+
+    @property
     def asset_parameters_fixed_rate_day_count_fraction(self) -> dict:
         return self.__asset_parameters_fixed_rate_day_count_fraction
 
@@ -12527,6 +12805,15 @@ class FieldFilterMap(Base):
         self.__cap_floor_vol = value        
 
     @property
+    def degree_days_type(self) -> dict:
+        return self.__degree_days_type
+
+    @degree_days_type.setter
+    def degree_days_type(self, value: dict):
+        self._property_changed('degree_days_type')
+        self.__degree_days_type = value        
+
+    @property
     def submitter(self) -> dict:
         return self.__submitter
 
@@ -12651,6 +12938,15 @@ class FieldFilterMap(Base):
     def asset_id(self, value: dict):
         self._property_changed('asset_id')
         self.__asset_id = value        
+
+    @property
+    def test_status(self) -> dict:
+        return self.__test_status
+
+    @test_status.setter
+    def test_status(self, value: dict):
+        self._property_changed('test_status')
+        self.__test_status = value        
 
     @property
     def mkt_type(self) -> dict:
@@ -13166,6 +13462,15 @@ class FieldFilterMap(Base):
         self.__mic = value        
 
     @property
+    def metric_value(self) -> dict:
+        return self.__metric_value
+
+    @metric_value.setter
+    def metric_value(self, value: dict):
+        self._property_changed('metric_value')
+        self.__metric_value = value        
+
+    @property
     def mid(self) -> dict:
         return self.__mid
 
@@ -13443,6 +13748,15 @@ class FieldFilterMap(Base):
     def cusip(self, value: dict):
         self._property_changed('cusip')
         self.__cusip = value        
+
+    @property
+    def wind_attribute(self) -> dict:
+        return self.__wind_attribute
+
+    @wind_attribute.setter
+    def wind_attribute(self, value: dict):
+        self._property_changed('wind_attribute')
+        self.__wind_attribute = value        
 
     @property
     def touch_spread_score(self) -> dict:
@@ -15011,6 +15325,15 @@ class FieldFilterMap(Base):
         self.__station_name = value        
 
     @property
+    def pass_pct(self) -> dict:
+        return self.__pass_pct
+
+    @pass_pct.setter
+    def pass_pct(self, value: dict):
+        self._property_changed('pass_pct')
+        self.__pass_pct = value        
+
+    @property
     def opening_report(self) -> dict:
         return self.__opening_report
 
@@ -15054,6 +15377,15 @@ class FieldFilterMap(Base):
     def product_type(self, value: dict):
         self._property_changed('product_type')
         self.__product_type = value        
+
+    @property
+    def test_measure_label(self) -> dict:
+        return self.__test_measure_label
+
+    @test_measure_label.setter
+    def test_measure_label(self, value: dict):
+        self._property_changed('test_measure_label')
+        self.__test_measure_label = value        
 
     @property
     def quantity(self) -> dict:
@@ -15239,6 +15571,7 @@ class FieldValueMap(Base):
         self.earnings_per_share_positive = kwargs.get('earnings_per_share_positive')
         self.unadjusted_high = kwargs.get('unadjusted_high')
         self.source_importance = kwargs.get('source_importance')
+        self.wind = kwargs.get('wind')
         self.relative_return_qtd = kwargs.get('relative_return_qtd')
         self.minutes_to_trade100_pct = kwargs.get('minutes_to_trade100_pct')
         self.expiration_tenor = kwargs.get('expiration_tenor')
@@ -15256,6 +15589,7 @@ class FieldValueMap(Base):
         self.c = kwargs.get('c')
         self.equity_vega = kwargs.get('equity_vega')
         self.leg_one_spread = kwargs.get('leg_one_spread')
+        self.cloud_attribute = kwargs.get('cloud_attribute')
         self.lender_payment = kwargs.get('lender_payment')
         self.five_day_move = kwargs.get('five_day_move')
         self.geography_name = kwargs.get('geography_name')
@@ -15332,6 +15666,8 @@ class FieldValueMap(Base):
         self.tcm_cost_horizon1_day = kwargs.get('tcm_cost_horizon1_day')
         self.asset_parameters_receiver_rate_option = kwargs.get('asset_parameters_receiver_rate_option')
         self.approval = kwargs.get('approval')
+        self.test_measure = kwargs.get('test_measure')
+        self.message = kwargs.get('message')
         self.leg_two_payment_type = kwargs.get('leg_two_payment_type')
         self.horizon = kwargs.get('horizon')
         self.day_count_convention_leg1 = kwargs.get('day_count_convention_leg1')
@@ -15399,10 +15735,13 @@ class FieldValueMap(Base):
         self.price_range_in_ticks = kwargs.get('price_range_in_ticks')
         self.expense_ratio_gross_bps = kwargs.get('expense_ratio_gross_bps')
         self.pct_change = kwargs.get('pct_change')
+        self.brightness_type = kwargs.get('brightness_type')
         self.number_of_rolls = kwargs.get('number_of_rolls')
         self.agent_lender_fee = kwargs.get('agent_lender_fee')
+        self.fuel_type = kwargs.get('fuel_type')
         self.bbid = kwargs.get('bbid')
         self.option_strike_price = kwargs.get('option_strike_price')
+        self.precipitation_type = kwargs.get('precipitation_type')
         self.effective_date = kwargs.get('effective_date')
         self.price_type_leg3 = kwargs.get('price_type_leg3')
         self.arrival_mid_normalized = kwargs.get('arrival_mid_normalized')
@@ -15434,6 +15773,7 @@ class FieldValueMap(Base):
         self.leg_two_index = kwargs.get('leg_two_index')
         self.market_buffer = kwargs.get('market_buffer')
         self.market_cap = kwargs.get('market_cap')
+        self.last_uploaded_time = kwargs.get('last_uploaded_time')
         self.oe_id = kwargs.get('oe_id')
         self.cluster_region = kwargs.get('cluster_region')
         self.bbid_equivalent = kwargs.get('bbid_equivalent')
@@ -15445,6 +15785,7 @@ class FieldValueMap(Base):
         self.ext_mkt_class = kwargs.get('ext_mkt_class')
         self.price_currency = kwargs.get('price_currency')
         self.hedge_id = kwargs.get('hedge_id')
+        self.failed_count = kwargs.get('failed_count')
         self.tcm_cost_horizon8_day = kwargs.get('tcm_cost_horizon8_day')
         self.residual_variance = kwargs.get('residual_variance')
         self.supra_strategy = kwargs.get('supra_strategy')
@@ -15455,7 +15796,9 @@ class FieldValueMap(Base):
         self.rounded_notional_amount2 = kwargs.get('rounded_notional_amount2')
         self.lending_sec_type = kwargs.get('lending_sec_type')
         self.leverage = kwargs.get('leverage')
+        self.forecast_day = kwargs.get('forecast_day')
         self.option_family = kwargs.get('option_family')
+        self.generator_output = kwargs.get('generator_output')
         self.price_spot_stop_loss_value = kwargs.get('price_spot_stop_loss_value')
         self.kpi_id = kwargs.get('kpi_id')
         self.relative_return_wtd = kwargs.get('relative_return_wtd')
@@ -15484,6 +15827,7 @@ class FieldValueMap(Base):
         self.option_lock_period = kwargs.get('option_lock_period')
         self.strike_relative = kwargs.get('strike_relative')
         self.es_momentum_percentile = kwargs.get('es_momentum_percentile')
+        self.pressure_type = kwargs.get('pressure_type')
         self.price_notation = kwargs.get('price_notation')
         self.strategy = kwargs.get('strategy')
         self.forecast_date = kwargs.get('forecast_date')
@@ -15502,6 +15846,7 @@ class FieldValueMap(Base):
         self.idea_source = kwargs.get('idea_source')
         self.unadjusted_ask = kwargs.get('unadjusted_ask')
         self.trading_pnl = kwargs.get('trading_pnl')
+        self.contribution_name = kwargs.get('contribution_name')
         self.collateral_value_required = kwargs.get('collateral_value_required')
         self.given_plus_paid = kwargs.get('given_plus_paid')
         self.short_conviction_small = kwargs.get('short_conviction_small')
@@ -15536,6 +15881,7 @@ class FieldValueMap(Base):
         self.vendor = kwargs.get('vendor')
         self.currency = kwargs.get('currency')
         self.cluster_class = kwargs.get('cluster_class')
+        self.data_set = kwargs.get('data_set')
         self.queueing_time = kwargs.get('queueing_time')
         self.ann_return5_year = kwargs.get('ann_return5_year')
         self.bid_size = kwargs.get('bid_size')
@@ -15558,6 +15904,7 @@ class FieldValueMap(Base):
         self.data_set_sub_category = kwargs.get('data_set_sub_category')
         self.day_count_convention2 = kwargs.get('day_count_convention2')
         self.quantity_bucket = kwargs.get('quantity_bucket')
+        self.degree_days = kwargs.get('degree_days')
         self.oe_name = kwargs.get('oe_name')
         self.given = kwargs.get('given')
         self.delisting_date = kwargs.get('delisting_date')
@@ -15603,17 +15950,20 @@ class FieldValueMap(Base):
         self.g_score = kwargs.get('g_score')
         self.corporate_spread_contribution = kwargs.get('corporate_spread_contribution')
         self.market_value = kwargs.get('market_value')
+        self.entity_id = kwargs.get('entity_id')
         self.notional_currency1 = kwargs.get('notional_currency1')
         self.net_debt_to_ebitda = kwargs.get('net_debt_to_ebitda')
         self.notional_currency2 = kwargs.get('notional_currency2')
         self.multiple_score = kwargs.get('multiple_score')
         self.beta_adjusted_exposure = kwargs.get('beta_adjusted_exposure')
+        self.brightness = kwargs.get('brightness')
         self.paid = kwargs.get('paid')
         self.fixed_rate = kwargs.get('fixed_rate')
         self.short = kwargs.get('short')
         self.asset_parameters_receiver_designated_maturity = kwargs.get(
             'asset_parameters_receiver_designated_maturity')
         self.bos_in_ticks_description = kwargs.get('bos_in_ticks_description')
+        self.test_id = kwargs.get('test_id')
         self.time = kwargs.get('time')
         self.implied_correlation = kwargs.get('implied_correlation')
         self.event_end_date_time = kwargs.get('event_end_date_time')
@@ -15670,6 +16020,7 @@ class FieldValueMap(Base):
         self.is_active = kwargs.get('is_active')
         self.growth_score = kwargs.get('growth_score')
         self.buffer_threshold = kwargs.get('buffer_threshold')
+        self.cloud = kwargs.get('cloud')
         self.price_forming_continuation_data = kwargs.get('price_forming_continuation_data')
         self.adjusted_short_interest = kwargs.get('adjusted_short_interest')
         self.basis_swap_rate = kwargs.get('basis_swap_rate')
@@ -15681,6 +16032,7 @@ class FieldValueMap(Base):
         self.created = kwargs.get('created')
         self.tcm_cost = kwargs.get('tcm_cost')
         self.sustain_japan = kwargs.get('sustain_japan')
+        self.history_start_date = kwargs.get('history_start_date')
         self.bid_spread = kwargs.get('bid_spread')
         self.fixed_payment_currency_leg1 = kwargs.get('fixed_payment_currency_leg1')
         self.hedge_tracking_error = kwargs.get('hedge_tracking_error')
@@ -15703,6 +16055,7 @@ class FieldValueMap(Base):
         self.eff_yield7_day = kwargs.get('eff_yield7_day')
         self.meeting_date = kwargs.get('meeting_date')
         self.close_time = kwargs.get('close_time')
+        self.fail_pct = kwargs.get('fail_pct')
         self.amount = kwargs.get('amount')
         self.lending_fund_acct = kwargs.get('lending_fund_acct')
         self.rebate = kwargs.get('rebate')
@@ -15748,6 +16101,7 @@ class FieldValueMap(Base):
         self.domain = kwargs.get('domain')
         self.share_class_assets = kwargs.get('share_class_assets')
         self.annuity = kwargs.get('annuity')
+        self.total_count = kwargs.get('total_count')
         self.uid = kwargs.get('uid')
         self.es_policy_percentile = kwargs.get('es_policy_percentile')
         self.floating_rate_option = kwargs.get('floating_rate_option')
@@ -15787,6 +16141,7 @@ class FieldValueMap(Base):
         self.concentration_limit = kwargs.get('concentration_limit')
         self.position_amount = kwargs.get('position_amount')
         self.wind_speed = kwargs.get('wind_speed')
+        self.observation_hour = kwargs.get('observation_hour')
         self.event_start_date_time = kwargs.get('event_start_date_time')
         self.borrower_id = kwargs.get('borrower_id')
         self.data_product = kwargs.get('data_product')
@@ -15889,6 +16244,7 @@ class FieldValueMap(Base):
         self.event_source = kwargs.get('event_source')
         self.on_behalf_of = kwargs.get('on_behalf_of')
         self.qis_perm_no = kwargs.get('qis_perm_no')
+        self.test_type = kwargs.get('test_type')
         self.accrued_interest_standard = kwargs.get('accrued_interest_standard')
         self.settlement = kwargs.get('settlement')
         self.shareclass_id = kwargs.get('shareclass_id')
@@ -15937,6 +16293,7 @@ class FieldValueMap(Base):
         self.total_risk = kwargs.get('total_risk')
         self.level = kwargs.get('level')
         self.mnav = kwargs.get('mnav')
+        self.implied_volatility_by_expiration = kwargs.get('implied_volatility_by_expiration')
         self.asset_parameters_fixed_rate_day_count_fraction = kwargs.get(
             'asset_parameters_fixed_rate_day_count_fraction')
         self.es_momentum_score = kwargs.get('es_momentum_score')
@@ -15952,6 +16309,7 @@ class FieldValueMap(Base):
         self.market_buffer_threshold = kwargs.get('market_buffer_threshold')
         self.price_notation3 = kwargs.get('price_notation3')
         self.cap_floor_vol = kwargs.get('cap_floor_vol')
+        self.degree_days_type = kwargs.get('degree_days_type')
         self.no = kwargs.get('no')
         self.notional = kwargs.get('notional')
         self.es_disclosure_percentage = kwargs.get('es_disclosure_percentage')
@@ -15963,6 +16321,7 @@ class FieldValueMap(Base):
         self.require_anon_client_name = kwargs.get('require_anon_client_name')
         self.total = kwargs.get('total')
         self.asset_id = kwargs.get('asset_id')
+        self.test_status = kwargs.get('test_status')
         self.mkt_type = kwargs.get('mkt_type')
         self.last_updated_time = kwargs.get('last_updated_time')
         self.pricing_location = kwargs.get('pricing_location')
@@ -16018,6 +16377,7 @@ class FieldValueMap(Base):
         self.snowfall = kwargs.get('snowfall')
         self.liquidity_bucket_buy = kwargs.get('liquidity_bucket_buy')
         self.mic = kwargs.get('mic')
+        self.metric_value = kwargs.get('metric_value')
         self.mid = kwargs.get('mid')
         self.relative_return_ytd = kwargs.get('relative_return_ytd')
         self.long = kwargs.get('long')
@@ -16046,6 +16406,7 @@ class FieldValueMap(Base):
         self.source_id = kwargs.get('source_id')
         self.cusip = kwargs.get('cusip')
         self.idea_activity_time = kwargs.get('idea_activity_time')
+        self.wind_attribute = kwargs.get('wind_attribute')
         self.touch_spread_score = kwargs.get('touch_spread_score')
         self.spread_option_atm_fwd_rate = kwargs.get('spread_option_atm_fwd_rate')
         self.net_exposure = kwargs.get('net_exposure')
@@ -16208,11 +16569,13 @@ class FieldValueMap(Base):
         self.rate360 = kwargs.get('rate360')
         self.delivery_point_leg1 = kwargs.get('delivery_point_leg1')
         self.station_name = kwargs.get('station_name')
+        self.pass_pct = kwargs.get('pass_pct')
         self.opening_report = kwargs.get('opening_report')
         self.value = kwargs.get('value')
         self.leg_one_index_location = kwargs.get('leg_one_index_location')
         self.payer_designated_maturity = kwargs.get('payer_designated_maturity')
         self.product_type = kwargs.get('product_type')
+        self.test_measure_label = kwargs.get('test_measure_label')
         self.quantity = kwargs.get('quantity')
         self.report_id = kwargs.get('report_id')
         self.macs_primary_asset_class = kwargs.get('macs_primary_asset_class')
@@ -16343,7 +16706,7 @@ class FieldValueMap(Base):
 
     @property
     def created_by_id(self) -> str:
-        """Unique identifier of user who created the object"""
+        """Unique identifier of user who created the object."""
         return self.__created_by_id
 
     @created_by_id.setter
@@ -16425,7 +16788,7 @@ class FieldValueMap(Base):
 
     @property
     def metric_category(self) -> str:
-        """Category of the ESG metric."""
+        """Category of the metric."""
         return self.__metric_category
 
     @metric_category.setter
@@ -16544,6 +16907,16 @@ class FieldValueMap(Base):
     def source_importance(self, value: float):
         self._property_changed('source_importance')
         self.__source_importance = value        
+
+    @property
+    def wind(self) -> float:
+        """Value of the wind attribute selected."""
+        return self.__wind
+
+    @wind.setter
+    def wind(self, value: float):
+        self._property_changed('wind')
+        self.__wind = value        
 
     @property
     def relative_return_qtd(self) -> float:
@@ -16715,6 +17088,16 @@ class FieldValueMap(Base):
     def leg_one_spread(self, value: float):
         self._property_changed('leg_one_spread')
         self.__leg_one_spread = value        
+
+    @property
+    def cloud_attribute(self) -> str:
+        """The attribute of cloud required: height or cover etc."""
+        return self.__cloud_attribute
+
+    @cloud_attribute.setter
+    def cloud_attribute(self, value: str):
+        self._property_changed('cloud_attribute')
+        self.__cloud_attribute = value        
 
     @property
     def lender_payment(self) -> float:
@@ -17487,6 +17870,27 @@ class FieldValueMap(Base):
         self.__approval = value        
 
     @property
+    def test_measure(self) -> float:
+        """Generic field to hold aggregatable numeric measure for test result. For e.g
+           delay for timeliness or variance for correctness."""
+        return self.__test_measure
+
+    @test_measure.setter
+    def test_measure(self, value: float):
+        self._property_changed('test_measure')
+        self.__test_measure = value        
+
+    @property
+    def message(self) -> str:
+        """Miscellaneous remarks."""
+        return self.__message
+
+    @message.setter
+    def message(self, value: str):
+        self._property_changed('message')
+        self.__message = value        
+
+    @property
     def leg_two_payment_type(self) -> str:
         """Type of payment stream."""
         return self.__leg_two_payment_type
@@ -18182,6 +18586,16 @@ class FieldValueMap(Base):
         self.__pct_change = value        
 
     @property
+    def brightness_type(self) -> str:
+        """The type of measure required like visibility or sunshine."""
+        return self.__brightness_type
+
+    @brightness_type.setter
+    def brightness_type(self, value: str):
+        self._property_changed('brightness_type')
+        self.__brightness_type = value        
+
+    @property
     def number_of_rolls(self) -> int:
         """Contract's number of rolls per year."""
         return self.__number_of_rolls
@@ -18202,6 +18616,16 @@ class FieldValueMap(Base):
         self.__agent_lender_fee = value        
 
     @property
+    def fuel_type(self) -> str:
+        """The type of fuel used to generate electricity."""
+        return self.__fuel_type
+
+    @fuel_type.setter
+    def fuel_type(self, value: str):
+        self._property_changed('fuel_type')
+        self.__fuel_type = value        
+
+    @property
     def bbid(self) -> str:
         """Bloomberg identifier (ticker and exchange code)."""
         return self.__bbid
@@ -18220,6 +18644,16 @@ class FieldValueMap(Base):
     def option_strike_price(self, value: float):
         self._property_changed('option_strike_price')
         self.__option_strike_price = value        
+
+    @property
+    def precipitation_type(self) -> str:
+        """The type of precipitation required: Rain or snow etc."""
+        return self.__precipitation_type
+
+    @precipitation_type.setter
+    def precipitation_type(self, value: str):
+        self._property_changed('precipitation_type')
+        self.__precipitation_type = value        
 
     @property
     def effective_date(self) -> datetime.date:
@@ -18532,6 +18966,16 @@ class FieldValueMap(Base):
         self.__market_cap = value        
 
     @property
+    def last_uploaded_time(self) -> datetime.datetime:
+        """Timestamp noting last uploaded datapoint."""
+        return self.__last_uploaded_time
+
+    @last_uploaded_time.setter
+    def last_uploaded_time(self, value: datetime.datetime):
+        self._property_changed('last_uploaded_time')
+        self.__last_uploaded_time = value        
+
+    @property
     def oe_id(self) -> str:
         """Marquee unique identifier"""
         return self.__oe_id
@@ -18644,6 +19088,16 @@ class FieldValueMap(Base):
         self.__hedge_id = value        
 
     @property
+    def failed_count(self) -> float:
+        """Number of entities that failed the test."""
+        return self.__failed_count
+
+    @failed_count.setter
+    def failed_count(self, value: float):
+        self._property_changed('failed_count')
+        self.__failed_count = value        
+
+    @property
     def tcm_cost_horizon8_day(self) -> float:
         """TCM cost with a 8 day time horizon."""
         return self.__tcm_cost_horizon8_day
@@ -18745,6 +19199,16 @@ class FieldValueMap(Base):
         self.__leverage = value        
 
     @property
+    def forecast_day(self) -> str:
+        """The offset for forecast day for weather from today."""
+        return self.__forecast_day
+
+    @forecast_day.setter
+    def forecast_day(self, value: str):
+        self._property_changed('forecast_day')
+        self.__forecast_day = value        
+
+    @property
     def option_family(self) -> str:
         """Style of the option."""
         return self.__option_family
@@ -18753,6 +19217,16 @@ class FieldValueMap(Base):
     def option_family(self, value: str):
         self._property_changed('option_family')
         self.__option_family = value        
+
+    @property
+    def generator_output(self) -> float:
+        """The output of an electricity generator in MW."""
+        return self.__generator_output
+
+    @generator_output.setter
+    def generator_output(self, value: float):
+        self._property_changed('generator_output')
+        self.__generator_output = value        
 
     @property
     def price_spot_stop_loss_value(self) -> float:
@@ -19046,6 +19520,16 @@ class FieldValueMap(Base):
         self.__es_momentum_percentile = value        
 
     @property
+    def pressure_type(self) -> str:
+        """The type of pressure required like sea level or barometric."""
+        return self.__pressure_type
+
+    @pressure_type.setter
+    def pressure_type(self, value: str):
+        self._property_changed('pressure_type')
+        self.__pressure_type = value        
+
+    @property
     def price_notation(self) -> float:
         """The Basis points, Price, Yield, Spread, Coupon, etc., value depending on the
            type of SB swap, which is calculated at affirmation."""
@@ -19232,6 +19716,17 @@ class FieldValueMap(Base):
     def trading_pnl(self, value: float):
         self._property_changed('trading_pnl')
         self.__trading_pnl = value        
+
+    @property
+    def contribution_name(self) -> str:
+        """Sector or type group name for the corresponding geography when metricName is
+           either CAI_CONTRIBUTION_SECTOR or CAI_CONTRIBUTION_TYPE."""
+        return self.__contribution_name
+
+    @contribution_name.setter
+    def contribution_name(self, value: str):
+        self._property_changed('contribution_name')
+        self.__contribution_name = value        
 
     @property
     def collateral_value_required(self) -> float:
@@ -19584,6 +20079,16 @@ class FieldValueMap(Base):
         self.__cluster_class = value        
 
     @property
+    def data_set(self) -> str:
+        """Unique id of dataset."""
+        return self.__data_set
+
+    @data_set.setter
+    def data_set(self, value: str):
+        self._property_changed('data_set')
+        self.__data_set = value        
+
+    @property
     def queueing_time(self) -> int:
         """Time for which risk calculation was queued (ms)."""
         return self.__queueing_time
@@ -19758,7 +20263,7 @@ class FieldValueMap(Base):
 
     @property
     def metric_type(self) -> str:
-        """Value type of the metric."""
+        """Type of the metric."""
         return self.__metric_type
 
     @metric_type.setter
@@ -19795,6 +20300,16 @@ class FieldValueMap(Base):
     def quantity_bucket(self, value: str):
         self._property_changed('quantity_bucket')
         self.__quantity_bucket = value        
+
+    @property
+    def degree_days(self) -> float:
+        """Value of the temperature of given type."""
+        return self.__degree_days
+
+    @degree_days.setter
+    def degree_days(self, value: float):
+        self._property_changed('degree_days')
+        self.__degree_days = value        
 
     @property
     def oe_name(self) -> str:
@@ -20250,6 +20765,16 @@ class FieldValueMap(Base):
         self.__market_value = value        
 
     @property
+    def entity_id(self) -> str:
+        """Identifies an entity uniquely; in use for Data Quality Checker."""
+        return self.__entity_id
+
+    @entity_id.setter
+    def entity_id(self, value: str):
+        self._property_changed('entity_id')
+        self.__entity_id = value        
+
+    @property
     def notional_currency1(self) -> str:
         """An indication of the type of currency of the notional or principal amount."""
         return self.__notional_currency1
@@ -20301,6 +20826,16 @@ class FieldValueMap(Base):
         self.__beta_adjusted_exposure = value        
 
     @property
+    def brightness(self) -> float:
+        """Value of the measure type selected."""
+        return self.__brightness
+
+    @brightness.setter
+    def brightness(self, value: float):
+        self._property_changed('brightness')
+        self.__brightness = value        
+
+    @property
     def paid(self) -> float:
         """Number of trades paid."""
         return self.__paid
@@ -20350,6 +20885,16 @@ class FieldValueMap(Base):
     def bos_in_ticks_description(self, value: str):
         self._property_changed('bos_in_ticks_description')
         self.__bos_in_ticks_description = value        
+
+    @property
+    def test_id(self) -> str:
+        """Unique ID for test configuration."""
+        return self.__test_id
+
+    @test_id.setter
+    def test_id(self, value: str):
+        self._property_changed('test_id')
+        self.__test_id = value        
 
     @property
     def time(self) -> datetime.datetime:
@@ -20464,7 +21009,7 @@ class FieldValueMap(Base):
 
     @property
     def created_time(self) -> datetime.datetime:
-        """Time created. ISO 8601 formatted string"""
+        """Time created. ISO 8601 formatted string."""
         return self.__created_time
 
     @created_time.setter
@@ -20920,6 +21465,16 @@ class FieldValueMap(Base):
         self.__buffer_threshold = value        
 
     @property
+    def cloud(self) -> float:
+        """Value of the cloud attribute selected."""
+        return self.__cloud
+
+    @cloud.setter
+    def cloud(self, value: float):
+        self._property_changed('cloud')
+        self.__cloud = value        
+
+    @property
     def price_forming_continuation_data(self) -> str:
         """An indication of whether an SB swap transaction is a post-execution event that
            affects the price of the swap transaction, e.g. terminations,
@@ -21036,6 +21591,16 @@ class FieldValueMap(Base):
     def sustain_japan(self, value: bool):
         self._property_changed('sustain_japan')
         self.__sustain_japan = value        
+
+    @property
+    def history_start_date(self) -> datetime.date:
+        """Asset history start date."""
+        return self.__history_start_date
+
+    @history_start_date.setter
+    def history_start_date(self, value: datetime.date):
+        self._property_changed('history_start_date')
+        self.__history_start_date = value        
 
     @property
     def bid_spread(self) -> float:
@@ -21273,6 +21838,16 @@ class FieldValueMap(Base):
     def close_time(self, value: datetime.datetime):
         self._property_changed('close_time')
         self.__close_time = value        
+
+    @property
+    def fail_pct(self) -> float:
+        """Fail percentage."""
+        return self.__fail_pct
+
+    @fail_pct.setter
+    def fail_pct(self, value: float):
+        self._property_changed('fail_pct')
+        self.__fail_pct = value        
 
     @property
     def amount(self) -> float:
@@ -21736,6 +22311,16 @@ class FieldValueMap(Base):
         self.__annuity = value        
 
     @property
+    def total_count(self) -> float:
+        """Number of entities in the test."""
+        return self.__total_count
+
+    @total_count.setter
+    def total_count(self, value: float):
+        self._property_changed('total_count')
+        self.__total_count = value        
+
+    @property
     def uid(self) -> str:
         """Two-digit code for countries and regions for which FCI numbers are represented.
            For countries it is the ISO 3166 2-digit country code. Regions are
@@ -21821,7 +22406,7 @@ class FieldValueMap(Base):
 
     @property
     def relative_universe(self) -> str:
-        """Universe relative to which the percentiles are computed for the metric."""
+        """Universe relative to which the percentiles are computed."""
         return self.__relative_universe
 
     @relative_universe.setter
@@ -22134,6 +22719,16 @@ class FieldValueMap(Base):
     def wind_speed(self, value: float):
         self._property_changed('wind_speed')
         self.__wind_speed = value        
+
+    @property
+    def observation_hour(self) -> str:
+        """The observation hour for hourly weather forecast."""
+        return self.__observation_hour
+
+    @observation_hour.setter
+    def observation_hour(self, value: str):
+        self._property_changed('observation_hour')
+        self.__observation_hour = value        
 
     @property
     def event_start_date_time(self) -> datetime.datetime:
@@ -22474,7 +23069,7 @@ class FieldValueMap(Base):
 
     @property
     def is_momentum(self) -> bool:
-        """Whether the metric value is a momentum value or not."""
+        """Flag indicating whether the value is a momentum value or not."""
         return self.__is_momentum
 
     @is_momentum.setter
@@ -23172,6 +23767,16 @@ class FieldValueMap(Base):
         self.__qis_perm_no = value        
 
     @property
+    def test_type(self) -> str:
+        """Semantic category that test belongs to e.g. Timeliness, Completeness etc."""
+        return self.__test_type
+
+    @test_type.setter
+    def test_type(self, value: str):
+        self._property_changed('test_type')
+        self.__test_type = value        
+
+    @property
     def accrued_interest_standard(self) -> float:
         """The accrued interest paid on the bond if it is settled two business days after
            the trade date."""
@@ -23669,6 +24274,16 @@ class FieldValueMap(Base):
         self.__mnav = value        
 
     @property
+    def implied_volatility_by_expiration(self) -> float:
+        """Volatility of an asset implied by observations of market prices."""
+        return self.__implied_volatility_by_expiration
+
+    @implied_volatility_by_expiration.setter
+    def implied_volatility_by_expiration(self, value: float):
+        self._property_changed('implied_volatility_by_expiration')
+        self.__implied_volatility_by_expiration = value        
+
+    @property
     def asset_parameters_fixed_rate_day_count_fraction(self) -> str:
         """Day Count Fraction"""
         return self.__asset_parameters_fixed_rate_day_count_fraction
@@ -23816,6 +24431,16 @@ class FieldValueMap(Base):
         self.__cap_floor_vol = value        
 
     @property
+    def degree_days_type(self) -> str:
+        """The type of degree days required: Heating or Cooling etc."""
+        return self.__degree_days_type
+
+    @degree_days_type.setter
+    def degree_days_type(self, value: str):
+        self._property_changed('degree_days_type')
+        self.__degree_days_type = value        
+
+    @property
     def no(self) -> float:
         """Price of no contract."""
         return self.__no
@@ -23926,6 +24551,16 @@ class FieldValueMap(Base):
         self.__asset_id = value        
 
     @property
+    def test_status(self) -> str:
+        """Result of the quality test."""
+        return self.__test_status
+
+    @test_status.setter
+    def test_status(self, value: str):
+        self._property_changed('test_status')
+        self.__test_status = value        
+
+    @property
     def mkt_type(self) -> str:
         """The MDAPI Type (e.g. IR_BASIS, FX_Vol)."""
         return self.__mkt_type
@@ -23937,7 +24572,7 @@ class FieldValueMap(Base):
 
     @property
     def last_updated_time(self) -> datetime.datetime:
-        """Timestamp of when the object was last updated"""
+        """Timestamp of when the object was last updated."""
         return self.__last_updated_time
 
     @last_updated_time.setter
@@ -24484,6 +25119,17 @@ class FieldValueMap(Base):
         self.__mic = value        
 
     @property
+    def metric_value(self) -> float:
+        """Value of CAI, LCAI, CAII or Sector or Type contribution to CAI for corresponding
+           geography."""
+        return self.__metric_value
+
+    @metric_value.setter
+    def metric_value(self, value: float):
+        self._property_changed('metric_value')
+        self.__metric_value = value        
+
+    @property
     def mid(self) -> float:
         """Mid."""
         return self.__mid
@@ -24771,6 +25417,16 @@ class FieldValueMap(Base):
     def idea_activity_time(self, value: datetime.datetime):
         self._property_changed('idea_activity_time')
         self.__idea_activity_time = value        
+
+    @property
+    def wind_attribute(self) -> str:
+        """The attribute of wind required: direction or speed etc."""
+        return self.__wind_attribute
+
+    @wind_attribute.setter
+    def wind_attribute(self, value: str):
+        self._property_changed('wind_attribute')
+        self.__wind_attribute = value        
 
     @property
     def touch_spread_score(self) -> float:
@@ -25114,7 +25770,7 @@ class FieldValueMap(Base):
 
     @property
     def last_updated_by_id(self) -> str:
-        """Unique identifier of user who last updated the object"""
+        """Unique identifier of user who last updated the object."""
         return self.__last_updated_by_id
 
     @last_updated_by_id.setter
@@ -26314,7 +26970,7 @@ class FieldValueMap(Base):
 
     @property
     def metric_name(self) -> str:
-        """Name of the ESG metric."""
+        """Name of the metric."""
         return self.__metric_name
 
     @metric_name.setter
@@ -26428,6 +27084,16 @@ class FieldValueMap(Base):
         self.__station_name = value        
 
     @property
+    def pass_pct(self) -> float:
+        """Pass percentage."""
+        return self.__pass_pct
+
+    @pass_pct.setter
+    def pass_pct(self, value: float):
+        self._property_changed('pass_pct')
+        self.__pass_pct = value        
+
+    @property
     def opening_report(self) -> str:
         """Report that was published when the trade idea was opened."""
         return self.__opening_report
@@ -26476,6 +27142,16 @@ class FieldValueMap(Base):
     def product_type(self, value: str):
         self._property_changed('product_type')
         self.__product_type = value        
+
+    @property
+    def test_measure_label(self) -> str:
+        """Semantic label for the test measure."""
+        return self.__test_measure_label
+
+    @test_measure_label.setter
+    def test_measure_label(self, value: str):
+        self._property_changed('test_measure_label')
+        self.__test_measure_label = value        
 
     @property
     def quantity(self) -> float:
@@ -27016,7 +27692,7 @@ class MarketDataScenario(Base):
     @camel_case_translate
     def __init__(
         self,
-        scenario: Scenario,
+        scenario: dict,
         subtract_base: bool = False,
         name: str = None
     ):        
@@ -27026,12 +27702,12 @@ class MarketDataScenario(Base):
         self.name = name
 
     @property
-    def scenario(self) -> Scenario:
-        """Market data scenarios"""
+    def scenario(self) -> dict:
+        """The scenario"""
         return self.__scenario
 
     @scenario.setter
-    def scenario(self, value: Scenario):
+    def scenario(self, value: dict):
         self._property_changed('scenario')
         self.__scenario = value        
 
@@ -27052,10 +27728,10 @@ class PositionSet(Base):
     @camel_case_translate
     def __init__(
         self,
+        positions: Tuple[Position, ...],
+        position_date: datetime.date,
         id_: str = None,
-        position_date: datetime.date = None,
         last_update_time: datetime.datetime = None,
-        positions: Tuple[Position, ...] = None,
         type_: str = None,
         divisor: float = None,
         last_updated_time: datetime.datetime = None,
@@ -27133,7 +27809,7 @@ class PositionSet(Base):
 
     @property
     def last_updated_time(self) -> datetime.datetime:
-        """Timestamp of when the object was last updated"""
+        """Timestamp of when the object was last updated."""
         return self.__last_updated_time
 
     @last_updated_time.setter
@@ -27193,6 +27869,7 @@ class RiskRequest(Base):
         pricing_location: Union[PricingLocation, str] = 'NYC',
         market_data_vendor: Union[MarketDataVendor, str] = 'Goldman Sachs',
         wait_for_results: bool = False,
+        use_historical_diddles_only: bool = False,
         scenario: MarketDataScenario = None,
         report_id: str = None,
         data_set_field_maps: Tuple[DataSetFieldMap, ...] = None,
@@ -27207,6 +27884,7 @@ class RiskRequest(Base):
         self.pricing_location = pricing_location
         self.market_data_vendor = market_data_vendor
         self.wait_for_results = wait_for_results
+        self.use_historical_diddles_only = use_historical_diddles_only
         self.scenario = scenario
         self.report_id = report_id
         self.data_set_field_maps = data_set_field_maps
@@ -27276,6 +27954,16 @@ class RiskRequest(Base):
     def wait_for_results(self, value: bool):
         self._property_changed('wait_for_results')
         self.__wait_for_results = value        
+
+    @property
+    def use_historical_diddles_only(self) -> bool:
+        """Enables a backward compatible pricing mode"""
+        return self.__use_historical_diddles_only
+
+    @use_historical_diddles_only.setter
+    def use_historical_diddles_only(self, value: bool):
+        self._property_changed('use_historical_diddles_only')
+        self.__use_historical_diddles_only = value        
 
     @property
     def scenario(self) -> MarketDataScenario:

@@ -12,6 +12,7 @@ Date
    business_day_offset
    date_range
    is_business_day
+   prev_business_date
 
 Point
 -----

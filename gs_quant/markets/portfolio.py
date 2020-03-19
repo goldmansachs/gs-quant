@@ -17,6 +17,7 @@ from gs_quant.context_base import nullcontext
 from gs_quant.instrument import Instrument
 from gs_quant.markets import PricingContext, PricingFuture
 from gs_quant.priceable import PriceableImpl
+from gs_quant.target.portfolios import PositionSet
 from gs_quant.risk import ResolvedInstrumentValues, RiskMeasure
 from gs_quant.risk.results import PortfolioRiskResult
 from gs_quant.api.gs.portfolios import GsPortfolioApi
@@ -85,10 +86,16 @@ class Portfolio(PriceableImpl):
         self.__instruments_by_name = None
 
     @staticmethod
-    def load_from_portfolio_id(portfolio_id):
-        positions = GsPortfolioApi.get_latest_positions(portfolio_id)
-        instruments = GsAssetApi.get_instruments_for_positions(positions.positions)
+    def load_from_portfolio_id(portfolio_id: str):
+        response = GsPortfolioApi.get_latest_positions(portfolio_id)
+        positions = response.positions if isinstance(response, PositionSet) else response['positions']
+        instruments = GsAssetApi.get_instruments_for_positions(positions)
         return Portfolio(instruments)
+
+    @staticmethod
+    def load_from_portfolio_name(name: str):
+        portfolio = GsPortfolioApi.get_portfolio_by_name(name)
+        return Portfolio.load_from_portfolio_id(portfolio.id)
 
     def append(self, instruments: Union[Instrument, Iterable[Instrument]]):
         self.instruments = self.instruments + ((instruments,) if isinstance(instruments, Instrument)

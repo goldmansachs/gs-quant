@@ -1075,12 +1075,16 @@ class CustomBasketsRebalanceInputs(Base):
         position_set: Tuple[PositionPriceInput, ...] = None,
         publish_parameters: PublishParameters = None,
         pricing_parameters: IndicesPriceParameters = None,
+        allow_limited_access_assets: bool = False,
+        allow_ca_restricted_assets: bool = False,
         name: str = None
     ):        
         super().__init__()
         self.position_set = position_set
         self.publish_parameters = publish_parameters
         self.pricing_parameters = pricing_parameters
+        self.allow_limited_access_assets = allow_limited_access_assets
+        self.allow_ca_restricted_assets = allow_ca_restricted_assets
         self.name = name
 
     @property
@@ -1114,6 +1118,28 @@ class CustomBasketsRebalanceInputs(Base):
         self._property_changed('pricing_parameters')
         self.__pricing_parameters = value        
 
+    @property
+    def allow_limited_access_assets(self) -> bool:
+        """To allow basket rebalance with constituents GS has limited access to. Default is
+           false."""
+        return self.__allow_limited_access_assets
+
+    @allow_limited_access_assets.setter
+    def allow_limited_access_assets(self, value: bool):
+        self._property_changed('allow_limited_access_assets')
+        self.__allow_limited_access_assets = value        
+
+    @property
+    def allow_ca_restricted_assets(self) -> bool:
+        """To allow basket rebalance with constituents that will not be corporate action
+           adjusted in the future. Default is false."""
+        return self.__allow_ca_restricted_assets
+
+    @allow_ca_restricted_assets.setter
+    def allow_ca_restricted_assets(self, value: bool):
+        self._property_changed('allow_ca_restricted_assets')
+        self.__allow_ca_restricted_assets = value        
+
 
 class IndicesCreateInputs(Base):
         
@@ -1132,7 +1158,9 @@ class IndicesCreateInputs(Base):
         index_create_source: Union[IndexCreateSource, str] = None,
         return_type: str = 'Price Return',
         publish_parameters: PublishParameters = None,
-        on_behalf_of: str = None
+        on_behalf_of: str = None,
+        allow_limited_access_assets: bool = False,
+        allow_ca_restricted_assets: bool = False
     ):        
         super().__init__()
         self.ticker = ticker
@@ -1146,6 +1174,8 @@ class IndicesCreateInputs(Base):
         self.publish_parameters = publish_parameters
         self.pricing_parameters = pricing_parameters
         self.on_behalf_of = on_behalf_of
+        self.allow_limited_access_assets = allow_limited_access_assets
+        self.allow_ca_restricted_assets = allow_ca_restricted_assets
 
     @property
     def ticker(self) -> str:
@@ -1260,6 +1290,28 @@ class IndicesCreateInputs(Base):
     def on_behalf_of(self, value: str):
         self._property_changed('on_behalf_of')
         self.__on_behalf_of = value        
+
+    @property
+    def allow_limited_access_assets(self) -> bool:
+        """To allow basket creation with constituents GS has limited access to. Default is
+           false."""
+        return self.__allow_limited_access_assets
+
+    @allow_limited_access_assets.setter
+    def allow_limited_access_assets(self, value: bool):
+        self._property_changed('allow_limited_access_assets')
+        self.__allow_limited_access_assets = value        
+
+    @property
+    def allow_ca_restricted_assets(self) -> bool:
+        """To allow basket creation with constituents that will not be corporate action
+           adjusted in the future. Default is false."""
+        return self.__allow_ca_restricted_assets
+
+    @allow_ca_restricted_assets.setter
+    def allow_ca_restricted_assets(self, value: bool):
+        self._property_changed('allow_ca_restricted_assets')
+        self.__allow_ca_restricted_assets = value        
 
 
 class IndicesEditInputs(Base):

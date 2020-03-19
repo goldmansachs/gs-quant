@@ -160,13 +160,19 @@ def diff(x: pd.Series, obs: int = 1) -> pd.Series:
     return ret_series
 
 
+class LagMode(Enum):
+    TRUNCATE = "truncate"
+    EXTEND = "extend"
+
+
 @plot_function
-def lag(x: pd.Series, obs: int = 1) -> pd.Series:
+def lag(x: pd.Series, obs: int = 1, mode: LagMode = LagMode.TRUNCATE) -> pd.Series:
     """
     Lag timeseries by a specified number of observations
 
     :param x: timeseries of prices
     :param obs: number of observations to lag series
+    :param mode: whether to extend series index (into the future)
     :return: date-based time series of return
 
     **Usage**
@@ -190,5 +196,8 @@ def lag(x: pd.Series, obs: int = 1) -> pd.Series:
     """
 
     # Determine how we want to handle observations prior to start date
-
+    if mode == LagMode.EXTEND:
+        if x.index.resolution != 'day':
+            raise MqValueError(f'unable to extend index with resolution {x.index.resolution}')
+        x = x.reindex(x.index.union(pd.date_range(x.index[-1], periods=obs + 1, freq='D')))
     return x.shift(obs)

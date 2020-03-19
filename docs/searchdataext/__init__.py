@@ -22,6 +22,10 @@ class IndexBuilder(sphinx.search.IndexBuilder):
         visitor = sphinx.search.WordCollector(doctree, self.lang)
         doctree.walk(visitor)
 
+        # index page should be marked as 'Home' for developer site search results
+        if ' '.join(visitor.found_title_words) == '':
+            visitor.found_title_words = ['Home']
+
         newdoc = {
             'title': ' '.join(visitor.found_title_words),
             'body': ' '.join(visitor.found_words),

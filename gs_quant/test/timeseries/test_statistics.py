@@ -454,5 +454,31 @@ def test_percentiles():
     assert_series_equal(result, expected, obj="percentiles without window length", check_less_precise=True)
 
 
+def test_regression():
+    dates = pd.date_range('2019-1-1', periods=6)
+    x1 = pd.Series([0.0, 1.0, 4.0, 9.0, 16.0, 25.0], index=dates)
+    x2 = pd.Series([0.0, 1.0, 2.0, 3.0, 4.0, 5.0], index=dates)
+    y = pd.Series([10.0, 14.0, 20.0, 28.0, 38.0, 50.0], index=dates)
+
+    regression = LinearRegression([x1, x2], y, True)
+
+    np.testing.assert_almost_equal(regression.coefficient(0), 10.0)
+    np.testing.assert_almost_equal(regression.coefficient(1), 1.0)
+    np.testing.assert_almost_equal(regression.coefficient(2), 3.0)
+
+    with pytest.raises(ValueError):
+        regression.coefficient(3)
+
+    np.testing.assert_almost_equal(regression.r_squared(), 1.0)
+
+    assert_series_equal(regression.fitted_values(), y)
+
+    dates_predict = [date(2019, 2, 1), date(2019, 2, 2)]
+    predicted = regression.predict([pd.Series([2.0, 3.0], index=dates_predict),
+                                    pd.Series([6.0, 7.0], index=dates_predict)])
+    expected = pd.Series([30.0, 34.0], index=dates_predict)
+    assert_series_equal(predicted, expected)
+
+
 if __name__ == "__main__":
     pytest.main(args=["test_statistics.py"])

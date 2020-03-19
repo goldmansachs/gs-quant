@@ -34,7 +34,7 @@ def test_get_many_backtests(mocker):
     )
 
     # mock GsSession
-    mocker.patch.object(GsSession.__class__, 'current',
+    mocker.patch.object(GsSession.__class__, 'default_value',
                         return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
@@ -49,7 +49,7 @@ def test_get_backtest(mocker):
     mock_response = Backtest(id=id_1, assetClass="Commod", type="Basket", name='Example Backtest')
 
     # mock GsSession
-    mocker.patch.object(GsSession.__class__, 'current',
+    mocker.patch.object(GsSession.__class__, 'default_value',
                         return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
@@ -65,7 +65,7 @@ def test_create_backtest(mocker):
     backtest = Backtest(id=id_1, assetClass="Commod", type="Basket", name='Example Backtest')
 
     # mock GsSession
-    mocker.patch.object(GsSession.__class__, 'current',
+    mocker.patch.object(GsSession.__class__, 'default_value',
                         return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
     mocker.patch.object(GsSession.current, '_post', return_value=backtest)
 
@@ -82,7 +82,7 @@ def test_update_backtest(mocker):
     backtest = Backtest(id=id_1, assetClass="Commod", type="Basket", name='Example Backtest')
 
     # mock GsSession
-    mocker.patch.object(GsSession.__class__, 'current',
+    mocker.patch.object(GsSession.__class__, 'default_value',
                         return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
     mocker.patch.object(GsSession.current, '_put', return_value=backtest)
 
@@ -100,7 +100,7 @@ def test_delete_backtest(mocker):
     mock_response = "Successfully deleted backtest."
 
     # mock GsSession
-    mocker.patch.object(GsSession.__class__, 'current',
+    mocker.patch.object(GsSession.__class__, 'default_value',
                         return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
     mocker.patch.object(GsSession.current, '_delete', return_value=mock_response)
 
@@ -126,7 +126,7 @@ def test_get_backtest_results(mocker):
     ), stats=None, history=(), backtestVersion=1)
 
     # mock GsSession
-    mocker.patch.object(GsSession.__class__, 'current',
+    mocker.patch.object(GsSession.__class__, 'default_value',
                         return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
@@ -144,7 +144,7 @@ def test_schedule_backtest(mocker):
     mock_response = "Successfully scheduled backtest."
 
     # mock GsSession
-    mocker.patch.object(GsSession.__class__, 'current',
+    mocker.patch.object(GsSession.__class__, 'default_value',
                         return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
     mocker.patch.object(GsSession.current, '_post', return_value=mock_response)
 

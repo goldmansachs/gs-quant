@@ -1,11 +1,11 @@
-IRCap
-=====
+InflationSwap
+=============
 
 For methods of this class, see :doc:`gs_quant.base.Priceable`
 
 .. currentmodule:: gs_quant.instrument
 
-.. autoclass:: IRCap
+.. autoclass:: InflationSwap
 
    
    .. rubric:: Properties
@@ -14,28 +14,22 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    
-   .. autoattribute:: cap_rate
-   
-   
    .. autoattribute:: effective_date
    
    
    .. autoattribute:: fee
    
    
+   .. autoattribute:: fixed_rate
+   
+   
+   .. autoattribute:: fixed_rate_business_day_convention
+   
+   
    .. autoattribute:: floating_rate_business_day_convention
    
    
-   .. autoattribute:: floating_rate_day_count_fraction
-   
-   
-   .. autoattribute:: floating_rate_designated_maturity
-   
-   
-   .. autoattribute:: floating_rate_frequency
-   
-   
-   .. autoattribute:: floating_rate_option
+   .. autoattribute:: index
    
    
    .. autoattribute:: notional_amount
@@ -44,10 +38,7 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: notional_currency
    
    
-   .. autoattribute:: premium
-   
-   
-   .. autoattribute:: premium_payment_date
+   .. autoattribute:: pay_or_receive
    
    
    .. autoattribute:: termination_date

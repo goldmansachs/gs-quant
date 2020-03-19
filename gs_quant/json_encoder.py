@@ -21,7 +21,7 @@ import re
 
 import pandas as pd
 
-from gs_quant.base import Base
+from gs_quant.base import Base, InstrumentBase
 
 
 class JSONEncoder(json.JSONEncoder):
@@ -35,6 +35,9 @@ class JSONEncoder(json.JSONEncoder):
             return o.value
         elif isinstance(o, pd.DataFrame):
             return o.to_json()
+        elif isinstance(o, InstrumentBase) and hasattr(o, '_derived_type'):
+            properties = {re.sub('_$', '', k): v for k, v in o.as_dict(as_camel_case=True).items()}
+            return {'$type': o._derived_type, 'properties': properties}
         elif isinstance(o, Base):
             return {re.sub('_$', '', k): v for k, v in o.as_dict(as_camel_case=True).items()}
         else:

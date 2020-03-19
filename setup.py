@@ -65,12 +65,14 @@ setuptools.setup(
         "requests",
         "scipy",
         "six",
-        "typing;python_version<'3.7'"
+        "statsmodels",
+        "typing;python_version<'3.7'",
+        "websockets"
     ],
     extras_require={
         "internal": ["gs_quant_internal>=0.4.1", "requests_kerberos"],
         "notebook": ["jupyter", "matplotlib~=2.1.0", "pprint"],
-        "test": ["pytest", "pytest-cov", "pytest-mock", "testfixtures"],
+        "test": ["pytest", "pytest-cov", "pytest-mock", "testfixtures", "nbconvert", "nbformat", "jupyter_client"],
         "develop": ["wheel", "sphinx", "sphinx_rtd_theme", "sphinx_autodoc_typehints", "pytest", "pytest-cov",
                     "pytest-mock", "testfixtures"]
     },

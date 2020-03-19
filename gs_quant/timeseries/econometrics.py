@@ -128,19 +128,19 @@ def returns(series: pd.Series, obs: int = 1, type: Returns = Returns.SIMPLE) -> 
 
     :param series: time series of prices
     :param obs: number of observations
-    :param type: returns type
+    :param type: returns type: simple or logarithmic
     :return: date-based time series of return
 
     **Usage**
 
     Compute returns series from price levels, based on the value of *type*:
 
-    ======   =============================
-    Type     Description
-    ======   =============================
-    simple   Simple arithmetic returns
-    log      Logarithmic returns
-    ======   =============================
+    ==========    =============================
+    Type          Description
+    ===========   =============================
+    simple        Simple arithmetic returns
+    logarithmic   Logarithmic returns
+    ===========   =============================
 
     *Simple*
 
@@ -191,19 +191,19 @@ def prices(series: pd.Series, initial: int = 1, type: Returns = Returns.SIMPLE) 
 
     :param series: time series of returns
     :param initial: initial price level
-    :param type: returns type (simple, log)
+    :param type: returns type: simple or logarithmic
     :return: date-based time series of return
 
     **Usage**
 
     Compute price levels from returns series, based on the value of *type*:
 
-    ======   =============================
-    Type     Description
-    ======   =============================
-    simple   Simple arithmetic returns
-    log      Logarithmic returns
-    ======   =============================
+    ==========    =============================
+    Type          Description
+    ===========   =============================
+    simple        Simple arithmetic returns
+    logarithmic   Logarithmic returns
+    ===========   =============================
 
     *Simple*
 
@@ -390,7 +390,7 @@ def volatility(x: pd.Series, w: Union[Window, int] = Window(None, 0),
     :param x: time series of prices
     :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
               and 10 the ramp up value. Window size defaults to length of series.
-    :param returns_type: returns type
+    :param returns_type: returns type: simple or logarithmic
     :return: date-based time series of return
 
     **Usage**
@@ -400,10 +400,19 @@ def volatility(x: pd.Series, w: Union[Window, int] = Window(None, 0),
 
     :math:`Y_t = \sqrt{\\frac{1}{N-1} \sum_{i=t-w+1}^t (R_t - \overline{R_t})^2} * \sqrt{252} * 100`
 
-    where N is the number of observations in each rolling window, :math:`w`, :math:`R_t` is the simple return on time
-    :math:`t`:
+    where N is the number of observations in each rolling window :math:`w`, :math:`R_t` is the return on time
+    :math:`t` based on *returns_type*
 
-    :math:`R_t = \\frac{X_t}{X_{t-1}} - 1`
+    ===========   =======================================================
+    Type          Description
+    ===========   =======================================================
+    simple        Simple geometric change in asset prices:
+                  :math:`R_t = \\frac{X_t}{X_{t-1}} - 1`
+                  where :math:`X_t` is the asset price at time :math:`t`
+    logarithmic   Natural logarithm of asset price changes:
+                  :math:`R_t = log(X_t) - log(X_{t-1})`
+                  where :math:`X_t` is the asset price at time :math:`t`
+    ===========   =======================================================
 
     and :math:`\overline{R_t}` is the mean value over the same window:
 
@@ -442,7 +451,7 @@ def correlation(x: pd.Series, y: pd.Series,
     :param y: price series
     :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
               and 10 the ramp up value. Window size defaults to length of series.
-    :param type_: type of both input series
+    :param type_: type of both input series: prices or returns
     :return: date-based time series of correlation
 
     **Usage**
@@ -453,11 +462,13 @@ def correlation(x: pd.Series, y: pd.Series,
     :math:`\\rho_t = \\frac{\sum_{i=t-w+1}^t (R_t - \overline{R_t})(Y_t - \overline{S_t})}{(N-1)\sigma R_t\sigma S_t}`
 
     where N is the number of observations in each rolling window, :math:`w`, and :math:`R_t` and :math:`S_t` are the
-    simple returns for each series on time :math:`t`:
+    simple returns for each series on time :math:`t`
+
+    If prices are provided:
 
     :math:`R_t = \\frac{X_t}{X_{t-1}} - 1` and :math:`S_t = \\frac{Y_t}{Y_{t-1}} - 1`
 
-    If prices = False, assumes returns are provided:
+    If returns are provided:
 
     :math:`R_t = X_t` and :math:`S_t = Y_t`
 

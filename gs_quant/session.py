@@ -13,21 +13,20 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-
-import inspect
-import json
-import os
 from abc import abstractmethod
 from configparser import ConfigParser
-from enum import Enum, auto, unique
-from typing import List, Optional, Tuple, Union
-
 import backoff
+from enum import Enum, auto, unique
+import inspect
+import json
 import msgpack
+import os
 import pandas as pd
 import requests
 import requests.adapters
 import requests.cookies
+from typing import List, Optional, Tuple, Union
+import websockets
 
 from gs_quant.base import Base
 from gs_quant.context_base import ContextBase
@@ -36,6 +35,7 @@ from gs_quant.json_encoder import JSONEncoder
 
 API_VERSION = 'v1'
 DEFAULT_APPLICATION = 'gs-quant'
+DEFAULT_TIMEOUT = 65
 
 
 @unique
@@ -76,7 +76,7 @@ class GsSession(ContextBase):
         self.api_version = api_version
         self.application = application
         self.verify = verify
-        self.http_adapter = http_adapter
+        self.http_adapter = requests.adapters.HTTPAdapter(pool_maxsize=100) if http_adapter is None else http_adapter
 
     @backoff.on_exception(lambda: backoff.expo(factor=2),
                           (requests.exceptions.HTTPError, requests.exceptions.Timeout),
@@ -139,7 +139,8 @@ class GsSession(ContextBase):
             request_headers: Optional[dict] = None,
             cls: Optional[type] = None,
             try_auth=True,
-            include_version: bool = True
+            include_version: bool = True,
+            timeout: int = DEFAULT_TIMEOUT
     ) -> Union[Base, tuple, dict]:
         is_dataframe = isinstance(payload, pd.DataFrame)
         if not is_dataframe:
@@ -147,7 +148,9 @@ class GsSession(ContextBase):
 
         url = '{}{}{}'.format(self.domain, '/' + self.api_version if include_version else '', path)
 
-        kwargs = {}
+        kwargs = {
+            'timeout': timeout
+        }
         if method in ['GET', 'DELETE']:
             kwargs['params'] = payload
         elif method in ['POST', 'PUT']:
@@ -194,26 +197,36 @@ class GsSession(ContextBase):
         else:
             return {'raw': response}
 
-    def _get(self, path: str, payload: Optional[Union[dict, Base]] = None, request_headers: Optional[dict]
-             = None, cls: Optional[type] = None, include_version: bool = True) -> Union[Base, tuple, dict]:
+    def _get(self, path: str, payload: Optional[Union[dict, Base]] = None, request_headers: Optional[dict] = None,
+             cls: Optional[type] = None, include_version: bool = True,
+             timeout: int = DEFAULT_TIMEOUT) -> Union[Base, tuple, dict]:
         return self.__request('GET', path, payload=payload, request_headers=request_headers,
-                              cls=cls, include_version=include_version)
+                              cls=cls, include_version=include_version, timeout=timeout)
 
     def _post(self, path: str, payload: Optional[Union[dict, Base, pd.DataFrame]] = None,
               request_headers: Optional[dict] = None, cls: Optional[type] = None,
-              include_version: bool = True) -> Union[Base, tuple, dict]:
+              include_version: bool = True, timeout: int = DEFAULT_TIMEOUT) -> Union[Base, tuple, dict]:
         return self.__request('POST', path, payload=payload, request_headers=request_headers,
-                              cls=cls, include_version=include_version)
+                              cls=cls, include_version=include_version, timeout=timeout)
 
     def _delete(self, path: str, payload: Optional[Union[dict, Base]] = None, request_headers: Optional[dict]
-                = None, cls: Optional[type] = None, include_version: bool = True) -> Union[Base, tuple, dict]:
+                = None, cls: Optional[type] = None, include_version: bool = True,
+                timeout: int = DEFAULT_TIMEOUT) -> Union[Base, tuple, dict]:
         return self.__request('DELETE', path, payload=payload, request_headers=request_headers,
-                              cls=cls, include_version=include_version)
+                              cls=cls, include_version=include_version, timeout=timeout)
 
     def _put(self, path: str, payload: Optional[Union[dict, Base]] = None, request_headers: Optional[dict]
-             = None, cls: Optional[type] = None, include_version: bool = True) -> Union[Base, tuple, dict]:
+             = None, cls: Optional[type] = None, include_version: bool = True,
+             timeout: int = DEFAULT_TIMEOUT) -> Union[Base, tuple, dict]:
         return self.__request('PUT', path, payload=payload, request_headers=request_headers,
-                              cls=cls, include_version=include_version)
+                              cls=cls, include_version=include_version, timeout=timeout)
+
+    def _connect_websocket(self, path: str):
+        url = 'ws{}{}{}'.format(self.domain[4:], '/' + self.api_version, path)
+        return websockets.connect(url, extra_headers=self._headers())
+
+    def _headers(self):
+        return [('Cookie', 'GSSSO=' + self._session.cookies['GSSSO'])]
 
     @classmethod
     def _config_for_environment(cls, environment):
@@ -247,11 +260,7 @@ class GsSession(ContextBase):
         )
 
         session.init()
-
-        if cls.current_is_set:
-            cls.current = session
-        else:
-            cls.default = session
+        cls.current = session
 
     @classmethod
     def get(
@@ -272,8 +281,6 @@ class GsSession(ContextBase):
                                                                          Environment) else environment_or_domain
 
         if client_id is not None:
-            if environment_or_domain not in (Environment.PROD.name, Environment.QA.name, Environment.DEV.name):
-                raise MqUninitialisedError('Only PROD, QA and DEV are valid environments')
             if isinstance(scopes, str):
                 scopes = (scopes,)
             else:
@@ -301,16 +308,21 @@ class OAuth2Session(GsSession):
 
     def __init__(self, environment, client_id, client_secret, scopes, api_version=API_VERSION,
                  application=DEFAULT_APPLICATION, http_adapter=None):
-        env_config = self._config_for_environment(environment)
 
-        super().__init__(env_config['AppDomain'], api_version=api_version, application=application,
-                         http_adapter=http_adapter)
+        if environment not in (Environment.PROD.name, Environment.QA.name, Environment.DEV.name):
+            env_config = self._config_for_environment(Environment.DEV.name)
+            url = environment
+        else:
+            env_config = self._config_for_environment(environment)
+            url = env_config['AppDomain']
+
+        super().__init__(url, api_version=api_version, application=application, http_adapter=http_adapter)
         self.auth_url = env_config['AuthURL']
         self.client_id = client_id
         self.client_secret = client_secret
         self.scopes = scopes
 
-        if environment == Environment.DEV.name:
+        if environment == Environment.DEV.name or url != env_config['AppDomain']:
             import urllib3
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
             self.verify = False
@@ -329,6 +341,9 @@ class OAuth2Session(GsSession):
         response = json.loads(reply.text)
         self._session.headers.update({'Authorization': 'Bearer {}'.format(response['access_token'])})
 
+    def _headers(self):
+        return [('Cookie', self._session.headers['Authorization'])]
+
 
 class PassThroughSession(GsSession):
 
@@ -344,6 +359,9 @@ class PassThroughSession(GsSession):
 
     def _authenticate(self):
         self._session.headers.update({'Authorization': 'Bearer {}'.format(self.token)})
+
+    def _headers(self):
+        return [('Cookie', self._session.headers['Authorization'])]
 
 
 try:

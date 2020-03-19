@@ -14,22 +14,22 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    
-   .. autoattribute:: calculationPeriodFrequency
+   .. autoattribute:: calculation_period_frequency
    
    
-   .. autoattribute:: calculationPeriods
+   .. autoattribute:: calculation_periods
    
    
    .. autoattribute:: commodity
    
    
-   .. autoattribute:: commodityReferencePrice
+   .. autoattribute:: commodity_reference_price
    
    
    .. autoattribute:: currency
    
    
-   .. autoattribute:: notionalAmount
+   .. autoattribute:: notional_amount
    
    
    .. autoattribute:: start

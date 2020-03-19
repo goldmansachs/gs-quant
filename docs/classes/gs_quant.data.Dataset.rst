@@ -1,23 +1,34 @@
-Dataset
-=======
+gs\_quant.data.Dataset
+======================
 
 .. currentmodule:: gs_quant.data
 
 .. autoclass:: Dataset
 
+   
    .. automethod:: __init__
 
-
+   
    .. rubric:: Methods
 
-   .. automethod:: get_coverage
-   .. automethod:: get_data
-   .. automethod:: get_data_last
-   .. automethod:: get_data_series
+   .. autosummary::
+   
+      ~Dataset.__init__
+      ~Dataset.get_coverage
+      ~Dataset.get_data
+      ~Dataset.get_data_last
+      ~Dataset.get_data_series
+   
+   
 
+   
+   
+   .. rubric:: Attributes
 
-   .. rubric:: Properties
-
-   .. autoattribute:: id
-
+   .. autosummary::
+   
+      ~Dataset.id
+      ~Dataset.name
+      ~Dataset.provider
+   
    

@@ -158,6 +158,8 @@ class ReportParameters(Base):
         risk_request: RiskRequest = None,
         participation_rate: float = None,
         approve_rebalance: bool = None,
+        limited_access_assets: Tuple[str, ...] = None,
+        corporate_action_restricted_assets: Tuple[str, ...] = None,
         name: str = None
     ):        
         super().__init__()
@@ -190,6 +192,8 @@ class ReportParameters(Base):
         self.risk_request = risk_request
         self.participation_rate = participation_rate
         self.approve_rebalance = approve_rebalance
+        self.limited_access_assets = limited_access_assets
+        self.corporate_action_restricted_assets = corporate_action_restricted_assets
         self.name = name
 
     @property
@@ -484,6 +488,27 @@ class ReportParameters(Base):
         self._property_changed('approve_rebalance')
         self.__approve_rebalance = value        
 
+    @property
+    def limited_access_assets(self) -> Tuple[str, ...]:
+        """List of constituents in the basket that GS has limited access to"""
+        return self.__limited_access_assets
+
+    @limited_access_assets.setter
+    def limited_access_assets(self, value: Tuple[str, ...]):
+        self._property_changed('limited_access_assets')
+        self.__limited_access_assets = value        
+
+    @property
+    def corporate_action_restricted_assets(self) -> Tuple[str, ...]:
+        """List of constituents in the basket that will not be adjusted for corporate
+           actions in the future"""
+        return self.__corporate_action_restricted_assets
+
+    @corporate_action_restricted_assets.setter
+    def corporate_action_restricted_assets(self, value: Tuple[str, ...]):
+        self._property_changed('corporate_action_restricted_assets')
+        self.__corporate_action_restricted_assets = value        
+
 
 class Report(Base):
         
@@ -577,7 +602,7 @@ class Report(Base):
 
     @property
     def created_time(self) -> datetime.datetime:
-        """Time created. ISO 8601 formatted string"""
+        """Time created. ISO 8601 formatted string."""
         return self.__created_time
 
     @created_time.setter
@@ -587,7 +612,7 @@ class Report(Base):
 
     @property
     def entitlements(self) -> Entitlements:
-        """Defines the entitlements of a given resource"""
+        """Defines the entitlements of a given resource."""
         return self.__entitlements
 
     @entitlements.setter
@@ -597,7 +622,7 @@ class Report(Base):
 
     @property
     def entitlement_exclusions(self) -> EntitlementExclusions:
-        """Defines the exclusion entitlements of a given resource"""
+        """Defines the exclusion entitlements of a given resource."""
         return self.__entitlement_exclusions
 
     @entitlement_exclusions.setter
@@ -627,7 +652,7 @@ class Report(Base):
 
     @property
     def last_updated_time(self) -> datetime.datetime:
-        """Timestamp of when the object was last updated"""
+        """Timestamp of when the object was last updated."""
         return self.__last_updated_time
 
     @last_updated_time.setter

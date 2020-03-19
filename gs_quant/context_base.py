@@ -15,7 +15,6 @@ under the License.
 """
 
 import threading
-from abc import ABCMeta
 
 from gs_quant.errors import MqUninitialisedError
 
@@ -27,67 +26,73 @@ def do_not_serialise(func):
     return func
 
 
-class ContextMeta(type, metaclass=ABCMeta):
-
-    @classmethod
-    def has_default(mcs) -> bool:
-        return False
+class ContextMeta(type):
 
     @property
     @do_not_serialise
-    def current(cls) -> 'ContextBase':
+    def __path_key(cls) -> str:
+        return '{}_path'.format(cls.__name__)
+
+    @property
+    @do_not_serialise
+    def __default_key(cls) -> str:
+        return '{}_default'.format(cls.__name__)
+
+    @classmethod
+    def default_value(mcs) -> object:
+        return None
+
+    @property
+    @do_not_serialise
+    def path(cls) -> tuple:
+        return getattr(thread_local, cls.__path_key, ())
+
+    @property
+    @do_not_serialise
+    def current(cls):
         """
         The current instance of this context
         """
-        current = getattr(thread_local, '{}_current'.format(cls.__name__), None) or cls.default
+        current = next(iter(cls.path), cls.default)
         if current is None:
             raise MqUninitialisedError('{} is not initialised'.format(cls.__name__))
 
         return current
 
     @current.setter
-    def current(cls, current: 'ContextBase'):
-        setattr(thread_local, '{}_current'.format(cls.__name__), current)
+    def current(cls, current):
+        setattr(thread_local, cls.__path_key, (current,))
 
     @property
     @do_not_serialise
     def current_is_set(cls) -> bool:
-        return getattr(thread_local, '{}_current'.format(cls.__name__), None) is not None or cls.default_is_set
+        return bool(cls.path) or cls.default is not None
 
     @property
     @do_not_serialise
-    def default(cls) -> 'ContextBase':
-        attr_name = '{}_default'.format(cls.__name__)
-        default = getattr(thread_local, attr_name, None)
-        if (not cls.default_is_set) and cls.has_default():
-            default = cls()
-            setattr(thread_local, attr_name, default)
+    def default(cls):
+        default = getattr(thread_local, cls.__default_key, None)
+        if default is None:
+            default = cls.default_value()
+            if default is not None:
+                setattr(thread_local, cls.__default_key, default)
 
         return default
 
-    @property
-    @do_not_serialise
-    def default_is_set(cls) -> bool:
-        return getattr(thread_local, '{}_default'.format(cls.__name__), None) is not None
+    def push(cls, context):
+        setattr(thread_local, cls.__path_key, (context,) + cls.path)
 
-    @default.setter
-    def default(cls, default: 'ContextBase'):
-        setattr(thread_local, '{}_default'.format(cls.__name__), default)
+    def pop(cls):
+        path = cls.path
+        setattr(thread_local, cls.__path_key, path[1:])
+        return path[0]
 
 
 class ContextBase(metaclass=ContextMeta):
 
     def __enter__(self):
-        clz = self._cls
-
-        try:
-            current = clz.current
-            setattr(thread_local, '{}_previous'.format(clz.__name__), current)
-        except MqUninitialisedError:
-            pass
-
-        setattr(thread_local, '{}_entered'.format(clz.__name__), True)
-        clz.current = self
+        self._cls.push(self)
+        setattr(thread_local, self.__entered_key, True)
         self._on_enter()
         return self
 
@@ -95,10 +100,13 @@ class ContextBase(metaclass=ContextMeta):
         try:
             self._on_exit(exc_type, exc_val, exc_tb)
         finally:
-            clz = self._cls
-            clz.current = getattr(thread_local, '{}_previous'.format(clz.__name__), None)
-            setattr(thread_local, '{}_previous'.format(clz.__name__), None)
-            setattr(thread_local, '{}_entered'.format(clz.__name__), False)
+            self._cls.pop()
+            setattr(thread_local, self.__entered_key, False)
+
+    @property
+    @do_not_serialise
+    def __entered_key(self) -> str:
+        return '{}_entered'.format(self._cls.__name__)
 
     @property
     @do_not_serialise
@@ -122,7 +130,7 @@ class ContextBase(metaclass=ContextMeta):
     @property
     @do_not_serialise
     def is_entered(self) -> bool:
-        return getattr(thread_local, '{}_entered'.format(self._cls.__name__), False)
+        return getattr(thread_local, self.__entered_key, False)
 
     def _on_enter(self):
         pass
@@ -134,8 +142,8 @@ class ContextBase(metaclass=ContextMeta):
 class ContextBaseWithDefault(ContextBase):
 
     @classmethod
-    def has_default(cls) -> bool:
-        return True
+    def default_value(cls) -> object:
+        return cls()
 
 
 try:

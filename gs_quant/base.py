@@ -212,12 +212,23 @@ class Base(metaclass=ABCMeta):
         if prop_type == Union:
             prop_type = next((a for a in return_hints.__args__ if issubclass(a, (Base, EnumBase))), None)
 
+        if prop_type is InstrumentBase:
+            # TODO Fix this
+            from .instrument import Instrument
+            prop_type = Instrument
+
         return prop_type
 
     @classmethod
     def prop_item_type(cls, prop: str) -> type:
         return_hints = get_type_hints(getattr(cls, prop).fget).get('return')
-        return return_hints.__args__[0]
+        item_type = return_hints.__args__[0]
+
+        item_args = [i for i in getattr(item_type, '__args__', ()) if isinstance(i, type)]
+        if item_args:
+            item_type = next((a for a in item_args if issubclass(a, (Base, EnumBase))), item_args[-1])
+
+        return item_type
 
     def __from_dict(self, values: dict):
         for prop in self.properties():
@@ -254,10 +265,6 @@ class Base(metaclass=ABCMeta):
                         setattr(self, prop, prop_type.from_dict(prop_value))
                 elif issubclass(prop_type, (list, tuple)):
                     item_type = self.prop_item_type(prop)
-                    item_args = [i for i in getattr(item_type, '__args__', ()) if isinstance(i, type)]
-                    if item_args:
-                        item_type = next((a for a in item_args if issubclass(a, (Base, EnumBase))), item_args[-1])
-
                     if issubclass(item_type, Base):
                         item_values = tuple(v if isinstance(v, (Base, EnumBase)) else item_type.from_dict(v)
                                             for v in prop_value)
@@ -281,14 +288,12 @@ class Base(metaclass=ABCMeta):
             value = values.pop(arg, None)
 
             if prop_type:
-                if issubclass(prop_type, Base):
-                    if isinstance(value, dict):
-                        if prop_type is InstrumentBase:
-                            # TODO Fix this
-                            from .instrument import Instrument
-                            value = Instrument.from_dict(value)
-                        else:
-                            value = prop_type.from_dict(value)
+                if issubclass(prop_type, Base) and isinstance(value, dict):
+                        value = prop_type.from_dict(value)
+                elif issubclass(prop_type, (list, tuple)) and isinstance(value, (list, tuple)):
+                    item_type = cls.prop_item_type(prop_name)
+                    if issubclass(item_type, Base):
+                        value = tuple(v if isinstance(v, (Base, EnumBase)) else item_type.from_dict(v) for v in value)
                 elif issubclass(prop_type, EnumBase):
                     value = get_enum_value(prop_type, value)
 

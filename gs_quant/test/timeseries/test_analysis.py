@@ -16,6 +16,7 @@ under the License.
 
 from datetime import date
 
+import pytest
 from pandas.util.testing import assert_series_equal
 
 from gs_quant.timeseries import *
@@ -94,14 +95,7 @@ def test_diff():
 
 
 def test_lag():
-
-    dates = [
-        date(2019, 1, 1),
-        date(2019, 1, 2),
-        date(2019, 1, 3),
-        date(2019, 1, 4),
-    ]
-
+    dates = pd.date_range("2019-01-01", periods=4, freq="D")
     x = pd.Series([1.0, 2.0, 3.0, 4.0], index=dates)
 
     result = lag(x)
@@ -111,3 +105,11 @@ def test_lag():
     result = lag(x, 2)
     expected = pd.Series([np.nan, np.nan, 1.0, 2.0], index=dates)
     assert_series_equal(result, expected, obj="Lag 2")
+
+    result = lag(x, 2, LagMode.EXTEND)
+    expected = pd.Series([np.nan, np.nan, 1.0, 2.0, 3.0, 4.0], index=pd.date_range("2019-01-01", periods=6, freq="D"))
+    assert_series_equal(result, expected, obj="Lag 2 Extend")
+
+    y = pd.Series([0] * 4, index=pd.date_range('2020-01-01T00:00:00Z', periods=4, freq='S'))
+    with pytest.raises(Exception):
+        lag(y, 5, LagMode.EXTEND)

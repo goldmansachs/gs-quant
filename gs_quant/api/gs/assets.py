@@ -121,10 +121,11 @@ class GsAssetApi:
             fields: IdList = None,
             as_of: dt.datetime = None,
             limit: int = 100,
+            return_type: Optional[type] = GsAsset,
             **kwargs
-    ) -> Tuple[GsAsset, ...]:
+    ) -> Union[Tuple[GsAsset, ...], Tuple[dict, ...]]:
         query = cls.__create_query(fields, as_of, limit, **kwargs)
-        response = GsSession.current._post('/assets/query', payload=query, cls=GsAsset)
+        response = GsSession.current._post('/assets/query', payload=query, cls=return_type)
         return response['results']
 
     @classmethod
@@ -167,7 +168,7 @@ class GsAssetApi:
         url = '/assets/{id}/positions/{date}'.format(id=asset_id, date=position_date_str)
 
         if position_type is not None:
-            url += '?type=' + position_type
+            url += '?type=' + position_type.value
 
         results = GsSession.current._get(url)['results']
         return tuple(PositionSet.from_dict(r) for r in results)
@@ -186,21 +187,26 @@ class GsAssetApi:
     def get_instruments_for_positions(
             positions: Iterable[Position]
     ) -> Tuple[Optional[Union[Instrument, Security]]]:
-        instrument_infos = GsSession.current._post(
-            '/assets/instruments', [p.assetId for p in positions],
-            cls=AssetToInstrumentResponse)
+        asset_ids = tuple(filter(None, (p.asset_id for p in positions)))
+        instrument_infos = GsSession.current._post('/assets/instruments', asset_ids, cls=AssetToInstrumentResponse)\
+            if asset_ids else {}
+
         instrument_lookup = {i.assetId: (i.instrument, i.sizeField) for i in instrument_infos if i}
         ret = ()
 
         for position in positions:
-            instrument_info = instrument_lookup.get(position.assetId)
-            if instrument_info:
-                instrument, size_field = instrument_info
-                if instrument is not None and size_field is not None and getattr(instrument, size_field, None) is None:
-                    setattr(instrument, size_field, position.quantity)
-                ret += (instrument,)
+            instrument = None
+
+            if position.instrument:
+                instrument = position.instrument
             else:
-                ret += (None,)
+                instrument_info = instrument_lookup.get(position.assetId)
+                if instrument_info:
+                    instrument, size_field = instrument_info
+                    if instrument is not None and size_field is not None and getattr(instrument, size_field, None) is None:
+                        setattr(instrument, size_field, position.quantity)
+
+            ret += (instrument,)
 
         return ret
 

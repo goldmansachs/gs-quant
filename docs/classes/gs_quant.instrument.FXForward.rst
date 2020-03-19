@@ -14,16 +14,16 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    
-   .. autoattribute:: forwardRate
+   .. autoattribute:: forward_rate
    
    
-   .. autoattribute:: notional
+   .. autoattribute:: notional_amount
    
    
    .. autoattribute:: pair
    
    
-   .. autoattribute:: settlementDate
+   .. autoattribute:: settlement_date
    
    
    

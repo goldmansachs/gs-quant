@@ -133,6 +133,12 @@ def plot_measure(asset_class: Optional[tuple] = None, asset_type: Optional[tuple
     return decorator
 
 
+def plot_method(fn):
+    # Indicates that fn should be exported to plottool as a method.
+    fn.plot_method = True
+    return fn
+
+
 def log_return(logger: logging.Logger, message):
     def outer(fn):
         @wraps(fn)

@@ -26,7 +26,7 @@ def test_get_asset(mocker):
     # mock GsSession
     mocker.patch.object(
         GsSession.__class__,
-        'current',
+        'default_value',
         return_value=GsSession.get(
             Environment.QA,
             'client_id',
@@ -106,8 +106,8 @@ def test_asset_identifiers(mocker):
     marquee_id = 'MA1234567890'
 
     mocker.patch.object(
-        GsSession.__class__,
-        'current',
+        GsSession,
+        'default_value',
         return_value=GsSession.get(
             Environment.QA,
             'client_id',

@@ -14,61 +14,58 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    
-   .. autoattribute:: clearingHouse
+   .. autoattribute:: clearing_house
    
    
-   .. autoattribute:: effectiveDate
+   .. autoattribute:: effective_date
    
    
    .. autoattribute:: fee
    
    
-   .. autoattribute:: notionalAmount
+   .. autoattribute:: notional_amount
    
    
-   .. autoattribute:: payerBusinessDayConvention
+   .. autoattribute:: notional_currency
    
    
-   .. autoattribute:: payerCurrency
+   .. autoattribute:: payer_business_day_convention
    
    
-   .. autoattribute:: payerDayCountFraction
+   .. autoattribute:: payer_day_count_fraction
    
    
-   .. autoattribute:: payerDesignatedMaturity
+   .. autoattribute:: payer_designated_maturity
    
    
-   .. autoattribute:: payerFrequency
+   .. autoattribute:: payer_frequency
    
    
-   .. autoattribute:: payerRateOption
+   .. autoattribute:: payer_rate_option
    
    
-   .. autoattribute:: payerSpread
+   .. autoattribute:: payer_spread
    
    
-   .. autoattribute:: receiverBusinessDayConvention
+   .. autoattribute:: receiver_business_day_convention
    
    
-   .. autoattribute:: receiverCurrency
+   .. autoattribute:: receiver_day_count_fraction
    
    
-   .. autoattribute:: receiverDayCountFraction
+   .. autoattribute:: receiver_designated_maturity
    
    
-   .. autoattribute:: receiverDesignatedMaturity
+   .. autoattribute:: receiver_frequency
    
    
-   .. autoattribute:: receiverFrequency
+   .. autoattribute:: receiver_rate_option
    
    
-   .. autoattribute:: receiverRateOption
+   .. autoattribute:: receiver_spread
    
    
-   .. autoattribute:: receiverSpread
-   
-   
-   .. autoattribute:: terminationDate
+   .. autoattribute:: termination_date
    
    
    

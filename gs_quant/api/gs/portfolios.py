@@ -15,10 +15,10 @@ under the License.
 """
 import datetime as dt
 import logging
-from typing import Tuple
+from typing import Tuple, Union
 
 from gs_quant.session import GsSession
-from gs_quant.target.portfolios import Portfolio, PositionSet
+from gs_quant.target.portfolios import Portfolio, Position, PositionSet
 from gs_quant.target.reports import Report
 
 _logger = logging.getLogger(__name__)
@@ -36,6 +36,18 @@ class GsPortfolioApi:
     @classmethod
     def get_portfolio(cls, portfolio_id: str) -> Portfolio:
         return GsSession.current._get('/portfolios/{id}'.format(id=portfolio_id), cls=Portfolio)
+
+    @classmethod
+    def get_portfolio_by_name(cls, name: str) -> Portfolio:
+        ret = GsSession.current._get('/portfolios?name={}'.format(name))
+        num_found = ret.get('totalResults', 0)
+
+        if num_found == 0:
+            raise ValueError('Portfolio {} not found'.format(name))
+        elif num_found > 1:
+            raise ValueError('More than one portfolio named {} found'.format(name))
+        else:
+            return Portfolio.from_dict(ret['results'][0])
 
     @classmethod
     def create_portfolio(cls, portfolio: Portfolio) -> Portfolio:
@@ -72,10 +84,16 @@ class GsPortfolioApi:
         return position_sets[0] if len(position_sets) > 0 else PositionSet()
 
     @classmethod
-    def get_latest_positions(cls, portfolio_id: str, position_type: str = 'close') -> PositionSet:
+    def get_latest_positions(cls, portfolio_id: str, position_type: str = 'close') -> Union[PositionSet, dict]:
         url = '/portfolios/{id}/positions/last?type={ptype}'.format(id=portfolio_id, ptype=position_type)
-        position_set = GsSession.current._get(url, cls=PositionSet)['results']
-        return position_set if position_set else PositionSet()
+        results = GsSession.current._get(url)['results']
+
+        # Annoyingly, different types are returned depending on position_type
+
+        if isinstance(results, dict) and 'positions' in results:
+            results['positions'] = tuple(Position.from_dict(p) for p in results['positions'])
+
+        return results
 
     @classmethod
     def get_position_dates(cls, portfolio_id: str) -> Tuple[dt.date, ...]:

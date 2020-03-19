@@ -17,7 +17,10 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: currency
    
    
-   .. autoattribute:: expirationDate
+   .. autoattribute:: expiration_date
+   
+   
+   .. autoattribute:: notional_amount
    
    
    
