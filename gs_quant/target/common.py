@@ -47,6 +47,7 @@ class AssetType(EnumBase, Enum):
     """Asset type differentiates the product categorization or contract type"""
 
     Access = 'Access'
+    AveragePriceOption = 'AveragePriceOption'
     Basis = 'Basis'
     BasisSwap = 'BasisSwap'
     Benchmark = 'Benchmark'
@@ -60,6 +61,7 @@ class AssetType(EnumBase, Enum):
     CD = 'CD'
     Cliquet = 'Cliquet'
     CMSOption = 'CMSOption'
+    CMSSpreadOption = 'CMSSpreadOption'
     Commodity = 'Commodity'
     CommodVarianceSwap = 'CommodVarianceSwap'
     Company = 'Company'
@@ -154,6 +156,23 @@ class CommodityMeanRule(EnumBase, Enum):
     Do_Not_Remove = 'Do Not Remove'
     Remove_Calculated = 'Remove Calculated'
     Remove_Fixed = 'Remove Fixed'
+    
+    def __repr__(self):
+        return self.value
+
+
+class CommodityUnit(EnumBase, Enum):    
+    
+    """A coding scheme value to identify the unit of measure (e.g. Therms) in which the
+       undelryer is denominated."""
+
+    Lot = 'Lot'
+    MegaWattHour = 'MegaWattHour'
+    Metric_Ton = 'Metric Ton'
+    Million_British_Thermal_Units = 'Million British Thermal Units'
+    Oil_Barrel = 'Oil Barrel'
+    Troy_Pound = 'Troy Pound'
+    US_Gallon = 'US Gallon'
     
     def __repr__(self):
         return self.value
@@ -984,6 +1003,32 @@ class PayReceive(EnumBase, Enum):
         return self.value
 
 
+class Period(EnumBase, Enum):    
+    
+    """A coding scheme to define a period corresponding to a quantity amount"""
+
+    Month = 'Month'
+    Quarter = 'Quarter'
+    Hour = 'Hour'
+    Day = 'Day'
+    BusinessDay = 'BusinessDay'
+    
+    def __repr__(self):
+        return self.value
+
+
+class PremiumSettlementRule(EnumBase, Enum):    
+    
+    """A coding scheme to define premium settlement rules"""
+
+    Once_At_Trade_Time = 'Once At Trade Time'
+    Once_At_Final_Settlement = 'Once At Final Settlement'
+    At_Each_Option_Settlement = 'At Each Option Settlement'
+    
+    def __repr__(self):
+        return self.value
+
+
 class PricingLocation(EnumBase, Enum):    
     
     """Based on the location of the exchange. Called 'Native Region' in SecDB"""
@@ -1038,6 +1083,7 @@ class RiskMeasureType(EnumBase, Enum):
     InflationDelta = 'InflationDelta'
     Local_Currency_Accrual_in_Cents = 'Local Currency Accrual in Cents'
     Local_Currency_Annuity = 'Local Currency Annuity'
+    Market_Data_Assets = 'Market Data Assets'
     OAS = 'OAS'
     ParallelBasis = 'ParallelBasis'
     ParallelDelta = 'ParallelDelta'
@@ -3226,6 +3272,200 @@ class CSLStringArray(Base):
     def string_values(self, value: Tuple[CSLString, ...]):
         self._property_changed('string_values')
         self.__string_values = value        
+
+
+class CommodOTCOptionLegDetails(Base):
+        
+    """Object representation of a commodities OTC option's Leg details"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        commodity: str = None,
+        commodity_reference_price: str = None,
+        contract: str = None,
+        leg_description: str = None,
+        fixing_currency: Union[CurrencyName, str] = None,
+        option_type: Union[OptionType, str] = None,
+        quantity_multiplier: int = None,
+        premium: Union[float, str] = None,
+        premium_unit: Union[CommodityUnit, str] = None,
+        premium_currency: Union[CurrencyName, str] = None,
+        premium_settlement_date: datetime.date = None,
+        premium_settlement_rule: Union[PremiumSettlementRule, str] = None,
+        strike_price: Union[float, str] = None,
+        strike_unit: Union[CommodityUnit, str] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.commodity = commodity
+        self.commodity_reference_price = commodity_reference_price
+        self.contract = contract
+        self.leg_description = leg_description
+        self.fixing_currency = fixing_currency
+        self.option_type = option_type
+        self.quantity_multiplier = quantity_multiplier
+        self.premium = premium
+        self.premium_unit = premium_unit
+        self.premium_currency = premium_currency
+        self.premium_settlement_date = premium_settlement_date
+        self.premium_settlement_rule = premium_settlement_rule
+        self.strike_price = strike_price
+        self.strike_unit = strike_unit
+        self.name = name
+
+    @property
+    def asset_class(self) -> str:
+        """Commod"""
+        return 'Commod'        
+
+    @property
+    def type(self) -> str:
+        """OptionLeg"""
+        return 'OptionLeg'        
+
+    @property
+    def commodity(self) -> str:
+        """Commodity asset"""
+        return self.__commodity
+
+    @commodity.setter
+    def commodity(self, value: str):
+        self._property_changed('commodity')
+        self.__commodity = value        
+
+    @property
+    def commodity_reference_price(self) -> str:
+        """The ISDA reference price"""
+        return self.__commodity_reference_price
+
+    @commodity_reference_price.setter
+    def commodity_reference_price(self, value: str):
+        self._property_changed('commodity_reference_price')
+        self.__commodity_reference_price = value        
+
+    @property
+    def contract(self) -> str:
+        """The observed contract at each pricing date e.g First Nearby, Second Nearby"""
+        return self.__contract
+
+    @contract.setter
+    def contract(self, value: str):
+        self._property_changed('contract')
+        self.__contract = value        
+
+    @property
+    def leg_description(self) -> str:
+        """The description of the averaging style"""
+        return self.__leg_description
+
+    @leg_description.setter
+    def leg_description(self, value: str):
+        self._property_changed('leg_description')
+        self.__leg_description = value        
+
+    @property
+    def fixing_currency(self) -> Union[CurrencyName, str]:
+        """Currency Names"""
+        return self.__fixing_currency
+
+    @fixing_currency.setter
+    def fixing_currency(self, value: Union[CurrencyName, str]):
+        self._property_changed('fixing_currency')
+        self.__fixing_currency = get_enum_value(CurrencyName, value)        
+
+    @property
+    def option_type(self) -> Union[OptionType, str]:
+        """Option Type"""
+        return self.__option_type
+
+    @option_type.setter
+    def option_type(self, value: Union[OptionType, str]):
+        self._property_changed('option_type')
+        self.__option_type = get_enum_value(OptionType, value)        
+
+    @property
+    def quantity_multiplier(self) -> int:
+        """quantity multiplier for driving the long/short direction of the leg"""
+        return self.__quantity_multiplier
+
+    @quantity_multiplier.setter
+    def quantity_multiplier(self, value: int):
+        self._property_changed('quantity_multiplier')
+        self.__quantity_multiplier = value        
+
+    @property
+    def premium(self) -> Union[float, str]:
+        """Option premium"""
+        return self.__premium
+
+    @premium.setter
+    def premium(self, value: Union[float, str]):
+        self._property_changed('premium')
+        self.__premium = value        
+
+    @property
+    def premium_unit(self) -> Union[CommodityUnit, str]:
+        """A coding scheme value to identify the unit of measure (e.g. Therms) in which the
+           undelryer is denominated."""
+        return self.__premium_unit
+
+    @premium_unit.setter
+    def premium_unit(self, value: Union[CommodityUnit, str]):
+        self._property_changed('premium_unit')
+        self.__premium_unit = get_enum_value(CommodityUnit, value)        
+
+    @property
+    def premium_currency(self) -> Union[CurrencyName, str]:
+        """Currency Names"""
+        return self.__premium_currency
+
+    @premium_currency.setter
+    def premium_currency(self, value: Union[CurrencyName, str]):
+        self._property_changed('premium_currency')
+        self.__premium_currency = get_enum_value(CurrencyName, value)        
+
+    @property
+    def premium_settlement_date(self) -> datetime.date:
+        """date at which the premium would be settled"""
+        return self.__premium_settlement_date
+
+    @premium_settlement_date.setter
+    def premium_settlement_date(self, value: datetime.date):
+        self._property_changed('premium_settlement_date')
+        self.__premium_settlement_date = value        
+
+    @property
+    def premium_settlement_rule(self) -> Union[PremiumSettlementRule, str]:
+        """A coding scheme to define premium settlement rules"""
+        return self.__premium_settlement_rule
+
+    @premium_settlement_rule.setter
+    def premium_settlement_rule(self, value: Union[PremiumSettlementRule, str]):
+        self._property_changed('premium_settlement_rule')
+        self.__premium_settlement_rule = get_enum_value(PremiumSettlementRule, value)        
+
+    @property
+    def strike_price(self) -> Union[float, str]:
+        """Strike as value, percent or at-the-money e.g. 62.5, 95%, ATM-25, ATMF, 10/vol,
+           100k/pv, $200K/BP, or multiple strikes 65.4/-45.8"""
+        return self.__strike_price
+
+    @strike_price.setter
+    def strike_price(self, value: Union[float, str]):
+        self._property_changed('strike_price')
+        self.__strike_price = value        
+
+    @property
+    def strike_unit(self) -> Union[CommodityUnit, str]:
+        """A coding scheme value to identify the unit of measure (e.g. Therms) in which the
+           undelryer is denominated."""
+        return self.__strike_unit
+
+    @strike_unit.setter
+    def strike_unit(self, value: Union[CommodityUnit, str]):
+        self._property_changed('strike_unit')
+        self.__strike_unit = get_enum_value(CommodityUnit, value)        
 
 
 class GIRDomain(Base):
@@ -27483,6 +27723,44 @@ class Position(Base):
         self.__description = value        
 
 
+class MarketDataScenario(Base):
+        
+    """A market data scenario to apply to the calculation"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        scenario: dict,
+        subtract_base: bool = False,
+        name: str = None
+    ):        
+        super().__init__()
+        self.scenario = scenario
+        self.subtract_base = subtract_base
+        self.name = name
+
+    @property
+    def scenario(self) -> dict:
+        """The scenario"""
+        return self.__scenario
+
+    @scenario.setter
+    def scenario(self, value: dict):
+        self._property_changed('scenario')
+        self.__scenario = value        
+
+    @property
+    def subtract_base(self) -> bool:
+        """Subtract values computed under the base market data state, to return a diff, if
+           true"""
+        return self.__subtract_base
+
+    @subtract_base.setter
+    def subtract_base(self, value: bool):
+        self._property_changed('subtract_base')
+        self.__subtract_base = value        
+
+
 class LiquidityRequest(Base):
         
     """Required parameters in order to get liquidity information on a set of positions"""
@@ -27683,44 +27961,6 @@ class LiquidityRequest(Base):
     def report_parameters(self, value: LiquidityReportParameters):
         self._property_changed('report_parameters')
         self.__report_parameters = value        
-
-
-class MarketDataScenario(Base):
-        
-    """A market data scenario to apply to the calculation"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        scenario: dict,
-        subtract_base: bool = False,
-        name: str = None
-    ):        
-        super().__init__()
-        self.scenario = scenario
-        self.subtract_base = subtract_base
-        self.name = name
-
-    @property
-    def scenario(self) -> dict:
-        """The scenario"""
-        return self.__scenario
-
-    @scenario.setter
-    def scenario(self, value: dict):
-        self._property_changed('scenario')
-        self.__scenario = value        
-
-    @property
-    def subtract_base(self) -> bool:
-        """Subtract values computed under the base market data state, to return a diff, if
-           true"""
-        return self.__subtract_base
-
-    @subtract_base.setter
-    def subtract_base(self, value: bool):
-        self._property_changed('subtract_base')
-        self.__subtract_base = value        
 
 
 class PositionSet(Base):

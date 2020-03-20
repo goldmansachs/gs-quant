@@ -32,8 +32,9 @@ from gs_quant.data.core import DataContext
 from gs_quant.errors import MqValueError
 from gs_quant.markets import MarketDataCoordinate
 from gs_quant.session import GsSession
-from gs_quant.target.common import FieldFilterMap, XRef, MarketDataVendor
-from gs_quant.target.data import DataQuery, DataQueryResponse, MDAPIDataBatchResponse, MDAPIDataQueryResponse
+from gs_quant.target.common import FieldFilterMap, XRef, MarketDataVendor, PricingLocation
+from gs_quant.target.data import DataQuery, DataQueryResponse, MDAPIDataBatchResponse, MDAPIDataQuery,\
+    MDAPIDataQueryResponse
 from gs_quant.target.data import DataSetEntity
 from .assets import GsAssetApi, GsIdType
 
@@ -89,9 +90,10 @@ class GsDataApi(DataApi):
     # DataApi interface
 
     @classmethod
-    def query_data(cls, query: DataQuery, dataset_id: str = None, asset_id_type: Union[GsIdType, str] = None) \
+    def query_data(cls, query: Union[DataQuery, MDAPIDataQuery], dataset_id: str = None,
+                   asset_id_type: Union[GsIdType, str] = None)\
             -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple]:
-        if query.marketDataCoordinates:
+        if isinstance(query, MDAPIDataQuery) and query.market_data_coordinates:
             # Don't use MDAPIDataBatchResponse for now - it doesn't handle quoting style correctly
             results: Union[MDAPIDataBatchResponse, dict] = GsSession.current._post(
                 '/data/coordinates/query', payload=query)
@@ -99,7 +101,7 @@ class GsDataApi(DataApi):
                 return results.get('responses', ())
             else:
                 return results.responses if results.responses is not None else ()
-        if query.where:
+        elif isinstance(query, DataQuery) and query.where:
             where = query.where.as_dict()
             xref_keys = set(where.keys()).intersection(XRef.properties())
             if xref_keys:
@@ -359,7 +361,7 @@ class GsDataApi(DataApi):
             as_of: Union[dt.datetime, dt.date] = None,
             vendor: MarketDataVendor = MarketDataVendor.Goldman_Sachs,
             as_dataframe: bool = False,
-            pricing_location: Optional[str] = None
+            pricing_location: Optional[PricingLocation] = None
     ) -> Union[dict, pd.DataFrame]:
         """
         Get last value of coordinates data
@@ -408,7 +410,7 @@ class GsDataApi(DataApi):
             end: Union[dt.datetime, dt.date] = None,
             vendor: MarketDataVendor = MarketDataVendor.Goldman_Sachs,
             as_multiple_dataframes: bool = False,
-            pricing_location: Optional[str] = None
+            pricing_location: Optional[PricingLocation] = None
     ) -> Union[pd.DataFrame, Tuple[pd.DataFrame]]:
         """
         Get coordinates data
@@ -450,7 +452,7 @@ class GsDataApi(DataApi):
             start: Union[dt.datetime, dt.date] = None,
             end: Union[dt.datetime, dt.date] = None,
             vendor: MarketDataVendor = MarketDataVendor.Goldman_Sachs,
-            pricing_location: Optional[str] = None
+            pricing_location: Optional[PricingLocation] = None
     ) -> Union[pd.Series, Tuple[pd.Series]]:
         """
         Get coordinates data series
