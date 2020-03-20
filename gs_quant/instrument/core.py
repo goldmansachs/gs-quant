@@ -43,7 +43,11 @@ class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
     @classmethod
     def from_dict(cls, values: dict):
         if values:
-            if hasattr(cls, 'asset_class'):
+            if hasattr(cls, '_derived_type'):
+                if 'properties' in values:
+                    values.update(values.pop('properties'))
+                return cls._from_dict(values)
+            elif hasattr(cls, 'asset_class'):
                 return cls._from_dict(values)
             else:
                 asset_class_field = next((f for f in ('asset_class', 'assetClass') if f in values), None)

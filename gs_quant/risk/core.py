@@ -35,7 +35,9 @@ __column_sort_fns = {
 }
 __risk_columns = ('date', 'time', 'marketDataType', 'assetId', 'pointClass', 'point')
 __crif_columns = ('date', 'time', 'riskType', 'amountCurrency', 'qualifier', 'bucket', 'label1', 'label2')
-__cashflows_columns = ('payment_date', 'payment_type', 'accrual_start_date', 'accrual_end_date', 'floating_rate_option', 'floating_rate_designated_maturity')
+__cashflows_columns = ('payment_date', 'payment_type', 'accrual_start_date', 'accrual_end_date', 'floating_rate_option',
+                       'floating_rate_designated_maturity')
+__assets_columns = ('date', 'mktType', 'mktAsset')
 
 
 class RiskResult:
@@ -404,16 +406,13 @@ def cashflows_formatter(result: List, pricing_key: PricingKey, _instrument: Inst
     return __dataframe_formatter(result, pricing_key, __cashflows_columns)
 
 
+def asset_formatter(result: List, pricing_key: PricingKey, _instrument: InstrumentBase) -> Optional[pd.DataFrame]:
+    return __dataframe_formatter(result, pricing_key, __cashflows_columns)
+
 def instrument_formatter(result: List, pricing_key: PricingKey, instrument: InstrumentBase):
-    # TODO Handle these correctly in the risk service
-    invalid_defaults = ('-- N/A --', 'NaN')
-    value_mappings = {'Payer': 'Pay', 'Rec': 'Receive', 'Receiver': 'Receive'}
     instruments_by_date = {}
 
     for field_values in result:
-        field_values = {field: value_mappings.get(value, value) for field, value in field_values.items()
-                        if value not in invalid_defaults}
-
         new_instrument = instrument.from_dict(field_values)
         new_instrument.unresolved = instrument
 
@@ -746,6 +745,11 @@ Cashflows = __risk_measure_with_doc_string(
     'Cashflows',
     RiskMeasureType.Cashflows
 )
+MarketDataAssets = __risk_measure_with_doc_string(
+    'MarketDataAssets',
+    'MarketDataAssets',
+    RiskMeasureType.Market_Data_Assets
+)
 
 Formatters = {
     DollarPrice: scalar_formatter,
@@ -787,5 +791,6 @@ Formatters = {
     IRFwdRate: scalar_formatter,
     CRIFIRCurve: crif_formatter,
     ResolvedInstrumentValues: instrument_formatter,
-    Cashflows: cashflows_formatter
+    Cashflows: cashflows_formatter,
+    MarketDataAssets: asset_formatter
 }
