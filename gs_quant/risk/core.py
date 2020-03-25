@@ -409,6 +409,7 @@ def cashflows_formatter(result: List, pricing_key: PricingKey, _instrument: Inst
 def asset_formatter(result: List, pricing_key: PricingKey, _instrument: InstrumentBase) -> Optional[pd.DataFrame]:
     return __dataframe_formatter(result, pricing_key, __cashflows_columns)
 
+
 def instrument_formatter(result: List, pricing_key: PricingKey, instrument: InstrumentBase):
     instruments_by_date = {}
 

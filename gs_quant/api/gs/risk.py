@@ -75,7 +75,7 @@ class GsRiskApi(RiskApi):
                 cls.__add_missing_results(ids_to_requests, results, "Timed out")
                 return results
 
-            time.sleep(1)
+            time.sleep(2)
 
         return results
 
@@ -113,14 +113,15 @@ class GsRiskApi(RiskApi):
 
                             result_id = result_parts[0]
                             raw_result = ';'.join(result_parts[1:])
+                            is_error = not raw_result.startswith(r'R[')
 
                             try:
-                                is_error = raw_result[0] == 'E'
-                                result = json.loads(raw_result[1:]) if not is_error else raw_result[1:]
-                                results[result_id] = RuntimeError(raw_result[1:]) if is_error else\
-                                    cls._handle_results(ids_to_requests[result_id], result)
+                                result = RuntimeError(raw_result) if is_error else\
+                                    cls._handle_results(ids_to_requests[result_id], json.loads(raw_result[1:]))
                             except Exception:
-                                results[result_id] = RuntimeError(raw_result[1:])
+                                result = RuntimeError(raw_result)
+
+                            results[result_id] = result
                         except asyncio.TimeoutError:
                             elapsed += rec_timeout
 

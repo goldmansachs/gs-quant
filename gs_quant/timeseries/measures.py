@@ -56,6 +56,15 @@ _logger = logging.getLogger(__name__)
 MeasureDependency: namedtuple = namedtuple("MeasureDependency", ["id_provider", "query_type"])
 
 
+class ExtendedSeries(Series):
+    _internal_names = Series._internal_names + ['dataset_ids']
+    _internal_names_set = set(_internal_names)
+
+    @property
+    def _constructor(self):
+        return ExtendedSeries
+
+
 # TODO: get NERC Calendar from SecDB
 class NercCalendar(AbstractHolidayCalendar):
     rules = [
@@ -356,6 +365,14 @@ def _market_data_timed(q):
     return df
 
 
+def _extract_series_from_df(df: pd.DataFrame, query_type: QueryType):
+    col_name = query_type.value.replace(' ', '')
+    col_name = col_name[0].lower() + col_name[1:]
+    series = ExtendedSeries() if df.empty else ExtendedSeries(df[col_name])
+    series.dataset_ids = getattr(df, 'dataset_ids', ())
+    return series
+
+
 @plot_measure((AssetClass.FX, AssetClass.Equity), None, [MeasureDependency(
     id_provider=cross_stored_direction_for_fx_vol, query_type=QueryType.IMPLIED_VOLATILITY)])
 def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Real, *, location: str = 'NYC',
@@ -412,15 +429,18 @@ def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Re
     q = GsDataApi.build_market_data_query([asset_id], QueryType.IMPLIED_VOLATILITY, where=where, source=source)
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
+    dataset_ids = getattr(df, 'dataset_ids', ())
 
     if df.empty:
-        return pd.Series()
-
-    curves = {k: v for k, v in df.groupby(column)}
-    if len(curves) < 3:
-        raise MqValueError('skew not available for given inputs')
-    series = [curves[qs]['impliedVolatility'] for qs in q_strikes]
-    return (series[0] - series[1]) / series[2]
+        series = ExtendedSeries()
+    else:
+        curves = {k: v for k, v in df.groupby(column)}
+        if len(curves) < 3:
+            raise MqValueError('skew not available for given inputs')
+        series = [curves[qs]['impliedVolatility'] for qs in q_strikes]
+        series = ExtendedSeries((series[0] - series[1]) / series[2])
+    series.dataset_ids = dataset_ids
+    return series
 
 
 @plot_measure((AssetClass.Credit,), (AssetType.Index,), [QueryType.IMPLIED_VOLATILITY_BY_DELTA_STRIKE])
@@ -462,7 +482,7 @@ def cds_implied_volatility(asset: Asset, expiry: str, tenor: str, strike_referen
     )
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
-    return Series() if df.empty else df['impliedVolatilityByDeltaStrike']
+    return _extract_series_from_df(df, QueryType.IMPLIED_VOLATILITY_BY_DELTA_STRIKE)
 
 
 @plot_measure((AssetClass.Equity, AssetClass.Commod, AssetClass.FX,), None,
@@ -513,7 +533,9 @@ def implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference,
                                           where=where, source=source, real_time=real_time)
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
-    return Series() if df.empty else df['impliedVolatility']
+    series = ExtendedSeries() if df.empty else ExtendedSeries(df['impliedVolatility'])
+    series.dataset_ids = getattr(df, 'dataset_ids', ())
+    return series
 
 
 @plot_measure((AssetClass.Equity,), (AssetType.Index, AssetType.ETF,), [QueryType.IMPLIED_CORRELATION])
@@ -550,7 +572,7 @@ def implied_correlation(asset: Asset, tenor: str, strike_reference: EdrDataRefer
 
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
-    return Series() if df.empty else df['impliedCorrelation']
+    return _extract_series_from_df(df, QueryType.IMPLIED_CORRELATION)
 
 
 @plot_measure((AssetClass.Equity,), (AssetType.Index, AssetType.ETF,), [QueryType.AVERAGE_IMPLIED_VOLATILITY])
@@ -587,7 +609,7 @@ def average_implied_volatility(asset: Asset, tenor: str, strike_reference: EdrDa
 
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
-    return Series() if df.empty else df['averageImpliedVolatility']
+    return _extract_series_from_df(df, QueryType.AVERAGE_IMPLIED_VOLATILITY)
 
 
 @plot_measure((AssetClass.Equity,), (AssetType.Index, AssetType.ETF,), [QueryType.AVERAGE_IMPLIED_VARIANCE])
@@ -624,7 +646,7 @@ def average_implied_variance(asset: Asset, tenor: str, strike_reference: EdrData
 
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
-    return Series() if df.empty else df['averageImpliedVariance']
+    return _extract_series_from_df(df, QueryType.AVERAGE_IMPLIED_VARIANCE)
 
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
@@ -705,7 +727,7 @@ def swap_rate(asset: Asset, tenor: str, benchmark_type: BenchmarkType = None, fl
 
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
-    return Series() if df.empty else df['swapRate']
+    return _extract_series_from_df(df, QueryType.SWAP_RATE)
 
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
@@ -740,7 +762,7 @@ def swaption_vol(asset: Asset, expiration_tenor: str, termination_tenor: str, re
 
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
-    return Series() if df.empty else df['swaptionVol']
+    return _extract_series_from_df(df, QueryType.SWAPTION_VOL)
 
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
@@ -777,18 +799,21 @@ def swaption_vol_term(asset: Asset, termination_tenor: str, relative_strike: flo
         _logger.debug('q %s', q)
         df = _market_data_timed(q)
 
+    dataset_ids = getattr(df, 'dataset_ids', ())
     if df.empty:
-        return pd.Series()
-
-    latest = df.index.max()
-    _logger.info('selected pricing date %s', latest)
-    df = df.loc[latest]
-    business_day = _get_custom_bd(asset.exchange)
-    df = df.assign(expirationDate=df.index + df['expiry'].map(_to_offset) + business_day - business_day)
-    df = df.set_index('expirationDate')
-    df.sort_index(inplace=True)
-    df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
-    return df['swaptionVol'] if not df.empty else pd.Series()
+        series = ExtendedSeries()
+    else:
+        latest = df.index.max()
+        _logger.info('selected pricing date %s', latest)
+        df = df.loc[latest]
+        business_day = _get_custom_bd(asset.exchange)
+        df = df.assign(expirationDate=df.index + df['expiry'].map(_to_offset) + business_day - business_day)
+        df = df.set_index('expirationDate')
+        df.sort_index(inplace=True)
+        df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
+        series = ExtendedSeries() if df.empty else ExtendedSeries(df['swaptionVol'])
+    series.dataset_ids = dataset_ids
+    return series
 
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
@@ -822,7 +847,7 @@ def swaption_atm_fwd_rate(asset: Asset, expiration_tenor: str, termination_tenor
 
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
-    return Series() if df.empty else df['atmFwdRate']
+    return _extract_series_from_df(df, QueryType.ATM_FWD_RATE)
 
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
@@ -861,7 +886,7 @@ def midcurve_vol(asset: Asset, expiration_tenor: str, forward_tenor: str, termin
 
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
-    return Series() if df.empty else df['midcurveVol']
+    return _extract_series_from_df(df, QueryType.MIDCURVE_VOL)
 
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
@@ -893,7 +918,7 @@ def midcurve_atm_fwd_rate(asset: Asset, expiration_tenor: str, forward_tenor: st
 
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
-    return Series() if df.empty else df['midcurveAtmFwdRate']
+    return _extract_series_from_df(df, QueryType.MIDCURVE_ATM_FWD_RATE)
 
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
@@ -927,7 +952,7 @@ def cap_floor_vol(asset: Asset, expiration_tenor: str, relative_strike: float, *
 
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
-    return Series() if df.empty else df['capFloorVol']
+    return _extract_series_from_df(df, QueryType.CAP_FLOOR_VOL)
 
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
@@ -957,7 +982,7 @@ def cap_floor_atm_fwd_rate(asset: Asset, expiration_tenor: str, *, source: str =
 
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
-    return Series() if df.empty else df['capFloorAtmFwdRate']
+    return _extract_series_from_df(df, QueryType.CAP_FLOOR_ATM_FWD_RATE)
 
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
@@ -996,7 +1021,7 @@ def spread_option_vol(asset: Asset, expiration_tenor: str, long_tenor: str, shor
 
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
-    return Series() if df.empty else df['spreadOptionVol']
+    return _extract_series_from_df(df, QueryType.SPREAD_OPTION_VOL)
 
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
@@ -1028,7 +1053,7 @@ def spread_option_atm_fwd_rate(asset: Asset, expiration_tenor: str, long_tenor: 
 
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
-    return Series() if df.empty else df['spreadOptionAtmFwdRate']
+    return _extract_series_from_df(df, QueryType.SPREAD_OPTION_ATM_FWD_RATE)
 
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
@@ -1062,7 +1087,7 @@ def zc_inflation_swap_rate(asset: Asset, termination_tenor: str, *, source: str 
 
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
-    return Series() if df.empty else df['inflationSwapRate']
+    return _extract_series_from_df(df, QueryType.INFLATION_SWAP_RATE)
 
 
 @plot_measure((AssetClass.FX,), (AssetType.Cross,),
@@ -1094,7 +1119,7 @@ def basis(asset: Asset, termination_tenor: str, *, source: str = None, real_time
 
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
-    return Series() if df.empty else df['basis']
+    return _extract_series_from_df(df, QueryType.BASIS)
 
 
 @plot_measure((AssetClass.FX,), (AssetType.Cross,), [MeasureDependency(
@@ -1127,11 +1152,12 @@ def forecast(asset: Asset, forecast_horizon: str, *, source: str = None, real_ti
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
 
-    series = Series() if df.empty else df['forecast']
+    series = ExtendedSeries() if df.empty else ExtendedSeries(df['forecast'])
 
     if cross_mqid != usd_based_cross_mqid:
         series = 1 / series
 
+    series.dataset_ids = getattr(df, 'dataset_ids', ())
     return series
 
 
@@ -1186,18 +1212,21 @@ def vol_term(asset: Asset, strike_reference: VolReference, relative_strike: Real
         _logger.debug('q %s', q)
         df = _market_data_timed(q)
 
+    dataset_ids = getattr(df, 'dataset_ids', ())
     if df.empty:
-        return pd.Series()
-
-    latest = df.index.max()
-    _logger.info('selected pricing date %s', latest)
-    df = df.loc[latest]
-    cbd = _get_custom_bd(asset.exchange)
-    df = df.assign(expirationDate=df.index + df['tenor'].map(_to_offset) + cbd - cbd)
-    df = df.set_index('expirationDate')
-    df.sort_index(inplace=True)
-    df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
-    return df['impliedVolatility'] if not df.empty else pd.Series()
+        series = ExtendedSeries()
+    else:
+        latest = df.index.max()
+        _logger.info('selected pricing date %s', latest)
+        df = df.loc[latest]
+        cbd = _get_custom_bd(asset.exchange)
+        df = df.assign(expirationDate=df.index + df['tenor'].map(_to_offset) + cbd - cbd)
+        df = df.set_index('expirationDate')
+        df.sort_index(inplace=True)
+        df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
+        series = ExtendedSeries() if df.empty else ExtendedSeries(df['impliedVolatility'])
+    series.dataset_ids = dataset_ids
+    return series
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.IMPLIED_VOLATILITY])
@@ -1233,16 +1262,19 @@ def vol_smile(asset: Asset, tenor: str, strike_reference: VolSmileReference,
         _logger.debug('q %s', q)
         df = _market_data_timed(q)
 
+    dataset_ids = getattr(df, 'dataset_ids', ())
     if df.empty:
-        return Series
+        series = ExtendedSeries()
+    else:
+        latest = df.index.max()
+        _logger.info('selected pricing date %s', latest)
+        df = df.loc[latest]
 
-    latest = df.index.max()
-    _logger.info('selected pricing date %s', latest)
-    df = df.loc[latest]
-
-    vols = df['impliedVolatility'].values
-    strikes = df['relativeStrike'].values
-    return Series(vols, index=strikes)
+        vols = df['impliedVolatility'].values
+        strikes = df['relativeStrike'].values
+        series = ExtendedSeries(vols, index=strikes)
+    series.dataset_ids = dataset_ids
+    return series
 
 
 @plot_measure((AssetClass.Equity, AssetClass.Commod), None, [QueryType.FORWARD])
@@ -1268,18 +1300,21 @@ def fwd_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None, *, sourc
         _logger.debug('q %s', q)
         df = _market_data_timed(q)
 
+    dataset_ids = getattr(df, 'dataset_ids', ())
     if df.empty:
-        return pd.Series()
-
-    latest = df.index.max()
-    _logger.info('selected pricing date %s', latest)
-    df = df.loc[latest]
-    cbd = _get_custom_bd(asset.exchange)
-    df.loc[:, 'expirationDate'] = df.index + df['tenor'].map(_to_offset) + cbd - cbd
-    df = df.set_index('expirationDate')
-    df.sort_index(inplace=True)
-    df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
-    return df['forward'] if not df.empty else pd.Series()
+        series = ExtendedSeries()
+    else:
+        latest = df.index.max()
+        _logger.info('selected pricing date %s', latest)
+        df = df.loc[latest]
+        cbd = _get_custom_bd(asset.exchange)
+        df.loc[:, 'expirationDate'] = df.index + df['tenor'].map(_to_offset) + cbd - cbd
+        df = df.set_index('expirationDate')
+        df.sort_index(inplace=True)
+        df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
+        series = ExtendedSeries() if df.empty else ExtendedSeries(df['forward'])
+    series.dataset_ids = dataset_ids
+    return series
 
 
 @cachetools.func.ttl_cache()  # fine as long as availability is not different between users
@@ -1329,34 +1364,42 @@ def var_term(asset: Asset, pricing_date: Optional[str] = None, forward_start_dat
         if forward_start_date:
             tenors = _var_swap_tenors(asset)
             sub_frames = []
+            dataset_ids = set()
             for t in tenors:
                 diff = _tenor_to_month(t) - _tenor_to_month(forward_start_date)
                 if diff < 1:
                     continue
                 t1 = _month_to_tenor(diff)
-                c = var_swap(asset, t1, forward_start_date, source=source, real_time=real_time).to_frame()
+                c = var_swap(asset, t1, forward_start_date, source=source, real_time=real_time)
+                dataset_ids.update(getattr(c, 'dataset_ids', ()))
+                c = c.to_frame()
                 if not c.empty:
                     c['tenor'] = t1
                     sub_frames.append(c)
             df = pd.concat(sub_frames)
+            dataset_ids = tuple(dataset_ids)
         else:
             q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.VAR_SWAP,
                                                   source=source, real_time=real_time)
             _logger.debug('q %s', q)
             df = _market_data_timed(q)
+            dataset_ids = getattr(df, 'dataset_ids', ())
 
     if df.empty:
-        return pd.Series()
+        series = ExtendedSeries()
+    else:
+        latest = df.index.max()
+        _logger.info('selected pricing date %s', latest)
+        df = df.loc[latest]
+        cbd = _get_custom_bd(asset.exchange)
+        df.loc[:, Fields.EXPIRATION_DATE.value] = df.index + df[Fields.TENOR.value].map(_to_offset) + cbd - cbd
+        df = df.set_index(Fields.EXPIRATION_DATE.value)
+        df.sort_index(inplace=True)
+        df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
+        series = ExtendedSeries() if df.empty else ExtendedSeries(df[Fields.VAR_SWAP.value])
 
-    latest = df.index.max()
-    _logger.info('selected pricing date %s', latest)
-    df = df.loc[latest]
-    cbd = _get_custom_bd(asset.exchange)
-    df.loc[:, Fields.EXPIRATION_DATE.value] = df.index + df[Fields.TENOR.value].map(_to_offset) + cbd - cbd
-    df = df.set_index(Fields.EXPIRATION_DATE.value)
-    df.sort_index(inplace=True)
-    df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
-    return df[Fields.VAR_SWAP.value] if not df.empty else pd.Series()
+    series.dataset_ids = dataset_ids
+    return series
 
 
 @plot_measure((AssetClass.Equity, AssetClass.Commod,), None, [QueryType.VAR_SWAP])
@@ -1381,7 +1424,9 @@ def var_swap(asset: Asset, tenor: str, forward_start_date: Optional[str] = None,
                                               where=where, source=source, real_time=real_time)
         _logger.debug('q %s', q)
         df = _market_data_timed(q)
-        return Series() if df.empty else df[Fields.VAR_SWAP.value]
+        series = ExtendedSeries() if df.empty else ExtendedSeries(df[Fields.VAR_SWAP.value])
+        series.dataset_ids = getattr(df, 'dataset_ids', ())
+        return series
     else:
         if not isinstance(forward_start_date, str):
             raise MqTypeError('forward_start_date must be a relative date')
@@ -1394,7 +1439,9 @@ def var_swap(asset: Asset, tenor: str, forward_start_date: Optional[str] = None,
 
         tenors = _var_swap_tenors(asset)
         if yt not in tenors or zt not in tenors:
-            return Series()
+            series = ExtendedSeries()
+            series.dataset_ids = ()
+            return series
 
         _logger.debug('where tenor=%s', f'{yt},{zt}')
         where = FieldFilterMap(tenor=[yt, zt])
@@ -1402,17 +1449,22 @@ def var_swap(asset: Asset, tenor: str, forward_start_date: Optional[str] = None,
                                               where=where, source=source, real_time=real_time)
         _logger.debug('q %s', q)
         df = _market_data_timed(q)
+        dataset_ids = getattr(df, 'dataset_ids', ())
         if df.empty:
-            return Series()
-
-        grouped = df.groupby(Fields.TENOR.value)
-        try:
-            yg = grouped.get_group(yt)[Fields.VAR_SWAP.value]
-            zg = grouped.get_group(zt)[Fields.VAR_SWAP.value]
-        except KeyError:
-            _logger.debug('no data for one or more tenors')
-            return Series()
-        return (z * zg - y * yg) / x
+            series = ExtendedSeries()
+        else:
+            grouped = df.groupby(Fields.TENOR.value)
+            try:
+                yg = grouped.get_group(yt)[Fields.VAR_SWAP.value]
+                zg = grouped.get_group(zt)[Fields.VAR_SWAP.value]
+            except KeyError:
+                _logger.debug('no data for one or more tenors')
+                series = ExtendedSeries()
+                series.dataset_ids = ()
+                return series
+            series = ExtendedSeries((z * zg - y * yg) / x)
+        series.dataset_ids = dataset_ids
+        return series
 
 
 def _get_iso_data(region: str):
@@ -1594,17 +1646,31 @@ def forward_price(asset: Asset, price_method: str = 'LMP', bucket: str = 'PEAK',
                                               where=where, source=None,
                                               real_time=False)
         forwards_data = _market_data_timed(q)
-        forwards_data['date'] = forwards_data.index.date
+        dataset_ids = getattr(forwards_data, 'dataset_ids', ())
+
+        forwards_data['dates'] = forwards_data.index.date
         print('q %s', q)
 
-    result_df = pd.merge(weights, forwards_data, how='left', on=['quantityBucket', 'contract'])
+    # Using cartesian product of the date range and weights dataframe with keys - quantityBucket and contract
+    # as this gives us an exhaustive list of data points required for the data to be complete
+    # i.e a composite key comprised of date, quantityBucket and contract
+    dates = pd.DataFrame(data=forwards_data['dates'].unique(), columns=["dates"])
+    weights = pd.merge(weights.assign(key=0), dates.assign(key=0), on='key').drop('key', axis=1)
+
+    # Left join on the weights dataframe using the composite key
+    result_df = pd.merge(weights, forwards_data, on=['quantityBucket', 'contract', 'dates'], how='left')
+
     result_df['weighted_price'] = result_df['weight'] * result_df['forwardPrice']
-    result_df = result_df.groupby('date').agg({'weight': 'sum',
-                                               'weighted_price': 'sum'})
+
+    # Filtering dates that have missing buckets or contracts.
+    # Dates with any null values due to unmatched rows in the right table with raw data will be removed as a result.
+    result_df = result_df.groupby('dates').filter(lambda x: x.notnull().values.all())
+    result_df = result_df.groupby('dates').agg({'weight': 'sum', 'weighted_price': 'sum'})
     result_df['price'] = result_df['weighted_price'] / result_df['weight']
 
-    result = pd.Series(result_df['price'], index=result_df.index)
+    result = ExtendedSeries(result_df['price'], index=result_df.index)
     result = result.rename_axis(None, axis='index')
+    result.dataset_ids = dataset_ids
     return result
 
 
@@ -1658,6 +1724,7 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
         df = _market_data_timed(q)
         _logger.debug('q %s', q)
 
+    dataset_ids = getattr(df, 'dataset_ids', ())
     df = df.tz_convert(timezone)
 
     df['month'] = df.index.to_period('M')
@@ -1686,7 +1753,9 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
     df = df['price'].resample(granularity).mean()
     df.index = df.index.date
     df = df.loc[start_date: end_date]
-    return df
+    series = ExtendedSeries(df)
+    series.dataset_ids = dataset_ids
+    return series
 
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
@@ -1744,8 +1813,9 @@ def central_bank_swap_rate(asset: Asset, rate_type: MeetingType = MeetingType.ME
         df['value'] = df['value'] - spot
     df = df.reset_index()
     df = df.set_index('meetingDate')
-    df = df['value']
-    return df
+    series = ExtendedSeries(df['value'])
+    series.dataset_ids = ('CENTRAL_BANK_WATCH',)
+    return series
 
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
@@ -1812,10 +1882,12 @@ def policy_rate_expectation(asset: Asset, rate_type: MeetingType = MeetingType.M
         joined_df = cbw_df.merge(spot_df, on=['date', 'assetId', 'rateType', 'location', 'valuationDate'], how='inner')
         joined_df = joined_df.set_index('valuationDate')
         joined_df['relValue'] = (joined_df['value'] - joined_df['spotValue'])
-        return joined_df['relValue']
-    cbw_df = cbw_df.set_index('valuationDate')
-    cbw_df = cbw_df['value']
-    return cbw_df
+        series = ExtendedSeries(joined_df['relValue'])
+    else:
+        cbw_df = cbw_df.set_index('valuationDate')
+        series = ExtendedSeries(cbw_df['value'])
+    series.dataset_ids = ('CENTRAL_BANK_WATCH',)
+    return series
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
@@ -1856,7 +1928,7 @@ def dividend_yield(asset: Asset, period: str, period_direction: FundamentalMetri
     q['queries'][0]['vendor'] = 'Goldman Sachs'
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
-    return Series() if df.empty else df['fundamentalMetric']
+    return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
@@ -1899,7 +1971,7 @@ def earnings_per_share(asset: Asset,
     q['queries'][0]['vendor'] = 'Goldman Sachs'
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
-    return Series() if df.empty else df['fundamentalMetric']
+    return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
@@ -1942,7 +2014,7 @@ def earnings_per_share_positive(asset: Asset,
     q['queries'][0]['vendor'] = 'Goldman Sachs'
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
-    return Series() if df.empty else df['fundamentalMetric']
+    return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
@@ -1985,7 +2057,7 @@ def net_debt_to_ebitda(asset: Asset,
     q['queries'][0]['vendor'] = 'Goldman Sachs'
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
-    return Series() if df.empty else df['fundamentalMetric']
+    return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
@@ -2026,7 +2098,7 @@ def price_to_book(asset: Asset, period: str, period_direction: FundamentalMetric
     q['queries'][0]['vendor'] = 'Goldman Sachs'
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
-    return Series() if df.empty else df['fundamentalMetric']
+    return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
@@ -2067,7 +2139,7 @@ def price_to_cash(asset: Asset, period: str, period_direction: FundamentalMetric
     q['queries'][0]['vendor'] = 'Goldman Sachs'
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
-    return Series() if df.empty else df['fundamentalMetric']
+    return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
@@ -2108,7 +2180,7 @@ def price_to_earnings(asset: Asset, period: str, period_direction: FundamentalMe
     q['queries'][0]['vendor'] = 'Goldman Sachs'
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
-    return Series() if df.empty else df['fundamentalMetric']
+    return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
@@ -2151,7 +2223,7 @@ def price_to_earnings_positive(asset: Asset,
     q['queries'][0]['vendor'] = 'Goldman Sachs'
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
-    return Series() if df.empty else df['fundamentalMetric']
+    return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
@@ -2192,7 +2264,7 @@ def price_to_sales(asset: Asset, period: str, period_direction: FundamentalMetri
     q['queries'][0]['vendor'] = 'Goldman Sachs'
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
-    return Series() if df.empty else df['fundamentalMetric']
+    return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
@@ -2233,7 +2305,7 @@ def return_on_equity(asset: Asset, period: str, period_direction: FundamentalMet
     q['queries'][0]['vendor'] = 'Goldman Sachs'
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
-    return Series() if df.empty else df['fundamentalMetric']
+    return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
@@ -2274,7 +2346,7 @@ def sales_per_share(asset: Asset, period: str, period_direction: FundamentalMetr
     q['queries'][0]['vendor'] = 'Goldman Sachs'
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
-    return Series() if df.empty else df['fundamentalMetric']
+    return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
 @plot_measure((AssetClass.Commod, AssetClass.Equity, AssetClass.FX), None, [QueryType.SPOT])
@@ -2297,7 +2369,9 @@ def realized_volatility(asset: Asset, w: Union[Window, int] = Window(None, 0), r
         real_time=real_time
     )
     df = _market_data_timed(q)
-    return volatility(df['spot'], w, returns_type)
+    series = ExtendedSeries() if df.empty else ExtendedSeries(volatility(df['spot'], w, returns_type))
+    series.dataset_ids = getattr(df, 'dataset_ids', ())
+    return series
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.ES_NUMERIC_SCORE])
@@ -2332,4 +2406,6 @@ def esg_aggregate(asset: Asset, metric: EsgMetric, value_unit: Optional[EsgValue
     q = GsDataApi.build_market_data_query([mqid], query_type, source=source, real_time=real_time)
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
-    return Series() if df.empty else df[query_metric]
+    series = ExtendedSeries() if df.empty else ExtendedSeries(df[query_metric])
+    series.dataset_ids = getattr(df, 'dataset_ids', ())
+    return series

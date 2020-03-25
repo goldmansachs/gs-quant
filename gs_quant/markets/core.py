@@ -148,7 +148,7 @@ class PricingContext(ContextBaseWithDefault):
                  use_cache: bool = False,
                  visible_to_gs: bool = False,
                  csa_term: Optional[str] = None,
-                 poll_for_batch_results: Optional[bool] = True,
+                 poll_for_batch_results: Optional[bool] = False,
                  batch_results_timeout: Optional[int] = None
                  ):
         """
@@ -527,7 +527,9 @@ class LivePricingContext(PricingContext):
                  is_async: bool = False,
                  is_batch: bool = False,
                  visible_to_gs: bool = False,
-                 csa_term: Optional[str] = None
+                 csa_term: Optional[str] = None,
+                 poll_for_batch_results: Optional[bool] = False,
+                 batch_results_timeout: Optional[int] = None
                  ):
         # TODO we use 23:59:59.999999 as a sentinel value to indicate live pricing for now. Fix this
         d = business_day_offset(dt.date.today(), -1, roll='preceding')
@@ -539,5 +541,7 @@ class LivePricingContext(PricingContext):
             is_batch=is_batch,
             use_cache=False,
             visible_to_gs=visible_to_gs,
-            csa_term=csa_term
+            csa_term=csa_term,
+            poll_for_batch_results=poll_for_batch_results,
+            batch_results_timeout=batch_results_timeout
         )

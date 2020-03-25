@@ -277,10 +277,12 @@ class GsDataApi(DataApi):
         if 'errorMessages' in container:
             raise MqValueError(f"market data request {body['requestId']} failed: {container['errorMessages']}")
         if 'response' not in container:
-            return pd.DataFrame()
-        df = pd.DataFrame(container['response']['data'])
-        df.set_index('date' if 'date' in df.columns else 'time', inplace=True)
-        df.index = pd.to_datetime(df.index)
+            df = MarketDataResponseFrame()
+        else:
+            df = MarketDataResponseFrame(container['response']['data'])
+            df.set_index('date' if 'date' in df.columns else 'time', inplace=True)
+            df.index = pd.to_datetime(df.index)
+        df.dataset_ids = tuple(container.get('dataSetIds', ()))
         return df
 
     @classmethod
@@ -509,7 +511,7 @@ class GsDataApi(DataApi):
             df = pd.DataFrame(data)
 
             for field_name, type_name in dataset_types.items():
-                if df.get(type_name) is not None and type_name in ('date', 'date-time'):
+                if df.get(field_name) is not None and type_name in ('date', 'date-time'):
                     df = df.astype({field_name: numpy.datetime64})
 
             field_names = dataset_types.keys()
@@ -522,3 +524,12 @@ class GsDataApi(DataApi):
             return df
         else:
             return pd.DataFrame({})
+
+
+class MarketDataResponseFrame(pd.DataFrame):
+    _internal_names = pd.DataFrame._internal_names + ['dataset_ids']
+    _internal_names_set = set(_internal_names)
+
+    @property
+    def _constructor(self):
+        return MarketDataResponseFrame
