@@ -374,8 +374,8 @@ def swap_term_structure(asset: Asset, benchmark_type: BenchmarkType = None, floa
                                  query_type=QueryType.BASIS_SWAP_RATE)])
 def basis_swap_term_structure(asset: Asset, spread_benchmark_type: BenchmarkType = None, spread_tenor: str = None,
                               reference_benchmark_type: BenchmarkType = None, reference_tenor: str = None,
-                              forward_tenor: str = 'Spot', *, source: str = None,
-                              pricing_date: Optional[GENERIC_DATE] = None, real_time: bool = False, ) -> Series:
+                              forward_tenor: str = 'Spot', pricing_date: Optional[GENERIC_DATE] = None,
+                              *, source: str = None, real_time: bool = False, ) -> Series:
     """
     GS end-of-day Floating-Floating interest rate swap (IRS) term structure across major currencies.
 

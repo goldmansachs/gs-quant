@@ -41,7 +41,9 @@ class HistoricalPricingContext(PricingContext):
             use_cache: bool = False,
             visible_to_gs: bool = False,
             csa_term: str = None,
-            market_data_location: Optional[str] = None):
+            market_data_location: Optional[str] = None,
+            poll_for_batch_results: Optional[bool] = False,
+            batch_results_timeout: Optional[int] = None):
         """
         A context for producing valuations over multiple dates
 
@@ -68,7 +70,8 @@ class HistoricalPricingContext(PricingContext):
         >>> price_series = price_f.result()
         """
         super().__init__(is_async=is_async, is_batch=is_batch, use_cache=use_cache, visible_to_gs=visible_to_gs,
-                         csa_term=csa_term, market_data_location=market_data_location)
+                         csa_term=csa_term, market_data_location=market_data_location,
+                         poll_for_batch_results=poll_for_batch_results, batch_results_timeout=batch_results_timeout)
         self.__calc_dates = None
 
         if start is not None:
