@@ -15,7 +15,6 @@ under the License.
 """
 import copy
 import datetime as dt
-import itertools
 import logging
 import weakref
 from abc import ABCMeta
@@ -25,7 +24,7 @@ from typing import Iterable, Optional, Tuple, Union
 
 from gs_quant.api.risk import RiskApi
 from gs_quant.base import Priceable, PricingKey, Scenario
-from gs_quant.context_base import ContextBaseWithDefault
+from gs_quant.context_base import ContextBaseWithDefault, nullcontext
 from gs_quant.datetime.date import business_day_offset, is_business_day
 from gs_quant.risk import DataFrameWithInfo, ErrorValue, FloatWithInfo, MarketDataScenario, \
     PricingDateAndMarketDataAsOf, \
@@ -214,13 +213,14 @@ class PricingContext(ContextBaseWithDefault):
         self.__futures = {}
         self.__use_cache = use_cache
         self.__visible_to_gs = visible_to_gs
+        self.__requests_by_provider = {}
         self.__lock = Lock()
 
     def _on_exit(self, exc_type, exc_val, exc_tb):
         self._calc()
 
     def _calc(self):
-        requests_by_provider = {}
+        requests_by_provider = self.__active_context.__requests_by_provider
         session = GsSession.current
         batch_result = Future() if self.__is_batch else None
 
@@ -231,10 +231,13 @@ class PricingContext(ContextBaseWithDefault):
                     handle_results(results, request_, provider_)
             except Exception as e:
                 _logger.error(str(e))
-                if self.__is_batch:
-                    batch_result.set_result(True)
 
-                handle_results(e, request_, provider_)
+                try:
+                    handle_results(e, request_, provider_)
+                except Exception as he:
+                    _logger.error(str(he))
+                    if self.__is_batch:
+                        batch_result.set_result(True)
 
         def get_batch_results_if_ready(provider_: RiskApi):
             def get_results():
@@ -310,7 +313,7 @@ class PricingContext(ContextBaseWithDefault):
                             tuple(positions),
                             tuple(sorted(risk_measures, key=lambda m: m.name or m.measure_type.value)),
                             parameters=self.__parameters,
-                            wait_for_results=not self.__is_batch,
+                            wait_for_results=not self.__active_context.__is_batch,
                             pricing_location=self.__market_data_location,
                             scenario=scenario,
                             pricing_and_market_data_as_of=self._pricing_market_data_as_of,
@@ -319,18 +322,23 @@ class PricingContext(ContextBaseWithDefault):
 
                         requests_by_provider.setdefault(provider, {})[request] = None
 
-        # We can't use asyncio here until we move to an async HTTP client
-        num_requests = len(tuple(itertools.chain.from_iterable(requests_by_provider.values())))
-        request_pool = ThreadPoolExecutor(num_requests) if num_requests > 1 or self.__is_async else None
+        request_pools = []
 
-        for provider, requests in requests_by_provider.items():
+        for provider, requests in self.__requests_by_provider.items():
+            num_requests = min(len(requests), 20)
+            request_pool = ThreadPoolExecutor(num_requests) if num_requests > 1 or self.__is_async else None
+            if request_pool:
+                request_pools.append(request_pool)
+
             for request in requests.keys():
                 if request_pool:
                     request_pool.submit(run_request, request, provider)
                 else:
                     run_request(request, provider)
 
-        if request_pool:
+        self.__requests_by_provider = {}
+
+        for request_pool in request_pools:
             request_pool.shutdown(wait=not self.__is_async)
 
         if batch_result and not self.__is_async:
@@ -361,6 +369,10 @@ class PricingContext(ContextBaseWithDefault):
 
                 if not positions_for_measure:
                     self.__futures.pop((request.scenario, risk_measure))
+
+    @property
+    def __active_context(self):
+        return next((c for c in reversed(PricingContext.path) if c.is_entered), self)
 
     @property
     def __parameters(self) -> RiskRequestParameters:
@@ -439,11 +451,12 @@ class PricingContext(ContextBaseWithDefault):
         position = RiskPosition(priceable, priceable.get_quantity())
         multiple_measures = not isinstance(risk_measure, RiskMeasure)
         futures = {}
+        active_context_lock = self.__active_context.__lock if self.__active_context != self else nullcontext()
 
-        with self.__lock:
+        with self.__lock, active_context_lock:
             for measure in risk_measure if multiple_measures else (risk_measure,):
                 scenario = self.__scenario
-                measure_future = self.__futures.get((scenario, measure), {}).get(position)
+                measure_future = self.__active_context.__futures.get((scenario, measure), {}).get(position)
 
                 if measure_future is None:
                     measure_future = PricingFuture(self)
@@ -456,7 +469,7 @@ class PricingContext(ContextBaseWithDefault):
                         self.__risk_measures_in_scenario_by_provider_and_position.setdefault(
                             priceable.provider(), {}).setdefault(
                             position, {}).setdefault(scenario, set()).add(measure)
-                        self.__futures.setdefault((scenario, measure), {})[position] = measure_future
+                        self.__active_context.__futures.setdefault((scenario, measure), {})[position] = measure_future
 
                 futures[measure] = measure_future
 

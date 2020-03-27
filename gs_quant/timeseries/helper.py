@@ -13,7 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-
+import inspect
 import logging
 from collections import namedtuple
 from enum import Enum, IntEnum
@@ -136,7 +136,15 @@ def plot_measure(asset_class: Optional[tuple] = None, asset_type: Optional[tuple
 def plot_method(fn):
     # Indicates that fn should be exported to plottool as a method.
     fn.plot_method = True
-    return fn
+
+    # Allows fn to accept and ignore real_time argument even if it is not defined in the signature
+    @wraps(fn)
+    def ignore_extra_argument(*args, **kwargs):
+        if 'real_time' not in inspect.signature(fn).parameters:
+            kwargs.pop('real_time', None)
+        return fn(*args, **kwargs)
+
+    return ignore_extra_argument
 
 
 def log_return(logger: logging.Logger, message):

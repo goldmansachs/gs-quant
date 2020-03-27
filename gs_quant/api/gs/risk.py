@@ -102,15 +102,13 @@ class GsRiskApi(RiskApi):
                         if elapsed > 0:
                             # Send a ping
                             await asyncio.wait_for(ws.send(json.dumps([])), send_timeout)
-                            await asyncio.wait_for(ws.recv(), timeout=send_timeout)
 
                         try:
                             response = await asyncio.wait_for(ws.recv(), timeout=rec_timeout)
-                            result_parts = response.split(';')
-
-                            if len(result_parts) < 2:
+                            if response == 'true':
                                 continue
 
+                            result_parts = response.split(';')
                             result_id = result_parts[0]
                             raw_result = ';'.join(result_parts[1:])
                             is_error = not raw_result.startswith(r'R[')

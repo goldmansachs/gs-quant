@@ -19,8 +19,8 @@ import pandas as pd
 import pytest
 
 import gs_quant.timeseries as ts
-from gs_quant.timeseries.helper import _create_int_enum, plot_function, plot_measure, normalize_window, Window, \
-    apply_ramp
+from gs_quant.timeseries.helper import _create_int_enum, plot_function, plot_measure, plot_method, normalize_window, \
+    Window, apply_ramp
 
 # TODO test the instance of IntEnum when we have any.
 
@@ -52,11 +52,18 @@ def pm():
     pass
 
 
+@plot_method
+def pmt(arg):
+    return arg
+
+
 def test_decorators():
     assert pf.plot_function
     assert pm.plot_measure
+    assert pmt.plot_method
     assert pm.asset_class is None
     assert pm.asset_type == ('abc',)
+    assert pmt(1, real_time=True) == 1
 
 
 def test_normalize_window_defaults_window_if_none_passed():
