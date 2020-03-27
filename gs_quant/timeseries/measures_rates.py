@@ -249,11 +249,6 @@ def basis_swap_spread(asset: Asset, swap_tenor: str = '1y',
     legs_w_defaults['spread'] = _get_swap_leg_defaults(currency, spread_benchmark_type, spread_tenor)
     legs_w_defaults['reference'] = _get_swap_leg_defaults(currency, reference_benchmark_type, reference_tenor)
 
-    if legs_w_defaults['spread']['benchmark_type'] == 'USD-LIBOR-BBA':
-        legs_w_defaults['spread']['benchmark_type'] = 'USD-Libor-BBA'
-    if legs_w_defaults['reference']['benchmark_type'] == 'USD-LIBOR-BBA':
-        legs_w_defaults['reference']['benchmark_type'] = 'USD-Libor-BBA'
-
     if forward_tenor == '0b' or forward_tenor is None or forward_tenor == 'Spot':
         forward_tenor = '0d'
     elif not re.fullmatch('(\\d+)([bdwmy])', forward_tenor):
@@ -417,11 +412,6 @@ def basis_swap_term_structure(asset: Asset, spread_benchmark_type: BenchmarkType
     legs_w_defaults = dict()
     legs_w_defaults['spread'] = _get_swap_leg_defaults(currency, spread_benchmark_type, spread_tenor)
     legs_w_defaults['reference'] = _get_swap_leg_defaults(currency, reference_benchmark_type, reference_tenor)
-
-    if legs_w_defaults['spread']['benchmark_type'] == 'USD-LIBOR-BBA':
-        legs_w_defaults['spread']['benchmark_type'] = 'USD-Libor-BBA'
-    if legs_w_defaults['reference']['benchmark_type'] == 'USD-LIBOR-BBA':
-        legs_w_defaults['reference']['benchmark_type'] = 'USD-Libor-BBA'
 
     csaTerms = currency.value + '-1'
     clearing_house = 'LCH'

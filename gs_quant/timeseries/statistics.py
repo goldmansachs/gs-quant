@@ -737,6 +737,7 @@ class LinearRegression:
         """
         return self._res.rsquared
 
+    @plot_method
     def fitted_values(self):
         """
         Fitted values

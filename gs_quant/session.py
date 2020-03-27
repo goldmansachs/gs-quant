@@ -361,7 +361,7 @@ class PassThroughSession(GsSession):
         self._session.headers.update({'Authorization': 'Bearer {}'.format(self.token)})
 
     def _headers(self):
-        return [('Cookie', self._session.headers['Authorization'])]
+        return [('Authorization', self._session.headers['Authorization'])]
 
 
 try:

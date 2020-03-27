@@ -60,6 +60,7 @@ setuptools.setup(
         "future",
         "inflection",
         "msgpack",
+        "nest-asyncio",
         "pandas<1.0.0",
         "python-dateutil>=2.7.0",
         "requests",
