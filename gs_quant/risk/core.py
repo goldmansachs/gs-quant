@@ -125,16 +125,7 @@ class ErrorValue(ResultInfo):
         return self if pricing_key == self.pricing_key else None
 
 
-class FloatWithInfo(float, ResultInfo):
-
-    def __new__(cls,
-                pricing_key: PricingKey,
-                value: Union[float, str],
-                unit: Optional[str] = None,
-                error: Optional[str] = None,
-                calculation_time: Optional[float] = None,
-                queueing_time: Optional[float] = None):
-        return float.__new__(cls, value)
+class ScalarWithInfo(ResultInfo, metaclass=ABCMeta):
 
     def __init__(
             self,
@@ -153,12 +144,10 @@ class FloatWithInfo(float, ResultInfo):
             calculation_time=calculation_time,
             queueing_time=queueing_time)
 
-    def __repr__(self):
-        return self.error if self.error else float.__repr__(self)
-
     @property
-    def raw_value(self) -> float:
-        return float(self)
+    @abstractmethod
+    def raw_value(self):
+        ...
 
     def for_pricing_key(self, pricing_key: PricingKey):
         return self if pricing_key == self.pricing_key else None
@@ -188,6 +177,44 @@ class FloatWithInfo(float, ResultInfo):
             pd.Series(index=dates, data=values).sort_index(),
             unit=unit,
             error=error)
+
+
+class FloatWithInfo(ScalarWithInfo, float):
+
+    def __new__(cls,
+                pricing_key: PricingKey,
+                value: Union[float, str],
+                unit: Optional[str] = None,
+                error: Optional[str] = None,
+                calculation_time: Optional[float] = None,
+                queueing_time: Optional[float] = None):
+        return float.__new__(cls, value)
+
+    @property
+    def raw_value(self) -> float:
+        return float(self)
+
+    def __repr__(self):
+        return self.error if self.error else float.__repr__(self)
+
+
+class StringWithInfo(ScalarWithInfo, str):
+
+    def __new__(cls,
+                pricing_key: PricingKey,
+                value: Union[float, str],
+                unit: Optional[str] = None,
+                error: Optional[str] = None,
+                calculation_time: Optional[float] = None,
+                queueing_time: Optional[float] = None):
+        return str.__new__(cls, value)
+
+    @property
+    def raw_value(self) -> str:
+        return str(self)
+
+    def __repr__(self):
+        return self.error if self.error else str.__repr__(self)
 
 
 class SeriesWithInfo(pd.Series, ResultInfo):
@@ -321,7 +348,7 @@ def sum_formatter(result: List, pricing_key: PricingKey, _instrument: Instrument
     return FloatWithInfo(
         pricing_key,
         sum(r.get('value', float('Nan')) for r in result),
-        unit=result[0].get('unit'),
+        unit=result[0].get('valueUnit'),
         error=next(filter(None, (r.get('error') for r in result)), None))
 
 
@@ -340,32 +367,46 @@ def __flatten_result(item: Union[List, Tuple]):
     return rows
 
 
-def __float_with_info_from_result(result: dict, pricing_key: PricingKey):
-    return FloatWithInfo(
-        pricing_key,
-        result.get('value', 'Nan'),
-        unit=result.get('unit'),
-        error=result.get('errorMessage'),
-        calculation_time=result.get('calculationTime'),
-        queueing_time=result.get('queueingTime'))
+def __scalar_with_info_from_result(result: dict, pricing_key: PricingKey):
+    if 'message' in result:
+        return StringWithInfo(
+            pricing_key,
+            result.get('message', ''),
+            unit=result.get('valueUnit'),
+            error=result.get('errorMessage'),
+            calculation_time=result.get('calculationTime'),
+            queueing_time=result.get('queueingTime'))
+    elif 'value' in result:
+        return FloatWithInfo(
+            pricing_key,
+            result.get('value', float('nan')),
+            unit=result.get('valueUnit'),
+            error=result.get('errorMessage'),
+            calculation_time=result.get('calculationTime'),
+            queueing_time=result.get('queueingTime'))
+    else:
+        raise RuntimeError('Unknown scalar result')
 
 
 def scalar_formatter(result: List, pricing_key: PricingKey, _instrument: InstrumentBase)\
-        -> Optional[Union[FloatWithInfo, SeriesWithInfo]]:
+        -> Optional[Union[FloatWithInfo, StringWithInfo, SeriesWithInfo, None]]:
     if not result:
         return None
 
     result = __flatten_result(result)
 
+    if not result:
+        return None
+
     if len(result) > 1 and 'date' in result[0]:
         columns = [x for x in result[0].keys() if x != 'value']
         compressed_results = pd.DataFrame(result).groupby(columns).sum().reset_index().to_dict('records')
-        r = [__float_with_info_from_result(r, pricing_key.for_pricing_date(r['date'])) for r in compressed_results]
-        return FloatWithInfo.compose(
+        r = [__scalar_with_info_from_result(r, pricing_key.for_pricing_date(r['date'])) for r in compressed_results]
+        return r[0].compose(
             r,
             pricing_key)
     else:
-        return __float_with_info_from_result(result[0], pricing_key)
+        return __scalar_with_info_from_result(result[0], pricing_key)
 
 
 def __dataframe_formatter(result: List, pricing_key: PricingKey, columns: Tuple[str, ...])\
@@ -379,7 +420,7 @@ def __dataframe_formatter(result: List, pricing_key: PricingKey, columns: Tuple[
     error = None
 
     if 'errorMessage' in df:
-        error = dict(zip(df.index, df.errorMessage))
+        error = df.errorMessage
 
     df.drop(columns=['calculationTime', 'queueingTime', 'errorMessage'], inplace=True, errors='ignore')
 
@@ -416,6 +457,7 @@ def instrument_formatter(result: List, pricing_key: PricingKey, instrument: Inst
     for field_values in result:
         new_instrument = instrument.from_dict(field_values)
         new_instrument.unresolved = instrument
+        new_instrument.name = instrument.name
 
         if len(result) > 1 and 'date' in field_values:
             date = dt.date.fromtimestamp(field_values['date'] / 1e9) + dt.timedelta(days=1)
@@ -741,6 +783,11 @@ ResolvedInstrumentValues = __risk_measure_with_doc_string(
     'Resolved InstrumentBase Values',
     RiskMeasureType.Resolved_Instrument_Values
 )
+Description = __risk_measure_with_doc_string(
+    'Description',
+    'Description',
+    RiskMeasureType.Description
+)
 Cashflows = __risk_measure_with_doc_string(
     'Cashflows',
     'Cashflows',
@@ -776,7 +823,7 @@ Formatters = {
     InflationDeltaParallel: scalar_formatter,
     InflationDeltaParallelLocalCcy: scalar_formatter,
     IRDelta: structured_formatter,
-    IRDeltaParallel: scalar_formatter,
+    IRDeltaParallel: sum_formatter,
     IRDeltaLocalCcy: structured_formatter,
     IRDeltaParallelLocalCcy: scalar_formatter,
     IRGammaParallel: scalar_formatter,
@@ -793,5 +840,6 @@ Formatters = {
     CRIFIRCurve: crif_formatter,
     ResolvedInstrumentValues: instrument_formatter,
     Cashflows: cashflows_formatter,
-    MarketDataAssets: asset_formatter
+    MarketDataAssets: asset_formatter,
+    Description: scalar_formatter
 }

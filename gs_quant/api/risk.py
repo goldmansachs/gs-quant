@@ -50,7 +50,7 @@ class RiskApi(metaclass=ABCMeta):
 
         for measure_idx, position_results in enumerate(results):
             risk_measure = request.measures[measure_idx]
-            formatter = Formatters.get(risk_measure)
+            formatter = Formatters.get(risk_measure) if not request.parameters.raw_results else None
             for position_idx, result in enumerate(position_results):
                 position = request.positions[position_idx]
 

@@ -6,7 +6,7 @@ You may obtain a copy of the License at
 
   http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing,
+Unless required by applicablNe law or agreed to in writing,
 software distributed under the License is distributed on an
 "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 KIND, either express or implied.  See the License for the
@@ -17,16 +17,20 @@ from gs_quant.context_base import nullcontext
 from gs_quant.instrument import Instrument
 from gs_quant.markets import PricingContext, PricingFuture
 from gs_quant.priceable import PriceableImpl
-from gs_quant.target.portfolios import PositionSet
+from gs_quant.target.portfolios import Position, PositionSet
 from gs_quant.risk import ResolvedInstrumentValues, RiskMeasure
 from gs_quant.risk.results import PortfolioRiskResult
 from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.api.gs.assets import GsAssetApi
 
 import copy
+import datetime as dt
 import pandas as pd
 from itertools import chain
+import logging
 from typing import Iterable, Optional, Tuple, Union
+
+_logger = logging.getLogger(__name__)
 
 
 class Portfolio(PriceableImpl):
@@ -34,7 +38,9 @@ class Portfolio(PriceableImpl):
     A collection of instruments
     """
 
-    def __init__(self, instruments: Optional[Union[Instrument, Iterable[Instrument], dict]] = ()):
+    def __init__(self,
+                 instruments: Optional[Union[Instrument, Iterable[Instrument], dict]] = (),
+                 name: Optional[str] = None):
         """
         Creates a portfolio object which can be used to hold instruments
         :param instruments: constructed with an instrument, a list or tuple of instruments or a dictionary where
@@ -49,6 +55,8 @@ class Portfolio(PriceableImpl):
             self.instruments = inst_list
         else:
             self.instruments = instruments
+
+        self.name = name
 
     def __getitem__(self, item):
         if isinstance(item, (int, slice)):
@@ -96,6 +104,24 @@ class Portfolio(PriceableImpl):
     def load_from_portfolio_name(name: str):
         portfolio = GsPortfolioApi.get_portfolio_by_name(name)
         return Portfolio.load_from_portfolio_id(portfolio.id)
+
+    def save(self):
+        if not self.name:
+            raise ValueError('name not set')
+
+        try:
+            portfolio_id = GsPortfolioApi.get_portfolio_by_name(self.name).id
+        except ValueError:
+            from gs_quant.target.portfolios import Portfolio as MarqueePortfolio
+            portfolio_id = GsPortfolioApi.create_portfolio(MarqueePortfolio('USD', self.name)).id
+            _logger.info('Created Marquee portfolio with ID: {}'.format(portfolio_id))
+
+        position_set = PositionSet(
+            position_date=dt.date.today(),
+            positions=tuple(Position(asset_id=GsAssetApi.get_or_create_asset_from_instrument(i))
+                            for i in self.instruments))
+
+        GsPortfolioApi.update_positions(portfolio_id, (position_set,))
 
     def append(self, instruments: Union[Instrument, Iterable[Instrument]]):
         self.instruments = self.instruments + ((instruments,) if isinstance(instruments, Instrument)

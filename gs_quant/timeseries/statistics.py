@@ -16,13 +16,14 @@
 # a 1-line description. Type annotations should be provided for parameters.
 
 import datetime
-
 import numpy
 import scipy.stats.mstats as stats
 from scipy.stats import percentileofscore
-import statsmodels.api as sm
-
 from .algebra import *
+import statsmodels.api as sm
+from ..models.epidemic import SIR, SEIR, PandemicModel
+from ..data import DataContext
+
 
 """
 Stats library is for basic arithmetic and statistical operations on timeseries.
@@ -753,3 +754,266 @@ class LinearRegression:
         """
         df = pd.concat(X_predict, axis=1) if isinstance(X_predict, list) else X_predict.to_frame()
         return self._res.predict(sm.add_constant(df) if self._fit_intercept else df)
+
+
+class SIRModel:
+
+    """SIR Compartmental model for transmission of infectious disease
+
+    :param s: number of susceptible individuals in population
+    :param i: number of infectious individuals in population
+    :param r: number of recovered individuals in population
+    :param n: total population size
+
+    **Usage**
+
+    Fit `SIR Model <https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology#The_SIR_model>`_ based on the
+    population in each compartment over a given time period.
+
+    The SIR models the movement of individuals between three compartments: susceptible (S), infected (I), and resistant
+    (R). The model calibrates parameters :
+
+    ===========   =======================================================
+    Parameter     Description
+    ===========   =======================================================
+    S0            initial susceptible individuals
+    I0            initial infected individuals
+    R0            initial recovered individuals
+    beta          Transmission rate from susceptible to infected
+    gamma         Immunity rate from infected to resistant
+    ===========   =======================================================
+
+    The parameters beta and gamma model how fast people move from being susceptible to infected (beta), and
+    subsequently from infected to resistant (gamma). This model can be used to forecast the populations of each
+    compartment once calibrated
+
+    """
+    def __init__(self, s: pd.Series, i: pd.Series, r: pd.Series, n: Union[pd.Series, float],
+                 end_date: date = None):
+
+        self.s = s
+        self.i = i
+        self.r = r
+        self.n = n
+
+        if end_date is None:
+            end_date = max(DataContext.current.end_date, s.index.max().date())
+
+        data = np.array([s, i, r]).T
+
+        beta_init = 0.9
+        gamma_init = 0.01
+
+        parameters, initial_conditions = SIR.get_parameters(s[0], i[0], r[0], n, beta=beta_init, gamma=gamma_init,
+                                                            S0_fixed=True, I0_fixed=True, R0_fixed=True)
+
+        self._model = PandemicModel(SIR, parameters=parameters, data=data,
+                                    initial_conditions=initial_conditions)
+        self._model.fit(verbose=False)
+
+        last_date = s.index.max().date()
+        predict_days = (end_date - last_date).days
+
+        t = np.arange(data.shape[0] + predict_days)
+        predict = self._model.solve(t, (self.s0(), self.i0(), self.r0()), (self.beta(), self.gamma(), n))
+
+        predict_dates = s.index.union(pd.date_range(last_date, end_date))
+
+        self._model.s_predict = pd.Series(predict[:, 0], predict_dates)
+        self._model.i_predict = pd.Series(predict[:, 1], predict_dates)
+        self._model.r_predict = pd.Series(predict[:, 2], predict_dates)
+
+    @plot_method
+    def s0(self):
+        """
+        Model calibration for initial susceptible individuals
+
+        :return: initial susceptible individuals
+        """
+        return self._model.fitted_parameters['S0']
+
+    @plot_method
+    def i0(self):
+        """
+        Model calibration for initial infectious individuals
+
+        :return: initial infectious individuals
+        """
+        return self._model.fitted_parameters['I0']
+
+    @plot_method
+    def r0(self):
+        """
+        Model calibration for initial recovered individuals
+
+        :return: initial recovered individuals
+        """
+        return self._model.fitted_parameters['R0']
+
+    @plot_method
+    def beta(self):
+        """
+        Model calibration for transmission rate (susceptible to infected)
+
+        :return: beta
+        """
+        return self._model.fitted_parameters['beta']
+
+    @plot_method
+    def gamma(self):
+        """
+        Model calibration for immunity (infected to resistant)
+
+        :return: beta
+        """
+        return self._model.fitted_parameters['gamma']
+
+    @plot_method
+    def s_predict(self):
+        """
+        Model calibration for susceptible individuals through time
+
+        :return: susceptible predict
+        """
+        return self._model.s_predict
+
+    @plot_method
+    def i_predict(self):
+        """
+        Model calibration for infected individuals through time
+
+        :return: infected predict
+        """
+        return self._model.i_predict
+
+    @plot_method
+    def r_predict(self):
+        """
+        Model calibration for recovered individuals through time
+
+        :return: infected predict
+        """
+        return self._model.r_predict
+
+
+class SEIRModel(SIRModel):
+
+    """SEIR Compartmental model for transmission of infectious disease
+
+    :param s: number of susceptible individuals in population
+    :param e: number of exposed individuals in population
+    :param i: number of infectious individuals in population
+    :param r: number of recovered individuals in population
+    :param n: total population size
+
+    **Usage**
+
+    Fit `SEIR Model <https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology#The_SEIR_model`_ based on the
+    population in each compartment over a given time period.
+
+    The SEIR models the movement of individuals between four compartments: susceptible (S), exposed (E), infected (I),
+    and resistant (R). The model calibrates parameters :
+
+    ===========   =======================================================
+    Parameter     Description
+    ===========   =======================================================
+    S0            initial susceptible individuals
+    E0            initial exposed individuals
+    I0            initial infected individuals
+    R0            initial recovered individuals
+    beta          Transmission rate from susceptible to exposed
+    gamma         Immunity rate from infected to resistant
+    sigma         Immunity rate from exposed to infected
+    ===========   =======================================================
+
+    The parameters beta, gamma, and sigma, model how fast people move from being susceptible to exposed (beta),
+    from exposed to infected (sigma), and subsequently from infected to resistant (gamma). This model can be used to
+    predict the populations of each compartment once calibrated.
+
+    """
+    def __init__(self, s: pd.Series, e: pd.Series, i: pd.Series, r: pd.Series, n: Union[pd.Series, float],
+                 end_date: date = None):
+
+        self.s = s
+        self.e = e
+        self.i = i
+        self.r = r
+        self.n = n
+
+        data = np.array([s, e, i, r]).T
+
+        if end_date is None:
+            end_date = max(DataContext.current.end_date, s.index.max().date())
+
+        beta_init = 0.9
+        gamma_init = 0.01
+        sigma_init = 0.2
+
+        parameters, initial_conditions = SEIR.get_parameters(s[0], e[0], i[0], r[0], n, beta=beta_init,
+                                                             gamma=gamma_init, sigma=sigma_init,
+                                                             S0_fixed=True, I0_fixed=True,
+                                                             R0_fixed=True, E0_fixed=True, S0_max=5e6, I0_max=5e6,
+                                                             E0_max=10e6, R0_max=10e6)
+
+        self._model = PandemicModel(SEIR, parameters=parameters, data=data,
+                                    initial_conditions=initial_conditions)
+        self._model.fit(verbose=False)
+
+        last_date = s.index.max().date()
+        predict_days = (end_date - last_date).days
+
+        t = np.arange(data.shape[0] + predict_days)
+        predict = self._model.solve(t, (self.s0(), self.e0(), self.i0(), self.r0()),
+                                    (self.beta(), self.gamma(), self.sigma(), n))
+
+        predict_dates = s.index.union(pd.date_range(last_date, end_date))
+
+        self._model.s_predict = pd.Series(predict[:, 0], predict_dates)
+        self._model.e_predict = pd.Series(predict[:, 1], predict_dates)
+        self._model.i_predict = pd.Series(predict[:, 2], predict_dates)
+        self._model.r_predict = pd.Series(predict[:, 3], predict_dates)
+
+    @plot_method
+    def e0(self):
+        """
+        Model calibration for initial exposed individuals
+
+        :return: initial exposed individuals
+        """
+        return self._model.fitted_parameters['E0']
+
+    @plot_method
+    def beta(self):
+        """
+        Model calibration for transmission rate (susceptible to exposed)
+
+        :return: beta
+        """
+        return self._model.fitted_parameters['beta']
+
+    @plot_method
+    def gamma(self):
+        """
+        Model calibration for immunity (infected to resistant)
+
+        :return: gamma
+        """
+        return self._model.fitted_parameters['gamma']
+
+    @plot_method
+    def sigma(self):
+        """
+        Model calibration for infection rate (exposed to infected)
+
+        :return: sigma
+        """
+        return self._model.fitted_parameters['sigma']
+
+    @plot_method
+    def e_predict(self):
+        """
+        Model calibration for exposed individuals through time
+
+        :return: exposed predict
+        """
+        return self._model.e_predict

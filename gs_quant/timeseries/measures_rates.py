@@ -189,9 +189,9 @@ def swap_rate_2(asset: Asset, swap_tenor: str, benchmark_type: BenchmarkType = N
 
     rate_mqid = _convert_asset_for_mdapi_swap_rates(**kwargs)
 
-    _logger.debug('where swap_tenor=%s, benchmark_type=%s, floating_rate_tenor=%s, forward_tenor=%s, '
-                  'pricing_location=%s', swap_tenor, defaults['benchmark_type'], defaults['floating_rate_tenor'],
-                  forward_tenor, defaults['pricing_location'])
+    _logger.debug('where asset= %s, swap_tenor=%s, benchmark_type=%s, floating_rate_tenor=%s, forward_tenor=%s, '
+                  'pricing_location=%s', rate_mqid, swap_tenor, defaults['benchmark_type'],
+                  defaults['floating_rate_tenor'], forward_tenor, defaults['pricing_location'])
     where = FieldFilterMap(csaTerms=csaTerms)
     q = GsDataApi.build_market_data_query([rate_mqid], QueryType.SWAP_RATE, where=where, source=source,
                                           real_time=real_time)
@@ -249,8 +249,8 @@ def basis_swap_spread(asset: Asset, swap_tenor: str = '1y',
     legs_w_defaults['spread'] = _get_swap_leg_defaults(currency, spread_benchmark_type, spread_tenor)
     legs_w_defaults['reference'] = _get_swap_leg_defaults(currency, reference_benchmark_type, reference_tenor)
 
-    if forward_tenor == '0b' or forward_tenor is None or forward_tenor == 'Spot':
-        forward_tenor = '0d'
+    if forward_tenor is None or forward_tenor == 'Spot':
+        forward_tenor = '0b'
     elif not re.fullmatch('(\\d+)([bdwmy])', forward_tenor):
         raise MqValueError('invalid forward tenor ' + forward_tenor)
 
@@ -268,9 +268,10 @@ def basis_swap_spread(asset: Asset, swap_tenor: str = '1y',
 
     rate_mqid = _convert_asset_for_mdapi_swap_rates(**kwargs)
 
-    _logger.debug('where swap_tenor=%s, spread_benchmark_type=%s, spread_tenor=%s,  reference_benchmark_type=%s, '
-                  'reference_tenor=%s, forward_tenor=%s, pricing_location=%s ', swap_tenor,
-                  legs_w_defaults['spread']['benchmark_type'], legs_w_defaults['spread']['floating_rate_tenor'],
+    _logger.debug('where asset=%s, swap_tenor=%s, spread_benchmark_type=%s, spread_tenor=%s, '
+                  'reference_benchmark_type=%s, reference_tenor=%s, forward_tenor=%s, pricing_location=%s ',
+                  rate_mqid, swap_tenor, legs_w_defaults['spread']['benchmark_type'],
+                  legs_w_defaults['spread']['floating_rate_tenor'],
                   legs_w_defaults['reference']['benchmark_type'], legs_w_defaults['reference']['floating_rate_tenor'],
                   forward_tenor, legs_w_defaults['spread']['pricing_location'])
 
@@ -339,6 +340,11 @@ def swap_term_structure(asset: Asset, benchmark_type: BenchmarkType = None, floa
     else:
         rate_mqids = [asset.id for asset in assets]
 
+    asset_string = ''
+    for mqid in rate_mqids:
+        asset_string = asset_string + ',' + mqid
+    _logger.debug('assets returned %s', asset_string)
+
     _logger.debug('where benchmark_type=%s, floating_rate_tenor=%s, forward_tenor=%s, '
                   'pricing_location=%s', defaults['benchmark_type'], defaults['floating_rate_tenor'],
                   forward_tenor, defaults['pricing_location'])
@@ -403,8 +409,8 @@ def basis_swap_term_structure(asset: Asset, spread_benchmark_type: BenchmarkType
         if not re.fullmatch('(\\d+)([bdwmy])', floating_rate_tenor):
             raise MqValueError('invalid floating rate tenor ' + floating_rate_tenor)
 
-    if forward_tenor == '0b' or forward_tenor is None or forward_tenor == 'Spot':
-        forward_tenor = '0d'
+    if forward_tenor is None or forward_tenor == 'Spot':
+        forward_tenor = '0b'
     elif not re.fullmatch('(\\d+)([bdwmy])', forward_tenor):
         raise MqValueError('invalid forward tenor ' + forward_tenor)
 
@@ -429,6 +435,11 @@ def basis_swap_term_structure(asset: Asset, spread_benchmark_type: BenchmarkType
         raise MqValueError('Specified arguments did not match any asset in the dataset')
     else:
         rate_mqids = [asset.id for asset in assets]
+
+    asset_string = ''
+    for mqid in rate_mqids:
+        asset_string = asset_string + ',' + mqid
+    _logger.debug('assets returned %s', asset_string)
 
     _logger.debug('where spread_benchmark_type=%s, spread_tenor=%s,  reference_benchmark_type=%s, '
                   'reference_tenor=%s, forward_tenor=%s, pricing_location=%s ',

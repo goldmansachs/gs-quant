@@ -86,6 +86,7 @@ class PricingKey(
         return self.clone(pricing_market_data_as_of=(as_of,))
 
 
+
 class EnumBase:
 
     @classmethod
