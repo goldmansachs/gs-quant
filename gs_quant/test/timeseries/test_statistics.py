@@ -17,7 +17,7 @@ from datetime import date
 
 import pytest
 from pandas.util.testing import assert_series_equal
-
+from scipy.integrate import odeint
 from gs_quant.timeseries import *
 
 
@@ -478,6 +478,108 @@ def test_regression():
                                     pd.Series([6.0, 7.0], index=dates_predict)])
     expected = pd.Series([30.0, 34.0], index=dates_predict)
     assert_series_equal(predicted, expected)
+
+
+def test_sir_model():
+
+    n = 1000
+    d = 100
+    i0 = 100
+    r0 = 0
+    s0 = n
+    beta = 0.5
+    gamma = 0.25
+
+    t = np.linspace(0, d, d)
+
+    def deriv(y, t_loc, n_loc, beta_loc, gamma_loc):
+        s, i, r = y
+        dsdt = -beta_loc * s * i / n_loc
+        didt = beta_loc * s * i / n_loc - gamma_loc * i
+        drdt = gamma_loc * i
+
+        return dsdt, didt, drdt
+
+    def get_series(beta_loc, gamma_loc):
+        # Initial conditions vector
+        y0 = s0, i0, r0
+        # Integrate the SIR equations over the time grid, t.
+        ret = odeint(deriv, y0, t, args=(n, beta_loc, gamma_loc))
+        s, i, r = ret.T
+
+        dr = pd.date_range(dt.date.today(), dt.date.today() + dt.timedelta(days=d - 1))
+        return pd.Series(s, dr), pd.Series(i, dr), pd.Series(r, dr)
+
+    (s, i, r) = get_series(beta, gamma)
+
+    sir = SIRModel(s, i, r, n)
+
+    assert abs(sir.beta() - beta) < 0.01
+    assert abs(sir.gamma() - gamma) < 0.01
+
+    beta = 0.4
+    gamma = 0.25
+
+    (s, i, r) = get_series(0.4, 0.25)
+
+    s_predict = sir.s_predict()
+    i_predict = sir.i_predict()
+    r_predict = sir.r_predict()
+
+    assert s_predict.size == d
+    assert i_predict.size == d
+    assert r_predict.size == d
+
+
+def test_seir_model():
+    n = 1000
+    d = 100
+    e0 = 1
+    i0 = 1
+    r0 = 0
+    s0 = n
+    beta = 0.5
+    gamma = 0.2
+    sigma = 1
+
+    t = np.linspace(0, d, d)
+
+    def deriv(y, t_loc, n_loc, beta_loc, gamma_loc, sigma_loc):
+        s, e, i, r = y
+        dsdt = -beta_loc * s * i / n_loc
+        dedt = beta_loc * s * i / n_loc - sigma_loc * e
+        didt = sigma_loc * e - gamma * i
+        drdt = gamma_loc * i
+
+        return dsdt, dedt, didt, drdt
+
+    def get_series(beta_loc, gamma_loc, sigma_loc):
+        # Initial conditions vector
+        y0 = s0, e0, i0, r0
+        # Integrate the SEIR equations over the time grid, t.
+        ret = odeint(deriv, y0, t, args=(n, beta_loc, gamma_loc, sigma_loc))
+        s, e, i, r = ret.T
+
+        dr = pd.date_range(dt.date.today(), dt.date.today() + dt.timedelta(days=d - 1))
+        return pd.Series(s, dr), pd.Series(e, dr), pd.Series(i, dr), pd.Series(r, dr)
+
+    (s, e, i, r) = get_series(beta, gamma, sigma)
+
+    seir = SEIRModel(s, e, i, r, n)
+
+    assert abs(seir.beta() - beta) < 0.01
+    assert abs(seir.gamma() - gamma) < 0.01
+    assert abs(seir.sigma() - sigma) < 0.01
+
+    s_predict = seir.s_predict()
+    e_predict = seir.e_predict()
+    i_predict = seir.i_predict()
+    r_predict = seir.i_predict()
+
+    assert s_predict.size == d
+    assert e_predict.size == d
+    assert i_predict.size == d
+    assert r_predict.size == d
 
 
 if __name__ == "__main__":

@@ -174,6 +174,16 @@ class GsAssetApi:
         return tuple(PositionSet.from_dict(r) for r in results)
 
     @staticmethod
+    def get_or_create_asset_from_instrument(instrument: Instrument) -> str:
+        asset = GsAsset(asset_class=instrument.asset_class,
+                        type_=instrument.type,
+                        name=instrument.name or '',
+                        parameters=instrument.as_dict(as_camel_case=True))
+
+        results = GsSession.current._post('/assets/bulk', [asset])
+        return results[0]['id']
+
+    @staticmethod
     def get_instruments_for_asset_ids(
             asset_ids: Tuple[str]
     ) -> Tuple[Optional[Union[Instrument, Security]]]:

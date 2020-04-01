@@ -59,6 +59,7 @@ setuptools.setup(
         "funcsigs",
         "future",
         "inflection",
+        "lmfit",
         "msgpack",
         "nest-asyncio",
         "pandas<1.0.0",

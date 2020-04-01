@@ -31,6 +31,7 @@ class ColumnFormat(Base):
         unit=None,
         human_readable: bool = None,
         axis_key=None,
+        show_tooltip: bool = None,
         name: str = None
     ):        
         super().__init__()
@@ -38,6 +39,7 @@ class ColumnFormat(Base):
         self.unit = unit
         self.human_readable = human_readable
         self.axis_key = axis_key
+        self.show_tooltip = show_tooltip
         self.name = name
 
     @property
@@ -81,18 +83,15 @@ class ColumnFormat(Base):
         self._property_changed('axis_key')
         self.__axis_key = value        
 
+    @property
+    def show_tooltip(self) -> bool:
+        """Whether to show the cell timestamp in a tooltip"""
+        return self.__show_tooltip
 
-class ColumnMappingParameters(Base):
-        
-    """Object used to apply parameters to a column."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        name: str = None
-    ):        
-        super().__init__()
-        self.name = name
+    @show_tooltip.setter
+    def show_tooltip(self, value: bool):
+        self._property_changed('show_tooltip')
+        self.__show_tooltip = value        
 
 
 class ColumnOperation(Base):
@@ -182,6 +181,17 @@ class ColumnProperty(Base):
     def property(self, value: str):
         self._property_changed('property')
         self.__property = value        
+
+
+class FieldMap(Base):
+        
+    @camel_case_translate
+    def __init__(
+        self,
+        name: str = None
+    ):        
+        super().__init__()
+        self.name = name
 
 
 class FunctionParameters(Base):
@@ -281,67 +291,6 @@ class FunctionParameters(Base):
     def returns(self, value: bool):
         self._property_changed('returns')
         self.__returns = value        
-
-
-class FunctionWhere(Base):
-        
-    """Parameters that will be passed into the data measure requests."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        participation_rate: float = None,
-        percent_adv: float = None,
-        strike_reference: str = None,
-        group: str = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.participation_rate = participation_rate
-        self.percent_adv = percent_adv
-        self.strike_reference = strike_reference
-        self.group = group
-        self.name = name
-
-    @property
-    def participation_rate(self) -> float:
-        """Executed quantity over market volume (e.g. 5, 10, 20)."""
-        return self.__participation_rate
-
-    @participation_rate.setter
-    def participation_rate(self, value: float):
-        self._property_changed('participation_rate')
-        self.__participation_rate = value        
-
-    @property
-    def percent_adv(self) -> float:
-        """Size of trade as percentage of average daily volume (e.g. .05, 1, 2, ..., 20)."""
-        return self.__percent_adv
-
-    @percent_adv.setter
-    def percent_adv(self, value: float):
-        self._property_changed('percent_adv')
-        self.__percent_adv = value        
-
-    @property
-    def strike_reference(self) -> str:
-        """Reference for strike level (enum: spot, forward)."""
-        return self.__strike_reference
-
-    @strike_reference.setter
-    def strike_reference(self, value: str):
-        self._property_changed('strike_reference')
-        self.__strike_reference = value        
-
-    @property
-    def group(self) -> str:
-        """Group for the request."""
-        return self.__group
-
-    @group.setter
-    def group(self, value: str):
-        self._property_changed('group')
-        self.__group = value        
 
 
 class Historical(Base):
@@ -573,7 +522,7 @@ class ColumnMappings(Base):
     def __init__(
         self,
         column_name: str = None,
-        parameters: ColumnMappingParameters = None,
+        parameters: FieldMap = None,
         name: str = None
     ):        
         super().__init__()
@@ -592,12 +541,11 @@ class ColumnMappings(Base):
         self.__column_name = value        
 
     @property
-    def parameters(self) -> ColumnMappingParameters:
-        """Object used to apply parameters to a column."""
+    def parameters(self) -> FieldMap:
         return self.__parameters
 
     @parameters.setter
-    def parameters(self, value: ColumnMappingParameters):
+    def parameters(self, value: FieldMap):
         self._property_changed('parameters')
         self.__parameters = value        
 
@@ -618,7 +566,7 @@ class Function(Base):
         end_time: str = None,
         fields: Tuple[str, ...] = None,
         parameters: FunctionParameters = None,
-        where: FunctionWhere = None,
+        where: FieldMap = None,
         vendor: str = None,
         data_set_id: str = None
     ):        
@@ -728,12 +676,11 @@ class Function(Base):
         self.__parameters = value        
 
     @property
-    def where(self) -> FunctionWhere:
-        """Parameters that will be passed into the data measure requests."""
+    def where(self) -> FieldMap:
         return self.__where
 
     @where.setter
-    def where(self, value: FunctionWhere):
+    def where(self, value: FieldMap):
         self._property_changed('where')
         self.__where = value        
 
@@ -874,7 +821,8 @@ class ColumnDefinition(Base):
         expression: str = None,
         expressions: Tuple[str, ...] = None,
         start_date: str = None,
-        end_date: str = None
+        end_date: str = None,
+        tooltip: str = None
     ):        
         super().__init__()
         self.enable_cell_flashing = enable_cell_flashing
@@ -890,6 +838,7 @@ class ColumnDefinition(Base):
         self.expressions = expressions
         self.start_date = start_date
         self.end_date = end_date
+        self.tooltip = tooltip
 
     @property
     def enable_cell_flashing(self) -> bool:
@@ -1020,6 +969,16 @@ class ColumnDefinition(Base):
     def end_date(self, value: str):
         self._property_changed('end_date')
         self.__end_date = value        
+
+    @property
+    def tooltip(self) -> str:
+        """Tooltip that is displayed on the column header"""
+        return self.__tooltip
+
+    @tooltip.setter
+    def tooltip(self, value: str):
+        self._property_changed('tooltip')
+        self.__tooltip = value        
 
 
 class EntityId(Base):

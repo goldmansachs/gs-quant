@@ -223,7 +223,7 @@ class GsSession(ContextBase):
 
     def _connect_websocket(self, path: str):
         url = 'ws{}{}{}'.format(self.domain[4:], '/' + self.api_version, path)
-        return websockets.connect(url, extra_headers=self._headers())
+        return websockets.connect(url, extra_headers=self._headers(), max_size=2**64, read_limit=2**64)
 
     def _headers(self):
         return [('Cookie', 'GSSSO=' + self._session.cookies['GSSSO'])]

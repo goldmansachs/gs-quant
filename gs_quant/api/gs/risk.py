@@ -111,13 +111,14 @@ class GsRiskApi(RiskApi):
                             result_parts = response.split(';')
                             result_id = result_parts[0]
                             raw_result = ';'.join(result_parts[1:])
+                            result_str = raw_result[1:]
                             is_error = not raw_result.startswith(r'R[')
 
                             try:
-                                result = RuntimeError(raw_result) if is_error else\
-                                    cls._handle_results(ids_to_requests[result_id], json.loads(raw_result[1:]))
+                                result = RuntimeError(result_str) if is_error else\
+                                    cls._handle_results(ids_to_requests[result_id], json.loads(result_str))
                             except Exception:
-                                result = RuntimeError(raw_result)
+                                result = RuntimeError(result_str)
 
                             results[result_id] = result
                         except asyncio.TimeoutError:

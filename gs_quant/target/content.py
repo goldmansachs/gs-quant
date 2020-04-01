@@ -41,12 +41,14 @@ class Author(Base):
         self,
         id_: str = None,
         name: str = None,
-        division=None
+        division=None,
+        email: str = None
     ):        
         super().__init__()
         self.__id = id_
         self.name = name
         self.division = division
+        self.email = email
 
     @property
     def id(self) -> str:
@@ -76,6 +78,15 @@ class Author(Base):
     def division(self, value):
         self._property_changed('division')
         self.__division = value        
+
+    @property
+    def email(self) -> str:
+        return self.__email
+
+    @email.setter
+    def email(self, value: str):
+        self._property_changed('email')
+        self.__email = value        
 
 
 class BulkDeleteContentResponse(Base):

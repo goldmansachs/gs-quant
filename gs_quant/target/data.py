@@ -1799,7 +1799,7 @@ class MarketDataCoordinate(Base):
 
     @property
     def mkt_type(self) -> str:
-        """The MDAPI Type, e.g. IR, IR_BASIS, FX, FX_Vol"""
+        """The MDAPI Type, e.g. IR, IR BASIS, FX, FX Vol"""
         return self.__mkt_type
 
     @mkt_type.setter
