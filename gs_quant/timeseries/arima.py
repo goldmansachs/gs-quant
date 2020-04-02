@@ -10,7 +10,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from __future__ import annotations
 from dataclasses import dataclass
 from typing import Iterable, Optional, Union, Tuple
 
@@ -95,15 +94,15 @@ class arima():
             d_vals: list=[0, 1, 2],
             q_vals: list=[0, 1, 2],
             freq: str=None
-    ) -> arima:
+    ) -> 'arima':
         """
         Train a combination of ARIMA models. If pandas DataFrame, finds the
         best arima model parameters for each column. If pandas Series, finds
         the best arima model parameters for the series.
 
         :param X: time series to be operated on; required parameter
-        :param train_size: if float, should be between 0.0 and 1.0 and 
-        represent the proportion of the dataset to include in the train split. 
+        :param train_size: if float, should be between 0.0 and 1.0 and
+        represent the proportion of the dataset to include in the train split.
         If int, represents the absolute number of train samples. If None,
         the value is automatically set 0.75
         :p_vals: number of autoregressive terms to search; default is [0,1,2]
@@ -116,44 +115,45 @@ class arima():
         if isinstance(X, pd.Series):
             X = X.to_frame()
 
-        if isinstance(X, pd.DataFrame):
-            for series_id in X.columns:
-                series = X[series_id]
-                best_score = float('inf')
-                best_order = None
-                best_const = None
-                best_ar_coef = None
-                best_ma_coef = None
-                best_resid = None
-                for order in list(itertools.product(*[p_vals, d_vals, q_vals])):
-                    try:
-                        mse, const, ar_coef, ma_coef, resid = self._evaluate_arima_model(series, order, train_size, freq)
-                        if mse < best_score:
-                            best_score = mse
-                            best_order = order
-                            best_const = const
-                            best_ar_coef = ar_coef
-                            best_ma_coef = ma_coef
-                            best_resid = resid
-                    except Exception as e:
-                        print('   {}'.format(e))
-                        continue
-
-                p, d, q = best_order
-                assert(p == len(best_ar_coef))
-
-                self.best_params[series_id] = ARIMA_BestParams(
-                                                    freq=freq,
-                                                    p=p,
-                                                    d=d,
-                                                    q=q,
-                                                    const=best_const,
-                                                    ar_coef=best_ar_coef,
-                                                    ma_coef=best_ma_coef,
-                                                    resid=best_resid,
-                                                    series=series)
-        else:
+        if not isinstance(X, pd.DataFrame):
             raise ValueError('Not DataFrame or Series!')
+
+        for series_id in X.columns:
+            series = X[series_id]
+            best_score = float('inf')
+            best_order = None
+            best_const = None
+            best_ar_coef = None
+            best_ma_coef = None
+            best_resid = None
+            for order in list(itertools.product(*[p_vals, d_vals, q_vals])):
+                try:
+                    mse, const, ar_coef, ma_coef, resid = self._evaluate_arima_model(series, order, train_size, freq)
+                    if mse < best_score:
+                        best_score = mse
+                        best_order = order
+                        best_const = const
+                        best_ar_coef = ar_coef
+                        best_ma_coef = ma_coef
+                        best_resid = resid
+                except Exception as e:
+                    print('   {}'.format(e))
+                    continue
+
+            p, d, q = best_order
+            assert(p == len(best_ar_coef))
+
+            self.best_params[series_id] = ARIMA_BestParams(
+                                                freq=freq,
+                                                p=p,
+                                                d=d,
+                                                q=q,
+                                                const=best_const,
+                                                ar_coef=best_ar_coef,
+                                                ma_coef=best_ma_coef,
+                                                resid=best_resid,
+                                                series=series)
+
         return self
 
     def _difference(self, X: pd.Series, d: int):
