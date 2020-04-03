@@ -13,12 +13,12 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-import gs_quant
 import os
 import setuptools
 import shutil
 import subprocess
 import sys
+import versioneer
 from pathlib import Path
 
 if "sdist" in sys.argv:
@@ -40,7 +40,8 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="gs_quant",
-    version=gs_quant.__version__,
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     author="Goldman Sachs",
     author_email="developer@gs.com",
     description="Goldman Sachs Quant",
@@ -69,6 +70,7 @@ setuptools.setup(
         "six",
         "statsmodels",
         "typing;python_version<'3.7'",
+        "versioneer",
         "websockets"
     ],
     extras_require={

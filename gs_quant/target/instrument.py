@@ -5062,7 +5062,7 @@ class CommodOTCOption(Instrument):
     @property
     def type(self) -> AssetType:
         """OptionStrategy"""
-        return AssetType.OptionStrategy
+        return AssetType.OptionStrategy        
 
     @property
     def buy_sell(self) -> Union[BuySell, str]:

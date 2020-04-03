@@ -714,6 +714,21 @@ IRDeltaParallelLocalCcy = __risk_measure_with_doc_string(
     'Interest Rate Parallel Delta (Local Ccy)',
     RiskMeasureType.ParallelDeltaLocalCcy,
     asset_class=AssetClass.Rates)
+IRXccyDelta = __risk_measure_with_doc_string(
+    'IRXccyDelta',
+    'Cross-ccy Delta',
+    RiskMeasureType.XccyDelta,
+    asset_class=AssetClass.Rates)
+IRXccyDeltaParallel = __risk_measure_with_doc_string(
+    'IRXccyDeltaParallel',
+    'Cross-ccy Parallel Delta',
+    RiskMeasureType.ParallelXccyDelta,
+    asset_class=AssetClass.Rates)
+IRXccyDeltaParallelLocalCurrency = __risk_measure_with_doc_string(
+    'IRXccyDeltaParallelLocalCurrency',
+    'Cross-ccy Parallel Delta (Local Ccy)',
+    RiskMeasureType.ParallelXccyDeltaLocalCcy,
+    asset_class=AssetClass.Rates)
 IRGammaParallel = __risk_measure_with_doc_string(
     'IRGammaParallel',
     'Interest Rate Parallel Gamma',
@@ -826,6 +841,9 @@ Formatters = {
     IRDeltaParallel: sum_formatter,
     IRDeltaLocalCcy: structured_formatter,
     IRDeltaParallelLocalCcy: scalar_formatter,
+    IRXccyDelta: structured_formatter,
+    IRXccyDeltaParallel: scalar_formatter,
+    IRXccyDeltaParallelLocalCurrency: scalar_formatter,
     IRGammaParallel: scalar_formatter,
     IRGammaParallelLocalCcy: scalar_formatter,
     IRVega: structured_formatter,

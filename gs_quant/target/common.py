@@ -1106,10 +1106,10 @@ class RiskMeasureType(EnumBase, Enum):
     Daily_Implied_Volatility = 'Daily Implied Volatility'
     Delta = 'Delta'
     DeltaLocalCcy = 'DeltaLocalCcy'
-    DeltaCrossCcy = 'DeltaCrossCcy'
     Description = 'Description'
     Dollar_Price = 'Dollar Price'
     DV01 = 'DV01'
+    Fair_Price = 'Fair Price'
     FairVarStrike = 'FairVarStrike'
     FairVolStrike = 'FairVolStrike'
     Forward_Price = 'Forward Price'
@@ -1121,13 +1121,15 @@ class RiskMeasureType(EnumBase, Enum):
     Local_Currency_Accrual_in_Cents = 'Local Currency Accrual in Cents'
     Local_Currency_Annuity = 'Local Currency Annuity'
     Market_Data_Assets = 'Market Data Assets'
+    MV = 'MV'
     OAS = 'OAS'
     ParallelBasis = 'ParallelBasis'
     ParallelDelta = 'ParallelDelta'
     ParallelDeltaLocalCcy = 'ParallelDeltaLocalCcy'
-    ParallelDeltaCrossCcy = 'ParallelDeltaCrossCcy'
     ParallelInflationDelta = 'ParallelInflationDelta'
     ParallelInflationDeltaLocalCcy = 'ParallelInflationDeltaLocalCcy'
+    ParallelXccyDelta = 'ParallelXccyDelta'
+    ParallelXccyDeltaLocalCcy = 'ParallelXccyDeltaLocalCcy'
     ParallelGamma = 'ParallelGamma'
     ParallelGammaLocalCcy = 'ParallelGammaLocalCcy'
     ParallelVega = 'ParallelVega'
@@ -1143,9 +1145,8 @@ class RiskMeasureType(EnumBase, Enum):
     Vega = 'Vega'
     VegaLocalCcy = 'VegaLocalCcy'
     Volga = 'Volga'
-    MV = 'MV'
-    Fair_Price = 'Fair Price'
     Volatility = 'Volatility'
+    XccyDelta = 'XccyDelta'
     
     def __repr__(self):
         return self.value
@@ -2561,7 +2562,7 @@ class RiskRequestParameters(Base):
     def __init__(
         self,
         csa_term: str = None,
-        raw_results: bool = None,
+        raw_results: bool = False,
         name: str = None
     ):        
         super().__init__()

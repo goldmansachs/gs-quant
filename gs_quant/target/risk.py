@@ -1720,6 +1720,7 @@ class LiquidityResponse(Base):
 
     @property
     def currency(self) -> Union[Currency, str]:
+        """Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)"""
         return self.__currency
 
     @currency.setter

@@ -22,7 +22,6 @@ from gs_quant.datetime.date import DayCountConvention
 from gs_quant.markets.securities import Asset
 from gs_quant.target.common import Currency
 from gs_quant.timeseries.datetime import align
-from gs_quant.timeseries import diff
 
 """
 Econometrics timeseries library is for standard economic and time series analytics operations, including returns,
@@ -616,52 +615,3 @@ def max_drawdown(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Se
         rolling_max = x.rolling(w.w, 0).max()
         result = (x / rolling_max - 1).rolling(w.w, 0).min()
     return apply_ramp(result, w)
-
-
-@plot_function
-def rsi(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
-    """
-    The relative strength index of X over a window.
-
-    :param x: time series
-    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-              and 10 the ramp up value. Window size defaults to length of series.
-    :return: time series of relative strength index
-
-    **Usage**
-
-    Compute the `relative strength index <https://en.wikipedia.org/wiki/Relative_strength_index>`_
-
-    :math:`RSI_t = 100 - 100 / ( 1 + RS_t )`
-
-    where :math:`RS_t` is the ratio of exponentially smoothed gains to exponentially smoothed losses over specified
-    window. See `smoothed or modified moving average
-    <https://en.wikipedia.org/wiki/Moving_average#Modified_moving_average>`_ for more details
-
-    **Examples**
-
-    >>> series = generate_series(100)
-    >>> rsi(series)
-
-    **See also**
-
-    :func:`diff`
-
-    """
-    w = normalize_window(x, w)
-
-    if not isinstance(w.w, int):
-        raise MqValueError('window length must be an integer to calculate RSI')
-
-    delta = diff(x)
-    up, down = delta.copy(), delta.copy()
-    up[up < 0] = 0
-    down[down > 0] = 0
-
-    ma_up = up.ewm(alpha=1 / w.w, adjust=False).mean()
-    ma_down = abs_(down.ewm(alpha=1 / w.w, adjust=False).mean())
-    rs = ma_up / ma_down
-
-    rsi = 100 - 100 / (1 + rs)
-    rsi[ma_down == 0] = 100
-    return apply_ramp(rsi, w)
