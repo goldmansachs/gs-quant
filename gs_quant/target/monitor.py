@@ -1161,6 +1161,7 @@ class MonitorParameters(Base):
         default_hidden: bool = None,
         line_chart_color: str = None,
         chart_curve_type=None,
+        ignore_business_day_logic: bool = None,
         name: str = None
     ):        
         super().__init__()
@@ -1180,6 +1181,7 @@ class MonitorParameters(Base):
         self.default_hidden = default_hidden
         self.line_chart_color = line_chart_color
         self.chart_curve_type = chart_curve_type
+        self.ignore_business_day_logic = ignore_business_day_logic
         self.name = name
 
     @property
@@ -1349,6 +1351,16 @@ class MonitorParameters(Base):
     def chart_curve_type(self, value):
         self._property_changed('chart_curve_type')
         self.__chart_curve_type = value        
+
+    @property
+    def ignore_business_day_logic(self) -> bool:
+        """Whether or not to apply business day logic for relative dates."""
+        return self.__ignore_business_day_logic
+
+    @ignore_business_day_logic.setter
+    def ignore_business_day_logic(self, value: bool):
+        self._property_changed('ignore_business_day_logic')
+        self.__ignore_business_day_logic = value        
 
 
 class Monitor(Base):

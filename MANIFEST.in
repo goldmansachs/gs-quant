@@ -7,3 +7,5 @@ include gs_quant/examples/*
 include gs_quant/guides/*
 include gs_quant/tutorials/*
 include gs_quant/docs/*
+include versioneer.py
+include gs_quant/_version.py

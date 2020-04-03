@@ -443,29 +443,5 @@ def test_sharpe_ratio():
     replace.restore()
 
 
-def test_rsi():
-    dates = [
-        date(2019, 1, 1),
-        date(2019, 1, 2),
-        date(2019, 1, 3),
-        date(2019, 1, 4),
-        date(2019, 1, 7),
-        date(2019, 1, 8),
-    ]
-
-    series = pd.Series([2, 2, 1, 4, 3, 1], index=dates)
-
-    result = rsi(series)
-    expected = pd.Series([np.nan, 100.0, 0.0, 78.2609, 59.6026, 37.9107], index=dates)
-    assert_series_equal(result, expected, obj="RSI", check_less_precise=True)
-
-    result = rsi(series, Window(2, 0))
-    expected = pd.Series([np.nan, 100.0, 0.0, 85.7143, 54.5455, 22.2222], index=dates)
-    assert_series_equal(result, expected, obj="RSI window 2", check_less_precise=True)
-
-    with pytest.raises(MqValueError):
-        rsi(series, Window('2d', 0))
-
-
 if __name__ == "__main__":
     pytest.main(args=["test_econometrics.py"])
