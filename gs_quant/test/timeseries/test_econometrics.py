@@ -14,7 +14,10 @@ specific language governing permissions and limitations
 under the License.
 """
 
+from math import isclose
+
 import pytest
+from pandas import Timestamp
 from pandas.util.testing import assert_series_equal
 
 from gs_quant.timeseries import *
@@ -364,6 +367,104 @@ def test_max_drawdown():
 
     output_window = max_drawdown(series, Window(2, 0))
     assert_series_equal(output_window, pd.Series([0.0, 0.0, 0.0, -0.2, -0.2, -0.75]), obj="Max drawdown window")
+
+
+def test_arima_fit():
+    test_dict = {
+                'High': {Timestamp('1989-01-03 00:00:00'): 3.575721263885498,
+                         Timestamp('1989-01-04 00:00:00'): 3.5857372283935547,
+                         Timestamp('1989-01-05 00:00:00'): 3.62580132484436,
+                         Timestamp('1989-01-06 00:00:00'): 3.62580132484436,
+                         Timestamp('1989-01-09 00:00:00'): 3.575721263885498,
+                         Timestamp('1989-01-10 00:00:00'): 3.575721263885498,
+                         Timestamp('1989-01-11 00:00:00'): 3.5657050609588623,
+                         Timestamp('1989-01-12 00:00:00'): 3.635817289352417,
+                         Timestamp('1989-01-13 00:00:00'): 3.615785360336304,
+                         Timestamp('1989-01-16 00:00:00'): 3.615785360336304,
+                         Timestamp('1989-01-17 00:00:00'): 3.635817289352417,
+                         Timestamp('1989-01-18 00:00:00'): 3.675881385803223,
+                         Timestamp('1989-01-19 00:00:00'): 3.695913553237915,
+                         Timestamp('1989-01-20 00:00:00'): 3.665865421295166,
+                         Timestamp('1989-01-23 00:00:00'): 3.675881385803223,
+                         Timestamp('1989-01-24 00:00:00'): 3.675881385803223,
+                         Timestamp('1989-01-25 00:00:00'): 3.695913553237915,
+                         Timestamp('1989-01-26 00:00:00'): 3.7760417461395264,
+                         Timestamp('1989-01-27 00:00:00'): 3.8561699390411377,
+                         Timestamp('1989-01-30 00:00:00'): 3.8561699390411377},
+                'Low': {Timestamp('1989-01-03 00:00:00'): 3.4855768680572514,
+                        Timestamp('1989-01-04 00:00:00'): 3.5356571674346924,
+                        Timestamp('1989-01-05 00:00:00'): 3.575721263885498,
+                        Timestamp('1989-01-06 00:00:00'): 3.575721263885498,
+                        Timestamp('1989-01-09 00:00:00'): 3.5356571674346924,
+                        Timestamp('1989-01-10 00:00:00'): 3.5356571674346924,
+                        Timestamp('1989-01-11 00:00:00'): 3.5256409645080566,
+                        Timestamp('1989-01-12 00:00:00'): 3.5456731319427486,
+                        Timestamp('1989-01-13 00:00:00'): 3.5857372283935547,
+                        Timestamp('1989-01-16 00:00:00'): 3.5957531929016118,
+                        Timestamp('1989-01-17 00:00:00'): 3.5857372283935547,
+                        Timestamp('1989-01-18 00:00:00'): 3.615785360336304,
+                        Timestamp('1989-01-19 00:00:00'): 3.655849456787109,
+                        Timestamp('1989-01-20 00:00:00'): 3.62580132484436,
+                        Timestamp('1989-01-23 00:00:00'): 3.615785360336304,
+                        Timestamp('1989-01-24 00:00:00'): 3.615785360336304,
+                        Timestamp('1989-01-25 00:00:00'): 3.655849456787109,
+                        Timestamp('1989-01-26 00:00:00'): 3.665865421295166,
+                        Timestamp('1989-01-27 00:00:00'): 3.79607367515564,
+                        Timestamp('1989-01-30 00:00:00'): 3.786057710647583},
+                'Close': {Timestamp('1989-01-03 00:00:00'): 3.5256409645080566,
+                          Timestamp('1989-01-04 00:00:00'): 3.5857372283935547,
+                          Timestamp('1989-01-05 00:00:00'): 3.575721263885498,
+                          Timestamp('1989-01-06 00:00:00'): 3.575721263885498,
+                          Timestamp('1989-01-09 00:00:00'): 3.575721263885498,
+                          Timestamp('1989-01-10 00:00:00'): 3.5556890964508057,
+                          Timestamp('1989-01-11 00:00:00'): 3.5556890964508057,
+                          Timestamp('1989-01-12 00:00:00'): 3.605769157409668,
+                          Timestamp('1989-01-13 00:00:00'): 3.605769157409668,
+                          Timestamp('1989-01-16 00:00:00'): 3.5957531929016118,
+                          Timestamp('1989-01-17 00:00:00'): 3.62580132484436,
+                          Timestamp('1989-01-18 00:00:00'): 3.675881385803223,
+                          Timestamp('1989-01-19 00:00:00'): 3.665865421295166,
+                          Timestamp('1989-01-20 00:00:00'): 3.6458332538604736,
+                          Timestamp('1989-01-23 00:00:00'): 3.62580132484436,
+                          Timestamp('1989-01-24 00:00:00'): 3.675881385803223,
+                          Timestamp('1989-01-25 00:00:00'): 3.675881385803223,
+                          Timestamp('1989-01-26 00:00:00'): 3.756009578704834,
+                          Timestamp('1989-01-27 00:00:00'): 3.79607367515564,
+                          Timestamp('1989-01-30 00:00:00'): 3.846153736114502},
+                    }
+
+    test_df = pd.DataFrame(test_dict)
+    arima = econometrics.arima()
+    arima.fit(test_df, train_size=0.8, freq='B', q_vals=[0])
+    transformed_test_df = arima.transform(test_df)
+
+    for col in transformed_test_df.keys():
+        count_nans = arima.best_params[col].p + arima.best_params[col].d
+        assert(count_nans == transformed_test_df[col].isna().sum())
+
+    # Test (1,2,0) Model
+    diff_test_df_high = test_df['High'].diff().diff()
+    assert(transformed_test_df['High'][3] == (arima.best_params['High'].const + diff_test_df_high[2] * arima.best_params['High'].ar_coef[0]))
+    assert(transformed_test_df['High'][4] == (arima.best_params['High'].const + diff_test_df_high[3] * arima.best_params['High'].ar_coef[0]))
+    assert(transformed_test_df['High'][-1] == (arima.best_params['High'].const + diff_test_df_high[-2] * arima.best_params['High'].ar_coef[0]))
+
+    # Test (2,1,0) Model
+    diff_test_df_low = test_df['Low'].diff()
+    assert(isclose(transformed_test_df['Low'][3], (arima.best_params['Low'].const + diff_test_df_low[2] * arima.best_params['Low'].ar_coef[0] + diff_test_df_low[1] * arima.best_params['Low'].ar_coef[1]), abs_tol=1e-8))
+    assert(isclose(transformed_test_df['Low'][4], (arima.best_params['Low'].const + diff_test_df_low[3] * arima.best_params['Low'].ar_coef[0] + diff_test_df_low[2] * arima.best_params['Low'].ar_coef[1]), abs_tol=1e-8))
+    assert(isclose(transformed_test_df['Low'][-1], (arima.best_params['Low'].const + diff_test_df_low[-2] * arima.best_params['Low'].ar_coef[0] + diff_test_df_low[-3] * arima.best_params['Low'].ar_coef[1]), abs_tol=1e-8))
+
+    # Test (1,2,0) Model
+    diff_test_df_close = test_df['Close'].diff()[1:].diff()
+    first_day = pd.Series([np.nan])
+    first_day.index = [diff_test_df_close.index[0] - pd.DateOffset(days=1)]
+    first_day.name = 'Close'
+    diff_test_df_close = pd.concat([first_day, diff_test_df_close])
+    diff_test_df_close.index.name = "Date"
+
+    assert(transformed_test_df['Close'][4] == (arima.best_params['Close'].const + diff_test_df_close[3] * arima.best_params['Close'].ar_coef[0]))
+    assert(transformed_test_df['Close'][5] == (arima.best_params['Close'].const + diff_test_df_close[4] * arima.best_params['Close'].ar_coef[0]))
+    assert(transformed_test_df['Close'][-1] == (arima.best_params['Close'].const + diff_test_df_close[-2] * arima.best_params['Close'].ar_coef[0]))
 
 
 if __name__ == "__main__":
