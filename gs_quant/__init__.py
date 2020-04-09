@@ -16,7 +16,8 @@ under the License.
 
 from ._version import get_versions
 
-name = 'gs_quant'
-__version__ = '0.8.115'
+name = "gs_quant"
+__version__ = get_versions()['version']
+del get_versions
 
 version = __version__

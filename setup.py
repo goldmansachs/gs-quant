@@ -70,7 +70,6 @@ setuptools.setup(
         "six",
         "statsmodels",
         "typing;python_version<'3.7'",
-        "versioneer",
         "websockets"
     ],
     extras_require={

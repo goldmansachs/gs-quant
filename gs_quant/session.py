@@ -342,7 +342,7 @@ class OAuth2Session(GsSession):
         self._session.headers.update({'Authorization': 'Bearer {}'.format(response['access_token'])})
 
     def _headers(self):
-        return [('Cookie', self._session.headers['Authorization'])]
+        return [('Authorization', self._session.headers['Authorization'])]
 
 
 class PassThroughSession(GsSession):

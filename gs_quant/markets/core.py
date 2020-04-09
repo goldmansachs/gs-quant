@@ -217,7 +217,10 @@ class PricingContext(ContextBaseWithDefault):
         self.__lock = Lock()
 
     def _on_exit(self, exc_type, exc_val, exc_tb):
-        self._calc()
+        if exc_val:
+            raise exc_val
+        else:
+            self._calc()
 
     def _calc(self):
         requests_by_provider = self.__active_context.__requests_by_provider

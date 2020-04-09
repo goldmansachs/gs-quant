@@ -522,9 +522,9 @@ def test_sir_model():
 
     (s, i, r) = get_series(0.4, 0.25)
 
-    s_predict = sir.s_predict()
-    i_predict = sir.i_predict()
-    r_predict = sir.r_predict()
+    s_predict = sir.predict_s()
+    i_predict = sir.predict_i()
+    r_predict = sir.predict_r()
 
     assert s_predict.size == d
     assert i_predict.size == d
@@ -571,10 +571,10 @@ def test_seir_model():
     assert abs(seir.gamma() - gamma) < 0.01
     assert abs(seir.sigma() - sigma) < 0.01
 
-    s_predict = seir.s_predict()
-    e_predict = seir.e_predict()
-    i_predict = seir.i_predict()
-    r_predict = seir.i_predict()
+    s_predict = seir.predict_s()
+    e_predict = seir.predict_e()
+    i_predict = seir.predict_i()
+    r_predict = seir.predict_i()
 
     assert s_predict.size == d
     assert e_predict.size == d
