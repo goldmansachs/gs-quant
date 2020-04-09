@@ -21,7 +21,7 @@ import scipy.stats.mstats as stats
 from scipy.stats import percentileofscore
 from .algebra import *
 import statsmodels.api as sm
-from ..models.epidemic import SIR, SEIR, PandemicModel
+from ..models.epidemiology import SIR, SEIR, EpidemicModel
 from ..data import DataContext
 
 
@@ -790,7 +790,7 @@ class SIRModel:
     """
     def __init__(self, s: pd.Series, i: pd.Series, r: pd.Series, n: Union[pd.Series, float],
                  end_date: date = None):
-
+        n = n.dropna()[0] if isinstance(n, pd.Series) else n
         self.s = s
         self.i = i
         self.r = r
@@ -807,7 +807,7 @@ class SIRModel:
         parameters, initial_conditions = SIR.get_parameters(s[0], i[0], r[0], n, beta=beta_init, gamma=gamma_init,
                                                             S0_fixed=True, I0_fixed=True, R0_fixed=True)
 
-        self._model = PandemicModel(SIR, parameters=parameters, data=data,
+        self._model = EpidemicModel(SIR, parameters=parameters, data=data,
                                     initial_conditions=initial_conditions)
         self._model.fit(verbose=False)
 
@@ -824,7 +824,7 @@ class SIRModel:
         self._model.r_predict = pd.Series(predict[:, 2], predict_dates)
 
     @plot_method
-    def s0(self):
+    def s0(self) -> float:
         """
         Model calibration for initial susceptible individuals
 
@@ -833,7 +833,7 @@ class SIRModel:
         return self._model.fitted_parameters['S0']
 
     @plot_method
-    def i0(self):
+    def i0(self) -> float:
         """
         Model calibration for initial infectious individuals
 
@@ -842,7 +842,7 @@ class SIRModel:
         return self._model.fitted_parameters['I0']
 
     @plot_method
-    def r0(self):
+    def r0(self) -> float:
         """
         Model calibration for initial recovered individuals
 
@@ -851,7 +851,7 @@ class SIRModel:
         return self._model.fitted_parameters['R0']
 
     @plot_method
-    def beta(self):
+    def beta(self) -> float:
         """
         Model calibration for transmission rate (susceptible to infected)
 
@@ -860,7 +860,7 @@ class SIRModel:
         return self._model.fitted_parameters['beta']
 
     @plot_method
-    def gamma(self):
+    def gamma(self) -> float:
         """
         Model calibration for immunity (infected to resistant)
 
@@ -869,7 +869,7 @@ class SIRModel:
         return self._model.fitted_parameters['gamma']
 
     @plot_method
-    def s_predict(self):
+    def predict_s(self) -> pd.Series:
         """
         Model calibration for susceptible individuals through time
 
@@ -878,7 +878,7 @@ class SIRModel:
         return self._model.s_predict
 
     @plot_method
-    def i_predict(self):
+    def predict_i(self) -> pd.Series:
         """
         Model calibration for infected individuals through time
 
@@ -887,7 +887,7 @@ class SIRModel:
         return self._model.i_predict
 
     @plot_method
-    def r_predict(self):
+    def predict_r(self) -> pd.Series:
         """
         Model calibration for recovered individuals through time
 
@@ -933,7 +933,7 @@ class SEIRModel(SIRModel):
     """
     def __init__(self, s: pd.Series, e: pd.Series, i: pd.Series, r: pd.Series, n: Union[pd.Series, float],
                  end_date: date = None):
-
+        n = n.dropna()[0] if isinstance(n, pd.Series) else n
         self.s = s
         self.e = e
         self.i = i
@@ -955,7 +955,7 @@ class SEIRModel(SIRModel):
                                                              R0_fixed=True, E0_fixed=True, S0_max=5e6, I0_max=5e6,
                                                              E0_max=10e6, R0_max=10e6)
 
-        self._model = PandemicModel(SEIR, parameters=parameters, data=data,
+        self._model = EpidemicModel(SEIR, parameters=parameters, data=data,
                                     initial_conditions=initial_conditions)
         self._model.fit(verbose=False)
 
@@ -974,7 +974,7 @@ class SEIRModel(SIRModel):
         self._model.r_predict = pd.Series(predict[:, 3], predict_dates)
 
     @plot_method
-    def e0(self):
+    def e0(self) -> float:
         """
         Model calibration for initial exposed individuals
 
@@ -983,7 +983,7 @@ class SEIRModel(SIRModel):
         return self._model.fitted_parameters['E0']
 
     @plot_method
-    def beta(self):
+    def beta(self) -> float:
         """
         Model calibration for transmission rate (susceptible to exposed)
 
@@ -992,7 +992,7 @@ class SEIRModel(SIRModel):
         return self._model.fitted_parameters['beta']
 
     @plot_method
-    def gamma(self):
+    def gamma(self) -> float:
         """
         Model calibration for immunity (infected to resistant)
 
@@ -1001,7 +1001,7 @@ class SEIRModel(SIRModel):
         return self._model.fitted_parameters['gamma']
 
     @plot_method
-    def sigma(self):
+    def sigma(self) -> float:
         """
         Model calibration for infection rate (exposed to infected)
 
@@ -1010,7 +1010,7 @@ class SEIRModel(SIRModel):
         return self._model.fitted_parameters['sigma']
 
     @plot_method
-    def e_predict(self):
+    def predict_e(self) -> pd.Series:
         """
         Model calibration for exposed individuals through time
 
