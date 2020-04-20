@@ -565,8 +565,6 @@ class arima():
         elif train_size is None:
             train_size = int(len(X) * 0.75)
             train, test = X[:train_size].astype(float), X[train_size:].astype(float)
-        else:
-            raise ValueError('train_size is not int, float, or None')
 
         model = ARIMA(train, order=arima_order, freq=freq)
         model_fit = model.fit(disp=False, method='css', trend='nc')
@@ -615,6 +613,9 @@ class arima():
         if not isinstance(X, pd.DataFrame):
             raise ValueError('Not DataFrame or Series!')
 
+        if not isinstance(train_size, (float, int, type(None))):
+            raise ValueError('train_size is not int, float, or None')
+
         for series_id in X.columns:
             series = X[series_id]
             best_score = float('inf')
@@ -640,15 +641,8 @@ class arima():
             p, d, q = best_order
             assert(p == len(best_ar_coef))
 
-            self.best_params[series_id] = ARIMA_BestParams(
-                                                freq=freq,
-                                                p=p,
-                                                d=d,
-                                                q=q,
-                                                const=best_const,
-                                                ar_coef=best_ar_coef,
-                                                ma_coef=best_ma_coef,
-                                                resid=best_resid,
+            self.best_params[series_id] = ARIMA_BestParams(freq=freq, p=p, d=d, q=q, const=best_const,
+                                                ar_coef=best_ar_coef, ma_coef=best_ma_coef, resid=best_resid,
                                                 series=series)
 
         return self
@@ -661,7 +655,7 @@ class arima():
         elif d == 1:
             return X.diff()
         else:
-            return self._difference(X.diff(), d-1)
+            return self._difference(X.diff(), d - 1)
 
     def _lagged_values(self, X: pd.Series, p: int, ar_coef: list):
         """Helper Function to Calculate AutoRegressive(AR) Component"""
@@ -670,10 +664,9 @@ class arima():
             return X
         elif p > 0:
             transformed_df = pd.concat([X.copy().shift(periods=i)
-                                        for i in range(1, p+1)], axis=1)
+                                        for i in range(1, p + 1)], axis=1)
             transformed_df = transformed_df.dot(ar_coef)
-        else:
-            raise ValueError("p should not be less than 0!")
+
         return transformed_df
 
     def _calculate_residuals(
@@ -697,7 +690,7 @@ class arima():
         X_ma[:] = np.nan
 
         for x in range(p + d, len(X_ar)):
-            ma_component = resid[x-q: x].dot(ma_coef)
+            ma_component = resid[x - q: x].dot(ma_coef)
             prediction = X_ar[x] + ma_component
             residual = X_diff[x] - prediction
             resid[x] = residual
@@ -756,17 +749,8 @@ class arima():
             ma_coef = self.best_params[series_id].ma_coef
             resid = self.best_params[series_id].resid
 
-            series[series_id] = self._arima_transform_series(
-                                        X[series_id],
-                                        p=p,
-                                        d=d,
-                                        q=q,
-                                        const=const,
-                                        ar_coef=ar_coef,
-                                        ma_coef=ma_coef,
-                                        resid=resid,
-                                        freq=freq
-                                )
+            series[series_id] = self._arima_transform_series(X[series_id], p=p, d=d, q=q, const=const, ar_coef=ar_coef,
+                                        ma_coef=ma_coef, resid=resid, freq=freq)
 
         return pd.DataFrame(series)
 
