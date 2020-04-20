@@ -510,15 +510,15 @@ def test_arima_fit():
     assert_series_equal(transformed_test_df['High'], test_df['High'])
 
     # Test if train_size is str
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(ValueError):
         arima.fit(test_df, train_size='str', freq='B', q_vals=[0])
 
     # Test if input is list
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(ValueError):
         arima.fit([1, 2, 3, 4], train_size=0.75, freq='B', q_vals=[0])
 
     # Test transform with list
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(ValueError):
         arima.fit(test_df, train_size=train_size, freq='B', q_vals=[0])
         transformed_test_df = arima.transform([1, 2, 3, 4])
 
