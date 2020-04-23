@@ -21,7 +21,7 @@ from gs_quant.timeseries.helper import _create_enum
 from .statistics import *
 
 RebalFreq = _create_enum('RebalFreq', ['Daily', 'Monthly'])
-ReturnType = _create_enum('ReturnType', ['ER'])
+ReturnType = _create_enum('ReturnType', ['excess_return'])
 
 
 @plot_function
@@ -30,7 +30,7 @@ def basket(
     weights: list,
     costs: list = None,
     rebal_freq: RebalFreq = RebalFreq.DAILY,
-    return_type: ReturnType = ReturnType.ER,
+    return_type: ReturnType = ReturnType.EXCESS_RETURN,
 ) -> pd.Series:
     """
     Calculates a basket return series.
@@ -39,7 +39,7 @@ def basket(
     :param weights: list of weights
     :param costs: list of costs; defaults to costs of 0
     :param rebal_freq: rebalancing frequency - Daily or Monthly
-    :param return_type: return type of underlying instruments - 'ER' (excess return) supported only.
+    :param return_type: return type of underlying instruments - excess return supported only.
     :return: time-series of the resulting basket
 
     **Usage**

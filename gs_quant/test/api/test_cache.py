@@ -39,7 +39,7 @@ def test_cache_addition_removal():
     p1 = IRSwap('Pay', '10y', 'DKK')
 
     with mock.patch('gs_quant.api.gs.risk.GsRiskApi._exec') as mocker:
-        mocker.return_value = [[[{'date': '2019-10-07', 'value': 0.07}]]]
+        mocker.return_value = [[[[{'$type': 'Risk', 'val': 0.07}]]]]
 
         with PricingContext(use_cache=True):
             p1.price()
@@ -60,7 +60,7 @@ def test_cache_addition_removal():
     assert not PricingCache.get(p2, risk.Price)
 
     with mock.patch('gs_quant.api.gs.risk.GsRiskApi._exec') as mocker:
-        mocker.return_value = [[[{'date': '2019-10-07', 'value': 0.07}]]]
+        mocker.return_value = [[[[{'$type': 'Risk', 'val': 0.07}]]]]
 
         with PricingContext(use_cache=True):
             p2_price = p2.price()
@@ -69,7 +69,7 @@ def test_cache_addition_removal():
 
     # Assert that running under a scenario does not retrieve the base result
     with mock.patch('gs_quant.api.gs.risk.GsRiskApi._exec') as mocker:
-        mocker.return_value = [[[{'date': '2019-10-07', 'value': 0.08}]]]
+        mocker.return_value = [[[[{'$type': 'Risk', 'val': 0.08}]]]]
 
         with risk.CarryScenario(time_shift=30), PricingContext(use_cache=True) as spc:
             # Don't want the price without the scenario
@@ -90,7 +90,7 @@ def test_cache_addition_removal():
 
     # Assert that caching respects parameters, such as csa
     with mock.patch('gs_quant.api.gs.risk.GsRiskApi._exec') as mocker:
-        mocker.return_value = [[[{'date': '2019-10-07', 'value': 0.08}]]]
+        mocker.return_value = [[[[{'$type': 'Risk', 'val': 0.08}]]]]
 
         with PricingContext(use_cache=True, csa_term='INVALID'):
             # Don't want the price with default csa
@@ -118,10 +118,10 @@ def test_cache_subset(mocker):
     ir_swap = IRSwap('Pay', '10y', 'DKK')
 
     values = [
-        {'date': '2019-10-07', 'value': 0.01},
-        {'date': '2019-10-08', 'value': 0.01}
+        {'$type': 'Risk', 'val': 0.01},
+        {'$type': 'Risk', 'val': 0.01}
     ]
-    mocker.return_value = [[values]]
+    mocker.return_value = [[[values]]]
 
     dates = (dt.date(2019, 10, 7), dt.date(2019, 10, 8))
     with HistoricalPricingContext(dates=dates, use_cache=True) as hpc:
@@ -144,20 +144,32 @@ def test_cache_subset(mocker):
     assert len(cached3) < len(dates)
 
     values = [
-        {'date': '2019-10-07', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-         'point': '1y', 'value': 0.01},
-        {'date': '2019-10-07', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-         'point': '2y', 'value': 0.015},
-        {'date': '2019-10-08', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-         'point': '1y', 'value': 0.01},
-        {'date': '2019-10-08', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-         'point': '2y', 'value': 0.015},
-        {'date': '2019-10-09', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-         'point': '1y', 'value': 0.01},
-        {'date': '2019-10-09', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-         'point': '2y', 'value': 0.015}
+        {
+            '$type': 'RiskVector',
+            'asset': [0.01, 0.015],
+            'points': [
+                {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
+                {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
+            ]
+        },
+        {
+            '$type': 'RiskVector',
+            'asset': [0.01, 0.015],
+            'points': [
+                {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
+                {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
+            ]
+        },
+        {
+            '$type': 'RiskVector',
+            'asset': [0.01, 0.015],
+            'points': [
+                {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
+                {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
+            ]
+        }
     ]
-    mocker.return_value = [[values]]
+    mocker.return_value = [[[values]]]
 
     with HistoricalPricingContext(dates=dates, use_cache=True) as hpc:
         pricing_key = hpc.pricing_key
@@ -179,45 +191,69 @@ def test_multiple_measures(mocker):
     values = [
         [
             [
-                {'date': '2019-10-07', 'marketDataType': 'IR Vol', 'assetId': 'USD-LIBOR-BBA', 'pointClass': 'Swap',
-                 'point': '1y', 'value': 0.01},
-                {'date': '2019-10-07', 'marketDataType': 'IR Vol', 'assetId': 'USD-LIBOR-BBA', 'pointClass': 'Swap',
-                 'point': '2y', 'value': 0.015},
-                {'date': '2019-10-08', 'marketDataType': 'IR Vol', 'assetId': 'USD-LIBOR-BBA', 'pointClass': 'Swap',
-                 'point': '1y', 'value': 0.01},
-                {'date': '2019-10-08', 'marketDataType': 'IR Vol', 'assetId': 'USD-LIBOR-BBA', 'pointClass': 'Swap',
-                 'point': '2y', 'value': 0.015},
-                {'date': '2019-10-09', 'marketDataType': 'IR Vol', 'assetId': 'USD-LIBOR-BBA', 'pointClass': 'Swap',
-                 'point': '1y', 'value': 0.01},
-                {'date': '2019-10-09', 'marketDataType': 'IR Vol', 'assetId': 'USD-LIBOR-BBA', 'pointClass': 'Swap',
-                 'point': '2y', 'value': 0.015}
+                {
+                    '$type': 'RiskVector',
+                    'asset': [0.01, 0.015],
+                    'points': [
+                        {'type': 'IR Vol', 'asset': 'USD-LIBOR-BBA', 'class_': 'Swap', 'point': '1y'},
+                        {'type': 'IR Vol', 'asset': 'USD-LIBOR-BBA', 'class_': 'Swap', 'point': '2y'}
+                    ]
+                },
+                {
+                    '$type': 'RiskVector',
+                    'asset': [0.01, 0.015],
+                    'points': [
+                        {'type': 'IR Vol', 'asset': 'USD-LIBOR-BBA', 'class_': 'Swap', 'point': '1y'},
+                        {'type': 'IR Vol', 'asset': 'USD-LIBOR-BBA', 'class_': 'Swap', 'point': '2y'}
+                    ]
+                },
+                {
+                    '$type': 'RiskVector',
+                    'asset': [0.01, 0.015],
+                    'points': [
+                        {'type': 'IR Vol', 'asset': 'USD-LIBOR-BBA', 'class_': 'Swap', 'point': '1y'},
+                        {'type': 'IR Vol', 'asset': 'USD-LIBOR-BBA', 'class_': 'Swap', 'point': '2y'}
+                    ]
+                }
             ]
         ],
         [
             [
-                {'date': '2019-10-07', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '1y', 'value': 0.01},
-                {'date': '2019-10-07', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '2y', 'value': 0.015},
-                {'date': '2019-10-08', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '1y', 'value': 0.01},
-                {'date': '2019-10-08', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '2y', 'value': 0.015},
-                {'date': '2019-10-09', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '1y', 'value': 0.01},
-                {'date': '2019-10-09', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '2y', 'value': 0.015}
+                {
+                    '$type': 'RiskVector',
+                    'asset': [0.01, 0.015],
+                    'points': [
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
+                    ]
+                },
+                {
+                    '$type': 'RiskVector',
+                    'asset': [0.01, 0.015],
+                    'points': [
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
+                    ]
+                },
+                {
+                    '$type': 'RiskVector',
+                    'asset': [0.01, 0.015],
+                    'points': [
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
+                    ]
+                }
             ]
         ],
         [
             [
-                {'date': '2019-10-07', 'value': 0.01},
-                {'date': '2019-10-08', 'value': 0.01},
-                {'date': '2019-10-09', 'value': 0.01}
+                {'$type': 'Risk', 'val': 0.01},
+                {'$type': 'Risk', 'val': 0.01},
+                {'$type': 'Risk', 'val': 0.01}
             ]
         ]
     ]
-    mocker.return_value = values
+    mocker.return_value = [values]
 
     set_session()
 

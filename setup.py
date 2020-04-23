@@ -63,7 +63,7 @@ setuptools.setup(
         "lmfit",
         "msgpack",
         "nest-asyncio",
-        "pandas<1.0.0",
+        "pandas",
         "python-dateutil>=2.7.0",
         "requests",
         "scipy",

@@ -77,29 +77,52 @@ def excess_returns(price_series: pd.Series, benchmark_or_rate: Union[Asset, Curr
     return pd.Series(e_returns, index=curve.index)
 
 
-def _annualized_return(levels: pd.Series) -> pd.Series:
-    v0 = levels.iloc[0]
-    d0 = levels.index[0]
-    points = list(map(lambda d, v: pow(v / v0, 365.25 / (d - d0).days) - 1, levels.index[1:], levels.values[1:]))
+def _annualized_return(levels: pd.Series, rolling: int) -> pd.Series:
+    if rolling == 0:
+        rolling = len(levels)
+
+    starting = [0] * rolling
+    starting.extend([a for a in range(1, len(levels) - rolling + 1)])
+    points = list(
+        map(lambda d, v, i: pow(v / levels[i], 365.25 / (d - levels.index[i]).days) - 1, levels.index[1:],
+            levels.values[1:], starting[1:]))
     points.insert(0, 0)
     return pd.Series(points, index=levels.index)
 
 
-def _get_ratio(price_series: pd.Series, benchmark_or_rate: Union[Asset, float, str], *,
-               day_count_convention: DayCountConvention) -> pd.Series:
-    er = excess_returns(price_series, benchmark_or_rate, day_count_convention=day_count_convention)
-    ann_return = _annualized_return(er)
-    ann_vol = volatility(er) / 100
-    return ann_return / ann_vol
+def _get_ratio(input_series: pd.Series, benchmark_or_rate: Union[Asset, float, str], rolling: int, *,
+               day_count_convention: DayCountConvention, curve_type: CurveType = CurveType.PRICES) -> pd.Series:
+    if curve_type == CurveType.PRICES:
+        er = excess_returns(input_series, benchmark_or_rate, day_count_convention=day_count_convention)
+    else:
+        assert curve_type == CurveType.EXCESS_RETURNS
+        er = input_series
+
+    ann_return = _annualized_return(er, rolling)
+    ann_vol = volatility(er, rolling).iloc[1:] if rolling > 0 else volatility(er)
+    return ann_return / ann_vol * 100
+
+
+class RiskFreeRateCurrency(Enum):
+    AUD = "AUD"
+    CHF = "CFH"
+    EUR = "EUR"
+    GBP = "GBP"
+    JPY = "JPY"
+    SEK = "SEK"
+    USD = "USD"
 
 
 @plot_session_function
-def sharpe_ratio(prices_: pd.Series, risk_free_rate: Union[Currency, float]) -> pd.Series:
+def sharpe_ratio(series: pd.Series, currency: RiskFreeRateCurrency, rolling: int = 0,
+                 curve_type: CurveType = CurveType.PRICES) -> pd.Series:
     """
     Calculate Sharpe ratio
 
-    :param prices_: series of prices for an asset
-    :param risk_free_rate: a fixed rate or currency like USD
+    :param series: series of prices or excess returns for an asset
+    :param currency: currency for risk-free rate
+    :param curve_type: whether input series is of prices or excess returns
+    :param rolling: rolling window to use
     :return: Sharpe ratio
 
     **Usage**
@@ -116,9 +139,8 @@ def sharpe_ratio(prices_: pd.Series, risk_free_rate: Union[Currency, float]) -> 
 
     DCF is the day count fraction using the Act/360 convention.
     """
-    if not isinstance(risk_free_rate, (Currency, float)):
-        raise MqTypeError(f'{risk_free_rate} must be a currency or fixed interest rate')
-    return _get_ratio(prices_, risk_free_rate, day_count_convention=DayCountConvention.ACTUAL_360)
+    return _get_ratio(series, Currency(currency.value), rolling, day_count_convention=DayCountConvention.ACTUAL_360,
+                      curve_type=curve_type)
 
 
 @plot_function

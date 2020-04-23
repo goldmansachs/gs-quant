@@ -1736,7 +1736,7 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
     # This will remove any duplicate prices uploaded with the same timestamp
     df = df.drop_duplicates()
     # freq is the frequency at which the ISO publishes data for e.g. 15 min, 1hr
-    freq = int(min(np.diff(df.index) / np.timedelta64(1, 's')))
+    freq = int(min(np.diff(df.index).astype('timedelta64[s]') / np.timedelta64(1, 's')))
     # checking missing data points
     ref_hour_range = pd.date_range(str(start_date), str(end_date + datetime.timedelta(days=1)),
                                    freq=str(freq) + "S", tz=timezone, closed='left')

@@ -17,7 +17,8 @@ import datetime as dt
 import logging
 from typing import Tuple, Union
 
-from gs_quant.session import GsSession
+from gs_quant.instrument import Instrument
+from gs_quant.session import Environment, GsSession
 from gs_quant.target.portfolios import Portfolio, Position, PositionSet
 from gs_quant.target.reports import Report
 
@@ -26,8 +27,6 @@ _logger = logging.getLogger(__name__)
 
 class GsPortfolioApi:
     """GS Asset API client implementation"""
-
-    # CRUD
 
     @classmethod
     def get_portfolios(cls, limit: int = 100) -> Tuple[Portfolio, ...]:
@@ -82,6 +81,18 @@ class GsPortfolioApi:
             id=portfolio_id, date=position_date.isoformat(), ptype=position_type)
         position_sets = GsSession.current._get(url, cls=PositionSet)['results']
         return position_sets[0] if len(position_sets) > 0 else PositionSet()
+
+    @classmethod
+    def get_instruments_by_position_type(cls, positions_type: str, positions_id: str) -> Tuple[Instrument, ...]:
+        root = 'deals' if positions_type == 'ETI' else 'books/' + positions_type
+        url = '/risk-internal/{}/{}/positions'.format(root, positions_id)
+
+        with GsSession.get(Environment.QA) as session:
+            # TODO Remove this once in prod
+            results = session._get(url)
+
+        return tuple(Instrument.from_dict(p['instrument']) for p in
+                     results.get('positionSets', ({'positions': ()},))[0]['positions'])
 
     @classmethod
     def get_latest_positions(cls, portfolio_id: str, position_type: str = 'close') -> Union[PositionSet, dict]:

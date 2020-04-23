@@ -35,8 +35,8 @@ class PriceableImpl(Priceable, metaclass=ABCMeta):
 
     def __init__(self):
         super().__init__()
-        self.resolution_key: PricingKey = None
-        self.unresolved: Priceable = None
+        self.resolution_key: Optional[PricingKey] = None
+        self.unresolved: Optional[Priceable] = None
 
     def __getattribute__(self, name):
         resolved = False
@@ -46,12 +46,19 @@ class PriceableImpl(Priceable, metaclass=ABCMeta):
         except AttributeError:
             pass
 
-        if GsSession.current_is_set and not resolved:
-            attr = getattr(super().__getattribute__('__class__'), name, None)
-            if attr and isinstance(attr, property) and super().__getattribute__(name) is None:
-                self.resolve()
+        ret = super().__getattribute__(name)
 
-        return super().__getattribute__(name)
+        if ret is None and GsSession.current_is_set and not resolved:
+            attr = getattr(super().__getattribute__('__class__'), name, None)
+            if attr and isinstance(attr, property):
+                resolved_inst = self.resolve(in_place=False)
+                if isinstance(resolved_inst, Future):
+                    ret = Future()
+                    resolved_inst.add_done_callback(lambda inst_f: ret.set_result(getattr(inst_f.result(), name, None)))
+                else:
+                    ret = getattr(resolved_inst, name, None)
+
+        return ret
 
     def _property_changed(self, prop: str):
         if self._hash_is_calced:

@@ -211,3 +211,40 @@ def relative_strength_index(x: pd.Series, w: Union[Window, int] = 14) -> pd.Data
             rsi[index] = 100 - (100 / (1 + relative_strength))
 
     return rsi
+
+
+@plot_function
+def exponential_moving_average(x: pd.Series, alpha: float = 0.75) -> pd.Series:
+    """
+    Exponentially weighted moving average time series from previous values.
+
+    :param x: time series of prices
+    :param alpha: how much to weigh the previous price in the time series, thus controlling how much importance we
+                  place on the (more distant) past
+    :return: date-based time series of return
+
+    **Usage**
+
+    An exponential(ly weighted) moving average (EMA), is defined as:
+
+    :math:`R_{t+1} = \alpha \cdot R_t + (1 - \alpha) \cdot P_t`
+
+    where :math: `\alpha` is the weight we place on the previous day's average.
+
+    See `Exponential moving average <https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average>`
+    _ for more information
+
+
+    **Examples**
+
+    Generate price series with 100 observations starting from today's date:
+
+    >>> prices = generate_series(100)
+    >>> exponential_moving_average(prices, 0.9)
+
+    **See also**
+
+    :func:`mean` :func:'moving_average' :func:'smoothed_moving_average'
+
+    """
+    return x.ewm(alpha=1 - alpha, adjust=False).mean()

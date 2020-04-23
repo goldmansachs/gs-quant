@@ -67,7 +67,7 @@ def min_(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
     if isinstance(w.w, pd.DateOffset):
         values = [x.loc[(x.index > idx - w.w) & (x.index <= idx)].min() for idx in x.index]
-        return apply_ramp(pd.Series(values, index=x.index), w)
+        return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
     else:
         return apply_ramp(x.rolling(w.w, 0).min(), w)
 
@@ -107,7 +107,7 @@ def max_(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
     if isinstance(w.w, pd.DateOffset):
         values = [x.loc[(x.index > idx - w.w) & (x.index <= idx)].max() for idx in x.index]
-        return apply_ramp(pd.Series(values, index=x.index), w)
+        return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
     else:
         return apply_ramp(x.rolling(w.w, 0).max(), w)
 
@@ -188,7 +188,7 @@ def mean(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
     if isinstance(w.w, pd.DateOffset):
         values = [x.loc[(x.index > idx - w.w) & (x.index <= idx)].mean() for idx in x.index]
-        return apply_ramp(pd.Series(values, index=x.index), w)
+        return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
     else:
         return apply_ramp(x.rolling(w.w, 0).mean(), w)
 
@@ -231,7 +231,7 @@ def median(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
     if isinstance(w.w, pd.DateOffset):
         values = [x.loc[(x.index > idx - w.w) & (x.index <= idx)].median() for idx in x.index]
-        return apply_ramp(pd.Series(values, index=x.index), w)
+        return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
     else:
         return apply_ramp(x.rolling(w.w, 0).median(), w)
 
@@ -269,7 +269,7 @@ def mode(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
     if isinstance(w.w, pd.DateOffset):
         values = [stats.mode(x.loc[(x.index > idx - w.w) & (x.index <= idx)]).mode[0] for idx in x.index]
-        return apply_ramp(pd.Series(values, index=x.index), w)
+        return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
     else:
         return apply_ramp(x.rolling(w.w, 0).apply(lambda y: stats.mode(y).mode, raw=True), w)
 
@@ -309,7 +309,7 @@ def sum_(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     assert x.index.is_monotonic_increasing
     if isinstance(w.w, pd.DateOffset):
         values = [x.loc[(x.index > idx - w.w) & (x.index <= idx)].sum() for idx in x.index]
-        return apply_ramp(pd.Series(values, index=x.index), w)
+        return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
     else:
         return apply_ramp(x.rolling(w.w, 0).sum(), w)
 
@@ -348,7 +348,7 @@ def product(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     assert x.index.is_monotonic_increasing
     if isinstance(w.w, pd.DateOffset):
         values = [x.loc[(x.index > idx - w.w) & (x.index <= idx)].agg(pd.Series.prod) for idx in x.index]
-        return apply_ramp(pd.Series(values, index=x.index), w)
+        return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
     else:
         return apply_ramp(x.rolling(w.w, 0).agg(pd.Series.prod), w)
 
@@ -393,7 +393,7 @@ def std(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
     if isinstance(w.w, pd.DateOffset):
         values = [x.loc[(x.index > idx - w.w) & (x.index <= idx)].std() for idx in x.index]
-        return apply_ramp(pd.Series(values, index=x.index), w)
+        return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
     else:
         return apply_ramp(x.rolling(w.w, 0).std(), w)
 
@@ -438,7 +438,7 @@ def var(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
     if isinstance(w.w, pd.DateOffset):
         values = [x.loc[(x.index > idx - w.w) & (x.index <= idx)].var() for idx in x.index]
-        return apply_ramp(pd.Series(values, index=x.index), w)
+        return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
     else:
         return apply_ramp(x.rolling(w.w, 0).var(), w)
 
@@ -485,7 +485,7 @@ def cov(x: pd.Series, y: pd.Series, w: Union[Window, int] = Window(None, 0)) -> 
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
     if isinstance(w.w, pd.DateOffset):
         values = [x.loc[(x.index > idx - w.w) & (x.index <= idx)].cov(y) for idx in x.index]
-        return apply_ramp(pd.Series(values, index=x.index), w)
+        return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
     else:
         return apply_ramp(x.rolling(w.w, 0).cov(y), w)
 
@@ -538,15 +538,15 @@ def zscores(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
         w = Window(w=w, r=w)
     if not w.w:
         if x.size == 1:
-            return pd.Series([0.0], index=x.index)
+            return pd.Series([0.0], index=x.index, dtype=np.dtype(float))
 
         clean_series = x.dropna()
-        zscore_series = pd.Series(stats.zscore(clean_series, ddof=1), clean_series.index)
+        zscore_series = pd.Series(stats.zscore(clean_series, ddof=1), clean_series.index, dtype=np.dtype(float))
         return interpolate(zscore_series, x, Interpolate.NAN)
     if not isinstance(w.w, int):
         w = normalize_window(x, w)
         values = [_zscore(x.loc[(x.index > idx - w.w) & (x.index <= idx)]) for idx in x.index]
-        return apply_ramp(pd.Series(values, index=x.index), w)
+        return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
     else:
         return apply_ramp(x.rolling(w.w, 0).apply(_zscore, raw=False), w)
 
@@ -651,7 +651,7 @@ def generate_series(length: int) -> pd.Series:
         levels.append(levels[i] * 1 + numpy.random.normal())
         dates.append(datetime.date.fromordinal(dates[i].toordinal() + 1))
 
-    return pd.Series(data=levels, index=dates)
+    return pd.Series(data=levels, index=dates, dtype=np.dtype(float))
 
 
 @plot_function
@@ -696,7 +696,7 @@ def percentiles(x: pd.Series, y: pd.Series = None, w: Union[Window, int] = Windo
     if y is None:
         y = x.copy()
 
-    res = pd.Series()
+    res = pd.Series(dtype=np.dtype(float))
     for idx, val in y.iteritems():
         sample = x.loc[(x.index > idx - w.w) & (x.index <= idx)] if isinstance(w.w, pd.DateOffset) else x[:idx][-w.w:]
         res.loc[idx] = percentileofscore(sample, val, kind='mean')
@@ -908,7 +908,7 @@ class SEIRModel(SIRModel):
 
     **Usage**
 
-    Fit `SEIR Model <https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology#The_SEIR_model`_ based on the
+    Fit `SEIR Model <https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology#The_SEIR_model>`_ based on the
     population in each compartment over a given time period.
 
     The SEIR models the movement of individuals between four compartments: susceptible (S), exposed (E), infected (I),

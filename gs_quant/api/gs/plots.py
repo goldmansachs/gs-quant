@@ -20,13 +20,13 @@ from gs_quant.session import GsSession
 from gs_quant.target.charts import Chart, ChartShare
 
 
-class GsChartApi:
+class GsPlotApi:
     """GS Chart API client implementation"""
 
     # CRUD
 
     @classmethod
-    def get_charts(cls, limit: int = 100) -> Tuple[Chart, ...]:
+    def get_many_charts(cls, limit: int = 100) -> Tuple[Chart, ...]:
         return GsSession.current._get('/charts?limit={limit}'.format(limit=limit), cls=Chart)['results']
 
     @classmethod

@@ -1113,6 +1113,14 @@ def test_swap_term_structure(mocker):
         tm_rates.swap_term_structure(**args)
     args['benchmark_type'] = BenchmarkType.LIBOR
 
+    bd_mock = replace('gs_quant.data.dataset.Dataset.get_data', Mock())
+    bd_mock.return_value = pd.DataFrame(data=dict(date="2020-04-10", exchange="NYC", description="Good Friday"),
+                                        index=[pd.Timestamp('2020-04-10')])
+    args['pricing_date'] = datetime.date(2020, 4, 10)
+    with pytest.raises(MqValueError):
+        tm_rates.swap_term_structure(**args)
+    args['pricing_date'] = None
+
     xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
     xrefs.return_value = 'USD'
     identifiers_empty = replace('gs_quant.timeseries.measures.GsAssetApi.get_many_assets', Mock())
@@ -1131,9 +1139,13 @@ def test_swap_term_structure(mocker):
         'assetId': ['MAEMPCXQG3T716EX', 'MAFRSWPAF5QPNTP2', 'MA88BXZ3TCTXTFW1', 'MAC4KAG9B9ZAZHFT']
     }
 
-    df = pd.DataFrame(data=d, index=_index * 4)
+    pricing_date_mock = replace('gs_quant.timeseries.measures_rates._range_from_pricing_date', Mock())
+    pricing_date_mock.return_value = [datetime.date(2019, 1, 1), datetime.date(2019, 1, 1)]
+    bd_mock.return_value = pd.DataFrame()
     market_data_mock = replace('gs_quant.timeseries.measures_rates._market_data_timed', Mock())
+
     market_data_mock.return_value = pd.DataFrame()
+    df = pd.DataFrame(data=d, index=_index * 4)
     assert tm_rates.swap_term_structure(**args).empty
 
     market_data_mock.return_value = df
@@ -1191,6 +1203,14 @@ def test_basis_swap_term_structure(mocker):
         tm_rates.basis_swap_term_structure(**args)
     args['reference_benchmark_type'] = BenchmarkType.LIBOR
 
+    bd_mock = replace('gs_quant.data.dataset.Dataset.get_data', Mock())
+    bd_mock.return_value = pd.DataFrame(data=dict(date="2020-04-10", exchange="NYC", description="Good Friday"),
+                                        index=[pd.Timestamp('2020-04-10')])
+    args['pricing_date'] = datetime.date(2020, 4, 10)
+    with pytest.raises(MqValueError):
+        tm_rates.basis_swap_term_structure(**args)
+    args['pricing_date'] = None
+
     xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
     xrefs.return_value = 'USD'
     identifiers_empty = replace('gs_quant.timeseries.measures.GsAssetApi.get_many_assets', Mock())
@@ -1209,11 +1229,15 @@ def test_basis_swap_term_structure(mocker):
         'assetId': ['MAEMPCXQG3T716EX', 'MAFRSWPAF5QPNTP2', 'MA88BXZ3TCTXTFW1', 'MAC4KAG9B9ZAZHFT']
     }
 
-    df = pd.DataFrame(data=d, index=_index * 4)
+    pricing_date_mock = replace('gs_quant.timeseries.measures_rates._range_from_pricing_date', Mock())
+    pricing_date_mock.return_value = [datetime.date(2019, 1, 1), datetime.date(2019, 1, 1)]
+    bd_mock.return_value = pd.DataFrame()
     market_data_mock = replace('gs_quant.timeseries.measures_rates._market_data_timed', Mock())
+
     market_data_mock.return_value = pd.DataFrame()
     assert tm_rates.basis_swap_term_structure(**args).empty
 
+    df = pd.DataFrame(data=d, index=_index * 4)
     market_data_mock.return_value = df
     with DataContext('2019-01-01', '2025-01-01'):
         actual = tm_rates.basis_swap_term_structure(**args)

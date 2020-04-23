@@ -14,8 +14,6 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from datetime import date
-
 import pytest
 from pandas.util.testing import assert_series_equal
 
@@ -362,3 +360,27 @@ def test_day_count_fractions():
     dcf = 1 / 365
     expected = pd.Series([np.NaN, dcf, dcf, dcf, dcf, dcf], index=dates)
     assert_series_equal(result, expected, obj="ACT/365")
+
+
+def test_date_range():
+
+    dates = [
+        date(2019, 1, 1),
+        date(2019, 1, 2),
+        date(2019, 1, 3),
+        date(2019, 1, 4),
+        date(2019, 1, 5),
+        date(2019, 1, 6),
+    ]
+
+    x = pd.Series([1.0, 2.0, 3.0, 4.0, 5.0, 7.0], index=dates)
+
+    assert (date_range(x, 0, 0) == x).all()
+    assert (date_range(x, 0, 0, True) == x.iloc[:-2]).all()
+
+    assert date_range(x, 0, date(2019, 1, 3)).index[-1] == date(2019, 1, 3)
+    assert (date_range(x, 0, date(2019, 1, 3)) == x.iloc[:3]).all()
+
+    assert date_range(x, date(2019, 1, 3), date(2019, 1, 6)).index[0] == date(2019, 1, 3)
+    assert date_range(x, date(2019, 1, 3), date(2019, 1, 6)).index[-1] == date(2019, 1, 6)
+    assert (date_range(x, date(2019, 1, 3), date(2019, 1, 6)) == x.iloc[2:6]).all()

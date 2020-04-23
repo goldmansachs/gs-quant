@@ -40,13 +40,13 @@ def test_portfolio(mocker):
     dollar_price_values = [
         [
             [
-                {'date': '2019-10-07', 'value': 0.01}
+                {'$type': 'Risk', 'val': 0.01}
             ],
             [
-                {'date': '2019-10-07', 'value': 0.02}
+                {'$type': 'Risk', 'val': 0.02}
             ],
             [
-                {'date': '2019-10-07', 'value': 0.03}
+                {'$type': 'Risk', 'val': 0.03}
             ]
         ]
     ]
@@ -54,33 +54,45 @@ def test_portfolio(mocker):
     dollar_price_ir_delta_values = [
         [
             [
-                {'date': '2019-10-07', 'value': 0.01}
+                {'$type': 'Risk', 'val': 0.01}
             ],
             [
-                {'date': '2019-10-07', 'value': 0.02}
+                {'$type': 'Risk', 'val': 0.02}
             ],
             [
-                {'date': '2019-10-07', 'value': 0.03}
+                {'$type': 'Risk', 'val': 0.03}
             ]
         ],
         [
             [
-                {'date': '2019-10-07', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '1y', 'value': 0.01},
-                {'date': '2019-10-07', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '2y', 'value': 0.015}
+                {
+                    '$type': 'RiskVector',
+                    'asset': [0.01, 0.015],
+                    'points': [
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
+                    ]
+                }
             ],
             [
-                {'date': '2019-10-07', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '1y', 'value': 0.02},
-                {'date': '2019-10-07', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '2y', 'value': 0.025}
+                {
+                    '$type': 'RiskVector',
+                    'asset': [0.02, 0.025],
+                    'points': [
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
+                    ]
+                }
             ],
             [
-                {'date': '2019-10-07', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '1y', 'value': 0.03},
-                {'date': '2019-10-07', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '2y', 'value': 0.035}
+                {
+                    '$type': 'RiskVector',
+                    'asset': [0.03, 0.035],
+                    'points': [
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
+                    ]
+                }
             ]
         ]
     ]
@@ -91,7 +103,7 @@ def test_portfolio(mocker):
 
     portfolio = Portfolio((swap1, swap2, swap3))
 
-    mocker.return_value = dollar_price_values
+    mocker.return_value = [dollar_price_values]
     prices: PortfolioRiskResult = portfolio.dollar_price()
     assert tuple(sorted(prices)) == (0.01, 0.02, 0.03)
     assert round(prices.aggregate(), 2) == 0.06
@@ -99,7 +111,7 @@ def test_portfolio(mocker):
     assert prices[swap2] == 0.02
     assert prices['swap3'] == 0.03
 
-    mocker.return_value = dollar_price_ir_delta_values
+    mocker.return_value = [dollar_price_ir_delta_values]
     result = portfolio.calc((risk.DollarPrice, risk.IRDelta))
 
     assert tuple(result[risk.DollarPrice]) == (0.01, 0.02, 0.03)
@@ -107,10 +119,7 @@ def test_portfolio(mocker):
     assert result[risk.DollarPrice]['swap3'] == 0.03
     assert result[risk.DollarPrice]['swap3'] == result['swap3'][risk.DollarPrice]
 
-    expected = risk.aggregate_risk([risk.DataFrameWithInfo(PricingContext.current.pricing_key, pd.DataFrame(v))
-                                   for v in dollar_price_ir_delta_values[1]]).reset_index(drop=True)
-    actual = result[risk.IRDelta].aggregate().raw_value
-    assert actual.equals(expected)
+    assert result[risk.IRDelta].aggregate().value.sum() == 0.135
 
     prices_only = result[risk.DollarPrice]
     assert tuple(prices) == tuple(prices_only)
@@ -138,68 +147,104 @@ def test_historical_pricing(mocker):
     dollar_price_ir_delta_values = [
         [
             [
-                {'date': '2019-10-07', 'value': 0.01},
-                {'date': '2019-10-08', 'value': 0.011},
-                {'date': '2019-10-09', 'value': 0.012}
+                {'$type': 'Risk', 'val': 0.01},
+                {'$type': 'Risk', 'val': 0.011},
+                {'$type': 'Risk', 'val': 0.012}
             ],
             [
-                {'date': '2019-10-07', 'value': 0.02},
-                {'date': '2019-10-08', 'value': 0.021},
-                {'date': '2019-10-09', 'value': 0.022}
+                {'$type': 'Risk', 'val': 0.02},
+                {'$type': 'Risk', 'val': 0.021},
+                {'$type': 'Risk', 'val': 0.022}
             ],
             [
-                {'date': '2019-10-07', 'value': 0.03},
-                {'date': '2019-10-08', 'value': 0.031},
-                {'date': '2019-10-09', 'value': 0.032}
+                {'$type': 'Risk', 'val': 0.03},
+                {'$type': 'Risk', 'val': 0.031},
+                {'$type': 'Risk', 'val': 0.032}
             ]
         ],
         [
             [
-                {'date': '2019-10-07', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '1y', 'value': 0.01},
-                {'date': '2019-10-07', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '2y', 'value': 0.015},
-                {'date': '2019-10-08', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '1y', 'value': 0.011},
-                {'date': '2019-10-08', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '2y', 'value': 0.0151},
-                {'date': '2019-10-09', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '1y', 'value': 0.012},
-                {'date': '2019-10-09', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '2y', 'value': 0.0152}
+                {
+                    '$type': 'RiskVector',
+                    'asset': [0.01, 0.015],
+                    'points': [
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
+                    ]
+                },
+                {
+                    '$type': 'RiskVector',
+                    'asset': [0.011, 0.0151],
+                    'points': [
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
+                    ]
+                },
+                {
+                    '$type': 'RiskVector',
+                    'asset': [0.012, 0.0152],
+                    'points': [
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
+                    ]
+                }
             ],
             [
-                {'date': '2019-10-07', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '1y', 'value': 0.02},
-                {'date': '2019-10-07', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '2y', 'value': 0.025},
-                {'date': '2019-10-08', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '1y', 'value': 0.021},
-                {'date': '2019-10-08', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '2y', 'value': 0.0251},
-                {'date': '2019-10-09', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '1y', 'value': 0.022},
-                {'date': '2019-10-09', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '2y', 'value': 0.0252}
+                {
+                    '$type': 'RiskVector',
+                    'asset': [0.02, 0.025],
+                    'points': [
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
+                    ]
+                },
+                {
+                    '$type': 'RiskVector',
+                    'asset': [0.021, 0.0251],
+                    'points': [
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
+                    ]
+                },
+                {
+                    '$type': 'RiskVector',
+                    'asset': [0.022, 0.0252],
+                    'points': [
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
+                    ]
+                }
             ],
             [
-                {'date': '2019-10-07', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '1y', 'value': 0.03},
-                {'date': '2019-10-07', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '2y', 'value': 0.035},
-                {'date': '2019-10-08', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '1y', 'value': 0.031},
-                {'date': '2019-10-08', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '2y', 'value': 0.0351},
-                {'date': '2019-10-09', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '1y', 'value': 0.032},
-                {'date': '2019-10-09', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '2y', 'value': 0.0352}
+                {
+                    '$type': 'RiskVector',
+                    'asset': [0.03, 0.035],
+                    'points': [
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
+                    ]
+                },
+                {
+                    '$type': 'RiskVector',
+                    'asset': [0.031, 0.0351],
+                    'points': [
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
+                    ]
+                },
+                {
+                    '$type': 'RiskVector',
+                    'asset': [0.032, 0.0352],
+                    'points': [
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
+                    ]
+                }
             ]
         ]
     ]
 
-    mocker.return_value = dollar_price_ir_delta_values
+    mocker.return_value = [dollar_price_ir_delta_values]
 
     swap1 = IRSwap('Pay', '10y', 'USD', fixed_rate=0.01, name='swap1')
     swap2 = IRSwap('Pay', '10y', 'USD', fixed_rate=0.02, name='swap2')
@@ -230,17 +275,17 @@ def test_duplicate_instrument(mocker):
     dollar_price_values = [
         [
             [
-                {'date': '2019-10-07', 'value': 0.01}
+                {'$type': 'Risk', 'val': 0.01}
             ],
             [
-                {'date': '2019-10-07', 'value': 0.02}
+                {'$type': 'Risk', 'val': 0.02}
             ],
             [
-                {'date': '2019-10-07', 'value': 0.03}
+                {'$type': 'Risk', 'val': 0.03}
             ]
         ]
     ]
-    mocker.return_value = dollar_price_values
+    mocker.return_value = [dollar_price_values]
 
     swap1 = IRSwap('Pay', '10y', 'USD', fixed_rate=0.01, name='swap1')
     swap2 = IRSwap('Pay', '10y', 'USD', fixed_rate=0.02, name='swap2')
@@ -260,7 +305,7 @@ def test_duplicate_instrument(mocker):
 def test_single_instrument(mocker):
     set_session()
 
-    mocker.return_value = [[[{'date': '2019-10-07', 'value': 0.01}]]]
+    mocker.return_value = [[[[{'$type': 'Risk', 'val': 0.01}]]]]
 
     swap1 = IRSwap('Pay', '10y', 'USD', fixed_rate=0.01, name='swap1')
 
@@ -279,33 +324,45 @@ def test_results_with_resolution():
     dollar_price_ir_delta_values = [
         [
             [
-                {'date': '2019-10-07', 'value': 0.01}
+                {'$type': 'Risk', 'val': 0.01}
             ],
             [
-                {'date': '2019-10-07', 'value': 0.02}
+                {'$type': 'Risk', 'val': 0.02}
             ],
             [
-                {'date': '2019-10-07', 'value': 0.03}
+                {'$type': 'Risk', 'val': 0.03}
             ]
         ],
         [
             [
-                {'date': '2019-10-07', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '1y', 'value': 0.01},
-                {'date': '2019-10-07', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '2y', 'value': 0.015}
+                {
+                    '$type': 'RiskVector',
+                    'asset': [0.01, 0.015],
+                    'points': [
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
+                    ]
+                }
             ],
             [
-                {'date': '2019-10-07', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '1y', 'value': 0.02},
-                {'date': '2019-10-07', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '2y', 'value': 0.025}
+                {
+                    '$type': 'RiskVector',
+                    'asset': [0.02, 0.025],
+                    'points': [
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
+                    ]
+                }
             ],
             [
-                {'date': '2019-10-07', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '1y', 'value': 0.03},
-                {'date': '2019-10-07', 'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap',
-                 'point': '2y', 'value': 0.035}
+                {
+                    '$type': 'RiskVector',
+                    'asset': [0.03, 0.035],
+                    'points': [
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
+                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
+                    ]
+                }
             ]
         ]
     ]
@@ -317,7 +374,7 @@ def test_results_with_resolution():
     portfolio = Portfolio((swap1, swap2, swap3))
 
     with mock.patch('gs_quant.api.gs.risk.GsRiskApi._exec') as mocker:
-        mocker.return_value = dollar_price_ir_delta_values
+        mocker.return_value = [dollar_price_ir_delta_values]
         result = portfolio.calc((risk.DollarPrice, risk.IRDelta))
 
     # Check that we've got results
@@ -327,16 +384,16 @@ def test_results_with_resolution():
 
     resolution_values = [
         [
-            [{'fixedRate': 0.01}],
-            [{'fixedRate': 0.007}],
-            [{'fixedRate': 0.05}]
+            [{'$type': 'LegDefinition', 'fixedRate': 0.01}],
+            [{'$type': 'LegDefinition', 'fixedRate': 0.007}],
+            [{'$type': 'LegDefinition', 'fixedRate': 0.05}]
         ]
     ]
 
     orig_swap1 = swap1.clone()
 
     with mock.patch('gs_quant.api.gs.risk.GsRiskApi._exec') as mocker:
-        mocker.return_value = resolution_values
+        mocker.return_value = [resolution_values]
         portfolio.resolve()
 
     # Assert that the resolved swap is indeed different and that we can retrieve results by both
@@ -356,7 +413,7 @@ def test_results_with_resolution():
     with mock.patch('gs_quant.api.gs.risk.GsRiskApi._exec') as mocker:
         with PricingContext(dt.date(1066, 11, 14)):
             # Resolve under a different pricing date
-            mocker.return_value = resolution_values
+            mocker.return_value = [resolution_values]
             portfolio.resolve()
 
     # Assert that after resolution under a different context, we cannot retrieve the result

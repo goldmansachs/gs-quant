@@ -636,6 +636,7 @@ class DataSetParameters(Base):
         override_query_column_ids: Tuple[str, ...] = None,
         plot: bool = None,
         coverage_enabled: bool = True,
+        use_created_time_for_upload: bool = None,
         name: str = None
     ):        
         super().__init__()
@@ -668,6 +669,7 @@ class DataSetParameters(Base):
         self.override_query_column_ids = override_query_column_ids
         self.plot = plot
         self.coverage_enabled = coverage_enabled
+        self.use_created_time_for_upload = use_created_time_for_upload
         self.name = name
 
     @property
@@ -967,6 +969,17 @@ class DataSetParameters(Base):
         self._property_changed('coverage_enabled')
         self.__coverage_enabled = value        
 
+    @property
+    def use_created_time_for_upload(self) -> bool:
+        """Whether the dataset uses createdTime to record the time at which the data got
+           uploaded."""
+        return self.__use_created_time_for_upload
+
+    @use_created_time_for_upload.setter
+    def use_created_time_for_upload(self, value: bool):
+        self._property_changed('use_created_time_for_upload')
+        self.__use_created_time_for_upload = value        
+
 
 class DataSetTransforms(Base):
         
@@ -1074,6 +1087,7 @@ class IdFieldProperties(Base):
         sedol: Tuple[str, ...] = None,
         portfolio_id: Tuple[str, ...] = None,
         rcic: Tuple[str, ...] = None,
+        run_id: Tuple[str, ...] = None,
         primary_country_ric: Tuple[str, ...] = None,
         market_cap_category: Tuple[str, ...] = None,
         country_id: Tuple[str, ...] = None,
@@ -1133,6 +1147,7 @@ class IdFieldProperties(Base):
         self.sedol = sedol
         self.portfolio_id = portfolio_id
         self.rcic = rcic
+        self.run_id = run_id
         self.primary_country_ric = primary_country_ric
         self.market_cap_category = market_cap_category
         self.country_id = country_id
@@ -1411,6 +1426,15 @@ class IdFieldProperties(Base):
     def rcic(self, value: Tuple[str, ...]):
         self._property_changed('rcic')
         self.__rcic = value        
+
+    @property
+    def run_id(self) -> Tuple[str, ...]:
+        return self.__run_id
+
+    @run_id.setter
+    def run_id(self, value: Tuple[str, ...]):
+        self._property_changed('run_id')
+        self.__run_id = value        
 
     @property
     def primary_country_ric(self) -> Tuple[str, ...]:

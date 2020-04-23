@@ -20,7 +20,7 @@ import weakref
 from abc import ABCMeta
 from concurrent.futures import Future, ThreadPoolExecutor
 from threading import Lock
-from typing import Iterable, Optional, Tuple, Union
+from typing import Iterable, Optional, Mapping, Tuple, Union
 
 from gs_quant.api.risk import RiskApi
 from gs_quant.base import Priceable, PricingKey, Scenario
@@ -31,7 +31,7 @@ from gs_quant.risk import DataFrameWithInfo, ErrorValue, FloatWithInfo, MarketDa
     ResolvedInstrumentValues, RiskMeasure, RiskPosition, RiskRequest, \
     RiskRequestParameters, SeriesWithInfo
 from gs_quant.risk.results import MultipleRiskMeasureFuture
-from gs_quant.risk import CompositeScenario
+from gs_quant.risk import CompositeScenario, StringWithInfo
 from gs_quant.session import GsSession
 from gs_quant.target.data import MarketDataCoordinate as __MarketDataCoordinate
 
@@ -213,7 +213,7 @@ class PricingContext(ContextBaseWithDefault):
         self.__futures = {}
         self.__use_cache = use_cache
         self.__visible_to_gs = visible_to_gs
-        self.__requests_by_provider = {}
+        self.__positions_by_provider = {}
         self.__lock = Lock()
 
     def _on_exit(self, exc_type, exc_val, exc_tb):
@@ -223,80 +223,58 @@ class PricingContext(ContextBaseWithDefault):
             self._calc()
 
     def _calc(self):
-        requests_by_provider = self.__active_context.__requests_by_provider
+        positions_by_provider = self.__active_context.__positions_by_provider
         session = GsSession.current
         batch_result = Future() if self.__is_batch else None
+        batch_providers = set()
+        batch_lock = Lock() if self.__is_batch else nullcontext()
 
-        def run_request(request_: RiskRequest, provider_: RiskApi):
+        def handle_results(requests_to_results: Mapping[RiskRequest, dict]):
+            for request_, result in requests_to_results.items():
+                try:
+                    self._handle_results(result, request_)
+                except Exception as e:
+                    try:
+                        self._handle_results(e, request_)
+                    except Exception as he:
+                        _logger.error('Error setting error result: ' + str(he))
+
+        def run_requests(requests_: Iterable[RiskRequest], provider_: RiskApi):
             try:
                 with session:
-                    results = provider_.calc(request_)
-                    handle_results(results, request_, provider_)
-            except Exception as e:
-                _logger.error(str(e))
-
-                try:
-                    handle_results(e, request_, provider_)
-                except Exception as he:
-                    _logger.error(str(he))
+                    results = provider_.calc_multi(requests_)
                     if self.__is_batch:
-                        batch_result.set_result(True)
+                        get_batch_results(dict(zip(results, requests_)), provider_)
+                    else:
+                        handle_results(dict(zip(requests_, results)))
+            except Exception as e:
+                handle_results({r: e for r in requests_})
 
-        def get_batch_results_if_ready(provider_: RiskApi):
+        def get_batch_results(ids_to_requests: Mapping[str, RiskRequest], provider_: RiskApi):
             def get_results():
-                with self.__lock:
-                    provider_requests = {v: k for k, v in requests_by_provider[provider_].items()}
-
                 try:
                     with session:
-                        results = provider_.get_results(
-                            provider_requests,
-                            self.__poll_for_batch_results,
-                            timeout=self.__batch_results_timeout)
-                        return results, provider_requests, provider_
-                except Exception as e:
-                    _logger.error(str(e))
-                    return e, provider_requests, provider_
+                        return provider_.get_results(ids_to_requests,
+                                                     self.__poll_for_batch_results,
+                                                     timeout=self.__batch_results_timeout)
+                except Exception as be:
+                    return {r: be for r in ids_to_requests.values()}
 
-            with self.__lock:
-                ready = all(v for k, v in requests_by_provider[provider_].items())
+            def set_results(results: Mapping[RiskRequest, Union[Exception, dict]]):
+                handle_results(results)
 
-            if ready:
-                # All requests have been submitted, schedule result retrieval
-                if self.__is_async:
-                    batch_result_pool = ThreadPoolExecutor(1)
-                    batch_result_pool.submit(get_results).add_done_callback(lambda f: handle_results(*f.result()))
-                    batch_result_pool.shutdown(wait=False)
-                else:
-                    handle_results(*get_results())
+                with batch_lock:
+                    # Check if we're the last provide and signal done if so
+                    batch_providers.remove(provider_)
+                    if not batch_providers:
+                        batch_result.set_result(True)
 
-        def handle_results(result: Union[Exception, dict, str], request_: RiskRequest, provider_: RiskApi):
-            if isinstance(result, Exception):
-                # Set all the futures for this request to an error value
-                if isinstance(request_, dict):
-                    # Batch response results, handle each result ...
-                    for sub_request in request_.values():
-                        self._handle_results({}, sub_request, error=str(result))
-
-                    batch_result.set_result(True)
-                else:
-                    self._handle_results({}, request_, error=str(result))
-            elif isinstance(result, str):
-                # It's a result id from a batch request, add it to the dict until we've received all we're expecting
-                with self.__lock:
-                    requests_by_provider[provider_][request_] = result
-                get_batch_results_if_ready(provider_)
-            elif isinstance(result, dict):
-                if isinstance(request_, dict):
-                    # Batch response results, handle each result ...
-                    for result_id, sub_result in result.items():
-                        handle_results(sub_result, request_[result_id], provider_)
-
-                    # ... and signal completion
-                    batch_result.set_result(True)
-                else:
-                    # A normal response
-                    self._handle_results(result, request_)
+            if self.__is_async:
+                batch_result_pool = ThreadPoolExecutor(1)
+                batch_result_pool.submit(get_results).add_done_callback(lambda f: set_results(f.result()))
+                batch_result_pool.shutdown(wait=False)
+            else:
+                set_results(get_results())
 
         with self.__lock:
             # Group requests by risk_measures, positions, scenario - so we can create unique RiskRequest objects
@@ -304,50 +282,51 @@ class PricingContext(ContextBaseWithDefault):
             while self.__risk_measures_in_scenario_by_provider_and_position:
                 provider, risk_measures_by_scenario =\
                     self.__risk_measures_in_scenario_by_provider_and_position.popitem()
-                positions_by_scenario_and_risk_measures = {}
                 for position, scenario_to_risk_measures in risk_measures_by_scenario.items():
                     for scenario, risk_measures in scenario_to_risk_measures.items():
-                        positions_by_scenario_and_risk_measures.setdefault(scenario, {}).setdefault(
-                            tuple(risk_measures), []).append(position)
+                        risk_measures = tuple(sorted(risk_measures, key=lambda m: m.name or m.measure_type.value))
+                        positions_by_provider.setdefault(provider, {}).setdefault((scenario, risk_measures), [])\
+                            .append(position)
 
-                for scenario, positions_by_risk_measures in positions_by_scenario_and_risk_measures.items():
-                    for risk_measures, positions in positions_by_risk_measures.items():
-                        request = RiskRequest(
-                            tuple(positions),
-                            tuple(sorted(risk_measures, key=lambda m: m.name or m.measure_type.value)),
-                            parameters=self.__parameters,
-                            wait_for_results=not self.__active_context.__is_batch,
-                            pricing_location=self.__market_data_location,
-                            scenario=scenario,
-                            pricing_and_market_data_as_of=self._pricing_market_data_as_of,
-                            request_visible_to_gs=self.__visible_to_gs
-                        )
+        if self.__positions_by_provider:
+            num_providers = len(self.__positions_by_provider)
+            request_pool = ThreadPoolExecutor(num_providers) if num_providers > 1 or self.__is_async else None
+            batch_providers = set(self.__positions_by_provider.keys())
 
-                        requests_by_provider.setdefault(provider, {})[request] = None
+            while self.__positions_by_provider:
+                provider, positions_by_scenario_and_risk_measures = self.__positions_by_provider.popitem()
+                requests = [
+                    RiskRequest(
+                        tuple(positions),
+                        risk_measures,
+                        parameters=self.__parameters,
+                        wait_for_results=not self.__is_batch,
+                        pricing_location=self.__market_data_location,
+                        scenario=scenario,
+                        pricing_and_market_data_as_of=self._pricing_market_data_as_of,
+                        request_visible_to_gs=self.__visible_to_gs
+                    )
+                    for (scenario, risk_measures), positions in positions_by_scenario_and_risk_measures.items()
+                ]
 
-        request_pools = []
-
-        for provider, requests in self.__requests_by_provider.items():
-            num_requests = min(len(requests), 20)
-            request_pool = ThreadPoolExecutor(num_requests) if num_requests > 1 or self.__is_async else None
-            if request_pool:
-                request_pools.append(request_pool)
-
-            for request in requests.keys():
                 if request_pool:
-                    request_pool.submit(run_request, request, provider)
+                    request_pool.submit(run_requests, requests, provider)
                 else:
-                    run_request(request, provider)
+                    run_requests(requests, provider)
 
-        self.__requests_by_provider = {}
+            if request_pool:
+                request_pool.shutdown(wait=not self.__is_async)
 
-        for request_pool in request_pools:
-            request_pool.shutdown(wait=not self.__is_async)
+            if batch_result and not self.__is_async:
+                batch_result.result()
 
-        if batch_result and not self.__is_async:
-            batch_result.result()
+    def _handle_results(self, results: Union[Exception, dict], request: RiskRequest):
+        error = None
+        if isinstance(results, Exception):
+            error = str(results)
+            results = {}
+            _logger.error('Error while handling results: ' + error)
 
-    def _handle_results(self, results: dict, request: RiskRequest, error: Optional[str] = 'No result returned'):
         with self.__lock:
             for risk_measure in request.measures:
                 # Get each risk measure from from the request and the corresponding positions --> futures dict
@@ -379,7 +358,7 @@ class PricingContext(ContextBaseWithDefault):
 
     @property
     def __parameters(self) -> RiskRequestParameters:
-        return RiskRequestParameters(self.__csa_term)
+        return RiskRequestParameters(csa_term=self.__csa_term)
 
     @property
     def __scenario(self) -> Optional[MarketDataScenario]:
@@ -520,20 +499,35 @@ class PricingContext(ContextBaseWithDefault):
             elif resolution_key == priceable.resolution_key:
                 return copy.copy(priceable)
 
+        def check_valid(result_):
+            if isinstance(result_, StringWithInfo):
+                _logger.error('Failed to resolve instrument fields: ' + result_)
+                return priceable
+            if isinstance(result_, ErrorValue):
+                _logger.error('Failed to resolve instrument fields: ' + result_.error)
+                return priceable
+            else:
+                return result_
+
         result = self.calc(priceable, ResolvedInstrumentValues)
         if in_place:
             def handle_result(result_):
-                priceable.unresolved = copy.copy(priceable)
-                priceable.from_instance(result_)
-                priceable.resolution_key = result_.resolution_key
+                result_ = check_valid(result_)
+                if result_ is not priceable:
+                    priceable.unresolved = copy.copy(priceable)
+                    priceable.from_instance(result_)
+                    priceable.resolution_key = result_.resolution_key
 
             if isinstance(result, Future):
                 result.add_done_callback(lambda f: handle_result(f.result()))
             else:
                 handle_result(result)
                 return
-
-        return result
+        else:
+            if isinstance(result, Future):
+                result.add_done_callback(lambda f: check_valid(f.result()))
+            else:
+                return check_valid(result)
 
 
 class LivePricingContext(PricingContext):

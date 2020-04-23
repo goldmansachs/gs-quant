@@ -1023,10 +1023,12 @@ class SocialDomain(Base):
     def __init__(
         self,
         onboarded: dict,
+        returns_enabled: bool = None,
         name: str = None
     ):        
         super().__init__()
         self.onboarded = onboarded
+        self.returns_enabled = returns_enabled
         self.name = name
 
     @property
@@ -1037,6 +1039,16 @@ class SocialDomain(Base):
     def onboarded(self, value: dict):
         self._property_changed('onboarded')
         self.__onboarded = value        
+
+    @property
+    def returns_enabled(self) -> bool:
+        """True if the fund has returns enabled"""
+        return self.__returns_enabled
+
+    @returns_enabled.setter
+    def returns_enabled(self, value: bool):
+        self._property_changed('returns_enabled')
+        self.__returns_enabled = value        
 
 
 class TemporalXRef(Base):
@@ -1164,6 +1176,7 @@ class AssetParameters(Base):
         on_behalf_of: str = None,
         index_calculation_agent: str = None,
         product_type: str = None,
+        vendor: str = None,
         call_first_date: datetime.date = None,
         call_last_date: datetime.date = None,
         amount_outstanding: float = None,
@@ -1255,6 +1268,7 @@ class AssetParameters(Base):
         self.on_behalf_of = on_behalf_of
         self.index_calculation_agent = index_calculation_agent
         self.product_type = product_type
+        self.vendor = vendor
         self.call_first_date = call_first_date
         self.call_last_date = call_last_date
         self.amount_outstanding = amount_outstanding
@@ -1988,6 +2002,16 @@ class AssetParameters(Base):
     def product_type(self, value: str):
         self._property_changed('product_type')
         self.__product_type = value        
+
+    @property
+    def vendor(self) -> str:
+        """Basket Vendor OEID."""
+        return self.__vendor
+
+    @vendor.setter
+    def vendor(self, value: str):
+        self._property_changed('vendor')
+        self.__vendor = value        
 
     @property
     def call_first_date(self) -> datetime.date:

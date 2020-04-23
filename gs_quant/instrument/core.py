@@ -50,6 +50,13 @@ class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
             elif hasattr(cls, 'asset_class'):
                 return cls._from_dict(values)
             else:
+                if '$type' in values:
+                    from gs_quant_internal import tdapi
+                    tdapi_cls = getattr(tdapi, values['$type'])
+                    if not tdapi_cls:
+                        raise RuntimeError('Cannot resolve TDAPI type {}'.format(tdapi_type))
+
+                    return tdapi_cls.from_dict(values)
                 asset_class_field = next((f for f in ('asset_class', 'assetClass') if f in values), None)
                 if not asset_class_field:
                     raise ValueError('assetClass/asset_class not specified')
@@ -64,12 +71,12 @@ class Security(XRef, Instrument):
     """A security, specified by a well-known identifier"""
 
     def __init__(self,
-                 ticker: str=None,
-                 bbid: str=None,
-                 isin: str=None,
-                 cusip: str=None,
-                 prime_id: str=None,
-                 quantity: float=1):
+                 ticker: str = None,
+                 bbid: str = None,
+                 isin: str = None,
+                 cusip: str = None,
+                 prime_id: str = None,
+                 quantity: float = 1):
         """
         Create a security by passing one identifier only and, optionally, a quantity
 

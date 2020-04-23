@@ -18,7 +18,7 @@ from gs_quant.instrument import Instrument
 from gs_quant.markets import PricingContext, PricingFuture
 from gs_quant.priceable import PriceableImpl
 from gs_quant.target.portfolios import Position, PositionSet
-from gs_quant.risk import ResolvedInstrumentValues, RiskMeasure
+from gs_quant.risk import DollarPrice, Price, ResolvedInstrumentValues, RiskMeasure
 from gs_quant.risk.results import PortfolioRiskResult
 from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.api.gs.assets import GsAssetApi
@@ -94,16 +94,33 @@ class Portfolio(PriceableImpl):
         self.__instruments_by_name = None
 
     @staticmethod
-    def load_from_portfolio_id(portfolio_id: str):
+    def __from_internal_positions(id_type: str, positions_id):
+        instruments = GsPortfolioApi.get_instruments_by_position_type(id_type, positions_id)
+        return Portfolio(instruments=instruments, name=positions_id)
+
+    @staticmethod
+    def from_eti(eti: str):
+        return Portfolio.__from_internal_positions('ETI', eti)
+
+    @staticmethod
+    def from_book(book: str, book_type: str = 'risk'):
+        return Portfolio.__from_internal_positions(book_type, book)
+
+    @staticmethod
+    def from_portfolio_id(portfolio_id: str):
         response = GsPortfolioApi.get_latest_positions(portfolio_id)
         positions = response.positions if isinstance(response, PositionSet) else response['positions']
         instruments = GsAssetApi.get_instruments_for_positions(positions)
-        return Portfolio(instruments)
+        ret = Portfolio(instruments)
+        ret.name = portfolio_id
+        return ret
 
     @staticmethod
-    def load_from_portfolio_name(name: str):
+    def from_portfolio_name(name: str):
         portfolio = GsPortfolioApi.get_portfolio_by_name(name)
-        return Portfolio.load_from_portfolio_id(portfolio.id)
+        ret = Portfolio.load_from_portfolio_id(portfolio.id)
+        ret.name = name
+        return ret
 
     def save(self):
         if not self.name:
@@ -133,8 +150,16 @@ class Portfolio(PriceableImpl):
         return instrument
 
     def to_frame(self) -> pd.DataFrame:
-        inst_list = [dict(chain(inst.as_dict().items(), (('instrument', inst),))) for inst in self.instruments]
-        return pd.DataFrame(inst_list).set_index('instrument')
+        inst_list = pd.DataFrame()
+        for inst in self.instruments:
+            if isinstance(inst, Portfolio):
+                r = inst.to_frame()
+            else:
+                r = pd.DataFrame([dict(chain(inst.as_dict().items(),
+                                             (('instrument', inst), ('portfolio', self.name))))]).\
+                    set_index(['portfolio', 'instrument'])
+            inst_list = pd.concat([inst_list, r])
+        return inst_list
 
     def index(self, key: Union[str, Instrument]) -> Union[int, Tuple[int, ...]]:
         if isinstance(key, str):
@@ -150,7 +175,7 @@ class Portfolio(PriceableImpl):
         else:
             raise ValueError('key must be either a name or Instrument')
 
-    def resolve(self, in_place: bool = True) -> Optional[dict]:
+    def resolve(self, in_place: bool = True) -> Optional[PortfolioRiskResult]:
         with self.__pricing_context:
             futures = [i.resolve(in_place) for i in self.__instruments]
 
@@ -159,6 +184,12 @@ class Portfolio(PriceableImpl):
                                        (ResolvedInstrumentValues,),
                                        futures,
                                        result_future=PricingFuture(PricingContext.current))
+
+    def dollar_price(self) -> PortfolioRiskResult:
+        return self.calc(DollarPrice)
+
+    def price(self) -> PortfolioRiskResult:
+        return self.calc(Price)
 
     def calc(self, risk_measure: Union[RiskMeasure, Iterable[RiskMeasure]]) -> PortfolioRiskResult:
         with self.__pricing_context:
