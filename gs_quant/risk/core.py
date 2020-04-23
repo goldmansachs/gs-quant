@@ -19,10 +19,9 @@ from copy import copy
 import datetime as dt
 from typing import Iterable, List, Optional, Tuple, Union
 
-import dateutil
 import pandas as pd
 
-from gs_quant.base import InstrumentBase, PricingKey
+from gs_quant.base import PricingKey
 from gs_quant.common import AssetClass
 from gs_quant.datetime import point_sort_order
 from gs_quant.target.risk import RiskMeasure, RiskMeasureType, RiskMeasureUnit, \
@@ -33,7 +32,7 @@ __column_sort_fns = {
     'mkt_point': point_sort_order,
     'point': point_sort_order
 }
-__risk_columns = ('date', 'time', 'marketDataType', 'assetId', 'pointClass', 'point')
+__risk_columns = ('date', 'time', 'mkt_type', 'mkt_asset', 'mkt_class', 'mkt_point')
 __crif_columns = ('date', 'time', 'riskType', 'amountCurrency', 'qualifier', 'bucket', 'label1', 'label2')
 __cashflows_columns = ('payment_date', 'payment_type', 'accrual_start_date', 'accrual_end_date', 'floating_rate_option',
                        'floating_rate_designated_maturity')
@@ -64,7 +63,7 @@ class ResultInfo(metaclass=ABCMeta):
     def __init__(
         self,
         pricing_key: PricingKey,
-        unit: Optional[str] = None,
+        unit: Optional[dict] = None,
         error: Optional[Union[str, dict]] = None,
         calculation_time: Optional[int] = None,
         queueing_time: Optional[int] = None
@@ -85,7 +84,7 @@ class ResultInfo(metaclass=ABCMeta):
         return self.__pricing_key
 
     @property
-    def unit(self) -> str:
+    def unit(self) -> dict:
         """The units of this result"""
         return self.__unit
 
@@ -131,7 +130,7 @@ class ScalarWithInfo(ResultInfo, metaclass=ABCMeta):
             self,
             pricing_key: PricingKey,
             value: Union[float, str],
-            unit: Optional[str] = None,
+            unit: Optional[dict] = None,
             error: Optional[Union[str, dict]] = None,
             calculation_time: Optional[float] = None,
             queueing_time: Optional[float] = None):
@@ -203,7 +202,7 @@ class StringWithInfo(ScalarWithInfo, str):
     def __new__(cls,
                 pricing_key: PricingKey,
                 value: Union[float, str],
-                unit: Optional[str] = None,
+                unit: Optional[dict] = None,
                 error: Optional[str] = None,
                 calculation_time: Optional[float] = None,
                 queueing_time: Optional[float] = None):
@@ -223,7 +222,7 @@ class SeriesWithInfo(pd.Series, ResultInfo):
             self,
             pricing_key: PricingKey,
             *args,
-            unit: Optional[str] = None,
+            unit: Optional[dict] = None,
             error: Optional[Union[str, dict]] = None,
             calculation_time: Optional[int] = None,
             queueing_time: Optional[int] = None,
@@ -265,7 +264,7 @@ class DataFrameWithInfo(pd.DataFrame, ResultInfo):
             self,
             pricing_key: PricingKey,
             *args,
-            unit: Optional[str] = None,
+            unit: Optional[dict] = None,
             error: Optional[Union[str, dict]] = None,
             calculation_time: Optional[float] = None,
             queueing_time: Optional[float] = None,
@@ -340,138 +339,6 @@ class PricingDateAndMarketDataAsOf(__PricingDateAndMarketDataAsOf):
 
     def __repr__(self):
         return '{} : {}'.format(self.pricing_date, self.market_data_as_of)
-
-
-def sum_formatter(result: List, pricing_key: PricingKey, _instrument: InstrumentBase) -> float:
-    result = __flatten_result(result)
-
-    return FloatWithInfo(
-        pricing_key,
-        sum(r.get('value', float('Nan')) for r in result),
-        unit=result[0].get('valueUnit'),
-        error=next(filter(None, (r.get('error') for r in result)), None))
-
-
-def __flatten_result(item: Union[List, Tuple]):
-    rows = []
-    for elem in item:
-        if isinstance(elem, (list, tuple)):
-            rows.extend(__flatten_result(elem))
-        else:
-            date = elem.get('date')
-            if date is not None:
-                elem['date'] = dateutil.parser.isoparse(date).date()
-
-            rows.append(elem)
-
-    return rows
-
-
-def __scalar_with_info_from_result(result: dict, pricing_key: PricingKey):
-    if 'message' in result:
-        return StringWithInfo(
-            pricing_key,
-            result.get('message', ''),
-            unit=result.get('valueUnit'),
-            error=result.get('errorMessage'),
-            calculation_time=result.get('calculationTime'),
-            queueing_time=result.get('queueingTime'))
-    elif 'value' in result:
-        return FloatWithInfo(
-            pricing_key,
-            result.get('value', float('nan')),
-            unit=result.get('valueUnit'),
-            error=result.get('errorMessage'),
-            calculation_time=result.get('calculationTime'),
-            queueing_time=result.get('queueingTime'))
-    else:
-        raise RuntimeError('Unknown scalar result')
-
-
-def scalar_formatter(result: List, pricing_key: PricingKey, _instrument: InstrumentBase)\
-        -> Optional[Union[FloatWithInfo, StringWithInfo, SeriesWithInfo, None]]:
-    if not result:
-        return None
-
-    result = __flatten_result(result)
-
-    if not result:
-        return None
-
-    if len(result) > 1 and 'date' in result[0]:
-        columns = [x for x in result[0].keys() if x != 'value']
-        compressed_results = pd.DataFrame(result).groupby(columns).sum().reset_index().to_dict('records')
-        r = [__scalar_with_info_from_result(r, pricing_key.for_pricing_date(r['date'])) for r in compressed_results]
-        return r[0].compose(
-            r,
-            pricing_key)
-    else:
-        return __scalar_with_info_from_result(result[0], pricing_key)
-
-
-def __dataframe_formatter(result: List, pricing_key: PricingKey, columns: Tuple[str, ...])\
-        -> Optional[DataFrameWithInfo]:
-    if not result:
-        return None
-
-    df = sort_risk(pd.DataFrame.from_records(__flatten_result(result)), columns)
-    calculation_time = df.calculationTime.unique().sum() if 'calculationTime' in df else 0
-    queueing_time = df.queueingTime.unique().sum() if 'calculationTime' in df else 0
-    error = None
-
-    if 'errorMessage' in df:
-        error = df.errorMessage
-
-    df.drop(columns=['calculationTime', 'queueingTime', 'errorMessage'], inplace=True, errors='ignore')
-
-    if len(df.index.unique()) == 1:
-        df.reset_index(drop=True, inplace=True)
-
-    return DataFrameWithInfo(
-        pricing_key,
-        df,
-        error=error,
-        calculation_time=calculation_time,
-        queueing_time=queueing_time)
-
-
-def structured_formatter(result: List, pricing_key: PricingKey, _instrument: InstrumentBase) -> Optional[pd.DataFrame]:
-    return __dataframe_formatter(result, pricing_key, __risk_columns)
-
-
-def crif_formatter(result: List, pricing_key: PricingKey, _instrument: InstrumentBase) -> Optional[pd.DataFrame]:
-    return __dataframe_formatter(result, pricing_key, __crif_columns)
-
-
-def cashflows_formatter(result: List, pricing_key: PricingKey, _instrument: InstrumentBase) -> Optional[pd.DataFrame]:
-    return __dataframe_formatter(result, pricing_key, __cashflows_columns)
-
-
-def asset_formatter(result: List, pricing_key: PricingKey, _instrument: InstrumentBase) -> Optional[pd.DataFrame]:
-    return __dataframe_formatter(result, pricing_key, __cashflows_columns)
-
-
-def instrument_formatter(result: List, pricing_key: PricingKey, instrument: InstrumentBase):
-    instruments_by_date = {}
-
-    for field_values in result:
-        new_instrument = instrument.from_dict(field_values)
-        new_instrument.unresolved = instrument
-        new_instrument.name = instrument.name
-
-        if len(result) > 1 and 'date' in field_values:
-            date = dt.date.fromtimestamp(field_values['date'] / 1e9) + dt.timedelta(days=1)
-            as_of = next((a for a in pricing_key.pricing_market_data_as_of if date == a.pricing_date), None)
-
-            if as_of:
-                date_key = pricing_key.clone(pricing_market_data_as_of=as_of)
-                new_instrument.resolution_key = date_key
-                instruments_by_date[date] = new_instrument
-        else:
-            new_instrument.resolution_key = pricing_key
-            return new_instrument
-
-    return instruments_by_date
 
 
 def aggregate_risk(results: Iterable[Union[DataFrameWithInfo, Future]], threshold: Optional[float] = None)\
@@ -813,51 +680,3 @@ MarketDataAssets = __risk_measure_with_doc_string(
     'MarketDataAssets',
     RiskMeasureType.Market_Data_Assets
 )
-
-Formatters = {
-    DollarPrice: scalar_formatter,
-    Price: scalar_formatter,
-    ForwardPrice: scalar_formatter,
-    Theta: scalar_formatter,
-    EqDelta: scalar_formatter,
-    EqGamma: scalar_formatter,
-    EqVega: sum_formatter,
-    EqSpot: scalar_formatter,
-    EqAnnualImpliedVol: scalar_formatter,
-    CommodDelta: scalar_formatter,
-    CommodVega: scalar_formatter,
-    CommodTheta: scalar_formatter,
-    FairVarStrike: scalar_formatter,
-    FairVolStrike: scalar_formatter,
-    FXDelta: structured_formatter,
-    FXGamma: structured_formatter,
-    FXVega: structured_formatter,
-    FXSpot: scalar_formatter,
-    IRBasis: structured_formatter,
-    InflationDelta: structured_formatter,
-    InflationDeltaParallel: scalar_formatter,
-    InflationDeltaParallelLocalCcy: scalar_formatter,
-    IRDelta: structured_formatter,
-    IRDeltaParallel: sum_formatter,
-    IRDeltaLocalCcy: structured_formatter,
-    IRDeltaParallelLocalCcy: scalar_formatter,
-    IRXccyDelta: structured_formatter,
-    IRXccyDeltaParallel: scalar_formatter,
-    IRXccyDeltaParallelLocalCurrency: scalar_formatter,
-    IRGammaParallel: scalar_formatter,
-    IRGammaParallelLocalCcy: scalar_formatter,
-    IRVega: structured_formatter,
-    IRVegaParallel: scalar_formatter,
-    IRVegaLocalCcy: structured_formatter,
-    IRVegaParallelLocalCcy: scalar_formatter,
-    IRAnnualImpliedVol: scalar_formatter,
-    IRDailyImpliedVol: scalar_formatter,
-    IRAnnualATMImpliedVol: scalar_formatter,
-    IRSpotRate: scalar_formatter,
-    IRFwdRate: scalar_formatter,
-    CRIFIRCurve: crif_formatter,
-    ResolvedInstrumentValues: instrument_formatter,
-    Cashflows: cashflows_formatter,
-    MarketDataAssets: asset_formatter,
-    Description: scalar_formatter
-}

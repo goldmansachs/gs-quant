@@ -73,6 +73,9 @@ class PricingKey(
         else:
             return iter([self])
 
+    def __len__(self):
+        return len(self.pricing_market_data_as_of)
+
     def clone(self, **kwargs):
         dict = {f: getattr(self, f, None) for f in super()._fields}
         dict.update(kwargs)
@@ -305,7 +308,7 @@ class Base(metaclass=ABCMeta):
         return instance
 
     @classmethod
-    def from_dict(cls, values: dict) -> 'Base':
+    def from_dict(cls, values: dict):
         """
         Construct an instance of this type from a dictionary
 

@@ -1003,9 +1003,8 @@ class IndicesPriceParameters(Base):
 
     @property
     def currency(self) -> Union[IndicesCurrency, str]:
-        """Currencies supported for Indices Create, default to USD during create. During
-           rebalance, cannot change basket currency hence the input value will
-           be discarded."""
+        """Currencies supported for Indices Create. During rebalance, cannot change basket
+           currency hence the input value will be discarded."""
         return self.__currency
 
     @currency.setter
@@ -1152,15 +1151,16 @@ class IndicesCreateInputs(Base):
         name: str,
         pricing_parameters: IndicesPriceParameters,
         position_set: Tuple[PositionPriceInput, ...],
+        return_type: str,
         description: str = None,
         styles: Tuple[str, ...] = None,
         related_content: GIRDomain = None,
         index_create_source: Union[IndexCreateSource, str] = None,
-        return_type: str = 'Price Return',
         publish_parameters: PublishParameters = None,
         on_behalf_of: str = None,
         allow_limited_access_assets: bool = False,
-        allow_ca_restricted_assets: bool = False
+        allow_ca_restricted_assets: bool = False,
+        vendor: str = None
     ):        
         super().__init__()
         self.ticker = ticker
@@ -1176,6 +1176,7 @@ class IndicesCreateInputs(Base):
         self.on_behalf_of = on_behalf_of
         self.allow_limited_access_assets = allow_limited_access_assets
         self.allow_ca_restricted_assets = allow_ca_restricted_assets
+        self.vendor = vendor
 
     @property
     def ticker(self) -> str:
@@ -1241,7 +1242,7 @@ class IndicesCreateInputs(Base):
     @property
     def return_type(self) -> str:
         """Determines the index calculation methodology with respect to dividend
-           reinvestment, default to Price Return"""
+           reinvestment."""
         return self.__return_type
 
     @return_type.setter
@@ -1312,6 +1313,16 @@ class IndicesCreateInputs(Base):
     def allow_ca_restricted_assets(self, value: bool):
         self._property_changed('allow_ca_restricted_assets')
         self.__allow_ca_restricted_assets = value        
+
+    @property
+    def vendor(self) -> str:
+        """Basket Vendor OEID."""
+        return self.__vendor
+
+    @vendor.setter
+    def vendor(self, value: str):
+        self._property_changed('vendor')
+        self.__vendor = value        
 
 
 class IndicesEditInputs(Base):

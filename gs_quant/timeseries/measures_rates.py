@@ -25,6 +25,7 @@ from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.data import QueryType, GsDataApi
 from gs_quant.data import DataContext
 from gs_quant.errors import MqValueError
+from gs_quant.datetime.gscalendar import GsCalendar
 from gs_quant.markets.securities import AssetIdentifier, Asset
 from gs_quant.target.common import Currency as CurrencyEnum, PricingLocation, AssetClass, AssetType, FieldFilterMap
 from gs_quant.timeseries import ASSET_SPEC, BenchmarkType, plot_measure, MeasureDependency, GENERIC_DATE
@@ -185,13 +186,13 @@ def swap_rate_2(asset: Asset, swap_tenor: str, benchmark_type: BenchmarkType = N
                   asset_parameters_fixed_rate=fixed_rate, asset_parameters_clearing_house=clearing_house,
                   asset_parameters_floating_rate_designated_maturity=defaults['floating_rate_tenor'],
                   asset_parameters_effective_date=forward_tenor, asset_parameters_pay_or_receive=pay_or_receive,
-                  asset_parameters_notional_currency=currency.name, pricing_location=defaults['pricing_location'])
+                  asset_parameters_notional_currency=currency.name, pricing_location=defaults['pricing_location'].value)
 
     rate_mqid = _convert_asset_for_mdapi_swap_rates(**kwargs)
 
     _logger.debug('where asset= %s, swap_tenor=%s, benchmark_type=%s, floating_rate_tenor=%s, forward_tenor=%s, '
                   'pricing_location=%s', rate_mqid, swap_tenor, defaults['benchmark_type'],
-                  defaults['floating_rate_tenor'], forward_tenor, defaults['pricing_location'])
+                  defaults['floating_rate_tenor'], forward_tenor, defaults['pricing_location'].value)
     where = FieldFilterMap(csaTerms=csaTerms)
     q = GsDataApi.build_market_data_query([rate_mqid], QueryType.SWAP_RATE, where=where, source=source,
                                           real_time=real_time)
@@ -264,7 +265,7 @@ def basis_swap_spread(asset: Asset, swap_tenor: str = '1y',
                   asset_parameters_receiver_designated_maturity=legs_w_defaults['reference']['floating_rate_tenor'],
                   asset_parameters_clearing_house=clearing_house, asset_parameters_effective_date=forward_tenor,
                   asset_parameters_notional_currency=currency.name,
-                  pricing_location=legs_w_defaults['spread']['pricing_location'])
+                  pricing_location=legs_w_defaults['spread']['pricing_location'].value)
 
     rate_mqid = _convert_asset_for_mdapi_swap_rates(**kwargs)
 
@@ -273,7 +274,7 @@ def basis_swap_spread(asset: Asset, swap_tenor: str = '1y',
                   rate_mqid, swap_tenor, legs_w_defaults['spread']['benchmark_type'],
                   legs_w_defaults['spread']['floating_rate_tenor'],
                   legs_w_defaults['reference']['benchmark_type'], legs_w_defaults['reference']['floating_rate_tenor'],
-                  forward_tenor, legs_w_defaults['spread']['pricing_location'])
+                  forward_tenor, legs_w_defaults['spread']['pricing_location'].value)
 
     where = FieldFilterMap(csaTerms=csaTerms)
     q = GsDataApi.build_market_data_query([rate_mqid], QueryType.BASIS_SWAP_RATE, where=where, source=source,
@@ -325,6 +326,10 @@ def swap_term_structure(asset: Asset, benchmark_type: BenchmarkType = None, floa
     elif not re.fullmatch('(\\d+)([bdwmy])', forward_tenor):
         raise MqValueError('invalid forward tenor ' + forward_tenor)
 
+    calendar = defaults['pricing_location'].value
+    if pricing_date is not None and pricing_date in list(GsCalendar.get(calendar).holidays):
+        raise MqValueError('Specified pricing date is a holiday in {} calendar'.format(calendar))
+
     csaTerms = currency.value + '-1'
     fixed_rate = 'ATM'
     pay_or_receive = 'Receive'
@@ -332,7 +337,7 @@ def swap_term_structure(asset: Asset, benchmark_type: BenchmarkType = None, floa
                   asset_parameters_fixed_rate=fixed_rate, asset_parameters_clearing_house=clearing_house,
                   asset_parameters_floating_rate_designated_maturity=defaults['floating_rate_tenor'],
                   asset_parameters_effective_date=forward_tenor, asset_parameters_pay_or_receive=pay_or_receive,
-                  asset_parameters_notional_currency=currency.name, pricing_location=defaults['pricing_location'])
+                  asset_parameters_notional_currency=currency.name, pricing_location=defaults['pricing_location'].value)
 
     assets = GsAssetApi.get_many_assets(**kwargs)
     if len(assets) == 0:
@@ -347,9 +352,9 @@ def swap_term_structure(asset: Asset, benchmark_type: BenchmarkType = None, floa
 
     _logger.debug('where benchmark_type=%s, floating_rate_tenor=%s, forward_tenor=%s, '
                   'pricing_location=%s', defaults['benchmark_type'], defaults['floating_rate_tenor'],
-                  forward_tenor, defaults['pricing_location'])
+                  forward_tenor, defaults['pricing_location'].value)
 
-    start, end = _range_from_pricing_date(asset.exchange, pricing_date)
+    start, end = _range_from_pricing_date(calendar, pricing_date)
     with DataContext(start, end):
         where = FieldFilterMap(csaTerms=csaTerms)
         q = GsDataApi.build_market_data_query(rate_mqids, QueryType.SWAP_RATE, where=where,
@@ -362,7 +367,7 @@ def swap_term_structure(asset: Asset, benchmark_type: BenchmarkType = None, floa
     latest = df.index.max()
     _logger.info('selected pricing date %s', latest)
     df = df.loc[latest]
-    business_day = _get_custom_bd(asset.exchange)
+    business_day = _get_custom_bd(calendar)
     df = df.assign(expirationDate=df.index + df['terminationTenor'].map(_to_offset) + business_day - business_day)
     df = df.set_index('expirationDate')
     df.sort_index(inplace=True)
@@ -419,6 +424,10 @@ def basis_swap_term_structure(asset: Asset, spread_benchmark_type: BenchmarkType
     legs_w_defaults['spread'] = _get_swap_leg_defaults(currency, spread_benchmark_type, spread_tenor)
     legs_w_defaults['reference'] = _get_swap_leg_defaults(currency, reference_benchmark_type, reference_tenor)
 
+    calendar = legs_w_defaults['spread']['pricing_location'].value
+    if pricing_date is not None and pricing_date in list(GsCalendar.get(calendar).holidays):
+        raise MqValueError('Specified pricing date is a holiday in {} calendar'.format(calendar))
+
     csaTerms = currency.value + '-1'
     clearing_house = 'LCH'
 
@@ -428,7 +437,7 @@ def basis_swap_term_structure(asset: Asset, spread_benchmark_type: BenchmarkType
                   asset_parameters_receiver_designated_maturity=legs_w_defaults['reference']['floating_rate_tenor'],
                   asset_parameters_clearing_house=clearing_house, asset_parameters_effective_date=forward_tenor,
                   asset_parameters_notional_currency=currency.name,
-                  pricing_location=legs_w_defaults['spread']['pricing_location'])
+                  pricing_location=legs_w_defaults['spread']['pricing_location'].value)
 
     assets = GsAssetApi.get_many_assets(**kwargs)
     if len(assets) == 0:
@@ -445,9 +454,9 @@ def basis_swap_term_structure(asset: Asset, spread_benchmark_type: BenchmarkType
                   'reference_tenor=%s, forward_tenor=%s, pricing_location=%s ',
                   legs_w_defaults['spread']['benchmark_type'], legs_w_defaults['spread']['floating_rate_tenor'],
                   legs_w_defaults['reference']['benchmark_type'], legs_w_defaults['reference']['floating_rate_tenor'],
-                  forward_tenor, legs_w_defaults['spread']['pricing_location'])
+                  forward_tenor, legs_w_defaults['spread']['pricing_location'].value)
 
-    start, end = _range_from_pricing_date(assets[0].exchange, pricing_date)
+    start, end = _range_from_pricing_date(calendar, pricing_date)
     with DataContext(start, end):
         where = FieldFilterMap(csaTerms=csaTerms)
         q = GsDataApi.build_market_data_query(rate_mqids, QueryType.BASIS_SWAP_RATE, where=where,
@@ -459,7 +468,7 @@ def basis_swap_term_structure(asset: Asset, spread_benchmark_type: BenchmarkType
     latest = df.index.max()
     _logger.info('selected pricing date %s', latest)
     df = df.loc[latest]
-    business_day = _get_custom_bd(asset.exchange)
+    business_day = _get_custom_bd(calendar)
     df = df.assign(expirationDate=df.index + df['terminationTenor'].map(_to_offset) + business_day - business_day)
     df = df.set_index('expirationDate')
     df.sort_index(inplace=True)

@@ -160,5 +160,39 @@ def test_relative_strength_index():
     assert_series_equal(result, expected, check_names=False, check_less_precise=True, obj="Relative Strength Index")
 
 
+def test_exponential_moving_average():
+
+    def ema_by_hand(ts, alpha=0.75):
+        R = ts.copy()
+        R *= 0
+        R[0] = ts[0]
+        for i in range(1, len(ts)):
+            R[i] = alpha * R[i - 1] + (1 - alpha) * ts[i]
+        return R
+
+    dates = [
+        date(2019, 1, 1),
+        date(2019, 1, 2),
+        date(2019, 1, 3),
+        date(2019, 1, 4),
+        date(2019, 1, 5),
+        date(2019, 1, 6),
+    ]
+
+    x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
+
+    result = exponential_moving_average(x)
+    expected = ema_by_hand(x)
+    assert_series_equal(result, expected, obj="Exponential moving average")
+
+    result = exponential_moving_average(x, 0.6)
+    expected = ema_by_hand(x, 0.6)
+    assert_series_equal(result, expected, obj="Exponential moving average weight 1")
+
+    result = exponential_moving_average(x, 0)
+    expected = x
+    assert_series_equal(result, expected, obj="Exponential moving average weight 2")
+
+
 if __name__ == "__main__":
     pytest.main(args=["test_technicals.py"])

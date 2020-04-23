@@ -15,11 +15,12 @@ under the License.
 """
 import asyncio
 import datetime as dt
+from itertools import chain
 import logging
 import json
 import math
 import time
-from typing import Iterable, Mapping, Optional, Union
+from typing import Iterable, Mapping, Optional, Tuple, Union
 from websockets import ConnectionClosedError
 
 from gs_quant.api.risk import RiskApi
@@ -33,25 +34,46 @@ _logger = logging.getLogger(__name__)
 class GsRiskApi(RiskApi):
 
     @classmethod
+    def calc_multi(cls, requests: Iterable[RiskRequest]) -> Tuple[Union[dict, str], ...]:
+        requests = tuple(requests)
+        results = cls._exec(requests)
+
+        if len(results) < len(requests):
+            raise RuntimeError('Missing results')
+
+        return tuple(cls.__result(request, result) for request, result in zip(requests, results))
+
+    @classmethod
     def calc(cls, request: RiskRequest) -> Union[Iterable, str]:
-        result = cls._exec(request)
+        return cls.__result(request, cls._exec(request))
+
+    @classmethod
+    def _exec(cls, request: Union[RiskRequest, Iterable[RiskRequest]]) -> Union[Iterable, dict]:
+        return GsSession.current._post(cls.__url(request), request, timeout=180)
+
+    @classmethod
+    def __result(cls, request: RiskRequest, result: Union[Iterable, dict]) -> Union[dict, str]:
         return cls._handle_results(request, result) if request.waitForResults else result['reportId']
 
     @classmethod
-    def _exec(cls, request: RiskRequest) -> Union[Iterable, dict]:
-        is_internal = any(hasattr(p.instrument, '_derived_type') for p in request.positions)
-        url_root = '/risk-internal' if is_internal else '/risk'
-        return GsSession.current._post(url_root + r'/calculate', request, timeout=180)
+    def __url(cls, request: Union[RiskRequest, Iterable[RiskRequest]]):
+        is_bulk = not isinstance(request, RiskRequest)
+        is_internal = any(hasattr(p.instrument, '_derived_type') for p in
+                          chain.from_iterable(r.positions for r in (request if is_bulk else (request,))))
+        return '/risk{}/calculate{}'.format('-internal' if is_internal else '', '/bulk' if is_bulk else '')
 
     @classmethod
-    def __add_missing_results(cls, ids_to_requests: Mapping[str, RiskRequest], results: Mapping[str, dict], error: str):
-        for result_id in ids_to_requests.keys():
-            if result_id not in results:
-                results[result_id] = RuntimeError(error)
+    def __add_missing_results(cls,
+                              ids_to_requests: Mapping[str, RiskRequest],
+                              results: Mapping[RiskRequest, Union[Exception, dict]],
+                              error: str):
+        for request in ids_to_requests.values():
+            if request not in results:
+                results[request] = RuntimeError(error)
 
     @classmethod
     def get_results(cls, ids_to_requests: Mapping[str, RiskRequest], poll: bool, timeout: Optional[int] = None)\
-            -> Mapping[str, dict]:
+            -> Mapping[RiskRequest, Union[Exception, dict]]:
         if not poll:
             return cls.subscribe_for_results(ids_to_requests, timeout=timeout)
 
@@ -69,7 +91,7 @@ class GsRiskApi(RiskApi):
 
                 result = session._get(url)
                 if isinstance(result, list):
-                    results[result_id] = cls._handle_results(ids_to_requests[result_id], result)
+                    results[ids_to_requests[result_id]] = cls._handle_results(ids_to_requests[result_id], result)
 
             if end_time and dt.datetime.now() > end_time:
                 cls.__add_missing_results(ids_to_requests, results, "Timed out")
@@ -81,11 +103,10 @@ class GsRiskApi(RiskApi):
 
     @classmethod
     def subscribe_for_results(cls, ids_to_requests: Mapping[str, RiskRequest], timeout: Optional[int] = None)\
-            -> Mapping[str, dict]:
+            -> Mapping[RiskRequest, Union[Exception, dict]]:
 
         max_attempts = 5
         send_timeout = 10
-        rec_timeout = max(timeout or 0, 30)
         results = {}
 
         async def get_results():
@@ -94,35 +115,25 @@ class GsRiskApi(RiskApi):
 
             async def impl():
                 async with GsSession.current._connect_websocket('/risk/calculate/results/subscribe') as ws:
-                    elapsed = 0
                     request_ids = [k for k in ids_to_requests.keys() if k not in results]
                     await asyncio.wait_for(ws.send(json.dumps(request_ids)), timeout=send_timeout)
 
-                    while len(results) < len(ids_to_requests) and (timeout is None or elapsed < timeout):
-                        if elapsed > 0:
-                            # Send a ping
-                            await asyncio.wait_for(ws.send(json.dumps([])), send_timeout)
+                    while len(results) < len(ids_to_requests):
+                        response = await asyncio.wait_for(ws.recv(), timeout=timeout)
+
+                        result_parts = response.split(';')
+                        result_id = result_parts[0]
+                        raw_result = ';'.join(result_parts[1:])
+                        result_str = raw_result[1:]
+                        is_error = not raw_result.startswith(r'R[')
 
                         try:
-                            response = await asyncio.wait_for(ws.recv(), timeout=rec_timeout)
-                            if response == 'true':
-                                continue
+                            result = RuntimeError(result_str) if is_error else\
+                                cls._handle_results(ids_to_requests[result_id], json.loads(result_str))
+                        except json.decoder.JSONDecodeError:
+                            result = RuntimeError(result_str)
 
-                            result_parts = response.split(';')
-                            result_id = result_parts[0]
-                            raw_result = ';'.join(result_parts[1:])
-                            result_str = raw_result[1:]
-                            is_error = not raw_result.startswith(r'R[')
-
-                            try:
-                                result = RuntimeError(result_str) if is_error else\
-                                    cls._handle_results(ids_to_requests[result_id], json.loads(result_str))
-                            except Exception:
-                                result = RuntimeError(result_str)
-
-                            results[result_id] = result
-                        except asyncio.TimeoutError:
-                            elapsed += rec_timeout
+                        results[ids_to_requests[result_id]] = result
 
             while len(results) < len(ids_to_requests) and attempts < max_attempts:
                 if attempts > 0:
@@ -136,7 +147,7 @@ class GsRiskApi(RiskApi):
                     attempts += 1
                 except asyncio.TimeoutError:
                     error = 'Timed out'
-                    attempts += 1
+                    attempts = max_attempts
                 except Exception as e:
                     error = str(e)
                     attempts = max_attempts

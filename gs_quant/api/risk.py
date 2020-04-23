@@ -15,10 +15,11 @@ under the License.
 """
 from abc import ABCMeta, abstractmethod
 import logging
-from typing import Iterable, Mapping, Optional, Union
+from typing import Iterable, Mapping, Optional, Tuple, Union
 
 from gs_quant.base import PricingKey
-from gs_quant.risk import ErrorValue, Formatters, RiskRequest
+from gs_quant.risk import ErrorValue, RiskRequest
+from gs_quant.risk.result_handlers import result_handlers
 
 
 _logger = logging.getLogger(__name__)
@@ -27,15 +28,19 @@ _logger = logging.getLogger(__name__)
 class RiskApi(metaclass=ABCMeta):
 
     @classmethod
+    def calc_multi(cls, requests: Iterable[RiskRequest]) -> Tuple[Union[dict, str], ...]:
+        return tuple(cls.calc(request) for request in requests)
+
+    @classmethod
     @abstractmethod
-    def calc(cls, request: RiskRequest) -> Union[Iterable, str]:
-        raise NotImplementedError('Must implement calc')
+    def calc(cls, request: RiskRequest) -> Union[dict, str]:
+        ...
 
     @classmethod
     @abstractmethod
     def get_results(cls, ids_to_requests: Mapping[str, RiskRequest], poll: bool, timeout: Optional[int] = None)\
-            -> Mapping[str, dict]:
-        raise NotImplementedError('Must implement get_results')
+            -> Mapping[RiskRequest, Union[Exception, dict]]:
+        ...
 
     @classmethod
     def _handle_results(cls, request: RiskRequest, results: Iterable) -> dict:
@@ -50,17 +55,21 @@ class RiskApi(metaclass=ABCMeta):
 
         for measure_idx, position_results in enumerate(results):
             risk_measure = request.measures[measure_idx]
-            formatter = Formatters.get(risk_measure) if not request.parameters.raw_results else None
-            for position_idx, result in enumerate(position_results):
+
+            for position_idx, date_results in enumerate(position_results):
+                if len(date_results) != len(pricing_key):
+                    raise RuntimeError('Number of results did not match requested days')
+
+                handler = result_handlers.get(date_results[0].get('$type'))
                 position = request.positions[position_idx]
 
                 try:
-                    result = formatter(result, pricing_key, position.instrument) if formatter else result
+                    date_results = handler(date_results, pricing_key, position.instrument) if handler else date_results
                 except Exception as e:
-                    error_string = str(e)
-                    result = ErrorValue(pricing_key, error_string)
-                    _logger.error(error_string)
+                    error = str(e)
+                    date_results = ErrorValue(pricing_key, error)
+                    _logger.error(error)
 
-                formatted_results.setdefault(risk_measure, {})[position] = result
+                formatted_results.setdefault(risk_measure, {})[position] = date_results
 
         return formatted_results

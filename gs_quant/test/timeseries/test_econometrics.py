@@ -21,6 +21,7 @@ from pandas.util.testing import assert_series_equal
 from testfixtures import Replacer
 
 from gs_quant.timeseries import *
+from gs_quant.timeseries.econometrics import _get_ratio
 
 
 def test_returns():
@@ -424,9 +425,6 @@ def test_excess_returns():
 
 
 def test_sharpe_ratio():
-    with pytest.raises(Exception):
-        sharpe_ratio(pd.Series(), 5)
-
     file = os.path.join(os.path.dirname(__file__), '..', 'resources', 'MIDASER_SPX_USD.csv')
     price_df = pd.read_csv(file)
     price_df.index = pd.to_datetime(price_df['Date'])
@@ -438,9 +436,18 @@ def test_sharpe_ratio():
     replace = Replacer()
     er = replace('gs_quant.timeseries.econometrics.excess_returns', Mock())
     er.return_value = er_df['ER']
-    actual = sharpe_ratio(price_df['SPX'], 0.0175)
+    actual = _get_ratio(price_df['SPX'], 0.0175, 0, day_count_convention=DayCountConvention.ACTUAL_360)
+    numpy.testing.assert_almost_equal(actual.values, er_df['SR'].values, decimal=5)
+    actual = sharpe_ratio(price_df['SPX'], RiskFreeRateCurrency.USD)
     numpy.testing.assert_almost_equal(actual.values, er_df['SR'].values, decimal=5)
     replace.restore()
+
+    actual = _get_ratio(price_df['SPX'], 0.0175, 10, day_count_convention=DayCountConvention.ACTUAL_360)
+    numpy.testing.assert_almost_equal(actual.values, er_df['SR10'].values, decimal=5)
+
+    actual = _get_ratio(er_df['ER'], 0.0175, 0, day_count_convention=DayCountConvention.ACTUAL_360,
+                        curve_type=CurveType.EXCESS_RETURNS)
+    numpy.testing.assert_almost_equal(actual.values, er_df['SR'].values, decimal=5)
 
 
 if __name__ == "__main__":

@@ -51,55 +51,63 @@ def set_session():
 def structured_calc(mocker, priceable: Priceable, measure: risk.RiskMeasure):
     set_session()
 
-    values = [
-        {'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap', 'point': '1y', 'value': 0.01},
-        {'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap', 'point': '2y', 'value': 0.015}
-    ]
-    mocker.return_value = [[values]]
+    values = {
+        '$type': 'RiskVector',
+        'asset': [0.01, 0.015],
+        'points': [
+            {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
+            {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
+        ]
+    }
+    mocker.return_value = [[[[values]]]]
+
+    expected = risk.sort_risk(pd.DataFrame([
+        {'mkt_type': 'IR', 'mkt_asset': 'USD', 'mkt_class': 'Swap', 'mkt_point': '1y', 'value': 0.01},
+        {'mkt_type': 'IR', 'mkt_asset': 'USD', 'mkt_class': 'Swap', 'mkt_point': '2y', 'value': 0.015}
+    ]))
 
     result = priceable.calc(measure)
-    expected = risk.sort_risk(pd.DataFrame(values))
     assert result.equals(expected)
-    risk_request = risk.RiskRequest(
+    risk_requests = (risk.RiskRequest(
         positions=(risk.RiskPosition(priceable, 1),),
         measures=(measure,),
         pricing_location=PricingContext.current.market_data_location,
         pricing_and_market_data_as_of=PricingContext.current._pricing_market_data_as_of,
         parameters=RiskRequestParameters(),
-        wait_for_results=True)
-    mocker.assert_called_with(risk_request)
+        wait_for_results=True),)
+    mocker.assert_called_with(risk_requests)
 
 
 def scalar_calc(mocker, priceable: Priceable, measure: risk.RiskMeasure):
     set_session()
-    mocker.return_value = [[[{'value': 0.01}]]]
+    mocker.return_value = [[[[{'$type': 'Risk', 'val': 0.01}]]]]
 
     result = priceable.calc(measure)
     assert result == 0.01
-    risk_request = risk.RiskRequest(
+    risk_requests = (risk.RiskRequest(
         positions=(risk.RiskPosition(priceable, 1),),
         measures=(measure,),
         pricing_location=PricingContext.current.market_data_location,
         pricing_and_market_data_as_of=PricingContext.current._pricing_market_data_as_of,
         parameters=RiskRequestParameters(),
-        wait_for_results=True)
-    mocker.assert_called_with(risk_request)
+        wait_for_results=True),)
+    mocker.assert_called_with(risk_requests)
 
 
 def price(mocker, priceable: Priceable):
     set_session()
-    mocker.return_value = [[[{'value': 0.01}]]]
+    mocker.return_value = [[[[{'$type': 'Risk', 'val': 0.01}]]]]
 
     result = priceable.dollar_price()
     assert result == 0.01
-    risk_request = risk.RiskRequest(
+    risk_requests = (risk.RiskRequest(
         positions=(risk.RiskPosition(priceable, 1),),
         measures=(risk.DollarPrice,),
         pricing_location=PricingContext.current.market_data_location,
         pricing_and_market_data_as_of=PricingContext.current._pricing_market_data_as_of,
         parameters=RiskRequestParameters(),
-        wait_for_results=True)
-    mocker.assert_called_with(risk_request)
+        wait_for_results=True),)
+    mocker.assert_called_with(risk_requests)
 
 
 @mock.patch.object(GsRiskApi, '_exec')
@@ -120,12 +128,16 @@ def test_structured_calc(mocker):
             for measure in (risk.FXDelta, risk.FXGamma, risk.FXVega):
                 structured_calc(mocker, priceable, measure)
 
-    values = [
-        {'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap', 'point': '1y', 'value': 0.01},
-        {'marketDataType': 'IR', 'assetId': 'USD', 'pointClass': 'Swap', 'point': '2y', 'value': 0.015}
-    ]
+    values = {
+        '$type': 'RiskVector',
+        'asset': [0.01, 0.015],
+        'points': [
+            {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
+            {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
+        ]
+    }
 
-    mocker.return_value = [[values] * len(priceables)]
+    mocker.return_value = [[[[values]] * len(priceables)]]
 
     with PricingContext():
         delta_f = [p.calc(risk.IRDelta) for p in priceables]
@@ -150,8 +162,7 @@ def test_scalar_calc(mocker):
 def test_async_calc(mocker):
     set_session()
 
-    results = [[{'value': 0.01 * idx}] for idx in range(len(priceables))]
-    mocker.return_value = [results]
+    mocker.return_value = [[[[{'$type': 'Risk', 'val': 0.01 * idx}] for idx in range(len(priceables))]]]
 
     with PricingContext():
         dollar_price_f = [p.dollar_price() for p in priceables]
@@ -167,7 +178,7 @@ def test_disjoint_priceables_measures(mocker):
     swap = priceables[4]
     swaption = priceables[6]
 
-    mocker.return_value = [[[{'value': 0.01}]]]
+    mocker.return_value = [[[[{'$type': 'Risk', 'val': 0.01}]]]] * 2
 
     with PricingContext():
         swap_price_f = swap.price()
@@ -185,12 +196,12 @@ def test_resolution():
     assert 'fixed_rate' not in swap.as_dict()
 
     with mock.patch('gs_quant.api.gs.risk.GsRiskApi._exec') as mocker:
-        mocker.return_value = [[[{'fixedRate': 0.01}]]]
+        mocker.return_value = [[[[{'$type': 'LegDefinition', 'fixedRate': 0.01}]]]]
         assert swap.fixed_rate == 0.01
 
     swap.notional_currency = 'GBP'
     assert 'fixed_rate' not in swap.as_dict()
 
     with mock.patch('gs_quant.api.gs.risk.GsRiskApi._exec') as mocker:
-        mocker.return_value = [[[{'fixedRate': 0.007}]]]
+        mocker.return_value = [[[[{'$type': 'LegDefinition', 'fixedRate': 0.007}]]]]
         assert swap.fixed_rate == 0.007

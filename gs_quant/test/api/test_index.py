@@ -16,7 +16,7 @@ under the License.
 
 import pytest
 
-from gs_quant.api.gs.assets import GsAssetApi, GsAsset
+from gs_quant.api.gs.assets import GsAsset
 from gs_quant.api.gs.indices import *
 from gs_quant.context_base import ContextMeta
 from gs_quant.session import *
@@ -26,15 +26,15 @@ def test_create(mocker):
     # construct inputs
     asset1_marquee_id = 'MQIDAsset1'
     asset2_marquee_id = 'MQIDAsset2'
-    position_set = [{'assetId': asset1_marquee_id, 'quantity': 100}, {'assetId': asset2_marquee_id, 'quantity': 200}]
+    position_set = ({'assetId': asset1_marquee_id, 'quantity': 100}, {'assetId': asset2_marquee_id, 'quantity': 200})
     publish_parameters = PublishParameters(False, False, False)
-    pricing_parameters = IndicesPriceParameters()
+    pricing_parameters = IndicesPriceParameters(IndicesCurrency.USD)
     pricing_parameters.initialPrice = 100
-    inputs = IndicesCreateInputs("ticker", 'Test Basket', pricing_parameters, position_set)
+    inputs = IndicesCreateInputs("ticker", 'Test Basket', pricing_parameters, position_set, '')
     inputs.publishParameters = publish_parameters
     # mock GsSession
     mock_response = CustomBasketsResponse('done', 'approvalId', 'reportId', 'MQIDIndex')
-    mocker.patch.object(ContextMeta, 'current', return_value=GsSession(Environment.QA))
+    mocker.patch.object(ContextMeta, 'current', return_value=GsSession.get(Environment.QA))
     mocker.patch.object(ContextMeta.current, '_post', return_value=mock_response)
     # run test
     index = GsIndexApi()
@@ -51,7 +51,7 @@ def test_rebalance(mocker):
     asset2_marquee_id = 'MQIDAsset2'
     position_set = [{'assetId': asset1_marquee_id, 'quantity': 100}, {'assetId': asset2_marquee_id, 'quantity': 200}]
     publish_parameters = PublishParameters(False, False, False)
-    pricing_parameters = IndicesPriceParameters()
+    pricing_parameters = IndicesPriceParameters(IndicesCurrency.USD)
     pricing_parameters.initialPrice = 100
     parameters = {
         'publishParameters': publish_parameters,
@@ -61,7 +61,7 @@ def test_rebalance(mocker):
     # mock GsSession
     mock_asset = GsAsset('Equity', AssetType.Custom_Basket, 'Test Basket')
     mock_response = CustomBasketsResponse('done', 'approvalId', 'reportId', index_marquee_id)
-    mocker.patch.object(ContextMeta, 'current', return_value=GsSession(Environment.QA))
+    mocker.patch.object(ContextMeta, 'current', return_value=GsSession.get(Environment.QA))
     mocker.patch.object(ContextMeta.current, '_post', return_value=mock_response)
     mocker.patch.object(GsAssetApi, 'get_asset', return_value=mock_asset)
     # run test
@@ -79,7 +79,7 @@ def test_rebalance_raises_exception(mocker):
     asset2_marquee_id = 'MQIDAsset2'
     position_set = [{'assetId': asset1_marquee_id, 'quantity': 100}, {'assetId': asset2_marquee_id, 'quantity': 200}]
     publish_parameters = PublishParameters(False, False, False)
-    pricing_parameters = IndicesPriceParameters()
+    pricing_parameters = IndicesPriceParameters(IndicesCurrency.USD)
     pricing_parameters.initialPrice = 100
     parameters = {
         'publishParameters': publish_parameters,
@@ -89,7 +89,7 @@ def test_rebalance_raises_exception(mocker):
     # mock GsSession
     mock_asset = GsAsset('Equity', AssetType.Custom_Basket, 'Test Basket')
     mock_response = CustomBasketsResponse('done', 'approvalId', 'reportId', index_marquee_id)
-    mocker.patch.object(ContextMeta, 'current', return_value=GsSession(Environment.QA))
+    mocker.patch.object(ContextMeta, 'current', return_value=GsSession.get(Environment.QA))
     mocker.patch.object(ContextMeta.current, '_get', return_value=mock_asset)
     mocker.patch.object(ContextMeta.current, '_post', return_value=mock_response)
     # run test
@@ -104,7 +104,7 @@ def test_rebalance_cancel(mocker):
     index_marquee_id = 'MQIDIndex'
     cancel_inputs = ApprovalAction('Test Cancel.')
     # mock GsSession
-    mocker.patch.object(ContextMeta, 'current', return_value=GsSession(Environment.QA))
+    mocker.patch.object(ContextMeta, 'current', return_value=GsSession.get(Environment.QA))
     mocker.patch.object(ContextMeta.current, '_post', return_value='')
     # run test
     index = GsIndexApi(index_marquee_id)
@@ -116,7 +116,7 @@ def test_rebalance_cancel_raises_exception(mocker):
     # construct inputs
     cancel_inputs = ApprovalAction('Test Cancel.')
     # mock GsSession
-    mocker.patch.object(ContextMeta, 'current', return_value=GsSession(Environment.QA))
+    mocker.patch.object(ContextMeta, 'current', return_value=GsSession.get(Environment.QA))
     mocker.patch.object(ContextMeta.current, '_post', return_value='')
     # run test
     index = GsIndexApi()

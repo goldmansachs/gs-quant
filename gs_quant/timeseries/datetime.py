@@ -19,8 +19,9 @@ from datetime import date, time
 from numbers import Real
 import numpy as np
 from .helper import *
-from ..errors import *
-from ..datetime.date import *
+from ..errors import MqValueError
+from ..datetime.date import DayCountConvention, PaymentFrequency, day_count_fraction
+from ..datetime.date import date_range as _date_range
 
 """
 Date and time manipulation for timeseries, including date or time shifting, calendar operations, curve alignment and
@@ -450,3 +451,41 @@ def day_count_fractions(
 
     dcfs = map(lambda a, b: day_count_fraction(a, b, convention, frequency), start_dates, end_dates)
     return pd.Series(data=[np.NaN] + list(dcfs), index=date_list[0:len(date_list)])
+
+
+@plot_function
+def date_range(x: pd.Series, start_date: Union[date, int], end_date: Union[date, int],
+               business_days_only: bool = False) -> pd.Series:
+    """
+    Create a time series from a (sub-)range of dates in an existing time series.
+
+    :param x: time series
+    :param start_date: start date for the sliced time series. If integer, the number of days after the first date
+    :param end_date: end date for the sliced time series. If integer the number of days before the last date
+    :param business_days_only: whether to include only business dates in the sliced ranges
+    :return: sliced time series
+
+    **Usage**
+
+    Returns a restricted ("sliced") time series based on start and end dates:
+
+    :math:`Y_t = R_t |_{start < t < end}`
+
+    **Examples**
+
+    Slice the first and last week of a time series:
+
+    >>> series = generate_series(100)
+    >>> sliced_series = date_range(series,7,7)
+
+    **See also**
+
+    :func:`day` :func: `lag`
+
+    """
+    if isinstance(start_date, int):
+        start_date = x.index[start_date]
+    if isinstance(end_date, int):
+        end_date = x.index[- (1 + end_date)]
+    week_mask = tuple([True] * 7) if not business_days_only else None
+    return x.loc[_date_range(start_date, end_date, week_mask=week_mask)]
