@@ -2490,9 +2490,11 @@ class VolatilityFlowBacktestParameters(Base):
         trading_parameters: BacktestTradingParameters,
         index_initial_value: float,
         underliers: Tuple[BacktestStrategyUnderlier, ...] = None,
-        measures: Tuple[Union[FlowVolBacktestMeasure, str], ...] = ['ALL MEASURES'],
+        measures: Tuple[Union[FlowVolBacktestMeasure, str], ...] = None,
         name: str = None
-    ):        
+    ):
+        if measures is None:
+            measures = ['ALL MEASURES']
         super().__init__()
         self.index_initial_value = index_initial_value
         self.underliers = underliers

@@ -314,7 +314,7 @@ def convert_asset_for_rates_data_set(from_asset: Asset, c_type: RatesConversionT
         return GsAssetApi.map_identifiers(GsIdType.mdapi, GsIdType.id, [to_asset])[to_asset]
 
     except KeyError:
-        logging.info(f'Unsupported currency or cross')
+        logging.info('Unsupported currency or cross')
         return from_asset.get_marquee_id()
 
 
@@ -1184,7 +1184,7 @@ def vol_term(asset: Asset, strike_reference: VolReference, relative_strike: Real
         if strike_reference == VolReference.NORMALIZED:
             raise MqValueError(f'strike reference {strike_reference} not supported for FX')
         if strike_reference == VolReference.DELTA_NEUTRAL and relative_strike != 0:
-            raise MqValueError(f'relative_strike must be 0 for delta_neutral')
+            raise MqValueError('relative_strike must be 0 for delta_neutral')
 
         if strike_reference == VolReference.DELTA_PUT:
             relative_strike *= -1

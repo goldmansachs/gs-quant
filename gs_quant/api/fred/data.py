@@ -137,7 +137,7 @@ class FredDataApi(DataApi):
         :param data: Data to convert with correct types
         :return: Dataframe with correct types
         """
-        if len(data) and isinstance(data, pd.Series):
+        if data and isinstance(data, pd.Series):
             return data.to_frame()
         else:
             return pd.DataFrame({})

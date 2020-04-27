@@ -47,7 +47,7 @@ class GsContentApi:
             tags: set = None,
             offset: int = 0,
             limit: int = 10,
-            order_by: dict = {'direction': OrderBy.DESC, 'field': 'createdTime'}
+            order_by: dict = None
     ) -> List[ContentResponse]:
         """
         Get contents for given parameters
@@ -69,6 +69,8 @@ class GsContentApi:
         >>> GsSession.use()
         >>> contents = GsContentApi.get_contents(channels=['G10'])
         """
+        if order_by is None:
+            order_by = {'direction': OrderBy.DESC, 'field': 'createdTime'}
 
         if limit and limit > 1000:
             raise ValueError('Limit is too large. Limit must be <= 1000.')
