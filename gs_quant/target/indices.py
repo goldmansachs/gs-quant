@@ -1160,7 +1160,8 @@ class IndicesCreateInputs(Base):
         on_behalf_of: str = None,
         allow_limited_access_assets: bool = False,
         allow_ca_restricted_assets: bool = False,
-        vendor: str = None
+        vendor: str = None,
+        default_backcast: bool = True
     ):        
         super().__init__()
         self.ticker = ticker
@@ -1177,6 +1178,7 @@ class IndicesCreateInputs(Base):
         self.allow_limited_access_assets = allow_limited_access_assets
         self.allow_ca_restricted_assets = allow_ca_restricted_assets
         self.vendor = vendor
+        self.default_backcast = default_backcast
 
     @property
     def ticker(self) -> str:
@@ -1323,6 +1325,16 @@ class IndicesCreateInputs(Base):
     def vendor(self, value: str):
         self._property_changed('vendor')
         self.__vendor = value        
+
+    @property
+    def default_backcast(self) -> bool:
+        """Is basket backcasted using initial positions."""
+        return self.__default_backcast
+
+    @default_backcast.setter
+    def default_backcast(self, value: bool):
+        self._property_changed('default_backcast')
+        self.__default_backcast = value        
 
 
 class IndicesEditInputs(Base):

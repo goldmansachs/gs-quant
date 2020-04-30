@@ -132,7 +132,7 @@ class Base(metaclass=ABCMeta):
 
     def __repr__(self):
         if self.name is not None:
-            return self.name
+            return '{} ({})'.format(self.name, self.__class__.__name__)
 
         return super().__repr__()
 

@@ -369,6 +369,17 @@ def test_get_swap_leg_defaults(mocker):
     assert result_dict == defaults
 
 
+def test_check_forward_tenor():
+    valid_tenors = [datetime.date(2020, 1, 1), '1y', 'imm2', 'frb2', '1m', '0b']
+    for tenor in valid_tenors:
+        assert tenor == tm_rates.check_forward_tenor(tenor)
+
+    invalid_tenors = ['5yr', 'imm5', 'frb0']
+    for tenor in invalid_tenors:
+        with pytest.raises(MqError):
+            tm_rates.check_forward_tenor(tenor)
+
+
 def mock_commod(_cls, _q):
     d = {
         'price': [30, 30, 30, 30, 35.929686, 35.636039, 27.307498, 23.23177, 19.020833, 18.827291, 17.823749, 17.393958,

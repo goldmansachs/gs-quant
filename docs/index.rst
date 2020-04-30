@@ -13,7 +13,8 @@ GS Quant API
    data
    datetime
    instrument 
-   market
+   markets
+   models
    risk
    timeseries
 

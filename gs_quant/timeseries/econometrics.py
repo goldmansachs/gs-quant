@@ -150,18 +150,19 @@ def returns(series: pd.Series, obs: int = 1, type: Returns = Returns.SIMPLE) -> 
 
     :param series: time series of prices
     :param obs: number of observations
-    :param type: returns type: simple or logarithmic
+    :param type: returns type: simple, logarithmic or absolute
     :return: date-based time series of return
 
     **Usage**
 
     Compute returns series from price levels, based on the value of *type*:
 
-    ==========    =============================
+    ===========   =============================
     Type          Description
     ===========   =============================
     simple        Simple arithmetic returns
     logarithmic   Logarithmic returns
+    absolute      Absolute returns
     ===========   =============================
 
     *Simple*
@@ -177,6 +178,14 @@ def returns(series: pd.Series, obs: int = 1, type: Returns = Returns.SIMPLE) -> 
     Natural logarithm of asset price changes, which can be aggregated through time
 
     :math:`Y_t = log(X_t) - log(X_{t-obs})`
+
+    where :math:`X_t` is the asset price at time :math:`t`
+
+    *Absolute*
+
+    Absolute change in asset prices
+
+    :math:`Y_t = X_t - X_{t-obs}`
 
     where :math:`X_t` is the asset price at time :math:`t`
 
@@ -200,8 +209,10 @@ def returns(series: pd.Series, obs: int = 1, type: Returns = Returns.SIMPLE) -> 
     elif type == Returns.LOGARITHMIC:
         log_s = series.apply(math.log)
         ret_series = log_s - log_s.shift(obs)
+    elif type == Returns.ABSOLUTE:
+        ret_series = series - series.shift(obs)
     else:
-        raise MqValueError('Unknown returns type (use simple / log)')
+        raise MqValueError('Unknown returns type (use simple / logarithmic / absolute)')
 
     return ret_series
 
@@ -213,18 +224,19 @@ def prices(series: pd.Series, initial: int = 1, type: Returns = Returns.SIMPLE) 
 
     :param series: time series of returns
     :param initial: initial price level
-    :param type: returns type: simple or logarithmic
+    :param type: returns type: simple, logarithmic or absolute
     :return: date-based time series of return
 
     **Usage**
 
     Compute price levels from returns series, based on the value of *type*:
 
-    ==========    =============================
+    ===========   =============================
     Type          Description
     ===========   =============================
     simple        Simple arithmetic returns
     logarithmic   Logarithmic returns
+    absolute      Absolute returns
     ===========   =============================
 
     *Simple*
@@ -240,6 +252,14 @@ def prices(series: pd.Series, initial: int = 1, type: Returns = Returns.SIMPLE) 
     Compute asset price series from logarithmic returns:
 
     :math:`Y_t = e^{X_{t-1}} Y_{t-1}`
+
+    where :math:`X_t` is the asset price at time :math:`t` and :math:`Y_0 = initial`
+
+    *Absolute*
+
+    Compute asset price series from absolute returns:
+
+    :math:`Y_t = X_{t-1} + Y_{t-1}`
 
     where :math:`X_t` is the asset price at time :math:`t` and :math:`Y_0 = initial`
 
@@ -262,8 +282,10 @@ def prices(series: pd.Series, initial: int = 1, type: Returns = Returns.SIMPLE) 
         return product(1 + series) * initial
     elif type == Returns.LOGARITHMIC:
         return product(series.apply(math.exp)) * initial
+    elif type == Returns.ABSOLUTE:
+        return sum_(series) + initial
     else:
-        raise MqValueError('Unknown returns type (use simple / log)')
+        raise MqValueError('Unknown returns type (use simple / Logarithmic / absolute)')
 
 
 @plot_function
@@ -412,7 +434,7 @@ def volatility(x: pd.Series, w: Union[Window, int] = Window(None, 0),
     :param x: time series of prices
     :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
               and 10 the ramp up value. Window size defaults to length of series.
-    :param returns_type: returns type: simple or logarithmic
+    :param returns_type: returns type: simple, logarithmic or absolute
     :return: date-based time series of return
 
     **Usage**
@@ -433,6 +455,9 @@ def volatility(x: pd.Series, w: Union[Window, int] = Window(None, 0),
                   where :math:`X_t` is the asset price at time :math:`t`
     logarithmic   Natural logarithm of asset price changes:
                   :math:`R_t = log(X_t) - log(X_{t-1})`
+                  where :math:`X_t` is the asset price at time :math:`t`
+    absolute      Absolute change in asset prices:
+                  :math:`Y_t = X_t - X_{t-obs}`
                   where :math:`X_t` is the asset price at time :math:`t`
     ===========   =======================================================
 

@@ -19,15 +19,25 @@ Instruments
    :toctree: classes
    :template: instruments.rst
 
-   CommodSwap
+   CommodOTCSwap
+   EqCliquet
+   EqForward
    EqOption
+   EqSynthetic
+   EqVarianceSwap
    Forward
    FXForward
    FXOption
    InflationSwap
    IRBasisSwap
    IRCap
+   IRCMSOption
+   IRCMSOptionStrip
+   IRCMSSpreadOption
+   IRCMSSpreadOptionStrip
    IRFloor
    IRSwap
    IRSwaption
+   IRXccySwap
+   IRXccySwapFixFix
    Security

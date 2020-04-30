@@ -53,7 +53,7 @@ class HistoricalPricingContext(PricingContext):
         :param dates: a custom iterable of dates
         :param is_async: return immediately (True) or wait for results (False) (defaults to False)
         :param is_batch: use for calculations expected to run longer than 3 mins, to avoid timeouts.
-        It can be used with is_async=True|False (defaults to False)
+            It can be used with is_async=True|False (defaults to False)
         :param use_cache: store results in the pricing cache (defaults to False)
         :param visible_to_gs: are the contents of risk requests visible to GS (defaults to False)
         :param csa_term: the csa under which the calculations are made. Default is local ccy ois index

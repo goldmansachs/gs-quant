@@ -1,4 +1,4 @@
-gs\_quant.markets.HistoricalPricingContext
+HistoricalPricingContext
 ==========================================
 
 .. currentmodule:: gs_quant.markets
@@ -15,7 +15,7 @@ gs\_quant.markets.HistoricalPricingContext
    
       ~HistoricalPricingContext.__init__
       ~HistoricalPricingContext.calc
-      ~HistoricalPricingContext.has_default
+      ~PricingContext.default_value
       ~HistoricalPricingContext.resolve_fields
    
    

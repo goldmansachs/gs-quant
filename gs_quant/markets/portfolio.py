@@ -34,8 +34,10 @@ _logger = logging.getLogger(__name__)
 
 
 class Portfolio(PriceableImpl):
-    """
-    A collection of instruments
+    """A collection of instruments
+
+    Portfolio holds a collection of instruments in order to run pricing and risk scenarios
+
     """
 
     def __init__(self,
@@ -43,8 +45,9 @@ class Portfolio(PriceableImpl):
                  name: Optional[str] = None):
         """
         Creates a portfolio object which can be used to hold instruments
+
         :param instruments: constructed with an instrument, a list or tuple of instruments or a dictionary where
-                            key is instrument name and value is an instrument
+            key is instrument name and value is an instrument
         """
         super().__init__()
         if isinstance(instruments, dict):

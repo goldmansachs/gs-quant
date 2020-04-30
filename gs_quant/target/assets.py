@@ -1193,6 +1193,7 @@ class AssetParameters(Base):
         minimum_piece: float = None,
         minimum_increment: float = None,
         minimum_denomination: float = None,
+        default_backcast: bool = None,
         name: str = None
     ):        
         super().__init__()
@@ -1285,6 +1286,7 @@ class AssetParameters(Base):
         self.minimum_piece = minimum_piece
         self.minimum_increment = minimum_increment
         self.minimum_denomination = minimum_denomination
+        self.default_backcast = default_backcast
         self.name = name
 
     @property
@@ -2181,6 +2183,16 @@ class AssetParameters(Base):
     def minimum_denomination(self, value: float):
         self._property_changed('minimum_denomination')
         self.__minimum_denomination = value        
+
+    @property
+    def default_backcast(self) -> bool:
+        """Is basket backcasted using initial positions."""
+        return self.__default_backcast
+
+    @default_backcast.setter
+    def default_backcast(self, value: bool):
+        self._property_changed('default_backcast')
+        self.__default_backcast = value        
 
 
 class AssetStats(Base):

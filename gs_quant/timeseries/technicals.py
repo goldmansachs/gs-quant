@@ -227,13 +227,12 @@ def exponential_moving_average(x: pd.Series, alpha: float = 0.75) -> pd.Series:
 
     An exponential(ly weighted) moving average (EMA), is defined as:
 
-    :math:`R_{t+1} = \alpha \cdot R_t + (1 - \alpha) \cdot P_t`
+    :math:`R_{t+1} = \\alpha \cdot R_t + (1 - \\alpha) \cdot P_t`
 
-    where :math: `\alpha` is the weight we place on the previous day's average.
+    where :math: `\\alpha` is the weight we place on the previous day's average.
 
-    See `Exponential moving average <https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average>`
-    _ for more information
-
+    See `Exponential moving average <https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average>`_ for
+    more information
 
     **Examples**
 

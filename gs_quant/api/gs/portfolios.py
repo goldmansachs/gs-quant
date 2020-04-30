@@ -91,8 +91,17 @@ class GsPortfolioApi:
             # TODO Remove this once in prod
             results = session._get(url)
 
-        return tuple(Instrument.from_dict(p['instrument']) for p in
-                     results.get('positionSets', ({'positions': ()},))[0]['positions'])
+        instruments = []
+        for position in results.get('positionSets', ({'positions': ()},))[0]['positions']:
+            instrument_values = position['instrument']
+            instrument = Instrument.from_dict(instrument_values)
+            name = instrument_values.get('name')
+            if name:
+                instrument.name = name
+
+            instruments.append(instrument)
+
+        return tuple(instruments)
 
     @classmethod
     def get_latest_positions(cls, portfolio_id: str, position_type: str = 'close') -> Union[PositionSet, dict]:

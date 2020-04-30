@@ -1,4 +1,4 @@
-gs\_quant.base.Priceable
+Priceable
 ========================
 
 .. currentmodule:: gs_quant.base

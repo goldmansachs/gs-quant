@@ -59,6 +59,14 @@ def test_returns():
     expected = pd.Series([np.nan, np.nan, 0.029753, -0.0004, -0.020203, 0.019803], index=dates)
     assert_series_equal(result, expected, obj="Logarithmic returns", check_less_precise=True)
 
+    result = returns(x, 1, Returns.ABSOLUTE)
+    expected = pd.Series([np.nan, 1.0, 2.02, -2.0604, 0.0, 2.019192], index=dates)
+    assert_series_equal(result, expected, obj="Absolute returns", check_less_precise=True)
+
+    result = returns(x, 2, Returns.ABSOLUTE)
+    expected = pd.Series([np.nan, np.nan, 3.02, -0.0404, -2.0604, 2.019192], index=dates)
+    assert_series_equal(result, expected, obj="Absolute returns", check_less_precise=True)
+
     with pytest.raises(MqValueError):
         returns(x, 1, "None")
 
@@ -95,6 +103,12 @@ def test_prices():
     result = prices(r, 100, Returns.LOGARITHMIC)
     expected = pd.Series([100.0, 101, 103.02, 100.9596, 100.9596, 102.978792], index=dates)
     assert_series_equal(result, expected, obj="Logarithmic prices series", check_less_precise=True)
+
+    r = pd.Series([np.nan, 1.0, 2.02, -2.0604, 0.0, 2.019192], index=dates)
+
+    result = prices(r, 100, Returns.ABSOLUTE)
+    expected = pd.Series([100.0, 101, 103.02, 100.9596, 100.9596, 102.978792], index=dates)
+    assert_series_equal(result, expected, obj="Absolute prices series", check_less_precise=True)
 
     with pytest.raises(MqValueError):
         prices(r, 1, "None")

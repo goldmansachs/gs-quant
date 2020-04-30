@@ -155,12 +155,12 @@ class PricingContext(ContextBaseWithDefault):
         as per the examples
 
         :param pricing_date: the date for pricing calculations. Default is today
-        :param market_data_as_of: the date/datetime for sourcing market data
-        (defaults to 1 business day before pricing_date)
+        :param market_data_as_of: the date/datetime for sourcing market data (defaults to 1 business day before
+            pricing_date)
         :param market_data_location: the location for sourcing market data ('NYC', 'LDN' or 'HKG' (defaults to LDN)
         :param is_async: if True, return (a future) immediately. If False, block (defaults to False)
         :param is_batch: use for calculations expected to run longer than 3 mins, to avoid timeouts.
-        It can be used with is_aync=True|False (defaults to False)
+            It can be used with is_aync=True|False (defaults to False)
         :param use_cache: store results in the pricing cache (defaults to False)
         :param visible_to_gs: are the contents of risk requests visible to GS (defaults to False)
         :param csa_term: the csa under which the calculations are made. Default is local ccy ois index
@@ -358,7 +358,7 @@ class PricingContext(ContextBaseWithDefault):
 
     @property
     def __parameters(self) -> RiskRequestParameters:
-        return RiskRequestParameters(csa_term=self.__csa_term)
+        return RiskRequestParameters(csa_term=self.__csa_term, raw_results=True)
 
     @property
     def __scenario(self) -> Optional[MarketDataScenario]:
@@ -522,10 +522,10 @@ class PricingContext(ContextBaseWithDefault):
                 result.add_done_callback(lambda f: handle_result(f.result()))
             else:
                 handle_result(result)
-                return
         else:
             if isinstance(result, Future):
                 result.add_done_callback(lambda f: check_valid(f.result()))
+                return result
             else:
                 return check_valid(result)
 

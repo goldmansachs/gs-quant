@@ -163,9 +163,9 @@ def date_range(begin: Union[int, dt.date],
     Construct a range of dates
 
     :param begin: Beginning date or int. An int will be interpreted as the number of business days before end
-    (which must be a date)
+        (which must be a date)
     :param end: End date or int. An int will be interpreted as the number of business days after begin
-    (which must be a date)
+        (which must be a date)
     :param calendars: Calendars to use for holidays
     :param week_mask: Which days are considered weekends (defaults to Saturday and Sunday)
     :return: A generator of dates

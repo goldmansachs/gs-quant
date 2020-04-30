@@ -17,7 +17,7 @@ from abc import ABCMeta, abstractmethod
 from concurrent.futures import Future
 from copy import copy
 import datetime as dt
-from typing import Iterable, List, Optional, Tuple, Union
+from typing import Iterable, Optional, Tuple, Union
 
 import pandas as pd
 
@@ -492,6 +492,7 @@ ForwardPrice = __risk_measure_with_doc_string(
     'Forward price',
     RiskMeasureType.Forward_Price,
     unit=RiskMeasureUnit.BPS)
+BaseCPI = __risk_measure_with_doc_string('BaseCPI', 'Base CPI level', RiskMeasureType.BaseCPI)
 Theta = __risk_measure_with_doc_string('Theta', '1 day Theta', RiskMeasureType.Theta)
 EqDelta = __risk_measure_with_doc_string(
     'EqDelta',

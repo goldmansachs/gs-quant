@@ -101,6 +101,7 @@ class ReportType(EnumBase, Enum):
     Portfolio_Aging = 'Portfolio Aging'
     Asset_Factor_Risk = 'Asset Factor Risk'
     Basket_Create = 'Basket Create'
+    Basket_Backcast = 'Basket Backcast'
     Scenario = 'Scenario'
     Iselect_Backtest = 'Iselect Backtest'
     Backtest_Run = 'Backtest Run'
@@ -160,6 +161,7 @@ class ReportParameters(Base):
         approve_rebalance: bool = None,
         limited_access_assets: Tuple[str, ...] = None,
         corporate_action_restricted_assets: Tuple[str, ...] = None,
+        backcast_dates: Tuple[datetime.date, ...] = None,
         name: str = None
     ):        
         super().__init__()
@@ -194,6 +196,7 @@ class ReportParameters(Base):
         self.approve_rebalance = approve_rebalance
         self.limited_access_assets = limited_access_assets
         self.corporate_action_restricted_assets = corporate_action_restricted_assets
+        self.backcast_dates = backcast_dates
         self.name = name
 
     @property
@@ -508,6 +511,16 @@ class ReportParameters(Base):
     def corporate_action_restricted_assets(self, value: Tuple[str, ...]):
         self._property_changed('corporate_action_restricted_assets')
         self.__corporate_action_restricted_assets = value        
+
+    @property
+    def backcast_dates(self) -> Tuple[datetime.date, ...]:
+        """List of dates user upload to backcast basket"""
+        return self.__backcast_dates
+
+    @backcast_dates.setter
+    def backcast_dates(self, value: Tuple[datetime.date, ...]):
+        self._property_changed('backcast_dates')
+        self.__backcast_dates = value        
 
 
 class Report(Base):
