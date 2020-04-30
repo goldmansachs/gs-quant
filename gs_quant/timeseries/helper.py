@@ -55,7 +55,7 @@ def _to_offset(tenor: str) -> pd.DateOffset:
 
 
 Interpolate = _create_enum('Interpolate', ['intersect', 'step', 'nan', 'zero', 'time'])
-Returns = _create_enum('Returns', ['simple', 'logarithmic'])
+Returns = _create_enum('Returns', ['simple', 'logarithmic', 'absolute'])
 SeriesType = _create_enum('SeriesType', ['prices', 'returns'])
 CurveType = _create_enum('CurveType', ['prices', 'excess_returns'])
 

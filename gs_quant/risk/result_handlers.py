@@ -26,7 +26,8 @@ def __dataframe_handler(field: str, mappings: tuple, result: List, pricing_key: 
 
     for date_key, date_result in zip(pricing_key, result):
         records = [{k: datum[v] for k, v in mappings} for datum in date_result[field]]
-        df = sort_risk(pd.DataFrame.from_records(records), tuple(k for k, _ in mappings))
+        df = pd.DataFrame.from_records(records)
+        df = sort_risk(df, tuple(k for k, _ in mappings))
         components.append(DataFrameWithInfo(date_key, df, unit=date_result.get('unit')))
 
     return DataFrameWithInfo.compose(components, pricing_key) if len(pricing_key) > 1 else components[0]
@@ -48,12 +49,22 @@ def cashflows_handler(result: List, pricing_key: PricingKey, _instrument: Instru
         ('accrual_start_date', 'accStart'),
         ('accrual_end_date', 'accEnd'),
         ('payment_amount', 'payAmount'),
+        ('notional', 'notional'),
         ('payment_type', 'paymentType'),
         ('floating_rate_option', 'index'),
         ('floating_rate_designated_maturity', 'indexTerm'),
+        ('day_count_fraction', 'dayCountFraction'),
         ('spread', 'spread'),
-        ('rate', 'rate')
+        ('rate', 'rate'),
+        ('discount_factor', 'discountFactor')
     )
+
+    for r in result:
+        for cashflow in r['cashflows']:
+            for field in ('payDate', 'setDate', 'accStart', 'accEnd'):
+                value = cashflow.get(field)
+                date = dt.date.fromisoformat(value) if value else dt.date.max
+                cashflow[field] = date
 
     return __dataframe_handler('cashflows', mappings, result, pricing_key)
 
@@ -98,6 +109,13 @@ def risk_handler(result: List, pricing_key: PricingKey, _instrument: InstrumentB
     return __double_handler('val', result, pricing_key)
 
 
+def risk_by_class_handler(result: List, pricing_key: PricingKey, _instrument: InstrumentBase)\
+        -> Union[FloatWithInfo, SeriesWithInfo]:
+
+    sum_result = [{'unit': r.get('unit'), 'val': sum(r['values'])} for r in result]
+    return __double_handler('val', sum_result, pricing_key)
+
+
 def risk_vector_handler(result: List, pricing_key: PricingKey, _instrument: InstrumentBase) -> DataFrameWithInfo:
     for date_result in result:
         for points, value in zip(date_result['points'], date_result['asset']):
@@ -122,5 +140,6 @@ result_handlers = {
     'NumberAndUnit': number_and_unit_handler,
     'RequireAssets': required_assets_handler,
     'Risk': risk_handler,
+    'RiskByClass': risk_by_class_handler,
     'RiskVector': risk_vector_handler
 }

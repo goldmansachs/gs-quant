@@ -17,7 +17,7 @@ under the License.
 import logging
 import re
 from typing import Optional
-
+import datetime
 import pandas as pd
 from pandas import Series
 
@@ -107,6 +107,23 @@ def _convert_asset_for_mdapi_swap_rates(**kwargs) -> str:
         return assets[0].id
 
 
+def check_forward_tenor(forward_tenor) -> GENERIC_DATE:
+    if isinstance(forward_tenor, datetime.date):
+        return forward_tenor
+    elif forward_tenor is None or forward_tenor == 'Spot':
+        return '0b'
+    elif not (re.fullmatch('(\\d+)([bdwmy])', forward_tenor) or re.fullmatch('(imm[1-4]|frb[1-9])', forward_tenor)):
+        raise MqValueError('invalid forward tenor ' + forward_tenor)
+    else:
+        return forward_tenor
+
+
+def _check_benchmark_type(currency, benchmark_type):
+    if benchmark_type is not None and \
+            benchmark_type.value not in CURRENCY_TO_SWAP_RATE_BENCHMARK[currency.value].keys():
+        raise MqValueError('%s is not supported for %s', benchmark_type, currency.value)
+
+
 def _get_swap_leg_defaults(currency: CurrencyEnum, benchmark_type: BenchmarkType = None,
                            floating_rate_tenor: str = None) -> dict:
     if currency == CurrencyEnum.JPY:
@@ -137,7 +154,7 @@ def _get_swap_leg_defaults(currency: CurrencyEnum, benchmark_type: BenchmarkType
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
               [MeasureDependency(id_provider=_currency_to_mdapi_swap_rate_asset, query_type=QueryType.SWAP_RATE)])
 def swap_rate_2(asset: Asset, swap_tenor: str, benchmark_type: BenchmarkType = None, floating_rate_tenor: str = None,
-                forward_tenor: str = 'Spot', *, source: str = None,
+                forward_tenor: Optional[GENERIC_DATE] = None, *, source: str = None,
                 real_time: bool = False) -> Series:
     """
     GS end-of-day Fixed-Floating interest rate swap (IRS) curves across major currencies.
@@ -147,8 +164,8 @@ def swap_rate_2(asset: Asset, swap_tenor: str, benchmark_type: BenchmarkType = N
     :param swap_tenor: relative date representation of expiration date e.g. 1m
     :param benchmark_type: benchmark type e.g. LIBOR
     :param floating_rate_tenor: floating index rate
-    :param forward_tenor: relative date representation of forward starting point eg: '1y' or 'Spot' for
-    spot starting swaps
+    :param forward_tenor: absolute / relative date representation of forward starting point eg: '1y' or 'Spot' for
+    spot starting swaps, 'imm1' or 'frb1'
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: swap rate curve
@@ -160,32 +177,27 @@ def swap_rate_2(asset: Asset, swap_tenor: str, benchmark_type: BenchmarkType = N
     if currency.value not in ['JPY', 'EUR', 'USD', 'GBP', 'CHF', 'SEK']:
         raise NotImplementedError('Data not available for {} swap rates'.format(currency.value))
 
-    if benchmark_type is not None and \
-            benchmark_type.value not in CURRENCY_TO_SWAP_RATE_BENCHMARK[currency.value].keys():
-        raise MqValueError('%s is not supported for %s', benchmark_type, currency.value)
+    _check_benchmark_type(currency, benchmark_type)
 
     defaults = _get_swap_leg_defaults(currency, benchmark_type, floating_rate_tenor)
 
-    if not re.fullmatch('(\\d+)([bdwmy])', swap_tenor):
+    if not (re.fullmatch('(\\d+)([bdwmy])', swap_tenor) or re.fullmatch('(frb[1-9])', forward_tenor)):
         raise MqValueError('invalid swap tenor ' + swap_tenor)
 
-    if not re.fullmatch('(\\d+)([bdwmy])', floating_rate_tenor):
-        raise MqValueError('invalid floating rate tenor ' + floating_rate_tenor)
+    if not re.fullmatch('(\\d+)([bdwmy])', defaults['floating_rate_tenor']):
+        raise MqValueError('invalid floating rate tenor ' + defaults['floating_rate_tenor'] + ' for index: ' +
+                           defaults['benchmark_type'])
 
-    if forward_tenor is None or forward_tenor == 'Spot':
-        forward_tenor = '0b'
-    elif not re.fullmatch('(\\d+)([bdwmy])', forward_tenor):
-        raise MqValueError('invalid forward tenor ' + forward_tenor)
+    forward_tenor = check_forward_tenor(forward_tenor)
 
     clearing_house = 'LCH'
     csaTerms = currency.value + '-1'
     fixed_rate = 'ATM'
-    pay_or_receive = 'Receive'
     kwargs = dict(type='Swap', asset_parameters_termination_date=swap_tenor,
                   asset_parameters_floating_rate_option=defaults['benchmark_type'],
                   asset_parameters_fixed_rate=fixed_rate, asset_parameters_clearing_house=clearing_house,
                   asset_parameters_floating_rate_designated_maturity=defaults['floating_rate_tenor'],
-                  asset_parameters_effective_date=forward_tenor, asset_parameters_pay_or_receive=pay_or_receive,
+                  asset_parameters_effective_date=forward_tenor,
                   asset_parameters_notional_currency=currency.name, pricing_location=defaults['pricing_location'].value)
 
     rate_mqid = _convert_asset_for_mdapi_swap_rates(**kwargs)
@@ -208,7 +220,7 @@ def swap_rate_2(asset: Asset, swap_tenor: str, benchmark_type: BenchmarkType = N
 def basis_swap_spread(asset: Asset, swap_tenor: str = '1y',
                       spread_benchmark_type: BenchmarkType = None, spread_tenor: str = None,
                       reference_benchmark_type: BenchmarkType = None, reference_tenor: str = None,
-                      forward_tenor: str = 'Spot', *, source: str = None,
+                      forward_tenor: Optional[GENERIC_DATE] = None, *, source: str = None,
                       real_time: bool = False, ) -> Series:
     """
     GS end-of-day Floating-Floating interest rate swap (IRS) curves across major currencies.
@@ -220,8 +232,8 @@ def basis_swap_spread(asset: Asset, swap_tenor: str = '1y',
     :param spread_tenor: relative date representation of expiration date of paying leg e.g. 1m
     :param reference_benchmark_type: benchmark type of reference leg e.g. LIBOR
     :param reference_tenor: relative date representation of expiration date of reference leg e.g. 1m
-    :param forward_tenor: relative date representation of forward starting point eg: '1y' or 'Spot' for Spot
-            Starting swap
+    :param forward_tenor: absolute / relative date representation of forward starting point eg: '1y' or 'Spot' for
+    spot starting swaps, 'imm1' or 'frb1'
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: swap rate curve
@@ -234,26 +246,22 @@ def basis_swap_spread(asset: Asset, swap_tenor: str = '1y',
         raise NotImplementedError('Data not available for {} basis swap rates'.format(currency.value))
 
     for benchmark_type in [spread_benchmark_type, reference_benchmark_type]:
-        if benchmark_type is not None and \
-                benchmark_type.value not in CURRENCY_TO_SWAP_RATE_BENCHMARK[currency.value].keys():
-            raise MqValueError('%s is not supported for %s', benchmark_type, currency.value)
+        _check_benchmark_type(currency, benchmark_type)
 
-    if not re.fullmatch('(\\d+)([bdwmy])', swap_tenor):
+    if not (re.fullmatch('(\\d+)([bdwmy])', swap_tenor) or re.fullmatch('(frb[1-9])', forward_tenor)):
         raise MqValueError('invalid swap tenor ' + swap_tenor)
-
-    for floating_rate_tenor in [spread_tenor, reference_tenor]:
-        if not re.fullmatch('(\\d+)([bdwmy])', floating_rate_tenor):
-            raise MqValueError('invalid floating rate tenor ' + floating_rate_tenor)
 
     # default benchmark types
     legs_w_defaults = dict()
     legs_w_defaults['spread'] = _get_swap_leg_defaults(currency, spread_benchmark_type, spread_tenor)
     legs_w_defaults['reference'] = _get_swap_leg_defaults(currency, reference_benchmark_type, reference_tenor)
 
-    if forward_tenor is None or forward_tenor == 'Spot':
-        forward_tenor = '0b'
-    elif not re.fullmatch('(\\d+)([bdwmy])', forward_tenor):
-        raise MqValueError('invalid forward tenor ' + forward_tenor)
+    for key, leg in legs_w_defaults.items():
+        if not re.fullmatch('(\\d+)([bdwmy])', leg['floating_rate_tenor']):
+            raise MqValueError('invalid floating rate tenor ' + leg['floating_rate_tenor'] + ' index: ' +
+                               leg['benchmark_type'])
+
+    forward_tenor = check_forward_tenor(forward_tenor)
 
     csaTerms = currency.value + '-1'
     clearing_house = 'LCH'
@@ -288,7 +296,7 @@ def basis_swap_spread(asset: Asset, swap_tenor: str = '1y',
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
               [MeasureDependency(id_provider=_currency_to_mdapi_swap_rate_asset, query_type=QueryType.SWAP_RATE)])
 def swap_term_structure(asset: Asset, benchmark_type: BenchmarkType = None, floating_rate_tenor: str = None,
-                        forward_tenor: str = 'Spot', pricing_date: Optional[GENERIC_DATE] = None,
+                        forward_tenor: Optional[GENERIC_DATE] = None, pricing_date: Optional[GENERIC_DATE] = None,
                         *, source: str = None, real_time: bool = False) -> Series:
     """
     GS end-of-day Fixed-Floating interest rate swap (IRS) term structure across major currencies.
@@ -296,8 +304,8 @@ def swap_term_structure(asset: Asset, benchmark_type: BenchmarkType = None, floa
     :param asset: asset object loaded from security master
     :param benchmark_type: benchmark type e.g. LIBOR
     :param floating_rate_tenor: floating index rate
-    :param forward_tenor: relative date representation of forward starting point eg: '1y' or 'Spot' for spot
-           starting swaps
+    :param forward_tenor: absolute / relative date representation of forward starting point eg: '1y' or 'Spot' for
+    spot starting swaps, 'imm1' or 'frb1'
     :param pricing_date: YYYY-MM-DD or relative date
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
@@ -311,20 +319,16 @@ def swap_term_structure(asset: Asset, benchmark_type: BenchmarkType = None, floa
     if currency.value not in ['JPY', 'EUR', 'USD', 'GBP', 'CHF', 'SEK']:
         raise NotImplementedError('Data not available for {} swap rates'.format(currency.value))
     clearing_house = 'LCH'
-    # put swap tenor check
-    if benchmark_type is not None and \
-            benchmark_type.value not in CURRENCY_TO_SWAP_RATE_BENCHMARK[currency.value].keys():
-        raise MqValueError('%s is not supported for %s', benchmark_type, currency.value)
+
+    _check_benchmark_type(currency, benchmark_type)
+
+    forward_tenor = check_forward_tenor(forward_tenor)
 
     defaults = _get_swap_leg_defaults(currency, benchmark_type, floating_rate_tenor)
 
-    if not re.fullmatch('(\\d+)([bdwmy])', floating_rate_tenor):
-        raise MqValueError('invalid floating rate tenor ' + floating_rate_tenor)
-
-    if forward_tenor is None or forward_tenor == 'Spot':
-        forward_tenor = '0b'
-    elif not re.fullmatch('(\\d+)([bdwmy])', forward_tenor):
-        raise MqValueError('invalid forward tenor ' + forward_tenor)
+    if not re.fullmatch('(\\d+)([bdwmy])', defaults['floating_rate_tenor']):
+        raise MqValueError('invalid floating rate tenor ' + defaults['floating_rate_tenor'] + ' for index: ' +
+                           defaults['benchmark_type'])
 
     calendar = defaults['pricing_location'].value
     if pricing_date is not None and pricing_date in list(GsCalendar.get(calendar).holidays):
@@ -332,11 +336,10 @@ def swap_term_structure(asset: Asset, benchmark_type: BenchmarkType = None, floa
 
     csaTerms = currency.value + '-1'
     fixed_rate = 'ATM'
-    pay_or_receive = 'Receive'
     kwargs = dict(type='Swap', asset_parameters_floating_rate_option=defaults['benchmark_type'],
                   asset_parameters_fixed_rate=fixed_rate, asset_parameters_clearing_house=clearing_house,
                   asset_parameters_floating_rate_designated_maturity=defaults['floating_rate_tenor'],
-                  asset_parameters_effective_date=forward_tenor, asset_parameters_pay_or_receive=pay_or_receive,
+                  asset_parameters_effective_date=forward_tenor,
                   asset_parameters_notional_currency=currency.name, pricing_location=defaults['pricing_location'].value)
 
     assets = GsAssetApi.get_many_assets(**kwargs)
@@ -380,7 +383,8 @@ def swap_term_structure(asset: Asset, benchmark_type: BenchmarkType = None, floa
                                  query_type=QueryType.BASIS_SWAP_RATE)])
 def basis_swap_term_structure(asset: Asset, spread_benchmark_type: BenchmarkType = None, spread_tenor: str = None,
                               reference_benchmark_type: BenchmarkType = None, reference_tenor: str = None,
-                              forward_tenor: str = 'Spot', pricing_date: Optional[GENERIC_DATE] = None,
+                              forward_tenor: Optional[GENERIC_DATE] = None,
+                              pricing_date: Optional[GENERIC_DATE] = None,
                               *, source: str = None, real_time: bool = False, ) -> Series:
     """
     GS end-of-day Floating-Floating interest rate swap (IRS) term structure across major currencies.
@@ -391,8 +395,8 @@ def basis_swap_term_structure(asset: Asset, spread_benchmark_type: BenchmarkType
     :param spread_tenor: relative date representation of expiration date of spread leg e.g. 1m
     :param reference_benchmark_type: benchmark type of reference leg e.g. LIBOR
     :param reference_tenor: relative date representation of expiration date of reference leg e.g. 1m
-    :param forward_tenor: relative date representation of forward starting point eg: '1y'  or 'Spot' for spot
-           starting swaps
+    :param forward_tenor: absolute / relative date representation of forward starting point eg: '1y' or 'Spot' for
+    spot starting swaps, 'imm1' or 'frb1'
     :param pricing_date: YYYY-MM-DD or relative date
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
@@ -406,23 +410,19 @@ def basis_swap_term_structure(asset: Asset, spread_benchmark_type: BenchmarkType
         raise NotImplementedError('Data not available for {} basis swap rates'.format(currency.value))
 
     for benchmark_type in [spread_benchmark_type, reference_benchmark_type]:
-        if benchmark_type is not None and \
-                benchmark_type.value not in CURRENCY_TO_SWAP_RATE_BENCHMARK[currency.value].keys():
-            raise MqValueError('%s is not supported for %s', benchmark_type, currency.value)
-
-    for floating_rate_tenor in [spread_tenor, reference_tenor]:
-        if not re.fullmatch('(\\d+)([bdwmy])', floating_rate_tenor):
-            raise MqValueError('invalid floating rate tenor ' + floating_rate_tenor)
-
-    if forward_tenor is None or forward_tenor == 'Spot':
-        forward_tenor = '0b'
-    elif not re.fullmatch('(\\d+)([bdwmy])', forward_tenor):
-        raise MqValueError('invalid forward tenor ' + forward_tenor)
+        _check_benchmark_type(currency, benchmark_type)
 
     # default benchmark types
     legs_w_defaults = dict()
     legs_w_defaults['spread'] = _get_swap_leg_defaults(currency, spread_benchmark_type, spread_tenor)
     legs_w_defaults['reference'] = _get_swap_leg_defaults(currency, reference_benchmark_type, reference_tenor)
+
+    for key, leg in legs_w_defaults.items():
+        if not re.fullmatch('(\\d+)([bdwmy])', leg['floating_rate_tenor']):
+            raise MqValueError('invalid floating rate tenor ' + leg['floating_rate_tenor'] + ' index: ' +
+                               leg['benchmark_type'])
+
+    forward_tenor = check_forward_tenor(forward_tenor)
 
     calendar = legs_w_defaults['spread']['pricing_location'].value
     if pricing_date is not None and pricing_date in list(GsCalendar.get(calendar).holidays):

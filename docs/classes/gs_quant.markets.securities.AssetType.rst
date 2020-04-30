@@ -1,4 +1,4 @@
-gs\_quant.markets.securities.AssetType
+AssetType
 ======================================
 
 .. currentmodule:: gs_quant.markets.securities

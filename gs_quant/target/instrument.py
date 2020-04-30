@@ -4639,7 +4639,7 @@ class IRXccySwap(Instrument):
     def __init__(
         self,
         termination_date: Union[Union[datetime.date, str], str] = None,
-        notional_amount: float = 1000000.0,
+        notional_amount: float = None,
         effective_date: Union[Union[datetime.date, str], str] = None,
         payer_currency: Union[Currency, str] = None,
         payer_spread: Union[float, str] = None,
@@ -4658,6 +4658,7 @@ class IRXccySwap(Instrument):
         fee: float = 0,
         fee_currency: Union[Currency, str] = None,
         fee_payment_date: Union[datetime.date, str] = None,
+        initial_fx_rate: float = None,
         name: str = None
     ):        
         super().__init__()
@@ -4681,6 +4682,7 @@ class IRXccySwap(Instrument):
         self.fee = fee
         self.fee_currency = fee_currency
         self.fee_payment_date = fee_payment_date
+        self.initial_fx_rate = initial_fx_rate
         self.name = name
 
     @property
@@ -4833,6 +4835,243 @@ class IRXccySwap(Instrument):
     def receiver_designated_maturity(self, value: str):
         self._property_changed('receiver_designated_maturity')
         self.__receiver_designated_maturity = value        
+
+    @property
+    def receiver_frequency(self) -> str:
+        """The frequency of receiver payments, e.g. 6m"""
+        return self.__receiver_frequency
+
+    @receiver_frequency.setter
+    def receiver_frequency(self, value: str):
+        self._property_changed('receiver_frequency')
+        self.__receiver_frequency = value        
+
+    @property
+    def receiver_day_count_fraction(self) -> Union[DayCountFraction, str]:
+        """The day count fraction for the receiver"""
+        return self.__receiver_day_count_fraction
+
+    @receiver_day_count_fraction.setter
+    def receiver_day_count_fraction(self, value: Union[DayCountFraction, str]):
+        self._property_changed('receiver_day_count_fraction')
+        self.__receiver_day_count_fraction = get_enum_value(DayCountFraction, value)        
+
+    @property
+    def receiver_business_day_convention(self) -> Union[BusinessDayConvention, str]:
+        """The business day convention for the receiver"""
+        return self.__receiver_business_day_convention
+
+    @receiver_business_day_convention.setter
+    def receiver_business_day_convention(self, value: Union[BusinessDayConvention, str]):
+        self._property_changed('receiver_business_day_convention')
+        self.__receiver_business_day_convention = get_enum_value(BusinessDayConvention, value)        
+
+    @property
+    def fee(self) -> float:
+        """The fee"""
+        return self.__fee
+
+    @fee.setter
+    def fee(self, value: float):
+        self._property_changed('fee')
+        self.__fee = value        
+
+    @property
+    def fee_currency(self) -> Union[Currency, str]:
+        """Currency of the fee"""
+        return self.__fee_currency
+
+    @fee_currency.setter
+    def fee_currency(self, value: Union[Currency, str]):
+        self._property_changed('fee_currency')
+        self.__fee_currency = get_enum_value(Currency, value)        
+
+    @property
+    def fee_payment_date(self) -> Union[datetime.date, str]:
+        """Payment date of the fee"""
+        return self.__fee_payment_date
+
+    @fee_payment_date.setter
+    def fee_payment_date(self, value: Union[datetime.date, str]):
+        self._property_changed('fee_payment_date')
+        self.__fee_payment_date = value        
+
+    @property
+    def initial_fx_rate(self) -> float:
+        """Payment date of the fee"""
+        return self.__initial_fx_rate
+
+    @initial_fx_rate.setter
+    def initial_fx_rate(self, value: float):
+        self._property_changed('initial_fx_rate')
+        self.__initial_fx_rate = value        
+
+
+class IRXccySwapFixFix(Instrument):
+        
+    """An exchange of fixed cashflows in different currencies"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        termination_date: Union[Union[datetime.date, str], str] = None,
+        notional_amount: float = None,
+        receiver_notional_amount: float = None,
+        effective_date: Union[Union[datetime.date, str], str] = None,
+        payer_currency: Union[Currency, str] = None,
+        payer_rate: Union[float, str] = None,
+        payer_frequency: str = None,
+        payer_day_count_fraction: Union[DayCountFraction, str] = None,
+        payer_business_day_convention: Union[BusinessDayConvention, str] = None,
+        receiver_currency: Union[Currency, str] = None,
+        receiver_rate: Union[float, str] = None,
+        receiver_frequency: str = None,
+        receiver_day_count_fraction: Union[DayCountFraction, str] = None,
+        receiver_business_day_convention: Union[BusinessDayConvention, str] = None,
+        fee: float = 0,
+        fee_currency: Union[Currency, str] = None,
+        fee_payment_date: Union[datetime.date, str] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.termination_date = termination_date
+        self.notional_amount = notional_amount
+        self.receiver_notional_amount = receiver_notional_amount
+        self.effective_date = effective_date
+        self.payer_currency = payer_currency
+        self.payer_rate = payer_rate
+        self.payer_frequency = payer_frequency
+        self.payer_day_count_fraction = payer_day_count_fraction
+        self.payer_business_day_convention = payer_business_day_convention
+        self.receiver_currency = receiver_currency
+        self.receiver_rate = receiver_rate
+        self.receiver_frequency = receiver_frequency
+        self.receiver_day_count_fraction = receiver_day_count_fraction
+        self.receiver_business_day_convention = receiver_business_day_convention
+        self.fee = fee
+        self.fee_currency = fee_currency
+        self.fee_payment_date = fee_payment_date
+        self.name = name
+
+    @property
+    def asset_class(self) -> AssetClass:
+        """Rates"""
+        return AssetClass.Rates        
+
+    @property
+    def type(self) -> AssetType:
+        """XccySwapFixFix"""
+        return AssetType.XccySwapFixFix        
+
+    @property
+    def termination_date(self) -> Union[Union[datetime.date, str], str]:
+        """The termination of the swap, e.g. 2050-04-01, 10y"""
+        return self.__termination_date
+
+    @termination_date.setter
+    def termination_date(self, value: Union[Union[datetime.date, str], str]):
+        self._property_changed('termination_date')
+        self.__termination_date = value        
+
+    @property
+    def notional_amount(self) -> float:
+        """Notional amount"""
+        return self.__notional_amount
+
+    @notional_amount.setter
+    def notional_amount(self, value: float):
+        self._property_changed('notional_amount')
+        self.__notional_amount = value        
+
+    @property
+    def receiver_notional_amount(self) -> float:
+        """Receiver notional amount"""
+        return self.__receiver_notional_amount
+
+    @receiver_notional_amount.setter
+    def receiver_notional_amount(self, value: float):
+        self._property_changed('receiver_notional_amount')
+        self.__receiver_notional_amount = value        
+
+    @property
+    def effective_date(self) -> Union[Union[datetime.date, str], str]:
+        """The date on which the swap becomes effective"""
+        return self.__effective_date
+
+    @effective_date.setter
+    def effective_date(self, value: Union[Union[datetime.date, str], str]):
+        self._property_changed('effective_date')
+        self.__effective_date = value        
+
+    @property
+    def payer_currency(self) -> Union[Currency, str]:
+        """Payer currency"""
+        return self.__payer_currency
+
+    @payer_currency.setter
+    def payer_currency(self, value: Union[Currency, str]):
+        self._property_changed('payer_currency')
+        self.__payer_currency = get_enum_value(Currency, value)        
+
+    @property
+    def payer_rate(self) -> Union[float, str]:
+        """Payer rate"""
+        return self.__payer_rate
+
+    @payer_rate.setter
+    def payer_rate(self, value: Union[float, str]):
+        self._property_changed('payer_rate')
+        self.__payer_rate = value        
+
+    @property
+    def payer_frequency(self) -> str:
+        """The frequency of payer payments, e.g. 6m"""
+        return self.__payer_frequency
+
+    @payer_frequency.setter
+    def payer_frequency(self, value: str):
+        self._property_changed('payer_frequency')
+        self.__payer_frequency = value        
+
+    @property
+    def payer_day_count_fraction(self) -> Union[DayCountFraction, str]:
+        """The day count fraction for the payer"""
+        return self.__payer_day_count_fraction
+
+    @payer_day_count_fraction.setter
+    def payer_day_count_fraction(self, value: Union[DayCountFraction, str]):
+        self._property_changed('payer_day_count_fraction')
+        self.__payer_day_count_fraction = get_enum_value(DayCountFraction, value)        
+
+    @property
+    def payer_business_day_convention(self) -> Union[BusinessDayConvention, str]:
+        """The business day convention for the payer"""
+        return self.__payer_business_day_convention
+
+    @payer_business_day_convention.setter
+    def payer_business_day_convention(self, value: Union[BusinessDayConvention, str]):
+        self._property_changed('payer_business_day_convention')
+        self.__payer_business_day_convention = get_enum_value(BusinessDayConvention, value)        
+
+    @property
+    def receiver_currency(self) -> Union[Currency, str]:
+        """Receiver currency"""
+        return self.__receiver_currency
+
+    @receiver_currency.setter
+    def receiver_currency(self, value: Union[Currency, str]):
+        self._property_changed('receiver_currency')
+        self.__receiver_currency = get_enum_value(Currency, value)        
+
+    @property
+    def receiver_rate(self) -> Union[float, str]:
+        """Receiver rate"""
+        return self.__receiver_rate
+
+    @receiver_rate.setter
+    def receiver_rate(self, value: Union[float, str]):
+        self._property_changed('receiver_rate')
+        self.__receiver_rate = value        
 
     @property
     def receiver_frequency(self) -> str:

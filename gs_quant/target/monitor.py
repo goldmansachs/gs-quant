@@ -17,81 +17,169 @@ under the License.
 from gs_quant.target.common import *
 import datetime
 from typing import Tuple, Union
-from gs_quant.base import Base, InstrumentBase, camel_case_translate, get_enum_value
+from enum import Enum
+from gs_quant.base import Base, EnumBase, InstrumentBase, camel_case_translate, get_enum_value
 
 
-class ColumnFormat(Base):
-        
-    """Object used to specify the column formatting"""
+class AssetProperties(EnumBase, Enum):    
+    
+    """Enum listing supported asset properties"""
 
-    @camel_case_translate
-    def __init__(
-        self,
-        precision: float,
-        unit=None,
-        human_readable: bool = None,
-        axis_key=None,
-        show_tooltip: bool = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.precision = precision
-        self.unit = unit
-        self.human_readable = human_readable
-        self.axis_key = axis_key
-        self.show_tooltip = show_tooltip
-        self.name = name
+    assetClass = 'assetClass'
+    currency = 'currency'
+    createdTime = 'createdTime'
+    description = 'description'
+    exchange = 'exchange'
+    id = 'id'
+    liveDate = 'liveDate'
+    name = 'name'
+    region = 'region'
+    shortName = 'shortName'
+    type = 'type'
+    xref_bbid = 'xref.bbid'
+    xref_bcid = 'xref.bcid'
+    xref_ticker = 'xref.ticker'
+    xref_ric = 'xref.ric'
+    date = 'date'
+    value = 'value'
+    slope = 'slope'
+    OIS_value = 'OIS value'
+    
+    def __repr__(self):
+        return self.value
 
-    @property
-    def precision(self) -> float:
-        """Number of decimals to show"""
-        return self.__precision
 
-    @precision.setter
-    def precision(self, value: float):
-        self._property_changed('precision')
-        self.__precision = value        
+class AvailableUnitTypes(EnumBase, Enum):    
+    
+    """Enum listing supported unit types"""
 
-    @property
-    def unit(self):
-        """Unit to show next to number"""
-        return self.__unit
+    percentage = 'percentage'
+    percentageWithSymbol = 'percentageWithSymbol'
+    bps = 'bps'
+    bp = 'bp'
+    x = 'x'
+    
+    def __repr__(self):
+        return self.value
 
-    @unit.setter
-    def unit(self, value):
-        self._property_changed('unit')
-        self.__unit = value        
 
-    @property
-    def human_readable(self) -> bool:
-        """Formats number to have commas"""
-        return self.__human_readable
+class EntitiesSupported(EnumBase, Enum):    
+    
+    """Enum listing supported entities"""
 
-    @human_readable.setter
-    def human_readable(self, value: bool):
-        self._property_changed('human_readable')
-        self.__human_readable = value        
+    assets = 'assets'
+    kpis = 'kpis'
+    sts = 'sts'
+    tds = 'tds'
+    
+    def __repr__(self):
+        return self.value
 
-    @property
-    def axis_key(self):
-        """Applicable for render type chart, determines line to be on the left or right
-           axis"""
-        return self.__axis_key
 
-    @axis_key.setter
-    def axis_key(self, value):
-        self._property_changed('axis_key')
-        self.__axis_key = value        
+class ParameterPeriod(EnumBase, Enum):    
+    
+    """Enum listing supported parameter periods"""
 
-    @property
-    def show_tooltip(self) -> bool:
-        """Whether to show the cell timestamp in a tooltip"""
-        return self.__show_tooltip
+    _1d = '1d'
+    _1w = '1w'
+    _1m = '1m'
+    _3m = '3m'
+    _6m = '6m'
+    _1y = '1y'
+    _2y = '2y'
+    _5y = '5y'
+    _10y = '10y'
+    _30y = '30y'
+    mtd = 'mtd'
+    ytd = 'ytd'
+    
+    def __repr__(self):
+        return self.value
 
-    @show_tooltip.setter
-    def show_tooltip(self, value: bool):
-        self._property_changed('show_tooltip')
-        self.__show_tooltip = value        
+
+class ParameterRender(EnumBase, Enum):    
+    
+    """Enum listing supported column definition render types"""
+
+    boxplot = 'boxplot'
+    default = 'default'
+    direction = 'direction'
+    hidden = 'hidden'
+    bar = 'bar'
+    sparkline = 'sparkline'
+    heatmap = 'heatmap'
+    simpleCandlestick = 'simpleCandlestick'
+    progress = 'progress'
+    chart = 'chart'
+    range = 'range'
+    
+    def __repr__(self):
+        return self.value
+
+
+class RateIds(EnumBase, Enum):    
+    
+    """Enum listing supported rate ids"""
+
+    USD = 'USD'
+    EUR = 'EUR'
+    JPY = 'JPY'
+    GBP = 'GBP'
+    CAD = 'CAD'
+    AUD = 'AUD'
+    
+    def __repr__(self):
+        return self.value
+
+
+class SortDirection(EnumBase, Enum):    
+    
+    """Enum with available sort directions"""
+
+    asc = 'asc'
+    desc = 'desc'
+    default = 'default'
+    
+    def __repr__(self):
+        return self.value
+
+
+class SortType(EnumBase, Enum):    
+    
+    """Enum listing supported sort types"""
+
+    value = 'value'
+    abs = 'abs'
+    
+    def __repr__(self):
+        return self.value
+
+
+class WipiFilterOperation(EnumBase, Enum):    
+    
+    """Enum listing supported operations for wipi filters."""
+
+    eq = 'eq'
+    ne = 'ne'
+    gt = 'gt'
+    lt = 'lt'
+    gte = 'gte'
+    lte = 'lte'
+    last = 'last'
+    
+    def __repr__(self):
+        return self.value
+
+
+class WipiFilterType(EnumBase, Enum):    
+    
+    """Enum listing supported wipi filter types."""
+
+    AND = 'AND'
+    OR = 'OR'
+    
+    def __repr__(self):
+        return self.value
 
 
 class ColumnOperation(Base):
@@ -103,7 +191,7 @@ class ColumnOperation(Base):
         self,
         column_names: Tuple[str, ...] = None,
         function_name: str = None,
-        type_=None,
+        type_: str = None,
         name: str = None
     ):        
         super().__init__()
@@ -134,14 +222,14 @@ class ColumnOperation(Base):
         self.__function_name = value        
 
     @property
-    def type(self):
+    def type(self) -> str:
         """Type of inputs into the function. Series means pass the whole series into the
            function, value means just gets the result of the column and pass it
            into the given function"""
         return self.__type
 
     @type.setter
-    def type(self, value):
+    def type(self, value: str):
         self._property_changed('type')
         self.__type = value        
 
@@ -183,6 +271,79 @@ class ColumnProperty(Base):
         self.__property = value        
 
 
+class ExportParameters(Base):
+        
+    """Object with properties specifying how to export individual row or complete
+       monitor data."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        tokens: Tuple[str, ...],
+        data_set_id: str = None,
+        fields: Tuple[str, ...] = None,
+        label: str = None,
+        start_date: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.data_set_id = data_set_id
+        self.fields = fields
+        self.label = label
+        self.start_date = start_date
+        self.tokens = tokens
+        self.name = name
+
+    @property
+    def data_set_id(self) -> str:
+        """Id of the DataSet in which the export will retrieve data from."""
+        return self.__data_set_id
+
+    @data_set_id.setter
+    def data_set_id(self, value: str):
+        self._property_changed('data_set_id')
+        self.__data_set_id = value        
+
+    @property
+    def fields(self) -> Tuple[str, ...]:
+        """The fields to be exported from the DataSet."""
+        return self.__fields
+
+    @fields.setter
+    def fields(self, value: Tuple[str, ...]):
+        self._property_changed('fields')
+        self.__fields = value        
+
+    @property
+    def label(self) -> str:
+        """The label for the export button. For example: Export Historical Data."""
+        return self.__label
+
+    @label.setter
+    def label(self, value: str):
+        self._property_changed('label')
+        self.__label = value        
+
+    @property
+    def start_date(self) -> str:
+        """The relative start date for the history of data to retrieve. Eg: -1y."""
+        return self.__start_date
+
+    @start_date.setter
+    def start_date(self, value: str):
+        self._property_changed('start_date')
+        self.__start_date = value        
+
+    @property
+    def tokens(self) -> Tuple[str, ...]:
+        return self.__tokens
+
+    @tokens.setter
+    def tokens(self, value: Tuple[str, ...]):
+        self._property_changed('tokens')
+        self.__tokens = value        
+
+
 class FieldMap(Base):
         
     @camel_case_translate
@@ -203,8 +364,8 @@ class FunctionParameters(Base):
         self,
         initial: int = None,
         obs: int = None,
-        returns_type=None,
-        type_=None,
+        returns_type: str = None,
+        type_: str = None,
         w: int = None,
         entity_id: str = None,
         returns: bool = None,
@@ -241,22 +402,22 @@ class FunctionParameters(Base):
         self.__obs = value        
 
     @property
-    def returns_type(self):
+    def returns_type(self) -> str:
         """returns type (simple, log)"""
         return self.__returns_type
 
     @returns_type.setter
-    def returns_type(self, value):
+    def returns_type(self, value: str):
         self._property_changed('returns_type')
         self.__returns_type = value        
 
     @property
-    def type(self):
+    def type(self) -> str:
         """returns type (simple, log)"""
         return self.__type
 
     @type.setter
-    def type(self, value):
+    def type(self, value: str):
         self._property_changed('type')
         self.__type = value        
 
@@ -403,115 +564,78 @@ class Movers(Base):
         self.__column_name = value        
 
 
-class Sort(Base):
+class ColumnFormat(Base):
         
-    """Object used to define sorting"""
+    """Object used to specify the column formatting"""
 
     @camel_case_translate
     def __init__(
         self,
-        column_name: str,
-        type_=None,
-        direction=None,
+        precision: float,
+        unit: Union[AvailableUnitTypes, str] = None,
+        human_readable: bool = None,
+        axis_key: str = None,
+        show_tooltip: bool = None,
         name: str = None
     ):        
         super().__init__()
-        self.__type = type_
-        self.column_name = column_name
-        self.direction = direction
+        self.precision = precision
+        self.unit = unit
+        self.human_readable = human_readable
+        self.axis_key = axis_key
+        self.show_tooltip = show_tooltip
         self.name = name
 
     @property
-    def type(self):
-        """Enum listing supported sort types"""
-        return self.__type
+    def precision(self) -> float:
+        """Number of decimals to show"""
+        return self.__precision
 
-    @type.setter
-    def type(self, value):
-        self._property_changed('type')
-        self.__type = value        
-
-    @property
-    def column_name(self) -> str:
-        """Required small string with a length from empty string to 50 characters"""
-        return self.__column_name
-
-    @column_name.setter
-    def column_name(self, value: str):
-        self._property_changed('column_name')
-        self.__column_name = value        
+    @precision.setter
+    def precision(self, value: float):
+        self._property_changed('precision')
+        self.__precision = value        
 
     @property
-    def direction(self):
-        """Enum with available sort directions"""
-        return self.__direction
+    def unit(self) -> Union[AvailableUnitTypes, str]:
+        """Unit to show next to number"""
+        return self.__unit
 
-    @direction.setter
-    def direction(self, value):
-        self._property_changed('direction')
-        self.__direction = value        
-
-
-class WipiRequestFilter(Base):
-        
-    """A filter used for transforming data"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        column: str,
-        operation,
-        value: Union[float, str],
-        type_=None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.column = column
-        self.operation = operation
-        self.value = value
-        self.__type = type_
-        self.name = name
+    @unit.setter
+    def unit(self, value: Union[AvailableUnitTypes, str]):
+        self._property_changed('unit')
+        self.__unit = get_enum_value(AvailableUnitTypes, value)        
 
     @property
-    def column(self) -> str:
-        """The column to perform the operation on."""
-        return self.__column
+    def human_readable(self) -> bool:
+        """Formats number to have commas"""
+        return self.__human_readable
 
-    @column.setter
-    def column(self, value: str):
-        self._property_changed('column')
-        self.__column = value        
-
-    @property
-    def operation(self):
-        """Enum listing supported operations for wipi filters."""
-        return self.__operation
-
-    @operation.setter
-    def operation(self, value):
-        self._property_changed('operation')
-        self.__operation = value        
+    @human_readable.setter
+    def human_readable(self, value: bool):
+        self._property_changed('human_readable')
+        self.__human_readable = value        
 
     @property
-    def value(self) -> Union[float, str]:
-        """The value of the operation is used with. Relative dates are used against the
-           last valuationDate."""
-        return self.__value
+    def axis_key(self) -> str:
+        """Applicable for render type chart, determines line to be on the left or right
+           axis"""
+        return self.__axis_key
 
-    @value.setter
-    def value(self, value: Union[float, str]):
-        self._property_changed('value')
-        self.__value = value        
+    @axis_key.setter
+    def axis_key(self, value: str):
+        self._property_changed('axis_key')
+        self.__axis_key = value        
 
     @property
-    def type(self):
-        """Enum listing supported wipi filter types."""
-        return self.__type
+    def show_tooltip(self) -> bool:
+        """Whether to show the cell timestamp in a tooltip"""
+        return self.__show_tooltip
 
-    @type.setter
-    def type(self, value):
-        self._property_changed('type')
-        self.__type = value        
+    @show_tooltip.setter
+    def show_tooltip(self, value: bool):
+        self._property_changed('show_tooltip')
+        self.__show_tooltip = value        
 
 
 class ColumnMappings(Base):
@@ -558,7 +682,7 @@ class Function(Base):
     def __init__(
         self,
         measure: str,
-        frequency,
+        frequency: str,
         name: str = None,
         start_date: str = None,
         end_date: str = None,
@@ -605,13 +729,13 @@ class Function(Base):
         self.__measure = value        
 
     @property
-    def frequency(self):
+    def frequency(self) -> str:
         """The frequency of the column data changes which dataset the values are retrieved
            from."""
         return self.__frequency
 
     @frequency.setter
-    def frequency(self, value):
+    def frequency(self, value: str):
         self._property_changed('frequency')
         self.__frequency = value        
 
@@ -712,7 +836,7 @@ class RateRow(Base):
     @camel_case_translate
     def __init__(
         self,
-        period,
+        period: Union[ParameterPeriod, str],
         last: float,
         change: float,
         std: float,
@@ -732,14 +856,14 @@ class RateRow(Base):
         self.name = name
 
     @property
-    def period(self):
+    def period(self) -> Union[ParameterPeriod, str]:
         """Calculated period"""
         return self.__period
 
     @period.setter
-    def period(self, value):
+    def period(self, value: Union[ParameterPeriod, str]):
         self._property_changed('period')
-        self.__period = value        
+        self.__period = get_enum_value(ParameterPeriod, value)        
 
     @property
     def last(self) -> float:
@@ -802,6 +926,117 @@ class RateRow(Base):
         self.__slope = value        
 
 
+class Sort(Base):
+        
+    """Object used to define sorting"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        column_name: str,
+        type_: Union[SortType, str] = None,
+        direction: Union[SortDirection, str] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.__type = get_enum_value(SortType, type_)
+        self.column_name = column_name
+        self.direction = direction
+        self.name = name
+
+    @property
+    def type(self) -> Union[SortType, str]:
+        """Enum listing supported sort types"""
+        return self.__type
+
+    @type.setter
+    def type(self, value: Union[SortType, str]):
+        self._property_changed('type')
+        self.__type = get_enum_value(SortType, value)        
+
+    @property
+    def column_name(self) -> str:
+        """Required small string with a length from empty string to 50 characters"""
+        return self.__column_name
+
+    @column_name.setter
+    def column_name(self, value: str):
+        self._property_changed('column_name')
+        self.__column_name = value        
+
+    @property
+    def direction(self) -> Union[SortDirection, str]:
+        """Enum with available sort directions"""
+        return self.__direction
+
+    @direction.setter
+    def direction(self, value: Union[SortDirection, str]):
+        self._property_changed('direction')
+        self.__direction = get_enum_value(SortDirection, value)        
+
+
+class WipiRequestFilter(Base):
+        
+    """A filter used for transforming data"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        column: str,
+        operation: Union[WipiFilterOperation, str],
+        value: Union[float, str],
+        type_: Union[WipiFilterType, str] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.column = column
+        self.operation = operation
+        self.value = value
+        self.__type = get_enum_value(WipiFilterType, type_)
+        self.name = name
+
+    @property
+    def column(self) -> str:
+        """The column to perform the operation on."""
+        return self.__column
+
+    @column.setter
+    def column(self, value: str):
+        self._property_changed('column')
+        self.__column = value        
+
+    @property
+    def operation(self) -> Union[WipiFilterOperation, str]:
+        """Enum listing supported operations for wipi filters."""
+        return self.__operation
+
+    @operation.setter
+    def operation(self, value: Union[WipiFilterOperation, str]):
+        self._property_changed('operation')
+        self.__operation = get_enum_value(WipiFilterOperation, value)        
+
+    @property
+    def value(self) -> Union[float, str]:
+        """The value of the operation is used with. Relative dates are used against the
+           last valuationDate."""
+        return self.__value
+
+    @value.setter
+    def value(self, value: Union[float, str]):
+        self._property_changed('value')
+        self.__value = value        
+
+    @property
+    def type(self) -> Union[WipiFilterType, str]:
+        """Enum listing supported wipi filter types."""
+        return self.__type
+
+    @type.setter
+    def type(self, value: Union[WipiFilterType, str]):
+        self._property_changed('type')
+        self.__type = get_enum_value(WipiFilterType, value)        
+
+
 class ColumnDefinition(Base):
         
     """Object defining the columns to be calculated in the monitor"""
@@ -809,10 +1044,10 @@ class ColumnDefinition(Base):
     @camel_case_translate
     def __init__(
         self,
-        render,
+        render: Union[ParameterRender, str],
         name: str,
         enable_cell_flashing: bool = None,
-        entity_property=None,
+        entity_property: Union[AssetProperties, str] = None,
         function: Function = None,
         format_: ColumnFormat = None,
         width: float = None,
@@ -861,24 +1096,24 @@ class ColumnDefinition(Base):
         self.__name = value        
 
     @property
-    def render(self):
+    def render(self) -> Union[ParameterRender, str]:
         """Enum listing supported column definition render types"""
         return self.__render
 
     @render.setter
-    def render(self, value):
+    def render(self, value: Union[ParameterRender, str]):
         self._property_changed('render')
-        self.__render = value        
+        self.__render = get_enum_value(ParameterRender, value)        
 
     @property
-    def entity_property(self):
+    def entity_property(self) -> Union[AssetProperties, str]:
         """Property to fetch from an entity"""
         return self.__entity_property
 
     @entity_property.setter
-    def entity_property(self, value):
+    def entity_property(self, value: Union[AssetProperties, str]):
         self._property_changed('entity_property')
-        self.__entity_property = value        
+        self.__entity_property = get_enum_value(AssetProperties, value)        
 
     @property
     def function(self) -> Function:
@@ -1025,7 +1260,7 @@ class RatesResponseData(Base):
     @camel_case_translate
     def __init__(
         self,
-        name,
+        name: Union[RateIds, str],
         id_: str,
         rows: Tuple[RateRow, ...],
         libor_id: str = None
@@ -1037,14 +1272,14 @@ class RatesResponseData(Base):
         self.rows = rows
 
     @property
-    def name(self):
+    def name(self) -> Union[RateIds, str]:
         """Enum listing supported rate ids"""
         return self.__name
 
     @name.setter
-    def name(self, value):
+    def name(self, value: Union[RateIds, str]):
         self._property_changed('name')
-        self.__name = value        
+        self.__name = get_enum_value(RateIds, value)        
 
     @property
     def id(self) -> str:
@@ -1088,13 +1323,15 @@ class RowGroup(Base):
         name: str,
         entity_ids: Tuple[EntityId, ...],
         movers: Movers = None,
-        sort: Sort = None
+        sort: Sort = None,
+        export: ExportParameters = None
     ):        
         super().__init__()
         self.name = name
         self.movers = movers
         self.entity_ids = entity_ids
         self.sort = sort
+        self.export = export
 
     @property
     def name(self) -> str:
@@ -1137,6 +1374,17 @@ class RowGroup(Base):
         self._property_changed('sort')
         self.__sort = value        
 
+    @property
+    def export(self) -> ExportParameters:
+        """Object with properties specifying how to export individual row or complete
+           monitor data."""
+        return self.__export
+
+    @export.setter
+    def export(self, value: ExportParameters):
+        self._property_changed('export')
+        self.__export = value        
+
 
 class MonitorParameters(Base):
         
@@ -1156,11 +1404,13 @@ class MonitorParameters(Base):
         rebase_to_end_of_year_spot: bool = None,
         filters: Tuple[WipiRequestFilter, ...] = None,
         exportable: Tuple[str, ...] = None,
+        export: ExportParameters = None,
         fill_column_index: float = None,
         knot: float = None,
         default_hidden: bool = None,
         line_chart_color: str = None,
-        chart_curve_type=None,
+        chart_curve_type: str = None,
+        ignore_business_day_logic: bool = None,
         name: str = None
     ):        
         super().__init__()
@@ -1175,11 +1425,13 @@ class MonitorParameters(Base):
         self.rebase_to_end_of_year_spot = rebase_to_end_of_year_spot
         self.filters = filters
         self.exportable = exportable
+        self.export = export
         self.fill_column_index = fill_column_index
         self.knot = knot
         self.default_hidden = default_hidden
         self.line_chart_color = line_chart_color
         self.chart_curve_type = chart_curve_type
+        self.ignore_business_day_logic = ignore_business_day_logic
         self.name = name
 
     @property
@@ -1287,13 +1539,24 @@ class MonitorParameters(Base):
 
     @property
     def exportable(self) -> Tuple[str, ...]:
-        """Permission to export monitor data."""
+        """Permission to export monitor data. This will be deprecated for export."""
         return self.__exportable
 
     @exportable.setter
     def exportable(self, value: Tuple[str, ...]):
         self._property_changed('exportable')
         self.__exportable = value        
+
+    @property
+    def export(self) -> ExportParameters:
+        """Object with properties specifying how to export individual row or complete
+           monitor data."""
+        return self.__export
+
+    @export.setter
+    def export(self, value: ExportParameters):
+        self._property_changed('export')
+        self.__export = value        
 
     @property
     def fill_column_index(self) -> float:
@@ -1341,14 +1604,24 @@ class MonitorParameters(Base):
         self.__line_chart_color = value        
 
     @property
-    def chart_curve_type(self):
+    def chart_curve_type(self) -> str:
         """The curve type of the chart line."""
         return self.__chart_curve_type
 
     @chart_curve_type.setter
-    def chart_curve_type(self, value):
+    def chart_curve_type(self, value: str):
         self._property_changed('chart_curve_type')
         self.__chart_curve_type = value        
+
+    @property
+    def ignore_business_day_logic(self) -> bool:
+        """Whether or not to apply business day logic for relative dates."""
+        return self.__ignore_business_day_logic
+
+    @ignore_business_day_logic.setter
+    def ignore_business_day_logic(self, value: bool):
+        self._property_changed('ignore_business_day_logic')
+        self.__ignore_business_day_logic = value        
 
 
 class Monitor(Base):
@@ -1359,7 +1632,7 @@ class Monitor(Base):
     def __init__(
         self,
         name: str,
-        type_,
+        type_: Union[EntitiesSupported, str],
         id_: str = None,
         parameters: MonitorParameters = None,
         created_time: datetime.datetime = None,
@@ -1375,7 +1648,7 @@ class Monitor(Base):
         super().__init__()
         self.__id = id_
         self.name = name
-        self.__type = type_
+        self.__type = get_enum_value(EntitiesSupported, type_)
         self.parameters = parameters
         self.created_time = created_time
         self.last_updated_time = last_updated_time
@@ -1408,14 +1681,14 @@ class Monitor(Base):
         self.__name = value        
 
     @property
-    def type(self):
+    def type(self) -> Union[EntitiesSupported, str]:
         """Enum listing supported entities"""
         return self.__type
 
     @type.setter
-    def type(self, value):
+    def type(self, value: Union[EntitiesSupported, str]):
         self._property_changed('type')
-        self.__type = value        
+        self.__type = get_enum_value(EntitiesSupported, value)        
 
     @property
     def parameters(self) -> MonitorParameters:

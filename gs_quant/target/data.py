@@ -1113,6 +1113,7 @@ class IdFieldProperties(Base):
         scenario_id: Tuple[str, ...] = None,
         scenario_group_id: Tuple[str, ...] = None,
         report_id: Tuple[str, ...] = None,
+        gsid2: Tuple[str, ...] = None,
         isin: Tuple[str, ...] = None,
         version: Tuple[float, ...] = None,
         name: Tuple[str, ...] = None,
@@ -1173,6 +1174,7 @@ class IdFieldProperties(Base):
         self.scenario_id = scenario_id
         self.scenario_group_id = scenario_group_id
         self.report_id = report_id
+        self.gsid2 = gsid2
         self.isin = isin
         self.version = version
         self.name = name
@@ -1667,6 +1669,15 @@ class IdFieldProperties(Base):
     def report_id(self, value: Tuple[str, ...]):
         self._property_changed('report_id')
         self.__report_id = value        
+
+    @property
+    def gsid2(self) -> Tuple[str, ...]:
+        return self.__gsid2
+
+    @gsid2.setter
+    def gsid2(self, value: Tuple[str, ...]):
+        self._property_changed('gsid2')
+        self.__gsid2 = value        
 
     @property
     def isin(self) -> Tuple[str, ...]:

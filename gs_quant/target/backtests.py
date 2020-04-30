@@ -268,77 +268,41 @@ class BacktestRiskPosition(Base):
         self.__quantity = value        
 
 
-class BacktestTradingParameters(Base):
+class BacktestSignalSeriesItem(Base):
         
-    """Trading Information for the Backtesting Strategy"""
+    """A backtest signal series item consisting of a date and boolean"""
 
     @camel_case_translate
     def __init__(
         self,
-        quantity_type: str = None,
-        quantity: float = None,
-        trade_in_method: str = None,
-        roll_frequency: str = None,
-        scaling_method: str = None,
+        date: datetime.date = None,
+        value: bool = None,
         name: str = None
     ):        
         super().__init__()
-        self.quantity_type = quantity_type
-        self.quantity = quantity
-        self.trade_in_method = trade_in_method
-        self.roll_frequency = roll_frequency
-        self.scaling_method = scaling_method
+        self.date = date
+        self.value = value
         self.name = name
 
     @property
-    def quantity_type(self) -> str:
-        """The unit of the quantity of backtest strategy"""
-        return self.__quantity_type
+    def date(self) -> datetime.date:
+        """Date on which the signal applies"""
+        return self.__date
 
-    @quantity_type.setter
-    def quantity_type(self, value: str):
-        self._property_changed('quantity_type')
-        self.__quantity_type = value        
-
-    @property
-    def quantity(self) -> float:
-        """The quantity of backtest strategy"""
-        return self.__quantity
-
-    @quantity.setter
-    def quantity(self, value: float):
-        self._property_changed('quantity')
-        self.__quantity = value        
+    @date.setter
+    def date(self, value: datetime.date):
+        self._property_changed('date')
+        self.__date = value        
 
     @property
-    def trade_in_method(self) -> str:
-        """Roll method for the backtest strategy"""
-        return self.__trade_in_method
+    def value(self) -> bool:
+        """Whether the signal should be evaluated or not"""
+        return self.__value
 
-    @trade_in_method.setter
-    def trade_in_method(self, value: str):
-        self._property_changed('trade_in_method')
-        self.__trade_in_method = value        
-
-    @property
-    def roll_frequency(self) -> str:
-        """Period the strategy rolls"""
-        return self.__roll_frequency
-
-    @roll_frequency.setter
-    def roll_frequency(self, value: str):
-        self._property_changed('roll_frequency')
-        self.__roll_frequency = value        
-
-    @property
-    def scaling_method(self) -> str:
-        """The method for scaling underliers, i.e fixedQuantity"""
-        return self.__scaling_method
-
-    @scaling_method.setter
-    def scaling_method(self, value: str):
-        self._property_changed('scaling_method')
-        self.__scaling_method = value        
+    @value.setter
+    def value(self, value: bool):
+        self._property_changed('value')
+        self.__value = value        
 
 
 class BaseIndexRefData(Base):
@@ -1605,6 +1569,103 @@ class BacktestStrategyUnderlierHedge(Base):
     def quantity_percentage(self, value: float):
         self._property_changed('quantity_percentage')
         self.__quantity_percentage = value        
+
+
+class BacktestTradingParameters(Base):
+        
+    """Trading Information for the Backtesting Strategy"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        quantity_type: str = None,
+        quantity: float = None,
+        trade_in_method: str = None,
+        roll_frequency: str = None,
+        scaling_method: str = None,
+        trade_in_signals: Tuple[BacktestSignalSeriesItem, ...] = None,
+        trade_out_signals: Tuple[BacktestSignalSeriesItem, ...] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.quantity_type = quantity_type
+        self.quantity = quantity
+        self.trade_in_method = trade_in_method
+        self.roll_frequency = roll_frequency
+        self.scaling_method = scaling_method
+        self.trade_in_signals = trade_in_signals
+        self.trade_out_signals = trade_out_signals
+        self.name = name
+
+    @property
+    def quantity_type(self) -> str:
+        """The unit of the quantity of backtest strategy"""
+        return self.__quantity_type
+
+    @quantity_type.setter
+    def quantity_type(self, value: str):
+        self._property_changed('quantity_type')
+        self.__quantity_type = value        
+
+    @property
+    def quantity(self) -> float:
+        """The quantity of backtest strategy"""
+        return self.__quantity
+
+    @quantity.setter
+    def quantity(self, value: float):
+        self._property_changed('quantity')
+        self.__quantity = value        
+
+    @property
+    def trade_in_method(self) -> str:
+        """Roll method for the backtest strategy"""
+        return self.__trade_in_method
+
+    @trade_in_method.setter
+    def trade_in_method(self, value: str):
+        self._property_changed('trade_in_method')
+        self.__trade_in_method = value        
+
+    @property
+    def roll_frequency(self) -> str:
+        """Period the strategy rolls"""
+        return self.__roll_frequency
+
+    @roll_frequency.setter
+    def roll_frequency(self, value: str):
+        self._property_changed('roll_frequency')
+        self.__roll_frequency = value        
+
+    @property
+    def scaling_method(self) -> str:
+        """The method for scaling underliers, i.e fixedQuantity"""
+        return self.__scaling_method
+
+    @scaling_method.setter
+    def scaling_method(self, value: str):
+        self._property_changed('scaling_method')
+        self.__scaling_method = value        
+
+    @property
+    def trade_in_signals(self) -> Tuple[BacktestSignalSeriesItem, ...]:
+        """Set of dates to define if trade in signal is enabled/disabled"""
+        return self.__trade_in_signals
+
+    @trade_in_signals.setter
+    def trade_in_signals(self, value: Tuple[BacktestSignalSeriesItem, ...]):
+        self._property_changed('trade_in_signals')
+        self.__trade_in_signals = value        
+
+    @property
+    def trade_out_signals(self) -> Tuple[BacktestSignalSeriesItem, ...]:
+        """Set of dates to define if trade out signal is enabled/disabled"""
+        return self.__trade_out_signals
+
+    @trade_out_signals.setter
+    def trade_out_signals(self, value: Tuple[BacktestSignalSeriesItem, ...]):
+        self._property_changed('trade_out_signals')
+        self.__trade_out_signals = value        
 
 
 class BasketBacktestParameters(Base):

@@ -12,14 +12,18 @@ Algebra
 
    abs_
    add
+   and_
    ceil
    divide
    exp
    filter_
    floor
    floordiv
+   if_
    log
    multiply
+   not_
+   or_
    power
    repeat
    sqrt
@@ -42,7 +46,7 @@ Analysis
 
 
 Backtesting
---------
+-----------
 
 .. currentmodule:: gs_quant.timeseries.backtesting
 
@@ -53,7 +57,7 @@ Backtesting
 
 
 Date / Time
-------------
+-----------
 
 
 .. currentmodule:: gs_quant.timeseries.datetime
@@ -69,6 +73,7 @@ Date / Time
    month
    year
    quarter
+   date_range
 
 
 Econometrics
@@ -107,6 +112,7 @@ Statistics
    median   
    min_
    mode
+   percentile
    percentiles
    product
    range_
@@ -116,6 +122,11 @@ Statistics
    winsorize
    zscores
 
+.. autosummary::
+   :toctree: classes
+
+   SIRModel
+   SEIRModel
 
 Technical Analysis
 ------------------
@@ -128,4 +139,5 @@ Technical Analysis
 
    bollinger_bands
    moving_average
+   exponential_moving_average
    

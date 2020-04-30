@@ -1,4 +1,4 @@
-gs\_quant.markets.PricingContext
+PricingContext
 ================================
 
 .. currentmodule:: gs_quant.markets
@@ -15,7 +15,7 @@ gs\_quant.markets.PricingContext
    
       ~PricingContext.__init__
       ~PricingContext.calc
-      ~PricingContext.has_default
+      ~PricingContext.default_value
       ~PricingContext.resolve_fields
    
    

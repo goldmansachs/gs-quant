@@ -212,6 +212,30 @@ class ChartShare(Base):
         self.__version = value        
 
 
+class XAxisSettings(Base):
+        
+    """An object which contains all the settings for the X axis"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        x_axis_date_format: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.x_axis_date_format = x_axis_date_format
+        self.name = name
+
+    @property
+    def x_axis_date_format(self) -> str:
+        return self.__x_axis_date_format
+
+    @x_axis_date_format.setter
+    def x_axis_date_format(self, value: str):
+        self._property_changed('x_axis_date_format')
+        self.__x_axis_date_format = value        
+
+
 class ChartExpression(Base):
         
     """An object which represent the single chart expression row"""
@@ -546,7 +570,8 @@ class Chart(Base):
         show_statistics: bool = None,
         copy_from_id: str = None,
         version: int = None,
-        draft_view_id: str = None
+        draft_view_id: str = None,
+        x_axis_settings: XAxisSettings = None
     ):        
         super().__init__()
         self.__id = id_
@@ -575,6 +600,7 @@ class Chart(Base):
         self.copy_from_id = copy_from_id
         self.version = version
         self.draft_view_id = draft_view_id
+        self.x_axis_settings = x_axis_settings
 
     @property
     def id(self) -> str:
@@ -829,3 +855,13 @@ class Chart(Base):
     def draft_view_id(self, value: str):
         self._property_changed('draft_view_id')
         self.__draft_view_id = value        
+
+    @property
+    def x_axis_settings(self) -> XAxisSettings:
+        """Settings for the X axis"""
+        return self.__x_axis_settings
+
+    @x_axis_settings.setter
+    def x_axis_settings(self, value: XAxisSettings):
+        self._property_changed('x_axis_settings')
+        self.__x_axis_settings = value        
