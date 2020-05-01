@@ -441,7 +441,7 @@ class PricingContext(ContextBaseWithDefault):
                 measure_future = self.__active_context.__futures.get((scenario, measure), {}).get(position)
 
                 if measure_future is None:
-                    measure_future = PricingFuture(self)
+                    measure_future = PricingFuture(self.__active_context)
                     if self.__use_cache:
                         cached_result = PricingCache.get(priceable, risk_measure)
                         if cached_result:
@@ -455,8 +455,8 @@ class PricingContext(ContextBaseWithDefault):
 
                 futures[measure] = measure_future
 
-        future = MultipleRiskMeasureFuture(futures, result_future=PricingFuture(self)) if multiple_measures else\
-            futures[risk_measure]
+        future = MultipleRiskMeasureFuture(futures, result_future=PricingFuture(self.__active_context))\
+            if multiple_measures else futures[risk_measure]
 
         if not (self.is_entered or self.__is_async):
             if not future.done():
