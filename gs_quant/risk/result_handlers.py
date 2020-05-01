@@ -34,7 +34,7 @@ def __dataframe_handler(field: str, mappings: tuple, result: List, pricing_key: 
 
 
 def __double_handler(field: str, result: List, pricing_key: PricingKey) -> Union[FloatWithInfo, SeriesWithInfo]:
-    components = [FloatWithInfo(k, r.get(field), r.get('unit')) for k, r in zip(pricing_key, result)]
+    components = [FloatWithInfo(k, r.get(field, float('nan')), r.get('unit')) for k, r in zip(pricing_key, result)]
     return FloatWithInfo.compose(components, pricing_key) if len(pricing_key) > 1 else components[0]
 
 
@@ -111,13 +111,21 @@ def risk_handler(result: List, pricing_key: PricingKey, _instrument: InstrumentB
 
 def risk_by_class_handler(result: List, pricing_key: PricingKey, _instrument: InstrumentBase)\
         -> Union[FloatWithInfo, SeriesWithInfo]:
+    sum_result = []
+    for date_result in result:
+        if date_result['$type'] == 'Error':
+            return error_handler(date_result)
+        sum_result.append({'unit': date_result.get('unit'), 'val': sum(date_result['values'])})
 
-    sum_result = [{'unit': r.get('unit'), 'val': sum(r['values'])} for r in result]
     return __double_handler('val', sum_result, pricing_key)
 
 
-def risk_vector_handler(result: List, pricing_key: PricingKey, _instrument: InstrumentBase) -> DataFrameWithInfo:
+def risk_vector_handler(result: List, pricing_key: PricingKey, _instrument: InstrumentBase)\
+        -> Union[DataFrameWithInfo, StringWithInfo]:
     for date_result in result:
+        if date_result['$type'] == 'Error':
+            return error_handler(date_result)
+
         for points, value in zip(date_result['points'], date_result['asset']):
             points.update({'value': value})
 

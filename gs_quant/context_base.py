@@ -106,7 +106,7 @@ class ContextBase(metaclass=ContextMeta):
     @property
     @do_not_serialise
     def __entered_key(self) -> str:
-        return '{}_entered'.format(self._cls.__name__)
+        return '{}_entered'.format(id(self))
 
     @property
     @do_not_serialise
