@@ -1411,6 +1411,7 @@ class MonitorParameters(Base):
         line_chart_color: str = None,
         chart_curve_type: str = None,
         ignore_business_day_logic: bool = None,
+        disable_row_click: bool = None,
         name: str = None
     ):        
         super().__init__()
@@ -1432,6 +1433,7 @@ class MonitorParameters(Base):
         self.line_chart_color = line_chart_color
         self.chart_curve_type = chart_curve_type
         self.ignore_business_day_logic = ignore_business_day_logic
+        self.disable_row_click = disable_row_click
         self.name = name
 
     @property
@@ -1622,6 +1624,16 @@ class MonitorParameters(Base):
     def ignore_business_day_logic(self, value: bool):
         self._property_changed('ignore_business_day_logic')
         self.__ignore_business_day_logic = value        
+
+    @property
+    def disable_row_click(self) -> bool:
+        """Whether or not allow clicking on a row through to the product page."""
+        return self.__disable_row_click
+
+    @disable_row_click.setter
+    def disable_row_click(self, value: bool):
+        self._property_changed('disable_row_click')
+        self.__disable_row_click = value        
 
 
 class Monitor(Base):

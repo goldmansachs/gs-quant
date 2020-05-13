@@ -57,6 +57,11 @@ def test_min():
     expected = pd.Series([3.0, 2.0, 2.0, 1.0, 1.0, 1.0], index=dates)
     assert_series_equal(result, expected, obj="Minimum with window 1w")
 
+    y = pd.Series([4.0, np.nan, 4.0, 2.0, 2.0, 5.0], index=dates)
+    result = min_([x, y], Window(2, 0))
+    expected = pd.Series([3.0, 2.0, 2.0, 1.0, 1.0, 2.0], index=dates)
+    assert_series_equal(result, expected, obj="Minimum of multiple series")
+
 
 def test_max():
     dates = [
@@ -85,6 +90,11 @@ def test_max():
     result = max_(x, Window('2d', 0))
     expected = pd.Series([3.0, 3.0, 3.0, 3.0, 3.0, 6.0], index=dates)
     assert_series_equal(result, expected, obj="Maximum window 1w")
+
+    y = pd.Series([4.0, np.nan, 4.0, 2.0, 2.0, 5.0], index=dates)
+    result = max_([x, y], Window(2, 0))
+    expected = pd.Series([4.0, 4.0, 4.0, 4.0, 3.0, 6.0], index=dates)
+    assert_series_equal(result, expected, obj="Maximum of multiple series")
 
 
 def test_range():
@@ -143,6 +153,11 @@ def test_mean():
     result = mean(x, Window('1w', 0))
     expected = pd.Series([3.0, 2.5, 8 / 3, 2.25, 2.4, 3.0], index=dates)
     assert_series_equal(result, expected, obj="Mean window 1w")
+
+    y = pd.Series([4.0, np.nan, 4.0, 2.0, 2.0, 5.0], index=dates)
+    result = mean([x, y], Window(2, 0))
+    expected = pd.Series([3.5, 3.0, 3.0, 2.5, 2.0, 4.0], index=dates)
+    assert_series_equal(result, expected, obj="Mean of multiple series")
 
 
 def test_median():
@@ -226,6 +241,11 @@ def test_sum():
     result = sum_(x, Window('1w', 0))
     expected = pd.Series([1.0, 3.0, 6.0, 10.0, 15.0, 20.0], index=dates)
     assert_series_equal(result, expected, obj="Sum window 1w")
+
+    y = pd.Series([4.0, np.nan, 4.0, 2.0, 2.0, 5.0], index=dates)
+    result = sum_([x, y], Window(2, 0))
+    expected = pd.Series([5.0, 7.0, 9.0, 13.0, 13.0, 18.0], index=dates)
+    assert_series_equal(result, expected, obj="Sum of multiple series")
 
 
 def test_product():

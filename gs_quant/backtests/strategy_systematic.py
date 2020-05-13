@@ -48,7 +48,9 @@ class StrategySystematic:
                  delta_hedge: DeltaHedgeParameters = None,
                  name: str = None,
                  cost_netting: bool = False,
-                 currency: Union[Currency, str] = Currency.USD):
+                 currency: Union[Currency, str] = Currency.USD,
+                 trade_in_signals: Tuple[BacktestSignalSeriesItem, ...] = None,
+                 trade_out_signals: Tuple[BacktestSignalSeriesItem, ...] = None):
         self.__cost_netting = cost_netting
         self.__currency = get_enum_value(Currency, currency)
         self.__name = name
@@ -60,7 +62,9 @@ class StrategySystematic:
             quantity=quantity,
             quantity_type=get_enum_value(QuantityType, quantity_type).value,
             trade_in_method=trade_in_method,
-            roll_frequency=roll_frequency)
+            roll_frequency=roll_frequency,
+            trade_in_signals=trade_in_signals,
+            trade_out_signals=trade_out_signals)
 
         self.__underliers = []
 

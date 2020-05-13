@@ -41,12 +41,14 @@ def test_cache_addition_removal():
     with mock.patch('gs_quant.api.gs.risk.GsRiskApi._exec') as mocker:
         mocker.return_value = [[[[{'$type': 'Risk', 'val': 0.07}]]]]
 
-        with PricingContext(use_cache=True):
+        with PricingContext(use_cache=True) as pc:
             p1.price()
+            price_key = pc._PricingContext__risk_key(risk.Price, p1.provider())
+            delta_key = pc._PricingContext__risk_key(risk.IRDelta, p1.provider())
 
-        assert PricingCache.get(p1, risk.Price)
+        assert PricingCache.get(price_key, p1)
 
-    assert not PricingCache.get(p1, risk.IRDelta)
+    assert not PricingCache.get(delta_key, p1)
 
     # Assert that deleting the cached instrument removes it from the PricingCache
     # N.B, this may not work when debugging tests
@@ -57,7 +59,8 @@ def test_cache_addition_removal():
     gc.collect()
 
     p2 = IRSwap('Pay', '10y', 'DKK')
-    assert not PricingCache.get(p2, risk.Price)
+    p2_price_key = PricingContext.current._PricingContext__risk_key(risk.Price, p2.provider())
+    # assert not PricingCache.get(p2_price_key)
 
     with mock.patch('gs_quant.api.gs.risk.GsRiskApi._exec') as mocker:
         mocker.return_value = [[[[{'$type': 'Risk', 'val': 0.07}]]]]
@@ -65,7 +68,7 @@ def test_cache_addition_removal():
         with PricingContext(use_cache=True):
             p2_price = p2.price()
 
-    assert PricingCache.get(p2, risk.Price) == p2_price.result()
+    assert PricingCache.get(p2_price_key, p2) == p2_price.result()
 
     # Assert that running under a scenario does not retrieve the base result
     with mock.patch('gs_quant.api.gs.risk.GsRiskApi._exec') as mocker:
@@ -73,42 +76,42 @@ def test_cache_addition_removal():
 
         with risk.CarryScenario(time_shift=30), PricingContext(use_cache=True) as spc:
             # Don't want the price without the scenario
-            assert not PricingCache.get(p2, risk.Price)
+            scenario_risk_key = spc._PricingContext__risk_key(risk.Price, p2.provider())
+            assert not PricingCache.get(scenario_risk_key, p2)
             scenario_price = p2.price()
-            scenario_pricing_key = spc.pricing_key
 
-        assert PricingCache.get(p2, risk.Price, scenario_pricing_key) == scenario_price.result()
+        assert PricingCache.get(scenario_risk_key, p2) == scenario_price.result()
 
-        with PricingContext(use_cache=True), risk.CarryScenario(time_shift=30):
-            cached_scenario_price = PricingCache.get(p2, risk.Price)
+        with PricingContext(use_cache=True) as pc, risk.CarryScenario(time_shift=30):
+            cached_scenario_price = PricingCache.get(pc._PricingContext__risk_key(risk.Price, p2.provider()), p2)
 
     # Check that we get the cached scenario price
     assert cached_scenario_price == scenario_price.result()
 
     # Check the base result is still correct
-    assert PricingCache.get(p2, risk.Price) == p2_price.result()
+    assert PricingCache.get(p2_price_key, p2) == p2_price.result()
 
     # Assert that caching respects parameters, such as csa
     with mock.patch('gs_quant.api.gs.risk.GsRiskApi._exec') as mocker:
         mocker.return_value = [[[[{'$type': 'Risk', 'val': 0.08}]]]]
 
-        with PricingContext(use_cache=True, csa_term='INVALID'):
+        with PricingContext(use_cache=True, csa_term='INVALID') as pc:
             # Don't want the price with default csa
-            assert not PricingCache.get(p2, risk.Price)
+            assert not PricingCache.get(pc._PricingContext__risk_key(risk.Price, p2.provider()), p2)
             csa_price = p2.price()
 
-        with PricingContext(use_cache=True, csa_term='INVALID'):
-            cached_csa_price = PricingCache.get(p2, risk.Price)
+        with PricingContext(use_cache=True, csa_term='INVALID') as pc:
+            cached_csa_price = PricingCache.get(pc._PricingContext__risk_key(risk.Price, p2.provider()), p2)
 
     # Check that we get the cached csa price
     assert cached_csa_price == csa_price.result()
 
     # Check the base result is still correct
-    assert PricingCache.get(p2, risk.Price) == p2_price.result()
+    assert PricingCache.get(p2_price_key, p2) == p2_price.result()
 
     # Change a property and assert that p2 is no longer cached
     p2.notional_currency = 'EUR'
-    assert not PricingCache.get(p2, risk.Price)
+    assert not PricingCache.get(p2_price_key, p2)
 
 
 @mock.patch.object(GsRiskApi, '_exec')
@@ -124,24 +127,20 @@ def test_cache_subset(mocker):
     mocker.return_value = [[[values]]]
 
     dates = (dt.date(2019, 10, 7), dt.date(2019, 10, 8))
-    with HistoricalPricingContext(dates=dates, use_cache=True) as hpc:
-        pricing_key = hpc.pricing_key
+    with HistoricalPricingContext(dates=dates, use_cache=True):
         price_f = ir_swap.price()
     price_f.result()
 
-    cached = PricingCache.get(ir_swap, risk.Price, pricing_key)
-    assert len(cached) == len(dates)
+    for date in dates:
+        risk_key = PricingContext(pricing_date=date)._PricingContext__risk_key(risk.Price, ir_swap.provider())
+        cached_scalar = PricingCache.get(risk_key, ir_swap)
+        assert cached_scalar
+        assert isinstance(cached_scalar, float)
 
-    cached_scalar = PricingCache.get(ir_swap, risk.Price, PricingContext(pricing_date=dates[0]).pricing_key)
-    assert isinstance(cached_scalar, float)
-
-    dates = dates + (dt.date(2019, 10, 9),)
-    pricing_key = HistoricalPricingContext(dates=dates).pricing_key
-    cached2 = PricingCache.get(ir_swap, risk.Price, pricing_key)
+    risk_key = PricingContext(pricing_date=dt.date(2019, 10, 9))._PricingContext__risk_key(risk.Price,
+                                                                                           ir_swap.provider())
+    cached2 = PricingCache.get(risk_key, ir_swap)
     assert cached2 is None
-
-    cached3 = PricingCache.get(ir_swap, risk.Price, pricing_key, return_partial=True)
-    assert len(cached3) < len(dates)
 
     values = [
         {
@@ -169,21 +168,19 @@ def test_cache_subset(mocker):
             ]
         }
     ]
-    mocker.return_value = [[[values]]]
 
-    with HistoricalPricingContext(dates=dates, use_cache=True) as hpc:
-        pricing_key = hpc.pricing_key
-        risk_f = ir_swap.calc(risk.IRDelta)
+    # Check that we can return the same values from the cache, after calculating once (with return values set to None)
 
-    risk_frame = risk_f.result()
+    for return_values in ([[[values]]], None):
+        mocker.return_value = return_values
 
-    assert isinstance(risk_frame, pd.DataFrame)
-    assert len(risk_frame.index.unique()) == len(dates)
-    cached4 = PricingCache.get(ir_swap, risk.IRDelta, pricing_key)
-    assert len(cached4.index.unique()) == len(dates)
+        with HistoricalPricingContext(dates=dates, use_cache=True):
+            risk_f = ir_swap.calc(risk.IRDelta)
 
-    cached5 = PricingCache.get(ir_swap, risk.IRDelta, PricingContext(pricing_date=dates[0]).pricing_key)
-    assert len(cached5.index.unique()) == len(cached5)
+        risk_frame = risk_f.result()
+
+        assert isinstance(risk_frame, pd.DataFrame)
+        assert len(risk_frame.index.unique()) == len(dates)
 
 
 @mock.patch.object(GsRiskApi, '_exec')
@@ -260,32 +257,19 @@ def test_multiple_measures(mocker):
     ir_swaption = IRSwaption('Pay', '10y', 'USD')
 
     dates = (dt.date(2019, 10, 7), dt.date(2019, 10, 8), dt.date(2019, 10, 9))
-    with HistoricalPricingContext(dates=dates, use_cache=True) as hpc:
-        pricing_key = hpc.pricing_key
+    with HistoricalPricingContext(dates=dates, use_cache=True):
         ir_swaption.price()
         ir_swaption.calc(risk.IRDelta)
         ir_swaption.calc(risk.IRVega)
 
     # make sure all the risk measures got cached correctly
-    cached = PricingCache.get(ir_swaption, risk.Price, pricing_key)
-    assert len(cached) == len(dates)
+    for date in dates:
+        with PricingContext(pricing_date=date) as pc:
+            for risk_measure in (risk.Price, risk.IRDelta, risk.IRVega):
+                val = PricingCache.get(pc._PricingContext__risk_key(risk_measure, ir_swaption.provider()), ir_swaption)
+                assert val is not None
 
-    cached1 = PricingCache.get(ir_swaption, risk.IRDelta, pricing_key)
-    assert len(cached1.index.unique()) == len(dates)
-
-    cached2 = PricingCache.get(ir_swaption, risk.IRVega, pricing_key)
-    assert len(cached2.index.unique()) == len(dates)
-
-    # date not in cache
-    cached3 = PricingCache.get(ir_swaption, risk.IRVega, PricingContext(pricing_date=dt.date(2019, 10, 11)).pricing_key)
-    assert cached3 is None
-
-    # subset from cache
-    subset_key = HistoricalPricingContext(dates=dates[0:2]).pricing_key
-    cached4 = PricingCache.get(ir_swaption, risk.Price, subset_key)
-    assert len(cached4) == 2
-
-    # intersection
-    subset_key = HistoricalPricingContext(dates=dates[0:2] + (dt.date(2019, 10, 2),)).pricing_key
-    cached5 = PricingCache.get(ir_swaption, risk.Price, subset_key, return_partial=True)
-    assert len(cached5) == 2
+    with PricingContext(pricing_date=dt.date(2019, 10, 11)) as pc:
+        for risk_measure in (risk.Price, risk.IRDelta, risk.IRVega):
+            val = PricingCache.get(pc._PricingContext__risk_key(risk_measure, ir_swaption.provider()), ir_swaption)
+            assert val is None

@@ -78,6 +78,15 @@ class AssetType(Enum):
     #: Cash
     CASH = "Cash"
 
+    #: Weather Index
+    WEATHER_INDEX = "Weather Index"
+
+    #: Swap
+    SWAP = "Swap"
+
+    #: Option
+    OPTION = "Option"
+
 
 class AssetIdentifier(Enum):
     """Asset type enumeration
@@ -302,6 +311,55 @@ class Cash(Asset):
         return AssetType.CASH
 
 
+class WeatherIndex(Asset):
+    """Weather Index Type
+
+    Represents an underlying index on a weather derivative, including where the data (e.g. CPD) has been collected,
+    an actual physical reference point (weather station) and various fall back arrangements.
+
+    """
+
+    def __init__(self, id_: str, name: str):
+        Asset.__init__(self, id_, AssetClass.Commod, name)
+
+    def get_type(self) -> AssetType:
+        return AssetType.WEATHER_INDEX
+
+
+class Swap(Asset):
+    """Swap Instrument Type
+
+    Represents a Swap Instrument
+
+    """
+
+    def __init__(self, id_: str, asset_class: Union[AssetClass, str], name: str):
+        if isinstance(asset_class, str):
+            asset_class = get_enum_value(AssetClass, asset_class)
+
+        Asset.__init__(self, id_, asset_class, name)
+
+    def get_type(self) -> AssetType:
+        return AssetType.SWAP
+
+
+class Option(Asset):
+    """Option Instrument Type
+
+    Represents an Option Instrument
+
+    """
+
+    def __init__(self, id_: str, asset_class: Union[AssetClass, str], name: str):
+        if isinstance(asset_class, str):
+            asset_class = get_enum_value(AssetClass, asset_class)
+
+        Asset.__init__(self, id_, asset_class, name)
+
+    def get_type(self) -> AssetType:
+        return AssetType.OPTION
+
+
 class IndexConstituentProvider(metaclass=ABCMeta):
     def __init__(self, id_: str):
         self.__id = id_
@@ -446,6 +504,15 @@ class SecurityMaster:
 
         if asset_type in (GsAssetType.Cash.value,):
             return Cash(gs_asset.id, gs_asset.name)
+
+        if asset_type in (GsAssetType.WeatherIndex.value,):
+            return WeatherIndex(gs_asset.id, gs_asset.name)
+
+        if asset_type in (GsAssetType.Swap.value,):
+            return Swap(gs_asset.id, gs_asset.assetClass, gs_asset.name)
+
+        if asset_type in (GsAssetType.Option.value,):
+            return Option(gs_asset.id, gs_asset.assetClass, gs_asset.name)
 
         raise TypeError(f'unsupported asset type {asset_type}')
 

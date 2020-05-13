@@ -13,7 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from gs_quant.base import Priceable, PricingKey
+from gs_quant.base import Priceable, RiskKey
 from gs_quant.markets import PricingCache, PricingContext
 from gs_quant.risk import DataFrameWithInfo, DollarPrice, ErrorValue, FloatWithInfo, Price, RiskMeasure, SeriesWithInfo
 from gs_quant.risk.results import MultipleRiskMeasureFuture
@@ -35,7 +35,7 @@ class PriceableImpl(Priceable, metaclass=ABCMeta):
 
     def __init__(self):
         super().__init__()
-        self.resolution_key: Optional[PricingKey] = None
+        self.resolution_key: Optional[RiskKey] = None
         self.unresolved: Optional[Priceable] = None
 
     def __getattribute__(self, name):
@@ -54,9 +54,10 @@ class PriceableImpl(Priceable, metaclass=ABCMeta):
                 resolved_inst = self.resolve(in_place=False)
                 if isinstance(resolved_inst, Future):
                     ret = Future()
-                    resolved_inst.add_done_callback(lambda inst_f: ret.set_result(getattr(inst_f.result(), name, None)))
+                    resolved_inst.add_done_callback(lambda inst_f: ret.set_result(
+                        object.__getattribute__(inst_f.result(), name)))
                 else:
-                    ret = getattr(resolved_inst, name, None)
+                    ret = object.__getattribute__(resolved_inst, name)
 
         return ret
 
@@ -67,9 +68,9 @@ class PriceableImpl(Priceable, metaclass=ABCMeta):
         super()._property_changed(prop)
 
         if self.resolution_key and self.unresolved:
-            self.resolution_key = None
-            self.from_instance(self.unresolved)
             self.unresolved = None
+            self.from_instance(self.unresolved)
+            self.resolution_key = None
 
     def get_quantity(self) -> float:
         """

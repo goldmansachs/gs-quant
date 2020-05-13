@@ -23,7 +23,6 @@ Portfolio
       ~Portfolio.from_book
       ~Portfolio.from_dict
       ~Portfolio.from_eti
-      ~Portfolio.from_instance
       ~Portfolio.from_portfolio_id
       ~Portfolio.from_portfolio_name
       ~Portfolio.get_quantity

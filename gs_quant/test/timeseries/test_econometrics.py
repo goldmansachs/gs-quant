@@ -422,9 +422,9 @@ def test_excess_returns():
     market_data.return_value = data
 
     with pytest.raises(Exception):
-        excess_returns(df['SPX'], Currency.AED)
+        excess_returns(df['SPX'], CurrencyEnum.AED)
 
-    actual = excess_returns(df['SPX'], Currency.USD)
+    actual = excess_returns(df['SPX'], CurrencyEnum.USD)
     expected = df['MIDASER']
     assert_series_equal(actual, expected, check_names=False)
 

@@ -125,7 +125,7 @@ class GsRiskApi(RiskApi):
                         result_id = result_parts[0]
                         raw_result = ';'.join(result_parts[1:])
                         result_str = raw_result[1:]
-                        is_error = not raw_result.startswith(r'R[')
+                        is_error = raw_result.startswith('E')
 
                         try:
                             result = RuntimeError(result_str) if is_error else\

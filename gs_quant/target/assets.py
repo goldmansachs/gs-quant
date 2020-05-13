@@ -1097,6 +1097,163 @@ class TemporalXRef(Base):
         self.__identifiers = value        
 
 
+class WeatherIndexParameters(Base):
+        
+    """parameters specific to weather index data underlier"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        data_provider: str = None,
+        weather_station: str = None,
+        reference_level_amount: float = None,
+        reference_level_unit: str = None,
+        weather_station_fallback: str = None,
+        weather_station_second_fallback: str = None,
+        alternative_data_provider: str = None,
+        synoptic_data_fallback: str = None,
+        adjustment_to_fallback_weather_station: str = None,
+        primary_disruption_fallbacks: str = None,
+        secondary_disruption_fallbacks: str = None,
+        final_edited_data: bool = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.data_provider = data_provider
+        self.weather_station = weather_station
+        self.reference_level_amount = reference_level_amount
+        self.reference_level_unit = reference_level_unit
+        self.weather_station_fallback = weather_station_fallback
+        self.weather_station_second_fallback = weather_station_second_fallback
+        self.alternative_data_provider = alternative_data_provider
+        self.synoptic_data_fallback = synoptic_data_fallback
+        self.adjustment_to_fallback_weather_station = adjustment_to_fallback_weather_station
+        self.primary_disruption_fallbacks = primary_disruption_fallbacks
+        self.secondary_disruption_fallbacks = secondary_disruption_fallbacks
+        self.final_edited_data = final_edited_data
+        self.name = name
+
+    @property
+    def data_provider(self) -> str:
+        """Weather index data provider"""
+        return self.__data_provider
+
+    @data_provider.setter
+    def data_provider(self, value: str):
+        self._property_changed('data_provider')
+        self.__data_provider = value        
+
+    @property
+    def weather_station(self) -> str:
+        """Weather index data source"""
+        return self.__weather_station
+
+    @weather_station.setter
+    def weather_station(self, value: str):
+        self._property_changed('weather_station')
+        self.__weather_station = value        
+
+    @property
+    def reference_level_amount(self) -> float:
+        """Number on which degree days or CPD differential is calculated"""
+        return self.__reference_level_amount
+
+    @reference_level_amount.setter
+    def reference_level_amount(self, value: float):
+        self._property_changed('reference_level_amount')
+        self.__reference_level_amount = value        
+
+    @property
+    def reference_level_unit(self) -> str:
+        """Unit of reference level"""
+        return self.__reference_level_unit
+
+    @reference_level_unit.setter
+    def reference_level_unit(self, value: str):
+        self._property_changed('reference_level_unit')
+        self.__reference_level_unit = value        
+
+    @property
+    def weather_station_fallback(self) -> str:
+        """First alternative Weather Index Station"""
+        return self.__weather_station_fallback
+
+    @weather_station_fallback.setter
+    def weather_station_fallback(self, value: str):
+        self._property_changed('weather_station_fallback')
+        self.__weather_station_fallback = value        
+
+    @property
+    def weather_station_second_fallback(self) -> str:
+        """Second alternative Weather Index Station"""
+        return self.__weather_station_second_fallback
+
+    @weather_station_second_fallback.setter
+    def weather_station_second_fallback(self, value: str):
+        self._property_changed('weather_station_second_fallback')
+        self.__weather_station_second_fallback = value        
+
+    @property
+    def alternative_data_provider(self) -> str:
+        """Alternative weather Data Provider"""
+        return self.__alternative_data_provider
+
+    @alternative_data_provider.setter
+    def alternative_data_provider(self, value: str):
+        self._property_changed('alternative_data_provider')
+        self.__alternative_data_provider = value        
+
+    @property
+    def synoptic_data_fallback(self) -> str:
+        """Alternative weather synoptic data location"""
+        return self.__synoptic_data_fallback
+
+    @synoptic_data_fallback.setter
+    def synoptic_data_fallback(self, value: str):
+        self._property_changed('synoptic_data_fallback')
+        self.__synoptic_data_fallback = value        
+
+    @property
+    def adjustment_to_fallback_weather_station(self) -> str:
+        """Weather station applicable to Adjustment Fallback Station Data terms"""
+        return self.__adjustment_to_fallback_weather_station
+
+    @adjustment_to_fallback_weather_station.setter
+    def adjustment_to_fallback_weather_station(self, value: str):
+        self._property_changed('adjustment_to_fallback_weather_station')
+        self.__adjustment_to_fallback_weather_station = value        
+
+    @property
+    def primary_disruption_fallbacks(self) -> str:
+        """Actions available following a weather Primary Disruption Event"""
+        return self.__primary_disruption_fallbacks
+
+    @primary_disruption_fallbacks.setter
+    def primary_disruption_fallbacks(self, value: str):
+        self._property_changed('primary_disruption_fallbacks')
+        self.__primary_disruption_fallbacks = value        
+
+    @property
+    def secondary_disruption_fallbacks(self) -> str:
+        """Actions available following a weather Secondary Disruption Event"""
+        return self.__secondary_disruption_fallbacks
+
+    @secondary_disruption_fallbacks.setter
+    def secondary_disruption_fallbacks(self, value: str):
+        self._property_changed('secondary_disruption_fallbacks')
+        self.__secondary_disruption_fallbacks = value        
+
+    @property
+    def final_edited_data(self) -> bool:
+        """Invoke Primary Disruption Fallbacks if weather data is not in final edited form"""
+        return self.__final_edited_data
+
+    @final_edited_data.setter
+    def final_edited_data(self, value: bool):
+        self._property_changed('final_edited_data')
+        self.__final_edited_data = value        
+
+
 class AssetParameters(Base):
         
     """Parameters specific to the asset type"""

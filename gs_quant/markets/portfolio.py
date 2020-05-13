@@ -153,16 +153,19 @@ class Portfolio(PriceableImpl):
         return instrument
 
     def to_frame(self) -> pd.DataFrame:
-        inst_list = pd.DataFrame()
-        for inst in self.instruments:
-            if isinstance(inst, Portfolio):
-                r = inst.to_frame()
-            else:
-                r = pd.DataFrame([dict(chain(inst.as_dict().items(),
-                                             (('instrument', inst), ('portfolio', self.name))))]).\
-                    set_index(['portfolio', 'instrument'])
-            inst_list = pd.concat([inst_list, r])
-        return inst_list
+        def to_records(portfolio: Portfolio) -> list:
+            records = []
+
+            for inst in portfolio.instruments:
+                if isinstance(inst, Portfolio):
+                    records.extend(to_records(inst))
+                else:
+                    records.append(dict(chain(inst.as_dict().items(),
+                                              (('instrument', inst), ('portfolio', self.name)))))
+
+            return records
+
+        return pd.DataFrame.from_records(to_records(self)).set_index(['portfolio', 'instrument'])
 
     def index(self, key: Union[str, Instrument]) -> Union[int, Tuple[int, ...]]:
         if isinstance(key, str):

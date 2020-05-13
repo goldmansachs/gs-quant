@@ -15,37 +15,21 @@ under the License.
 """
 import datetime as dt
 import pandas as pd
-from typing import List, Mapping, Union
 
-from .core import DataFrameWithInfo, FloatWithInfo, SeriesWithInfo, StringWithInfo, sort_risk
-from gs_quant.base import InstrumentBase, PricingKey
-
-
-def __dataframe_handler(field: str, mappings: tuple, result: List, pricing_key: PricingKey) -> DataFrameWithInfo:
-    components = []
-
-    for date_key, date_result in zip(pricing_key, result):
-        records = [{k: datum[v] for k, v in mappings} for datum in date_result[field]]
-        df = pd.DataFrame.from_records(records)
-        df = sort_risk(df, tuple(k for k, _ in mappings))
-        components.append(DataFrameWithInfo(date_key, df, unit=date_result.get('unit')))
-
-    return DataFrameWithInfo.compose(components, pricing_key) if len(pricing_key) > 1 else components[0]
+from .core import DataFrameWithInfo, ErrorValue, FloatWithInfo, StringWithInfo, sort_risk
+from gs_quant.base import InstrumentBase, RiskKey
 
 
-def __double_handler(field: str, result: List, pricing_key: PricingKey) -> Union[FloatWithInfo, SeriesWithInfo]:
-    components = [FloatWithInfo(k, r.get(field, float('nan')), r.get('unit')) for k, r in zip(pricing_key, result)]
-    return FloatWithInfo.compose(components, pricing_key) if len(pricing_key) > 1 else components[0]
+def __dataframe_handler(field: str, mappings: tuple, result: dict, risk_key: RiskKey) -> DataFrameWithInfo:
+    records = [{k: datum[v] for k, v in mappings} for datum in result[field]]
+    df = pd.DataFrame.from_records(records)
+    return DataFrameWithInfo(risk_key, sort_risk(df, tuple(k for k, _ in mappings)))
 
 
-def __string_handler(field: str, result: List, pricing_key: PricingKey) -> Union[StringWithInfo, SeriesWithInfo]:
-    components = [StringWithInfo(k, r.get(field)) for k, r in zip(pricing_key, result)]
-    return StringWithInfo.compose(components, pricing_key) if len(pricing_key) > 1 else components[0]
-
-
-def cashflows_handler(result: List, pricing_key: PricingKey, _instrument: InstrumentBase) -> DataFrameWithInfo:
+def cashflows_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase) -> DataFrameWithInfo:
     mappings = (
         ('payment_date', 'payDate'),
+        ('set_date', 'setDate'),
         ('accrual_start_date', 'accStart'),
         ('accrual_end_date', 'accEnd'),
         ('payment_amount', 'payAmount'),
@@ -59,75 +43,51 @@ def cashflows_handler(result: List, pricing_key: PricingKey, _instrument: Instru
         ('discount_factor', 'discountFactor')
     )
 
-    for r in result:
-        for cashflow in r['cashflows']:
-            for field in ('payDate', 'setDate', 'accStart', 'accEnd'):
-                value = cashflow.get(field)
-                date = dt.date.fromisoformat(value) if value else dt.date.max
-                cashflow[field] = date
+    for cashflow in result['cashflows']:
+        for field in ('payDate', 'setDate', 'accStart', 'accEnd'):
+            value = cashflow.get(field)
+            date = dt.date.fromisoformat(value) if value else dt.date.max
+            cashflow[field] = date
 
-    return __dataframe_handler('cashflows', mappings, result, pricing_key)
-
-
-def error_handler(result: List, pricing_key: PricingKey, _instrument: InstrumentBase)\
-        -> Union[StringWithInfo, SeriesWithInfo]:
-    components = [StringWithInfo(k, r.get('errorString')) for k, r in zip(pricing_key, result)]
-    return StringWithInfo.compose(components, pricing_key) if len(pricing_key) > 1 else components[0]
+    return __dataframe_handler('cashflows', mappings, result, risk_key)
 
 
-def leg_definition_handler(result: List, pricing_key: PricingKey, instrument: InstrumentBase)\
-        -> Union[InstrumentBase, Mapping[dt.date, InstrumentBase]]:
-    instruments_by_date = {}
-
-    for date_key, field_values in zip(pricing_key, result):
-        new_instrument = instrument.from_dict(field_values)
-        new_instrument.unresolved = instrument
-        new_instrument.name = instrument.name
-        new_instrument.resolution_key = date_key
-        instruments_by_date[date_key.pricing_market_data_as_of[0].pricing_date] = new_instrument
-
-    return instruments_by_date if len(pricing_key) > 1 else next(iter(instruments_by_date.values()))
+def error_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase) -> ErrorValue:
+    return ErrorValue(risk_key, result.get('errorString'))
 
 
-def message_handler(result: List, pricing_key: PricingKey, _instrument: InstrumentBase)\
-        -> Union[StringWithInfo, SeriesWithInfo]:
-    return __string_handler('message', result, pricing_key)
+def leg_definition_handler(result: dict, risk_key: RiskKey, instrument: InstrumentBase) -> InstrumentBase:
+    new_instrument = instrument.from_dict(result)
+    new_instrument.unresolved = instrument
+    new_instrument.name = instrument.name
+    new_instrument.resolution_key = risk_key
+    return new_instrument
 
 
-def number_and_unit_handler(result: List, pricing_key: PricingKey, _instrument: InstrumentBase)\
-        -> Union[FloatWithInfo, SeriesWithInfo]:
-    return __double_handler('value', result, pricing_key)
+def message_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase) -> StringWithInfo:
+    return StringWithInfo(risk_key, result.get('message'))
 
 
-def required_assets_handler(result: List, pricing_key: PricingKey, _instrument: InstrumentBase):
+def number_and_unit_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase) -> FloatWithInfo:
+    return FloatWithInfo(risk_key, result.get('value', float('nan')), unit=result.get('unit'))
+
+
+def required_assets_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase):
     mappings = (('mkt_type', 'type'), ('mkt_asset', 'asset'))
-    return __dataframe_handler('requiredAssets', mappings, result, pricing_key)
+    return __dataframe_handler('requiredAssets', mappings, result, risk_key)
 
 
-def risk_handler(result: List, pricing_key: PricingKey, _instrument: InstrumentBase)\
-        -> Union[FloatWithInfo, SeriesWithInfo]:
-    return __double_handler('val', result, pricing_key)
+def risk_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase) -> FloatWithInfo:
+    return FloatWithInfo(risk_key, result.get('val', float('nan')), unit=result.get('unit'))
 
 
-def risk_by_class_handler(result: List, pricing_key: PricingKey, _instrument: InstrumentBase)\
-        -> Union[FloatWithInfo, SeriesWithInfo]:
-    sum_result = []
-    for date_result in result:
-        if date_result['$type'] == 'Error':
-            return error_handler(date_result)
-        sum_result.append({'unit': date_result.get('unit'), 'val': sum(date_result['values'])})
-
-    return __double_handler('val', sum_result, pricing_key)
+def risk_by_class_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase) -> FloatWithInfo:
+    return FloatWithInfo(risk_key, sum(result.get('values', (float('nan'),))), unit=result.get('unit'))
 
 
-def risk_vector_handler(result: List, pricing_key: PricingKey, _instrument: InstrumentBase)\
-        -> Union[DataFrameWithInfo, StringWithInfo]:
-    for date_result in result:
-        if date_result['$type'] == 'Error':
-            return error_handler(date_result)
-
-        for points, value in zip(date_result['points'], date_result['asset']):
-            points.update({'value': value})
+def risk_vector_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase) -> DataFrameWithInfo:
+    for points, value in zip(result['points'], result['asset']):
+        points.update({'value': value})
 
     mappings = (
         ('mkt_type', 'type'),
@@ -137,7 +97,7 @@ def risk_vector_handler(result: List, pricing_key: PricingKey, _instrument: Inst
         ('value', 'value')
     )
 
-    return __dataframe_handler('points', mappings, result, pricing_key)
+    return __dataframe_handler('points', mappings, result, risk_key)
 
 
 result_handlers = {

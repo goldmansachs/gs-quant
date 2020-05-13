@@ -33,22 +33,34 @@ Generally not finance-specific routines.
 
 
 @plot_function
-def min_(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
+def min_(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     """
     Minimum value of series over given window
 
-    :param x: series: timeseries
+    :param x: series: a timeseries or an array of timeseries
+
     :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
               and 10 the ramp up value. Window size defaults to length of series.
     :return: timeseries of minimum value
 
     **Usage**
 
-    Returns the minimum value of thee series over each window:
+    Returns the minimum value of the series over each window.
+
+    If :math:`x` is a series:
 
     :math:`R_t = min(X_{t-w+1}:X_t)`
 
-    where :math:`w` is the size of the rolling window. If window is not provided, returns the minimum value over the
+    where :math:`w` is the size of the rolling window.
+
+
+    If :math:`x` is an array of series:
+
+    :math:`R_t` = min(X_{1, t-w+1}:X_{n, t})
+
+    where :math:`w` is the size of the rolling window, and :math:`n` is the number of series.
+
+    If window is not provided, returns the minimum value over the
     full series. If the window size is greater than the available data, will return minimum of available values.
 
     **Examples**
@@ -63,6 +75,8 @@ def min_(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     :func:`max_`
 
     """
+    if isinstance(x, list):
+        x = pd.concat(x, axis=1).min(axis=1)
     w = normalize_window(x, w)
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
     if isinstance(w.w, pd.DateOffset):
@@ -73,23 +87,33 @@ def min_(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
 
 
 @plot_function
-def max_(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
+def max_(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     """
     Maximum value of series over given window
 
-    :param x: series: timeseries
+    :param x: series: a timeseries or an array of timeseries
     :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
               and 10 the ramp up value. Window size defaults to length of series.
     :return: timeseries of maximum value
 
     **Usage**
 
-    Returns the maximum value of the series over each window:
+    Returns the maximum value of the series over each window.
+
+    If :math:`x` is a series:
 
     :math:`R_t = max(X_{t-w+1}:X_t)`
 
-    where :math:`w` is the size of the rolling window. If window is not provided, returns the minimum value over the
-    full series. If the window size is greater than the available data, will return minimum of available values.
+    where :math:`w` is the size of the rolling window.
+
+    If :math:`x` is an array of series:
+
+    :math:`R_t` = max(X_{1, t-w+1}:X_{n, t})
+
+    where :math:`w` is the size of the rolling window, and :math:`n` is the number of series.
+
+    If window is not provided, returns the maximum value over the full series. If the window size is greater than the
+    available data, will return maximum of available values.
 
     **Examples**
 
@@ -103,6 +127,8 @@ def max_(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     :func:`min_`
 
     """
+    if isinstance(x, list):
+        x = pd.concat(x, axis=1).max(axis=1)
     w = normalize_window(x, w)
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
     if isinstance(w.w, pd.DateOffset):
@@ -153,11 +179,11 @@ def range_(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
 
 
 @plot_function
-def mean(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
+def mean(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     """
     Arithmetic mean of series over given window
 
-    :param x: series: timeseries
+    :param x: series: a timeseries or an array of timeseries
     :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
               and 10 the ramp up value. Window size defaults to length of series.
     :return: timeseries of mean value
@@ -166,11 +192,21 @@ def mean(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
 
     Calculates `arithmetic mean <https://en.wikipedia.org/wiki/Arithmetic_mean>`_ of the series over a rolling window
 
+    If a timeseries is provided:
+
     :math:`R_t = \\frac{\sum_{i=t-w+1}^{t} X_i}{N}`
 
-    where :math:`N` is the number of observations in each rolling window, :math:`w`. If window is not provided, computes
-    rolling mean over the full series. If the window size is greater than the available data, will return mean of
-    available values.
+    where :math:`N` is the number of observations in each rolling window, :math:`w`.
+
+    If an array of timeseries is provided:
+
+    :math:`R_t = \\frac{\sum_{i=t-w+1}^{t} {\sum_{j=1}^{n}} X_{ij}}{N}`
+
+    where :math:`n` is the number of series, and :math:`N` is the number of observations in each rolling window,
+    :math:`w`.
+
+    If window is not provided, computes rolling mean over the full series. If the window size is greater than the
+    available data, will return mean of available values.
 
     **Examples**
 
@@ -184,13 +220,15 @@ def mean(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     :func:`median` :func:`mode`
 
     """
+    if isinstance(x, list):
+        x = pd.concat(x, axis=1)
     w = normalize_window(x, w)
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
     if isinstance(w.w, pd.DateOffset):
-        values = [x.loc[(x.index > idx - w.w) & (x.index <= idx)].mean() for idx in x.index]
-        return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
+        values = [np.nanmean(x.loc[(x.index > idx - w.w) & (x.index <= idx)]) for idx in x.index]
     else:
-        return apply_ramp(x.rolling(w.w, 0).mean(), w)
+        values = [np.nanmean(x.iloc[max(idx - w.w + 1, 0): idx + 1]) for idx in range(0, len(x))]
+    return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
 
 
 @plot_function
@@ -275,23 +313,33 @@ def mode(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
 
 
 @plot_function
-def sum_(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
+def sum_(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     """
     Rolling sum of series over given window
 
-    :param x: series: timeseries
+    :param x: series: a timeseries or an array of timeseries
     :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
               and 10 the ramp up value. Window size defaults to length of series.
     :return: timeseries of rolling sum
 
     **Usage**
 
-    Calculate the sum of observations over a given rolling window. For each time, :math:`t`, returns the value
-    of all observations from :math:`t-w+1` to :math:`t` summed together:
+    Calculate the sum of observations over a given rolling window.
+
+    If :math:`x` is a series:
 
     :math:`R_t = \sum_{i=t-w+1}^{t} X_i`
 
-    where :math:`w` is the size of the rolling window. If window is not provided, computes sum over the full series
+    where :math:`w` is the size of the rolling window.
+
+    If :math:`x` is an array of series:
+
+    :math:`R_t = \sum_{i=t-w+1}^{t} \sum_{j=1}^{n} X_{ij}`
+
+    where :math:`w` is the size of the rolling window and :math:`n` is the number of series
+
+    If window is not provided, computes sum over the full series. If the window size is greater than the available data,
+    will return sum of available values.
 
     **Examples**
 
@@ -305,6 +353,8 @@ def sum_(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     :func:`product`
 
     """
+    if isinstance(x, list):
+        x = pd.concat(x, axis=1).sum(axis=1)
     w = normalize_window(x, w)
     assert x.index.is_monotonic_increasing
     if isinstance(w.w, pd.DateOffset):

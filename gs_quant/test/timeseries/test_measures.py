@@ -37,9 +37,10 @@ from gs_quant.data.fields import Fields
 from gs_quant.errors import MqError, MqValueError
 from gs_quant.markets.securities import AssetClass, Cross, Index, Currency, SecurityMaster, Stock
 from gs_quant.session import GsSession, Environment
-from gs_quant.target.common import XRef, FieldFilterMap, Currency as CurrEnum
+from gs_quant.target.common import XRef, PricingLocation, Currency as CurrEnum
 from gs_quant.test.timeseries.utils import mock_request
-from gs_quant.timeseries.measures import BenchmarkType, PricingLocation, VolReference
+from gs_quant.timeseries.measures import BenchmarkType, VolReference
+from gs_quant.api.gs.data import QueryType
 
 _index = [pd.Timestamp('2019-01-01')]
 _test_datasets = ('TEST_DATASET',)
@@ -268,6 +269,17 @@ def test_currency_to_mdapi_basis_swap_rate_asset(mocker):
     replace.restore()
 
 
+def test_check_clearing_house(mocker):
+    for ch in tm_rates._ClearingHouse.__members__:
+        assert ch == tm_rates._check_clearing_house(ch)
+
+    assert tm_rates._ClearingHouse.LCH == tm_rates._check_clearing_house(None)
+    invalid_ch = ['NYSE']
+    for ch in invalid_ch:
+        with pytest.raises(MqError):
+            tm_rates._check_clearing_house(ch)
+
+
 def test_cross_stored_direction_for_fx_vol(mocker):
     mocker.patch.object(GsSession.__class__, 'default_value',
                         return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
@@ -434,6 +446,40 @@ def mock_forward_price(_cls, _q):
     return df
 
 
+def mock_fair_price(_cls, _q):
+    d = {
+        'fairPrice': [
+            2.880,
+            2.844,
+            2.726,
+        ],
+        'contract': [
+            "F21",
+            "G21",
+            "H21",
+        ]}
+    df = MarketDataResponseFrame(data=d, index=pd.to_datetime([datetime.date(2019, 1, 2)] * 3))
+    df.dataset_ids = _test_datasets
+    return df
+
+
+def mock_implied_volatility(_cls, _q):
+    d = {
+        'impliedVolatility': [
+            2.880,
+            2.844,
+            2.726,
+        ],
+        'contract': [
+            "F21",
+            "G21",
+            "H21",
+        ]}
+    df = MarketDataResponseFrame(data=d, index=pd.to_datetime([datetime.date(2019, 1, 2)] * 3))
+    df.dataset_ids = _test_datasets
+    return df
+
+
 def mock_missing_bucket_forward_price(_cls, _q):
     d = {
         'forwardPrice': [
@@ -515,6 +561,7 @@ def mock_fx_switch(_cls, _q, _n):
 
 def mock_curr(_cls, _q):
     d = {
+        'swapAnnuity': [1, 2, 3],
         'swapRate': [1, 2, 3],
         'basisSwapRate': [1, 2, 3],
         'swaptionVol': [1, 2, 3],
@@ -902,86 +949,6 @@ def test_avg_impl_var():
     replace.restore()
 
 
-def test_swap_rate(mocker):
-    replace = Replacer()
-    mock_usd = Currency('MA890', 'USD')
-
-    xrefs = replace('gs_quant.timeseries.measures.GsAssetApi.get_asset_xrefs', Mock())
-    xrefs.return_value = [GsTemporalXRef(dt.date(2019, 1, 1), dt.date(2952, 12, 31), XRef(bbid='USD', ))]
-    identifiers = replace('gs_quant.timeseries.measures.GsAssetApi.map_identifiers', Mock())
-    identifiers.return_value = {'USD-3m': 'MA123'}
-    mocker.patch.object(GsDataApi, 'get_market_data', return_value=mock_curr(None, None))
-    actual = tm.swap_rate(mock_usd, '1y')
-    assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='swapRate'), pd.Series(actual))
-    assert actual.dataset_ids == _test_datasets
-
-    identifiers = replace('gs_quant.timeseries.measures.GsAssetApi.map_identifiers', Mock())
-    identifiers.return_value = {'USD OIS': 'MA124'}
-    actual = tm.swap_rate(mock_usd, '1y', BenchmarkType.OIS)
-    assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='swapRate'), pd.Series(actual))
-    assert actual.dataset_ids == _test_datasets
-
-    mock_eur = Currency('MA891', 'EUR')
-    xrefs = replace('gs_quant.timeseries.measures.GsAssetApi.get_asset_xrefs', Mock())
-    xrefs.return_value = [GsTemporalXRef(dt.date(2019, 1, 1), dt.date(2952, 12, 31), XRef(bbid='EUR', ))]
-    identifiers = replace('gs_quant.timeseries.measures.GsAssetApi.map_identifiers', Mock())
-    identifiers.return_value = {'EUR-6m': 'MA125'}
-    actual = tm.swap_rate(mock_eur, '1y')
-    assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='swapRate'), pd.Series(actual))
-    assert actual.dataset_ids == _test_datasets
-
-    mock_sek = Currency('MA892', 'SEK')
-    xrefs = replace('gs_quant.timeseries.measures.GsAssetApi.get_asset_xrefs', Mock())
-    xrefs.return_value = [GsTemporalXRef(dt.date(2019, 1, 1), dt.date(2952, 12, 31), XRef(bbid='SEK', ))]
-    identifiers = replace('gs_quant.timeseries.measures.GsAssetApi.map_identifiers', Mock())
-    identifiers.return_value = {'SEK-6m': 'MA126'}
-    actual = tm.swap_rate(mock_sek, '1y')
-    assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='swapRate'), pd.Series(actual))
-    assert actual.dataset_ids == _test_datasets
-
-    with pytest.raises(NotImplementedError):
-        tm.swap_rate(mock_sek, '1y', pricing_location=PricingLocation.NYC)
-
-    with pytest.raises(NotImplementedError):
-        tm.swap_rate(..., '1y', real_time=True)
-
-    GsDataApi.get_market_data.reset_mock()
-    mock_krw = Currency('MA893', 'KRW')
-    xrefs = replace('gs_quant.timeseries.measures.GsAssetApi.get_asset_xrefs', Mock())
-    xrefs.return_value = [GsTemporalXRef(dt.date(2019, 1, 1), dt.date(2952, 12, 31), XRef(bbid='KRW', ))]
-    actual = tm.swap_rate(mock_krw, '1y')
-    assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='swapRate'), pd.Series(actual))
-    assert actual.dataset_ids == _test_datasets
-    GsDataApi.get_market_data.assert_called_once_with(
-        GsDataApi.build_market_data_query(
-            ['MA893'],
-            tm.QueryType.SWAP_RATE,
-            where=FieldFilterMap(tenor='1y', pricing_location='HKG'),
-            source=None,
-            real_time=False
-        )
-    )
-
-    GsDataApi.get_market_data.reset_mock()
-    actual = tm.swap_rate(mock_krw, '2y', BenchmarkType.CDKSDA, '3m', PricingLocation.NYC)
-    assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='swapRate'), pd.Series(actual))
-    assert actual.dataset_ids == _test_datasets
-    GsDataApi.get_market_data.assert_called_once_with(
-        GsDataApi.build_market_data_query(
-            ['MA893'],
-            tm.QueryType.SWAP_RATE,
-            where=FieldFilterMap(tenor='2y', pricing_location='NYC'),
-            source=None,
-            real_time=False
-        )
-    )
-
-    with pytest.raises(NotImplementedError):
-        tm.swap_rate(mock_krw, '1y', floating_index='1y')
-
-    replace.restore()
-
-
 def test_basis_swap_spread(mocker):
     replace = Replacer()
     args = dict(swap_tenor='10y', spread_benchmark_type=None, spread_tenor=None,
@@ -1037,12 +1004,14 @@ def test_basis_swap_spread(mocker):
     identifiers.return_value = {'MAQB1PGEJFCET3GG'}
     mocker.patch.object(GsDataApi, 'get_market_data', return_value=mock_curr(None, None))
     actual = tm_rates.basis_swap_spread(**args)
-    assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='basisSwapRate'), actual)
-
+    expected = tm.ExtendedSeries([1, 2, 3], index=_index * 3, name='basisSwapRate')
+    expected.dataset_ids = _test_datasets
+    assert_series_equal(expected, actual)
+    assert actual.dataset_ids == expected.dataset_ids
     replace.restore()
 
 
-def test_swap_rate_2(mocker):
+def test_swap_rate(mocker):
     replace = Replacer()
     args = dict(swap_tenor='10y', benchmark_type=None, floating_rate_tenor=None, forward_tenor='0b', real_time=False)
 
@@ -1051,33 +1020,33 @@ def test_swap_rate_2(mocker):
     xrefs.return_value = 'NOK'
     args['asset'] = mock_nok
     with pytest.raises(NotImplementedError):
-        tm_rates.swap_rate_2(**args)
+        tm_rates.swap_rate(**args)
 
     mock_usd = Currency('MAZ7RWC904JYHYPS', 'USD')
     args['asset'] = mock_usd
     xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
     xrefs.return_value = 'USD'
     with pytest.raises(NotImplementedError):
-        tm_rates.swap_rate_2(..., '1y', real_time=True)
+        tm_rates.swap_rate(..., '1y', real_time=True)
 
     args['swap_tenor'] = '5yr'
     with pytest.raises(MqValueError):
-        tm_rates.swap_rate_2(**args)
+        tm_rates.swap_rate(**args)
     args['swap_tenor'] = '10y'
 
     args['floating_rate_tenor'] = '5yr'
     with pytest.raises(MqValueError):
-        tm_rates.swap_rate_2(**args)
+        tm_rates.swap_rate(**args)
     args['floating_rate_tenor'] = '3m'
 
     args['forward_tenor'] = '5yr'
     with pytest.raises(MqValueError):
-        tm_rates.swap_rate_2(**args)
+        tm_rates.swap_rate(**args)
     args['forward_tenor'] = None
 
     args['benchmark_type'] = BenchmarkType.STIBOR
     with pytest.raises(MqValueError):
-        tm_rates.swap_rate_2(**args)
+        tm_rates.swap_rate(**args)
     args['benchmark_type'] = BenchmarkType.LIBOR
 
     xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
@@ -1085,9 +1054,62 @@ def test_swap_rate_2(mocker):
     identifiers = replace('gs_quant.timeseries.measures_rates._convert_asset_for_mdapi_swap_rates', Mock())
     identifiers.return_value = {'MAZ7RWC904JYHYPS'}
     mocker.patch.object(GsDataApi, 'get_market_data', return_value=mock_curr(None, None))
-    actual = tm_rates.swap_rate_2(**args)
-    assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='swapRate'), actual)
+    actual = tm_rates.swap_rate(**args)
+    expected = tm.ExtendedSeries([1, 2, 3], index=_index * 3, name='swapRate')
+    expected.dataset_ids = _test_datasets
+    assert_series_equal(expected, actual)
+    assert actual.dataset_ids == _test_datasets
+    replace.restore()
 
+
+def test_swap_annuity(mocker):
+    replace = Replacer()
+    args = dict(swap_tenor='10y', benchmark_type=None, floating_rate_tenor=None, forward_tenor='0b', real_time=False)
+
+    mock_nok = Currency('MA891', 'NOK')
+    xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+    xrefs.return_value = 'NOK'
+    args['asset'] = mock_nok
+    with pytest.raises(NotImplementedError):
+        tm_rates.swap_annuity(**args)
+
+    mock_usd = Currency('MAZ7RWC904JYHYPS', 'USD')
+    args['asset'] = mock_usd
+    xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+    xrefs.return_value = 'USD'
+    with pytest.raises(NotImplementedError):
+        tm_rates.swap_annuity(..., '1y', real_time=True)
+
+    args['swap_tenor'] = '5yr'
+    with pytest.raises(MqValueError):
+        tm_rates.swap_annuity(**args)
+    args['swap_tenor'] = '10y'
+
+    args['floating_rate_tenor'] = '5yr'
+    with pytest.raises(MqValueError):
+        tm_rates.swap_annuity(**args)
+    args['floating_rate_tenor'] = '1y'
+
+    args['forward_tenor'] = '5yr'
+    with pytest.raises(MqValueError):
+        tm_rates.swap_annuity(**args)
+    args['forward_tenor'] = None
+
+    args['benchmark_type'] = BenchmarkType.STIBOR
+    with pytest.raises(MqValueError):
+        tm_rates.swap_annuity(**args)
+    args['benchmark_type'] = BenchmarkType.SOFR
+
+    xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+    xrefs.return_value = 'USD'
+    identifiers = replace('gs_quant.timeseries.measures_rates._convert_asset_for_mdapi_swap_rates', Mock())
+    identifiers.return_value = {'MAZ7RWC904JYHYPS'}
+    mocker.patch.object(GsDataApi, 'get_market_data', return_value=mock_curr(None, None))
+    actual = tm_rates.swap_annuity(**args)
+    expected = abs(tm.ExtendedSeries([1.0, 2.0, 3.0], index=_index * 3, name='swapAnnuity') * 1e4 / 1e8)
+    expected.dataset_ids = _test_datasets
+    assert_series_equal(expected, actual)
+    assert actual.dataset_ids == expected.dataset_ids
     replace.restore()
 
 
@@ -1162,8 +1184,12 @@ def test_swap_term_structure(mocker):
     market_data_mock.return_value = df
     with DataContext('2019-01-01', '2025-01-01'):
         actual = tm_rates.swap_term_structure(**args)
-    expected = pd.Series([1, 2, 3, 4], index=pd.to_datetime(['2020-01-01', '2021-01-01', '2021-12-31', '2022-12-30']))
+    actual.dataset_ids = _test_datasets
+    expected = tm.ExtendedSeries([1, 2, 3, 4], index=pd.to_datetime(['2020-01-01', '2021-01-01', '2021-12-31',
+                                                                     '2022-12-30']))
+    expected.dataset_ids = _test_datasets
     assert_series_equal(expected, actual, check_names=False)
+    assert actual.dataset_ids == expected.dataset_ids
     replace.restore()
 
 
@@ -1252,8 +1278,12 @@ def test_basis_swap_term_structure(mocker):
     market_data_mock.return_value = df
     with DataContext('2019-01-01', '2025-01-01'):
         actual = tm_rates.basis_swap_term_structure(**args)
-    expected = pd.Series([1, 2, 3, 4], index=pd.to_datetime(['2020-01-01', '2021-01-01', '2021-12-31', '2022-12-30']))
+    actual.dataset_ids = _test_datasets
+    expected = tm.ExtendedSeries([1, 2, 3, 4], index=pd.to_datetime(['2020-01-01', '2021-01-01', '2021-12-31',
+                                                                     '2022-12-30']))
+    expected.dataset_ids = _test_datasets
     assert_series_equal(expected, actual, check_names=False)
+    assert actual.dataset_ids == expected.dataset_ids
     replace.restore()
 
 
@@ -2156,58 +2186,148 @@ def test_get_iso_data():
 
 
 def test_string_to_date_interval():
-    contract_months = ["F", "G", "H", "J", "K", "M", "N", "Q", "U", "V", "X", "Z"]
-    assert (tm._string_to_date_interval("K20", contract_months)['start_date'] == datetime.date(2020, 5, 1))
-    assert (tm._string_to_date_interval("K20", contract_months)['end_date'] == datetime.date(2020, 5, 31))
+    assert (tm._string_to_date_interval("K20")['start_date'] == datetime.date(2020, 5, 1))
+    assert (tm._string_to_date_interval("K20")['end_date'] == datetime.date(2020, 5, 31))
 
-    assert (tm._string_to_date_interval("k20", contract_months)['start_date'] == datetime.date(2020, 5, 1))
-    assert (tm._string_to_date_interval("k20", contract_months)['end_date'] == datetime.date(2020, 5, 31))
+    assert (tm._string_to_date_interval("k20")['start_date'] == datetime.date(2020, 5, 1))
+    assert (tm._string_to_date_interval("k20")['end_date'] == datetime.date(2020, 5, 31))
 
-    assert (tm._string_to_date_interval("Cal22", contract_months)['start_date'] == datetime.date(2022, 1, 1))
-    assert (tm._string_to_date_interval("Cal22", contract_months)['end_date'] == datetime.date(2022, 12, 31))
+    assert (tm._string_to_date_interval("Cal22")['start_date'] == datetime.date(2022, 1, 1))
+    assert (tm._string_to_date_interval("Cal22")['end_date'] == datetime.date(2022, 12, 31))
 
-    assert (tm._string_to_date_interval("Cal2012", contract_months)['start_date'] == datetime.date(2012, 1, 1))
-    assert (tm._string_to_date_interval("Cal2012", contract_months)['end_date'] == datetime.date(2012, 12, 31))
+    assert (tm._string_to_date_interval("Cal2012")['start_date'] == datetime.date(2012, 1, 1))
+    assert (tm._string_to_date_interval("Cal2012")['end_date'] == datetime.date(2012, 12, 31))
 
-    assert (tm._string_to_date_interval("Cal53", contract_months)['start_date'] == datetime.date(1953, 1, 1))
-    assert (tm._string_to_date_interval("Cal53", contract_months)['end_date'] == datetime.date(1953, 12, 31))
+    assert (tm._string_to_date_interval("Cal53")['start_date'] == datetime.date(1953, 1, 1))
+    assert (tm._string_to_date_interval("Cal53")['end_date'] == datetime.date(1953, 12, 31))
 
-    assert (tm._string_to_date_interval("2010", contract_months)['start_date'] == datetime.date(2010, 1, 1))
-    assert (tm._string_to_date_interval("2010", contract_months)['end_date'] == datetime.date(2010, 12, 31))
+    assert (tm._string_to_date_interval("2010")['start_date'] == datetime.date(2010, 1, 1))
+    assert (tm._string_to_date_interval("2010")['end_date'] == datetime.date(2010, 12, 31))
 
-    assert (tm._string_to_date_interval("3Q20", contract_months)['start_date'] == datetime.date(2020, 7, 1))
-    assert (tm._string_to_date_interval("3Q20", contract_months)['end_date'] == datetime.date(2020, 9, 30))
+    assert (tm._string_to_date_interval("3Q20")['start_date'] == datetime.date(2020, 7, 1))
+    assert (tm._string_to_date_interval("3Q20")['end_date'] == datetime.date(2020, 9, 30))
 
-    assert (tm._string_to_date_interval("2h2021", contract_months)['start_date'] == datetime.date(2021, 7, 1))
-    assert (tm._string_to_date_interval("2h2021", contract_months)['end_date'] == datetime.date(2021, 12, 31))
+    assert (tm._string_to_date_interval("2h2021")['start_date'] == datetime.date(2021, 7, 1))
+    assert (tm._string_to_date_interval("2h2021")['end_date'] == datetime.date(2021, 12, 31))
 
-    assert (tm._string_to_date_interval("3q20", contract_months)['start_date'] == datetime.date(2020, 7, 1))
-    assert (tm._string_to_date_interval("3q20", contract_months)['end_date'] == datetime.date(2020, 9, 30))
+    assert (tm._string_to_date_interval("3q20")['start_date'] == datetime.date(2020, 7, 1))
+    assert (tm._string_to_date_interval("3q20")['end_date'] == datetime.date(2020, 9, 30))
 
-    assert (tm._string_to_date_interval("2H2021", contract_months)['start_date'] == datetime.date(2021, 7, 1))
-    assert (tm._string_to_date_interval("2H2021", contract_months)['end_date'] == datetime.date(2021, 12, 31))
+    assert (tm._string_to_date_interval("2H2021")['start_date'] == datetime.date(2021, 7, 1))
+    assert (tm._string_to_date_interval("2H2021")['end_date'] == datetime.date(2021, 12, 31))
 
-    assert (tm._string_to_date_interval("Mar2021", contract_months)['start_date'] == datetime.date(2021, 3, 1))
-    assert (tm._string_to_date_interval("Mar2021", contract_months)['end_date'] == datetime.date(2021, 3, 31))
+    assert (tm._string_to_date_interval("Mar2021")['start_date'] == datetime.date(2021, 3, 1))
+    assert (tm._string_to_date_interval("Mar2021")['end_date'] == datetime.date(2021, 3, 31))
 
-    assert (tm._string_to_date_interval("March2021", contract_months)['start_date'] == datetime.date(2021, 3, 1))
-    assert (tm._string_to_date_interval("March2021", contract_months)['end_date'] == datetime.date(2021, 3, 31))
+    assert (tm._string_to_date_interval("March2021")['start_date'] == datetime.date(2021, 3, 1))
+    assert (tm._string_to_date_interval("March2021")['end_date'] == datetime.date(2021, 3, 31))
 
-    assert (tm._string_to_date_interval("5Q20", contract_months) == "Invalid Quarter")
+    assert (tm._string_to_date_interval("5Q20") == "Invalid Quarter")
 
-    assert (tm._string_to_date_interval("HH2021", contract_months) == "Invalid num")
+    assert (tm._string_to_date_interval("HH2021") == "Invalid num")
 
-    assert (tm._string_to_date_interval("3H2021", contract_months) == "Invalid Half Year")
+    assert (tm._string_to_date_interval("3H2021") == "Invalid Half Year")
 
-    assert (tm._string_to_date_interval("Cal2a", contract_months) == "Invalid year")
+    assert (tm._string_to_date_interval("Cal2a") == "Invalid year")
+    assert (tm._string_to_date_interval("Marc201") == "Invalid date code")
 
-    assert (tm._string_to_date_interval("Marc2021", contract_months) == "Invalid date code")
+    assert (tm._string_to_date_interval("M1a2021") == "Invalid date code")
 
-    assert (tm._string_to_date_interval("M1a2021", contract_months) == "Invalid date code")
+    assert (tm._string_to_date_interval("Marcha2021") == "Invalid date code")
 
-    assert (tm._string_to_date_interval("I20", contract_months) == "Invalid month")
+    assert (tm._string_to_date_interval("I20") == "Invalid month")
 
-    assert (tm._string_to_date_interval("20", contract_months) == "Unknown date code")
+    assert (tm._string_to_date_interval("20") == "Unknown date code")
+
+
+def test_implied_volatility():
+    target = {
+        'F21': [2.880],
+        'F21-H21': [2.815756],
+    }
+    replace = Replacer()
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_implied_volatility)
+    mock = Index('MA001', AssetClass.Commod, 'Option NG Exchange')
+
+    with DataContext(datetime.date(2019, 1, 2), datetime.date(2019, 1, 2)):
+        actual = tm.implied_volatility(mock,
+                                       tenor='F21-H21')
+        assert_series_equal(pd.Series(target['F21-H21'],
+                                      index=[datetime.date(2019, 1, 2)],
+                                      name='price'),
+                            pd.Series(actual))
+    replace.restore()
+
+
+def test_fair_price():
+    target = {
+        'F21': [2.880],
+        'F21-H21': [2.815756],
+    }
+    replace = Replacer()
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_fair_price)
+    mock = Index('MA001', AssetClass.Commod, 'Swap NG Exchange')
+
+    with DataContext(datetime.date(2019, 1, 2), datetime.date(2019, 1, 2)):
+        actual = tm.fair_price(mock,
+                               tenor='F21')
+        assert_series_equal(pd.Series(target['F21'],
+                                      index=[datetime.date(2019, 1, 2)],
+                                      name='price'),
+                            pd.Series(actual))
+    replace.restore()
+
+
+def test_weighted_average_valuation_curve_for_calendar_strip():
+    target = {
+        'F21': [2.880],
+        'F21-H21': [2.815756],
+    }
+    replace = Replacer()
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_fair_price)
+    mock = Index('MA001', AssetClass.Commod, 'Swap NG Exchange')
+
+    with DataContext(datetime.date(2019, 1, 2), datetime.date(2019, 1, 2)):
+        actual = tm._weighted_average_valuation_curve_for_calendar_strip(mock,
+                                                                         contract_range='F21',
+                                                                         query_type=QueryType.FAIR_PRICE,
+                                                                         measure_field='fairPrice'
+                                                                         )
+        assert_series_equal(pd.Series(target['F21'],
+                                      index=[datetime.date(2019, 1, 2)],
+                                      name='price'),
+                            pd.Series(actual))
+
+        actual = tm._weighted_average_valuation_curve_for_calendar_strip(mock,
+                                                                         contract_range='F21-H21',
+                                                                         query_type=QueryType.FAIR_PRICE,
+                                                                         measure_field='fairPrice'
+                                                                         )
+        assert_series_equal(pd.Series(target['F21-H21'],
+                                      index=[datetime.date(2019, 1, 2)],
+                                      name='price'),
+                            pd.Series(actual))
+
+        with pytest.raises(ValueError):
+            tm._weighted_average_valuation_curve_for_calendar_strip(mock,
+                                                                    contract_range='Invalid',
+                                                                    query_type=QueryType.FAIR_PRICE,
+                                                                    measure_field='fairPrice'
+                                                                    )
+        with pytest.raises(ValueError):
+            tm._weighted_average_valuation_curve_for_calendar_strip(mock,
+                                                                    contract_range='F20-I20',
+                                                                    query_type=QueryType.FAIR_PRICE,
+                                                                    measure_field='fairPrice'
+                                                                    )
+        with pytest.raises(ValueError):
+            tm._weighted_average_valuation_curve_for_calendar_strip(mock,
+                                                                    contract_range='3H20',
+                                                                    query_type=QueryType.PRICE,
+                                                                    measure_field='fairPrice'
+                                                                    )
+
+    replace.restore()
 
 
 def test_fundamental_metrics():
