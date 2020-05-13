@@ -16,15 +16,11 @@ under the License.
 from gs_quant.base import Priceable
 from gs_quant.risk import RiskMeasure, RiskResult, aggregate_results
 
-from collections import namedtuple
 from concurrent.futures import Future
 from functools import partial
 from itertools import chain
 import pandas as pd
 from typing import Iterable, Mapping, Optional, Tuple, Union
-
-
-MeasureResult = namedtuple('MeasureResult', ('value', 'error', 'unit', 'pricing_key'))
 
 
 class CompositeResultFuture:
@@ -36,14 +32,14 @@ class CompositeResultFuture:
 
         for idx, future in enumerate(futures):
             if future.done():
-                self.__pending.remove(idx)
+                self.__cb(future, idx)
             else:
                 future.add_done_callback(partial(self.__cb, idx=idx))
 
     def __getitem__(self, item):
         return self.result()[item]
 
-    def __cb(self, _future: Future, idx):
+    def __cb(self, _future: Future, idx: int):
         self.__pending.remove(idx)
         if not self.__pending:
             self._set_result()

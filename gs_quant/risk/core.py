@@ -21,7 +21,7 @@ from typing import Iterable, Optional, Tuple, Union
 
 import pandas as pd
 
-from gs_quant.base import PricingKey
+from gs_quant.base import RiskKey
 from gs_quant.common import AssetClass
 from gs_quant.datetime import point_sort_order
 from gs_quant.target.risk import RiskMeasure, RiskMeasureType, RiskMeasureUnit, \
@@ -33,10 +33,6 @@ __column_sort_fns = {
     'point': point_sort_order
 }
 __risk_columns = ('date', 'time', 'mkt_type', 'mkt_asset', 'mkt_class', 'mkt_point')
-__crif_columns = ('date', 'time', 'riskType', 'amountCurrency', 'qualifier', 'bucket', 'label1', 'label2')
-__cashflows_columns = ('payment_date', 'payment_type', 'accrual_start_date', 'accrual_end_date', 'floating_rate_option',
-                       'floating_rate_designated_maturity')
-__assets_columns = ('date', 'mktType', 'mktAsset')
 
 
 class RiskResult:
@@ -62,13 +58,13 @@ class ResultInfo(metaclass=ABCMeta):
 
     def __init__(
         self,
-        pricing_key: PricingKey,
+        risk_key: RiskKey,
         unit: Optional[dict] = None,
         error: Optional[Union[str, dict]] = None,
         calculation_time: Optional[int] = None,
         queueing_time: Optional[int] = None
     ):
-        self.__pricing_key = pricing_key
+        self.__risk_key = risk_key
         self.__unit = unit
         self.__error = error
         self.__calculation_time = calculation_time
@@ -80,8 +76,8 @@ class ResultInfo(metaclass=ABCMeta):
         ...
 
     @property
-    def pricing_key(self) -> PricingKey:
-        return self.__pricing_key
+    def risk_key(self) -> RiskKey:
+        return self.__risk_key
 
     @property
     def unit(self) -> dict:
@@ -103,15 +99,34 @@ class ResultInfo(metaclass=ABCMeta):
         """The time (in milliseconds) for which this computation was queued"""
         return self.__queueing_time
 
-    @abstractmethod
-    def for_pricing_key(self, pricing_key: PricingKey):
-        ...
+    @staticmethod
+    def composition_info(components: Iterable):
+        dates = []
+        values = []
+        errors = {}
+        risk_key = None
+        unit = None
+
+        for component in components:
+            date = component.risk_key.date
+            risk_key = component.risk_key.base if risk_key is None else risk_key
+            if risk_key != component.risk_key.base:
+                raise RuntimeError('Cannot compose heterogeneous results')
+
+            if isinstance(component, ErrorValue):
+                errors[date] = ErrorValue
+            else:
+                values.append(component.raw_value)
+                dates.append(date)
+                unit = unit or component.unit
+
+        return dates, values, errors, risk_key, unit
 
 
 class ErrorValue(ResultInfo):
 
-    def __init__(self, pricing_key: PricingKey, error: Union[str, dict]):
-        super().__init__(pricing_key, error=error)
+    def __init__(self, risk_key: RiskKey, error: Union[str, dict]):
+        super().__init__(risk_key, error=error)
 
     def __repr__(self):
         return self.error
@@ -120,15 +135,12 @@ class ErrorValue(ResultInfo):
     def raw_value(self):
         return None
 
-    def for_pricing_key(self, pricing_key: PricingKey):
-        return self if pricing_key == self.pricing_key else None
-
 
 class ScalarWithInfo(ResultInfo, metaclass=ABCMeta):
 
     def __init__(
             self,
-            pricing_key: PricingKey,
+            risk_key: RiskKey,
             value: Union[float, str],
             unit: Optional[dict] = None,
             error: Optional[Union[str, dict]] = None,
@@ -137,7 +149,7 @@ class ScalarWithInfo(ResultInfo, metaclass=ABCMeta):
         float.__init__(value)
         ResultInfo.__init__(
             self,
-            pricing_key,
+            risk_key,
             unit=unit,
             error=error,
             calculation_time=calculation_time,
@@ -148,40 +160,16 @@ class ScalarWithInfo(ResultInfo, metaclass=ABCMeta):
     def raw_value(self):
         ...
 
-    def for_pricing_key(self, pricing_key: PricingKey):
-        return self if pricing_key == self.pricing_key else None
-
     @staticmethod
-    def compose(components, pricing_key: Optional[PricingKey] = None):
-        unit = None
-        error = {}
-        as_of = ()
-        dates = []
-        values = []
-        generated_pricing_key = None
-
-        for component in components:
-            generated_pricing_key = component.pricing_key
-            unit = unit or component.unit
-            as_of += component.pricing_key.pricing_market_data_as_of
-            date = component.pricing_key.pricing_market_data_as_of[0].pricing_date
-            dates.append(date)
-            values.append(component.raw_value)
-
-            if component.error:
-                error[date] = component.error
-
-        return SeriesWithInfo(
-            pricing_key or generated_pricing_key.clone(pricing_market_data_as_of=as_of),
-            pd.Series(index=dates, data=values).sort_index(),
-            unit=unit,
-            error=error)
+    def compose(components: Iterable):
+        dates, values, errors, risk_key, unit = ResultInfo.composition_info(components)
+        return SeriesWithInfo(risk_key, pd.Series(index=dates, data=values), unit=unit, error=errors)
 
 
 class FloatWithInfo(ScalarWithInfo, float):
 
     def __new__(cls,
-                pricing_key: PricingKey,
+                risk_key: RiskKey,
                 value: Union[float, str],
                 unit: Optional[str] = None,
                 error: Optional[str] = None,
@@ -200,7 +188,7 @@ class FloatWithInfo(ScalarWithInfo, float):
 class StringWithInfo(ScalarWithInfo, str):
 
     def __new__(cls,
-                pricing_key: PricingKey,
+                risk_key: RiskKey,
                 value: Union[float, str],
                 unit: Optional[dict] = None,
                 error: Optional[str] = None,
@@ -220,7 +208,7 @@ class SeriesWithInfo(pd.Series, ResultInfo):
 
     def __init__(
             self,
-            pricing_key: PricingKey,
+            risk_key: RiskKey,
             *args,
             unit: Optional[dict] = None,
             error: Optional[Union[str, dict]] = None,
@@ -231,7 +219,7 @@ class SeriesWithInfo(pd.Series, ResultInfo):
         pd.Series.__init__(self, *args, **kwargs)
         ResultInfo.__init__(
             self,
-            pricing_key,
+            risk_key,
             unit=unit,
             error=error,
             calculation_time=calculation_time,
@@ -246,23 +234,12 @@ class SeriesWithInfo(pd.Series, ResultInfo):
     def raw_value(self) -> pd.Series:
         return pd.Series(self)
 
-    def for_pricing_key(self, pricing_key: PricingKey):
-        dates = [as_of.pricing_date for as_of in pricing_key.pricing_market_data_as_of]
-        scalar = len(dates) == 1
-        error = self.error or {}
-        error = error.get(dates[0]) if scalar else {d: error[d] for d in dates if d in error}
-
-        if scalar:
-            return FloatWithInfo(pricing_key, self.loc[dates[0]], unit=self.unit, error=error)
-
-        return SeriesWithInfo(pricing_key, pd.Series(index=dates, data=self.loc[dates]), unit=self.unit, error=error)
-
 
 class DataFrameWithInfo(pd.DataFrame, ResultInfo):
 
     def __init__(
             self,
-            pricing_key: PricingKey,
+            risk_key: RiskKey,
             *args,
             unit: Optional[dict] = None,
             error: Optional[Union[str, dict]] = None,
@@ -277,7 +254,7 @@ class DataFrameWithInfo(pd.DataFrame, ResultInfo):
         self._internal_names_set.update(internal_names)
         ResultInfo.__init__(
             self,
-            pricing_key,
+            risk_key,
             unit=unit,
             error=error,
             calculation_time=calculation_time,
@@ -290,49 +267,13 @@ class DataFrameWithInfo(pd.DataFrame, ResultInfo):
     def raw_value(self) -> pd.DataFrame:
         return pd.DataFrame(self)
 
-    def for_pricing_key(self, pricing_key: PricingKey):
-        dates = [as_of.pricing_date for as_of in pricing_key.pricing_market_data_as_of]
-        error = self.error or {}
-        error = {d: error[d] for d in dates if d in error}
-        df = self.loc[dates]
-
-        if len(dates) == 1:
-            df = df.reset_index(drop=True)
-
-        return DataFrameWithInfo(pricing_key, df, unit=self.unit, error=error)
-
     @staticmethod
-    def compose(components, pricing_key: Optional[PricingKey] = None):
-        unit = None
-        error = {}
-        as_of = ()
-        dfs = []
-        generated_pricing_key = None
+    def compose(components: Iterable):
+        dates, values, errors, risk_key, unit = ResultInfo.composition_info(components)
+        df = pd.concat([v.assign(date=d) if v.index.name != 'date' and 'date' not in v else v
+                        for d, v in zip(dates, values)]).set_index('date')
 
-        for component in components:
-            generated_pricing_key = component.pricing_key
-            unit = unit or component.unit
-            as_of += component.pricing_key.pricing_market_data_as_of
-            date = component.pricing_key.pricing_market_data_as_of[0].pricing_date
-
-            df = component.raw_value
-            if df.index.name != 'date' and 'date' not in df:
-                df = df.assign(date=date)
-
-            dfs.append(df)
-
-            if component.error:
-                error[date] = component.error
-
-        df = pd.concat(dfs)
-        if df.index.name != 'date':
-            df = df.set_index('date')
-
-        return DataFrameWithInfo(
-            pricing_key or generated_pricing_key.clone(pricing_market_data_as_of=as_of),
-            df,
-            unit=unit,
-            error=error)
+        return DataFrameWithInfo(risk_key, df, unit=unit, error=errors)
 
 
 class PricingDateAndMarketDataAsOf(__PricingDateAndMarketDataAsOf):
@@ -384,7 +325,7 @@ def aggregate_risk(results: Iterable[Union[DataFrameWithInfo, Future]], threshol
 def aggregate_results(results: Iterable[Union[dict, DataFrameWithInfo, FloatWithInfo, SeriesWithInfo]])\
         -> Union[dict, DataFrameWithInfo, FloatWithInfo, SeriesWithInfo]:
     unit = None
-    pricing_key = None
+    risk_key = None
     results = tuple(results)
 
     for result in results:
@@ -400,20 +341,20 @@ def aggregate_results(results: Iterable[Union[dict, DataFrameWithInfo, FloatWith
 
             unit = unit or result.unit
 
-        if pricing_key and pricing_key != result.pricing_key:
+        if risk_key and risk_key != result.risk_key:
             raise ValueError('Cannot aggregate results with different pricing keys')
 
-        pricing_key = pricing_key or result.pricing_key
+        risk_key = risk_key or result.risk_key
 
     inst = next(iter(results))
     if isinstance(inst, dict):
         return dict((k, aggregate_results([r[k] for r in results])) for k in inst.keys())
     elif isinstance(inst, FloatWithInfo):
-        return FloatWithInfo(pricing_key, sum(results), unit=unit)
+        return FloatWithInfo(risk_key, sum(results), unit=unit)
     elif isinstance(inst, SeriesWithInfo):
-        return SeriesWithInfo(pricing_key, sum(results), unit=unit)
+        return SeriesWithInfo(risk_key, sum(results), unit=unit)
     elif isinstance(inst, DataFrameWithInfo):
-        return DataFrameWithInfo(pricing_key, aggregate_risk(results), unit=unit)
+        return DataFrameWithInfo(risk_key, aggregate_risk(results), unit=unit)
 
 
 def subtract_risk(left: DataFrameWithInfo, right: DataFrameWithInfo) -> pd.DataFrame:

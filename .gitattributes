@@ -1,0 +1,2 @@
+*.sh        eol=lf
+gs_quant/_version.py export-subst

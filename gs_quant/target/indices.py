@@ -301,7 +301,7 @@ class ISelectIndexParameters(Base):
     def __init__(
         self,
         name: str = None,
-        value: float = None
+        value: Union[float, str] = None
     ):        
         super().__init__()
         self.name = name
@@ -317,11 +317,11 @@ class ISelectIndexParameters(Base):
         self.__name = value        
 
     @property
-    def value(self) -> float:
+    def value(self) -> Union[float, str]:
         return self.__value
 
     @value.setter
-    def value(self, value: float):
+    def value(self, value: Union[float, str]):
         self._property_changed('value')
         self.__value = value        
 

@@ -42,7 +42,7 @@ from gs_quant.datetime.point import relative_days_add
 from gs_quant.errors import MqTypeError, MqValueError
 from gs_quant.markets.securities import *
 from gs_quant.markets.securities import Asset, AssetIdentifier, SecurityMaster
-from gs_quant.target.common import AssetClass, FieldFilterMap, AssetType, Currency, PricingLocation
+from gs_quant.target.common import AssetClass, FieldFilterMap, AssetType
 from gs_quant.timeseries import volatility, Window, Returns
 from gs_quant.timeseries.helper import log_return, plot_measure, _to_offset
 
@@ -217,6 +217,8 @@ CROSS_TO_CROSS_CURRENCY_BASIS = {
     'GBPUSD': 'GBP-3m/USD-3m'
 }
 
+_CONTRACT_MONTH_CODES = "FGHJKMNQUVXZ"
+
 
 def _asset_from_spec(asset_spec: ASSET_SPEC) -> Asset:
     return asset_spec if isinstance(asset_spec, Asset) else SecurityMaster.get_asset(asset_spec,
@@ -314,7 +316,7 @@ def convert_asset_for_rates_data_set(from_asset: Asset, c_type: RatesConversionT
         return GsAssetApi.map_identifiers(GsIdType.mdapi, GsIdType.id, [to_asset])[to_asset]
 
     except KeyError:
-        logging.info(f'Unsupported currency or cross')
+        logging.info('Unsupported currency or cross')
         return from_asset.get_marquee_id()
 
 
@@ -488,19 +490,25 @@ def cds_implied_volatility(asset: Asset, expiry: str, tenor: str, strike_referen
 @plot_measure((AssetClass.Equity, AssetClass.Commod, AssetClass.FX,), None,
               [MeasureDependency(id_provider=cross_stored_direction_for_fx_vol,
                                  query_type=QueryType.IMPLIED_VOLATILITY)])
-def implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference, relative_strike: Real = None, *,
-                       source: str = None, real_time: bool = False) -> Series:
+def implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference = None,
+                       relative_strike: Real = None, *, source: str = None, real_time: bool = False) -> Series:
     """
     Volatility of an asset implied by observations of market prices.
 
     :param asset: asset object loaded from security master
     :param tenor: relative date representation of expiration date e.g. 1m
+            or absolute calendar strips e.g. 'Cal20', 'F20-G20'
     :param strike_reference: reference for strike level
     :param relative_strike: strike relative to reference
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: implied volatility curve
     """
+
+    if asset.asset_class == AssetClass.Commod:
+        return _weighted_average_valuation_curve_for_calendar_strip(asset, tenor,
+                                                                    QueryType.IMPLIED_VOLATILITY, "impliedVolatility")
+
     if relative_strike is None and strike_reference != VolReference.DELTA_NEUTRAL:
         raise MqValueError('Relative strike must be provided if your strike reference is not delta_neutral')
 
@@ -647,87 +655,6 @@ def average_implied_variance(asset: Asset, tenor: str, strike_reference: EdrData
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
     return _extract_series_from_df(df, QueryType.AVERAGE_IMPLIED_VARIANCE)
-
-
-@plot_measure((AssetClass.Cash,), (AssetType.Currency,),
-              [MeasureDependency(id_provider=currency_to_default_swap_rate_asset, query_type=QueryType.SWAP_RATE)])
-def swap_rate(asset: Asset, tenor: str, benchmark_type: BenchmarkType = None, floating_index: str = None,
-              pricing_location: PricingLocation = None, *, source: str = None, real_time: bool = False) -> Series:
-    """
-    GS end-of-day Fixed-Floating interest rate swap (IRS) curves across major currencies.
-
-    :param asset: asset object loaded from security master
-    :param tenor: relative date representation of expiration date e.g. 1m
-    :param benchmark_type: benchmark type e.g. LIBOR
-    :param floating_index: floating index rate
-    :param pricing_location: the pricing location (used for EOD data only)
-    :param source: name of function caller
-    :param real_time: whether to retrieve intraday data instead of EOD
-    :return: swap rate curve
-    """
-    if real_time:
-        raise NotImplementedError('realtime swap_rate not implemented')
-
-    currency = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
-    currency = Currency(currency)
-
-    if currency == Currency.KRW:
-        if benchmark_type not in (None, BenchmarkType.CDKSDA) or floating_index not in (None, '3m'):
-            raise NotImplementedError('Unsupported benchmark for {} swap rates'.format(currency.value))
-
-        # default pricing location
-        pricing_location = pricing_location or PricingLocation.HKG
-
-        rate_mqid = asset.get_marquee_id()
-        where = FieldFilterMap(tenor=tenor, pricing_location=pricing_location.value)
-
-        _logger.debug('where tenor=%s, pricingLocation=%s', tenor, pricing_location.value)
-
-    else:
-        if pricing_location not in (None, PricingLocation.LDN):
-            raise NotImplementedError('Unsupported pricing location {} for {} swap rates'.format(pricing_location.value,
-                                                                                                 currency.value))
-        # default benchmark types
-        if benchmark_type is None:
-            if currency == Currency.EUR:
-                benchmark_type = BenchmarkType.EURIBOR
-            elif currency == Currency.SEK:
-                benchmark_type = BenchmarkType.STIBOR
-            else:
-                benchmark_type = BenchmarkType.LIBOR
-
-        over_nights = [BenchmarkType.OIS]
-
-        # default floating index
-        if floating_index is None:
-            if benchmark_type in over_nights:
-                floating_index = '1d'
-            else:
-                if currency in [Currency.USD]:
-                    floating_index = '3m'
-                elif currency in [Currency.GBP, Currency.EUR, Currency.CHF, Currency.SEK]:
-                    floating_index = '6m'
-
-        mdapi_divider = " " if benchmark_type in over_nights else "-"
-        mdapi_floating_index = BenchmarkType.OIS.value if benchmark_type is BenchmarkType.OIS else floating_index
-        mdapi = currency.value + mdapi_divider + mdapi_floating_index
-
-        rate_mqid = GsAssetApi.map_identifiers(GsIdType.mdapi, GsIdType.id, [mdapi])[mdapi]
-        where = FieldFilterMap(tenor=tenor)
-
-        _logger.debug('where tenor=%s, floatingIndex=%s', tenor, floating_index)
-
-    q = GsDataApi.build_market_data_query(
-        [rate_mqid],
-        QueryType.SWAP_RATE,
-        where=where,
-        source=source,
-        real_time=real_time
-    )
-
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
-    return _extract_series_from_df(df, QueryType.SWAP_RATE)
 
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
@@ -1184,7 +1111,7 @@ def vol_term(asset: Asset, strike_reference: VolReference, relative_strike: Real
         if strike_reference == VolReference.NORMALIZED:
             raise MqValueError(f'strike reference {strike_reference} not supported for FX')
         if strike_reference == VolReference.DELTA_NEUTRAL and relative_strike != 0:
-            raise MqValueError(f'relative_strike must be 0 for delta_neutral')
+            raise MqValueError('relative_strike must be 0 for delta_neutral')
 
         if strike_reference == VolReference.DELTA_PUT:
             relative_strike *= -1
@@ -1511,10 +1438,13 @@ def _filter_by_bucket(df, bucket, holidays, region):
     return df
 
 
-# Slang Date::Interval implementation
-# Accept months (e.g. F07), quarters (e.g. 4Q06),
-# half-years (e.g. 1H07), and years (e.g. Cal07 or 2007)
-def _string_to_date_interval(interval: str, contract_months):
+def _string_to_date_interval(interval: str):
+    """
+    Slang Date::Interval implementation
+    Accept months (e.g. F07), quarters (e.g. 4Q06), half-years (e.g. 1H07), and years (e.g. Cal07 or 2007)
+    :param interval: date-interval
+    :return: start and end date
+    """
     if interval[-2:].isdigit():
         YS = interval[-2:]
         year = int("20" + YS) if int(YS) <= 51 else int("19" + YS)
@@ -1527,8 +1457,8 @@ def _string_to_date_interval(interval: str, contract_months):
 
     start_year = datetime.date(year, 1, 1)
     if len(interval) == 1 + len(YS):
-        if interval[0].upper() in contract_months:
-            month_index = contract_months.index(interval[0].upper()) + 1
+        if interval[0].upper() in _CONTRACT_MONTH_CODES:
+            month_index = _CONTRACT_MONTH_CODES.index(interval[0].upper()) + 1
             start_date = datetime.date(year, month_index, 1)
             end_date = datetime.date(year, month_index, calendar.monthrange(year, month_index)[1])
         else:
@@ -1572,10 +1502,107 @@ def _string_to_date_interval(interval: str, contract_months):
     return {'start_date': start_date, 'end_date': end_date}
 
 
+def _merge_curves_by_weighted_average(forwards_data, weights, keys, measure_column):
+    """
+    Merges price curve with weights curve
+    :param forwards_data: Pricing data
+    :param weights: dataframe with each pricing data point associated with a weight
+    :param keys: keys to join dataframes - columns that uniquely identify each datapoint
+    :param measure_column: dataset measure column name
+    :return:
+    """
+    # Using cartesian product of the date range and weights dataframe with keys
+    # as this gives us an exhaustive list of data points required for the data to be complete
+    # i.e a composite key comprised of date and keys
+    dates = pd.DataFrame(data=forwards_data['dates'].unique(), columns=["dates"])
+    weights = pd.merge(weights.assign(key=0), dates.assign(key=0), on='key').drop('key', axis=1)
+
+    # Left join on the weights dataframe using the composite key
+    result_df = pd.merge(weights, forwards_data, on=keys, how='left')
+
+    result_df['weighted_price'] = result_df['weight'] * result_df[measure_column]
+
+    # Filtering dates that have missing buckets or contracts.
+    # Dates with any null values due to unmatched rows in the right table with raw data will be removed as a result.
+    result_df = result_df.groupby('dates').filter(lambda x: x.notnull().values.all())
+    result_df = result_df.groupby('dates').agg({'weight': 'sum', 'weighted_price': 'sum'})
+    result_df['price'] = result_df['weighted_price'] / result_df['weight']
+
+    result = ExtendedSeries(result_df['price'], index=result_df.index)
+    result = result.rename_axis(None, axis='index')
+    return result
+
+
+def _weighted_average_valuation_curve_for_calendar_strip(asset, contract_range, query_type, measure_field):
+    """
+    :param asset: marquee asset
+    :param contract_range: tenor in case of instruments, calendar strip for underliers
+    :param query_type: dataset query type
+    :param measure_field: dataset measure column name
+    :return:
+    """
+    start_date_interval = _string_to_date_interval(contract_range.split("-")[0])
+    if type(start_date_interval) == str:
+        raise ValueError(start_date_interval)
+    start_contract_range = start_date_interval['start_date']
+    if "-" in contract_range:
+        end_date_interval = _string_to_date_interval(contract_range.split("-")[1])
+        if type(end_date_interval) == str:
+            raise ValueError(end_date_interval)
+        end_contract_range = end_date_interval['end_date']
+    else:
+        end_contract_range = start_date_interval['end_date']
+
+    dates_contract_range = pd.date_range(start=start_contract_range,
+                                         end=end_contract_range,
+                                         ).to_frame()
+    dates_contract_range['date'] = dates_contract_range.index.date
+    dates_contract_range['month'] = dates_contract_range.index.month - 1
+    dates_contract_range['year'] = dates_contract_range.index.year
+    dates_contract_range['contract_month'] = dates_contract_range.apply(
+        lambda row: _CONTRACT_MONTH_CODES[row['month']] + str(row['year'])[-2:], axis=1)
+
+    weights = dates_contract_range.groupby('contract_month').size()
+    weights = pd.DataFrame({'contract': weights.index, 'weight': weights.values})
+
+    start, end = DataContext.current.start_date, DataContext.current.end_date
+
+    with DataContext(start, end):
+        q = GsDataApi.build_market_data_query([asset.get_marquee_id()], query_type,
+                                              source=None,
+                                              real_time=False)
+        data = _market_data_timed(q)
+        dataset_ids = getattr(data, 'dataset_ids', ())
+
+        data['dates'] = data.index.date
+        print('q %s', q)
+
+    keys = ['contract', 'dates']
+    result = _merge_curves_by_weighted_average(data, weights, keys, measure_field)
+    result.dataset_ids = dataset_ids
+    return result
+
+
+@plot_measure((AssetClass.Commod,), None, [QueryType.PRICE])
+def fair_price(asset: Asset, tenor: str = 'F21', *,
+               source: str = None, real_time: bool = False) -> pd.Series:
+    """'
+    Fair Price for Swap Instrument
+
+    :param asset: asset object loaded from security master
+    :param tenor: e.g. inputs - 'Cal20', 'F20-G20', '2Q20', '2H20', 'Cal20-Cal21': Default Value = F20
+    :param source: name of function caller: default source = None
+    :param real_time: whether to retrieve intraday data instead of EOD: default value = False
+    :return: Fair Price
+    """
+
+    return _weighted_average_valuation_curve_for_calendar_strip(asset, tenor, QueryType.FAIR_PRICE, "fairPrice")
+
+
 @plot_measure((AssetClass.Commod,), None, [QueryType.FORWARD_PRICE])
 def forward_price(asset: Asset, price_method: str = 'LMP', bucket: str = 'PEAK',
                   contract_range: str = 'F20', *, source: str = None, real_time: bool = False) -> pd.Series:
-    """'
+    """
     Us Power Forward Prices
 
     :param asset: asset object loaded from security master
@@ -1598,13 +1625,12 @@ def forward_price(asset: Asset, price_method: str = 'LMP', bucket: str = 'PEAK',
         weights_df['quantityBucket'] = bucket
         return weights_df
 
-    contract_months = ["F", "G", "H", "J", "K", "M", "N", "Q", "U", "V", "X", "Z"]
-    start_date_interval = _string_to_date_interval(contract_range.split("-")[0], contract_months)
+    start_date_interval = _string_to_date_interval(contract_range.split("-")[0])
     if type(start_date_interval) == str:
         raise ValueError(start_date_interval)
     start_contract_range = start_date_interval['start_date']
     if "-" in contract_range:
-        end_date_interval = _string_to_date_interval(contract_range.split("-")[1], contract_months)
+        end_date_interval = _string_to_date_interval(contract_range.split("-")[1])
         if type(end_date_interval) == str:
             raise ValueError(end_date_interval)
         end_contract_range = end_date_interval['end_date']
@@ -1628,7 +1654,7 @@ def forward_price(asset: Asset, price_method: str = 'LMP', bucket: str = 'PEAK',
     dates_contract_range['month'] = dates_contract_range.index.month - 1
     dates_contract_range['year'] = dates_contract_range.index.year
     dates_contract_range['contract_month'] = dates_contract_range.apply(
-        lambda row: contract_months[row['month']] + str(row['year'])[-2:], axis=1)
+        lambda row: _CONTRACT_MONTH_CODES[row['month']] + str(row['year'])[-2:], axis=1)
     holidays = NercCalendar().holidays(start=start_contract_range, end=end_contract_range).date
 
     weights = []
@@ -1651,25 +1677,9 @@ def forward_price(asset: Asset, price_method: str = 'LMP', bucket: str = 'PEAK',
         forwards_data['dates'] = forwards_data.index.date
         print('q %s', q)
 
-    # Using cartesian product of the date range and weights dataframe with keys - quantityBucket and contract
-    # as this gives us an exhaustive list of data points required for the data to be complete
-    # i.e a composite key comprised of date, quantityBucket and contract
-    dates = pd.DataFrame(data=forwards_data['dates'].unique(), columns=["dates"])
-    weights = pd.merge(weights.assign(key=0), dates.assign(key=0), on='key').drop('key', axis=1)
-
-    # Left join on the weights dataframe using the composite key
-    result_df = pd.merge(weights, forwards_data, on=['quantityBucket', 'contract', 'dates'], how='left')
-
-    result_df['weighted_price'] = result_df['weight'] * result_df['forwardPrice']
-
-    # Filtering dates that have missing buckets or contracts.
-    # Dates with any null values due to unmatched rows in the right table with raw data will be removed as a result.
-    result_df = result_df.groupby('dates').filter(lambda x: x.notnull().values.all())
-    result_df = result_df.groupby('dates').agg({'weight': 'sum', 'weighted_price': 'sum'})
-    result_df['price'] = result_df['weighted_price'] / result_df['weight']
-
-    result = ExtendedSeries(result_df['price'], index=result_df.index)
-    result = result.rename_axis(None, axis='index')
+    keys = ['quantityBucket', 'contract', 'dates']
+    measure_column = 'forwardPrice'
+    result = _merge_curves_by_weighted_average(forwards_data, weights, keys, measure_column)
     result.dataset_ids = dataset_ids
     return result
 
