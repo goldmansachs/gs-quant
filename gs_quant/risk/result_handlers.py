@@ -77,7 +77,6 @@ def message_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase
 def number_and_unit_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase) -> FloatWithInfo:
     return FloatWithInfo(risk_key, result.get('value', float('nan')), unit=result.get('unit'))
 
-
 def required_assets_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase):
     mappings = (('mkt_type', 'type'), ('mkt_asset', 'asset'))
     return __dataframe_handler('requiredAssets', mappings, result, risk_key)
