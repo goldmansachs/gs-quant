@@ -14,10 +14,14 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime as dt
+import logging
 import pandas as pd
 
 from .core import DataFrameWithInfo, ErrorValue, FloatWithInfo, StringWithInfo, sort_risk
 from gs_quant.base import InstrumentBase, RiskKey
+
+
+_logger = logging.getLogger(__name__)
 
 
 def __dataframe_handler(field: str, mappings: tuple, result: dict, risk_key: RiskKey) -> DataFrameWithInfo:
@@ -52,8 +56,10 @@ def cashflows_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBa
     return __dataframe_handler('cashflows', mappings, result, risk_key)
 
 
-def error_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase) -> ErrorValue:
-    return ErrorValue(risk_key, result.get('errorString'))
+def error_handler(result: dict, risk_key: RiskKey, instrument: InstrumentBase) -> ErrorValue:
+    error = result.get('errorString', 'Unknown error')
+    _logger.error(f'Error while computing {risk_key.risk_measure} on {instrument} for {risk_key.date}: {error}')
+    return ErrorValue(risk_key, error)
 
 
 def leg_definition_handler(result: dict, risk_key: RiskKey, instrument: InstrumentBase) -> InstrumentBase:
@@ -70,7 +76,6 @@ def message_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase
 
 def number_and_unit_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase) -> FloatWithInfo:
     return FloatWithInfo(risk_key, result.get('value', float('nan')), unit=result.get('unit'))
-
 
 def required_assets_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase):
     mappings = (('mkt_type', 'type'), ('mkt_asset', 'asset'))
