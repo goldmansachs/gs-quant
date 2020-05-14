@@ -113,8 +113,8 @@ class ResultInfo(metaclass=ABCMeta):
             if risk_key != component.risk_key.base:
                 raise RuntimeError('Cannot compose heterogeneous results')
 
-            if isinstance(component, ErrorValue):
-                errors[date] = ErrorValue
+            if isinstance(component, (ErrorValue, Exception)):
+                errors[date] = component
             else:
                 values.append(component.raw_value)
                 dates.append(date)
