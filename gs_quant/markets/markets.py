@@ -22,6 +22,11 @@ from gs_quant.common import PricingLocation
 from gs_quant.datetime.date import prev_business_date
 
 
+def closing_market_date(location: Optional[Union[PricingLocation, str]] = None) -> dt.date:
+    return prev_business_date(dt.date.today(),
+                              calendars=location.value if isinstance(location, PricingLocation) else location)
+
+
 class Market(ABC):
 
     def __init__(self, location: Union[str, PricingLocation]):
@@ -66,9 +71,7 @@ class ClosingMarket(AsOfMarket):
     def __init__(self, location: Union[str, PricingLocation], date: Optional[dt.date] = None):
         date = date or self.__cache.get(location)
         if date is None:
-            date = prev_business_date(dt.date.today(),
-                                      calendars=location.value if isinstance(location, PricingLocation) else location)
-            self.__cache[location] = date
+            date = self.__cache[location] = closing_market_date(location)
 
         super().__init__(location, date)
 
@@ -77,8 +80,8 @@ class LiveMarket(AsOfMarket):
 
     def __init__(self, location: Union[str, PricingLocation]):
         # TODO we use 23:59:59.999999 as a sentinel value to indicate live pricing for now. Fix this
-        today = dt.date.today()
-        super().__init__(location, dt.datetime(today.year, today.month, today.day, 23, 59, 59, 999999))
+        date = closing_market_date(location)
+        super().__init__(location, dt.datetime(date.year, date.month, date.day, 23, 59, 59, 999999))
 
     def __repr__(self):
         return 'LIVE ({})'.format(self.location.value)
