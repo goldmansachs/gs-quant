@@ -360,8 +360,8 @@ def basis_swap_spread(asset: Asset, swap_tenor: str = '1y',
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
               [MeasureDependency(id_provider=_currency_to_mdapi_swap_rate_asset, query_type=QueryType.SWAP_RATE)])
 def swap_term_structure(asset: Asset, benchmark_type: BenchmarkType = None, floating_rate_tenor: str = None,
-                        forward_tenor: Optional[GENERIC_DATE] = None, pricing_date: Optional[GENERIC_DATE] = None,
-                        clearing_house: _ClearingHouse = None, *, source: str = None,
+                        forward_tenor: Optional[GENERIC_DATE] = None, clearing_house: _ClearingHouse = None,
+                        pricing_date: Optional[GENERIC_DATE] = None, *, source: str = None,
                         real_time: bool = False) -> Series:
     """
     GS end-of-day Fixed-Floating interest rate swap (IRS) term structure across major currencies.
@@ -371,8 +371,8 @@ def swap_term_structure(asset: Asset, benchmark_type: BenchmarkType = None, floa
     :param floating_rate_tenor: floating index rate
     :param forward_tenor: absolute / relative date representation of forward starting point eg: '1y' or 'Spot' for
     spot starting swaps, 'imm1' or 'frb1'
-    :param pricing_date: YYYY-MM-DD or relative date
     :param clearing_house: Example - "LCH", "EUREX", "JSCC", "CME"
+    :param pricing_date: YYYY-MM-DD or relative date
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: swap rate term structure
@@ -451,8 +451,8 @@ def swap_term_structure(asset: Asset, benchmark_type: BenchmarkType = None, floa
 def basis_swap_term_structure(asset: Asset, spread_benchmark_type: BenchmarkType = None, spread_tenor: str = None,
                               reference_benchmark_type: BenchmarkType = None, reference_tenor: str = None,
                               forward_tenor: Optional[GENERIC_DATE] = None,
-                              pricing_date: Optional[GENERIC_DATE] = None,
                               clearing_house: _ClearingHouse = None,
+                              pricing_date: Optional[GENERIC_DATE] = None,
                               *, source: str = None, real_time: bool = False, ) -> Series:
     """
     GS end-of-day Floating-Floating interest rate swap (IRS) term structure across major currencies.
@@ -465,8 +465,8 @@ def basis_swap_term_structure(asset: Asset, spread_benchmark_type: BenchmarkType
     :param reference_tenor: relative date representation of expiration date of reference leg e.g. 1m
     :param forward_tenor: absolute / relative date representation of forward starting point eg: '1y' or 'Spot' for
     spot starting swaps, 'imm1' or 'frb1'
-    :param pricing_date: YYYY-MM-DD or relative date
     :param clearing_house: Example - "LCH", "EUREX", "JSCC", "CME"
+    :param pricing_date: YYYY-MM-DD or relative date
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: swap rate curve
