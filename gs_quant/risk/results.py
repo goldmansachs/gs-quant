@@ -14,7 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 from gs_quant.base import Priceable
-from gs_quant.risk import RiskMeasure, RiskResult, aggregate_results
+from gs_quant.risk import ErrorValue, RiskMeasure, RiskResult, aggregate_results
 
 from concurrent.futures import Future
 from functools import partial
@@ -74,6 +74,20 @@ class MultipleRiskMeasureFuture(CompositeResultFuture):
     def _set_result(self):
         self._result_future.set_result(MultipleRiskMeasureResult(
             dict(zip(self.__risk_measures, (f.result() for f in self.futures)))))
+
+
+class HistoricalPricingFuture(CompositeResultFuture):
+
+    def _set_result(self):
+        results = [f.result() for f in self._futures]
+        base = next((r for r in results if not isinstance(r, (ErrorValue, Exception))), None)
+
+        if base is None:
+            self._result_future.set_result(results[0])
+        else:
+            result = MultipleRiskMeasureResult({k: base[k].compose(r[k] for r in results) for k in base.keys()})\
+                if isinstance(base, MultipleRiskMeasureResult) else base.compose(results)
+            self._result_future.set_result(result)
 
 
 class PortfolioRiskResult(RiskResult):
@@ -143,7 +157,7 @@ class PortfolioRiskResult(RiskResult):
                   instruments: Optional[Union[int, slice, str, Priceable, Iterable[Union[int, str, Priceable]]]] = (),
                   risk_measure: Optional[RiskMeasure] = None):
         futures = self.__futures(instruments) if instruments or instruments == 0 else self._result.futures
-        scalar = isinstance(futures, (Future, MultipleRiskMeasureFuture))
+        scalar = isinstance(futures, (Future, HistoricalPricingFuture, MultipleRiskMeasureFuture))
         risk_measure = self.risk_measures[0] if len(self.risk_measures) == 1 and not risk_measure else risk_measure
 
         def result(future: Future):
