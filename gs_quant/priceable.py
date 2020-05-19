@@ -68,8 +68,9 @@ class PriceableImpl(Priceable, metaclass=ABCMeta):
         super()._property_changed(prop)
 
         if self.resolution_key and self.unresolved:
+            unresolved = self.unresolved
             self.unresolved = None
-            self.from_instance(self.unresolved)
+            self.from_instance(unresolved)
             self.resolution_key = None
 
     def get_quantity(self) -> float:

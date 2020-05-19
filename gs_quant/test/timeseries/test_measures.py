@@ -16,7 +16,6 @@ under the License.
 
 import datetime
 import datetime as dt
-import unittest.mock
 from typing import Union
 
 import pandas as pd
@@ -39,7 +38,7 @@ from gs_quant.markets.securities import AssetClass, Cross, Index, Currency, Secu
 from gs_quant.session import GsSession, Environment
 from gs_quant.target.common import XRef, PricingLocation, Currency as CurrEnum
 from gs_quant.test.timeseries.utils import mock_request
-from gs_quant.timeseries.measures import BenchmarkType, VolReference
+from gs_quant.timeseries.measures import BenchmarkType
 from gs_quant.api.gs.data import QueryType
 
 _index = [pd.Timestamp('2019-01-01')]
@@ -270,9 +269,7 @@ def test_currency_to_mdapi_basis_swap_rate_asset(mocker):
 
 
 def test_check_clearing_house(mocker):
-    for ch in tm_rates._ClearingHouse.__members__:
-        assert ch == tm_rates._check_clearing_house(ch)
-
+    assert tm_rates._ClearingHouse.CME == tm_rates._check_clearing_house(tm_rates._ClearingHouse.CME)
     assert tm_rates._ClearingHouse.LCH == tm_rates._check_clearing_house(None)
     invalid_ch = ['NYSE']
     for ch in invalid_ch:
@@ -1753,8 +1750,6 @@ def test_var_term():
 
 
 def _vol_term_typical(reference, value):
-    from gs_quant.target.common import FieldFilterMap
-
     assert DataContext.current_is_set
     data = {
         'tenor': ['1w', '2w', '1y', '2y'],
@@ -1766,7 +1761,6 @@ def _vol_term_typical(reference, value):
     replace = Replacer()
     market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
     market_mock.return_value = out
-    ffm_mock = replace('gs_quant.timeseries.measures.FieldFilterMap', Mock(spec=FieldFilterMap))
 
     actual = tm.vol_term(Index('MA123', AssetClass.Equity, '123'), reference, value)
     idx = pd.DatetimeIndex(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
@@ -1779,8 +1773,7 @@ def _vol_term_typical(reference, value):
         assert_series_equal(expected, pd.Series(actual))
         assert actual.dataset_ids == _test_datasets
     market_mock.assert_called_once()
-    ffm_mock.assert_called_once_with(relativeStrike=value if reference == tm.VolReference.NORMALIZED else value / 100,
-                                     strikeReference=unittest.mock.ANY)
+
     replace.restore()
     return actual
 
@@ -1814,8 +1807,6 @@ def test_vol_term():
 
 
 def _vol_term_fx(reference, value):
-    from gs_quant.target.common import FieldFilterMap
-
     assert DataContext.current_is_set
     data = {
         'tenor': ['1w', '2w', '1y', '2y'],
@@ -1827,7 +1818,6 @@ def _vol_term_fx(reference, value):
     replace = Replacer()
     market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
     market_mock.return_value = out
-    ffm_mock = replace('gs_quant.timeseries.measures.FieldFilterMap', Mock(spec=FieldFilterMap))
     cross_mock = replace('gs_quant.timeseries.measures.cross_stored_direction_for_fx_vol', Mock())
     cross_mock.return_value = 'EURUSD'
 
@@ -1842,9 +1832,7 @@ def _vol_term_fx(reference, value):
         assert_series_equal(expected, pd.Series(actual))
         assert actual.dataset_ids == _test_datasets
     market_mock.assert_called_once()
-    ffm_mock.assert_called_once_with(relativeStrike=value * -1 if reference == VolReference.DELTA_PUT else value,
-                                     strikeReference='delta' if reference.value.lower().startswith(
-                                         'delta') else reference.value)
+
     replace.restore()
     return actual
 

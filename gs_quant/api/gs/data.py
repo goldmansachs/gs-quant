@@ -108,7 +108,7 @@ class GsDataApi(DataApi):
             xref_keys = set(where.keys()).intersection(XRef.properties())
             if xref_keys:
                 # Check that assetId is a symbol dimension of this data set. If not, we need to do a separate query
-                # to resolve xref --> assetId
+                # to resolve xref pip install dtaidistance--> assetId
                 if len(xref_keys) > 1:
                     raise MqValueError('Cannot not specify more than one type of asset identifier')
 
@@ -249,7 +249,7 @@ class GsDataApi(DataApi):
         return res
 
     @staticmethod
-    def build_market_data_query(asset_ids: List[str], query_type: QueryType, where: Union[FieldFilterMap] = None,
+    def build_market_data_query(asset_ids: List[str], query_type: QueryType, where: Union[FieldFilterMap, dict] = None,
                                 source: Union[str] = None, real_time: bool = False):
         inner = {
             'assetIds': asset_ids,

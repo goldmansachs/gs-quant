@@ -42,7 +42,7 @@ from gs_quant.datetime.point import relative_days_add
 from gs_quant.errors import MqTypeError, MqValueError
 from gs_quant.markets.securities import *
 from gs_quant.markets.securities import Asset, AssetIdentifier, SecurityMaster
-from gs_quant.target.common import AssetClass, FieldFilterMap, AssetType
+from gs_quant.target.common import AssetClass, AssetType
 from gs_quant.timeseries import volatility, Window, Returns
 from gs_quant.timeseries.helper import log_return, plot_measure, _to_offset
 
@@ -427,7 +427,7 @@ def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Re
     column = 'relativeStrike'
     kwargs[column] = q_strikes
     _logger.debug('where tenor=%s and %s', tenor, kwargs)
-    where = FieldFilterMap(tenor=tenor, **kwargs)
+    where = dict(tenor=tenor, **kwargs)
     q = GsDataApi.build_market_data_query([asset_id], QueryType.IMPLIED_VOLATILITY, where=where, source=source)
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
@@ -472,7 +472,7 @@ def cds_implied_volatility(asset: Asset, expiry: str, tenor: str, strike_referen
     q = GsDataApi.build_market_data_query(
         [asset.get_marquee_id()],
         QueryType.IMPLIED_VOLATILITY_BY_DELTA_STRIKE,
-        where=FieldFilterMap(
+        where=dict(
             expiry=expiry,
             tenor=tenor,
             deltaStrike=delta_strike,
@@ -536,7 +536,7 @@ def implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference 
     ref_string = "delta" if strike_reference in (VolReference.DELTA_CALL, VolReference.DELTA_PUT,
                                                  VolReference.DELTA_NEUTRAL) else strike_reference.value
     _logger.debug('where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, ref_string, relative_strike)
-    where = FieldFilterMap(tenor=tenor, strikeReference=ref_string, relativeStrike=relative_strike)
+    where = dict(tenor=tenor, strikeReference=ref_string, relativeStrike=relative_strike)
     q = GsDataApi.build_market_data_query([asset_id], QueryType.IMPLIED_VOLATILITY,
                                           where=where, source=source, real_time=real_time)
     _logger.debug('q %s', q)
@@ -574,7 +574,7 @@ def implied_correlation(asset: Asset, tenor: str, strike_reference: EdrDataRefer
     _logger.debug('where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, strike_ref, relative_strike)
 
     mqid = asset.get_marquee_id()
-    where = FieldFilterMap(tenor=tenor, strikeReference=strike_ref, relativeStrike=relative_strike)
+    where = dict(tenor=tenor, strikeReference=strike_ref, relativeStrike=relative_strike)
     q = GsDataApi.build_market_data_query([mqid], QueryType.IMPLIED_CORRELATION, where=where, source=source,
                                           real_time=real_time)
 
@@ -611,7 +611,7 @@ def average_implied_volatility(asset: Asset, tenor: str, strike_reference: EdrDa
     _logger.debug('where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, strike_ref, relative_strike)
 
     mqid = asset.get_marquee_id()
-    where = FieldFilterMap(tenor=tenor, strikeReference=strike_ref, relativeStrike=relative_strike)
+    where = dict(tenor=tenor, strikeReference=strike_ref, relativeStrike=relative_strike)
     q = GsDataApi.build_market_data_query([mqid], QueryType.AVERAGE_IMPLIED_VOLATILITY,
                                           where=where, source=source, real_time=real_time)
 
@@ -648,7 +648,7 @@ def average_implied_variance(asset: Asset, tenor: str, strike_reference: EdrData
     _logger.debug('where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, strike_ref, relative_strike)
 
     mqid = asset.get_marquee_id()
-    where = FieldFilterMap(tenor=tenor, strikeReference=strike_ref, relativeStrike=relative_strike)
+    where = dict(tenor=tenor, strikeReference=strike_ref, relativeStrike=relative_strike)
     q = GsDataApi.build_market_data_query([mqid], QueryType.AVERAGE_IMPLIED_VARIANCE, where=where, source=source,
                                           real_time=real_time)
 
@@ -682,7 +682,7 @@ def swaption_vol(asset: Asset, expiration_tenor: str, termination_tenor: str, re
     q = GsDataApi.build_market_data_query(
         [rate_benchmark_mqid],
         QueryType.SWAPTION_VOL,
-        where=FieldFilterMap(expiry=expiration_tenor, tenor=termination_tenor, strike=relative_strike),
+        where=dict(expiry=expiration_tenor, tenor=termination_tenor, strike=relative_strike),
         source=source,
         real_time=real_time
     )
@@ -715,7 +715,7 @@ def swaption_vol_term(asset: Asset, termination_tenor: str, relative_strike: flo
     start, end = _range_from_pricing_date(asset.exchange, pricing_date)
     with DataContext(start, end):
         _logger.debug('where tenor=%s, strike=%s', termination_tenor, relative_strike)
-        where = FieldFilterMap(tenor=termination_tenor, strike=relative_strike)
+        where = dict(tenor=termination_tenor, strike=relative_strike)
         q = GsDataApi.build_market_data_query(
             [rate_benchmark_mqid],
             QueryType.SWAPTION_VOL,
@@ -767,7 +767,7 @@ def swaption_atm_fwd_rate(asset: Asset, expiration_tenor: str, termination_tenor
     q = GsDataApi.build_market_data_query(
         [rate_benchmark_mqid],
         QueryType.ATM_FWD_RATE,
-        where=FieldFilterMap(expiry=expiration_tenor, tenor=termination_tenor, strike=0),
+        where=dict(expiry=expiration_tenor, tenor=termination_tenor, strike=0),
         source=source,
         real_time=real_time
     )
@@ -805,8 +805,8 @@ def midcurve_vol(asset: Asset, expiration_tenor: str, forward_tenor: str, termin
     q = GsDataApi.build_market_data_query(
         [rate_benchmark_mqid],
         QueryType.MIDCURVE_VOL,
-        where=FieldFilterMap(expiry=expiration_tenor, forwardTenor=forward_tenor, tenor=termination_tenor,
-                             strike=relative_strike),
+        where=dict(expiry=expiration_tenor, forwardTenor=forward_tenor, tenor=termination_tenor,
+                   strike=relative_strike),
         source=source,
         real_time=real_time
     )
@@ -838,7 +838,7 @@ def midcurve_atm_fwd_rate(asset: Asset, expiration_tenor: str, forward_tenor: st
     q = GsDataApi.build_market_data_query(
         [convert_asset_for_rates_data_set(asset, RatesConversionType.DEFAULT_BENCHMARK_RATE)],
         QueryType.MIDCURVE_ATM_FWD_RATE,
-        where=FieldFilterMap(expiry=expiration_tenor, forwardTenor=forward_tenor, tenor=termination_tenor, strike=0),
+        where=dict(expiry=expiration_tenor, forwardTenor=forward_tenor, tenor=termination_tenor, strike=0),
         source=source,
         real_time=real_time
     )
@@ -872,7 +872,7 @@ def cap_floor_vol(asset: Asset, expiration_tenor: str, relative_strike: float, *
     q = GsDataApi.build_market_data_query(
         [rate_benchmark_mqid],
         QueryType.CAP_FLOOR_VOL,
-        where=FieldFilterMap(expiry=expiration_tenor, strike=relative_strike),
+        where=dict(expiry=expiration_tenor, strike=relative_strike),
         source=source,
         real_time=real_time
     )
@@ -902,7 +902,7 @@ def cap_floor_atm_fwd_rate(asset: Asset, expiration_tenor: str, *, source: str =
     q = GsDataApi.build_market_data_query(
         [convert_asset_for_rates_data_set(asset, RatesConversionType.DEFAULT_BENCHMARK_RATE)],
         QueryType.CAP_FLOOR_ATM_FWD_RATE,
-        where=FieldFilterMap(expiry=expiration_tenor, strike=0),
+        where=dict(expiry=expiration_tenor, strike=0),
         source=source,
         real_time=real_time
     )
@@ -940,8 +940,8 @@ def spread_option_vol(asset: Asset, expiration_tenor: str, long_tenor: str, shor
     q = GsDataApi.build_market_data_query(
         [rate_benchmark_mqid],
         QueryType.SPREAD_OPTION_VOL,
-        where=FieldFilterMap(expiry=expiration_tenor, longTenor=long_tenor, shortTenor=short_tenor,
-                             strike=relative_strike),
+        where=dict(expiry=expiration_tenor, longTenor=long_tenor, shortTenor=short_tenor,
+                   strike=relative_strike),
         source=source,
         real_time=real_time
     )
@@ -973,7 +973,7 @@ def spread_option_atm_fwd_rate(asset: Asset, expiration_tenor: str, long_tenor: 
     q = GsDataApi.build_market_data_query(
         [convert_asset_for_rates_data_set(asset, RatesConversionType.DEFAULT_BENCHMARK_RATE)],
         QueryType.SPREAD_OPTION_ATM_FWD_RATE,
-        where=FieldFilterMap(expiry=expiration_tenor, longTenor=long_tenor, shortTenor=short_tenor, strike=0),
+        where=dict(expiry=expiration_tenor, longTenor=long_tenor, shortTenor=short_tenor, strike=0),
         source=source,
         real_time=real_time
     )
@@ -1007,7 +1007,7 @@ def zc_inflation_swap_rate(asset: Asset, termination_tenor: str, *, source: str 
     q = GsDataApi.build_market_data_query(
         [infl_rate_benchmark_mqid],
         QueryType.INFLATION_SWAP_RATE,
-        where=FieldFilterMap(tenor=termination_tenor),
+        where=dict(tenor=termination_tenor),
         source=source,
         real_time=real_time
     )
@@ -1039,7 +1039,7 @@ def basis(asset: Asset, termination_tenor: str, *, source: str = None, real_time
     q = GsDataApi.build_market_data_query(
         [basis_mqid],
         QueryType.BASIS,
-        where=FieldFilterMap(tenor=termination_tenor),
+        where=dict(tenor=termination_tenor),
         source=source,
         real_time=real_time
     )
@@ -1072,7 +1072,7 @@ def forecast(asset: Asset, forecast_horizon: str, *, source: str = None, real_ti
     q = GsDataApi.build_market_data_query(
         [usd_based_cross_mqid],
         QueryType.FORECAST,
-        where=FieldFilterMap(relativePeriod=horizon),
+        where=dict(relativePeriod=horizon),
         source=source,
         real_time=real_time
     )
@@ -1132,7 +1132,7 @@ def vol_term(asset: Asset, strike_reference: VolReference, relative_strike: Real
         sr_string = 'delta' if strike_reference in (
             VolReference.DELTA_CALL, VolReference.DELTA_PUT, VolReference.DELTA_NEUTRAL) else strike_reference.value
         _logger.debug('where strikeReference=%s, relativeStrike=%s', sr_string, relative_strike)
-        where = FieldFilterMap(strikeReference=sr_string, relativeStrike=relative_strike)
+        where = dict(strikeReference=sr_string, relativeStrike=relative_strike)
         q = GsDataApi.build_market_data_query([asset_id], QueryType.IMPLIED_VOLATILITY, where=where,
                                               source=source,
                                               real_time=real_time)
@@ -1182,7 +1182,7 @@ def vol_smile(asset: Asset, tenor: str, strike_reference: VolSmileReference,
         q = GsDataApi.build_market_data_query(
             [mqid],
             QueryType.IMPLIED_VOLATILITY,
-            where=FieldFilterMap(tenor=tenor, strikeReference=strike_reference.value),
+            where=dict(tenor=tenor, strikeReference=strike_reference.value),
             source=source,
             real_time=real_time
         )
@@ -1221,7 +1221,7 @@ def fwd_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None, *, sourc
 
     start, end = _range_from_pricing_date(asset.exchange, pricing_date)
     with DataContext(start, end):
-        where = FieldFilterMap(strikeReference='forward', relativeStrike=1)
+        where = dict(strikeReference='forward', relativeStrike=1)
         q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.FORWARD, where=where, source=source,
                                               real_time=real_time)
         _logger.debug('q %s', q)
@@ -1346,7 +1346,7 @@ def var_swap(asset: Asset, tenor: str, forward_start_date: Optional[str] = None,
 
     if forward_start_date is None:
         _logger.debug('where tenor=%s', tenor)
-        where = FieldFilterMap(tenor=tenor)
+        where = dict(tenor=tenor)
         q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.VAR_SWAP,
                                               where=where, source=source, real_time=real_time)
         _logger.debug('q %s', q)
@@ -1371,7 +1371,7 @@ def var_swap(asset: Asset, tenor: str, forward_start_date: Optional[str] = None,
             return series
 
         _logger.debug('where tenor=%s', f'{yt},{zt}')
-        where = FieldFilterMap(tenor=[yt, zt])
+        where = dict(tenor=[yt, zt])
         q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.VAR_SWAP,
                                               where=where, source=source, real_time=real_time)
         _logger.debug('q %s', q)
@@ -1567,8 +1567,12 @@ def _weighted_average_valuation_curve_for_calendar_strip(asset, contract_range, 
 
     start, end = DataContext.current.start_date, DataContext.current.end_date
 
+    contracts_to_query = weights['contract'].unique().tolist()
+    where = dict(contract=contracts_to_query)
+
     with DataContext(start, end):
         q = GsDataApi.build_market_data_query([asset.get_marquee_id()], query_type,
+                                              where=where,
                                               source=None,
                                               real_time=False)
         data = _market_data_timed(q)
@@ -1583,7 +1587,7 @@ def _weighted_average_valuation_curve_for_calendar_strip(asset, contract_range, 
     return result
 
 
-@plot_measure((AssetClass.Commod,), None, [QueryType.PRICE])
+@plot_measure((AssetClass.Commod,), None, [QueryType.FAIR_PRICE])
 def fair_price(asset: Asset, tenor: str = 'F21', *,
                source: str = None, real_time: bool = False) -> pd.Series:
     """'
@@ -1666,7 +1670,10 @@ def forward_price(asset: Asset, price_method: str = 'LMP', bucket: str = 'PEAK',
 
     start, end = DataContext.current.start_date, DataContext.current.end_date
 
-    where = FieldFilterMap(priceMethod=price_method.upper())
+    contracts_to_query = weights['contract'].unique().tolist()
+    quantitybuckets_to_query = weights['quantityBucket'].unique().tolist()
+
+    where = dict(priceMethod=price_method.upper(), quantityBucket=quantitybuckets_to_query, contract=contracts_to_query)
     with DataContext(start, end):
         q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.FORWARD_PRICE,
                                               where=where, source=None,
@@ -1727,7 +1734,7 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
         .astimezone(to_zone)
     end_time = datetime.datetime.combine(end_date, datetime.datetime.max.time(), tzinfo=from_zone).astimezone(to_zone)
 
-    where = FieldFilterMap(priceMethod=price_method.upper())
+    where = dict(priceMethod=price_method.upper())
     with DataContext(start_time, end_time):
         q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.PRICE, where=where, source=source,
                                               real_time=True)
@@ -1930,7 +1937,7 @@ def dividend_yield(asset: Asset, period: str, period_direction: FundamentalMetri
     q = GsDataApi.build_market_data_query(
         [mqid],
         QueryType.FUNDAMENTAL_METRIC,
-        where=FieldFilterMap(metric=metric, period=period, periodDirection=period_direction.value),
+        where=dict(metric=metric, period=period, periodDirection=period_direction.value),
         source=source,
         real_time=real_time
     )
@@ -1973,7 +1980,7 @@ def earnings_per_share(asset: Asset,
     q = GsDataApi.build_market_data_query(
         [mqid],
         QueryType.FUNDAMENTAL_METRIC,
-        where=FieldFilterMap(metric=metric, period=period, periodDirection=period_direction.value),
+        where=dict(metric=metric, period=period, periodDirection=period_direction.value),
         source=source,
         real_time=real_time
     )
@@ -2016,7 +2023,7 @@ def earnings_per_share_positive(asset: Asset,
     q = GsDataApi.build_market_data_query(
         [mqid],
         QueryType.FUNDAMENTAL_METRIC,
-        where=FieldFilterMap(metric=metric, period=period, periodDirection=period_direction.value),
+        where=dict(metric=metric, period=period, periodDirection=period_direction.value),
         source=source,
         real_time=real_time
     )
@@ -2059,7 +2066,7 @@ def net_debt_to_ebitda(asset: Asset,
     q = GsDataApi.build_market_data_query(
         [mqid],
         QueryType.FUNDAMENTAL_METRIC,
-        where=FieldFilterMap(metric=metric, period=period, periodDirection=period_direction.value),
+        where=dict(metric=metric, period=period, periodDirection=period_direction.value),
         source=source,
         real_time=real_time
     )
@@ -2100,7 +2107,7 @@ def price_to_book(asset: Asset, period: str, period_direction: FundamentalMetric
     q = GsDataApi.build_market_data_query(
         [mqid],
         QueryType.FUNDAMENTAL_METRIC,
-        where=FieldFilterMap(metric=metric, period=period, periodDirection=period_direction.value),
+        where=dict(metric=metric, period=period, periodDirection=period_direction.value),
         source=source,
         real_time=real_time
     )
@@ -2141,7 +2148,7 @@ def price_to_cash(asset: Asset, period: str, period_direction: FundamentalMetric
     q = GsDataApi.build_market_data_query(
         [mqid],
         QueryType.FUNDAMENTAL_METRIC,
-        where=FieldFilterMap(metric=metric, period=period, periodDirection=period_direction.value),
+        where=dict(metric=metric, period=period, periodDirection=period_direction.value),
         source=source,
         real_time=real_time
     )
@@ -2182,7 +2189,7 @@ def price_to_earnings(asset: Asset, period: str, period_direction: FundamentalMe
     q = GsDataApi.build_market_data_query(
         [mqid],
         QueryType.FUNDAMENTAL_METRIC,
-        where=FieldFilterMap(metric=metric, period=period, periodDirection=period_direction.value),
+        where=dict(metric=metric, period=period, periodDirection=period_direction.value),
         source=source,
         real_time=real_time
     )
@@ -2225,7 +2232,7 @@ def price_to_earnings_positive(asset: Asset,
     q = GsDataApi.build_market_data_query(
         [mqid],
         QueryType.FUNDAMENTAL_METRIC,
-        where=FieldFilterMap(metric=metric, period=period, periodDirection=period_direction.value),
+        where=dict(metric=metric, period=period, periodDirection=period_direction.value),
         source=source,
         real_time=real_time
     )
@@ -2266,7 +2273,7 @@ def price_to_sales(asset: Asset, period: str, period_direction: FundamentalMetri
     q = GsDataApi.build_market_data_query(
         [mqid],
         QueryType.FUNDAMENTAL_METRIC,
-        where=FieldFilterMap(metric=metric, period=period, periodDirection=period_direction.value),
+        where=dict(metric=metric, period=period, periodDirection=period_direction.value),
         source=source,
         real_time=real_time
     )
@@ -2307,7 +2314,7 @@ def return_on_equity(asset: Asset, period: str, period_direction: FundamentalMet
     q = GsDataApi.build_market_data_query(
         [mqid],
         QueryType.FUNDAMENTAL_METRIC,
-        where=FieldFilterMap(metric=metric, period=period, periodDirection=period_direction.value),
+        where=dict(metric=metric, period=period, periodDirection=period_direction.value),
         source=source,
         real_time=real_time
     )
@@ -2348,7 +2355,7 @@ def sales_per_share(asset: Asset, period: str, period_direction: FundamentalMetr
     q = GsDataApi.build_market_data_query(
         [mqid],
         QueryType.FUNDAMENTAL_METRIC,
-        where=FieldFilterMap(metric=metric, period=period, periodDirection=period_direction.value),
+        where=dict(metric=metric, period=period, periodDirection=period_direction.value),
         source=source,
         real_time=real_time
     )

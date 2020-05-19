@@ -16,6 +16,13 @@
 # description. Type annotations should be provided for parameters.
 from .statistics import *
 from ..errors import *
+import itertools
+from dataclasses import dataclass
+from typing import Union, Tuple
+import numpy as np
+import pandas as pd
+from statsmodels.tsa.arima_model import ARIMA
+from statsmodels.tools.eval_measures import mse
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.data import DataContext
 from gs_quant.datetime.date import DayCountConvention
@@ -662,3 +669,157 @@ def max_drawdown(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Se
         rolling_max = x.rolling(w.w, 0).max()
         result = (x / rolling_max - 1).rolling(w.w, 0).min()
     return apply_ramp(result, w)
+
+
+@dataclass
+class ARIMABestParams:
+    freq: str = ''
+    p: int = None
+    d: int = None
+    q: int = None
+    const: float = None
+    ar_coef: List[float] = None
+    ma_coef: List[float] = None
+    resid: List[float] = None
+    series: pd.Series = None
+
+
+class Arima:
+    """
+    ARIMA is the Autoregressive Integrated Moving Average Model and is used
+    to normalize and forecast time series data. ARIMA has 3 parameters:
+    (p, d, q) where:
+        :p is the number of autoregressive terms
+        :d is the number of nonseasonal differences
+        :q is the number of lagged forecast errors in the prediction equation
+    An ARIMA model is selected from the Cartesian product of sets p, q, and d.
+    The time series is split into train and test sets and an ARIMA model is fit
+    for every combination on the training set. The model with the lowest
+    mean-squared error (MSE) on the test set is selected as the best model. The
+    original times series can then be transformed by the best model.
+    **Examples**
+    >>> series = generate_series(100)
+    >>> ar = econometrics.Arima()
+    >>> ar.fit(series, train_size=0.8)
+    >>> transformed_time_series = ar.transform(series)
+    """
+
+    def __init__(self):
+        self.best_params = {}
+
+    @staticmethod
+    def _evaluate_arima_model(X: Union[pd.Series, pd.DataFrame], arima_order: Tuple[int, int, int],
+                              train_size: Union[float, int, None], freq: str) -> Tuple[float, dict]:
+        train_size = int(len(X) * 0.75) if train_size is None else int(len(X) * train_size) \
+            if isinstance(train_size, float) else train_size
+        train, test = X[:train_size].astype(float), X[train_size:].astype(float)
+
+        model = ARIMA(train, order=arima_order, freq=freq)
+        model_fit = model.fit(disp=False, method='css', trend='nc')
+
+        # calculate test error
+        yhat = model_fit.forecast(len(test))[0]
+        error = mse(test, yhat)
+
+        return error, model_fit
+
+    def fit(self, X: Union[pd.Series, pd.DataFrame], train_size: Union[float, int, None] = None,
+            p_vals: list = (0, 1, 2), d_vals: list = (0, 1, 2), q_vals: list = (0, 1, 2), freq: str = None) -> 'arima':
+        """
+        Train a combination of ARIMA models. If pandas DataFrame, finds the
+        best arima model parameters for each column. If pandas Series, finds
+        the best arima model parameters for the series.
+        :param X: time series to be operated on; required parameter
+        :param train_size: if float, should be between 0.0 and 1.0 and
+        represent the proportion of the dataset to include in the train split.
+        If int, represents the absolute number of train samples. If None,
+        the value is automatically set 0.75
+        :p_vals: number of autoregressive terms to search; default is [0,1,2]
+        :d_vals: number of differences to search; default is [0,1,2]
+        :q_vals: number of lagged forecast to search; always [0,1,2]
+        :freq: frequency of time series, default is None
+        :return: self
+        """
+        if isinstance(X, pd.Series):
+            X = X.to_frame()
+
+        for series_id in X.columns:
+            series = X[series_id]
+            best_score = float('inf')
+            best_order = None
+            best_const = None
+            best_ar_coef = None
+            best_ma_coef = None
+            best_resid = None
+            for order in list(itertools.product(*[p_vals, d_vals, q_vals])):
+                try:
+                    error, model_fit = self._evaluate_arima_model(series, order, train_size, freq)
+                    if error < best_score:
+                        best_score = error
+                        best_order = order
+                        best_const = model_fit.params.to_dict().get('const', 0)
+                        best_ar_coef = model_fit.arparams
+                        best_ma_coef = model_fit.maparams
+                        best_resid = model_fit.resid
+                except Exception as e:
+                    print('   {}'.format(e))
+                    continue
+
+            p, d, q = best_order
+            self.best_params[series_id] = ARIMABestParams(freq, p, d, q, best_const, best_ar_coef, best_ma_coef,
+                                                          best_resid, series)
+        return self
+
+    def _difference(self, X: pd.Series, d: int):
+        """Helper Function to Difference Time Series n Times"""
+
+        return X if d == 0 else X.diff() if d == 1 else self._difference(X.diff(), d - 1)
+
+    @staticmethod
+    def _lagged_values(X: pd.Series, p: int, ar_coef: list):
+        """Helper Function to Calculate AutoRegressive(AR) Component"""
+
+        return X if p == 0 else pd.concat([X.copy().shift(periods=i) for i in range(1, p + 1)], axis=1).dot(ar_coef)
+
+    @staticmethod
+    def _calculate_residuals(X_ar: pd.Series, X_diff: pd.Series, p: int, d: int, q: int, ma_coef: list):
+        """Helper Function to Calculate Residuals/MA Component"""
+
+        ma_coef = ma_coef[::-1]
+        resid = X_ar.copy(deep=True)
+        resid[:] = 0
+
+        X_ma = X_ar.copy(deep=True)
+        X_ma[:] = np.nan
+
+        for x in range(p + d, len(X_ar)):
+            ma_component = resid[x - q: x].dot(ma_coef)
+            prediction = X_ar[x] + ma_component
+            residual = X_diff[x] - prediction
+            resid[x] = residual
+            X_ma[x] = prediction
+
+        return resid, X_ma
+
+    def _arima_transform_series(self, s: ARIMABestParams) -> pd.Series:
+        """Helper Function to Transform Series"""
+
+        # Difference first
+        X_diff = self._difference(s.series, s.d)
+
+        # Calculate Autoregressive Component
+        X_diff_ar = self._lagged_values(X_diff, s.p, s.ar_coef)
+
+        # Calculate Residuals and Moving Average Component
+        _, X_diff_ar_ma = self._calculate_residuals(X_diff_ar, X_diff, s.p, s.d, s.q, s.ma_coef)
+        return X_diff_ar_ma
+
+    def transform(self, X: Union[pd.Series, pd.DataFrame]) -> pd.DataFrame:
+        """
+        Transform a series based on the best ARIMA found from fit().
+        Does not support tranformation using MA components.
+        :param X: time series to be operated on; required parameter
+        :return: DataFrame
+        """
+        X = X.to_frame() if isinstance(X, pd.Series) else X
+        return pd.DataFrame({s_id: self._arima_transform_series(self.best_params[s_id]) for s_id in X.columns})

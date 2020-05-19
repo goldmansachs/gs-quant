@@ -166,7 +166,7 @@ class LagMode(Enum):
 
 
 @plot_function
-def lag(x: pd.Series, obs: int = 1, mode: LagMode = LagMode.TRUNCATE) -> pd.Series:
+def lag(x: pd.Series, obs: int = 1, mode: LagMode = LagMode.EXTEND) -> pd.Series:
     """
     Lag timeseries by a specified number of observations
 

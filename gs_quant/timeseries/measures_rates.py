@@ -29,7 +29,7 @@ from gs_quant.data import DataContext
 from gs_quant.datetime.gscalendar import GsCalendar
 from gs_quant.errors import MqValueError
 from gs_quant.markets.securities import AssetIdentifier, Asset
-from gs_quant.target.common import Currency as CurrencyEnum, PricingLocation, AssetClass, AssetType, FieldFilterMap
+from gs_quant.target.common import Currency as CurrencyEnum, PricingLocation, AssetClass, AssetType
 from gs_quant.timeseries import ASSET_SPEC, BenchmarkType, plot_measure, MeasureDependency, GENERIC_DATE
 from gs_quant.timeseries.helper import _to_offset
 from gs_quant.timeseries.measures import _asset_from_spec, _market_data_timed, _range_from_pricing_date, \
@@ -137,11 +137,11 @@ def _check_benchmark_type(currency, benchmark_type):
 def _check_clearing_house(clearing_house: _ClearingHouse) -> _ClearingHouse:
     if clearing_house is None:
         return _ClearingHouse.LCH
-    elif clearing_house not in _ClearingHouse.__members__:
+    elif isinstance(clearing_house, _ClearingHouse):
+        return clearing_house
+    else:
         raise MqValueError('invalid clearing house: ' + clearing_house + ' choose one among ' +
                            ', '.join([ch.value for ch in _ClearingHouse]))
-    else:
-        return clearing_house
 
 
 def _get_swap_leg_defaults(currency: CurrencyEnum, benchmark_type: BenchmarkType = None,
@@ -208,7 +208,7 @@ def _get_swap_data(asset: Asset, swap_tenor: str, benchmark_type: BenchmarkType 
     _logger.debug('where asset= %s, swap_tenor=%s, benchmark_type=%s, floating_rate_tenor=%s, forward_tenor=%s, '
                   'pricing_location=%s', rate_mqid, swap_tenor, defaults['benchmark_type'],
                   defaults['floating_rate_tenor'], forward_tenor, defaults['pricing_location'].value)
-    where = FieldFilterMap(csaTerms=csaTerms)
+    where = dict(csaTerms=csaTerms)
     q = GsDataApi.build_market_data_query([rate_mqid], query_type, where=where, source=source,
                                           real_time=real_time)
     _logger.debug('q %s', q)
@@ -346,7 +346,7 @@ def basis_swap_spread(asset: Asset, swap_tenor: str = '1y',
                   legs_w_defaults['reference']['benchmark_type'], legs_w_defaults['reference']['floating_rate_tenor'],
                   forward_tenor, legs_w_defaults['spread']['pricing_location'].value)
 
-    where = FieldFilterMap(csaTerms=csaTerms)
+    where = dict(csaTerms=csaTerms)
     q = GsDataApi.build_market_data_query([rate_mqid], QueryType.BASIS_SWAP_RATE, where=where, source=source,
                                           real_time=real_time)
     _logger.debug('q %s', q)
@@ -423,7 +423,7 @@ def swap_term_structure(asset: Asset, benchmark_type: BenchmarkType = None, floa
 
     start, end = _range_from_pricing_date(calendar, pricing_date)
     with DataContext(start, end):
-        where = FieldFilterMap(csaTerms=csaTerms)
+        where = dict(csaTerms=csaTerms)
         q = GsDataApi.build_market_data_query(rate_mqids, QueryType.SWAP_RATE, where=where,
                                               source=source, real_time=real_time)
         _logger.debug('q %s', q)
@@ -528,7 +528,7 @@ def basis_swap_term_structure(asset: Asset, spread_benchmark_type: BenchmarkType
 
     start, end = _range_from_pricing_date(calendar, pricing_date)
     with DataContext(start, end):
-        where = FieldFilterMap(csaTerms=csaTerms)
+        where = dict(csaTerms=csaTerms)
         q = GsDataApi.build_market_data_query(rate_mqids, QueryType.BASIS_SWAP_RATE, where=where,
                                               source=source, real_time=real_time)
         _logger.debug('q %s', q)

@@ -19,7 +19,8 @@ from unittest.mock import Mock
 import pytest
 from pandas.util.testing import assert_series_equal
 from testfixtures import Replacer
-
+from pandas import Timestamp
+from math import isclose
 from gs_quant.timeseries import *
 from gs_quant.timeseries.econometrics import _get_ratio
 
@@ -462,6 +463,146 @@ def test_sharpe_ratio():
     actual = _get_ratio(er_df['ER'], 0.0175, 0, day_count_convention=DayCountConvention.ACTUAL_360,
                         curve_type=CurveType.EXCESS_RETURNS)
     numpy.testing.assert_almost_equal(actual.values, er_df['SR'].values, decimal=5)
+
+
+def test_arima_fit():
+    test_dict = {
+        'High': {
+            Timestamp('1989-01-03 00:00:00'): 3.575721263885498,
+            Timestamp('1989-01-04 00:00:00'): 3.5857372283935547,
+            Timestamp('1989-01-05 00:00:00'): 3.62580132484436,
+            Timestamp('1989-01-06 00:00:00'): 3.62580132484436,
+            Timestamp('1989-01-09 00:00:00'): 3.575721263885498,
+            Timestamp('1989-01-10 00:00:00'): 3.575721263885498,
+            Timestamp('1989-01-11 00:00:00'): 3.5657050609588623,
+            Timestamp('1989-01-12 00:00:00'): 3.635817289352417,
+            Timestamp('1989-01-13 00:00:00'): 3.615785360336304,
+            Timestamp('1989-01-16 00:00:00'): 3.615785360336304,
+            Timestamp('1989-01-17 00:00:00'): 3.635817289352417,
+            Timestamp('1989-01-18 00:00:00'): 3.675881385803223,
+            Timestamp('1989-01-19 00:00:00'): 3.695913553237915,
+            Timestamp('1989-01-20 00:00:00'): 3.665865421295166,
+            Timestamp('1989-01-23 00:00:00'): 3.675881385803223,
+            Timestamp('1989-01-24 00:00:00'): 3.675881385803223,
+            Timestamp('1989-01-25 00:00:00'): 3.695913553237915,
+            Timestamp('1989-01-26 00:00:00'): 3.7760417461395264,
+            Timestamp('1989-01-27 00:00:00'): 3.8561699390411377,
+            Timestamp('1989-01-30 00:00:00'): 3.8561699390411377},
+        'Low': {
+            Timestamp('1989-01-03 00:00:00'): 3.4855768680572514,
+            Timestamp('1989-01-04 00:00:00'): 3.5356571674346924,
+            Timestamp('1989-01-05 00:00:00'): 3.575721263885498,
+            Timestamp('1989-01-06 00:00:00'): 3.575721263885498,
+            Timestamp('1989-01-09 00:00:00'): 3.5356571674346924,
+            Timestamp('1989-01-10 00:00:00'): 3.5356571674346924,
+            Timestamp('1989-01-11 00:00:00'): 3.5256409645080566,
+            Timestamp('1989-01-12 00:00:00'): 3.5456731319427486,
+            Timestamp('1989-01-13 00:00:00'): 3.5857372283935547,
+            Timestamp('1989-01-16 00:00:00'): 3.5957531929016118,
+            Timestamp('1989-01-17 00:00:00'): 3.5857372283935547,
+            Timestamp('1989-01-18 00:00:00'): 3.615785360336304,
+            Timestamp('1989-01-19 00:00:00'): 3.655849456787109,
+            Timestamp('1989-01-20 00:00:00'): 3.62580132484436,
+            Timestamp('1989-01-23 00:00:00'): 3.615785360336304,
+            Timestamp('1989-01-24 00:00:00'): 3.615785360336304,
+            Timestamp('1989-01-25 00:00:00'): 3.655849456787109,
+            Timestamp('1989-01-26 00:00:00'): 3.665865421295166,
+            Timestamp('1989-01-27 00:00:00'): 3.79607367515564,
+            Timestamp('1989-01-30 00:00:00'): 3.786057710647583},
+        'Close': {
+            Timestamp('1989-01-03 00:00:00'): 3.5256409645080566,
+            Timestamp('1989-01-04 00:00:00'): 3.5857372283935547,
+            Timestamp('1989-01-05 00:00:00'): 3.575721263885498,
+            Timestamp('1989-01-06 00:00:00'): 3.575721263885498,
+            Timestamp('1989-01-09 00:00:00'): 3.575721263885498,
+            Timestamp('1989-01-10 00:00:00'): 3.5556890964508057,
+            Timestamp('1989-01-11 00:00:00'): 3.5556890964508057,
+            Timestamp('1989-01-12 00:00:00'): 3.605769157409668,
+            Timestamp('1989-01-13 00:00:00'): 3.605769157409668,
+            Timestamp('1989-01-16 00:00:00'): 3.5957531929016118,
+            Timestamp('1989-01-17 00:00:00'): 3.62580132484436,
+            Timestamp('1989-01-18 00:00:00'): 3.675881385803223,
+            Timestamp('1989-01-19 00:00:00'): 3.665865421295166,
+            Timestamp('1989-01-20 00:00:00'): 3.6458332538604736,
+            Timestamp('1989-01-23 00:00:00'): 3.62580132484436,
+            Timestamp('1989-01-24 00:00:00'): 3.675881385803223,
+            Timestamp('1989-01-25 00:00:00'): 3.675881385803223,
+            Timestamp('1989-01-26 00:00:00'): 3.756009578704834,
+            Timestamp('1989-01-27 00:00:00'): 3.79607367515564,
+            Timestamp('1989-01-30 00:00:00'): 3.846153736114502},
+    }
+
+    test_df = pd.DataFrame(test_dict)
+    arima = econometrics.Arima()
+
+    train_size_values = [0.75, int(0.75 * len(test_df)), None]
+    for train_size in train_size_values:
+        arima.fit(test_df, train_size=train_size, freq='B', q_vals=[0])
+        transformed_test_df = arima.transform(test_df)
+
+        for col in transformed_test_df.keys():
+            count_nans = arima.best_params[col].p + arima.best_params[col].d
+            assert (count_nans == transformed_test_df[col].isna().sum())
+
+        # Test (2,1,0) Model
+        test_df_high = test_df['High'].diff()
+        assert (isclose(transformed_test_df['High'][3], (arima.best_params['High'].const + test_df_high[2] *
+                                                         arima.best_params['High'].ar_coef[0] + test_df_high[1] *
+                                                         arima.best_params['High'].ar_coef[1]), abs_tol=1e-8))
+        assert (isclose(transformed_test_df['High'][4], (arima.best_params['High'].const + test_df_high[3] *
+                                                         arima.best_params['High'].ar_coef[0] + test_df_high[2] *
+                                                         arima.best_params['High'].ar_coef[1]), abs_tol=1e-8))
+        assert (isclose(transformed_test_df['High'][-1], (arima.best_params['High'].const + test_df_high[-2] *
+                                                          arima.best_params['High'].ar_coef[0] + test_df_high[-3] *
+                                                          arima.best_params['High'].ar_coef[1]), abs_tol=1e-8))
+
+        # Test (2,2,0) Model
+        test_df_low = test_df['Low'].diff().diff()
+        assert (isclose(transformed_test_df['Low'][4], (arima.best_params['Low'].const + test_df_low[3] *
+                                                        arima.best_params['Low'].ar_coef[0] + test_df_low[2] *
+                                                        arima.best_params['Low'].ar_coef[1]), abs_tol=1e-8))
+        assert (isclose(transformed_test_df['Low'][5], (arima.best_params['Low'].const + test_df_low[4] *
+                                                        arima.best_params['Low'].ar_coef[0] + test_df_low[3] *
+                                                        arima.best_params['Low'].ar_coef[1]), abs_tol=1e-8))
+        assert (isclose(transformed_test_df['Low'][-1], (arima.best_params['Low'].const + test_df_low[-2] *
+                                                         arima.best_params['Low'].ar_coef[0] + test_df_low[-3] *
+                                                         arima.best_params['Low'].ar_coef[1]), abs_tol=1e-8))
+
+        # Test (2,1,0) Model
+        test_df_close = test_df['Close'].diff()
+        assert (isclose(transformed_test_df['Close'][3], (arima.best_params['Close'].const + test_df_close[2] *
+                                                          arima.best_params['Close'].ar_coef[0] + test_df_close[1] *
+                                                          arima.best_params['Close'].ar_coef[1]), abs_tol=1e-8))
+        assert (isclose(transformed_test_df['Close'][4], (arima.best_params['Close'].const + test_df_close[3] *
+                                                          arima.best_params['Close'].ar_coef[0] + test_df_close[2] *
+                                                          arima.best_params['Close'].ar_coef[1]), abs_tol=1e-8))
+        assert (isclose(transformed_test_df['Close'][-1], (arima.best_params['Close'].const + test_df_close[-2] *
+                                                           arima.best_params['Close'].ar_coef[0] + test_df_close[-3] *
+                                                           arima.best_params['Close'].ar_coef[1]), abs_tol=1e-8))
+
+    # Test if input is pd.Series
+    test_high_series = pd.Series(test_df['High'])
+    arima.fit(test_high_series, train_size=0.75, freq='B', q_vals=[0])
+    transformed_test_series = arima.transform(test_high_series)
+    test_series_high = test_df['High'].diff()
+    assert (isclose(transformed_test_series['High'][3], (arima.best_params['High'].const + test_series_high[2] *
+                                                         arima.best_params['High'].ar_coef[0] + test_series_high[1] *
+                                                         arima.best_params['High'].ar_coef[1]), abs_tol=1e-8))
+    assert (isclose(transformed_test_series['High'][4], (arima.best_params['High'].const + test_series_high[3] *
+                                                         arima.best_params['High'].ar_coef[0] + test_series_high[2] *
+                                                         arima.best_params['High'].ar_coef[1]), abs_tol=1e-8))
+    assert (isclose(transformed_test_series['High'][-1], (arima.best_params['High'].const + test_series_high[-2] *
+                                                          arima.best_params['High'].ar_coef[0] + test_series_high[-3] *
+                                                          arima.best_params['High'].ar_coef[1]), abs_tol=1e-8))
+
+    # Test if p=0 and d=0
+    new_arima = econometrics.Arima()
+    zero_resid = test_high_series.copy(deep=True)
+    zero_resid[:] = 0
+    new_arima.best_params = {'High': econometrics.ARIMABestParams(p=0, q=0, d=0, const=0, ar_coef=[0], ma_coef=[],
+                                                                  resid=zero_resid, series=test_high_series)}
+    transformed_test_df = new_arima.transform(test_high_series)
+    assert_series_equal(transformed_test_df['High'], test_df['High'])
 
 
 if __name__ == "__main__":

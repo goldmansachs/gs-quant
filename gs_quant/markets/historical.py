@@ -21,22 +21,8 @@ from typing import Iterable, Optional, Tuple, Union
 from .core import PricingContext
 from gs_quant.base import Priceable
 from gs_quant.datetime.date import date_range
-from gs_quant.risk import ErrorValue, RiskMeasure
-from gs_quant.risk.results import CompositeResultFuture, MultipleRiskMeasureResult
-
-
-class HistoricalPricingFuture(CompositeResultFuture):
-
-    def _set_result(self):
-        results = [f.result() for f in self._futures]
-        base = next((r for r in results if not isinstance(r, (ErrorValue, Exception))), None)
-
-        if base is None:
-            self._result_future.set_result(results[0])
-        else:
-            result = MultipleRiskMeasureResult({k: base[k].compose(r[k] for r in results) for k in base.keys()})\
-                if isinstance(base, MultipleRiskMeasureResult) else base.compose(results)
-            self._result_future.set_result(result)
+from gs_quant.risk import RiskMeasure
+from gs_quant.risk.results import HistoricalPricingFuture
 
 
 class HistoricalPricingContext(PricingContext):
