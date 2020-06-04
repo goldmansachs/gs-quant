@@ -68,8 +68,6 @@ class EntitiesSupported(EnumBase, Enum):
     """Enum listing supported entities"""
 
     assets = 'assets'
-    kpis = 'kpis'
-    sts = 'sts'
     tds = 'tds'
     
     def __repr__(self):
@@ -355,105 +353,6 @@ class FieldMap(Base):
         self.name = name
 
 
-class FunctionParameters(Base):
-        
-    """Function parameters to be passed into the relevant gs_quant function."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        initial: int = None,
-        obs: int = None,
-        returns_type: str = None,
-        type_: str = None,
-        w: int = None,
-        entity_id: str = None,
-        returns: bool = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.initial = initial
-        self.obs = obs
-        self.returns_type = returns_type
-        self.__type = type_
-        self.w = w
-        self.entity_id = entity_id
-        self.returns = returns
-        self.name = name
-
-    @property
-    def initial(self) -> int:
-        """Initial value"""
-        return self.__initial
-
-    @initial.setter
-    def initial(self, value: int):
-        self._property_changed('initial')
-        self.__initial = value        
-
-    @property
-    def obs(self) -> int:
-        """Number of Observations"""
-        return self.__obs
-
-    @obs.setter
-    def obs(self, value: int):
-        self._property_changed('obs')
-        self.__obs = value        
-
-    @property
-    def returns_type(self) -> str:
-        """returns type (simple, log)"""
-        return self.__returns_type
-
-    @returns_type.setter
-    def returns_type(self, value: str):
-        self._property_changed('returns_type')
-        self.__returns_type = value        
-
-    @property
-    def type(self) -> str:
-        """returns type (simple, log)"""
-        return self.__type
-
-    @type.setter
-    def type(self, value: str):
-        self._property_changed('type')
-        self.__type = value        
-
-    @property
-    def w(self) -> int:
-        """Window or int: number of observations and ramp up to use. e.g. Window(22, 10)
-           where 22 is the window size"""
-        return self.__w
-
-    @w.setter
-    def w(self, value: int):
-        self._property_changed('w')
-        self.__w = value        
-
-    @property
-    def entity_id(self) -> str:
-        """Entity to use as additional series for functions. i.e. Beta or Correlation
-           functions."""
-        return self.__entity_id
-
-    @entity_id.setter
-    def entity_id(self, value: str):
-        self._property_changed('entity_id')
-        self.__entity_id = value        
-
-    @property
-    def returns(self) -> bool:
-        """Whether pb_total_return custom function returns the sum or typical returns."""
-        return self.__returns
-
-    @returns.setter
-    def returns(self, value: bool):
-        self._property_changed('returns')
-        self.__returns = value        
-
-
 class Historical(Base):
         
     """value and date for historical data"""
@@ -689,7 +588,7 @@ class Function(Base):
         start_time: str = None,
         end_time: str = None,
         fields: Tuple[str, ...] = None,
-        parameters: FunctionParameters = None,
+        parameters: FieldMap = None,
         where: FieldMap = None,
         vendor: str = None,
         data_set_id: str = None
@@ -790,12 +689,12 @@ class Function(Base):
         self.__fields = value        
 
     @property
-    def parameters(self) -> FunctionParameters:
-        """Function parameters to be passed into the relevant gs_quant function."""
+    def parameters(self) -> FieldMap:
+        """Parameters to be passed into GS Quant functions. For example, window (w)."""
         return self.__parameters
 
     @parameters.setter
-    def parameters(self, value: FunctionParameters):
+    def parameters(self, value: FieldMap):
         self._property_changed('parameters')
         self.__parameters = value        
 
@@ -1057,7 +956,8 @@ class ColumnDefinition(Base):
         expressions: Tuple[str, ...] = None,
         start_date: str = None,
         end_date: str = None,
-        tooltip: str = None
+        tooltip: str = None,
+        parent_column_name: str = None
     ):        
         super().__init__()
         self.enable_cell_flashing = enable_cell_flashing
@@ -1074,6 +974,7 @@ class ColumnDefinition(Base):
         self.start_date = start_date
         self.end_date = end_date
         self.tooltip = tooltip
+        self.parent_column_name = parent_column_name
 
     @property
     def enable_cell_flashing(self) -> bool:
@@ -1214,6 +1115,16 @@ class ColumnDefinition(Base):
     def tooltip(self, value: str):
         self._property_changed('tooltip')
         self.__tooltip = value        
+
+    @property
+    def parent_column_name(self) -> str:
+        """Name of the top level column name."""
+        return self.__parent_column_name
+
+    @parent_column_name.setter
+    def parent_column_name(self, value: str):
+        self._property_changed('parent_column_name')
+        self.__parent_column_name = value        
 
 
 class EntityId(Base):
@@ -1395,45 +1306,15 @@ class MonitorParameters(Base):
         self,
         column_definitions: Tuple[ColumnDefinition, ...],
         row_groups: Tuple[RowGroup, ...],
-        data_set_id: str = None,
-        rebase_to_spot: bool = None,
-        rebase_historical_curve: bool = None,
-        meeting_after_next: bool = None,
-        next_meeting: bool = None,
-        last_meeting: bool = None,
-        rebase_to_end_of_year_spot: bool = None,
-        filters: Tuple[WipiRequestFilter, ...] = None,
-        exportable: Tuple[str, ...] = None,
         export: ExportParameters = None,
-        fill_column_index: float = None,
-        knot: float = None,
-        default_hidden: bool = None,
-        line_chart_color: str = None,
-        chart_curve_type: str = None,
         ignore_business_day_logic: bool = None,
-        disable_row_click: bool = None,
         name: str = None
     ):        
         super().__init__()
         self.column_definitions = column_definitions
         self.row_groups = row_groups
-        self.data_set_id = data_set_id
-        self.rebase_to_spot = rebase_to_spot
-        self.rebase_historical_curve = rebase_historical_curve
-        self.meeting_after_next = meeting_after_next
-        self.next_meeting = next_meeting
-        self.last_meeting = last_meeting
-        self.rebase_to_end_of_year_spot = rebase_to_end_of_year_spot
-        self.filters = filters
-        self.exportable = exportable
         self.export = export
-        self.fill_column_index = fill_column_index
-        self.knot = knot
-        self.default_hidden = default_hidden
-        self.line_chart_color = line_chart_color
-        self.chart_curve_type = chart_curve_type
         self.ignore_business_day_logic = ignore_business_day_logic
-        self.disable_row_click = disable_row_click
         self.name = name
 
     @property
@@ -1457,99 +1338,6 @@ class MonitorParameters(Base):
         self.__row_groups = value        
 
     @property
-    def data_set_id(self) -> str:
-        """ID of the dataset in which the monitor fetches data."""
-        return self.__data_set_id
-
-    @data_set_id.setter
-    def data_set_id(self, value: str):
-        self._property_changed('data_set_id')
-        self.__data_set_id = value        
-
-    @property
-    def rebase_to_spot(self) -> bool:
-        """Whether to rebase the output to the first rows values"""
-        return self.__rebase_to_spot
-
-    @rebase_to_spot.setter
-    def rebase_to_spot(self, value: bool):
-        self._property_changed('rebase_to_spot')
-        self.__rebase_to_spot = value        
-
-    @property
-    def rebase_historical_curve(self) -> bool:
-        """Whether to rebase the historical curve."""
-        return self.__rebase_historical_curve
-
-    @rebase_historical_curve.setter
-    def rebase_historical_curve(self, value: bool):
-        self._property_changed('rebase_historical_curve')
-        self.__rebase_historical_curve = value        
-
-    @property
-    def meeting_after_next(self) -> bool:
-        """For a given valuation date, toggle to pull the hikes/cuts priced in for the 2nd
-           meeting after the valuation date over the past 3 months."""
-        return self.__meeting_after_next
-
-    @meeting_after_next.setter
-    def meeting_after_next(self, value: bool):
-        self._property_changed('meeting_after_next')
-        self.__meeting_after_next = value        
-
-    @property
-    def next_meeting(self) -> bool:
-        """For a given valuation date, toggle to pull the hikes/cuts priced in for the next
-           meeting after the valuation date over the past 3 months."""
-        return self.__next_meeting
-
-    @next_meeting.setter
-    def next_meeting(self, value: bool):
-        self._property_changed('next_meeting')
-        self.__next_meeting = value        
-
-    @property
-    def last_meeting(self) -> bool:
-        """For a given valuation date, toggle to pull the hikes/cuts priced in for the last
-           meeting before the valuation date over the past 3 months."""
-        return self.__last_meeting
-
-    @last_meeting.setter
-    def last_meeting(self, value: bool):
-        self._property_changed('last_meeting')
-        self.__last_meeting = value        
-
-    @property
-    def rebase_to_end_of_year_spot(self) -> bool:
-        """Whether to rebase to the EOY Forward."""
-        return self.__rebase_to_end_of_year_spot
-
-    @rebase_to_end_of_year_spot.setter
-    def rebase_to_end_of_year_spot(self, value: bool):
-        self._property_changed('rebase_to_end_of_year_spot')
-        self.__rebase_to_end_of_year_spot = value        
-
-    @property
-    def filters(self) -> Tuple[WipiRequestFilter, ...]:
-        """Filters for the dataset before returning the data response."""
-        return self.__filters
-
-    @filters.setter
-    def filters(self, value: Tuple[WipiRequestFilter, ...]):
-        self._property_changed('filters')
-        self.__filters = value        
-
-    @property
-    def exportable(self) -> Tuple[str, ...]:
-        """Permission to export monitor data. This will be deprecated for export."""
-        return self.__exportable
-
-    @exportable.setter
-    def exportable(self, value: Tuple[str, ...]):
-        self._property_changed('exportable')
-        self.__exportable = value        
-
-    @property
     def export(self) -> ExportParameters:
         """Object with properties specifying how to export individual row or complete
            monitor data."""
@@ -1561,61 +1349,6 @@ class MonitorParameters(Base):
         self.__export = value        
 
     @property
-    def fill_column_index(self) -> float:
-        """The Index to place the fill column. The Fill column is remaining white space in
-           the monitor. Defaults to the last column."""
-        return self.__fill_column_index
-
-    @fill_column_index.setter
-    def fill_column_index(self, value: float):
-        self._property_changed('fill_column_index')
-        self.__fill_column_index = value        
-
-    @property
-    def knot(self) -> float:
-        """Used when rendering a chart component from the output, whether to display a knot
-           in the chart configuration as a prop. Number represents size of the
-           knot."""
-        return self.__knot
-
-    @knot.setter
-    def knot(self, value: float):
-        self._property_changed('knot')
-        self.__knot = value        
-
-    @property
-    def default_hidden(self) -> bool:
-        """On workspaces, monitors may be hidden by default. True will by default hide this
-           monitor. For example, used in workspaces with multi charts."""
-        return self.__default_hidden
-
-    @default_hidden.setter
-    def default_hidden(self, value: bool):
-        self._property_changed('default_hidden')
-        self.__default_hidden = value        
-
-    @property
-    def line_chart_color(self) -> str:
-        """On monitors that render line charts, for example Central Bank Watch curves, this
-           will enforce the line color."""
-        return self.__line_chart_color
-
-    @line_chart_color.setter
-    def line_chart_color(self, value: str):
-        self._property_changed('line_chart_color')
-        self.__line_chart_color = value        
-
-    @property
-    def chart_curve_type(self) -> str:
-        """The curve type of the chart line."""
-        return self.__chart_curve_type
-
-    @chart_curve_type.setter
-    def chart_curve_type(self, value: str):
-        self._property_changed('chart_curve_type')
-        self.__chart_curve_type = value        
-
-    @property
     def ignore_business_day_logic(self) -> bool:
         """Whether or not to apply business day logic for relative dates."""
         return self.__ignore_business_day_logic
@@ -1624,16 +1357,6 @@ class MonitorParameters(Base):
     def ignore_business_day_logic(self, value: bool):
         self._property_changed('ignore_business_day_logic')
         self.__ignore_business_day_logic = value        
-
-    @property
-    def disable_row_click(self) -> bool:
-        """Whether or not allow clicking on a row through to the product page."""
-        return self.__disable_row_click
-
-    @disable_row_click.setter
-    def disable_row_click(self, value: bool):
-        self._property_changed('disable_row_click')
-        self.__disable_row_click = value        
 
 
 class Monitor(Base):

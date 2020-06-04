@@ -56,7 +56,7 @@ def min_(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int] = Window(No
 
     If :math:`x` is an array of series:
 
-    :math:`R_t` = min(X_{1, t-w+1}:X_{n, t})
+    :math:`R_t = min(X_{1, t-w+1}:X_{n, t})`
 
     where :math:`w` is the size of the rolling window, and :math:`n` is the number of series.
 
@@ -108,7 +108,7 @@ def max_(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int] = Window(No
 
     If :math:`x` is an array of series:
 
-    :math:`R_t` = max(X_{1, t-w+1}:X_{n, t})
+    :math:`R_t = max(X_{1, t-w+1}:X_{n, t})`
 
     where :math:`w` is the size of the rolling window, and :math:`n` is the number of series.
 
@@ -449,6 +449,49 @@ def std(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
 
 
 @plot_function
+def exponential_std(x: pd.Series, alpha: float = 0.75) -> pd.Series:
+    """
+    Exponentially weighted standard deviation time series from previous values.
+
+    :param x: time series of prices
+    :param alpha: how much to weigh the previous price in the time series, thus controlling how much importance we
+                  place on the (more distant) past
+    :return: date-based time series of standard deviation of the input series
+
+    **Usage**
+
+    Provides `unbiased estimator <https://en.wikipedia.org/wiki/Unbiased_estimation_of_standard_deviation>`_ of
+    exponentially weighted sample `standard deviation
+    <https://en.wikipedia.org/wiki/Weighted_arithmetic_mean#Weighted_sample_variance>`_:
+
+    :math:`R_t = \\sqrt{ \\frac{\sum_{i=0}^t w_i (X_{t-i} - \overline{X_t})^2} {\sum_{i=0}^t w_i} * DF_t }`
+
+    where :math:`w_i` is the weight assigned to :math:`i` th observation, :math:`\overline{X_t}` is the day's
+    `exponential moving average <https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average>`_ and
+    :math:`DF_t` is the debiasing factor:
+
+    :math:`w_i = (1-\\alpha)\\alpha^i` for i<t; :math:`\\alpha^i` for i=t
+
+    :math:`\overline{X_t} = \\alpha \cdot \overline{X_{t-1}} + (1 - \\alpha) \cdot X_{t-1}`
+
+    :math:`DF_t = \\frac{(\sum_{i=0}^t w_i)^2} {(\sum_{i=0}^t w_i)^2 - \sum_{i=0}^t w_i^2}`
+
+    **Examples**
+
+    Generate price series and compute exponentially weighted standard deviation of returns
+
+    >>> prices = generate_series(100)
+    >>> exponential_std(returns(prices), 0.9)
+
+    **See also**
+
+    :func:`std` :func:`var` :func:`exponential_moving_average`
+
+    """
+    return x.ewm(alpha=1 - alpha, adjust=False).std()
+
+
+@plot_function
 def var(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     """
     Rolling variance of series over given window
@@ -746,12 +789,21 @@ def percentiles(x: pd.Series, y: pd.Series = None, w: Union[Window, int] = Windo
     if y is None:
         y = x.copy()
 
+    if isinstance(w.r, int) and w.r > len(y):
+        raise ValueError('Ramp value must be less than the length of the series y.')
+
+    if isinstance(w.w, int) and w.w > len(x):
+        return pd.Series()
+
     res = pd.Series(dtype=np.dtype(float))
     for idx, val in y.iteritems():
         sample = x.loc[(x.index > idx - w.w) & (x.index <= idx)] if isinstance(w.w, pd.DateOffset) else x[:idx][-w.w:]
         res.loc[idx] = percentileofscore(sample, val, kind='mean')
 
-    return apply_ramp(res, w)
+    if isinstance(w.r, pd.DateOffset):
+        return res.loc[res.index[0] + w.r:]
+    else:
+        return res[w.r:]
 
 
 @plot_function

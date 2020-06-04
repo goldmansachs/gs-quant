@@ -106,6 +106,7 @@ Statistics
    :toctree: functions
 
    cov
+   exponential_std
    generate_series
    max_   
    mean
@@ -140,4 +141,6 @@ Technical Analysis
    bollinger_bands
    moving_average
    exponential_moving_average
+   smoothed_moving_average
+   relative_strength_index
    

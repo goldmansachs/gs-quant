@@ -56,7 +56,7 @@ class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
             else:
                 if '$type' in values:
                     from gs_quant_internal import tdapi
-                    tdapi_cls = getattr(tdapi, values['$type'])
+                    tdapi_cls = getattr(tdapi, values['$type'].replace('Defn', 'Builder'))
                     if not tdapi_cls:
                         raise RuntimeError('Cannot resolve TDAPI type {}'.format(tdapi_cls))
 

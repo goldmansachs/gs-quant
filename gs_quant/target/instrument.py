@@ -611,10 +611,11 @@ class CommodOption(Instrument):
         quantity_period: Union[Period, str] = None,
         settlement: str = None,
         contract: str = None,
-        leg_description: str = None,
+        floating_type: str = None,
         fixing_currency: Union[CurrencyName, str] = None,
         fixing_currency_source: str = None,
-        strike_price: Union[float, str] = None,
+        strike: str = None,
+        strike_unit: str = None,
         name: str = None
     ):        
         super().__init__()
@@ -629,10 +630,11 @@ class CommodOption(Instrument):
         self.quantity_period = quantity_period
         self.settlement = settlement
         self.contract = contract
-        self.leg_description = leg_description
+        self.floating_type = floating_type
         self.fixing_currency = fixing_currency
         self.fixing_currency_source = fixing_currency_source
-        self.strike_price = strike_price
+        self.strike = strike
+        self.strike_unit = strike_unit
         self.name = name
 
     @property
@@ -756,14 +758,14 @@ class CommodOption(Instrument):
         self.__contract = value        
 
     @property
-    def leg_description(self) -> str:
+    def floating_type(self) -> str:
         """The description of the averaging style"""
-        return self.__leg_description
+        return self.__floating_type
 
-    @leg_description.setter
-    def leg_description(self, value: str):
-        self._property_changed('leg_description')
-        self.__leg_description = value        
+    @floating_type.setter
+    def floating_type(self, value: str):
+        self._property_changed('floating_type')
+        self.__floating_type = value        
 
     @property
     def fixing_currency(self) -> Union[CurrencyName, str]:
@@ -786,14 +788,24 @@ class CommodOption(Instrument):
         self.__fixing_currency_source = value        
 
     @property
-    def strike_price(self) -> Union[float, str]:
-        """Size of some value, i.e. notional like 1.3b, 1.5, 1000"""
-        return self.__strike_price
+    def strike(self) -> str:
+        """strike price (e.g. 50 or 50qd)"""
+        return self.__strike
 
-    @strike_price.setter
-    def strike_price(self, value: Union[float, str]):
-        self._property_changed('strike_price')
-        self.__strike_price = value        
+    @strike.setter
+    def strike(self, value: str):
+        self._property_changed('strike')
+        self.__strike = value        
+
+    @property
+    def strike_unit(self) -> str:
+        """Commodity asset"""
+        return self.__strike_unit
+
+    @strike_unit.setter
+    def strike_unit(self, value: str):
+        self._property_changed('strike_unit')
+        self.__strike_unit = value        
 
 
 class CommodSwap(Instrument):
@@ -814,10 +826,11 @@ class CommodSwap(Instrument):
         quantity_unit: str = None,
         quantity_period: Union[Period, str] = None,
         settlement: str = None,
-        leg_description: str = None,
+        floating_type: str = None,
         fixing_currency: Union[CurrencyName, str] = None,
         fixing_currency_source: str = None,
         fixed_price: Union[float, str] = None,
+        fixed_price_unit: str = None,
         name: str = None
     ):        
         super().__init__()
@@ -832,10 +845,11 @@ class CommodSwap(Instrument):
         self.quantity_unit = quantity_unit
         self.quantity_period = quantity_period
         self.settlement = settlement
-        self.leg_description = leg_description
+        self.floating_type = floating_type
         self.fixing_currency = fixing_currency
         self.fixing_currency_source = fixing_currency_source
         self.fixed_price = fixed_price
+        self.fixed_price_unit = fixed_price_unit
         self.name = name
 
     @property
@@ -959,14 +973,14 @@ class CommodSwap(Instrument):
         self.__settlement = value        
 
     @property
-    def leg_description(self) -> str:
+    def floating_type(self) -> str:
         """The description of the averaging style"""
-        return self.__leg_description
+        return self.__floating_type
 
-    @leg_description.setter
-    def leg_description(self, value: str):
-        self._property_changed('leg_description')
-        self.__leg_description = value        
+    @floating_type.setter
+    def floating_type(self, value: str):
+        self._property_changed('floating_type')
+        self.__floating_type = value        
 
     @property
     def fixing_currency(self) -> Union[CurrencyName, str]:
@@ -997,6 +1011,16 @@ class CommodSwap(Instrument):
     def fixed_price(self, value: Union[float, str]):
         self._property_changed('fixed_price')
         self.__fixed_price = value        
+
+    @property
+    def fixed_price_unit(self) -> str:
+        """Commodity asset"""
+        return self.__fixed_price_unit
+
+    @fixed_price_unit.setter
+    def fixed_price_unit(self, value: str):
+        self._property_changed('fixed_price_unit')
+        self.__fixed_price_unit = value        
 
 
 class CommodVarianceSwap(Instrument):

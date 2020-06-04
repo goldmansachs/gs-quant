@@ -18,7 +18,7 @@ import logging
 from typing import Tuple, Union
 
 from gs_quant.instrument import Instrument
-from gs_quant.session import Environment, GsSession
+from gs_quant.session import GsSession
 from gs_quant.target.portfolios import Portfolio, Position, PositionSet
 from gs_quant.target.reports import Report
 
@@ -86,10 +86,7 @@ class GsPortfolioApi:
     def get_instruments_by_position_type(cls, positions_type: str, positions_id: str) -> Tuple[Instrument, ...]:
         root = 'deals' if positions_type == 'ETI' else 'books/' + positions_type
         url = '/risk-internal/{}/{}/positions'.format(root, positions_id)
-
-        with GsSession.get(Environment.QA) as session:
-            # TODO Remove this once in prod
-            results = session._get(url)
+        results = GsSession.current._get(url, timeout=181)
 
         instruments = []
         for position in results.get('positionSets', ({'positions': ()},))[0]['positions']:

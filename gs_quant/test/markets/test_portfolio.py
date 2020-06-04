@@ -257,11 +257,11 @@ def test_historical_pricing(mocker):
         results = portfolio.calc((risk.DollarPrice, risk.IRDelta))
 
     expected = risk.SeriesWithInfo(
-        risk_key.base,
         pd.Series(
             data=[0.06, 0.063, 0.066],
             index=[dt.date(2019, 10, 7), dt.date(2019, 10, 8), dt.date(2019, 10, 9)]
-        ))
+        ),
+        risk_key=risk_key.base,)
 
     actual = results[risk.DollarPrice].aggregate()
 

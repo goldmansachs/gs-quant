@@ -33,10 +33,11 @@ from gs_quant.errors import MqValueError
 from gs_quant.markets import MarketDataCoordinate
 from gs_quant.session import GsSession
 from gs_quant.target.common import FieldFilterMap, XRef, MarketDataVendor, PricingLocation
-from gs_quant.target.data import DataQuery, DataQueryResponse, MDAPIDataBatchResponse, MDAPIDataQuery,\
+from gs_quant.target.data import DataQuery, DataQueryResponse, MDAPIDataBatchResponse, MDAPIDataQuery, \
     MDAPIDataQueryResponse
 from gs_quant.target.data import DataSetEntity
 from .assets import GsAssetApi, GsIdType
+from ...target.assets import EntityQuery
 
 _logger = logging.getLogger(__name__)
 
@@ -46,6 +47,7 @@ class QueryType(Enum):
     IMPLIED_CORRELATION = "Implied Correlation"
     AVERAGE_IMPLIED_VOLATILITY = "Average Implied Volatility"
     AVERAGE_IMPLIED_VARIANCE = "Average Implied Variance"
+    AVERAGE_REALIZED_VOLATILITY = "Average Realized Volatility"
     SWAP_RATE = "Swap Rate"
     SWAP_ANNUITY = "Swap Annuity"
     BASIS_SWAP_RATE = "Basis Swap Rate"
@@ -87,6 +89,7 @@ class QueryType(Enum):
 
 class GsDataApi(DataApi):
     __definitions = {}
+    __asset_coordinates_cache = TTLCache(10000, 86400)
     DEFAULT_SCROLL = '30s'
 
     # DataApi interface
@@ -151,8 +154,8 @@ class GsDataApi(DataApi):
         return results
 
     @classmethod
-    def last_data(cls, query: DataQuery, dataset_id: str = None) -> Union[list, tuple]:
-        if query.marketDataCoordinates:
+    def last_data(cls, query: Union[DataQuery, MDAPIDataQuery], dataset_id: str = None) -> Union[list, tuple]:
+        if getattr(query, 'marketDataCoordinates', None):
             result = GsSession.current._post('/data/coordinates/query/last', payload=query)
             return result.get('responses', ())
         else:
@@ -247,6 +250,46 @@ class GsDataApi(DataApi):
 
         res = GsSession.current._get('/data/datasets?{query}'.format(query=query_string), cls=DataSetEntity)['results']
         return res
+
+    @classmethod
+    @cachetools.cached(__asset_coordinates_cache)
+    def get_many_coordinates(
+            cls,
+            mkt_type: str = None,
+            mkt_asset: str = None,
+            mkt_class: str = None,
+            mkt_point: Tuple[str, ...] = (),
+            *,
+            limit: int = 100,
+            return_type: type = str,
+    ) -> Union[Tuple[str, ...], Tuple[MarketDataCoordinate, ...]]:
+        where = FieldFilterMap(
+            mkt_type=mkt_type.upper() if mkt_type is not None else None,
+            mkt_asset=mkt_asset.upper() if mkt_asset is not None else None,
+            mkt_class=mkt_class.upper() if mkt_class is not None else None,
+        )
+        for index, point in enumerate(mkt_point):
+            setattr(where, 'mkt_point' + str(index + 1), point.upper())
+
+        query = EntityQuery(
+            where=where,
+            limit=limit
+        )
+        results = GsSession.current._post('/data/mdapi/query', query)['results']
+
+        if return_type is str:
+            return tuple(coordinate['name'] for coordinate in results)
+        elif return_type is MarketDataCoordinate:
+            return tuple(
+                MarketDataCoordinate(
+                    mkt_type=coordinate['dimensions']['mktType'],
+                    mkt_asset=coordinate['dimensions']['mktAsset'],
+                    mkt_class=coordinate['dimensions']['mktClass'],
+                    mkt_point=tuple(coordinate['dimensions']['mktPoint'].values()),
+                    mkt_quoting_style=coordinate['dimensions']['mktQuotingStyle']
+                ) for coordinate in results)
+        else:
+            raise NotImplementedError('Unsupported return type')
 
     @staticmethod
     def build_market_data_query(asset_ids: List[str], query_type: QueryType, where: Union[FieldFilterMap, dict] = None,

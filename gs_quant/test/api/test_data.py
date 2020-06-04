@@ -307,5 +307,23 @@ def test_coordinates_converter():
         GsDataApi._coordinate_from_str("A")
 
 
+def test_get_many_coordinates(mocker):
+    coordinates = [
+        {
+            'id': 'MC123',
+            'name': 'A_B_C_D_E.F1'
+        },
+        {
+            'id': 'MC123',
+            'name': 'A_B_C_D_E.F2'
+        }
+    ]
+    mocker.patch.object(GsSession.__class__, 'default_value',
+                        return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    GsSession.current._post = mocker.Mock(return_value={'results': coordinates})
+    response = GsDataApi.get_many_coordinates(mkt_type='A', mkt_asset='B')
+    assert response == ('A_B_C_D_E.F1', 'A_B_C_D_E.F2')
+
+
 if __name__ == "__main__":
     pytest.main(args=["test_data.py"])

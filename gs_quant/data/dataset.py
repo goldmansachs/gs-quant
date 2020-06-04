@@ -213,6 +213,7 @@ class Dataset:
             fields=fields,
             **kwargs
         )
+        query.format = None  # "last" endpoint does not support MessagePack
 
         data = self.provider.last_data(query, self.id)
         return self.provider.construct_dataframe_with_types(self.id, data)

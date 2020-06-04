@@ -1124,6 +1124,7 @@ class IdFieldProperties(Base):
         bcid: Tuple[str, ...] = None,
         qis_perm_no: Tuple[str, ...] = None,
         asset_id: Tuple[str, ...] = None,
+        primary_entity_id: Tuple[str, ...] = None,
         activity_id: Tuple[str, ...] = None,
         idea_id: Tuple[str, ...] = None,
         scenario_id: Tuple[str, ...] = None,
@@ -1185,6 +1186,7 @@ class IdFieldProperties(Base):
         self.bcid = bcid
         self.qis_perm_no = qis_perm_no
         self.asset_id = asset_id
+        self.primary_entity_id = primary_entity_id
         self.activity_id = activity_id
         self.idea_id = idea_id
         self.scenario_id = scenario_id
@@ -1667,6 +1669,15 @@ class IdFieldProperties(Base):
         self.__asset_id = value        
 
     @property
+    def primary_entity_id(self) -> Tuple[str, ...]:
+        return self.__primary_entity_id
+
+    @primary_entity_id.setter
+    def primary_entity_id(self, value: Tuple[str, ...]):
+        self._property_changed('primary_entity_id')
+        self.__primary_entity_id = value        
+
+    @property
     def activity_id(self) -> Tuple[str, ...]:
         return self.__activity_id
 
@@ -1800,6 +1811,149 @@ class MDAPI(Base):
         self.__quoting_styles = value        
 
 
+class MDAPIDataQuery(Base):
+        
+    @camel_case_translate
+    def __init__(
+        self,
+        market_data_coordinates: Tuple[MarketDataCoordinate, ...],
+        format_: Union[Format, str] = None,
+        pricing_location: Union[PricingLocation, str] = None,
+        selector_function: str = None,
+        samples: int = None,
+        vendor: Union[MarketDataVendor, str] = None,
+        start_time: datetime.datetime = None,
+        end_time: datetime.datetime = None,
+        start_date: datetime.date = None,
+        end_date: datetime.date = None,
+        real_time: bool = True,
+        name: str = None
+    ):        
+        super().__init__()
+        self.__format = get_enum_value(Format, format_)
+        self.market_data_coordinates = market_data_coordinates
+        self.pricing_location = pricing_location
+        self.selector_function = selector_function
+        self.samples = samples
+        self.vendor = vendor
+        self.start_time = start_time
+        self.end_time = end_time
+        self.start_date = start_date
+        self.end_date = end_date
+        self.real_time = real_time
+        self.name = name
+
+    @property
+    def format(self) -> Union[Format, str]:
+        """Alternative format for data to be returned in"""
+        return self.__format
+
+    @format.setter
+    def format(self, value: Union[Format, str]):
+        self._property_changed('format')
+        self.__format = get_enum_value(Format, value)        
+
+    @property
+    def market_data_coordinates(self) -> Tuple[MarketDataCoordinate, ...]:
+        """Object representation of a market data coordinate"""
+        return self.__market_data_coordinates
+
+    @market_data_coordinates.setter
+    def market_data_coordinates(self, value: Tuple[MarketDataCoordinate, ...]):
+        self._property_changed('market_data_coordinates')
+        self.__market_data_coordinates = value        
+
+    @property
+    def pricing_location(self) -> Union[PricingLocation, str]:
+        """Pricing location of end-of-day data (not used for real-time query)."""
+        return self.__pricing_location
+
+    @pricing_location.setter
+    def pricing_location(self, value: Union[PricingLocation, str]):
+        self._property_changed('pricing_location')
+        self.__pricing_location = get_enum_value(PricingLocation, value)        
+
+    @property
+    def selector_function(self) -> str:
+        """Aggregation function to be applied to value fields"""
+        return self.__selector_function
+
+    @selector_function.setter
+    def selector_function(self, value: str):
+        self._property_changed('selector_function')
+        self.__selector_function = value        
+
+    @property
+    def samples(self) -> int:
+        """Number of points to down sample the data, for example if 10, it will return at
+           most 10 sample data points evenly spaced over the time/date range"""
+        return self.__samples
+
+    @samples.setter
+    def samples(self, value: int):
+        self._property_changed('samples')
+        self.__samples = value        
+
+    @property
+    def vendor(self) -> Union[MarketDataVendor, str]:
+        return self.__vendor
+
+    @vendor.setter
+    def vendor(self, value: Union[MarketDataVendor, str]):
+        self._property_changed('vendor')
+        self.__vendor = get_enum_value(MarketDataVendor, value)        
+
+    @property
+    def start_time(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
+        return self.__start_time
+
+    @start_time.setter
+    def start_time(self, value: datetime.datetime):
+        self._property_changed('start_time')
+        self.__start_time = value        
+
+    @property
+    def end_time(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
+        return self.__end_time
+
+    @end_time.setter
+    def end_time(self, value: datetime.datetime):
+        self._property_changed('end_time')
+        self.__end_time = value        
+
+    @property
+    def start_date(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__start_date
+
+    @start_date.setter
+    def start_date(self, value: datetime.date):
+        self._property_changed('start_date')
+        self.__start_date = value        
+
+    @property
+    def end_date(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__end_date
+
+    @end_date.setter
+    def end_date(self, value: datetime.date):
+        self._property_changed('end_date')
+        self.__end_date = value        
+
+    @property
+    def real_time(self) -> bool:
+        """Intraday or end of day data"""
+        return self.__real_time
+
+    @real_time.setter
+    def real_time(self, value: bool):
+        self._property_changed('real_time')
+        self.__real_time = value        
+
+
 class MDAPIDataQueryResponse(Base):
         
     @camel_case_translate
@@ -1821,78 +1975,6 @@ class MDAPIDataQueryResponse(Base):
     def data(self, value: Tuple[FieldValueMap, ...]):
         self._property_changed('data')
         self.__data = value        
-
-
-class MarketDataCoordinate(Base):
-        
-    """Object representation of a market data coordinate"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        mkt_type: str = None,
-        mkt_asset: str = None,
-        mkt_class: str = None,
-        mkt_point: Tuple[str, ...] = None,
-        mkt_quoting_style: str = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.mkt_type = mkt_type
-        self.mkt_asset = mkt_asset
-        self.mkt_class = mkt_class
-        self.mkt_point = mkt_point
-        self.mkt_quoting_style = mkt_quoting_style
-        self.name = name
-
-    @property
-    def mkt_type(self) -> str:
-        """The MDAPI Type, e.g. IR, IR BASIS, FX, FX Vol"""
-        return self.__mkt_type
-
-    @mkt_type.setter
-    def mkt_type(self, value: str):
-        self._property_changed('mkt_type')
-        self.__mkt_type = value        
-
-    @property
-    def mkt_asset(self) -> str:
-        """The MDAPI Asset, e.g. USD, EUR-EURIBOR-Telerate, WTI"""
-        return self.__mkt_asset
-
-    @mkt_asset.setter
-    def mkt_asset(self, value: str):
-        self._property_changed('mkt_asset')
-        self.__mkt_asset = value        
-
-    @property
-    def mkt_class(self) -> str:
-        """The MDAPI Class, e.g. Swap, Cash."""
-        return self.__mkt_class
-
-    @mkt_class.setter
-    def mkt_class(self, value: str):
-        self._property_changed('mkt_class')
-        self.__mkt_class = value        
-
-    @property
-    def mkt_point(self) -> Tuple[str, ...]:
-        """The MDAPI Point, e.g. 3m, 10y, 11y, Dec19"""
-        return self.__mkt_point
-
-    @mkt_point.setter
-    def mkt_point(self, value: Tuple[str, ...]):
-        self._property_changed('mkt_point')
-        self.__mkt_point = value        
-
-    @property
-    def mkt_quoting_style(self) -> str:
-        return self.__mkt_quoting_style
-
-    @mkt_quoting_style.setter
-    def mkt_quoting_style(self, value: str):
-        self._property_changed('mkt_quoting_style')
-        self.__mkt_quoting_style = value        
 
 
 class MarketDataField(Base):
@@ -2138,7 +2220,7 @@ class SymbolFilterLink(Base):
     @property
     def entity_type(self) -> str:
         """The type of the entity to lookup to."""
-        return 'MDAPIArcticSymbol'        
+        return 'MktCoordinate'        
 
     @property
     def entity_field(self) -> str:
@@ -2582,149 +2664,6 @@ class MDAPIDataBatchResponse(Base):
     def responses(self, value: Tuple[MDAPIDataQueryResponse, ...]):
         self._property_changed('responses')
         self.__responses = value        
-
-
-class MDAPIDataQuery(Base):
-        
-    @camel_case_translate
-    def __init__(
-        self,
-        market_data_coordinates: Tuple[MarketDataCoordinate, ...],
-        format_: Union[Format, str] = None,
-        pricing_location: Union[PricingLocation, str] = None,
-        selector_function: str = None,
-        samples: int = None,
-        vendor: Union[MarketDataVendor, str] = None,
-        start_time: datetime.datetime = None,
-        end_time: datetime.datetime = None,
-        start_date: datetime.date = None,
-        end_date: datetime.date = None,
-        real_time: bool = True,
-        name: str = None
-    ):        
-        super().__init__()
-        self.__format = get_enum_value(Format, format_)
-        self.market_data_coordinates = market_data_coordinates
-        self.pricing_location = pricing_location
-        self.selector_function = selector_function
-        self.samples = samples
-        self.vendor = vendor
-        self.start_time = start_time
-        self.end_time = end_time
-        self.start_date = start_date
-        self.end_date = end_date
-        self.real_time = real_time
-        self.name = name
-
-    @property
-    def format(self) -> Union[Format, str]:
-        """Alternative format for data to be returned in"""
-        return self.__format
-
-    @format.setter
-    def format(self, value: Union[Format, str]):
-        self._property_changed('format')
-        self.__format = get_enum_value(Format, value)        
-
-    @property
-    def market_data_coordinates(self) -> Tuple[MarketDataCoordinate, ...]:
-        """Object representation of a market data coordinate"""
-        return self.__market_data_coordinates
-
-    @market_data_coordinates.setter
-    def market_data_coordinates(self, value: Tuple[MarketDataCoordinate, ...]):
-        self._property_changed('market_data_coordinates')
-        self.__market_data_coordinates = value        
-
-    @property
-    def pricing_location(self) -> Union[PricingLocation, str]:
-        """Pricing location of end-of-day data (not used for real-time query)."""
-        return self.__pricing_location
-
-    @pricing_location.setter
-    def pricing_location(self, value: Union[PricingLocation, str]):
-        self._property_changed('pricing_location')
-        self.__pricing_location = get_enum_value(PricingLocation, value)        
-
-    @property
-    def selector_function(self) -> str:
-        """Aggregation function to be applied to value fields"""
-        return self.__selector_function
-
-    @selector_function.setter
-    def selector_function(self, value: str):
-        self._property_changed('selector_function')
-        self.__selector_function = value        
-
-    @property
-    def samples(self) -> int:
-        """Number of points to down sample the data, for example if 10, it will return at
-           most 10 sample data points evenly spaced over the time/date range"""
-        return self.__samples
-
-    @samples.setter
-    def samples(self, value: int):
-        self._property_changed('samples')
-        self.__samples = value        
-
-    @property
-    def vendor(self) -> Union[MarketDataVendor, str]:
-        return self.__vendor
-
-    @vendor.setter
-    def vendor(self, value: Union[MarketDataVendor, str]):
-        self._property_changed('vendor')
-        self.__vendor = get_enum_value(MarketDataVendor, value)        
-
-    @property
-    def start_time(self) -> datetime.datetime:
-        """ISO 8601-formatted timestamp"""
-        return self.__start_time
-
-    @start_time.setter
-    def start_time(self, value: datetime.datetime):
-        self._property_changed('start_time')
-        self.__start_time = value        
-
-    @property
-    def end_time(self) -> datetime.datetime:
-        """ISO 8601-formatted timestamp"""
-        return self.__end_time
-
-    @end_time.setter
-    def end_time(self, value: datetime.datetime):
-        self._property_changed('end_time')
-        self.__end_time = value        
-
-    @property
-    def start_date(self) -> datetime.date:
-        """ISO 8601-formatted date"""
-        return self.__start_date
-
-    @start_date.setter
-    def start_date(self, value: datetime.date):
-        self._property_changed('start_date')
-        self.__start_date = value        
-
-    @property
-    def end_date(self) -> datetime.date:
-        """ISO 8601-formatted date"""
-        return self.__end_date
-
-    @end_date.setter
-    def end_date(self, value: datetime.date):
-        self._property_changed('end_date')
-        self.__end_date = value        
-
-    @property
-    def real_time(self) -> bool:
-        """Intraday or end of day data"""
-        return self.__real_time
-
-    @real_time.setter
-    def real_time(self, value: bool):
-        self._property_changed('real_time')
-        self.__real_time = value        
 
 
 class MarketDataMapping(Base):
