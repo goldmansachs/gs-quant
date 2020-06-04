@@ -615,6 +615,91 @@ class Benchmark(Base):
         self.__name = value        
 
 
+class CommodityReferencePriceParameters(Base):
+        
+    """Parameters specific to the group used to specify the commodity underlier."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        commodity_base: str = None,
+        commodity_details: str = None,
+        currency: str = None,
+        unit: str = None,
+        exchange_id: str = None,
+        publication: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.commodity_base = commodity_base
+        self.commodity_details = commodity_details
+        self.currency = currency
+        self.unit = unit
+        self.exchange_id = exchange_id
+        self.publication = publication
+        self.name = name
+
+    @property
+    def commodity_base(self) -> str:
+        """Value to identify the base type of the commodity being traded."""
+        return self.__commodity_base
+
+    @commodity_base.setter
+    def commodity_base(self, value: str):
+        self._property_changed('commodity_base')
+        self.__commodity_base = value        
+
+    @property
+    def commodity_details(self) -> str:
+        """Value to identify the commodity being traded more specifically."""
+        return self.__commodity_details
+
+    @commodity_details.setter
+    def commodity_details(self, value: str):
+        self._property_changed('commodity_details')
+        self.__commodity_details = value        
+
+    @property
+    def currency(self) -> str:
+        """Currency of price."""
+        return self.__currency
+
+    @currency.setter
+    def currency(self, value: str):
+        self._property_changed('currency')
+        self.__currency = value        
+
+    @property
+    def unit(self) -> str:
+        """Unit of measurement of the commodity."""
+        return self.__unit
+
+    @unit.setter
+    def unit(self, value: str):
+        self._property_changed('unit')
+        self.__unit = value        
+
+    @property
+    def exchange_id(self) -> str:
+        """Exchange where that future is listed, if traded by a listed price."""
+        return self.__exchange_id
+
+    @exchange_id.setter
+    def exchange_id(self, value: str):
+        self._property_changed('exchange_id')
+        self.__exchange_id = value        
+
+    @property
+    def publication(self) -> str:
+        """Publication with reference to whose prices commodity is traded."""
+        return self.__publication
+
+    @publication.setter
+    def publication(self, value: str):
+        self._property_changed('publication')
+        self.__publication = value        
+
+
 class NumberRange(Base):
         
     """lower and upper bound to define a number range"""

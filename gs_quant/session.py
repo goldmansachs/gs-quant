@@ -18,6 +18,7 @@ from configparser import ConfigParser
 import backoff
 from enum import Enum, auto, unique
 import inspect
+import itertools
 import json
 import msgpack
 import os
@@ -62,11 +63,11 @@ class GsSession(ContextBase):
 
         @classmethod
         def get_default(cls):
-            return [
+            return (
                 cls.READ_CONTENT.value,
                 cls.READ_PRODUCT_DATA.value,
                 cls.READ_FINANCIAL_DATA.value
-            ]
+            )
 
     def __init__(self, domain: str, api_version: str = API_VERSION, application: str = DEFAULT_APPLICATION, verify=True,
                  http_adapter: requests.adapters.HTTPAdapter = None):
@@ -283,8 +284,9 @@ class GsSession(ContextBase):
         if client_id is not None:
             if isinstance(scopes, str):
                 scopes = (scopes,)
-            else:
-                scopes = cls.Scopes.get_default() if len(scopes) == 0 else scopes
+
+            scopes = tuple(set(itertools.chain(scopes, cls.Scopes.get_default())))
+
             return OAuth2Session(environment_or_domain, client_id, client_secret, scopes, api_version=api_version,
                                  application=application, http_adapter=http_adapter)
         elif token:

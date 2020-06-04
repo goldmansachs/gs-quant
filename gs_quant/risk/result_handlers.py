@@ -16,6 +16,7 @@ under the License.
 import datetime as dt
 import logging
 import pandas as pd
+from typing import Union
 
 from .core import DataFrameWithInfo, ErrorValue, FloatWithInfo, StringWithInfo, sort_risk
 from gs_quant.base import InstrumentBase, RiskKey
@@ -27,7 +28,7 @@ _logger = logging.getLogger(__name__)
 def __dataframe_handler(field: str, mappings: tuple, result: dict, risk_key: RiskKey) -> DataFrameWithInfo:
     records = [{k: datum[v] for k, v in mappings} for datum in result[field]]
     df = pd.DataFrame.from_records(records)
-    return DataFrameWithInfo(risk_key, sort_risk(df, tuple(k for k, _ in mappings)))
+    return DataFrameWithInfo(sort_risk(df, tuple(k for k, _ in mappings)), risk_key=risk_key)
 
 
 def cashflows_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase) -> DataFrameWithInfo:
@@ -87,8 +88,27 @@ def risk_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase) -
     return FloatWithInfo(risk_key, result.get('val', float('nan')), unit=result.get('unit'))
 
 
-def risk_by_class_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase) -> FloatWithInfo:
-    return FloatWithInfo(risk_key, sum(result.get('values', (float('nan'),))), unit=result.get('unit'))
+def risk_by_class_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase)\
+        -> Union[DataFrameWithInfo, FloatWithInfo]:
+    # TODO Remove this once we migrate parallel USD IRDelta measures
+    types = [c['type'] for c in result['classes']]
+    if len(types) <= 2 and all(t == 'IR' for t in types):
+        return FloatWithInfo(risk_key, sum(result.get('values', (float('nan'),))), unit=result.get('unit'))
+    else:
+        for clazz, value in zip(result['classes'], result['values']):
+            mkt_type = clazz['type']
+            if 'SPIKE' in mkt_type or 'JUMP' in mkt_type:
+                clazz['type'] = 'OTHER'
+
+            clazz.update({'value': value})
+
+        mappings = (
+            ('mkt_type', 'type'),
+            ('mkt_asset', 'asset'),
+            ('value', 'value')
+        )
+
+        return __dataframe_handler('classes', mappings, result, risk_key)
 
 
 def risk_vector_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase) -> DataFrameWithInfo:

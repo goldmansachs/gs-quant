@@ -159,6 +159,7 @@ class ReportParameters(Base):
         risk_request: RiskRequest = None,
         participation_rate: float = None,
         approve_rebalance: bool = None,
+        use_risk_request_batch_mode: bool = False,
         limited_access_assets: Tuple[str, ...] = None,
         corporate_action_restricted_assets: Tuple[str, ...] = None,
         backcast_dates: Tuple[datetime.date, ...] = None,
@@ -194,6 +195,7 @@ class ReportParameters(Base):
         self.risk_request = risk_request
         self.participation_rate = participation_rate
         self.approve_rebalance = approve_rebalance
+        self.use_risk_request_batch_mode = use_risk_request_batch_mode
         self.limited_access_assets = limited_access_assets
         self.corporate_action_restricted_assets = corporate_action_restricted_assets
         self.backcast_dates = backcast_dates
@@ -490,6 +492,16 @@ class ReportParameters(Base):
     def approve_rebalance(self, value: bool):
         self._property_changed('approve_rebalance')
         self.__approve_rebalance = value        
+
+    @property
+    def use_risk_request_batch_mode(self) -> bool:
+        """Switch to enable RiskRequest batching"""
+        return self.__use_risk_request_batch_mode
+
+    @use_risk_request_batch_mode.setter
+    def use_risk_request_batch_mode(self, value: bool):
+        self._property_changed('use_risk_request_batch_mode')
+        self.__use_risk_request_batch_mode = value        
 
     @property
     def limited_access_assets(self) -> Tuple[str, ...]:

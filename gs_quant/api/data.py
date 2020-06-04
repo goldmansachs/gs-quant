@@ -14,6 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime as dt
+import logging
 import pandas as pd
 from abc import ABCMeta
 import inflection
@@ -22,6 +23,8 @@ from gs_quant.base import Base
 from gs_quant.api.fred.fred_query import FredQuery
 from gs_quant.target.common import FieldFilterMap
 from gs_quant.target.data import DataQuery, MDAPIDataQuery
+
+_logger = logging.getLogger(__name__)
 
 
 class DataApi(metaclass=ABCMeta):
@@ -51,6 +54,7 @@ class DataApi(metaclass=ABCMeta):
             end: Optional[Union[dt.date, dt.datetime]] = None,
             as_of: Optional[dt.datetime] = None,
             since: Optional[dt.datetime] = None,
+            restrict_fields: bool = False,
             **kwargs
     ):
         end_is_time = isinstance(end, dt.datetime)
@@ -97,5 +101,11 @@ class DataApi(metaclass=ABCMeta):
                 query.where = where
             else:
                 raise ValueError('Invalid query field: ' + field)
+
+        if getattr(query, 'fields', None) is not None:
+            try:
+                query.restrict_fields = restrict_fields
+            except AttributeError as e:
+                _logger.debug('unable to set restrict_fields', exc_info=e)
 
         return query

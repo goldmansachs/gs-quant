@@ -32,6 +32,9 @@ def set_session():
     GsSession.use(Environment.PROD, 'client_id', 'secret')
     PricingCache.clear()
 
+    import gs_quant.markets.markets as markets
+    markets.close_market_date = mock.MagicMock(return_value=dt.date.today())
+
 
 def test_cache_addition_removal():
     set_session()

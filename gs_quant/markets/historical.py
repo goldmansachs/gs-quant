@@ -14,15 +14,14 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime as dt
-from concurrent.futures import Future
-import pandas as pd
 from typing import Iterable, Optional, Tuple, Union
 
 from .core import PricingContext
+from .markets import CloseMarket, close_market_date
 from gs_quant.base import Priceable
 from gs_quant.datetime.date import date_range
 from gs_quant.risk import RiskMeasure
-from gs_quant.risk.results import HistoricalPricingFuture
+from gs_quant.risk.results import HistoricalPricingFuture, PricingFuture
 
 
 class HistoricalPricingContext(PricingContext):
@@ -43,7 +42,6 @@ class HistoricalPricingContext(PricingContext):
             visible_to_gs: bool = False,
             csa_term: str = None,
             market_data_location: Optional[str] = None,
-            poll_for_batch_results: Optional[bool] = False,
             batch_results_timeout: Optional[int] = None):
         """
         A context for producing valuations over multiple dates
@@ -72,7 +70,7 @@ class HistoricalPricingContext(PricingContext):
         """
         super().__init__(is_async=is_async, is_batch=is_batch, use_cache=use_cache, visible_to_gs=visible_to_gs,
                          csa_term=csa_term, market_data_location=market_data_location,
-                         poll_for_batch_results=poll_for_batch_results, batch_results_timeout=batch_results_timeout)
+                         batch_results_timeout=batch_results_timeout)
         if start is not None:
             if dates is not None:
                 raise ValueError('Must supply start or dates, not both')
@@ -86,20 +84,16 @@ class HistoricalPricingContext(PricingContext):
         else:
             raise ValueError('Must supply start or dates')
 
-    def resolve_fields(self, priceable: Priceable, in_place: bool) -> Optional[Union[Priceable, Future]]:
-        if in_place:
-            raise RuntimeError('Cannot resolve in place under a HistoricalPricingContext')
-
-        return super().resolve_fields(priceable, in_place)
-
-    def calc(self, priceable: Priceable, risk_measure: Union[RiskMeasure, Iterable[RiskMeasure]])\
-            -> Union[pd.DataFrame, pd.Series, Future]:
+    def calc(self, priceable: Priceable, risk_measure: RiskMeasure) -> PricingFuture:
         futures = []
         for date in self.__date_range:
             with PricingContext(pricing_date=date,
-                                market_data_location=self.market_data_location,
+                                market=CloseMarket(location=self.market_data_location,
+                                                   date=close_market_date(self.market_data_location, date)),
+                                is_async=True,
+                                csa_term=self.csa_term,
                                 use_cache=self.use_cache,
-                                is_async=True) as pc:
-                futures.append(pc.calc(priceable, risk_measure))
+                                visible_to_gs=self.visible_to_gs):
+                futures.append(priceable.calc(risk_measure))
 
-        return self._return_calc_result(HistoricalPricingFuture(futures, result_future=self._result_future()))
+        return HistoricalPricingFuture(futures)

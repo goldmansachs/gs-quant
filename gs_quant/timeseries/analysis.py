@@ -14,8 +14,7 @@
 # Chart Service will attempt to make public functions (not prefixed with _) from this module available. Such functions
 # should be fully documented: docstrings should describe parameters and the return value, and provide a 1-line
 # description. Type annotations should be provided for parameters.
-
-
+from gs_quant.datetime import relative_date_add
 from gs_quant.timeseries.datetime import *
 from .helper import plot_function
 
@@ -166,12 +165,12 @@ class LagMode(Enum):
 
 
 @plot_function
-def lag(x: pd.Series, obs: int = 1, mode: LagMode = LagMode.EXTEND) -> pd.Series:
+def lag(x: pd.Series, obs: Union[Window, int, str] = 1, mode: LagMode = LagMode.EXTEND) -> pd.Series:
     """
-    Lag timeseries by a specified number of observations
+    Lag timeseries by a specified number of observations or a relative date
 
     :param x: timeseries of prices
-    :param obs: number of observations to lag series
+    :param obs: number of observations to lag series or relative date e.g. 3d, 2m, 1y
     :param mode: whether to extend series index (into the future)
     :return: date-based time series of return
 
@@ -190,11 +189,24 @@ def lag(x: pd.Series, obs: int = 1, mode: LagMode = LagMode.EXTEND) -> pd.Series
     >>> prices = generate_series(100)
     >>> lagged = lag(prices, 2)
 
+    Lag series by 1 year:
+
+    >>> prices = generate_series(100)
+    >>> lagged = lag(prices, '1y')
+
     **See also**
 
     :func:`diff`
     """
+    if isinstance(obs, str):
+        end = x.index[-1]
+        y = x.copy()  # avoid mutating the provided series
+        y.index = y.index + pd.DateOffset(relative_date_add(obs))
+        if mode == LagMode.EXTEND:
+            return y
+        return y[:end]
 
+    obs = getattr(obs, 'w', obs)
     # Determine how we want to handle observations prior to start date
     if mode == LagMode.EXTEND:
         if x.index.resolution != 'day':

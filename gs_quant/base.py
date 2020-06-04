@@ -500,6 +500,10 @@ class InstrumentBase(Base):
     pass
 
 
+class Market(Base):
+    pass
+
+
 def get_enum_value(enum_type: EnumMeta, value: Union[EnumBase, str]):
     if value in (None, 'None'):
         return None

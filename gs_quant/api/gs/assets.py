@@ -227,7 +227,7 @@ class GsAssetApi:
             end_date: dt.date,
             fields: IdList = None,
             position_type: PositionType = None,
-    ) -> Tuple[PositionSet, ...]:
+    ) -> List[dict]:
         start_date_str = start_date.isoformat()
         end_date_str = end_date.isoformat()
         url = '/assets/{id}/positions/data?startDate={start_date}&endDate={end_date}'.format(id=asset_id,
@@ -237,7 +237,7 @@ class GsAssetApi:
             url += '&fields='.join([''] + fields)
 
         if position_type is not None:
-            url += '&type=' + position_type
+            url += '&type=' + position_type.value
 
         results = GsSession.current._get(url)['results']
         return results

@@ -23,12 +23,39 @@ import pandas as pd
 from typing import Iterable, Mapping, Optional, Tuple, Union
 
 
-class CompositeResultFuture:
+class PricingFuture(Future):
 
-    def __init__(self, futures: Iterable[Future], result_future: Optional[Future] = None):
-        self._futures = tuple(futures)
-        self._result_future = result_future or Future()
-        self.__pending = set(range(len(self._futures)))
+    def __init__(self):
+        super().__init__()
+
+    def result(self, timeout=None):
+        """Return the result of the call that the future represents.
+
+        :param timeout: The number of seconds to wait for the result if the future isn't done.
+        If None, then there is no limit on the wait time.
+
+        Returns:
+            The result of the call that the future represents.
+
+        Raises:
+            CancelledError: If the future was cancelled.
+            TimeoutError: If the future didn't finish executing before the given timeout.
+
+        Exception: If the call raised then that exception will be raised.
+        """
+        from gs_quant.markets import PricingContext
+        if not self.done() and PricingContext.current.active_context.is_entered:
+            raise RuntimeError('Cannot evaluate results under the same pricing context being used to produce them')
+
+        return super().result(timeout=timeout)
+
+
+class CompositeResultFuture(PricingFuture):
+
+    def __init__(self, futures: Iterable[Future]):
+        super().__init__()
+        self.__futures = tuple(futures)
+        self.__pending = set(range(len(self.__futures)))
 
         for idx, future in enumerate(futures):
             if future.done():
@@ -45,20 +72,11 @@ class CompositeResultFuture:
             self._set_result()
 
     def _set_result(self):
-        self._result_future.set_result([f.result() for f in self._futures])
+        self.set_result([f.result() for f in self.__futures])
 
     @property
     def futures(self) -> Tuple[Future, ...]:
-        return self._futures
-
-    def done(self) -> bool:
-        return self._result_future.done()
-
-    def result(self, timeout: Optional[int] = None):
-        return self._result_future.result(timeout)
-
-    def add_done_callback(self, fn):
-        self._result_future.add_done_callback(fn)
+        return self.__futures
 
 
 class MultipleRiskMeasureResult(dict):
@@ -67,27 +85,26 @@ class MultipleRiskMeasureResult(dict):
 
 class MultipleRiskMeasureFuture(CompositeResultFuture):
 
-    def __init__(self, measures_to_futures: Mapping[RiskMeasure, Future], result_future: Optional[Future] = None):
-        super().__init__(measures_to_futures.values(), result_future=result_future)
+    def __init__(self, measures_to_futures: Mapping[RiskMeasure, Future]):
         self.__risk_measures = measures_to_futures.keys()
+        super().__init__(measures_to_futures.values())
 
     def _set_result(self):
-        self._result_future.set_result(MultipleRiskMeasureResult(
-            dict(zip(self.__risk_measures, (f.result() for f in self.futures)))))
+        self.set_result(MultipleRiskMeasureResult(dict(zip(self.__risk_measures, (f.result() for f in self.futures)))))
 
 
 class HistoricalPricingFuture(CompositeResultFuture):
 
     def _set_result(self):
-        results = [f.result() for f in self._futures]
+        results = [f.result() for f in self.futures]
         base = next((r for r in results if not isinstance(r, (ErrorValue, Exception))), None)
 
         if base is None:
-            self._result_future.set_result(results[0])
+            self.set_result(results[0])
         else:
             result = MultipleRiskMeasureResult({k: base[k].compose(r[k] for r in results) for k in base.keys()})\
                 if isinstance(base, MultipleRiskMeasureResult) else base.compose(results)
-            self._result_future.set_result(result)
+            self.set_result(result)
 
 
 class PortfolioRiskResult(RiskResult):
@@ -95,9 +112,8 @@ class PortfolioRiskResult(RiskResult):
     def __init__(self,
                  portfolio,
                  risk_measures: Iterable[RiskMeasure],
-                 futures: Iterable[Future],
-                 result_future: Optional[Future] = None):
-        super().__init__(CompositeResultFuture(futures, result_future=result_future), tuple(risk_measures))
+                 futures: Iterable[Future]):
+        super().__init__(CompositeResultFuture(futures), tuple(risk_measures))
         self.__portfolio = portfolio
 
     def __getitem__(self, item):
@@ -118,8 +134,7 @@ class PortfolioRiskResult(RiskResult):
     def __iter__(self):
         return iter(self.__results())
 
-    def subset(self,
-               instruments: Optional[Iterable[Union[int, str, Priceable]]]):
+    def subset(self, instruments: Optional[Iterable[Union[int, str, Priceable]]]):
         return PortfolioRiskResult(self.__portfolio, self.risk_measures, self.__futures(instruments))
 
     def aggregate(self) -> Union[float, pd.DataFrame, pd.Series]:

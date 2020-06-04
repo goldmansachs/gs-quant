@@ -298,6 +298,41 @@ def test_std():
     assert_series_equal(result, expected, obj="std window 1w", check_less_precise=True)
 
 
+def test_exponential_std():
+
+    def exp_std_calc(ts, alpha=0.75):
+        std = ts * 0
+        for i in range(1, len(ts)):
+            weights = (1 - alpha) * alpha ** np.arange(i, -1, -1)
+            weights[0] /= (1 - alpha)
+            x = ts.to_numpy()[:i + 1]
+            ema = sum(weights * x) / sum(weights)
+            debias_fact = sum(weights) ** 2 / (sum(weights) ** 2 - sum(weights ** 2))
+            var = debias_fact * sum(weights * (x - ema) ** 2) / sum(weights)
+            std[i] = np.sqrt(var)
+        std[0] = np.NaN
+        return std
+
+    dates = [
+        date(2019, 1, 1),
+        date(2019, 1, 2),
+        date(2019, 1, 3),
+        date(2019, 1, 4),
+        date(2019, 1, 7),
+        date(2019, 1, 8),
+    ]
+
+    x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
+
+    result = exponential_std(x)
+    expected = exp_std_calc(x)
+    assert_series_equal(result, expected, obj="Exponentially weighted standard deviation")
+
+    result = exponential_std(x, 0.8)
+    expected = exp_std_calc(x, 0.8)
+    assert_series_equal(result, expected, obj="Exponentially weighted standard deviation weight 1")
+
+
 def test_var():
     dates = [
         date(2019, 1, 1),
@@ -436,8 +471,8 @@ def test_percentiles():
     y = pd.Series([3.5, 1.8, 2.9, 1.2, 3.1, 6.0], index=dates)
 
     assert_series_equal(percentiles(pd.Series([]), y), pd.Series([]))
-    assert_series_equal(percentiles(x, pd.Series([])), pd.Series([]))
-    assert_series_equal(percentiles(x, y, Window(7, 0)), pd.Series([]))
+    assert_series_equal(percentiles(x, pd.Series([])), pd.Series())
+    assert_series_equal(percentiles(x, y, Window(7, 0)), pd.Series())
 
     result = percentiles(x, y, 2)
     expected = pd.Series([50.0, 50.0, 100.0, 75.0], index=dates[2:])
@@ -451,6 +486,10 @@ def test_percentiles():
     expected = pd.Series([100.0, 0.0, 33.333333, 25.0, 100.0, 90.0], index=dates)
     assert_series_equal(result, expected, obj="percentiles with window 1w")
 
+    result = percentiles(x, y, Window('1w', '3d'))
+    expected = pd.Series([25.0, 100.0, 90.0], index=dates[3:])
+    assert_series_equal(result, expected, obj="percentiles with window 1w and ramp 3d")
+
     result = percentiles(x)
     expected = pd.Series([50.0, 25.0, 66.667, 12.500, 70.0, 91.667], index=dates)
     assert_series_equal(result, expected, obj="percentiles over historical values", check_less_precise=True)
@@ -458,6 +497,9 @@ def test_percentiles():
     result = percentiles(x, y)
     expected = pd.Series([100.0, 0.0, 33.333, 25.0, 100.0, 91.667], index=dates)
     assert_series_equal(result, expected, obj="percentiles without window length", check_less_precise=True)
+
+    with pytest.raises(ValueError):
+        percentiles(x, pd.Series(), Window(6, 1))
 
 
 def test_percentile():

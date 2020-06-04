@@ -17,6 +17,7 @@ under the License.
 from unittest import mock
 
 import copy
+import datetime as dt
 import pandas as pd
 
 import gs_quant.risk as risk
@@ -27,7 +28,7 @@ from gs_quant.instrument import CommodSwap, EqForward, EqOption, FXOption, IRBas
     IRFloor
 from gs_quant.markets import PricingContext
 from gs_quant.session import Environment, GsSession
-from gs_quant.risk import PricingDateAndMarketDataAsOf, RiskRequestParameters
+from gs_quant.target.risk import PricingDateAndMarketDataAsOf, RiskPosition, RiskRequestParameters
 
 priceables = (
     CommodSwap('Electricity', '1y'),
@@ -46,6 +47,9 @@ def set_session():
     from gs_quant.session import OAuth2Session
     OAuth2Session.init = mock.MagicMock(return_value=None)
     GsSession.use(Environment.QA, 'client_id', 'secret')
+
+    import gs_quant.markets.markets as markets
+    markets.close_market_date = mock.MagicMock(return_value=dt.date.today())
 
 
 def structured_calc(mocker, priceable: Priceable, measure: risk.RiskMeasure):
@@ -68,13 +72,12 @@ def structured_calc(mocker, priceable: Priceable, measure: risk.RiskMeasure):
 
     current = PricingContext.current
     result = priceable.calc(measure)
-    assert result.equals(expected)
+    assert result.raw_value.equals(expected)
     risk_requests = (risk.RiskRequest(
-        positions=(risk.RiskPosition(instrument=priceable, quantity=1),),
+        positions=(RiskPosition(instrument=priceable, quantity=1),),
         measures=(measure,),
-        pricing_location=current.market_data_location,
         pricing_and_market_data_as_of=(PricingDateAndMarketDataAsOf(pricing_date=current.pricing_date,
-                                                                    market_data_as_of=current.market.as_of),),
+                                                                    market=current.market),),
         parameters=RiskRequestParameters(raw_results=True),
         wait_for_results=True),)
     mocker.assert_called_with(risk_requests)
@@ -88,11 +91,10 @@ def scalar_calc(mocker, priceable: Priceable, measure: risk.RiskMeasure):
     result = priceable.calc(measure)
     assert result == 0.01
     risk_requests = (risk.RiskRequest(
-        positions=(risk.RiskPosition(instrument=priceable, quantity=1),),
+        positions=(RiskPosition(instrument=priceable, quantity=1),),
         measures=(measure,),
-        pricing_location=current.market_data_location,
         pricing_and_market_data_as_of=(PricingDateAndMarketDataAsOf(pricing_date=current.pricing_date,
-                                                                    market_data_as_of=current.market.as_of),),
+                                                                    market=current.market),),
         parameters=RiskRequestParameters(raw_results=True),
         wait_for_results=True),)
     mocker.assert_called_with(risk_requests)
@@ -106,11 +108,10 @@ def price(mocker, priceable: Priceable):
     result = priceable.dollar_price()
     assert result == 0.01
     risk_requests = (risk.RiskRequest(
-        positions=(risk.RiskPosition(instrument=priceable, quantity=1),),
+        positions=(RiskPosition(instrument=priceable, quantity=1),),
         measures=(risk.DollarPrice,),
-        pricing_location=current.market_data_location,
         pricing_and_market_data_as_of=(PricingDateAndMarketDataAsOf(pricing_date=current.pricing_date,
-                                                                    market_data_as_of=current.market.as_of),),
+                                                                    market=current.market),),
         parameters=RiskRequestParameters(raw_results=True),
         wait_for_results=True),)
     mocker.assert_called_with(risk_requests)

@@ -15,10 +15,10 @@ under the License.
 """
 from gs_quant.context_base import nullcontext
 from gs_quant.instrument import Instrument
-from gs_quant.markets import PricingContext, PricingFuture
+from gs_quant.markets import PricingContext
 from gs_quant.priceable import PriceableImpl
 from gs_quant.target.portfolios import Position, PositionSet
-from gs_quant.risk import DollarPrice, Price, ResolvedInstrumentValues, RiskMeasure
+from gs_quant.risk import ResolvedInstrumentValues, RiskMeasure
 from gs_quant.risk.results import PortfolioRiskResult
 from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.api.gs.assets import GsAssetApi
@@ -186,20 +186,10 @@ class Portfolio(PriceableImpl):
             futures = [i.resolve(in_place) for i in self.__instruments]
 
         if not in_place:
-            return PortfolioRiskResult(self,
-                                       (ResolvedInstrumentValues,),
-                                       futures,
-                                       result_future=PricingFuture(PricingContext.current))
+            return PortfolioRiskResult(self, (ResolvedInstrumentValues,), futures)
 
-    def dollar_price(self) -> PortfolioRiskResult:
-        return self.calc(DollarPrice)
-
-    def price(self) -> PortfolioRiskResult:
-        return self.calc(Price)
-
-    def calc(self, risk_measure: Union[RiskMeasure, Iterable[RiskMeasure]]) -> PortfolioRiskResult:
+    def calc(self, risk_measure: Union[RiskMeasure, Iterable[RiskMeasure]], fn=None) -> PortfolioRiskResult:
         with self.__pricing_context:
             return PortfolioRiskResult(self,
                                        (risk_measure,) if isinstance(risk_measure, RiskMeasure) else risk_measure,
-                                       [i.calc(risk_measure) for i in self.__instruments],
-                                       result_future=PricingFuture(PricingContext.current))
+                                       [i.calc(risk_measure, fn=fn) for i in self.__instruments])
