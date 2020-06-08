@@ -1,4 +1,4 @@
-gs\_quant.markets.securities.Index
+Index
 ==================================
 
 .. currentmodule:: gs_quant.markets.securities

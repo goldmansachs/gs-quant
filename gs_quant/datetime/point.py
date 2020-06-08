@@ -88,7 +88,7 @@ DictDayRule = {
 }
 
 
-def relative_days_add(date_rule: str, strict: bool = False) -> float:
+def relative_date_add(date_rule: str, strict: bool = False) -> float:
     """Change the string in date rule format to the number of days. E.g 1d to 1, 1y to 365, 1m to 30, -1w to -7"""
     days = ''
 
@@ -191,19 +191,19 @@ def point_sort_order(point: str, ref_date: dt.date = dt.date.today()) -> float:
     elif re.search(RDatePartReg, point) is not None:
         res = re.search(RDatePartReg, point)
         date_str = res.group(1)
-        days = relative_days_add(date_str)
+        days = relative_date_add(date_str)
     elif re.search(CashFXReg, point) is not None:
         res = re.search(CashFXReg, point)
         date_str = res.group(1)
-        days = relative_days_add(date_str)
+        days = relative_date_add(date_str)
     elif re.search(PricerBFReg, point) is not None:
         res = re.search(PricerBFReg, point)
         date_str = res.group(1)
-        days = relative_days_add(date_str)
+        days = relative_date_add(date_str)
     elif re.search(FRAxReg, point) is not None:
         res = re.search(FRAxReg, point)
         date_str = res.group(1) + 'm'
-        days = relative_days_add(date_str)
+        days = relative_date_add(date_str)
     elif re.search(SpikeQEReg, point) is not None:
         res = re.search(SpikeQEReg, point)
         qe = res.group(1)

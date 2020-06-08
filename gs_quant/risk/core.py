@@ -16,16 +16,15 @@ under the License.
 from abc import ABCMeta, abstractmethod
 from concurrent.futures import Future
 from copy import copy
+import itertools
 import datetime as dt
-from typing import Iterable, List, Optional, Tuple, Union
+from typing import Iterable, Optional, Tuple, Union
 
 import pandas as pd
 
-from gs_quant.base import PricingKey
-from gs_quant.common import AssetClass
+from .measures import RiskMeasure
+from gs_quant.base import RiskKey
 from gs_quant.datetime import point_sort_order
-from gs_quant.target.risk import RiskMeasure, RiskMeasureType, RiskMeasureUnit, \
-    PricingDateAndMarketDataAsOf as __PricingDateAndMarketDataAsOf
 
 __column_sort_fns = {
     'label1': point_sort_order,
@@ -33,10 +32,6 @@ __column_sort_fns = {
     'point': point_sort_order
 }
 __risk_columns = ('date', 'time', 'mkt_type', 'mkt_asset', 'mkt_class', 'mkt_point')
-__crif_columns = ('date', 'time', 'riskType', 'amountCurrency', 'qualifier', 'bucket', 'label1', 'label2')
-__cashflows_columns = ('payment_date', 'payment_type', 'accrual_start_date', 'accrual_end_date', 'floating_rate_option',
-                       'floating_rate_designated_maturity')
-__assets_columns = ('date', 'mktType', 'mktAsset')
 
 
 class RiskResult:
@@ -45,9 +40,14 @@ class RiskResult:
         self.__risk_measures = tuple(risk_measures)
         self.__result = result
 
-    @property
     def done(self) -> bool:
         return self.__result.done()
+
+    def result(self):
+        return self.__result.result()
+
+    def add_done_callback(self, cb):
+        self.__result.add_done_callback(cb)
 
     @property
     def risk_measures(self) -> Tuple[RiskMeasure]:
@@ -62,17 +62,13 @@ class ResultInfo(metaclass=ABCMeta):
 
     def __init__(
         self,
-        pricing_key: PricingKey,
+        risk_key: RiskKey,
         unit: Optional[dict] = None,
-        error: Optional[Union[str, dict]] = None,
-        calculation_time: Optional[int] = None,
-        queueing_time: Optional[int] = None
+        error: Optional[Union[str, dict]] = None
     ):
-        self.__pricing_key = pricing_key
+        self.__risk_key = risk_key
         self.__unit = unit
         self.__error = error
-        self.__calculation_time = calculation_time
-        self.__queueing_time = queueing_time
 
     @property
     @abstractmethod
@@ -80,8 +76,8 @@ class ResultInfo(metaclass=ABCMeta):
         ...
 
     @property
-    def pricing_key(self) -> PricingKey:
-        return self.__pricing_key
+    def risk_key(self) -> RiskKey:
+        return self.__risk_key
 
     @property
     def unit(self) -> dict:
@@ -93,25 +89,34 @@ class ResultInfo(metaclass=ABCMeta):
         """Any error associated with this result"""
         return self.__error
 
-    @property
-    def calculation_time(self) -> int:
-        """The time (in milliseconds) taken to compute this result"""
-        return self.__calculation_time
+    @staticmethod
+    def composition_info(components: Iterable):
+        dates = []
+        values = []
+        errors = {}
+        risk_key = None
+        unit = None
 
-    @property
-    def queueing_time(self) -> int:
-        """The time (in milliseconds) for which this computation was queued"""
-        return self.__queueing_time
+        for component in components:
+            date = component.risk_key.date
+            risk_key = component.risk_key.base if risk_key is None else risk_key
+            if risk_key != component.risk_key.base:
+                raise RuntimeError('Cannot compose heterogeneous results')
 
-    @abstractmethod
-    def for_pricing_key(self, pricing_key: PricingKey):
-        ...
+            if isinstance(component, (ErrorValue, Exception)):
+                errors[date] = component
+            else:
+                values.append(component.raw_value)
+                dates.append(date)
+                unit = unit or component.unit
+
+        return dates, values, errors, risk_key, unit
 
 
 class ErrorValue(ResultInfo):
 
-    def __init__(self, pricing_key: PricingKey, error: Union[str, dict]):
-        super().__init__(pricing_key, error=error)
+    def __init__(self, risk_key: RiskKey, error: Union[str, dict]):
+        super().__init__(risk_key, error=error)
 
     def __repr__(self):
         return self.error
@@ -120,73 +125,39 @@ class ErrorValue(ResultInfo):
     def raw_value(self):
         return None
 
-    def for_pricing_key(self, pricing_key: PricingKey):
-        return self if pricing_key == self.pricing_key else None
-
 
 class ScalarWithInfo(ResultInfo, metaclass=ABCMeta):
 
     def __init__(
             self,
-            pricing_key: PricingKey,
+            risk_key: RiskKey,
             value: Union[float, str],
             unit: Optional[dict] = None,
-            error: Optional[Union[str, dict]] = None,
-            calculation_time: Optional[float] = None,
-            queueing_time: Optional[float] = None):
+            error: Optional[Union[str, dict]] = None):
         float.__init__(value)
-        ResultInfo.__init__(
-            self,
-            pricing_key,
-            unit=unit,
-            error=error,
-            calculation_time=calculation_time,
-            queueing_time=queueing_time)
+        ResultInfo.__init__(self, risk_key, unit=unit, error=error)
 
     @property
     @abstractmethod
     def raw_value(self):
         ...
 
-    def for_pricing_key(self, pricing_key: PricingKey):
-        return self if pricing_key == self.pricing_key else None
-
     @staticmethod
-    def compose(components, pricing_key: Optional[PricingKey] = None):
-        unit = None
-        error = {}
-        as_of = ()
-        dates = []
-        values = []
-        generated_pricing_key = None
-
-        for component in components:
-            generated_pricing_key = component.pricing_key
-            unit = unit or component.unit
-            as_of += component.pricing_key.pricing_market_data_as_of
-            date = component.pricing_key.pricing_market_data_as_of[0].pricing_date
-            dates.append(date)
-            values.append(component.raw_value)
-
-            if component.error:
-                error[date] = component.error
-
-        return SeriesWithInfo(
-            pricing_key or generated_pricing_key.clone(pricing_market_data_as_of=as_of),
-            pd.Series(index=dates, data=values).sort_index(),
-            unit=unit,
-            error=error)
+    def compose(components: Iterable):
+        dates, values, errors, risk_key, unit = ResultInfo.composition_info(components)
+        return SeriesWithInfo(pd.Series(index=pd.DatetimeIndex(dates), data=values),
+                              risk_key=risk_key,
+                              unit=unit,
+                              error=errors)
 
 
 class FloatWithInfo(ScalarWithInfo, float):
 
     def __new__(cls,
-                pricing_key: PricingKey,
+                risk_key: RiskKey,
                 value: Union[float, str],
                 unit: Optional[str] = None,
-                error: Optional[str] = None,
-                calculation_time: Optional[float] = None,
-                queueing_time: Optional[float] = None):
+                error: Optional[str] = None):
         return float.__new__(cls, value)
 
     @property
@@ -200,12 +171,10 @@ class FloatWithInfo(ScalarWithInfo, float):
 class StringWithInfo(ScalarWithInfo, str):
 
     def __new__(cls,
-                pricing_key: PricingKey,
+                risk_key: RiskKey,
                 value: Union[float, str],
                 unit: Optional[dict] = None,
-                error: Optional[str] = None,
-                calculation_time: Optional[float] = None,
-                queueing_time: Optional[float] = None):
+                error: Optional[str] = None):
         return str.__new__(cls, value)
 
     @property
@@ -218,24 +187,20 @@ class StringWithInfo(ScalarWithInfo, str):
 
 class SeriesWithInfo(pd.Series, ResultInfo):
 
+    _internal_names = pd.DataFrame._internal_names +\
+                      ['_ResultInfo__' + i for i in dir(ResultInfo) if isinstance(getattr(ResultInfo, i), property)]
+    _internal_names_set = set(_internal_names)
+
     def __init__(
             self,
-            pricing_key: PricingKey,
             *args,
+            risk_key: Optional[RiskKey] = None,
             unit: Optional[dict] = None,
             error: Optional[Union[str, dict]] = None,
-            calculation_time: Optional[int] = None,
-            queueing_time: Optional[int] = None,
             **kwargs
     ):
         pd.Series.__init__(self, *args, **kwargs)
-        ResultInfo.__init__(
-            self,
-            pricing_key,
-            unit=unit,
-            error=error,
-            calculation_time=calculation_time,
-            queueing_time=queueing_time)
+        ResultInfo.__init__(self, risk_key, unit=unit, error=error)
 
         self.index.name = 'date'
 
@@ -243,102 +208,57 @@ class SeriesWithInfo(pd.Series, ResultInfo):
         return self.error if self.error else pd.Series.__repr__(self)
 
     @property
+    def _constructor(self):
+        return SeriesWithInfo
+
+    @property
+    def _constructor_expanddim(self):
+        return DataFrameWithInfo
+
+    @property
     def raw_value(self) -> pd.Series:
         return pd.Series(self)
-
-    def for_pricing_key(self, pricing_key: PricingKey):
-        dates = [as_of.pricing_date for as_of in pricing_key.pricing_market_data_as_of]
-        scalar = len(dates) == 1
-        error = self.error or {}
-        error = error.get(dates[0]) if scalar else {d: error[d] for d in dates if d in error}
-
-        if scalar:
-            return FloatWithInfo(pricing_key, self.loc[dates[0]], unit=self.unit, error=error)
-
-        return SeriesWithInfo(pricing_key, pd.Series(index=dates, data=self.loc[dates]), unit=self.unit, error=error)
 
 
 class DataFrameWithInfo(pd.DataFrame, ResultInfo):
 
+    _internal_names = pd.DataFrame._internal_names + \
+                      ['_ResultInfo__' + i for i in dir(ResultInfo) if isinstance(getattr(ResultInfo, i), property)]
+    _internal_names_set = set(_internal_names)
+
     def __init__(
             self,
-            pricing_key: PricingKey,
             *args,
+            risk_key: Optional[RiskKey] = None,
             unit: Optional[dict] = None,
             error: Optional[Union[str, dict]] = None,
-            calculation_time: Optional[float] = None,
-            queueing_time: Optional[float] = None,
             **kwargs
     ):
         pd.DataFrame.__init__(self, *args, **kwargs)
-        properties = [i for i in dir(ResultInfo) if isinstance(getattr(ResultInfo, i), property)]
-        internal_names = properties + ['_ResultInfo__' + i for i in properties if i != 'raw_value']
-        self._internal_names.append(internal_names)
-        self._internal_names_set.update(internal_names)
-        ResultInfo.__init__(
-            self,
-            pricing_key,
-            unit=unit,
-            error=error,
-            calculation_time=calculation_time,
-            queueing_time=queueing_time)
+        ResultInfo.__init__(self, risk_key, unit=unit, error=error)
 
     def __repr__(self):
         return self.error if self.error else pd.DataFrame.__repr__(self)
 
     @property
+    def _constructor(self):
+        return DataFrameWithInfo
+
+    @property
+    def _constructor_sliced(self):
+        return SeriesWithInfo
+
+    @property
     def raw_value(self) -> pd.DataFrame:
         return pd.DataFrame(self)
 
-    def for_pricing_key(self, pricing_key: PricingKey):
-        dates = [as_of.pricing_date for as_of in pricing_key.pricing_market_data_as_of]
-        error = self.error or {}
-        error = {d: error[d] for d in dates if d in error}
-        df = self.loc[dates]
-
-        if len(dates) == 1:
-            df = df.reset_index(drop=True)
-
-        return DataFrameWithInfo(pricing_key, df, unit=self.unit, error=error)
-
     @staticmethod
-    def compose(components, pricing_key: Optional[PricingKey] = None):
-        unit = None
-        error = {}
-        as_of = ()
-        dfs = []
-        generated_pricing_key = None
+    def compose(components: Iterable):
+        dates, values, errors, risk_key, unit = ResultInfo.composition_info(components)
+        df = pd.concat([v.assign(date=d) if v.index.name != 'date' and 'date' not in v else v
+                        for d, v in zip(dates, values)]).set_index('date')
 
-        for component in components:
-            generated_pricing_key = component.pricing_key
-            unit = unit or component.unit
-            as_of += component.pricing_key.pricing_market_data_as_of
-            date = component.pricing_key.pricing_market_data_as_of[0].pricing_date
-
-            df = component.raw_value
-            if df.index.name != 'date' and 'date' not in df:
-                df = df.assign(date=date)
-
-            dfs.append(df)
-
-            if component.error:
-                error[date] = component.error
-
-        df = pd.concat(dfs)
-        if df.index.name != 'date':
-            df = df.set_index('date')
-
-        return DataFrameWithInfo(
-            pricing_key or generated_pricing_key.clone(pricing_market_data_as_of=as_of),
-            df,
-            unit=unit,
-            error=error)
-
-
-class PricingDateAndMarketDataAsOf(__PricingDateAndMarketDataAsOf):
-
-    def __repr__(self):
-        return '{} : {}'.format(self.pricing_date, self.market_data_as_of)
+        return DataFrameWithInfo(df, risk_key=risk_key, unit=unit, error=errors)
 
 
 def aggregate_risk(results: Iterable[Union[DataFrameWithInfo, Future]], threshold: Optional[float] = None)\
@@ -371,23 +291,32 @@ def aggregate_risk(results: Iterable[Union[DataFrameWithInfo, Future]], threshol
     delta and vega are Dataframes, representing the merged risk of the individual instruments
     """
     dfs = [r.result().raw_value if isinstance(r, Future) else r.raw_value for r in results]
-    result = pd.concat(dfs)
-    result = result.groupby([c for c in result.columns if c != 'value']).sum()
-    result = pd.DataFrame.from_records(result.to_records())
+    result = pd.concat(df.reset_index(level=0) for df in dfs)
+    result = result.groupby([c for c in result.columns if c != 'value'], as_index=False).sum()
 
     if threshold is not None:
         result = result[result.value.abs() > threshold]
 
-    return sort_risk(result)
+    result = sort_risk(result)
+
+    if 'date' in result:
+        result = result.set_index('date')
+
+    return result
 
 
-def aggregate_results(results: Iterable[Union[dict, DataFrameWithInfo, FloatWithInfo, SeriesWithInfo]])\
-        -> Union[dict, DataFrameWithInfo, FloatWithInfo, SeriesWithInfo]:
+ResultType = Union[dict, tuple, DataFrameWithInfo, FloatWithInfo, SeriesWithInfo]
+
+
+def aggregate_results(results: Iterable[ResultType]) -> ResultType:
     unit = None
-    pricing_key = None
+    risk_key = None
     results = tuple(results)
 
     for result in results:
+        if isinstance(result, Exception):
+            raise Exception
+
         if result.error:
             raise ValueError('Cannot aggregate results in error')
 
@@ -400,20 +329,22 @@ def aggregate_results(results: Iterable[Union[dict, DataFrameWithInfo, FloatWith
 
             unit = unit or result.unit
 
-        if pricing_key and pricing_key != result.pricing_key:
+        if risk_key and risk_key != result.risk_key:
             raise ValueError('Cannot aggregate results with different pricing keys')
 
-        pricing_key = pricing_key or result.pricing_key
+        risk_key = risk_key or result.risk_key
 
     inst = next(iter(results))
     if isinstance(inst, dict):
         return dict((k, aggregate_results([r[k] for r in results])) for k in inst.keys())
+    elif isinstance(inst, tuple):
+        return tuple(set(itertools.chain.from_iterable(results)))
     elif isinstance(inst, FloatWithInfo):
-        return FloatWithInfo(pricing_key, sum(results), unit=unit)
+        return FloatWithInfo(risk_key, sum(results), unit=unit)
     elif isinstance(inst, SeriesWithInfo):
-        return SeriesWithInfo(pricing_key, sum(results), unit=unit)
+        return SeriesWithInfo(sum(results), risk_key=risk_key, unit=unit)
     elif isinstance(inst, DataFrameWithInfo):
-        return DataFrameWithInfo(pricing_key, aggregate_risk(results), unit=unit)
+        return DataFrameWithInfo(aggregate_risk(results), risk_key=risk_key, unit=unit)
 
 
 def subtract_risk(left: DataFrameWithInfo, right: DataFrameWithInfo) -> pd.DataFrame:
@@ -462,7 +393,7 @@ def sort_risk(df: pd.DataFrame, by: Tuple[str, ...] = __risk_columns) -> pd.Data
     def cmp(row) -> tuple:
         return tuple(fns[i](row[i]) if fns[i] else row[i] for i in indices if i != -1)
 
-    data = sorted((tuple(r)[1:] for r in df.to_records()), key=cmp)
+    data = sorted((row for _, row in df.iterrows()), key=cmp)
     fields = [f for f in by if f in columns]
     fields.extend(f for f in columns if f not in fields)
 
@@ -471,212 +402,3 @@ def sort_risk(df: pd.DataFrame, by: Tuple[str, ...] = __risk_columns) -> pd.Data
         result = result.set_index('date')
 
     return result
-
-
-def __risk_measure_with_doc_string(
-    name: str,
-    doc: str,
-    measure_type: RiskMeasureType,
-    asset_class: Optional[AssetClass] = None,
-    unit: Optional[RiskMeasureUnit] = None
-) -> RiskMeasure:
-    measure = RiskMeasure(measure_type=measure_type, asset_class=asset_class, unit=unit, name=name)
-    measure.__doc__ = doc
-    return measure
-
-
-DollarPrice = __risk_measure_with_doc_string('DollarPrice', 'Present value in USD', RiskMeasureType.Dollar_Price)
-Price = __risk_measure_with_doc_string('Price', 'Present value in local currency', RiskMeasureType.PV)
-ForwardPrice = __risk_measure_with_doc_string(
-    'ForwardPrice',
-    'Forward price',
-    RiskMeasureType.Forward_Price,
-    unit=RiskMeasureUnit.BPS)
-Theta = __risk_measure_with_doc_string('Theta', '1 day Theta', RiskMeasureType.Theta)
-EqDelta = __risk_measure_with_doc_string(
-    'EqDelta',
-    'Equity Delta',
-    RiskMeasureType.Delta,
-    asset_class=AssetClass.Equity)
-EqGamma = __risk_measure_with_doc_string(
-    'EqGamma',
-    'Equity Gamma',
-    RiskMeasureType.Gamma,
-    asset_class=AssetClass.Equity)
-EqVega = __risk_measure_with_doc_string('EqVega', 'Equity Vega', RiskMeasureType.Vega, asset_class=AssetClass.Equity)
-EqSpot = __risk_measure_with_doc_string(
-    'EqSpot',
-    'Equity Spot Level',
-    RiskMeasureType.Spot, asset_class=AssetClass.Equity)
-EqAnnualImpliedVol = __risk_measure_with_doc_string(
-    'EqAnnualImpliedVol',
-    'Equity Annual Implied Volatility (%)',
-    RiskMeasureType.Annual_Implied_Volatility,
-    asset_class=AssetClass.Equity,
-    unit=RiskMeasureUnit.Percent)
-CommodDelta = __risk_measure_with_doc_string(
-    'CommodDelta',
-    'Commodity Delta',
-    RiskMeasureType.Delta,
-    asset_class=AssetClass.Commod)
-CommodTheta = __risk_measure_with_doc_string(
-    'CommodTheta',
-    'Commodity Theta',
-    RiskMeasureType.Theta,
-    asset_class=AssetClass.Commod)
-CommodVega = __risk_measure_with_doc_string(
-    'CommodVega',
-    'Commodity Vega',
-    RiskMeasureType.Vega,
-    asset_class=AssetClass.Commod)
-FairVolStrike = __risk_measure_with_doc_string(
-    'FairVolStrike',
-    'Fair Volatility Strike Value of a Variance Swap',
-    RiskMeasureType.FairVolStrike)
-FairVarStrike = __risk_measure_with_doc_string(
-    'FairVarStrike',
-    'Fair Variance Strike Value of a Variance Swap',
-    RiskMeasureType.FairVarStrike)
-FXDelta = __risk_measure_with_doc_string('FXDelta', 'FX Delta', RiskMeasureType.Delta, asset_class=AssetClass.FX)
-FXGamma = __risk_measure_with_doc_string('FXGamma', 'FX Gamma', RiskMeasureType.Gamma, asset_class=AssetClass.FX)
-FXVega = __risk_measure_with_doc_string('FXVega', 'FX Vega', RiskMeasureType.Vega, asset_class=AssetClass.FX)
-FXSpot = __risk_measure_with_doc_string('FXSpot', 'FX Spot Rate', RiskMeasureType.Spot, asset_class=AssetClass.FX)
-IRBasis = __risk_measure_with_doc_string(
-    'IRBasis',
-    'Interest Rate Basis',
-    RiskMeasureType.Basis,
-    asset_class=AssetClass.Rates)
-InflationDelta = __risk_measure_with_doc_string(
-    'InflationDelta',
-    'Inflation Delta',
-    RiskMeasureType.InflationDelta,
-    asset_class=AssetClass.Rates)
-InflationDeltaParallel = __risk_measure_with_doc_string(
-    'InflationDeltaParallel',
-    'Inflation Parallel Delta',
-    RiskMeasureType.ParallelInflationDelta,
-    asset_class=AssetClass.Rates)
-InflationDeltaParallelLocalCcy = __risk_measure_with_doc_string(
-    'InflationDeltaParallelLocalCcy',
-    'Inflation Parallel Delta (Local Ccy)',
-    RiskMeasureType.ParallelInflationDeltaLocalCcy,
-    asset_class=AssetClass.Rates)
-IRDelta = __risk_measure_with_doc_string(
-    'IRDelta',
-    'Interest Rate Delta',
-    RiskMeasureType.Delta,
-    asset_class=AssetClass.Rates)
-IRDeltaParallel = __risk_measure_with_doc_string(
-    'IRDeltaParallel',
-    'Interest Rate Parallel Delta',
-    RiskMeasureType.ParallelDelta,
-    asset_class=AssetClass.Rates)
-IRDeltaLocalCcy = __risk_measure_with_doc_string(
-    'IRDeltaLocalCcy',
-    'Interest Rate Delta (Local Ccy)',
-    RiskMeasureType.DeltaLocalCcy,
-    asset_class=AssetClass.Rates)
-IRDeltaParallelLocalCcy = __risk_measure_with_doc_string(
-    'IRDeltaParallelLocalCcy',
-    'Interest Rate Parallel Delta (Local Ccy)',
-    RiskMeasureType.ParallelDeltaLocalCcy,
-    asset_class=AssetClass.Rates)
-IRXccyDelta = __risk_measure_with_doc_string(
-    'IRXccyDelta',
-    'Cross-ccy Delta',
-    RiskMeasureType.XccyDelta,
-    asset_class=AssetClass.Rates)
-IRXccyDeltaParallel = __risk_measure_with_doc_string(
-    'IRXccyDeltaParallel',
-    'Cross-ccy Parallel Delta',
-    RiskMeasureType.ParallelXccyDelta,
-    asset_class=AssetClass.Rates)
-IRXccyDeltaParallelLocalCurrency = __risk_measure_with_doc_string(
-    'IRXccyDeltaParallelLocalCurrency',
-    'Cross-ccy Parallel Delta (Local Ccy)',
-    RiskMeasureType.ParallelXccyDeltaLocalCcy,
-    asset_class=AssetClass.Rates)
-IRGammaParallel = __risk_measure_with_doc_string(
-    'IRGammaParallel',
-    'Interest Rate Parallel Gamma',
-    RiskMeasureType.ParallelGamma,
-    asset_class=AssetClass.Rates)
-IRGammaParallelLocalCcy = __risk_measure_with_doc_string(
-    'IRGammaParallelLocalCcy',
-    'Interest Rate Parallel Gamma (Local Ccy)',
-    RiskMeasureType.ParallelGammaLocalCcy,
-    asset_class=AssetClass.Rates)
-IRVega = __risk_measure_with_doc_string(
-    'IRVega',
-    'Interest Rate Vega',
-    RiskMeasureType.Vega,
-    asset_class=AssetClass.Rates)
-IRVegaParallel = __risk_measure_with_doc_string(
-    'IRVegaParallel',
-    'Interest Rate Parallel Vega',
-    RiskMeasureType.ParallelVega,
-    asset_class=AssetClass.Rates)
-IRVegaLocalCcy = __risk_measure_with_doc_string(
-    'IRVegaLocalCcy',
-    'Interest Rate Vega (Local Ccy)',
-    RiskMeasureType.VegaLocalCcy,
-    asset_class=AssetClass.Rates)
-IRVegaParallelLocalCcy = __risk_measure_with_doc_string(
-    'IRVegaParallelLocalCcy',
-    'Interest Rate Parallel Vega (Local Ccy)',
-    RiskMeasureType.ParallelVegaLocalCcy,
-    asset_class=AssetClass.Rates)
-IRAnnualImpliedVol = __risk_measure_with_doc_string(
-    'IRAnnualImpliedVol',
-    'Interest Rate Annual Implied Volatility (%)',
-    RiskMeasureType.Annual_Implied_Volatility,
-    asset_class=AssetClass.Rates,
-    unit=RiskMeasureUnit.Percent)
-IRAnnualATMImpliedVol = __risk_measure_with_doc_string(
-    'IRAnnualATMImpliedVol',
-    'Interest Rate Annual Implied At-The-Money Volatility (%)',
-    RiskMeasureType.Annual_ATMF_Implied_Volatility,
-    asset_class=AssetClass.Rates,
-    unit=RiskMeasureUnit.Percent)
-IRDailyImpliedVol = __risk_measure_with_doc_string(
-    'IRDailyImpliedVol',
-    'Interest Rate Daily Implied Volatility (bps)',
-    RiskMeasureType.Daily_Implied_Volatility,
-    asset_class=AssetClass.Rates,
-    unit=RiskMeasureUnit.BPS)
-IRSpotRate = __risk_measure_with_doc_string(
-    'IRSpotRate',
-    'At-The-Money Spot Rate (%)',
-    RiskMeasureType.Spot_Rate,
-    asset_class=AssetClass.Rates,
-    unit=RiskMeasureUnit.Percent)
-IRFwdRate = __risk_measure_with_doc_string(
-    'IRFwdRate',
-    'Par Rate (%)',
-    RiskMeasureType.Forward_Rate,
-    asset_class=AssetClass.Rates,
-    unit=RiskMeasureUnit.Percent)
-CRIFIRCurve = __risk_measure_with_doc_string(
-    'CRIFIRCurve',
-    'CRIF IR Curve',
-    RiskMeasureType.CRIF_IRCurve)
-ResolvedInstrumentValues = __risk_measure_with_doc_string(
-    'ResolvedInstrumentBaseValues',
-    'Resolved InstrumentBase Values',
-    RiskMeasureType.Resolved_Instrument_Values
-)
-Description = __risk_measure_with_doc_string(
-    'Description',
-    'Description',
-    RiskMeasureType.Description
-)
-Cashflows = __risk_measure_with_doc_string(
-    'Cashflows',
-    'Cashflows',
-    RiskMeasureType.Cashflows
-)
-MarketDataAssets = __risk_measure_with_doc_string(
-    'MarketDataAssets',
-    'MarketDataAssets',
-    RiskMeasureType.Market_Data_Assets
-)

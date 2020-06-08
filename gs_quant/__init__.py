@@ -21,3 +21,10 @@ __version__ = get_versions()['version']
 del get_versions
 
 version = __version__
+
+try:
+    from .xl_interface.instrument_generation import install_hook
+    install_hook()
+except ModuleNotFoundError:
+    pass
+

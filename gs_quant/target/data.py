@@ -150,6 +150,7 @@ class DataQuery(Base):
         fields: Tuple[Union[dict, str], ...] = None,
         restrict_fields: bool = False,
         entity_filter: FieldFilterMap = None,
+        interval: str = None,
         name: str = None
     ):        
         super().__init__()
@@ -177,6 +178,7 @@ class DataQuery(Base):
         self.fields = fields
         self.restrict_fields = restrict_fields
         self.entity_filter = entity_filter
+        self.interval = interval
         self.name = name
 
     @property
@@ -424,6 +426,17 @@ class DataQuery(Base):
     def entity_filter(self, value: FieldFilterMap):
         self._property_changed('entity_filter')
         self.__entity_filter = value        
+
+    @property
+    def interval(self) -> str:
+        """Interval to use when returning data. E.g. 1s, 1m, 1h, 1d. Only seconds(s),
+           minutes(m), hours(h) and days(d) are supported."""
+        return self.__interval
+
+    @interval.setter
+    def interval(self, value: str):
+        self._property_changed('interval')
+        self.__interval = value        
 
 
 class DataSetCondition(Base):
@@ -1061,17 +1074,36 @@ class IdFieldProperties(Base):
     @camel_case_translate
     def __init__(
         self,
-        last_returns_start_date: Tuple[datetime.date, ...] = None,
-        created_by_id: Tuple[str, ...] = None,
         vehicle_type: Tuple[str, ...] = None,
-        market_model_id: Tuple[str, ...] = None,
         ticker: Tuple[str, ...] = None,
-        ric: Tuple[str, ...] = None,
         position_source_id: Tuple[str, ...] = None,
-        bbid: Tuple[str, ...] = None,
-        bbid_equivalent: Tuple[str, ...] = None,
         valoren: Tuple[str, ...] = None,
         hedge_id: Tuple[str, ...] = None,
+        entity_id: Tuple[str, ...] = None,
+        identifier: Tuple[str, ...] = None,
+        subdivision_id: Tuple[str, ...] = None,
+        portfolio_id: Tuple[str, ...] = None,
+        rcic: Tuple[str, ...] = None,
+        primary_country_ric: Tuple[str, ...] = None,
+        country_id: Tuple[str, ...] = None,
+        delisted: Tuple[str, ...] = None,
+        regional_focus: Tuple[str, ...] = None,
+        net_exposure_classification: Tuple[str, ...] = None,
+        feed: Tuple[str, ...] = None,
+        last_returns_end_date: Tuple[datetime.date, ...] = None,
+        implementation_id: Tuple[str, ...] = None,
+        mic: Tuple[str, ...] = None,
+        cusip: Tuple[str, ...] = None,
+        last_updated_by_id: Tuple[str, ...] = None,
+        report_id: Tuple[str, ...] = None,
+        gsid2: Tuple[str, ...] = None,
+        isin: Tuple[str, ...] = None,
+        last_returns_start_date: Tuple[datetime.date, ...] = None,
+        created_by_id: Tuple[str, ...] = None,
+        market_model_id: Tuple[str, ...] = None,
+        ric: Tuple[str, ...] = None,
+        bbid: Tuple[str, ...] = None,
+        bbid_equivalent: Tuple[str, ...] = None,
         supra_strategy: Tuple[str, ...] = None,
         kpi_id: Tuple[str, ...] = None,
         lms_id: Tuple[str, ...] = None,
@@ -1081,57 +1113,59 @@ class IdFieldProperties(Base):
         data_set: Tuple[str, ...] = None,
         prime_id: Tuple[str, ...] = None,
         backtest_id: Tuple[str, ...] = None,
-        entity_id: Tuple[str, ...] = None,
-        identifier: Tuple[str, ...] = None,
-        subdivision_id: Tuple[str, ...] = None,
         sedol: Tuple[str, ...] = None,
-        portfolio_id: Tuple[str, ...] = None,
-        rcic: Tuple[str, ...] = None,
         run_id: Tuple[str, ...] = None,
-        primary_country_ric: Tuple[str, ...] = None,
         market_cap_category: Tuple[str, ...] = None,
-        country_id: Tuple[str, ...] = None,
         universe_id1: Tuple[str, ...] = None,
         universe_id2: Tuple[str, ...] = None,
-        delisted: Tuple[str, ...] = None,
-        regional_focus: Tuple[str, ...] = None,
         wpk: Tuple[str, ...] = None,
-        net_exposure_classification: Tuple[str, ...] = None,
         order_id: Tuple[str, ...] = None,
         id_: Tuple[str, ...] = None,
         bcid: Tuple[str, ...] = None,
         qis_perm_no: Tuple[str, ...] = None,
-        feed: Tuple[str, ...] = None,
         asset_id: Tuple[str, ...] = None,
-        last_returns_end_date: Tuple[datetime.date, ...] = None,
-        implementation_id: Tuple[str, ...] = None,
-        mic: Tuple[str, ...] = None,
-        cusip: Tuple[str, ...] = None,
+        primary_entity_id: Tuple[str, ...] = None,
         activity_id: Tuple[str, ...] = None,
         idea_id: Tuple[str, ...] = None,
-        last_updated_by_id: Tuple[str, ...] = None,
         scenario_id: Tuple[str, ...] = None,
         scenario_group_id: Tuple[str, ...] = None,
-        report_id: Tuple[str, ...] = None,
-        isin: Tuple[str, ...] = None,
+        tags: Tuple[str, ...] = None,
         version: Tuple[float, ...] = None,
         name: Tuple[str, ...] = None,
         folder_name: Tuple[str, ...] = None,
-        description: Tuple[str, ...] = None,
-        tags: Tuple[str, ...] = None
+        description: Tuple[str, ...] = None
     ):        
         super().__init__()
-        self.last_returns_start_date = last_returns_start_date
-        self.created_by_id = created_by_id
         self.vehicle_type = vehicle_type
-        self.market_model_id = market_model_id
         self.ticker = ticker
-        self.ric = ric
         self.position_source_id = position_source_id
-        self.bbid = bbid
-        self.bbid_equivalent = bbid_equivalent
         self.valoren = valoren
         self.hedge_id = hedge_id
+        self.entity_id = entity_id
+        self.identifier = identifier
+        self.subdivision_id = subdivision_id
+        self.portfolio_id = portfolio_id
+        self.rcic = rcic
+        self.primary_country_ric = primary_country_ric
+        self.country_id = country_id
+        self.delisted = delisted
+        self.regional_focus = regional_focus
+        self.net_exposure_classification = net_exposure_classification
+        self.feed = feed
+        self.last_returns_end_date = last_returns_end_date
+        self.implementation_id = implementation_id
+        self.mic = mic
+        self.cusip = cusip
+        self.last_updated_by_id = last_updated_by_id
+        self.report_id = report_id
+        self.gsid2 = gsid2
+        self.isin = isin
+        self.last_returns_start_date = last_returns_start_date
+        self.created_by_id = created_by_id
+        self.market_model_id = market_model_id
+        self.ric = ric
+        self.bbid = bbid
+        self.bbid_equivalent = bbid_equivalent
         self.supra_strategy = supra_strategy
         self.kpi_id = kpi_id
         self.lms_id = lms_id
@@ -1141,44 +1175,254 @@ class IdFieldProperties(Base):
         self.data_set = data_set
         self.prime_id = prime_id
         self.backtest_id = backtest_id
-        self.entity_id = entity_id
-        self.identifier = identifier
-        self.subdivision_id = subdivision_id
         self.sedol = sedol
-        self.portfolio_id = portfolio_id
-        self.rcic = rcic
         self.run_id = run_id
-        self.primary_country_ric = primary_country_ric
         self.market_cap_category = market_cap_category
-        self.country_id = country_id
         self.universe_id1 = universe_id1
         self.universe_id2 = universe_id2
-        self.delisted = delisted
-        self.regional_focus = regional_focus
         self.wpk = wpk
-        self.net_exposure_classification = net_exposure_classification
         self.order_id = order_id
         self.__id = id_
         self.bcid = bcid
         self.qis_perm_no = qis_perm_no
-        self.feed = feed
         self.asset_id = asset_id
-        self.last_returns_end_date = last_returns_end_date
-        self.implementation_id = implementation_id
-        self.mic = mic
-        self.cusip = cusip
+        self.primary_entity_id = primary_entity_id
         self.activity_id = activity_id
         self.idea_id = idea_id
-        self.last_updated_by_id = last_updated_by_id
         self.scenario_id = scenario_id
         self.scenario_group_id = scenario_group_id
-        self.report_id = report_id
-        self.isin = isin
+        self.tags = tags
         self.version = version
         self.name = name
         self.folder_name = folder_name
         self.description = description
-        self.tags = tags
+
+    @property
+    def vehicle_type(self) -> Tuple[str, ...]:
+        return self.__vehicle_type
+
+    @vehicle_type.setter
+    def vehicle_type(self, value: Tuple[str, ...]):
+        self._property_changed('vehicle_type')
+        self.__vehicle_type = value        
+
+    @property
+    def ticker(self) -> Tuple[str, ...]:
+        """Filter by Ticker."""
+        return self.__ticker
+
+    @ticker.setter
+    def ticker(self, value: Tuple[str, ...]):
+        self._property_changed('ticker')
+        self.__ticker = value        
+
+    @property
+    def position_source_id(self) -> Tuple[str, ...]:
+        """Filter by id"""
+        return self.__position_source_id
+
+    @position_source_id.setter
+    def position_source_id(self, value: Tuple[str, ...]):
+        self._property_changed('position_source_id')
+        self.__position_source_id = value        
+
+    @property
+    def valoren(self) -> Tuple[str, ...]:
+        """Filter by Valoren (subject to licensing)."""
+        return self.__valoren
+
+    @valoren.setter
+    def valoren(self, value: Tuple[str, ...]):
+        self._property_changed('valoren')
+        self.__valoren = value        
+
+    @property
+    def hedge_id(self) -> Tuple[str, ...]:
+        """Filter by hedge id."""
+        return self.__hedge_id
+
+    @hedge_id.setter
+    def hedge_id(self, value: Tuple[str, ...]):
+        self._property_changed('hedge_id')
+        self.__hedge_id = value        
+
+    @property
+    def entity_id(self) -> Tuple[str, ...]:
+        return self.__entity_id
+
+    @entity_id.setter
+    def entity_id(self, value: Tuple[str, ...]):
+        self._property_changed('entity_id')
+        self.__entity_id = value        
+
+    @property
+    def identifier(self) -> Tuple[str, ...]:
+        return self.__identifier
+
+    @identifier.setter
+    def identifier(self, value: Tuple[str, ...]):
+        self._property_changed('identifier')
+        self.__identifier = value        
+
+    @property
+    def subdivision_id(self) -> Tuple[str, ...]:
+        return self.__subdivision_id
+
+    @subdivision_id.setter
+    def subdivision_id(self, value: Tuple[str, ...]):
+        self._property_changed('subdivision_id')
+        self.__subdivision_id = value        
+
+    @property
+    def portfolio_id(self) -> Tuple[str, ...]:
+        """Filter by portfolio id."""
+        return self.__portfolio_id
+
+    @portfolio_id.setter
+    def portfolio_id(self, value: Tuple[str, ...]):
+        self._property_changed('portfolio_id')
+        self.__portfolio_id = value        
+
+    @property
+    def rcic(self) -> Tuple[str, ...]:
+        """Filter by RCIC (subject to licensing)."""
+        return self.__rcic
+
+    @rcic.setter
+    def rcic(self, value: Tuple[str, ...]):
+        self._property_changed('rcic')
+        self.__rcic = value        
+
+    @property
+    def primary_country_ric(self) -> Tuple[str, ...]:
+        """Filter by Primary Country RIC (subject to licensing)."""
+        return self.__primary_country_ric
+
+    @primary_country_ric.setter
+    def primary_country_ric(self, value: Tuple[str, ...]):
+        self._property_changed('primary_country_ric')
+        self.__primary_country_ric = value        
+
+    @property
+    def country_id(self) -> Tuple[str, ...]:
+        return self.__country_id
+
+    @country_id.setter
+    def country_id(self, value: Tuple[str, ...]):
+        self._property_changed('country_id')
+        self.__country_id = value        
+
+    @property
+    def delisted(self) -> Tuple[str, ...]:
+        """Filter by delisted status."""
+        return self.__delisted
+
+    @delisted.setter
+    def delisted(self, value: Tuple[str, ...]):
+        self._property_changed('delisted')
+        self.__delisted = value        
+
+    @property
+    def regional_focus(self) -> Tuple[str, ...]:
+        return self.__regional_focus
+
+    @regional_focus.setter
+    def regional_focus(self, value: Tuple[str, ...]):
+        self._property_changed('regional_focus')
+        self.__regional_focus = value        
+
+    @property
+    def net_exposure_classification(self) -> Tuple[str, ...]:
+        return self.__net_exposure_classification
+
+    @net_exposure_classification.setter
+    def net_exposure_classification(self, value: Tuple[str, ...]):
+        self._property_changed('net_exposure_classification')
+        self.__net_exposure_classification = value        
+
+    @property
+    def feed(self) -> Tuple[str, ...]:
+        return self.__feed
+
+    @feed.setter
+    def feed(self, value: Tuple[str, ...]):
+        self._property_changed('feed')
+        self.__feed = value        
+
+    @property
+    def last_returns_end_date(self) -> Tuple[datetime.date, ...]:
+        return self.__last_returns_end_date
+
+    @last_returns_end_date.setter
+    def last_returns_end_date(self, value: Tuple[datetime.date, ...]):
+        self._property_changed('last_returns_end_date')
+        self.__last_returns_end_date = value        
+
+    @property
+    def implementation_id(self) -> Tuple[str, ...]:
+        return self.__implementation_id
+
+    @implementation_id.setter
+    def implementation_id(self, value: Tuple[str, ...]):
+        self._property_changed('implementation_id')
+        self.__implementation_id = value        
+
+    @property
+    def mic(self) -> Tuple[str, ...]:
+        return self.__mic
+
+    @mic.setter
+    def mic(self, value: Tuple[str, ...]):
+        self._property_changed('mic')
+        self.__mic = value        
+
+    @property
+    def cusip(self) -> Tuple[str, ...]:
+        """Filter by CUSIP (subject to licensing)."""
+        return self.__cusip
+
+    @cusip.setter
+    def cusip(self, value: Tuple[str, ...]):
+        self._property_changed('cusip')
+        self.__cusip = value        
+
+    @property
+    def last_updated_by_id(self) -> Tuple[str, ...]:
+        """Filter by last updated user id"""
+        return self.__last_updated_by_id
+
+    @last_updated_by_id.setter
+    def last_updated_by_id(self, value: Tuple[str, ...]):
+        self._property_changed('last_updated_by_id')
+        self.__last_updated_by_id = value        
+
+    @property
+    def report_id(self) -> Tuple[str, ...]:
+        return self.__report_id
+
+    @report_id.setter
+    def report_id(self, value: Tuple[str, ...]):
+        self._property_changed('report_id')
+        self.__report_id = value        
+
+    @property
+    def gsid2(self) -> Tuple[str, ...]:
+        return self.__gsid2
+
+    @gsid2.setter
+    def gsid2(self, value: Tuple[str, ...]):
+        self._property_changed('gsid2')
+        self.__gsid2 = value        
+
+    @property
+    def isin(self) -> Tuple[str, ...]:
+        """Filter by ISIN (subject to licensing)."""
+        return self.__isin
+
+    @isin.setter
+    def isin(self, value: Tuple[str, ...]):
+        self._property_changed('isin')
+        self.__isin = value        
 
     @property
     def last_returns_start_date(self) -> Tuple[datetime.date, ...]:
@@ -1200,15 +1444,6 @@ class IdFieldProperties(Base):
         self.__created_by_id = value        
 
     @property
-    def vehicle_type(self) -> Tuple[str, ...]:
-        return self.__vehicle_type
-
-    @vehicle_type.setter
-    def vehicle_type(self, value: Tuple[str, ...]):
-        self._property_changed('vehicle_type')
-        self.__vehicle_type = value        
-
-    @property
     def market_model_id(self) -> Tuple[str, ...]:
         return self.__market_model_id
 
@@ -1216,16 +1451,6 @@ class IdFieldProperties(Base):
     def market_model_id(self, value: Tuple[str, ...]):
         self._property_changed('market_model_id')
         self.__market_model_id = value        
-
-    @property
-    def ticker(self) -> Tuple[str, ...]:
-        """Filter by Ticker."""
-        return self.__ticker
-
-    @ticker.setter
-    def ticker(self, value: Tuple[str, ...]):
-        self._property_changed('ticker')
-        self.__ticker = value        
 
     @property
     def ric(self) -> Tuple[str, ...]:
@@ -1236,16 +1461,6 @@ class IdFieldProperties(Base):
     def ric(self, value: Tuple[str, ...]):
         self._property_changed('ric')
         self.__ric = value        
-
-    @property
-    def position_source_id(self) -> Tuple[str, ...]:
-        """Filter by id"""
-        return self.__position_source_id
-
-    @position_source_id.setter
-    def position_source_id(self, value: Tuple[str, ...]):
-        self._property_changed('position_source_id')
-        self.__position_source_id = value        
 
     @property
     def bbid(self) -> Tuple[str, ...]:
@@ -1266,26 +1481,6 @@ class IdFieldProperties(Base):
     def bbid_equivalent(self, value: Tuple[str, ...]):
         self._property_changed('bbid_equivalent')
         self.__bbid_equivalent = value        
-
-    @property
-    def valoren(self) -> Tuple[str, ...]:
-        """Filter by Valoren (subject to licensing)."""
-        return self.__valoren
-
-    @valoren.setter
-    def valoren(self, value: Tuple[str, ...]):
-        self._property_changed('valoren')
-        self.__valoren = value        
-
-    @property
-    def hedge_id(self) -> Tuple[str, ...]:
-        """Filter by hedge id."""
-        return self.__hedge_id
-
-    @hedge_id.setter
-    def hedge_id(self, value: Tuple[str, ...]):
-        self._property_changed('hedge_id')
-        self.__hedge_id = value        
 
     @property
     def supra_strategy(self) -> Tuple[str, ...]:
@@ -1371,33 +1566,6 @@ class IdFieldProperties(Base):
         self.__backtest_id = value        
 
     @property
-    def entity_id(self) -> Tuple[str, ...]:
-        return self.__entity_id
-
-    @entity_id.setter
-    def entity_id(self, value: Tuple[str, ...]):
-        self._property_changed('entity_id')
-        self.__entity_id = value        
-
-    @property
-    def identifier(self) -> Tuple[str, ...]:
-        return self.__identifier
-
-    @identifier.setter
-    def identifier(self, value: Tuple[str, ...]):
-        self._property_changed('identifier')
-        self.__identifier = value        
-
-    @property
-    def subdivision_id(self) -> Tuple[str, ...]:
-        return self.__subdivision_id
-
-    @subdivision_id.setter
-    def subdivision_id(self, value: Tuple[str, ...]):
-        self._property_changed('subdivision_id')
-        self.__subdivision_id = value        
-
-    @property
     def sedol(self) -> Tuple[str, ...]:
         """Filter by SEDOL (subject to licensing)."""
         return self.__sedol
@@ -1406,26 +1574,6 @@ class IdFieldProperties(Base):
     def sedol(self, value: Tuple[str, ...]):
         self._property_changed('sedol')
         self.__sedol = value        
-
-    @property
-    def portfolio_id(self) -> Tuple[str, ...]:
-        """Filter by portfolio id."""
-        return self.__portfolio_id
-
-    @portfolio_id.setter
-    def portfolio_id(self, value: Tuple[str, ...]):
-        self._property_changed('portfolio_id')
-        self.__portfolio_id = value        
-
-    @property
-    def rcic(self) -> Tuple[str, ...]:
-        """Filter by RCIC (subject to licensing)."""
-        return self.__rcic
-
-    @rcic.setter
-    def rcic(self, value: Tuple[str, ...]):
-        self._property_changed('rcic')
-        self.__rcic = value        
 
     @property
     def run_id(self) -> Tuple[str, ...]:
@@ -1437,16 +1585,6 @@ class IdFieldProperties(Base):
         self.__run_id = value        
 
     @property
-    def primary_country_ric(self) -> Tuple[str, ...]:
-        """Filter by Primary Country RIC (subject to licensing)."""
-        return self.__primary_country_ric
-
-    @primary_country_ric.setter
-    def primary_country_ric(self, value: Tuple[str, ...]):
-        self._property_changed('primary_country_ric')
-        self.__primary_country_ric = value        
-
-    @property
     def market_cap_category(self) -> Tuple[str, ...]:
         return self.__market_cap_category
 
@@ -1454,15 +1592,6 @@ class IdFieldProperties(Base):
     def market_cap_category(self, value: Tuple[str, ...]):
         self._property_changed('market_cap_category')
         self.__market_cap_category = value        
-
-    @property
-    def country_id(self) -> Tuple[str, ...]:
-        return self.__country_id
-
-    @country_id.setter
-    def country_id(self, value: Tuple[str, ...]):
-        self._property_changed('country_id')
-        self.__country_id = value        
 
     @property
     def universe_id1(self) -> Tuple[str, ...]:
@@ -1483,25 +1612,6 @@ class IdFieldProperties(Base):
         self.__universe_id2 = value        
 
     @property
-    def delisted(self) -> Tuple[str, ...]:
-        """Filter by delisted status."""
-        return self.__delisted
-
-    @delisted.setter
-    def delisted(self, value: Tuple[str, ...]):
-        self._property_changed('delisted')
-        self.__delisted = value        
-
-    @property
-    def regional_focus(self) -> Tuple[str, ...]:
-        return self.__regional_focus
-
-    @regional_focus.setter
-    def regional_focus(self, value: Tuple[str, ...]):
-        self._property_changed('regional_focus')
-        self.__regional_focus = value        
-
-    @property
     def wpk(self) -> Tuple[str, ...]:
         """Filter by WPK (subject to licensing)."""
         return self.__wpk
@@ -1510,15 +1620,6 @@ class IdFieldProperties(Base):
     def wpk(self, value: Tuple[str, ...]):
         self._property_changed('wpk')
         self.__wpk = value        
-
-    @property
-    def net_exposure_classification(self) -> Tuple[str, ...]:
-        return self.__net_exposure_classification
-
-    @net_exposure_classification.setter
-    def net_exposure_classification(self, value: Tuple[str, ...]):
-        self._property_changed('net_exposure_classification')
-        self.__net_exposure_classification = value        
 
     @property
     def order_id(self) -> Tuple[str, ...]:
@@ -1559,15 +1660,6 @@ class IdFieldProperties(Base):
         self.__qis_perm_no = value        
 
     @property
-    def feed(self) -> Tuple[str, ...]:
-        return self.__feed
-
-    @feed.setter
-    def feed(self, value: Tuple[str, ...]):
-        self._property_changed('feed')
-        self.__feed = value        
-
-    @property
     def asset_id(self) -> Tuple[str, ...]:
         return self.__asset_id
 
@@ -1577,41 +1669,13 @@ class IdFieldProperties(Base):
         self.__asset_id = value        
 
     @property
-    def last_returns_end_date(self) -> Tuple[datetime.date, ...]:
-        return self.__last_returns_end_date
+    def primary_entity_id(self) -> Tuple[str, ...]:
+        return self.__primary_entity_id
 
-    @last_returns_end_date.setter
-    def last_returns_end_date(self, value: Tuple[datetime.date, ...]):
-        self._property_changed('last_returns_end_date')
-        self.__last_returns_end_date = value        
-
-    @property
-    def implementation_id(self) -> Tuple[str, ...]:
-        return self.__implementation_id
-
-    @implementation_id.setter
-    def implementation_id(self, value: Tuple[str, ...]):
-        self._property_changed('implementation_id')
-        self.__implementation_id = value        
-
-    @property
-    def mic(self) -> Tuple[str, ...]:
-        return self.__mic
-
-    @mic.setter
-    def mic(self, value: Tuple[str, ...]):
-        self._property_changed('mic')
-        self.__mic = value        
-
-    @property
-    def cusip(self) -> Tuple[str, ...]:
-        """Filter by CUSIP (subject to licensing)."""
-        return self.__cusip
-
-    @cusip.setter
-    def cusip(self, value: Tuple[str, ...]):
-        self._property_changed('cusip')
-        self.__cusip = value        
+    @primary_entity_id.setter
+    def primary_entity_id(self, value: Tuple[str, ...]):
+        self._property_changed('primary_entity_id')
+        self.__primary_entity_id = value        
 
     @property
     def activity_id(self) -> Tuple[str, ...]:
@@ -1632,16 +1696,6 @@ class IdFieldProperties(Base):
         self.__idea_id = value        
 
     @property
-    def last_updated_by_id(self) -> Tuple[str, ...]:
-        """Filter by last updated user id"""
-        return self.__last_updated_by_id
-
-    @last_updated_by_id.setter
-    def last_updated_by_id(self, value: Tuple[str, ...]):
-        self._property_changed('last_updated_by_id')
-        self.__last_updated_by_id = value        
-
-    @property
     def scenario_id(self) -> Tuple[str, ...]:
         return self.__scenario_id
 
@@ -1660,23 +1714,14 @@ class IdFieldProperties(Base):
         self.__scenario_group_id = value        
 
     @property
-    def report_id(self) -> Tuple[str, ...]:
-        return self.__report_id
+    def tags(self) -> Tuple[str, ...]:
+        """Filter by contents of tags, matches on words"""
+        return self.__tags
 
-    @report_id.setter
-    def report_id(self, value: Tuple[str, ...]):
-        self._property_changed('report_id')
-        self.__report_id = value        
-
-    @property
-    def isin(self) -> Tuple[str, ...]:
-        """Filter by ISIN (subject to licensing)."""
-        return self.__isin
-
-    @isin.setter
-    def isin(self, value: Tuple[str, ...]):
-        self._property_changed('isin')
-        self.__isin = value        
+    @tags.setter
+    def tags(self, value: Tuple[str, ...]):
+        self._property_changed('tags')
+        self.__tags = value        
 
     @property
     def version(self) -> Tuple[float, ...]:
@@ -1715,16 +1760,6 @@ class IdFieldProperties(Base):
     def description(self, value: Tuple[str, ...]):
         self._property_changed('description')
         self.__description = value        
-
-    @property
-    def tags(self) -> Tuple[str, ...]:
-        """Filter by contents of tags, matches on words"""
-        return self.__tags
-
-    @tags.setter
-    def tags(self, value: Tuple[str, ...]):
-        self._property_changed('tags')
-        self.__tags = value        
 
 
 class MDAPI(Base):
@@ -1776,6 +1811,149 @@ class MDAPI(Base):
         self.__quoting_styles = value        
 
 
+class MDAPIDataQuery(Base):
+        
+    @camel_case_translate
+    def __init__(
+        self,
+        market_data_coordinates: Tuple[MarketDataCoordinate, ...],
+        format_: Union[Format, str] = None,
+        pricing_location: Union[PricingLocation, str] = None,
+        selector_function: str = None,
+        samples: int = None,
+        vendor: Union[MarketDataVendor, str] = None,
+        start_time: datetime.datetime = None,
+        end_time: datetime.datetime = None,
+        start_date: datetime.date = None,
+        end_date: datetime.date = None,
+        real_time: bool = True,
+        name: str = None
+    ):        
+        super().__init__()
+        self.__format = get_enum_value(Format, format_)
+        self.market_data_coordinates = market_data_coordinates
+        self.pricing_location = pricing_location
+        self.selector_function = selector_function
+        self.samples = samples
+        self.vendor = vendor
+        self.start_time = start_time
+        self.end_time = end_time
+        self.start_date = start_date
+        self.end_date = end_date
+        self.real_time = real_time
+        self.name = name
+
+    @property
+    def format(self) -> Union[Format, str]:
+        """Alternative format for data to be returned in"""
+        return self.__format
+
+    @format.setter
+    def format(self, value: Union[Format, str]):
+        self._property_changed('format')
+        self.__format = get_enum_value(Format, value)        
+
+    @property
+    def market_data_coordinates(self) -> Tuple[MarketDataCoordinate, ...]:
+        """Object representation of a market data coordinate"""
+        return self.__market_data_coordinates
+
+    @market_data_coordinates.setter
+    def market_data_coordinates(self, value: Tuple[MarketDataCoordinate, ...]):
+        self._property_changed('market_data_coordinates')
+        self.__market_data_coordinates = value        
+
+    @property
+    def pricing_location(self) -> Union[PricingLocation, str]:
+        """Pricing location of end-of-day data (not used for real-time query)."""
+        return self.__pricing_location
+
+    @pricing_location.setter
+    def pricing_location(self, value: Union[PricingLocation, str]):
+        self._property_changed('pricing_location')
+        self.__pricing_location = get_enum_value(PricingLocation, value)        
+
+    @property
+    def selector_function(self) -> str:
+        """Aggregation function to be applied to value fields"""
+        return self.__selector_function
+
+    @selector_function.setter
+    def selector_function(self, value: str):
+        self._property_changed('selector_function')
+        self.__selector_function = value        
+
+    @property
+    def samples(self) -> int:
+        """Number of points to down sample the data, for example if 10, it will return at
+           most 10 sample data points evenly spaced over the time/date range"""
+        return self.__samples
+
+    @samples.setter
+    def samples(self, value: int):
+        self._property_changed('samples')
+        self.__samples = value        
+
+    @property
+    def vendor(self) -> Union[MarketDataVendor, str]:
+        return self.__vendor
+
+    @vendor.setter
+    def vendor(self, value: Union[MarketDataVendor, str]):
+        self._property_changed('vendor')
+        self.__vendor = get_enum_value(MarketDataVendor, value)        
+
+    @property
+    def start_time(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
+        return self.__start_time
+
+    @start_time.setter
+    def start_time(self, value: datetime.datetime):
+        self._property_changed('start_time')
+        self.__start_time = value        
+
+    @property
+    def end_time(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
+        return self.__end_time
+
+    @end_time.setter
+    def end_time(self, value: datetime.datetime):
+        self._property_changed('end_time')
+        self.__end_time = value        
+
+    @property
+    def start_date(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__start_date
+
+    @start_date.setter
+    def start_date(self, value: datetime.date):
+        self._property_changed('start_date')
+        self.__start_date = value        
+
+    @property
+    def end_date(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__end_date
+
+    @end_date.setter
+    def end_date(self, value: datetime.date):
+        self._property_changed('end_date')
+        self.__end_date = value        
+
+    @property
+    def real_time(self) -> bool:
+        """Intraday or end of day data"""
+        return self.__real_time
+
+    @real_time.setter
+    def real_time(self, value: bool):
+        self._property_changed('real_time')
+        self.__real_time = value        
+
+
 class MDAPIDataQueryResponse(Base):
         
     @camel_case_translate
@@ -1797,78 +1975,6 @@ class MDAPIDataQueryResponse(Base):
     def data(self, value: Tuple[FieldValueMap, ...]):
         self._property_changed('data')
         self.__data = value        
-
-
-class MarketDataCoordinate(Base):
-        
-    """Object representation of a market data coordinate"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        mkt_type: str = None,
-        mkt_asset: str = None,
-        mkt_class: str = None,
-        mkt_point: Tuple[str, ...] = None,
-        mkt_quoting_style: str = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.mkt_type = mkt_type
-        self.mkt_asset = mkt_asset
-        self.mkt_class = mkt_class
-        self.mkt_point = mkt_point
-        self.mkt_quoting_style = mkt_quoting_style
-        self.name = name
-
-    @property
-    def mkt_type(self) -> str:
-        """The MDAPI Type, e.g. IR, IR BASIS, FX, FX Vol"""
-        return self.__mkt_type
-
-    @mkt_type.setter
-    def mkt_type(self, value: str):
-        self._property_changed('mkt_type')
-        self.__mkt_type = value        
-
-    @property
-    def mkt_asset(self) -> str:
-        """The MDAPI Asset, e.g. USD, EUR-EURIBOR-Telerate, WTI"""
-        return self.__mkt_asset
-
-    @mkt_asset.setter
-    def mkt_asset(self, value: str):
-        self._property_changed('mkt_asset')
-        self.__mkt_asset = value        
-
-    @property
-    def mkt_class(self) -> str:
-        """The MDAPI Class, e.g. Swap, Cash."""
-        return self.__mkt_class
-
-    @mkt_class.setter
-    def mkt_class(self, value: str):
-        self._property_changed('mkt_class')
-        self.__mkt_class = value        
-
-    @property
-    def mkt_point(self) -> Tuple[str, ...]:
-        """The MDAPI Point, e.g. 3m, 10y, 11y, Dec19"""
-        return self.__mkt_point
-
-    @mkt_point.setter
-    def mkt_point(self, value: Tuple[str, ...]):
-        self._property_changed('mkt_point')
-        self.__mkt_point = value        
-
-    @property
-    def mkt_quoting_style(self) -> str:
-        return self.__mkt_quoting_style
-
-    @mkt_quoting_style.setter
-    def mkt_quoting_style(self, value: str):
-        self._property_changed('mkt_quoting_style')
-        self.__mkt_quoting_style = value        
 
 
 class MarketDataField(Base):
@@ -2114,7 +2220,7 @@ class SymbolFilterLink(Base):
     @property
     def entity_type(self) -> str:
         """The type of the entity to lookup to."""
-        return 'MDAPIArcticSymbol'        
+        return 'MktCoordinate'        
 
     @property
     def entity_field(self) -> str:
@@ -2558,149 +2664,6 @@ class MDAPIDataBatchResponse(Base):
     def responses(self, value: Tuple[MDAPIDataQueryResponse, ...]):
         self._property_changed('responses')
         self.__responses = value        
-
-
-class MDAPIDataQuery(Base):
-        
-    @camel_case_translate
-    def __init__(
-        self,
-        market_data_coordinates: Tuple[MarketDataCoordinate, ...],
-        format_: Union[Format, str] = None,
-        pricing_location: Union[PricingLocation, str] = None,
-        selector_function: str = None,
-        samples: int = None,
-        vendor: Union[MarketDataVendor, str] = None,
-        start_time: datetime.datetime = None,
-        end_time: datetime.datetime = None,
-        start_date: datetime.date = None,
-        end_date: datetime.date = None,
-        real_time: bool = True,
-        name: str = None
-    ):        
-        super().__init__()
-        self.__format = get_enum_value(Format, format_)
-        self.market_data_coordinates = market_data_coordinates
-        self.pricing_location = pricing_location
-        self.selector_function = selector_function
-        self.samples = samples
-        self.vendor = vendor
-        self.start_time = start_time
-        self.end_time = end_time
-        self.start_date = start_date
-        self.end_date = end_date
-        self.real_time = real_time
-        self.name = name
-
-    @property
-    def format(self) -> Union[Format, str]:
-        """Alternative format for data to be returned in"""
-        return self.__format
-
-    @format.setter
-    def format(self, value: Union[Format, str]):
-        self._property_changed('format')
-        self.__format = get_enum_value(Format, value)        
-
-    @property
-    def market_data_coordinates(self) -> Tuple[MarketDataCoordinate, ...]:
-        """Object representation of a market data coordinate"""
-        return self.__market_data_coordinates
-
-    @market_data_coordinates.setter
-    def market_data_coordinates(self, value: Tuple[MarketDataCoordinate, ...]):
-        self._property_changed('market_data_coordinates')
-        self.__market_data_coordinates = value        
-
-    @property
-    def pricing_location(self) -> Union[PricingLocation, str]:
-        """Pricing location of end-of-day data (not used for real-time query)."""
-        return self.__pricing_location
-
-    @pricing_location.setter
-    def pricing_location(self, value: Union[PricingLocation, str]):
-        self._property_changed('pricing_location')
-        self.__pricing_location = get_enum_value(PricingLocation, value)        
-
-    @property
-    def selector_function(self) -> str:
-        """Aggregation function to be applied to value fields"""
-        return self.__selector_function
-
-    @selector_function.setter
-    def selector_function(self, value: str):
-        self._property_changed('selector_function')
-        self.__selector_function = value        
-
-    @property
-    def samples(self) -> int:
-        """Number of points to down sample the data, for example if 10, it will return at
-           most 10 sample data points evenly spaced over the time/date range"""
-        return self.__samples
-
-    @samples.setter
-    def samples(self, value: int):
-        self._property_changed('samples')
-        self.__samples = value        
-
-    @property
-    def vendor(self) -> Union[MarketDataVendor, str]:
-        return self.__vendor
-
-    @vendor.setter
-    def vendor(self, value: Union[MarketDataVendor, str]):
-        self._property_changed('vendor')
-        self.__vendor = get_enum_value(MarketDataVendor, value)        
-
-    @property
-    def start_time(self) -> datetime.datetime:
-        """ISO 8601-formatted timestamp"""
-        return self.__start_time
-
-    @start_time.setter
-    def start_time(self, value: datetime.datetime):
-        self._property_changed('start_time')
-        self.__start_time = value        
-
-    @property
-    def end_time(self) -> datetime.datetime:
-        """ISO 8601-formatted timestamp"""
-        return self.__end_time
-
-    @end_time.setter
-    def end_time(self, value: datetime.datetime):
-        self._property_changed('end_time')
-        self.__end_time = value        
-
-    @property
-    def start_date(self) -> datetime.date:
-        """ISO 8601-formatted date"""
-        return self.__start_date
-
-    @start_date.setter
-    def start_date(self, value: datetime.date):
-        self._property_changed('start_date')
-        self.__start_date = value        
-
-    @property
-    def end_date(self) -> datetime.date:
-        """ISO 8601-formatted date"""
-        return self.__end_date
-
-    @end_date.setter
-    def end_date(self, value: datetime.date):
-        self._property_changed('end_date')
-        self.__end_date = value        
-
-    @property
-    def real_time(self) -> bool:
-        """Intraday or end of day data"""
-        return self.__real_time
-
-    @real_time.setter
-    def real_time(self, value: bool):
-        self._property_changed('real_time')
-        self.__real_time = value        
 
 
 class MarketDataMapping(Base):

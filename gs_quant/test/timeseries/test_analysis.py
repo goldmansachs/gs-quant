@@ -98,15 +98,27 @@ def test_lag():
     dates = pd.date_range("2019-01-01", periods=4, freq="D")
     x = pd.Series([1.0, 2.0, 3.0, 4.0], index=dates)
 
-    result = lag(x)
+    result = lag(x, '1m')
+    expected = pd.Series([1.0, 2.0, 3.0, 4.0], index=pd.date_range("2019-01-31", periods=4, freq="D"))
+    assert_series_equal(result, expected, obj="Lag 1m")
+
+    result = lag(x, '2d', LagMode.TRUNCATE)
+    expected = pd.Series([1.0, 2.0], index=pd.date_range("2019-01-03", periods=2, freq="D"))
+    assert_series_equal(result, expected, obj="Lag 2d truncate")
+
+    result = lag(x, mode=LagMode.TRUNCATE)
     expected = pd.Series([np.nan, 1.0, 2.0, 3.0], index=dates)
     assert_series_equal(result, expected, obj="Lag")
 
-    result = lag(x, 2)
+    result = lag(x, 2, LagMode.TRUNCATE)
     expected = pd.Series([np.nan, np.nan, 1.0, 2.0], index=dates)
     assert_series_equal(result, expected, obj="Lag 2")
 
     result = lag(x, 2, LagMode.EXTEND)
+    expected = pd.Series([np.nan, np.nan, 1.0, 2.0, 3.0, 4.0], index=pd.date_range("2019-01-01", periods=6, freq="D"))
+    assert_series_equal(result, expected, obj="Lag 2 Extend")
+
+    result = lag(x, 2)
     expected = pd.Series([np.nan, np.nan, 1.0, 2.0, 3.0, 4.0], index=pd.date_range("2019-01-01", periods=6, freq="D"))
     assert_series_equal(result, expected, obj="Lag 2 Extend")
 

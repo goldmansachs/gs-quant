@@ -18,7 +18,7 @@
 import datetime
 import numpy
 import scipy.stats.mstats as stats
-from scipy.stats import percentileofscore
+from scipy.stats import percentileofscore, scoreatpercentile
 from .algebra import *
 import statsmodels.api as sm
 from ..models.epidemiology import SIR, SEIR, EpidemicModel
@@ -33,22 +33,34 @@ Generally not finance-specific routines.
 
 
 @plot_function
-def min_(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
+def min_(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     """
     Minimum value of series over given window
 
-    :param x: series: timeseries
+    :param x: series: a timeseries or an array of timeseries
+
     :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
               and 10 the ramp up value. Window size defaults to length of series.
     :return: timeseries of minimum value
 
     **Usage**
 
-    Returns the minimum value of thee series over each window:
+    Returns the minimum value of the series over each window.
+
+    If :math:`x` is a series:
 
     :math:`R_t = min(X_{t-w+1}:X_t)`
 
-    where :math:`w` is the size of the rolling window. If window is not provided, returns the minimum value over the
+    where :math:`w` is the size of the rolling window.
+
+
+    If :math:`x` is an array of series:
+
+    :math:`R_t = min(X_{1, t-w+1}:X_{n, t})`
+
+    where :math:`w` is the size of the rolling window, and :math:`n` is the number of series.
+
+    If window is not provided, returns the minimum value over the
     full series. If the window size is greater than the available data, will return minimum of available values.
 
     **Examples**
@@ -63,6 +75,8 @@ def min_(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     :func:`max_`
 
     """
+    if isinstance(x, list):
+        x = pd.concat(x, axis=1).min(axis=1)
     w = normalize_window(x, w)
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
     if isinstance(w.w, pd.DateOffset):
@@ -73,23 +87,33 @@ def min_(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
 
 
 @plot_function
-def max_(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
+def max_(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     """
     Maximum value of series over given window
 
-    :param x: series: timeseries
+    :param x: series: a timeseries or an array of timeseries
     :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
               and 10 the ramp up value. Window size defaults to length of series.
     :return: timeseries of maximum value
 
     **Usage**
 
-    Returns the maximum value of the series over each window:
+    Returns the maximum value of the series over each window.
+
+    If :math:`x` is a series:
 
     :math:`R_t = max(X_{t-w+1}:X_t)`
 
-    where :math:`w` is the size of the rolling window. If window is not provided, returns the minimum value over the
-    full series. If the window size is greater than the available data, will return minimum of available values.
+    where :math:`w` is the size of the rolling window.
+
+    If :math:`x` is an array of series:
+
+    :math:`R_t = max(X_{1, t-w+1}:X_{n, t})`
+
+    where :math:`w` is the size of the rolling window, and :math:`n` is the number of series.
+
+    If window is not provided, returns the maximum value over the full series. If the window size is greater than the
+    available data, will return maximum of available values.
 
     **Examples**
 
@@ -103,6 +127,8 @@ def max_(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     :func:`min_`
 
     """
+    if isinstance(x, list):
+        x = pd.concat(x, axis=1).max(axis=1)
     w = normalize_window(x, w)
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
     if isinstance(w.w, pd.DateOffset):
@@ -153,11 +179,11 @@ def range_(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
 
 
 @plot_function
-def mean(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
+def mean(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     """
     Arithmetic mean of series over given window
 
-    :param x: series: timeseries
+    :param x: series: a timeseries or an array of timeseries
     :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
               and 10 the ramp up value. Window size defaults to length of series.
     :return: timeseries of mean value
@@ -166,11 +192,21 @@ def mean(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
 
     Calculates `arithmetic mean <https://en.wikipedia.org/wiki/Arithmetic_mean>`_ of the series over a rolling window
 
+    If a timeseries is provided:
+
     :math:`R_t = \\frac{\sum_{i=t-w+1}^{t} X_i}{N}`
 
-    where :math:`N` is the number of observations in each rolling window, :math:`w`. If window is not provided, computes
-    rolling mean over the full series. If the window size is greater than the available data, will return mean of
-    available values.
+    where :math:`N` is the number of observations in each rolling window, :math:`w`.
+
+    If an array of timeseries is provided:
+
+    :math:`R_t = \\frac{\sum_{i=t-w+1}^{t} {\sum_{j=1}^{n}} X_{ij}}{N}`
+
+    where :math:`n` is the number of series, and :math:`N` is the number of observations in each rolling window,
+    :math:`w`.
+
+    If window is not provided, computes rolling mean over the full series. If the window size is greater than the
+    available data, will return mean of available values.
 
     **Examples**
 
@@ -184,13 +220,15 @@ def mean(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     :func:`median` :func:`mode`
 
     """
+    if isinstance(x, list):
+        x = pd.concat(x, axis=1)
     w = normalize_window(x, w)
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
     if isinstance(w.w, pd.DateOffset):
-        values = [x.loc[(x.index > idx - w.w) & (x.index <= idx)].mean() for idx in x.index]
-        return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
+        values = [np.nanmean(x.loc[(x.index > idx - w.w) & (x.index <= idx)]) for idx in x.index]
     else:
-        return apply_ramp(x.rolling(w.w, 0).mean(), w)
+        values = [np.nanmean(x.iloc[max(idx - w.w + 1, 0): idx + 1]) for idx in range(0, len(x))]
+    return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
 
 
 @plot_function
@@ -275,23 +313,33 @@ def mode(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
 
 
 @plot_function
-def sum_(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
+def sum_(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     """
     Rolling sum of series over given window
 
-    :param x: series: timeseries
+    :param x: series: a timeseries or an array of timeseries
     :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
               and 10 the ramp up value. Window size defaults to length of series.
     :return: timeseries of rolling sum
 
     **Usage**
 
-    Calculate the sum of observations over a given rolling window. For each time, :math:`t`, returns the value
-    of all observations from :math:`t-w+1` to :math:`t` summed together:
+    Calculate the sum of observations over a given rolling window.
+
+    If :math:`x` is a series:
 
     :math:`R_t = \sum_{i=t-w+1}^{t} X_i`
 
-    where :math:`w` is the size of the rolling window. If window is not provided, computes sum over the full series
+    where :math:`w` is the size of the rolling window.
+
+    If :math:`x` is an array of series:
+
+    :math:`R_t = \sum_{i=t-w+1}^{t} \sum_{j=1}^{n} X_{ij}`
+
+    where :math:`w` is the size of the rolling window and :math:`n` is the number of series
+
+    If window is not provided, computes sum over the full series. If the window size is greater than the available data,
+    will return sum of available values.
 
     **Examples**
 
@@ -305,6 +353,8 @@ def sum_(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
     :func:`product`
 
     """
+    if isinstance(x, list):
+        x = pd.concat(x, axis=1).sum(axis=1)
     w = normalize_window(x, w)
     assert x.index.is_monotonic_increasing
     if isinstance(w.w, pd.DateOffset):
@@ -396,6 +446,49 @@ def std(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
         return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
     else:
         return apply_ramp(x.rolling(w.w, 0).std(), w)
+
+
+@plot_function
+def exponential_std(x: pd.Series, alpha: float = 0.75) -> pd.Series:
+    """
+    Exponentially weighted standard deviation time series from previous values.
+
+    :param x: time series of prices
+    :param alpha: how much to weigh the previous price in the time series, thus controlling how much importance we
+                  place on the (more distant) past
+    :return: date-based time series of standard deviation of the input series
+
+    **Usage**
+
+    Provides `unbiased estimator <https://en.wikipedia.org/wiki/Unbiased_estimation_of_standard_deviation>`_ of
+    exponentially weighted sample `standard deviation
+    <https://en.wikipedia.org/wiki/Weighted_arithmetic_mean#Weighted_sample_variance>`_:
+
+    :math:`R_t = \\sqrt{ \\frac{\sum_{i=0}^t w_i (X_{t-i} - \overline{X_t})^2} {\sum_{i=0}^t w_i} * DF_t }`
+
+    where :math:`w_i` is the weight assigned to :math:`i` th observation, :math:`\overline{X_t}` is the day's
+    `exponential moving average <https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average>`_ and
+    :math:`DF_t` is the debiasing factor:
+
+    :math:`w_i = (1-\\alpha)\\alpha^i` for i<t; :math:`\\alpha^i` for i=t
+
+    :math:`\overline{X_t} = \\alpha \cdot \overline{X_{t-1}} + (1 - \\alpha) \cdot X_{t-1}`
+
+    :math:`DF_t = \\frac{(\sum_{i=0}^t w_i)^2} {(\sum_{i=0}^t w_i)^2 - \sum_{i=0}^t w_i^2}`
+
+    **Examples**
+
+    Generate price series and compute exponentially weighted standard deviation of returns
+
+    >>> prices = generate_series(100)
+    >>> exponential_std(returns(prices), 0.9)
+
+    **See also**
+
+    :func:`std` :func:`var` :func:`exponential_moving_average`
+
+    """
+    return x.ewm(alpha=1 - alpha, adjust=False).std()
 
 
 @plot_function
@@ -696,11 +789,54 @@ def percentiles(x: pd.Series, y: pd.Series = None, w: Union[Window, int] = Windo
     if y is None:
         y = x.copy()
 
+    if isinstance(w.r, int) and w.r > len(y):
+        raise ValueError('Ramp value must be less than the length of the series y.')
+
+    if isinstance(w.w, int) and w.w > len(x):
+        return pd.Series()
+
     res = pd.Series(dtype=np.dtype(float))
     for idx, val in y.iteritems():
         sample = x.loc[(x.index > idx - w.w) & (x.index <= idx)] if isinstance(w.w, pd.DateOffset) else x[:idx][-w.w:]
         res.loc[idx] = percentileofscore(sample, val, kind='mean')
 
+    if isinstance(w.r, pd.DateOffset):
+        return res.loc[res.index[0] + w.r:]
+    else:
+        return res[w.r:]
+
+
+@plot_function
+def percentile(x: pd.Series, n: float, w: Union[Window, int] = None) -> Union[pd.Series, float]:
+    """
+    Returns the nth percentile of a series.
+
+    :param x: series
+    :param n: percentile
+    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+              and 10 the ramp up value.
+    :return: nth percentile
+
+    **Usage**
+
+    Calculates the `nth percentile rank <https://en.wikipedia.org/wiki/Percentile_rank>`_ of :math:`x`. Rolling nth
+    percentile is returned if a window is specified, else a scalar for nth percentile over the entire series.
+
+    **Example**
+
+    Compute the 90th percentile of a series.
+
+    >>> a = generate_series(100)
+    >>> percentile(a, 90)
+
+    """
+    if not 0 <= n <= 100:
+        raise MqValueError('percentile must be in range [0, 100]')
+    if w is None:
+        return scoreatpercentile(x.values, n)
+
+    w = normalize_window(x, w)
+    res = x.rolling(w.w, 0).quantile(n / 100)
     return apply_ramp(res, w)
 
 
@@ -760,10 +896,15 @@ class SIRModel:
 
     """SIR Compartmental model for transmission of infectious disease
 
+    :param beta: transmission rate of the infection
+    :param gamma: recovery rate of the infection
     :param s: number of susceptible individuals in population
     :param i: number of infectious individuals in population
     :param r: number of recovered individuals in population
     :param n: total population size
+    :param end_date: end date for the evolution of the model
+    :param fit: whether to fit the model to the data
+    :param fit_period: on how many days back to fit the model
 
     **Usage**
 
@@ -788,36 +929,56 @@ class SIRModel:
     compartment once calibrated
 
     """
-    def __init__(self, s: pd.Series, i: pd.Series, r: pd.Series, n: Union[pd.Series, float],
-                 end_date: date = None):
+    def __init__(self, beta: float = None, gamma: float = None, s: Union[pd.Series, float] = None,
+                 i: Union[pd.Series, float] = None, r: Union[pd.Series, float] = None,
+                 n: Union[pd.Series, float] = None, fit: bool = True,
+                 fit_period: int = None):
         n = n.dropna()[0] if isinstance(n, pd.Series) else n
-        self.s = s
-        self.i = i
-        self.r = r
+        n = 100 if n is None else n
+        fit = False if s is None and i is None and r is None else fit
+        s = n if s is None else s
+        i = 1 if i is None else i
+        r = 0 if r is None else r
+
+        data_start = [ts.index.min().date() for ts in [s, i, r] if isinstance(ts, pd.Series)]
+        data_start.append(DataContext.current.start_date)
+        start_date = max(data_start)
+
+        data_end = [ts.index.max().date() for ts in [s, i, r] if isinstance(ts, pd.Series)]
+        data_end.append(DataContext.current.end_date)
+        end_date = max(data_end)
+
+        self.s = s if isinstance(s, pd.Series) else [s]
+        self.i = i if isinstance(i, pd.Series) else [i]
+        self.r = r if isinstance(r, pd.Series) else [r]
         self.n = n
+        self.beta_init = beta
+        self.gamma_init = gamma
+        self.fit = fit
+        self.fit_period = fit_period
+        self.beta_fixed = not (self.fit or (self.beta_init is None))
+        self.gamma_fixed = not (self.fit or (self.gamma_init is None))
 
-        if end_date is None:
-            end_date = max(DataContext.current.end_date, s.index.max().date())
+        data = np.array([self.s, self.i, self.r]).T
 
-        data = np.array([s, i, r]).T
+        beta_init = self.beta_init if self.beta_init is not None else 0.9
+        gamma_init = self.gamma_init if self.gamma_init is not None else 0.01
 
-        beta_init = 0.9
-        gamma_init = 0.01
+        parameters, initial_conditions = SIR.get_parameters(self.s[0], self.i[0], self.r[0], n, beta=beta_init,
+                                                            gamma=gamma_init, beta_fixed=self.beta_fixed,
+                                                            gamma_fixed=self.gamma_fixed, S0_fixed=True, I0_fixed=True,
+                                                            R0_fixed=True)
+        self.parameters = parameters
 
-        parameters, initial_conditions = SIR.get_parameters(s[0], i[0], r[0], n, beta=beta_init, gamma=gamma_init,
-                                                            S0_fixed=True, I0_fixed=True, R0_fixed=True)
+        self._model = EpidemicModel(SIR, parameters=parameters, data=data, initial_conditions=initial_conditions,
+                                    fit_period=self.fit_period)
+        if self.fit:
+            self._model.fit(verbose=False)
 
-        self._model = EpidemicModel(SIR, parameters=parameters, data=data,
-                                    initial_conditions=initial_conditions)
-        self._model.fit(verbose=False)
-
-        last_date = s.index.max().date()
-        predict_days = (end_date - last_date).days
-
-        t = np.arange(data.shape[0] + predict_days)
+        t = np.arange((end_date - start_date).days + 1)
         predict = self._model.solve(t, (self.s0(), self.i0(), self.r0()), (self.beta(), self.gamma(), n))
 
-        predict_dates = s.index.union(pd.date_range(last_date, end_date))
+        predict_dates = pd.date_range(start_date, end_date)
 
         self._model.s_predict = pd.Series(predict[:, 0], predict_dates)
         self._model.i_predict = pd.Series(predict[:, 1], predict_dates)
@@ -830,7 +991,9 @@ class SIRModel:
 
         :return: initial susceptible individuals
         """
-        return self._model.fitted_parameters['S0']
+        if self.fit:
+            return self._model.fitted_parameters['S0']
+        return self.parameters['S0'].value
 
     @plot_method
     def i0(self) -> float:
@@ -839,7 +1002,9 @@ class SIRModel:
 
         :return: initial infectious individuals
         """
-        return self._model.fitted_parameters['I0']
+        if self.fit:
+            return self._model.fitted_parameters['I0']
+        return self.parameters['I0'].value
 
     @plot_method
     def r0(self) -> float:
@@ -848,7 +1013,9 @@ class SIRModel:
 
         :return: initial recovered individuals
         """
-        return self._model.fitted_parameters['R0']
+        if self.fit:
+            return self._model.fitted_parameters['R0']
+        return self.parameters['R0'].value
 
     @plot_method
     def beta(self) -> float:
@@ -857,7 +1024,9 @@ class SIRModel:
 
         :return: beta
         """
-        return self._model.fitted_parameters['beta']
+        if self.fit:
+            return self._model.fitted_parameters['beta']
+        return self.parameters['beta'].value
 
     @plot_method
     def gamma(self) -> float:
@@ -866,7 +1035,9 @@ class SIRModel:
 
         :return: beta
         """
-        return self._model.fitted_parameters['gamma']
+        if self.fit:
+            return self._model.fitted_parameters['gamma']
+        return self.parameters['gamma'].value
 
     @plot_method
     def predict_s(self) -> pd.Series:
@@ -900,11 +1071,17 @@ class SEIRModel(SIRModel):
 
     """SEIR Compartmental model for transmission of infectious disease
 
+    :param beta: transmission rate of the infection
+    :param gamma: recovery rate of the infection
+    :param sigma: immunity rate from exposed to infected
     :param s: number of susceptible individuals in population
     :param e: number of exposed individuals in population
     :param i: number of infectious individuals in population
     :param r: number of recovered individuals in population
     :param n: total population size
+    :param end_date: end date for the evolution of the model
+    :param fit: whether to fit the model to the data
+    :param fit_period: on how many days back to fit the model
 
     **Usage**
 
@@ -931,42 +1108,66 @@ class SEIRModel(SIRModel):
     predict the populations of each compartment once calibrated.
 
     """
-    def __init__(self, s: pd.Series, e: pd.Series, i: pd.Series, r: pd.Series, n: Union[pd.Series, float],
-                 end_date: date = None):
+    def __init__(self, beta: float = None, gamma: float = None, sigma: float = None, s: Union[pd.Series, float] = None,
+                 e: Union[pd.Series, float] = None, i: Union[pd.Series, float] = None,
+                 r: Union[pd.Series, float] = None, n: Union[pd.Series, float] = None,
+                 fit: bool = True, fit_period: int = None):
         n = n.dropna()[0] if isinstance(n, pd.Series) else n
-        self.s = s
-        self.e = e
-        self.i = i
-        self.r = r
+        n = 100 if n is None else n
+        fit = False if all(state is None for state in (s, e, i, r)) else fit
+        s = n if s is None else s
+        e = 1 if e is None else e
+        i = 1 if i is None else i
+        r = 0 if r is None else r
+
+        data_start = [ts.index.min().date() for ts in [s, i, r] if isinstance(ts, pd.Series)]
+        data_start.append(DataContext.current.start_date)
+        start_date = max(data_start)
+
+        data_end = [ts.index.max().date() for ts in [s, i, r] if isinstance(ts, pd.Series)]
+        data_end.append(DataContext.current.end_date)
+        end_date = max(data_end)
+
+        self.s = s if isinstance(s, pd.Series) else [s]
+        self.e = e if isinstance(e, pd.Series) else [e]
+        self.i = i if isinstance(i, pd.Series) else [i]
+        self.r = r if isinstance(r, pd.Series) else [r]
         self.n = n
+        self.beta_init = beta
+        self.gamma_init = gamma
+        self.sigma_init = sigma
+        self.fit = fit
+        self.fit_period = fit_period
+        self.beta_fixed = not (self.fit or (self.beta is None))
+        self.gamma_fixed = not (self.fit or (self.gamma is None))
+        self.sigma_fixed = not (self.fit or (self.sigma is None))
 
-        data = np.array([s, e, i, r]).T
+        data = np.array([self.s, self.e, self.i, self.r]).T
 
-        if end_date is None:
-            end_date = max(DataContext.current.end_date, s.index.max().date())
+        beta_init = self.beta_init if self.beta_init is not None else 0.9
+        gamma_init = self.gamma_init if self.gamma_init is not None else 0.01
+        sigma_init = self.sigma_init if self.sigma_init is not None else 0.2
 
-        beta_init = 0.9
-        gamma_init = 0.01
-        sigma_init = 0.2
-
-        parameters, initial_conditions = SEIR.get_parameters(s[0], e[0], i[0], r[0], n, beta=beta_init,
-                                                             gamma=gamma_init, sigma=sigma_init,
+        parameters, initial_conditions = SEIR.get_parameters(self.s[0], self.e[0], self.i[0], self.r[0], n,
+                                                             beta=beta_init, gamma=gamma_init, sigma=sigma_init,
+                                                             beta_fixed=self.beta_fixed,
+                                                             gamma_fixed=self.gamma_fixed,
+                                                             sigma_fixed=self.sigma_fixed,
                                                              S0_fixed=True, I0_fixed=True,
                                                              R0_fixed=True, E0_fixed=True, S0_max=5e6, I0_max=5e6,
                                                              E0_max=10e6, R0_max=10e6)
+        self.parameters = parameters
 
-        self._model = EpidemicModel(SEIR, parameters=parameters, data=data,
-                                    initial_conditions=initial_conditions)
-        self._model.fit(verbose=False)
+        self._model = EpidemicModel(SEIR, parameters=parameters, data=data, initial_conditions=initial_conditions,
+                                    fit_period=self.fit_period)
+        if self.fit:
+            self._model.fit(verbose=False)
 
-        last_date = s.index.max().date()
-        predict_days = (end_date - last_date).days
-
-        t = np.arange(data.shape[0] + predict_days)
+        t = np.arange((end_date - start_date).days + 1)
         predict = self._model.solve(t, (self.s0(), self.e0(), self.i0(), self.r0()),
                                     (self.beta(), self.gamma(), self.sigma(), n))
 
-        predict_dates = s.index.union(pd.date_range(last_date, end_date))
+        predict_dates = pd.date_range(start_date, end_date)
 
         self._model.s_predict = pd.Series(predict[:, 0], predict_dates)
         self._model.e_predict = pd.Series(predict[:, 1], predict_dates)
@@ -980,7 +1181,9 @@ class SEIRModel(SIRModel):
 
         :return: initial exposed individuals
         """
-        return self._model.fitted_parameters['E0']
+        if self.fit:
+            return self._model.fitted_parameters['E0']
+        return self.parameters['E0'].value
 
     @plot_method
     def beta(self) -> float:
@@ -989,7 +1192,9 @@ class SEIRModel(SIRModel):
 
         :return: beta
         """
-        return self._model.fitted_parameters['beta']
+        if self.fit:
+            return self._model.fitted_parameters['beta']
+        return self.parameters['beta'].value
 
     @plot_method
     def gamma(self) -> float:
@@ -998,7 +1203,9 @@ class SEIRModel(SIRModel):
 
         :return: gamma
         """
-        return self._model.fitted_parameters['gamma']
+        if self.fit:
+            return self._model.fitted_parameters['gamma']
+        return self.parameters['gamma'].value
 
     @plot_method
     def sigma(self) -> float:
@@ -1007,7 +1214,9 @@ class SEIRModel(SIRModel):
 
         :return: sigma
         """
-        return self._model.fitted_parameters['sigma']
+        if self.fit:
+            return self._model.fitted_parameters['sigma']
+        return self.parameters['sigma'].value
 
     @plot_method
     def predict_e(self) -> pd.Series:

@@ -253,15 +253,15 @@ def test_historical_pricing(mocker):
     portfolio = Portfolio((swap1, swap2, swap3))
 
     with HistoricalPricingContext(dates=(dt.date(2019, 10, 7), dt.date(2019, 10, 8), dt.date(2019, 10, 9))) as hpc:
-        pricing_key = hpc.pricing_key
+        risk_key = hpc._PricingContext__risk_key(risk.DollarPrice, swap1.provider())
         results = portfolio.calc((risk.DollarPrice, risk.IRDelta))
 
     expected = risk.SeriesWithInfo(
-        pricing_key,
         pd.Series(
             data=[0.06, 0.063, 0.066],
             index=[dt.date(2019, 10, 7), dt.date(2019, 10, 8), dt.date(2019, 10, 9)]
-        ))
+        ),
+        risk_key=risk_key.base,)
 
     actual = results[risk.DollarPrice].aggregate()
 

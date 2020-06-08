@@ -232,41 +232,6 @@ class DeleteContentResponse(Base):
         self.__data = value        
 
 
-class Disclaimer(Base):
-        
-    """Disclaimer associated with a content piece"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        text: str = None,
-        type_=None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.text = text
-        self.__type = type_
-        self.name = name
-
-    @property
-    def text(self) -> str:
-        return self.__text
-
-    @text.setter
-    def text(self, value: str):
-        self._property_changed('text')
-        self.__text = value        
-
-    @property
-    def type(self):
-        return self.__type
-
-    @type.setter
-    def type(self, value):
-        self._property_changed('type')
-        self.__type = value        
-
-
 class Object(Base):
         
     @camel_case_translate
@@ -1032,7 +997,6 @@ class ContentParameters(Base):
         certification_type=None,
         asset_ids: Tuple[str, ...] = None,
         origin=None,
-        disclaimers: Tuple[Disclaimer, ...] = None,
         investment_recommendations: InvestmentRecommendations = None,
         name: str = None
     ):        
@@ -1047,7 +1011,6 @@ class ContentParameters(Base):
         self.certification_type = certification_type
         self.asset_ids = asset_ids
         self.origin = origin
-        self.disclaimers = disclaimers
         self.language = language
         self.investment_recommendations = investment_recommendations
         self.name = name
@@ -1151,16 +1114,6 @@ class ContentParameters(Base):
     def origin(self, value):
         self._property_changed('origin')
         self.__origin = value        
-
-    @property
-    def disclaimers(self) -> Tuple[Disclaimer, ...]:
-        """List of disclaimers associated with a content piece"""
-        return self.__disclaimers
-
-    @disclaimers.setter
-    def disclaimers(self, value: Tuple[Disclaimer, ...]):
-        self._property_changed('disclaimers')
-        self.__disclaimers = value        
 
     @property
     def language(self):

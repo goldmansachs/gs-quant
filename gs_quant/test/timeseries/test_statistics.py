@@ -22,16 +22,14 @@ from gs_quant.timeseries import *
 
 
 def test_generate_series():
-
     x = generate_series(100)
 
-    assert(len(x) == 100)
-    assert(x.index[0] == datetime.date.today())
-    assert(x[0] == 100)
+    assert (len(x) == 100)
+    assert (x.index[0] == datetime.date.today())
+    assert (x[0] == 100)
 
 
 def test_min():
-
     dates = [
         date(2019, 1, 1),
         date(2019, 1, 2),
@@ -59,9 +57,13 @@ def test_min():
     expected = pd.Series([3.0, 2.0, 2.0, 1.0, 1.0, 1.0], index=dates)
     assert_series_equal(result, expected, obj="Minimum with window 1w")
 
+    y = pd.Series([4.0, np.nan, 4.0, 2.0, 2.0, 5.0], index=dates)
+    result = min_([x, y], Window(2, 0))
+    expected = pd.Series([3.0, 2.0, 2.0, 1.0, 1.0, 2.0], index=dates)
+    assert_series_equal(result, expected, obj="Minimum of multiple series")
+
 
 def test_max():
-
     dates = [
         date(2019, 1, 1),
         date(2019, 1, 2),
@@ -89,9 +91,13 @@ def test_max():
     expected = pd.Series([3.0, 3.0, 3.0, 3.0, 3.0, 6.0], index=dates)
     assert_series_equal(result, expected, obj="Maximum window 1w")
 
+    y = pd.Series([4.0, np.nan, 4.0, 2.0, 2.0, 5.0], index=dates)
+    result = max_([x, y], Window(2, 0))
+    expected = pd.Series([4.0, 4.0, 4.0, 4.0, 3.0, 6.0], index=dates)
+    assert_series_equal(result, expected, obj="Maximum of multiple series")
+
 
 def test_range():
-
     dates = [
         date(2019, 1, 1),
         date(2019, 1, 2),
@@ -121,7 +127,6 @@ def test_range():
 
 
 def test_mean():
-
     dates = [
         date(2019, 1, 1),
         date(2019, 1, 2),
@@ -149,9 +154,13 @@ def test_mean():
     expected = pd.Series([3.0, 2.5, 8 / 3, 2.25, 2.4, 3.0], index=dates)
     assert_series_equal(result, expected, obj="Mean window 1w")
 
+    y = pd.Series([4.0, np.nan, 4.0, 2.0, 2.0, 5.0], index=dates)
+    result = mean([x, y], Window(2, 0))
+    expected = pd.Series([3.5, 3.0, 3.0, 2.5, 2.0, 4.0], index=dates)
+    assert_series_equal(result, expected, obj="Mean of multiple series")
+
 
 def test_median():
-
     dates = [
         date(2019, 1, 1),
         date(2019, 1, 2),
@@ -181,7 +190,6 @@ def test_median():
 
 
 def test_mode():
-
     dates = [
         date(2019, 1, 1),
         date(2019, 1, 2),
@@ -211,7 +219,6 @@ def test_mode():
 
 
 def test_sum():
-
     dates = [
         date(2019, 1, 1),
         date(2019, 1, 2),
@@ -235,9 +242,13 @@ def test_sum():
     expected = pd.Series([1.0, 3.0, 6.0, 10.0, 15.0, 20.0], index=dates)
     assert_series_equal(result, expected, obj="Sum window 1w")
 
+    y = pd.Series([4.0, np.nan, 4.0, 2.0, 2.0, 5.0], index=dates)
+    result = sum_([x, y], Window(2, 0))
+    expected = pd.Series([5.0, 7.0, 9.0, 13.0, 13.0, 18.0], index=dates)
+    assert_series_equal(result, expected, obj="Sum of multiple series")
+
 
 def test_product():
-
     dates = [
         date(2019, 1, 1),
         date(2019, 1, 2),
@@ -263,7 +274,6 @@ def test_product():
 
 
 def test_std():
-
     dates = [
         date(2019, 1, 1),
         date(2019, 1, 2),
@@ -288,8 +298,42 @@ def test_std():
     assert_series_equal(result, expected, obj="std window 1w", check_less_precise=True)
 
 
-def test_var():
+def test_exponential_std():
 
+    def exp_std_calc(ts, alpha=0.75):
+        std = ts * 0
+        for i in range(1, len(ts)):
+            weights = (1 - alpha) * alpha ** np.arange(i, -1, -1)
+            weights[0] /= (1 - alpha)
+            x = ts.to_numpy()[:i + 1]
+            ema = sum(weights * x) / sum(weights)
+            debias_fact = sum(weights) ** 2 / (sum(weights) ** 2 - sum(weights ** 2))
+            var = debias_fact * sum(weights * (x - ema) ** 2) / sum(weights)
+            std[i] = np.sqrt(var)
+        std[0] = np.NaN
+        return std
+
+    dates = [
+        date(2019, 1, 1),
+        date(2019, 1, 2),
+        date(2019, 1, 3),
+        date(2019, 1, 4),
+        date(2019, 1, 7),
+        date(2019, 1, 8),
+    ]
+
+    x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
+
+    result = exponential_std(x)
+    expected = exp_std_calc(x)
+    assert_series_equal(result, expected, obj="Exponentially weighted standard deviation")
+
+    result = exponential_std(x, 0.8)
+    expected = exp_std_calc(x, 0.8)
+    assert_series_equal(result, expected, obj="Exponentially weighted standard deviation weight 1")
+
+
+def test_var():
     dates = [
         date(2019, 1, 1),
         date(2019, 1, 2),
@@ -315,7 +359,6 @@ def test_var():
 
 
 def test_cov():
-
     dates = [
         date(2019, 1, 1),
         date(2019, 1, 2),
@@ -342,7 +385,6 @@ def test_cov():
 
 
 def test_zscores():
-
     assert_series_equal(zscores(pd.Series()), pd.Series())
     assert_series_equal(zscores(pd.Series(), 1), pd.Series())
 
@@ -377,7 +419,6 @@ def test_zscores():
 
 
 def test_winsorize():
-
     assert_series_equal(winsorize(pd.Series()), pd.Series())
 
     x = generate_series(10000)
@@ -391,13 +432,13 @@ def test_winsorize():
     b_upper = mu + sigma * limit * 1.001
     b_lower = mu - sigma * limit * 1.001
 
-    assert(True in r.ge(b_upper).values)
-    assert(True in r.le(b_lower).values)
+    assert (True in r.ge(b_upper).values)
+    assert (True in r.le(b_lower).values)
 
     wr = winsorize(r, limit)
 
-    assert(True not in wr.ge(b_upper).values)
-    assert(True not in wr.le(b_lower).values)
+    assert (True not in wr.ge(b_upper).values)
+    assert (True not in wr.le(b_lower).values)
 
     limit = 2.0
 
@@ -407,13 +448,13 @@ def test_winsorize():
     b_upper = mu + sigma * limit * 1.001
     b_lower = mu - sigma * limit * 1.001
 
-    assert(True in r.ge(b_upper).values)
-    assert(True in r.le(b_lower).values)
+    assert (True in r.ge(b_upper).values)
+    assert (True in r.le(b_lower).values)
 
     wr = winsorize(r, limit)
 
-    assert(True not in wr.ge(b_upper).values)
-    assert(True not in wr.le(b_lower).values)
+    assert (True not in wr.ge(b_upper).values)
+    assert (True not in wr.le(b_lower).values)
 
 
 def test_percentiles():
@@ -430,8 +471,8 @@ def test_percentiles():
     y = pd.Series([3.5, 1.8, 2.9, 1.2, 3.1, 6.0], index=dates)
 
     assert_series_equal(percentiles(pd.Series([]), y), pd.Series([]))
-    assert_series_equal(percentiles(x, pd.Series([])), pd.Series([]))
-    assert_series_equal(percentiles(x, y, Window(7, 0)), pd.Series([]))
+    assert_series_equal(percentiles(x, pd.Series([])), pd.Series())
+    assert_series_equal(percentiles(x, y, Window(7, 0)), pd.Series())
 
     result = percentiles(x, y, 2)
     expected = pd.Series([50.0, 50.0, 100.0, 75.0], index=dates[2:])
@@ -445,6 +486,10 @@ def test_percentiles():
     expected = pd.Series([100.0, 0.0, 33.333333, 25.0, 100.0, 90.0], index=dates)
     assert_series_equal(result, expected, obj="percentiles with window 1w")
 
+    result = percentiles(x, y, Window('1w', '3d'))
+    expected = pd.Series([25.0, 100.0, 90.0], index=dates[3:])
+    assert_series_equal(result, expected, obj="percentiles with window 1w and ramp 3d")
+
     result = percentiles(x)
     expected = pd.Series([50.0, 25.0, 66.667, 12.500, 70.0, 91.667], index=dates)
     assert_series_equal(result, expected, obj="percentiles over historical values", check_less_precise=True)
@@ -452,6 +497,22 @@ def test_percentiles():
     result = percentiles(x, y)
     expected = pd.Series([100.0, 0.0, 33.333, 25.0, 100.0, 91.667], index=dates)
     assert_series_equal(result, expected, obj="percentiles without window length", check_less_precise=True)
+
+    with pytest.raises(ValueError):
+        percentiles(x, pd.Series(), Window(6, 1))
+
+
+def test_percentile():
+    with pytest.raises(MqError):
+        percentile(pd.Series(), -1)
+    with pytest.raises(MqError):
+        percentile(pd.Series(), 100.1)
+
+    for n in range(0, 101, 5):
+        assert percentile(pd.Series(x * 10 for x in range(0, 11)), n) == n
+
+    x = percentile(pd.Series(x for x in range(0, 5)), 50, 2)
+    assert_series_equal(x, pd.Series([1.5, 2.5, 3.5], index=pd.RangeIndex(2, 5)))
 
 
 def test_regression():
@@ -481,7 +542,6 @@ def test_regression():
 
 
 def test_sir_model():
-
     n = 1000
     d = 100
     i0 = 100
@@ -512,7 +572,7 @@ def test_sir_model():
 
     (s, i, r) = get_series(beta, gamma)
 
-    sir = SIRModel(s, i, r, n)
+    sir = SIRModel(beta, gamma, s, i, r, n)
 
     assert abs(sir.beta() - beta) < 0.01
     assert abs(sir.gamma() - gamma) < 0.01
@@ -529,6 +589,22 @@ def test_sir_model():
     assert s_predict.size == d
     assert i_predict.size == d
     assert r_predict.size == d
+
+    sir = SIRModel(beta, gamma, s, i, r, n, fit=False)
+
+    assert sir.beta() == beta
+    assert sir.gamma() == gamma
+
+    sir1 = SIRModel(beta, gamma, s, i, r, n, fit=False)
+
+    with DataContext(end=dt.date.today() + dt.timedelta(days=d - 1)):
+        sir2 = SIRModel(beta, gamma, s[0], i, r[0], n, fit=False)
+
+    assert sir1.beta() == sir1.beta()
+    assert sir2.gamma() == sir2.gamma()
+    assert (sir1.predict_i() == sir2.predict_i()).all()
+    assert (sir1.predict_r() == sir2.predict_r()).all()
+    assert (sir1.predict_s() == sir2.predict_s()).all()
 
 
 def test_seir_model():
@@ -565,7 +641,7 @@ def test_seir_model():
 
     (s, e, i, r) = get_series(beta, gamma, sigma)
 
-    seir = SEIRModel(s, e, i, r, n)
+    seir = SEIRModel(beta, gamma, sigma, s, e, i, r, n)
 
     assert abs(seir.beta() - beta) < 0.01
     assert abs(seir.gamma() - gamma) < 0.01
@@ -580,6 +656,25 @@ def test_seir_model():
     assert e_predict.size == d
     assert i_predict.size == d
     assert r_predict.size == d
+
+    seir = SEIRModel(beta, gamma, sigma, s, e, i, r, n, fit=False)
+
+    assert seir.beta() == beta
+    assert seir.gamma() == gamma
+    assert seir.sigma() == sigma
+
+    seir1 = SEIRModel(beta, gamma, sigma, s, e, i, r, n, fit=False)
+
+    with DataContext(end=dt.date.today() + dt.timedelta(days=d - 1)):
+        seir2 = SEIRModel(beta, gamma, sigma, s[0], e[0], i, r[0], n, fit=False)
+
+    assert seir1.beta() == seir1.beta()
+    assert seir2.gamma() == seir2.gamma()
+    assert seir2.sigma() == seir2.sigma()
+    assert (seir1.predict_i() == seir2.predict_i()).all()
+    assert (seir1.predict_e() == seir2.predict_e()).all()
+    assert (seir1.predict_r() == seir2.predict_r()).all()
+    assert (seir1.predict_s() == seir2.predict_s()).all()
 
 
 if __name__ == "__main__":

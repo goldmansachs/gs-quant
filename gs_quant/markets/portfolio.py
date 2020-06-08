@@ -15,10 +15,10 @@ under the License.
 """
 from gs_quant.context_base import nullcontext
 from gs_quant.instrument import Instrument
-from gs_quant.markets import PricingContext, PricingFuture
+from gs_quant.markets import PricingContext
 from gs_quant.priceable import PriceableImpl
 from gs_quant.target.portfolios import Position, PositionSet
-from gs_quant.risk import DollarPrice, Price, ResolvedInstrumentValues, RiskMeasure
+from gs_quant.risk import ResolvedInstrumentValues, RiskMeasure
 from gs_quant.risk.results import PortfolioRiskResult
 from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.api.gs.assets import GsAssetApi
@@ -34,8 +34,10 @@ _logger = logging.getLogger(__name__)
 
 
 class Portfolio(PriceableImpl):
-    """
-    A collection of instruments
+    """A collection of instruments
+
+    Portfolio holds a collection of instruments in order to run pricing and risk scenarios
+
     """
 
     def __init__(self,
@@ -43,8 +45,9 @@ class Portfolio(PriceableImpl):
                  name: Optional[str] = None):
         """
         Creates a portfolio object which can be used to hold instruments
+
         :param instruments: constructed with an instrument, a list or tuple of instruments or a dictionary where
-                            key is instrument name and value is an instrument
+            key is instrument name and value is an instrument
         """
         super().__init__()
         if isinstance(instruments, dict):
@@ -150,16 +153,19 @@ class Portfolio(PriceableImpl):
         return instrument
 
     def to_frame(self) -> pd.DataFrame:
-        inst_list = pd.DataFrame()
-        for inst in self.instruments:
-            if isinstance(inst, Portfolio):
-                r = inst.to_frame()
-            else:
-                r = pd.DataFrame([dict(chain(inst.as_dict().items(),
-                                             (('instrument', inst), ('portfolio', self.name))))]).\
-                    set_index(['portfolio', 'instrument'])
-            inst_list = pd.concat([inst_list, r])
-        return inst_list
+        def to_records(portfolio: Portfolio) -> list:
+            records = []
+
+            for inst in portfolio.instruments:
+                if isinstance(inst, Portfolio):
+                    records.extend(to_records(inst))
+                else:
+                    records.append(dict(chain(inst.as_dict().items(),
+                                              (('instrument', inst), ('portfolio', self.name)))))
+
+            return records
+
+        return pd.DataFrame.from_records(to_records(self)).set_index(['portfolio', 'instrument'])
 
     def index(self, key: Union[str, Instrument]) -> Union[int, Tuple[int, ...]]:
         if isinstance(key, str):
@@ -180,20 +186,10 @@ class Portfolio(PriceableImpl):
             futures = [i.resolve(in_place) for i in self.__instruments]
 
         if not in_place:
-            return PortfolioRiskResult(self,
-                                       (ResolvedInstrumentValues,),
-                                       futures,
-                                       result_future=PricingFuture(PricingContext.current))
+            return PortfolioRiskResult(self, (ResolvedInstrumentValues,), futures)
 
-    def dollar_price(self) -> PortfolioRiskResult:
-        return self.calc(DollarPrice)
-
-    def price(self) -> PortfolioRiskResult:
-        return self.calc(Price)
-
-    def calc(self, risk_measure: Union[RiskMeasure, Iterable[RiskMeasure]]) -> PortfolioRiskResult:
+    def calc(self, risk_measure: Union[RiskMeasure, Iterable[RiskMeasure]], fn=None) -> PortfolioRiskResult:
         with self.__pricing_context:
             return PortfolioRiskResult(self,
                                        (risk_measure,) if isinstance(risk_measure, RiskMeasure) else risk_measure,
-                                       [i.calc(risk_measure) for i in self.__instruments],
-                                       result_future=PricingFuture(PricingContext.current))
+                                       [i.calc(risk_measure, fn=fn) for i in self.__instruments])

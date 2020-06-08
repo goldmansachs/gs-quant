@@ -55,23 +55,23 @@ def _to_offset(tenor: str) -> pd.DateOffset:
 
 
 Interpolate = _create_enum('Interpolate', ['intersect', 'step', 'nan', 'zero', 'time'])
-Returns = _create_enum('Returns', ['simple', 'logarithmic'])
+Returns = _create_enum('Returns', ['simple', 'logarithmic', 'absolute'])
 SeriesType = _create_enum('SeriesType', ['prices', 'returns'])
 CurveType = _create_enum('CurveType', ['prices', 'excess_returns'])
 
 Window = namedtuple('Window', ['w', 'r'])
 
 
-def _check_window(x: pd.Series, window: Window):
-    if len(x) > 0 and isinstance(window.w, int) and isinstance(window.r, int):
+def _check_window(series_length: int, window: Window):
+    if series_length > 0 and isinstance(window.w, int) and isinstance(window.r, int):
         if window.w <= 0:
             raise ValueError('Window value must be greater than zero.')
-        if window.r > len(x) or window.r < 0:
+        if window.r > series_length or window.r < 0:
             raise ValueError('Ramp value must be less than the length of the series and greater than zero.')
 
 
 def apply_ramp(x: pd.Series, window: Window) -> pd.Series:
-    _check_window(x, window)
+    _check_window(len(x), window)
     if isinstance(window.w, int) and window.w > len(x):  # does not restrict window size when it is a DataOffset
         return pd.Series([])
     if isinstance(window.r, pd.DateOffset):
@@ -80,9 +80,10 @@ def apply_ramp(x: pd.Series, window: Window) -> pd.Series:
         return x[window.r:]
 
 
-def normalize_window(x: pd.Series, window: Union[Window, int, None], default_window: int = None) -> Window:
+def normalize_window(x: Union[pd.Series, pd.DataFrame], window: Union[Window, int, None], default_window: int = None) \
+        -> Window:
     if default_window is None:
-        default_window = x.size
+        default_window = len(x)
 
     if isinstance(window, int):
         window = Window(w=window, r=window)
@@ -100,7 +101,7 @@ def normalize_window(x: pd.Series, window: Union[Window, int, None], default_win
             elif window.w is None:
                 window = Window(w=default_window, r=window.r)
 
-    _check_window(x, window)
+    _check_window(default_window, window)
     return window
 
 

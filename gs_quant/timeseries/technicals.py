@@ -124,13 +124,13 @@ def smoothed_moving_average(x: pd.Series, w: Union[Window, int] = Window(None, 0
 
     A modified moving average (MMA), running moving average (RMA), or smoothed moving average (SMMA) is defined as:
 
-    :math:`P_MM,today = \\frac{(N_1)P_MM,yesterday + P_today}{N}`
+    :math:`P_{MM,today} = \\frac{(N-1)P_{MM,yesterday} + P_today}{N}`
 
     where N is the number of observations in each rolling window, :math:`w`. If window is not provided, computes
     rolling mean over the full series
 
-    See `Modified moving average <https://en.wikipedia.org/wiki/Moving_average#Modified_moving_average>`
-    _ for more information
+    See `Modified moving average <https://en.wikipedia.org/wiki/Moving_average#Modified_moving_average>`_ for more
+    information
 
 
     **Examples**
@@ -227,13 +227,12 @@ def exponential_moving_average(x: pd.Series, alpha: float = 0.75) -> pd.Series:
 
     An exponential(ly weighted) moving average (EMA), is defined as:
 
-    :math:`R_{t+1} = \alpha \cdot R_t + (1 - \alpha) \cdot P_t`
+    :math:`R_{t+1} = \\alpha \cdot R_t + (1 - \\alpha) \cdot P_t`
 
-    where :math: `\alpha` is the weight we place on the previous day's average.
+    where :math: `\\alpha` is the weight we place on the previous day's average.
 
-    See `Exponential moving average <https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average>`
-    _ for more information
-
+    See `Exponential moving average <https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average>`_ for
+    more information
 
     **Examples**
 
@@ -244,7 +243,7 @@ def exponential_moving_average(x: pd.Series, alpha: float = 0.75) -> pd.Series:
 
     **See also**
 
-    :func:`mean` :func:'moving_average' :func:'smoothed_moving_average'
+    :func:`mean` :func:`moving_average` :func:`smoothed_moving_average`
 
     """
     return x.ewm(alpha=1 - alpha, adjust=False).mean()

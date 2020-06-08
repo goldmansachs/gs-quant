@@ -23,9 +23,10 @@ from enum import EnumMeta
 from functools import wraps
 import inflection
 from inspect import signature, Parameter
+import itertools
 import keyword
 import logging
-from typing import Union, get_type_hints
+from typing import Optional, Union, get_type_hints
 
 from gs_quant.context_base import ContextBase, ContextMeta
 
@@ -63,31 +64,11 @@ def camel_case_translate(f):
     return wrapper
 
 
-class PricingKey(
-    namedtuple('_PricingKey', ('pricing_market_data_as_of', 'market_data_location', 'parameters', 'scenario'))
-):
+class RiskKey(namedtuple('RiskKey', ('provider', 'date', 'market', 'params', 'scenario', 'risk_measure'))):
 
-    def __iter__(self):
-        if len(self.pricing_market_data_as_of) > 1:
-            return iter(self.clone(pricing_market_data_as_of=(as_of,)) for as_of in self.pricing_market_data_as_of)
-        else:
-            return iter([self])
-
-    def __len__(self):
-        return len(self.pricing_market_data_as_of)
-
-    def clone(self, **kwargs):
-        dict = {f: getattr(self, f, None) for f in super()._fields}
-        dict.update(kwargs)
-        return PricingKey(**dict)
-
-    def for_pricing_date(self, pricing_date: dt.date):
-        as_of = next((a for a in self.pricing_market_data_as_of if a.pricing_date == pricing_date), None)
-        if as_of is None:
-            raise ValueError('{} not found'.format(pricing_date))
-
-        return self.clone(pricing_market_data_as_of=(as_of,))
-
+    @property
+    def base(self):
+        return RiskKey(self.provider, None, None, self.params, self.scenario, self.risk_measure)
 
 
 class EnumBase:
@@ -95,6 +76,9 @@ class EnumBase:
     @classmethod
     def _missing_(cls: EnumMeta, key):
         return next((m for m in cls.__members__.values() if m.value.lower() == key.lower()), None)
+
+    def __lt__(self, other):
+        return self.value < other.value
 
 
 class Base(metaclass=ABCMeta):
@@ -104,10 +88,10 @@ class Base(metaclass=ABCMeta):
     __properties = set()
 
     def __init__(self, **_kwargs):
-        self.__calced_hash: int = None
+        self.__calced_hash: Optional[int] = None
 
         try:
-            self.name: str = None
+            self.name: Optional[str] = None
         except AttributeError:
             # Regrettably, read-only properties called name exist
             pass
@@ -132,7 +116,7 @@ class Base(metaclass=ABCMeta):
 
     def __repr__(self):
         if self.name is not None:
-            return self.name
+            return '{} ({})'.format(self.name, self.__class__.__name__)
 
         return super().__repr__()
 
@@ -162,6 +146,18 @@ class Base(metaclass=ABCMeta):
 
     def __ne__(self, other) -> bool:
         return not self.__eq__(other)
+
+    def __lt__(self, other):
+        for prop in itertools.chain(('name',), sorted(self.properties())):
+            val = getattr(self, prop)
+            other_val = getattr(other, prop)
+
+            if val != other_val:
+                if val is None:
+                    return False
+                return val < other_val
+
+        return False
 
     def clone(self, **kwargs):
         """
@@ -197,7 +193,7 @@ class Base(metaclass=ABCMeta):
                                    getattr(getattr(cls, i).fget, 'do_not_serialise', False))
         return cls.__properties
 
-    def as_dict(self, as_camel_case: bool=False) -> dict:
+    def as_dict(self, as_camel_case: bool = False) -> dict:
         """Dictionary of the public, non-null properties and values"""
         raw_properties = self.properties()
         properties = (inflection.camelize(p, uppercase_first_letter=False) for p in raw_properties) \
@@ -206,7 +202,7 @@ class Base(metaclass=ABCMeta):
         return dict((p, v) for p, v in zip(properties, values) if v is not None)
 
     @classmethod
-    def prop_type(cls, prop: str) -> type:
+    def prop_type(cls, prop: str, additional: Optional[list] = None) -> type:
         return_hints = get_type_hints(getattr(cls, prop).fget).get('return')
         if hasattr(return_hints, '__origin__'):
             prop_type = return_hints.__origin__
@@ -215,6 +211,18 @@ class Base(metaclass=ABCMeta):
 
         if prop_type == Union:
             prop_type = next((a for a in return_hints.__args__ if issubclass(a, (Base, EnumBase))), None)
+            if prop_type is None:
+                for typ in (dt.datetime, dt.date):
+                    if typ in return_hints.__args__:
+                        prop_type = typ
+
+                        if additional is not None:
+                            additional.extend([a for a in return_hints.__args__ if a != prop_type])
+                        break
+
+            if prop_type is None:
+                prop_type = return_hints.__args__[-1]
+                additional.extend(return_hints.__args__[:-1])
 
         if prop_type is InstrumentBase:
             # TODO Fix this
@@ -242,7 +250,8 @@ class Base(metaclass=ABCMeta):
             prop_value = values.get(prop, values.get(inflection.camelize(prop, uppercase_first_letter=False)))
 
             if prop_value is not None:
-                prop_type = self.prop_type(prop)
+                additional_types = []
+                prop_type = self.prop_type(prop, additional=additional_types)
 
                 if prop_type is None:
                     # This shouldn't happen
@@ -252,14 +261,23 @@ class Base(metaclass=ABCMeta):
                         setattr(self, prop, dt.datetime.fromtimestamp(prop_value / 1000).isoformat())
                     else:
                         import re
-                        matcher = re.search('\.([0-9]*)Z$', prop_value)
+                        matcher = re.search('\\.([0-9]*)Z$', prop_value)
                         if matcher:
                             sub_seconds = matcher.group(1)
                             if len(sub_seconds) > 6:
                                 prop_value = re.sub(matcher.re, '.{}Z'.format(sub_seconds[:6]), prop_value)
-                        setattr(self, prop, dateutil.parser.isoparse(prop_value))
+
+                        try:
+                            setattr(self, prop, dateutil.parser.isoparse(prop_value))
+                        except ValueError:
+                            if str in additional_types:
+                                setattr(self, prop, prop_value)
                 elif issubclass(prop_type, dt.date):
-                    setattr(self, prop, dateutil.parser.isoparse(prop_value).date())
+                    try:
+                        setattr(self, prop, dateutil.parser.isoparse(prop_value).date())
+                    except ValueError:
+                        if str in additional_types:
+                            setattr(self, prop, prop_value)
                 elif issubclass(prop_type, EnumBase):
                     setattr(self, prop, get_enum_value(prop_type, prop_value))
                 elif issubclass(prop_type, Base):
@@ -293,7 +311,7 @@ class Base(metaclass=ABCMeta):
 
             if prop_type:
                 if issubclass(prop_type, Base) and isinstance(value, dict):
-                        value = prop_type.from_dict(value)
+                    value = prop_type.from_dict(value)
                 elif issubclass(prop_type, (list, tuple)) and isinstance(value, (list, tuple)):
                     item_type = cls.prop_item_type(prop_name)
                     if issubclass(item_type, Base):
@@ -361,7 +379,7 @@ class Priceable(Base, metaclass=ABCMeta):
         """
         raise NotImplementedError
 
-    def resolve(self, in_place: bool=True):
+    def resolve(self, in_place: bool = True):
         """
         Resolve non-supplied properties of an instrument
 
@@ -479,6 +497,10 @@ class Scenario(Base, ContextBase, metaclass=__ScenarioMeta):
 
 
 class InstrumentBase(Base):
+    pass
+
+
+class Market(Base):
     pass
 
 

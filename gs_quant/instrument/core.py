@@ -13,11 +13,15 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+from typing import Iterable
+
 from gs_quant.base import get_enum_value, InstrumentBase
 from gs_quant.common import AssetClass, AssetType, XRef
 from gs_quant.priceable import PriceableImpl
+from gs_quant.api.gs.parser import GsParserApi
 
 from abc import ABCMeta
+from typing import Optional
 import inspect
 
 
@@ -52,9 +56,9 @@ class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
             else:
                 if '$type' in values:
                     from gs_quant_internal import tdapi
-                    tdapi_cls = getattr(tdapi, values['$type'])
+                    tdapi_cls = getattr(tdapi, values['$type'].replace('Defn', 'Builder'))
                     if not tdapi_cls:
-                        raise RuntimeError('Cannot resolve TDAPI type {}'.format(tdapi_type))
+                        raise RuntimeError('Cannot resolve TDAPI type {}'.format(tdapi_cls))
 
                     return tdapi_cls.from_dict(values)
                 asset_class_field = next((f for f in ('asset_class', 'assetClass') if f in values), None)
@@ -64,6 +68,32 @@ class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
                 return cls.__asset_class_and_type_to_instrument().get((
                     get_enum_value(AssetClass, values.pop(asset_class_field)),
                     get_enum_value(AssetType, values.pop('type'))), Security)._from_dict(values)
+
+    @classmethod
+    def from_quick_entry(cls, text: str, asset_class: Optional[AssetClass] = None):
+        if not asset_class:
+            try:
+                inst = cls.default_instance()
+                asset_class = inst.asset_class
+            except AttributeError:
+                pass
+
+        if not asset_class:
+            res = GsParserApi.get_instrument_from_text(text)
+            if len(res):  # multiple instruments returned
+                instrument = res.pop(0)
+            else:
+                raise ValueError('Could not resolve instrument')
+        else:
+            instrument = GsParserApi.get_instrument_from_text_asset_class(text, asset_class)
+        try:
+            return cls.from_dict(instrument)
+        except AttributeError:
+            raise ValueError('Invalid instrument specification')
+
+    @staticmethod
+    def compose(components: Iterable):
+        return {c.resolution_key.date: c for c in components}
 
 
 class Security(XRef, Instrument):

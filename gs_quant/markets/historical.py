@@ -14,14 +14,14 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime as dt
-from concurrent.futures import Future
-import pandas as pd
 from typing import Iterable, Optional, Tuple, Union
 
+from .core import PricingContext
+from .markets import CloseMarket, close_market_date
 from gs_quant.base import Priceable
-from gs_quant.datetime.date import business_day_offset, date_range
-from gs_quant.risk import PricingDateAndMarketDataAsOf, RiskMeasure
-from .core import PricingCache, PricingContext
+from gs_quant.datetime.date import date_range
+from gs_quant.risk import RiskMeasure
+from gs_quant.risk.results import HistoricalPricingFuture, PricingFuture
 
 
 class HistoricalPricingContext(PricingContext):
@@ -42,7 +42,6 @@ class HistoricalPricingContext(PricingContext):
             visible_to_gs: bool = False,
             csa_term: str = None,
             market_data_location: Optional[str] = None,
-            poll_for_batch_results: Optional[bool] = False,
             batch_results_timeout: Optional[int] = None):
         """
         A context for producing valuations over multiple dates
@@ -53,7 +52,7 @@ class HistoricalPricingContext(PricingContext):
         :param dates: a custom iterable of dates
         :param is_async: return immediately (True) or wait for results (False) (defaults to False)
         :param is_batch: use for calculations expected to run longer than 3 mins, to avoid timeouts.
-        It can be used with is_async=True|False (defaults to False)
+            It can be used with is_async=True|False (defaults to False)
         :param use_cache: store results in the pricing cache (defaults to False)
         :param visible_to_gs: are the contents of risk requests visible to GS (defaults to False)
         :param csa_term: the csa under which the calculations are made. Default is local ccy ois index
@@ -71,9 +70,7 @@ class HistoricalPricingContext(PricingContext):
         """
         super().__init__(is_async=is_async, is_batch=is_batch, use_cache=use_cache, visible_to_gs=visible_to_gs,
                          csa_term=csa_term, market_data_location=market_data_location,
-                         poll_for_batch_results=poll_for_batch_results, batch_results_timeout=batch_results_timeout)
-        self.__calc_dates = None
-
+                         batch_results_timeout=batch_results_timeout)
         if start is not None:
             if dates is not None:
                 raise ValueError('Must supply start or dates, not both')
@@ -87,34 +84,16 @@ class HistoricalPricingContext(PricingContext):
         else:
             raise ValueError('Must supply start or dates')
 
-    def _on_exit(self, exc_type, exc_val, exc_tb):
-        try:
-            super()._on_exit(exc_type, exc_val, exc_tb)
-        finally:
-            self.__calc_dates = None
+    def calc(self, priceable: Priceable, risk_measure: RiskMeasure) -> PricingFuture:
+        futures = []
+        for date in self.__date_range:
+            with PricingContext(pricing_date=date,
+                                market=CloseMarket(location=self.market_data_location,
+                                                   date=close_market_date(self.market_data_location, date)),
+                                is_async=True,
+                                csa_term=self.csa_term,
+                                use_cache=self.use_cache,
+                                visible_to_gs=self.visible_to_gs):
+                futures.append(priceable.calc(risk_measure))
 
-    def resolve_fields(self, priceable: Priceable, in_place: bool) -> Optional[Union[Priceable, Future]]:
-        if in_place:
-            raise RuntimeError('Cannot resolve in place under a HistoricalPricingContext')
-
-        return super().resolve_fields(priceable, in_place)
-
-    @property
-    def pricing_date(self):
-        return self.__date_range
-
-    @property
-    def _pricing_market_data_as_of(self) -> Tuple[PricingDateAndMarketDataAsOf, ...]:
-        return tuple(
-            PricingDateAndMarketDataAsOf(
-                d, business_day_offset(d, -1, roll='preceding') if d == dt.date.today() else d)
-            for d in (self.__calc_dates if self.__calc_dates is not None else self.__date_range))
-
-    def calc(self, priceable: Priceable, risk_measure: Union[RiskMeasure, Iterable[RiskMeasure]])\
-            -> Union[pd.DataFrame, pd.Series, Future]:
-        if self.use_cache:
-            missing_keys = PricingCache.missing_pricing_keys(priceable, risk_measure, self.pricing_key) or ()
-            calc_dates = set(k.pricing_market_data_as_of[0].pricing_date for k in missing_keys)
-            self.__calc_dates = calc_dates if self.__calc_dates is None else self.__calc_dates | calc_dates
-
-        return super().calc(priceable, risk_measure)
+        return HistoricalPricingFuture(futures)
