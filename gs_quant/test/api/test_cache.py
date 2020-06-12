@@ -124,10 +124,9 @@ def test_cache_subset(mocker):
     ir_swap = IRSwap('Pay', '10y', 'DKK')
 
     values = [
-        {'$type': 'Risk', 'val': 0.01},
         {'$type': 'Risk', 'val': 0.01}
     ]
-    mocker.return_value = [[[values]]]
+    mocker.return_value = [[[values]], [[values]]]
 
     dates = (dt.date(2019, 10, 7), dt.date(2019, 10, 8))
     with HistoricalPricingContext(dates=dates, use_cache=True):
@@ -153,28 +152,12 @@ def test_cache_subset(mocker):
                 {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
                 {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
             ]
-        },
-        {
-            '$type': 'RiskVector',
-            'asset': [0.01, 0.015],
-            'points': [
-                {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
-                {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
-            ]
-        },
-        {
-            '$type': 'RiskVector',
-            'asset': [0.01, 0.015],
-            'points': [
-                {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
-                {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
-            ]
         }
     ]
 
     # Check that we can return the same values from the cache, after calculating once (with return values set to None)
 
-    for return_values in ([[[values]]], None):
+    for return_values in ([[[values]], [[values]], [[values]]], None):
         mocker.return_value = return_values
 
         with HistoricalPricingContext(dates=dates, use_cache=True):

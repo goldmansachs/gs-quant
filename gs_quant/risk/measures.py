@@ -33,29 +33,29 @@ class RiskMeasure(__RiskMeasure):
 class __RelativeRiskMeasure(RiskMeasure):
 
     def __init__(self,
-                 from_market: Market,
+                 to_market: Market,
                  asset_class: Union[AssetClass, str] = None,
                  measure_type: Union[RiskMeasureType, str] = None,
                  unit: Union[RiskMeasureUnit, str] = None,
                  value: Union[float, str] = None,
                  name: str = None):
         super().__init__(asset_class=asset_class, measure_type=measure_type, unit=unit, value=value, name=name)
-        self.__from_market = from_market
+        self.__to_market = to_market
 
     @property
     @do_not_serialise
     def pricing_context(self):
         from gs_quant.markets import PricingContext, RelativeMarket
-        return PricingContext.current.clone(
-            market=RelativeMarket(from_market=self.__from_market, to_market=PricingContext.current.market))
+        current = PricingContext.current
+        return current.clone(market=RelativeMarket(from_market=current.market, to_market=self.__to_market))
 
 
 class PnlExplain(__RelativeRiskMeasure):
 
     """ Pnl Explained """
 
-    def __init__(self, base: Market):
-        super().__init__(base, measure_type=RiskMeasureType.PnlExplain, name=RiskMeasureType.PnlExplain.value)
+    def __init__(self, to_market: Market):
+        super().__init__(to_market, measure_type=RiskMeasureType.PnlExplain, name=RiskMeasureType.PnlExplain.value)
 
 
 def __risk_measure_with_doc_string(name: str,

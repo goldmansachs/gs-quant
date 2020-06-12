@@ -1174,7 +1174,8 @@ class SwapClearingHouse(EnumBase, Enum):
     EUREX = 'EUREX'
     JSCC = 'JSCC'
     CME = 'CME'
-    
+    NONE = 'NONE'
+
     def __repr__(self):
         return self.value
 

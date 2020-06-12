@@ -88,8 +88,8 @@ class HistoricalPricingContext(PricingContext):
         futures = []
         for date in self.__date_range:
             with PricingContext(pricing_date=date,
-                                market=CloseMarket(location=self.market_data_location,
-                                                   date=close_market_date(self.market_data_location, date)),
+                                market=CloseMarket(location=self.market.location,
+                                                   date=close_market_date(self.market.location, date)),
                                 is_async=True,
                                 csa_term=self.csa_term,
                                 use_cache=self.use_cache,

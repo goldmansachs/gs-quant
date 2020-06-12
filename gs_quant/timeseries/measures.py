@@ -629,7 +629,7 @@ def average_implied_volatility(asset: Asset, tenor: str, strike_reference: EdrDa
     if top_n_of_index is None and composition_date is not None:
         raise MqValueError('Specify top_n_of_index to get the average implied volatility of top constituents')
 
-    if top_n_of_index is not None and top_n_of_index > 200:
+    if top_n_of_index is not None and top_n_of_index > 100:
         raise NotImplementedError('Maximum number of constituents exceeded. Do not use top_n_of_index to calculate on '
                                   'the full list')
 
@@ -638,25 +638,27 @@ def average_implied_volatility(asset: Asset, tenor: str, strike_reference: EdrDa
 
         ref_string, relative_strike = _preprocess_implied_vol_strikes_eq(VolReference(strike_reference.value),
                                                                          relative_strike)
-        asset_ids = constituents['underlyingAssetId'].to_list()
 
         _logger.debug('where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, ref_string, relative_strike)
         where = dict(tenor=tenor, strikeReference=ref_string, relativeStrike=relative_strike)
-        query = GsDataApi.build_market_data_query(asset_ids, QueryType.IMPLIED_VOLATILITY, where=where, source=source,
-                                                  real_time=real_time)
-
+        query = GsDataApi.build_market_data_query(
+            constituents.index.to_list(),
+            QueryType.IMPLIED_VOLATILITY,
+            where=where,
+            source=source,
+            real_time=real_time
+        )
         df = _market_data_timed(query)
-        grouped_df = df.groupby('assetId')
 
-        weighted_vols = []
-        for underlying_id, weight in zip(constituents['underlyingAssetId'], constituents['netWeight']):
-            filtered = grouped_df.get_group(underlying_id)
-            filtered = filtered.loc[~filtered.index.duplicated(keep='last')]
-            implied_vol = ExtendedSeries() if filtered.empty else ExtendedSeries(filtered['impliedVolatility'])
-            weighted_vols.append(implied_vol * weight)
+        def calculate_avg_vol(group):
+            vols = group.set_index('assetId')['impliedVolatility']
+            weights = constituents.reindex(vols.index.to_list())['netWeight']
+            total_weight = sum(weights)
+            return sum([vol * weight / total_weight for vol, weight in zip(vols, weights)])
 
-        series = ExtendedSeries(pd.concat(weighted_vols, axis=1).sum(1, min_count=1), name='averageImpliedVolatility') \
-            if len(weighted_vols) else ExtendedSeries()
+        average_vol = df.groupby(df.index).apply(calculate_avg_vol)
+
+        series = ExtendedSeries(average_vol, name='averageImpliedVolatility')
         series.dataset_ids = getattr(df, 'dataset_ids', ())
         return series
 
@@ -754,18 +756,19 @@ def average_realized_volatility(asset: Asset, tenor: str, returns_type: Returns 
         constituents = _get_index_constituent_weights(asset, top_n_of_index, composition_date)
 
         q = GsDataApi.build_market_data_query(
-            constituents['underlyingAssetId'].to_list(),
+            constituents.index.to_list(),
             QueryType.SPOT,
             source=source,
             real_time=real_time
         )
         _logger.debug('q %s', q)
         df = _market_data_timed(q)
-        grouped_df = df.groupby('assetId')
 
+        grouped = df.groupby('assetId')
         weighted_vols = []
-        for underlying_id, weight in zip(constituents['underlyingAssetId'], constituents['netWeight']):
-            filtered = grouped_df.get_group(underlying_id)
+        for underlying_id, weight in zip(constituents.index, constituents['netWeight']):
+            filtered = grouped.get_group(underlying_id) if underlying_id in grouped.indices else pd.DataFrame()
+            filtered = filtered.loc[~filtered.index.duplicated(keep='last')]
             vol = ExtendedSeries() if filtered.empty else ExtendedSeries(volatility(filtered['spot'],
                                                                                     Window(tenor, tenor), returns_type))
             weighted_vols.append(vol * weight)
@@ -795,7 +798,7 @@ def _get_index_constituent_weights(asset: Asset, top_n_of_index: Optional[int] =
     if not len(positions_data):
         raise MqValueError('Unable to get constituents of {} between {} and {}'.format(mqid, start, end))
 
-    constituents = pd.DataFrame(positions_data)
+    constituents = pd.DataFrame(positions_data)[['underlyingAssetId', 'netWeight', 'positionDate']]
     constituents.set_index('positionDate', inplace=True)
     latest = constituents.index.max()
     _logger.info('selected composition date %s', latest)
@@ -805,6 +808,7 @@ def _get_index_constituent_weights(asset: Asset, top_n_of_index: Optional[int] =
     total_weight = constituents['netWeight'].sum()
     constituents['netWeight'] = constituents['netWeight'] / total_weight
 
+    constituents.set_index('underlyingAssetId', inplace=True)
     return constituents
 
 

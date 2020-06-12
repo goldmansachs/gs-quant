@@ -1022,15 +1022,15 @@ def test_avg_impl_vol():
                        index=pd.date_range(start='2020-01-01', periods=3))
     df3 = pd.DataFrame(data={'impliedVolatility': [2, 5], 'assetId': ['MA3', 'MA3']},
                        index=pd.date_range(start='2020-01-01', periods=2))
-    mock_implied_vol = MarketDataResponseFrame(pd.concat([df1, df2, df3], join='inner'))
-    mock_implied_vol.dataset_ids = _test_datasets
 
     replace('gs_quant.api.gs.assets.GsAssetApi.get_asset_positions_data', mock_index_positions_data)
     market_data_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    mock_implied_vol = MarketDataResponseFrame(pd.concat([df1, df2, df3], join='inner'))
+    mock_implied_vol.dataset_ids = _test_datasets
     market_data_mock.return_value = mock_implied_vol
 
     actual = tm.average_implied_volatility(mock_spx, '1m', tm.EdrDataReference.DELTA_CALL, 25, 3, '1d')
-    assert_series_equal(pd.Series([1.4, 2.6, 3.0],
+    assert_series_equal(pd.Series([1.4, 2.6, 3.33333],
                                   index=pd.date_range(start='2020-01-01', periods=3), name='averageImpliedVolatility'),
                         pd.Series(actual))
     assert actual.dataset_ids == _test_datasets
@@ -1043,7 +1043,7 @@ def test_avg_impl_vol():
                                       composition_date='1d')
 
     with pytest.raises(NotImplementedError):
-        tm.average_implied_volatility(mock_spx, '1m', tm.EdrDataReference.DELTA_PUT, 75, top_n_of_index=201)
+        tm.average_implied_volatility(mock_spx, '1m', tm.EdrDataReference.DELTA_PUT, 75, top_n_of_index=101)
 
     replace.restore()
 
