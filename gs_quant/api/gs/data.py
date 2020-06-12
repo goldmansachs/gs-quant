@@ -34,7 +34,7 @@ from gs_quant.markets import MarketDataCoordinate
 from gs_quant.session import GsSession
 from gs_quant.target.common import FieldFilterMap, XRef, MarketDataVendor, PricingLocation
 from gs_quant.target.data import DataQuery, DataQueryResponse, MDAPIDataBatchResponse, MDAPIDataQuery, \
-    MDAPIDataQueryResponse
+    MDAPIDataQueryResponse, MDAPIQueryField
 from gs_quant.target.data import DataSetEntity
 from .assets import GsAssetApi, GsIdType
 from ...target.assets import EntityQuery
@@ -333,7 +333,8 @@ class GsDataApi(DataApi):
     @classmethod
     def __normalise_coordinate_data(
             cls,
-            data: Iterable[Union[MDAPIDataQueryResponse, dict]]
+            data: Iterable[Union[MDAPIDataQueryResponse, dict]],
+            fields: Optional[Tuple[MDAPIQueryField, ...]] = None
     ) -> Iterable[Iterable[dict]]:
         ret = []
         for response in data:
@@ -349,7 +350,7 @@ class GsDataApi(DataApi):
                 if not pt:
                     continue
 
-                if 'value' not in pt:
+                if not fields and 'value' not in pt:
                     value_field = pt['mktQuotingStyle']
                     pt['value'] = pt.pop(value_field)
 
@@ -457,7 +458,8 @@ class GsDataApi(DataApi):
             end: Union[dt.datetime, dt.date] = None,
             vendor: MarketDataVendor = MarketDataVendor.Goldman_Sachs,
             as_multiple_dataframes: bool = False,
-            pricing_location: Optional[PricingLocation] = None
+            pricing_location: Optional[PricingLocation] = None,
+            fields: Optional[Tuple[MDAPIQueryField, ...]] = None,
     ) -> Union[pd.DataFrame, Tuple[pd.DataFrame]]:
         """
         Get coordinates data
@@ -468,6 +470,7 @@ class GsDataApi(DataApi):
         :param vendor: data vendor
         :param as_multiple_dataframes: whether to return the result as one or multiple Dataframe(s)
         :param pricing_location: the location where close data has been recorded (not used for real-time query)
+        :param fields: value fields to return
         :return: Dataframe(s) of the returned data
 
         **Examples**
@@ -482,10 +485,11 @@ class GsDataApi(DataApi):
             vendor=vendor,
             start=start,
             end=end,
-            pricing_location=pricing_location
+            pricing_location=pricing_location,
+            fields=fields
         )
 
-        results = cls.__normalise_coordinate_data(cls.query_data(query))
+        results = cls.__normalise_coordinate_data(cls.query_data(query), fields=fields)
 
         if as_multiple_dataframes:
             return tuple(GsDataApi.__df_from_coordinate_data(r) for r in results)

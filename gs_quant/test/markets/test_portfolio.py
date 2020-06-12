@@ -144,107 +144,109 @@ def test_portfolio(mocker):
 def test_historical_pricing(mocker):
     set_session()
 
-    dollar_price_ir_delta_values = [
+    day1 = [
         [
-            [
-                {'$type': 'Risk', 'val': 0.01},
-                {'$type': 'Risk', 'val': 0.011},
-                {'$type': 'Risk', 'val': 0.012}
-            ],
-            [
-                {'$type': 'Risk', 'val': 0.02},
-                {'$type': 'Risk', 'val': 0.021},
-                {'$type': 'Risk', 'val': 0.022}
-            ],
-            [
-                {'$type': 'Risk', 'val': 0.03},
-                {'$type': 'Risk', 'val': 0.031},
-                {'$type': 'Risk', 'val': 0.032}
-            ]
+            [{'$type': 'Risk', 'val': 0.01}],
+            [{'$type': 'Risk', 'val': 0.02}],
+            [{'$type': 'Risk', 'val': 0.03}],
         ],
         [
-            [
-                {
-                    '$type': 'RiskVector',
-                    'asset': [0.01, 0.015],
-                    'points': [
-                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
-                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
-                    ]
-                },
-                {
-                    '$type': 'RiskVector',
-                    'asset': [0.011, 0.0151],
-                    'points': [
-                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
-                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
-                    ]
-                },
-                {
-                    '$type': 'RiskVector',
-                    'asset': [0.012, 0.0152],
-                    'points': [
-                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
-                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
-                    ]
-                }
-            ],
-            [
-                {
-                    '$type': 'RiskVector',
-                    'asset': [0.02, 0.025],
-                    'points': [
-                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
-                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
-                    ]
-                },
-                {
-                    '$type': 'RiskVector',
-                    'asset': [0.021, 0.0251],
-                    'points': [
-                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
-                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
-                    ]
-                },
-                {
-                    '$type': 'RiskVector',
-                    'asset': [0.022, 0.0252],
-                    'points': [
-                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
-                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
-                    ]
-                }
-            ],
-            [
-                {
-                    '$type': 'RiskVector',
-                    'asset': [0.03, 0.035],
-                    'points': [
-                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
-                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
-                    ]
-                },
-                {
-                    '$type': 'RiskVector',
-                    'asset': [0.031, 0.0351],
-                    'points': [
-                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
-                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
-                    ]
-                },
-                {
-                    '$type': 'RiskVector',
-                    'asset': [0.032, 0.0352],
-                    'points': [
-                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
-                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
-                    ]
-                }
-            ]
+            [{
+                '$type': 'RiskVector',
+                'asset': [0.01, 0.015],
+                'points': [
+                    {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
+                    {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
+                ]
+            }],
+            [{
+                '$type': 'RiskVector',
+                'asset': [0.02, 0.025],
+                'points': [
+                    {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
+                    {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
+                ]
+            }],
+            [{
+                '$type': 'RiskVector',
+                'asset': [0.03, 0.035],
+                'points': [
+                    {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
+                    {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
+                ]
+            }]
         ]
     ]
 
-    mocker.return_value = [dollar_price_ir_delta_values]
+    day2 = [
+        [
+            [{'$type': 'Risk', 'val': 0.011}],
+            [{'$type': 'Risk', 'val': 0.021}],
+            [{'$type': 'Risk', 'val': 0.031}],
+        ],
+        [
+            [{
+                '$type': 'RiskVector',
+                'asset': [0.011, 0.0151],
+                'points': [
+                    {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
+                    {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
+                ]
+            }],
+            [{
+                '$type': 'RiskVector',
+                'asset': [0.021, 0.0251],
+                'points': [
+                    {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
+                    {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
+                ]
+            }],
+            [{
+                '$type': 'RiskVector',
+                'asset': [0.031, 0.0351],
+                'points': [
+                    {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
+                    {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
+                ]
+            }]
+        ]
+    ]
+
+    day3 = [
+        [
+            [{'$type': 'Risk', 'val': 0.012}],
+            [{'$type': 'Risk', 'val': 0.022}],
+            [{'$type': 'Risk', 'val': 0.032}],
+        ],
+        [
+            [{
+                '$type': 'RiskVector',
+                'asset': [0.012, 0.0152],
+                'points': [
+                    {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
+                    {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
+                ]
+            }],
+            [{
+                '$type': 'RiskVector',
+                'asset': [0.022, 0.0252],
+                'points': [
+                    {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
+                    {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
+                ]
+            }],
+            [{
+                '$type': 'RiskVector',
+                'asset': [0.032, 0.0352],
+                'points': [
+                    {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
+                    {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
+                ]
+            }]
+        ]
+    ]
+
+    mocker.return_value = [day1, day2, day3]
 
     swap1 = IRSwap('Pay', '10y', 'USD', fixed_rate=0.01, name='swap1')
     swap2 = IRSwap('Pay', '10y', 'USD', fixed_rate=0.02, name='swap2')

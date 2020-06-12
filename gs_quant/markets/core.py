@@ -22,7 +22,7 @@ from inspect import signature
 from threading import Lock
 from typing import Iterable, Optional, Union
 
-from .markets import CloseMarket, LiveMarket, Market
+from .markets import CloseMarket, LiveMarket, Market, close_market_date
 from gs_quant.base import Priceable, RiskKey, Scenario, get_enum_value
 from gs_quant.common import PricingLocation
 from gs_quant.context_base import ContextBaseWithDefault
@@ -132,7 +132,9 @@ class PricingContext(ContextBaseWithDefault):
         self.__use_cache = use_cache
         self.__visible_to_gs = visible_to_gs
         self.__market_data_location = get_enum_value(PricingLocation, market_data_location)
-        self.__market = market or CloseMarket()
+        self.__market = market or CloseMarket(
+            date=close_market_date(self.__market_data_location, self.__pricing_date) if pricing_date else None,
+            location=self.__market_data_location if market_data_location else None)
         self.__lock = Lock()
         self.__pending = {}
 
@@ -186,12 +188,6 @@ class PricingContext(ContextBaseWithDefault):
                         requests_for_provider.setdefault((params, scenario, date, market, tuple(sorted(risk_measures))),
                                                          []).append(priceable)
 
-                # TODO This will optimise for the fewest requests but we might want to just send one request per date
-                requests_by_date_market = {}
-                for (params, scenario, date, market, risk_measures), priceables in requests_for_provider.items():
-                    requests_by_date_market.setdefault((params, scenario, risk_measures, tuple(priceables)), set())\
-                        .add((date, market))
-
                 requests = [
                     RiskRequest(
                         tuple(RiskPosition(instrument=p, quantity=p.get_quantity()) for p in priceables),
@@ -199,11 +195,10 @@ class PricingContext(ContextBaseWithDefault):
                         parameters=self.__parameters,
                         wait_for_results=not self.__is_batch,
                         scenario=scenario,
-                        pricing_and_market_data_as_of=tuple(PricingDateAndMarketDataAsOf(pricing_date=d, market=m)
-                                                            for d, m in sorted(dates_markets)),
+                        pricing_and_market_data_as_of=(PricingDateAndMarketDataAsOf(pricing_date=date, market=market),),
                         request_visible_to_gs=self.__visible_to_gs
                     )
-                    for (params, scenario, risk_measures, priceables), dates_markets in requests_by_date_market.items()
+                    for (params, scenario, date, market, risk_measures), priceables in requests_for_provider.items()
                 ]
 
                 if request_pool:

@@ -202,8 +202,6 @@ class SeriesWithInfo(pd.Series, ResultInfo):
         pd.Series.__init__(self, *args, **kwargs)
         ResultInfo.__init__(self, risk_key, unit=unit, error=error)
 
-        self.index.name = 'date'
-
     def __repr__(self):
         return self.error if self.error else pd.Series.__repr__(self)
 
@@ -255,8 +253,7 @@ class DataFrameWithInfo(pd.DataFrame, ResultInfo):
     @staticmethod
     def compose(components: Iterable):
         dates, values, errors, risk_key, unit = ResultInfo.composition_info(components)
-        df = pd.concat([v.assign(date=d) if v.index.name != 'date' and 'date' not in v else v
-                        for d, v in zip(dates, values)]).set_index('date')
+        df = pd.concat(v.assign(date=d) for d, v in zip(dates, values)).set_index('date')
 
         return DataFrameWithInfo(df, risk_key=risk_key, unit=unit, error=errors)
 
@@ -291,18 +288,13 @@ def aggregate_risk(results: Iterable[Union[DataFrameWithInfo, Future]], threshol
     delta and vega are Dataframes, representing the merged risk of the individual instruments
     """
     dfs = [r.result().raw_value if isinstance(r, Future) else r.raw_value for r in results]
-    result = pd.concat(df.reset_index(level=0) for df in dfs)
+    result = pd.concat(df.reset_index(level=0) if df.index.name == 'date' else df for df in dfs)
     result = result.groupby([c for c in result.columns if c != 'value'], as_index=False).sum()
 
     if threshold is not None:
         result = result[result.value.abs() > threshold]
 
-    result = sort_risk(result)
-
-    if 'date' in result:
-        result = result.set_index('date')
-
-    return result
+    return sort_risk(result)
 
 
 ResultType = Union[dict, tuple, DataFrameWithInfo, FloatWithInfo, SeriesWithInfo]

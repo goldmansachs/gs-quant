@@ -505,7 +505,7 @@ class Market(Base):
 
 
 def get_enum_value(enum_type: EnumMeta, value: Union[EnumBase, str]):
-    if value in (None, 'None'):
+    if value in (None,):
         return None
 
     if isinstance(value, enum_type):

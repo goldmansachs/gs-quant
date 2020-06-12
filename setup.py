@@ -66,7 +66,7 @@ setuptools.setup(
         "pandas",
         "python-dateutil>=2.7.0",
         "requests",
-        "scipy",
+        "scipy>=1.2.0",
         "six",
         "statsmodels",
         "typing;python_version<'3.7'",
