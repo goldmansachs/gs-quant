@@ -32,7 +32,7 @@ import websockets
 from gs_quant.base import Base
 from gs_quant.context_base import ContextBase
 from gs_quant.errors import MqError, MqRequestError, MqAuthenticationError, MqUninitialisedError
-from gs_quant.json_encoder import JSONEncoder
+from gs_quant.json_encoder import JSONEncoder, default
 
 API_VERSION = 'v1'
 DEFAULT_APPLICATION = 'gs-quant'
@@ -156,13 +156,19 @@ class GsSession(ContextBase):
             kwargs['params'] = payload
         elif method in ['POST', 'PUT']:
             headers = self._session.headers.copy()
+
             if request_headers:
-                headers.update({**{'Content-Type': 'application/json'}, **request_headers})
-            else:
+                headers.update(request_headers)
+
+            if 'Content-Type' not in headers:
                 headers.update({'Content-Type': 'application/json'})
+
+            use_msgpack = headers.get('Content-Type') == 'application/x-msgpack'
             kwargs['headers'] = headers
+
             if is_dataframe or payload:
-                kwargs['data'] = payload if isinstance(payload, str) else json.dumps(payload, cls=JSONEncoder)
+                kwargs['data'] = payload if isinstance(payload, str) else\
+                    msgpack.dumps(payload, default=default) if use_msgpack else json.dumps(payload, cls=JSONEncoder)
         else:
             raise MqError('not implemented')
 
@@ -222,9 +228,10 @@ class GsSession(ContextBase):
         return self.__request('PUT', path, payload=payload, request_headers=request_headers,
                               cls=cls, include_version=include_version, timeout=timeout)
 
-    def _connect_websocket(self, path: str):
+    def _connect_websocket(self, path: str, headers: Optional[dict] = None):
         url = 'ws{}{}{}'.format(self.domain[4:], '/' + self.api_version, path)
-        return websockets.connect(url, extra_headers=self._headers(), max_size=2**64, read_limit=2**64)
+        extra_headers = self._headers() + list((headers or {}).items())
+        return websockets.connect(url, extra_headers=extra_headers, max_size=2**64, read_limit=2**64)
 
     def _headers(self):
         return [('Cookie', 'GSSSO=' + self._session.cookies['GSSSO'])]

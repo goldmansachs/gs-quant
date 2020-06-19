@@ -18,7 +18,7 @@ from typing import Iterable, Optional, Tuple, Union
 
 from .core import PricingContext
 from .markets import CloseMarket, close_market_date
-from gs_quant.base import Priceable
+from gs_quant.base import Priceable, RiskKey
 from gs_quant.datetime.date import date_range
 from gs_quant.risk import RiskMeasure
 from gs_quant.risk.results import HistoricalPricingFuture, PricingFuture
@@ -42,7 +42,8 @@ class HistoricalPricingContext(PricingContext):
             visible_to_gs: bool = False,
             csa_term: str = None,
             market_data_location: Optional[str] = None,
-            batch_results_timeout: Optional[int] = None):
+            timeout: Optional[int] = None,
+            show_progress: Optional[bool] = False):
         """
         A context for producing valuations over multiple dates
 
@@ -70,7 +71,7 @@ class HistoricalPricingContext(PricingContext):
         """
         super().__init__(is_async=is_async, is_batch=is_batch, use_cache=use_cache, visible_to_gs=visible_to_gs,
                          csa_term=csa_term, market_data_location=market_data_location,
-                         batch_results_timeout=batch_results_timeout)
+                         timeout=timeout, show_progress=show_progress)
         if start is not None:
             if dates is not None:
                 raise ValueError('Must supply start or dates, not both')
@@ -86,14 +87,15 @@ class HistoricalPricingContext(PricingContext):
 
     def calc(self, priceable: Priceable, risk_measure: RiskMeasure) -> PricingFuture:
         futures = []
+
+        provider = priceable.provider()
+        scenario = self._scenario
+        parameters = self._parameters
+        location = self.market.location
+
         for date in self.__date_range:
-            with PricingContext(pricing_date=date,
-                                market=CloseMarket(location=self.market.location,
-                                                   date=close_market_date(self.market.location, date)),
-                                is_async=True,
-                                csa_term=self.csa_term,
-                                use_cache=self.use_cache,
-                                visible_to_gs=self.visible_to_gs):
-                futures.append(priceable.calc(risk_measure))
+            market = CloseMarket(location=location, date=close_market_date(location, date))
+            risk_key = RiskKey(provider, date, market, parameters, scenario, risk_measure)
+            futures.append(self._calc(priceable, risk_key))
 
         return HistoricalPricingFuture(futures)

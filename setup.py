@@ -71,11 +71,12 @@ setuptools.setup(
         "statsmodels",
         "typing;python_version<'3.7'",
         "websockets",
-        "pydash"
+        "pydash",
+        "tqdm"
     ],
     extras_require={
         "internal": ["gs_quant_internal>=0.4.1", "requests_kerberos"],
-        "notebook": ["jupyter", "matplotlib~=2.1.0", "pprint"],
+        "notebook": ["jupyter", "matplotlib~=2.1.0", "pprint", "seaborn"],
         "test": ["pytest", "pytest-cov", "pytest-mock", "testfixtures", "nbconvert", "nbformat", "jupyter_client"],
         "develop": ["wheel", "sphinx", "sphinx_rtd_theme", "sphinx_autodoc_typehints", "pytest", "pytest-cov",
                     "pytest-mock", "testfixtures"]

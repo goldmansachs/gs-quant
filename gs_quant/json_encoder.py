@@ -17,28 +17,28 @@ under the License.
 import datetime
 from enum import Enum
 import json
+import pandas as pd
 import re
 
-import pandas as pd
+from gs_quant.base import Base, QuotableBuilder
 
-from gs_quant.base import Base, InstrumentBase
+
+def default(o):
+    if isinstance(o, datetime.datetime):
+        return o.strftime('%Y-%m-%dT%H:%M:%S.') + '{:06d}'.format(o.microsecond)[:-3] + 'Z'
+    if isinstance(o, datetime.date):
+        return o.isoformat()
+    elif isinstance(o, Enum):
+        return o.value
+    elif isinstance(o, pd.DataFrame):
+        return o.to_json()
+    elif isinstance(o, Base):
+        properties = {re.sub('_$', '', k): v for k, v in o.as_dict(as_camel_case=True).items()}
+        return {'$type': o._type, 'properties': properties} if isinstance(o, QuotableBuilder) else properties
 
 
 class JSONEncoder(json.JSONEncoder):
 
     def default(self, o):
-        if isinstance(o, datetime.datetime):
-            return o.strftime('%Y-%m-%dT%H:%M:%S.') + '{:06d}'.format(o.microsecond)[:-3] + 'Z'
-        if isinstance(o, datetime.date):
-            return o.isoformat()
-        elif isinstance(o, Enum):
-            return o.value
-        elif isinstance(o, pd.DataFrame):
-            return o.to_json()
-        elif isinstance(o, InstrumentBase) and hasattr(o, '_derived_type'):
-            properties = {re.sub('_$', '', k): v for k, v in o.as_dict(as_camel_case=True).items()}
-            return {'$type': o._derived_type, 'properties': properties}
-        elif isinstance(o, Base):
-            return {re.sub('_$', '', k): v for k, v in o.as_dict(as_camel_case=True).items()}
-        else:
-            return json.JSONEncoder.default(self, o)
+        ret = default(o)
+        return super().default(o) if ret is None else ret

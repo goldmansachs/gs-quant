@@ -107,7 +107,7 @@ class GsDataApi(DataApi):
             else:
                 return results.responses if results.responses is not None else ()
         elif isinstance(query, DataQuery) and query.where:
-            where = query.where.as_dict()
+            where = query.where.as_dict() if isinstance(query.where, FieldFilterMap) else query.where
             xref_keys = set(where.keys()).intersection(XRef.properties())
             if xref_keys:
                 # Check that assetId is a symbol dimension of this data set. If not, we need to do a separate query
