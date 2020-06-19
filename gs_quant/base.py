@@ -87,8 +87,9 @@ class Base(metaclass=ABCMeta):
 
     __properties = set()
 
-    def __init__(self, **_kwargs):
+    def __init__(self):
         self.__calced_hash: Optional[int] = None
+        self.__as_dict = {False: {}, True: {}}
 
         try:
             self.name: Optional[str] = None
@@ -122,6 +123,7 @@ class Base(metaclass=ABCMeta):
 
     def _property_changed(self, prop: str):
         self.__calced_hash = None
+        self.__as_dict = {False: {}, True: {}}
 
     @property
     def _hash_is_calced(self) -> bool:
@@ -195,11 +197,14 @@ class Base(metaclass=ABCMeta):
 
     def as_dict(self, as_camel_case: bool = False) -> dict:
         """Dictionary of the public, non-null properties and values"""
-        raw_properties = self.properties()
-        properties = (inflection.camelize(p, uppercase_first_letter=False) for p in raw_properties) \
-            if as_camel_case else raw_properties
-        values = (super(Base, self).__getattribute__(p) for p in raw_properties)
-        return dict((p, v) for p, v in zip(properties, values) if v is not None)
+        if not self.__as_dict[as_camel_case]:
+            raw_properties = self.properties()
+            properties = (inflection.camelize(p, uppercase_first_letter=False) for p in raw_properties) \
+                if as_camel_case else raw_properties
+            values = (super(Base, self).__getattribute__(p) for p in raw_properties)
+            self.__as_dict[as_camel_case] = dict((p, v) for p, v in zip(properties, values) if v is not None)
+
+        return self.__as_dict[as_camel_case]
 
     @classmethod
     def prop_type(cls, prop: str, additional: Optional[list] = None) -> type:
@@ -500,6 +505,10 @@ class InstrumentBase(Base):
     pass
 
 
+class QuotableBuilder(Base):
+    pass
+
+
 class Market(Base):
     pass
 
@@ -518,3 +527,17 @@ def get_enum_value(enum_type: EnumMeta, value: Union[EnumBase, str]):
         enum_value = value
 
     return enum_value
+
+
+def as_tuple(f):
+    def wrap(*args):
+        value = args[1]
+        if value is not None and not isinstance(value, str):
+            try:
+                iter(value)
+            except TypeError:
+                value = (value,)
+
+        return f(args[0], value)
+
+    return wrap

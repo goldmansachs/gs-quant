@@ -15,13 +15,13 @@ under the License.
 """
 import datetime as dt
 import logging
+
 import pandas as pd
 from abc import ABCMeta
 import inflection
 from typing import Optional, Union
 from gs_quant.base import Base
 from gs_quant.api.fred.fred_query import FredQuery
-from gs_quant.target.common import FieldFilterMap
 from gs_quant.target.data import DataQuery, MDAPIDataQuery
 
 _logger = logging.getLogger(__name__)
@@ -88,19 +88,14 @@ class DataApi(metaclass=ABCMeta):
                 format="MessagePack"
             )
 
-        where = FieldFilterMap()
         query_properties = query.properties()
-        where_properties = where.properties()
-
+        query.where = dict()
         for field, value in kwargs.items():
             snake_case_field = inflection.underscore(field)
             if snake_case_field in query_properties:
                 setattr(query, snake_case_field, value)
-            elif snake_case_field in where_properties:
-                setattr(where, snake_case_field, value)
-                query.where = where
             else:
-                raise ValueError('Invalid query field: ' + field)
+                query.where[field] = value
 
         if getattr(query, 'fields', None) is not None:
             try:

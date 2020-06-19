@@ -92,7 +92,7 @@ def risk_by_class_handler(result: dict, risk_key: RiskKey, _instrument: Instrume
         -> Union[DataFrameWithInfo, FloatWithInfo]:
     # TODO Remove this once we migrate parallel USD IRDelta measures
     types = [c['type'] for c in result['classes']]
-    if len(types) <= 2 and all(t == 'IR' for t in types):
+    if len(types) <= 2 and len(set(types)) == 1:
         return FloatWithInfo(risk_key, sum(result.get('values', (float('nan'),))), unit=result.get('unit'))
     else:
         classes = []

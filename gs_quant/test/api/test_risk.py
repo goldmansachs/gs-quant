@@ -20,6 +20,7 @@ import copy
 import datetime as dt
 import pandas as pd
 
+from gs_quant.datetime.time import to_zulu_string
 import gs_quant.risk as risk
 from gs_quant.api.gs.risk import GsRiskApi
 from gs_quant.base import Priceable
@@ -28,7 +29,8 @@ from gs_quant.instrument import CommodSwap, EqForward, EqOption, FXOption, IRBas
     IRFloor
 from gs_quant.markets import PricingContext
 from gs_quant.session import Environment, GsSession
-from gs_quant.target.risk import PricingDateAndMarketDataAsOf, RiskPosition, RiskRequestParameters
+from gs_quant.target.risk import PricingDateAndMarketDataAsOf, RiskPosition, RiskRequestParameters, \
+    APEXOptimizationRequest
 
 priceables = (
     CommodSwap('Electricity', '1y'),
@@ -212,3 +214,39 @@ def test_resolution():
     with mock.patch('gs_quant.api.gs.risk.GsRiskApi._exec') as mocker:
         mocker.return_value = [[[[{'$type': 'LegDefinition', 'fixedRate': 0.007}]]]]
         assert swap.fixed_rate == 0.007
+
+
+def test_create_pretrade_execution_optimization():
+    start_time = dt.datetime.utcnow()
+    duration = dt.timedelta(hours=8)
+    end_time = start_time + duration
+
+    positions = [{"assetId": "MA4B66MW5E27UANLXW6", "quantity": 350},
+                 {"assetId": "MA4B66MW5E27UAMFDDC", "quantity": 675}]
+
+    request = APEXOptimizationRequest(positions,
+                                      type="APEX",
+                                      executionStartTime=to_zulu_string(start_time),
+                                      executionEndTime=to_zulu_string(end_time),
+                                      waitForResults=False,
+                                      parameters={"urgency": "MEDIUM", "participationRate": 0.1})
+
+    set_session()
+    with mock.patch.object(GsSession.current, '_post') as mocker:
+        mock_response = {'optimizationId': 'LI0D2ND2JCFANFAN'}
+        mocker.return_value = mock_response
+        response = GsRiskApi.create_pretrade_execution_optimization(request)
+        GsSession.current._post.assert_called_with('/risk/execution/pretrade', request)
+        assert response == mock_response
+
+
+def test_get_pretrade_execution_optimization():
+    optimization_id = 'LI0D2ND2JCFANFAN'
+    mock_response = {'id': optimization_id, 'analytics': {}, 'status': 'Completed'}
+
+    set_session()
+    with mock.patch.object(GsSession.current, '_get') as mocker:
+        mocker.return_value = mock_response
+        response = GsRiskApi.get_pretrade_execution_optimization(optimization_id)
+        GsSession.current._get.assert_called_with('/risk/execution/pretrade/{}/results'.format(optimization_id))
+        assert response == mock_response

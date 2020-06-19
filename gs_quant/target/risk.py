@@ -1988,3 +1988,201 @@ class LiquidityResponse(Base):
     def error_message(self, value: str):
         self._property_changed('error_message')
         self.__error_message = value        
+
+
+class APEXOptimizationStatus(EnumBase, Enum):
+    """Optimization status."""
+
+    Running = 'Running'
+    Completed = 'Completed'
+
+    def __repr__(self):
+        return self.value
+
+
+class APEXUrgency(EnumBase, Enum):
+    """Parameter which controls the urgency of executing the basket from very low to very high. Very High urgency tilts the schedule towards the benchmark, whereas Very Low would minimise cost, carrying a relatively higher risk to the benchmark."""
+
+    VERY_LOW = 'VERY_LOW'
+    LOW = 'LOW'
+    MEDIUM = 'MEDIUM'
+    HIGH = 'HIGH'
+    VERY_HIGH = 'VERY_HIGH'
+
+    def __repr__(self):
+        return self.value
+
+
+
+class OptimizationType(EnumBase, Enum):
+    """Pretrade optimization algorithm type."""
+
+    APEX = 'APEX'
+
+    def __repr__(self):
+        return self.value
+
+
+class APEXOptimizationRequest(Base):
+    """Required payload in order to get optimization and analytics information given a set of positions."""
+
+    def __init__(self, positions: Tuple[Position, ...], executionStartTime: datetime.datetime,
+                 executionEndTime: datetime.datetime, parameters: dict, type: Union[OptimizationType, str],
+                 createdById: str = None, createdTime: datetime.datetime = None, entitlements: Entitlements = None,
+                 entitlementExclusions: EntitlementExclusions = None, id: str = None, lastUpdatedById: str = None,
+                 lastUpdatedTime: datetime.datetime = None, ownerId: str = None, waitForResults: bool = False):
+        super().__init__()
+        self.__createdById = createdById
+        self.__createdTime = createdTime
+        self.__entitlements = entitlements
+        self.__entitlementExclusions = entitlementExclusions
+        self.__id = id
+        self.__lastUpdatedById = lastUpdatedById
+        self.__lastUpdatedTime = lastUpdatedTime
+        self.__ownerId = ownerId
+        self.__positions = positions
+        self.__executionStartTime = executionStartTime
+        self.__executionEndTime = executionEndTime
+        self.__type = type if isinstance(type, OptimizationType) else get_enum_value(OptimizationType, type)
+        self.__waitForResults = waitForResults
+        self.__parameters = parameters
+
+    @property
+    def createdById(self) -> str:
+        """Unique identifier of user who created the object."""
+        return self.__createdById
+
+    @createdById.setter
+    def createdById(self, value: str):
+        self.__createdById = value
+        self._property_changed('createdById')
+
+    @property
+    def createdTime(self) -> datetime.datetime:
+        """Time created. ISO 8601 formatted string."""
+        return self.__createdTime
+
+    @createdTime.setter
+    def createdTime(self, value: datetime.datetime):
+        self.__createdTime = value
+        self._property_changed('createdTime')
+
+    @property
+    def entitlements(self) -> Entitlements:
+        """Defines the entitlements of a given resource."""
+        return self.__entitlements
+
+    @entitlements.setter
+    def entitlements(self, value: Entitlements):
+        self.__entitlements = value
+        self._property_changed('entitlements')
+
+    @property
+    def entitlementExclusions(self) -> EntitlementExclusions:
+        """Defines the exclusion entitlements of a given resource."""
+        return self.__entitlementExclusions
+
+    @entitlementExclusions.setter
+    def entitlementExclusions(self, value: EntitlementExclusions):
+        self.__entitlementExclusions = value
+        self._property_changed('entitlementExclusions')
+
+    @property
+    def id(self) -> str:
+        """Marquee unique identifier of a portfolio optimization and analytics request."""
+        return self.__id
+
+    @id.setter
+    def id(self, value: str):
+        self.__id = value
+        self._property_changed('id')
+
+    @property
+    def lastUpdatedById(self) -> str:
+        """Unique identifier of user who last updated the object."""
+        return self.__lastUpdatedById
+
+    @lastUpdatedById.setter
+    def lastUpdatedById(self, value: str):
+        self.__lastUpdatedById = value
+        self._property_changed('lastUpdatedById')
+
+    @property
+    def lastUpdatedTime(self) -> datetime.datetime:
+        """Timestamp of when the object was last updated."""
+        return self.__lastUpdatedTime
+
+    @lastUpdatedTime.setter
+    def lastUpdatedTime(self, value: datetime.datetime):
+        self.__lastUpdatedTime = value
+        self._property_changed('lastUpdatedTime')
+
+    @property
+    def ownerId(self) -> str:
+        """Marquee unique identifier for user who owns the object."""
+        return self.__ownerId
+
+    @ownerId.setter
+    def ownerId(self, value: str):
+        self.__ownerId = value
+        self._property_changed('ownerId')
+
+    @property
+    def positions(self) -> Tuple[Position, ...]:
+        """A set of positions with asset id and quantity."""
+        return self.__positions
+
+    @positions.setter
+    def positions(self, value: Tuple[Position, ...]):
+        self.__positions = value
+        self._property_changed('positions')
+
+    @property
+    def executionStartTime(self) -> datetime.datetime:
+        """Start time of a pretrade schedule. Currently only a timestamp of current business date is supported."""
+        return self.__executionStartTime
+
+    @executionStartTime.setter
+    def executionStartTime(self, value: datetime.datetime):
+        self.__executionStartTime = value
+        self._property_changed('executionStartTime')
+
+    @property
+    def executionEndTime(self) -> datetime.datetime:
+        """End time of a pretrade schedule. Currently only a timestamp of current business date is supported."""
+        return self.__executionEndTime
+
+    @executionEndTime.setter
+    def executionEndTime(self, value: datetime.datetime):
+        self.__executionEndTime = value
+        self._property_changed('executionEndTime')
+
+    @property
+    def type(self) -> Union[OptimizationType, str]:
+        """Pretrade optimization algorithm type."""
+        return self.__type
+
+    @type.setter
+    def type(self, value: Union[OptimizationType, str]):
+        self.__type = value if isinstance(value, OptimizationType) else get_enum_value(OptimizationType, value)
+        self._property_changed('type')
+
+    @property
+    def waitForResults(self) -> bool:
+        """For short-running requests this may be set to true and the results will be returned directly. If false, the response will contain the optimizationId for retrieving the results."""
+        return self.__waitForResults
+
+    @waitForResults.setter
+    def waitForResults(self, value: bool):
+        self.__waitForResults = value
+        self._property_changed('waitForResults')
+
+    @property
+    def parameters(self) -> dict:
+        """Constraints which the trade scheduler uses to optimize execution."""
+        return self.__parameters
+
+    @parameters.setter
+    def parameters(self, value: dict):
+        self.__parameters = value
+        self._property_changed('parameters')

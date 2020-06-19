@@ -13,14 +13,15 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import asyncio
 import datetime as dt
 import logging
 import weakref
 from abc import ABCMeta
 from concurrent.futures import ThreadPoolExecutor
 from inspect import signature
-from threading import Lock
-from typing import Iterable, Optional, Union
+from tqdm import tqdm
+from typing import Optional, Union
 
 from .markets import CloseMarket, LiveMarket, Market, close_market_date
 from gs_quant.base import Priceable, RiskKey, Scenario, get_enum_value
@@ -79,9 +80,9 @@ class PricingContext(ContextBaseWithDefault):
                  use_cache: bool = False,
                  visible_to_gs: bool = False,
                  csa_term: Optional[str] = None,
-                 batch_results_timeout: Optional[int] = None,
-                 market: Optional[Market] = None
-                 ):
+                 timeout: Optional[int] = None,
+                 market: Optional[Market] = None,
+                 show_progress: Optional[bool] = False):
         """
         The methods on this class should not be called directly. Instead, use the methods on the instruments,
         as per the examples
@@ -128,15 +129,15 @@ class PricingContext(ContextBaseWithDefault):
         self.__csa_term = csa_term
         self.__is_async = is_async
         self.__is_batch = is_batch
-        self.__batch_results_timeout = batch_results_timeout
+        self.__timeout = timeout
         self.__use_cache = use_cache
         self.__visible_to_gs = visible_to_gs
         self.__market_data_location = get_enum_value(PricingLocation, market_data_location)
         self.__market = market or CloseMarket(
             date=close_market_date(self.__market_data_location, self.__pricing_date) if pricing_date else None,
             location=self.__market_data_location if market_data_location else None)
-        self.__lock = Lock()
         self.__pending = {}
+        self.__show_progress = show_progress
 
     def _on_exit(self, exc_type, exc_val, exc_tb):
         if exc_val:
@@ -145,79 +146,93 @@ class PricingContext(ContextBaseWithDefault):
             self.__calc()
 
     def __calc(self):
-        session = GsSession.current
-        requests_by_provider = {}
+        def run_requests(requests_: list, provider_, create_event_loop: bool):
+            if create_event_loop:
+                asyncio.set_event_loop(asyncio.new_event_loop())
 
-        def run_requests(requests_: Iterable[RiskRequest], provider_):
             results = {}
 
             try:
                 with session:
-                    results = provider_.calc_multi(requests_)
-                    if self.__is_batch:
-                        results = provider_.get_results(dict(zip(results, requests_)),
-                                                        timeout=self.__batch_results_timeout).values()
+                    results = provider_.run(requests_, 1000, progress_bar, timeout=self.__timeout)
             except Exception as e:
-                results = ({k: e for k in self.__pending.keys()},)
+                results = {k: e for k in self.__pending.keys()}
             finally:
-                with self.__lock:
-                    for result in results:
-                        for (risk_key, result_priceable), value in result.items():
-                            if self.__use_cache:
-                                PricingCache.put(risk_key, result_priceable, value)
+                while self.__pending:
+                    (risk_key_, priceable_), future = self.__pending.popitem()
+                    result = results.get((risk_key_, priceable_))
 
-                            self.__pending.pop((risk_key, result_priceable)).set_result(value)
+                    if result is not None:
+                        if self.__use_cache:
+                            PricingCache.put(risk_key_, priceable_, result)
+                    else:
+                        result = ErrorValue(risk_key_, 'No result returned')
 
-        with self.__lock:
-            # Group requests optimally
-            for (key, priceable) in self.__pending.keys():
-                requests_by_provider.setdefault(key.provider, {})\
-                    .setdefault((key.params, key.scenario, key.date, key.market), {})\
-                    .setdefault(priceable, set())\
-                    .add(key.risk_measure)
+                    future.set_result(result)
 
+        # Group requests optimally
+        requests_by_provider = {}
+        for (key, priceable) in self.__pending.keys():
+            requests_by_provider.setdefault(key.provider, {})\
+                .setdefault((key.params, key.scenario, key.date, key.market), {})\
+                .setdefault(priceable, set())\
+                .add(key.risk_measure)
+
+        requests_for_provider = {}
         if requests_by_provider:
-            num_providers = len(requests_by_provider)
-            request_pool = ThreadPoolExecutor(num_providers) if num_providers > 1 or self.__is_async else None
-
             for provider, by_params_scenario_date_market in requests_by_provider.items():
-                requests_for_provider = {}
+                grouped_requests = {}
 
                 for (params, scenario, date, market), positions_by_measures in by_params_scenario_date_market.items():
                     for priceable, risk_measures in positions_by_measures.items():
-                        requests_for_provider.setdefault((params, scenario, date, market, tuple(sorted(risk_measures))),
-                                                         []).append(priceable)
+                        grouped_requests.setdefault((params, scenario, date, market, tuple(sorted(risk_measures))),
+                                                    []).append(priceable)
 
                 requests = [
                     RiskRequest(
                         tuple(RiskPosition(instrument=p, quantity=p.get_quantity()) for p in priceables),
                         risk_measures,
-                        parameters=self.__parameters,
+                        parameters=self._parameters,
                         wait_for_results=not self.__is_batch,
                         scenario=scenario,
                         pricing_and_market_data_as_of=(PricingDateAndMarketDataAsOf(pricing_date=date, market=market),),
                         request_visible_to_gs=self.__visible_to_gs
                     )
-                    for (params, scenario, date, market, risk_measures), priceables in requests_for_provider.items()
+                    for (params, scenario, date, market, risk_measures), priceables in grouped_requests.items()
                 ]
 
-                if request_pool:
-                    request_pool.submit(run_requests, requests, provider)
-                else:
-                    run_requests(requests, provider)
+                requests_for_provider[provider] = requests
 
+            session = GsSession.current
+            show_status = self.__show_progress and\
+                (len(requests_for_provider) > 1 or len(next(iter(requests_for_provider.values()))) > 1)
+            request_pool = ThreadPoolExecutor(len(requests_for_provider))\
+                if len(requests_for_provider) > 1 or self.__is_async else None
+            progress_bar = tqdm(total=len(self.__pending), position=0, maxinterval=1) if show_status else None
+            completion_futures = []
+
+            for provider, requests in requests_for_provider.items():
+                if request_pool:
+                    completion_future = request_pool.submit(run_requests, requests, provider, True)
+                    if not self.__is_async:
+                        completion_futures.append(completion_future)
+                else:
+                    run_requests(requests, provider, False)
+
+            # Wait on results if not async, so exceptions are surfaced
             if request_pool:
-                request_pool.shutdown(wait=not self.__is_async)
+                request_pool.shutdown(False)
+                all(f.result() for f in completion_futures)
 
     def __risk_key(self, risk_measure: RiskMeasure, provider: type) -> RiskKey:
-        return RiskKey(provider, self.__pricing_date, self.__market, self.__parameters, self.__scenario, risk_measure)
+        return RiskKey(provider, self.__pricing_date, self.__market, self._parameters, self._scenario, risk_measure)
 
     @property
-    def __parameters(self) -> RiskRequestParameters:
+    def _parameters(self) -> RiskRequestParameters:
         return RiskRequestParameters(csa_term=self.__csa_term, raw_results=True)
 
     @property
-    def __scenario(self) -> Optional[MarketDataScenario]:
+    def _scenario(self) -> Optional[MarketDataScenario]:
         scenarios = Scenario.path
         if not scenarios:
             return None
@@ -242,10 +257,6 @@ class PricingContext(ContextBaseWithDefault):
         return self.__is_batch
 
     @property
-    def batch_results_timeout(self) -> Optional[int]:
-        return self.__batch_results_timeout
-
-    @property
     def market(self) -> Market:
         return self.__market
 
@@ -255,7 +266,7 @@ class PricingContext(ContextBaseWithDefault):
 
     @property
     def csa_term(self) -> str:
-        return self.__parameters.csa_term
+        return self._parameters.csa_term
 
     @property
     def pricing_date(self) -> dt.date:
@@ -277,6 +288,23 @@ class PricingContext(ContextBaseWithDefault):
         clone_kwargs.update(kwargs)
         return self.__class__(**clone_kwargs)
 
+    def _calc(self, priceable: Priceable, risk_key: RiskKey) -> PricingFuture:
+        future = self.active_context.__pending.get((risk_key, priceable))
+
+        if future is None:
+            future = PricingFuture()
+            cached_result = PricingCache.get(risk_key, priceable) if self.use_cache else None
+
+            if cached_result is not None:
+                future.set_result(cached_result)
+            else:
+                self.active_context.__pending[(risk_key, priceable)] = future
+
+        if not (self.is_entered or self.is_async):
+            self.__calc()
+
+        return future
+    
     def calc(self, priceable: Priceable, risk_measure: RiskMeasure) -> PricingFuture:
         """
         Calculate the risk measure for the priceable instrument. Do not use directly, use via instruments
@@ -293,20 +321,4 @@ class PricingContext(ContextBaseWithDefault):
         >>> swap = IRSwap('Pay', '10y', 'USD', fixed_rate=0.01)
         >>> delta = swap.calc(IRDelta)
         """
-        with self.active_context.__lock:
-            risk_key = self.__risk_key(risk_measure, priceable.provider())
-            future = self.active_context.__pending.get((risk_key, priceable))
-
-            if future is None:
-                future = PricingFuture()
-                cached_result = PricingCache.get(risk_key, priceable) if self.use_cache else None
-
-                if cached_result is not None:
-                    future.set_result(cached_result)
-                else:
-                    self.active_context.__pending[(risk_key, priceable)] = future
-
-        if not (self.is_entered or self.is_async):
-            self.__calc()
-
-        return future
+        return self._calc(priceable, self.__risk_key(risk_measure, priceable.provider()))

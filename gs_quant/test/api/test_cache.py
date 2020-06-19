@@ -171,72 +171,29 @@ def test_cache_subset(mocker):
 
 @mock.patch.object(GsRiskApi, '_exec')
 def test_multiple_measures(mocker):
-    values = [
+    day = [
         [
-            [
-                {
-                    '$type': 'RiskVector',
-                    'asset': [0.01, 0.015],
-                    'points': [
-                        {'type': 'IR Vol', 'asset': 'USD-LIBOR-BBA', 'class_': 'Swap', 'point': '1y'},
-                        {'type': 'IR Vol', 'asset': 'USD-LIBOR-BBA', 'class_': 'Swap', 'point': '2y'}
-                    ]
-                },
-                {
-                    '$type': 'RiskVector',
-                    'asset': [0.01, 0.015],
-                    'points': [
-                        {'type': 'IR Vol', 'asset': 'USD-LIBOR-BBA', 'class_': 'Swap', 'point': '1y'},
-                        {'type': 'IR Vol', 'asset': 'USD-LIBOR-BBA', 'class_': 'Swap', 'point': '2y'}
-                    ]
-                },
-                {
-                    '$type': 'RiskVector',
-                    'asset': [0.01, 0.015],
-                    'points': [
-                        {'type': 'IR Vol', 'asset': 'USD-LIBOR-BBA', 'class_': 'Swap', 'point': '1y'},
-                        {'type': 'IR Vol', 'asset': 'USD-LIBOR-BBA', 'class_': 'Swap', 'point': '2y'}
-                    ]
-                }
-            ]
+            [{
+                '$type': 'RiskVector',
+                'asset': [0.01, 0.015],
+                'points': [
+                    {'type': 'IR Vol', 'asset': 'USD-LIBOR-BBA', 'class_': 'Swap', 'point': '1y'},
+                    {'type': 'IR Vol', 'asset': 'USD-LIBOR-BBA', 'class_': 'Swap', 'point': '2y'}
+                ]
+            }]
         ],
-        [
-            [
-                {
-                    '$type': 'RiskVector',
-                    'asset': [0.01, 0.015],
-                    'points': [
-                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
-                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
-                    ]
-                },
-                {
-                    '$type': 'RiskVector',
-                    'asset': [0.01, 0.015],
-                    'points': [
-                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
-                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
-                    ]
-                },
-                {
-                    '$type': 'RiskVector',
-                    'asset': [0.01, 0.015],
-                    'points': [
-                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
-                        {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
-                    ]
-                }
+        [{
+            '$type': 'RiskVector',
+            'asset': [0.01, 0.015],
+            'points': [
+                {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
+                {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
             ]
-        ],
-        [
-            [
-                {'$type': 'Risk', 'val': 0.01},
-                {'$type': 'Risk', 'val': 0.01},
-                {'$type': 'Risk', 'val': 0.01}
-            ]
-        ]
+        }],
+        [{'$type': 'Risk', 'val': 0.01}]
     ]
-    mocker.return_value = [values]
+
+    mocker.return_value = [day, day, day]
 
     set_session()
 

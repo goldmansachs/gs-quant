@@ -15,7 +15,7 @@ under the License.
 """
 from typing import Iterable
 
-from gs_quant.base import get_enum_value, InstrumentBase
+from gs_quant.base import get_enum_value, InstrumentBase, QuotableBuilder
 from gs_quant.common import AssetClass, AssetType, XRef
 from gs_quant.priceable import PriceableImpl
 from gs_quant.api.gs.parser import GsParserApi
@@ -47,7 +47,7 @@ class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
     @classmethod
     def from_dict(cls, values: dict):
         if values:
-            if hasattr(cls, '_derived_type'):
+            if issubclass(cls, QuotableBuilder):
                 if 'properties' in values:
                     values.update(values.pop('properties'))
                 return cls._from_dict(values)

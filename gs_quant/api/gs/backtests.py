@@ -95,8 +95,13 @@ class GsBacktestApi:
         response = GsSession.current._post('/backtests/calculate', backtest, request_headers=request_headers)
 
         # map the response to backtest result
-        if 'Data' in response and 'RiskData' in response:
-            backtestResult = BacktestResult(performance=response['Data'], risks=response['RiskData'])
+        if 'Data' in response and 'RiskData' and 'Portfolio' in response:
+            backtestResult = BacktestResult(performance=response['Data'],
+                                            risks=response['RiskData'],
+                                            portfolio=response['Portfolio'])
+        elif 'Data' in response and 'RiskData' in response:
+            backtestResult = BacktestResult(performance=response['Data'],
+                                            risks=response['RiskData'])
         elif 'Data' in response:
             backtestResult = BacktestResult(performance=response['Data'])
         else:

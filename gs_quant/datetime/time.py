@@ -15,10 +15,12 @@ under the License.
 """
 
 import datetime as dt
-
+import logging
 import numpy as np
 
 from gs_quant.errors import *
+
+_logger = logging.getLogger(__name__)
 
 DAYS_IN_YEAR = 365.25
 DAYS_IN_WEEK = 7
@@ -39,18 +41,21 @@ SECS_IN_YEAR = SECS_IN_MIN * MINS_IN_HOUR * HOURS_IN_DAY * DAYS_IN_YEAR
 
 class Timer:
 
-    def __init__(self, print_on_exit=True, label='Execution'):
-        self.print_on_exit = print_on_exit
-        self.label = label
+    def __init__(self, print_on_exit: bool = True, label: str = 'Execution', threshold: int = None):
+        self.__print_on_exit = print_on_exit
+        self.__label = label
+        self.__threshold = threshold
 
     def __enter__(self):
-        self.start = dt.datetime.now()
+        self.__start = dt.datetime.now()
 
     def __exit__(self, *args):
-        self.elapsed = dt.datetime.now() - self.start
+        self.__elapsed = dt.datetime.now() - self.__start
 
-        if self.print_on_exit:
-            print("{} took {} seconds".format(self.label, self.elapsed.seconds + self.elapsed.microseconds / 1000000))
+        if self.__print_on_exit:
+            if self.__threshold is None or self.__elapsed.seconds > self.__threshold:
+                _logger.warning(
+                    f'{self.__label} took {self.__elapsed.seconds + self.__elapsed.microseconds / 1000000} seconds')
 
 
 def to_zulu_string(time: dt.datetime):
