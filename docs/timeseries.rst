@@ -89,6 +89,7 @@ Econometrics
    beta
    change
    correlation
+   excess_returns_
    index
    max_drawdown
    prices

@@ -31,6 +31,7 @@ class IndicesCurrency(EnumBase, Enum):
     CAD = 'CAD'
     AUD = 'AUD'
     CHF = 'CHF'
+    CNH = 'CNH'
     CNY = 'CNY'
     DKK = 'DKK'
     HKD = 'HKD'

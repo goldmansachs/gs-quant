@@ -87,6 +87,9 @@ class AssetType(Enum):
     #: Option
     OPTION = "Option"
 
+    #: Commodity Reference Price
+    COMMODITY_REFERENCE_PRICE = "Commodity Reference Price"
+
 
 class AssetIdentifier(Enum):
     """Asset type enumeration
@@ -326,6 +329,21 @@ class WeatherIndex(Asset):
         return AssetType.WEATHER_INDEX
 
 
+class CommodityReferencePrice(Asset):
+    """Commodity Reference Price
+
+    Represents an underlying index for commodities in the event that no ISDA Commodity Reference Price exists.
+    Includes base, details, unit, currency and exchange id or publication etc.
+
+    """
+
+    def __init__(self, id_: str, name: str):
+        Asset.__init__(self, id_, AssetClass.Commod, name)
+
+    def get_type(self) -> AssetType:
+        return AssetType.COMMODITY_REFERENCE_PRICE
+
+
 class Swap(Asset):
     """Swap Instrument Type
 
@@ -513,6 +531,9 @@ class SecurityMaster:
 
         if asset_type in (GsAssetType.Option.value,):
             return Option(gs_asset.id, gs_asset.assetClass, gs_asset.name)
+
+        if asset_type in (GsAssetType.CommodityReferencePrice.value,):
+            return CommodityReferencePrice(gs_asset.id, gs_asset.name)
 
         raise TypeError(f'unsupported asset type {asset_type}')
 

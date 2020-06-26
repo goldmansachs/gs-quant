@@ -23,6 +23,8 @@ from gs_quant.base import Base, EnumBase, InstrumentBase, camel_case_translate, 
 
 class MDAPIQueryField(EnumBase, Enum):    
     
+    ask = 'ask'
+    bid = 'bid'
     mid = 'mid'
     expectedDataQuality = 'expectedDataQuality'
     actualDataQuality = 'actualDataQuality'
@@ -1096,6 +1098,7 @@ class IdFieldProperties(Base):
         rcic: Tuple[str, ...] = None,
         primary_country_ric: Tuple[str, ...] = None,
         country_id: Tuple[str, ...] = None,
+        fred_id: Tuple[str, ...] = None,
         delisted: Tuple[str, ...] = None,
         regional_focus: Tuple[str, ...] = None,
         net_exposure_classification: Tuple[str, ...] = None,
@@ -1158,6 +1161,7 @@ class IdFieldProperties(Base):
         self.rcic = rcic
         self.primary_country_ric = primary_country_ric
         self.country_id = country_id
+        self.fred_id = fred_id
         self.delisted = delisted
         self.regional_focus = regional_focus
         self.net_exposure_classification = net_exposure_classification
@@ -1321,6 +1325,15 @@ class IdFieldProperties(Base):
     def country_id(self, value: Tuple[str, ...]):
         self._property_changed('country_id')
         self.__country_id = value        
+
+    @property
+    def fred_id(self) -> Tuple[str, ...]:
+        return self.__fred_id
+
+    @fred_id.setter
+    def fred_id(self, value: Tuple[str, ...]):
+        self._property_changed('fred_id')
+        self.__fred_id = value        
 
     @property
     def delisted(self) -> Tuple[str, ...]:
@@ -2077,17 +2090,24 @@ class SymbolFilterLink(Base):
     @camel_case_translate
     def __init__(
         self,
+        entity_type: str = None,
         entity_field: str = None,
         name: str = None
     ):        
         super().__init__()
+        self.entity_type = entity_type
         self.entity_field = entity_field
         self.name = name
 
     @property
     def entity_type(self) -> str:
         """The type of the entity to lookup to."""
-        return 'MktCoordinate'        
+        return self.__entity_type
+
+    @entity_type.setter
+    def entity_type(self, value: str):
+        self._property_changed('entity_type')
+        self.__entity_type = value        
 
     @property
     def entity_field(self) -> str:
@@ -2534,7 +2554,7 @@ class MDAPIDataBatchResponse(Base):
 
 
 class MDAPIDataQuery(Base):
-
+        
     @camel_case_translate
     def __init__(
         self,
@@ -2551,7 +2571,7 @@ class MDAPIDataQuery(Base):
         real_time: bool = True,
         fields: Tuple[Union[MDAPIQueryField, str], ...] = None,
         name: str = None
-    ):
+    ):        
         super().__init__()
         self.__format = get_enum_value(Format, format_)
         self.market_data_coordinates = market_data_coordinates
@@ -2575,7 +2595,7 @@ class MDAPIDataQuery(Base):
     @format.setter
     def format(self, value: Union[Format, str]):
         self._property_changed('format')
-        self.__format = get_enum_value(Format, value)
+        self.__format = get_enum_value(Format, value)        
 
     @property
     def market_data_coordinates(self) -> Tuple[MarketDataCoordinate, ...]:
@@ -2585,7 +2605,7 @@ class MDAPIDataQuery(Base):
     @market_data_coordinates.setter
     def market_data_coordinates(self, value: Tuple[MarketDataCoordinate, ...]):
         self._property_changed('market_data_coordinates')
-        self.__market_data_coordinates = value
+        self.__market_data_coordinates = value        
 
     @property
     def pricing_location(self) -> Union[PricingLocation, str]:
@@ -2595,7 +2615,7 @@ class MDAPIDataQuery(Base):
     @pricing_location.setter
     def pricing_location(self, value: Union[PricingLocation, str]):
         self._property_changed('pricing_location')
-        self.__pricing_location = get_enum_value(PricingLocation, value)
+        self.__pricing_location = get_enum_value(PricingLocation, value)        
 
     @property
     def selector_function(self) -> str:
@@ -2605,7 +2625,7 @@ class MDAPIDataQuery(Base):
     @selector_function.setter
     def selector_function(self, value: str):
         self._property_changed('selector_function')
-        self.__selector_function = value
+        self.__selector_function = value        
 
     @property
     def samples(self) -> int:
@@ -2616,7 +2636,7 @@ class MDAPIDataQuery(Base):
     @samples.setter
     def samples(self, value: int):
         self._property_changed('samples')
-        self.__samples = value
+        self.__samples = value        
 
     @property
     def vendor(self) -> Union[MarketDataVendor, str]:
@@ -2625,7 +2645,7 @@ class MDAPIDataQuery(Base):
     @vendor.setter
     def vendor(self, value: Union[MarketDataVendor, str]):
         self._property_changed('vendor')
-        self.__vendor = get_enum_value(MarketDataVendor, value)
+        self.__vendor = get_enum_value(MarketDataVendor, value)        
 
     @property
     def start_time(self) -> datetime.datetime:
@@ -2635,7 +2655,7 @@ class MDAPIDataQuery(Base):
     @start_time.setter
     def start_time(self, value: datetime.datetime):
         self._property_changed('start_time')
-        self.__start_time = value
+        self.__start_time = value        
 
     @property
     def end_time(self) -> datetime.datetime:
@@ -2645,7 +2665,7 @@ class MDAPIDataQuery(Base):
     @end_time.setter
     def end_time(self, value: datetime.datetime):
         self._property_changed('end_time')
-        self.__end_time = value
+        self.__end_time = value        
 
     @property
     def start_date(self) -> datetime.date:
@@ -2655,7 +2675,7 @@ class MDAPIDataQuery(Base):
     @start_date.setter
     def start_date(self, value: datetime.date):
         self._property_changed('start_date')
-        self.__start_date = value
+        self.__start_date = value        
 
     @property
     def end_date(self) -> datetime.date:
@@ -2665,7 +2685,7 @@ class MDAPIDataQuery(Base):
     @end_date.setter
     def end_date(self, value: datetime.date):
         self._property_changed('end_date')
-        self.__end_date = value
+        self.__end_date = value        
 
     @property
     def real_time(self) -> bool:
@@ -2675,7 +2695,7 @@ class MDAPIDataQuery(Base):
     @real_time.setter
     def real_time(self, value: bool):
         self._property_changed('real_time')
-        self.__real_time = value
+        self.__real_time = value        
 
     @property
     def fields(self) -> Tuple[Union[MDAPIQueryField, str], ...]:
@@ -2685,7 +2705,7 @@ class MDAPIDataQuery(Base):
     @fields.setter
     def fields(self, value: Tuple[Union[MDAPIQueryField, str], ...]):
         self._property_changed('fields')
-        self.__fields = value
+        self.__fields = value        
 
 
 class MarketDataMapping(Base):
@@ -3330,19 +3350,19 @@ class DataSetEntity(Base):
         self,
         id_: str,
         name: str,
-        description: str,
-        short_description: str,
-        vendor: Union[MarketDataVendor, str],
-        data_product: str,
-        parameters: DataSetParameters,
-        dimensions: DataSetDimensions,
         owner_id: str = None,
+        description: str = None,
+        short_description: str = None,
         mappings: Tuple[MarketDataMapping, ...] = None,
+        vendor: Union[MarketDataVendor, str] = None,
         start_date: datetime.date = None,
         mdapi: MDAPI = None,
+        data_product: str = None,
         entitlements: Entitlements = None,
         entitlement_exclusions: EntitlementExclusions = None,
         query_processors: ProcessorEntity = None,
+        parameters: DataSetParameters = None,
+        dimensions: DataSetDimensions = None,
         defaults: DataSetDefaults = None,
         filters: DataSetFilters = None,
         transformations: Tuple[DataSetTransformation, ...] = None,
