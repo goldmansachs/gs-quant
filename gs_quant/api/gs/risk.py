@@ -35,7 +35,7 @@ _logger = logging.getLogger(__name__)
 
 class GsRiskApi(RiskApi):
 
-    USE_MSGPACK = False
+    USE_MSGPACK = True
 
     @classmethod
     def calc_multi(cls, requests: Iterable[RiskRequest]) -> dict:
@@ -53,11 +53,11 @@ class GsRiskApi(RiskApi):
 
     @classmethod
     def _exec(cls, request: Union[RiskRequest, Iterable[RiskRequest]]) -> Union[Iterable, dict]:
+        use_msgpack = cls.USE_MSGPACK and not isinstance(request, RiskRequest)
         return GsSession.current._post(cls.__url(request),
                                        request,
                                        timeout=181,
-                                       request_headers={'Content-Type': 'application/x-msgpack'} if cls.USE_MSGPACK else
-                                                       {})
+                                       request_headers={'Content-Type': 'application/x-msgpack'} if use_msgpack else {})
 
     @classmethod
     def __url(cls, request: Union[RiskRequest, Iterable[RiskRequest]]):

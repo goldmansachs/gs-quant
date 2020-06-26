@@ -429,6 +429,9 @@ def test_excess_returns():
     expected = df['MIDASER']
     assert_series_equal(actual, expected, check_names=False)
 
+    plot = excess_returns_(df['SPX'], RiskFreeRateCurrency.USD)
+    assert_series_equal(plot, expected, check_names=False)
+
     actual = excess_returns(df['SPX'], Cash('MABCDE', 'T_SHARPE_USD'))
     assert_series_equal(actual, expected, check_names=False)
 
@@ -436,6 +439,11 @@ def test_excess_returns():
     file = os.path.join(os.path.dirname(__file__), '..', 'resources', 'Sharpe_SPX_0175.csv')
     expected = pd.read_csv(file).loc[:, 'ER']
     numpy.testing.assert_array_almost_equal(actual.values, expected.values)
+
+    market_data.return_value = pd.DataFrame()
+    with pytest.raises(MqError):
+        excess_returns(df['SPX'], CurrencyEnum.USD)
+
     replace.restore()
 
 
@@ -458,7 +466,7 @@ def test_sharpe_ratio():
     replace.restore()
 
     actual = _get_ratio(price_df['SPX'], 0.0175, 10, day_count_convention=DayCountConvention.ACTUAL_360)
-    numpy.testing.assert_almost_equal(actual.values, er_df['SR10'].values, decimal=5)
+    numpy.testing.assert_almost_equal(actual.values, er_df['SR10'].values[10:], decimal=5)
 
     actual = _get_ratio(er_df['ER'], 0.0175, 0, day_count_convention=DayCountConvention.ACTUAL_360,
                         curve_type=CurveType.EXCESS_RETURNS)

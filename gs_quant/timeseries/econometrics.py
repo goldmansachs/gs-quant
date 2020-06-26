@@ -75,6 +75,8 @@ def excess_returns(price_series: pd.Series, benchmark_or_rate: Union[Asset, Curr
     with DataContext(price_series.index[0], price_series.index[-1]):
         q = GsDataApi.build_market_data_query([marquee_id], QueryType.SPOT)
         df = GsDataApi.get_market_data(q)
+    if df.empty:
+        raise MqValueError(f'could not retrieve risk-free rate {marquee_id}')
     curve, bench_curve = align(price_series, df['spot'], Interpolate.INTERSECT)
 
     e_returns = [curve.iloc[0]]
@@ -85,9 +87,6 @@ def excess_returns(price_series: pd.Series, benchmark_or_rate: Union[Asset, Curr
 
 
 def _annualized_return(levels: pd.Series, rolling: int) -> pd.Series:
-    if rolling == 0:
-        rolling = len(levels)
-
     starting = [0] * rolling
     starting.extend([a for a in range(1, len(levels) - rolling + 1)])
     points = list(
@@ -97,7 +96,7 @@ def _annualized_return(levels: pd.Series, rolling: int) -> pd.Series:
     return pd.Series(points, index=levels.index)
 
 
-def _get_ratio(input_series: pd.Series, benchmark_or_rate: Union[Asset, float, str], rolling: int, *,
+def _get_ratio(input_series: pd.Series, benchmark_or_rate: Union[Asset, float, str], w: Union[Window, int], *,
                day_count_convention: DayCountConvention, curve_type: CurveType = CurveType.PRICES) -> pd.Series:
     if curve_type == CurveType.PRICES:
         er = excess_returns(input_series, benchmark_or_rate, day_count_convention=day_count_convention)
@@ -105,9 +104,11 @@ def _get_ratio(input_series: pd.Series, benchmark_or_rate: Union[Asset, float, s
         assert curve_type == CurveType.EXCESS_RETURNS
         er = input_series
 
-    ann_return = _annualized_return(er, rolling)
-    ann_vol = volatility(er, rolling).iloc[1:] if rolling > 0 else volatility(er)
-    return ann_return / ann_vol * 100
+    w = normalize_window(er, w or None)  # continue to support 0 as an input for window
+    ann_return = _annualized_return(er, w.w)
+    ann_vol = volatility(er, w.w).iloc[1:] if w.w < len(er) else volatility(er)
+    result = ann_return / ann_vol * 100
+    return apply_ramp(result, w)
 
 
 class RiskFreeRateCurrency(Enum):
@@ -121,7 +122,33 @@ class RiskFreeRateCurrency(Enum):
 
 
 @plot_session_function
-def sharpe_ratio(series: pd.Series, currency: RiskFreeRateCurrency, rolling: int = 0,
+def excess_returns_(price_series: pd.Series, currency: RiskFreeRateCurrency) -> pd.Series:
+    """
+    Calculate excess returns
+
+    :param price_series: price series
+    :param currency: currency for risk-free rate
+    :return: excess returns
+
+    **Usage**
+
+    Given a price series P and risk-free rate R, excess returns E are defined as:
+
+    :math:`E_t = E_{t-1} + P_t - P_{t-1} * (1 + R * DCF_{t-1,t})`
+
+    where DCF is day count fraction between two points
+
+    **Examples**
+
+    Get excess returns from a price series.
+
+    >>> er = excess_returns(generate_series(100), RiskFreeRateCurrency.USD)
+    """
+    return excess_returns(price_series, Currency(currency.value), day_count_convention=DayCountConvention.ACTUAL_360)
+
+
+@plot_session_function
+def sharpe_ratio(series: pd.Series, currency: RiskFreeRateCurrency, w: Union[Window, int] = None,
                  curve_type: CurveType = CurveType.PRICES) -> pd.Series:
     """
     Calculate Sharpe ratio
@@ -129,24 +156,34 @@ def sharpe_ratio(series: pd.Series, currency: RiskFreeRateCurrency, rolling: int
     :param series: series of prices or excess returns for an asset
     :param currency: currency for risk-free rate
     :param curve_type: whether input series is of prices or excess returns
-    :param rolling: rolling window to use
+    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+              and 10 the ramp up value.
     :return: Sharpe ratio
 
     **Usage**
 
-    Given a price series and risk-free rate (a number, currency, or cash asset), returns the rolling Sharpe ratio.
+    Given a price series P, risk-free rate R, and window of size w returns the rolling
+    `Sharpe ratio <https://en.wikipedia.org/wiki/Sharpe_ratio>`_ S:
 
-    For a fixed rate R, excess returns E are calculated as:
+    :math:`S_t = \\frac{(E_t / E_{t-w+1})^{365.25 / (D_t - D_{t-w} - 1)}}{volatility(E, w)_t}`
+
+    Excess returns E are defined as:
 
     :math:`E_t = E_{t-1} + P_t - P_{t-1} * (1 + R * DCF_{t-1,t})`
 
-    Subscripts refers to dates in the price series.
+    where D is the date for a data point and DCF is day count fraction between two points
 
-    P is a point in the price series.
+    **Examples**
 
-    DCF is the day count fraction using the Act/360 convention.
+    Get rolling sharpe ratio of a price series (with window of 252).
+
+    >>> sr = sharpe_ratio(generate_series(100), RiskFreeRateCurrency.USD, 252)
+
+    **See also**
+
+    :func:`volatility`
     """
-    return _get_ratio(series, Currency(currency.value), rolling, day_count_convention=DayCountConvention.ACTUAL_360,
+    return _get_ratio(series, Currency(currency.value), w, day_count_convention=DayCountConvention.ACTUAL_360,
                       curve_type=curve_type)
 
 

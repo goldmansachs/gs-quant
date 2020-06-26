@@ -110,6 +110,9 @@ class ParameterRender(EnumBase, Enum):
     progress = 'progress'
     chart = 'chart'
     range = 'range'
+    scale = 'scale'
+    color = 'color'
+    triColor = 'triColor'
     
     def __repr__(self):
         return self.value
@@ -475,6 +478,11 @@ class ColumnFormat(Base):
         human_readable: bool = None,
         axis_key: str = None,
         show_tooltip: bool = None,
+        low_color: str = None,
+        high_color: str = None,
+        mid_color: str = None,
+        low_value: float = None,
+        high_value: float = None,
         name: str = None
     ):        
         super().__init__()
@@ -483,6 +491,11 @@ class ColumnFormat(Base):
         self.human_readable = human_readable
         self.axis_key = axis_key
         self.show_tooltip = show_tooltip
+        self.low_color = low_color
+        self.high_color = high_color
+        self.mid_color = mid_color
+        self.low_value = low_value
+        self.high_value = high_value
         self.name = name
 
     @property
@@ -535,6 +548,57 @@ class ColumnFormat(Base):
     def show_tooltip(self, value: bool):
         self._property_changed('show_tooltip')
         self.__show_tooltip = value        
+
+    @property
+    def low_color(self) -> str:
+        """Hex color of cell if the resulting value is less than lowValue. i.e. #FF0000"""
+        return self.__low_color
+
+    @low_color.setter
+    def low_color(self, value: str):
+        self._property_changed('low_color')
+        self.__low_color = value        
+
+    @property
+    def high_color(self) -> str:
+        """Hex color of cell if the resulting value is less than highValue. i.e. #FF0000"""
+        return self.__high_color
+
+    @high_color.setter
+    def high_color(self, value: str):
+        self._property_changed('high_color')
+        self.__high_color = value        
+
+    @property
+    def mid_color(self) -> str:
+        """Hex color of cell if the resulting value is equal to or between lowValue and
+           highValue. i.e. #FF0000"""
+        return self.__mid_color
+
+    @mid_color.setter
+    def mid_color(self, value: str):
+        self._property_changed('mid_color')
+        self.__mid_color = value        
+
+    @property
+    def low_value(self) -> float:
+        """Value to compare for lowColor."""
+        return self.__low_value
+
+    @low_value.setter
+    def low_value(self, value: float):
+        self._property_changed('low_value')
+        self.__low_value = value        
+
+    @property
+    def high_value(self) -> float:
+        """Value to compare for HighColor."""
+        return self.__high_value
+
+    @high_value.setter
+    def high_value(self, value: float):
+        self._property_changed('high_value')
+        self.__high_value = value        
 
 
 class ColumnMappings(Base):
@@ -1136,11 +1200,13 @@ class EntityId(Base):
         self,
         id_: str = None,
         column_mappings: Tuple[ColumnMappings, ...] = None,
+        color: str = None,
         name: str = None
     ):        
         super().__init__()
         self.__id = id_
         self.column_mappings = column_mappings
+        self.color = color
         self.name = name
 
     @property
@@ -1162,6 +1228,16 @@ class EntityId(Base):
     def column_mappings(self, value: Tuple[ColumnMappings, ...]):
         self._property_changed('column_mappings')
         self.__column_mappings = value        
+
+    @property
+    def color(self) -> str:
+        """Hex color of the cell. i.e. #FF0000"""
+        return self.__color
+
+    @color.setter
+    def color(self, value: str):
+        self._property_changed('color')
+        self.__color = value        
 
 
 class RatesResponseData(Base):

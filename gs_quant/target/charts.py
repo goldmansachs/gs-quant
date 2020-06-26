@@ -219,12 +219,23 @@ class XAxisSettings(Base):
     @camel_case_translate
     def __init__(
         self,
+        show_grid_lines: bool = None,
         x_axis_date_format: str = None,
         name: str = None
     ):        
         super().__init__()
+        self.show_grid_lines = show_grid_lines
         self.x_axis_date_format = x_axis_date_format
         self.name = name
+
+    @property
+    def show_grid_lines(self) -> bool:
+        return self.__show_grid_lines
+
+    @show_grid_lines.setter
+    def show_grid_lines(self, value: bool):
+        self._property_changed('show_grid_lines')
+        self.__show_grid_lines = value        
 
     @property
     def x_axis_date_format(self) -> str:
@@ -234,6 +245,67 @@ class XAxisSettings(Base):
     def x_axis_date_format(self, value: str):
         self._property_changed('x_axis_date_format')
         self.__x_axis_date_format = value        
+
+
+class YAxisSettings(Base):
+        
+    """An object which contains all the settings for a Y axis."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        decimal_precision: int = None,
+        id_: str = None,
+        label: str = None,
+        show_grid_lines: bool = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.decimal_precision = decimal_precision
+        self.__id = id_
+        self.label = label
+        self.show_grid_lines = show_grid_lines
+        self.name = name
+
+    @property
+    def decimal_precision(self) -> int:
+        """Number of decimals displayed for value labels on all the series on this Y axis."""
+        return self.__decimal_precision
+
+    @decimal_precision.setter
+    def decimal_precision(self, value: int):
+        self._property_changed('decimal_precision')
+        self.__decimal_precision = value        
+
+    @property
+    def id(self) -> str:
+        """The unique ID of the axis."""
+        return self.__id
+
+    @id.setter
+    def id(self, value: str):
+        self._property_changed('id')
+        self.__id = value        
+
+    @property
+    def label(self) -> str:
+        """The label to display on the axis"""
+        return self.__label
+
+    @label.setter
+    def label(self, value: str):
+        self._property_changed('label')
+        self.__label = value        
+
+    @property
+    def show_grid_lines(self) -> bool:
+        """Whether or not the grid lines for this axis will be rendered on the chart."""
+        return self.__show_grid_lines
+
+    @show_grid_lines.setter
+    def show_grid_lines(self, value: bool):
+        self._property_changed('show_grid_lines')
+        self.__show_grid_lines = value        
 
 
 class ChartExpression(Base):
@@ -571,7 +643,8 @@ class Chart(Base):
         copy_from_id: str = None,
         version: int = None,
         draft_view_id: str = None,
-        x_axis_settings: XAxisSettings = None
+        x_axis_settings: XAxisSettings = None,
+        y_axes_settings: Tuple[YAxisSettings, ...] = None
     ):        
         super().__init__()
         self.__id = id_
@@ -601,6 +674,7 @@ class Chart(Base):
         self.version = version
         self.draft_view_id = draft_view_id
         self.x_axis_settings = x_axis_settings
+        self.y_axes_settings = y_axes_settings
 
     @property
     def id(self) -> str:
@@ -865,3 +939,13 @@ class Chart(Base):
     def x_axis_settings(self, value: XAxisSettings):
         self._property_changed('x_axis_settings')
         self.__x_axis_settings = value        
+
+    @property
+    def y_axes_settings(self) -> Tuple[YAxisSettings, ...]:
+        """Settings for the Y axes"""
+        return self.__y_axes_settings
+
+    @y_axes_settings.setter
+    def y_axes_settings(self, value: Tuple[YAxisSettings, ...]):
+        self._property_changed('y_axes_settings')
+        self.__y_axes_settings = value        

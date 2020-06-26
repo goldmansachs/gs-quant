@@ -41,7 +41,7 @@ from gs_quant.datetime.gscalendar import GsCalendar
 from gs_quant.datetime.point import relative_date_add
 from gs_quant.errors import MqTypeError, MqValueError
 from gs_quant.markets.securities import *
-from gs_quant.markets.securities import Asset, AssetIdentifier, SecurityMaster
+from gs_quant.markets.securities import Asset, AssetIdentifier, SecurityMaster, AssetType as SecAssetType
 from gs_quant.target.common import AssetClass, AssetType
 from gs_quant.timeseries import volatility, Window, Returns, sqrt
 from gs_quant.timeseries.helper import log_return, plot_measure, _to_offset
@@ -506,7 +506,7 @@ def implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference 
     :return: implied volatility curve
     """
 
-    if asset.asset_class == AssetClass.Commod:
+    if asset.asset_class == AssetClass.Commod and asset.get_type() not in (SecAssetType.ETF, SecAssetType.STOCK):
         return _weighted_average_valuation_curve_for_calendar_strip(asset, tenor,
                                                                     QueryType.IMPLIED_VOLATILITY, "impliedVolatility")
 

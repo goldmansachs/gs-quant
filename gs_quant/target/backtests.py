@@ -73,6 +73,7 @@ class FlowVolBacktestMeasure(EnumBase, Enum):
     delta = 'delta'
     gamma = 'gamma'
     vega = 'vega'
+    portfolio = 'portfolio'
     
     def __repr__(self):
         return self.value
@@ -209,7 +210,7 @@ class BacktestRebalanceParameters(Base):
     @day_of_month.setter
     def day_of_month(self, value: float):
         self._property_changed('day_of_month')
-        self.__day_of_month = value
+        self.__day_of_month = value        
 
 
 class BacktestRisk(Base):
@@ -1360,7 +1361,6 @@ class BacktestResult(Base):
         self,
         backtest_id: str = None,
         performance: Tuple[FieldValueMap, ...] = None,
-        portfolio: Tuple[FieldValueMap, ...] = None,
         stats: PerformanceStats = None,
         performance_decompositions: Tuple[BacktestPerformanceDecomposition, ...] = None,
         risks: Tuple[BacktestRisk, ...] = None,
@@ -1373,7 +1373,6 @@ class BacktestResult(Base):
         super().__init__()
         self.backtest_id = backtest_id
         self.performance = performance
-        self.portfolio = portfolio
         self.stats = stats
         self.performance_decompositions = performance_decompositions
         self.risks = risks
@@ -1401,17 +1400,7 @@ class BacktestResult(Base):
     @performance.setter
     def performance(self, value: Tuple[FieldValueMap, ...]):
         self._property_changed('performance')
-        self.__performance = value
-
-    @property
-    def portfolio(self) -> Tuple[FieldValueMap, ...]:
-        """Backtest portfolio information."""
-        return self.__portfolio
-
-    @portfolio.setter
-    def portfolio(self, value: Tuple[FieldValueMap, ...]):
-        self._property_changed('portfolio')
-        self.__portfolio = value
+        self.__performance = value        
 
     @property
     def stats(self) -> PerformanceStats:
