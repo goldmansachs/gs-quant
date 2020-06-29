@@ -73,7 +73,6 @@ class FlowVolBacktestMeasure(EnumBase, Enum):
     delta = 'delta'
     gamma = 'gamma'
     vega = 'vega'
-    portfolio = 'portfolio'
     
     def __repr__(self):
         return self.value
