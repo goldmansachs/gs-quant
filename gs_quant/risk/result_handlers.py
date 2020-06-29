@@ -26,7 +26,7 @@ _logger = logging.getLogger(__name__)
 
 
 def __dataframe_handler(result: Iterable, mappings: tuple, risk_key: RiskKey) -> DataFrameWithInfo:
-    records = [{k: datum.get(v) or (None if v == 'value' else '') for k, v in mappings} for datum in result]
+    records = [{k: datum.get(v, (None if v == 'value' else '')) for k, v in mappings} for datum in result]
     df = pd.DataFrame.from_records(records)
     return DataFrameWithInfo(sort_risk(df, tuple(k for k, _ in mappings)), risk_key=risk_key)
 
