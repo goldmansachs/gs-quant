@@ -204,7 +204,7 @@ class Base(metaclass=ABCMeta):
             values = (super(Base, self).__getattribute__(p) for p in raw_properties)
             self.__as_dict[as_camel_case] = dict((p, v) for p, v in zip(properties, values) if v is not None)
 
-        return self.__as_dict[as_camel_case]
+        return copy.copy(self.__as_dict[as_camel_case])
 
     @classmethod
     def prop_type(cls, prop: str, additional: Optional[list] = None) -> type:
