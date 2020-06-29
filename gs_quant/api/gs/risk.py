@@ -35,7 +35,7 @@ _logger = logging.getLogger(__name__)
 
 class GsRiskApi(RiskApi):
 
-    USE_MSGPACK = True
+    USE_MSGPACK = False
 
     @classmethod
     def calc_multi(cls, requests: Iterable[RiskRequest]) -> dict:

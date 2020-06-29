@@ -52,11 +52,11 @@ def close_market_date(location: Optional[Union[PricingLocation, str]] = None,
     :return: close market date
     """
     from .core import PricingContext
-
     date = date or PricingContext.current.pricing_date
 
     if date == dt.date.today():
-        date = prev_business_date(date, calendars=location.value if isinstance(location, PricingLocation) else location)
+        # Don't use the calendars argument here as external users do not (yet) have access to that dataset
+        date = prev_business_date(date)
 
     return date
 

@@ -219,14 +219,25 @@ class XAxisSettings(Base):
     @camel_case_translate
     def __init__(
         self,
+        auto_fit_range_to_data: bool = None,
         show_grid_lines: bool = None,
         x_axis_date_format: str = None,
         name: str = None
     ):        
         super().__init__()
+        self.auto_fit_range_to_data = auto_fit_range_to_data
         self.show_grid_lines = show_grid_lines
         self.x_axis_date_format = x_axis_date_format
         self.name = name
+
+    @property
+    def auto_fit_range_to_data(self) -> bool:
+        return self.__auto_fit_range_to_data
+
+    @auto_fit_range_to_data.setter
+    def auto_fit_range_to_data(self, value: bool):
+        self._property_changed('auto_fit_range_to_data')
+        self.__auto_fit_range_to_data = value        
 
     @property
     def show_grid_lines(self) -> bool:
@@ -257,6 +268,9 @@ class YAxisSettings(Base):
         decimal_precision: int = None,
         id_: str = None,
         label: str = None,
+        label_format: str = None,
+        max_: int = None,
+        min_: int = None,
         show_grid_lines: bool = None,
         name: str = None
     ):        
@@ -264,6 +278,9 @@ class YAxisSettings(Base):
         self.decimal_precision = decimal_precision
         self.__id = id_
         self.label = label
+        self.label_format = label_format
+        self.__max = max_
+        self.__min = min_
         self.show_grid_lines = show_grid_lines
         self.name = name
 
@@ -296,6 +313,36 @@ class YAxisSettings(Base):
     def label(self, value: str):
         self._property_changed('label')
         self.__label = value        
+
+    @property
+    def label_format(self) -> str:
+        """The format to apply to the Y axis ticks."""
+        return self.__label_format
+
+    @label_format.setter
+    def label_format(self, value: str):
+        self._property_changed('label_format')
+        self.__label_format = value        
+
+    @property
+    def max(self) -> int:
+        """Maximum Y axis tick value."""
+        return self.__max
+
+    @max.setter
+    def max(self, value: int):
+        self._property_changed('max')
+        self.__max = value        
+
+    @property
+    def min(self) -> int:
+        """Minimum Y axis tick value."""
+        return self.__min
+
+    @min.setter
+    def min(self, value: int):
+        self._property_changed('min')
+        self.__min = value        
 
     @property
     def show_grid_lines(self) -> bool:
