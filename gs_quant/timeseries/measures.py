@@ -849,6 +849,54 @@ def swaption_vol(asset: Asset, expiration_tenor: str, termination_tenor: str, re
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
               [MeasureDependency(id_provider=currency_to_default_benchmark_rate, query_type=QueryType.SWAPTION_VOL)])
+def swaption_vol_smile(asset: Asset, expiration_tenor: str, termination_tenor: str,
+                       pricing_date: Optional[GENERIC_DATE] = None, *, source: str = None,
+                       real_time: bool = False) -> Series:
+    """
+    GS end-of-day implied normal volatility for swaption vol matrices.
+
+    :param asset: asset object loaded from security master
+    :param expiration_tenor: relative date representation of expiration date on the option e.g. 3m
+    :param termination_tenor: relative date representation of the instrument's expiration date e.g. 1y
+    :param pricing_date: YYYY-MM-DD or relative date
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: swaption implied normal volatility curve
+    """
+    if real_time:
+        raise NotImplementedError('realtime swaption_vol not implemented')
+
+    rate_benchmark_mqid = convert_asset_for_rates_data_set(asset, RatesConversionType.DEFAULT_BENCHMARK_RATE)
+    _logger.debug('where expiry=%s, tenor=%s', expiration_tenor, termination_tenor)
+
+    start, end = _range_from_pricing_date(asset.exchange, pricing_date)
+    with DataContext(start, end):
+        q = GsDataApi.build_market_data_query(
+            [rate_benchmark_mqid],
+            QueryType.SWAPTION_VOL,
+            where=dict(expiry=expiration_tenor, tenor=termination_tenor),
+            source=source,
+            real_time=real_time
+        )
+        _logger.debug('q %s', q)
+        df = _market_data_timed(q)
+
+    dataset_ids = getattr(df, 'dataset_ids', ())
+    if df.empty:
+        series = ExtendedSeries()
+    else:
+        latest = df.index.max()
+        _logger.info('selected pricing date %s', latest)
+        df = df.loc[latest]
+        df.set_index('strike', inplace=True)
+        df.sort_index(inplace=True)
+        series = ExtendedSeries(df['swaptionVol'].values, index=df.index.values)
+    series.dataset_ids = dataset_ids
+    return series
+
+
+@plot_measure((AssetClass.Cash,), (AssetType.Currency,),
+              [MeasureDependency(id_provider=currency_to_default_benchmark_rate, query_type=QueryType.SWAPTION_VOL)])
 def swaption_vol_term(asset: Asset, termination_tenor: str, relative_strike: float,
                       pricing_date: Optional[GENERIC_DATE] = None, *, source: str = None,
                       real_time: bool = False) -> Series:

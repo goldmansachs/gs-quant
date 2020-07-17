@@ -18,7 +18,7 @@
 import datetime
 import numpy
 import scipy.stats.mstats as stats
-from scipy.stats import percentileofscore, scoreatpercentile
+from scipy.stats import percentileofscore
 from .algebra import *
 import statsmodels.api as sm
 from ..models.epidemiology import SIR, SEIR, EpidemicModel
@@ -832,8 +832,10 @@ def percentile(x: pd.Series, n: float, w: Union[Window, int] = None) -> Union[pd
     """
     if not 0 <= n <= 100:
         raise MqValueError('percentile must be in range [0, 100]')
+
+    x = x.dropna()
     if w is None:
-        return scoreatpercentile(x.values, n)
+        return numpy.percentile(x.values, n)
 
     w = normalize_window(x, w)
     res = x.rolling(w.w, 0).quantile(n / 100)
@@ -842,13 +844,39 @@ def percentile(x: pd.Series, n: float, w: Union[Window, int] = None) -> Union[pd
 
 class LinearRegression:
 
-    """Ordinary least squares (OLS) Linear Regression"""
+    """
+    Fit an Ordinary least squares (OLS) linear regression model.
+
+    :param X: observations of the explanatory variable(s)
+    :param y: observations of the dependant variable
+    :param fit_intercept: whether to calculate intercept in the model
+
+    **Usage**
+
+    Fit `OLS Model <https://en.wikipedia.org/wiki/Ordinary_least_squares>`_ based on observations of the explanatory
+    variables(s) X and the dependant variable y. If X and y are not aligned, only use the intersection of dates/times
+
+    **Examples**
+
+    R Squared of an OLS model:
+
+    >>> x = generate_series(100)
+    >>> y = generate_series(100)
+    >>> r = LinearRegression(x, y)
+    >>> r.r_squared()
+
+    """
 
     def __init__(self, X: Union[pd.Series, List[pd.Series]], y: pd.Series, fit_intercept: bool = True):
         df = pd.concat(X, axis=1) if isinstance(X, list) else X.to_frame()
         df = sm.add_constant(df) if fit_intercept else df
+
+        df = df[~df.isin([np.nan, np.inf, -np.inf]).any(1)]  # filter out nan and inf
+        y = y[~y.isin([np.nan, np.inf, -np.inf])]
+        df_aligned, y_aligned = df.align(y, 'inner', axis=0)  # align series
+
         self._index_scope = range(0, len(df.columns)) if fit_intercept else range(1, len(df.columns) + 1)
-        self._res = sm.OLS(y, df).fit()
+        self._res = sm.OLS(y_aligned, df_aligned).fit()
         self._fit_intercept = fit_intercept
 
     def _convert_index(self, i: int):
@@ -860,6 +888,7 @@ class LinearRegression:
     def coefficient(self, i: int) -> float:
         """
         Estimated coefficient
+
         :param i: coefficient of which predictor to get. If intercept is used, start from 0, else start from 1
         :return: estimated coefficient of the i-th predictor
         """
@@ -870,14 +899,16 @@ class LinearRegression:
     def r_squared(self) -> float:
         """
         Coefficient of determination (R Squared)
+
         :return: R Squared
         """
         return self._res.rsquared
 
     @plot_method
-    def fitted_values(self):
+    def fitted_values(self) -> pd.Series:
         """
         Fitted values
+
         :return: fitted values
         """
         return self._res.fittedvalues
@@ -885,11 +916,22 @@ class LinearRegression:
     @plot_method
     def predict(self, X_predict: Union[pd.Series, List[pd.Series]]) -> pd.Series:
         """
+        Use the model for prediction
+
         :param X_predict: the values for which to predict
         :return: predicted values
         """
         df = pd.concat(X_predict, axis=1) if isinstance(X_predict, list) else X_predict.to_frame()
         return self._res.predict(sm.add_constant(df) if self._fit_intercept else df)
+
+    @plot_method
+    def standard_deviation_of_errors(self) -> float:
+        """
+        Standard deviation of the error term
+
+        :return: standard deviation of the error term
+        """
+        return np.sqrt(self._res.mse_resid)
 
 
 class SIRModel:

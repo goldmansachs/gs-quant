@@ -125,3 +125,8 @@ def test_lag():
     y = pd.Series([0] * 4, index=pd.date_range('2020-01-01T00:00:00Z', periods=4, freq='S'))
     with pytest.raises(Exception):
         lag(y, 5, LagMode.EXTEND)
+
+    z = pd.Series([10, 11, 12], index=pd.date_range('2020-02-28', periods=3, freq='D'))
+    result = lag(z, '2y')
+    expected = pd.Series([10, 12], index=pd.date_range('2022-02-28', periods=2, freq='D'))
+    assert_series_equal(result, expected, obj="Lag RDate 2y")

@@ -679,6 +679,7 @@ class Chart(Base):
         chart_type: Union[ChartType, str] = None,
         chart_properties: Tuple[ChartProperties, ...] = None,
         regression_properties: Tuple[ChartRegression, ...] = None,
+        interval: str = None,
         relative_start_date: str = None,
         relative_end_date: str = None,
         start_date: datetime.date = None,
@@ -709,6 +710,7 @@ class Chart(Base):
         self.chart_type = chart_type
         self.chart_properties = chart_properties
         self.regression_properties = regression_properties
+        self.interval = interval
         self.relative_start_date = relative_start_date
         self.relative_end_date = relative_end_date
         self.start_date = start_date
@@ -871,6 +873,16 @@ class Chart(Base):
     def regression_properties(self, value: Tuple[ChartRegression, ...]):
         self._property_changed('regression_properties')
         self.__regression_properties = value        
+
+    @property
+    def interval(self) -> str:
+        """The interval value to be used e.g. Daily, 1M or 20Y"""
+        return self.__interval
+
+    @interval.setter
+    def interval(self, value: str):
+        self._property_changed('interval')
+        self.__interval = value        
 
     @property
     def relative_start_date(self) -> str:

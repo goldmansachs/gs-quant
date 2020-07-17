@@ -50,9 +50,6 @@ def set_session():
     OAuth2Session.init = mock.MagicMock(return_value=None)
     GsSession.use(Environment.QA, 'client_id', 'secret')
 
-    import gs_quant.markets.markets as markets
-    markets.close_market_date = mock.MagicMock(return_value=dt.date.today())
-
 
 def structured_calc(mocker, priceable: Priceable, measure: risk.RiskMeasure):
     set_session()

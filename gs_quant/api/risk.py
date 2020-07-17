@@ -108,7 +108,7 @@ class RiskApi(metaclass=ABCMeta):
                    args=(outstanding_requests, responses, raw_results, GsSession.current, loop)).start()
 
             if is_async:
-                loop.create_task(cls.get_results(responses, raw_results, timeout=timeout))
+                listener = loop.create_task(cls.get_results(responses, raw_results, timeout=timeout))
 
             results = {}
             expected = len(requests)
@@ -134,22 +134,36 @@ class RiskApi(metaclass=ABCMeta):
 
                     results.update(results_by_key)
 
+            await responses.put(None)
+            if is_async:
+                await listener
+
             return results
 
         if sys.version_info >= (3, 7):
             return asyncio.run(run_async())
         else:
-            main_loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(main_loop)
+            try:
+                existing_event_loop = asyncio.get_event_loop()
+            except RuntimeError:
+                existing_event_loop = None
+
+            use_existing = existing_event_loop and existing_event_loop.is_running()
+            main_loop = existing_event_loop if use_existing else asyncio.new_event_loop()
+
+            if not use_existing:
+                asyncio.set_event_loop(main_loop)
 
             try:
                 return main_loop.run_until_complete(run_async())
             except Exception:
-                main_loop.stop()
+                if not use_existing:
+                    main_loop.stop()
                 raise
             finally:
-                main_loop.close()
-                asyncio.set_event_loop(None)
+                if not use_existing:
+                    main_loop.close()
+                    asyncio.set_event_loop(None)
 
     @classmethod
     def _handle_results(cls, request: RiskRequest, results: Union[Iterable, Exception]) -> dict:

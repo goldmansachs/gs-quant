@@ -28,12 +28,17 @@ def classes(module_name) -> list:
 
 
 def test_classes():
-    for module_name in ('assets', 'backtests', 'common', 'content', 'data', 'indices',
-                        'instrument', 'monitor', 'portfolios', 'reports', 'risk', 'trades'):
+    for module_name in ('assets', 'backtests', 'charts', 'common', 'content', 'coordinates', 'countries', 'data',
+                        'hedge', 'indices', 'instrument', 'monitor', 'portfolios', 'reports', 'risk', 'trades',
+                        'workspaces_markets'):
         for typ in classes(module_name):
+            properties = typ.properties()
+            if not properties:
+                continue
+
             obj = typ.default_instance()
 
-            for prop_name in obj.properties():
+            for prop_name in properties:
                 _ = object.__getattribute__(obj, prop_name)
                 if getattr(typ, prop_name).fset is not None:
                     setattr(obj, prop_name, None)

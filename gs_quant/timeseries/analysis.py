@@ -14,6 +14,8 @@
 # Chart Service will attempt to make public functions (not prefixed with _) from this module available. Such functions
 # should be fully documented: docstrings should describe parameters and the return value, and provide a 1-line
 # description. Type annotations should be provided for parameters.
+import re
+
 from gs_quant.datetime import relative_date_add
 from gs_quant.timeseries.datetime import *
 from .helper import plot_function
@@ -201,7 +203,14 @@ def lag(x: pd.Series, obs: Union[Window, int, str] = 1, mode: LagMode = LagMode.
     if isinstance(obs, str):
         end = x.index[-1]
         y = x.copy()  # avoid mutating the provided series
-        y.index = y.index + pd.DateOffset(relative_date_add(obs))
+
+        match = re.fullmatch('(\\d+)y', obs)
+        if match:
+            y.index += pd.DateOffset(years=int(match.group(1)))
+            y = y.groupby(y.index).first()
+        else:
+            y.index += pd.DateOffset(relative_date_add(obs))
+
         if mode == LagMode.EXTEND:
             return y
         return y[:end]

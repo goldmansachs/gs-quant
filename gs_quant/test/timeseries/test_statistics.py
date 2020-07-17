@@ -516,10 +516,9 @@ def test_percentile():
 
 
 def test_regression():
-    dates = pd.date_range('2019-1-1', periods=6)
-    x1 = pd.Series([0.0, 1.0, 4.0, 9.0, 16.0, 25.0], index=dates)
-    x2 = pd.Series([0.0, 1.0, 2.0, 3.0, 4.0, 5.0], index=dates)
-    y = pd.Series([10.0, 14.0, 20.0, 28.0, 38.0, 50.0], index=dates)
+    x1 = pd.Series([0.0, 1.0, 4.0, 9.0, 16.0, 25.0, np.nan], index=pd.date_range('2019-1-1', periods=7))
+    x2 = pd.Series([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0], index=pd.date_range('2019-1-1', periods=8))
+    y = pd.Series([10.0, 14.0, 20.0, 28.0, 38.0, 50.0, 60.0], index=pd.date_range('2019-1-1', periods=7))
 
     regression = LinearRegression([x1, x2], y, True)
 
@@ -532,13 +531,16 @@ def test_regression():
 
     np.testing.assert_almost_equal(regression.r_squared(), 1.0)
 
-    assert_series_equal(regression.fitted_values(), y)
+    expected = pd.Series([10.0, 14.0, 20.0, 28.0, 38.0, 50.0], index=pd.date_range('2019-1-1', periods=6))
+    assert_series_equal(regression.fitted_values(), expected)
 
     dates_predict = [date(2019, 2, 1), date(2019, 2, 2)]
     predicted = regression.predict([pd.Series([2.0, 3.0], index=dates_predict),
                                     pd.Series([6.0, 7.0], index=dates_predict)])
     expected = pd.Series([30.0, 34.0], index=dates_predict)
     assert_series_equal(predicted, expected)
+
+    np.testing.assert_almost_equal(regression.standard_deviation_of_errors(), 0)
 
 
 def test_sir_model():
