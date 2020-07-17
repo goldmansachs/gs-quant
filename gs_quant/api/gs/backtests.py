@@ -95,19 +95,16 @@ class GsBacktestApi:
         response = GsSession.current._post('/backtests/calculate', backtest, request_headers=request_headers)
 
         # map the response to backtest result
-        if 'Data' in response and 'RiskData' and 'Portfolio' in response:
-            backtestResult = BacktestResult(performance=response['Data'],
-                                            risks=response['RiskData'],
-                                            portfolio=response['Portfolio'])
-        elif 'Data' in response and 'RiskData' in response:
-            backtestResult = BacktestResult(performance=response['Data'],
-                                            risks=response['RiskData'])
-        elif 'Data' in response:
-            backtestResult = BacktestResult(performance=response['Data'])
-        else:
+        if "Data" not in response:
             raise MqValueError('No Data in Response Message.')
 
-        return backtestResult
+        data = response['Data']
+        risks = response['RiskData'] if 'RiskData' in response else None
+        portfolio = response['Portfolio'] if 'Portfolio' in response else None
+
+        return BacktestResult(performance=data,
+                              risks=risks,
+                              portfolio=portfolio)
 
     @classmethod
     def calculate_position_risk(cls, backtestRiskRequest: BacktestRiskRequest) -> dict:

@@ -625,7 +625,8 @@ def mock_curr(_cls, _q):
         'inflationSwapRate': [1, 2, 3],
         'midcurveAtmFwdRate': [1, 2, 3],
         'capFloorAtmFwdRate': [1, 2, 3],
-        'spreadOptionAtmFwdRate': [1, 2, 3]
+        'spreadOptionAtmFwdRate': [1, 2, 3],
+        'strike': [0.25, 0.5, 0.75]
     }
     df = MarketDataResponseFrame(data=d, index=_index * 3)
     df.dataset_ids = _test_datasets
@@ -966,6 +967,32 @@ def test_vol_smile():
     market_mock.assert_called_once()
     with pytest.raises(NotImplementedError):
         tm.vol_smile(mock_spx, '1m', tm.VolSmileReference.SPOT, '1d', real_time=True)
+    replace.restore()
+
+
+def test_swaption_vol_smile():
+    replace = Replacer()
+    mock_usd = Currency('MA890', 'USD')
+    mock_usd.exchange = None
+    identifiers = replace('gs_quant.timeseries.measures.convert_asset_for_rates_data_set', Mock())
+    identifiers.return_value = {'MA123'}
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_curr)
+    actual = tm.swaption_vol_smile(mock_usd, '3m', '10y')
+    assert_series_equal(pd.Series([1, 2, 3], index=[0.25, 0.5, 0.75]), pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+
+    actual = tm.swaption_vol_smile(mock_usd, '3m', '10y', '1b')
+    assert_series_equal(pd.Series([1, 2, 3], index=[0.25, 0.5, 0.75]), pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+
+    market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    market_mock.return_value = mock_empty_market_data_response()
+    actual = tm.swaption_vol_smile(mock_usd, '3m', '10y', '1b')
+    assert actual.empty
+    assert actual.dataset_ids == ()
+    market_mock.assert_called_once()
+    with pytest.raises(NotImplementedError):
+        tm.swaption_vol_smile(mock_usd, '3m', '10y', '1b', real_time=True)
     replace.restore()
 
 

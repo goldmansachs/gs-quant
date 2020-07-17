@@ -127,6 +127,7 @@ Statistics
 .. autosummary::
    :toctree: classes
 
+   LinearRegression
    SIRModel
    SEIRModel
 

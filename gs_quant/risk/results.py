@@ -13,20 +13,31 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from gs_quant.base import Priceable
-from gs_quant.risk import ErrorValue, RiskMeasure, RiskResult, aggregate_results
+from gs_quant.base import InstrumentBase, Priceable
+from gs_quant.risk import ErrorValue, RiskMeasure, aggregate_results
 
 from concurrent.futures import Future
-from functools import partial
+import copy
+import datetime as dt
 from itertools import chain
+import logging
 import pandas as pd
 from typing import Iterable, Mapping, Optional, Tuple, Union
 
 
+_logger = logging.getLogger(__name__)
+
+
+class _Sentinel:
+    pass
+
+
 class PricingFuture(Future):
 
-    def __init__(self):
+    def __init__(self, result=_Sentinel):
         super().__init__()
+        if result != _Sentinel:
+            self.set_result(result)
 
     def result(self, timeout=None):
         """Return the result of the call that the future represents.
@@ -55,19 +66,21 @@ class CompositeResultFuture(PricingFuture):
     def __init__(self, futures: Iterable[Future]):
         super().__init__()
         self.__futures = tuple(futures)
-        self.__pending = set(range(len(self.__futures)))
+        self.__pending = set()
 
-        for idx, future in enumerate(futures):
-            if future.done():
-                self.__cb(future, idx)
-            else:
-                future.add_done_callback(partial(self.__cb, idx=idx))
+        for future in self.__futures:
+            if not future.done():
+                future.add_done_callback(self.__cb)
+                self.__pending.add(future)
+
+        if not self.__pending:
+            self._set_result()
 
     def __getitem__(self, item):
         return self.result()[item]
 
-    def __cb(self, _future: Future, idx: int):
-        self.__pending.remove(idx)
+    def __cb(self, future: Future):
+        self.__pending.remove(future)
         if not self.__pending:
             self._set_result()
 
@@ -80,7 +93,15 @@ class CompositeResultFuture(PricingFuture):
 
 
 class MultipleRiskMeasureResult(dict):
-    pass
+
+    def __getitem__(self, item):
+        if isinstance(item, dt.date):
+            if all(isinstance(v, (pd.DataFrame, pd.Series)) for v in self.values()):
+                return MultipleRiskMeasureResult((k, v.loc[item]) for k, v in self.items())
+            else:
+                raise ValueError('Can only index by date on historical results')
+        else:
+            return super().__getitem__(item)
 
 
 class MultipleRiskMeasureFuture(CompositeResultFuture):
@@ -100,6 +121,7 @@ class HistoricalPricingFuture(CompositeResultFuture):
         base = next((r for r in results if not isinstance(r, (ErrorValue, Exception))), None)
 
         if base is None:
+            _logger.error(f'Historical pricing failed: {results[0]}')
             self.set_result(results[0])
         else:
             result = MultipleRiskMeasureResult({k: base[k].compose(r[k] for r in results) for k in base.keys()})\
@@ -107,14 +129,57 @@ class HistoricalPricingFuture(CompositeResultFuture):
             self.set_result(result)
 
 
-class PortfolioRiskResult(RiskResult):
+class PortfolioPath:
+
+    def __init__(self, path):
+        self.__path = (path,) if isinstance(path, int) else path
+
+    def __repr__(self):
+        return repr(self.__path)
+
+    def __iter__(self):
+        return iter(self.__path)
+
+    def __len__(self):
+        return len(self.__path)
+
+    def __add__(self, other):
+        return PortfolioPath(self.__path + other.__path)
+
+    def __eq__(self, other):
+        return self.__path == other.__path
+
+    def __hash__(self):
+        return hash(self.__path)
+
+    def __call__(self, target, rename_to_parent: Optional[bool] = False):
+        parent = None
+        path = list(self.__path)
+
+        while path:
+            elem = path.pop(0)
+            parent = target if len(self) - len(path) > 1 else None
+            target = target.futures[elem] if isinstance(target, CompositeResultFuture) else target[elem]
+
+            if isinstance(target, PricingFuture) and path:
+                target = target.result()
+
+        if rename_to_parent and parent and getattr(parent, 'name', None):
+            target = copy.copy(target)
+            target.name = parent.name
+
+        return target
+
+
+class PortfolioRiskResult(CompositeResultFuture):
 
     def __init__(self,
                  portfolio,
                  risk_measures: Iterable[RiskMeasure],
                  futures: Iterable[Future]):
-        super().__init__(CompositeResultFuture(futures), tuple(risk_measures))
+        super().__init__(futures)
         self.__portfolio = portfolio
+        self.__risk_measures = tuple(risk_measures)
 
     def __getitem__(self, item):
         if isinstance(item, RiskMeasure):
@@ -124,60 +189,85 @@ class PortfolioRiskResult(RiskResult):
             if len(self.risk_measures) == 1:
                 return self
             else:
-                return PortfolioRiskResult(self.__portfolio, (item,), self._result.futures)
+                return PortfolioRiskResult(self.__portfolio, (item,), self.futures)
+        elif isinstance(item, dt.date):
+            futures = []
+            for result in self:
+                if isinstance(result, (MultipleRiskMeasureResult, PortfolioRiskResult)):
+                    futures.append(PricingFuture(result[item]))
+                elif isinstance(result, (pd.DataFrame, pd.Series)):
+                    futures.append(PricingFuture(result.loc[item]))
+                else:
+                    raise RuntimeError('Can only index by date on historical results')
+
+            return PortfolioRiskResult(self.__portfolio, self.risk_measures, futures)
         else:
-            return self.__results(instruments=item)
+            return self.__results(items=item)
 
     def __len__(self):
-        return len(self._result.futures)
+        return len(self.futures)
 
     def __iter__(self):
         return iter(self.__results())
 
-    def subset(self, instruments: Optional[Iterable[Union[int, str, Priceable]]]):
-        return PortfolioRiskResult(self.__portfolio, self.risk_measures, self.__futures(instruments))
+    @property
+    def portfolio(self):
+        return self.__portfolio
 
-    def aggregate(self) -> Union[float, pd.DataFrame, pd.Series]:
-        return aggregate_results(self.__results())
+    @property
+    def risk_measures(self) -> Tuple[RiskMeasure, ...]:
+        return self.__risk_measures
 
-    def __futures(self,
-                  instruments: Optional[Union[int, slice, str, Priceable, Iterable[Union[int, str, Priceable]]]]) ->\
-            Union[Future, Tuple[Future, ...]]:
-        futures = self._result.futures
+    @property
+    def dates(self):
+        result = self[self.__risk_measures[0]].__results(self.__portfolio.all_instruments[0])
+        result = result[0] if isinstance(result, PortfolioRiskResult) else result
+        return tuple(i.date() for i in result.index) if isinstance(result, (pd.DataFrame, pd.Series)) else None
 
-        if isinstance(instruments, (int, slice)):
-            return futures[instruments]
-        elif isinstance(instruments, (str, Priceable)):
-            idx = None
+    def result(self, timeout: Optional[int] = None):
+        super().result(timeout=timeout)
+        return self
 
-            try:
-                idx = self.__portfolio.index(instruments)
-            except KeyError:
-                # See if we have priced then resolved
-                if isinstance(instruments, Priceable) and instruments.unresolved:
-                    idx = self.__portfolio.index(instruments.unresolved)
+    def subset(self, items: Iterable[Union[int, str, PortfolioPath, Priceable]], name: Optional[str] = None):
+        paths = tuple(chain.from_iterable((i,) if isinstance(i, PortfolioPath) else self.__paths(i) for i in items))
+        sub_portfolio = self.__portfolio.subset(paths, name=name)
+        return PortfolioRiskResult(sub_portfolio, self.risk_measures, [p(self.futures) for p in paths])
 
-            if idx is None:
-                raise KeyError('Instrument not in portfolio')
-            elif isinstance(idx, int):
-                return futures[idx]
-            else:
-                return tuple(futures[i] for i in idx)
+    def aggregate(self) -> Union[float, pd.DataFrame, pd.Series, MultipleRiskMeasureResult]:
+        if len(self.__risk_measures) > 1:
+            return MultipleRiskMeasureResult((r, self[r].aggregate()) for r in self.__risk_measures)
         else:
-            all_futures = [self.__futures(i) for i in instruments]
-            return tuple(chain.from_iterable((f,) if isinstance(f, (Future, MultipleRiskMeasureFuture)) else f
-                                             for f in all_futures))
+            return aggregate_results(self.__results())
 
-    def __results(self,
-                  instruments: Optional[Union[int, slice, str, Priceable, Iterable[Union[int, str, Priceable]]]] = (),
-                  risk_measure: Optional[RiskMeasure] = None):
-        futures = self.__futures(instruments) if instruments or instruments == 0 else self._result.futures
-        scalar = isinstance(futures, (Future, HistoricalPricingFuture, MultipleRiskMeasureFuture))
-        risk_measure = self.risk_measures[0] if len(self.risk_measures) == 1 and not risk_measure else risk_measure
+    def __paths(self, items: Union[int, slice, str, Priceable]) -> Tuple[PortfolioPath, ...]:
+        if isinstance(items, int):
+            return (PortfolioPath(items),)
+        elif isinstance(items, slice):
+            return tuple(PortfolioPath(i) for i in range(len(self.__portfolio))[items])
+        elif isinstance(items, (str, Priceable)):
+            paths = self.__portfolio.paths(items)
+            if not paths and isinstance(items, InstrumentBase) and items.unresolved:
+                paths = self.__portfolio.paths(items.unresolved)
+                key = items.resolution_key.ex_measure
+                paths = tuple(p for p in paths if self.__result(p, self.risk_measures[0]).risk_key.ex_measure == key)
 
-        def result(future: Future):
-            res = future.result()
-            return res[risk_measure] if risk_measure and\
-                isinstance(res, (MultipleRiskMeasureResult, MultipleRiskMeasureFuture)) else res
+                if not paths:
+                    raise KeyError(f'{items} not in portfolio')
 
-        return result(futures) if scalar else tuple(result(f) for f in futures)
+            return paths
+
+    def __results(self, items: Optional[Union[int, slice, str, Priceable]] = None):
+        if items is None:
+            return tuple(self.__result(p) for p in self.__portfolio.all_paths)
+
+        paths = self.__paths(items)
+        return self.__result(paths[0]) if len(paths) == 1 else self.subset(paths)
+
+    def __result(self, path: PortfolioPath, risk_measure: Optional[RiskMeasure] = None):
+        res = path(self.futures).result()
+
+        if len(self.risk_measures) == 1 and not risk_measure:
+            risk_measure = self.risk_measures[0]
+
+        return res[risk_measure]\
+            if risk_measure and isinstance(res, (MultipleRiskMeasureResult, PortfolioRiskResult)) else res

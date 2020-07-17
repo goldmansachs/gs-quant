@@ -34,30 +34,6 @@ __column_sort_fns = {
 __risk_columns = ('date', 'time', 'mkt_type', 'mkt_asset', 'mkt_class', 'mkt_point')
 
 
-class RiskResult:
-
-    def __init__(self, result, risk_measures: Iterable[RiskMeasure]):
-        self.__risk_measures = tuple(risk_measures)
-        self.__result = result
-
-    def done(self) -> bool:
-        return self.__result.done()
-
-    def result(self):
-        return self.__result.result()
-
-    def add_done_callback(self, cb):
-        self.__result.add_done_callback(cb)
-
-    @property
-    def risk_measures(self) -> Tuple[RiskMeasure]:
-        return self.__risk_measures
-
-    @property
-    def _result(self):
-        return self.__result
-
-
 class ResultInfo(metaclass=ABCMeta):
 
     def __init__(
@@ -99,9 +75,7 @@ class ResultInfo(metaclass=ABCMeta):
 
         for component in components:
             date = component.risk_key.date
-            risk_key = component.risk_key.base if risk_key is None else risk_key
-            if risk_key != component.risk_key.base:
-                raise RuntimeError('Cannot compose heterogeneous results')
+            risk_key = component.risk_key.ex_date_and_market if risk_key is None else risk_key
 
             if isinstance(component, (ErrorValue, Exception)):
                 errors[date] = component

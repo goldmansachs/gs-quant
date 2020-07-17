@@ -22,7 +22,8 @@ import inflection
 from typing import Optional, Union
 from gs_quant.base import Base
 from gs_quant.api.fred.fred_query import FredQuery
-from gs_quant.target.data import DataQuery, MDAPIDataQuery
+from gs_quant.target.coordinates import MDAPIDataQuery
+from gs_quant.target.data import DataQuery
 
 _logger = logging.getLogger(__name__)
 

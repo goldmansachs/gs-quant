@@ -64,11 +64,7 @@ def error_handler(result: dict, risk_key: RiskKey, instrument: InstrumentBase) -
 
 
 def leg_definition_handler(result: dict, risk_key: RiskKey, instrument: InstrumentBase) -> InstrumentBase:
-    new_instrument = instrument.from_dict(result)
-    new_instrument.unresolved = instrument
-    new_instrument.name = instrument.name
-    new_instrument.resolution_key = risk_key
-    return new_instrument
+    return instrument.resolved(result, risk_key)
 
 
 def message_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase) -> StringWithInfo:

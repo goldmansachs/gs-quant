@@ -24,7 +24,7 @@ from tqdm import tqdm
 from typing import Optional, Union
 
 from .markets import CloseMarket, LiveMarket, Market, close_market_date
-from gs_quant.base import Priceable, RiskKey, Scenario, get_enum_value
+from gs_quant.base import InstrumentBase, RiskKey, Scenario, get_enum_value
 from gs_quant.common import PricingLocation
 from gs_quant.context_base import ContextBaseWithDefault
 from gs_quant.datetime.date import business_day_offset
@@ -52,18 +52,18 @@ class PricingCache(metaclass=ABCMeta):
         __cache = weakref.WeakKeyDictionary()
 
     @classmethod
-    def get(cls, risk_key: RiskKey, priceable: Priceable) -> Optional[CacheResult]:
-        return cls.__cache.get(priceable, {}).get(risk_key)
+    def get(cls, risk_key: RiskKey, instrument: InstrumentBase) -> Optional[CacheResult]:
+        return cls.__cache.get(instrument, {}).get(risk_key)
 
     @classmethod
-    def put(cls, risk_key: RiskKey, priceable: Priceable, result: CacheResult):
+    def put(cls, risk_key: RiskKey, instrument: InstrumentBase, result: CacheResult):
         if not isinstance(result, ErrorValue) and not isinstance(risk_key.market, LiveMarket):
-            cls.__cache.setdefault(priceable, {})[risk_key] = result
+            cls.__cache.setdefault(instrument, {})[risk_key] = result
 
     @classmethod
-    def drop(cls, priceable: Priceable):
-        if priceable in cls.__cache:
-            cls.__cache.pop(priceable)
+    def drop(cls, instrument: InstrumentBase):
+        if instrument in cls.__cache:
+            cls.__cache.pop(instrument)
 
 
 class PricingContext(ContextBaseWithDefault):
@@ -172,10 +172,10 @@ class PricingContext(ContextBaseWithDefault):
 
         # Group requests optimally
         requests_by_provider = {}
-        for (key, priceable) in self.__pending.keys():
+        for (key, instrument) in self.__pending.keys():
             requests_by_provider.setdefault(key.provider, {})\
                 .setdefault((key.params, key.scenario, key.date, key.market), {})\
-                .setdefault(priceable, set())\
+                .setdefault(instrument, set())\
                 .add(key.risk_measure)
 
         requests_for_provider = {}
@@ -184,13 +184,13 @@ class PricingContext(ContextBaseWithDefault):
                 grouped_requests = {}
 
                 for (params, scenario, date, market), positions_by_measures in by_params_scenario_date_market.items():
-                    for priceable, risk_measures in positions_by_measures.items():
+                    for instrument, risk_measures in positions_by_measures.items():
                         grouped_requests.setdefault((params, scenario, date, market, tuple(sorted(risk_measures))),
-                                                    []).append(priceable)
+                                                    []).append(instrument)
 
                 requests = [
                     RiskRequest(
-                        tuple(RiskPosition(instrument=p, quantity=p.get_quantity()) for p in priceables),
+                        tuple(RiskPosition(instrument=i, quantity=i.instrument_quantity) for i in instruments),
                         risk_measures,
                         parameters=self._parameters,
                         wait_for_results=not self.__is_batch,
@@ -198,7 +198,7 @@ class PricingContext(ContextBaseWithDefault):
                         pricing_and_market_data_as_of=(PricingDateAndMarketDataAsOf(pricing_date=date, market=market),),
                         request_visible_to_gs=self.__visible_to_gs
                     )
-                    for (params, scenario, date, market, risk_measures), priceables in grouped_requests.items()
+                    for (params, scenario, date, market, risk_measures), instruments in grouped_requests.items()
                 ]
 
                 requests_for_provider[provider] = requests
@@ -288,28 +288,28 @@ class PricingContext(ContextBaseWithDefault):
         clone_kwargs.update(kwargs)
         return self.__class__(**clone_kwargs)
 
-    def _calc(self, priceable: Priceable, risk_key: RiskKey) -> PricingFuture:
-        future = self.active_context.__pending.get((risk_key, priceable))
+    def _calc(self, instrument: InstrumentBase, risk_key: RiskKey) -> PricingFuture:
+        future = self.active_context.__pending.get((risk_key, instrument))
 
         if future is None:
             future = PricingFuture()
-            cached_result = PricingCache.get(risk_key, priceable) if self.use_cache else None
+            cached_result = PricingCache.get(risk_key, instrument) if self.use_cache else None
 
             if cached_result is not None:
                 future.set_result(cached_result)
             else:
-                self.active_context.__pending[(risk_key, priceable)] = future
+                self.active_context.__pending[(risk_key, instrument)] = future
 
         if not (self.is_entered or self.is_async):
             self.__calc()
 
         return future
     
-    def calc(self, priceable: Priceable, risk_measure: RiskMeasure) -> PricingFuture:
+    def calc(self, instrument: InstrumentBase, risk_measure: RiskMeasure) -> PricingFuture:
         """
-        Calculate the risk measure for the priceable instrument. Do not use directly, use via instruments
+        Calculate the risk measure for the instrument. Do not use directly, use via instruments
 
-        :param priceable: The priceable (e.g. instrument)
+        :param instrument: The instrument
         :param risk_measure: The measure we wish to calculate
         :return: A PricingFuture whose result will be the calculation result
 
@@ -321,4 +321,4 @@ class PricingContext(ContextBaseWithDefault):
         >>> swap = IRSwap('Pay', '10y', 'USD', fixed_rate=0.01)
         >>> delta = swap.calc(IRDelta)
         """
-        return self._calc(priceable, self.__risk_key(risk_measure, priceable.provider()))
+        return self._calc(instrument, self.__risk_key(risk_measure, instrument.provider))

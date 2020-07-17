@@ -92,7 +92,7 @@ def align(x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Interpol
 
     >>> a = generate_series(100)
     >>> b = generate_series(100)
-    >>> align(a)
+    >>> align(a, b)
 
     **See also**
 

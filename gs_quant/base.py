@@ -13,12 +13,12 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
 import builtins
 from collections import namedtuple
 import copy
 import datetime as dt
-import dateutil
+from dateutil.parser import isoparse
 from enum import EnumMeta
 from functools import wraps
 import inflection
@@ -28,7 +28,7 @@ import keyword
 import logging
 from typing import Optional, Union, get_type_hints
 
-from gs_quant.context_base import ContextBase, ContextMeta
+from gs_quant.context_base import ContextBase, ContextMeta, do_not_serialise
 
 _logger = logging.getLogger(__name__)
 
@@ -67,8 +67,12 @@ def camel_case_translate(f):
 class RiskKey(namedtuple('RiskKey', ('provider', 'date', 'market', 'params', 'scenario', 'risk_measure'))):
 
     @property
-    def base(self):
+    def ex_date_and_market(self):
         return RiskKey(self.provider, None, None, self.params, self.scenario, self.risk_measure)
+
+    @property
+    def ex_measure(self):
+        return RiskKey(self.provider, self.date, self.market, self.params, self.scenario, None)
 
 
 class EnumBase:
@@ -77,7 +81,7 @@ class EnumBase:
     def _missing_(cls: EnumMeta, key):
         return next((m for m in cls.__members__.values() if m.value.lower() == key.lower()), None)
 
-    def __lt__(self, other):
+    def __lt__(self: EnumMeta, other):
         return self.value < other.value
 
 
@@ -87,7 +91,7 @@ class Base(metaclass=ABCMeta):
 
     __properties = set()
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.__calced_hash: Optional[int] = None
         self.__as_dict = {False: {}, True: {}}
 
@@ -133,7 +137,10 @@ class Base(metaclass=ABCMeta):
         if not self._hash_is_calced:
             calced_hash = hash(self.name)
             for prop in self.properties():
-                calced_hash ^= hash(super().__getattribute__(prop))
+                value = super().__getattribute__(prop)
+                if isinstance(value, dict):
+                    value = tuple(value.items())
+                calced_hash ^= hash(value)
 
             self.__calced_hash = calced_hash
 
@@ -141,7 +148,7 @@ class Base(metaclass=ABCMeta):
 
     def __eq__(self, other) -> bool:
         return\
-            type(self) == type(other) and self.name == other.name and\
+            type(self) == type(other) and (self.name is None or other.name is None or self.name == other.name) and\
             (self.__calced_hash is None or other.__calced_hash is None or self.__calced_hash == other.__calced_hash) \
             and all(super(Base, self).__getattribute__(p) == super(Base, other).__getattribute__(p)
                     for p in self.properties())
@@ -150,9 +157,12 @@ class Base(metaclass=ABCMeta):
         return not self.__eq__(other)
 
     def __lt__(self, other):
+        if not isinstance(other, type(self)):
+            return type(self).__name__ < type(other).__name__
+
         for prop in itertools.chain(('name',), sorted(self.properties())):
-            val = getattr(self, prop)
-            other_val = getattr(other, prop)
+            val = super(Base, self).__getattribute__(prop)
+            other_val = super(Base, other).__getattribute__(prop)
 
             if val != other_val:
                 if val is None:
@@ -273,13 +283,13 @@ class Base(metaclass=ABCMeta):
                                 prop_value = re.sub(matcher.re, '.{}Z'.format(sub_seconds[:6]), prop_value)
 
                         try:
-                            setattr(self, prop, dateutil.parser.isoparse(prop_value))
+                            setattr(self, prop, isoparse(prop_value))
                         except ValueError:
                             if str in additional_types:
                                 setattr(self, prop, prop_value)
                 elif issubclass(prop_type, dt.date):
                     try:
-                        setattr(self, prop, dateutil.parser.isoparse(prop_value).date())
+                        setattr(self, prop, isoparse(prop_value).date())
                     except ValueError:
                         if str in additional_types:
                             setattr(self, prop, prop_value)
@@ -304,7 +314,7 @@ class Base(metaclass=ABCMeta):
                     setattr(self, prop, prop_value)
 
     @classmethod
-    def _from_dict(cls, values: dict) -> 'Base':
+    def _from_dict(cls, values: dict):
         args = [k for k, v in signature(cls.__init__).parameters.items() if k not in ('kwargs', '_kwargs')
                 and v.default == Parameter.empty][1:]
         required = {}
@@ -365,24 +375,6 @@ class Base(metaclass=ABCMeta):
 
 
 class Priceable(Base, metaclass=ABCMeta):
-
-    PROVIDER = None
-
-    def provider(self):
-        """
-        The risk provider - defaults to GsRiskApi
-        """
-        if self.PROVIDER is None:
-            from gs_quant.api.gs.risk import GsRiskApi
-            type(self).PROVIDER = GsRiskApi
-
-        return self.PROVIDER
-
-    def get_quantity(self) -> float:
-        """
-        Quantity of the instrument
-        """
-        raise NotImplementedError
 
     def resolve(self, in_place: bool = True):
         """
@@ -450,11 +442,12 @@ class Priceable(Base, metaclass=ABCMeta):
         """
         raise NotImplementedError
 
-    def calc(self, risk_measure):
+    def calc(self, risk_measure, fn=None):
         """
         Calculate the value of the risk_measure
 
         :param risk_measure: the risk measure to compute, e.g. IRDelta (from gs_quant.risk)
+        :param fn: a function for post-processing results
         :return: a float or dataframe, depending on whether the value is scalar or structured, or a future thereof
         (depending on how PricingContext is being used)
 
@@ -502,11 +495,66 @@ class Scenario(Base, ContextBase, metaclass=__ScenarioMeta):
 
 
 class InstrumentBase(Base):
-    pass
+
+    def __init__(self, quantity: Optional[float] = 1):
+        super().__init__()
+        self.__instrument_quantity = quantity
+        self.__resolution_key: Optional[RiskKey] = None
+        self.__unresolved: Optional[InstrumentBase] = None
+
+    @property
+    @abstractmethod
+    @do_not_serialise
+    def provider(self):
+        ...
+
+    @property
+    @do_not_serialise
+    def instrument_quantity(self) -> float:
+        return self.__instrument_quantity
+
+    @property
+    @do_not_serialise
+    def resolution_key(self) -> RiskKey:
+        return self.__resolution_key
+
+    @property
+    @do_not_serialise
+    def unresolved(self):
+        return self.__unresolved
+
+    def from_instance(self, instance):
+        super().from_instance(instance)
+        self.__unresolved = instance.__unresolved
+        self.__resolution_key = instance.__resolution_key
+
+    def resolved(self, values: dict, resolution_key: RiskKey):
+        new_instrument = self.from_dict(values)
+        new_instrument.name = self.name
+        new_instrument.__unresolved = copy.copy(self)
+        new_instrument.__resolution_key = resolution_key
+        return new_instrument
+
+    def unresolve(self):
+        if self.__resolution_key and self.__unresolved:
+            self.from_instance(self.__unresolved)
+            self.__resolution_key = None
+            self.__unresolved = None
 
 
-class QuotableBuilder(Base):
-    pass
+class QuotableBuilder(Base, metaclass=ABCMeta):
+
+    def __init__(self, valuation_overrides: Optional[dict] = None):
+        super().__init__()
+        self.valuation_overrides = valuation_overrides
+
+    @property
+    def valuation_overrides(self) -> Optional[dict]:
+        return self.__valuation_overrides
+
+    @valuation_overrides.setter
+    def valuation_overrides(self, value: dict):
+        self.__valuation_overrides = value
 
 
 class Market(Base):

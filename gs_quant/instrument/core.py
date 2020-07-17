@@ -13,21 +13,62 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from typing import Iterable
-
-from gs_quant.base import get_enum_value, InstrumentBase, QuotableBuilder
-from gs_quant.common import AssetClass, AssetType, XRef
-from gs_quant.priceable import PriceableImpl
 from gs_quant.api.gs.parser import GsParserApi
+from gs_quant.api.gs.risk import GsRiskApi
+from gs_quant.base import get_enum_value, InstrumentBase, QuotableBuilder, RiskKey
+from gs_quant.common import AssetClass, AssetType, XRef
+from gs_quant.context_base import do_not_serialise
+from gs_quant.markets import HistoricalPricingContext, MarketDataCoordinate, PricingCache, PricingContext
+from gs_quant.priceable import PriceableImpl
+from gs_quant.risk import FloatWithInfo, DataFrameWithInfo, SeriesWithInfo, ResolvedInstrumentValues, RiskMeasure
+from gs_quant.risk.results import ErrorValue, MultipleRiskMeasureFuture, PricingFuture
+from gs_quant.session import GsSession
 
 from abc import ABCMeta
-from typing import Optional
+import copy
+import logging
+from typing import Iterable, Optional, Tuple, Union
 import inspect
+
+_logger = logging.getLogger(__name__)
 
 
 class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
 
+    PROVIDER = GsRiskApi
     __instrument_mappings = {}
+
+    def __getattribute__(self, name):
+        ret = super().__getattribute__(name)
+        if ret is not None or name not in self.properties():
+            return ret
+
+        resolved = False
+
+        try:
+            resolved = super().__getattribute__('resolution_key') is not None
+        except AttributeError:
+            pass
+
+        if GsSession.current_is_set and not resolved:
+            attr = getattr(super().__getattribute__('__class__'), name, None)
+            if attr and isinstance(attr, property):
+                resolved_inst = self.resolve(in_place=False)
+                if isinstance(resolved_inst, PricingFuture):
+                    ret = PricingFuture()
+                    resolved_inst.add_done_callback(lambda inst_f: ret.set_result(
+                        object.__getattribute__(inst_f.result(), name)))
+                else:
+                    ret = object.__getattribute__(resolved_inst, name)
+
+        return ret
+
+    def _property_changed(self, prop: str):
+        if self._hash_is_calced:
+            PricingCache.drop(self)
+
+        super()._property_changed(prop)
+        self.unresolve()
 
     @classmethod
     def __asset_class_and_type_to_instrument(cls):
@@ -43,6 +84,108 @@ class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
                 cls.__instrument_mappings[(instrument.asset_class, instrument.type)] = clazz
 
         return cls.__instrument_mappings
+
+    @property
+    @do_not_serialise
+    def provider(self):
+        return self.PROVIDER
+
+    def resolve(self, in_place: bool = True) -> Optional[Union[PriceableImpl, PricingFuture, dict]]:
+        """
+        Resolve non-supplied properties of an instrument
+
+        **Examples**
+
+        >>> from gs_quant.instrument import IRSwap
+        >>>
+        >>> swap = IRSwap('Pay', '10y', 'USD')
+        >>> rate = swap.fixedRate
+
+        rate is None
+
+        >>> swap.resolve()
+        >>> rate = swap.fixedRate
+
+        rates is now the solved fixed rate
+        """
+        def handle_result(result: Optional[Union[ErrorValue, InstrumentBase]]) -> Optional[PriceableImpl]:
+            ret = None if in_place else result
+            if isinstance(result, ErrorValue):
+                _logger.error('Failed to resolve instrument fields: ' + result.error)
+                ret = self
+            elif result is None:
+                _logger.error('Unknown error resolving instrument fields')
+                ret = self
+            elif in_place:
+                self.from_instance(result)
+
+            return ret
+
+        if in_place and isinstance(PricingContext.current, HistoricalPricingContext):
+            raise RuntimeError('Cannot resolve in place under a HistoricalPricingContext')
+
+        return self.calc(ResolvedInstrumentValues, fn=handle_result)
+
+    def calc(self, risk_measure: Union[RiskMeasure, Iterable[RiskMeasure]], fn=None)\
+            -> Union[DataFrameWithInfo, ErrorValue, FloatWithInfo, PriceableImpl, PricingFuture,
+                     SeriesWithInfo, Tuple[MarketDataCoordinate, ...]]:
+        """
+        Calculate the value of the risk_measure
+
+        :param risk_measure: the risk measure to compute, e.g. IRDelta (from gs_quant.risk)
+        :param fn: post-processing function (optional)
+        :return: a float or dataframe, depending on whether the value is scalar or structured, or a future thereof
+        (depending on how PricingContext is being used)
+
+        **Examples**
+
+        >>> from gs_quant.instrument import IRCap
+        >>> from gs_quant.risk import IRDelta
+        >>>
+        >>> cap = IRCap('1y', 'USD')
+        >>> delta = cap.calc(IRDelta)
+
+        delta is a dataframe
+
+        >>> from gs_quant.instrument import EqOption
+        >>> from gs_quant.risk import EqDelta
+        >>>
+        >>> option = EqOption('.SPX', '3m', 'ATMF', 'Call', 'European')
+        >>> delta = option.calc(EqDelta)
+
+        delta is a float
+
+        >>> from gs_quant.markets import PricingContext
+        >>>
+        >>> cap_usd = IRCap('1y', 'USD')
+        >>> cap_eur = IRCap('1y', 'EUR')
+
+        >>> with PricingContext():
+        >>>     usd_delta_f = cap_usd.calc(IRDelta)
+        >>>     eur_delta_f = cap_eur.calc(IRDelta)
+        >>>
+        >>> usd_delta = usd_delta_f.result()
+        >>> eur_delta = eur_delta_f.result()
+
+        usd_delta_f and eur_delta_f are futures, usd_delta and eur_delta are dataframes
+        """
+        futures = {r: r.pricing_context.calc(self, r)
+                   for r in ((risk_measure,) if isinstance(risk_measure, RiskMeasure) else risk_measure)}
+        future = MultipleRiskMeasureFuture(futures) if len(futures) > 1 else futures[risk_measure]
+
+        if fn is not None:
+            ret = PricingFuture()
+
+            def cb(f):
+                try:
+                    ret.set_result(fn(f.result()))
+                except Exception as e:
+                    ret.set_exception(e)
+
+            future.add_done_callback(cb)
+            future = ret
+
+        return future.result() if not (PricingContext.current.is_entered or PricingContext.current.is_async) else future
 
     @classmethod
     def from_dict(cls, values: dict):
@@ -85,11 +228,32 @@ class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
             else:
                 raise ValueError('Could not resolve instrument')
         else:
-            instrument = GsParserApi.get_instrument_from_text_asset_class(text, asset_class)
+            instrument = GsParserApi.get_instrument_from_text_asset_class(text, asset_class.value)
         try:
             return cls.from_dict(instrument)
         except AttributeError:
             raise ValueError('Invalid instrument specification')
+
+    @classmethod
+    def from_asset_ids(cls, asset_ids: Tuple[str, ...]) -> Tuple[InstrumentBase, ...]:
+        from gs_quant.api.gs.assets import GsAssetApi
+        instruments = GsAssetApi.get_instruments_for_asset_ids(asset_ids)
+
+        try:
+            inst = cls.default_instance()
+            asset_class = inst.asset_class
+            asset_type = inst.type
+
+            if not all(i.asset_class == asset_class and i.type == asset_type for i in instruments):
+                raise ValueError(f'Instrument(s) not all of type {cls.__name__}')
+        except AttributeError:
+            pass
+
+        return instruments
+
+    @classmethod
+    def from_asset_id(cls, asset_id:str) -> InstrumentBase:
+        return cls.from_asset_ids((asset_id,))[0]
 
     @staticmethod
     def compose(components: Iterable):
@@ -103,6 +267,7 @@ class Security(XRef, Instrument):
     def __init__(self,
                  ticker: str = None,
                  bbid: str = None,
+                 ric: str = None,
                  isin: str = None,
                  cusip: str = None,
                  prime_id: str = None,
@@ -120,11 +285,5 @@ class Security(XRef, Instrument):
         if len(tuple(filter(None, (f is not None for f in (ticker, bbid, isin, cusip, prime_id))))) > 1:
             raise ValueError('Only specify one identifier')
 
-        super().__init__(ticker=ticker, bbid=bbid, isin=isin, cusip=cusip, prime_id=prime_id)
-        self.quantity = quantity
-
-    def get_quantity(self) -> float:
-        """
-        Quantity of the security
-        """
-        return self.quantity
+        XRef.__init__(self, ticker=ticker, bbid=bbid, ric=ric, isin=isin, cusip=cusip, prime_id=prime_id)
+        Instrument.__init__(self, quantity)

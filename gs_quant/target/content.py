@@ -42,13 +42,15 @@ class Author(Base):
         id_: str = None,
         name: str = None,
         division=None,
-        email: str = None
+        email: str = None,
+        title: str = None
     ):        
         super().__init__()
         self.__id = id_
         self.name = name
         self.division = division
         self.email = email
+        self.title = title
 
     @property
     def id(self) -> str:
@@ -87,6 +89,15 @@ class Author(Base):
     def email(self, value: str):
         self._property_changed('email')
         self.__email = value        
+
+    @property
+    def title(self) -> str:
+        return self.__title
+
+    @title.setter
+    def title(self, value: str):
+        self._property_changed('title')
+        self.__title = value        
 
 
 class BulkDeleteContentResponse(Base):
@@ -998,6 +1009,7 @@ class ContentParameters(Base):
         asset_ids: Tuple[str, ...] = None,
         origin=None,
         investment_recommendations: InvestmentRecommendations = None,
+        is_flow: bool = None,
         name: str = None
     ):        
         super().__init__()
@@ -1013,6 +1025,7 @@ class ContentParameters(Base):
         self.origin = origin
         self.language = language
         self.investment_recommendations = investment_recommendations
+        self.is_flow = is_flow
         self.name = name
 
     @property
@@ -1134,6 +1147,15 @@ class ContentParameters(Base):
     def investment_recommendations(self, value: InvestmentRecommendations):
         self._property_changed('investment_recommendations')
         self.__investment_recommendations = value        
+
+    @property
+    def is_flow(self) -> bool:
+        return self.__is_flow
+
+    @is_flow.setter
+    def is_flow(self, value: bool):
+        self._property_changed('is_flow')
+        self.__is_flow = value        
 
 
 class ContentUpdateResponse(Base):

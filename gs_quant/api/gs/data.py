@@ -33,8 +33,8 @@ from gs_quant.errors import MqValueError
 from gs_quant.markets import MarketDataCoordinate
 from gs_quant.session import GsSession
 from gs_quant.target.common import FieldFilterMap, XRef, MarketDataVendor, PricingLocation
-from gs_quant.target.data import DataQuery, DataQueryResponse, MDAPIDataBatchResponse, MDAPIDataQuery, \
-    MDAPIDataQueryResponse, MDAPIQueryField
+from gs_quant.target.coordinates import MDAPIDataBatchResponse, MDAPIDataQuery, MDAPIDataQueryResponse, MDAPIQueryField
+from gs_quant.target.data import DataQuery, DataQueryResponse
 from gs_quant.target.data import DataSetEntity
 from .assets import GsAssetApi, GsIdType
 from ...target.assets import EntityQuery
@@ -182,7 +182,8 @@ class GsDataApi(DataApi):
             scroll_id: Optional[str] = None,
             limit: int = None,
             offset: int = None,
-            fields: List[str] = None
+            fields: List[str] = None,
+            include_history: bool = False
     ) -> List[dict]:
         params = {}
         if scroll:
@@ -200,6 +201,9 @@ class GsDataApi(DataApi):
 
         if fields:
             params['fields'] = fields
+
+        if include_history:
+            params['includeHistory'] = 'true'
 
         body = GsSession.current._get('/data/{}/coverage'.format(dataset_id), payload=params)
         results = body['results']
@@ -460,6 +464,7 @@ class GsDataApi(DataApi):
             as_multiple_dataframes: bool = False,
             pricing_location: Optional[PricingLocation] = None,
             fields: Optional[Tuple[MDAPIQueryField, ...]] = None,
+            **kwargs
     ) -> Union[pd.DataFrame, Tuple[pd.DataFrame]]:
         """
         Get coordinates data
@@ -471,6 +476,7 @@ class GsDataApi(DataApi):
         :param as_multiple_dataframes: whether to return the result as one or multiple Dataframe(s)
         :param pricing_location: the location where close data has been recorded (not used for real-time query)
         :param fields: value fields to return
+        :param kwargs: Extra query arguments
         :return: Dataframe(s) of the returned data
 
         **Examples**
@@ -486,7 +492,8 @@ class GsDataApi(DataApi):
             start=start,
             end=end,
             pricing_location=pricing_location,
-            fields=fields
+            fields=fields,
+            **kwargs
         )
 
         results = cls.__normalise_coordinate_data(cls.query_data(query), fields=fields)
@@ -503,7 +510,8 @@ class GsDataApi(DataApi):
             start: Union[dt.datetime, dt.date] = None,
             end: Union[dt.datetime, dt.date] = None,
             vendor: MarketDataVendor = MarketDataVendor.Goldman_Sachs,
-            pricing_location: Optional[PricingLocation] = None
+            pricing_location: Optional[PricingLocation] = None,
+            **kwargs
     ) -> Union[pd.Series, Tuple[pd.Series]]:
         """
         Get coordinates data series
@@ -513,6 +521,7 @@ class GsDataApi(DataApi):
         :param end: end date or time
         :param vendor: data vendor
         :param pricing_location: the location where close data has been recorded (not used for real-time query)
+        :param kwargs: Extra query arguments
         :return: Series of the returned data
 
         **Examples**
@@ -526,7 +535,9 @@ class GsDataApi(DataApi):
             end=end,
             pricing_location=pricing_location,
             vendor=vendor,
-            as_multiple_dataframes=True)
+            as_multiple_dataframes=True,
+            **kwargs
+        )
 
         ret = tuple(pd.Series() if df.empty else pd.Series(index=df.index, data=df.value.values) for df in dfs)
         if isinstance(coordinates, (MarketDataCoordinate, str)):

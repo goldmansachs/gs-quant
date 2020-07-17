@@ -180,8 +180,8 @@ class GsAssetApi:
                         name=instrument.name or '',
                         parameters=instrument.as_dict(as_camel_case=True))
 
-        results = GsSession.current._post('/assets/bulk', [asset])
-        return results[0]['id']
+        results = GsSession.current._post('/assets', asset)
+        return results['id']
 
     @staticmethod
     def get_instruments_for_asset_ids(

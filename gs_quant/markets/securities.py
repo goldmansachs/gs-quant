@@ -90,6 +90,9 @@ class AssetType(Enum):
     #: Commodity Reference Price
     COMMODITY_REFERENCE_PRICE = "Commodity Reference Price"
 
+    #: Bond
+    BOND = "Bond"
+
 
 class AssetIdentifier(Enum):
     """Asset type enumeration
@@ -344,6 +347,20 @@ class CommodityReferencePrice(Asset):
         return AssetType.COMMODITY_REFERENCE_PRICE
 
 
+class Bond(Asset):
+    """Bond
+
+    Represents a bond.
+
+    """
+
+    def __init__(self, id_: str, name: str):
+        Asset.__init__(self, id_, AssetClass.Credit, name)
+
+    def get_type(self) -> AssetType:
+        return AssetType.BOND
+
+
 class Swap(Asset):
     """Swap Instrument Type
 
@@ -534,6 +551,9 @@ class SecurityMaster:
 
         if asset_type in (GsAssetType.CommodityReferencePrice.value,):
             return CommodityReferencePrice(gs_asset.id, gs_asset.name)
+
+        if asset_type in (GsAssetType.Bond.value,):
+            return Bond(gs_asset.id, gs_asset.name)
 
         raise TypeError(f'unsupported asset type {asset_type}')
 

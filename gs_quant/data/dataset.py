@@ -181,6 +181,8 @@ class Dataset:
             if len(gb.groups) > 1:
                 raise MqValueError('Not a series for a single {}'.format(symbol_dimension))
 
+        if df.empty:
+            return pd.Series()
         return pd.Series(index=df.index, data=df.loc[:, field_value].values)
 
     def get_data_last(
@@ -223,6 +225,7 @@ class Dataset:
             limit: int = None,
             offset: int = None,
             fields: List[str] = None,
+            include_history: bool = False,
             **kwargs
     ) -> pd.DataFrame:
         """
@@ -231,6 +234,7 @@ class Dataset:
         :param limit: The maximum number of assets to return
         :param offset: The offset
         :param fields: The fields to return, e.g. assetId
+        :param include_history: Return column for historyStartDate
         :return: A Dataframe of the assets covered
 
         **Examples**
@@ -245,6 +249,7 @@ class Dataset:
             limit=limit,
             offset=offset,
             fields=fields,
+            include_history=include_history,
             **kwargs
         )
 
