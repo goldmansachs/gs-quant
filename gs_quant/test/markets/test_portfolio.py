@@ -319,14 +319,15 @@ def test_backtothefuture_pricing(mocker):
 
     portfolio = Portfolio((swap1, swap2, swap3))
 
-    with BackToTheFuturePricingContext(dates=business_day_offset(dt.datetime.today().date(), [-1, 0, 1])) as hpc:
+    with BackToTheFuturePricingContext(dates=business_day_offset(dt.datetime.today().date(), [-1, 0, 1],
+                                                                 roll='forward')) as hpc:
         risk_key = hpc._PricingContext__risk_key(risk.DollarPrice, swap1.provider)
         results = portfolio.calc(risk.DollarPrice)
 
     expected = risk.SeriesWithInfo(
         pd.Series(
             data=[0.06, 0.063, 0.066],
-            index=business_day_offset(dt.datetime.today().date(), [-1, 0, 1])
+            index=business_day_offset(dt.datetime.today().date(), [-1, 0, 1], roll='forward')
         ),
         risk_key=risk_key.ex_date_and_market,)
 

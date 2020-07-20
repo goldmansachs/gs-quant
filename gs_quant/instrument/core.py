@@ -68,7 +68,6 @@ class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
             PricingCache.drop(self)
 
         super()._property_changed(prop)
-        self.unresolve()
 
     @classmethod
     def __asset_class_and_type_to_instrument(cls):
