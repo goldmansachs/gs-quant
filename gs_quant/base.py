@@ -523,6 +523,11 @@ class InstrumentBase(Base):
     def unresolved(self):
         return self.__unresolved
 
+    def _property_changed(self, prop: str):
+        if self.__resolution_key:
+            self.__resolution_key = None
+            self.unresolve()
+
     def from_instance(self, instance):
         super().from_instance(instance)
         self.__unresolved = instance.__unresolved
