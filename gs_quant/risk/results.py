@@ -228,6 +228,11 @@ class PortfolioRiskResult(CompositeResultFuture):
         super().result(timeout=timeout)
         return self
 
+    def to_frame(self):
+        def to_records(p: PortfolioRiskResult) -> list:
+            return [to_records(res) if isinstance(res, PortfolioRiskResult) else res for res in p._result]
+        return pd.DataFrame(to_records(self))
+
     def subset(self, items: Iterable[Union[int, str, PortfolioPath, Priceable]], name: Optional[str] = None):
         paths = tuple(chain.from_iterable((i,) if isinstance(i, PortfolioPath) else self.__paths(i) for i in items))
         sub_portfolio = self.__portfolio.subset(paths, name=name)

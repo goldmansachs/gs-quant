@@ -87,7 +87,7 @@ class RiskApi(metaclass=ABCMeta):
             with session:
                 while True:
                     requests_chunk = cls.drain_queue(outstanding_requests)
-                    if not requests_chunk:
+                    if requests_chunk == [None]:
                         break
 
                     try:
@@ -102,6 +102,7 @@ class RiskApi(metaclass=ABCMeta):
             raw_results = asyncio.Queue()
             responses = asyncio.Queue() if is_async else raw_results
             outstanding_requests = queue.Queue()
+            listener = None
 
             Thread(daemon=True,
                    target=execute_requests,
@@ -134,7 +135,9 @@ class RiskApi(metaclass=ABCMeta):
 
                     results.update(results_by_key)
 
+            outstanding_requests.put(None)
             await responses.put(None)
+
             if is_async:
                 await listener
 
