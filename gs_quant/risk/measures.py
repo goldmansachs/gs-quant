@@ -58,6 +58,29 @@ class PnlExplain(__RelativeRiskMeasure):
         super().__init__(to_market, measure_type=RiskMeasureType.PnlExplain, name=RiskMeasureType.PnlExplain.value)
 
 
+class PnlExplainClose(PnlExplain):
+
+    def __init__(self):
+        from gs_quant.markets import CloseMarket
+        super().__init__(CloseMarket())
+
+
+class PnlExplainLive(PnlExplain):
+
+    def __init__(self):
+        from gs_quant.markets import LiveMarket
+        super().__init__(LiveMarket())
+
+
+class PnlPredict(__RelativeRiskMeasure):
+
+    """ Pnl Predicted """
+
+    def __init__(self):
+        from gs_quant.markets import LiveMarket
+        super().__init__(LiveMarket(), measure_type=RiskMeasureType.PnlPredict, name=RiskMeasureType.PnlPredict.value)
+
+
 def __risk_measure_with_doc_string(name: str,
                                    doc: str,
                                    measure_type: RiskMeasureType,
@@ -165,6 +188,16 @@ IRDeltaParallelLocalCcy = __risk_measure_with_doc_string(
     'IRDeltaParallelLocalCcy',
     'Interest Rate Parallel Delta (Local Ccy)',
     RiskMeasureType.ParallelDeltaLocalCcy,
+    asset_class=AssetClass.Rates)
+IRDiscountDeltaParallel = __risk_measure_with_doc_string(
+    'IRDiscountDeltaParallel',
+    'Parallel Discount Delta',
+    RiskMeasureType.ParallelDiscountDelta,
+    asset_class=AssetClass.Rates)
+IRDiscountDeltaParallelLocalCcy = __risk_measure_with_doc_string(
+    'IRDiscountDeltaParallelLocalCcy',
+    'Parallel Discount Delta (Local Ccy)',
+    RiskMeasureType.ParallelDiscountDeltaLocalCcy,
     asset_class=AssetClass.Rates)
 IRXccyDelta = __risk_measure_with_doc_string(
     'IRXccyDelta',

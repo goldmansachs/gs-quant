@@ -471,9 +471,9 @@ def test_results_with_resolution():
 
     resolution_values = [
         [
-            [{'$type': 'LegDefinition', 'fixedRate': 0.01}],
-            [{'$type': 'LegDefinition', 'fixedRate': 0.007}],
-            [{'$type': 'LegDefinition', 'fixedRate': 0.05}]
+            [{'$type': 'LegDefinition', 'fixedRate': 0.01, 'terminationDate': '1076-11-14'}],
+            [{'$type': 'LegDefinition', 'fixedRate': 0.007, 'terminationDate': '1076-11-14'}],
+            [{'$type': 'LegDefinition', 'fixedRate': 0.05, 'terminationDate': '1076-11-14'}]
         ]
     ]
 
@@ -503,6 +503,11 @@ def test_results_with_resolution():
             mocker.return_value = [resolution_values]
             portfolio.resolve()
 
+    assert all(i.termination_date == dt.date(1076, 11, 14) for i in portfolio.instruments)
+    assert swap1.fixed_rate == 0.01
+    assert swap2.fixed_rate == 0.007
+    assert swap3.fixed_rate == 0.05
+
     # Assert that after resolution under a different context, we cannot retrieve the result
 
     try:
@@ -510,3 +515,16 @@ def test_results_with_resolution():
         assert False
     except KeyError:
         assert True
+
+    # Resolve again and check we get the same values
+
+    with mock.patch('gs_quant.api.gs.risk.GsRiskApi._exec') as mocker:
+        with PricingContext(dt.date(1066, 11, 14)):
+            # Resolve under a different pricing date
+            mocker.return_value = [resolution_values]
+            portfolio.resolve()
+
+    assert all(i.termination_date == dt.date(1076, 11, 14) for i in portfolio.instruments)
+    assert swap1.fixed_rate == 0.01
+    assert swap2.fixed_rate == 0.007
+    assert swap3.fixed_rate == 0.05

@@ -156,10 +156,11 @@ class Portfolio(PriceableImpl):
 
     @staticmethod
     def from_portfolio_id(portfolio_id: str):
+        portfolio = GsPortfolioApi.get_portfolio(portfolio_id)
         response = GsPortfolioApi.get_latest_positions(portfolio_id)
         positions = response.positions if isinstance(response, PositionSet) else response['positions']
         instruments = GsAssetApi.get_instruments_for_positions(positions)
-        ret = Portfolio(instruments, name=response.name)
+        ret = Portfolio(instruments, name=portfolio.name)
         ret.__id = portfolio_id
         return ret
 

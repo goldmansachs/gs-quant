@@ -528,7 +528,10 @@ class InstrumentBase(Base):
             self.__resolution_key = None
             self.unresolve()
 
+        super()._property_changed(prop)
+
     def from_instance(self, instance):
+        self.__resolution_key = None
         super().from_instance(instance)
         self.__unresolved = instance.__unresolved
         self.__resolution_key = instance.__resolution_key
