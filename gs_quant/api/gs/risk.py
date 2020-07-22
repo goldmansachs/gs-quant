@@ -20,7 +20,6 @@ import json
 import logging
 import math
 import msgpack
-from queue import Queue
 import time
 from typing import Iterable, Optional, Union
 from websockets import ConnectionClosedError, client
@@ -67,11 +66,11 @@ class GsRiskApi(RiskApi):
         return '/risk{}/calculate{}'.format('-internal' if is_internal else '', '/bulk' if is_bulk else '')
 
     @classmethod
-    async def get_results(cls, responses: asyncio.Queue, results: Queue, timeout: Optional[int] = None):
+    async def get_results(cls, responses: asyncio.Queue, results: asyncio.Queue, timeout: Optional[int] = None):
         async def send_to_websocket(ws: client):
             while True:
                 items = await cls.drain_queue_async(responses)
-                if items == [None]:
+                if not items:
                     break
 
                 report_ids = [i[1]['reportId'] for i in items]
@@ -129,7 +128,7 @@ class GsRiskApi(RiskApi):
         while attempts < max_attempts:
             if attempts > 0:
                 await asyncio.sleep(math.pow(2, attempts))
-                _logger.error('{} error, retrying (attempt {} of {})'.format(error, attempts + 1, max_attempts))
+                _logger.error(f'{error} error, retrying (attempt {attempts + 1} of {max_attempts})')
 
             try:
                 async with GsSession.current._connect_websocket('/risk/calculate/results/subscribe') as ws:
@@ -147,6 +146,7 @@ class GsRiskApi(RiskApi):
                 attempts = max_attempts
 
         if error != '':
+            _logger.error(f'Fatal error: {error}')
             results.put_nowait([])
 
     @classmethod
