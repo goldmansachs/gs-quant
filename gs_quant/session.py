@@ -16,6 +16,7 @@ under the License.
 from abc import abstractmethod
 from configparser import ConfigParser
 import backoff
+import certifi
 from enum import Enum, auto, unique
 import inspect
 import itertools
@@ -26,6 +27,7 @@ import pandas as pd
 import requests
 import requests.adapters
 import requests.cookies
+import ssl
 from typing import List, Optional, Tuple, Union
 import websockets
 
@@ -47,7 +49,9 @@ class Environment(Enum):
 
 
 class GsSession(ContextBase):
+
     __config = None
+    __ssl_ctx = None
 
     class Scopes(Enum):
         READ_CONTENT = 'read_content'
@@ -118,6 +122,14 @@ class GsSession(ContextBase):
 
     def __del__(self):
         self.close()
+
+    @staticmethod
+    def __ssl_context() -> ssl.SSLContext:
+        if GsSession.__ssl_ctx is None:
+            GsSession.__ssl_ctx = ssl.create_default_context()
+            GsSession.__ssl_ctx.load_verify_locations(certifi.where())
+
+        return GsSession.__ssl_ctx
 
     @staticmethod
     def __unpack(results: Union[dict, list], cls: type) -> Union[Base, tuple, dict]:
@@ -231,7 +243,11 @@ class GsSession(ContextBase):
     def _connect_websocket(self, path: str, headers: Optional[dict] = None):
         url = 'ws{}{}{}'.format(self.domain[4:], '/' + self.api_version, path)
         extra_headers = self._headers() + list((headers or {}).items())
-        return websockets.connect(url, extra_headers=extra_headers, max_size=2**64, read_limit=2**64)
+        return websockets.connect(url,
+                                  extra_headers=extra_headers,
+                                  max_size=2**64,
+                                  read_limit=2**64,
+                                  ssl=self.__ssl_context())
 
     def _headers(self):
         return [('Cookie', 'GSSSO=' + self._session.cookies['GSSSO'])]

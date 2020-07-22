@@ -79,7 +79,7 @@ class RiskApi(metaclass=ABCMeta):
             max_concurrent: int,
             progress_bar: Optional[tqdm] = None,
             timeout: Optional[int] = None) -> dict:
-        def execute_requests(outstanding_requests: asyncio.Queue,
+        def execute_requests(outstanding_requests: queue.Queue,
                              responses: asyncio.Queue,
                              raw_results: asyncio.Queue,
                              session: GsSession,
@@ -87,7 +87,7 @@ class RiskApi(metaclass=ABCMeta):
             with session:
                 while True:
                     requests_chunk = cls.drain_queue(outstanding_requests)
-                    if requests_chunk == [None]:
+                    if not requests_chunk:
                         break
 
                     try:
@@ -135,8 +135,8 @@ class RiskApi(metaclass=ABCMeta):
 
                     results.update(results_by_key)
 
-            outstanding_requests.put(None)
-            await responses.put(None)
+            outstanding_requests.put([])
+            await responses.put([])
 
             if is_async:
                 await listener
