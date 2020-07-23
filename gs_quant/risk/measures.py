@@ -72,7 +72,7 @@ class PnlExplainLive(PnlExplain):
         super().__init__(LiveMarket())
 
 
-class PnlPredict(__RelativeRiskMeasure):
+class PnlPredictLive(__RelativeRiskMeasure):
 
     """ Pnl Predicted """
 
