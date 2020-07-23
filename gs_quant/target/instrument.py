@@ -617,6 +617,7 @@ class CommodOption(Instrument):
         fixing_currency_source: str = None,
         strike: str = None,
         strike_unit: str = None,
+        option_type: str = None,
         name: str = None
     ):        
         super().__init__()
@@ -637,6 +638,7 @@ class CommodOption(Instrument):
         self.fixing_currency_source = fixing_currency_source
         self.strike = strike
         self.strike_unit = strike_unit
+        self.option_type = option_type
         self.name = name
 
     @property
@@ -818,6 +820,16 @@ class CommodOption(Instrument):
     def strike_unit(self, value: str):
         self._property_changed('strike_unit')
         self.__strike_unit = value        
+
+    @property
+    def option_type(self) -> str:
+        """e.g. call or put"""
+        return self.__option_type
+
+    @option_type.setter
+    def option_type(self, value: str):
+        self._property_changed('option_type')
+        self.__option_type = value        
 
 
 class CommodSwap(Instrument):
@@ -2305,7 +2317,7 @@ class FXOption(Instrument):
         strike_price: Union[float, str] = None,
         premium: Union[float, str] = None,
         premium_currency: Union[Currency, str] = None,
-        premium_payment_date: Union[datetime.date, str] = None,
+        premium_payment_date: str = None,
         settlement_date: Union[datetime.date, str] = None,
         settlement_currency: Union[Currency, str] = None,
         settlement_rate_option: str = None,
@@ -2448,12 +2460,12 @@ class FXOption(Instrument):
         self.__premium_currency = get_enum_value(Currency, value)        
 
     @property
-    def premium_payment_date(self) -> Union[datetime.date, str]:
+    def premium_payment_date(self) -> str:
         """Payment date of the option premium"""
         return self.__premium_payment_date
 
     @premium_payment_date.setter
-    def premium_payment_date(self, value: Union[datetime.date, str]):
+    def premium_payment_date(self, value: str):
         self._property_changed('premium_payment_date')
         self.__premium_payment_date = value        
 
@@ -5462,7 +5474,7 @@ class IRXccySwapFixFlt(Instrument):
         floating_rate_for_the_initial_calculation_period: float = None,
         floating_rate_option: str = None,
         floating_rate_designated_maturity: str = None,
-        floating_rate_spread: float = None,
+        floating_rate_spread: Union[float, str] = None,
         floating_rate_frequency: str = None,
         floating_rate_day_count_fraction: Union[DayCountFraction, str] = None,
         floating_rate_business_day_convention: Union[BusinessDayConvention, str] = None,
@@ -5602,12 +5614,12 @@ class IRXccySwapFixFlt(Instrument):
         self.__floating_rate_designated_maturity = value        
 
     @property
-    def floating_rate_spread(self) -> float:
+    def floating_rate_spread(self) -> Union[float, str]:
         """The spread over the floating rate"""
         return self.__floating_rate_spread
 
     @floating_rate_spread.setter
-    def floating_rate_spread(self, value: float):
+    def floating_rate_spread(self, value: Union[float, str]):
         self._property_changed('floating_rate_spread')
         self.__floating_rate_spread = value        
 

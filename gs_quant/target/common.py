@@ -1203,6 +1203,7 @@ class RiskMeasureType(EnumBase, Enum):
     Resolved_Instrument_Values = 'Resolved Instrument Values'
     PNL = 'PNL'
     PnlExplain = 'PnlExplain'
+    PnlPredict = 'PnlPredict'
     PV = 'PV'
     Spot = 'Spot'
     Spot_Rate = 'Spot Rate'
