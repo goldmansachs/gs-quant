@@ -51,7 +51,7 @@ def cashflows_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBa
     for cashflow in result['cashflows']:
         for field in ('payDate', 'setDate', 'accStart', 'accEnd'):
             value = cashflow.get(field)
-            date = dt.date.fromisoformat(value) if value else dt.date.max
+            date = dt.datetime.strptime(value, '%Y-%M-%d').date() if value else dt.date.max
             cashflow[field] = date
 
     return __dataframe_handler(result['cashflows'], mappings, risk_key)

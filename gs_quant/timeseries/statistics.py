@@ -19,6 +19,7 @@ import datetime
 import numpy
 import scipy.stats.mstats as stats
 from scipy.stats import percentileofscore
+from statsmodels.regression.rolling import RollingOLS
 from .algebra import *
 import statsmodels.api as sm
 from ..models.epidemiology import SIR, SEIR, EpidemicModel
@@ -870,6 +871,7 @@ class LinearRegression:
     def __init__(self, X: Union[pd.Series, List[pd.Series]], y: pd.Series, fit_intercept: bool = True):
         df = pd.concat(X, axis=1) if isinstance(X, list) else X.to_frame()
         df = sm.add_constant(df) if fit_intercept else df
+        df.columns = range(len(df.columns)) if fit_intercept else range(1, len(df.columns) + 1)
 
         df = df[~df.isin([np.nan, np.inf, -np.inf]).any(1)]  # filter out nan and inf
         y = y[~y.isin([np.nan, np.inf, -np.inf])]
@@ -879,11 +881,6 @@ class LinearRegression:
         self._res = sm.OLS(y_aligned, df_aligned).fit()
         self._fit_intercept = fit_intercept
 
-    def _convert_index(self, i: int):
-        if i not in self._index_scope:
-            raise ValueError('index {} out of range'.format(i))
-        return 'const' if i == 0 else i - 1
-
     @plot_method
     def coefficient(self, i: int) -> float:
         """
@@ -892,8 +889,7 @@ class LinearRegression:
         :param i: coefficient of which predictor to get. If intercept is used, start from 0, else start from 1
         :return: estimated coefficient of the i-th predictor
         """
-        converted_i = self._convert_index(i)
-        return self._res.params[converted_i]
+        return self._res.params[i]
 
     @plot_method
     def r_squared(self) -> float:
@@ -930,6 +926,89 @@ class LinearRegression:
         Standard deviation of the error term
 
         :return: standard deviation of the error term
+        """
+        return np.sqrt(self._res.mse_resid)
+
+
+class RollingLinearRegression:
+
+    """
+    Fit a rolling ordinary least squares (OLS) linear regression model.
+
+    :param X: observations of the explanatory variable(s)
+    :param y: observations of the dependant variable
+    :param w: number of observations in each rolling window. Must be larger than the number of observations or
+              explanatory variables
+    :param fit_intercept: whether to calculate intercept in the model
+
+    **Usage**
+
+    Fit `OLS Model <https://en.wikipedia.org/wiki/Ordinary_least_squares>`_ based on observations of the explanatory
+    variables(s) X and the dependant variable y across a rolling window with fixed number of observations.
+    The parameters of each rolling window are stored at the end of each window.
+    If X and y are not aligned, only use the intersection of dates/times
+
+    **Examples**
+
+    R Squared of a rolling OLS model:
+
+    >>> x = generate_series(100)
+    >>> y = generate_series(100)
+    >>> r = RollingLinearRegression(x, y, 5)
+    >>> r.r_squared()
+
+    """
+
+    def __init__(self, X: Union[pd.Series, List[pd.Series]], y: pd.Series, w: int, fit_intercept: bool = True):
+        df = pd.concat(X, axis=1) if isinstance(X, list) else X.to_frame()
+        df = sm.add_constant(df) if fit_intercept else df
+        df.columns = range(len(df.columns)) if fit_intercept else range(1, len(df.columns) + 1)
+
+        if w <= len(df.columns):
+            raise MqValueError('Window length must be larger than the number of explanatory variables')
+
+        df = df[~df.isin([np.nan, np.inf, -np.inf]).any(1)]  # filter out nan and inf
+        y = y[~y.isin([np.nan, np.inf, -np.inf])]
+        df_aligned, y_aligned = df.align(y, 'inner', axis=0)  # align series
+
+        self._X = df_aligned.copy()
+        self._res = RollingOLS(y_aligned, df_aligned, w).fit()
+
+    @plot_method
+    def coefficient(self, i: int) -> pd.Series:
+        """
+        Estimated coefficients
+
+        :param i: coefficients of which predictor to get. If intercept is used, start from 0, else start from 1
+        :return: estimated coefficients of the i-th predictor
+        """
+        return self._res.params[i]
+
+    @plot_method
+    def r_squared(self) -> pd.Series:
+        """
+        Coefficients of determination (R Squared) of rolling regressions
+
+        :return: R Squared
+        """
+        return self._res.rsquared
+
+    @plot_method
+    def fitted_values(self) -> pd.Series:
+        """
+        Fitted values at the end of each rolling window
+
+        :return: fitted values
+        """
+        comp = self._X.mul(self._res.params.values)
+        return comp.sum(axis=1, min_count=len(comp.columns))
+
+    @plot_method
+    def standard_deviation_of_errors(self) -> pd.Series:
+        """
+        Standard deviations of the error terms
+
+        :return: standard deviations of the error terms
         """
         return np.sqrt(self._res.mse_resid)
 

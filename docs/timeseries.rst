@@ -74,6 +74,8 @@ Date / Time
    year
    quarter
    date_range
+   prepend
+   union
 
 
 Econometrics
@@ -126,8 +128,10 @@ Statistics
 
 .. autosummary::
    :toctree: classes
+   :template: timeseries_class.rst
 
    LinearRegression
+   RollingLinearRegression
    SIRModel
    SEIRModel
 

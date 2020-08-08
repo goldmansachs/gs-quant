@@ -14,9 +14,9 @@ specific language governing permissions and limitations
 under the License.
 """
 
-
+from .coordinate import DataCoordinate
+from .core import DataContext, DataFrequency
 from .dataset import Dataset
-from .dataset import Fields
-from .core import DataContext
+from .fields import DataMeasure, DataDimension, Fields
 
 __name__ = 'data'

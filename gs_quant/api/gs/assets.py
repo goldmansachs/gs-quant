@@ -23,7 +23,7 @@ from enum import auto, Enum
 from functools import wraps
 from typing import Iterable, List, Tuple, Optional, Union
 from gs_quant.target.assets import Asset as __Asset, AssetClass, AssetType, AssetToInstrumentResponse, TemporalXRef,\
-    Position, EntityQuery, PositionSet
+    Position, EntityQuery, PositionSet, Currency, AssetParameters
 from gs_quant.target.common import FieldFilterMap
 from gs_quant.errors import MqValueError
 from gs_quant.instrument import Instrument, Security
@@ -158,6 +158,18 @@ class GsAssetApi:
     ) -> GsAsset:
         return GsSession.current._get('/assets/{id}'.format(id=asset_id), cls=GsAsset)
 
+    @classmethod
+    def get_asset_by_name(cls, name: str) -> GsAsset:
+        ret = GsSession.current._get('/assets?name={}'.format(name))
+        num_found = ret.get('totalResults', 0)
+
+        if num_found == 0:
+            raise ValueError('Asset {} not found'.format(name))
+        elif num_found > 1:
+            raise ValueError('More than one asset named {} found'.format(name))
+        else:
+            return GsAsset.from_dict(ret['results'][0])
+
     @staticmethod
     def get_asset_positions_for_date(
             asset_id: str,
@@ -172,6 +184,18 @@ class GsAssetApi:
 
         results = GsSession.current._get(url)['results']
         return tuple(PositionSet.from_dict(r) for r in results)
+
+    @classmethod
+    def get_latest_positions(cls, asset_id: str, position_type: str = 'close') -> Union[PositionSet, dict]:
+        url = '/assets/{id}/positions/last?type={ptype}'.format(id=asset_id, ptype=position_type)
+        results = GsSession.current._get(url)['results']
+
+        # Annoyingly, different types are returned depending on position_type
+
+        if isinstance(results, dict) and 'positions' in results:
+            results['positions'] = tuple(Position.from_dict(p) for p in results['positions'])
+
+        return results
 
     @staticmethod
     def get_or_create_asset_from_instrument(instrument: Instrument) -> str:

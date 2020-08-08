@@ -235,7 +235,7 @@ class Base(metaclass=ABCMeta):
                             additional.extend([a for a in return_hints.__args__ if a != prop_type])
                         break
 
-            if prop_type is None:
+            if prop_type is None and additional is not None:
                 prop_type = return_hints.__args__[-1]
                 additional.extend(return_hints.__args__[:-1])
 
@@ -287,7 +287,7 @@ class Base(metaclass=ABCMeta):
                         except ValueError:
                             if str in additional_types:
                                 setattr(self, prop, prop_value)
-                elif issubclass(prop_type, dt.date):
+                elif issubclass(prop_type, dt.date) and type(prop_value) is not dt.date:
                     try:
                         setattr(self, prop, isoparse(prop_value).date())
                     except ValueError:
@@ -372,6 +372,14 @@ class Base(metaclass=ABCMeta):
             attr = getattr(super().__getattribute__('__class__'), prop)
             if attr.fset:
                 super(Base, self).__setattr__(prop, super(Base, instance).__getattribute__(prop))
+
+
+class Entity(metaclass=ABCMeta):
+    """Base class for any first-class entity"""
+
+    @abstractmethod
+    def get_data_coordinate(self, measure, dimensions, frequency):
+        """Overridden by base class"""
 
 
 class Priceable(Base, metaclass=ABCMeta):
