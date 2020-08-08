@@ -123,6 +123,7 @@ class ForeCastHorizon(Enum):
 class BenchmarkType(Enum):
     LIBOR = 'LIBOR'
     EURIBOR = 'EURIBOR'
+    EUROSTR = 'EUROSTR'
     STIBOR = 'STIBOR'
     OIS = 'OIS'
     CDKSDA = 'CDKSDA'
@@ -166,6 +167,11 @@ class EsgMetric(Enum):
 class EsgValueUnit(Enum):
     PERCENTILE = 'percentile'
     SCORE = 'score'
+
+
+class SwaptionTenorType(Enum):
+    OPTION_EXPIRY = 'option_expiry'
+    SWAP_MATURITY = 'swap_maturity'
 
 
 ESG_METRIC_TO_QUERY_TYPE = {
@@ -897,14 +903,15 @@ def swaption_vol_smile(asset: Asset, expiration_tenor: str, termination_tenor: s
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
               [MeasureDependency(id_provider=currency_to_default_benchmark_rate, query_type=QueryType.SWAPTION_VOL)])
-def swaption_vol_term(asset: Asset, termination_tenor: str, relative_strike: float,
+def swaption_vol_term(asset: Asset, tenor_type: SwaptionTenorType, tenor: str, relative_strike: float,
                       pricing_date: Optional[GENERIC_DATE] = None, *, source: str = None,
                       real_time: bool = False) -> Series:
     """
     Term structure of GS end-of-day implied normal volatility for swaption vol matrices.
 
     :param asset: an asset
-    :param termination_tenor: relative date representation of the instrument's expiration date e.g. 1y
+    :param tenor_type: specifies which type of tenor will be fixed, one of OPTION_EXPIRATION or SWAP_MATURITY
+    :param tenor: relative date representation of the instrument's expiration date e.g. 1y
     :param relative_strike: strike level relative to at the money e.g. 10
     :param pricing_date: YYYY-MM-DD or relative date
     :param source: name of function caller
@@ -916,9 +923,14 @@ def swaption_vol_term(asset: Asset, termination_tenor: str, relative_strike: flo
 
     rate_benchmark_mqid = convert_asset_for_rates_data_set(asset, RatesConversionType.DEFAULT_BENCHMARK_RATE)
     start, end = _range_from_pricing_date(asset.exchange, pricing_date)
+    if tenor_type == SwaptionTenorType.OPTION_EXPIRY:
+        tenor_to_plot, tenor_dataset_field = 'tenor', 'expiry'
+    else:
+        tenor_to_plot, tenor_dataset_field = 'expiry', 'tenor'
     with DataContext(start, end):
-        _logger.debug('where tenor=%s, strike=%s', termination_tenor, relative_strike)
-        where = dict(tenor=termination_tenor, strike=relative_strike)
+        _logger.debug('where tenor_type=%s, tenor=%s, strike=%s', tenor_type, tenor, relative_strike)
+        where = dict(strike=relative_strike)
+        where[tenor_dataset_field] = tenor
         q = GsDataApi.build_market_data_query(
             [rate_benchmark_mqid],
             QueryType.SWAPTION_VOL,
@@ -937,7 +949,8 @@ def swaption_vol_term(asset: Asset, termination_tenor: str, relative_strike: flo
         _logger.info('selected pricing date %s', latest)
         df = df.loc[latest]
         business_day = _get_custom_bd(asset.exchange)
-        df = df.assign(expirationDate=df.index + df['expiry'].map(_to_offset) + business_day - business_day)
+
+        df = df.assign(expirationDate=df.index + df[tenor_to_plot].map(_to_offset) + business_day - business_day)
         df = df.set_index('expirationDate')
         df.sort_index(inplace=True)
         df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
@@ -1884,7 +1897,7 @@ def _weighted_average_valuation_curve_for_calendar_strip(asset, contract_range, 
 
 
 @plot_measure((AssetClass.Commod,), None, [QueryType.FAIR_PRICE])
-def fair_price(asset: Asset, tenor: str = 'F21', *,
+def fair_price(asset: Asset, tenor: str = None, *,
                source: str = None, real_time: bool = False) -> pd.Series:
     """'
     Fair Price for Swap Instrument
@@ -1896,7 +1909,18 @@ def fair_price(asset: Asset, tenor: str = 'F21', *,
     :return: Fair Price
     """
 
-    return _weighted_average_valuation_curve_for_calendar_strip(asset, tenor, QueryType.FAIR_PRICE, "fairPrice")
+    asset_type = asset.get_type()
+
+    if asset_type == SecAssetType.INDEX:
+        if tenor is None:
+            raise ValueError('Contract month range query input is not specified')
+        return _weighted_average_valuation_curve_for_calendar_strip(asset, tenor, QueryType.FAIR_PRICE, "fairPrice")
+
+    asset_id = asset.get_marquee_id()
+    q = GsDataApi.build_market_data_query([asset_id], QueryType.FAIR_PRICE, source=source,
+                                          real_time=real_time)
+    df = _market_data_timed(q)
+    return _extract_series_from_df(df, QueryType.FAIR_PRICE)
 
 
 @plot_measure((AssetClass.Commod,), None, [QueryType.FORWARD_PRICE])

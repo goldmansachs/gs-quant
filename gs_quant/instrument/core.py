@@ -203,13 +203,27 @@ class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
                         raise RuntimeError('Cannot resolve TDAPI type {}'.format(tdapi_cls))
 
                     return tdapi_cls.from_dict(values)
+
                 asset_class_field = next((f for f in ('asset_class', 'assetClass') if f in values), None)
                 if not asset_class_field:
                     raise ValueError('assetClass/asset_class not specified')
+                if 'type' not in values:
+                    raise ValueError('type not specified')
 
-                return cls.__asset_class_and_type_to_instrument().get((
-                    get_enum_value(AssetClass, values.pop(asset_class_field)),
-                    get_enum_value(AssetType, values.pop('type'))), Security)._from_dict(values)
+                asset_type = values.pop('type')
+                asset_class = values.pop(asset_class_field)
+                default_type = Security if asset_type in [None, "", "Security"] and asset_class in [None, "",
+                                                                                                    "Security"] \
+                    else None
+
+                instrument = cls.__asset_class_and_type_to_instrument().get((
+                    get_enum_value(AssetClass, asset_class),
+                    get_enum_value(AssetType, asset_type)), default_type)
+
+                if instrument is None:
+                    raise ValueError('unable to build instrument')
+
+                return instrument._from_dict(values)
 
     @classmethod
     def from_quick_entry(cls, text: str, asset_class: Optional[AssetClass] = None):

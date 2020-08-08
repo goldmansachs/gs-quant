@@ -384,3 +384,44 @@ def test_date_range():
     assert date_range(x, date(2019, 1, 3), date(2019, 1, 6)).index[0] == date(2019, 1, 3)
     assert date_range(x, date(2019, 1, 3), date(2019, 1, 6)).index[-1] == date(2019, 1, 6)
     assert (date_range(x, date(2019, 1, 3), date(2019, 1, 6)) == x.iloc[2:6]).all()
+
+
+def test_prepend():
+    x = pd.Series([1.0, 2.0, 3.0, 4.0, 5.0, 7.0], index=pd.date_range('2019-01-01', "2019-01-06"))
+    y = pd.Series([3.1, 4.1, 5.1], index=pd.date_range('2019-01-03', '2019-01-05'))
+
+    assert_series_equal(prepend([]), pd.Series(dtype='float64'), obj='prepend empty')
+
+    assert_series_equal(prepend([x]), x, obj='prepend one series')
+
+    actual = prepend([x, y])
+    expected = pd.Series([1.0, 2.0, 3.1, 4.1, 5.1], index=pd.date_range('2019-01-01', '2019-01-05'))
+    assert_series_equal(actual, expected, obj='prepend two series')
+
+    x = pd.Series([1.0, 2.0, 3.0, 4.0, 5.0, 7.0], index=pd.date_range('2019-01-01', periods=6, freq='H'))
+    y = pd.Series([3.1, 4.1, 5.1], index=pd.date_range('2019-01-01 02:00', periods=3, freq='H'))
+
+    actual = prepend([x, y])
+    expected = pd.Series([1.0, 2.0, 3.1, 4.1, 5.1], index=pd.date_range('2019-01-01', periods=5, freq='H'))
+    assert_series_equal(actual, expected, obj='prepend two real-time series')
+
+
+def test_union():
+    x = pd.Series([3.1, 4.1, np.nan], index=pd.date_range('2019-01-03', '2019-01-05'))
+    y = pd.Series([1.0, np.nan, 3.0, 4.0, 5.0, 6.0], index=pd.date_range('2019-01-01', "2019-01-06"))
+    z = pd.Series([60.0, 70.0], index=pd.date_range('2019-01-06', "2019-01-07"))
+
+    assert_series_equal(union([]), pd.Series(dtype='float64'), obj='union empty')
+
+    assert_series_equal(union([x]), x, obj='union of one series')
+
+    actual = union([x, y, z])
+    expected = pd.Series([1.0, np.nan, 3.1, 4.1, 5.0, 6.0, 70], index=pd.date_range('2019-01-01', '2019-01-07'))
+    assert_series_equal(actual, expected, obj='union of three series')
+
+    x = pd.Series([3.1, 4.1, np.nan], index=pd.date_range('2019-01-01 02:00', periods=3, freq='H'))
+    y = pd.Series([1.0, np.nan, 3.0, 4.0, 5.0, 6.0], index=pd.date_range('2019-01-01', periods=6, freq='H'))
+
+    actual = union([x, y])
+    expected = pd.Series([1.0, np.nan, 3.1, 4.1, 5.0, 6.0], index=pd.date_range('2019-01-01', periods=6, freq='H'))
+    assert_series_equal(actual, expected, obj='union of two real-time series')

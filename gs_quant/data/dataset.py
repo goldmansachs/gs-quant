@@ -53,6 +53,9 @@ class Dataset:
         TR = 'TR'
         TR_FXSPOT = 'TR_FXSPOT'
 
+    class FRED(Vendor):
+        GDP = 'GDP'
+
     def __init__(self, dataset_id: Union[str, Vendor], provider: DataApi = None):
         """
 
@@ -213,6 +216,7 @@ class Dataset:
             start=start,
             end=as_of,
             fields=fields,
+            format='JSON',
             **kwargs
         )
         query.format = None  # "last" endpoint does not support MessagePack

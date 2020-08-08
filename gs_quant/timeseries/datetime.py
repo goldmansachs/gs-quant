@@ -489,3 +489,72 @@ def date_range(x: pd.Series, start_date: Union[date, int], end_date: Union[date,
         end_date = x.index[- (1 + end_date)]
     week_mask = tuple([True] * 7) if not business_days_only else None
     return x.loc[_date_range(start_date, end_date, week_mask=week_mask)]
+
+
+@plot_function
+def prepend(x: List[pd.Series]) -> pd.Series:
+    """
+    Prepend data series
+
+    :param x: an array of timeseries
+    :return: concatenated timeseries
+
+    **Usage**
+
+    For input series [:math:`x_1`, :math:`x_2`, ... , :math:`X_n`], takes data from series :math:`X_i` until
+    the first date for which :math:`X_{i+1}` has data, useful when a higher quality series has a shorter history
+    than a lower quality series.
+
+    **Examples**
+
+    Prepend two series:
+
+    >>> x = generate_series(100)
+    >>> y = generate_series(100)
+    >>> prepend([x, y])
+
+    **See also**
+
+    :func:`union`
+
+    """
+    res = pd.Series(dtype='float64')
+    for i in range(len(x)):
+        this = x[i]
+        if i == len(x) - 1:
+            return res.append(this)
+        end = x[i + 1].index[0]
+        res = res.append(this.loc[this.index < end])
+    return res
+
+
+@plot_function
+def union(x: List[pd.Series]) -> pd.Series:
+    """
+    Fill in missing dates or times of one series with another
+
+    :param x: an array of timeseries
+    :return: combined series
+
+    **Usage**
+
+    Starting from :math:`i=1`, takes points from series :math:`x_i`. Where points are missing from :math:`x_i`,
+    returns points from :math:`x_{i+1}`.
+
+    **Examples**
+
+    Union of two series:
+
+    >>> x = generate_series(100)
+    >>> y = generate_series(100)
+    >>> union([x, y])
+
+    **See also**
+
+    :func:`prepend`
+
+    """
+    res = pd.Series(dtype='float64')
+    for series in x:
+        res = res.combine_first(series)
+    return res

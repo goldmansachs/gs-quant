@@ -37,10 +37,10 @@ __risk_columns = ('date', 'time', 'mkt_type', 'mkt_asset', 'mkt_class', 'mkt_poi
 class ResultInfo(metaclass=ABCMeta):
 
     def __init__(
-        self,
-        risk_key: RiskKey,
-        unit: Optional[dict] = None,
-        error: Optional[Union[str, dict]] = None
+            self,
+            risk_key: RiskKey,
+            unit: Optional[dict] = None,
+            error: Optional[Union[str, dict]] = None
     ):
         self.__risk_key = risk_key
         self.__unit = unit
@@ -160,8 +160,7 @@ class StringWithInfo(ScalarWithInfo, str):
 
 
 class SeriesWithInfo(pd.Series, ResultInfo):
-
-    _internal_names = pd.DataFrame._internal_names +\
+    _internal_names = pd.DataFrame._internal_names + \
                       ['_ResultInfo__' + i for i in dir(ResultInfo) if isinstance(getattr(ResultInfo, i), property)]
     _internal_names_set = set(_internal_names)
 
@@ -177,7 +176,9 @@ class SeriesWithInfo(pd.Series, ResultInfo):
         ResultInfo.__init__(self, risk_key, unit=unit, error=error)
 
     def __repr__(self):
-        return self.error if self.error else pd.Series.__repr__(self)
+        if self.error:
+            return pd.Series.__repr__(self) + "\nErrors: " + str(self.error)
+        return pd.Series.__repr__(self)
 
     @property
     def _constructor(self):
@@ -193,7 +194,6 @@ class SeriesWithInfo(pd.Series, ResultInfo):
 
 
 class DataFrameWithInfo(pd.DataFrame, ResultInfo):
-
     _internal_names = pd.DataFrame._internal_names + \
                       ['_ResultInfo__' + i for i in dir(ResultInfo) if isinstance(getattr(ResultInfo, i), property)]
     _internal_names_set = set(_internal_names)
@@ -210,7 +210,9 @@ class DataFrameWithInfo(pd.DataFrame, ResultInfo):
         ResultInfo.__init__(self, risk_key, unit=unit, error=error)
 
     def __repr__(self):
-        return self.error if self.error else pd.DataFrame.__repr__(self)
+        if self.error:
+            return pd.DataFrame.__repr__(self) + "\nErrors: " + str(self.errors)
+        return pd.DataFrame.__repr__(self)
 
     @property
     def _constructor(self):
@@ -232,7 +234,7 @@ class DataFrameWithInfo(pd.DataFrame, ResultInfo):
         return DataFrameWithInfo(df, risk_key=risk_key, unit=unit, error=errors)
 
 
-def aggregate_risk(results: Iterable[Union[DataFrameWithInfo, Future]], threshold: Optional[float] = None)\
+def aggregate_risk(results: Iterable[Union[DataFrameWithInfo, Future]], threshold: Optional[float] = None) \
         -> pd.DataFrame:
     """
     Combine the results of multiple InstrumentBase.calc() calls, into a single result
@@ -335,8 +337,8 @@ def subtract_risk(left: DataFrameWithInfo, right: DataFrameWithInfo) -> pd.DataF
     >>>
     >>> delta_diff = subtract_risk(delta_today, delta_yday_f.result())
     """
-    assert(left.columns.names == right.columns.names)
-    assert('value' in left.columns.names)
+    assert (left.columns.names == right.columns.names)
+    assert ('value' in left.columns.names)
 
     right_negated = copy(right)
     right_negated.value *= -1

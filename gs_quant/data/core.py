@@ -14,12 +14,29 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime
-
+from enum import Enum
 from gs_quant.context_base import ContextBaseWithDefault
 
 
 def _now():
     return datetime.datetime.now(datetime.timezone.utc)
+
+
+class DataFrequency(Enum):
+    """Data Frequency enumeration
+
+    Enumeration of different data frequencies for field subscription
+
+    """
+
+    #: Data subscription for series updating daily
+    DAILY = 'DAILY'
+
+    #: Data subscription for real-time or intraday series
+    REAL_TIME = 'REALTIME'
+
+    #: Data subscription for real-time or daily series
+    ANY = 'ANY'
 
 
 class DataContext(ContextBaseWithDefault):

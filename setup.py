@@ -54,6 +54,7 @@ setuptools.setup(
     # TODO: remove compatibility packages (configparser, future, six) now that we only support 3.6+
     install_requires=[
         "backoff",
+        "aenum",
         "cachetools",
         "configparser",
         "dataclasses;python_version<'3.7'",
@@ -63,7 +64,7 @@ setuptools.setup(
         "lmfit",
         "msgpack",
         "nest-asyncio",
-        "pandas",
+        "pandas<1.1",
         "python-dateutil>=2.7.0",
         "requests",
         "scipy>=1.2.0",
@@ -76,7 +77,7 @@ setuptools.setup(
         "certifi"
     ],
     extras_require={
-        "internal": ["gs_quant_internal>=0.4.1", "requests_kerberos"],
+        "internal": ["gs_quant_internal>=0.6.4", "requests_kerberos"],
         "notebook": ["jupyter", "matplotlib~=2.1.0", "pprint", "seaborn"],
         "test": ["pytest", "pytest-cov", "pytest-mock", "testfixtures", "nbconvert", "nbformat", "jupyter_client"],
         "develop": ["wheel", "sphinx", "sphinx_rtd_theme", "sphinx_autodoc_typehints", "pytest", "pytest-cov",

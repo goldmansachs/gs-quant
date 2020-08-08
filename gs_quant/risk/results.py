@@ -204,6 +204,14 @@ class PortfolioRiskResult(CompositeResultFuture):
         else:
             return self.__results(items=item)
 
+    def __contains__(self, item):
+        if isinstance(item, RiskMeasure):
+            return item in self.__risk_measures
+        elif isinstance(item, dt.date):
+            return item in self.dates
+        else:
+            return item in self.__portfolio
+
     def __len__(self):
         return len(self.futures)
 

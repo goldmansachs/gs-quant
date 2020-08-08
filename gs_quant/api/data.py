@@ -15,13 +15,14 @@ under the License.
 """
 import datetime as dt
 import logging
-
-import pandas as pd
 from abc import ABCMeta
-import inflection
 from typing import Optional, Union
-from gs_quant.base import Base
+
+import inflection
+import pandas as pd
+
 from gs_quant.api.fred.fred_query import FredQuery
+from gs_quant.base import Base
 from gs_quant.target.coordinates import MDAPIDataQuery
 from gs_quant.target.data import DataQuery
 
@@ -56,6 +57,7 @@ class DataApi(metaclass=ABCMeta):
             as_of: Optional[dt.datetime] = None,
             since: Optional[dt.datetime] = None,
             restrict_fields: bool = False,
+            format: str = 'MessagePack',
             **kwargs
     ):
         end_is_time = isinstance(end, dt.datetime)
@@ -68,7 +70,7 @@ class DataApi(metaclass=ABCMeta):
                 end_time=end if real_time else None,
                 start_date=start if not real_time else None,
                 end_date=end if not real_time else None,
-                format='MessagePack',
+                format=format,
                 real_time=real_time,
                 **kwargs
             )
@@ -86,7 +88,7 @@ class DataApi(metaclass=ABCMeta):
                 end_time=end if end_is_time else None,
                 as_of_time=as_of,
                 since=since,
-                format="MessagePack"
+                format=format
             )
 
         query_properties = query.properties()

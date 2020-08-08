@@ -14,11 +14,10 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime as dt
+import logging
 from enum import Enum
 from itertools import chain
 from typing import Iterable, List, Optional, Tuple, Union
-
-import logging
 from urllib.parse import urlencode
 
 import cachetools
@@ -26,9 +25,9 @@ import numpy
 import pandas as pd
 from cachetools import TTLCache
 
-from gs_quant.base import Base
 from gs_quant.api.data import DataApi
-from gs_quant.data.core import DataContext
+from gs_quant.base import Base
+from gs_quant.data.core import DataContext, DataFrequency
 from gs_quant.errors import MqValueError
 from gs_quant.markets import MarketDataCoordinate
 from gs_quant.session import GsSession
@@ -96,7 +95,7 @@ class GsDataApi(DataApi):
 
     @classmethod
     def query_data(cls, query: Union[DataQuery, MDAPIDataQuery], dataset_id: str = None,
-                   asset_id_type: Union[GsIdType, str] = None)\
+                   asset_id_type: Union[GsIdType, str] = None) \
             -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple]:
         if isinstance(query, MDAPIDataQuery) and query.market_data_coordinates:
             # Don't use MDAPIDataBatchResponse for now - it doesn't handle quoting style correctly
@@ -317,6 +316,47 @@ class GsDataApi(DataApi):
         return {
             'queries': [inner]
         }
+
+    @classmethod
+    def get_data_providers(cls, asset_id: str) -> dict:
+        """Return daily and real-time data providers
+
+        :param asset_id: identifier of asset to query
+        :return: dictionary of available data providers
+
+        ** Usage **
+
+        Return a dictionary containing a set of dataset providers for each available data field.
+        For each field will return a dict of daily and real-time dataset providers where available.
+        """
+
+        GsSession.current: GsSession
+        body = GsSession.current._get(f'/data/markets/{asset_id}/availability')
+        if 'errorMessages' in body:
+            raise MqValueError(f"data availablity request {body['requestId']} failed: {body.get('errorMessages', '')}")
+        if 'data' not in body:
+            providers = dict()
+        else:
+            providers = dict()
+
+            all_ds = sorted(body['data'], key=lambda x: x['rank'], reverse=True)
+
+            for source in all_ds:
+
+                fq = source.get('frequency', 'End Of Day')
+                df = source.get('datasetField', '')
+                rk = source.get('rank')
+
+                if df not in providers:
+                    providers[df] = {}
+
+                if rk:
+                    if fq == 'End Of Day':
+                        providers[df][DataFrequency.DAILY] = source['datasetId']
+                    elif fq == 'Real Time':
+                        providers[df][DataFrequency.REAL_TIME] = source['datasetId']
+
+        return providers
 
     @classmethod
     def get_market_data(cls, query) -> pd.DataFrame:

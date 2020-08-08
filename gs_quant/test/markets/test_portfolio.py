@@ -13,17 +13,17 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import datetime as dt
 from unittest import mock
 
-import datetime as dt
 import pandas as pd
 
+import gs_quant.risk as risk
 from gs_quant.api.gs.risk import GsRiskApi
 from gs_quant.datetime import business_day_offset
-from gs_quant.instrument import IRSwap
+from gs_quant.instrument import IRSwap, IRSwaption
 from gs_quant.markets import HistoricalPricingContext, PricingContext, BackToTheFuturePricingContext
 from gs_quant.markets.portfolio import Portfolio
-import gs_quant.risk as risk
 from gs_quant.risk.results import PortfolioPath, PortfolioRiskResult
 from gs_quant.session import Environment, GsSession
 
@@ -265,22 +265,22 @@ def test_historical_pricing(mocker):
             data=[0.06, 0.063, 0.066],
             index=[dt.date(2019, 10, 7), dt.date(2019, 10, 8), dt.date(2019, 10, 9)]
         ),
-        risk_key=risk_key.ex_date_and_market,)
+        risk_key=risk_key.ex_date_and_market, )
 
     assert results.dates == dates
     actual = results[risk.DollarPrice].aggregate()
     assert actual.equals(expected)
 
-    assert(results[dt.date(2019, 10, 9)][risk.DollarPrice]['swap1'] ==
-           results[risk.DollarPrice][dt.date(2019, 10, 9)]['swap1'])
-    assert(results[dt.date(2019, 10, 9)][risk.DollarPrice]['swap1'] ==
-           results[risk.DollarPrice]['swap1'][dt.date(2019, 10, 9)])
-    assert(results[dt.date(2019, 10, 9)][risk.DollarPrice]['swap1'] ==
-           results['swap1'][risk.DollarPrice][dt.date(2019, 10, 9)])
-    assert(results[dt.date(2019, 10, 9)][risk.DollarPrice]['swap1'] ==
-           results['swap1'][dt.date(2019, 10, 9)][risk.DollarPrice])
-    assert(results[dt.date(2019, 10, 9)][risk.DollarPrice]['swap1'] ==
-           results[dt.date(2019, 10, 9)]['swap1'][risk.DollarPrice])
+    assert (results[dt.date(2019, 10, 9)][risk.DollarPrice]['swap1'] ==
+            results[risk.DollarPrice][dt.date(2019, 10, 9)]['swap1'])
+    assert (results[dt.date(2019, 10, 9)][risk.DollarPrice]['swap1'] ==
+            results[risk.DollarPrice]['swap1'][dt.date(2019, 10, 9)])
+    assert (results[dt.date(2019, 10, 9)][risk.DollarPrice]['swap1'] ==
+            results['swap1'][risk.DollarPrice][dt.date(2019, 10, 9)])
+    assert (results[dt.date(2019, 10, 9)][risk.DollarPrice]['swap1'] ==
+            results['swap1'][dt.date(2019, 10, 9)][risk.DollarPrice])
+    assert (results[dt.date(2019, 10, 9)][risk.DollarPrice]['swap1'] ==
+            results[dt.date(2019, 10, 9)]['swap1'][risk.DollarPrice])
 
 
 @mock.patch.object(GsRiskApi, '_exec')
@@ -329,7 +329,7 @@ def test_backtothefuture_pricing(mocker):
             data=[0.06, 0.063, 0.066],
             index=business_day_offset(dt.datetime.today().date(), [-1, 0, 1], roll='forward')
         ),
-        risk_key=risk_key.ex_date_and_market,)
+        risk_key=risk_key.ex_date_and_market, )
 
     actual = results[risk.DollarPrice].aggregate()
 
@@ -528,3 +528,14 @@ def test_results_with_resolution():
     assert swap1.fixed_rate == 0.01
     assert swap2.fixed_rate == 0.007
     assert swap3.fixed_rate == 0.05
+
+
+def test_from_frame():
+    swap = IRSwap('Receive', '3m', 'USD', fixedRate=0, notionalAmount=1)
+    swaption = IRSwaption(notional_currency='GBP', expiration_date='10y', effective_date='0b')
+    portfolio = Portfolio((swap, swaption))
+    port_df = portfolio.to_frame()
+    new_port_df = Portfolio.from_frame(port_df)
+
+    assert new_port_df[swap] == swap
+    assert new_port_df[swaption] == swaption

@@ -13,22 +13,25 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import copy
+import datetime as dt
+import locale
+import logging
+from itertools import chain
+from typing import Iterable, Optional, Tuple, Union
+
+import numpy as np
+import pandas as pd
+
+from gs_quant.api.gs.assets import GsAssetApi
+from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.context_base import nullcontext
 from gs_quant.instrument import Instrument
 from gs_quant.markets import HistoricalPricingContext, PricingContext
 from gs_quant.priceable import PriceableImpl
-from gs_quant.target.portfolios import Position, PositionSet
 from gs_quant.risk import RiskMeasure
 from gs_quant.risk.results import CompositeResultFuture, PortfolioRiskResult, PortfolioPath, PricingFuture
-from gs_quant.api.gs.portfolios import GsPortfolioApi
-from gs_quant.api.gs.assets import GsAssetApi
-
-import copy
-import datetime as dt
-import pandas as pd
-from itertools import chain
-import logging
-from typing import Iterable, Optional, Tuple, Union
+from gs_quant.target.portfolios import Position, PositionSet
 
 _logger = logging.getLogger(__name__)
 
@@ -70,6 +73,14 @@ class Portfolio(PriceableImpl):
         else:
             values = tuple(self[p] for p in self.paths(item))
             return values[0] if len(values) == 1 else values
+
+    def __contains__(self, item):
+        if isinstance(item, PriceableImpl):
+            return any(item in p.__priceables_lookup for p in self.all_portfolios + (self,))
+        elif isinstance(item, str):
+            return any(item in p.__priceables_by_name for p in self.all_portfolios + (self,))
+        else:
+            return False
 
     def __len__(self):
         return len(self.__priceables)
@@ -155,9 +166,28 @@ class Portfolio(PriceableImpl):
         return Portfolio.__from_internal_positions(book_type, book)
 
     @staticmethod
-    def from_portfolio_id(portfolio_id: str):
+    def from_asset_id(asset_id: str, date=None):
+        asset = GsAssetApi.get_asset(asset_id)
+        response = GsAssetApi.get_asset_positions_for_date(asset_id, date) if date else \
+            GsAssetApi.get_latest_positions(asset_id)
+        response = response[0] if isinstance(response, tuple) else response
+        positions = response.positions if isinstance(response, PositionSet) else response['positions']
+        instruments = GsAssetApi.get_instruments_for_positions(positions)
+        ret = Portfolio(instruments, name=asset.name)
+        ret.__id = asset_id
+        return ret
+
+    @staticmethod
+    def from_asset_name(name: str):
+        asset = GsAssetApi.get_asset_by_name(name)
+        return Portfolio.load_from_portfolio_id(asset.id)
+
+    @staticmethod
+    def from_portfolio_id(portfolio_id: str, date=None):
         portfolio = GsPortfolioApi.get_portfolio(portfolio_id)
-        response = GsPortfolioApi.get_latest_positions(portfolio_id)
+        response = GsPortfolioApi.get_positions_for_date(portfolio_id, date) if date else\
+            GsPortfolioApi.get_latest_positions(portfolio_id)
+        response = response[0] if isinstance(response, tuple) else response
         positions = response.positions if isinstance(response, PositionSet) else response['positions']
         instruments = GsAssetApi.get_instruments_for_positions(positions)
         ret = Portfolio(instruments, name=portfolio.name)
@@ -197,6 +227,72 @@ class Portfolio(PriceableImpl):
 
         GsPortfolioApi.update_positions(self.__id, (position_set,))
 
+    @classmethod
+    def from_frame(
+            cls,
+            data: pd.DataFrame,
+            mappings: dict = {},
+            date_formats: list = None,
+    ):
+        trade_list = []
+        attribute_map = {}
+
+        data = data.replace({np.nan: None})
+
+        for index, row in data.iterrows():
+            if is_empty(row):
+                continue
+            try:
+                instrument_type = get_value(row, mappings, 'type')
+                asset_class = get_value(row, mappings, 'asset_class')
+            except ValueError:
+                pass
+
+            if 'tdapi' in str(instrument_type):
+                inputs = {'$type': instrument_type[6:]}
+                [instrument, attributes] = get_instrument(instrument_type[6:], instr_map=attribute_map, tdapi=True)
+            else:
+                inputs = {'asset_class': asset_class, 'type': instrument_type}
+                [instrument, attributes] = get_instrument(instrument_type,
+                                                          instr_class=asset_class,
+                                                          instr_map=attribute_map)
+
+            for attribute in attributes:
+                if attribute == 'type' or attribute == 'asset_class':
+                    continue
+
+                additional = []
+                prop_type = instrument.prop_type(attribute, additional)
+                additional.append(prop_type)
+
+                if prop_type is dt.date:
+                    value = get_date(row, mappings, attribute, date_formats)
+                else:
+                    value = get_value(row, mappings, attribute)
+                    if value is not None and type(value) not in (float, int):
+                        if float in additional:
+                            value = string_to_float(value)
+
+                if value is not None:
+                    if type(value) is str:
+                        value.strip(' ')
+                    inputs[attribute] = value
+
+            trade = Instrument.from_dict(inputs)
+            trade_list.append(trade)
+
+        return cls(trade_list)
+
+    @classmethod
+    def from_csv(
+            cls,
+            csv_file: str,
+            mappings: dict = {},
+            date_formats: list = None,
+    ):
+        data = pd.read_csv(csv_file, skip_blank_lines=True).replace({np.nan: None})
+        return cls.from_frame(data, mappings, date_formats)
+
     def append(self, priceables: Union[PriceableImpl, Iterable[PriceableImpl]]):
         self.priceables += ((priceables,) if isinstance(priceables, PriceableImpl) else tuple(priceables))
 
@@ -205,7 +301,7 @@ class Portfolio(PriceableImpl):
         self.priceables = [inst for inst in self.instruments if inst != priceable]
         return priceable
 
-    def to_frame(self) -> pd.DataFrame:
+    def to_frame(self, mappings: dict = {}) -> pd.DataFrame:
         def to_records(portfolio: Portfolio) -> list:
             records = []
 
@@ -224,7 +320,23 @@ class Portfolio(PriceableImpl):
         if 'asset_class' in all_columns:
             columns = ['asset_class', 'type'] + columns
 
-        return df[columns]
+        df = df[columns]
+
+        for key, value in mappings.items():
+            if isinstance(value, str):
+                df[key] = df[value]
+            elif callable(value):
+                df[key] = len(df) * [None]
+                df[key] = df.apply(value, axis=1)
+
+        return df
+
+    def to_csv(self, csv_file: str, mappings: dict = {}, ignored_cols: list = []):
+        port_df = self.to_frame(mappings)
+        port_df = port_df[np.setdiff1d(port_df.columns, ignored_cols)]
+        port_df.reset_index(drop=True, inplace=True)
+
+        port_df.to_csv(csv_file)
 
     @property
     def all_paths(self) -> Tuple[PortfolioPath, ...]:
@@ -262,8 +374,8 @@ class Portfolio(PriceableImpl):
 
         if not in_place:
             ret = {} if isinstance(PricingContext.current, HistoricalPricingContext) else Portfolio(name=self.name)
-            result_future = PricingFuture() if not isinstance(pricing_context, PricingContext) or\
-                pricing_context.is_async or pricing_context.is_entered else None
+            result_future = PricingFuture() if not isinstance(pricing_context, PricingContext) \
+                or pricing_context.is_async or pricing_context.is_entered else None
 
             def cb(future):
                 if isinstance(ret, Portfolio):
@@ -288,3 +400,100 @@ class Portfolio(PriceableImpl):
             return PortfolioRiskResult(self,
                                        (risk_measure,) if isinstance(risk_measure, RiskMeasure) else risk_measure,
                                        [p.calc(risk_measure, fn=fn) for p in self.__priceables])
+
+
+def np_to_fundamental_type(value):
+    if isinstance(value, np.generic):
+        return value.item()
+    return value
+
+
+def from_excel_date(ordinal, _epoch0=dt.datetime(1899, 12, 31)):
+    if isinstance(ordinal, float):
+        if ordinal > 59:
+            ordinal -= 1  # Excel leap year bug, 1900 is not a leap year!
+        return (_epoch0 + dt.timedelta(days=ordinal)).replace(microsecond=0).date()
+
+    return ordinal
+
+
+def get_value(row, mappings, attribute):
+    if attribute in mappings.keys():
+        if isinstance(mappings[attribute], str):
+            return np_to_fundamental_type(row[mappings[attribute]])
+        return mappings[attribute](row)
+    elif attribute in row.index:
+        return row[attribute]
+
+
+valid_date_formats = ['%Y-%m-%d',  # '2020-07-28'
+                      '%d%b%y',  # '28Jul20'
+                      '%d-%b-%y',  # '28-Jul-20'
+                      '%d/%m/%Y']  # '28/07/2020
+
+
+def get_date(row, mappings, attribute, date_formats: list = None):
+    if date_formats is None:
+        date_formats = valid_date_formats
+    else:
+        date_formats.append(valid_date_formats)
+
+    value = get_value(row, mappings, attribute)
+    if isinstance(value, (dt.datetime, dt.date)):
+        return value
+
+    ordinal = from_excel_date(value)
+    r = None
+    if ordinal is not None:
+        for f in date_formats:
+            try:
+                r = dt.datetime.strptime(ordinal, f).date()
+            except ValueError:
+                pass
+            if r is not None:
+                return r
+
+    return ordinal
+
+
+def string_to_float(string):
+    locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+    try:
+        return locale.atof(string)
+    except ValueError:
+        pass
+    try:
+        return float(string.strip('%')) / 100
+    except ValueError:
+        pass
+
+    return string
+
+
+def is_empty(serie):
+    for elem in serie.values:
+        if elem is not None:
+            return False
+    return True
+
+
+def get_instrument(instr_type, instr_class=None, instr_map=None, tdapi=False):
+    if instr_map is None:
+        instr_map = {}
+    if tdapi:
+        if instr_type in instr_map:
+            instr = instr_map[instr_type][0]
+            attri = instr_map[instr_type][1]
+        else:
+            instr = Instrument().from_dict({'$type': instr_type})
+            attri = instr.properties()
+            instr_map[instr_type] = (instr, attri)
+    else:
+        if (instr_class, instr_type) in instr_map:
+            instr = instr_map[(instr_class, instr_type)][0]
+            attri = instr_map[(instr_class, instr_type)][1]
+        else:
+            instr = Instrument().from_dict({'asset_class': instr_class, 'type': instr_type})
+            attri = instr.properties()
+            instr_map[(instr_class, instr_type)] = (instr, attri)
+    return [instr, attri]
