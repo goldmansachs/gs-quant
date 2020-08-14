@@ -459,7 +459,7 @@ def test_get_swap_leg_defaults():
     defaults = tm_rates._get_swap_leg_defaults(CurrEnum.USD)
     assert result_dict == defaults
 
-    result_dict = dict(currency=CurrEnum.EUR, benchmark_type='EUR-EURIBOR-Telerate', floating_rate_tenor='6m',
+    result_dict = dict(currency=CurrEnum.EUR, benchmark_type='EUR-EURIBOR-TELERATE', floating_rate_tenor='6m',
                        pricing_location=PricingLocation.LDN)
     defaults = tm_rates._get_swap_leg_defaults(CurrEnum.EUR)
     assert result_dict == defaults

@@ -151,6 +151,7 @@ class DataQuery(Base):
         restrict_fields: bool = False,
         entity_filter: FieldFilterMap = None,
         interval: str = None,
+        time_filter: TimeFilter = None,
         name: str = None
     ):        
         super().__init__()
@@ -179,6 +180,7 @@ class DataQuery(Base):
         self.restrict_fields = restrict_fields
         self.entity_filter = entity_filter
         self.interval = interval
+        self.time_filter = time_filter
         self.name = name
 
     @property
@@ -437,6 +439,16 @@ class DataQuery(Base):
     def interval(self, value: str):
         self._property_changed('interval')
         self.__interval = value        
+
+    @property
+    def time_filter(self) -> TimeFilter:
+        """Filter to restrict data to a range of hours per day."""
+        return self.__time_filter
+
+    @time_filter.setter
+    def time_filter(self, value: TimeFilter):
+        self._property_changed('time_filter')
+        self.__time_filter = value        
 
 
 class DataSetCondition(Base):
@@ -2083,58 +2095,6 @@ class SymbolFilterLink(Base):
     def entity_field(self, value: str):
         self._property_changed('entity_field')
         self.__entity_field = value        
-
-
-class TimeFilter(Base):
-        
-    """Filter to restrict data to a range of hours per day."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        start_hours: str,
-        end_hours: str,
-        time_zone: str,
-        name: str = None
-    ):        
-        super().__init__()
-        self.start_hours = start_hours
-        self.end_hours = end_hours
-        self.time_zone = time_zone
-        self.name = name
-
-    @property
-    def start_hours(self) -> str:
-        """Start hours after which the data will be shown. Data is inclusive of the
-           startHours value."""
-        return self.__start_hours
-
-    @start_hours.setter
-    def start_hours(self, value: str):
-        self._property_changed('start_hours')
-        self.__start_hours = value        
-
-    @property
-    def end_hours(self) -> str:
-        """End hours up to which the data will be shown. Data is exclusive of the endHours
-           value with a precision of 1 second."""
-        return self.__end_hours
-
-    @end_hours.setter
-    def end_hours(self, value: str):
-        self._property_changed('end_hours')
-        self.__end_hours = value        
-
-    @property
-    def time_zone(self) -> str:
-        """The time zone with respect to which the start and end hours will be applied
-           (must be a valid IANA TimeZone identifier)."""
-        return self.__time_zone
-
-    @time_zone.setter
-    def time_zone(self, value: str):
-        self._property_changed('time_zone')
-        self.__time_zone = value        
 
 
 class DataFilter(Base):

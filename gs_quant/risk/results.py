@@ -13,7 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from gs_quant.base import InstrumentBase, Priceable
+from gs_quant.base import InstrumentBase, Priceable, Sentinel
 from gs_quant.risk import ErrorValue, RiskMeasure, aggregate_results
 
 from concurrent.futures import Future
@@ -28,15 +28,13 @@ from typing import Iterable, Mapping, Optional, Tuple, Union
 _logger = logging.getLogger(__name__)
 
 
-class _Sentinel:
-    pass
-
-
 class PricingFuture(Future):
 
-    def __init__(self, result=_Sentinel):
+    __RESULT_SENTINEL = Sentinel('PricingFuture')
+
+    def __init__(self, result=__RESULT_SENTINEL):
         super().__init__()
-        if result != _Sentinel:
+        if result is not self.__RESULT_SENTINEL:
             self.set_result(result)
 
     def result(self, timeout=None):
@@ -230,7 +228,7 @@ class PortfolioRiskResult(CompositeResultFuture):
     def dates(self):
         result = self[self.__risk_measures[0]].__results(self.__portfolio.all_instruments[0])
         result = result[0] if isinstance(result, PortfolioRiskResult) else result
-        return tuple(i.date() for i in result.index) if isinstance(result, (pd.DataFrame, pd.Series)) else None
+        return tuple(result.index) if isinstance(result, (pd.DataFrame, pd.Series)) else None
 
     def result(self, timeout: Optional[int] = None):
         super().result(timeout=timeout)

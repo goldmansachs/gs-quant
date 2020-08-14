@@ -69,7 +69,7 @@ setuptools.setup(
         "requests",
         "scipy>=1.2.0",
         "six",
-        "statsmodels",
+        "statsmodels>=0.11.1",
         "typing;python_version<'3.7'",
         "websockets",
         "pydash",

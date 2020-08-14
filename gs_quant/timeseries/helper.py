@@ -142,7 +142,7 @@ def plot_method(fn):
     # Allows fn to accept and ignore real_time argument even if it is not defined in the signature
     @wraps(fn)
     def ignore_extra_argument(*args, **kwargs):
-        for arg in ('real_time', 'interval'):
+        for arg in ('real_time', 'interval', 'time_filter'):
             if arg not in inspect.signature(fn).parameters:
                 kwargs.pop(arg, None)
         return fn(*args, **kwargs)

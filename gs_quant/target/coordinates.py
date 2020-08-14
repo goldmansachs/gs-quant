@@ -109,6 +109,7 @@ class MDAPIDataQuery(Base):
         end_date: datetime.date = None,
         real_time: bool = True,
         fields: Tuple[Union[MDAPIQueryField, str], ...] = None,
+        time_filter: TimeFilter = None,
         name: str = None
     ):        
         super().__init__()
@@ -125,6 +126,7 @@ class MDAPIDataQuery(Base):
         self.end_date = end_date
         self.real_time = real_time
         self.fields = fields
+        self.time_filter = time_filter
         self.name = name
 
     @property
@@ -257,3 +259,13 @@ class MDAPIDataQuery(Base):
     def fields(self, value: Tuple[Union[MDAPIQueryField, str], ...]):
         self._property_changed('fields')
         self.__fields = value        
+
+    @property
+    def time_filter(self) -> TimeFilter:
+        """Filter to restrict data to a range of hours per day."""
+        return self.__time_filter
+
+    @time_filter.setter
+    def time_filter(self, value: TimeFilter):
+        self._property_changed('time_filter')
+        self.__time_filter = value        

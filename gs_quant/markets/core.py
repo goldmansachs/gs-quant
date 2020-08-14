@@ -20,6 +20,7 @@ import weakref
 from abc import ABCMeta
 from concurrent.futures import ThreadPoolExecutor
 from inspect import signature
+from itertools import zip_longest
 from tqdm import tqdm
 from typing import Optional, Union
 
@@ -188,18 +189,20 @@ class PricingContext(ContextBaseWithDefault):
                         grouped_requests.setdefault((params, scenario, date, market, tuple(sorted(risk_measures))),
                                                     []).append(instrument)
 
-                requests = [
-                    RiskRequest(
-                        tuple(RiskPosition(instrument=i, quantity=i.instrument_quantity) for i in instruments),
-                        risk_measures,
-                        parameters=self._parameters,
-                        wait_for_results=not self.__is_batch,
-                        scenario=scenario,
-                        pricing_and_market_data_as_of=(PricingDateAndMarketDataAsOf(pricing_date=date, market=market),),
-                        request_visible_to_gs=self.__visible_to_gs
-                    )
-                    for (params, scenario, date, market, risk_measures), instruments in grouped_requests.items()
-                ]
+                requests = []
+
+                for (params, scenario, date, market, risk_measures), instruments in grouped_requests.items():
+                    for chunk in [tuple(filter(None, i)) for i in zip_longest(*[iter(instruments)] * 1000)]:
+                        requests.append(RiskRequest(
+                            tuple(RiskPosition(instrument=i, quantity=i.instrument_quantity) for i in chunk),
+                            risk_measures,
+                            parameters=self._parameters,
+                            wait_for_results=not self.__is_batch,
+                            scenario=scenario,
+                            pricing_and_market_data_as_of=(PricingDateAndMarketDataAsOf(pricing_date=date,
+                                                                                        market=market),),
+                            request_visible_to_gs=self.__visible_to_gs
+                        ))
 
                 requests_for_provider[provider] = requests
 

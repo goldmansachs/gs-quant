@@ -22,7 +22,7 @@ import math
 import msgpack
 import time
 from typing import Iterable, Optional, Union
-from websockets import ConnectionClosedError, client
+from websockets import ConnectionClosedError
 
 from gs_quant.api.risk import RiskApi
 from gs_quant.risk import RiskRequest
@@ -67,63 +67,86 @@ class GsRiskApi(RiskApi):
 
     @classmethod
     async def get_results(cls, responses: asyncio.Queue, results: asyncio.Queue, timeout: Optional[int] = None):
-        async def send_to_websocket(ws: client):
-            while True:
-                items = await cls.drain_queue_async(responses)
-                if not items:
-                    break
+        async def handle_websocket():
+            ret = ''
 
-                report_ids = [i[1]['reportId'] for i in items]
-                requests_by_id.update(zip(report_ids, (i[0] for i in items)))
-                await asyncio.wait_for(ws.send(json.dumps(report_ids)), timeout=send_timeout)
-                dispatched.update(report_ids)
+            try:
+                # If we're re-connecting then re-send any in-flight request ids
 
-            done.set_result(None)
+                outstanding_request_ids = [i for i in pending_requests.keys() if i not in dispatched]
+                if outstanding_request_ids:
+                    _logger.info(f'Re-sending {len(outstanding_request_ids)} requests')
+                    await asyncio.wait_for(ws.send(json.dumps(outstanding_request_ids)), timeout=send_timeout)
 
-        async def read_from_websocket(ws: client):
-            run = True
-            outstanding_report_ids = [i for i in requests_by_id.keys() if i not in dispatched]
-            if outstanding_report_ids:
-                _logger.info(f'Re-sending {len(outstanding_report_ids)} requests')
-                await asyncio.wait_for(ws.send(json.dumps(outstanding_report_ids)), timeout=send_timeout)
+                all_requests_dispatched = False
 
-            pending = set()
-            while requests_by_id or run:
-                complete, pending = await asyncio.wait((ws.recv(), done),
-                                                       timeout=timeout,
-                                                       return_when=asyncio.FIRST_COMPLETED)
-                if done in complete:
-                    complete.remove(done)
-                    run = False
+                while pending_requests or not all_requests_dispatched:
+                    # Continue while we have pending or un-dispatched requests
 
-                if not complete:
-                    continue
+                    request_listener = asyncio.ensure_future(cls.drain_queue_async(responses))\
+                        if not all_requests_dispatched else None
+                    result_listener = asyncio.ensure_future(ws.recv())
+                    listeners = tuple(filter(None, (request_listener, result_listener)))
 
-                result_id, status_result_str = complete.pop().result().split(';', 1)
-                status, result_str = status_result_str[0], status_result_str[1:]
+                    # Wait for either a request or result
+                    complete, pending = await asyncio.wait(listeners, return_when=asyncio.FIRST_COMPLETED)
 
-                if status == 'E':
-                    result = RuntimeError(result_str)
-                else:
-                    try:
-                        result = msgpack.unpackb(base64.b64decode(result_str), raw=False) if cls.USE_MSGPACK else\
-                            json.loads(result_str)
-                    except Exception as ee:
-                        result = ee
+                    # Check results before sending more requests. Results can be lost otherwise
 
-                request = requests_by_id.pop(result_id)
-                results.put_nowait((request, result))
+                    if result_listener in complete:
+                        # New results have been received
 
-            while pending:
-                pending.pop().cancel()
+                        request_id, status_result_str = result_listener.result().split(';', 1)
+                        status, result_str = status_result_str[0], status_result_str[1:]
 
-        requests_by_id = {}
+                        if status == 'E':
+                            # An error
+                            result = RuntimeError(result_str)
+                        else:
+                            # Unpack the result
+
+                            try:
+                                result = msgpack.unpackb(base64.b64decode(result_str), raw=False)\
+                                    if cls.USE_MSGPACK else json.loads(result_str)
+                            except Exception as ee:
+                                result = ee
+
+                        # Enqueue the request and result for the listener to handle
+                        results.put_nowait((pending_requests.pop(request_id), result))
+                    else:
+                        result_listener.cancel()
+
+                    if request_listener:
+                        if request_listener in complete:
+                            # New requests have been posted ...
+
+                            all_requests_dispatched, items = request_listener.result()
+                            if items:
+                                # ... extract the request IDs ...
+                                request_ids = [i[1]['reportId'] for i in items]
+
+                                # ... update the pending requests ...
+                                pending_requests.update(zip(request_ids, (i[0] for i in items)))
+
+                                # ... add to our result subscription ...
+
+                                await asyncio.wait_for(ws.send(json.dumps(request_ids)), timeout=send_timeout)
+
+                                # ... note dispatched
+                                dispatched.update(request_ids)
+                        else:
+                            request_listener.cancel()
+            except Exception as e:
+                ret = str(e)
+
+            return ret
+
+        pending_requests = {}
         dispatched = set()
         error = ''
         attempts = 0
         max_attempts = 5
         send_timeout = 30
-        done = asyncio.Future()
 
         while attempts < max_attempts:
             if attempts > 0:
@@ -132,9 +155,9 @@ class GsRiskApi(RiskApi):
 
             try:
                 async with GsSession.current._connect_websocket('/risk/calculate/results/subscribe') as ws:
-                    await asyncio.wait((send_to_websocket(ws), read_from_websocket(ws)))
-                    attempts = max_attempts
-                    error = ''
+                    error = await handle_websocket()
+
+                attempts = max_attempts
             except ConnectionClosedError as cce:
                 error = 'Connection failed: ' + str(cce)
                 attempts += 1
@@ -147,7 +170,7 @@ class GsRiskApi(RiskApi):
 
         if error != '':
             _logger.error(f'Fatal error: {error}')
-            results.put_nowait([])
+            cls.shutdown_queue_listener(results)
 
     @classmethod
     def create_pretrade_execution_optimization(cls, request: APEXOptimizationRequest) -> str:
