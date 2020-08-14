@@ -16,7 +16,7 @@ under the License.
 import datetime as dt
 from typing import Iterable, Optional, Tuple, Union
 
-from gs_quant.base import Priceable, RiskKey
+from gs_quant.base import InstrumentBase, RiskKey
 from gs_quant.datetime.date import date_range
 from gs_quant.risk import RiskMeasure, CarryScenario, MarketDataScenario
 from gs_quant.risk.results import HistoricalPricingFuture, PricingFuture
@@ -84,10 +84,10 @@ class HistoricalPricingContext(PricingContext):
         else:
             raise ValueError('Must supply start or dates')
 
-    def calc(self, priceable: Priceable, risk_measure: RiskMeasure) -> PricingFuture:
+    def calc(self, instrument: InstrumentBase, risk_measure: RiskMeasure) -> PricingFuture:
         futures = []
 
-        provider = priceable.provider
+        provider = instrument.provider
         scenario = self._scenario
         parameters = self._parameters
         location = self.market.location
@@ -95,7 +95,7 @@ class HistoricalPricingContext(PricingContext):
         for date in self.__date_range:
             market = CloseMarket(location=location, date=close_market_date(location, date))
             risk_key = RiskKey(provider, date, market, parameters, scenario, risk_measure)
-            futures.append(self._calc(priceable, risk_key))
+            futures.append(self._calc(instrument, risk_key))
 
         return HistoricalPricingFuture(futures)
 
@@ -165,10 +165,10 @@ class BackToTheFuturePricingContext(HistoricalPricingContext):
         else:
             raise ValueError('Must supply start or dates')
 
-    def calc(self, priceable: Priceable, risk_measure: RiskMeasure) -> PricingFuture:
+    def calc(self, instrument: InstrumentBase, risk_measure: RiskMeasure) -> PricingFuture:
         futures = []
 
-        provider = priceable.provider
+        provider = instrument.provider
         base_scenario = self._scenario
         parameters = self._parameters
         location = self.market.location
@@ -177,10 +177,10 @@ class BackToTheFuturePricingContext(HistoricalPricingContext):
             if date > self.pricing_date:
                 scenario = MarketDataScenario(CarryScenario(date=date, roll_to_fwds=self._roll_to_fwds))
                 risk_key = RiskKey(provider, date, base_market, parameters, scenario, risk_measure)
-                futures.append(self._calc(priceable, risk_key))
+                futures.append(self._calc(instrument, risk_key))
             else:
                 market = CloseMarket(location=location, date=close_market_date(location, date))
                 risk_key = RiskKey(provider, date, market, parameters, base_scenario, risk_measure)
-                futures.append(self._calc(priceable, risk_key))
+                futures.append(self._calc(instrument, risk_key))
 
         return HistoricalPricingFuture(futures)

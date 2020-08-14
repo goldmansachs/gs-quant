@@ -577,6 +577,15 @@ class Market(Base):
     pass
 
 
+class Sentinel:
+
+    def __init__(self, name: str):
+        self.__name = name
+
+    def __eq__(self, other):
+        return self.__name == other.__name
+
+
 def get_enum_value(enum_type: EnumMeta, value: Union[EnumBase, str]):
     if value in (None,):
         return None

@@ -2768,7 +2768,58 @@ class SimpleParty(Base):
     @party_book.setter
     def party_book(self, value: str):
         self._property_changed('party_book')
-        self.__party_book = value        
+        self.__party_book = value
+
+
+class TimeFilter(Base):
+    """Filter to restrict data to a range of hours per day."""
+
+    @camel_case_translate
+    def __init__(
+            self,
+            start_hours: str,
+            end_hours: str,
+            time_zone: str,
+            name: str = None
+    ):
+        super().__init__()
+        self.start_hours = start_hours
+        self.end_hours = end_hours
+        self.time_zone = time_zone
+        self.name = name
+
+    @property
+    def start_hours(self) -> str:
+        """Start hours after which the data will be shown. Data is inclusive of the
+           startHours value."""
+        return self.__start_hours
+
+    @start_hours.setter
+    def start_hours(self, value: str):
+        self._property_changed('start_hours')
+        self.__start_hours = value
+
+    @property
+    def end_hours(self) -> str:
+        """End hours up to which the data will be shown. Data is exclusive of the endHours
+           value with a precision of 1 second."""
+        return self.__end_hours
+
+    @end_hours.setter
+    def end_hours(self, value: str):
+        self._property_changed('end_hours')
+        self.__end_hours = value
+
+    @property
+    def time_zone(self) -> str:
+        """The time zone with respect to which the start and end hours will be applied
+           (must be a valid IANA TimeZone identifier)."""
+        return self.__time_zone
+
+    @time_zone.setter
+    def time_zone(self, value: str):
+        self._property_changed('time_zone')
+        self.__time_zone = value
 
 
 class WeightedPosition(Base):

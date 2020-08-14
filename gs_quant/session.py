@@ -248,7 +248,7 @@ class GsSession(ContextBase):
                                   extra_headers=extra_headers,
                                   max_size=2**64,
                                   read_limit=2**64,
-                                  ssl=self.__ssl_context())
+                                  ssl=self.__ssl_context() if url.startswith('wss') else None)
 
     def _headers(self):
         return [('Cookie', 'GSSSO=' + self._session.cookies['GSSSO'])]

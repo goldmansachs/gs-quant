@@ -20,9 +20,9 @@ import queue
 import sys
 from threading import Thread
 from tqdm import tqdm
-from typing import Iterable, Optional, Union
+from typing import Iterable, Optional, Union, Tuple
 
-from gs_quant.base import RiskKey
+from gs_quant.base import RiskKey, Sentinel
 from gs_quant.risk import ErrorValue, RiskRequest
 from gs_quant.risk.result_handlers import result_handlers
 from gs_quant.session import GsSession
@@ -31,6 +31,8 @@ _logger = logging.getLogger(__name__)
 
 
 class RiskApi(metaclass=ABCMeta):
+
+    __SHUTDOWN_SENTINEL = Sentinel('QueueListenerShutdown')
 
     @classmethod
     @abstractmethod
@@ -49,29 +51,53 @@ class RiskApi(metaclass=ABCMeta):
     @classmethod
     def __handle_queue_update(cls,
                               q: Union[queue.Queue, asyncio.Queue],
-                              first: object) -> list:
-        ret = first if isinstance(first, list) else [first]
+                              first: object) -> Tuple[bool, list]:
+        if first is cls.__SHUTDOWN_SENTINEL:
+            return True, []
+
+        ret = [first]
+        shutdown = False
 
         while True:
             try:
                 elem = q.get_nowait()
-                if isinstance(elem, list):
-                    ret.extend(elem)
+                if elem is cls.__SHUTDOWN_SENTINEL:
+                    shutdown = True
                 else:
                     ret.append(elem)
             except (asyncio.QueueEmpty, queue.Empty):
                 break
 
-        return ret
+        return shutdown, ret
 
     @classmethod
-    def drain_queue(cls, q: queue.Queue) -> list:
+    def drain_queue(cls, q: queue.Queue) -> Tuple[bool, list]:
         return cls.__handle_queue_update(q, q.get())
 
     @classmethod
-    async def drain_queue_async(cls, q: asyncio.Queue) -> list:
+    async def drain_queue_async(cls, q: asyncio.Queue) -> Tuple[bool, list]:
         elem = await q.get()
         return cls.__handle_queue_update(q, elem)
+
+    @classmethod
+    def enqueue(cls,
+                q: Union[queue.Queue, asyncio.Queue],
+                items: Iterable,
+                loop: Optional[asyncio.AbstractEventLoop] = None):
+        for item in items:
+            if loop:
+                loop.call_soon_threadsafe(q.put_nowait, item)
+            else:
+                q.put_nowait(item)
+
+    @classmethod
+    def shutdown_queue_listener(cls,
+                                q: Union[queue.Queue, asyncio.Queue],
+                                loop: Optional[asyncio.AbstractEventLoop] = None):
+        if loop:
+            loop.call_soon_threadsafe(q.put_nowait, cls.__SHUTDOWN_SENTINEL)
+        else:
+            q.put_nowait(cls.__SHUTDOWN_SENTINEL)
 
     @classmethod
     def run(cls,
@@ -85,16 +111,23 @@ class RiskApi(metaclass=ABCMeta):
                              session: GsSession,
                              loop: asyncio.AbstractEventLoop):
             with session:
-                while True:
-                    requests_chunk = cls.drain_queue(outstanding_requests)
-                    if not requests_chunk:
-                        break
+                shutdown = False
+                while not shutdown:
+                    shutdown, requests_chunk = cls.drain_queue(outstanding_requests)
+                    if requests_chunk:
+                        try:
+                            # Get the responses for our requests chunk
+                            responses_chunk = cls.calc_multi(requests_chunk)
 
-                    try:
-                        responses_chunk = cls.calc_multi(requests_chunk)
-                        loop.call_soon_threadsafe(responses.put_nowait, list(responses_chunk.items()))
-                    except Exception as e:
-                        loop.call_soon_threadsafe(raw_results.put_nowait, [(r, e) for r in requests_chunk])
+                            # Enqueue the replies for either the result subscriber (if async requests) or directly
+                            cls.enqueue(responses, responses_chunk.items(), loop=loop)
+                        except Exception as e:
+                            # Enqueue the error as a reply
+                            cls.enqueue(raw_results, ((r, e) for r in requests_chunk), loop=loop)
+
+                if responses != raw_results:
+                    # If we are in async mode, indicate to the result subscriber that there are no more requests
+                    cls.shutdown_queue_listener(responses, loop=loop)
 
         async def run_async():
             is_async = not requests[0].wait_for_results
@@ -102,31 +135,40 @@ class RiskApi(metaclass=ABCMeta):
             raw_results = asyncio.Queue()
             responses = asyncio.Queue() if is_async else raw_results
             outstanding_requests = queue.Queue()
-            listener = None
+            results_handler = None
 
+            # The requests library (which we use for dispatching) is not async, so we need a thread for concurrency
             Thread(daemon=True,
                    target=execute_requests,
                    args=(outstanding_requests, responses, raw_results, GsSession.current, loop)).start()
 
             if is_async:
-                listener = loop.create_task(cls.get_results(responses, raw_results, timeout=timeout))
+                # If async we need a task to handle result subscription
+                results_handler = loop.create_task(cls.get_results(responses, raw_results, timeout=timeout))
 
             results = {}
             expected = len(requests)
             received = 0
-            chunk_size = max_concurrent
+            chunk_size = min(max_concurrent, len(requests))
 
             while received < expected:
-                chunk_size = min(chunk_size, len(requests))
                 if requests:
-                    outstanding_requests.put([requests.pop(0) for _ in range(chunk_size)])
+                    # Enqueue requests for dispatch
+                    cls.enqueue(outstanding_requests, (requests.pop(0) for _ in range(chunk_size)), loop=loop)
+                    if not requests:
+                        # No more requests - shutdown the listener queue, the thread will exit
+                        cls.shutdown_queue_listener(outstanding_requests, loop=loop)
 
-                completed = await cls.drain_queue_async(raw_results)
-                if not completed:
+                # Wait for results
+                shutdown, completed = await cls.drain_queue_async(raw_results)
+                if shutdown:
+                    # Only happens on error
                     break
 
-                chunk_size = len(completed)
+                # Enable as many new requests as we've received results, to keep the outstanding number constant
+                chunk_size = min(len(completed), len(requests))
 
+                # Handle the results
                 for request, result in completed:
                     received += 1
                     results_by_key = cls._handle_results(request, result)
@@ -135,11 +177,8 @@ class RiskApi(metaclass=ABCMeta):
 
                     results.update(results_by_key)
 
-            outstanding_requests.put([])
-            await responses.put([])
-
-            if is_async:
-                await listener
+            if results_handler:
+                await results_handler
 
             return results
 

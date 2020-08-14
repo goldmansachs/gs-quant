@@ -119,7 +119,7 @@ class ScalarWithInfo(ResultInfo, metaclass=ABCMeta):
     @staticmethod
     def compose(components: Iterable):
         dates, values, errors, risk_key, unit = ResultInfo.composition_info(components)
-        return SeriesWithInfo(pd.Series(index=pd.DatetimeIndex(dates), data=values),
+        return SeriesWithInfo(pd.Series(index=pd.DatetimeIndex(dates).date, data=values),
                               risk_key=risk_key,
                               unit=unit,
                               error=errors)

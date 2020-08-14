@@ -84,6 +84,7 @@ class QueryType(Enum):
     G_REGIONAL_SCORE = "G Regional Score"
     G_REGIONAL_PERCENTILE = "G Regional Percentile"
     ES_DISCLOSURE_PERCENTAGE = "ES Disclosure Percentage"
+    RATING = "Rating"
 
 
 class GsDataApi(DataApi):

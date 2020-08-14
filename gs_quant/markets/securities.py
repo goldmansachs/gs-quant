@@ -95,6 +95,12 @@ class AssetType(Enum):
     #: Commodity Reference Price
     COMMODITY_REFERENCE_PRICE = "Commodity Reference Price"
 
+    #: Commodity Power Node
+    COMMODITY_POWER_NODE = "Commodity Power Node"
+
+    #: Commodity Power Aggregated Nodes
+    COMMODITY_POWER_AGGREGATED_NODES = "Commodity Power Aggregated Nodes"
+
     #: Bond
     BOND = "Bond"
 
@@ -242,7 +248,7 @@ class Asset(Entity, metaclass=ABCMeta):
 
     def get_data_coordinate(self,
                             measure: DataMeasure,
-                            dimensions: Optional[DataDimensions] = dict,
+                            dimensions: Optional[DataDimensions] = None,
                             frequency: DataFrequency = DataFrequency.ANY) -> BaseDataCoordinate:
         """
         Get data coordinate
@@ -278,6 +284,7 @@ class Asset(Entity, metaclass=ABCMeta):
         daily_dataset_id = available.get(DataFrequency.DAILY)
         rt_dataset_id = available.get(DataFrequency.REAL_TIME)
 
+        dimensions = dimensions or {}
         dimensions['assetId'] = asset_id
 
         if frequency == DataFrequency.DAILY:
@@ -287,12 +294,14 @@ class Asset(Entity, metaclass=ABCMeta):
 
     def get_data_series(self,
                         measure: DataMeasure,
-                        dimensions: DataDimensions = dict) -> pd.Series:
+                        dimensions: DataDimensions = None,
+                        frequency: DataFrequency = DataFrequency.ANY) -> pd.Series:
         """
         Get asset series
 
         :param measure: measure to get as series
         :param dimensions: dimensions to query (e.g. tenor)
+        :param frequency: data frequency to query
         :return: timeseries of given measure
 
         **Usage**
@@ -315,7 +324,9 @@ class Asset(Entity, metaclass=ABCMeta):
 
         """
 
-        coordinate = self.get_data_coordinate(measure, dimensions)
+        coordinate = self.get_data_coordinate(measure, dimensions, frequency)
+        if coordinate is None:
+            raise ValueError(f"No data co-ordinate found for these parameters: {measure, dimensions, frequency}")
         return coordinate.get_series()
 
     def get_close_prices(self) -> pd.Series:
@@ -478,6 +489,34 @@ class CommodityReferencePrice(Asset):
 
     def get_type(self) -> AssetType:
         return AssetType.COMMODITY_REFERENCE_PRICE
+
+
+class CommodityPowerNode(Asset):
+    """Commodity Power Node
+
+    Represents a distinct location in commodity power markets
+
+    """
+
+    def __init__(self, id_: str, name: str):
+        Asset.__init__(self, id_, AssetClass.Commod, name)
+
+    def get_type(self) -> AssetType:
+        return AssetType.COMMODITY_POWER_NODE
+
+
+class CommodityPowerAggregatedNodes(Asset):
+    """Commodity Power Aggregated Nodes
+
+    Represents a group of locations in commodity power markets
+
+    """
+
+    def __init__(self, id_: str, name: str):
+        Asset.__init__(self, id_, AssetClass.Commod, name)
+
+    def get_type(self) -> AssetType:
+        return AssetType.COMMODITY_POWER_AGGREGATED_NODES
 
 
 class Bond(Asset):
@@ -699,6 +738,12 @@ class SecurityMaster:
 
         if asset_type in (GsAssetType.CommodityReferencePrice.value,):
             return CommodityReferencePrice(gs_asset.id, gs_asset.name)
+
+        if asset_type in (GsAssetType.CommodityPowerNode.value,):
+            return CommodityPowerNode(gs_asset.id, gs_asset.name)
+
+        if asset_type in (GsAssetType.CommodityPowerAggregatedNodes.value,):
+            return CommodityPowerAggregatedNodes(gs_asset.id, gs_asset.name)
 
         if asset_type in (GsAssetType.Bond.value,):
             return Bond(gs_asset.id, gs_asset.name)

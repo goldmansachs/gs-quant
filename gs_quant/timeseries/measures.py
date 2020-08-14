@@ -382,7 +382,7 @@ def _extract_series_from_df(df: pd.DataFrame, query_type: QueryType):
     return series
 
 
-@plot_measure((AssetClass.FX, AssetClass.Equity), None, [MeasureDependency(
+@plot_measure((AssetClass.FX, AssetClass.Equity, AssetClass.Commod), None, [MeasureDependency(
     id_provider=cross_stored_direction_for_fx_vol, query_type=QueryType.IMPLIED_VOLATILITY)])
 def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Real, *, location: str = 'NYC',
          source: str = None, real_time: bool = False) -> Series:
@@ -411,7 +411,7 @@ def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Re
         else:
             raise MqValueError('strike_reference has to be delta to get skew for FX options')
     else:
-        assert asset.asset_class == AssetClass.Equity
+        assert asset.asset_class in (AssetClass.Equity, AssetClass.Commod)
         if strike_reference in (SkewReference.DELTA, None):
             b = 50
         elif strike_reference == SkewReference.NORMALIZED:
