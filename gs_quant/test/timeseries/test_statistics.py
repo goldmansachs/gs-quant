@@ -62,6 +62,14 @@ def test_min():
     expected = pd.Series([3.0, 2.0, 2.0, 1.0, 1.0, 2.0], index=dates)
     assert_series_equal(result, expected, obj="Minimum of multiple series")
 
+    result = min_(x, "2d")
+    expected = pd.Series([2.0, 1.0, 3.0, 3.0], index=dates[2:])
+    assert_series_equal(result, expected, obj="Minimum with strdate window")
+
+    result = min_(x, "1d")
+    expected = pd.Series([2.0, 3.0, 1.0, 3.0, 6.0], index=dates[1:])
+    assert_series_equal(result, expected, obj="Minimum with strdate window 2")
+
 
 def test_max():
     dates = [
@@ -95,6 +103,12 @@ def test_max():
     result = max_([x, y], Window(2, 0))
     expected = pd.Series([4.0, 4.0, 4.0, 4.0, 3.0, 6.0], index=dates)
     assert_series_equal(result, expected, obj="Maximum of multiple series")
+
+    s = pd.Series([-3.0, -2.0, 3.0, -1.0, -3.0, 6.0], index=dates)
+    t = pd.Series([0, 0], index=dates[0:2])
+    result = max_([s, t], 1)
+    expected = pd.Series([0.0, 3, 0, 0, 6], index=dates[1:])
+    assert_series_equal(result, expected, obj="Maximum with constant")
 
 
 def test_range():
@@ -299,7 +313,6 @@ def test_std():
 
 
 def test_exponential_std():
-
     def exp_std_calc(ts, alpha=0.75):
         std = ts * 0
         for i in range(1, len(ts)):
@@ -385,6 +398,9 @@ def test_cov():
 
 
 def test_zscores():
+    with pytest.raises(MqValueError):
+        zscores(pd.Series(range(5)), "2d")
+
     assert_series_equal(zscores(pd.Series()), pd.Series())
     assert_series_equal(zscores(pd.Series(), 1), pd.Series())
 
@@ -416,6 +432,14 @@ def test_zscores():
     result = zscores(x, Window('1w', 0))
     expected = pd.Series([0.0, -0.707106, 0.577350, -1.305582, 0.670820, 1.603567], index=dates)
     assert_series_equal(result, expected, obj="z-score window 1w", check_less_precise=True)
+
+    result = zscores(x, '1w')
+    expected = pd.Series([1.603567], index=dates[-1:])
+    assert_series_equal(result, expected, obj='z-score window string 1w', check_less_precise=True)
+
+    result = zscores(x, '1m')
+    expected = pd.Series()
+    assert_series_equal(result, expected, obj="z-score window too large", check_less_precise=True)
 
 
 def test_winsorize():
@@ -507,12 +531,30 @@ def test_percentile():
         percentile(pd.Series(), -1)
     with pytest.raises(MqError):
         percentile(pd.Series(), 100.1)
+    with pytest.raises(MqTypeError):
+        percentile(pd.Series(range(5), index=range(5)), 90, "2d")
 
     for n in range(0, 101, 5):
         assert percentile(pd.Series(x * 10 for x in range(0, 11)), n) == n
 
     x = percentile(pd.Series(x for x in range(0, 5)), 50, 2)
     assert_series_equal(x, pd.Series([1.5, 2.5, 3.5], index=pd.RangeIndex(2, 5)))
+
+    x = percentile(pd.Series(), 90, "1d")
+    assert_series_equal(x, pd.Series(), obj="Percentile with empty series")
+
+
+def test_percentile_str():
+    today = datetime.datetime.now()
+    days = pd.date_range(today, periods=12, freq='D')
+    start = pd.Series([29, 56, 82, 13, 35, 53, 25, 23, 21, 12, 15, 9], index=days)
+    actual = percentile(start, 2, '10d')
+    expected = pd.Series([12.18, 9.54], index=pd.date_range(today + datetime.timedelta(days=10), periods=2, freq='D'))
+    assert_series_equal(actual, expected)
+
+    actual = percentile(start, 50, '1w')
+    expected = percentile(start, 50, 7)
+    assert_series_equal(actual, expected)
 
 
 def test_regression():

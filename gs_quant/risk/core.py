@@ -18,7 +18,7 @@ from concurrent.futures import Future
 from copy import copy
 import itertools
 import datetime as dt
-from typing import Iterable, Optional, Tuple, Union
+from typing import Iterable, Optional, Tuple, Union, Any, Callable
 
 import pandas as pd
 
@@ -139,7 +139,17 @@ class FloatWithInfo(ScalarWithInfo, float):
         return float(self)
 
     def __repr__(self):
+
         return self.error if self.error else float.__repr__(self)
+
+    def __add__(self, other):
+        if isinstance(other, FloatWithInfo):
+            if self.unit == other.unit:
+                return FloatWithInfo(combine_risk_key(self.risk_key, other.risk_key), self.raw_value + other.raw_value,
+                                     self.unit)
+            else:
+                raise ValueError('FloatWithInfo unit mismatch')
+        return super(FloatWithInfo, self).__add__(other)
 
 
 class StringWithInfo(ScalarWithInfo, str):
@@ -273,13 +283,16 @@ def aggregate_risk(results: Iterable[Union[DataFrameWithInfo, Future]], threshol
     return sort_risk(result)
 
 
-ResultType = Union[dict, tuple, DataFrameWithInfo, FloatWithInfo, SeriesWithInfo]
+ResultType = Union[None, dict, tuple, DataFrameWithInfo, FloatWithInfo, SeriesWithInfo]
 
 
 def aggregate_results(results: Iterable[ResultType]) -> ResultType:
     unit = None
     risk_key = None
     results = tuple(results)
+
+    if not len(results):
+        return None
 
     for result in results:
         if isinstance(result, Exception):
@@ -370,3 +383,18 @@ def sort_risk(df: pd.DataFrame, by: Tuple[str, ...] = __risk_columns) -> pd.Data
         result = result.set_index('date')
 
     return result
+
+
+def combine_risk_key(key_1: RiskKey, key_2: RiskKey) -> RiskKey:
+    """
+    Combine two risk keys (key_1, key_2) into a new RiskKey
+
+    :type key_1: RiskKey
+    :type key_2: RiskKey
+    """
+
+    def get_field_value(field_name: str): getattr(key_1, field_name) \
+        if getattr(key_1, field_name) == getattr(key_2, field_name) else None
+
+    return RiskKey(get_field_value("provider"), get_field_value("date"), get_field_value("market"),
+                   get_field_value("params"), get_field_value("scenario"), get_field_value("risk_measure"))

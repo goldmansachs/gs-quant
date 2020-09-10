@@ -17,13 +17,17 @@ import datetime as dt
 import logging
 from enum import Enum
 from itertools import chain
-from typing import Iterable, List, Optional, Tuple, Union
+from typing import Iterable, List, Optional, Tuple, Union, Dict
 from urllib.parse import urlencode
 
 import cachetools
 import numpy
 import pandas as pd
 from cachetools import TTLCache
+from gs_quant.target.common import FieldFilterMap, XRef, MarketDataVendor, PricingLocation
+from gs_quant.target.coordinates import MDAPIDataBatchResponse, MDAPIDataQuery, MDAPIDataQueryResponse, MDAPIQueryField
+from gs_quant.target.data import DataQuery, DataQueryResponse
+from gs_quant.target.data import DataSetEntity
 
 from gs_quant.api.data import DataApi
 from gs_quant.base import Base
@@ -31,10 +35,6 @@ from gs_quant.data.core import DataContext, DataFrequency
 from gs_quant.errors import MqValueError
 from gs_quant.markets import MarketDataCoordinate
 from gs_quant.session import GsSession
-from gs_quant.target.common import FieldFilterMap, XRef, MarketDataVendor, PricingLocation
-from gs_quant.target.coordinates import MDAPIDataBatchResponse, MDAPIDataQuery, MDAPIDataQueryResponse, MDAPIQueryField
-from gs_quant.target.data import DataQuery, DataQueryResponse
-from gs_quant.target.data import DataSetEntity
 from .assets import GsAssetApi, GsIdType
 from ...target.assets import EntityQuery
 
@@ -44,11 +44,14 @@ _logger = logging.getLogger(__name__)
 class QueryType(Enum):
     IMPLIED_VOLATILITY = "Implied Volatility"
     IMPLIED_CORRELATION = "Implied Correlation"
+    REALIZED_CORRELATION = "Realized Correlation"
     AVERAGE_IMPLIED_VOLATILITY = "Average Implied Volatility"
     AVERAGE_IMPLIED_VARIANCE = "Average Implied Variance"
     AVERAGE_REALIZED_VOLATILITY = "Average Realized Volatility"
     SWAP_RATE = "Swap Rate"
     SWAP_ANNUITY = "Swap Annuity"
+    SWAPTION_PREMIUM = "Swaption Premium"
+    SWAPTION_ANNUITY = "Swaption Annuity"
     BASIS_SWAP_RATE = "Basis Swap Rate"
     SWAPTION_VOL = "Swaption Vol"
     MIDCURVE_VOL = "Midcurve Vol"
@@ -60,6 +63,8 @@ class QueryType(Enum):
     ATM_FWD_RATE = "Atm Fwd Rate"
     BASIS = "Basis"
     VAR_SWAP = "Var Swap"
+    MIDCURVE_PREMIUM = "Midcurve Premium"
+    MIDCURVE_ANNUITY = "Midcurve Annuity"
     MIDCURVE_ATM_FWD_RATE = "Midcurve Atm Fwd Rate"
     CAP_FLOOR_ATM_FWD_RATE = "Cap Floor Atm Fwd Rate"
     SPREAD_OPTION_ATM_FWD_RATE = "Spread Option Atm Fwd Rate"
@@ -85,6 +90,7 @@ class QueryType(Enum):
     G_REGIONAL_PERCENTILE = "G Regional Percentile"
     ES_DISCLOSURE_PERCENTAGE = "ES Disclosure Percentage"
     RATING = "Rating"
+    CONVICTION_LIST = "Conviction List"
 
 
 class GsDataApi(DataApi):
@@ -100,8 +106,7 @@ class GsDataApi(DataApi):
             -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple]:
         if isinstance(query, MDAPIDataQuery) and query.market_data_coordinates:
             # Don't use MDAPIDataBatchResponse for now - it doesn't handle quoting style correctly
-            results: Union[MDAPIDataBatchResponse, dict] = GsSession.current._post(
-                '/data/coordinates/query', payload=query)
+            results: Union[MDAPIDataBatchResponse, dict] = cls.execute_query('coordinates', query)
             if isinstance(results, dict):
                 return results.get('responses', ())
             else:
@@ -133,12 +138,9 @@ class GsDataApi(DataApi):
                     setattr(query.where, xref_type, None)
                     query.where.assetId = [asset_id_map[x] for x in xref_values]
 
-        results: Union[DataQueryResponse, dict] = GsSession.current._post('/data/{}/query'.format(dataset_id),
-                                                                          payload=query)
-        if isinstance(results, dict):
-            results = results.get('data', ())
-        else:
-            results = results.data if results.data is not None else ()
+        response: Union[DataQueryResponse, dict] = cls.execute_query(dataset_id, query)
+
+        results = cls.get_results(dataset_id, response, query)
 
         if asset_id_type not in {GsIdType.id, None}:
             asset_ids = tuple(set(filter(None, (r.get('assetId') for r in results))))
@@ -150,6 +152,31 @@ class GsDataApi(DataApi):
 
                 for result in results:
                     result[asset_id_type] = xref_map[result['assetId']]
+
+        return results
+
+    @staticmethod
+    def execute_query(dataset_id: str, query: Union[DataQuery, MDAPIDataQuery]):
+        return GsSession.current._post('/data/{}/query'.format(dataset_id), payload=query)
+
+    @staticmethod
+    def get_results(dataset_id: str, response: Union[DataQueryResponse, dict], query: DataQuery) -> list:
+        if isinstance(response, dict):
+            total_pages = response.get('totalPages')
+            results = response.get('data', ())
+        else:
+            total_pages = response.total_pages if response.total_pages is not None else 0
+            results = response.data if response.data is not None else ()
+
+        if total_pages:
+            if query.page is None:
+                query.page = total_pages - 1
+                results = results + GsDataApi.get_results(dataset_id, GsDataApi.execute_query(dataset_id, query), query)
+            elif query.page - 1 > 0:
+                query.page -= 1
+                results = results + GsDataApi.get_results(dataset_id, GsDataApi.execute_query(dataset_id, query), query)
+            else:
+                return results
 
         return results
 
@@ -296,7 +323,7 @@ class GsDataApi(DataApi):
             raise NotImplementedError('Unsupported return type')
 
     @staticmethod
-    def build_market_data_query(asset_ids: List[str], query_type: QueryType, where: Union[FieldFilterMap, dict] = None,
+    def build_market_data_query(asset_ids: List[str], query_type: QueryType, where: Union[FieldFilterMap, Dict] = None,
                                 source: Union[str] = None, real_time: bool = False):
         inner = {
             'assetIds': asset_ids,
@@ -319,10 +346,10 @@ class GsDataApi(DataApi):
         }
 
     @classmethod
-    def get_data_providers(cls, asset_id: str) -> dict:
+    def get_data_providers(cls, entity_id: str) -> Dict:
         """Return daily and real-time data providers
 
-        :param asset_id: identifier of asset to query
+        :param entity_id: identifier of entity i.e. asset, country, subdivision
         :return: dictionary of available data providers
 
         ** Usage **
@@ -332,30 +359,29 @@ class GsDataApi(DataApi):
         """
 
         GsSession.current: GsSession
-        body = GsSession.current._get(f'/data/markets/{asset_id}/availability')
+        body = GsSession.current._get(f'/data/measures/{entity_id}/availability')
         if 'errorMessages' in body:
             raise MqValueError(f"data availablity request {body['requestId']} failed: {body.get('errorMessages', '')}")
         if 'data' not in body:
-            providers = dict()
+            providers = {}
         else:
-            providers = dict()
+            providers = {}
 
-            all_ds = sorted(body['data'], key=lambda x: x['rank'], reverse=True)
+            all_data_mappings = sorted(body['data'], key=lambda x: x['rank'], reverse=True)
 
-            for source in all_ds:
+            for source in all_data_mappings:
 
-                fq = source.get('frequency', 'End Of Day')
-                df = source.get('datasetField', '')
-                rk = source.get('rank')
+                freq = source.get('frequency', 'End Of Day')
+                dataset_field = source.get('datasetField', '')
+                rank = source.get('rank')
 
-                if df not in providers:
-                    providers[df] = {}
+                providers.setdefault(dataset_field, {})
 
-                if rk:
-                    if fq == 'End Of Day':
-                        providers[df][DataFrequency.DAILY] = source['datasetId']
-                    elif fq == 'Real Time':
-                        providers[df][DataFrequency.REAL_TIME] = source['datasetId']
+                if rank:
+                    if freq == 'End Of Day':
+                        providers[dataset_field][DataFrequency.DAILY] = source['datasetId']
+                    elif freq == 'Real Time':
+                        providers[dataset_field][DataFrequency.REAL_TIME] = source['datasetId']
 
         return providers
 
@@ -378,9 +404,9 @@ class GsDataApi(DataApi):
     @classmethod
     def __normalise_coordinate_data(
             cls,
-            data: Iterable[Union[MDAPIDataQueryResponse, dict]],
+            data: Iterable[Union[MDAPIDataQueryResponse, Dict]],
             fields: Optional[Tuple[MDAPIQueryField, ...]] = None
-    ) -> Iterable[Iterable[dict]]:
+    ) -> Iterable[Iterable[Dict]]:
         ret = []
         for response in data:
             coord_data = []
@@ -407,11 +433,13 @@ class GsDataApi(DataApi):
     @classmethod
     def __df_from_coordinate_data(
             cls,
-            data: Iterable[dict]
+            data: Iterable[Dict],
+            *,
+            use_datetime_index: Optional[bool] = True
     ) -> pd.DataFrame:
         df = cls._sort_coordinate_data(pd.DataFrame.from_records(data))
         index_field = next((f for f in ('time', 'date') if f in df.columns), None)
-        if index_field:
+        if index_field and use_datetime_index:
             df = df.set_index(pd.DatetimeIndex(df.loc[:, index_field].values))
 
         return df
@@ -455,7 +483,7 @@ class GsDataApi(DataApi):
             vendor: MarketDataVendor = MarketDataVendor.Goldman_Sachs,
             as_dataframe: bool = False,
             pricing_location: Optional[PricingLocation] = None
-    ) -> Union[dict, pd.DataFrame]:
+    ) -> Union[Dict, pd.DataFrame]:
         """
         Get last value of coordinates data
 
@@ -473,7 +501,6 @@ class GsDataApi(DataApi):
         """
         market_data_coordinates = tuple(cls._coordinate_from_str(coord) if isinstance(coord, str) else coord
                                         for coord in coordinates)
-        ret = {coordinate: None for coordinate in market_data_coordinates}
         query = cls.build_query(
             end=as_of,
             market_data_coordinates=market_data_coordinates,
@@ -483,17 +510,24 @@ class GsDataApi(DataApi):
 
         data = cls.last_data(query)
 
+        if not as_dataframe:
+            ret = {coordinate: None for coordinate in market_data_coordinates}
+            for idx, row in enumerate(cls.__normalise_coordinate_data(data)):
+                try:
+                    ret[market_data_coordinates[idx]] = row[0]['value']
+                except IndexError:
+                    ret[market_data_coordinates[idx]] = None
+            return ret
+
+        ret = []
         for idx, row in enumerate(cls.__normalise_coordinate_data(data)):
+            coordinate_as_dict = market_data_coordinates[idx].as_dict(as_camel_case=True)
             try:
-                ret[market_data_coordinates[idx]] = row[0]['value']
+                ret.append(dict(chain(coordinate_as_dict.items(),
+                                      (('value', row[0]['value']), ('time', row[0]['time'])))))
             except IndexError:
-                ret[market_data_coordinates[idx]] = None
-
-        if as_dataframe:
-            data = [dict(chain(c.as_dict(as_camel_case=True).items(), (('value', v),))) for c, v in ret.items()]
-            return cls.__df_from_coordinate_data(data)
-
-        return ret
+                ret.append(dict(chain(coordinate_as_dict.items(), (('value', None), ('time', None)))))
+        return cls.__df_from_coordinate_data(ret, use_datetime_index=False)
 
     @classmethod
     def coordinates_data(
@@ -601,9 +635,10 @@ class GsDataApi(DataApi):
         raise RuntimeError(f"Unable to get Dataset schema for {dataset_id}")
 
     @classmethod
-    def construct_dataframe_with_types(cls, dataset_id: str, data: Union[Base, list, tuple]) -> pd.DataFrame:
+    def construct_dataframe_with_types(cls, dataset_id: str, data: Union[Base, List, Tuple]) -> pd.DataFrame:
         """
         Constructs a dataframe with correct date types.
+        :param dataset_id: id of the dataset
         :param data: data to convert with correct types
         :return: dataframe with correct types
         """

@@ -133,6 +133,16 @@ class BenchmarkType(Enum):
     SONIA = 'SONIA'
     TONA = 'TONA'
     Fed_Funds = 'Fed_Funds'
+    NIBOR = 'NIBOR'
+    CIBOR = 'CIBOR'
+    BBR = 'BBR'
+    BA = 'BA'
+    KSDA = 'KSDA'
+    REPO = 'REPO'
+    SOR = 'SOR'
+    HIBOR = 'HIBOR'
+    MIBOR = 'MIBOR'
+    CDOR = 'CDOR'
 
 
 class FundamentalMetricPeriodDirection(Enum):
@@ -573,7 +583,8 @@ def _preprocess_implied_vol_strikes_eq(strike_reference: VolReference = None, re
 
 
 @plot_measure((AssetClass.Equity,), (AssetType.Index, AssetType.ETF,), [QueryType.IMPLIED_CORRELATION])
-def implied_correlation(asset: Asset, tenor: str, strike_reference: EdrDataReference, relative_strike: Real, *,
+def implied_correlation(asset: Asset, tenor: str, strike_reference: EdrDataReference, relative_strike: Real,
+                        top_n_of_index: Optional[int] = None, composition_date: Optional[GENERIC_DATE] = None, *,
                         source: str = None, real_time: bool = False) -> Series:
     """
     Correlation of an asset implied by observations of market prices.
@@ -582,12 +593,21 @@ def implied_correlation(asset: Asset, tenor: str, strike_reference: EdrDataRefer
     :param tenor: relative date representation of expiration date e.g. 1m
     :param strike_reference: reference for strike level
     :param relative_strike: strike relative to reference
+    :param top_n_of_index: the number of top constituents to take into account
+    :param composition_date: YYYY-MM-DD or relative days before today e.g. 1d, 1m, 1y; defaults to most recent date
+        available
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: implied correlation curve
     """
     if real_time:
         raise NotImplementedError('realtime implied_correlation not implemented')
+
+    if top_n_of_index is None and composition_date is not None:
+        raise MqValueError('specify top_n_of_index to get the implied correlation of top constituents')
+
+    if top_n_of_index is not None and top_n_of_index > 100:
+        raise MqValueError('maximum number of constituents exceeded while using top_n_of_index')
 
     if strike_reference == EdrDataReference.DELTA_PUT:
         relative_strike = abs(100 - relative_strike)
@@ -601,12 +621,52 @@ def implied_correlation(asset: Asset, tenor: str, strike_reference: EdrDataRefer
 
     mqid = asset.get_marquee_id()
     where = dict(tenor=tenor, strikeReference=strike_ref, relativeStrike=relative_strike)
-    q = GsDataApi.build_market_data_query([mqid], QueryType.IMPLIED_CORRELATION, where=where, source=source,
-                                          real_time=real_time)
 
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
-    return _extract_series_from_df(df, QueryType.IMPLIED_CORRELATION)
+    if top_n_of_index is None:
+        q = GsDataApi.build_market_data_query([mqid], QueryType.IMPLIED_CORRELATION, where=where,
+                                              source=source, real_time=real_time)
+        _logger.debug('q %s', q)
+        df = _market_data_timed(q)
+        return _extract_series_from_df(df, QueryType.IMPLIED_CORRELATION)
+
+    # results for top n
+    constituents = _get_index_constituent_weights(asset, top_n_of_index, composition_date)
+    query = GsDataApi.build_market_data_query(
+        constituents.index.to_list() + [mqid],
+        QueryType.IMPLIED_VOLATILITY,
+        where=where,
+        source=source,
+        real_time=real_time
+    )
+    df = _market_data_timed(query)
+    df = df[['assetId', 'impliedVolatility']]
+    full_index = pd.date_range(start=df.index.min(), end=df.index.max(), freq='D')
+
+    all_groups = []
+    for name, group in df.groupby('assetId'):
+        g = group.reindex(full_index)
+        g['assetId'] = name
+        g['impliedVolatility'].interpolate(inplace=True)
+        all_groups.append(g)
+    df = pd.concat(all_groups)
+
+    df['impliedVolatility'] /= 100
+    match = df['assetId'] == mqid
+    df_asset = df.loc[match]
+    df_rest = df.loc[~match]
+
+    def calculate_vol(group):
+        vols = group.set_index('assetId')['impliedVolatility']
+        weights = constituents.reindex(vols.index.to_list())['netWeight']
+        total_weight = sum(weights)
+        parts = [vol * weight / total_weight for vol, weight in zip(vols, weights)]
+        return pd.Series([sum(parts), sum(map(lambda x: pow(x, 2), parts))], index=['first', 'second'])
+
+    inter = df_rest.groupby(df_rest.index).apply(calculate_vol)
+    values = (pow(df_asset['impliedVolatility'], 2) - inter['second']) / (pow(inter['first'], 2) - inter['second'])
+    series = ExtendedSeries(values * 100)
+    series.dataset_ids = getattr(df, 'dataset_ids', ())
+    return series
 
 
 @plot_measure((AssetClass.Equity,), (AssetType.Index, AssetType.ETF,), [QueryType.AVERAGE_IMPLIED_VOLATILITY,
@@ -1721,6 +1781,8 @@ def _get_iso_data(region: str):
     if region == 'CAISO':
         timezone = 'US/Pacific'
         weekends = [6]
+        peak_start = 6
+        peak_end = 22
 
     return timezone, peak_start, peak_end, weekends
 
@@ -2699,14 +2761,90 @@ def sales_per_share(asset: Asset, period: str, period_direction: FundamentalMetr
     return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
+@plot_measure((AssetClass.Equity,), (AssetType.Index, AssetType.ETF,), [QueryType.REALIZED_CORRELATION])
+def realized_correlation(asset: Asset, tenor: str, top_n_of_index: Optional[int] = None,
+                         composition_date: Optional[GENERIC_DATE] = None, *,
+                         source: str = None, real_time: bool = False) -> Series:
+    """
+    Realized correlation of an asset.
+
+    :param asset: asset object loaded from security master
+    :param tenor: relative date representation of expiration date e.g. 1m
+    :param top_n_of_index: the number of top constituents to take into account
+    :param composition_date: YYYY-MM-DD or relative days before today e.g. 1d, 1m, 1y; defaults to most recent date
+        available
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: realized correlation curve
+    """
+    if real_time:
+        raise NotImplementedError('realtime realized_correlation not implemented')
+
+    if top_n_of_index is None and composition_date is not None:
+        raise MqValueError('specify top_n_of_index to get realized correlation of top constituents')
+
+    if top_n_of_index is not None and top_n_of_index > 100:
+        raise MqValueError('number of constituents (top_n_of_index) must be <= 100')
+
+    mqid = asset.get_marquee_id()
+    _logger.debug('where tenor=%s', tenor)
+    where = dict(tenor=tenor)
+
+    if top_n_of_index is None:
+        q = GsDataApi.build_market_data_query([mqid], QueryType.REALIZED_CORRELATION, where=where,
+                                              source=source, real_time=real_time)
+        _logger.debug('q %s', q)
+        df = _market_data_timed(q)
+        return _extract_series_from_df(df, QueryType.REALIZED_CORRELATION)
+
+    # results for top n
+    constituents = _get_index_constituent_weights(asset, top_n_of_index, composition_date)
+    head_start = DataContext.current.start_date - datetime.timedelta(days=relative_date_add(tenor, True) + 1)
+    with DataContext(head_start, DataContext.current.end_date):
+        q = GsDataApi.build_market_data_query(
+            constituents.index.to_list() + [mqid],
+            QueryType.SPOT,
+            source=source,
+            real_time=real_time
+        )
+        _logger.debug('q %s', q)
+        df = _market_data_timed(q)
+    match = df['assetId'] == mqid
+    df_asset = df.loc[match]
+    df_rest = df.loc[~match]
+
+    grouped = df_rest.groupby('assetId')
+    weighted_vols = []
+    for underlying_id, weight in zip(constituents.index, constituents['netWeight']):
+        filtered = grouped.get_group(underlying_id) if underlying_id in grouped.indices else pd.DataFrame()
+        filtered = filtered.loc[~filtered.index.duplicated(keep='last')]
+        if not filtered.empty:
+            vol = volatility(filtered['spot'], Window(tenor, tenor)) / 100
+            assert not vol.empty, f'insufficient history to calculate for {tenor}'
+            weighted_vols.append(vol * weight)
+
+    if len(weighted_vols) == 0:
+        raise MqValueError(f'no data for constituents of {asset}')
+
+    s1 = pd.concat(weighted_vols, axis=1).sum(1, min_count=1)
+    s2 = pd.concat(map(lambda x: x * x, weighted_vols), axis=1).sum(1, min_count=1)
+    idx_vol = volatility(df_asset['spot'], Window(tenor, tenor)) / 100
+    values = (idx_vol * idx_vol - s2) / (s1 * s1 - s2) * 100
+    series = ExtendedSeries(values)
+    series.dataset_ids = getattr(df, 'dataset_ids', ())
+    return series
+
+
 @plot_measure((AssetClass.Commod, AssetClass.Equity, AssetClass.FX), None, [QueryType.SPOT])
-def realized_volatility(asset: Asset, w: Union[Window, int] = Window(None, 0), returns_type: Returns = Returns.SIMPLE,
-                        *, source: str = None, real_time: bool = False) -> Series:
+def realized_volatility(asset: Asset, w: Union[Window, int, str] = Window(None, 0),
+                        returns_type: Returns = Returns.SIMPLE, *, source: str = None, real_time: bool = False) \
+        -> Series:
     """
     Realized volatility for an asset.
 
     :param asset: asset object loaded from security master
-    :param w: number of observations to use; defaults to length of series
+    :param w: number of observations to use; defaults to length of series. If string is provided, should be
+        in relative date form (e.g. "1d", "1w", "1m", "1y", etc).
     :param returns_type: returns type: simple or logarithmic
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
@@ -2758,4 +2896,28 @@ def esg_aggregate(asset: Asset, metric: EsgMetric, value_unit: Optional[EsgValue
     df = _market_data_timed(q)
     series = ExtendedSeries() if df.empty else ExtendedSeries(df[query_metric])
     series.dataset_ids = getattr(df, 'dataset_ids', ())
+    return series
+
+
+@plot_measure((AssetClass.Equity,), None, [QueryType.RATING])
+def rating(asset: Asset, *, source: str = None, real_time: bool = False) -> Series:
+    """
+    Analyst Rating, which may take on the following values
+    {'Sell': -1, 'Neutral': 0, 'Buy': 1}
+
+    :param asset: asset object loaded from security master
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: ratings in numeric form ( 'Buy' : 1, 'Neutral' : 0, 'Sell' : -1 )
+    """
+    if real_time:
+        raise NotImplementedError('real-time rating not implemented')
+    mqid = asset.get_marquee_id()
+    query_type = QueryType.RATING
+    _logger.debug('where assetId=%s, query_type=%s', mqid, query_type.value)
+    q = GsDataApi.build_market_data_query([mqid], query_type, source=source, real_time=real_time)
+    _logger.debug('q %s', q)
+    df = _market_data_timed(q)
+    series = _extract_series_from_df(df, query_type)
+    series.replace(['Buy', 'Sell', 'Neutral'], [1, -1, 0], inplace=True)
     return series

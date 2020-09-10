@@ -33,15 +33,29 @@ Generally not finance-specific routines.
 """
 
 
+def _concat_series(series: List[pd.Series]):
+    curves = []
+    constants = {}
+    k = 0
+    for s in series:
+        if s.min() != s.max():
+            curves.append(s)
+        else:
+            constants[f'temp{k}'] = s.min()
+            k += 1
+    return pd.concat(curves, axis=1).assign(**constants)
+
+
 @plot_function
-def min_(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int] = Window(None, 0)) -> pd.Series:
+def min_(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int, str] = Window(None, 0)) -> pd.Series:
     """
     Minimum value of series over given window
 
     :param x: series: a timeseries or an array of timeseries
 
     :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-              and 10 the ramp up value. Window size defaults to length of series.
+              and 10 the ramp up value.  If w is a string, it should be a relative date like '1m', '1d', etc.
+              Window size defaults to length of series.
     :return: timeseries of minimum value
 
     **Usage**
@@ -77,7 +91,7 @@ def min_(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int] = Window(No
 
     """
     if isinstance(x, list):
-        x = pd.concat(x, axis=1).min(axis=1)
+        x = _concat_series(x).min(axis=1)
     w = normalize_window(x, w)
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
     if isinstance(w.w, pd.DateOffset):
@@ -88,13 +102,14 @@ def min_(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int] = Window(No
 
 
 @plot_function
-def max_(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int] = Window(None, 0)) -> pd.Series:
+def max_(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int, str] = Window(None, 0)) -> pd.Series:
     """
     Maximum value of series over given window
 
     :param x: series: a timeseries or an array of timeseries
     :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-              and 10 the ramp up value. Window size defaults to length of series.
+              and 10 the ramp up value.  If w is a string, it should be a relative date like '1m', '1d', etc.
+              Window size defaults to length of series.
     :return: timeseries of maximum value
 
     **Usage**
@@ -129,7 +144,7 @@ def max_(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int] = Window(No
 
     """
     if isinstance(x, list):
-        x = pd.concat(x, axis=1).max(axis=1)
+        x = _concat_series(x).max(axis=1)
     w = normalize_window(x, w)
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
     if isinstance(w.w, pd.DateOffset):
@@ -140,13 +155,14 @@ def max_(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int] = Window(No
 
 
 @plot_function
-def range_(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
+def range_(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Series:
     """
     Range of series over given window
 
     :param x: series: timeseries
     :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-              and 10 the ramp up value. Window size defaults to length of series.
+              and 10 the ramp up value.  If w is a string, it should be a relative date like '1m', '1d', etc.
+              Window size defaults to length of series.
     :return: timeseries of range
 
     **Usage**
@@ -180,13 +196,14 @@ def range_(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
 
 
 @plot_function
-def mean(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int] = Window(None, 0)) -> pd.Series:
+def mean(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int, str] = Window(None, 0)) -> pd.Series:
     """
     Arithmetic mean of series over given window
 
     :param x: series: a timeseries or an array of timeseries
     :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-              and 10 the ramp up value. Window size defaults to length of series.
+              and 10 the ramp up value.  If w is a string, it should be a relative date like '1m', '1d', etc.
+              Window size defaults to length of series.
     :return: timeseries of mean value
 
     **Usage**
@@ -233,13 +250,14 @@ def mean(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int] = Window(No
 
 
 @plot_function
-def median(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
+def median(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Series:
     """
     Median value of series over given window
 
     :param x: series: timeseries
     :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-              and 10 the ramp up value. Window size defaults to length of series.
+              and 10 the ramp up value.  If w is a string, it should be a relative date like '1m', '1d', etc.
+              Window size defaults to length of series.
     :return: timeseries of median value
 
     **Usage**
@@ -276,13 +294,14 @@ def median(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
 
 
 @plot_function
-def mode(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
+def mode(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Series:
     """
     Most common value in series over given window
 
     :param x: series: timeseries
     :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-              and 10 the ramp up value. Window size defaults to length of series.
+              and 10 the ramp up value.  If w is a string, it should be a relative date like '1m', '1d', etc.
+              Window size defaults to length of series.
     :return: timeseries of mode value
 
     **Usage**
@@ -314,13 +333,14 @@ def mode(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
 
 
 @plot_function
-def sum_(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int] = Window(None, 0)) -> pd.Series:
+def sum_(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int, str] = Window(None, 0)) -> pd.Series:
     """
     Rolling sum of series over given window
 
     :param x: series: a timeseries or an array of timeseries
     :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-              and 10 the ramp up value. Window size defaults to length of series.
+              and 10 the ramp up value.  If w is a string, it should be a relative date like '1m', '1d', etc.
+              Window size defaults to length of series.
     :return: timeseries of rolling sum
 
     **Usage**
@@ -366,13 +386,14 @@ def sum_(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int] = Window(No
 
 
 @plot_function
-def product(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
+def product(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Series:
     """
     Rolling product of series over given window
 
     :param x: series: timeseries
     :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-              and 10 the ramp up value. Window size defaults to length of series.
+              and 10 the ramp up value.  If w is a string, it should be a relative date like '1m', '1d', etc.
+              Window size defaults to length of series.
     :return: timeseries of rolling product
 
     **Usage**
@@ -405,13 +426,14 @@ def product(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
 
 
 @plot_function
-def std(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
+def std(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Series:
     """
     Rolling standard deviation of series over given window
 
     :param x: series: timeseries
     :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-              and 10 the ramp up value. Window size defaults to length of series.
+              and 10 the ramp up value.  If w is a string, it should be a relative date like '1m', '1d', etc.
+              Window size defaults to length of series.
     :return: timeseries of standard deviation
 
     **Usage**
@@ -450,32 +472,34 @@ def std(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
 
 
 @plot_function
-def exponential_std(x: pd.Series, alpha: float = 0.75) -> pd.Series:
+def exponential_std(x: pd.Series, beta: float = 0.75) -> pd.Series:
     """
-    Exponentially weighted standard deviation time series from previous values.
+    Exponentially weighted standard deviation
 
-    :param x: time series of prices
-    :param alpha: how much to weigh the previous price in the time series, thus controlling how much importance we
-                  place on the (more distant) past
-    :return: date-based time series of standard deviation of the input series
+    :param x: time series
+    :param beta: how much to weigh the previous price in the time series, thus controlling how much importance we
+                  place on the (more distant) past. Must be between 0 (inclusive) and 1 (exclusive)
+    :return: time series of standard deviation of the input series
 
     **Usage**
 
-    Provides `unbiased estimator <https://en.wikipedia.org/wiki/Unbiased_estimation_of_standard_deviation>`_ of
-    exponentially weighted sample `standard deviation
-    <https://en.wikipedia.org/wiki/Weighted_arithmetic_mean#Weighted_sample_variance>`_:
+    Provides an unbiased estimator of `exponentially weighted standard deviation
+    <https://en.wikipedia.org/wiki/Moving_average#Exponentially_weighted_moving_variance_and_standard_deviation>`_ of
+    a series [:math:`X_0`, :math:`X_1`, :math:`X_2`, ...]:
 
-    :math:`R_t = \\sqrt{ \\frac{\sum_{i=0}^t w_i (X_{t-i} - \overline{X_t})^2} {\sum_{i=0}^t w_i} * DF_t }`
+    :math:`S_t = \\sqrt{[EWMA(X_t^2) - EWMA(X_t)^2] * DF_t}`
 
-    where :math:`w_i` is the weight assigned to :math:`i` th observation, :math:`\overline{X_t}` is the day's
-    `exponential moving average <https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average>`_ and
-    :math:`DF_t` is the debiasing factor:
-
-    :math:`w_i = (1-\\alpha)\\alpha^i` for i<t; :math:`\\alpha^i` for i=t
-
-    :math:`\overline{X_t} = \\alpha \cdot \overline{X_{t-1}} + (1 - \\alpha) \cdot X_{t-1}`
+    where :math:`EWMA(X_t)` is the `exponential moving average
+    <https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average>`_ at :math:`t` (see function
+    :func:`exponential_moving_average`), :math:`DF_t` is the debiasing factor (see
+    `Weighted sample variance <https://en.wikipedia.org/wiki/Weighted_arithmetic_mean#Weighted_sample_variance>`_
+    for further details):
 
     :math:`DF_t = \\frac{(\sum_{i=0}^t w_i)^2} {(\sum_{i=0}^t w_i)^2 - \sum_{i=0}^t w_i^2}`
+
+    where :math:`w_i` is the weight assigned to :math:`i` th observation:
+
+    :math:`w_i = (1-\\beta)\\beta^i` for i<t; :math:`\\beta^i` for i=t
 
     **Examples**
 
@@ -489,17 +513,18 @@ def exponential_std(x: pd.Series, alpha: float = 0.75) -> pd.Series:
     :func:`std` :func:`var` :func:`exponential_moving_average`
 
     """
-    return x.ewm(alpha=1 - alpha, adjust=False).std()
+    return x.ewm(alpha=1 - beta, adjust=False).std()
 
 
 @plot_function
-def var(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
+def var(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Series:
     """
     Rolling variance of series over given window
 
     :param x: series: timeseries
     :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-              and 10 the ramp up value. Window size defaults to length of series.
+              and 10 the ramp up value.  If w is a string, it should be a relative date like '1m', '1d', etc.
+              Window size defaults to length of series.
     :return: timeseries of variance
 
     **Usage**
@@ -538,14 +563,15 @@ def var(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
 
 
 @plot_function
-def cov(x: pd.Series, y: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
+def cov(x: pd.Series, y: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Series:
     """
     Rolling co-variance of series over given window
 
     :param x: series: timeseries
     :param y: series: timeseries
     :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-              and 10 the ramp up value. Window size defaults to length of series.
+              and 10 the ramp up value.  If w is a string, it should be a relative date like '1m', '1d', etc.
+              Window size defaults to length of series.
     :return: timeseries of covariance
 
     **Usage**
@@ -592,13 +618,14 @@ def _zscore(x):
 
 
 @plot_function
-def zscores(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
+def zscores(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Series:
     """
     Rolling z-scores over a given window
 
     :param x: time series of prices
     :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-              and 10 the ramp up value. Window size defaults to length of series.
+              and 10 the ramp up value.  If w is a string, it should be a relative date like '1m', '1d', etc.
+              Window size defaults to length of series.
     :return: timeseries of z-scores
 
     **Usage**
@@ -629,7 +656,11 @@ def zscores(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
         return x
 
     if isinstance(w, int):
-        w = Window(w=w, r=w)
+        w = normalize_window(x, w)
+    elif isinstance(w, str):
+        if not (isinstance(x.index, pd.DatetimeIndex) or isinstance(x.index[0], datetime.date)):
+            raise MqValueError("When string is passed window index must be a DatetimeIndex or of type datetime.date")
+        w = normalize_window(x, w)
     if not w.w:
         if x.size == 1:
             return pd.Series([0.0], index=x.index, dtype=np.dtype(float))
@@ -646,14 +677,15 @@ def zscores(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
 
 
 @plot_function
-def winsorize(x: pd.Series, limit: float = 2.5, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
+def winsorize(x: pd.Series, limit: float = 2.5, w: Union[Window, int, str] = Window(None, 0)) -> pd.Series:
     """
     Limit extreme values in series
 
     :param x: time series of prices
     :param limit: max z-score of values
     :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-              and 10 the ramp up value. Window size defaults to length of series.
+              and 10 the ramp up value.  If w is a string, it should be a relative date like '1m', '1d', etc.
+              Window size defaults to length of series.
     :return: timeseries of winsorized values
 
     **Usage**
@@ -749,14 +781,15 @@ def generate_series(length: int) -> pd.Series:
 
 
 @plot_function
-def percentiles(x: pd.Series, y: pd.Series = None, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
+def percentiles(x: pd.Series, y: pd.Series = None, w: Union[Window, int, str] = Window(None, 0)) -> pd.Series:
     """
     Rolling percentiles over given window
 
     :param x: value series
     :param y: distribution series
     :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-              and 10 the ramp up value. Window size defaults to length of series.
+              and 10 the ramp up value.  If w is a string, it should be a relative date like '1m', '1d', etc.
+              Window size defaults to length of series.
     :return: timeseries of percentiles
 
     **Usage**
@@ -808,14 +841,14 @@ def percentiles(x: pd.Series, y: pd.Series = None, w: Union[Window, int] = Windo
 
 
 @plot_function
-def percentile(x: pd.Series, n: float, w: Union[Window, int] = None) -> Union[pd.Series, float]:
+def percentile(x: pd.Series, n: float, w: Union[Window, int, str] = None) -> Union[pd.Series, float]:
     """
     Returns the nth percentile of a series.
 
     :param x: series
     :param n: percentile
     :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-              and 10 the ramp up value.
+              and 10 the ramp up value.  If w is a string, it should be a relative date like '1m', '1d', etc.
     :return: nth percentile
 
     **Usage**
@@ -833,13 +866,22 @@ def percentile(x: pd.Series, n: float, w: Union[Window, int] = None) -> Union[pd
     """
     if not 0 <= n <= 100:
         raise MqValueError('percentile must be in range [0, 100]')
-
     x = x.dropna()
+    if x.size < 1:
+        return x
     if w is None:
         return numpy.percentile(x.values, n)
 
+    n /= 100
     w = normalize_window(x, w)
-    res = x.rolling(w.w, 0).quantile(n / 100)
+    if isinstance(w.w, pd.DateOffset):
+        try:
+            values = [x.loc[(x.index > idx - w.w) & (x.index <= idx)].quantile(n) for idx in x.index]
+        except TypeError:
+            raise MqTypeError(f'cannot use relative dates with index {x.index}')
+        res = pd.Series(values, index=x.index, dtype=np.dtype(float))
+    else:
+        res = x.rolling(w.w, 0).quantile(n)
     return apply_ramp(res, w)
 
 

@@ -110,7 +110,7 @@ class DataCoordinate(BaseDataCoordinate):
         return (self.dataset_id, self.measure, self.dimensions) == (other.dataset_id, other.measure, other.dimensions)
 
     def __hash__(self):
-        return hash((self.dataset_id, self.measure, self.dimensions))
+        return hash((self.dataset_id, self.measure, tuple(self.dimensions)))
 
     def get_range(self,
                   start: Optional[DateOrDatetime] = None,

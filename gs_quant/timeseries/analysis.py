@@ -60,7 +60,7 @@ def first(x: pd.Series) -> pd.Series:
 @plot_function
 def last(x: pd.Series) -> pd.Series:
     """
-    Last value of series
+    Last value of series (as a series)
 
     :param x: time series
     :return: time series of last value
@@ -86,6 +86,35 @@ def last(x: pd.Series) -> pd.Series:
 
     """
     return pd.Series(x[-1], x.index)
+
+
+@plot_function
+def last_value(x: pd.Series) -> Union[int, float]:
+    """
+    Last value of series (as a scalar)
+
+    :param x: time series
+    :return: last value
+
+    **Usage**
+
+    Return a scalar value :math:`X_T` where T is the last index value in the series.
+
+    **Examples**
+
+    Last value of series:
+
+    >>> series = generate_series(100)
+    >>> lv = last_value(series)
+
+    **See also**
+
+    :func:`last`
+
+    """
+    if x.empty:
+        raise MqValueError("cannot get last value of an empty series")
+    return x.iloc[-1]
 
 
 @plot_function

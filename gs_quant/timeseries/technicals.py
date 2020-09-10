@@ -14,7 +14,7 @@
 # Marquee Plot Service will attempt to make public functions (not prefixed with _) from this module available.
 # Such functions should be fully documented: docstrings should describe parameters and the return value, and provide
 # a 1-line description. Type annotations should be provided for parameters.
-from gs_quant.timeseries import diff
+from gs_quant.timeseries import diff, annualize, returns
 from .statistics import *
 
 """
@@ -25,13 +25,14 @@ statistical properties of trading activity, such as price movement and volume ch
 
 
 @plot_function
-def moving_average(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
+def moving_average(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Series:
     """
     Moving average over specified window
 
     :param x: time series of prices
     :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-              and 10 the ramp up value. Window size defaults to length of series.
+              and 10 the ramp up value.  If w is a string, it should be a relative date like '1m', '1d', etc.
+              Window size defaults to length of series.
     :return: date-based time series of return
 
     **Usage**
@@ -64,13 +65,14 @@ def moving_average(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.
 
 
 @plot_function
-def bollinger_bands(x: pd.Series, w: Union[Window, int] = Window(None, 0), k: float = 2) -> pd.DataFrame:
+def bollinger_bands(x: pd.Series, w: Union[Window, int, str] = Window(None, 0), k: float = 2) -> pd.DataFrame:
     """
     Bollinger bands with given window and width
 
     :param x: time series of prices
     :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-              and 10 the ramp up value. Window size defaults to length of series.
+              and 10 the ramp up value.  If w is a string, it should be a relative date like '1m', '1d', etc.
+              Window size defaults to length of series.
     :param k: band width in standard deviations (default: 2)
     :return: date-based time series of return
 
@@ -111,13 +113,14 @@ def bollinger_bands(x: pd.Series, w: Union[Window, int] = Window(None, 0), k: fl
 
 
 @plot_function
-def smoothed_moving_average(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
+def smoothed_moving_average(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Series:
     """
     Smoothed moving average over specified window
 
     :param x: time series of prices
     :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-              and 10 the ramp up value. Window size defaults to length of series.
+              and 10 the ramp up value.  If w is a string, it should be a relative date like '1m', '1d', etc.
+              Window size defaults to length of series.
     :return: date-based time series of return
 
     **Usage**
@@ -146,28 +149,36 @@ def smoothed_moving_average(x: pd.Series, w: Union[Window, int] = Window(None, 0
 
     """
     w = normalize_window(x, w)
-    window = w.w
+    window_size = w.w
     ramp = w.r
-    initial_moving_average = apply_ramp(mean(x, Window(window, 0)), w)[0]
-    if ramp > 0:
+    means = apply_ramp(mean(x, Window(window_size, 0)), w)
+    if means.size < 1:
+        return pd.Series()
+    initial_moving_average = means[0]
+    if (isinstance(ramp, int) and ramp > 0) or isinstance(ramp, pd.DateOffset):
         x = apply_ramp(x, w)
 
     smoothed_moving_averages = x.copy()
     smoothed_moving_averages *= 0
     smoothed_moving_averages[0] = initial_moving_average
     for i in range(1, len(x)):
-        smoothed_moving_averages[i] = ((window - 1) * smoothed_moving_averages[i - 1] + x[i]) / window
+        if isinstance(window_size, int):
+            window_num_elem = window_size
+        else:
+            window_num_elem = len(x[(x.index > (x.index[i] - window_size)) & (x.index <= x.index[i])])
+        smoothed_moving_averages[i] = ((window_num_elem - 1) * smoothed_moving_averages[i - 1] + x[i]) / window_num_elem
     return smoothed_moving_averages
 
 
 @plot_function
-def relative_strength_index(x: pd.Series, w: Union[Window, int] = 14) -> pd.DataFrame:
+def relative_strength_index(x: pd.Series, w: Union[Window, int, str] = 14) -> pd.DataFrame:
     """
     Relative Strength Index
 
     :param x: time series of prices
     :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-              and 10 the ramp up value. Window size defaults to length of series.
+              and 10 the ramp up value.  If w is a string, it should be a relative date like '1m', '1d', etc.
+              Window size defaults to length of series.
     :return: date-based time series of RSI
 
     **Usage**
@@ -214,22 +225,25 @@ def relative_strength_index(x: pd.Series, w: Union[Window, int] = 14) -> pd.Data
 
 
 @plot_function
-def exponential_moving_average(x: pd.Series, alpha: float = 0.75) -> pd.Series:
+def exponential_moving_average(x: pd.Series, beta: float = 0.75) -> pd.Series:
     """
-    Exponentially weighted moving average time series from previous values.
+    Exponentially weighted moving average
 
     :param x: time series of prices
-    :param alpha: how much to weigh the previous price in the time series, thus controlling how much importance we
-                  place on the (more distant) past
+    :param beta: how much to weigh the previous observations in the time series, thus controlling how much importance we
+        place on the (more distant) past. Must be between 0 (inclusive) and 1 (exclusive)
     :return: date-based time series of return
 
     **Usage**
 
-    An exponential(ly weighted) moving average (EMA), is defined as:
+    The exponential(ly weighted) moving average (EMA) of a series [:math:`X_0`, :math:`X_1`, :math:`X_2`, ...],
+    is defined as:
 
-    :math:`R_{t+1} = \\alpha \cdot R_t + (1 - \\alpha) \cdot P_t`
+    :math:`Y_0 = X_0`
 
-    where :math: `\\alpha` is the weight we place on the previous day's average.
+    :math:`Y_t = \\beta \cdot Y_{t-1} + (1 - \\beta) \cdot X_t`
+
+    where :math:`\\beta` is the weight we place on the previous average.
 
     See `Exponential moving average <https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average>`_ for
     more information
@@ -246,4 +260,71 @@ def exponential_moving_average(x: pd.Series, alpha: float = 0.75) -> pd.Series:
     :func:`mean` :func:`moving_average` :func:`smoothed_moving_average`
 
     """
-    return x.ewm(alpha=1 - alpha, adjust=False).mean()
+    return x.ewm(alpha=1 - beta, adjust=False).mean()
+
+
+@plot_function
+def exponential_volatility(x: pd.Series, beta: float = 0.75) -> pd.Series:
+    """
+    Exponentially weighted volatility
+
+    :param x: time series of prices
+    :param beta: how much to weigh the previous price in the time series, thus controlling how much importance we
+                  place on the (more distant) past. Must be between 0 (inclusive) and 1 (exclusive)
+    :return: date-based time series of exponential volatility of the input series
+
+    **Usage**
+
+    Calculates the exponentially weighted standard deviation of the return of the input series, and annualizes the
+    standard deviation
+
+    **Examples**
+
+    Generate price series and compute exponentially weighted standard deviation of returns
+
+    >>> prices = generate_series(100)
+    >>> exponential_volatility(prices, 0.9)
+
+    The above is equivalent to
+
+    >>> annualize(exponential_std(returns(prices), 0.9)) * 100
+
+    **See also**
+
+    :func:`volatility` :func:`exponential_std` :func:`exponential_spread_volatility`
+
+    """
+    return annualize(exponential_std(returns(x), beta)).mul(100)
+
+
+@plot_function
+def exponential_spread_volatility(x: pd.Series, beta: float = 0.75) -> pd.Series:
+    """
+    Exponentially weighted spread volatility
+
+    :param x: time series of prices
+    :param beta: how much to weigh the previous price in the time series, thus controlling how much importance we
+                  place on the (more distant) past. Must be between 0 (inclusive) and 1 (exclusive)
+    :return: date-based time series of exponential spread volatility of the input series
+
+    **Usage**
+
+    Exponentially weights the daily differences of the input series, calculates the annualized standard deviation
+
+    **Examples**
+
+    Generate price series and compute exponentially weighted standard deviation of returns
+
+    >>> prices = generate_series(100)
+    >>> exponential_volatility(prices, 0.9)
+
+    The above is equivalent to
+
+    >>> annualize(exponential_std(diff(prices, 1), 0.9))
+
+    **See also**
+
+    :func:`volatility` :func:`exponential_std` :func:`exponential_volatility`
+
+    """
+    return annualize(exponential_std(diff(x, 1), beta))

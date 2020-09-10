@@ -449,6 +449,23 @@ def test_filter():
         filter_(zero_neg_pos, 0)
 
 
+def test_smooth_spikes():
+    s = pd.Series([1, 3])
+    actual = smooth_spikes(s, 0.5)
+    assert actual.empty
+
+    sparse_index = pd.to_datetime(['2020-01-01', '2020-01-02', '2020-01-04', '2020-01-07'])
+    s = pd.Series([8, 10.0, 8, 6.4], index=sparse_index)
+    actual = smooth_spikes(s, 0.25)
+    expected = pd.Series([10.0, 8], index=sparse_index[1:3])
+    assert_series_equal(actual, expected)
+
+    s = pd.Series([8, 10.1, 8, 6.4], index=sparse_index)
+    actual = smooth_spikes(s, 0.25)
+    expected = pd.Series([8.0, 8], index=sparse_index[1:3])
+    assert_series_equal(actual, expected)
+
+
 def test_repeat():
     with pytest.raises(MqError):
         repeat(pd.Series, 0)
