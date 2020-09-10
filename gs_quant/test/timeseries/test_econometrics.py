@@ -279,8 +279,15 @@ def test_volatility():
     vol = std * math.sqrt(252) * 100
 
     real_vol = volatility(x)
-
     assert (real_vol[-1] == vol)
+
+    result = volatility(x, w="3d")
+    expected = pd.Series([33.04542, 31.74902, 31.74902], index=daily_dates[3:])
+    assert_series_equal(result, expected, obj="Volatility strdate")
+
+    result = volatility(x, w="3m")
+    expected = pd.Series()
+    assert_series_equal(pd.Series(), expected, obj="Volatility strdate too large for series")
 
 
 def test_correlation():
@@ -331,8 +338,15 @@ def test_correlation():
 
     result = correlation(x, y, Window('2d', 0))
     expected = pd.Series([np.nan, np.nan, -1.0, 1.0, np.nan, -1.0], index=daily_dates)
-
     assert_series_equal(result, expected, check_less_precise=True)
+
+    result = correlation(x, y, "2d")
+    expected = pd.Series([-1, 1, np.nan, -1], index=daily_dates[2:])
+    assert_series_equal(result, expected, obj="Correlation strdate as window")
+
+    result = correlation(x, y, "3m")
+    expected = pd.Series()
+    assert_series_equal(result, expected, obj="Correlation strdate as window with too large of window")
 
 
 def test_beta():
@@ -354,20 +368,17 @@ def test_beta():
 
     result = beta(x, y)
     expected = pd.Series([np.nan, np.nan, np.nan, 1.0, 1.0, 1.0], index=daily_dates)
-
     assert_series_equal(result, expected, check_less_precise=True)
 
     y = pd.Series([100.0, 102.0, 104.0, 101.0, 100.95, 100.0], index=daily_dates)
 
     result = beta(x, y)
     expected = pd.Series([np.nan, np.nan, np.nan, 0.718146, 0.718919, 0.572201], index=daily_dates)
-
     assert_series_equal(result, expected, check_less_precise=True)
 
     result = beta(x, y, Window(2, 0))
     expected = pd.Series([np.nan, np.nan, np.nan, 0.8255252918287954,
                           0.7054398925453326, -2.24327163719368], index=daily_dates)
-
     assert_series_equal(result, expected, check_less_precise=True)
 
     ret_x = returns(x)
@@ -376,14 +387,16 @@ def test_beta():
     result = beta(ret_x, ret_y, Window(2, 0), False)
     expected = pd.Series([np.nan, np.nan, np.nan, 0.8255252918287954,
                           0.7054398925453326, -2.24327163719368], index=daily_dates)
-
     assert_series_equal(result, expected, check_less_precise=True)
 
     result = beta(x, y, Window('2d', 0))
     expected = pd.Series([np.nan, np.nan, np.nan, 0.8255252918287954,
                           np.nan, -2.24327163719368], index=daily_dates)
-
     assert_series_equal(result, expected, check_less_precise=True)
+
+    result = beta(x, y, '2d')
+    expected = pd.Series([np.nan, 0.8255252918287954, np.nan, -2.24327163719368], index=daily_dates[2:])
+    assert_series_equal(result, expected, obj="beta with strdate window")
 
 
 def test_max_drawdown():

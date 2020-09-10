@@ -29,6 +29,7 @@ class ComponentType(EnumBase, Enum):
     assetPlot = 'assetPlot'
     chart = 'chart'
     barChart = 'barChart'
+    stackedBarChart = 'stackedBarChart'
     commentary = 'commentary'
     commentaryPromo = 'commentaryPromo'
     monitor = 'monitor'

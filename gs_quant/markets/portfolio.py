@@ -88,6 +88,32 @@ class Portfolio(PriceableImpl):
     def __iter__(self):
         return iter(self.__priceables)
 
+    def __hash__(self):
+        hash_code = hash(self.__name) ^ hash(self.__id)
+        for priceable in self.__priceables:
+            hash_code ^= hash(priceable)
+
+        return hash_code
+
+    def __eq__(self, other):
+        if not isinstance(other, Portfolio):
+            return False
+
+        for path in self.all_paths:
+            try:
+                if path(self) != path(other):
+                    return False
+            except IndexError:
+                return False
+
+        return True
+
+    def __add__(self, other):
+        if not isinstance(other, Portfolio):
+            raise ValueError('Can only add instances of Portfolio')
+
+        return Portfolio(self.__priceables + other.__priceables)
+
     @property
     def __pricing_context(self) -> PricingContext:
         return PricingContext.current if not PricingContext.current.is_entered else nullcontext()
@@ -231,11 +257,12 @@ class Portfolio(PriceableImpl):
     def from_frame(
             cls,
             data: pd.DataFrame,
-            mappings: dict = {},
+            mappings: dict = None,
             date_formats: list = None,
     ):
         trade_list = []
         attribute_map = {}
+        mappings = mappings or {}
 
         data = data.replace({np.nan: None})
 
@@ -246,7 +273,8 @@ class Portfolio(PriceableImpl):
                 instrument_type = get_value(row, mappings, 'type')
                 asset_class = get_value(row, mappings, 'asset_class')
             except ValueError:
-                pass
+                instrument_type = ''
+                asset_class = ''
 
             if 'tdapi' in str(instrument_type):
                 inputs = {'$type': instrument_type[6:]}
@@ -274,7 +302,7 @@ class Portfolio(PriceableImpl):
                             value = string_to_float(value)
 
                 if value is not None:
-                    if type(value) is str:
+                    if isinstance(value, str):
                         value.strip(' ')
                     inputs[attribute] = value
 
@@ -287,8 +315,8 @@ class Portfolio(PriceableImpl):
     def from_csv(
             cls,
             csv_file: str,
-            mappings: dict = {},
-            date_formats: list = None,
+            mappings: Optional[dict] = None,
+            date_formats: Optional[list] = None,
     ):
         data = pd.read_csv(csv_file, skip_blank_lines=True).replace({np.nan: None})
         return cls.from_frame(data, mappings, date_formats)
@@ -301,7 +329,7 @@ class Portfolio(PriceableImpl):
         self.priceables = [inst for inst in self.instruments if inst != priceable]
         return priceable
 
-    def to_frame(self, mappings: dict = {}) -> pd.DataFrame:
+    def to_frame(self, mappings: Optional[dict] = None) -> pd.DataFrame:
         def to_records(portfolio: Portfolio) -> list:
             records = []
 
@@ -321,6 +349,7 @@ class Portfolio(PriceableImpl):
             columns = ['asset_class', 'type'] + columns
 
         df = df[columns]
+        mappings = mappings or {}
 
         for key, value in mappings.items():
             if isinstance(value, str):
@@ -331,9 +360,9 @@ class Portfolio(PriceableImpl):
 
         return df
 
-    def to_csv(self, csv_file: str, mappings: dict = {}, ignored_cols: list = []):
-        port_df = self.to_frame(mappings)
-        port_df = port_df[np.setdiff1d(port_df.columns, ignored_cols)]
+    def to_csv(self, csv_file: str, mappings: Optional[dict] = None, ignored_cols: Optional[list] = None):
+        port_df = self.to_frame(mappings or {})
+        port_df = port_df[np.setdiff1d(port_df.columns, ignored_cols or [])]
         port_df.reset_index(drop=True, inplace=True)
 
         port_df.to_csv(csv_file)
@@ -432,7 +461,7 @@ valid_date_formats = ['%Y-%m-%d',  # '2020-07-28'
                       '%d/%m/%Y']  # '28/07/2020
 
 
-def get_date(row, mappings, attribute, date_formats: list = None):
+def get_date(row, mappings, attribute, date_formats: Optional[list] = None):
     if date_formats is None:
         date_formats = valid_date_formats
     else:

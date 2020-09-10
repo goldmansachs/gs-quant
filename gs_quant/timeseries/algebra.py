@@ -611,6 +611,50 @@ def filter_(x: pd.Series, operator: Optional[FilterOperator] = None, value: Opti
 
 
 @plot_function
+def smooth_spikes(x: pd.Series, threshold: float) -> pd.Series:
+    """
+    Smooth out the spikes of a series. If a point is larger/smaller than (1 +/- threshold) times both neighbors, replace
+    it with the average of those neighbours. Note: the first and last points in the input series are dropped.
+
+    :param x: timeseries
+    :param threshold: minimum increment to trigger filter
+    :return: smoothed timeseries
+
+    **Usage**
+
+    Returns series where values that exceed the threshold relative to both neighbors are replaced.
+
+    **Examples**
+
+    Generate price series and smooth spikes over a threshold of 0.5.
+
+    >>> prices = generate_series(100)
+    >>> smooth_spikes(prices, 0.5)
+
+    **See also**
+
+    :func:`exponential_moving_average`
+    """
+
+    if len(x) < 3:
+        return pd.Series()
+
+    result = x.copy()
+    multiplier = (1 + threshold)
+    current, next_ = x.iloc[0:2]
+    for i in range(1, len(x) - 1):
+        previous = current
+        current = next_
+        next_ = x.iloc[i + 1]
+
+        scaled = current * multiplier
+        if (current > previous * multiplier and current > next_ * multiplier) or (previous > scaled and next_ > scaled):
+            result.iloc[i] = (previous + next_) / 2
+
+    return result[1:-1]
+
+
+@plot_function
 def repeat(x: pd.Series, n: int = 1) -> pd.Series:
     """
     Repeats values for days where data is missing. For any date with missing data, the last recorded value is used.

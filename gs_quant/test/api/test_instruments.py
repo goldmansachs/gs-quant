@@ -15,10 +15,17 @@ under the License.
 """
 
 from gs_quant.instrument import Instrument, IRSwap
+import datetime as dt
 
 
 def test_from_dict():
     swap = IRSwap('Receive', '3m', 'USD', fixedRate=0, notionalAmount=1)
+    properties = swap.as_dict()
+    new_swap = Instrument.from_dict(properties)
+    assert swap == new_swap
+
+    # setting a datetime.date should work in a dictionary
+    swap = IRSwap('Receive', dt.date(2030, 4, 11), 'USD', fixedRate='atm+5', notionalAmount=1)
     properties = swap.as_dict()
     new_swap = Instrument.from_dict(properties)
     assert swap == new_swap

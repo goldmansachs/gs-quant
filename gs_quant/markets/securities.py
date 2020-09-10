@@ -15,10 +15,11 @@ under the License.
 """
 
 import datetime as dt
+import json
 import threading
 from abc import ABCMeta, abstractmethod
 from enum import Enum
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple, Union, Dict
 
 import cachetools
 import pandas as pd
@@ -26,11 +27,14 @@ import pytz
 
 from gs_quant.api.gs.assets import GsAssetApi, GsAsset, AssetClass, AssetParameters, \
     AssetType as GsAssetType, PositionSet, Currency
-from gs_quant.api.gs.data import GsDataApi
-from gs_quant.base import Entity, get_enum_value
+from gs_quant.base import get_enum_value
 from gs_quant.common import PositionType
 from gs_quant.data import DataMeasure, DataFrequency
-from gs_quant.data.coordinate import BaseDataCoordinate, DataCoordinate, DataDimensions
+from gs_quant.data.coordinate import DataDimensions
+from gs_quant.data.coordinate import DateOrDatetime
+from gs_quant.entities.entity import Entity, EntityIdentifier, EntityType
+from gs_quant.errors import MqValueError
+from gs_quant.json_encoder import JSONEncoder
 from gs_quant.markets import PricingContext
 
 
@@ -104,8 +108,11 @@ class AssetType(Enum):
     #: Bond
     BOND = "Bond"
 
+    #: Commodity
+    COMMODITY = "Commodity"
 
-class AssetIdentifier(Enum):
+
+class AssetIdentifier(EntityIdentifier):
     """Asset type enumeration
 
     Enumeration of different security identifiers
@@ -134,8 +141,15 @@ class ReturnType(Enum):
 
 
 class Asset(Entity, metaclass=ABCMeta):
-    def __init__(self, id_: str, asset_class: AssetClass, name: str, exchange: Optional[str] = None,
-                 currency: Optional[str] = None, parameters: AssetParameters = None):
+    def __init__(self,
+                 id_: str,
+                 asset_class: AssetClass,
+                 name: str,
+                 exchange: Optional[str] = None,
+                 currency: Optional[str] = None,
+                 parameters: AssetParameters = None,
+                 entity: Optional[Dict] = None):
+        super().__init__(id_, EntityType.ASSET, entity=entity)
         self.__id = id_
         self.asset_class = asset_class
         self.name = name
@@ -246,62 +260,20 @@ class Asset(Entity, metaclass=ABCMeta):
         ids = self.get_identifiers(as_of=as_of)
         return ids.get(id_type.value)
 
-    def get_data_coordinate(self,
-                            measure: DataMeasure,
-                            dimensions: Optional[DataDimensions] = None,
-                            frequency: DataFrequency = DataFrequency.ANY) -> BaseDataCoordinate:
-        """
-        Get data coordinate
-
-        :param measure: measure to get as series
-        :param dimensions: dimensions to query (e.g. tenor)
-        :param frequency: data frequency to query
-        :return: DataCoordinate
-
-        **Usage**
-
-        Get a given data coordinate for the asset and measure
-
-        **Examples**
-
-        Get close price series:
-
-        >>> from gs_quant.markets.securities import SecurityMaster
-        >>> from gs_quant.data import DataMeasure
-        >>>
-        >>> gs = SecurityMaster.get_asset("GS", AssetIdentifier.TICKER)
-        >>> gs.get_data_coordinate(DataMeasure.CLOSE_PRICE)
-
-        **See also**
-
-        :class:`DataMeasure`
-
-        """
-        asset_id = self.get_identifier(AssetIdentifier.MARQUEE_ID)
-        data_providers = GsDataApi.get_data_providers(asset_id)
-        available = data_providers.get(measure.value, {})
-
-        daily_dataset_id = available.get(DataFrequency.DAILY)
-        rt_dataset_id = available.get(DataFrequency.REAL_TIME)
-
-        dimensions = dimensions or {}
-        dimensions['assetId'] = asset_id
-
-        if frequency == DataFrequency.DAILY:
-            return DataCoordinate(dataset_id=daily_dataset_id, measure=measure, dimensions=dimensions)
-        if frequency == DataFrequency.REAL_TIME:
-            return DataCoordinate(dataset_id=rt_dataset_id, measure=measure, dimensions=dimensions)
-
     def get_data_series(self,
                         measure: DataMeasure,
-                        dimensions: DataDimensions = None,
-                        frequency: DataFrequency = DataFrequency.ANY) -> pd.Series:
+                        dimensions: Optional[DataDimensions] = None,
+                        frequency: Optional[DataFrequency] = None,
+                        start: Optional[DateOrDatetime] = None,
+                        end: Optional[DateOrDatetime] = None) -> pd.Series:
         """
         Get asset series
 
         :param measure: measure to get as series
         :param dimensions: dimensions to query (e.g. tenor)
         :param frequency: data frequency to query
+        :param start: start of the series
+        :param end: end of the series
         :return: timeseries of given measure
 
         **Usage**
@@ -326,10 +298,12 @@ class Asset(Entity, metaclass=ABCMeta):
 
         coordinate = self.get_data_coordinate(measure, dimensions, frequency)
         if coordinate is None:
-            raise ValueError(f"No data co-ordinate found for these parameters: {measure, dimensions, frequency}")
-        return coordinate.get_series()
+            raise MqValueError(f"No data co-ordinate found for these parameters: {measure, dimensions, frequency}")
+        return coordinate.get_series(start=start, end=end)
 
-    def get_close_prices(self) -> pd.Series:
+    def get_close_prices(self,
+                         start: Optional[dt.date] = None,
+                         end: Optional[dt.date] = None) -> pd.Series:
         """
         Get close price series
 
@@ -355,11 +329,30 @@ class Asset(Entity, metaclass=ABCMeta):
 
         """
 
-        return self.get_data_series(DataMeasure.CLOSE_PRICE)
+        return self.get_data_series(DataMeasure.CLOSE_PRICE, None, DataFrequency.DAILY, start, end)
 
     @abstractmethod
     def get_type(self) -> AssetType:
         """Overridden by sub-classes to return security type"""
+
+    @property
+    def data_dimension(self) -> str:
+        return 'assetId'
+
+    @classmethod
+    def entity_type(cls) -> EntityType:
+        return EntityType.ASSET
+
+    @classmethod
+    def get(cls,
+            id_value: str,
+            id_type: AssetIdentifier,
+            as_of: Union[dt.date, dt.datetime] = None,
+            exchange_code: ExchangeCode = None,
+            asset_type: AssetType = None,
+            sort_by_rank: bool = False) -> Optional['Asset']:
+        asset = SecurityMaster.get_asset(id_value, id_type, as_of, exchange_code, asset_type, sort_by_rank)
+        return asset
 
 
 class Stock(Asset):
@@ -370,13 +363,18 @@ class Stock(Asset):
 
     """
 
-    def __init__(self, id_: str, name: str, exchange=None, currency=None):
-        Asset.__init__(self, id_, AssetClass.Equity, name, exchange, currency)
+    def __init__(self,
+                 id_: str,
+                 name: str,
+                 exchange: Optional[str] = None,
+                 currency: Optional[Currency] = None,
+                 entity: Optional[Dict] = None):
+        Asset.__init__(self, id_, AssetClass.Equity, name, exchange, currency, entity=entity)
 
     def get_type(self) -> AssetType:
         return AssetType.STOCK
 
-    def get_currency(self) -> Currency:
+    def get_currency(self) -> Optional[Currency]:
         return self.currency
 
 
@@ -388,8 +386,11 @@ class Cross(Asset):
 
     """
 
-    def __init__(self, id_: str, name: str):
-        Asset.__init__(self, id_, AssetClass.FX, name)
+    def __init__(self,
+                 id_: str,
+                 name: str,
+                 entity: Optional[Dict] = None):
+        Asset.__init__(self, id_, AssetClass.FX, name, entity=entity)
 
     def get_type(self) -> AssetType:
         return AssetType.CROSS
@@ -403,16 +404,21 @@ class Future(Asset):
 
     """
 
-    def __init__(self, id_: str, asset_class: Union[AssetClass, str], name: str, currency=None):
+    def __init__(self,
+                 id_: str,
+                 asset_class: Union[AssetClass, str],
+                 name: str,
+                 currency: Optional[Currency] = None,
+                 entity: Optional[Dict] = None):
         if isinstance(asset_class, str):
             asset_class = get_enum_value(AssetClass, asset_class)
 
-        Asset.__init__(self, id_, asset_class, name, currency=currency)
+        Asset.__init__(self, id_, asset_class, name, currency=currency, entity=entity)
 
     def get_type(self) -> AssetType:
         return AssetType.FUTURE
 
-    def get_currency(self) -> Currency:
+    def get_currency(self) -> Optional[Currency]:
         return self.currency
 
 
@@ -424,8 +430,11 @@ class Currency(Asset):
 
     """
 
-    def __init__(self, id_: str, name: str):
-        Asset.__init__(self, id_, AssetClass.Cash, name)
+    def __init__(self,
+                 id_: str,
+                 name: str,
+                 entity: Optional[Dict] = None):
+        Asset.__init__(self, id_, AssetClass.Cash, name, entity=entity)
 
     def get_type(self) -> AssetType:
         return AssetType.CURRENCY
@@ -439,8 +448,11 @@ class Rate(Asset):
 
     """
 
-    def __init__(self, id_: str, name: str):
-        Asset.__init__(self, id_, AssetClass.Rates, name)
+    def __init__(self,
+                 id_: str,
+                 name: str,
+                 entity: Optional[Dict] = None):
+        Asset.__init__(self, id_, AssetClass.Rates, name, entity=entity)
 
     def get_type(self) -> AssetType:
         return AssetType.RATE
@@ -454,8 +466,11 @@ class Cash(Asset):
 
     """
 
-    def __init__(self, id_: str, name: str):
-        Asset.__init__(self, id_, AssetClass.Cash, name)
+    def __init__(self,
+                 id_: str,
+                 name: str,
+                 entity: Optional[Dict] = None):
+        Asset.__init__(self, id_, AssetClass.Cash, name, entity=entity)
 
     def get_type(self) -> AssetType:
         return AssetType.CASH
@@ -469,8 +484,11 @@ class WeatherIndex(Asset):
 
     """
 
-    def __init__(self, id_: str, name: str):
-        Asset.__init__(self, id_, AssetClass.Commod, name)
+    def __init__(self,
+                 id_: str,
+                 name: str,
+                 entity: Optional[Dict] = None):
+        Asset.__init__(self, id_, AssetClass.Commod, name, entity=entity)
 
     def get_type(self) -> AssetType:
         return AssetType.WEATHER_INDEX
@@ -484,8 +502,11 @@ class CommodityReferencePrice(Asset):
 
     """
 
-    def __init__(self, id_: str, name: str):
-        Asset.__init__(self, id_, AssetClass.Commod, name)
+    def __init__(self,
+                 id_: str,
+                 name: str,
+                 entity: Optional[Dict] = None):
+        Asset.__init__(self, id_, AssetClass.Commod, name, entity=entity)
 
     def get_type(self) -> AssetType:
         return AssetType.COMMODITY_REFERENCE_PRICE
@@ -498,8 +519,11 @@ class CommodityPowerNode(Asset):
 
     """
 
-    def __init__(self, id_: str, name: str):
-        Asset.__init__(self, id_, AssetClass.Commod, name)
+    def __init__(self,
+                 id_: str,
+                 name: str,
+                 entity: Optional[Dict] = None):
+        Asset.__init__(self, id_, AssetClass.Commod, name, entity=entity)
 
     def get_type(self) -> AssetType:
         return AssetType.COMMODITY_POWER_NODE
@@ -512,11 +536,31 @@ class CommodityPowerAggregatedNodes(Asset):
 
     """
 
-    def __init__(self, id_: str, name: str):
-        Asset.__init__(self, id_, AssetClass.Commod, name)
+    def __init__(self,
+                 id_: str,
+                 name: str,
+                 entity: Optional[Dict] = None):
+        Asset.__init__(self, id_, AssetClass.Commod, name, entity=entity)
 
     def get_type(self) -> AssetType:
         return AssetType.COMMODITY_POWER_AGGREGATED_NODES
+
+
+class Commodity(Asset):
+    """Commodity
+
+    Represents a commodity.
+
+    """
+
+    def __init__(self,
+                 id_: str,
+                 name: str,
+                 entity: Optional[Dict] = None):
+        Asset.__init__(self, id_, AssetClass.Commod, name, entity=entity)
+
+    def get_type(self) -> AssetType:
+        return AssetType.COMMODITY
 
 
 class Bond(Asset):
@@ -526,8 +570,11 @@ class Bond(Asset):
 
     """
 
-    def __init__(self, id_: str, name: str):
-        Asset.__init__(self, id_, AssetClass.Credit, name)
+    def __init__(self,
+                 id_: str,
+                 name: str,
+                 entity: Optional[Dict] = None):
+        Asset.__init__(self, id_, AssetClass.Credit, name, entity=entity)
 
     def get_type(self) -> AssetType:
         return AssetType.BOND
@@ -540,11 +587,15 @@ class Swap(Asset):
 
     """
 
-    def __init__(self, id_: str, asset_class: Union[AssetClass, str], name: str):
+    def __init__(self,
+                 id_: str,
+                 asset_class: Union[AssetClass, str],
+                 name: str,
+                 entity: Optional[Dict] = None):
         if isinstance(asset_class, str):
             asset_class = get_enum_value(AssetClass, asset_class)
 
-        Asset.__init__(self, id_, asset_class, name)
+        Asset.__init__(self, id_, asset_class, name, entity=entity)
 
     def get_type(self) -> AssetType:
         return AssetType.SWAP
@@ -557,11 +608,15 @@ class Option(Asset):
 
     """
 
-    def __init__(self, id_: str, asset_class: Union[AssetClass, str], name: str):
+    def __init__(self,
+                 id_: str,
+                 asset_class: Union[AssetClass, str],
+                 name: str,
+                 entity: Optional[Dict] = None):
         if isinstance(asset_class, str):
             asset_class = get_enum_value(AssetClass, asset_class)
 
-        Asset.__init__(self, id_, asset_class, name)
+        Asset.__init__(self, id_, asset_class, name, entity=entity)
 
     def get_type(self) -> AssetType:
         return AssetType.OPTION
@@ -624,14 +679,20 @@ class Index(Asset, IndexConstituentProvider):
     Index which tracks an evolving portfolio of securities, and can be traded through cash or derivatives markets
     """
 
-    def __init__(self, id_: str, asset_class: AssetClass, name: str, exchange=None, currency=None):
-        Asset.__init__(self, id_, asset_class, name, exchange, currency)
+    def __init__(self,
+                 id_: str,
+                 asset_class: AssetClass,
+                 name: str,
+                 exchange: Optional[str] = None,
+                 currency: Optional[Currency] = None,
+                 entity: Optional[Dict] = None):
+        Asset.__init__(self, id_, asset_class, name, exchange, currency, entity=entity)
         IndexConstituentProvider.__init__(self, id_)
 
     def get_type(self) -> AssetType:
         return AssetType.INDEX
 
-    def get_currency(self) -> Currency:
+    def get_currency(self) -> Optional[Currency]:
         return self.currency
 
     def get_return_type(self) -> ReturnType:
@@ -647,14 +708,20 @@ class ETF(Asset, IndexConstituentProvider):
     ETF which tracks an evolving portfolio of securities, and can be traded on exchange
     """
 
-    def __init__(self, id_: str, asset_class: AssetClass, name: str, exchange=None, currency=None):
-        Asset.__init__(self, id_, asset_class, name, exchange, currency)
+    def __init__(self,
+                 id_: str,
+                 asset_class: AssetClass,
+                 name: str,
+                 exchange: Optional[str] = None,
+                 currency: Optional[Currency] = None,
+                 entity: Optional[Dict] = None):
+        Asset.__init__(self, id_, asset_class, name, exchange, currency, entity=entity)
         IndexConstituentProvider.__init__(self, id_)
 
     def get_type(self) -> AssetType:
         return AssetType.ETF
 
-    def get_currency(self) -> Currency:
+    def get_currency(self) -> Optional[Currency]:
         return self.currency
 
 
@@ -664,14 +731,19 @@ class Basket(Asset, IndexConstituentProvider):
     Basket which tracks an evolving portfolio of securities, and can be traded through cash or derivatives markets
     """
 
-    def __init__(self, id_: str, asset_class: AssetClass, name: str, currency=None):
-        Asset.__init__(self, id_, asset_class, name, currency=currency)
+    def __init__(self,
+                 id_: str,
+                 asset_class: AssetClass,
+                 name: str,
+                 currency: Optional[Currency] = None,
+                 entity: Optional[Dict] = None):
+        Asset.__init__(self, id_, asset_class, name, currency=currency, entity=entity)
         IndexConstituentProvider.__init__(self, id_)
 
     def get_type(self) -> AssetType:
         return AssetType.BASKET
 
-    def get_currency(self) -> Currency:
+    def get_currency(self) -> Optional[Currency]:
         return self.currency
 
 
@@ -693,60 +765,66 @@ class SecurityMaster:
     @classmethod
     def __gs_asset_to_asset(cls, gs_asset: GsAsset) -> Asset:
         asset_type = gs_asset.type.value
+        asset_entity: Dict = json.loads(json.dumps(gs_asset.as_dict(), cls=JSONEncoder))
 
         if asset_type in (GsAssetType.Single_Stock.value,):
-            return Stock(gs_asset.id, gs_asset.name, gs_asset.exchange, gs_asset.currency)
+            return Stock(gs_asset.id, gs_asset.name, gs_asset.exchange, gs_asset.currency, entity=asset_entity)
 
         if asset_type in (GsAssetType.ETF.value,):
-            return ETF(gs_asset.id, gs_asset.assetClass, gs_asset.name, gs_asset.exchange, gs_asset.currency)
+            return ETF(gs_asset.id, gs_asset.assetClass, gs_asset.name, gs_asset.exchange, gs_asset.currency,
+                       entity=asset_entity)
 
         if asset_type in (
                 GsAssetType.Index.value,
                 GsAssetType.Risk_Premia.value,
                 GsAssetType.Access.value,
                 GsAssetType.Multi_Asset_Allocation.value):
-            return Index(gs_asset.id, gs_asset.assetClass, gs_asset.name, gs_asset.exchange, gs_asset.currency)
+            return Index(gs_asset.id, gs_asset.assetClass, gs_asset.name, gs_asset.exchange, gs_asset.currency,
+                         entity=asset_entity)
 
         if asset_type in (
                 GsAssetType.Custom_Basket.value,
                 GsAssetType.Research_Basket.value):
-            return Basket(gs_asset.id, gs_asset.assetClass, gs_asset.name, gs_asset.currency)
+            return Basket(gs_asset.id, gs_asset.assetClass, gs_asset.name, gs_asset.currency, entity=asset_entity)
 
         if asset_type in (GsAssetType.Future.value,):
-            return Future(gs_asset.id, gs_asset.assetClass, gs_asset.name, gs_asset.currency)
+            return Future(gs_asset.id, gs_asset.assetClass, gs_asset.name, gs_asset.currency, entity=asset_entity)
 
         if asset_type in (GsAssetType.Cross.value,):
-            return Cross(gs_asset.id, gs_asset.name)
+            return Cross(gs_asset.id, gs_asset.name, entity=asset_entity)
 
         if asset_type in (GsAssetType.Currency.value,):
-            return Currency(gs_asset.id, gs_asset.name)
+            return Currency(gs_asset.id, gs_asset.name, entity=asset_entity)
 
         if asset_type in (GsAssetType.Rate.value,):
-            return Rate(gs_asset.id, gs_asset.name)
+            return Rate(gs_asset.id, gs_asset.name, entity=asset_entity)
 
         if asset_type in (GsAssetType.Cash.value,):
-            return Cash(gs_asset.id, gs_asset.name)
+            return Cash(gs_asset.id, gs_asset.name, entity=asset_entity)
 
         if asset_type in (GsAssetType.WeatherIndex.value,):
-            return WeatherIndex(gs_asset.id, gs_asset.name)
+            return WeatherIndex(gs_asset.id, gs_asset.name, entity=asset_entity)
 
         if asset_type in (GsAssetType.Swap.value,):
-            return Swap(gs_asset.id, gs_asset.assetClass, gs_asset.name)
+            return Swap(gs_asset.id, gs_asset.assetClass, gs_asset.name, entity=asset_entity)
 
         if asset_type in (GsAssetType.Option.value,):
-            return Option(gs_asset.id, gs_asset.assetClass, gs_asset.name)
+            return Option(gs_asset.id, gs_asset.assetClass, gs_asset.name, entity=asset_entity)
 
         if asset_type in (GsAssetType.CommodityReferencePrice.value,):
-            return CommodityReferencePrice(gs_asset.id, gs_asset.name)
+            return CommodityReferencePrice(gs_asset.id, gs_asset.name, entity=asset_entity)
 
         if asset_type in (GsAssetType.CommodityPowerNode.value,):
-            return CommodityPowerNode(gs_asset.id, gs_asset.name)
+            return CommodityPowerNode(gs_asset.id, gs_asset.name, entity=asset_entity)
 
         if asset_type in (GsAssetType.CommodityPowerAggregatedNodes.value,):
-            return CommodityPowerAggregatedNodes(gs_asset.id, gs_asset.name)
+            return CommodityPowerAggregatedNodes(gs_asset.id, gs_asset.name, entity=asset_entity)
 
         if asset_type in (GsAssetType.Bond.value,):
-            return Bond(gs_asset.id, gs_asset.name)
+            return Bond(gs_asset.id, gs_asset.name, entity=asset_entity)
+
+        if asset_type in (GsAssetType.Commodity.value,):
+            return Commodity(gs_asset.id, gs_asset.name, entity=asset_entity)
 
         raise TypeError(f'unsupported asset type {asset_type}')
 

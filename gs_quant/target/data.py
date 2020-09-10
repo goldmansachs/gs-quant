@@ -41,6 +41,8 @@ class MeasureEntityType(EnumBase, Enum):
     KPI = 'KPI'
     COUNTRY = 'COUNTRY'
     SUBDIVISION = 'SUBDIVISION'
+    REPORT = 'REPORT'
+    HEDGE = 'HEDGE'
     
     def __repr__(self):
         return self.value
@@ -134,6 +136,8 @@ class DataQuery(Base):
         start_date: datetime.date = None,
         end_date: datetime.date = None,
         start_time: datetime.datetime = None,
+        page: int = None,
+        page_size: int = None,
         end_time: datetime.datetime = None,
         as_of_time: datetime.datetime = None,
         id_as_of_date: datetime.date = None,
@@ -151,6 +155,7 @@ class DataQuery(Base):
         restrict_fields: bool = False,
         entity_filter: FieldFilterMap = None,
         interval: str = None,
+        distinct_consecutive: bool = False,
         time_filter: TimeFilter = None,
         name: str = None
     ):        
@@ -163,6 +168,8 @@ class DataQuery(Base):
         self.start_date = start_date
         self.end_date = end_date
         self.start_time = start_time
+        self.page = page
+        self.page_size = page_size
         self.end_time = end_time
         self.as_of_time = as_of_time
         self.id_as_of_date = id_as_of_date
@@ -180,6 +187,7 @@ class DataQuery(Base):
         self.restrict_fields = restrict_fields
         self.entity_filter = entity_filter
         self.interval = interval
+        self.distinct_consecutive = distinct_consecutive
         self.time_filter = time_filter
         self.name = name
 
@@ -261,6 +269,26 @@ class DataQuery(Base):
     def start_time(self, value: datetime.datetime):
         self._property_changed('start_time')
         self.__start_time = value        
+
+    @property
+    def page(self) -> int:
+        """Number of symbols page to fetch."""
+        return self.__page
+
+    @page.setter
+    def page(self, value: int):
+        self._property_changed('page')
+        self.__page = value        
+
+    @property
+    def page_size(self) -> int:
+        """Number of how many symbols can be single page contain"""
+        return self.__page_size
+
+    @page_size.setter
+    def page_size(self, value: int):
+        self._property_changed('page_size')
+        self.__page_size = value        
 
     @property
     def end_time(self) -> datetime.datetime:
@@ -439,6 +467,16 @@ class DataQuery(Base):
     def interval(self, value: str):
         self._property_changed('interval')
         self.__interval = value        
+
+    @property
+    def distinct_consecutive(self) -> bool:
+        """enable removing consecutive duplicates"""
+        return self.__distinct_consecutive
+
+    @distinct_consecutive.setter
+    def distinct_consecutive(self, value: bool):
+        self._property_changed('distinct_consecutive')
+        self.__distinct_consecutive = value        
 
     @property
     def time_filter(self) -> TimeFilter:
@@ -632,15 +670,11 @@ class DataSetParameters(Base):
     @camel_case_translate
     def __init__(
         self,
-        upload_data_policy: str,
-        logical_db: str,
-        symbol_strategy: str,
-        apply_market_data_entitlements: bool,
-        coverage: str,
         frequency: str,
-        methodology: str,
         category: str = None,
         sub_category: str = None,
+        methodology: str = None,
+        coverage: str = None,
         coverages: Tuple[Union[AssetType, str], ...] = None,
         notes: str = None,
         history: str = None,
@@ -653,7 +687,11 @@ class DataSetParameters(Base):
         approver_ids: Tuple[str, ...] = None,
         support_ids: Tuple[str, ...] = None,
         support_distribution_list: Tuple[str, ...] = None,
+        apply_market_data_entitlements: bool = None,
+        upload_data_policy: str = None,
         identifier_mapper_name: str = None,
+        logical_db: str = None,
+        symbol_strategy: str = None,
         constant_symbols: Tuple[str, ...] = None,
         underlying_data_set_id: str = None,
         immutable: bool = None,
@@ -662,6 +700,7 @@ class DataSetParameters(Base):
         plot: bool = None,
         coverage_enabled: bool = True,
         use_created_time_for_upload: bool = None,
+        apply_entity_entitlements: bool = None,
         name: str = None
     ):        
         super().__init__()
@@ -695,6 +734,7 @@ class DataSetParameters(Base):
         self.plot = plot
         self.coverage_enabled = coverage_enabled
         self.use_created_time_for_upload = use_created_time_for_upload
+        self.apply_entity_entitlements = apply_entity_entitlements
         self.name = name
 
     @property
@@ -1005,6 +1045,17 @@ class DataSetParameters(Base):
         self._property_changed('use_created_time_for_upload')
         self.__use_created_time_for_upload = value        
 
+    @property
+    def apply_entity_entitlements(self) -> bool:
+        """Whether entity level entitlements are applied while querying the dataset and its
+           coverage."""
+        return self.__apply_entity_entitlements
+
+    @apply_entity_entitlements.setter
+    def apply_entity_entitlements(self, value: bool):
+        self._property_changed('apply_entity_entitlements')
+        self.__apply_entity_entitlements = value        
+
 
 class DataSetTransforms(Base):
         
@@ -1014,10 +1065,12 @@ class DataSetTransforms(Base):
     def __init__(
         self,
         redact_columns: Tuple[str, ...] = None,
+        round_columns: Tuple[str, ...] = None,
         name: str = None
     ):        
         super().__init__()
         self.redact_columns = redact_columns
+        self.round_columns = round_columns
         self.name = name
 
     @property
@@ -1029,6 +1082,16 @@ class DataSetTransforms(Base):
     def redact_columns(self, value: Tuple[str, ...]):
         self._property_changed('redact_columns')
         self.__redact_columns = value        
+
+    @property
+    def round_columns(self) -> Tuple[str, ...]:
+        """Rounds list of database columns."""
+        return self.__round_columns
+
+    @round_columns.setter
+    def round_columns(self, value: Tuple[str, ...]):
+        self._property_changed('round_columns')
+        self.__round_columns = value        
 
 
 class FieldLinkSelector(Base):
@@ -1142,6 +1205,7 @@ class IdFieldProperties(Base):
         idea_id: Tuple[str, ...] = None,
         scenario_id: Tuple[str, ...] = None,
         scenario_group_id: Tuple[str, ...] = None,
+        auto_tags: Tuple[str, ...] = None,
         tags: Tuple[str, ...] = None,
         version: Tuple[float, ...] = None,
         name: Tuple[str, ...] = None,
@@ -1205,6 +1269,7 @@ class IdFieldProperties(Base):
         self.idea_id = idea_id
         self.scenario_id = scenario_id
         self.scenario_group_id = scenario_group_id
+        self.auto_tags = auto_tags
         self.tags = tags
         self.version = version
         self.name = name
@@ -1737,6 +1802,16 @@ class IdFieldProperties(Base):
         self.__scenario_group_id = value        
 
     @property
+    def auto_tags(self) -> Tuple[str, ...]:
+        """Filter by contents of tags, matches on words"""
+        return self.__auto_tags
+
+    @auto_tags.setter
+    def auto_tags(self, value: Tuple[str, ...]):
+        self._property_changed('auto_tags')
+        self.__auto_tags = value        
+
+    @property
     def tags(self) -> Tuple[str, ...]:
         """Filter by contents of tags, matches on words"""
         return self.__tags
@@ -1873,6 +1948,7 @@ class MarketDataFilteredField(Base):
         field: str = None,
         default_value: str = None,
         default_numerical_value: float = None,
+        default_boolean_value: bool = None,
         numerical_values: Tuple[float, ...] = None,
         values: Tuple[str, ...] = None,
         name: str = None
@@ -1881,6 +1957,7 @@ class MarketDataFilteredField(Base):
         self.field = field
         self.default_value = default_value
         self.default_numerical_value = default_numerical_value
+        self.default_boolean_value = default_boolean_value
         self.numerical_values = numerical_values
         self.values = values
         self.name = name
@@ -1914,6 +1991,16 @@ class MarketDataFilteredField(Base):
     def default_numerical_value(self, value: float):
         self._property_changed('default_numerical_value')
         self.__default_numerical_value = value        
+
+    @property
+    def default_boolean_value(self) -> bool:
+        """Default for boolean field"""
+        return self.__default_boolean_value
+
+    @default_boolean_value.setter
+    def default_boolean_value(self, value: bool):
+        self._property_changed('default_boolean_value')
+        self.__default_boolean_value = value        
 
     @property
     def numerical_values(self) -> Tuple[float, ...]:
@@ -2167,6 +2254,7 @@ class DataQueryResponse(Base):
         request_id: str = None,
         error_message: str = None,
         id_: str = None,
+        total_pages: int = None,
         data_set_id: str = None,
         entity_type: Union[MeasureEntityType, str] = None,
         delay: int = None,
@@ -2179,6 +2267,7 @@ class DataQueryResponse(Base):
         self.__type = type_
         self.error_message = error_message
         self.__id = id_
+        self.total_pages = total_pages
         self.data_set_id = data_set_id
         self.entity_type = entity_type
         self.delay = delay
@@ -2223,6 +2312,16 @@ class DataQueryResponse(Base):
     def id(self, value: str):
         self._property_changed('id')
         self.__id = value        
+
+    @property
+    def total_pages(self) -> int:
+        """Number of total symbol pages"""
+        return self.__total_pages
+
+    @total_pages.setter
+    def total_pages(self, value: int):
+        self._property_changed('total_pages')
+        self.__total_pages = value        
 
     @property
     def data_set_id(self) -> str:
@@ -2830,9 +2929,9 @@ class DataSetDimensions(Base):
     @camel_case_translate
     def __init__(
         self,
-        time_field: str,
+        symbol_dimensions: Tuple[str, ...],
+        time_field: str = None,
         transaction_time_field: str = None,
-        symbol_dimensions: Tuple[str, ...] = None,
         non_symbol_dimensions: Tuple[FieldColumnPair, ...] = None,
         symbol_dimension_link: FieldLink = None,
         linked_dimensions: Tuple[FieldLinkSelector, ...] = None,

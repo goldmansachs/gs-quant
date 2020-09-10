@@ -15,7 +15,7 @@ under the License.
 """
 from gs_quant.api.gs.parser import GsParserApi
 from gs_quant.api.gs.risk import GsRiskApi
-from gs_quant.base import get_enum_value, InstrumentBase, QuotableBuilder, RiskKey
+from gs_quant.base import get_enum_value, InstrumentBase, QuotableBuilder
 from gs_quant.common import AssetClass, AssetType, XRef
 from gs_quant.context_base import do_not_serialise
 from gs_quant.markets import HistoricalPricingContext, MarketDataCoordinate, PricingCache, PricingContext
@@ -25,7 +25,6 @@ from gs_quant.risk.results import ErrorValue, MultipleRiskMeasureFuture, Pricing
 from gs_quant.session import GsSession
 
 from abc import ABCMeta
-import copy
 import logging
 from typing import Iterable, Optional, Tuple, Union
 import inspect
@@ -34,7 +33,6 @@ _logger = logging.getLogger(__name__)
 
 
 class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
-
     PROVIDER = GsRiskApi
     __instrument_mappings = {}
 
@@ -107,6 +105,7 @@ class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
 
         rates is now the solved fixed rate
         """
+
         def handle_result(result: Optional[Union[ErrorValue, InstrumentBase]]) -> Optional[PriceableImpl]:
             ret = None if in_place else result
             if isinstance(result, ErrorValue):
@@ -125,7 +124,7 @@ class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
 
         return self.calc(ResolvedInstrumentValues, fn=handle_result)
 
-    def calc(self, risk_measure: Union[RiskMeasure, Iterable[RiskMeasure]], fn=None)\
+    def calc(self, risk_measure: Union[RiskMeasure, Iterable[RiskMeasure]], fn=None) \
             -> Union[DataFrameWithInfo, ErrorValue, FloatWithInfo, PriceableImpl, PricingFuture,
                      SeriesWithInfo, Tuple[MarketDataCoordinate, ...]]:
         """
@@ -170,7 +169,8 @@ class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
         """
         futures = {r: r.pricing_context.calc(self, r)
                    for r in ((risk_measure,) if isinstance(risk_measure, RiskMeasure) else risk_measure)}
-        future = MultipleRiskMeasureFuture(futures) if len(futures) > 1 else futures[risk_measure]
+        future = MultipleRiskMeasureFuture(self, futures) if len(futures) > 1 else futures[
+            risk_measure if isinstance(risk_measure, RiskMeasure) else risk_measure[0]]
 
         if fn is not None:
             ret = PricingFuture()
@@ -265,16 +265,15 @@ class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
         return instruments
 
     @classmethod
-    def from_asset_id(cls, asset_id:str) -> InstrumentBase:
+    def from_asset_id(cls, asset_id: str) -> InstrumentBase:
         return cls.from_asset_ids((asset_id,))[0]
 
     @staticmethod
     def compose(components: Iterable):
-        return {c.resolution_key.date: c for c in components}
+        return {c.risk_key.date if isinstance(c, ErrorValue) else c.resolution_key.date: c for c in components}
 
 
 class Security(XRef, Instrument):
-
     """A security, specified by a well-known identifier"""
 
     def __init__(self,

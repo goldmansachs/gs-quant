@@ -23,6 +23,9 @@ from gs_quant.target.risk import RiskMeasure as __RiskMeasure, RiskMeasureType, 
 
 class RiskMeasure(__RiskMeasure):
 
+    def __repr__(self):
+        return self.name or self.measure_type.name
+
     @property
     @do_not_serialise
     def pricing_context(self):

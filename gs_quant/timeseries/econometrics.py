@@ -96,7 +96,7 @@ def _annualized_return(levels: pd.Series, rolling: int) -> pd.Series:
     return pd.Series(points, index=levels.index)
 
 
-def _get_ratio(input_series: pd.Series, benchmark_or_rate: Union[Asset, float, str], w: Union[Window, int], *,
+def _get_ratio(input_series: pd.Series, benchmark_or_rate: Union[Asset, float, str], w: Union[Window, int, str], *,
                day_count_convention: DayCountConvention, curve_type: CurveType = CurveType.PRICES) -> pd.Series:
     if curve_type == CurveType.PRICES:
         er = excess_returns(input_series, benchmark_or_rate, day_count_convention=day_count_convention)
@@ -470,14 +470,15 @@ def annualize(x: pd.Series) -> pd.Series:
 
 
 @plot_function
-def volatility(x: pd.Series, w: Union[Window, int] = Window(None, 0),
+def volatility(x: pd.Series, w: Union[Window, int, str] = Window(None, 0),
                returns_type: Returns = Returns.SIMPLE) -> pd.Series:
     """
     Realized volatility of price series
 
     :param x: time series of prices
     :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-              and 10 the ramp up value. Window size defaults to length of series.
+              and 10 the ramp up value.  If w is a string, it should be a relative date like '1m', '1d', etc.
+              Window size defaults to length of series.
     :param returns_type: returns type: simple, logarithmic or absolute
     :return: date-based time series of return
 
@@ -534,14 +535,15 @@ def volatility(x: pd.Series, w: Union[Window, int] = Window(None, 0),
 
 @plot_function
 def correlation(x: pd.Series, y: pd.Series,
-                w: Union[Window, int] = Window(None, 0), type_: SeriesType = SeriesType.PRICES) -> pd.Series:
+                w: Union[Window, int, str] = Window(None, 0), type_: SeriesType = SeriesType.PRICES) -> pd.Series:
     """
     Rolling correlation of two price series
 
     :param x: price series
     :param y: price series
-    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-              and 10 the ramp up value. Window size defaults to length of series.
+    :param w: Window, int, or str: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+              and 10 the ramp up value. If w is a string, it should be a relative date like '1m', '1d', etc.
+              Window size defaults to length of series.
     :param type_: type of both input series: prices or returns
     :return: date-based time series of correlation
 
@@ -605,14 +607,15 @@ def correlation(x: pd.Series, y: pd.Series,
 
 
 @plot_function
-def beta(x: pd.Series, b: pd.Series, w: Union[Window, int] = Window(None, 0), prices: bool = True) -> pd.Series:
+def beta(x: pd.Series, b: pd.Series, w: Union[Window, int, str] = Window(None, 0), prices: bool = True) -> pd.Series:
     """
     Rolling beta of price series and benchmark
 
     :param x: time series of prices
     :param b: time series of benchmark prices
-    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-              and 10 the ramp up value. Window size defaults to length of series.
+    :param w: Window, int, or str: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+              and 10 the ramp up value.  If w is a string, it should be a relative date like '1m', '1d', etc.
+              Window size defaults to length of series.
     :param prices: True if input series are prices, False if they are returns
     :return: date-based time series of beta
 
@@ -675,13 +678,14 @@ def beta(x: pd.Series, b: pd.Series, w: Union[Window, int] = Window(None, 0), pr
 
 
 @plot_function
-def max_drawdown(x: pd.Series, w: Union[Window, int] = Window(None, 0)) -> pd.Series:
+def max_drawdown(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Series:
     """
     Compute the maximum peak to trough drawdown over a rolling window.
 
     :param x: time series
-    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-              and 10 the ramp up value. Window size defaults to length of series.
+    :param w: Window, int, or str: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+              and 10 the ramp up value.  If w is a string, it should be a relative date like '1m', '1d', etc.
+              Window size defaults to length of series.
     :return: time series of rolling maximum drawdown
 
     **Examples**

@@ -24,8 +24,9 @@ from gs_quant.context_base import ContextMeta
 from gs_quant.errors import MqValueError
 from gs_quant.markets import MarketDataCoordinate
 from gs_quant.session import GsSession, Environment
+from gs_quant.target.common import FieldFilterMap
 from gs_quant.target.coordinates import MDAPIDataQuery
-from gs_quant.target.data import MarketDataVendor, DataSetEntity
+from gs_quant.target.data import MarketDataVendor, DataSetEntity, DataQuery
 
 test_coordinates = (
     MarketDataCoordinate(mkt_type='Prime', mkt_quoting_style='price', mkt_asset='335320934'),
@@ -236,6 +237,7 @@ def test_coordinate_last(mocker):
 
     expected_result = pd.DataFrame(
         data={
+            'time': ['2019-01-20T01:08:00Z', '2019-01-20T01:09:45Z'],
             'mktType': ['Prime', 'IR'],
             'mktAsset': ['335320934', 'USD'],
             'mktClass': [None, 'Swap'],
@@ -324,6 +326,32 @@ def test_get_many_coordinates(mocker):
     GsSession.current._post = mocker.Mock(return_value={'results': coordinates})
     response = GsDataApi.get_many_coordinates(mkt_type='A', mkt_asset='B')
     assert response == ('A_B_C_D_E.F1', 'A_B_C_D_E.F2')
+
+
+def test_auto_scroll_on_pages(mocker):
+    response = {
+        "requestId": "049de678-1480000",
+        "totalPages": 5,
+        "data": [
+            {
+                "date": "2012-01-25",
+                "assetId": "MADXKSGX6921CFNF",
+                "value": 1
+            }
+        ]
+    }
+    mocker.patch.object(ContextMeta, 'current', return_value=GsSession(Environment.QA))
+    mocker.patch.object(ContextMeta.current, '_post', return_value=response)
+
+    query = DataQuery(
+        start_date=dt.date(2017, 1, 15),
+        end_date=dt.date(2017, 1, 18),
+        where=FieldFilterMap(
+            currency="GBP"
+        )
+    )
+    response = GsDataApi.get_results("test", response, query)
+    assert len(response) == 5
 
 
 if __name__ == "__main__":

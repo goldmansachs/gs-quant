@@ -13,20 +13,21 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from abc import ABCMeta, abstractmethod
 import builtins
-from collections import namedtuple
 import copy
 import datetime as dt
-from dateutil.parser import isoparse
-from enum import EnumMeta
-from functools import wraps
-import inflection
-from inspect import signature, Parameter
 import itertools
 import keyword
 import logging
+from abc import ABCMeta, abstractmethod
+from collections import namedtuple
+from enum import EnumMeta
+from functools import wraps
+from inspect import signature, Parameter
 from typing import Optional, Union, get_type_hints
+
+import inflection
+from dateutil.parser import isoparse
 
 from gs_quant.context_base import ContextBase, ContextMeta, do_not_serialise
 
@@ -74,6 +75,10 @@ class RiskKey(namedtuple('RiskKey', ('provider', 'date', 'market', 'params', 'sc
     def ex_measure(self):
         return RiskKey(self.provider, self.date, self.market, self.params, self.scenario, None)
 
+    @property
+    def fields(self):
+        return self._fields
+
 
 class EnumBase:
 
@@ -86,7 +91,6 @@ class EnumBase:
 
 
 class Base(metaclass=ABCMeta):
-
     """The base class for all generated classes"""
 
     __properties = set()
@@ -147,8 +151,8 @@ class Base(metaclass=ABCMeta):
         return self.__calced_hash
 
     def __eq__(self, other) -> bool:
-        return\
-            type(self) == type(other) and (self.name is None or other.name is None or self.name == other.name) and\
+        return \
+            type(self) == type(other) and (self.name is None or other.name is None or self.name == other.name) and \
             (self.__calced_hash is None or other.__calced_hash is None or self.__calced_hash == other.__calced_hash) \
             and all(super(Base, self).__getattribute__(p) == super(Base, other).__getattribute__(p)
                     for p in self.properties())
@@ -372,14 +376,6 @@ class Base(metaclass=ABCMeta):
             attr = getattr(super().__getattribute__('__class__'), prop)
             if attr.fset:
                 super(Base, self).__setattr__(prop, super(Base, instance).__getattribute__(prop))
-
-
-class Entity(metaclass=ABCMeta):
-    """Base class for any first-class entity"""
-
-    @abstractmethod
-    def get_data_coordinate(self, measure, dimensions, frequency):
-        """Overridden by base class"""
 
 
 class Priceable(Base, metaclass=ABCMeta):

@@ -15,7 +15,6 @@ under the License.
 """
 import inspect
 import logging
-from collections import namedtuple
 from enum import Enum, IntEnum
 from functools import wraps
 from typing import Optional, Union, List
@@ -59,7 +58,36 @@ Returns = _create_enum('Returns', ['simple', 'logarithmic', 'absolute'])
 SeriesType = _create_enum('SeriesType', ['prices', 'returns'])
 CurveType = _create_enum('CurveType', ['prices', 'excess_returns'])
 
-Window = namedtuple('Window', ['w', 'r'])
+
+class Window:
+
+    """
+    Create a Window with size and ramp up to use.
+
+    :param w: window size
+    :param r: ramp up value. Defaults to the window size.
+    :return: new window object
+
+    **Usage**
+
+    The window size and ramp up value can either the number of observations or a string representation of the time
+    period.
+
+    **Examples**
+
+    Window size is :math:`22` obversations and the ramp up value is :math:`10`:
+
+    >>> Window(22, 10)
+
+    Window size is one month and the ramp up size is one week:
+
+    >>> Window('1m', '1w')
+
+    """
+
+    def __init__(self, w: Union[int, str, None] = None, r: Union[int, str, None] = None):
+        self.w = w
+        self.r = w if r is None else r
 
 
 def _check_window(series_length: int, window: Window):
@@ -80,26 +108,25 @@ def apply_ramp(x: pd.Series, window: Window) -> pd.Series:
         return x[window.r:]
 
 
-def normalize_window(x: Union[pd.Series, pd.DataFrame], window: Union[Window, int, None], default_window: int = None) \
-        -> Window:
+def normalize_window(x: Union[pd.Series, pd.DataFrame], window: Union[Window, int, str, None],
+                     default_window: int = None) -> Window:
     if default_window is None:
         default_window = len(x)
 
     if isinstance(window, int):
-        window = Window(w=window, r=window)
+        window = Window(window, window)
+    elif isinstance(window, str):
+        window = Window(_to_offset(window), _to_offset(window))
     else:
         if window is None:
-            window = Window(w=default_window, r=0)
+            window = Window(default_window, 0)
         else:
             if isinstance(window.w, str):
                 window = Window(_to_offset(window.w), window.r)
             if isinstance(window.r, str):
                 window = Window(window.w, _to_offset(window.r))
-            if window.w and window.r is None:
-                window_size = window.w
-                window = Window(w=window_size, r=window_size)
-            elif window.w is None:
-                window = Window(w=default_window, r=window.r)
+            if window.w is None:
+                window = Window(default_window, window.r)
 
     _check_window(default_window, window)
     return window
