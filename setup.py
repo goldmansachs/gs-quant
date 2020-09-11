@@ -58,6 +58,7 @@ setuptools.setup(
         "cachetools",
         "configparser",
         "dataclasses;python_version<'3.7'",
+        "dtaidistance",
         "funcsigs",
         "future",
         "inflection",
@@ -65,6 +66,7 @@ setuptools.setup(
         "msgpack",
         "nest-asyncio",
         "pandas<1.1",
+        "plotly>=4.6.0",
         "python-dateutil>=2.7.0",
         "requests",
         "scipy>=1.2.0",
@@ -78,7 +80,8 @@ setuptools.setup(
     ],
     extras_require={
         "internal": ["gs_quant_internal>=0.6.6", "requests_kerberos"],
-        "notebook": ["jupyter", "matplotlib~=2.1.0", "pprint", "seaborn"],
+        "notebook": ["jupyter", "matplotlib~=2.1.0", "pprint", "seaborn",
+                     "ipywidgets"],
         "test": ["pytest", "pytest-cov", "pytest-mock", "testfixtures", "nbconvert", "nbformat", "jupyter_client"],
         "develop": ["wheel", "sphinx", "sphinx_rtd_theme", "sphinx_autodoc_typehints", "pytest", "pytest-cov",
                     "pytest-mock", "testfixtures"]
