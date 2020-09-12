@@ -1010,6 +1010,7 @@ class ContentParameters(Base):
         origin=None,
         investment_recommendations: InvestmentRecommendations = None,
         is_flow: bool = None,
+        is_research_summary: bool = None,
         name: str = None
     ):        
         super().__init__()
@@ -1026,6 +1027,7 @@ class ContentParameters(Base):
         self.language = language
         self.investment_recommendations = investment_recommendations
         self.is_flow = is_flow
+        self.is_research_summary = is_research_summary
         self.name = name
 
     @property
@@ -1156,6 +1158,15 @@ class ContentParameters(Base):
     def is_flow(self, value: bool):
         self._property_changed('is_flow')
         self.__is_flow = value        
+
+    @property
+    def is_research_summary(self) -> bool:
+        return self.__is_research_summary
+
+    @is_research_summary.setter
+    def is_research_summary(self, value: bool):
+        self._property_changed('is_research_summary')
+        self.__is_research_summary = value        
 
 
 class ContentUpdateResponse(Base):

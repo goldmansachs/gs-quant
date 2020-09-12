@@ -184,6 +184,18 @@ class SwaptionTenorType(Enum):
     SWAP_MATURITY = 'swap_maturity'
 
 
+class EquilibriumExchangeRateMetric(Enum):
+    GSDEER = 'gsdeer'
+    GSFEER = 'gsfeer'
+
+
+class EquilibriumExchangeRateQuarter(Enum):
+    Q1 = 'Q1'
+    Q2 = 'Q2'
+    Q3 = 'Q3'
+    Q4 = 'Q4'
+
+
 ESG_METRIC_TO_QUERY_TYPE = {
     "esNumericScore": QueryType.ES_NUMERIC_SCORE,
     "esNumericPercentile": QueryType.ES_NUMERIC_PERCENTILE,
@@ -2920,4 +2932,40 @@ def rating(asset: Asset, *, source: str = None, real_time: bool = False) -> Seri
     df = _market_data_timed(q)
     series = _extract_series_from_df(df, query_type)
     series.replace(['Buy', 'Sell', 'Neutral'], [1, -1, 0], inplace=True)
+    return series
+
+
+@plot_measure((AssetClass.FX,), None, [QueryType.GSDEER])
+def gir_gsdeer_gsfeer(asset: Asset, metric: EquilibriumExchangeRateMetric,
+                      year: str, quarter: EquilibriumExchangeRateQuarter, *,
+                      source: str = None, real_time: bool = False) -> Series:
+    """
+    GSDEER and GSFEER quarterly estimates for currency fair values made by Global Investment Research (GIR)
+    macro analysts.
+    :param asset: asset object loaded from security master
+    :param metric: Name of metric. One of gsdeer, gsfeer
+    :param year: Year of estimate.
+    :param quarter: Quarter of estimate. One of: Q1, Q2, Q3, Q4
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: gsdeer/gsfeer data of the asset for the field requested
+    """
+    if real_time:
+        raise NotImplementedError('real-time gir_gsdeer_gsfeer not implemented')
+
+    mqid = asset.get_marquee_id()
+    year = str(year)
+
+    _logger.debug('where assetId=%s, metric=%s, year=%s, quarter=%s', mqid, metric.value, year, quarter)
+    q = GsDataApi.build_market_data_query(
+        [mqid],
+        QueryType[metric.value.upper()],
+        where=dict(year=year, quarter=quarter),
+        source=source,
+        real_time=real_time
+    )
+    _logger.debug('q %s', q)
+
+    df = _market_data_timed(q)
+    series = _extract_series_from_df(df, metric)
     return series

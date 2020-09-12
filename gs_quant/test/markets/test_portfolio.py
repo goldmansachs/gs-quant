@@ -366,7 +366,7 @@ def test_duplicate_instrument(mocker):
     prices: PortfolioRiskResult = portfolio.dollar_price()
     assert tuple(prices) == (0.01, 0.02, 0.03, 0.01)
     assert round(prices.aggregate(), 2) == 0.07
-    assert tuple(prices[swap1]) == (0.01, 0.01)
+    assert prices[swap1] == 0.01
 
 
 @mock.patch.object(GsRiskApi, '_exec')
@@ -531,7 +531,7 @@ def test_results_with_resolution():
 
 
 def test_from_frame():
-    swap = IRSwap('Receive', '3m', 'USD', fixedRate=0, notionalAmount=1)
+    swap = IRSwap('Receive', '3m', 'USD', fixed_rate=0, notional_amount=1)
     swaption = IRSwaption(notional_currency='GBP', expiration_date='10y', effective_date='0b')
     portfolio = Portfolio((swap, swaption))
     port_df = portfolio.to_frame()

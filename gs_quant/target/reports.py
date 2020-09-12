@@ -140,6 +140,7 @@ class ReportParameters(Base):
         fx_hedged: bool = None,
         publish_to_bloomberg: bool = None,
         publish_to_reuters: bool = None,
+        publish_to_factset: bool = None,
         include_price_history: bool = None,
         index_update: bool = None,
         index_rebalance: bool = None,
@@ -176,6 +177,7 @@ class ReportParameters(Base):
         self.fx_hedged = fx_hedged
         self.publish_to_bloomberg = publish_to_bloomberg
         self.publish_to_reuters = publish_to_reuters
+        self.publish_to_factset = publish_to_factset
         self.include_price_history = include_price_history
         self.index_update = index_update
         self.index_rebalance = index_rebalance
@@ -302,6 +304,16 @@ class ReportParameters(Base):
     def publish_to_reuters(self, value: bool):
         self._property_changed('publish_to_reuters')
         self.__publish_to_reuters = value        
+
+    @property
+    def publish_to_factset(self) -> bool:
+        """Publish Basket to Factset"""
+        return self.__publish_to_factset
+
+    @publish_to_factset.setter
+    def publish_to_factset(self, value: bool):
+        self._property_changed('publish_to_factset')
+        self.__publish_to_factset = value        
 
     @property
     def include_price_history(self) -> bool:

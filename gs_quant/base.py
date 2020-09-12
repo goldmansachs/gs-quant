@@ -28,10 +28,16 @@ from typing import Optional, Union, get_type_hints
 
 import inflection
 from dateutil.parser import isoparse
+import numpy as np
 
 from gs_quant.context_base import ContextBase, ContextMeta, do_not_serialise
 
 _logger = logging.getLogger(__name__)
+
+_valid_date_formats = ('%Y-%m-%d',  # '2020-07-28'
+                       '%d%b%y',    # '28Jul20'
+                       '%d-%b-%y',  # '28-Jul-20'
+                       '%d/%m/%Y')  # '28/07/2020
 
 
 def _normalise_arg(arg: str) -> str:
@@ -269,6 +275,9 @@ class Base(metaclass=ABCMeta):
             prop_value = values.get(prop, values.get(inflection.camelize(prop, uppercase_first_letter=False)))
 
             if prop_value is not None:
+                if isinstance(prop_value, np.generic):
+                    prop_value = prop_value.item()
+
                 additional_types = []
                 prop_type = self.prop_type(prop, additional=additional_types)
 
@@ -292,11 +301,27 @@ class Base(metaclass=ABCMeta):
                             if str in additional_types:
                                 setattr(self, prop, prop_value)
                 elif issubclass(prop_type, dt.date) and type(prop_value) is not dt.date:
-                    try:
-                        setattr(self, prop, isoparse(prop_value).date())
-                    except ValueError:
-                        if str in additional_types:
-                            setattr(self, prop, prop_value)
+                    date_value = None
+
+                    if isinstance(prop_value, float):
+                        # Assume it's an Excel date
+                        if prop_value > 59:
+                            prop_value -= 1  # Excel leap year bug, 1900 is not a leap year!
+                        date_value = dt.datetime(1899, 12, 31) + dt.timedelta(days=prop_value).date()
+                    elif isinstance(prop_value, str):
+                        for format in _valid_date_formats:
+                            try:
+                                date_value = dt.datetime.strptime(prop_value, format).date()
+                                break
+                            except ValueError:
+                                pass
+
+                    setattr(self, prop, date_value or prop_value)
+                elif issubclass(prop_type, float) and isinstance(prop_value, str):
+                    if prop_value.endswith('%'):
+                        setattr(self, prop, float(prop_value[:-1]) / 100)
+                    else:
+                        setattr(self, prop, float(prop_value))
                 elif issubclass(prop_type, EnumBase):
                     setattr(self, prop, get_enum_value(prop_type, prop_value))
                 elif issubclass(prop_type, Base):
