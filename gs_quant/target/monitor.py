@@ -99,19 +99,22 @@ class ParameterRender(EnumBase, Enum):
     
     """Enum listing supported column definition render types"""
 
+    bar = 'bar'
     boxplot = 'boxplot'
+    chart = 'chart'
+    color = 'color'
     default = 'default'
     direction = 'direction'
-    hidden = 'hidden'
-    bar = 'bar'
-    sparkline = 'sparkline'
     heatmap = 'heatmap'
-    simpleCandlestick = 'simpleCandlestick'
+    hidden = 'hidden'
+    multiColumnHeatmap = 'multiColumnHeatmap'
     progress = 'progress'
-    chart = 'chart'
     range = 'range'
     scale = 'scale'
-    color = 'color'
+    simpleCandlestick = 'simpleCandlestick'
+    sparkline = 'sparkline'
+    stackedBarChart = 'stackedBarChart'
+    text = 'text'
     triColor = 'triColor'
     
     def __repr__(self):
@@ -181,58 +184,6 @@ class WipiFilterType(EnumBase, Enum):
     
     def __repr__(self):
         return self.value
-
-
-class ColumnOperation(Base):
-        
-    """Object used to describe function chaining and column operations."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        column_names: Tuple[str, ...] = None,
-        function_name: str = None,
-        type_: str = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.column_names = column_names
-        self.function_name = function_name
-        self.__type = type_
-        self.name = name
-
-    @property
-    def column_names(self) -> Tuple[str, ...]:
-        """Name of the columns to get results from in order and put into the given
-           function."""
-        return self.__column_names
-
-    @column_names.setter
-    def column_names(self, value: Tuple[str, ...]):
-        self._property_changed('column_names')
-        self.__column_names = value        
-
-    @property
-    def function_name(self) -> str:
-        """Name of the function to pass column results into."""
-        return self.__function_name
-
-    @function_name.setter
-    def function_name(self, value: str):
-        self._property_changed('function_name')
-        self.__function_name = value        
-
-    @property
-    def type(self) -> str:
-        """Type of inputs into the function. Series means pass the whole series into the
-           function, value means just gets the result of the column and pass it
-           into the given function"""
-        return self.__type
-
-    @type.setter
-    def type(self, value: str):
-        self._property_changed('type')
-        self.__type = value        
 
 
 class ColumnProperty(Base):
@@ -476,6 +427,7 @@ class ColumnFormat(Base):
         precision: float,
         unit: Union[AvailableUnitTypes, str] = None,
         human_readable: bool = None,
+        multiplier: float = None,
         axis_key: str = None,
         show_tooltip: bool = None,
         low_color: str = None,
@@ -489,6 +441,7 @@ class ColumnFormat(Base):
         self.precision = precision
         self.unit = unit
         self.human_readable = human_readable
+        self.multiplier = multiplier
         self.axis_key = axis_key
         self.show_tooltip = show_tooltip
         self.low_color = low_color
@@ -527,6 +480,16 @@ class ColumnFormat(Base):
     def human_readable(self, value: bool):
         self._property_changed('human_readable')
         self.__human_readable = value        
+
+    @property
+    def multiplier(self) -> float:
+        """Formatted value is the product of the original value and multiplier"""
+        return self.__multiplier
+
+    @multiplier.setter
+    def multiplier(self, value: float):
+        self._property_changed('multiplier')
+        self.__multiplier = value        
 
     @property
     def axis_key(self) -> str:
@@ -610,11 +573,13 @@ class ColumnMappings(Base):
         self,
         column_name: str = None,
         parameters: FieldMap = None,
+        color: str = None,
         name: str = None
     ):        
         super().__init__()
         self.column_name = column_name
         self.parameters = parameters
+        self.color = color
         self.name = name
 
     @property
@@ -629,6 +594,80 @@ class ColumnMappings(Base):
 
     @property
     def parameters(self) -> FieldMap:
+        return self.__parameters
+
+    @parameters.setter
+    def parameters(self, value: FieldMap):
+        self._property_changed('parameters')
+        self.__parameters = value        
+
+    @property
+    def color(self) -> str:
+        """Hex color of the bar chart. i.e. #FF0000"""
+        return self.__color
+
+    @color.setter
+    def color(self, value: str):
+        self._property_changed('color')
+        self.__color = value        
+
+
+class ColumnOperation(Base):
+        
+    """Object used to describe function chaining and column operations."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        column_names: Tuple[str, ...] = None,
+        function_name: str = None,
+        type_: str = None,
+        parameters: FieldMap = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.column_names = column_names
+        self.function_name = function_name
+        self.__type = type_
+        self.parameters = parameters
+        self.name = name
+
+    @property
+    def column_names(self) -> Tuple[str, ...]:
+        """Name of the columns to get results from in order and put into the given
+           function."""
+        return self.__column_names
+
+    @column_names.setter
+    def column_names(self, value: Tuple[str, ...]):
+        self._property_changed('column_names')
+        self.__column_names = value        
+
+    @property
+    def function_name(self) -> str:
+        """Name of the function to pass column results into."""
+        return self.__function_name
+
+    @function_name.setter
+    def function_name(self, value: str):
+        self._property_changed('function_name')
+        self.__function_name = value        
+
+    @property
+    def type(self) -> str:
+        """Type of inputs into the function. Series means pass the whole series into the
+           function, value means just gets the result of the column and pass it
+           into the given function"""
+        return self.__type
+
+    @type.setter
+    def type(self, value: str):
+        self._property_changed('type')
+        self.__type = value        
+
+    @property
+    def parameters(self) -> FieldMap:
+        """Parameters to be passed into GS Quant functions. For example, window (w)."""
         return self.__parameters
 
     @parameters.setter
@@ -1021,7 +1060,8 @@ class ColumnDefinition(Base):
         start_date: str = None,
         end_date: str = None,
         tooltip: str = None,
-        parent_column_name: str = None
+        parent_column_name: str = None,
+        primary: bool = None
     ):        
         super().__init__()
         self.enable_cell_flashing = enable_cell_flashing
@@ -1039,6 +1079,7 @@ class ColumnDefinition(Base):
         self.end_date = end_date
         self.tooltip = tooltip
         self.parent_column_name = parent_column_name
+        self.primary = primary
 
     @property
     def enable_cell_flashing(self) -> bool:
@@ -1189,6 +1230,16 @@ class ColumnDefinition(Base):
     def parent_column_name(self, value: str):
         self._property_changed('parent_column_name')
         self.__parent_column_name = value        
+
+    @property
+    def primary(self) -> bool:
+        """Applies variable column width to primary column when displayed as a monitor"""
+        return self.__primary
+
+    @primary.setter
+    def primary(self, value: bool):
+        self._property_changed('primary')
+        self.__primary = value        
 
 
 class EntityId(Base):

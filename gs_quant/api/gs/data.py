@@ -91,6 +91,8 @@ class QueryType(Enum):
     ES_DISCLOSURE_PERCENTAGE = "ES Disclosure Percentage"
     RATING = "Rating"
     CONVICTION_LIST = "Conviction List"
+    GSDEER = "Gsdeer"
+    GSFEER = "Gsfeer"
 
 
 class GsDataApi(DataApi):

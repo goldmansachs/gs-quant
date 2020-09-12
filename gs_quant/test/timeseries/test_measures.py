@@ -898,6 +898,15 @@ def mock_rating(_cls, _q):
     return df
 
 
+def mock_gsdeer_gsfeer(_cls, _q):
+    d = {
+        'gsdeer': [1, 1.2, 1.1],
+        'gsfeer': [2, 1.8, 1.9],
+    }
+    df = MarketDataResponseFrame(data=d, index=_index * 3)
+    return df
+
+
 def test_skew():
     replace = Replacer()
 
@@ -3231,6 +3240,33 @@ def test_rating():
 
     with pytest.raises(NotImplementedError):
         tm.rating(mock_aapl, real_time=True)
+    replace.restore()
+
+
+def test_gir_gsdeer_gsfeer():
+    replace = Replacer()
+    mock_usdeur = Cross('MAQB05GD31BA5HWV', 'USDEUR')
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_gsdeer_gsfeer)
+
+    actual = tm.gir_gsdeer_gsfeer(mock_usdeur,
+                                  tm.EquilibriumExchangeRateMetric.GSDEER,
+                                  '2020',
+                                  tm.EquilibriumExchangeRateQuarter.Q1)
+    assert_series_equal(pd.Series([1, 1.2, 1.1], index=_index * 3, name='gsdeer'),
+                        pd.Series(actual))
+
+    actual = tm.gir_gsdeer_gsfeer(mock_usdeur,
+                                  tm.EquilibriumExchangeRateMetric.GSFEER,
+                                  '2020',
+                                  tm.EquilibriumExchangeRateQuarter.Q1)
+    assert_series_equal(pd.Series([2, 1.8, 1.9], index=_index * 3, name='gsfeer'),
+                        pd.Series(actual))
+    with pytest.raises(NotImplementedError):
+        tm.gir_gsdeer_gsfeer(mock_usdeur,
+                             tm.EquilibriumExchangeRateMetric.GSDEER,
+                             '2020',
+                             tm.EquilibriumExchangeRateQuarter.Q1,
+                             real_time=True)
     replace.restore()
 
 

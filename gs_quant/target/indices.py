@@ -144,6 +144,53 @@ class CustomBasketsResponse(Base):
         self.__asset_id = value        
 
 
+class ISelectActionRequest(Base):
+        
+    @camel_case_translate
+    def __init__(
+        self,
+        action_comment: str,
+        trader_attestations: Tuple[str, ...] = None,
+        user_action: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.action_comment = action_comment
+        self.trader_attestations = trader_attestations
+        self.user_action = user_action
+        self.name = name
+
+    @property
+    def action_comment(self) -> str:
+        """Comment for request the action"""
+        return self.__action_comment
+
+    @action_comment.setter
+    def action_comment(self, value: str):
+        self._property_changed('action_comment')
+        self.__action_comment = value        
+
+    @property
+    def trader_attestations(self) -> Tuple[str, ...]:
+        """Attestations for traders when there is a waiver"""
+        return self.__trader_attestations
+
+    @trader_attestations.setter
+    def trader_attestations(self, value: Tuple[str, ...]):
+        self._property_changed('trader_attestations')
+        self.__trader_attestations = value        
+
+    @property
+    def user_action(self) -> str:
+        """What action is the user performing?"""
+        return self.__user_action
+
+    @user_action.setter
+    def user_action(self, value: str):
+        self._property_changed('user_action')
+        self.__user_action = value        
+
+
 class ISelectConstituentColumn(Base):
         
     @camel_case_translate
@@ -294,6 +341,39 @@ class ISelectConstituentColumn(Base):
     def tooltip(self, value: str):
         self._property_changed('tooltip')
         self.__tooltip = value        
+
+
+class ISelectIndexParameter(Base):
+        
+    @camel_case_translate
+    def __init__(
+        self,
+        name: str = None,
+        value: Union[float, str] = None
+    ):        
+        super().__init__()
+        self.name = name
+        self.value = value
+
+    @property
+    def name(self) -> str:
+        """Free text description of asset. Description provided will be indexed in the
+           search service for free text relevance match"""
+        return self.__name
+
+    @name.setter
+    def name(self, value: str):
+        self._property_changed('name')
+        self.__name = value        
+
+    @property
+    def value(self) -> Union[float, str]:
+        return self.__value
+
+    @value.setter
+    def value(self, value: Union[float, str]):
+        self._property_changed('value')
+        self.__value = value        
 
 
 class ISelectIndexParameters(Base):
@@ -450,12 +530,14 @@ class PublishParameters(Base):
         publish_to_reuters: bool,
         publish_to_bloomberg: bool,
         include_price_history: bool,
+        publish_to_factset: bool = False,
         name: str = None
     ):        
         super().__init__()
         self.include_price_history = include_price_history
         self.publish_to_bloomberg = publish_to_bloomberg
         self.publish_to_reuters = publish_to_reuters
+        self.publish_to_factset = publish_to_factset
         self.name = name
 
     @property
@@ -487,6 +569,16 @@ class PublishParameters(Base):
     def publish_to_reuters(self, value: bool):
         self._property_changed('publish_to_reuters')
         self.__publish_to_reuters = value        
+
+    @property
+    def publish_to_factset(self) -> bool:
+        """Publish Basket to Factset, default to false"""
+        return self.__publish_to_factset
+
+    @publish_to_factset.setter
+    def publish_to_factset(self, value: bool):
+        self._property_changed('publish_to_factset')
+        self.__publish_to_factset = value        
 
 
 class CustomBasketsEditInputs(Base):
@@ -630,6 +722,145 @@ class ISelectRebalance(Base):
     def waiver_requested(self, value: bool):
         self._property_changed('waiver_requested')
         self.__waiver_requested = value        
+
+
+class ISelectRequest(Base):
+        
+    @camel_case_translate
+    def __init__(
+        self,
+        rebalance_date: str,
+        request_counter: int,
+        use_new_rebalance_interface: bool,
+        new_parameters: Tuple[ISelectNewParameter, ...] = None,
+        index_parameters: Tuple[ISelectIndexParameter, ...] = None,
+        new_weights: Tuple[ISelectNewWeight, ...] = None,
+        new_units: Tuple[ISelectNewUnit, ...] = None,
+        entry_type: str = None,
+        waiver_requested: bool = None,
+        presubmit: bool = None,
+        requester_id: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.use_new_rebalance_interface = use_new_rebalance_interface
+        self.new_parameters = new_parameters
+        self.index_parameters = index_parameters
+        self.new_weights = new_weights
+        self.new_units = new_units
+        self.rebalance_date = rebalance_date
+        self.entry_type = entry_type
+        self.request_counter = request_counter
+        self.waiver_requested = waiver_requested
+        self.presubmit = presubmit
+        self.requester_id = requester_id
+        self.name = name
+
+    @property
+    def use_new_rebalance_interface(self) -> bool:
+        """Flag to route to original ISelect or DynVol ISelect"""
+        return self.__use_new_rebalance_interface
+
+    @use_new_rebalance_interface.setter
+    def use_new_rebalance_interface(self, value: bool):
+        self._property_changed('use_new_rebalance_interface')
+        self.__use_new_rebalance_interface = value        
+
+    @property
+    def new_parameters(self) -> Tuple[ISelectNewParameter, ...]:
+        """New parameters to be updated"""
+        return self.__new_parameters
+
+    @new_parameters.setter
+    def new_parameters(self, value: Tuple[ISelectNewParameter, ...]):
+        self._property_changed('new_parameters')
+        self.__new_parameters = value        
+
+    @property
+    def index_parameters(self) -> Tuple[ISelectIndexParameter, ...]:
+        """Index Parameters to be updated"""
+        return self.__index_parameters
+
+    @index_parameters.setter
+    def index_parameters(self, value: Tuple[ISelectIndexParameter, ...]):
+        self._property_changed('index_parameters')
+        self.__index_parameters = value        
+
+    @property
+    def new_weights(self) -> Tuple[ISelectNewWeight, ...]:
+        """New Weight array to be updated"""
+        return self.__new_weights
+
+    @new_weights.setter
+    def new_weights(self, value: Tuple[ISelectNewWeight, ...]):
+        self._property_changed('new_weights')
+        self.__new_weights = value        
+
+    @property
+    def new_units(self) -> Tuple[ISelectNewUnit, ...]:
+        """New Unit array to be updated"""
+        return self.__new_units
+
+    @new_units.setter
+    def new_units(self, value: Tuple[ISelectNewUnit, ...]):
+        self._property_changed('new_units')
+        self.__new_units = value        
+
+    @property
+    def rebalance_date(self) -> str:
+        return self.__rebalance_date
+
+    @rebalance_date.setter
+    def rebalance_date(self, value: str):
+        self._property_changed('rebalance_date')
+        self.__rebalance_date = value        
+
+    @property
+    def entry_type(self) -> str:
+        """Rebalance type"""
+        return self.__entry_type
+
+    @entry_type.setter
+    def entry_type(self, value: str):
+        self._property_changed('entry_type')
+        self.__entry_type = value        
+
+    @property
+    def request_counter(self) -> int:
+        return self.__request_counter
+
+    @request_counter.setter
+    def request_counter(self, value: int):
+        self._property_changed('request_counter')
+        self.__request_counter = value        
+
+    @property
+    def waiver_requested(self) -> bool:
+        return self.__waiver_requested
+
+    @waiver_requested.setter
+    def waiver_requested(self, value: bool):
+        self._property_changed('waiver_requested')
+        self.__waiver_requested = value        
+
+    @property
+    def presubmit(self) -> bool:
+        return self.__presubmit
+
+    @presubmit.setter
+    def presubmit(self, value: bool):
+        self._property_changed('presubmit')
+        self.__presubmit = value        
+
+    @property
+    def requester_id(self) -> str:
+        """Marquee unique identifier for user who owns the object."""
+        return self.__requester_id
+
+    @requester_id.setter
+    def requester_id(self, value: str):
+        self._property_changed('requester_id')
+        self.__requester_id = value        
 
 
 class ISelectResponse(Base):

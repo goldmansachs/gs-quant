@@ -15,7 +15,6 @@ under the License.
 """
 import copy
 import datetime as dt
-import locale
 import logging
 from itertools import chain
 from typing import Iterable, Optional, Tuple, Union
@@ -254,62 +253,30 @@ class Portfolio(PriceableImpl):
         GsPortfolioApi.update_positions(self.__id, (position_set,))
 
     @classmethod
-    def from_frame(
-            cls,
-            data: pd.DataFrame,
-            mappings: dict = None,
-            date_formats: list = None,
-    ):
-        trade_list = []
-        attribute_map = {}
-        mappings = mappings or {}
+    def from_frame(cls, data: pd.DataFrame, mappings: dict = None):
+        def get_value(row: pd.Series, attribute: str):
+            value = mappings.get(attribute, attribute)
+            return value(row) if callable(value) else row.get(value)
 
+        instruments = []
+        mappings = mappings or {}
         data = data.replace({np.nan: None})
 
-        for index, row in data.iterrows():
-            if is_empty(row):
-                continue
-            try:
-                instrument_type = get_value(row, mappings, 'type')
-                asset_class = get_value(row, mappings, 'asset_class')
-            except ValueError:
-                instrument_type = ''
-                asset_class = ''
+        for row in (r for _, r in data.iterrows() if any(v for v in r.values if v is not None)):
+            instrument = None
+            for init_keys in (('asset_class', 'type'), ('$type',)):
+                init_values = tuple(filter(None, (get_value(row, k) for k in init_keys)))
+                if len(init_keys) == len(init_values):
+                    instrument = Instrument.from_dict(dict(zip(init_keys, init_values)))
+                    instrument = instrument.from_dict({p: get_value(row, p) for p in instrument.properties()})
+                    break
 
-            if 'tdapi' in str(instrument_type):
-                inputs = {'$type': instrument_type[6:]}
-                [instrument, attributes] = get_instrument(instrument_type[6:], instr_map=attribute_map, tdapi=True)
+            if instrument:
+                instruments.append(instrument)
             else:
-                inputs = {'asset_class': asset_class, 'type': instrument_type}
-                [instrument, attributes] = get_instrument(instrument_type,
-                                                          instr_class=asset_class,
-                                                          instr_map=attribute_map)
+                raise ValueError('Neither asset_class/type nor $type specified')
 
-            for attribute in attributes:
-                if attribute == 'type' or attribute == 'asset_class':
-                    continue
-
-                additional = []
-                prop_type = instrument.prop_type(attribute, additional)
-                additional.append(prop_type)
-
-                if prop_type is dt.date:
-                    value = get_date(row, mappings, attribute, date_formats)
-                else:
-                    value = get_value(row, mappings, attribute)
-                    if value is not None and type(value) not in (float, int):
-                        if float in additional:
-                            value = string_to_float(value)
-
-                if value is not None:
-                    if isinstance(value, str):
-                        value.strip(' ')
-                    inputs[attribute] = value
-
-            trade = Instrument.from_dict(inputs)
-            trade_list.append(trade)
-
-        return cls(trade_list)
+        return cls(instruments)
 
     @classmethod
     def from_csv(
@@ -337,16 +304,22 @@ class Portfolio(PriceableImpl):
                 if isinstance(priceable, Portfolio):
                     records.extend(to_records(priceable))
                 else:
-                    records.append(dict(chain(priceable.as_dict().items(),
+                    as_dict = priceable.as_dict()
+                    if hasattr(priceable, '_type'):
+                        as_dict['$type'] = priceable._type
+
+                    records.append(dict(chain(as_dict.items(),
                                               (('instrument', priceable), ('portfolio', portfolio.name)))))
 
             return records
 
         df = pd.DataFrame.from_records(to_records(self)).set_index(['portfolio', 'instrument'])
         all_columns = df.columns.to_list()
-        columns = sorted(c for c in all_columns if c not in ('asset_class', 'type'))
-        if 'asset_class' in all_columns:
-            columns = ['asset_class', 'type'] + columns
+        columns = sorted(c for c in all_columns if c not in ('asset_class', 'type', '$type'))
+
+        for asset_column in ('$type', 'type', 'asset_class'):
+            if asset_column in all_columns:
+                columns = [asset_column] + columns
 
         df = df[columns]
         mappings = mappings or {}
@@ -429,100 +402,3 @@ class Portfolio(PriceableImpl):
             return PortfolioRiskResult(self,
                                        (risk_measure,) if isinstance(risk_measure, RiskMeasure) else risk_measure,
                                        [p.calc(risk_measure, fn=fn) for p in self.__priceables])
-
-
-def np_to_fundamental_type(value):
-    if isinstance(value, np.generic):
-        return value.item()
-    return value
-
-
-def from_excel_date(ordinal, _epoch0=dt.datetime(1899, 12, 31)):
-    if isinstance(ordinal, float):
-        if ordinal > 59:
-            ordinal -= 1  # Excel leap year bug, 1900 is not a leap year!
-        return (_epoch0 + dt.timedelta(days=ordinal)).replace(microsecond=0).date()
-
-    return ordinal
-
-
-def get_value(row, mappings, attribute):
-    if attribute in mappings.keys():
-        if isinstance(mappings[attribute], str):
-            return np_to_fundamental_type(row[mappings[attribute]])
-        return mappings[attribute](row)
-    elif attribute in row.index:
-        return row[attribute]
-
-
-valid_date_formats = ['%Y-%m-%d',  # '2020-07-28'
-                      '%d%b%y',  # '28Jul20'
-                      '%d-%b-%y',  # '28-Jul-20'
-                      '%d/%m/%Y']  # '28/07/2020
-
-
-def get_date(row, mappings, attribute, date_formats: Optional[list] = None):
-    if date_formats is None:
-        date_formats = valid_date_formats
-    else:
-        date_formats.append(valid_date_formats)
-
-    value = get_value(row, mappings, attribute)
-    if isinstance(value, (dt.datetime, dt.date)):
-        return value
-
-    ordinal = from_excel_date(value)
-    r = None
-    if ordinal is not None:
-        for f in date_formats:
-            try:
-                r = dt.datetime.strptime(ordinal, f).date()
-            except ValueError:
-                pass
-            if r is not None:
-                return r
-
-    return ordinal
-
-
-def string_to_float(string):
-    locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
-    try:
-        return locale.atof(string)
-    except ValueError:
-        pass
-    try:
-        return float(string.strip('%')) / 100
-    except ValueError:
-        pass
-
-    return string
-
-
-def is_empty(serie):
-    for elem in serie.values:
-        if elem is not None:
-            return False
-    return True
-
-
-def get_instrument(instr_type, instr_class=None, instr_map=None, tdapi=False):
-    if instr_map is None:
-        instr_map = {}
-    if tdapi:
-        if instr_type in instr_map:
-            instr = instr_map[instr_type][0]
-            attri = instr_map[instr_type][1]
-        else:
-            instr = Instrument().from_dict({'$type': instr_type})
-            attri = instr.properties()
-            instr_map[instr_type] = (instr, attri)
-    else:
-        if (instr_class, instr_type) in instr_map:
-            instr = instr_map[(instr_class, instr_type)][0]
-            attri = instr_map[(instr_class, instr_type)][1]
-        else:
-            instr = Instrument().from_dict({'asset_class': instr_class, 'type': instr_type})
-            attri = instr.properties()
-            instr_map[(instr_class, instr_type)] = (instr, attri)
-    return [instr, attri]

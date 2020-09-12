@@ -294,6 +294,7 @@ class AssetClassifications(Base):
         rating_second_highest: str = None,
         rating_linear: float = None,
         commod_template: str = None,
+        region: Union[Region, str] = None,
         name: str = None
     ):        
         super().__init__()
@@ -316,6 +317,7 @@ class AssetClassifications(Base):
         self.rating_second_highest = rating_second_highest
         self.rating_linear = rating_linear
         self.commod_template = commod_template
+        self.region = region
         self.name = name
 
     @property
@@ -508,6 +510,16 @@ class AssetClassifications(Base):
         self._property_changed('commod_template')
         self.__commod_template = value        
 
+    @property
+    def region(self) -> Union[Region, str]:
+        """Regional classification for the asset"""
+        return self.__region
+
+    @region.setter
+    def region(self, value: Union[Region, str]):
+        self._property_changed('region')
+        self.__region = get_enum_value(Region, value)        
+
 
 class AssetToInstrumentResponse(Base):
         
@@ -615,9 +627,97 @@ class Benchmark(Base):
         self.__name = value        
 
 
+class CommodityPowerAggregatedNodes(Base):
+        
+    """Commodity power aggregated node represents a group of locations in power markets
+       e.g. zone or hub."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        ISO: str = None,
+        type_: str = None,
+        location_name: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.ISO = ISO
+        self.__type = type_
+        self.location_name = location_name
+        self.name = name
+
+    @property
+    def ISO(self) -> str:
+        """Independent system operator"""
+        return self.__ISO
+
+    @ISO.setter
+    def ISO(self, value: str):
+        self._property_changed('ISO')
+        self.__ISO = value        
+
+    @property
+    def type(self) -> str:
+        """Aggregate Type."""
+        return self.__type
+
+    @type.setter
+    def type(self, value: str):
+        self._property_changed('type')
+        self.__type = value        
+
+    @property
+    def location_name(self) -> str:
+        """Location within the ISO"""
+        return self.__location_name
+
+    @location_name.setter
+    def location_name(self, value: str):
+        self._property_changed('location_name')
+        self.__location_name = value        
+
+
+class CommodityPowerNode(Base):
+        
+    """Commodity power node represents a distinct location in power markets"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        ISO: str = None,
+        location_name: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.ISO = ISO
+        self.location_name = location_name
+        self.name = name
+
+    @property
+    def ISO(self) -> str:
+        """Independent system operator"""
+        return self.__ISO
+
+    @ISO.setter
+    def ISO(self, value: str):
+        self._property_changed('ISO')
+        self.__ISO = value        
+
+    @property
+    def location_name(self) -> str:
+        """Location within the ISO"""
+        return self.__location_name
+
+    @location_name.setter
+    def location_name(self, value: str):
+        self._property_changed('location_name')
+        self.__location_name = value        
+
+
 class CommodityReferencePriceParameters(Base):
         
-    """Parameters specific to the group used to specify the commodity underlier."""
+    """Deprecated - Parameters specific to the group used to specify the commodity
+       underlier."""
 
     @camel_case_translate
     def __init__(
@@ -1361,7 +1461,7 @@ class AssetParameters(Base):
         option_type: Union[OptionType, str] = None,
         settlement_date: datetime.date = None,
         settlement_type: str = None,
-        strike_price: float = None,
+        strike_price: Union[float, str] = None,
         put_currency: Union[Currency, str] = None,
         put_amount: float = None,
         automatic_exercise: bool = None,
@@ -1686,11 +1786,11 @@ class AssetParameters(Base):
         self.__settlement_type = value        
 
     @property
-    def strike_price(self) -> float:
+    def strike_price(self) -> Union[float, str]:
         return self.__strike_price
 
     @strike_price.setter
-    def strike_price(self, value: float):
+    def strike_price(self, value: Union[float, str]):
         self._property_changed('strike_price')
         self.__strike_price = value        
 

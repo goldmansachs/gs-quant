@@ -27,7 +27,7 @@ from websockets import ConnectionClosedError
 from gs_quant.api.risk import RiskApi
 from gs_quant.risk import RiskRequest
 from gs_quant.session import GsSession
-from gs_quant.target.risk import APEXOptimizationRequest
+from gs_quant.target.risk import OptimizationRequest
 
 _logger = logging.getLogger(__name__)
 
@@ -173,7 +173,7 @@ class GsRiskApi(RiskApi):
             cls.shutdown_queue_listener(results)
 
     @classmethod
-    def create_pretrade_execution_optimization(cls, request: APEXOptimizationRequest) -> str:
+    def create_pretrade_execution_optimization(cls, request: OptimizationRequest) -> str:
         try:
             response = GsSession.current._post(r'/risk/execution/pretrade', request)
             _logger.info('New optimization is created with id: {}'.format(response.get("optimizationId")))

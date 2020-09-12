@@ -21,6 +21,7 @@ import copy
 import datetime as dt
 from itertools import chain
 import logging
+import operator as op
 import pandas as pd
 from typing import Any, Iterable, Mapping, Optional, Tuple, Union
 
@@ -135,25 +136,47 @@ class MultipleRiskMeasureResult(dict):
         else:
             return super().__getitem__(item)
 
-    def __add__(self, other):
-        if not isinstance(other, MultipleRiskMeasureResult):
-            raise ValueError('Can only add instances of MultipleRiskMeasureResult')
-
-        if sorted(self.keys()) == sorted(other.keys()):
-            from gs_quant.markets.portfolio import Portfolio
-            return PortfolioRiskResult(
-                Portfolio((self.__instrument, other.__instrument)),
-                self.keys(),
-                tuple(MultipleRiskMeasureFuture(r.__instrument, dict((k, PricingFuture(v)) for k, v in r))
-                      for r in (self, other))
-            )
-        elif set(self.keys()).isdisjoint(other.keys()) and self.__instrument == other.__instrument:
-            if set(self.keys()).intersection(other.keys()):
-                raise ValueError('Keys must be disjoint')
-
-            return MultipleRiskMeasureResult(self.__instrument, chain(self.items(), other.items()))
+    def __mul__(self, other):
+        if isinstance(other, (int, float)):
+            return self.__op(op.mul, other)
         else:
-            raise ValueError('Can only add where risk_measures match or instrument identical & risk_measures disjoint')
+            return ValueError('Can only multiply by an int or float')
+
+    def __add__(self, other):
+        if isinstance(other, (int, float)):
+            return self.__op(op.add, other)
+        elif isinstance(other, MultipleRiskMeasureResult):
+            if sorted(self.keys()) == sorted(other.keys()):
+                from gs_quant.markets.portfolio import Portfolio
+                return PortfolioRiskResult(
+                    Portfolio((self.__instrument, other.__instrument)),
+                    self.keys(),
+                    tuple(MultipleRiskMeasureFuture(r.__instrument, dict((k, PricingFuture(v)) for k, v in r))
+                          for r in (self, other))
+                )
+            elif set(self.keys()).isdisjoint(other.keys()) and self.__instrument == other.__instrument:
+                if set(self.keys()).intersection(other.keys()):
+                    raise ValueError('Keys must be disjoint')
+
+                return MultipleRiskMeasureResult(self.__instrument, chain(self.items(), other.items()))
+            else:
+                raise ValueError('Can only add where risk_measures match or instrument identical &' +
+                                 'risk_measures disjoint')
+        else:
+            raise ValueError('Can only add instances of MultipleRiskMeasureResult or int, float')
+
+    def __op(self, operator, operand):
+        values = {}
+        for key, value in self.items():
+            if isinstance(value, pd.DataFrame):
+                new_value = value.copy()
+                new_value.value += operator(value.value, operand)
+            else:
+                new_value = operator(value, operand)
+
+            values[key] = new_value
+
+        return MultipleRiskMeasureResult(self.__instrument, values)
 
     @property
     def instrument(self):
@@ -291,38 +314,52 @@ class PortfolioRiskResult(CompositeResultFuture):
     def __iter__(self):
         return iter(self.__results())
 
-    def __add__(self, other):
-        if not isinstance(other, PortfolioRiskResult):
-            raise ValueError('Can only add instances of PortfolioRiskResult')
-
-        if sorted(self.__risk_measures) == sorted(other.__risk_measures):
-            return PortfolioRiskResult(
-                self.portfolio + other.portfolio,
-                self.__risk_measures,
-                self.futures + other.futures)
-        elif set(self.__risk_measures).isdisjoint(other.__risk_measures) and self.__portfolio == other.__portfolio:
-            futures = []
-            risk_measures = self.__risk_measures + other.__risk_measures
-            risk_measure = self.__risk_measures[0] if len(self.__risk_measures) == 1 else None
-            other_measure = other.__risk_measures[0] if len(other.__risk_measures) == 1 else None
-
-            for priceable, future, other_future in zip(self.__portfolio, self.futures, other.futures):
-                if isinstance(future, PortfolioRiskResult) and isinstance(other_future, PortfolioRiskResult):
-                    futures.append(future + other_future)
-                else:
-                    if risk_measure:
-                        future = MultipleRiskMeasureFuture(priceable, {risk_measure: future})
-
-                    if other_measure:
-                        other_future = MultipleRiskMeasureFuture(priceable, {other_measure: other_future})
-
-                    risk_measure_futures = [future.measures_to_futures.get(m) or other_future.measures_to_futures[m]
-                                            for m in risk_measures]
-                    futures.append(MultipleRiskMeasureFuture(priceable, dict(zip(risk_measures, risk_measure_futures))))
-
-            return PortfolioRiskResult(self.__portfolio, risk_measures, futures)
+    def __mul__(self, other):
+        if isinstance(other, (int, float)):
+            futures = [f + other if isinstance(f, PortfolioRiskResult) else PricingFuture(f.result() * other)
+                       for f in self.futures]
+            return PortfolioRiskResult(self.__portfolio, self.__risk_measures, futures)
         else:
-            raise ValueError('Can only add where risk_measures match or portfolios identical & risk_measures disjoint')
+            return ValueError('Can only multiply by an int or float')
+
+    def __add__(self, other):
+        if isinstance(other, (int, float)):
+            futures = [f + other if isinstance(f, PortfolioRiskResult) else PricingFuture(f.result() + other)
+                       for f in self.futures]
+            return PortfolioRiskResult(self.__portfolio, self.__risk_measures, futures)
+        elif isinstance(other, PortfolioRiskResult):
+            if sorted(self.__risk_measures) == sorted(other.__risk_measures):
+                return PortfolioRiskResult(
+                    self.__portfolio + other.__portfolio,
+                    self.__risk_measures,
+                    self.futures + other.futures)
+            elif set(self.__risk_measures).isdisjoint(other.__risk_measures) and self.__portfolio == other.__portfolio:
+                futures = []
+                risk_measures = self.__risk_measures + other.__risk_measures
+                risk_measure = self.__risk_measures[0] if len(self.__risk_measures) == 1 else None
+                other_measure = other.__risk_measures[0] if len(other.__risk_measures) == 1 else None
+
+                for priceable, future, other_future in zip(self.__portfolio, self.futures, other.futures):
+                    if isinstance(future, PortfolioRiskResult) and isinstance(other_future, PortfolioRiskResult):
+                        futures.append(future + other_future)
+                    else:
+                        if risk_measure:
+                            future = MultipleRiskMeasureFuture(priceable, {risk_measure: future})
+
+                        if other_measure:
+                            other_future = MultipleRiskMeasureFuture(priceable, {other_measure: other_future})
+
+                        risk_measure_futures = [future.measures_to_futures.get(m) or other_future.measures_to_futures[m]
+                                                for m in risk_measures]
+                        futures.append(MultipleRiskMeasureFuture(priceable,
+                                                                 dict(zip(risk_measures, risk_measure_futures))))
+
+                return PortfolioRiskResult(self.__portfolio, risk_measures, futures)
+            else:
+                raise ValueError('Can only add where risk_measures match or portfolios identical &' +
+                                 'risk_measures disjoint')
+        else:
+            raise ValueError('Can only add instances of PortfolioRiskResult or int, float')
 
     @property
     def portfolio(self):
@@ -386,7 +423,7 @@ class PortfolioRiskResult(CompositeResultFuture):
             return tuple(self.__result(p) for p in self.__portfolio.all_paths)
 
         paths = self.__paths(items)
-        return self.__result(paths[0]) if len(paths) == 1 else self.subset(paths)
+        return self.__result(paths[0]) if not isinstance(items, slice) else self.subset(paths)
 
     def __result(self, path: PortfolioPath, risk_measure: Optional[RiskMeasure] = None):
         res = path(self.futures).result()

@@ -603,6 +603,7 @@ class CommodOption(Instrument):
         buy_sell: Union[BuySell, str] = None,
         commodity: str = None,
         commodity_reference_price: str = None,
+        underlier_short_name: str = None,
         start: Union[datetime.date, str] = None,
         end: Union[datetime.date, str] = None,
         number_of_periods: int = None,
@@ -624,6 +625,7 @@ class CommodOption(Instrument):
         self.buy_sell = buy_sell
         self.commodity = commodity
         self.commodity_reference_price = commodity_reference_price
+        self.underlier_short_name = underlier_short_name
         self.start = start
         self.end = end
         self.number_of_periods = number_of_periods
@@ -680,6 +682,16 @@ class CommodOption(Instrument):
     def commodity_reference_price(self, value: str):
         self._property_changed('commodity_reference_price')
         self.__commodity_reference_price = value        
+
+    @property
+    def underlier_short_name(self) -> str:
+        """Plain-English underlier short name"""
+        return self.__underlier_short_name
+
+    @underlier_short_name.setter
+    def underlier_short_name(self, value: str):
+        self._property_changed('underlier_short_name')
+        self.__underlier_short_name = value        
 
     @property
     def start(self) -> Union[datetime.date, str]:
@@ -1359,7 +1371,7 @@ class EqCliquet(Instrument):
 
     @property
     def expiration_date(self) -> Union[datetime.date, str]:
-        """Date or tenor, e.g. 2018-09-03, 3m"""
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
         return self.__expiration_date
 
     @expiration_date.setter
@@ -1531,7 +1543,7 @@ class EqForward(Instrument):
 
     @property
     def expiration_date(self) -> Union[datetime.date, str]:
-        """Date or tenor, e.g. 2018-09-03, 3m"""
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
         return self.__expiration_date
 
     @expiration_date.setter
@@ -1577,7 +1589,7 @@ class EqOption(Instrument):
         multiplier: float = None,
         settlement_date: Union[datetime.date, str] = None,
         settlement_currency: Union[Currency, str] = None,
-        premium: float = None,
+        premium: float = 0,
         premium_payment_date: Union[datetime.date, str] = None,
         valuation_time: Union[ValuationTime, str] = None,
         method_of_settlement: Union[OptionSettlementMethod, str] = None,
@@ -1630,7 +1642,7 @@ class EqOption(Instrument):
 
     @property
     def expiration_date(self) -> Union[datetime.date, str]:
-        """Date or tenor, e.g. 2018-09-03, 3m"""
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
         return self.__expiration_date
 
     @expiration_date.setter
@@ -1701,7 +1713,7 @@ class EqOption(Instrument):
 
     @property
     def settlement_date(self) -> Union[datetime.date, str]:
-        """Date or tenor, e.g. 2018-09-03, 3m"""
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
         return self.__settlement_date
 
     @settlement_date.setter
@@ -1856,7 +1868,7 @@ class EqOptionLeg(Instrument):
 
     @property
     def expiration_date(self) -> Union[datetime.date, str]:
-        """Date or tenor, e.g. 2018-09-03, 3m"""
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
         return self.__expiration_date
 
     @expiration_date.setter
@@ -1927,7 +1939,7 @@ class EqOptionLeg(Instrument):
 
     @property
     def settlement_date(self) -> Union[datetime.date, str]:
-        """Date or tenor, e.g. 2018-09-03, 3m"""
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
         return self.__settlement_date
 
     @settlement_date.setter
@@ -2023,23 +2035,25 @@ class EqSynthetic(Instrument):
     @camel_case_translate
     def __init__(
         self,
-        underlier: Union[float, str] = None,
+        underlier: Union[float, str],
+        expiry: str,
         currency: Union[Currency, str] = None,
         swap_type: str = 'Eq Swap',
-        effective_date: datetime.date = None,
-        strike_price: Union[float, str] = None,
-        notional_amount: float = None,
+        buy_sell: Union[BuySell, str] = None,
         underlier_type: Union[UnderlierType, str] = None,
+        effective_date: datetime.date = None,
+        num_of_underlyers: float = None,
         name: str = None
     ):        
         super().__init__()
         self.underlier = underlier
         self.currency = currency
         self.swap_type = swap_type
-        self.effective_date = effective_date
-        self.strike_price = strike_price
-        self.notional_amount = notional_amount
+        self.buy_sell = buy_sell
         self.underlier_type = underlier_type
+        self.effective_date = effective_date
+        self.num_of_underlyers = num_of_underlyers
+        self.expiry = expiry
         self.name = name
 
     @property
@@ -2082,34 +2096,14 @@ class EqSynthetic(Instrument):
         self.__swap_type = value        
 
     @property
-    def effective_date(self) -> datetime.date:
-        """The date on which the synthetic becomes effective"""
-        return self.__effective_date
+    def buy_sell(self) -> Union[BuySell, str]:
+        """Buy or Sell side of contract"""
+        return self.__buy_sell
 
-    @effective_date.setter
-    def effective_date(self, value: datetime.date):
-        self._property_changed('effective_date')
-        self.__effective_date = value        
-
-    @property
-    def strike_price(self) -> Union[float, str]:
-        """Variance strike as value or percentage string e.g. 62.5, 95%"""
-        return self.__strike_price
-
-    @strike_price.setter
-    def strike_price(self, value: Union[float, str]):
-        self._property_changed('strike_price')
-        self.__strike_price = value        
-
-    @property
-    def notional_amount(self) -> float:
-        """Notional amount"""
-        return self.__notional_amount
-
-    @notional_amount.setter
-    def notional_amount(self, value: float):
-        self._property_changed('notional_amount')
-        self.__notional_amount = value        
+    @buy_sell.setter
+    def buy_sell(self, value: Union[BuySell, str]):
+        self._property_changed('buy_sell')
+        self.__buy_sell = get_enum_value(BuySell, value)        
 
     @property
     def underlier_type(self) -> Union[UnderlierType, str]:
@@ -2120,6 +2114,36 @@ class EqSynthetic(Instrument):
     def underlier_type(self, value: Union[UnderlierType, str]):
         self._property_changed('underlier_type')
         self.__underlier_type = get_enum_value(UnderlierType, value)        
+
+    @property
+    def effective_date(self) -> datetime.date:
+        """The date on which the synthetic becomes effective"""
+        return self.__effective_date
+
+    @effective_date.setter
+    def effective_date(self, value: datetime.date):
+        self._property_changed('effective_date')
+        self.__effective_date = value        
+
+    @property
+    def num_of_underlyers(self) -> float:
+        """number of underlyers referenced in synthetic contract"""
+        return self.__num_of_underlyers
+
+    @num_of_underlyers.setter
+    def num_of_underlyers(self, value: float):
+        self._property_changed('num_of_underlyers')
+        self.__num_of_underlyers = value        
+
+    @property
+    def expiry(self) -> str:
+        """Tenor"""
+        return self.__expiry
+
+    @expiry.setter
+    def expiry(self, value: str):
+        self._property_changed('expiry')
+        self.__expiry = value        
 
 
 class EqVarianceSwap(Instrument):
@@ -2271,7 +2295,7 @@ class FXForward(Instrument):
 
     @property
     def settlement_date(self) -> Union[datetime.date, str]:
-        """Date or tenor, e.g. 2018-09-03, 3m"""
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
         return self.__settlement_date
 
     @settlement_date.setter
@@ -2307,45 +2331,41 @@ class FXOption(Instrument):
     @camel_case_translate
     def __init__(
         self,
-        call_currency: Union[Currency, str] = None,
-        put_currency: Union[Currency, str] = None,
-        expiration_date: Union[datetime.date, str] = None,
+        pair: str = None,
+        buy_sell: Union[BuySell, str] = None,
         option_type: Union[OptionType, str] = None,
-        call_amount: Union[float, str] = None,
-        put_amount: Union[float, str] = None,
         notional_amount: Union[float, str] = None,
+        notional_currency: Union[Currency, str] = None,
+        notional_amount_other_currency: Union[float, str] = None,
         strike_price: Union[float, str] = None,
-        premium: Union[float, str] = None,
-        premium_currency: Union[Currency, str] = None,
-        premium_payment_date: str = None,
         settlement_date: Union[datetime.date, str] = None,
         settlement_currency: Union[Currency, str] = None,
         settlement_rate_option: str = None,
         method_of_settlement: Union[OptionSettlementMethod, str] = None,
+        expiration_date: Union[datetime.date, str] = None,
         expiration_time: str = None,
-        pair: str = None,
-        buy_sell: Union[BuySell, str] = None,
+        premium: Union[float, str] = None,
+        premium_currency: Union[Currency, str] = None,
+        premium_payment_date: str = None,
         name: str = None
     ):        
         super().__init__()
-        self.call_currency = call_currency
-        self.put_currency = put_currency
-        self.expiration_date = expiration_date
+        self.pair = pair
+        self.buy_sell = buy_sell
         self.option_type = option_type
-        self.call_amount = call_amount
-        self.put_amount = put_amount
         self.notional_amount = notional_amount
+        self.notional_currency = notional_currency
+        self.notional_amount_other_currency = notional_amount_other_currency
         self.strike_price = strike_price
-        self.premium = premium
-        self.premium_currency = premium_currency
-        self.premium_payment_date = premium_payment_date
         self.settlement_date = settlement_date
         self.settlement_currency = settlement_currency
         self.settlement_rate_option = settlement_rate_option
         self.method_of_settlement = method_of_settlement
+        self.expiration_date = expiration_date
         self.expiration_time = expiration_time
-        self.pair = pair
-        self.buy_sell = buy_sell
+        self.premium = premium
+        self.premium_currency = premium_currency
+        self.premium_payment_date = premium_payment_date
         self.name = name
 
     @property
@@ -2359,34 +2379,24 @@ class FXOption(Instrument):
         return AssetType.Option        
 
     @property
-    def call_currency(self) -> Union[Currency, str]:
-        """Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)"""
-        return self.__call_currency
+    def pair(self) -> str:
+        """A currency pair, e.g.: EURUSD or EUR USD"""
+        return self.__pair
 
-    @call_currency.setter
-    def call_currency(self, value: Union[Currency, str]):
-        self._property_changed('call_currency')
-        self.__call_currency = get_enum_value(Currency, value)        
-
-    @property
-    def put_currency(self) -> Union[Currency, str]:
-        """Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)"""
-        return self.__put_currency
-
-    @put_currency.setter
-    def put_currency(self, value: Union[Currency, str]):
-        self._property_changed('put_currency')
-        self.__put_currency = get_enum_value(Currency, value)        
+    @pair.setter
+    def pair(self, value: str):
+        self._property_changed('pair')
+        self.__pair = value        
 
     @property
-    def expiration_date(self) -> Union[datetime.date, str]:
-        """Date or tenor, e.g. 2018-09-03, 3m"""
-        return self.__expiration_date
+    def buy_sell(self) -> Union[BuySell, str]:
+        """Buy or Sell side of contract"""
+        return self.__buy_sell
 
-    @expiration_date.setter
-    def expiration_date(self, value: Union[datetime.date, str]):
-        self._property_changed('expiration_date')
-        self.__expiration_date = value        
+    @buy_sell.setter
+    def buy_sell(self, value: Union[BuySell, str]):
+        self._property_changed('buy_sell')
+        self.__buy_sell = get_enum_value(BuySell, value)        
 
     @property
     def option_type(self) -> Union[OptionType, str]:
@@ -2399,26 +2409,6 @@ class FXOption(Instrument):
         self.__option_type = get_enum_value(OptionType, value)        
 
     @property
-    def call_amount(self) -> Union[float, str]:
-        """Amount of the call currency"""
-        return self.__call_amount
-
-    @call_amount.setter
-    def call_amount(self, value: Union[float, str]):
-        self._property_changed('call_amount')
-        self.__call_amount = value        
-
-    @property
-    def put_amount(self) -> Union[float, str]:
-        """Amount of the put currency"""
-        return self.__put_amount
-
-    @put_amount.setter
-    def put_amount(self, value: Union[float, str]):
-        self._property_changed('put_amount')
-        self.__put_amount = value        
-
-    @property
     def notional_amount(self) -> Union[float, str]:
         """Notional amount"""
         return self.__notional_amount
@@ -2427,6 +2417,26 @@ class FXOption(Instrument):
     def notional_amount(self, value: Union[float, str]):
         self._property_changed('notional_amount')
         self.__notional_amount = value        
+
+    @property
+    def notional_currency(self) -> Union[Currency, str]:
+        """Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)"""
+        return self.__notional_currency
+
+    @notional_currency.setter
+    def notional_currency(self, value: Union[Currency, str]):
+        self._property_changed('notional_currency')
+        self.__notional_currency = get_enum_value(Currency, value)        
+
+    @property
+    def notional_amount_other_currency(self) -> Union[float, str]:
+        """Notional amount in currency other than NotionalCurrency from the pair"""
+        return self.__notional_amount_other_currency
+
+    @notional_amount_other_currency.setter
+    def notional_amount_other_currency(self, value: Union[float, str]):
+        self._property_changed('notional_amount_other_currency')
+        self.__notional_amount_other_currency = value        
 
     @property
     def strike_price(self) -> Union[float, str]:
@@ -2438,36 +2448,6 @@ class FXOption(Instrument):
     def strike_price(self, value: Union[float, str]):
         self._property_changed('strike_price')
         self.__strike_price = value        
-
-    @property
-    def premium(self) -> Union[float, str]:
-        """Option premium"""
-        return self.__premium
-
-    @premium.setter
-    def premium(self, value: Union[float, str]):
-        self._property_changed('premium')
-        self.__premium = value        
-
-    @property
-    def premium_currency(self) -> Union[Currency, str]:
-        """Currency of the option premium"""
-        return self.__premium_currency
-
-    @premium_currency.setter
-    def premium_currency(self, value: Union[Currency, str]):
-        self._property_changed('premium_currency')
-        self.__premium_currency = get_enum_value(Currency, value)        
-
-    @property
-    def premium_payment_date(self) -> str:
-        """Payment date of the option premium"""
-        return self.__premium_payment_date
-
-    @premium_payment_date.setter
-    def premium_payment_date(self, value: str):
-        self._property_changed('premium_payment_date')
-        self.__premium_payment_date = value        
 
     @property
     def settlement_date(self) -> Union[datetime.date, str]:
@@ -2510,6 +2490,16 @@ class FXOption(Instrument):
         self.__method_of_settlement = get_enum_value(OptionSettlementMethod, value)        
 
     @property
+    def expiration_date(self) -> Union[datetime.date, str]:
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
+        return self.__expiration_date
+
+    @expiration_date.setter
+    def expiration_date(self, value: Union[datetime.date, str]):
+        self._property_changed('expiration_date')
+        self.__expiration_date = value        
+
+    @property
     def expiration_time(self) -> str:
         """The location and (optionally) time of spot for expiration"""
         return self.__expiration_time
@@ -2520,14 +2510,87 @@ class FXOption(Instrument):
         self.__expiration_time = value        
 
     @property
-    def pair(self) -> str:
-        """A currency pair, e.g., EUR/USD"""
-        return self.__pair
+    def premium(self) -> Union[float, str]:
+        """Option premium"""
+        return self.__premium
 
-    @pair.setter
-    def pair(self, value: str):
-        self._property_changed('pair')
-        self.__pair = value        
+    @premium.setter
+    def premium(self, value: Union[float, str]):
+        self._property_changed('premium')
+        self.__premium = value        
+
+    @property
+    def premium_currency(self) -> Union[Currency, str]:
+        """Currency of the option premium"""
+        return self.__premium_currency
+
+    @premium_currency.setter
+    def premium_currency(self, value: Union[Currency, str]):
+        self._property_changed('premium_currency')
+        self.__premium_currency = get_enum_value(Currency, value)        
+
+    @property
+    def premium_payment_date(self) -> str:
+        """Payment date of the option premium"""
+        return self.__premium_payment_date
+
+    @premium_payment_date.setter
+    def premium_payment_date(self, value: str):
+        self._property_changed('premium_payment_date')
+        self.__premium_payment_date = value        
+
+
+class FXOptionLeg(Instrument):
+        
+    """Object representation of a FX option leg used in FXOptionStrategy"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        buy_sell: Union[BuySell, str] = None,
+        option_type: Union[OptionType, str] = None,
+        notional_amount: Union[float, str] = None,
+        notional_currency: Union[Currency, str] = None,
+        notional_amount_other_currency: Union[float, str] = None,
+        strike_price: Union[float, str] = None,
+        expiration_date: Union[datetime.date, str] = None,
+        settlement_date: Union[datetime.date, str] = None,
+        premium: Union[float, str] = None,
+        premium_currency: Union[Currency, str] = None,
+        premium_payment_date: str = None,
+        settlement_currency: Union[Currency, str] = None,
+        settlement_rate_option: str = None,
+        method_of_settlement: Union[OptionSettlementMethod, str] = None,
+        expiration_time: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.buy_sell = buy_sell
+        self.option_type = option_type
+        self.notional_amount = notional_amount
+        self.notional_currency = notional_currency
+        self.notional_amount_other_currency = notional_amount_other_currency
+        self.strike_price = strike_price
+        self.expiration_date = expiration_date
+        self.settlement_date = settlement_date
+        self.premium = premium
+        self.premium_currency = premium_currency
+        self.premium_payment_date = premium_payment_date
+        self.settlement_currency = settlement_currency
+        self.settlement_rate_option = settlement_rate_option
+        self.method_of_settlement = method_of_settlement
+        self.expiration_time = expiration_time
+        self.name = name
+
+    @property
+    def asset_class(self) -> AssetClass:
+        """FX"""
+        return AssetClass.FX        
+
+    @property
+    def type(self) -> AssetType:
+        """OptionLeg"""
+        return AssetType.OptionLeg        
 
     @property
     def buy_sell(self) -> Union[BuySell, str]:
@@ -2538,6 +2601,147 @@ class FXOption(Instrument):
     def buy_sell(self, value: Union[BuySell, str]):
         self._property_changed('buy_sell')
         self.__buy_sell = get_enum_value(BuySell, value)        
+
+    @property
+    def option_type(self) -> Union[OptionType, str]:
+        """Option Type"""
+        return self.__option_type
+
+    @option_type.setter
+    def option_type(self, value: Union[OptionType, str]):
+        self._property_changed('option_type')
+        self.__option_type = get_enum_value(OptionType, value)        
+
+    @property
+    def notional_amount(self) -> Union[float, str]:
+        """Notional amount"""
+        return self.__notional_amount
+
+    @notional_amount.setter
+    def notional_amount(self, value: Union[float, str]):
+        self._property_changed('notional_amount')
+        self.__notional_amount = value        
+
+    @property
+    def notional_currency(self) -> Union[Currency, str]:
+        """Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)"""
+        return self.__notional_currency
+
+    @notional_currency.setter
+    def notional_currency(self, value: Union[Currency, str]):
+        self._property_changed('notional_currency')
+        self.__notional_currency = get_enum_value(Currency, value)        
+
+    @property
+    def notional_amount_other_currency(self) -> Union[float, str]:
+        """Notional amount in currency other than NotionalCurrency from the pair"""
+        return self.__notional_amount_other_currency
+
+    @notional_amount_other_currency.setter
+    def notional_amount_other_currency(self, value: Union[float, str]):
+        self._property_changed('notional_amount_other_currency')
+        self.__notional_amount_other_currency = value        
+
+    @property
+    def strike_price(self) -> Union[float, str]:
+        """Strike as value, percent or at-the-money e.g. 62.5, 95%, ATM-25, ATMF, 10/vol,
+           100k/pv, $200K/BP, or multiple strikes 65.4/-45.8"""
+        return self.__strike_price
+
+    @strike_price.setter
+    def strike_price(self, value: Union[float, str]):
+        self._property_changed('strike_price')
+        self.__strike_price = value        
+
+    @property
+    def expiration_date(self) -> Union[datetime.date, str]:
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
+        return self.__expiration_date
+
+    @expiration_date.setter
+    def expiration_date(self, value: Union[datetime.date, str]):
+        self._property_changed('expiration_date')
+        self.__expiration_date = value        
+
+    @property
+    def settlement_date(self) -> Union[datetime.date, str]:
+        """Settlement date of the option, after expiration"""
+        return self.__settlement_date
+
+    @settlement_date.setter
+    def settlement_date(self, value: Union[datetime.date, str]):
+        self._property_changed('settlement_date')
+        self.__settlement_date = value        
+
+    @property
+    def premium(self) -> Union[float, str]:
+        """Option premium"""
+        return self.__premium
+
+    @premium.setter
+    def premium(self, value: Union[float, str]):
+        self._property_changed('premium')
+        self.__premium = value        
+
+    @property
+    def premium_currency(self) -> Union[Currency, str]:
+        """Currency of the option premium"""
+        return self.__premium_currency
+
+    @premium_currency.setter
+    def premium_currency(self, value: Union[Currency, str]):
+        self._property_changed('premium_currency')
+        self.__premium_currency = get_enum_value(Currency, value)        
+
+    @property
+    def premium_payment_date(self) -> str:
+        """Payment date of the option premium"""
+        return self.__premium_payment_date
+
+    @premium_payment_date.setter
+    def premium_payment_date(self, value: str):
+        self._property_changed('premium_payment_date')
+        self.__premium_payment_date = value        
+
+    @property
+    def settlement_currency(self) -> Union[Currency, str]:
+        """Currency of settlement"""
+        return self.__settlement_currency
+
+    @settlement_currency.setter
+    def settlement_currency(self, value: Union[Currency, str]):
+        self._property_changed('settlement_currency')
+        self.__settlement_currency = get_enum_value(Currency, value)        
+
+    @property
+    def settlement_rate_option(self) -> str:
+        """The source of spot for settlement"""
+        return self.__settlement_rate_option
+
+    @settlement_rate_option.setter
+    def settlement_rate_option(self, value: str):
+        self._property_changed('settlement_rate_option')
+        self.__settlement_rate_option = value        
+
+    @property
+    def method_of_settlement(self) -> Union[OptionSettlementMethod, str]:
+        """How the option is settled (e.g. Cash, Physical)"""
+        return self.__method_of_settlement
+
+    @method_of_settlement.setter
+    def method_of_settlement(self, value: Union[OptionSettlementMethod, str]):
+        self._property_changed('method_of_settlement')
+        self.__method_of_settlement = get_enum_value(OptionSettlementMethod, value)        
+
+    @property
+    def expiration_time(self) -> str:
+        """The location and (optionally) time of spot for expiration"""
+        return self.__expiration_time
+
+    @expiration_time.setter
+    def expiration_time(self, value: str):
+        self._property_changed('expiration_time')
+        self.__expiration_time = value        
 
 
 class Forward(Instrument):
@@ -2580,7 +2784,7 @@ class Forward(Instrument):
 
     @property
     def expiration_date(self) -> Union[datetime.date, str]:
-        """Date or tenor, e.g. 2018-09-03, 3m"""
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
         return self.__expiration_date
 
     @expiration_date.setter
@@ -2873,6 +3077,101 @@ class IRBasisSwap(Instrument):
     def clearing_house(self, value: Union[SwapClearingHouse, str]):
         self._property_changed('clearing_house')
         self.__clearing_house = get_enum_value(SwapClearingHouse, value)        
+
+
+class IRBondFuture(Instrument):
+        
+    """A future on a (treasury) bond"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        buy_sell: Union[BuySell, str] = None,
+        notional_amount: Union[float, str] = None,
+        underlier: Union[float, str] = None,
+        currency: Union[Currency, str] = None,
+        expiration_date: Union[datetime.date, str] = None,
+        exchange: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.buy_sell = buy_sell
+        self.notional_amount = notional_amount
+        self.underlier = underlier
+        self.currency = currency
+        self.expiration_date = expiration_date
+        self.exchange = exchange
+        self.name = name
+
+    @property
+    def asset_class(self) -> AssetClass:
+        """Rates"""
+        return AssetClass.Rates        
+
+    @property
+    def type(self) -> AssetType:
+        """BondFuture"""
+        return AssetType.BondFuture        
+
+    @property
+    def buy_sell(self) -> Union[BuySell, str]:
+        """Buy or Sell side of contract"""
+        return self.__buy_sell
+
+    @buy_sell.setter
+    def buy_sell(self, value: Union[BuySell, str]):
+        self._property_changed('buy_sell')
+        self.__buy_sell = get_enum_value(BuySell, value)        
+
+    @property
+    def notional_amount(self) -> Union[float, str]:
+        """Notional amount"""
+        return self.__notional_amount
+
+    @notional_amount.setter
+    def notional_amount(self, value: Union[float, str]):
+        self._property_changed('notional_amount')
+        self.__notional_amount = value        
+
+    @property
+    def underlier(self) -> Union[float, str]:
+        """Underlier security identifier"""
+        return self.__underlier
+
+    @underlier.setter
+    def underlier(self, value: Union[float, str]):
+        self._property_changed('underlier')
+        self.__underlier = value        
+
+    @property
+    def currency(self) -> Union[Currency, str]:
+        """Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)"""
+        return self.__currency
+
+    @currency.setter
+    def currency(self, value: Union[Currency, str]):
+        self._property_changed('currency')
+        self.__currency = get_enum_value(Currency, value)        
+
+    @property
+    def expiration_date(self) -> Union[datetime.date, str]:
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
+        return self.__expiration_date
+
+    @expiration_date.setter
+    def expiration_date(self, value: Union[datetime.date, str]):
+        self._property_changed('expiration_date')
+        self.__expiration_date = value        
+
+    @property
+    def exchange(self) -> str:
+        """Name of marketplace where security, derivative or other instrument is traded"""
+        return self.__exchange
+
+    @exchange.setter
+    def exchange(self, value: str):
+        self._property_changed('exchange')
+        self.__exchange = value        
 
 
 class IRBondOption(Instrument):
@@ -4358,7 +4657,7 @@ class IRSwap(Instrument):
         floating_rate_for_the_initial_calculation_period: float = None,
         floating_rate_option: str = None,
         floating_rate_designated_maturity: str = None,
-        floating_rate_spread: float = None,
+        floating_rate_spread: Union[float, str] = None,
         floating_rate_frequency: str = None,
         floating_rate_day_count_fraction: Union[DayCountFraction, str] = None,
         floating_rate_business_day_convention: Union[BusinessDayConvention, str] = None,
@@ -4498,12 +4797,12 @@ class IRSwap(Instrument):
         self.__floating_rate_designated_maturity = value        
 
     @property
-    def floating_rate_spread(self) -> float:
+    def floating_rate_spread(self) -> Union[float, str]:
         """The spread over the floating rate"""
         return self.__floating_rate_spread
 
     @floating_rate_spread.setter
-    def floating_rate_spread(self, value: float):
+    def floating_rate_spread(self, value: Union[float, str]):
         self._property_changed('floating_rate_spread')
         self.__floating_rate_spread = value        
 
@@ -5902,6 +6201,75 @@ class InflationSwap(Instrument):
         self.__clearing_house = get_enum_value(SwapClearingHouse, value)        
 
 
+class InstrumentsAnyAssetRef(Instrument):
+        
+    """An instrument that references an asset ID (from the asset service)"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        asset_id: str = None,
+        buy_sell: Union[BuySell, str] = None,
+        size: float = None,
+        product_code: Union[ProductCode, str] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.asset_id = asset_id
+        self.buy_sell = buy_sell
+        self.size = size
+        self.product_code = product_code
+        self.name = name
+
+    @property
+    def asset_class(self) -> AssetClass:
+        """Cross Asset"""
+        return AssetClass.Cross_Asset        
+
+    @property
+    def type(self) -> AssetType:
+        """Any"""
+        return AssetType.Any        
+
+    @property
+    def asset_id(self) -> str:
+        return self.__asset_id
+
+    @asset_id.setter
+    def asset_id(self, value: str):
+        self._property_changed('asset_id')
+        self.__asset_id = value        
+
+    @property
+    def buy_sell(self) -> Union[BuySell, str]:
+        """Buy or Sell side of contract"""
+        return self.__buy_sell
+
+    @buy_sell.setter
+    def buy_sell(self, value: Union[BuySell, str]):
+        self._property_changed('buy_sell')
+        self.__buy_sell = get_enum_value(BuySell, value)        
+
+    @property
+    def size(self) -> float:
+        return self.__size
+
+    @size.setter
+    def size(self, value: float):
+        self._property_changed('size')
+        self.__size = value        
+
+    @property
+    def product_code(self) -> Union[ProductCode, str]:
+        """Override the clearing destination/symbol"""
+        return self.__product_code
+
+    @product_code.setter
+    def product_code(self, value: Union[ProductCode, str]):
+        self._property_changed('product_code')
+        self.__product_code = get_enum_value(ProductCode, value)        
+
+
 class CommodOTCOption(Instrument):
         
     """Object representation of a commodities OTC option strategies"""
@@ -6292,7 +6660,7 @@ class EqOptionStrategy(Instrument):
 
     @property
     def expiration_date(self) -> Union[datetime.date, str]:
-        """Date or tenor, e.g. 2018-09-03, 3m"""
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
         return self.__expiration_date
 
     @expiration_date.setter
@@ -6353,7 +6721,7 @@ class EqOptionStrategy(Instrument):
 
     @property
     def settlement_date(self) -> Union[datetime.date, str]:
-        """Date or tenor, e.g. 2018-09-03, 3m"""
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
         return self.__settlement_date
 
     @settlement_date.setter
@@ -6450,3 +6818,325 @@ class EqOptionStrategy(Instrument):
     def trade_as(self, value: Union[TradeAs, str]):
         self._property_changed('trade_as')
         self.__trade_as = get_enum_value(TradeAs, value)        
+
+
+class FXOptionStrategy(Instrument):
+        
+    """Object representation of a FX option Strategy"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        pair: str = None,
+        buy_sell: Union[BuySell, str] = None,
+        strategy_name: str = None,
+        legs: Tuple[FXOptionLeg, ...] = None,
+        option_type: Union[OptionType, str] = None,
+        notional_amount: Union[float, str] = None,
+        notional_currency: Union[Currency, str] = None,
+        notional_amount_other_currency: Union[float, str] = None,
+        strike_price: Union[float, str] = None,
+        settlement_date: Union[datetime.date, str] = None,
+        settlement_currency: Union[Currency, str] = None,
+        settlement_rate_option: str = None,
+        method_of_settlement: Union[OptionSettlementMethod, str] = None,
+        expiration_date: Union[datetime.date, str] = None,
+        expiration_time: str = None,
+        premium: Union[float, str] = None,
+        premium_currency: Union[Currency, str] = None,
+        premium_payment_date: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.pair = pair
+        self.buy_sell = buy_sell
+        self.strategy_name = strategy_name
+        self.legs = legs
+        self.option_type = option_type
+        self.notional_amount = notional_amount
+        self.notional_currency = notional_currency
+        self.notional_amount_other_currency = notional_amount_other_currency
+        self.strike_price = strike_price
+        self.settlement_date = settlement_date
+        self.settlement_currency = settlement_currency
+        self.settlement_rate_option = settlement_rate_option
+        self.method_of_settlement = method_of_settlement
+        self.expiration_date = expiration_date
+        self.expiration_time = expiration_time
+        self.premium = premium
+        self.premium_currency = premium_currency
+        self.premium_payment_date = premium_payment_date
+        self.name = name
+
+    @property
+    def asset_class(self) -> AssetClass:
+        """FX"""
+        return AssetClass.FX        
+
+    @property
+    def type(self) -> AssetType:
+        """OptionStrategy"""
+        return AssetType.OptionStrategy        
+
+    @property
+    def pair(self) -> str:
+        """A currency pair, e.g.: EURUSD or EUR USD"""
+        return self.__pair
+
+    @pair.setter
+    def pair(self, value: str):
+        self._property_changed('pair')
+        self.__pair = value        
+
+    @property
+    def buy_sell(self) -> Union[BuySell, str]:
+        """Buy or Sell side of contract"""
+        return self.__buy_sell
+
+    @buy_sell.setter
+    def buy_sell(self, value: Union[BuySell, str]):
+        self._property_changed('buy_sell')
+        self.__buy_sell = get_enum_value(BuySell, value)        
+
+    @property
+    def strategy_name(self) -> str:
+        return self.__strategy_name
+
+    @strategy_name.setter
+    def strategy_name(self, value: str):
+        self._property_changed('strategy_name')
+        self.__strategy_name = value        
+
+    @property
+    def legs(self) -> Tuple[FXOptionLeg, ...]:
+        """Object representation of a FX option leg used in FXOptionStrategy"""
+        return self.__legs
+
+    @legs.setter
+    def legs(self, value: Tuple[FXOptionLeg, ...]):
+        self._property_changed('legs')
+        self.__legs = value        
+
+    @property
+    def option_type(self) -> Union[OptionType, str]:
+        """Option Type"""
+        return self.__option_type
+
+    @option_type.setter
+    def option_type(self, value: Union[OptionType, str]):
+        self._property_changed('option_type')
+        self.__option_type = get_enum_value(OptionType, value)        
+
+    @property
+    def notional_amount(self) -> Union[float, str]:
+        """Notional amount"""
+        return self.__notional_amount
+
+    @notional_amount.setter
+    def notional_amount(self, value: Union[float, str]):
+        self._property_changed('notional_amount')
+        self.__notional_amount = value        
+
+    @property
+    def notional_currency(self) -> Union[Currency, str]:
+        """Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)"""
+        return self.__notional_currency
+
+    @notional_currency.setter
+    def notional_currency(self, value: Union[Currency, str]):
+        self._property_changed('notional_currency')
+        self.__notional_currency = get_enum_value(Currency, value)        
+
+    @property
+    def notional_amount_other_currency(self) -> Union[float, str]:
+        """Notional amount in currency other than NotionalCurrency from the pair"""
+        return self.__notional_amount_other_currency
+
+    @notional_amount_other_currency.setter
+    def notional_amount_other_currency(self, value: Union[float, str]):
+        self._property_changed('notional_amount_other_currency')
+        self.__notional_amount_other_currency = value        
+
+    @property
+    def strike_price(self) -> Union[float, str]:
+        """Strike as value, percent or at-the-money e.g. 62.5, 95%, ATM-25, ATMF, 10/vol,
+           100k/pv, $200K/BP, or multiple strikes 65.4/-45.8"""
+        return self.__strike_price
+
+    @strike_price.setter
+    def strike_price(self, value: Union[float, str]):
+        self._property_changed('strike_price')
+        self.__strike_price = value        
+
+    @property
+    def settlement_date(self) -> Union[datetime.date, str]:
+        """Settlement date of the option, after expiration"""
+        return self.__settlement_date
+
+    @settlement_date.setter
+    def settlement_date(self, value: Union[datetime.date, str]):
+        self._property_changed('settlement_date')
+        self.__settlement_date = value        
+
+    @property
+    def settlement_currency(self) -> Union[Currency, str]:
+        """Currency of settlement"""
+        return self.__settlement_currency
+
+    @settlement_currency.setter
+    def settlement_currency(self, value: Union[Currency, str]):
+        self._property_changed('settlement_currency')
+        self.__settlement_currency = get_enum_value(Currency, value)        
+
+    @property
+    def settlement_rate_option(self) -> str:
+        """The source of spot for settlement"""
+        return self.__settlement_rate_option
+
+    @settlement_rate_option.setter
+    def settlement_rate_option(self, value: str):
+        self._property_changed('settlement_rate_option')
+        self.__settlement_rate_option = value        
+
+    @property
+    def method_of_settlement(self) -> Union[OptionSettlementMethod, str]:
+        """How the option is settled (e.g. Cash, Physical)"""
+        return self.__method_of_settlement
+
+    @method_of_settlement.setter
+    def method_of_settlement(self, value: Union[OptionSettlementMethod, str]):
+        self._property_changed('method_of_settlement')
+        self.__method_of_settlement = get_enum_value(OptionSettlementMethod, value)        
+
+    @property
+    def expiration_date(self) -> Union[datetime.date, str]:
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
+        return self.__expiration_date
+
+    @expiration_date.setter
+    def expiration_date(self, value: Union[datetime.date, str]):
+        self._property_changed('expiration_date')
+        self.__expiration_date = value        
+
+    @property
+    def expiration_time(self) -> str:
+        """The location and (optionally) time of spot for expiration"""
+        return self.__expiration_time
+
+    @expiration_time.setter
+    def expiration_time(self, value: str):
+        self._property_changed('expiration_time')
+        self.__expiration_time = value        
+
+    @property
+    def premium(self) -> Union[float, str]:
+        """Option premium"""
+        return self.__premium
+
+    @premium.setter
+    def premium(self, value: Union[float, str]):
+        self._property_changed('premium')
+        self.__premium = value        
+
+    @property
+    def premium_currency(self) -> Union[Currency, str]:
+        """Currency of the option premium"""
+        return self.__premium_currency
+
+    @premium_currency.setter
+    def premium_currency(self, value: Union[Currency, str]):
+        self._property_changed('premium_currency')
+        self.__premium_currency = get_enum_value(Currency, value)        
+
+    @property
+    def premium_payment_date(self) -> str:
+        """Payment date of the option premium"""
+        return self.__premium_payment_date
+
+    @premium_payment_date.setter
+    def premium_payment_date(self, value: str):
+        self._property_changed('premium_payment_date')
+        self.__premium_payment_date = value        
+
+
+class InvoiceSpread(Instrument):
+        
+    """An interest swap vs a bond future"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        buy_sell: Union[BuySell, str] = None,
+        notional_amount: Union[float, str] = None,
+        underlier: Union[float, str] = None,
+        swap: IRSwap = None,
+        future: IRBondFuture = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.buy_sell = buy_sell
+        self.notional_amount = notional_amount
+        self.underlier = underlier
+        self.swap = swap
+        self.future = future
+        self.name = name
+
+    @property
+    def asset_class(self) -> AssetClass:
+        """Rates"""
+        return AssetClass.Rates        
+
+    @property
+    def type(self) -> AssetType:
+        """InvoiceSpread"""
+        return AssetType.InvoiceSpread        
+
+    @property
+    def buy_sell(self) -> Union[BuySell, str]:
+        """Buy or Sell side of contract"""
+        return self.__buy_sell
+
+    @buy_sell.setter
+    def buy_sell(self, value: Union[BuySell, str]):
+        self._property_changed('buy_sell')
+        self.__buy_sell = get_enum_value(BuySell, value)        
+
+    @property
+    def notional_amount(self) -> Union[float, str]:
+        """Notional amount"""
+        return self.__notional_amount
+
+    @notional_amount.setter
+    def notional_amount(self, value: Union[float, str]):
+        self._property_changed('notional_amount')
+        self.__notional_amount = value        
+
+    @property
+    def underlier(self) -> Union[float, str]:
+        """Underlier of the bond future"""
+        return self.__underlier
+
+    @underlier.setter
+    def underlier(self, value: Union[float, str]):
+        self._property_changed('underlier')
+        self.__underlier = value        
+
+    @property
+    def swap(self) -> IRSwap:
+        """A vanilla interest rate swap of fixed vs floating cashflows"""
+        return self.__swap
+
+    @swap.setter
+    def swap(self, value: IRSwap):
+        self._property_changed('swap')
+        self.__swap = value        
+
+    @property
+    def future(self) -> IRBondFuture:
+        """A future on a (treasury) bond"""
+        return self.__future
+
+    @future.setter
+    def future(self, value: IRBondFuture):
+        self._property_changed('future')
+        self.__future = value        

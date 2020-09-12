@@ -35,12 +35,12 @@ def basket(
     """
     Calculates a basket return series.
 
-    :param series: list of time series of instruments
+    :param series: list of time series of instrument prices
     :param weights: list of weights
-    :param costs: list of costs; defaults to costs of 0
+    :param costs: list of execution costs in decimal; defaults to costs of 0
     :param rebal_freq: rebalancing frequency - Daily or Monthly
-    :param return_type: return type of underlying instruments - excess return supported only.
-    :return: time-series of the resulting basket
+    :param return_type: return type of underlying instruments - only excess return is supported
+    :return: time series of the resulting basket
 
     **Usage**
 
@@ -48,12 +48,12 @@ def basket(
 
     **Examples**
 
-    Generate price series and combine them in a basket
+    Generate price series and combine them in a basket (weights 70%/30%) which rebalances monthly and assumes
+    execution costs 5bps and 10bps each time the constituents are traded.
 
     >>> prices1 = generate_series(100)
     >>> prices2 = generate_series(100)
-    >>> mybasket = basket([prices1, prices2], [0.5, 0.5])
-
+    >>> mybasket = basket([prices1, prices2], [0.7, 0.3], [0.0005, 0.001], monthly)
 
     **See also**
 

@@ -30,7 +30,7 @@ from gs_quant.instrument import CommodSwap, EqForward, EqOption, FXOption, IRBas
 from gs_quant.markets import PricingContext
 from gs_quant.session import Environment, GsSession
 from gs_quant.target.risk import PricingDateAndMarketDataAsOf, RiskPosition, RiskRequestParameters, \
-    APEXOptimizationRequest
+    OptimizationRequest
 
 priceables = (
     CommodSwap('Electricity', '1y'),
@@ -221,12 +221,12 @@ def test_create_pretrade_execution_optimization():
     positions = [{"assetId": "MA4B66MW5E27UANLXW6", "quantity": 350},
                  {"assetId": "MA4B66MW5E27UAMFDDC", "quantity": 675}]
 
-    request = APEXOptimizationRequest(positions,
-                                      type="APEX",
-                                      executionStartTime=to_zulu_string(start_time),
-                                      executionEndTime=to_zulu_string(end_time),
-                                      waitForResults=False,
-                                      parameters={"urgency": "MEDIUM", "participationRate": 0.1})
+    request = OptimizationRequest(positions,
+                                  type="APEX",
+                                  executionStartTime=to_zulu_string(start_time),
+                                  executionEndTime=to_zulu_string(end_time),
+                                  waitForResults=False,
+                                  parameters={"urgency": "MEDIUM", "participationRate": 0.1})
 
     set_session()
     with mock.patch.object(GsSession.current, '_post') as mocker:

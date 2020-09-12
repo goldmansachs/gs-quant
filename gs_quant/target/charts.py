@@ -212,6 +212,55 @@ class ChartShare(Base):
         self.__version = value        
 
 
+class ChartTime(Base):
+        
+    """An object which contains all the time settings."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        start: str = None,
+        end: str = None,
+        timezone: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.start = start
+        self.end = end
+        self.timezone = timezone
+        self.name = name
+
+    @property
+    def start(self) -> str:
+        """Start time in hh:mm:ss format"""
+        return self.__start
+
+    @start.setter
+    def start(self, value: str):
+        self._property_changed('start')
+        self.__start = value        
+
+    @property
+    def end(self) -> str:
+        """End time in hh:mm:ss format"""
+        return self.__end
+
+    @end.setter
+    def end(self, value: str):
+        self._property_changed('end')
+        self.__end = value        
+
+    @property
+    def timezone(self) -> str:
+        """The timezone to use"""
+        return self.__timezone
+
+    @timezone.setter
+    def timezone(self, value: str):
+        self._property_changed('timezone')
+        self.__timezone = value        
+
+
 class XAxisSettings(Base):
         
     """An object which contains all the settings for the X axis"""
@@ -687,10 +736,12 @@ class Chart(Base):
         start_time: datetime.datetime = None,
         end_time: datetime.datetime = None,
         tags: Tuple[str, ...] = None,
+        auto_tags: Tuple[str, ...] = None,
         show_statistics: bool = None,
         copy_from_id: str = None,
         version: int = None,
         draft_view_id: str = None,
+        time_settings: ChartTime = None,
         x_axis_settings: XAxisSettings = None,
         y_axes_settings: Tuple[YAxisSettings, ...] = None
     ):        
@@ -718,10 +769,12 @@ class Chart(Base):
         self.start_time = start_time
         self.end_time = end_time
         self.tags = tags
+        self.auto_tags = auto_tags
         self.show_statistics = show_statistics
         self.copy_from_id = copy_from_id
         self.version = version
         self.draft_view_id = draft_view_id
+        self.time_settings = time_settings
         self.x_axis_settings = x_axis_settings
         self.y_axes_settings = y_axes_settings
 
@@ -950,6 +1003,17 @@ class Chart(Base):
         self.__tags = value        
 
     @property
+    def auto_tags(self) -> Tuple[str, ...]:
+        """Metadata associated with the object. Provide an array of strings which will be
+           indexed for search and locating related objects"""
+        return self.__auto_tags
+
+    @auto_tags.setter
+    def auto_tags(self, value: Tuple[str, ...]):
+        self._property_changed('auto_tags')
+        self.__auto_tags = value        
+
+    @property
     def show_statistics(self) -> bool:
         """Flag to show the statistic in the chart area"""
         return self.__show_statistics
@@ -988,6 +1052,16 @@ class Chart(Base):
     def draft_view_id(self, value: str):
         self._property_changed('draft_view_id')
         self.__draft_view_id = value        
+
+    @property
+    def time_settings(self) -> ChartTime:
+        """Start / end time settings with timezone"""
+        return self.__time_settings
+
+    @time_settings.setter
+    def time_settings(self, value: ChartTime):
+        self._property_changed('time_settings')
+        self.__time_settings = value        
 
     @property
     def x_axis_settings(self) -> XAxisSettings:
