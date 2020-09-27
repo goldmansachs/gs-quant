@@ -19,6 +19,7 @@ import datetime as dt
 import os
 from typing import Union
 
+import numpy as np
 import pandas as pd
 import pytest
 from gs_quant.target.common import XRef, PricingLocation, Currency as CurrEnum
@@ -904,6 +905,31 @@ def mock_gsdeer_gsfeer(_cls, _q):
         'gsfeer': [2, 1.8, 1.9],
     }
     df = MarketDataResponseFrame(data=d, index=_index * 3)
+    return df
+
+
+def mock_factor_profile(_cls, _q):
+    d = {
+        'growthScore': [0.238, 0.234, 0.234, 0.230],
+        'financialReturnsScore': [0.982, 0.982, 0.982, 0.982],
+        'multipleScore': [0.204, 0.192, 0.190, 0.190],
+        'integratedScore': [0.672, 0.676, 0.676, 0.674]
+    }
+    df = MarketDataResponseFrame(data=d, index=pd.to_datetime([datetime.date(2020, 8, 13), datetime.date(2020, 8, 14),
+                                                               datetime.date(2020, 8, 17), datetime.date(2020, 8, 18)]))
+    df.dataset_ids = _test_datasets
+    return df
+
+
+def mock_commodities_forecast(_cls, _q):
+    d = {
+        'forecastPeriod': ['3m', '3m', '3m', '3m'],
+        'forecastType': ['spotReturn', 'spotReturn', 'spotReturn', 'spotReturn'],
+        'forecastValue': [1700, 1400, 1500, 1600]
+    }
+    df = MarketDataResponseFrame(data=d, index=pd.to_datetime([datetime.date(2020, 8, 13), datetime.date(2020, 8, 14),
+                                                               datetime.date(2020, 8, 17), datetime.date(2020, 8, 18)]))
+    df.dataset_ids = _test_datasets
     return df
 
 
@@ -2088,11 +2114,11 @@ def test_month_to_tenor():
     assert tm._month_to_tenor(18) == '18m'
 
 
-def test_forward_var():
-    idx = pd.to_datetime([datetime.date(2019, 1, 1), datetime.date(2019, 1, 2)] * 6)
+def test_forward_var_term():
+    idx = pd.DatetimeIndex([datetime.date(2020, 4, 1), datetime.date(2020, 4, 2)] * 6)
     data = {
         'varSwap': [1.1, 1, 2.1, 2, 3.1, 3, 4.1, 4, 5.1, 5, 6.1, 6],
-        'tenor': ['1w', '1w', '1m', '1m', '5w', '5w', '2m', '2m', '3m', '3m', '4m', '4m']
+        'tenor': ['1w', '1w', '1m', '1m', '5w', '5w', '2m', '2m', '3m', '3m', '5m', '5m']
     }
     out = MarketDataResponseFrame(data=data, index=idx)
     out.dataset_ids = _test_datasets
@@ -2101,21 +2127,34 @@ def test_forward_var():
     market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
     market_mock.return_value = out
 
-    expected = pd.Series([4.0, 28.0, 43.0, 69.0], name='forwardVar',
-                         index=pd.to_datetime(['2019-01-02', '2019-02-02', '2019-03-02', '2019-04-02']))
-    with DataContext('2019-01-01', '2020-01-01'):
-        actual = tm.forward_var(Index('MA123', AssetClass.Equity, '123'), '1m', datetime.date(2019, 1, 2))
+    # Equity
+    expected = pd.Series([np.nan, 5.29150, 6.55744], name='forwardVarTerm',
+                         index=pd.DatetimeIndex(['2020-05-01', '2020-06-02', '2020-07-02'], name='expirationDate'))
+    with DataContext('2020-01-01', '2020-07-31'):
+        actual = tm.forward_var_term(Index('MA123', AssetClass.Equity, '123'), datetime.date(2020, 4, 2))
     assert_series_equal(expected, pd.Series(actual))
     assert actual.dataset_ids == _test_datasets
     market_mock.assert_called_once()
 
+    # FX
+    expected_fx = pd.Series([np.nan, 5.29150, 6.55744, 7.24569], name='forwardVarTerm',
+                            index=pd.DatetimeIndex(['2020-05-01', '2020-06-02', '2020-07-02', '2020-09-02'],
+                                                   name='expirationDate'))
+
+    with DataContext('2020-01-01', '2020-09-02'):
+        actual_fx = tm.forward_var_term(Cross('ABCDE', 'EURUSD'))
+    assert_series_equal(expected_fx, pd.Series(actual_fx))
+    assert actual_fx.dataset_ids == _test_datasets
+
+    # no data
     market_mock.reset_mock()
     market_mock.return_value = mock_empty_market_data_response()
-    actual = tm.forward_var(Index('MA123', AssetClass.Equity, '123'), '1m')
+    actual = tm.forward_var_term(Index('MA123', AssetClass.Equity, '123'))
     assert actual.empty
 
-    with pytest.raises(MqValueError):
-        tm.forward_var(..., '1m', real_time=True)
+    # real-time
+    with pytest.raises(NotImplementedError):
+        tm.forward_var_term(..., real_time=True)
 
     replace.restore()
 
@@ -2296,10 +2335,10 @@ def test_var_term():
 
 
 def test_forward_vol():
-    idx = pd.to_datetime([datetime.date(2020, 5, 1), datetime.date(2020, 5, 2)] * 6)
+    idx = pd.DatetimeIndex([datetime.date(2020, 5, 1), datetime.date(2020, 5, 2)] * 4)
     data = {
-        'impliedVolatility': [1.1, 1, 2.1, 2, 3.1, 3, 4.1, 4, 5.1, 5, 6.1, 6],
-        'tenor': ['1w', '1w', '1m', '1m', '5w', '5w', '2m', '2m', '3m', '3m', '4m', '4m']
+        'impliedVolatility': [2.1, 2, 3.1, 3, 4.1, 4, 5.1, 5],
+        'tenor': ['1m', '1m', '2m', '2m', '3m', '3m', '4m', '4m']
     }
     out = MarketDataResponseFrame(data=data, index=idx)
     out.dataset_ids = _test_datasets
@@ -2309,11 +2348,10 @@ def test_forward_vol():
     market_mock.return_value = out
 
     # Equity
-    expected = pd.Series([2.0, 5.29150, 6.55744, 8.30662], name='forwardVol',
-                         index=pd.to_datetime(['2020-05-02', '2020-06-02', '2020-07-02', '2020-08-02']))
+    expected = pd.Series([5.58659, 5.47723], name='forwardVol',
+                         index=pd.to_datetime(['2020-05-01', '2020-05-02']))
     with DataContext('2020-01-01', '2020-09-01'):
-        actual = tm.forward_vol(Index('MA123', AssetClass.Equity, '123'), '1m', tm.VolReference.SPOT, 100,
-                                datetime.date(2020, 5, 2))
+        actual = tm.forward_vol(Index('MA123', AssetClass.Equity, '123'), '1m', '2m', tm.VolReference.SPOT, 100)
     assert_series_equal(expected, pd.Series(actual))
     assert actual.dataset_ids == _test_datasets
     market_mock.assert_called_once()
@@ -2322,21 +2360,76 @@ def test_forward_vol():
     cross_mock = replace('gs_quant.timeseries.measures.cross_stored_direction_for_fx_vol', Mock())
     cross_mock.return_value = 'EURUSD'
 
-    actual_fx = tm.forward_vol(Cross('ABCDE', 'EURUSD'), '1m', tm.VolReference.SPOT, 100)
-    expected_fx = expected.loc[DataContext.current.start_date: DataContext.current.end_date]
+    with DataContext('2020-01-01', '2020-09-01'):
+        actual_fx = tm.forward_vol(Cross('ABCDE', 'EURUSD'), '1m', '2m', tm.VolReference.SPOT, 100)
+    assert_series_equal(expected, pd.Series(actual_fx))
+    assert actual_fx.dataset_ids == _test_datasets
+
+    # no data
+    market_mock.reset_mock()
+    market_mock.return_value = mock_empty_market_data_response()
+    actual = tm.forward_vol(Index('MA123', AssetClass.Equity, '123'), '1m', '2m', tm.VolReference.SPOT, 100)
+    assert actual.empty
+
+    # no data for required tenor
+    market_mock.reset_mock()
+    market_mock.return_value = MarketDataResponseFrame(data={'impliedVolatility': [2.1, 3.1, 5.1],
+                                                             'tenor': ['1m', '2m', '4m']},
+                                                       index=[datetime.date(2020, 5, 1)] * 3)
+    actual = tm.forward_vol(Index('MA123', AssetClass.Equity, '123'), '1m', '2m', tm.VolReference.SPOT, 100)
+    assert actual.empty
+
+    # real-time
+    with pytest.raises(NotImplementedError):
+        tm.forward_vol(..., '1m', '2m', tm.VolReference.SPOT, 100, real_time=True)
+
+    replace.restore()
+
+
+def test_forward_vol_term():
+    idx = pd.DatetimeIndex([datetime.date(2020, 4, 1), datetime.date(2020, 4, 2)] * 6)
+    data = {
+        'impliedVolatility': [1.1, 1, 2.1, 2, 3.1, 3, 4.1, 4, 5.1, 5, 6.1, 6],
+        'tenor': ['1w', '1w', '1m', '1m', '5w', '5w', '2m', '2m', '3m', '3m', '5m', '5m']
+    }
+    out = MarketDataResponseFrame(data=data, index=idx)
+    out.dataset_ids = _test_datasets
+
+    replace = Replacer()
+    market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    market_mock.return_value = out
+
+    # Equity
+    expected = pd.Series([np.nan, 5.29150, 6.55744], name='forwardVolTerm',
+                         index=pd.DatetimeIndex(['2020-05-01', '2020-06-02', '2020-07-02'], name='expirationDate'))
+    with DataContext('2020-01-01', '2020-07-31'):
+        actual = tm.forward_vol_term(Index('MA123', AssetClass.Equity, '123'), tm.VolReference.SPOT, 100,
+                                     datetime.date(2020, 4, 2))
+    assert_series_equal(expected, pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+    market_mock.assert_called_once()
+
+    # FX
+    cross_mock = replace('gs_quant.timeseries.measures.cross_stored_direction_for_fx_vol', Mock())
+    cross_mock.return_value = 'EURUSD'
+    expected_fx = pd.Series([np.nan, 5.29150, 6.55744, 7.24569], name='forwardVolTerm',
+                            index=pd.DatetimeIndex(['2020-05-01', '2020-06-02', '2020-07-02', '2020-09-02'],
+                                                   name='expirationDate'))
+
+    with DataContext('2020-01-01', '2020-09-02'):
+        actual_fx = tm.forward_vol_term(Cross('ABCDE', 'EURUSD'), tm.VolReference.SPOT, 100)
     assert_series_equal(expected_fx, pd.Series(actual_fx))
     assert actual_fx.dataset_ids == _test_datasets
 
     # no data
     market_mock.reset_mock()
     market_mock.return_value = mock_empty_market_data_response()
-    actual = tm.forward_vol(Index('MA123', AssetClass.Equity, '123'), '1m', tm.VolReference.SPOT, 100,
-                            datetime.date(2020, 1, 2))
+    actual = tm.forward_vol_term(Index('MA123', AssetClass.Equity, '123'), tm.VolReference.SPOT, 100)
     assert actual.empty
 
     # real-time
     with pytest.raises(NotImplementedError):
-        tm.forward_vol(..., '1m', tm.VolReference.SPOT, 100, real_time=True)
+        tm.forward_vol_term(..., tm.VolReference.SPOT, 100, real_time=True)
 
     replace.restore()
 
@@ -3225,21 +3318,28 @@ def test_esg_aggregate():
     replace.restore()
 
 
-def test_rating():
+def test_gir_rating():
     replace = Replacer()
 
     mock_aapl = Stock('MA4B66MW5E27U9VBB94', 'AAPL')
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_rating)
-    actual = tm.rating(mock_aapl)
+    actual = tm.gir_rating(mock_aapl, tm._RatingMetric.RATING)
     assert_series_equal(pd.Series([1, -1, 1, 0], index=pd.to_datetime([datetime.date(2020, 8, 13),
                                                                        datetime.date(2020, 8, 14),
                                                                        datetime.date(2020, 8, 17),
                                                                        datetime.date(2020, 8, 18)]),
                                   name='rating'), pd.Series(actual))
+
+    actual = tm.gir_rating(mock_aapl, tm._RatingMetric.CONVICTION_LIST)
+    assert_series_equal(pd.Series([1, 0, 0, 0], index=pd.to_datetime([datetime.date(2020, 8, 13),
+                                                                      datetime.date(2020, 8, 14),
+                                                                      datetime.date(2020, 8, 17),
+                                                                      datetime.date(2020, 8, 18)]),
+                                  name='convictionList'), pd.Series(actual))
     assert actual.dataset_ids == _test_datasets
 
     with pytest.raises(NotImplementedError):
-        tm.rating(mock_aapl, real_time=True)
+        tm.gir_rating(mock_aapl, tm._RatingMetric.RATING, real_time=True)
     replace.restore()
 
 
@@ -3267,6 +3367,68 @@ def test_gir_gsdeer_gsfeer():
                              '2020',
                              tm.EquilibriumExchangeRateQuarter.Q1,
                              real_time=True)
+    replace.restore()
+
+
+def test_gir_factor_profile():
+    replace = Replacer()
+
+    mock_aapl = Stock('MA4B66MW5E27U9VBB94', 'AAPL')
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_factor_profile)
+    actual = tm.gir_factor_profile(mock_aapl, tm._FactorProfileMetric.GROWTH_SCORE)
+    assert_series_equal(pd.Series([0.238, 0.234, 0.234, 0.230], index=pd.to_datetime([datetime.date(2020, 8, 13),
+                                                                                      datetime.date(2020, 8, 14),
+                                                                                      datetime.date(2020, 8, 17),
+                                                                                      datetime.date(2020, 8, 18)]),
+                                  name='growthScore'), pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+
+    actual = tm.gir_factor_profile(mock_aapl, tm._FactorProfileMetric.FINANCIAL_RETURNS_SCORE)
+    assert_series_equal(pd.Series([0.982, 0.982, 0.982, 0.982], index=pd.to_datetime([datetime.date(2020, 8, 13),
+                                                                                      datetime.date(2020, 8, 14),
+                                                                                      datetime.date(2020, 8, 17),
+                                                                                      datetime.date(2020, 8, 18)]),
+                                  name='financialReturnsScore'), pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+
+    actual = tm.gir_factor_profile(mock_aapl, tm._FactorProfileMetric.MULTIPLE_SCORE)
+    assert_series_equal(pd.Series([0.204, 0.192, 0.190, 0.190], index=pd.to_datetime([datetime.date(2020, 8, 13),
+                                                                                      datetime.date(2020, 8, 14),
+                                                                                      datetime.date(2020, 8, 17),
+                                                                                      datetime.date(2020, 8, 18)]),
+                                  name='multipleScore'), pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+
+    actual = tm.gir_factor_profile(mock_aapl, tm._FactorProfileMetric.INTEGRATED_SCORE)
+    assert_series_equal(pd.Series([0.672, 0.676, 0.676, 0.674], index=pd.to_datetime([datetime.date(2020, 8, 13),
+                                                                                      datetime.date(2020, 8, 14),
+                                                                                      datetime.date(2020, 8, 17),
+                                                                                      datetime.date(2020, 8, 18)]),
+                                  name='integratedScore'), pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+
+    with pytest.raises(NotImplementedError):
+        tm.gir_factor_profile(mock_aapl, tm._FactorProfileMetric.GROWTH_SCORE, real_time=True)
+
+    replace.restore()
+
+
+def test_gir_commodities_forecast():
+    replace = Replacer()
+
+    mock_spgcsb = Index('MA74Y70Z4D4TBX9H', 'SPGCSB', 'GSCI Sugar')
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_commodities_forecast)
+    actual = tm.gir_commodities_forecast(mock_spgcsb, tm._CommoditiesForecastPeriod.THREE_MONTH,
+                                         tm._CommoditiesForecastType.SPOT_RETURN)
+    assert_series_equal(pd.Series([1700, 1400, 1500, 1600], index=pd.to_datetime([datetime.date(2020, 8, 13),
+                                                                                  datetime.date(2020, 8, 14),
+                                                                                  datetime.date(2020, 8, 17),
+                                                                                  datetime.date(2020, 8, 18)]),
+                                  name='forecastValue'), pd.Series(actual))
+
+    with pytest.raises(NotImplementedError):
+        tm.gir_commodities_forecast(mock_spgcsb, tm._CommoditiesForecastPeriod.THREE_MONTH,
+                                    tm._CommoditiesForecastType.SPOT_RETURN, real_time=True)
     replace.restore()
 
 

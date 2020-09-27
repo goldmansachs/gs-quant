@@ -108,6 +108,12 @@ class AssetType(Enum):
     #: Bond
     BOND = "Bond"
 
+    #: Future Market
+    FUTURE_MARKET = "Future Market"
+
+    #: Future Contract
+    FUTURE_CONTRACT = "Future Contract"
+
     #: Commodity
     COMMODITY = "Commodity"
 
@@ -580,6 +586,46 @@ class Bond(Asset):
         return AssetType.BOND
 
 
+class FutureMarket(Asset):
+    """Future Market
+
+    Represents a future market
+
+    """
+
+    def __init__(self,
+                 id_: str,
+                 asset_class: Union[AssetClass, str],
+                 name: str,
+                 entity: Optional[Dict] = None):
+        if isinstance(asset_class, str):
+            asset_class = get_enum_value(AssetClass, asset_class)
+        Asset.__init__(self, id_, asset_class, name, entity=entity)
+
+    def get_type(self) -> AssetType:
+        return AssetType.FUTURE_MARKET
+
+
+class FutureContract(Asset):
+    """Future Contract
+
+    Represents a future contract
+
+    """
+
+    def __init__(self,
+                 id_: str,
+                 asset_class: Union[AssetClass, str],
+                 name: Union[AssetClass, str],
+                 entity: Optional[Dict] = None):
+        if isinstance(asset_class, str):
+            asset_class = get_enum_value(AssetClass, asset_class)
+        Asset.__init__(self, id_, asset_class, name, entity=entity)
+
+    def get_type(self) -> AssetType:
+        return AssetType.FUTURE_CONTRACT
+
+
 class Swap(Asset):
     """Swap Instrument Type
 
@@ -825,6 +871,12 @@ class SecurityMaster:
 
         if asset_type in (GsAssetType.Commodity.value,):
             return Commodity(gs_asset.id, gs_asset.name, entity=asset_entity)
+
+        if asset_type in (GsAssetType.FutureMarket.value,):
+            return FutureMarket(gs_asset.id, gs_asset.name, entity=asset_entity)
+
+        if asset_type in (GsAssetType.FutureContract.value,):
+            return FutureContract(gs_asset.id, gs_asset.name, entity=asset_entity)
 
         raise TypeError(f'unsupported asset type {asset_type}')
 

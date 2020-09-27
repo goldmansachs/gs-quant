@@ -170,7 +170,7 @@ class MultipleRiskMeasureResult(dict):
         for key, value in self.items():
             if isinstance(value, pd.DataFrame):
                 new_value = value.copy()
-                new_value.value += operator(value.value, operand)
+                new_value.value = operator(value.value, operand)
             else:
                 new_value = operator(value, operand)
 

@@ -77,8 +77,8 @@ setuptools.setup(
         "certifi"
     ],
     extras_require={
-        "internal": ["gs_quant_internal>=0.6.6", "requests_kerberos"],
-        "notebook": ["jupyter", "matplotlib~=2.1.0", "pprint", "seaborn"],
+        "internal": ["gs_quant_internal>=0.7.4", "requests_kerberos"],
+        "notebook": ["jupyter", "matplotlib~=3.1.0", "seaborn"],
         "test": ["pytest", "pytest-cov", "pytest-mock", "testfixtures", "nbconvert", "nbformat", "jupyter_client"],
         "develop": ["wheel", "sphinx", "sphinx_rtd_theme", "sphinx_autodoc_typehints", "pytest", "pytest-cov",
                     "pytest-mock", "testfixtures"]

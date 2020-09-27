@@ -196,6 +196,31 @@ class EquilibriumExchangeRateQuarter(Enum):
     Q4 = 'Q4'
 
 
+class _FactorProfileMetric(Enum):
+    GROWTH_SCORE = 'growthScore'
+    FINANCIAL_RETURNS_SCORE = 'financialReturnsScore'
+    MULTIPLE_SCORE = 'multipleScore'
+    INTEGRATED_SCORE = 'integratedScore'
+
+
+class _CommoditiesForecastType(Enum):
+    SPOT = 'spot'
+    SPOT_RETURN = 'spotReturn'
+    ROLL_RETURN = 'rollReturn'
+    TOTAL_RETURN = 'totalReturn'
+
+
+class _CommoditiesForecastPeriod(Enum):
+    THREE_MONTH = '3m'
+    SIX_MONTH = '6m'
+    TWELVE_MONTH = '12m'
+
+
+class _RatingMetric(Enum):
+    RATING = 'rating'
+    CONVICTION_LIST = 'convictionList'
+
+
 ESG_METRIC_TO_QUERY_TYPE = {
     "esNumericScore": QueryType.ES_NUMERIC_SCORE,
     "esNumericPercentile": QueryType.ES_NUMERIC_PERCENTILE,
@@ -244,6 +269,21 @@ CROSS_TO_CROSS_CURRENCY_BASIS = {
     'USDGBP': 'GBP-3m/USD-3m',
     'GBPUSD': 'GBP-3m/USD-3m'
 }
+
+
+_FACTOR_PROFILE_METRIC_TO_QUERY_TYPE = {
+    'growthScore': QueryType.GROWTH_SCORE,
+    'financialReturnsScore': QueryType.FINANCIAL_RETURNS_SCORE,
+    'multipleScore': QueryType.MULTIPLE_SCORE,
+    'integratedScore': QueryType.INTEGRATED_SCORE
+}
+
+
+_RATING_METRIC_TO_QUERY_TYPE = {
+    'rating': QueryType.RATING,
+    'convictionList': QueryType.CONVICTION_LIST
+}
+
 
 _COMMOD_CONTRACT_MONTH_CODES = "FGHJKMNQUVXZ"
 _COMMOD_CONTRACT_MONTH_CODES_DICT = {k: v for k, v in enumerate(_COMMOD_CONTRACT_MONTH_CODES)}
@@ -1377,23 +1417,98 @@ def forecast(asset: Asset, forecast_horizon: str, *, source: str = None, real_ti
 
 
 @plot_measure((AssetClass.Equity, AssetClass.FX), None, [QueryType.IMPLIED_VOLATILITY])
-def forward_vol(asset: Asset, tenor: str, strike_reference: VolReference, relative_strike: Real,
-                pricing_date: Optional[GENERIC_DATE] = None, *, source: str = None, real_time: bool = False) \
-        -> pd.Series:
+def forward_vol(asset: Asset, tenor: str, forward_start_date: str, strike_reference: VolReference,
+                relative_strike: Real, *, source: str = None, real_time: bool = False) -> pd.Series:
     """
-    Forward volatility. Uses most recent date available if pricing_date is not provided.
+    Forward volatility.
 
     :param asset: asset object loaded from security master
     :param tenor: relative date representation of expiration date e.g. 1m
+    :param forward_start_date: forward start date e.g. 2m, 1y
     :param strike_reference: reference for strike level
     :param relative_strike: strike relative to reference
-    :param pricing_date: YYYY-MM-DD or relative days before today e.g. 1d, 1m, 1y
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: forward volatility curve
     """
     if real_time:
         raise NotImplementedError('real-time forward vol not implemented')
+
+    if asset.asset_class == AssetClass.FX:
+        sr_string, relative_strike = _preprocess_implied_vol_strikes_fx(strike_reference, relative_strike)
+        asset_id = cross_stored_direction_for_fx_vol(asset)
+    else:
+        sr_string, relative_strike = _preprocess_implied_vol_strikes_eq(strike_reference, relative_strike)
+        asset_id = asset.get_marquee_id()
+
+    t1_month = _tenor_to_month(forward_start_date)
+    t2_month = _tenor_to_month(tenor) + t1_month
+    t1 = _month_to_tenor(t1_month)
+    t2 = _month_to_tenor(t2_month)
+
+    _logger.debug('where strikeReference=%s, relativeStrike=%s, tenor=%s', sr_string, relative_strike, f'{t1},{t2}')
+    where = dict(tenor=[t1, t2], strikeReference=sr_string, relativeStrike=relative_strike)
+    q = GsDataApi.build_market_data_query([asset_id], QueryType.IMPLIED_VOLATILITY, where=where,
+                                          source=source, real_time=real_time)
+    _logger.debug('q %s', q)
+    df = _market_data_timed(q)
+    dataset_ids = getattr(df, 'dataset_ids', ())
+
+    if df.empty:
+        series = ExtendedSeries(name='forwardVol')
+    else:
+        grouped = df.groupby(Fields.TENOR.value)
+        try:
+            sg = grouped.get_group(t1)['impliedVolatility']
+            lg = grouped.get_group(t2)['impliedVolatility']
+        except KeyError:
+            _logger.debug('no data for one or more tenors')
+            series = ExtendedSeries(name='forwardVol')
+        else:
+            series = ExtendedSeries(sqrt((t2_month * lg ** 2 - t1_month * sg ** 2) / _tenor_to_month(tenor)),
+                                    name='forwardVol')
+    series.dataset_ids = dataset_ids
+    return series
+
+
+def _process_forward_vol_term(asset: Asset, df: pd.DataFrame, name: str) -> pd.Series:
+    if df.empty:
+        return pd.Series(dtype='float64')
+    else:
+        latest = df.index.max()
+        _logger.info('selected pricing date %s', latest)
+        df = df.loc[latest]
+
+        tenors = [t for t in df[Fields.TENOR.value].values if re.fullmatch('([1-9]\\d*)([my])', t)]
+        df = pd.DataFrame(df[df['tenor'].isin(tenors)])
+        cbd = _get_custom_bd(asset.exchange)
+        df = df.assign(expirationDate=df.index + df['tenor'].map(_to_offset) + cbd - cbd)
+        df = df.set_index('expirationDate')
+        df.sort_index(inplace=True)
+
+        df = df.assign(tenorInMonth=df['tenor'].map(_tenor_to_month))
+        series = sqrt((df['tenorInMonth'] * df[name] ** 2 - df['tenorInMonth'].shift(1) * df[name].shift(1) ** 2) /
+                      (df['tenorInMonth'] - df['tenorInMonth'].shift(1)))
+        return series.loc[DataContext.current.start_date: DataContext.current.end_date]
+
+
+@plot_measure((AssetClass.Equity, AssetClass.FX), None, [QueryType.IMPLIED_VOLATILITY])
+def forward_vol_term(asset: Asset, strike_reference: VolReference, relative_strike: Real,
+                     pricing_date: Optional[GENERIC_DATE] = None, *, source: str = None, real_time: bool = False) \
+        -> pd.Series:
+    """
+    Forward volatility term structure.
+
+    :param asset: asset object loaded from security master
+    :param strike_reference: reference for strike level
+    :param relative_strike: strike relative to reference
+    :param pricing_date: YYYY-MM-DD or relative days before today e.g. 1d, 1m, 1y
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: forward volatility term structure
+    """
+    if real_time:
+        raise NotImplementedError('real-time forward vol term not implemented')
 
     if asset.asset_class == AssetClass.FX:
         sr_string, relative_strike = _preprocess_implied_vol_strikes_fx(strike_reference, relative_strike)
@@ -1408,35 +1523,14 @@ def forward_vol(asset: Asset, tenor: str, strike_reference: VolReference, relati
     with DataContext(start, end):
         _logger.debug('where strikeReference=%s, relativeStrike=%s', sr_string, relative_strike)
         where = dict(strikeReference=sr_string, relativeStrike=relative_strike)
-        q = GsDataApi.build_market_data_query([asset_id], QueryType.IMPLIED_VOLATILITY, where=where,
-                                              source=source,
+        q = GsDataApi.build_market_data_query([asset_id], QueryType.IMPLIED_VOLATILITY, where=where, source=source,
                                               real_time=real_time)
         _logger.debug('q %s', q)
         df = _market_data_timed(q)
 
-    dataset_ids = getattr(df, 'dataset_ids', ())
-
-    series = ExtendedSeries(name='forwardVol')
-    if not df.empty:
-        latest = df.index.max()
-        _logger.info('selected pricing date %s', latest)
-        df = df.loc[latest]
-
-        row = df[df[Fields.TENOR.value] == tenor]['impliedVolatility']
-        if not row.empty:
-            series.at[latest] = row.iloc[0]
-
-        for t in df[Fields.TENOR.value]:
-            if re.fullmatch('([1-9]\\d*)([my])', t):
-                t1 = _tenor_to_month(t)
-                t2 = _tenor_to_month(tenor) + t1
-                t2_row = df[df[Fields.TENOR.value] == _month_to_tenor(t2)]['impliedVolatility']
-                t1_row = df[df[Fields.TENOR.value] == t]['impliedVolatility']
-                if not t2_row.empty and not t1_row.empty:
-                    series.at[latest + _to_offset(t)] = \
-                        sqrt((t2 * t2_row.iloc[0] ** 2 - t1 * t1_row.iloc[0] ** 2) / (t2 - t1))
-    series = series[series.index.isin(pd.date_range(DataContext.current.start_date, DataContext.current.end_date))]
-    series.dataset_ids = dataset_ids
+    series = _process_forward_vol_term(asset, df, "impliedVolatility")
+    series = ExtendedSeries(series, name='forwardVolTerm')
+    series.dataset_ids = getattr(df, 'dataset_ids', ())
     return series
 
 
@@ -1607,52 +1701,31 @@ def _month_to_tenor(months: int) -> str:
     return f'{months // 12}y' if months % 12 == 0 else f'{months}m'
 
 
-@plot_measure((AssetClass.Equity, AssetClass.Commod), None, [QueryType.VAR_SWAP])
-def forward_var(asset: Asset, tenor: str, pricing_date: Optional[str] = None, *, source: str = None,
-                real_time: bool = False) -> pd.Series:
+@plot_measure((AssetClass.Equity, ), None, [QueryType.VAR_SWAP])
+def forward_var_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None, *, source: str = None,
+                     real_time: bool = False) -> pd.Series:
     """
-    Strike of the forward-starting variance swap in variance terms. Uses most recent date available if pricing_date is
-    not provided.
+    Forward variance swap term structure.
 
     :param asset: asset object loaded from security master
-    :param tenor: relative date representation of expiration date e.g. 1m
     :param pricing_date: YYYY-MM-DD or relative days before today e.g. 1d, 1m, 1y
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
-    :return: forward variance curve
+    :return: forward variance swap term structure
     """
     if real_time:
-        raise MqValueError('real-time forward var not implemented')
+        raise NotImplementedError('real-time forward var term not implemented')
 
     start, end = _range_from_pricing_date(asset.exchange, pricing_date)
     with DataContext(start, end):
         q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.VAR_SWAP, source=source,
                                               real_time=real_time)
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
-    dataset_ids = getattr(df, 'dataset_ids', ())
+        _logger.debug('q %s', q)
+        df = _market_data_timed(q)
 
-    series = ExtendedSeries(name='forwardVar')
-    if not df.empty:
-        latest = df.index.max()
-        _logger.info('selected pricing date %s', latest)
-        df = df.loc[latest]
-
-        row = df[df[Fields.TENOR.value] == tenor][Fields.VAR_SWAP.value]
-        if not row.empty:
-            series.at[latest] = row.iloc[0] ** 2
-
-        for t in df[Fields.TENOR.value]:
-            if re.fullmatch('([1-9]\\d*)([my])', t):
-                t1 = _tenor_to_month(t)
-                t2 = _tenor_to_month(tenor) + t1
-                t2_row = df[df[Fields.TENOR.value] == _month_to_tenor(t2)][Fields.VAR_SWAP.value]
-                t1_row = df[df[Fields.TENOR.value] == t][Fields.VAR_SWAP.value]
-                if not t2_row.empty and not t1_row.empty:
-                    series.at[latest + _to_offset(t)] = \
-                        (t2 * t2_row.iloc[0] ** 2 - t1 * t1_row.iloc[0] ** 2) / (t2 - t1)
-    series = series[series.index.isin(pd.date_range(DataContext.current.start_date, DataContext.current.end_date))]
-    series.dataset_ids = dataset_ids
+    series = _process_forward_vol_term(asset, df, Fields.VAR_SWAP.value)
+    series = ExtendedSeries(series, name='forwardVarTerm')
+    series.dataset_ids = getattr(df, 'dataset_ids', ())
     return series
 
 
@@ -2911,13 +2984,17 @@ def esg_aggregate(asset: Asset, metric: EsgMetric, value_unit: Optional[EsgValue
     return series
 
 
-@plot_measure((AssetClass.Equity,), None, [QueryType.RATING])
-def rating(asset: Asset, *, source: str = None, real_time: bool = False) -> Series:
+@plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,), [QueryType.RATING, QueryType.CONVICTION_LIST])
+def gir_rating(asset: Asset, metric: _RatingMetric, *, source: str = None, real_time: bool = False) -> Series:
     """
     Analyst Rating, which may take on the following values
     {'Sell': -1, 'Neutral': 0, 'Buy': 1}
+    Conviction List, which is true if the security is on the Conviction Buy List or false otherwise.
+    Securities with a convictionList value equal to true are by definition a subset of the securities
+    with a rating equal to Buy
 
     :param asset: asset object loaded from security master
+    :param metric: Name of metric. Either rating or conviction list
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: ratings in numeric form ( 'Buy' : 1, 'Neutral' : 0, 'Sell' : -1 )
@@ -2925,13 +3002,14 @@ def rating(asset: Asset, *, source: str = None, real_time: bool = False) -> Seri
     if real_time:
         raise NotImplementedError('real-time rating not implemented')
     mqid = asset.get_marquee_id()
-    query_type = QueryType.RATING
-    _logger.debug('where assetId=%s, query_type=%s', mqid, query_type.value)
+    query_type = _RATING_METRIC_TO_QUERY_TYPE[metric.value]
+    _logger.debug('where assetId=%s, metric=%s, query_type=%s', mqid, metric.value, query_type.value)
     q = GsDataApi.build_market_data_query([mqid], query_type, source=source, real_time=real_time)
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
     series = _extract_series_from_df(df, query_type)
-    series.replace(['Buy', 'Sell', 'Neutral'], [1, -1, 0], inplace=True)
+    if query_type == QueryType.RATING:
+        series.replace(['Buy', 'Sell', 'Neutral'], [1, -1, 0], inplace=True)
     return series
 
 
@@ -2968,4 +3046,77 @@ def gir_gsdeer_gsfeer(asset: Asset, metric: EquilibriumExchangeRateMetric,
 
     df = _market_data_timed(q)
     series = _extract_series_from_df(df, metric)
+    return series
+
+
+@plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,),
+              [QueryType.GROWTH_SCORE, QueryType.FINANCIAL_RETURNS_SCORE,
+               QueryType.MULTIPLE_SCORE, QueryType.INTEGRATED_SCORE])
+def gir_factor_profile(asset: Asset, metric: _FactorProfileMetric, *, source: str = None,
+                       real_time: bool = False) -> Series:
+    """
+    This dataset consists of Goldman Sachs Investment Profile ("IP") percentiles for US and Canadian securities
+    covered by Goldman Sachs GIR analysts. Beginning in mid-2017, IP was renamed GS Factor Profile;
+    the dataset provided hereunder refers to both IP and GS Factor Profile percentiles, and is referred
+    to herein as "GS Factor Profile"
+    Percentiles are generated daily, and historical values are available going back to January 1, 2009.
+    :param asset: asset object loaded from security master
+    :param metric: Growth Score, i.e. Growth percentile relative to Americas coverage universe
+                   (a higher score means faster growth);
+                   Financial Returns Score, i.e. Financial Returns percentile relative to Americas coverage universe
+                   (a higher score means stronger financial returns);
+                   Multiple Score, i.e. Multiple percentile relative to Americas coverage universe
+                   (a higher score means more expensive);
+                   Integrated Score, i.e. Average of the Growth, Financial Returns and (1-Multiple) percentile
+                   (a higher score means more attractive)
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: Factor Profile data of the asset for the field requested
+    """
+    if real_time:
+        raise NotImplementedError('real-time gir_factor_profile not implemented')
+
+    mqid = asset.get_marquee_id()
+
+    query_type = _FACTOR_PROFILE_METRIC_TO_QUERY_TYPE.get(metric.value)
+    _logger.debug('where assetId=%s, metric=%s, query=%s', mqid, metric.value, query_type.value)
+    q = GsDataApi.build_market_data_query([mqid], query_type, source=source, real_time=real_time)
+    _logger.debug('q %s', q)
+    df = _market_data_timed(q)
+    series = _extract_series_from_df(df, query_type)
+
+    return series
+
+
+@plot_measure((AssetClass.Commod,), (AssetType.Commodity, AssetType.Index,), [QueryType.GIR_COMMODITIES_FORECAST])
+def gir_commodities_forecast(asset: Asset, forecastPeriod: _CommoditiesForecastPeriod,
+                             forecastType: _CommoditiesForecastType, *, source: str = None,
+                             real_time: bool = False) -> Series:
+    """
+    Short and long-term commodities forecast.
+    :param asset: asset object loaded from security master
+    :param forecastPeriod: Relative, e.g. 3m, 6m, 12m; Quarterly (up to next two years), e.g. 2020Q3;
+                            Annual (up to next ten years), e.g. 2023
+    :param forecastType: Type of return for commodity indices. Spot for individual commodities.
+                          One of spotReturn/totalReturn/rollReturn/spot
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: Forecast Value of the commodity or index as requested
+    """
+    if real_time:
+        raise NotImplementedError('real-time rating not implemented')
+    mqid = asset.get_marquee_id()
+    query_type = QueryType.GIR_COMMODITIES_FORECAST
+    _logger.debug('where assetId=%s, forecastPeriod=%s, forecastType=%s, query_type=%s',
+                  mqid, forecastPeriod, forecastType, query_type.value)
+    q = GsDataApi.build_market_data_query(
+        [mqid],
+        query_type,
+        where=dict(forecastPeriod=forecastPeriod, forecastType=forecastType),
+        source=source,
+        real_time=real_time
+    )
+    _logger.debug('q %s', q)
+    df = _market_data_timed(q)
+    series = _extract_series_from_df(df, QueryType.FORECAST_VALUE)
     return series

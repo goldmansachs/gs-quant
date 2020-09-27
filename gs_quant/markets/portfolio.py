@@ -282,11 +282,10 @@ class Portfolio(PriceableImpl):
     def from_csv(
             cls,
             csv_file: str,
-            mappings: Optional[dict] = None,
-            date_formats: Optional[list] = None,
+            mappings: Optional[dict] = None
     ):
         data = pd.read_csv(csv_file, skip_blank_lines=True).replace({np.nan: None})
-        return cls.from_frame(data, mappings, date_formats)
+        return cls.from_frame(data, mappings)
 
     def append(self, priceables: Union[PriceableImpl, Iterable[PriceableImpl]]):
         self.priceables += ((priceables,) if isinstance(priceables, PriceableImpl) else tuple(priceables))
@@ -389,7 +388,10 @@ class Portfolio(PriceableImpl):
                             priceables_by_date.setdefault(date, []).append(priceable)
 
                     for date, priceables in priceables_by_date.items():
-                        ret[date] = Portfolio(priceables, name=self.name)
+                        if any(p for p in priceables if not isinstance(p, PriceableImpl)):
+                            _logger.error(f'Error resolving on {date}, skipping that date')
+                        else:
+                            ret[date] = Portfolio(priceables, name=self.name)
 
                 if result_future:
                     result_future.set_result(ret)

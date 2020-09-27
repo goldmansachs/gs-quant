@@ -93,6 +93,8 @@ class AssetType(EnumBase, Enum):
     Forward = 'Forward'
     Fund = 'Fund'
     Future = 'Future'
+    FutureContract = "FutureContract"
+    FutureMarket = "FutureMarket"
     FutureOption = 'FutureOption'
     FutureStrategy = 'FutureStrategy'
     Hedge_Fund = 'Hedge Fund'
