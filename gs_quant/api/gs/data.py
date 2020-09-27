@@ -93,6 +93,12 @@ class QueryType(Enum):
     CONVICTION_LIST = "Conviction List"
     GSDEER = "Gsdeer"
     GSFEER = "Gsfeer"
+    GROWTH_SCORE = "Growth Score"
+    FINANCIAL_RETURNS_SCORE = "Financial Returns Score"
+    MULTIPLE_SCORE = "Multiple Score"
+    INTEGRATED_SCORE = "Integrated Score"
+    GIR_COMMODITIES_FORECAST = "Gir Commodities Forecast"
+    FORECAST_VALUE = "Forecast Value"
 
 
 class GsDataApi(DataApi):

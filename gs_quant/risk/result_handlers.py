@@ -19,10 +19,11 @@ import pandas as pd
 from typing import Iterable, Union
 
 from .core import DataFrameWithInfo, ErrorValue, FloatWithInfo, StringWithInfo, sort_risk
+from .measures import EqDelta, EqGamma, EqVega
 from gs_quant.base import InstrumentBase, RiskKey
 
-
 _logger = logging.getLogger(__name__)
+__scalar_risk_measures = (EqDelta, EqGamma, EqVega)
 
 
 def __dataframe_handler(result: Iterable, mappings: tuple, risk_key: RiskKey) -> DataFrameWithInfo:
@@ -51,7 +52,7 @@ def cashflows_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBa
     for cashflow in result['cashflows']:
         for field in ('payDate', 'setDate', 'accStart', 'accEnd'):
             value = cashflow.get(field)
-            date = dt.datetime.strptime(value, '%Y-%M-%d').date() if value else dt.date.max
+            date = dt.datetime.strptime(value, '%Y-%m-%d').date() if value else dt.date.max
             cashflow[field] = date
 
     return __dataframe_handler(result['cashflows'], mappings, risk_key)
@@ -84,7 +85,7 @@ def risk_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase) -
     return FloatWithInfo(risk_key, result.get('val', float('nan')), unit=result.get('unit'))
 
 
-def risk_by_class_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase)\
+def risk_by_class_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase) \
         -> Union[DataFrameWithInfo, FloatWithInfo]:
     # TODO Remove this once we migrate parallel USD IRDelta measures
     types = [c['type'] for c in result['classes']]
@@ -119,7 +120,12 @@ def risk_by_class_handler(result: dict, risk_key: RiskKey, _instrument: Instrume
 
 
 def risk_vector_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase) -> DataFrameWithInfo:
-    for points, value in zip(result['points'], result['asset']):
+    assets = result['asset']
+    # Handle equity risk measures which are really scalars
+    if len(assets) == 1 and risk_key.risk_measure in __scalar_risk_measures:
+        return FloatWithInfo(risk_key, assets[0])
+
+    for points, value in zip(result['points'], assets):
         points.update({'value': value})
 
     mappings = (
@@ -133,6 +139,10 @@ def risk_vector_handler(result: dict, risk_key: RiskKey, _instrument: Instrument
     return __dataframe_handler(result['points'], mappings, risk_key)
 
 
+def unsupported_handler(_result: dict, risk_key: RiskKey, instrument: InstrumentBase) -> ErrorValue:
+    return ErrorValue(risk_key, f'{risk_key.risk_measure} not supported for {type(instrument).__name__}')
+
+
 result_handlers = {
     'Error': error_handler,
     'IRPCashflowTable': cashflows_handler,
@@ -142,5 +152,6 @@ result_handlers = {
     'RequireAssets': required_assets_handler,
     'Risk': risk_handler,
     'RiskByClass': risk_by_class_handler,
-    'RiskVector': risk_vector_handler
+    'RiskVector': risk_vector_handler,
+    'Unsupported': unsupported_handler
 }

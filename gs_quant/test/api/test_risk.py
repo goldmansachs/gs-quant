@@ -146,7 +146,7 @@ def test_structured_calc(mocker):
     mocker.return_value = [[[[values]] * len(priceables)]]
 
     with PricingContext():
-        delta_f = [p.calc(risk.IRDelta) for p in priceables]
+        delta_f = [p.calc(risk.IRDelta) for p in priceables if not isinstance(p, EqOption)]
 
     delta = risk.aggregate_risk(delta_f, threshold=0)
 

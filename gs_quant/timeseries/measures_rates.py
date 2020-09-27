@@ -265,6 +265,8 @@ def _get_tdapi_rates_assets(allow_many=False, **kwargs) -> Union[str, list]:
             kwargs['asset_parameters_receiver_designated_maturity'], kwargs[
                 'asset_parameters_payer_designated_maturity']
 
+        assets = GsAssetApi.get_many_assets(**kwargs)
+
     if len(assets) > 1:
         # term structure measures need multiple assets
         if ('asset_parameters_termination_date' not in kwargs) or (
