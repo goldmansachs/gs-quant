@@ -4,7 +4,7 @@
 
 It is created and maintained by quantitative developers (quants) at Goldman Sachs to enable the development of trading strategies and analysis of derivative products. GS Quant can be used to facilitate derivative structuring, trading, and risk management, or as a set of statistical packages for data analytics applications.
 
-Please refer to [Goldman Sachs Developer](https://developer.gs.com/discover/gs-quant/) for additional information.
+Please refer to [Goldman Sachs Developer](https://developer.gs.com/docs/gsquant/) for additional information.
 
 ## Requirements
 
