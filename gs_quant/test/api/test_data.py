@@ -295,16 +295,16 @@ def test_get_many_defns_api(mocker):
 
 def test_coordinates_converter():
     coord = GsDataApi._coordinate_from_str("A_B_C_D")
-    assert str(coord) == 'A|B|C|D|'
+    assert str(coord) == 'A_B_C_D'
 
     coord = GsDataApi._coordinate_from_str("A_B_C.E")
-    assert str(coord) == 'A|B|C||E'
+    assert str(coord) == 'A_B_C.E'
 
     coord = GsDataApi._coordinate_from_str("A_B_.E")
-    assert str(coord) == 'A|B|||E'
+    assert str(coord) == 'A_B_.E'
 
-    coord = GsDataApi._coordinate_from_str("A_B_C_D_E.F")
-    assert str(coord) == 'A|B|C|D_E|F'
+    coord = GsDataApi._coordinate_from_str("A_B_C_D;E.F")
+    assert str(coord) == 'A_B_C_D;E.F'
 
     with pytest.raises(MqValueError, match='invalid coordinate A'):
         GsDataApi._coordinate_from_str("A")

@@ -17,11 +17,13 @@ under the License.
 import datetime as dt
 from gs_quant.base import Market
 from gs_quant.common import PricingLocation
+from gs_quant.context_base import do_not_serialise
 from gs_quant.datetime.date import prev_business_date
 from gs_quant.target.common import CloseMarket as _CloseMarket, LiveMarket as _LiveMarket, \
-    OverlayMarket as __OverlayMarket, RelativeMarket as __RelativeMarket, TimestampedMarket as _TimestampedMarket
-from gs_quant.target.data import MarketDataCoordinate as __MarketDataCoordinate
-from typing import Mapping, Optional, Union
+    OverlayMarket as _OverlayMarket, RelativeMarket as __RelativeMarket, TimestampedMarket as _TimestampedMarket
+from gs_quant.target.data import MarketDataCoordinate as __MarketDataCoordinate, \
+    MarketDataCoordinateValue as __MarketDataCoordinateValue
+from typing import Mapping, Optional, Tuple, Union
 
 
 def market_location(location: Optional[PricingLocation] = None) -> PricingLocation:
@@ -63,9 +65,27 @@ def close_market_date(location: Optional[Union[PricingLocation, str]] = None,
 
 class MarketDataCoordinate(__MarketDataCoordinate):
 
-    def __str__(self):
-        return "|".join(f or '' for f in (self.mkt_type, self.mkt_asset, self.mkt_class,
-                                          '_'.join(self.mkt_point or ()), self.mkt_quoting_style))
+    def __repr__(self):
+        ret = "_".join(f or '' for f in (self.mkt_type, self.mkt_asset, self.mkt_class))
+
+        if self.mkt_point:
+            ret += '_' + ';'.join(self.mkt_point)
+
+        if self.mkt_quoting_style:
+            ret += f'.{self.mkt_quoting_style}'
+
+        return ret
+
+    @classmethod
+    def from_string(cls, value: str):
+        from gs_quant.api.gs.data import GsDataApi
+        return GsDataApi._coordinate_from_str(value)
+
+
+class MarketDataCoordinateValue(__MarketDataCoordinateValue):
+
+    def __repr__(self):
+        return f'{self.coordinate} --> {self.value}'
 
 
 MarketDataMap = Mapping[MarketDataCoordinate, float]
@@ -123,16 +143,33 @@ class LiveMarket(_LiveMarket, Market):
         return market_location(super().location)
 
 
-class OverlayMarket(__OverlayMarket, Market):
+class OverlayMarket(_OverlayMarket, Market):
     """Market Object which overlays a base Market object (eg: CloseMarket, LiveMarket or
     TimestampedMarket) with a MarketDataMap (a map of market coordinate to float)
     """
 
-    def __init__(self, base_market: Market, market_data: MarketDataMap):
-        super().__init__(base_market=base_market, market_data=market_data.items())
+    def __init__(self, market_data: MarketDataMap, base_market: Optional[Market] = None):
+        super().__init__(base_market=base_market or CloseMarket(), market_data=())
+        self.__market_data = market_data
+
+    def __getitem__(self, item):
+        return self.__market_data[item]
+
+    def __setitem__(self, key, value):
+        self.__market_data[key] = value
+        self._property_changed('market_data')
 
     def __repr__(self):
-        return f'Overlayed ({id(self)}): {repr(self.base_market)}'
+        return f'Overlay ({id(self)}): {repr(self.base_market)}'
+
+    @_OverlayMarket.market_data.getter
+    def market_data(self) -> Tuple[MarketDataCoordinateValue, ...]:
+        return tuple(MarketDataCoordinateValue(coordinate=c, value=v) for c, v in self.__market_data.items())
+
+    @property
+    @do_not_serialise
+    def coordinates(self) -> Tuple[MarketDataCoordinate, ...]:
+        return tuple(self.__market_data.keys())
 
 
 class RelativeMarket(__RelativeMarket, Market):

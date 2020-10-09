@@ -29,7 +29,7 @@ class GsIndexApi:
 
     def create(
             self,
-            inputs: IndicesCreateInputs,
+            inputs: Union[CustomBasketsCreateInputs, IndicesDynamicConstructInputs]
     ) -> CustomBasketsResponse:
         """
         Create a custom basket of equity stocks or ETFs
@@ -68,7 +68,7 @@ class GsIndexApi:
 
     def cancel_rebalance(
             self,
-            inputs: ApprovalAction,
+            inputs: Union[CustomBasketsRebalanceAction, ISelectActionRequest],
     ):
         """
         Cancel current pending rebalance of an index

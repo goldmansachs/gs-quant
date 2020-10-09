@@ -83,6 +83,7 @@ class AddTradeAction(Action):
         # TODO: make trade_duration capable of being a tenor or a date as well as a trade attribute
         super().__init__(name)
         self._priceables = make_list(priceables)
+        self._dated_priceables = {}  # a trigger may inject the portfolio at a trigger date
         self._trade_duration = trade_duration
         for i, p in enumerate(self._priceables):
             if p.name is None:
@@ -99,15 +100,17 @@ class AddTradeAction(Action):
         return self._trade_duration
 
     def apply_action(self, state: Union[datetime.date, Iterable[datetime.date]], backtest: BackTest):
-        with HistoricalPricingContext(dates=make_list(state)):
-            backtest.calc_calls += 1
-            backtest.calculations += len(make_list(state)) * len(self._priceables)
-            f = Portfolio(self._priceables).resolve(in_place=False)
+        with PricingContext(is_batch=True):
+            f = {}
+            for s in state:
+                active_portfolio = self._dated_priceables.get(s) or self._priceables
+                with PricingContext(pricing_date=s):
+                    f[s] = Portfolio(active_portfolio).resolve(in_place=False)
 
         for s in backtest.states:
             pos = []
-            for create_date, portfolio in f.result().items():
-                pos += [inst for inst in portfolio.instruments
+            for create_date, portfolio in f.items():
+                pos += [inst for inst in portfolio.result().instruments
                         if get_final_date(inst, create_date, self.trade_duration) >= s >= create_date]
             backtest.portfolio_dict[s].append(pos)
 

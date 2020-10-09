@@ -30,11 +30,12 @@ import requests.cookies
 import ssl
 from typing import List, Optional, Tuple, Union
 import websockets
-
 from gs_quant.base import Base
 from gs_quant.context_base import ContextBase
 from gs_quant.errors import MqError, MqRequestError, MqAuthenticationError, MqUninitialisedError
 from gs_quant.json_encoder import JSONEncoder, default
+from gs_quant import version as APP_VERSION
+
 
 API_VERSION = 'v1'
 DEFAULT_APPLICATION = 'gs-quant'
@@ -74,7 +75,7 @@ class GsSession(ContextBase):
             )
 
     def __init__(self, domain: str, api_version: str = API_VERSION, application: str = DEFAULT_APPLICATION, verify=True,
-                 http_adapter: requests.adapters.HTTPAdapter = None):
+                 http_adapter: requests.adapters.HTTPAdapter = None, application_version=APP_VERSION):
         super().__init__()
         self._session = None
         self.domain = domain
@@ -82,6 +83,7 @@ class GsSession(ContextBase):
         self.application = application
         self.verify = verify
         self.http_adapter = requests.adapters.HTTPAdapter(pool_maxsize=100) if http_adapter is None else http_adapter
+        self.application_version = application_version
 
     @backoff.on_exception(lambda: backoff.expo(factor=2),
                           (requests.exceptions.HTTPError, requests.exceptions.Timeout),
@@ -174,7 +176,7 @@ class GsSession(ContextBase):
                 headers.update(request_headers)
 
             if 'Content-Type' not in headers:
-                headers.update({'Content-Type': 'application/json'})
+                headers.update({'Content-Type': 'application/json; charset=utf-8'})
 
             use_msgpack = headers.get('Content-Type') == 'application/x-msgpack'
             kwargs['headers'] = headers
@@ -194,26 +196,27 @@ class GsSession(ContextBase):
             return self.__request(method, path, payload=payload, cls=cls, try_auth=False)
         elif not 199 < response.status_code < 300:
             raise MqRequestError(response.status_code, response.text, context='{} {}'.format(method, url))
-        elif 'application/x-msgpack' in response.headers['content-type']:
-            res = msgpack.unpackb(response.content, raw=False)
+        elif 'Content-Type' in response.headers:
+            if 'application/x-msgpack' in response.headers['Content-Type']:
+                res = msgpack.unpackb(response.content, raw=False)
 
-            if cls:
-                if isinstance(res, dict) and 'results' in res:
-                    res['results'] = self.__unpack(res['results'], cls)
-                else:
-                    res = self.__unpack(res, cls)
+                if cls:
+                    if isinstance(res, dict) and 'results' in res:
+                        res['results'] = self.__unpack(res['results'], cls)
+                    else:
+                        res = self.__unpack(res, cls)
 
-            return res
-        elif 'application/json' in response.headers['content-type']:
-            res = json.loads(response.text)
+                return res
+            elif 'application/json' in response.headers['Content-Type']:
+                res = json.loads(response.text)
 
-            if cls:
-                if isinstance(res, dict) and 'results' in res:
-                    res['results'] = self.__unpack(res['results'], cls)
-                else:
-                    res = self.__unpack(res, cls)
+                if cls:
+                    if isinstance(res, dict) and 'results' in res:
+                        res['results'] = self.__unpack(res['results'], cls)
+                    else:
+                        res = self.__unpack(res, cls)
 
-            return res
+                return res
         else:
             return {'raw': response}
 
@@ -298,7 +301,8 @@ class GsSession(ContextBase):
             is_gssso: bool = False,
             api_version: str = API_VERSION,
             application: str = DEFAULT_APPLICATION,
-            http_adapter: requests.adapters.HTTPAdapter = None
+            http_adapter: requests.adapters.HTTPAdapter = None,
+            application_version: str = APP_VERSION,
     ) -> 'GsSession':
         """ Return an instance of the appropriate session type for the given credentials"""
 
@@ -325,7 +329,8 @@ class GsSession(ContextBase):
                                           application=application, http_adapter=http_adapter)
         else:
             try:
-                return KerberosSession(environment_or_domain, api_version=api_version, http_adapter=http_adapter)
+                return KerberosSession(environment_or_domain, api_version=api_version, http_adapter=http_adapter,
+                                       application_version=application_version)
             except NameError:
                 raise MqUninitialisedError('Must specify client_id and client_secret')
 
@@ -396,10 +401,11 @@ try:
     class KerberosSession(KerberosSessionMixin, GsSession):
 
         def __init__(self, environment_or_domain: str, api_version: str = API_VERSION,
-                     application: str = DEFAULT_APPLICATION, http_adapter: requests.adapters.HTTPAdapter = None):
+                     application: str = DEFAULT_APPLICATION, http_adapter: requests.adapters.HTTPAdapter = None,
+                     application_version: str = APP_VERSION):
             domain, verify = self.domain_and_verify(environment_or_domain)
             GsSession.__init__(self, domain, api_version=api_version, application=application, verify=verify,
-                               http_adapter=http_adapter)
+                               http_adapter=http_adapter, application_version=application_version)
 
     class PassThroughGSSSOSession(KerberosSessionMixin, GsSession):
 

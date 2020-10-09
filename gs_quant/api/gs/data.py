@@ -91,8 +91,8 @@ class QueryType(Enum):
     ES_DISCLOSURE_PERCENTAGE = "ES Disclosure Percentage"
     RATING = "Rating"
     CONVICTION_LIST = "Conviction List"
-    GSDEER = "Gsdeer"
-    GSFEER = "Gsfeer"
+    GIR_GSDEER_GSFEER = "Gir Gsdeer Gsfeer"
+    GIR_FX_FORECAST = "Gir Fx Forecast"
     GROWTH_SCORE = "Growth Score"
     FINANCIAL_RETURNS_SCORE = "Financial Returns Score"
     MULTIPLE_SCORE = "Multiple Score"
@@ -652,10 +652,12 @@ class GsDataApi(DataApi):
         """
         if len(data):
             dataset_types = cls.get_types(dataset_id)
-            df = pd.DataFrame(data)
+
+            df = pd.DataFrame(data, columns=dataset_types)
 
             for field_name, type_name in dataset_types.items():
-                if df.get(field_name) is not None and type_name in ('date', 'date-time'):
+                if df.get(field_name) is not None and type_name in ('date', 'date-time') and \
+                        len(df.get(field_name).value_counts()) > 0:
                     df = df.astype({field_name: numpy.datetime64})
 
             field_names = dataset_types.keys()

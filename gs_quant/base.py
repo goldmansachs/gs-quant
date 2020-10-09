@@ -150,6 +150,8 @@ class Base(metaclass=ABCMeta):
                 value = super().__getattribute__(prop)
                 if isinstance(value, dict):
                     value = tuple(value.items())
+                elif isinstance(value, list):
+                    value = tuple(value)
                 calced_hash ^= hash(value)
 
             self.__calced_hash = calced_hash

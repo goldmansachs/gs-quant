@@ -63,6 +63,7 @@ setuptools.setup(
         "inflection",
         "lmfit",
         "msgpack",
+        "more_itertools",
         "nest-asyncio",
         "pandas<1.1",
         "python-dateutil>=2.7.0",

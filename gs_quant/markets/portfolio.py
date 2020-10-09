@@ -16,21 +16,21 @@ under the License.
 import copy
 import datetime as dt
 import logging
-from itertools import chain
 from typing import Iterable, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
-
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.context_base import nullcontext
 from gs_quant.instrument import Instrument
-from gs_quant.markets import HistoricalPricingContext, PricingContext
+from gs_quant.markets import HistoricalPricingContext, OverlayMarket, PricingContext
 from gs_quant.priceable import PriceableImpl
 from gs_quant.risk import RiskMeasure
 from gs_quant.risk.results import CompositeResultFuture, PortfolioRiskResult, PortfolioPath, PricingFuture
 from gs_quant.target.portfolios import Position, PositionSet
+from more_itertools import unique_everseen
+from itertools import chain
 
 _logger = logging.getLogger(__name__)
 
@@ -125,6 +125,10 @@ class Portfolio(PriceableImpl):
     def name(self) -> str:
         return self.__name
 
+    @name.setter
+    def name(self, name):
+        self.__name = name
+
     @property
     def priceables(self) -> Tuple[PriceableImpl, ...]:
         return self.__priceables
@@ -148,11 +152,12 @@ class Portfolio(PriceableImpl):
 
     @property
     def instruments(self) -> Tuple[Instrument, ...]:
-        return tuple(set(i for i in self.__priceables if isinstance(i, Instrument)))
+        return tuple(unique_everseen(i for i in self.__priceables if isinstance(i, Instrument)))
 
     @property
     def all_instruments(self) -> Tuple[Instrument, ...]:
-        return tuple(set(chain(self.instruments, chain.from_iterable(p.instruments for p in self.all_portfolios))))
+        instr = chain(self.instruments, chain.from_iterable(p.all_instruments for p in self.all_portfolios))
+        return tuple(unique_everseen(instr))
 
     @property
     def portfolios(self) -> Tuple[PriceableImpl, ...]:
@@ -161,7 +166,7 @@ class Portfolio(PriceableImpl):
     @property
     def all_portfolios(self) -> Tuple[PriceableImpl, ...]:
         stack = list(self.portfolios)
-        portfolios = set(stack)
+        portfolios = list(unique_everseen(stack))
 
         while stack:
             portfolio = stack.pop()
@@ -169,10 +174,10 @@ class Portfolio(PriceableImpl):
                 continue
 
             sub_portfolios = portfolio.portfolios
-            portfolios.update(sub_portfolios)
+            portfolios.extend(sub_portfolios)
             stack.extend(sub_portfolios)
 
-        return tuple(portfolios)
+        return tuple(unique_everseen(portfolios))
 
     def subset(self, paths: Iterable[PortfolioPath], name=None):
         return Portfolio(tuple(self[p] for p in paths), name=name)
@@ -210,7 +215,7 @@ class Portfolio(PriceableImpl):
     @staticmethod
     def from_portfolio_id(portfolio_id: str, date=None):
         portfolio = GsPortfolioApi.get_portfolio(portfolio_id)
-        response = GsPortfolioApi.get_positions_for_date(portfolio_id, date) if date else\
+        response = GsPortfolioApi.get_positions_for_date(portfolio_id, date) if date else \
             GsPortfolioApi.get_latest_positions(portfolio_id)
         response = response[0] if isinstance(response, tuple) else response
         positions = response.positions if isinstance(response, PositionSet) else response['positions']
@@ -254,9 +259,9 @@ class Portfolio(PriceableImpl):
 
     @classmethod
     def from_frame(cls, data: pd.DataFrame, mappings: dict = None):
-        def get_value(row: pd.Series, attribute: str):
+        def get_value(this_row: pd.Series, attribute: str):
             value = mappings.get(attribute, attribute)
-            return value(row) if callable(value) else row.get(value)
+            return value(this_row) if callable(value) else this_row.get(value)
 
         instruments = []
         mappings = mappings or {}
@@ -371,14 +376,14 @@ class Portfolio(PriceableImpl):
     def resolve(self, in_place: bool = True) -> Optional[Union[PricingFuture, PriceableImpl, dict]]:
         pricing_context = self.__pricing_context
         with pricing_context:
-            futures = [i.resolve(in_place) for i in self.__priceables]
+            futures = [p.resolve(in_place) for p in self.__priceables]
 
         if not in_place:
             ret = {} if isinstance(PricingContext.current, HistoricalPricingContext) else Portfolio(name=self.name)
-            result_future = PricingFuture() if not isinstance(pricing_context, PricingContext) \
-                or pricing_context.is_async or pricing_context.is_entered else None
+            result_future = PricingFuture() if not isinstance(
+                pricing_context, PricingContext) or pricing_context.is_async or pricing_context.is_entered else None
 
-            def cb(future):
+            def cb(future: CompositeResultFuture):
                 if isinstance(ret, Portfolio):
                     ret.priceables = [f.result() for f in future.futures]
                 else:
@@ -398,6 +403,58 @@ class Portfolio(PriceableImpl):
 
             CompositeResultFuture(futures).add_done_callback(cb)
             return result_future or ret
+
+    def market(self) -> Union[OverlayMarket, PricingFuture, dict]:
+        """
+        Market Data map of coordinates and values. Note that this is not yet supported on all instruments
+
+        ***Examples**
+
+        >>> from gs_quant.markets.portfolio import Portfolio
+        >>>
+        >>> portfolio = Portfolio(...)
+        >>> market = portfolio.market()
+
+        """
+        pricing_context = self.__pricing_context
+        with pricing_context:
+            futures = [i.market() for i in self.all_instruments]
+
+        result_future = PricingFuture()
+        return_future = not isinstance(pricing_context,
+                                       PricingContext) or pricing_context.is_async or pricing_context.is_entered
+
+        def cb(future: CompositeResultFuture):
+            def update_market_data(all_market_data, this_market_data):
+                for item in this_market_data:
+                    existing_value = all_market_data.setdefault(item.coordinate, item.value)
+                    if abs(existing_value - item.value) > 1e-6:
+                        raise ValueError(
+                            f'Conflicting values for {item.coordinate}: {existing_value} vs {item.value}')
+
+            results = [f.result() for f in future.futures]
+            is_historical = isinstance(results[0], dict)
+            market_data = None if is_historical else {}
+            overlay_markets = {} if is_historical else None
+
+            for result in results:
+                if market_data is not None:
+                    update_market_data(market_data, result.market_data)
+                else:
+                    for market in result.values():
+                        update_market_data(overlay_markets.setdefault(market.base_market, {}), market.market_data)
+
+            if market_data:
+                ret = OverlayMarket(base_market=results[0].base_market, market_data=market_data)
+            else:
+                ret = {base_market.date: OverlayMarket(base_market=base_market, market_data=market_data)
+                       for base_market, market_data in overlay_markets.items()}
+
+            if result_future:
+                result_future.set_result(ret)
+
+        CompositeResultFuture(futures).add_done_callback(cb)
+        return result_future if return_future else result_future.result()
 
     def calc(self, risk_measure: Union[RiskMeasure, Iterable[RiskMeasure]], fn=None) -> PortfolioRiskResult:
         with self.__pricing_context:

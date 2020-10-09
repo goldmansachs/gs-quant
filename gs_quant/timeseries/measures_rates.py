@@ -208,6 +208,8 @@ def _currency_to_tdapi_swap_rate_asset(asset_spec: ASSET_SPEC) -> str:
 def _currency_to_tdapi_swaption_rate_asset(asset_spec: ASSET_SPEC) -> str:
     asset = _asset_from_spec(asset_spec)
     bbid = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
+    if bbid is None:
+        return asset.get_marquee_id()
     try:
         result = swaptions_defaults_provider.get_swaption_parameter(bbid, "assetIdForAvailabilityCheck")
     except TypeError:
@@ -608,7 +610,7 @@ def midcurve_annuity(asset: Asset, expiration_tenor: str, forward_tenor: str, te
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
               [MeasureDependency(id_provider=_currency_to_tdapi_swaption_rate_asset,
                                  query_type=QueryType.ATM_FWD_RATE)])
-def swaption_atm_fw_rate2(asset: Asset, expiration_tenor: str = None, termination_tenor: str = None,
+def swaption_atm_fwd_rate(asset: Asset, expiration_tenor: str = None, termination_tenor: str = None,
                           benchmark_type: str = None,
                           floating_rate_tenor: str = None,
                           clearing_house: str = None, *, source: str = None,
@@ -638,11 +640,11 @@ def swaption_atm_fw_rate2(asset: Asset, expiration_tenor: str = None, terminatio
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
               [MeasureDependency(id_provider=_currency_to_tdapi_swaption_rate_asset,
                                  query_type=QueryType.SWAPTION_VOL)])
-def swaption_vol2(asset: Asset, expiration_tenor: str = None, termination_tenor: str = None,
-                  relative_strike: float = None, benchmark_type: str = None,
-                  floating_rate_tenor: str = None,
-                  clearing_house: str = None, *, source: str = None,
-                  real_time: bool = False) -> Series:
+def swaption_vol(asset: Asset, expiration_tenor: str = None, termination_tenor: str = None,
+                 relative_strike: float = None, benchmark_type: str = None,
+                 floating_rate_tenor: str = None,
+                 clearing_house: str = None, *, source: str = None,
+                 real_time: bool = False) -> Series:
     """
     GS end-of-day implied normal volatility for swaption vol matrices.
 
@@ -667,11 +669,11 @@ def swaption_vol2(asset: Asset, expiration_tenor: str = None, termination_tenor:
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
               [MeasureDependency(id_provider=_currency_to_tdapi_swaption_rate_asset,
                                  query_type=QueryType.MIDCURVE_VOL)])
-def midcurve_vol2(asset: Asset, expiration_tenor: str, forward_tenor: str, termination_tenor: str,
-                  relative_strike: float = None, benchmark_type: str = None,
-                  floating_rate_tenor: str = None,
-                  clearing_house: str = None, *, source: str = None,
-                  real_time: bool = False) -> Series:
+def midcurve_vol(asset: Asset, expiration_tenor: str, forward_tenor: str, termination_tenor: str,
+                 relative_strike: float = None, benchmark_type: str = None,
+                 floating_rate_tenor: str = None,
+                 clearing_house: str = None, *, source: str = None,
+                 real_time: bool = False) -> Series:
     """
     GS end-of-day implied normal volatility for swaption vol matrices.
 
@@ -697,7 +699,7 @@ def midcurve_vol2(asset: Asset, expiration_tenor: str, forward_tenor: str, termi
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
               [MeasureDependency(id_provider=_currency_to_tdapi_swaption_rate_asset,
                                  query_type=QueryType.MIDCURVE_ATM_FWD_RATE)])
-def midcurve_atm_fw_rate2(asset: Asset, expiration_tenor: str, forward_tenor: str, termination_tenor: str,
+def midcurve_atm_fwd_rate(asset: Asset, expiration_tenor: str, forward_tenor: str, termination_tenor: str,
                           benchmark_type: str = None,
                           floating_rate_tenor: str = None,
                           clearing_house: str = None, *, source: str = None,
@@ -838,11 +840,11 @@ def _is_valid_relative_date_tenor(tenor):
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
               [MeasureDependency(id_provider=_currency_to_tdapi_swaption_rate_asset,
                                  query_type=QueryType.SWAPTION_VOL)])
-def swaption_vol_smile2(asset: Asset, expiration_tenor: str, termination_tenor: str,
-                        pricing_date: Optional[GENERIC_DATE] = None, benchmark_type: str = None,
-                        floating_rate_tenor: str = None,
-                        clearing_house: str = None, *, source: str = None,
-                        real_time: bool = False) -> Series:
+def swaption_vol_smile(asset: Asset, expiration_tenor: str, termination_tenor: str,
+                       pricing_date: Optional[GENERIC_DATE] = None, benchmark_type: str = None,
+                       floating_rate_tenor: str = None,
+                       clearing_house: str = None, *, source: str = None,
+                       real_time: bool = False) -> Series:
     """
     GS end-of-day implied normal volatility for swaption vol matrices.
 
@@ -891,11 +893,11 @@ def swaption_vol_smile2(asset: Asset, expiration_tenor: str, termination_tenor: 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
               [MeasureDependency(id_provider=_currency_to_tdapi_swaption_rate_asset,
                                  query_type=QueryType.SWAPTION_VOL)])
-def swaption_vol_term2(asset: Asset, tenor_type: SwaptionTenorType, tenor: str, relative_strike: float,
-                       pricing_date: Optional[GENERIC_DATE] = None, benchmark_type: str = None,
-                       floating_rate_tenor: str = None,
-                       clearing_house: str = None, *, source: str = None,
-                       real_time: bool = False) -> Series:
+def swaption_vol_term(asset: Asset, tenor_type: SwaptionTenorType, tenor: str, relative_strike: float,
+                      pricing_date: Optional[GENERIC_DATE] = None, benchmark_type: str = None,
+                      floating_rate_tenor: str = None,
+                      clearing_house: str = None, *, source: str = None,
+                      real_time: bool = False) -> Series:
     """
     Term structure of GS end-of-day implied normal volatility for swaption vol matrices.
 

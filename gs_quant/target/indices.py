@@ -45,6 +45,7 @@ class IndicesCurrency(EnumBase, Enum):
     NOK = 'NOK'
     NZD = 'NZD'
     PHP = 'PHP'
+    PLN = 'PLN'
     RUB = 'RUB'
     SEK = 'SEK'
     SGD = 'SGD'
@@ -58,9 +59,9 @@ class IndicesCurrency(EnumBase, Enum):
         return self.value
 
 
-class ApprovalAction(Base):
+class CustomBasketsRebalanceAction(Base):
         
-    """Comments for the approval action"""
+    """Comments for the rebalance action"""
 
     @camel_case_translate
     def __init__(
@@ -74,6 +75,7 @@ class ApprovalAction(Base):
 
     @property
     def comment(self) -> str:
+        """Free text to mention the reason for cancelling rebalance"""
         return self.__comment
 
     @comment.setter
@@ -84,44 +86,33 @@ class ApprovalAction(Base):
 
 class CustomBasketsResponse(Base):
         
-    """Rebalance custom basket response"""
+    """Response object for basket creation/edit/rebalance indicating the status of the
+       request"""
 
     @camel_case_translate
     def __init__(
         self,
         status: str = None,
-        approval_id: str = None,
         report_id: str = None,
         asset_id: str = None,
         name: str = None
     ):        
         super().__init__()
         self.status = status
-        self.approval_id = approval_id
         self.report_id = report_id
         self.asset_id = asset_id
         self.name = name
 
     @property
     def status(self) -> str:
-        """Indices rebalance process status. Status is done if basket assets rebalance,
-           report creation and scheduling are all successfully executed."""
+        """Basket action request status. Status is done if basket is successfully
+           created/updated and report is triggered for downstream updates"""
         return self.__status
 
     @status.setter
     def status(self, value: str):
         self._property_changed('status')
         self.__status = value        
-
-    @property
-    def approval_id(self) -> str:
-        """Marquee unique identifier of approval created"""
-        return self.__approval_id
-
-    @approval_id.setter
-    def approval_id(self, value: str):
-        self._property_changed('approval_id')
-        self.__approval_id = value        
 
     @property
     def report_id(self) -> str:
@@ -462,6 +453,8 @@ class ISelectSeries(Base):
 
 class PositionPriceInput(Base):
         
+    """Information relating to each constituent"""
+
     @camel_case_translate
     def __init__(
         self,
@@ -480,7 +473,7 @@ class PositionPriceInput(Base):
 
     @property
     def asset_id(self) -> str:
-        """Marquee unique identifier"""
+        """Marquee unique identifier for the asset"""
         return self.__asset_id
 
     @asset_id.setter
@@ -521,8 +514,9 @@ class PositionPriceInput(Base):
 
 class PublishParameters(Base):
         
-    """Publishing parameters to determine where and how to publish indices, default all
-       to false"""
+    """Publishing parameters to determine where and how to publish baskets, default all
+       to false. If not provided when rebalance/edit, selections during create
+       will be continued."""
 
     @camel_case_translate
     def __init__(
@@ -542,7 +536,8 @@ class PublishParameters(Base):
 
     @property
     def include_price_history(self) -> bool:
-        """Include full price history, default to false"""
+        """Include full price history when publishing to Bloomberg, default to false. Can
+           only be set to true when publishing to Bloomberg"""
         return self.__include_price_history
 
     @include_price_history.setter
@@ -592,7 +587,11 @@ class CustomBasketsEditInputs(Base):
         description: str = None,
         styles: Tuple[str, ...] = None,
         related_content: GIRDomain = None,
-        publish_parameters: PublishParameters = None
+        publish_parameters: PublishParameters = None,
+        index_notes: str = None,
+        index_not_trading_reasons: Union[IndexNotTradingReasons, str] = None,
+        flagship: bool = None,
+        clone_parent_id: str = None
     ):        
         super().__init__()
         self.name = name
@@ -600,6 +599,10 @@ class CustomBasketsEditInputs(Base):
         self.styles = styles
         self.related_content = related_content
         self.publish_parameters = publish_parameters
+        self.index_notes = index_notes
+        self.index_not_trading_reasons = index_not_trading_reasons
+        self.flagship = flagship
+        self.clone_parent_id = clone_parent_id
 
     @property
     def name(self) -> str:
@@ -613,8 +616,8 @@ class CustomBasketsEditInputs(Base):
 
     @property
     def description(self) -> str:
-        """Free text description of asset. Description provided will be indexed in the
-           search service for free text relevance match"""
+        """Free text description of basket, default to empty. Description provided will be
+           indexed in the search service for free text relevance match."""
         return self.__description
 
     @description.setter
@@ -624,7 +627,7 @@ class CustomBasketsEditInputs(Base):
 
     @property
     def styles(self) -> Tuple[str, ...]:
-        """Styles or themes associated with the asset (max 50)"""
+        """Styles or themes associated with the basket (max 50), default to Bespoke"""
         return self.__styles
 
     @styles.setter
@@ -634,6 +637,7 @@ class CustomBasketsEditInputs(Base):
 
     @property
     def related_content(self) -> GIRDomain:
+        """Links to content related to this basket or any of its constituents (optional)"""
         return self.__related_content
 
     @related_content.setter
@@ -643,14 +647,323 @@ class CustomBasketsEditInputs(Base):
 
     @property
     def publish_parameters(self) -> PublishParameters:
-        """Publishing parameters to determine where and how to publish indices, default all
-           to false"""
+        """Publishing parameters to determine where and how to publish baskets, default all
+           to false. If not provided when rebalance/edit, selections during
+           create will be continued."""
         return self.__publish_parameters
 
     @publish_parameters.setter
     def publish_parameters(self, value: PublishParameters):
         self._property_changed('publish_parameters')
         self.__publish_parameters = value        
+
+    @property
+    def index_notes(self) -> str:
+        """Notes for the index"""
+        return self.__index_notes
+
+    @index_notes.setter
+    def index_notes(self, value: str):
+        self._property_changed('index_notes')
+        self.__index_notes = value        
+
+    @property
+    def index_not_trading_reasons(self) -> Union[IndexNotTradingReasons, str]:
+        """Reasons the index was not traded"""
+        return self.__index_not_trading_reasons
+
+    @index_not_trading_reasons.setter
+    def index_not_trading_reasons(self, value: Union[IndexNotTradingReasons, str]):
+        self._property_changed('index_not_trading_reasons')
+        self.__index_not_trading_reasons = get_enum_value(IndexNotTradingReasons, value)        
+
+    @property
+    def flagship(self) -> bool:
+        """Is a flagship basket."""
+        return self.__flagship
+
+    @flagship.setter
+    def flagship(self, value: bool):
+        self._property_changed('flagship')
+        self.__flagship = value        
+
+    @property
+    def clone_parent_id(self) -> str:
+        """Marquee Id of the source basket, in case current basket composition is sourced
+           from another marquee basket"""
+        return self.__clone_parent_id
+
+    @clone_parent_id.setter
+    def clone_parent_id(self, value: str):
+        self._property_changed('clone_parent_id')
+        self.__clone_parent_id = value        
+
+
+class CustomBasketsPricingParameters(Base):
+        
+    """Parameters for pricing baskets"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        currency: Union[IndicesCurrency, str] = None,
+        divisor: float = None,
+        initial_price: float = None,
+        target_notional: float = None,
+        weighting_strategy: str = None,
+        reweight: bool = False,
+        name: str = None
+    ):        
+        super().__init__()
+        self.currency = currency
+        self.divisor = divisor
+        self.initial_price = initial_price
+        self.target_notional = target_notional
+        self.weighting_strategy = weighting_strategy
+        self.reweight = reweight
+        self.name = name
+
+    @property
+    def currency(self) -> Union[IndicesCurrency, str]:
+        """Currencies supported for basket creation. During rebalance, cannot change basket
+           currency hence the input value will be discarded."""
+        return self.__currency
+
+    @currency.setter
+    def currency(self, value: Union[IndicesCurrency, str]):
+        self._property_changed('currency')
+        self.__currency = get_enum_value(IndicesCurrency, value)        
+
+    @property
+    def divisor(self) -> float:
+        """Divisor to be applied to the overall position set"""
+        return self.__divisor
+
+    @divisor.setter
+    def divisor(self, value: float):
+        self._property_changed('divisor')
+        self.__divisor = value        
+
+    @property
+    def initial_price(self) -> float:
+        """Initial overall price for the position set"""
+        return self.__initial_price
+
+    @initial_price.setter
+    def initial_price(self, value: float):
+        self._property_changed('initial_price')
+        self.__initial_price = value        
+
+    @property
+    def target_notional(self) -> float:
+        """Target notional for the position set"""
+        return self.__target_notional
+
+    @target_notional.setter
+    def target_notional(self, value: float):
+        self._property_changed('target_notional')
+        self.__target_notional = value        
+
+    @property
+    def weighting_strategy(self) -> str:
+        """Strategy used to price the position set. If not supplied, it is inferred from
+           the quantities or weights in the positions."""
+        return self.__weighting_strategy
+
+    @weighting_strategy.setter
+    def weighting_strategy(self, value: str):
+        self._property_changed('weighting_strategy')
+        self.__weighting_strategy = value        
+
+    @property
+    def reweight(self) -> bool:
+        """To reweight positions if input weights don't add up to 1, default to false"""
+        return self.__reweight
+
+    @reweight.setter
+    def reweight(self, value: bool):
+        self._property_changed('reweight')
+        self.__reweight = value        
+
+
+class DynamicConstructionResponse(Base):
+        
+    @camel_case_translate
+    def __init__(
+        self,
+        action=None,
+        columns: Tuple[ISelectConstituentColumn, ...] = None,
+        constituent_validations: tuple = None,
+        date_validation_status: str = None,
+        types: tuple = None,
+        date_validations: tuple = None,
+        new_parameters: Tuple[ISelectNewParameter, ...] = None,
+        index_type: str = None,
+        index_parameter_definitions: tuple = None,
+        index_metadata: tuple = None,
+        index_parameters: tuple = None,
+        index_parameter_validation: tuple = None,
+        status=None,
+        valid: int = None,
+        validation_messages: Tuple[str, ...] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.action = action
+        self.columns = columns
+        self.constituent_validations = constituent_validations
+        self.date_validation_status = date_validation_status
+        self.types = types
+        self.date_validations = date_validations
+        self.new_parameters = new_parameters
+        self.index_type = index_type
+        self.index_parameter_definitions = index_parameter_definitions
+        self.index_metadata = index_metadata
+        self.index_parameters = index_parameters
+        self.index_parameter_validation = index_parameter_validation
+        self.status = status
+        self.valid = valid
+        self.validation_messages = validation_messages
+        self.name = name
+
+    @property
+    def action(self):
+        """Action type"""
+        return self.__action
+
+    @action.setter
+    def action(self, value):
+        self._property_changed('action')
+        self.__action = value        
+
+    @property
+    def columns(self) -> Tuple[ISelectConstituentColumn, ...]:
+        """NewParameters Columns Definition"""
+        return self.__columns
+
+    @columns.setter
+    def columns(self, value: Tuple[ISelectConstituentColumn, ...]):
+        self._property_changed('columns')
+        self.__columns = value        
+
+    @property
+    def constituent_validations(self) -> tuple:
+        return self.__constituent_validations
+
+    @constituent_validations.setter
+    def constituent_validations(self, value: tuple):
+        self._property_changed('constituent_validations')
+        self.__constituent_validations = value        
+
+    @property
+    def date_validation_status(self) -> str:
+        return self.__date_validation_status
+
+    @date_validation_status.setter
+    def date_validation_status(self, value: str):
+        self._property_changed('date_validation_status')
+        self.__date_validation_status = value        
+
+    @property
+    def types(self) -> tuple:
+        return self.__types
+
+    @types.setter
+    def types(self, value: tuple):
+        self._property_changed('types')
+        self.__types = value        
+
+    @property
+    def date_validations(self) -> tuple:
+        return self.__date_validations
+
+    @date_validations.setter
+    def date_validations(self, value: tuple):
+        self._property_changed('date_validations')
+        self.__date_validations = value        
+
+    @property
+    def new_parameters(self) -> Tuple[ISelectNewParameter, ...]:
+        """New parameters for the index"""
+        return self.__new_parameters
+
+    @new_parameters.setter
+    def new_parameters(self, value: Tuple[ISelectNewParameter, ...]):
+        self._property_changed('new_parameters')
+        self.__new_parameters = value        
+
+    @property
+    def index_type(self) -> str:
+        """What type of index is the user constructing?"""
+        return self.__index_type
+
+    @index_type.setter
+    def index_type(self, value: str):
+        self._property_changed('index_type')
+        self.__index_type = value        
+
+    @property
+    def index_parameter_definitions(self) -> tuple:
+        return self.__index_parameter_definitions
+
+    @index_parameter_definitions.setter
+    def index_parameter_definitions(self, value: tuple):
+        self._property_changed('index_parameter_definitions')
+        self.__index_parameter_definitions = value        
+
+    @property
+    def index_metadata(self) -> tuple:
+        return self.__index_metadata
+
+    @index_metadata.setter
+    def index_metadata(self, value: tuple):
+        self._property_changed('index_metadata')
+        self.__index_metadata = value        
+
+    @property
+    def index_parameters(self) -> tuple:
+        return self.__index_parameters
+
+    @index_parameters.setter
+    def index_parameters(self, value: tuple):
+        self._property_changed('index_parameters')
+        self.__index_parameters = value        
+
+    @property
+    def index_parameter_validation(self) -> tuple:
+        return self.__index_parameter_validation
+
+    @index_parameter_validation.setter
+    def index_parameter_validation(self, value: tuple):
+        self._property_changed('index_parameter_validation')
+        self.__index_parameter_validation = value        
+
+    @property
+    def status(self):
+        return self.__status
+
+    @status.setter
+    def status(self, value):
+        self._property_changed('status')
+        self.__status = value        
+
+    @property
+    def valid(self) -> int:
+        return self.__valid
+
+    @valid.setter
+    def valid(self, value: int):
+        self._property_changed('valid')
+        self.__valid = value        
+
+    @property
+    def validation_messages(self) -> Tuple[str, ...]:
+        return self.__validation_messages
+
+    @validation_messages.setter
+    def validation_messages(self, value: Tuple[str, ...]):
+        self._property_changed('validation_messages')
+        self.__validation_messages = value        
 
 
 class ISelectRebalance(Base):
@@ -1209,186 +1522,87 @@ class ISelectResponse(Base):
         self.__validation_messages = value        
 
 
-class IndicesPriceParameters(Base):
+class IndicesDynamicConstructInputs(Base):
         
-    """Parameters for pricing indices"""
+    """STS Indices Dynamic Construction Inputs"""
 
     @camel_case_translate
     def __init__(
         self,
-        currency: Union[IndicesCurrency, str] = None,
-        divisor: float = None,
-        initial_price: float = None,
-        target_notional: float = None,
-        weighting_strategy: str = None,
-        reweight: bool = False,
+        index_type: str,
+        new_parameters: Tuple[ISelectNewParameter, ...],
+        index_parameters: Tuple[ISelectIndexParameters, ...],
+        index_metadata: Tuple[ISelectIndexParameters, ...],
         name: str = None
     ):        
         super().__init__()
-        self.currency = currency
-        self.divisor = divisor
-        self.initial_price = initial_price
-        self.target_notional = target_notional
-        self.weighting_strategy = weighting_strategy
-        self.reweight = reweight
+        self.index_type = index_type
+        self.new_parameters = new_parameters
+        self.index_parameters = index_parameters
+        self.index_metadata = index_metadata
         self.name = name
 
     @property
-    def currency(self) -> Union[IndicesCurrency, str]:
-        """Currencies supported for Indices Create. During rebalance, cannot change basket
-           currency hence the input value will be discarded."""
-        return self.__currency
+    def index_type(self) -> str:
+        """What type of index is the user constructing?"""
+        return self.__index_type
 
-    @currency.setter
-    def currency(self, value: Union[IndicesCurrency, str]):
-        self._property_changed('currency')
-        self.__currency = get_enum_value(IndicesCurrency, value)        
-
-    @property
-    def divisor(self) -> float:
-        """Divisor to be applied to the overall position set"""
-        return self.__divisor
-
-    @divisor.setter
-    def divisor(self, value: float):
-        self._property_changed('divisor')
-        self.__divisor = value        
+    @index_type.setter
+    def index_type(self, value: str):
+        self._property_changed('index_type')
+        self.__index_type = value        
 
     @property
-    def initial_price(self) -> float:
-        """Initial overall price for the position set"""
-        return self.__initial_price
+    def new_parameters(self) -> Tuple[ISelectNewParameter, ...]:
+        """New parameters for the index"""
+        return self.__new_parameters
 
-    @initial_price.setter
-    def initial_price(self, value: float):
-        self._property_changed('initial_price')
-        self.__initial_price = value        
-
-    @property
-    def target_notional(self) -> float:
-        """Target notional for the position set"""
-        return self.__target_notional
-
-    @target_notional.setter
-    def target_notional(self, value: float):
-        self._property_changed('target_notional')
-        self.__target_notional = value        
+    @new_parameters.setter
+    def new_parameters(self, value: Tuple[ISelectNewParameter, ...]):
+        self._property_changed('new_parameters')
+        self.__new_parameters = value        
 
     @property
-    def weighting_strategy(self) -> str:
-        """Strategy used to price the position set. If not supplied, it is inferred from
-           the quantities or weights in the positions."""
-        return self.__weighting_strategy
+    def index_parameters(self) -> Tuple[ISelectIndexParameters, ...]:
+        """Index Parameters for the index"""
+        return self.__index_parameters
 
-    @weighting_strategy.setter
-    def weighting_strategy(self, value: str):
-        self._property_changed('weighting_strategy')
-        self.__weighting_strategy = value        
+    @index_parameters.setter
+    def index_parameters(self, value: Tuple[ISelectIndexParameters, ...]):
+        self._property_changed('index_parameters')
+        self.__index_parameters = value        
 
     @property
-    def reweight(self) -> bool:
-        """To reweight positions if input weights don't add up to 1, default to false"""
-        return self.__reweight
+    def index_metadata(self) -> Tuple[ISelectIndexParameters, ...]:
+        """Top level Index metadata"""
+        return self.__index_metadata
 
-    @reweight.setter
-    def reweight(self, value: bool):
-        self._property_changed('reweight')
-        self.__reweight = value        
+    @index_metadata.setter
+    def index_metadata(self, value: Tuple[ISelectIndexParameters, ...]):
+        self._property_changed('index_metadata')
+        self.__index_metadata = value        
 
 
-class CustomBasketsRebalanceInputs(Base):
+class CustomBasketsCreateInputs(Base):
         
-    """Inputs used to rebalance a custom basket"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        position_set: Tuple[PositionPriceInput, ...] = None,
-        publish_parameters: PublishParameters = None,
-        pricing_parameters: IndicesPriceParameters = None,
-        allow_limited_access_assets: bool = False,
-        allow_ca_restricted_assets: bool = False,
-        name: str = None
-    ):        
-        super().__init__()
-        self.position_set = position_set
-        self.publish_parameters = publish_parameters
-        self.pricing_parameters = pricing_parameters
-        self.allow_limited_access_assets = allow_limited_access_assets
-        self.allow_ca_restricted_assets = allow_ca_restricted_assets
-        self.name = name
-
-    @property
-    def position_set(self) -> Tuple[PositionPriceInput, ...]:
-        """Information of constituents associated with the rebalance."""
-        return self.__position_set
-
-    @position_set.setter
-    def position_set(self, value: Tuple[PositionPriceInput, ...]):
-        self._property_changed('position_set')
-        self.__position_set = value        
-
-    @property
-    def publish_parameters(self) -> PublishParameters:
-        """Publishing parameters to determine where and how to publish indices, default all
-           to false"""
-        return self.__publish_parameters
-
-    @publish_parameters.setter
-    def publish_parameters(self, value: PublishParameters):
-        self._property_changed('publish_parameters')
-        self.__publish_parameters = value        
-
-    @property
-    def pricing_parameters(self) -> IndicesPriceParameters:
-        """Parameters for pricing indices"""
-        return self.__pricing_parameters
-
-    @pricing_parameters.setter
-    def pricing_parameters(self, value: IndicesPriceParameters):
-        self._property_changed('pricing_parameters')
-        self.__pricing_parameters = value        
-
-    @property
-    def allow_limited_access_assets(self) -> bool:
-        """To allow basket rebalance with constituents GS has limited access to. Default is
-           false."""
-        return self.__allow_limited_access_assets
-
-    @allow_limited_access_assets.setter
-    def allow_limited_access_assets(self, value: bool):
-        self._property_changed('allow_limited_access_assets')
-        self.__allow_limited_access_assets = value        
-
-    @property
-    def allow_ca_restricted_assets(self) -> bool:
-        """To allow basket rebalance with constituents that will not be corporate action
-           adjusted in the future. Default is false."""
-        return self.__allow_ca_restricted_assets
-
-    @allow_ca_restricted_assets.setter
-    def allow_ca_restricted_assets(self, value: bool):
-        self._property_changed('allow_ca_restricted_assets')
-        self.__allow_ca_restricted_assets = value        
-
-
-class IndicesCreateInputs(Base):
-        
-    """Inputs used to create an index"""
+    """Inputs required to create a basket"""
 
     @camel_case_translate
     def __init__(
         self,
         ticker: str,
         name: str,
-        pricing_parameters: IndicesPriceParameters,
+        pricing_parameters: CustomBasketsPricingParameters,
         position_set: Tuple[PositionPriceInput, ...],
         return_type: str,
         description: str = None,
         styles: Tuple[str, ...] = None,
         related_content: GIRDomain = None,
-        index_create_source: Union[IndexCreateSource, str] = None,
+        hedge_id: str = None,
+        clone_parent_id: str = None,
         publish_parameters: PublishParameters = None,
+        index_notes: str = None,
+        flagship: bool = None,
         on_behalf_of: str = None,
         allow_limited_access_assets: bool = False,
         allow_ca_restricted_assets: bool = False,
@@ -1401,11 +1615,14 @@ class IndicesCreateInputs(Base):
         self.description = description
         self.styles = styles
         self.related_content = related_content
-        self.index_create_source = index_create_source
+        self.hedge_id = hedge_id
+        self.clone_parent_id = clone_parent_id
         self.return_type = return_type
         self.position_set = position_set
         self.publish_parameters = publish_parameters
         self.pricing_parameters = pricing_parameters
+        self.index_notes = index_notes
+        self.flagship = flagship
         self.on_behalf_of = on_behalf_of
         self.allow_limited_access_assets = allow_limited_access_assets
         self.allow_ca_restricted_assets = allow_ca_restricted_assets
@@ -1414,7 +1631,10 @@ class IndicesCreateInputs(Base):
 
     @property
     def ticker(self) -> str:
-        """Ticker Identifier of the new asset (Prefix with 'GS' to publish to Bloomberg)"""
+        """Ticker Identifier for the basket (Prefix with 'GS' to publish to Bloomberg).
+           Please note ticker should start with your assigned prefix. If you do
+           not have a prefix setup, reach out to your GS representative or you
+           can use the default prefix GSMB"""
         return self.__ticker
 
     @ticker.setter
@@ -1424,7 +1644,7 @@ class IndicesCreateInputs(Base):
 
     @property
     def name(self) -> str:
-        """Display name of the index"""
+        """Display name of the basket"""
         return self.__name
 
     @name.setter
@@ -1434,7 +1654,7 @@ class IndicesCreateInputs(Base):
 
     @property
     def description(self) -> str:
-        """Free text description of asset, default to empty. Description provided will be
+        """Free text description of basket, default to empty. Description provided will be
            indexed in the search service for free text relevance match."""
         return self.__description
 
@@ -1445,7 +1665,7 @@ class IndicesCreateInputs(Base):
 
     @property
     def styles(self) -> Tuple[str, ...]:
-        """Styles or themes associated with the asset (max 50), default to Bespoke"""
+        """Styles or themes associated with the basket (max 50), default to Bespoke"""
         return self.__styles
 
     @styles.setter
@@ -1455,7 +1675,7 @@ class IndicesCreateInputs(Base):
 
     @property
     def related_content(self) -> GIRDomain:
-        """Links to content related to this index or any of its constituents (optional)"""
+        """Links to content related to this basket or any of its constituents (optional)"""
         return self.__related_content
 
     @related_content.setter
@@ -1464,14 +1684,26 @@ class IndicesCreateInputs(Base):
         self.__related_content = value        
 
     @property
-    def index_create_source(self) -> Union[IndexCreateSource, str]:
-        """Source of basket create"""
-        return self.__index_create_source
+    def hedge_id(self) -> str:
+        """Marquee Id of the source hedge, in case current basket composition is sourced
+           from marquee hedge"""
+        return self.__hedge_id
 
-    @index_create_source.setter
-    def index_create_source(self, value: Union[IndexCreateSource, str]):
-        self._property_changed('index_create_source')
-        self.__index_create_source = get_enum_value(IndexCreateSource, value)        
+    @hedge_id.setter
+    def hedge_id(self, value: str):
+        self._property_changed('hedge_id')
+        self.__hedge_id = value        
+
+    @property
+    def clone_parent_id(self) -> str:
+        """Marquee Id of the source basket, in case current basket composition is sourced
+           from another marquee basket"""
+        return self.__clone_parent_id
+
+    @clone_parent_id.setter
+    def clone_parent_id(self, value: str):
+        self._property_changed('clone_parent_id')
+        self.__clone_parent_id = value        
 
     @property
     def return_type(self) -> str:
@@ -1486,8 +1718,9 @@ class IndicesCreateInputs(Base):
 
     @property
     def position_set(self) -> Tuple[PositionPriceInput, ...]:
-        """Information of constituents associated with the index. Need to supply one of
-           weight, quantity."""
+        """Information of constituents associated with the basket. Need to supply one of
+           weight or quantity. If using weight, need to provide weight for all
+           constituents and similarly for quantity"""
         return self.__position_set
 
     @position_set.setter
@@ -1497,8 +1730,9 @@ class IndicesCreateInputs(Base):
 
     @property
     def publish_parameters(self) -> PublishParameters:
-        """Publishing parameters to determine where and how to publish indices, default all
-           to false"""
+        """Publishing parameters to determine where and how to publish baskets, default all
+           to false. If not provided when rebalance/edit, selections during
+           create will be continued."""
         return self.__publish_parameters
 
     @publish_parameters.setter
@@ -1507,18 +1741,39 @@ class IndicesCreateInputs(Base):
         self.__publish_parameters = value        
 
     @property
-    def pricing_parameters(self) -> IndicesPriceParameters:
-        """Parameters for pricing indices"""
+    def pricing_parameters(self) -> CustomBasketsPricingParameters:
+        """Parameters for pricing baskets"""
         return self.__pricing_parameters
 
     @pricing_parameters.setter
-    def pricing_parameters(self, value: IndicesPriceParameters):
+    def pricing_parameters(self, value: CustomBasketsPricingParameters):
         self._property_changed('pricing_parameters')
         self.__pricing_parameters = value        
 
     @property
+    def index_notes(self) -> str:
+        """Notes for the index"""
+        return self.__index_notes
+
+    @index_notes.setter
+    def index_notes(self, value: str):
+        self._property_changed('index_notes')
+        self.__index_notes = value        
+
+    @property
+    def flagship(self) -> bool:
+        """Is a flagship basket."""
+        return self.__flagship
+
+    @flagship.setter
+    def flagship(self, value: bool):
+        self._property_changed('flagship')
+        self.__flagship = value        
+
+    @property
     def on_behalf_of(self) -> str:
-        """Marquee unique identifier"""
+        """If creating the basket on behalf of a client, please provide the client's guid
+           here."""
         return self.__on_behalf_of
 
     @on_behalf_of.setter
@@ -1550,7 +1805,8 @@ class IndicesCreateInputs(Base):
 
     @property
     def vendor(self) -> str:
-        """Basket Vendor OEID."""
+        """If the basket composition was sourced from a vendor, please provide vendor oeid
+           here"""
         return self.__vendor
 
     @vendor.setter
@@ -1560,13 +1816,92 @@ class IndicesCreateInputs(Base):
 
     @property
     def default_backcast(self) -> bool:
-        """Is basket backcasted using initial positions."""
+        """Should basket be backcasted using the current composition"""
         return self.__default_backcast
 
     @default_backcast.setter
     def default_backcast(self, value: bool):
         self._property_changed('default_backcast')
         self.__default_backcast = value        
+
+
+class CustomBasketsRebalanceInputs(Base):
+        
+    """Inputs used to rebalance a custom basket"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        position_set: Tuple[PositionPriceInput, ...] = None,
+        publish_parameters: PublishParameters = None,
+        pricing_parameters: CustomBasketsPricingParameters = None,
+        allow_limited_access_assets: bool = False,
+        allow_ca_restricted_assets: bool = False,
+        name: str = None
+    ):        
+        super().__init__()
+        self.position_set = position_set
+        self.publish_parameters = publish_parameters
+        self.pricing_parameters = pricing_parameters
+        self.allow_limited_access_assets = allow_limited_access_assets
+        self.allow_ca_restricted_assets = allow_ca_restricted_assets
+        self.name = name
+
+    @property
+    def position_set(self) -> Tuple[PositionPriceInput, ...]:
+        """Information of constituents associated with the basket. Need to supply one of
+           weight or quantity. If using weight, need to provide weight for all
+           constituents and similarly for quantity"""
+        return self.__position_set
+
+    @position_set.setter
+    def position_set(self, value: Tuple[PositionPriceInput, ...]):
+        self._property_changed('position_set')
+        self.__position_set = value        
+
+    @property
+    def publish_parameters(self) -> PublishParameters:
+        """Publishing parameters to determine where and how to publish baskets, default all
+           to false. If not provided when rebalance/edit, selections during
+           create will be continued."""
+        return self.__publish_parameters
+
+    @publish_parameters.setter
+    def publish_parameters(self, value: PublishParameters):
+        self._property_changed('publish_parameters')
+        self.__publish_parameters = value        
+
+    @property
+    def pricing_parameters(self) -> CustomBasketsPricingParameters:
+        """Parameters for pricing baskets"""
+        return self.__pricing_parameters
+
+    @pricing_parameters.setter
+    def pricing_parameters(self, value: CustomBasketsPricingParameters):
+        self._property_changed('pricing_parameters')
+        self.__pricing_parameters = value        
+
+    @property
+    def allow_limited_access_assets(self) -> bool:
+        """To allow basket rebalance with constituents GS has limited access to. Default is
+           false."""
+        return self.__allow_limited_access_assets
+
+    @allow_limited_access_assets.setter
+    def allow_limited_access_assets(self, value: bool):
+        self._property_changed('allow_limited_access_assets')
+        self.__allow_limited_access_assets = value        
+
+    @property
+    def allow_ca_restricted_assets(self) -> bool:
+        """To allow basket rebalance with constituents that will not be corporate action
+           adjusted in the future. Default is false."""
+        return self.__allow_ca_restricted_assets
+
+    @allow_ca_restricted_assets.setter
+    def allow_ca_restricted_assets(self, value: bool):
+        self._property_changed('allow_ca_restricted_assets')
+        self.__allow_ca_restricted_assets = value        
 
 
 class IndicesEditInputs(Base):
@@ -1583,7 +1918,7 @@ class IndicesEditInputs(Base):
 
     @property
     def parameters(self) -> CustomBasketsEditInputs:
-        """The inputs used to edit an index."""
+        """parameters used to edit a basket"""
         return self.__parameters
 
     @parameters.setter

@@ -101,7 +101,7 @@ class GenericEngine(object):
 
         for trigger in strategy.triggers:
             if trigger.deterministic:
-                triggered_dates = [date for date in dates if trigger.has_triggered(date)]
+                triggered_dates = [date for date in dates if trigger.has_triggered(date, backtest)]
                 for action in trigger.actions:
                     if action.deterministic:
                         action.apply_action(triggered_dates, backtest)

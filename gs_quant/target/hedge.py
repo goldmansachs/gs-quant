@@ -1632,17 +1632,18 @@ class PerformanceHedgeParameters(Base):
         notional: float,
         observation_start_date: datetime.date,
         observation_end_date: datetime.date,
-        max_leverage: float = None,
         backtest_start_date: datetime.date = None,
         backtest_end_date: datetime.date = None,
         sampling_period: str = 'Weekly',
+        max_leverage: float = None,
+        percentage_in_cash: float = None,
+        explode_universe: bool = None,
         exclude_target_assets: bool = None,
         exclude_corporate_actions: bool = None,
         exclude_corporate_actions_types: Tuple[Union[CorporateActionsTypes, str], ...] = None,
         exclude_hard_to_borrow_assets: bool = None,
         exclude_restricted_assets: bool = None,
         max_adv_percentage: float = None,
-        explode_universe: bool = None,
         max_return_deviation: float = None,
         max_weight: float = None,
         min_market_cap: float = None,
@@ -1659,20 +1660,21 @@ class PerformanceHedgeParameters(Base):
         super().__init__()
         self.hedge_target = hedge_target
         self.universe = universe
-        self.notional = notional
-        self.max_leverage = max_leverage
         self.observation_start_date = observation_start_date
         self.observation_end_date = observation_end_date
         self.backtest_start_date = backtest_start_date
         self.backtest_end_date = backtest_end_date
         self.sampling_period = sampling_period
+        self.notional = notional
+        self.max_leverage = max_leverage
+        self.percentage_in_cash = percentage_in_cash
+        self.explode_universe = explode_universe
         self.exclude_target_assets = exclude_target_assets
         self.exclude_corporate_actions = exclude_corporate_actions
         self.exclude_corporate_actions_types = exclude_corporate_actions_types
         self.exclude_hard_to_borrow_assets = exclude_hard_to_borrow_assets
         self.exclude_restricted_assets = exclude_restricted_assets
         self.max_adv_percentage = max_adv_percentage
-        self.explode_universe = explode_universe
         self.max_return_deviation = max_return_deviation
         self.max_weight = max_weight
         self.min_market_cap = min_market_cap
@@ -1707,26 +1709,6 @@ class PerformanceHedgeParameters(Base):
     def universe(self, value: Tuple[str, ...]):
         self._property_changed('universe')
         self.__universe = value        
-
-    @property
-    def notional(self) -> float:
-        """Notional value of the hedge target."""
-        return self.__notional
-
-    @notional.setter
-    def notional(self, value: float):
-        self._property_changed('notional')
-        self.__notional = value        
-
-    @property
-    def max_leverage(self) -> float:
-        """Maximum percentage of the notional that can be used to hedge."""
-        return self.__max_leverage
-
-    @max_leverage.setter
-    def max_leverage(self, value: float):
-        self._property_changed('max_leverage')
-        self.__max_leverage = value        
 
     @property
     def observation_start_date(self) -> datetime.date:
@@ -1777,6 +1759,47 @@ class PerformanceHedgeParameters(Base):
     def sampling_period(self, value: str):
         self._property_changed('sampling_period')
         self.__sampling_period = value        
+
+    @property
+    def notional(self) -> float:
+        """Notional value of the hedge target."""
+        return self.__notional
+
+    @notional.setter
+    def notional(self, value: float):
+        self._property_changed('notional')
+        self.__notional = value        
+
+    @property
+    def max_leverage(self) -> float:
+        """Maximum percentage of the notional that can be used to hedge."""
+        return self.__max_leverage
+
+    @max_leverage.setter
+    def max_leverage(self, value: float):
+        self._property_changed('max_leverage')
+        self.__max_leverage = value        
+
+    @property
+    def percentage_in_cash(self) -> float:
+        """Percentage of the hedge notional that will be in cash."""
+        return self.__percentage_in_cash
+
+    @percentage_in_cash.setter
+    def percentage_in_cash(self, value: float):
+        self._property_changed('percentage_in_cash')
+        self.__percentage_in_cash = value        
+
+    @property
+    def explode_universe(self) -> bool:
+        """Explode the assets in the universe into their underliers to be used as the hedge
+           universe."""
+        return self.__explode_universe
+
+    @explode_universe.setter
+    def explode_universe(self, value: bool):
+        self._property_changed('explode_universe')
+        self.__explode_universe = value        
 
     @property
     def exclude_target_assets(self) -> bool:
@@ -1839,17 +1862,6 @@ class PerformanceHedgeParameters(Base):
     def max_adv_percentage(self, value: float):
         self._property_changed('max_adv_percentage')
         self.__max_adv_percentage = value        
-
-    @property
-    def explode_universe(self) -> bool:
-        """Explode the assets in the universe into their underliers to be used as the hedge
-           universe."""
-        return self.__explode_universe
-
-    @explode_universe.setter
-    def explode_universe(self, value: bool):
-        self._property_changed('explode_universe')
-        self.__explode_universe = value        
 
     @property
     def max_return_deviation(self) -> float:
