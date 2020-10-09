@@ -25,6 +25,7 @@ from gs_quant.risk.results import ErrorValue, MultipleRiskMeasureFuture, Pricing
 from gs_quant.session import GsSession
 
 from abc import ABCMeta
+import datetime as dt
 import logging
 from typing import Iterable, Optional, Tuple, Union
 import inspect
@@ -106,20 +107,22 @@ class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
         rates is now the solved fixed rate
         """
 
+        is_historical = isinstance(PricingContext.current, HistoricalPricingContext)
+
         def handle_result(result: Optional[Union[ErrorValue, InstrumentBase]]) -> Optional[PriceableImpl]:
             ret = None if in_place else result
             if isinstance(result, ErrorValue):
                 _logger.error('Failed to resolve instrument fields: ' + result.error)
-                ret = self
+                ret = {result.risk_key.date: self} if is_historical else self
             elif result is None:
                 _logger.error('Unknown error resolving instrument fields')
-                ret = self
+                ret = {dt.date.today(): self} if is_historical else self
             elif in_place:
                 self.from_instance(result)
 
             return ret
 
-        if in_place and isinstance(PricingContext.current, HistoricalPricingContext):
+        if in_place and is_historical:
             raise RuntimeError('Cannot resolve in place under a HistoricalPricingContext')
 
         return self.calc(ResolvedInstrumentValues, fn=handle_result)

@@ -61,6 +61,12 @@ class RiskTriggerRequirements(TriggerRequirements):
         self.direction = direction
 
 
+class AggregateTriggerRequirements(TriggerRequirements):
+    def __init__(self, triggers: Iterable[object]):
+        super().__init__()
+        self.triggers = triggers
+
+
 class Trigger(object):
 
     def __init__(self, trigger_requirements: Optional[TriggerRequirements], actions: Union[Action, Iterable[Action]]):
@@ -156,3 +162,17 @@ class StrategyRiskTrigger(Trigger):
             if risk_value == self._trigger_requirements.trigger_level:
                 return True
         return False
+
+
+class AggregateTrigger(Trigger):
+    def __init__(self, triggers: Iterable[Trigger]):
+        actions = []
+        for t in triggers:
+            actions += [action for action in t.actions]
+        super().__init__(AggregateTriggerRequirements(triggers), actions)
+
+    def has_triggered(self, state: datetime.date, backtest: BackTest = None) -> bool:
+        for trigger in self._trigger_requirements.triggers:
+            if not trigger.has_triggered(state, backtest):
+                return False
+        return True

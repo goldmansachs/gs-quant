@@ -33,6 +33,7 @@ class AssetProperties(EnumBase, Enum):
     id = 'id'
     liveDate = 'liveDate'
     name = 'name'
+    underliers = 'underliers'
     region = 'region'
     shortName = 'shortName'
     type = 'type'

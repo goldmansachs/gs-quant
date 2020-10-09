@@ -117,10 +117,34 @@ class DataGroup(Base):
     @camel_case_translate
     def __init__(
         self,
+        context: FieldValueMap = None,
+        data: Tuple[FieldValueMap, ...] = None,
         name: str = None
     ):        
         super().__init__()
+        self.context = context
+        self.data = data
         self.name = name
+
+    @property
+    def context(self) -> FieldValueMap:
+        """Context map for the grouped data (key dimensions)"""
+        return self.__context
+
+    @context.setter
+    def context(self, value: FieldValueMap):
+        self._property_changed('context')
+        self.__context = value        
+
+    @property
+    def data(self) -> Tuple[FieldValueMap, ...]:
+        """Array of grouped data objects"""
+        return self.__data
+
+    @data.setter
+    def data(self, value: Tuple[FieldValueMap, ...]):
+        self._property_changed('data')
+        self.__data = value        
 
 
 class DataQuery(Base):

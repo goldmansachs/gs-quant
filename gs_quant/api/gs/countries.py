@@ -44,7 +44,8 @@ class GsCountryApi:
 
     @classmethod
     def get_many_subdivisions(cls, limit: int = 100) -> Tuple[Subdivision, ...]:
-        return GsSession.current._get('/subdivisions?limit={limit}'.format(limit=limit), cls=Subdivision)['results']
+        return GsSession.current._get('/countries/subdivisions?limit={limit}'.format(limit=limit),
+                                      cls=Subdivision)['results']
 
     @classmethod
     def get_subdivision(cls, subdivision_id: str) -> Subdivision:

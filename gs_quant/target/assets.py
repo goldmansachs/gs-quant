@@ -636,13 +636,13 @@ class CommodityPowerAggregatedNodes(Base):
     def __init__(
         self,
         ISO: str = None,
-        type_: str = None,
+        aggregate_type: str = None,
         location_name: str = None,
         name: str = None
     ):        
         super().__init__()
         self.ISO = ISO
-        self.__type = type_
+        self.aggregate_type = aggregate_type
         self.location_name = location_name
         self.name = name
 
@@ -657,14 +657,14 @@ class CommodityPowerAggregatedNodes(Base):
         self.__ISO = value        
 
     @property
-    def type(self) -> str:
-        """Aggregate Type."""
-        return self.__type
+    def aggregate_type(self) -> str:
+        """Aggregate type of nodes within the ISO."""
+        return self.__aggregate_type
 
-    @type.setter
-    def type(self, value: str):
-        self._property_changed('type')
-        self.__type = value        
+    @aggregate_type.setter
+    def aggregate_type(self, value: str):
+        self._property_changed('aggregate_type')
+        self.__aggregate_type = value        
 
     @property
     def location_name(self) -> str:
@@ -798,6 +798,128 @@ class CommodityReferencePriceParameters(Base):
     def publication(self, value: str):
         self._property_changed('publication')
         self.__publication = value        
+
+
+class DateRange(Base):
+        
+    @camel_case_translate
+    def __init__(
+        self,
+        end_date: datetime.date = None,
+        start_date: datetime.date = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.end_date = end_date
+        self.start_date = start_date
+        self.name = name
+
+    @property
+    def end_date(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__end_date
+
+    @end_date.setter
+    def end_date(self, value: datetime.date):
+        self._property_changed('end_date')
+        self.__end_date = value        
+
+    @property
+    def start_date(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__start_date
+
+    @start_date.setter
+    def start_date(self, value: datetime.date):
+        self._property_changed('start_date')
+        self.__start_date = value        
+
+
+class FutureContract(Base):
+        
+    """A Future Contract"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        future_market_marquee_id: str = None,
+        contract: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.future_market_marquee_id = future_market_marquee_id
+        self.contract = contract
+        self.name = name
+
+    @property
+    def future_market_marquee_id(self) -> str:
+        """A unique identifier which associates the current asset with the Future Market
+           asset in Marquee"""
+        return self.__future_market_marquee_id
+
+    @future_market_marquee_id.setter
+    def future_market_marquee_id(self, value: str):
+        self._property_changed('future_market_marquee_id')
+        self.__future_market_marquee_id = value        
+
+    @property
+    def contract(self) -> str:
+        """Strip which describes the contract - day/month"""
+        return self.__contract
+
+    @contract.setter
+    def contract(self, value: str):
+        self._property_changed('contract')
+        self.__contract = value        
+
+
+class FutureMarket(Base):
+        
+    """A Future Market"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        exchange: str = None,
+        period_frequency: str = None,
+        product_group: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.exchange = exchange
+        self.period_frequency = period_frequency
+        self.product_group = product_group
+        self.name = name
+
+    @property
+    def exchange(self) -> str:
+        """An exchange where future is listed"""
+        return self.__exchange
+
+    @exchange.setter
+    def exchange(self, value: str):
+        self._property_changed('exchange')
+        self.__exchange = value        
+
+    @property
+    def period_frequency(self) -> str:
+        """Frequency of contracts - daily/monthly/quarterly"""
+        return self.__period_frequency
+
+    @period_frequency.setter
+    def period_frequency(self, value: str):
+        self._property_changed('period_frequency')
+        self.__period_frequency = value        
+
+    @property
+    def product_group(self) -> str:
+        """The future group this represents"""
+        return self.__product_group
+
+    @product_group.setter
+    def product_group(self, value: str):
+        self._property_changed('product_group')
+        self.__product_group = value        
 
 
 class NumberRange(Base):
@@ -1202,40 +1324,6 @@ class SecuritiesLendingLoan(Base):
         self.__return_date = value        
 
 
-class SocialDomain(Base):
-        
-    @camel_case_translate
-    def __init__(
-        self,
-        onboarded: dict,
-        returns_enabled: bool = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.onboarded = onboarded
-        self.returns_enabled = returns_enabled
-        self.name = name
-
-    @property
-    def onboarded(self) -> dict:
-        return self.__onboarded
-
-    @onboarded.setter
-    def onboarded(self, value: dict):
-        self._property_changed('onboarded')
-        self.__onboarded = value        
-
-    @property
-    def returns_enabled(self) -> bool:
-        """True if the fund has returns enabled"""
-        return self.__returns_enabled
-
-    @returns_enabled.setter
-    def returns_enabled(self, value: bool):
-        self._property_changed('returns_enabled')
-        self.__returns_enabled = value        
-
-
 class TemporalXRef(Base):
         
     @camel_case_translate
@@ -1501,9 +1589,9 @@ class AssetParameters(Base):
         contract_month: str = None,
         load_type: str = None,
         contract_unit: str = None,
-        index_create_source: Union[IndexCreateSource, str] = None,
         index_approval_ids: Tuple[str, ...] = None,
         is_pair_basket: bool = None,
+        is_legacy_pair_basket: bool = None,
         fixed_rate_day_count_fraction: Union[DayCountFraction, str] = None,
         floating_rate_day_count_fraction: Union[DayCountFraction, str] = None,
         pay_day_count_fraction: Union[DayCountFraction, str] = None,
@@ -1513,6 +1601,8 @@ class AssetParameters(Base):
         resettable_leg: Union[PayReceive, str] = None,
         inflation_lag: str = None,
         fx_index: str = None,
+        index_notes: str = None,
+        index_not_trading_reasons: Union[IndexNotTradingReasons, str] = None,
         trade_as: str = None,
         clone_parent_id: str = None,
         on_behalf_of: str = None,
@@ -1594,9 +1684,9 @@ class AssetParameters(Base):
         self.contract_month = contract_month
         self.load_type = load_type
         self.contract_unit = contract_unit
-        self.index_create_source = index_create_source
         self.index_approval_ids = index_approval_ids
         self.is_pair_basket = is_pair_basket
+        self.is_legacy_pair_basket = is_legacy_pair_basket
         self.fixed_rate_day_count_fraction = fixed_rate_day_count_fraction
         self.floating_rate_day_count_fraction = floating_rate_day_count_fraction
         self.pay_day_count_fraction = pay_day_count_fraction
@@ -1606,6 +1696,8 @@ class AssetParameters(Base):
         self.resettable_leg = resettable_leg
         self.inflation_lag = inflation_lag
         self.fx_index = fx_index
+        self.index_notes = index_notes
+        self.index_not_trading_reasons = index_not_trading_reasons
         self.trade_as = trade_as
         self.clone_parent_id = clone_parent_id
         self.on_behalf_of = on_behalf_of
@@ -2179,16 +2271,6 @@ class AssetParameters(Base):
         self.__contract_unit = value        
 
     @property
-    def index_create_source(self) -> Union[IndexCreateSource, str]:
-        """Source of basket create"""
-        return self.__index_create_source
-
-    @index_create_source.setter
-    def index_create_source(self, value: Union[IndexCreateSource, str]):
-        self._property_changed('index_create_source')
-        self.__index_create_source = get_enum_value(IndexCreateSource, value)        
-
-    @property
     def index_approval_ids(self) -> Tuple[str, ...]:
         """Array of approval identifiers related to the object"""
         return self.__index_approval_ids
@@ -2206,6 +2288,15 @@ class AssetParameters(Base):
     def is_pair_basket(self, value: bool):
         self._property_changed('is_pair_basket')
         self.__is_pair_basket = value        
+
+    @property
+    def is_legacy_pair_basket(self) -> bool:
+        return self.__is_legacy_pair_basket
+
+    @is_legacy_pair_basket.setter
+    def is_legacy_pair_basket(self, value: bool):
+        self._property_changed('is_legacy_pair_basket')
+        self.__is_legacy_pair_basket = value        
 
     @property
     def fixed_rate_day_count_fraction(self) -> Union[DayCountFraction, str]:
@@ -2296,6 +2387,26 @@ class AssetParameters(Base):
     def fx_index(self, value: str):
         self._property_changed('fx_index')
         self.__fx_index = value        
+
+    @property
+    def index_notes(self) -> str:
+        """Notes for the index"""
+        return self.__index_notes
+
+    @index_notes.setter
+    def index_notes(self, value: str):
+        self._property_changed('index_notes')
+        self.__index_notes = value        
+
+    @property
+    def index_not_trading_reasons(self) -> Union[IndexNotTradingReasons, str]:
+        """Reasons the index was not traded"""
+        return self.__index_not_trading_reasons
+
+    @index_not_trading_reasons.setter
+    def index_not_trading_reasons(self, value: Union[IndexNotTradingReasons, str]):
+        self._property_changed('index_not_trading_reasons')
+        self.__index_not_trading_reasons = get_enum_value(IndexNotTradingReasons, value)        
 
     @property
     def trade_as(self) -> str:

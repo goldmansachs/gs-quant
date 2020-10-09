@@ -301,3 +301,8 @@ MarketDataAssets = __risk_measure_with_doc_string(
     'MarketDataAssets',
     RiskMeasureType.Market_Data_Assets
 )
+MarketData = __risk_measure_with_doc_string(
+    'Market Data',
+    'Market Data map of coordinates and values',
+    RiskMeasureType.Market_Data
+)

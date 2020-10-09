@@ -196,7 +196,9 @@ def test_get_coverage(mocker):
     mocker.patch("gs_quant.api.gs.data.GsDataApi.get_coverage", return_value=test_coverage_data)
     mocker.patch("gs_quant.api.gs.data.GsDataApi.get_types", return_value={'gsid': 'string'})
     data = Dataset(Dataset.TR.TREOD).get_coverage()
-    assert data.equals(GsDataApi.construct_dataframe_with_types(str(Dataset.TR.TREOD), test_coverage_data))
+    results = test_coverage_data["results"]
+    gsid = GsDataApi.construct_dataframe_with_types(str(Dataset.TR.TREOD), results).get('gsid').get(0)
+    assert data["results"][0]["gsid"] == gsid
 
 
 def test_construct_dataframe_with_types(mocker):

@@ -25,10 +25,11 @@ import operator as op
 import pandas as pd
 from typing import Any, Iterable, Mapping, Optional, Tuple, Union
 
+
 _logger = logging.getLogger(__name__)
 
 
-def _value_for_date(result: Union[DataFrameWithInfo, SeriesWithInfo], date: dt.date) ->\
+def _value_for_date(result: Union[DataFrameWithInfo, SeriesWithInfo], date: dt.date) -> \
         Union[DataFrameWithInfo, ErrorValue, FloatWithInfo]:
     from gs_quant.markets import CloseMarket
 
@@ -60,6 +61,7 @@ def _value_for_date(result: Union[DataFrameWithInfo, SeriesWithInfo], date: dt.d
 
 
 class PricingFuture(Future):
+
     __RESULT_SENTINEL = Sentinel('PricingFuture')
 
     def __init__(self, result: Optional[Any] = __RESULT_SENTINEL):
@@ -385,10 +387,82 @@ class PortfolioRiskResult(CompositeResultFuture):
         return self
 
     def to_frame(self):
+        dates = self.dates
+
         def to_records(p: PortfolioRiskResult) -> list:
             return [to_records(res) if isinstance(res, PortfolioRiskResult) else res for res in p]
 
-        return pd.DataFrame(to_records(self))
+        def flatten_list(lst):
+            return [item for sublist in lst for item in sublist]
+
+        def multiple(p):
+            if len(p.portfolios) == 0:
+                return len(p.all_instruments) * len(self.risk_measures) if dates else len(p.all_instruments)
+            if len(p.portfolios) > 0:
+                for i in p.portfolios:
+                    return len(i) * multiple(i)
+
+        '''Populate index labels'''
+        def pop_idx_labels(p, level, idx_label):
+            if len(p.portfolios) == 0:
+                for idx, r in enumerate(p.all_instruments):
+                    r.name = f'{r.type.name}_{idx}' if r.name is None else r.name
+                if dates and len(self.risk_measures) > 1:
+                    idx_label[0].append(
+                        [str(r) for r in self.risk_measures] * len(p.all_instruments))
+                    if len(idx_label) > 1:
+                        idx_label[1].append([[r.name] * len(self.risk_measures) for r in p.all_instruments])
+                    return idx_label
+                else:
+                    return idx_label[0].append([r.name for r in p.all_instruments])
+
+            if level > 1:
+                curr_level_arr = idx_label[level - 1]
+                for idx, r in enumerate(p.all_portfolios):
+                    r.name = f'Portfolio_{idx}' if r.name is None else r.name
+                [curr_level_arr.append([r.name] * multiple(r)) for r in p.portfolios]
+                for r in p.portfolios:
+                    pop_idx_labels(r, level - 1, idx_label)
+            return idx_label
+
+        '''Extract risk values'''
+        record = to_records(self)
+        port_depth = len(max(self.portfolio.all_paths, key=len))
+        port_depth = port_depth + 1 if (dates and len(self.risk_measures) > 1) else port_depth
+        temp_array = [[] for _ in range(port_depth)]
+        idx_labels = pop_idx_labels(self.portfolio, port_depth, temp_array)
+        if idx_labels:
+            idx_labels[1] = flatten_list(idx_labels[1]) if (dates and len(self.risk_measures) > 1) else idx_labels[1]
+            flat_list = [flatten_list(idx_labels[i]) for i in range(len(idx_labels))]
+            flat_list.reverse()
+            '''Get list of tuples for multiindex'''
+            index_multi = list(zip(*flat_list))
+        else:
+            index_multi = None
+        '''Case with risk values calculated over a range of dates'''
+        if dates:
+            '''Base case with 1 (unnested) portfolio and 1 risk measure'''
+            if len(self.risk_measures) == 1:
+                df = pd.DataFrame(record)
+            else:
+                df = pd.concat([pd.DataFrame(rec) for rec in record], axis=1)
+            '''Ensure dates are always the index'''
+            check_date = [idx for idx in dates]
+            check_date.reverse()
+            df = df.transpose() if [idx for idx in df.index] != check_date else df
+            df.columns = pd.MultiIndex.from_tuples(index_multi) if index_multi else [r.name for r in
+                                                                                     self.portfolio.all_instruments]
+            return df
+
+        else:
+            if len(self.portfolio.all_portfolios) == 0:
+                return pd.DataFrame(record, columns=self.risk_measures, index=[p.name for p in self.portfolio])
+            else:
+                df = pd.DataFrame(record)
+                df.index = pd.MultiIndex.from_tuples(index_multi) if index_multi else [r.name for r in
+                                                                                       self.portfolio.all_instruments]
+                df.columns = self.risk_measures
+                return df
 
     def subset(self, items: Iterable[Union[int, str, PortfolioPath, Priceable]], name: Optional[str] = None):
         paths = tuple(chain.from_iterable((i,) if isinstance(i, PortfolioPath) else self.__paths(i) for i in items))
@@ -431,5 +505,5 @@ class PortfolioRiskResult(CompositeResultFuture):
         if len(self.risk_measures) == 1 and not risk_measure:
             risk_measure = self.risk_measures[0]
 
-        return res[risk_measure] \
+        return res[risk_measure]\
             if risk_measure and isinstance(res, (MultipleRiskMeasureResult, PortfolioRiskResult)) else res

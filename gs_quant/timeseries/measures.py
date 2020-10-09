@@ -110,10 +110,10 @@ class EdrDataReference(Enum):
     SPOT = 'spot'
 
 
-class ForeCastHorizon(Enum):
+class FxForecastHorizon(Enum):
     THREE_MONTH = '3m'
     SIX_MONTH = '6m'
-    ONE_YEAR = '1y'
+    TWELVE_MONTH = '12m'
     EOY1 = 'EOY1'
     EOY2 = 'EOY2'
     EOY3 = 'EOY3'
@@ -187,13 +187,6 @@ class SwaptionTenorType(Enum):
 class EquilibriumExchangeRateMetric(Enum):
     GSDEER = 'gsdeer'
     GSFEER = 'gsfeer'
-
-
-class EquilibriumExchangeRateQuarter(Enum):
-    Q1 = 'Q1'
-    Q2 = 'Q2'
-    Q3 = 'Q3'
-    Q4 = 'Q4'
 
 
 class _FactorProfileMetric(Enum):
@@ -931,252 +924,6 @@ def _get_index_constituent_weights(asset: Asset, top_n_of_index: Optional[int] =
 
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
-              [MeasureDependency(id_provider=currency_to_default_benchmark_rate, query_type=QueryType.SWAPTION_VOL)])
-def swaption_vol(asset: Asset, expiration_tenor: str, termination_tenor: str, relative_strike: float,
-                 *, source: str = None, real_time: bool = False) -> Series:
-    """
-    GS end-of-day implied normal volatility for swaption vol matrices.
-
-    :param asset: asset object loaded from security master
-    :param expiration_tenor: relative date representation of expiration date on the option e.g. 3m
-    :param termination_tenor: relative date representation of the instrument's expiration date e.g. 1y
-    :param relative_strike: strike level relative to at the money e.g. 10
-    :param source: name of function caller
-    :param real_time: whether to retrieve intraday data instead of EOD
-    :return: swaption implied normal volatility curve
-    """
-    if real_time:
-        raise NotImplementedError('realtime swaption_vol not implemented')
-
-    rate_benchmark_mqid = convert_asset_for_rates_data_set(asset, RatesConversionType.DEFAULT_BENCHMARK_RATE)
-
-    _logger.debug('where expiry=%s, tenor=%s, strike=%s', expiration_tenor, termination_tenor, relative_strike)
-
-    q = GsDataApi.build_market_data_query(
-        [rate_benchmark_mqid],
-        QueryType.SWAPTION_VOL,
-        where=dict(expiry=expiration_tenor, tenor=termination_tenor, strike=relative_strike),
-        source=source,
-        real_time=real_time
-    )
-
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
-    return _extract_series_from_df(df, QueryType.SWAPTION_VOL)
-
-
-@plot_measure((AssetClass.Cash,), (AssetType.Currency,),
-              [MeasureDependency(id_provider=currency_to_default_benchmark_rate, query_type=QueryType.SWAPTION_VOL)])
-def swaption_vol_smile(asset: Asset, expiration_tenor: str, termination_tenor: str,
-                       pricing_date: Optional[GENERIC_DATE] = None, *, source: str = None,
-                       real_time: bool = False) -> Series:
-    """
-    GS end-of-day implied normal volatility for swaption vol matrices.
-
-    :param asset: asset object loaded from security master
-    :param expiration_tenor: relative date representation of expiration date on the option e.g. 3m
-    :param termination_tenor: relative date representation of the instrument's expiration date e.g. 1y
-    :param pricing_date: YYYY-MM-DD or relative date
-    :param source: name of function caller
-    :param real_time: whether to retrieve intraday data instead of EOD
-    :return: swaption implied normal volatility curve
-    """
-    if real_time:
-        raise NotImplementedError('realtime swaption_vol not implemented')
-
-    rate_benchmark_mqid = convert_asset_for_rates_data_set(asset, RatesConversionType.DEFAULT_BENCHMARK_RATE)
-    _logger.debug('where expiry=%s, tenor=%s', expiration_tenor, termination_tenor)
-
-    start, end = _range_from_pricing_date(asset.exchange, pricing_date)
-    with DataContext(start, end):
-        q = GsDataApi.build_market_data_query(
-            [rate_benchmark_mqid],
-            QueryType.SWAPTION_VOL,
-            where=dict(expiry=expiration_tenor, tenor=termination_tenor),
-            source=source,
-            real_time=real_time
-        )
-        _logger.debug('q %s', q)
-        df = _market_data_timed(q)
-
-    dataset_ids = getattr(df, 'dataset_ids', ())
-    if df.empty:
-        series = ExtendedSeries()
-    else:
-        latest = df.index.max()
-        _logger.info('selected pricing date %s', latest)
-        df = df.loc[latest]
-        df.set_index('strike', inplace=True)
-        df.sort_index(inplace=True)
-        series = ExtendedSeries(df['swaptionVol'].values, index=df.index.values)
-    series.dataset_ids = dataset_ids
-    return series
-
-
-@plot_measure((AssetClass.Cash,), (AssetType.Currency,),
-              [MeasureDependency(id_provider=currency_to_default_benchmark_rate, query_type=QueryType.SWAPTION_VOL)])
-def swaption_vol_term(asset: Asset, tenor_type: SwaptionTenorType, tenor: str, relative_strike: float,
-                      pricing_date: Optional[GENERIC_DATE] = None, *, source: str = None,
-                      real_time: bool = False) -> Series:
-    """
-    Term structure of GS end-of-day implied normal volatility for swaption vol matrices.
-
-    :param asset: an asset
-    :param tenor_type: specifies which type of tenor will be fixed, one of OPTION_EXPIRATION or SWAP_MATURITY
-    :param tenor: relative date representation of the instrument's expiration date e.g. 1y
-    :param relative_strike: strike level relative to at the money e.g. 10
-    :param pricing_date: YYYY-MM-DD or relative date
-    :param source: name of function caller
-    :param real_time: whether to retrieve intraday data instead of EOD
-    :return: swaption implied normal volatility term structure
-    """
-    if real_time:
-        raise NotImplementedError('realtime swaption_vol_term not implemented')
-
-    rate_benchmark_mqid = convert_asset_for_rates_data_set(asset, RatesConversionType.DEFAULT_BENCHMARK_RATE)
-    start, end = _range_from_pricing_date(asset.exchange, pricing_date)
-    if tenor_type == SwaptionTenorType.OPTION_EXPIRY:
-        tenor_to_plot, tenor_dataset_field = 'tenor', 'expiry'
-    else:
-        tenor_to_plot, tenor_dataset_field = 'expiry', 'tenor'
-    with DataContext(start, end):
-        _logger.debug('where tenor_type=%s, tenor=%s, strike=%s', tenor_type, tenor, relative_strike)
-        where = dict(strike=relative_strike)
-        where[tenor_dataset_field] = tenor
-        q = GsDataApi.build_market_data_query(
-            [rate_benchmark_mqid],
-            QueryType.SWAPTION_VOL,
-            where=where,
-            source=source,
-            real_time=real_time
-        )
-        _logger.debug('q %s', q)
-        df = _market_data_timed(q)
-
-    dataset_ids = getattr(df, 'dataset_ids', ())
-    if df.empty:
-        series = ExtendedSeries()
-    else:
-        latest = df.index.max()
-        _logger.info('selected pricing date %s', latest)
-        df = df.loc[latest]
-        business_day = _get_custom_bd(asset.exchange)
-
-        df = df.assign(expirationDate=df.index + df[tenor_to_plot].map(_to_offset) + business_day - business_day)
-        df = df.set_index('expirationDate')
-        df.sort_index(inplace=True)
-        df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
-        series = ExtendedSeries() if df.empty else ExtendedSeries(df['swaptionVol'])
-    series.dataset_ids = dataset_ids
-    return series
-
-
-@plot_measure((AssetClass.Cash,), (AssetType.Currency,),
-              [MeasureDependency(id_provider=currency_to_default_benchmark_rate, query_type=QueryType.ATM_FWD_RATE)])
-def swaption_atm_fwd_rate(asset: Asset, expiration_tenor: str, termination_tenor: str, *, source: str = None,
-                          real_time: bool = False) -> Series:
-    """
-    GS end-of-day at-the-money forward rate for swaption vol matrices.
-
-    :param asset: asset object loaded from security master
-    :param expiration_tenor: relative date representation of expiration date on the option e.g. 3m
-    :param termination_tenor: relative date representation of the instrument's expiration date e.g. 1y
-    :param source: name of function caller
-    :param real_time: whether to retrieve intraday data instead of EOD
-    :return: swaption at-the-money forward rate curve
-    """
-    if real_time:
-        raise NotImplementedError('realtime swaption_atm_fwd_rate not implemented')
-
-    rate_benchmark_mqid = convert_asset_for_rates_data_set(asset, RatesConversionType.DEFAULT_BENCHMARK_RATE)
-
-    _logger.debug('where expiry=%s, tenor=%s', expiration_tenor, termination_tenor)
-
-    q = GsDataApi.build_market_data_query(
-        [rate_benchmark_mqid],
-        QueryType.ATM_FWD_RATE,
-        where=dict(expiry=expiration_tenor, tenor=termination_tenor, strike=0),
-        source=source,
-        real_time=real_time
-    )
-
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
-    return _extract_series_from_df(df, QueryType.ATM_FWD_RATE)
-
-
-@plot_measure((AssetClass.Cash,), (AssetType.Currency,),
-              [MeasureDependency(id_provider=currency_to_default_benchmark_rate, query_type=QueryType.MIDCURVE_VOL)])
-def midcurve_vol(asset: Asset, expiration_tenor: str, forward_tenor: str, termination_tenor: str,
-                 relative_strike: float,
-                 *, source: str = None, real_time: bool = False) -> Series:
-    """
-    GS end-of-day implied normal volatility for midcurve vol matrices.
-
-    :param asset: asset object loaded from security master
-    :param expiration_tenor: relative date representation of expiration date on the option e.g. 3m
-    :param forward_tenor: relative date representation of swap's start date after option expiry e.g. 2y
-    :param termination_tenor: relative date representation of the instrument's expiration date e.g. 1y
-    :param relative_strike: strike level relative to at the money e.g. 10
-    :param source: name of function caller
-    :param real_time: whether to retrieve intraday data instead of EOD
-    :return: midcurve implied normal volatility curve
-    """
-    if real_time:
-        raise NotImplementedError('realtime midcurve_vol not implemented')
-
-    _logger.debug('where expiry=%s, forwardTenor=%s, tenor=%s, strike=%s', expiration_tenor, forward_tenor,
-                  termination_tenor, relative_strike)
-
-    rate_benchmark_mqid = convert_asset_for_rates_data_set(asset, RatesConversionType.DEFAULT_BENCHMARK_RATE)
-
-    q = GsDataApi.build_market_data_query(
-        [rate_benchmark_mqid],
-        QueryType.MIDCURVE_VOL,
-        where=dict(expiry=expiration_tenor, forwardTenor=forward_tenor, tenor=termination_tenor,
-                   strike=relative_strike),
-        source=source,
-        real_time=real_time
-    )
-
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
-    return _extract_series_from_df(df, QueryType.MIDCURVE_VOL)
-
-
-@plot_measure((AssetClass.Cash,), (AssetType.Currency,),
-              [MeasureDependency(id_provider=currency_to_default_benchmark_rate,
-                                 query_type=QueryType.MIDCURVE_ATM_FWD_RATE)])
-def midcurve_atm_fwd_rate(asset: Asset, expiration_tenor: str, forward_tenor: str, termination_tenor: str,
-                          *, source: str = None, real_time: bool = False) -> Series:
-    """
-    GS end-of-day at-the-money forward rate for midcurve vol matrices.
-
-    :param asset: asset object loaded from security master
-    :param expiration_tenor: relative date representation of expiration date on the option e.g. 3m
-    :param forward_tenor: relative date representation of swap's start date after option expiry e.g. 2y
-    :param termination_tenor: relative date representation of the instrument's expiration date e.g. 1y
-    :param source: name of function caller
-    :param real_time: whether to retrieve intraday data instead of EOD
-    :return: midcurve atm forward rate curve
-    """
-    if real_time:
-        raise NotImplementedError('realtime midcurve_atm_fwd_rate not implemented')
-
-    q = GsDataApi.build_market_data_query(
-        [convert_asset_for_rates_data_set(asset, RatesConversionType.DEFAULT_BENCHMARK_RATE)],
-        QueryType.MIDCURVE_ATM_FWD_RATE,
-        where=dict(expiry=expiration_tenor, forwardTenor=forward_tenor, tenor=termination_tenor, strike=0),
-        source=source,
-        real_time=real_time
-    )
-
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
-    return _extract_series_from_df(df, QueryType.MIDCURVE_ATM_FWD_RATE)
-
-
-@plot_measure((AssetClass.Cash,), (AssetType.Currency,),
               [MeasureDependency(id_provider=currency_to_default_benchmark_rate, query_type=QueryType.CAP_FLOOR_VOL)])
 def cap_floor_vol(asset: Asset, expiration_tenor: str, relative_strike: float, *, source: str = None,
                   real_time: bool = False) -> Series:
@@ -1378,13 +1125,14 @@ def basis(asset: Asset, termination_tenor: str, *, source: str = None, real_time
 
 
 @plot_measure((AssetClass.FX,), (AssetType.Cross,), [MeasureDependency(
-    id_provider=cross_to_usd_based_cross, query_type=QueryType.FORECAST)])
-def forecast(asset: Asset, forecast_horizon: str, *, source: str = None, real_time: bool = False) -> Series:
+    id_provider=cross_to_usd_based_cross, query_type=QueryType.GIR_FX_FORECAST)])
+def gir_fx_forecast(asset: Asset, relativePeriod: FxForecastHorizon = FxForecastHorizon.THREE_MONTH, *,
+                    source: str = None, real_time: bool = False) -> Series:
     """
-    GS end-of-day FX forecasts made by Global Investment Research (GIR) macro analysts.
+    FX forecasts made by Global Investment Research (GIR) macro analysts.
 
     :param asset: asset object loaded from security master
-    :param forecast_horizon: relative period of time to forecast e.g. 1y
+    :param relativePeriod: Forecast horizon. One of: 3m, 6m, 12m, EOY1, EOY2, EOY3, EOY4
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: FX forecast curve
@@ -1394,20 +1142,18 @@ def forecast(asset: Asset, forecast_horizon: str, *, source: str = None, real_ti
 
     cross_mqid = asset.get_marquee_id()
     usd_based_cross_mqid = cross_to_usd_based_cross(cross_mqid)
-
-    horizon = '12m' if forecast_horizon == '1y' else forecast_horizon
+    query_type = QueryType.GIR_FX_FORECAST
 
     q = GsDataApi.build_market_data_query(
         [usd_based_cross_mqid],
-        QueryType.FORECAST,
-        where=dict(relativePeriod=horizon),
+        query_type,
+        where=dict(relativePeriod=relativePeriod),
         source=source,
         real_time=real_time
     )
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
-
-    series = ExtendedSeries() if df.empty else ExtendedSeries(df['forecast'])
+    series = _extract_series_from_df(df, query_type)
 
     if cross_mqid != usd_based_cross_mqid:
         series = 1 / series
@@ -3013,39 +2759,33 @@ def gir_rating(asset: Asset, metric: _RatingMetric, *, source: str = None, real_
     return series
 
 
-@plot_measure((AssetClass.FX,), None, [QueryType.GSDEER])
-def gir_gsdeer_gsfeer(asset: Asset, metric: EquilibriumExchangeRateMetric,
-                      year: str, quarter: EquilibriumExchangeRateQuarter, *,
+@plot_measure((AssetClass.FX,), (AssetType.Cross,), [MeasureDependency(
+    id_provider=cross_to_usd_based_cross, query_type=QueryType.GIR_GSDEER_GSFEER)])
+def gir_gsdeer_gsfeer(asset: Asset, metric: EquilibriumExchangeRateMetric = EquilibriumExchangeRateMetric.GSDEER, *,
                       source: str = None, real_time: bool = False) -> Series:
     """
     GSDEER and GSFEER quarterly estimates for currency fair values made by Global Investment Research (GIR)
     macro analysts.
     :param asset: asset object loaded from security master
     :param metric: Name of metric. One of gsdeer, gsfeer
-    :param year: Year of estimate.
-    :param quarter: Quarter of estimate. One of: Q1, Q2, Q3, Q4
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: gsdeer/gsfeer data of the asset for the field requested
     """
     if real_time:
         raise NotImplementedError('real-time gir_gsdeer_gsfeer not implemented')
-
     mqid = asset.get_marquee_id()
-    year = str(year)
-
-    _logger.debug('where assetId=%s, metric=%s, year=%s, quarter=%s', mqid, metric.value, year, quarter)
-    q = GsDataApi.build_market_data_query(
-        [mqid],
-        QueryType[metric.value.upper()],
-        where=dict(year=year, quarter=quarter),
-        source=source,
-        real_time=real_time
-    )
-    _logger.debug('q %s', q)
-
-    df = _market_data_timed(q)
+    usd_based_cross_mqid = cross_to_usd_based_cross(mqid)
+    ds = Dataset('GSDEER_GSFEER')
+    start_date = dt.date.today() - pd.tseries.offsets.BDay(1)
+    df = ds.get_data(assetId=usd_based_cross_mqid, start_date=start_date)
+    latest_date = df.index.max()
+    df = df.loc[latest_date]
+    df.index = df.apply(lambda x: dt.date(int(x.year), (int(x.quarter[-1]) - 1) * 3 + 1, 1), axis=1)
     series = _extract_series_from_df(df, metric)
+    if mqid != usd_based_cross_mqid:
+        series = 1 / series
+        series.dataset_ids = getattr(df, 'dataset_ids', ())
     return series
 
 
@@ -3089,8 +2829,10 @@ def gir_factor_profile(asset: Asset, metric: _FactorProfileMetric, *, source: st
 
 
 @plot_measure((AssetClass.Commod,), (AssetType.Commodity, AssetType.Index,), [QueryType.GIR_COMMODITIES_FORECAST])
-def gir_commodities_forecast(asset: Asset, forecastPeriod: _CommoditiesForecastPeriod,
-                             forecastType: _CommoditiesForecastType, *, source: str = None,
+def gir_commodities_forecast(asset: Asset,
+                             forecastPeriod: _CommoditiesForecastPeriod = _CommoditiesForecastPeriod.THREE_MONTH,
+                             forecastType: _CommoditiesForecastType = _CommoditiesForecastType.SPOT_RETURN, *,
+                             source: str = None,
                              real_time: bool = False) -> Series:
     """
     Short and long-term commodities forecast.
@@ -3112,11 +2854,11 @@ def gir_commodities_forecast(asset: Asset, forecastPeriod: _CommoditiesForecastP
     q = GsDataApi.build_market_data_query(
         [mqid],
         query_type,
-        where=dict(forecastPeriod=forecastPeriod, forecastType=forecastType),
+        where=dict(forecastPeriod=str(forecastPeriod), forecastType=forecastType),
         source=source,
         real_time=real_time
     )
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
-    series = _extract_series_from_df(df, QueryType.FORECAST_VALUE)
+    series = _extract_series_from_df(df, query_type)
     return series

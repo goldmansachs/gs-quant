@@ -13,15 +13,15 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from gs_quant.base import Priceable
-from gs_quant.markets import MarketDataCoordinate
-from gs_quant.risk import DataFrameWithInfo, DollarPrice, FloatWithInfo, MarketDataAssets, Price, SeriesWithInfo
-from gs_quant.risk.results import PricingFuture, PortfolioRiskResult
-
-from abc import ABCMeta
-import itertools
 import logging
-from typing import Tuple, Union
+from abc import ABCMeta
+from typing import Union, Optional
+
+from gs_quant.base import Priceable
+from gs_quant.markets import HistoricalPricingContext, MarketDataCoordinate, PricingContext, CloseMarket, OverlayMarket
+from gs_quant.risk import DataFrameWithInfo, DollarPrice, FloatWithInfo, Price, SeriesWithInfo, \
+    MarketData
+from gs_quant.risk.results import PricingFuture, PortfolioRiskResult, ErrorValue
 
 __asset_class_and_type_to_instrument = {}
 _logger = logging.getLogger(__name__)
@@ -75,14 +75,41 @@ class PriceableImpl(Priceable, metaclass=ABCMeta):
         """
         return self.calc(Price)
 
-    def coordinates(self) -> Tuple[MarketDataCoordinate, ...]:
-        from gs_quant.api.gs.data import GsDataApi
+    def market(self) -> Union[OverlayMarket, PricingFuture]:
+        """
+        Market Data map of coordinates and values. Note that this is not yet supported on all instruments
 
-        def coordinates_for_asset(result: DataFrameWithInfo):
-            return tuple(itertools.chain.from_iterable(GsDataApi.get_many_coordinates(mkt_type=t,
-                                                                                      mkt_asset=a,
-                                                                                      return_type=MarketDataCoordinate,
-                                                                                      limit=10000)
-                                                       for t, a in zip(result.mkt_type, result.mkt_asset)))
+        ***Examples**
 
-        return self.calc(MarketDataAssets, fn=coordinates_for_asset)
+        >>> from gs_quant.instrument import IRSwap
+        >>>
+        >>> swap = IRSwap('Pay', '10y', 'EUR')
+        >>> market = swap.market()
+
+        """
+        def handle_result(result: Optional[Union[DataFrameWithInfo, ErrorValue, PricingFuture]]) ->\
+                [OverlayMarket, dict]:
+            properties = MarketDataCoordinate.properties()
+            is_historical = isinstance(PricingContext.current, HistoricalPricingContext)
+            location = PricingContext.current.market_data_location
+
+            def extract_market_data(this_result: DataFrameWithInfo):
+                market_data = {}
+
+                for _, row in result.iterrows():
+                    coordinate_values = {p: row.get(p) for p in properties}
+                    if 'mkt_point' in coordinate_values:
+                        coordinate_values['mkt_point'] = tuple(coordinate_values['mkt_point'].split(';'))
+                    market_data[MarketDataCoordinate.from_dict(coordinate_values)] = row['value']
+
+                return market_data
+
+            if is_historical:
+                return {date: OverlayMarket(
+                    base_market=CloseMarket(date=date, location=location),
+                    market_data=extract_market_data(result.loc[date])
+                ) for date in set(result.index)}
+            else:
+                return OverlayMarket(base_market=result.risk_key.market, market_data=extract_market_data(result))
+
+        return self.calc(MarketData, fn=handle_result)
