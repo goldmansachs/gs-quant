@@ -20,7 +20,7 @@ from gs_quant.common import PricingLocation
 from gs_quant.context_base import do_not_serialise
 from gs_quant.datetime.date import prev_business_date
 from gs_quant.target.common import CloseMarket as _CloseMarket, LiveMarket as _LiveMarket, \
-    OverlayMarket as _OverlayMarket, RelativeMarket as __RelativeMarket, TimestampedMarket as _TimestampedMarket
+    OverlayMarket as _OverlayMarket, RelativeMarket as _RelativeMarket, TimestampedMarket as _TimestampedMarket
 from gs_quant.target.data import MarketDataCoordinate as __MarketDataCoordinate, \
     MarketDataCoordinateValue as __MarketDataCoordinateValue
 from typing import Mapping, Optional, Tuple, Union
@@ -166,13 +166,17 @@ class OverlayMarket(_OverlayMarket, Market):
     def market_data(self) -> Tuple[MarketDataCoordinateValue, ...]:
         return tuple(MarketDataCoordinateValue(coordinate=c, value=v) for c, v in self.__market_data.items())
 
+    @Market.location.getter
+    def location(self) -> PricingLocation:
+        return self.base_market.location
+
     @property
     @do_not_serialise
     def coordinates(self) -> Tuple[MarketDataCoordinate, ...]:
         return tuple(self.__market_data.keys())
 
 
-class RelativeMarket(__RelativeMarket, Market):
+class RelativeMarket(_RelativeMarket, Market):
     """Market Object which captures the change between two Market Objects
     (to_market and from_market)
     """
@@ -182,3 +186,7 @@ class RelativeMarket(__RelativeMarket, Market):
 
     def __repr__(self):
         return f'{repr(self.from_market)} -> {repr(self.to_market)}'
+
+    @Market.location.getter
+    def location(self) -> PricingLocation:
+        return self.from_market.location if self.from_market.location == self.to_market.location else None

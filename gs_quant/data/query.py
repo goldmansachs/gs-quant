@@ -14,11 +14,13 @@ specific language governing permissions and limitations
 under the License.
 """
 
-import pandas as pd
 from enum import Enum
+from typing import Union
+
+import pandas as pd
+
 from gs_quant.data import DataCoordinate
-from typing import Union, List
-from datetime import date, datetime
+from gs_quant.data.coordinate import DateOrDatetime
 from .stream import DataSeries
 
 
@@ -30,15 +32,16 @@ class DataQueryType(Enum):
 class DataQuery:
     """Defines a query on a coordinate"""
 
-    def __init__(self, coordinate: DataCoordinate, start: Union[date, datetime] = None,
-                 end: Union[date, datetime] = None, dates: List[Union[date, datetime]] = None,
+    def __init__(self,
+                 coordinate: DataCoordinate,
+                 start: DateOrDatetime = None,
+                 end: DateOrDatetime = None,
                  query_type: DataQueryType = DataQueryType.RANGE):
         """Initialize data query"""
 
         self.coordinate = coordinate
         self.start = start
         self.end = end
-        self.dates = dates
         self.query_type = query_type
 
     def get_series(self) -> Union[pd.Series, None]:

@@ -43,6 +43,8 @@ class ComponentType(EnumBase, Enum):
     selector = 'selector'
     separator = 'separator'
     stackedBarChart = 'stackedBarChart'
+    video = 'video'
+    webinar = 'webinar'
     
     def __repr__(self):
         return self.value
@@ -946,6 +948,163 @@ class SeparatorComponentParameters(Base):
         self.__show_more_url = value        
 
 
+class VideoComponentParameters(Base):
+        
+    """Parameters provided for a video component."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        replay_url: str,
+        date: str = None,
+        description: str = None,
+        height: float = None,
+        title: str = None,
+        transparent: bool = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.date = date
+        self.description = description
+        self.height = height
+        self.replay_url = replay_url
+        self.title = title
+        self.transparent = transparent
+        self.name = name
+
+    @property
+    def date(self) -> str:
+        """ISO 8601 Formatted datetime string for when the video will be hosted."""
+        return self.__date
+
+    @date.setter
+    def date(self, value: str):
+        self._property_changed('date')
+        self.__date = value        
+
+    @property
+    def description(self) -> str:
+        """Description of video."""
+        return self.__description
+
+    @description.setter
+    def description(self, value: str):
+        self._property_changed('description')
+        self.__description = value        
+
+    @property
+    def height(self) -> float:
+        """Used for restricting the height in pixels of the component on a workspace."""
+        return self.__height
+
+    @height.setter
+    def height(self, value: float):
+        self._property_changed('height')
+        self.__height = value        
+
+    @property
+    def replay_url(self) -> str:
+        """URL for the replay of the video."""
+        return self.__replay_url
+
+    @replay_url.setter
+    def replay_url(self, value: str):
+        self._property_changed('replay_url')
+        self.__replay_url = value        
+
+    @property
+    def title(self) -> str:
+        """Title of the video."""
+        return self.__title
+
+    @title.setter
+    def title(self, value: str):
+        self._property_changed('title')
+        self.__title = value        
+
+    @property
+    def transparent(self) -> bool:
+        """Sets the component card to have a transparent background"""
+        return self.__transparent
+
+    @transparent.setter
+    def transparent(self, value: bool):
+        self._property_changed('transparent')
+        self.__transparent = value        
+
+
+class WebinarProvider(Base):
+        
+    """The provider of the webinar."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        url: str,
+        name: str = None
+    ):        
+        super().__init__()
+        self.url = url
+        self.name = name
+
+    @property
+    def url(self) -> str:
+        """Url for the the webinar."""
+        return self.__url
+
+    @url.setter
+    def url(self, value: str):
+        self._property_changed('url')
+        self.__url = value        
+
+
+class WebinarSpeaker(Base):
+        
+    """A speaker or host of a webinar."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        name: str,
+        title: str,
+        author_url: str = None
+    ):        
+        super().__init__()
+        self.author_url = author_url
+        self.name = name
+        self.title = title
+
+    @property
+    def author_url(self) -> str:
+        """A url to the speaker or hosts webpage."""
+        return self.__author_url
+
+    @author_url.setter
+    def author_url(self, value: str):
+        self._property_changed('author_url')
+        self.__author_url = value        
+
+    @property
+    def name(self) -> str:
+        """Name of the speaker or host."""
+        return self.__name
+
+    @name.setter
+    def name(self, value: str):
+        self._property_changed('name')
+        self.__name = value        
+
+    @property
+    def title(self) -> str:
+        """Title of the speaker or host."""
+        return self.__title
+
+    @title.setter
+    def title(self, value: str):
+        self._property_changed('title')
+        self.__title = value        
+
+
 class WorkspaceDate(Base):
         
     """Relative date to display at the bottom of the page."""
@@ -1227,6 +1386,152 @@ class SelectorComponentParameters(Base):
     def width(self, value: float):
         self._property_changed('width')
         self.__width = value        
+
+
+class WebinarComponentParameters(Base):
+        
+    """Parameters provided for a webinar component."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        date: str,
+        date_text: str,
+        description: str,
+        provider: WebinarProvider,
+        replay_url: str,
+        title: str,
+        height: float = None,
+        hosts: Tuple[WebinarSpeaker, ...] = None,
+        password: str = None,
+        series: str = None,
+        speakers: Tuple[WebinarSpeaker, ...] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.date = date
+        self.date_text = date_text
+        self.description = description
+        self.height = height
+        self.hosts = hosts
+        self.password = password
+        self.provider = provider
+        self.replay_url = replay_url
+        self.series = series
+        self.speakers = speakers
+        self.title = title
+        self.name = name
+
+    @property
+    def date(self) -> str:
+        """ISO 8601 Formatted datetime string for when the webinar will be hosted."""
+        return self.__date
+
+    @date.setter
+    def date(self, value: str):
+        self._property_changed('date')
+        self.__date = value        
+
+    @property
+    def date_text(self) -> str:
+        """A custom date string to display on the webinar card, for example 01 Oct 2020
+           6:00PM (ET)."""
+        return self.__date_text
+
+    @date_text.setter
+    def date_text(self, value: str):
+        self._property_changed('date_text')
+        self.__date_text = value        
+
+    @property
+    def description(self) -> str:
+        """Description of webinar."""
+        return self.__description
+
+    @description.setter
+    def description(self, value: str):
+        self._property_changed('description')
+        self.__description = value        
+
+    @property
+    def height(self) -> float:
+        """Used for restricting the height in pixels of the component on a workspace."""
+        return self.__height
+
+    @height.setter
+    def height(self, value: float):
+        self._property_changed('height')
+        self.__height = value        
+
+    @property
+    def hosts(self) -> Tuple[WebinarSpeaker, ...]:
+        """List of hosts for the webinar."""
+        return self.__hosts
+
+    @hosts.setter
+    def hosts(self, value: Tuple[WebinarSpeaker, ...]):
+        self._property_changed('hosts')
+        self.__hosts = value        
+
+    @property
+    def password(self) -> str:
+        """Password for the webinar."""
+        return self.__password
+
+    @password.setter
+    def password(self, value: str):
+        self._property_changed('password')
+        self.__password = value        
+
+    @property
+    def provider(self) -> WebinarProvider:
+        """The provider of the webinar."""
+        return self.__provider
+
+    @provider.setter
+    def provider(self, value: WebinarProvider):
+        self._property_changed('provider')
+        self.__provider = value        
+
+    @property
+    def replay_url(self) -> str:
+        """URL for the replay of the webinar."""
+        return self.__replay_url
+
+    @replay_url.setter
+    def replay_url(self, value: str):
+        self._property_changed('replay_url')
+        self.__replay_url = value        
+
+    @property
+    def series(self) -> str:
+        """Name of the series of the webinar."""
+        return self.__series
+
+    @series.setter
+    def series(self, value: str):
+        self._property_changed('series')
+        self.__series = value        
+
+    @property
+    def speakers(self) -> Tuple[WebinarSpeaker, ...]:
+        """List of speakers for the webinar."""
+        return self.__speakers
+
+    @speakers.setter
+    def speakers(self, value: Tuple[WebinarSpeaker, ...]):
+        self._property_changed('speakers')
+        self.__speakers = value        
+
+    @property
+    def title(self) -> str:
+        """Title of the webinar."""
+        return self.__title
+
+    @title.setter
+    def title(self, value: str):
+        self._property_changed('title')
+        self.__title = value        
 
 
 class WorkspaceComponent(Base):

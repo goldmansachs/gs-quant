@@ -203,12 +203,6 @@ class _CommoditiesForecastType(Enum):
     TOTAL_RETURN = 'totalReturn'
 
 
-class _CommoditiesForecastPeriod(Enum):
-    THREE_MONTH = '3m'
-    SIX_MONTH = '6m'
-    TWELVE_MONTH = '12m'
-
-
 class _RatingMetric(Enum):
     RATING = 'rating'
     CONVICTION_LIST = 'convictionList'
@@ -263,7 +257,6 @@ CROSS_TO_CROSS_CURRENCY_BASIS = {
     'GBPUSD': 'GBP-3m/USD-3m'
 }
 
-
 _FACTOR_PROFILE_METRIC_TO_QUERY_TYPE = {
     'growthScore': QueryType.GROWTH_SCORE,
     'financialReturnsScore': QueryType.FINANCIAL_RETURNS_SCORE,
@@ -271,12 +264,10 @@ _FACTOR_PROFILE_METRIC_TO_QUERY_TYPE = {
     'integratedScore': QueryType.INTEGRATED_SCORE
 }
 
-
 _RATING_METRIC_TO_QUERY_TYPE = {
     'rating': QueryType.RATING,
     'convictionList': QueryType.CONVICTION_LIST
 }
-
 
 _COMMOD_CONTRACT_MONTH_CODES = "FGHJKMNQUVXZ"
 _COMMOD_CONTRACT_MONTH_CODES_DICT = {k: v for k, v in enumerate(_COMMOD_CONTRACT_MONTH_CODES)}
@@ -1447,7 +1438,7 @@ def _month_to_tenor(months: int) -> str:
     return f'{months // 12}y' if months % 12 == 0 else f'{months}m'
 
 
-@plot_measure((AssetClass.Equity, ), None, [QueryType.VAR_SWAP])
+@plot_measure((AssetClass.Equity,), None, [QueryType.VAR_SWAP])
 def forward_var_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None, *, source: str = None,
                      real_time: bool = False) -> pd.Series:
     """
@@ -1616,6 +1607,36 @@ def _get_iso_data(region: str):
         peak_end = 22
 
     return timezone, peak_start, peak_end, weekends
+
+
+def _get_qbt_mapping(bucket, region):
+    # Finds combo bucket for power by mapping of the quantity bucket
+    weekend_offpeak = "SUH1X16" if region == 'CAISO' else "2X16H"
+    QBT_mapping = {"OFFPEAK": [weekend_offpeak, "7X8"], "7X16": ["PEAK", weekend_offpeak],
+                   "7X24": ["PEAK", "7X8", weekend_offpeak]}
+    return QBT_mapping[bucket.upper()] if bucket.upper() in QBT_mapping else [bucket.upper()]
+
+
+def _get_weight_for_bucket(asset, start_contract_range, end_contract_range, bucket):
+    # Find contracts and holidays in the date range
+    bbid = Asset.get_identifier(asset, AssetIdentifier.BLOOMBERG_ID)
+    region = bbid.split(" ")[0]
+    timezone = _get_iso_data(region)[0]
+    dates_contract_range = get_contract_range(start_contract_range, end_contract_range, timezone)
+    holidays = NercCalendar().holidays(start=start_contract_range, end=end_contract_range).date
+
+    # Get number of hours for a given bucket for each contract
+    weights = []
+    buckets_QBT = _get_qbt_mapping(bucket, region)
+    for bucket_QBT in buckets_QBT:
+        df_bucket = _filter_by_bucket(dates_contract_range, bucket_QBT, holidays, region)
+        weights_df = df_bucket.groupby('contract_month').size()
+        weights_df = pd.DataFrame({'contract': weights_df.index, 'weight': weights_df.values})
+        weights_df['quantityBucket'] = bucket_QBT
+        weights.append(weights_df)
+
+    weights = pd.concat(weights)
+    return weights
 
 
 def _filter_by_bucket(df, bucket, holidays, region):
@@ -1833,15 +1854,6 @@ def forward_price(asset: Asset, price_method: str = 'LMP', bucket: str = 'PEAK',
     if real_time:
         raise ValueError('Use daily frequency instead of intraday')
 
-    bbid = Asset.get_identifier(asset, AssetIdentifier.BLOOMBERG_ID)
-
-    def _get_weight_for_bucket(df, bucket, holidays, region):
-        df = _filter_by_bucket(df, bucket, holidays, region)
-        weights_df = df.groupby('contract_month').size()
-        weights_df = pd.DataFrame({'contract': weights_df.index, 'weight': weights_df.values})
-        weights_df['quantityBucket'] = bucket
-        return weights_df
-
     start_date_interval = _string_to_date_interval(contract_range.split("-")[0])
     if type(start_date_interval) == str:
         raise ValueError(start_date_interval)
@@ -1854,24 +1866,7 @@ def forward_price(asset: Asset, price_method: str = 'LMP', bucket: str = 'PEAK',
     else:
         end_contract_range = start_date_interval['end_date']
 
-    region = bbid.split(" ")[0]
-    timezone = _get_iso_data(region)[0]
-
-    weekend_offpeak = "SUH1X16" if region == 'CAISO' else "2X16H"
-    QBT_mapping = {"OFFPEAK": [weekend_offpeak, "7X8"], "7X16": ["PEAK", weekend_offpeak],
-                   "7X24": ["PEAK", "7X8", weekend_offpeak]}
-
-    dates_contract_range = get_contract_range(start_contract_range, end_contract_range, timezone)
-
-    holidays = NercCalendar().holidays(start=start_contract_range, end=end_contract_range).date
-
-    weights = []
-    buckets_QBT = QBT_mapping[bucket.upper()] if bucket.upper() in QBT_mapping else [bucket.upper()]
-    for bucket_QBT in buckets_QBT:
-        weight = _get_weight_for_bucket(dates_contract_range, bucket_QBT, holidays, region)
-        weights.append(weight)
-    weights = pd.concat(weights)
-
+    weights = _get_weight_for_bucket(asset, start_contract_range, end_contract_range, bucket)
     start, end = DataContext.current.start_date, DataContext.current.end_date
 
     contracts_to_query = weights['contract'].unique().tolist()
@@ -2829,8 +2824,7 @@ def gir_factor_profile(asset: Asset, metric: _FactorProfileMetric, *, source: st
 
 
 @plot_measure((AssetClass.Commod,), (AssetType.Commodity, AssetType.Index,), [QueryType.GIR_COMMODITIES_FORECAST])
-def gir_commodities_forecast(asset: Asset,
-                             forecastPeriod: _CommoditiesForecastPeriod = _CommoditiesForecastPeriod.THREE_MONTH,
+def gir_commodities_forecast(asset: Asset, forecastPeriod: str,
                              forecastType: _CommoditiesForecastType = _CommoditiesForecastType.SPOT_RETURN, *,
                              source: str = None,
                              real_time: bool = False) -> Series:
@@ -2862,3 +2856,106 @@ def gir_commodities_forecast(asset: Asset,
     df = _market_data_timed(q)
     series = _extract_series_from_df(df, query_type)
     return series
+
+
+@plot_measure((AssetClass.Commod,), None, [QueryType.FORWARD_PRICE])
+def forward_curve(asset: Asset, bucket: str = 'PEAK', market_date: str = "",
+                  *, source: str = None, real_time: bool = False) -> pd.Series:
+    """
+    Forward Curve for Futures Data
+
+    :param asset: asset object loaded from security master
+    :param bucket: bucket type among '7x24', 'Peak', 'Offpeak', '2x16h', '7x16' and '7x8': Default value = Peak
+    :param market_date: Date for which forward curve to be plotted, format-YYYYMMDD: default value = today
+    :param source: name of function caller: default source = None
+    :param real_time: whether to retrieve intraday data instead of EOD: default value = False
+    :return: Term structure or price projection for future contracts for a given date
+    """
+    if real_time:
+        raise MqValueError('Forward Curve uses daily frequency instead of intraday')
+
+    # Validations for date inputs
+    start, end = DataContext.current.start_date, DataContext.current.end_date
+    if type(market_date) != str:
+        raise MqTypeError('Market date should be of string data type as \'YYYYMMDD\'')
+    # If no date entered by user, assign today or convert entered string format to date object
+    if len(market_date) == 0:
+        market_date = pd.Timestamp.today().date()
+    else:
+        try:
+            market_date = pd.datetime.strptime(market_date, "%Y%m%d").date()
+        except ValueError:
+            raise MqValueError('Market date should be of format as \'YYYYMMDD\'')
+
+    # Check if market date is future date for the given asset
+    timezone = _get_iso_data(asset.name.split()[0])[0]
+    if market_date > pd.Timestamp.today(tz=timezone).date():
+        raise MqValueError('Market date cannot be a future date')
+    # Check if market date is weekend
+    if market_date.weekday() > 4:
+        raise MqValueError('Market date cannot be a weekend')
+    # Check if market date is within end and start date ranges
+    if market_date > end:
+        raise MqValueError('Market date should be within end date for query')
+    if market_date > start:
+        start = market_date
+
+    # Check if market date do not have an entry, a holiday or value not entered yet, if so get prev date value
+    ds = Dataset('COMMOD_US_ELEC_ENERGY_FORWARD_PRICES')
+    last_data = ds.get_data_last(as_of=market_date)
+    last_date = pd.Timestamp(last_data.index.unique().values[0])
+    if (market_date > last_date):
+        market_date = last_date
+
+    # Find valid contracts and buckets for query, use until end of month for end date
+    weights = _get_weight_for_bucket(asset, start, end + pd.tseries.offsets.MonthEnd(0), bucket)
+    contracts_to_query = weights['contract'].unique().tolist()
+    quantitybuckets_to_query = weights['quantityBucket'].unique().tolist()
+
+    # Get data for given asset for given market date for valid contracts and buckets
+    where = dict(quantityBucket=quantitybuckets_to_query, contract=contracts_to_query)
+    with DataContext(market_date, market_date):
+        q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.FORWARD_PRICE,
+                                              where=where, source=None,
+                                              real_time=False)
+        forward_price = _market_data_timed(q)
+        dataset_ids = getattr(forward_price, 'dataset_ids', ())
+
+    # If no data received
+    if forward_price.empty:
+        return ExtendedSeries()
+
+    # Get plot dates for valid contract_months
+    forward_dates_to_plot = dict()
+    for month in contracts_to_query:
+        start_date_month = _string_to_date_interval(month)["start_date"]
+        forward_dates_to_plot[month] = start_date_month
+
+    # Create a dataframe with required columns
+    forward_curve_plot = {'contract': forward_price['contract'],
+                          'forwardPrice': forward_price['forwardPrice'],
+                          'quantityBucket': forward_price['quantityBucket']}
+    df = pd.DataFrame(forward_curve_plot)
+    df = df.reset_index(drop=True)
+
+    # Compute wtd average if required for combo buckets
+    is_wtd_avg_required = True if len(quantitybuckets_to_query) > 1 else False
+    if is_wtd_avg_required:
+        df = pd.merge(df, weights, how='left', on=['contract', 'quantityBucket'])
+        df['forwardPrice'] = df['forwardPrice'] * df['weight']
+        df = df.groupby('contract').agg({'weight': 'sum', 'forwardPrice': 'sum'})
+        df['forwardPrice'] = df['forwardPrice'] / df['weight']
+        df = df.reset_index()
+
+    # Map contract to plot date and format output
+    for row in df.itertuples():
+        df.at[row.Index, 'contract'] = forward_dates_to_plot[df.at[row.Index, 'contract']]
+    df = df.sort_values(by=['contract'])
+    df = df.set_index('contract')
+
+    # Create Extended Series for return
+    result = ExtendedSeries(df['forwardPrice'], index=df.index)
+    result = result.rename_axis(None, axis='index')
+    result.dataset_ids = dataset_ids
+
+    return result

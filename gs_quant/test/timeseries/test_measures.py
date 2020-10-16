@@ -38,7 +38,7 @@ from gs_quant.api.gs.data import QueryType
 from gs_quant.data.core import DataContext
 from gs_quant.data.dataset import Dataset
 from gs_quant.data.fields import Fields
-from gs_quant.errors import MqError, MqValueError
+from gs_quant.errors import MqError, MqValueError, MqTypeError
 from gs_quant.markets.securities import AssetClass, Cross, Index, Currency, SecurityMaster, Stock, Swap
 from gs_quant.session import GsSession, Environment
 from gs_quant.test.timeseries.utils import mock_request
@@ -3310,7 +3310,7 @@ def test_gir_commodities_forecast():
 
     mock_spgcsb = Index('MA74Y70Z4D4TBX9H', 'SPGCSB', 'GSCI Sugar')
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_commodities_forecast)
-    actual = tm.gir_commodities_forecast(mock_spgcsb, tm._CommoditiesForecastPeriod.THREE_MONTH,
+    actual = tm.gir_commodities_forecast(mock_spgcsb, '3m',
                                          tm._CommoditiesForecastType.SPOT_RETURN)
     assert_series_equal(pd.Series([1700, 1400, 1500, 1600], index=pd.to_datetime([datetime.date(2020, 8, 13),
                                                                                   datetime.date(2020, 8, 14),
@@ -3319,8 +3319,119 @@ def test_gir_commodities_forecast():
                                   name='girCommoditiesForecast'), pd.Series(actual))
 
     with pytest.raises(NotImplementedError):
-        tm.gir_commodities_forecast(mock_spgcsb, tm._CommoditiesForecastPeriod.THREE_MONTH,
+        tm.gir_commodities_forecast(mock_spgcsb, '3m',
                                     tm._CommoditiesForecastType.SPOT_RETURN, real_time=True)
+    replace.restore()
+
+
+def mock_forward_curve_peak(_cls, _q):
+    d = {
+        'forwardPrice': [40.05],
+        'quantityBucket': ["PEAK"],
+        'contract': ["U20"]
+    }
+    df = MarketDataResponseFrame(data=d, index=pd.to_datetime([datetime.date(2020, 8, 20)]))
+    df.dataset_ids = _test_datasets
+    return df
+
+
+def mock_forward_curve_peak_holiday(_cls, _q):
+    d = {
+        'forwardPrice': [26.567302],
+        'quantityBucket': ["PEAK"],
+        'contract': ["U20"]
+    }
+    df = MarketDataResponseFrame(data=d, index=pd.to_datetime([datetime.date(2020, 9, 4)]))
+    df.dataset_ids = _test_datasets
+    return df
+
+
+def mock_forward_curve_offpeak(_cls, _q):
+    d = {
+        'forwardPrice': [30.9692, 44.9868],
+        'quantityBucket': ["7X8", "SUH1X16"],
+        'contract': ["U20", "U20"]
+    }
+    df = MarketDataResponseFrame(data=d, index=pd.to_datetime([datetime.date(2020, 8, 20)] * 2))
+    df.dataset_ids = _test_datasets
+    return df
+
+
+def mock_empty_forward_curve(_cls, _q):
+    df = MarketDataResponseFrame()
+    df.dataset_ids = ()
+    return df
+
+
+def test_forward_curve():
+    # Set output and mock attributes for test
+    target = {
+        'Peak_CAISO': [40.05],
+        'OffPeak_CAISO': [34.4736],
+        'Peak_CAISO_holiday': [26.567302]
+    }
+    replace = Replacer()
+    mock_CAISO = Index('MA001', AssetClass.Commod, 'CAISO')
+    bbid_mock = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+    bbid_mock.return_value = 'CAISO'
+    mock_get_data = replace('gs_quant.data.dataset.Dataset.get_data_last', Mock())
+
+    with DataContext(datetime.date(2020, 8, 20), datetime.date(2020, 9, 20)):
+        # Test for term structure for bucket: peak
+        replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_forward_curve_peak)
+        mock_get_data.return_value = pd.DataFrame(data=[0], index=[datetime.date(2020, 8, 20)])
+        actual = tm.forward_curve(mock_CAISO, bucket='Peak', market_date='20200820')
+        assert_series_equal(pd.Series(target['Peak_CAISO'], index=[datetime.date(2020, 9, 1)], name='forwardPrice'),
+                            pd.Series(actual))
+
+        # Test for holiday date query, which would fetch value for prev date
+        replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_forward_curve_peak_holiday)
+        mock_get_data.return_value = pd.DataFrame(data=[0], index=[datetime.date(2020, 9, 4)])
+        actual = tm.forward_curve(mock_CAISO, bucket='Peak', market_date='20200907')
+        assert_series_equal(pd.Series(target['Peak_CAISO_holiday'], index=[datetime.date(2020, 9, 1)],
+                                      name='forwardPrice'), pd.Series(actual))
+
+        # Test for term structure for bucket: Off peak, which requires wtd avg computation
+        replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_forward_curve_offpeak)
+        mock_get_data.return_value = pd.DataFrame(data=[0], index=[datetime.date(2020, 8, 25)])
+        actual = tm.forward_curve(mock_CAISO, bucket='OffPeak', market_date='20200825')
+        assert_series_equal(pd.Series(target['OffPeak_CAISO'], index=[datetime.date(2020, 9, 1)], name='forwardPrice'),
+                            pd.Series(actual))
+
+        # Test for an empty data query result
+        replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_empty_forward_curve)
+        mock_get_data.return_value = pd.DataFrame(data=[0], index=[datetime.date(2020, 8, 25)])
+        actual = tm.forward_curve(mock_CAISO, bucket='OffPeak', market_date='20200825')
+        assert actual.empty
+
+        # Test for intra day frequency error
+        with pytest.raises(MqValueError):
+            tm.forward_curve(mock_CAISO, bucket='7x24', market_date='20200820', real_time=True)
+
+        # Test for future date query
+        with pytest.raises(MqValueError):
+            tm.forward_curve(mock_CAISO, bucket='7x24', market_date='20400820')
+
+        # Test for weekend date query
+        with pytest.raises(MqValueError):
+            tm.forward_curve(mock_CAISO, bucket='7x24', market_date='20200822')
+
+        # Test for term structure for market date beyond end date which is an invalid scenario
+        with pytest.raises(MqValueError):
+            tm.forward_curve(mock_CAISO, bucket='OffPeak', market_date='20201001')
+
+        # Test for empty market date in parameters, will fail as end date for this test is in past
+        with pytest.raises(MqValueError):
+            actual = tm.forward_curve(mock_CAISO, bucket='Peak')
+
+        # Test for invalid market_date data type
+        with pytest.raises(MqTypeError):
+            actual = tm.forward_curve(mock_CAISO, bucket='Peak', market_date=20201001)
+
+        # Test for invalid market_date string format
+        with pytest.raises(MqValueError):
+            actual = tm.forward_curve(mock_CAISO, bucket='Peak', market_date='9, Jan 2020')
+
     replace.restore()
 
 

@@ -92,7 +92,7 @@ class PricingContext(ContextBaseWithDefault):
         :param market_data_location: the location for sourcing market data ('NYC', 'LDN' or 'HKG' (defaults to LDN)
         :param is_async: if True, return (a future) immediately. If False, block (defaults to False)
         :param is_batch: use for calculations expected to run longer than 3 mins, to avoid timeouts.
-            It can be used with is_aync=True|False (defaults to False)
+            It can be used with is_async=True|False (defaults to False)
         :param use_cache: store results in the pricing cache (defaults to False)
         :param visible_to_gs: are the contents of risk requests visible to GS (defaults to False)
         :param csa_term: the csa under which the calculations are made. Default is local ccy ois index
@@ -126,7 +126,22 @@ class PricingContext(ContextBaseWithDefault):
         """
         super().__init__()
 
-        self.__pricing_date = pricing_date or business_day_offset(dt.date.today(), 0, roll='preceding')
+        if market and market_data_location and market.location is not market_data_location:
+            raise ValueError('market.location and market_data_location cannot be different')
+
+        if not market_data_location:
+            if not market:
+                # use parent context's market_data_location
+                if self != self.active_context:
+                    market_data_location = self.active_context.market_data_location
+                # if no parent but there was a context set previously, use that
+                elif self.prior_context:
+                    market_data_location = self.prior_context.market_data_location
+            else:
+                market_data_location = market.location
+
+        self.__pricing_date = pricing_date or (self.prior_context.pricing_date if self.prior_context else
+                                               business_day_offset(dt.date.today(), 0, roll='preceding'))
         self.__csa_term = csa_term
         self.__is_async = is_async
         self.__is_batch = is_batch
@@ -246,6 +261,10 @@ class PricingContext(ContextBaseWithDefault):
     @property
     def active_context(self):
         return next((c for c in reversed(PricingContext.path) if c.is_entered), self)
+
+    @property
+    def prior_context(self):
+        return PricingContext.path[-1] if len(PricingContext.path) else None
 
     @property
     def is_current(self) -> bool:

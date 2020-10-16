@@ -16,8 +16,11 @@ under the License.
 
 import json
 import pathlib
+from unittest import mock
 
+from gs_quant.api.gs.risk import GsRiskApi
 from gs_quant.json_encoder import JSONEncoder
+from gs_quant.session import Environment, GsSession
 
 
 def _remove_unwanted(json_text):
@@ -66,3 +69,70 @@ def mock_request(method, path, payload, test_file_name):
             elif payload == _remove_unwanted(queries['dataQuerySPX']):
                 return load_json_from_resource(test_file_name, 'treod_query_response_spx.json')
     raise Exception(f'Unhandled request. Method: {method}, Path: {path}, payload: {payload} not recognized.')
+
+
+gs_risk_api_exec = GsRiskApi._exec
+
+
+def get_risk_request_id(requests):
+    """
+    This is not a formal equality of the risk request as it covers only the names of core components.  When a formal
+    eq function is provided on risk_request then this should be replaced with something derived from that.
+    :param requests: a collection of RiskRequests
+    :type requests: tuple of RiskRequest
+    :return: hash
+    :rtype: str
+    """
+    identifier = str(len(requests))
+    for request in requests:
+        identifier += '_'
+        identifier += '-'.join(
+            [pos.instrument.name for pos in request.positions])
+        identifier += '-'.join([str(risk) for risk in request.measures])
+        identifier += request.pricing_and_market_data_as_of[0].pricing_date.strftime('%Y%b%d')
+        identifier += request.scenario.scenario.scenario_type if request.scenario is not None else ''
+    return identifier[:232]  # cut down to less than max number of char for filename
+
+
+def mock_calc_create_files(*args, **kwargs):
+    # never leave a side_effect calling this function.  Call it once to create the files, check them in and switch to
+    # mock_calc
+    def get_json(*args, **kwargs):
+        this_json = gs_risk_api_exec(*args, **kwargs)
+        return this_json
+
+    result_json = get_json(*args, **kwargs)
+    request = kwargs.get('request') or args[0]
+
+    with open(pathlib.Path(__file__).parents[1] / f'calc_cache/request{get_risk_request_id(request)}.json',
+              'w') as json_data:
+        json.dump(result_json, json_data)
+
+    return result_json
+
+
+def mock_calc(*args, **kwargs):
+    request = kwargs.get('request') or args[0]
+    with open(pathlib.Path(__file__).parents[1] / f'calc_cache/request{get_risk_request_id(request)}.json') \
+            as json_data:
+        return json.load(json_data)
+
+
+class MockCalc:
+    def __init__(self, mocker, save_files=False):
+        # do not save tests with save_files = True
+        self.save_files = save_files
+        self.mocker = mocker
+
+    def __enter__(self):
+        if self.save_files:
+            GsSession.use(Environment.PROD, None, None)
+            self.mocker.patch.object(GsRiskApi, '_exec', side_effect=mock_calc_create_files)
+        else:
+            from gs_quant.session import OAuth2Session
+            OAuth2Session.init = mock.MagicMock(return_value=None)
+            GsSession.use(Environment.PROD, 'fake_client_id', 'fake_secret')
+            self.mocker.patch.object(GsRiskApi, '_exec', side_effect=mock_calc)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass

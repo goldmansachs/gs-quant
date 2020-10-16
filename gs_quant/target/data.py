@@ -181,6 +181,8 @@ class DataQuery(Base):
         interval: str = None,
         distinct_consecutive: bool = False,
         time_filter: TimeFilter = None,
+        use_field_alias: bool = False,
+        remap_schema_to_alias: bool = False,
         name: str = None
     ):        
         super().__init__()
@@ -213,6 +215,8 @@ class DataQuery(Base):
         self.interval = interval
         self.distinct_consecutive = distinct_consecutive
         self.time_filter = time_filter
+        self.use_field_alias = use_field_alias
+        self.remap_schema_to_alias = remap_schema_to_alias
         self.name = name
 
     @property
@@ -512,6 +516,27 @@ class DataQuery(Base):
         self._property_changed('time_filter')
         self.__time_filter = value        
 
+    @property
+    def use_field_alias(self) -> bool:
+        """Whether to use field alias in the query."""
+        return self.__use_field_alias
+
+    @use_field_alias.setter
+    def use_field_alias(self, value: bool):
+        self._property_changed('use_field_alias')
+        self.__use_field_alias = value        
+
+    @property
+    def remap_schema_to_alias(self) -> bool:
+        """Whether to remap the schema of the output data to field aliases, if aliases have
+           been used to query the data"""
+        return self.__remap_schema_to_alias
+
+    @remap_schema_to_alias.setter
+    def remap_schema_to_alias(self, value: bool):
+        self._property_changed('remap_schema_to_alias')
+        self.__remap_schema_to_alias = value        
+
 
 class DataSetCondition(Base):
         
@@ -711,16 +736,6 @@ class DataSetParameters(Base):
         approver_ids: Tuple[str, ...] = None,
         support_ids: Tuple[str, ...] = None,
         support_distribution_list: Tuple[str, ...] = None,
-        apply_market_data_entitlements: bool = None,
-        upload_data_policy: str = None,
-        identifier_mapper_name: str = None,
-        logical_db: str = None,
-        symbol_strategy: str = None,
-        constant_symbols: Tuple[str, ...] = None,
-        underlying_data_set_id: str = None,
-        immutable: bool = None,
-        include_in_catalog: bool = False,
-        override_query_column_ids: Tuple[str, ...] = None,
         plot: bool = None,
         coverage_enabled: bool = True,
         use_created_time_for_upload: bool = None,
@@ -745,16 +760,6 @@ class DataSetParameters(Base):
         self.approver_ids = approver_ids
         self.support_ids = support_ids
         self.support_distribution_list = support_distribution_list
-        self.apply_market_data_entitlements = apply_market_data_entitlements
-        self.upload_data_policy = upload_data_policy
-        self.identifier_mapper_name = identifier_mapper_name
-        self.logical_db = logical_db
-        self.symbol_strategy = symbol_strategy
-        self.constant_symbols = constant_symbols
-        self.underlying_data_set_id = underlying_data_set_id
-        self.immutable = immutable
-        self.include_in_catalog = include_in_catalog
-        self.override_query_column_ids = override_query_column_ids
         self.plot = plot
         self.coverage_enabled = coverage_enabled
         self.use_created_time_for_upload = use_created_time_for_upload
@@ -934,111 +939,6 @@ class DataSetParameters(Base):
         self.__support_distribution_list = value        
 
     @property
-    def apply_market_data_entitlements(self) -> bool:
-        """Whether market data entitlements are checked."""
-        return self.__apply_market_data_entitlements
-
-    @apply_market_data_entitlements.setter
-    def apply_market_data_entitlements(self, value: bool):
-        self._property_changed('apply_market_data_entitlements')
-        self.__apply_market_data_entitlements = value        
-
-    @property
-    def upload_data_policy(self) -> str:
-        """Policy governing uploads."""
-        return self.__upload_data_policy
-
-    @upload_data_policy.setter
-    def upload_data_policy(self, value: str):
-        self._property_changed('upload_data_policy')
-        self.__upload_data_policy = value        
-
-    @property
-    def identifier_mapper_name(self) -> str:
-        """Identifier mapper associated with dataset."""
-        return self.__identifier_mapper_name
-
-    @identifier_mapper_name.setter
-    def identifier_mapper_name(self, value: str):
-        self._property_changed('identifier_mapper_name')
-        self.__identifier_mapper_name = value        
-
-    @property
-    def identifier_updater_name(self) -> str:
-        """Identifier updater associated with dataset."""
-        return 'REPORT_IDENTIFIER_UPDATER'        
-
-    @property
-    def logical_db(self) -> str:
-        """Database where contents are (to be) stored."""
-        return self.__logical_db
-
-    @logical_db.setter
-    def logical_db(self, value: str):
-        self._property_changed('logical_db')
-        self.__logical_db = value        
-
-    @property
-    def symbol_strategy(self) -> str:
-        """Method for looking up database table name."""
-        return self.__symbol_strategy
-
-    @symbol_strategy.setter
-    def symbol_strategy(self, value: str):
-        self._property_changed('symbol_strategy')
-        self.__symbol_strategy = value        
-
-    @property
-    def constant_symbols(self) -> Tuple[str, ...]:
-        return self.__constant_symbols
-
-    @constant_symbols.setter
-    def constant_symbols(self, value: Tuple[str, ...]):
-        self._property_changed('constant_symbols')
-        self.__constant_symbols = value        
-
-    @property
-    def underlying_data_set_id(self) -> str:
-        """Dataset on which this (virtual) dataset is based."""
-        return self.__underlying_data_set_id
-
-    @underlying_data_set_id.setter
-    def underlying_data_set_id(self, value: str):
-        self._property_changed('underlying_data_set_id')
-        self.__underlying_data_set_id = value        
-
-    @property
-    def immutable(self) -> bool:
-        """Whether dataset is immutable (i.e. not writable through data service)."""
-        return self.__immutable
-
-    @immutable.setter
-    def immutable(self, value: bool):
-        self._property_changed('immutable')
-        self.__immutable = value        
-
-    @property
-    def include_in_catalog(self) -> bool:
-        """Whether dataset should be in the catalog."""
-        return self.__include_in_catalog
-
-    @include_in_catalog.setter
-    def include_in_catalog(self, value: bool):
-        self._property_changed('include_in_catalog')
-        self.__include_in_catalog = value        
-
-    @property
-    def override_query_column_ids(self) -> Tuple[str, ...]:
-        """Explicit set of database columns to query for, regardless of fields specified in
-           request."""
-        return self.__override_query_column_ids
-
-    @override_query_column_ids.setter
-    def override_query_column_ids(self, value: Tuple[str, ...]):
-        self._property_changed('override_query_column_ids')
-        self.__override_query_column_ids = value        
-
-    @property
     def plot(self) -> bool:
         """Whether dataset is intended for use in Plottool."""
         return self.__plot
@@ -1081,41 +981,38 @@ class DataSetParameters(Base):
         self.__apply_entity_entitlements = value        
 
 
-class DataSetTransforms(Base):
+class DeleteCoverageQuery(Base):
         
-    """Dataset transformation specifiers."""
-
     @camel_case_translate
     def __init__(
         self,
-        redact_columns: Tuple[str, ...] = None,
-        round_columns: Tuple[str, ...] = None,
+        where: FieldFilterMap = None,
+        delete_all: bool = False,
         name: str = None
     ):        
         super().__init__()
-        self.redact_columns = redact_columns
-        self.round_columns = round_columns
+        self.where = where
+        self.delete_all = delete_all
         self.name = name
 
     @property
-    def redact_columns(self) -> Tuple[str, ...]:
-        """Redact (exclude) a list of database columns."""
-        return self.__redact_columns
+    def where(self) -> FieldFilterMap:
+        """Filters on data fields."""
+        return self.__where
 
-    @redact_columns.setter
-    def redact_columns(self, value: Tuple[str, ...]):
-        self._property_changed('redact_columns')
-        self.__redact_columns = value        
+    @where.setter
+    def where(self, value: FieldFilterMap):
+        self._property_changed('where')
+        self.__where = value        
 
     @property
-    def round_columns(self) -> Tuple[str, ...]:
-        """Rounds list of database columns."""
-        return self.__round_columns
+    def delete_all(self) -> bool:
+        return self.__delete_all
 
-    @round_columns.setter
-    def round_columns(self, value: Tuple[str, ...]):
-        self._property_changed('round_columns')
-        self.__round_columns = value        
+    @delete_all.setter
+    def delete_all(self, value: bool):
+        self._property_changed('delete_all')
+        self.__delete_all = value        
 
 
 class FieldLinkSelector(Base):
@@ -1166,722 +1063,6 @@ class FieldLinkSelector(Base):
     def display_name(self, value: str):
         self._property_changed('display_name')
         self.__display_name = value        
-
-
-class IdFieldProperties(Base):
-        
-    @camel_case_translate
-    def __init__(
-        self,
-        vehicle_type: Tuple[str, ...] = None,
-        ticker: Tuple[str, ...] = None,
-        position_source_id: Tuple[str, ...] = None,
-        valoren: Tuple[str, ...] = None,
-        hedge_id: Tuple[str, ...] = None,
-        entity_id: Tuple[str, ...] = None,
-        identifier: Tuple[str, ...] = None,
-        subdivision_id: Tuple[str, ...] = None,
-        portfolio_id: Tuple[str, ...] = None,
-        rcic: Tuple[str, ...] = None,
-        primary_country_ric: Tuple[str, ...] = None,
-        country_id: Tuple[str, ...] = None,
-        fred_id: Tuple[str, ...] = None,
-        delisted: Tuple[str, ...] = None,
-        regional_focus: Tuple[str, ...] = None,
-        net_exposure_classification: Tuple[str, ...] = None,
-        feed: Tuple[str, ...] = None,
-        last_returns_end_date: Tuple[datetime.date, ...] = None,
-        implementation_id: Tuple[str, ...] = None,
-        mic: Tuple[str, ...] = None,
-        cusip: Tuple[str, ...] = None,
-        last_updated_by_id: Tuple[str, ...] = None,
-        report_id: Tuple[str, ...] = None,
-        gsid2: Tuple[str, ...] = None,
-        isin: Tuple[str, ...] = None,
-        last_returns_start_date: Tuple[datetime.date, ...] = None,
-        created_by_id: Tuple[str, ...] = None,
-        market_model_id: Tuple[str, ...] = None,
-        ric: Tuple[str, ...] = None,
-        bbid: Tuple[str, ...] = None,
-        bbid_equivalent: Tuple[str, ...] = None,
-        supra_strategy: Tuple[str, ...] = None,
-        kpi_id: Tuple[str, ...] = None,
-        lms_id: Tuple[str, ...] = None,
-        strategy: Tuple[str, ...] = None,
-        owner_id: Tuple[str, ...] = None,
-        asset2_id: Tuple[str, ...] = None,
-        data_set: Tuple[str, ...] = None,
-        prime_id: Tuple[str, ...] = None,
-        backtest_id: Tuple[str, ...] = None,
-        sedol: Tuple[str, ...] = None,
-        run_id: Tuple[str, ...] = None,
-        market_cap_category: Tuple[str, ...] = None,
-        universe_id1: Tuple[str, ...] = None,
-        universe_id2: Tuple[str, ...] = None,
-        wpk: Tuple[str, ...] = None,
-        order_id: Tuple[str, ...] = None,
-        id_: Tuple[str, ...] = None,
-        bcid: Tuple[str, ...] = None,
-        qis_perm_no: Tuple[str, ...] = None,
-        asset_id: Tuple[str, ...] = None,
-        primary_entity_id: Tuple[str, ...] = None,
-        activity_id: Tuple[str, ...] = None,
-        idea_id: Tuple[str, ...] = None,
-        scenario_id: Tuple[str, ...] = None,
-        scenario_group_id: Tuple[str, ...] = None,
-        auto_tags: Tuple[str, ...] = None,
-        tags: Tuple[str, ...] = None,
-        version: Tuple[float, ...] = None,
-        name: Tuple[str, ...] = None,
-        folder_name: Tuple[str, ...] = None,
-        description: Tuple[str, ...] = None
-    ):        
-        super().__init__()
-        self.vehicle_type = vehicle_type
-        self.ticker = ticker
-        self.position_source_id = position_source_id
-        self.valoren = valoren
-        self.hedge_id = hedge_id
-        self.entity_id = entity_id
-        self.identifier = identifier
-        self.subdivision_id = subdivision_id
-        self.portfolio_id = portfolio_id
-        self.rcic = rcic
-        self.primary_country_ric = primary_country_ric
-        self.country_id = country_id
-        self.fred_id = fred_id
-        self.delisted = delisted
-        self.regional_focus = regional_focus
-        self.net_exposure_classification = net_exposure_classification
-        self.feed = feed
-        self.last_returns_end_date = last_returns_end_date
-        self.implementation_id = implementation_id
-        self.mic = mic
-        self.cusip = cusip
-        self.last_updated_by_id = last_updated_by_id
-        self.report_id = report_id
-        self.gsid2 = gsid2
-        self.isin = isin
-        self.last_returns_start_date = last_returns_start_date
-        self.created_by_id = created_by_id
-        self.market_model_id = market_model_id
-        self.ric = ric
-        self.bbid = bbid
-        self.bbid_equivalent = bbid_equivalent
-        self.supra_strategy = supra_strategy
-        self.kpi_id = kpi_id
-        self.lms_id = lms_id
-        self.strategy = strategy
-        self.owner_id = owner_id
-        self.asset2_id = asset2_id
-        self.data_set = data_set
-        self.prime_id = prime_id
-        self.backtest_id = backtest_id
-        self.sedol = sedol
-        self.run_id = run_id
-        self.market_cap_category = market_cap_category
-        self.universe_id1 = universe_id1
-        self.universe_id2 = universe_id2
-        self.wpk = wpk
-        self.order_id = order_id
-        self.__id = id_
-        self.bcid = bcid
-        self.qis_perm_no = qis_perm_no
-        self.asset_id = asset_id
-        self.primary_entity_id = primary_entity_id
-        self.activity_id = activity_id
-        self.idea_id = idea_id
-        self.scenario_id = scenario_id
-        self.scenario_group_id = scenario_group_id
-        self.auto_tags = auto_tags
-        self.tags = tags
-        self.version = version
-        self.name = name
-        self.folder_name = folder_name
-        self.description = description
-
-    @property
-    def vehicle_type(self) -> Tuple[str, ...]:
-        return self.__vehicle_type
-
-    @vehicle_type.setter
-    def vehicle_type(self, value: Tuple[str, ...]):
-        self._property_changed('vehicle_type')
-        self.__vehicle_type = value        
-
-    @property
-    def ticker(self) -> Tuple[str, ...]:
-        """Filter by Ticker."""
-        return self.__ticker
-
-    @ticker.setter
-    def ticker(self, value: Tuple[str, ...]):
-        self._property_changed('ticker')
-        self.__ticker = value        
-
-    @property
-    def position_source_id(self) -> Tuple[str, ...]:
-        """Filter by id"""
-        return self.__position_source_id
-
-    @position_source_id.setter
-    def position_source_id(self, value: Tuple[str, ...]):
-        self._property_changed('position_source_id')
-        self.__position_source_id = value        
-
-    @property
-    def valoren(self) -> Tuple[str, ...]:
-        """Filter by Valoren (subject to licensing)."""
-        return self.__valoren
-
-    @valoren.setter
-    def valoren(self, value: Tuple[str, ...]):
-        self._property_changed('valoren')
-        self.__valoren = value        
-
-    @property
-    def hedge_id(self) -> Tuple[str, ...]:
-        """Filter by hedge id."""
-        return self.__hedge_id
-
-    @hedge_id.setter
-    def hedge_id(self, value: Tuple[str, ...]):
-        self._property_changed('hedge_id')
-        self.__hedge_id = value        
-
-    @property
-    def entity_id(self) -> Tuple[str, ...]:
-        return self.__entity_id
-
-    @entity_id.setter
-    def entity_id(self, value: Tuple[str, ...]):
-        self._property_changed('entity_id')
-        self.__entity_id = value        
-
-    @property
-    def identifier(self) -> Tuple[str, ...]:
-        return self.__identifier
-
-    @identifier.setter
-    def identifier(self, value: Tuple[str, ...]):
-        self._property_changed('identifier')
-        self.__identifier = value        
-
-    @property
-    def subdivision_id(self) -> Tuple[str, ...]:
-        return self.__subdivision_id
-
-    @subdivision_id.setter
-    def subdivision_id(self, value: Tuple[str, ...]):
-        self._property_changed('subdivision_id')
-        self.__subdivision_id = value        
-
-    @property
-    def portfolio_id(self) -> Tuple[str, ...]:
-        """Filter by portfolio id."""
-        return self.__portfolio_id
-
-    @portfolio_id.setter
-    def portfolio_id(self, value: Tuple[str, ...]):
-        self._property_changed('portfolio_id')
-        self.__portfolio_id = value        
-
-    @property
-    def rcic(self) -> Tuple[str, ...]:
-        """Filter by RCIC (subject to licensing)."""
-        return self.__rcic
-
-    @rcic.setter
-    def rcic(self, value: Tuple[str, ...]):
-        self._property_changed('rcic')
-        self.__rcic = value        
-
-    @property
-    def primary_country_ric(self) -> Tuple[str, ...]:
-        """Filter by Primary Country RIC (subject to licensing)."""
-        return self.__primary_country_ric
-
-    @primary_country_ric.setter
-    def primary_country_ric(self, value: Tuple[str, ...]):
-        self._property_changed('primary_country_ric')
-        self.__primary_country_ric = value        
-
-    @property
-    def country_id(self) -> Tuple[str, ...]:
-        return self.__country_id
-
-    @country_id.setter
-    def country_id(self, value: Tuple[str, ...]):
-        self._property_changed('country_id')
-        self.__country_id = value        
-
-    @property
-    def fred_id(self) -> Tuple[str, ...]:
-        return self.__fred_id
-
-    @fred_id.setter
-    def fred_id(self, value: Tuple[str, ...]):
-        self._property_changed('fred_id')
-        self.__fred_id = value        
-
-    @property
-    def delisted(self) -> Tuple[str, ...]:
-        """Filter by delisted status."""
-        return self.__delisted
-
-    @delisted.setter
-    def delisted(self, value: Tuple[str, ...]):
-        self._property_changed('delisted')
-        self.__delisted = value        
-
-    @property
-    def regional_focus(self) -> Tuple[str, ...]:
-        return self.__regional_focus
-
-    @regional_focus.setter
-    def regional_focus(self, value: Tuple[str, ...]):
-        self._property_changed('regional_focus')
-        self.__regional_focus = value        
-
-    @property
-    def net_exposure_classification(self) -> Tuple[str, ...]:
-        return self.__net_exposure_classification
-
-    @net_exposure_classification.setter
-    def net_exposure_classification(self, value: Tuple[str, ...]):
-        self._property_changed('net_exposure_classification')
-        self.__net_exposure_classification = value        
-
-    @property
-    def feed(self) -> Tuple[str, ...]:
-        return self.__feed
-
-    @feed.setter
-    def feed(self, value: Tuple[str, ...]):
-        self._property_changed('feed')
-        self.__feed = value        
-
-    @property
-    def last_returns_end_date(self) -> Tuple[datetime.date, ...]:
-        return self.__last_returns_end_date
-
-    @last_returns_end_date.setter
-    def last_returns_end_date(self, value: Tuple[datetime.date, ...]):
-        self._property_changed('last_returns_end_date')
-        self.__last_returns_end_date = value        
-
-    @property
-    def implementation_id(self) -> Tuple[str, ...]:
-        return self.__implementation_id
-
-    @implementation_id.setter
-    def implementation_id(self, value: Tuple[str, ...]):
-        self._property_changed('implementation_id')
-        self.__implementation_id = value        
-
-    @property
-    def mic(self) -> Tuple[str, ...]:
-        return self.__mic
-
-    @mic.setter
-    def mic(self, value: Tuple[str, ...]):
-        self._property_changed('mic')
-        self.__mic = value        
-
-    @property
-    def cusip(self) -> Tuple[str, ...]:
-        """Filter by CUSIP (subject to licensing)."""
-        return self.__cusip
-
-    @cusip.setter
-    def cusip(self, value: Tuple[str, ...]):
-        self._property_changed('cusip')
-        self.__cusip = value        
-
-    @property
-    def last_updated_by_id(self) -> Tuple[str, ...]:
-        """Filter by last updated user id"""
-        return self.__last_updated_by_id
-
-    @last_updated_by_id.setter
-    def last_updated_by_id(self, value: Tuple[str, ...]):
-        self._property_changed('last_updated_by_id')
-        self.__last_updated_by_id = value        
-
-    @property
-    def report_id(self) -> Tuple[str, ...]:
-        return self.__report_id
-
-    @report_id.setter
-    def report_id(self, value: Tuple[str, ...]):
-        self._property_changed('report_id')
-        self.__report_id = value        
-
-    @property
-    def gsid2(self) -> Tuple[str, ...]:
-        return self.__gsid2
-
-    @gsid2.setter
-    def gsid2(self, value: Tuple[str, ...]):
-        self._property_changed('gsid2')
-        self.__gsid2 = value        
-
-    @property
-    def isin(self) -> Tuple[str, ...]:
-        """Filter by ISIN (subject to licensing)."""
-        return self.__isin
-
-    @isin.setter
-    def isin(self, value: Tuple[str, ...]):
-        self._property_changed('isin')
-        self.__isin = value        
-
-    @property
-    def last_returns_start_date(self) -> Tuple[datetime.date, ...]:
-        return self.__last_returns_start_date
-
-    @last_returns_start_date.setter
-    def last_returns_start_date(self, value: Tuple[datetime.date, ...]):
-        self._property_changed('last_returns_start_date')
-        self.__last_returns_start_date = value        
-
-    @property
-    def created_by_id(self) -> Tuple[str, ...]:
-        """Filter by id of user who created the object"""
-        return self.__created_by_id
-
-    @created_by_id.setter
-    def created_by_id(self, value: Tuple[str, ...]):
-        self._property_changed('created_by_id')
-        self.__created_by_id = value        
-
-    @property
-    def market_model_id(self) -> Tuple[str, ...]:
-        return self.__market_model_id
-
-    @market_model_id.setter
-    def market_model_id(self, value: Tuple[str, ...]):
-        self._property_changed('market_model_id')
-        self.__market_model_id = value        
-
-    @property
-    def ric(self) -> Tuple[str, ...]:
-        """Filter by RIC (subject to licensing)."""
-        return self.__ric
-
-    @ric.setter
-    def ric(self, value: Tuple[str, ...]):
-        self._property_changed('ric')
-        self.__ric = value        
-
-    @property
-    def bbid(self) -> Tuple[str, ...]:
-        """Filter by Bloomberg ID."""
-        return self.__bbid
-
-    @bbid.setter
-    def bbid(self, value: Tuple[str, ...]):
-        self._property_changed('bbid')
-        self.__bbid = value        
-
-    @property
-    def bbid_equivalent(self) -> Tuple[str, ...]:
-        """Filter by Bloomberg equivalent ID."""
-        return self.__bbid_equivalent
-
-    @bbid_equivalent.setter
-    def bbid_equivalent(self, value: Tuple[str, ...]):
-        self._property_changed('bbid_equivalent')
-        self.__bbid_equivalent = value        
-
-    @property
-    def supra_strategy(self) -> Tuple[str, ...]:
-        return self.__supra_strategy
-
-    @supra_strategy.setter
-    def supra_strategy(self, value: Tuple[str, ...]):
-        self._property_changed('supra_strategy')
-        self.__supra_strategy = value        
-
-    @property
-    def kpi_id(self) -> Tuple[str, ...]:
-        return self.__kpi_id
-
-    @kpi_id.setter
-    def kpi_id(self, value: Tuple[str, ...]):
-        self._property_changed('kpi_id')
-        self.__kpi_id = value        
-
-    @property
-    def lms_id(self) -> Tuple[str, ...]:
-        return self.__lms_id
-
-    @lms_id.setter
-    def lms_id(self, value: Tuple[str, ...]):
-        self._property_changed('lms_id')
-        self.__lms_id = value        
-
-    @property
-    def strategy(self) -> Tuple[str, ...]:
-        return self.__strategy
-
-    @strategy.setter
-    def strategy(self, value: Tuple[str, ...]):
-        self._property_changed('strategy')
-        self.__strategy = value        
-
-    @property
-    def owner_id(self) -> Tuple[str, ...]:
-        """Filter by owner ID"""
-        return self.__owner_id
-
-    @owner_id.setter
-    def owner_id(self, value: Tuple[str, ...]):
-        self._property_changed('owner_id')
-        self.__owner_id = value        
-
-    @property
-    def asset2_id(self) -> Tuple[str, ...]:
-        return self.__asset2_id
-
-    @asset2_id.setter
-    def asset2_id(self, value: Tuple[str, ...]):
-        self._property_changed('asset2_id')
-        self.__asset2_id = value        
-
-    @property
-    def data_set(self) -> Tuple[str, ...]:
-        return self.__data_set
-
-    @data_set.setter
-    def data_set(self, value: Tuple[str, ...]):
-        self._property_changed('data_set')
-        self.__data_set = value        
-
-    @property
-    def prime_id(self) -> Tuple[str, ...]:
-        """Filter by primeId."""
-        return self.__prime_id
-
-    @prime_id.setter
-    def prime_id(self, value: Tuple[str, ...]):
-        self._property_changed('prime_id')
-        self.__prime_id = value        
-
-    @property
-    def backtest_id(self) -> Tuple[str, ...]:
-        return self.__backtest_id
-
-    @backtest_id.setter
-    def backtest_id(self, value: Tuple[str, ...]):
-        self._property_changed('backtest_id')
-        self.__backtest_id = value        
-
-    @property
-    def sedol(self) -> Tuple[str, ...]:
-        """Filter by SEDOL (subject to licensing)."""
-        return self.__sedol
-
-    @sedol.setter
-    def sedol(self, value: Tuple[str, ...]):
-        self._property_changed('sedol')
-        self.__sedol = value        
-
-    @property
-    def run_id(self) -> Tuple[str, ...]:
-        return self.__run_id
-
-    @run_id.setter
-    def run_id(self, value: Tuple[str, ...]):
-        self._property_changed('run_id')
-        self.__run_id = value        
-
-    @property
-    def market_cap_category(self) -> Tuple[str, ...]:
-        return self.__market_cap_category
-
-    @market_cap_category.setter
-    def market_cap_category(self, value: Tuple[str, ...]):
-        self._property_changed('market_cap_category')
-        self.__market_cap_category = value        
-
-    @property
-    def universe_id1(self) -> Tuple[str, ...]:
-        return self.__universe_id1
-
-    @universe_id1.setter
-    def universe_id1(self, value: Tuple[str, ...]):
-        self._property_changed('universe_id1')
-        self.__universe_id1 = value        
-
-    @property
-    def universe_id2(self) -> Tuple[str, ...]:
-        return self.__universe_id2
-
-    @universe_id2.setter
-    def universe_id2(self, value: Tuple[str, ...]):
-        self._property_changed('universe_id2')
-        self.__universe_id2 = value        
-
-    @property
-    def wpk(self) -> Tuple[str, ...]:
-        """Filter by WPK (subject to licensing)."""
-        return self.__wpk
-
-    @wpk.setter
-    def wpk(self, value: Tuple[str, ...]):
-        self._property_changed('wpk')
-        self.__wpk = value        
-
-    @property
-    def order_id(self) -> Tuple[str, ...]:
-        return self.__order_id
-
-    @order_id.setter
-    def order_id(self, value: Tuple[str, ...]):
-        self._property_changed('order_id')
-        self.__order_id = value        
-
-    @property
-    def id(self) -> Tuple[str, ...]:
-        """Filter by id"""
-        return self.__id
-
-    @id.setter
-    def id(self, value: Tuple[str, ...]):
-        self._property_changed('id')
-        self.__id = value        
-
-    @property
-    def bcid(self) -> Tuple[str, ...]:
-        """Filter by Bloomberg Composite ID."""
-        return self.__bcid
-
-    @bcid.setter
-    def bcid(self, value: Tuple[str, ...]):
-        self._property_changed('bcid')
-        self.__bcid = value        
-
-    @property
-    def qis_perm_no(self) -> Tuple[str, ...]:
-        return self.__qis_perm_no
-
-    @qis_perm_no.setter
-    def qis_perm_no(self, value: Tuple[str, ...]):
-        self._property_changed('qis_perm_no')
-        self.__qis_perm_no = value        
-
-    @property
-    def asset_id(self) -> Tuple[str, ...]:
-        return self.__asset_id
-
-    @asset_id.setter
-    def asset_id(self, value: Tuple[str, ...]):
-        self._property_changed('asset_id')
-        self.__asset_id = value        
-
-    @property
-    def primary_entity_id(self) -> Tuple[str, ...]:
-        return self.__primary_entity_id
-
-    @primary_entity_id.setter
-    def primary_entity_id(self, value: Tuple[str, ...]):
-        self._property_changed('primary_entity_id')
-        self.__primary_entity_id = value        
-
-    @property
-    def activity_id(self) -> Tuple[str, ...]:
-        return self.__activity_id
-
-    @activity_id.setter
-    def activity_id(self, value: Tuple[str, ...]):
-        self._property_changed('activity_id')
-        self.__activity_id = value        
-
-    @property
-    def idea_id(self) -> Tuple[str, ...]:
-        return self.__idea_id
-
-    @idea_id.setter
-    def idea_id(self, value: Tuple[str, ...]):
-        self._property_changed('idea_id')
-        self.__idea_id = value        
-
-    @property
-    def scenario_id(self) -> Tuple[str, ...]:
-        return self.__scenario_id
-
-    @scenario_id.setter
-    def scenario_id(self, value: Tuple[str, ...]):
-        self._property_changed('scenario_id')
-        self.__scenario_id = value        
-
-    @property
-    def scenario_group_id(self) -> Tuple[str, ...]:
-        return self.__scenario_group_id
-
-    @scenario_group_id.setter
-    def scenario_group_id(self, value: Tuple[str, ...]):
-        self._property_changed('scenario_group_id')
-        self.__scenario_group_id = value        
-
-    @property
-    def auto_tags(self) -> Tuple[str, ...]:
-        """Filter by contents of tags, matches on words"""
-        return self.__auto_tags
-
-    @auto_tags.setter
-    def auto_tags(self, value: Tuple[str, ...]):
-        self._property_changed('auto_tags')
-        self.__auto_tags = value        
-
-    @property
-    def tags(self) -> Tuple[str, ...]:
-        """Filter by contents of tags, matches on words"""
-        return self.__tags
-
-    @tags.setter
-    def tags(self, value: Tuple[str, ...]):
-        self._property_changed('tags')
-        self.__tags = value        
-
-    @property
-    def version(self) -> Tuple[float, ...]:
-        return self.__version
-
-    @version.setter
-    def version(self, value: Tuple[float, ...]):
-        self._property_changed('version')
-        self.__version = value        
-
-    @property
-    def name(self) -> Tuple[str, ...]:
-        """Filter by name (exact match)."""
-        return self.__name
-
-    @name.setter
-    def name(self, value: Tuple[str, ...]):
-        self._property_changed('name')
-        self.__name = value        
-
-    @property
-    def folder_name(self) -> Tuple[str, ...]:
-        return self.__folder_name
-
-    @folder_name.setter
-    def folder_name(self, value: Tuple[str, ...]):
-        self._property_changed('folder_name')
-        self.__folder_name = value        
-
-    @property
-    def description(self) -> Tuple[str, ...]:
-        """Filter by asset description."""
-        return self.__description
-
-    @description.setter
-    def description(self, value: Tuple[str, ...]):
-        self._property_changed('description')
-        self.__description = value        
 
 
 class MDAPI(Base):
@@ -2171,6 +1352,43 @@ class ParserEntity(Base):
         self.__trades = value        
 
 
+class RemapFieldPair(Base):
+        
+    """Field and remapTo field pair."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        field: str = None,
+        remap_to: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.field = field
+        self.remap_to = remap_to
+        self.name = name
+
+    @property
+    def field(self) -> str:
+        """Field to remap."""
+        return self.__field
+
+    @field.setter
+    def field(self, value: str):
+        self._property_changed('field')
+        self.__field = value        
+
+    @property
+    def remap_to(self) -> str:
+        """Field to remap to."""
+        return self.__remap_to
+
+    @remap_to.setter
+    def remap_to(self, value: str):
+        self._property_changed('remap_to')
+        self.__remap_to = value        
+
+
 class SymbolFilterLink(Base):
         
     """The entity type and field used to filter symbols."""
@@ -2397,41 +1615,53 @@ class DataQueryResponse(Base):
         self.__groups = value        
 
 
-class DataSetTransformation(Base):
+class DataSetTransforms(Base):
         
-    """Transform the Dataset output. Can be used with or without certain conditions."""
+    """Dataset transformation specifiers."""
 
     @camel_case_translate
     def __init__(
         self,
-        transforms: DataSetTransforms,
-        condition: DataSetCondition = None,
+        redact_columns: Tuple[str, ...] = None,
+        round_columns: Tuple[str, ...] = None,
+        remap_fields: Tuple[RemapFieldPair, ...] = None,
         name: str = None
     ):        
         super().__init__()
-        self.condition = condition
-        self.transforms = transforms
+        self.redact_columns = redact_columns
+        self.round_columns = round_columns
+        self.remap_fields = remap_fields
         self.name = name
 
     @property
-    def condition(self) -> DataSetCondition:
-        """Condition to match before applying the transformations."""
-        return self.__condition
+    def redact_columns(self) -> Tuple[str, ...]:
+        """Redact (exclude) a list of database columns."""
+        return self.__redact_columns
 
-    @condition.setter
-    def condition(self, value: DataSetCondition):
-        self._property_changed('condition')
-        self.__condition = value        
+    @redact_columns.setter
+    def redact_columns(self, value: Tuple[str, ...]):
+        self._property_changed('redact_columns')
+        self.__redact_columns = value        
 
     @property
-    def transforms(self) -> DataSetTransforms:
-        """Series of transformation actions to perform."""
-        return self.__transforms
+    def round_columns(self) -> Tuple[str, ...]:
+        """Rounds list of database columns."""
+        return self.__round_columns
 
-    @transforms.setter
-    def transforms(self, value: DataSetTransforms):
-        self._property_changed('transforms')
-        self.__transforms = value        
+    @round_columns.setter
+    def round_columns(self, value: Tuple[str, ...]):
+        self._property_changed('round_columns')
+        self.__round_columns = value        
+
+    @property
+    def remap_fields(self) -> Tuple[RemapFieldPair, ...]:
+        """Remaps a list of output fields to a different list of fields."""
+        return self.__remap_fields
+
+    @remap_fields.setter
+    def remap_fields(self, value: Tuple[RemapFieldPair, ...]):
+        self._property_changed('remap_fields')
+        self.__remap_fields = value        
 
 
 class FieldLink(Base):
@@ -2885,6 +2115,43 @@ class ComplexFilter(Base):
         self.__simple_filters = value        
 
 
+class DataSetTransformation(Base):
+        
+    """Transform the Dataset output. Can be used with or without certain conditions."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        transforms: DataSetTransforms,
+        condition: DataSetCondition = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.condition = condition
+        self.transforms = transforms
+        self.name = name
+
+    @property
+    def condition(self) -> DataSetCondition:
+        """Condition to match before applying the transformations."""
+        return self.__condition
+
+    @condition.setter
+    def condition(self, value: DataSetCondition):
+        self._property_changed('condition')
+        self.__condition = value        
+
+    @property
+    def transforms(self) -> DataSetTransforms:
+        """Series of transformation actions to perform."""
+        return self.__transforms
+
+    @transforms.setter
+    def transforms(self, value: DataSetTransforms):
+        self._property_changed('transforms')
+        self.__transforms = value        
+
+
 class FieldColumnPair(Base):
         
     """Map from fields to database columns."""
@@ -2896,6 +2163,7 @@ class FieldColumnPair(Base):
         column: str = None,
         field_description: str = None,
         link: FieldLink = None,
+        aliases: Tuple[str, ...] = None,
         name: str = None
     ):        
         super().__init__()
@@ -2903,6 +2171,7 @@ class FieldColumnPair(Base):
         self.column = column
         self.field_description = field_description
         self.link = link
+        self.aliases = aliases
         self.name = name
 
     @property
@@ -2945,6 +2214,17 @@ class FieldColumnPair(Base):
         self._property_changed('link')
         self.__link = value        
 
+    @property
+    def aliases(self) -> Tuple[str, ...]:
+        """Set of alias fields that can be used to refer to the current field when
+           querying."""
+        return self.__aliases
+
+    @aliases.setter
+    def aliases(self, value: Tuple[str, ...]):
+        self._property_changed('aliases')
+        self.__aliases = value        
+
 
 class DataSetDimensions(Base):
         
@@ -2956,6 +2236,7 @@ class DataSetDimensions(Base):
         symbol_dimensions: Tuple[str, ...],
         time_field: str = None,
         transaction_time_field: str = None,
+        symbol_dimension_properties: Tuple[FieldColumnPair, ...] = None,
         non_symbol_dimensions: Tuple[FieldColumnPair, ...] = None,
         symbol_dimension_link: FieldLink = None,
         linked_dimensions: Tuple[FieldLinkSelector, ...] = None,
@@ -2969,6 +2250,7 @@ class DataSetDimensions(Base):
         self.time_field = time_field
         self.transaction_time_field = transaction_time_field
         self.symbol_dimensions = symbol_dimensions
+        self.symbol_dimension_properties = symbol_dimension_properties
         self.non_symbol_dimensions = non_symbol_dimensions
         self.symbol_dimension_link = symbol_dimension_link
         self.linked_dimensions = linked_dimensions
@@ -3007,6 +2289,16 @@ class DataSetDimensions(Base):
     def symbol_dimensions(self, value: Tuple[str, ...]):
         self._property_changed('symbol_dimensions')
         self.__symbol_dimensions = value        
+
+    @property
+    def symbol_dimension_properties(self) -> Tuple[FieldColumnPair, ...]:
+        """Additional properties for symbol dimensions."""
+        return self.__symbol_dimension_properties
+
+    @symbol_dimension_properties.setter
+    def symbol_dimension_properties(self, value: Tuple[FieldColumnPair, ...]):
+        self._property_changed('symbol_dimension_properties')
+        self.__symbol_dimension_properties = value        
 
     @property
     def non_symbol_dimensions(self) -> Tuple[FieldColumnPair, ...]:

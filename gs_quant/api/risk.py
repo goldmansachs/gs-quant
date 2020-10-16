@@ -15,6 +15,7 @@ under the License.
 """
 from abc import ABCMeta, abstractmethod
 import asyncio
+from concurrent.futures import TimeoutError
 import logging
 import queue
 import sys
@@ -71,13 +72,19 @@ class RiskApi(metaclass=ABCMeta):
         return shutdown, ret
 
     @classmethod
-    def drain_queue(cls, q: queue.Queue) -> Tuple[bool, list]:
-        return cls.__handle_queue_update(q, q.get())
+    def drain_queue(cls, q: queue.Queue, timeout: Optional[int] = None) -> Tuple[bool, list]:
+        try:
+            return cls.__handle_queue_update(q, q.get(timeout=timeout))
+        except queue.Empty:
+            return False, []
 
     @classmethod
-    async def drain_queue_async(cls, q: asyncio.Queue) -> Tuple[bool, list]:
-        elem = await q.get()
-        return cls.__handle_queue_update(q, elem)
+    async def drain_queue_async(cls, q: asyncio.Queue, timeout: Optional[int] = None) -> Tuple[bool, list]:
+        try:
+            elem = await asyncio.wait_for(q.get(), timeout=timeout) if timeout else await q.get()
+            return cls.__handle_queue_update(q, elem)
+        except TimeoutError:
+            return False, []
 
     @classmethod
     def enqueue(cls,
