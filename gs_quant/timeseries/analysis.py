@@ -198,10 +198,10 @@ class LagMode(Enum):
 @plot_function
 def lag(x: pd.Series, obs: Union[Window, int, str] = 1, mode: LagMode = LagMode.EXTEND) -> pd.Series:
     """
-    Lag timeseries by a specified number of observations or a relative date
+    Lag timeseries by a number of observations or a relative date.
 
     :param x: timeseries of prices
-    :param obs: number of observations to lag series or relative date e.g. 3d, 2m, 1y
+    :param obs: non-zero integer (number of observations) or relative date e.g. "-90d", "1d", "1m", "1y"
     :param mode: whether to extend series index (into the future)
     :return: date-based time series of return
 
@@ -249,5 +249,10 @@ def lag(x: pd.Series, obs: Union[Window, int, str] = 1, mode: LagMode = LagMode.
     if mode == LagMode.EXTEND:
         if x.index.resolution != 'day':
             raise MqValueError(f'unable to extend index with resolution {x.index.resolution}')
-        x = x.reindex(x.index.union(pd.date_range(x.index[-1], periods=obs + 1, freq='D')))
+        kwargs = {'periods': abs(obs) + 1, 'freq': 'D'}
+        if obs > 0:
+            kwargs['start'] = x.index[-1]
+        else:
+            kwargs['end'] = x.index[0]
+        x = x.reindex(x.index.union(pd.date_range(**kwargs)))
     return x.shift(obs)

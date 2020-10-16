@@ -20,7 +20,7 @@ from enum import Enum
 import pandas as pd
 
 from gs_quant.backtests.actions import Action
-from gs_quant.backtests.backtest_utils import make_list
+from gs_quant.backtests.backtest_utils import make_list, CalcType
 from gs_quant.backtests.generic_engine import BackTest
 
 
@@ -73,7 +73,7 @@ class Trigger(object):
         self._trigger_requirements = trigger_requirements
         self._actions = make_list(actions)
         self._risks = [x.risk for x in self.actions if x.risk is not None]
-        self._deterministic = True
+        self._calc_type = CalcType.simple
 
     def has_triggered(self, state: datetime.date, backtest: BackTest = None) -> bool:
         """
@@ -85,8 +85,8 @@ class Trigger(object):
         raise RuntimeError('has_triggered to be implemented by subclass')
 
     @property
-    def deterministic(self):
-        return self._deterministic
+    def calc_type(self):
+        return self._calc_type
 
     @property
     def actions(self):
@@ -147,7 +147,7 @@ class StrategyRiskTrigger(Trigger):
                  trigger_requirements: RiskTriggerRequirements,
                  actions: Union[Action, Iterable[Action]]):
         super().__init__(trigger_requirements, actions)
-        self._deterministic = False
+        self._calc_type = CalcType.path_dependent
         self._risks += [trigger_requirements.risk]
 
     def has_triggered(self, state: datetime.date, backtest: BackTest = None) -> bool:

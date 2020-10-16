@@ -55,6 +55,16 @@ class SharpeAssets(Enum):
     SEK = 'MAGNZZY0GJ4TATNG'
 
 
+def excess_returns_pure(price_series: pd.Series, spot_curve: pd.Series) -> pd.Series:
+    curve, bench_curve = align(price_series, spot_curve, Interpolate.INTERSECT)
+
+    e_returns = [curve.iloc[0]]
+    for i in range(1, len(curve)):
+        multiplier = 1 + curve.iloc[i] / curve.iloc[i - 1] - bench_curve.iloc[i] / bench_curve.iloc[i - 1]
+        e_returns.append(e_returns[-1] * multiplier)
+    return pd.Series(e_returns, index=curve.index)
+
+
 def excess_returns(price_series: pd.Series, benchmark_or_rate: Union[Asset, Currency, float], *,
                    day_count_convention=DayCountConvention.ACTUAL_360) -> pd.Series:
     if isinstance(benchmark_or_rate, float):
@@ -77,13 +87,8 @@ def excess_returns(price_series: pd.Series, benchmark_or_rate: Union[Asset, Curr
         df = GsDataApi.get_market_data(q)
     if df.empty:
         raise MqValueError(f'could not retrieve risk-free rate {marquee_id}')
-    curve, bench_curve = align(price_series, df['spot'], Interpolate.INTERSECT)
 
-    e_returns = [curve.iloc[0]]
-    for i in range(1, len(curve)):
-        multiplier = 1 + curve.iloc[i] / curve.iloc[i - 1] - bench_curve.iloc[i] / bench_curve.iloc[i - 1]
-        e_returns.append(e_returns[-1] * multiplier)
-    return pd.Series(e_returns, index=curve.index)
+    return excess_returns_pure(price_series, df['spot'])
 
 
 def _annualized_return(levels: pd.Series, rolling: int) -> pd.Series:
@@ -96,6 +101,14 @@ def _annualized_return(levels: pd.Series, rolling: int) -> pd.Series:
     return pd.Series(points, index=levels.index)
 
 
+def get_ratio_pure(er: pd.Series, w: Union[Window, int, str]) -> pd.Series:
+    w = normalize_window(er, w or None)  # continue to support 0 as an input for window
+    ann_return = _annualized_return(er, w.w)
+    ann_vol = volatility(er, w.w).iloc[1:] if w.w < len(er) else volatility(er)
+    result = ann_return / ann_vol * 100
+    return apply_ramp(result, w)
+
+
 def _get_ratio(input_series: pd.Series, benchmark_or_rate: Union[Asset, float, str], w: Union[Window, int, str], *,
                day_count_convention: DayCountConvention, curve_type: CurveType = CurveType.PRICES) -> pd.Series:
     if curve_type == CurveType.PRICES:
@@ -104,11 +117,7 @@ def _get_ratio(input_series: pd.Series, benchmark_or_rate: Union[Asset, float, s
         assert curve_type == CurveType.EXCESS_RETURNS
         er = input_series
 
-    w = normalize_window(er, w or None)  # continue to support 0 as an input for window
-    ann_return = _annualized_return(er, w.w)
-    ann_vol = volatility(er, w.w).iloc[1:] if w.w < len(er) else volatility(er)
-    result = ann_return / ann_vol * 100
-    return apply_ramp(result, w)
+    return get_ratio_pure(er, w)
 
 
 class RiskFreeRateCurrency(Enum):

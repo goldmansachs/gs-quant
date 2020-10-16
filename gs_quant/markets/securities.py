@@ -873,10 +873,10 @@ class SecurityMaster:
             return Commodity(gs_asset.id, gs_asset.name, entity=asset_entity)
 
         if asset_type in (GsAssetType.FutureMarket.value,):
-            return FutureMarket(gs_asset.id, gs_asset.name, entity=asset_entity)
+            return FutureMarket(gs_asset.id, gs_asset.assetClass, gs_asset.name, entity=asset_entity)
 
         if asset_type in (GsAssetType.FutureContract.value,):
-            return FutureContract(gs_asset.id, gs_asset.name, entity=asset_entity)
+            return FutureContract(gs_asset.id, gs_asset.assetClass, gs_asset.name, entity=asset_entity)
 
         raise TypeError(f'unsupported asset type {asset_type}')
 

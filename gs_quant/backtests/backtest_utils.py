@@ -15,9 +15,16 @@ under the License.
 """
 
 import datetime as dt
+from enum import Enum
 from dateutil.relativedelta import relativedelta
 from gs_quant.datetime.date import business_day_offset
 from gs_quant.instrument import Instrument
+
+
+class CalcType(Enum):
+    simple = 'simple'
+    semi_path_dependent = 'semi_path_dependent'
+    path_dependent = 'path_dependent'
 
 
 def make_list(thing):
@@ -42,14 +49,14 @@ def get_final_date(inst, create_date, duration):
     if hasattr(inst, str(duration)):
         return getattr(inst, str(duration))
     if duration[-1].lower() in ['d', 'b']:
-        return business_day_offset(create_date, duration[:-1])
+        return business_day_offset(create_date, int(duration[:-1]))
     if duration[-1].lower() == 'w':
-        return create_date + relativedelta(weeks=duration[:-1])
+        return create_date + relativedelta(weeks=int(duration[:-1]))
     if duration[-1].lower() == 'm':
-        return create_date + relativedelta(months=duration[:-1])
+        return create_date + relativedelta(months=int(duration[:-1]))
     if duration[-1].lower() == 'y':
-        return create_date + relativedelta(years=duration[:-1])
-    raise RuntimeError('Unable to get final date for {}'.format(duration))
+        return create_date + relativedelta(years=int(duration[:-1]))
+    raise RuntimeError(f'Unable to get final date for {duration}')
 
 
 def scale_trade(inst, ratio):

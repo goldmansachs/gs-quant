@@ -1011,6 +1011,7 @@ class ContentParameters(Base):
         investment_recommendations: InvestmentRecommendations = None,
         is_flow: bool = None,
         is_research_summary: bool = None,
+        is_restricted: bool = None,
         name: str = None
     ):        
         super().__init__()
@@ -1028,6 +1029,7 @@ class ContentParameters(Base):
         self.investment_recommendations = investment_recommendations
         self.is_flow = is_flow
         self.is_research_summary = is_research_summary
+        self.is_restricted = is_restricted
         self.name = name
 
     @property
@@ -1167,6 +1169,15 @@ class ContentParameters(Base):
     def is_research_summary(self, value: bool):
         self._property_changed('is_research_summary')
         self.__is_research_summary = value        
+
+    @property
+    def is_restricted(self) -> bool:
+        return self.__is_restricted
+
+    @is_restricted.setter
+    def is_restricted(self, value: bool):
+        self._property_changed('is_restricted')
+        self.__is_restricted = value        
 
 
 class ContentUpdateResponse(Base):

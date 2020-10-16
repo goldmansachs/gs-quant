@@ -652,8 +652,10 @@ class GsDataApi(DataApi):
         """
         if len(data):
             dataset_types = cls.get_types(dataset_id)
+            # Use first row to infer fields from data
+            incoming_data_data_types = pd.DataFrame([data[0]]).dtypes.to_dict()
 
-            df = pd.DataFrame(data, columns=dataset_types)
+            df = pd.DataFrame(data, columns={**dataset_types, **incoming_data_data_types})
 
             for field_name, type_name in dataset_types.items():
                 if df.get(field_name) is not None and type_name in ('date', 'date-time') and \

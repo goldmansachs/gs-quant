@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import json
 from abc import ABCMeta
 from datetime import date, datetime
 from enum import Enum
@@ -57,6 +58,20 @@ class BaseDataCoordinate(metaclass=ABCMeta):
                    end: Optional[DateOrDatetime] = None):
         pass
 
+    def set_dimensions(self, dimensions: DataDimensions):
+        """Set further dimensions that weren't defined at initialization
+
+        :param dimensions: Additional dimensions to add
+
+        ** Usage **
+
+        For datagrids, we may not know dimension asset_id at point of initialization
+        """
+        _dimensions = self.dimensions
+        for key, v in dimensions.items():
+            _dimensions[key.value if isinstance(key, Enum) else key] = v
+        self.__dimensions = tuple(sorted(_dimensions.items()))
+
 
 class DataCoordinate(BaseDataCoordinate):
     """A coordinate which locates a given datapoint through time"""
@@ -64,8 +79,8 @@ class DataCoordinate(BaseDataCoordinate):
     __slots__ = ['__dataset_id', '__frequency']
 
     def __init__(self,
-                 dataset_id: str,
                  measure: DataMeasure,
+                 dataset_id: Optional[str] = None,
                  dimensions: Optional[DataDimensions] = None,
                  frequency: Optional[DataFrequency] = None):
         """Initialize data coordinate
@@ -111,6 +126,9 @@ class DataCoordinate(BaseDataCoordinate):
 
     def __hash__(self):
         return hash((self.dataset_id, self.measure, tuple(self.dimensions)))
+
+    def __str__(self):
+        return f'Dataset Id: {self.dataset_id}, Measure: {self.measure.value} Dimensions: {json.dumps(self.dimensions)}'
 
     def get_range(self,
                   start: Optional[DateOrDatetime] = None,

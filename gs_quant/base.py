@@ -597,7 +597,11 @@ class QuotableBuilder(Base, metaclass=ABCMeta):
 
 
 class Market(Base):
-    pass
+
+    @property
+    @abstractmethod
+    def location(self):
+        ...
 
 
 class Sentinel:

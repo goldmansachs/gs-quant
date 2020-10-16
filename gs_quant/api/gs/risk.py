@@ -15,11 +15,13 @@ under the License.
 """
 import asyncio
 import base64
+import datetime as dt
 from itertools import chain
 import json
 import logging
 import math
 import msgpack
+from socket import gaierror
 import time
 from typing import Iterable, Optional, Union
 from websockets import ConnectionClosedError
@@ -32,9 +34,14 @@ from gs_quant.target.risk import OptimizationRequest
 _logger = logging.getLogger(__name__)
 
 
+class WebsocketUnavailable(Exception):
+    pass
+
+
 class GsRiskApi(RiskApi):
 
     USE_MSGPACK = False
+    POLL_FOR_BATCH_RESULTS = False
 
     @classmethod
     def calc_multi(cls, requests: Iterable[RiskRequest]) -> dict:
@@ -67,6 +74,56 @@ class GsRiskApi(RiskApi):
 
     @classmethod
     async def get_results(cls, responses: asyncio.Queue, results: asyncio.Queue, timeout: Optional[int] = None):
+        if cls.POLL_FOR_BATCH_RESULTS:
+            return await cls.__get_results_poll(responses, results, timeout=timeout)
+        else:
+            try:
+                return await cls.__get_results_ws(responses, results, timeout=timeout)
+            except WebsocketUnavailable:
+                return await cls.__get_results_poll(responses, results, timeout=timeout)
+
+    @classmethod
+    async def __get_results_poll(cls, responses: asyncio.Queue, results: asyncio.Queue, timeout: Optional[int] = None):
+        run = True
+        pending_requests = {}
+        end_time = dt.datetime.now() + dt.timedelta(seconds=timeout) if timeout else None
+
+        while pending_requests or run:
+            # Check for timeout
+            if end_time is not None and dt.datetime.now() > end_time:
+                _logger.error('Fatal error: timeout while waiting for results')
+                cls.shutdown_queue_listener(results)
+                return
+
+            shutdown, items = await cls.drain_queue_async(responses, timeout=2)
+
+            if shutdown:
+                run = False
+
+            if items:
+                # ... extract the request IDs ...
+                request_ids = [i[1]['reportId'] for i in items]
+
+                # ... update the pending requests ...
+                pending_requests.update(zip(request_ids, (i[0] for i in items)))
+
+            # ... poll for completed requests ...
+            try:
+                calc_results = GsSession.current._post('/risk/calculate/results/bulk', list(pending_requests.keys()))
+            except Exception as e:
+                _logger.error(f'Fatal error: {e}')
+                cls.shutdown_queue_listener(results)
+                return
+
+            # ... enqueue the request and result for the listener to handle ...
+            for result in calc_results:
+                if 'error' in result:
+                    results.put_nowait((pending_requests.pop(result['requestId']), RuntimeError(result['error'])))
+                elif 'result' in result:
+                    results.put_nowait((pending_requests.pop(result['requestId']), result['result']))
+
+    @classmethod
+    async def __get_results_ws(cls, responses: asyncio.Queue, results: asyncio.Queue, timeout: Optional[int] = None):
         async def handle_websocket():
             ret = ''
 
@@ -129,15 +186,14 @@ class GsRiskApi(RiskApi):
                                 pending_requests.update(zip(request_ids, (i[0] for i in items)))
 
                                 # ... add to our result subscription ...
-
                                 await asyncio.wait_for(ws.send(json.dumps(request_ids)), timeout=send_timeout)
 
                                 # ... note dispatched
                                 dispatched.update(request_ids)
                         else:
                             request_listener.cancel()
-            except Exception as e:
-                ret = str(e)
+            except Exception as ee:
+                ret = str(ee)
 
             return ret
 
@@ -164,6 +220,8 @@ class GsRiskApi(RiskApi):
             except asyncio.TimeoutError:
                 error = 'Timed out'
                 attempts = max_attempts
+            except gaierror:
+                raise WebsocketUnavailable()
             except Exception as e:
                 error = str(e)
                 attempts = max_attempts
