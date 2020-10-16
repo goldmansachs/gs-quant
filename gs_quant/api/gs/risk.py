@@ -101,26 +101,27 @@ class GsRiskApi(RiskApi):
                 run = False
 
             if items:
-                # ... extract the request IDs ...
-                request_ids = [i[1]['reportId'] for i in items]
-
                 # ... update the pending requests ...
-                pending_requests.update(zip(request_ids, (i[0] for i in items)))
+                pending_requests.update(((i[1]['reportId'], i[0]) for i in items))
+
+            if not pending_requests:
+                continue
 
             # ... poll for completed requests ...
+
             try:
                 calc_results = GsSession.current._post('/risk/calculate/results/bulk', list(pending_requests.keys()))
+
+                # ... enqueue the request and result for the listener to handle ...
+                for result in calc_results:
+                    if 'error' in result:
+                        results.put_nowait((pending_requests.pop(result['requestId']), RuntimeError(result['error'])))
+                    elif 'result' in result:
+                        results.put_nowait((pending_requests.pop(result['requestId']), result['result']))
             except Exception as e:
                 _logger.error(f'Fatal error: {e}')
                 cls.shutdown_queue_listener(results)
                 return
-
-            # ... enqueue the request and result for the listener to handle ...
-            for result in calc_results:
-                if 'error' in result:
-                    results.put_nowait((pending_requests.pop(result['requestId']), RuntimeError(result['error'])))
-                elif 'result' in result:
-                    results.put_nowait((pending_requests.pop(result['requestId']), result['result']))
 
     @classmethod
     async def __get_results_ws(cls, responses: asyncio.Queue, results: asyncio.Queue, timeout: Optional[int] = None):
