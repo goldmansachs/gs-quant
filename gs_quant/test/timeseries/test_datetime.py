@@ -373,17 +373,26 @@ def test_date_range():
         date(2019, 1, 6),
     ]
 
-    x = pd.Series([1.0, 2.0, 3.0, 4.0, 5.0, 7.0], index=dates)
+    values = [1.0, 2.0, 3.0, 4.0, 5.0, 7.0]
+    s0 = pd.Series(values, index=dates)
+    s1 = pd.Series(values, index=pd.date_range('2019-01-01', periods=6, freq='D'))
 
-    assert (date_range(x, 0, 0) == x).all()
-    assert (date_range(x, 0, 0, True) == x.iloc[:-2]).all()
+    for x in [s0, s1]:
+        assert (date_range(x, 0, 0) == x).all()
+        assert (date_range(x, 0, 0, True) == x.iloc[:-2]).all()
 
-    assert date_range(x, 0, date(2019, 1, 3)).index[-1] == date(2019, 1, 3)
-    assert (date_range(x, 0, date(2019, 1, 3)) == x.iloc[:3]).all()
+        assert date_range(x, 0, date(2019, 1, 3)).index[-1] == date(2019, 1, 3)
+        assert (date_range(x, 0, date(2019, 1, 3)) == x.iloc[:3]).all()
 
-    assert date_range(x, date(2019, 1, 3), date(2019, 1, 6)).index[0] == date(2019, 1, 3)
-    assert date_range(x, date(2019, 1, 3), date(2019, 1, 6)).index[-1] == date(2019, 1, 6)
-    assert (date_range(x, date(2019, 1, 3), date(2019, 1, 6)) == x.iloc[2:6]).all()
+        assert date_range(x, date(2019, 1, 3), date(2019, 1, 6)).index[0] == date(2019, 1, 3)
+        assert date_range(x, date(2019, 1, 3), date(2019, 1, 6)).index[-1] == date(2019, 1, 6)
+        assert (date_range(x, date(2019, 1, 3), date(2019, 1, 6)) == x.iloc[2:6]).all()
+
+    y = pd.Series(values, index=pd.date_range('2020-10-23', periods=6, freq='D'))
+    assert (date_range(y, 1, 1, True) == y.iloc[3:5]).all()
+
+    with pytest.raises(MqValueError):
+        date_range(pd.Series([1]), 0, 0)
 
 
 def test_prepend():
@@ -425,3 +434,7 @@ def test_union():
     actual = union([x, y])
     expected = pd.Series([1.0, np.nan, 3.1, 4.1, 5.0, 6.0], index=pd.date_range('2019-01-01', periods=6, freq='H'))
     assert_series_equal(actual, expected, obj='union of two real-time series')
+
+
+if __name__ == "__main__":
+    pytest.main(args=["test_datetime.py"])

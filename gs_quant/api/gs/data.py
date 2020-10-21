@@ -24,7 +24,7 @@ import cachetools
 import numpy
 import pandas as pd
 from cachetools import TTLCache
-from gs_quant.target.common import FieldFilterMap, XRef, MarketDataVendor, PricingLocation
+from gs_quant.target.common import FieldFilterMap, MarketDataVendor, PricingLocation
 from gs_quant.target.coordinates import MDAPIDataBatchResponse, MDAPIDataQuery, MDAPIDataQueryResponse, MDAPIQueryField
 from gs_quant.target.data import DataQuery, DataQueryResponse
 from gs_quant.target.data import DataSetEntity
@@ -35,7 +35,7 @@ from gs_quant.data.core import DataContext, DataFrequency
 from gs_quant.errors import MqValueError
 from gs_quant.markets import MarketDataCoordinate
 from gs_quant.session import GsSession
-from .assets import GsAssetApi, GsIdType
+from .assets import GsIdType
 from ...target.assets import EntityQuery
 
 _logger = logging.getLogger(__name__)
@@ -111,7 +111,7 @@ class GsDataApi(DataApi):
     @classmethod
     def query_data(cls, query: Union[DataQuery, MDAPIDataQuery], dataset_id: str = None,
                    asset_id_type: Union[GsIdType, str] = None) \
-            -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple]:
+            -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
         if isinstance(query, MDAPIDataQuery) and query.market_data_coordinates:
             # Don't use MDAPIDataBatchResponse for now - it doesn't handle quoting style correctly
             results: Union[MDAPIDataBatchResponse, dict] = cls.execute_query('coordinates', query)
@@ -119,49 +119,8 @@ class GsDataApi(DataApi):
                 return results.get('responses', ())
             else:
                 return results.responses if results.responses is not None else ()
-        elif isinstance(query, DataQuery) and query.where:
-            where = query.where.as_dict() if isinstance(query.where, FieldFilterMap) else query.where
-            xref_keys = set(where.keys()).intersection(XRef.properties())
-            if xref_keys:
-                # Check that assetId is a symbol dimension of this data set. If not, we need to do a separate query
-                # to resolve xref pip install dtaidistance--> assetId
-                if len(xref_keys) > 1:
-                    raise MqValueError('Cannot not specify more than one type of asset identifier')
-
-                definition = cls.get_definition(dataset_id)
-
-                sd = definition.dimensions.symbolDimensions
-                if definition.parameters.symbolStrategy == 'MDAPI' or ('assetId' not in sd and 'gsid' not in sd):
-                    xref_type = min(xref_keys)
-                    if asset_id_type is None:
-                        asset_id_type = xref_type
-
-                    xref_values = where[asset_id_type]
-                    xref_values = (xref_values,) if isinstance(xref_values, str) else xref_values
-                    asset_id_map = GsAssetApi.map_identifiers(xref_type, GsIdType.id, xref_values)
-
-                    if len(asset_id_map) != len(xref_values):
-                        raise MqValueError('Not all {} were resolved to asset Ids'.format(asset_id_type))
-
-                    setattr(query.where, xref_type, None)
-                    query.where.assetId = [asset_id_map[x] for x in xref_values]
-
         response: Union[DataQueryResponse, dict] = cls.execute_query(dataset_id, query)
-
-        results = cls.get_results(dataset_id, response, query)
-
-        if asset_id_type not in {GsIdType.id, None}:
-            asset_ids = tuple(set(filter(None, (r.get('assetId') for r in results))))
-            if asset_ids:
-                xref_map = GsAssetApi.map_identifiers(GsIdType.id, asset_id_type, asset_ids)
-
-                if len(xref_map) != len(asset_ids):
-                    raise MqValueError('Not all asset Ids were resolved to {}'.format(asset_id_type))
-
-                for result in results:
-                    result[asset_id_type] = xref_map[result['assetId']]
-
-        return results
+        return cls.get_results(dataset_id, response, query)
 
     @staticmethod
     def execute_query(dataset_id: str, query: Union[DataQuery, MDAPIDataQuery]):
