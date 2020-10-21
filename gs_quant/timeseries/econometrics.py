@@ -121,50 +121,50 @@ def _get_ratio(input_series: pd.Series, benchmark_or_rate: Union[Asset, float, s
 
 
 class RiskFreeRateCurrency(Enum):
+    USD = "USD"
     AUD = "AUD"
     CHF = "CFH"
     EUR = "EUR"
     GBP = "GBP"
     JPY = "JPY"
     SEK = "SEK"
-    USD = "USD"
 
 
 @plot_session_function
-def excess_returns_(price_series: pd.Series, currency: RiskFreeRateCurrency) -> pd.Series:
+def excess_returns_(price_series: pd.Series, currency: RiskFreeRateCurrency = RiskFreeRateCurrency.USD) -> pd.Series:
     """
     Calculate excess returns
 
     :param price_series: price series
-    :param currency: currency for risk-free rate
+    :param currency: currency for risk-free rate, defaults to USD
     :return: excess returns
 
     **Usage**
 
     Given a price series P and risk-free rate R, excess returns E are defined as:
 
-    :math:`E_t = E_{t-1} + P_t - P_{t-1} * (1 + R * DCF_{t-1,t})`
+    :math:`E_t = E_{t-1} + P_t - P_{t-1} * (1 + R * (D_t - D_{t-1}) / 360)`
 
-    where DCF is day count fraction between two points
+    The `Actual/360 <https://en.wikipedia.org/wiki/Day_count_convention#Actual/360>_` day count convention is used.
 
     **Examples**
 
     Get excess returns from a price series.
 
-    >>> er = excess_returns(generate_series(100), RiskFreeRateCurrency.USD)
+    >>> er = excess_returns(generate_series(100), USD)
     """
     return excess_returns(price_series, Currency(currency.value), day_count_convention=DayCountConvention.ACTUAL_360)
 
 
 @plot_session_function
-def sharpe_ratio(series: pd.Series, currency: RiskFreeRateCurrency, w: Union[Window, int] = None,
-                 curve_type: CurveType = CurveType.PRICES) -> pd.Series:
+def sharpe_ratio(series: pd.Series, currency: RiskFreeRateCurrency = RiskFreeRateCurrency.USD,
+                 w: Union[Window, int] = None, curve_type: CurveType = CurveType.PRICES) -> pd.Series:
     """
     Calculate Sharpe ratio
 
     :param series: series of prices or excess returns for an asset
-    :param currency: currency for risk-free rate
-    :param curve_type: whether input series is of prices or excess returns
+    :param currency: currency for risk-free rate, defaults to USD
+    :param curve_type: whether input series is of prices or excess returns, defaults to prices
     :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
               and 10 the ramp up value.
     :return: Sharpe ratio
@@ -178,15 +178,16 @@ def sharpe_ratio(series: pd.Series, currency: RiskFreeRateCurrency, w: Union[Win
 
     Excess returns E are defined as:
 
-    :math:`E_t = E_{t-1} + P_t - P_{t-1} * (1 + R * DCF_{t-1,t})`
+    :math:`E_t = E_{t-1} + P_t - P_{t-1} * (1 + R * (D_t - D_{t-1}) / 360)`
 
-    where D is the date for a data point and DCF is day count fraction between two points
+    where D is the date for a data point. The
+    `Actual/360 <https://en.wikipedia.org/wiki/Day_count_convention#Actual/360>_` day count convention is used.
 
     **Examples**
 
     Get rolling sharpe ratio of a price series (with window of 252).
 
-    >>> sr = sharpe_ratio(generate_series(100), RiskFreeRateCurrency.USD, 252)
+    >>> sr = sharpe_ratio(generate_series(100), USD, 252, CurveType.PRICES)
 
     **See also**
 

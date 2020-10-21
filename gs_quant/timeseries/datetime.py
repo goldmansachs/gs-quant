@@ -14,8 +14,7 @@
 # Chart Service will attempt to make public functions (not prefixed with _) from this module available. Such functions
 # should be fully documented: docstrings should describe parameters and the return value, and provide a 1-line
 # description. Type annotations should be provided for parameters.
-
-from datetime import date, time
+from datetime import date, time, timedelta
 from numbers import Real
 import numpy as np
 from .helper import *
@@ -455,14 +454,14 @@ def day_count_fractions(
 
 @plot_function
 def date_range(x: pd.Series, start_date: Union[date, int], end_date: Union[date, int],
-               business_days_only: bool = False) -> pd.Series:
+               weekdays_only: bool = False) -> pd.Series:
     """
     Create a time series from a (sub-)range of dates in an existing time series.
 
     :param x: time series
-    :param start_date: start date for the sliced time series. If integer, the number of days after the first date
-    :param end_date: end date for the sliced time series. If integer the number of days before the last date
-    :param business_days_only: whether to include only business dates in the sliced ranges
+    :param start_date: start date for the sliced time series. If integer, number of observations after the first
+    :param end_date: end date for the sliced time series. If integer, number of observations before the last
+    :param weekdays_only: whether to include only weekdays in the sliced ranges
     :return: sliced time series
 
     **Usage**
@@ -483,12 +482,29 @@ def date_range(x: pd.Series, start_date: Union[date, int], end_date: Union[date,
     :func:`day` :func: `lag`
 
     """
+    if not (x.index.is_all_dates or all(map(lambda a: isinstance(a, date), x.index.values))):
+        raise MqValueError('input is not a time series')
+
     if isinstance(start_date, int):
         start_date = x.index[start_date]
     if isinstance(end_date, int):
         end_date = x.index[- (1 + end_date)]
-    week_mask = tuple([True] * 7) if not business_days_only else None
-    return x.loc[_date_range(start_date, end_date, week_mask=week_mask)]
+
+    try:
+        start_date = start_date.date()
+        end_date = end_date.date()
+    except AttributeError:
+        pass
+
+    if weekdays_only:
+        week_mask = None
+        wd = start_date.weekday()
+        if wd > 4:
+            start_date += timedelta(days=7 - wd)
+    else:
+        week_mask = tuple([True] * 7)
+
+    return x.loc[x.index.intersection(list(_date_range(start_date, end_date, week_mask=week_mask)))]
 
 
 @plot_function

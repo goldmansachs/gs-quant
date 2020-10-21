@@ -29,7 +29,6 @@ import requests.adapters
 import requests.cookies
 import ssl
 from typing import List, Optional, Tuple, Union
-import websockets
 from gs_quant.base import Base
 from gs_quant.context_base import ContextBase
 from gs_quant.errors import MqError, MqRequestError, MqAuthenticationError, MqUninitialisedError
@@ -245,6 +244,7 @@ class GsSession(ContextBase):
                               cls=cls, include_version=include_version, timeout=timeout)
 
     def _connect_websocket(self, path: str, headers: Optional[dict] = None):
+        import websockets
         url = 'ws{}{}{}'.format(self.domain[4:], '/' + self.api_version, path)
         extra_headers = self._headers() + list((headers or {}).items())
         return websockets.connect(url,

@@ -24,7 +24,6 @@ import msgpack
 from socket import gaierror
 import time
 from typing import Iterable, Optional, Union
-from websockets import ConnectionClosedError
 
 from gs_quant.api.risk import RiskApi
 from gs_quant.risk import RiskRequest
@@ -205,6 +204,7 @@ class GsRiskApi(RiskApi):
         max_attempts = 5
         send_timeout = 30
 
+        from websockets import ConnectionClosedError
         while attempts < max_attempts:
             if attempts > 0:
                 await asyncio.sleep(math.pow(2, attempts))
