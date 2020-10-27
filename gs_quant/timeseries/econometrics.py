@@ -145,7 +145,7 @@ def excess_returns_(price_series: pd.Series, currency: RiskFreeRateCurrency = Ri
 
     :math:`E_t = E_{t-1} + P_t - P_{t-1} * (1 + R * (D_t - D_{t-1}) / 360)`
 
-    The `Actual/360 <https://en.wikipedia.org/wiki/Day_count_convention#Actual/360>_` day count convention is used.
+    The `Actual/360 <https://en.wikipedia.org/wiki/Day_count_convention#Actual/360>`_ day count convention is used.
 
     **Examples**
 
@@ -181,7 +181,7 @@ def sharpe_ratio(series: pd.Series, currency: RiskFreeRateCurrency = RiskFreeRat
     :math:`E_t = E_{t-1} + P_t - P_{t-1} * (1 + R * (D_t - D_{t-1}) / 360)`
 
     where D is the date for a data point. The
-    `Actual/360 <https://en.wikipedia.org/wiki/Day_count_convention#Actual/360>_` day count convention is used.
+    `Actual/360 <https://en.wikipedia.org/wiki/Day_count_convention#Actual/360>`_ day count convention is used.
 
     **Examples**
 

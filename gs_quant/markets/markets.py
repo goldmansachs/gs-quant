@@ -157,7 +157,7 @@ class OverlayMarket(_OverlayMarket, Market):
 
     def __setitem__(self, key, value):
         self.__market_data[key] = value
-        self._property_changed('market_data')
+        Market._property_changed(self, 'market_data')
 
     def __repr__(self):
         return f'Overlay ({id(self)}): {repr(self.base_market)}'
@@ -167,6 +167,7 @@ class OverlayMarket(_OverlayMarket, Market):
         return tuple(MarketDataCoordinateValue(coordinate=c, value=v) for c, v in self.__market_data.items())
 
     @Market.location.getter
+    @do_not_serialise
     def location(self) -> PricingLocation:
         return self.base_market.location
 

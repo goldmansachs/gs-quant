@@ -372,7 +372,8 @@ def sort_risk(df: pd.DataFrame, by: Tuple[str, ...] = __risk_columns) -> pd.Data
     fns = [__column_sort_fns.get(c) for c in columns]
 
     def cmp(row) -> tuple:
-        return tuple(fns[i](row[i]) if fns[i] else row[i] for i in indices if i != -1)
+        return tuple(
+            (fns[i](row[i]) or 0) if fns[i] else row[i] for i in indices if i != -1)
 
     data = sorted((row for _, row in df.iterrows()), key=cmp)
     fields = [f for f in by if f in columns]
