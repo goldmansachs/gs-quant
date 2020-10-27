@@ -576,7 +576,33 @@ def implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference 
                                           real_time=real_time)
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
-    return _extract_series_from_df(df, QueryType.IMPLIED_VOLATILITY)
+    out = _extract_series_from_df(df, QueryType.IMPLIED_VOLATILITY)
+    ids = set(out.dataset_ids)
+
+    now = datetime.date.today()
+    if not real_time and DataContext.current.end_date >= now:
+        delta = datetime.timedelta(days=1)
+        with DataContext(now - delta, now + delta):
+            q_l = GsDataApi.build_market_data_query([asset_id], QueryType.IMPLIED_VOLATILITY, where=where,
+                                                    source=source, real_time=True, measure='Last')
+        _logger.debug('q_l %s', q_l)
+
+        try:
+            df_l = _market_data_timed(q_l)
+        except Exception as e:
+            _logger.warning('error loading Last of implied_vol', exc_info=e)
+        else:
+            if df_l.empty:
+                _logger.warning('no data for Last of implied_vol')
+            else:
+                ids.union(getattr(df_l, 'dataset_ids', ()))
+                s_l = _extract_series_from_df(df_l, QueryType.IMPLIED_VOLATILITY)
+                s_l.index = s_l.index.tz_convert(None).normalize()
+                out = pd.concat([out, s_l])
+                out = out[~out.index.duplicated(keep='first')]
+
+    out.dataset_ids = tuple(ids)
+    return out
 
 
 def _preprocess_implied_vol_strikes_fx(strike_reference: VolReference = None, relative_strike: Real = None):
@@ -1525,6 +1551,57 @@ def var_term(asset: Asset, pricing_date: Optional[str] = None, forward_start_dat
     return series
 
 
+def _split_conditions(where):
+    la = [dict()]
+    for k, v in where.items():
+        lb = []
+        while len(la) > 0:
+            temp = la.pop()
+            for cv in v:
+                clone = temp.copy()
+                clone[k] = [cv]
+                lb.append(clone)
+        la = lb
+    return la
+
+
+def _get_var_swap_df(asset: Asset, where, source, real_time):
+    ids = []
+    q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.VAR_SWAP,
+                                          where=where, source=source, real_time=real_time)
+    _logger.debug('q %s', q)
+    result = _market_data_timed(q)
+    ids.extend(getattr(result, 'dataset_ids', tuple()))
+
+    now = datetime.date.today()
+    if not real_time and DataContext.current.end_date >= now:
+        where_list = _split_conditions(where)
+        delta = datetime.timedelta(days=1)
+        with DataContext(now - delta, now + delta):
+            net = {"queries": []}
+            for wl in where_list:
+                qp = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.VAR_SWAP,
+                                                       where=wl, source=source, real_time=True, measure='Last')
+                net["queries"].extend(qp["queries"])
+        _logger.debug('last q %s', net)
+
+        try:
+            df_l = _market_data_timed(net)
+            ids.extend(getattr(df_l, 'dataset_ids', tuple()))
+        except Exception as e:
+            _logger.warning('error loading Last of var_swap', exc_info=e)
+        else:
+            if df_l.empty:
+                _logger.warning('no data for Last of var_swap')
+            else:
+                df_l.index = df_l.index.tz_convert(None).normalize()
+                if df_l.index.max() > result.index.max():
+                    result = pd.concat([result, df_l])
+
+    result.dataset_ids = tuple(ids)
+    return result
+
+
 @plot_measure((AssetClass.Equity, AssetClass.Commod,), None, [QueryType.VAR_SWAP])
 def var_swap(asset: Asset, tenor: str, forward_start_date: Optional[str] = None,
              *, source: str = None, real_time: bool = False) -> Series:
@@ -1542,11 +1619,8 @@ def var_swap(asset: Asset, tenor: str, forward_start_date: Optional[str] = None,
 
     if forward_start_date is None:
         _logger.debug('where tenor=%s', tenor)
-        where = dict(tenor=tenor)
-        q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.VAR_SWAP,
-                                              where=where, source=source, real_time=real_time)
-        _logger.debug('q %s', q)
-        df = _market_data_timed(q)
+        where = dict(tenor=[tenor])
+        df = _get_var_swap_df(asset, where, source, real_time)
         series = ExtendedSeries() if df.empty else ExtendedSeries(df[Fields.VAR_SWAP.value])
         series.dataset_ids = getattr(df, 'dataset_ids', ())
         return series
@@ -1568,10 +1642,7 @@ def var_swap(asset: Asset, tenor: str, forward_start_date: Optional[str] = None,
 
         _logger.debug('where tenor=%s', f'{yt},{zt}')
         where = dict(tenor=[yt, zt])
-        q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.VAR_SWAP,
-                                              where=where, source=source, real_time=real_time)
-        _logger.debug('q %s', q)
-        df = _market_data_timed(q)
+        df = _get_var_swap_df(asset, where, source, real_time)
         dataset_ids = getattr(df, 'dataset_ids', ())
         if df.empty:
             series = ExtendedSeries()

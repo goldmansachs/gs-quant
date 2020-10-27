@@ -291,7 +291,7 @@ class GsDataApi(DataApi):
 
     @staticmethod
     def build_market_data_query(asset_ids: List[str], query_type: QueryType, where: Union[FieldFilterMap, Dict] = None,
-                                source: Union[str] = None, real_time: bool = False):
+                                source: Union[str] = None, real_time: bool = False, measure='Curve'):
         inner = {
             'assetIds': asset_ids,
             'queryType': query_type.value,
@@ -299,7 +299,7 @@ class GsDataApi(DataApi):
             'source': source or 'any',
             'frequency': 'Real Time' if real_time else 'End Of Day',
             'measures': [
-                'Curve'
+                measure
             ]
         }
         if real_time:
@@ -356,16 +356,22 @@ class GsDataApi(DataApi):
     def get_market_data(cls, query) -> pd.DataFrame:
         GsSession.current: GsSession
         body = GsSession.current._post('/data/markets', payload=query)
-        container = body['responses'][0]['queryResponse'][0]
-        if 'errorMessages' in container:
-            raise MqValueError(f"market data request {body['requestId']} failed: {container['errorMessages']}")
-        if 'response' not in container:
-            df = MarketDataResponseFrame()
-        else:
-            df = MarketDataResponseFrame(container['response']['data'])
-            df.set_index('date' if 'date' in df.columns else 'time', inplace=True)
-            df.index = pd.to_datetime(df.index)
-        df.dataset_ids = tuple(container.get('dataSetIds', ()))
+
+        ids = []
+        parts = []
+        for e in body['responses']:
+            container = e['queryResponse'][0]
+            ids.extend(container.get('dataSetIds', ()))
+            if 'errorMessages' in container:
+                raise MqValueError(f"market data request {body['requestId']} failed: {container['errorMessages']}")
+            if 'response' in container:
+                df = MarketDataResponseFrame(container['response']['data'])
+                df.set_index('date' if 'date' in df.columns else 'time', inplace=True)
+                df.index = pd.to_datetime(df.index)
+                parts.append(df)
+
+        df = pd.concat(parts) if len(parts) > 0 else MarketDataResponseFrame()
+        df.dataset_ids = tuple(ids)
         return df
 
     @classmethod

@@ -17,7 +17,7 @@ under the License.
 import json
 import pathlib
 from unittest import mock
-
+import datetime
 from gs_quant.api.gs.risk import GsRiskApi
 from gs_quant.json_encoder import JSONEncoder
 from gs_quant.session import Environment, GsSession
@@ -89,7 +89,9 @@ def get_risk_request_id(requests):
         identifier += '-'.join(
             [pos.instrument.name for pos in request.positions])
         identifier += '-'.join([str(risk) for risk in request.measures])
-        identifier += request.pricing_and_market_data_as_of[0].pricing_date.strftime('%Y%b%d')
+        date = request.pricing_and_market_data_as_of[0].pricing_date.strftime('%Y%b%d')
+        today = datetime.date.today().strftime('%Y%b%d')
+        identifier += 'today' if date == today else date
         identifier += request.scenario.scenario.scenario_type if request.scenario is not None else ''
     return identifier[:232]  # cut down to less than max number of char for filename
 

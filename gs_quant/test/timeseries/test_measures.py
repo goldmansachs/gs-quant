@@ -22,6 +22,7 @@ from typing import Union
 import numpy as np
 import pandas as pd
 import pytest
+import pytz
 from gs_quant.target.common import XRef, PricingLocation, Currency as CurrEnum
 from numpy.testing import assert_allclose
 from pandas.testing import assert_series_equal
@@ -656,14 +657,18 @@ def mock_missing_bucket_forward_price(_cls, _q):
     return pd.DataFrame(data=d, index=pd.to_datetime([datetime.date(2019, 1, 2)] * 8))
 
 
-def mock_fx(_cls, _q):
+def mock_fx_vol(_cls, q):
+    queries = q.get('queries', [])
+    if len(queries) > 0 and 'Last' in queries[0]['measures']:
+        return MarketDataResponseFrame({'impliedVolatility': [3]}, index=[pd.Timestamp('2019-01-04T12:00:00Z')])
+
     d = {
         'strikeReference': ['delta', 'spot', 'forward'],
         'relativeStrike': [25, 100, 100],
         'impliedVolatility': [5, 1, 2],
         'forecast': [1.1, 1.1, 1.1]
     }
-    df = MarketDataResponseFrame(data=d, index=_index * 3)
+    df = MarketDataResponseFrame(data=d, index=pd.date_range('2019-01-01', periods=3, freq='D'))
     df.dataset_ids = _test_datasets
     return df
 
@@ -749,6 +754,49 @@ def mock_eq(_cls, _q):
         'fundamentalMetric': [5, 1, 2]
     }
     df = MarketDataResponseFrame(data=d, index=_index * 3)
+    df.dataset_ids = _test_datasets
+    return df
+
+
+def mock_eq_vol(_cls, q):
+    queries = q.get('queries', [])
+    if len(queries) > 0 and 'Last' in queries[0]['measures']:
+        idx = [pd.Timestamp(datetime.datetime.now(pytz.UTC))]
+        return MarketDataResponseFrame({'impliedVolatility': [3]}, index=idx)
+
+    d = {
+        'impliedVolatility': [5, 1, 2],
+    }
+    end = datetime.date.today() - datetime.timedelta(days=1)
+    df = MarketDataResponseFrame(data=d, index=pd.date_range(end=end, periods=3, freq='D'))
+    df.dataset_ids = _test_datasets
+    return df
+
+
+def mock_eq_vol_last_err(_cls, q):
+    queries = q.get('queries', [])
+    if len(queries) > 0 and 'Last' in queries[0]['measures']:
+        raise MqValueError('error while getting last')
+
+    d = {
+        'impliedVolatility': [5, 1, 2],
+    }
+    end = datetime.date.today() - datetime.timedelta(days=1)
+    df = MarketDataResponseFrame(data=d, index=pd.date_range(end=end, periods=3, freq='D'))
+    df.dataset_ids = _test_datasets
+    return df
+
+
+def mock_eq_vol_last_empty(_cls, q):
+    queries = q.get('queries', [])
+    if len(queries) > 0 and 'Last' in queries[0]['measures']:
+        return MarketDataResponseFrame()
+
+    d = {
+        'impliedVolatility': [5, 1, 2],
+    }
+    end = datetime.date.today() - datetime.timedelta(days=1)
+    df = MarketDataResponseFrame(data=d, index=pd.date_range(end=end, periods=3, freq='D'))
     df.dataset_ids = _test_datasets
     return df
 
@@ -1009,17 +1057,38 @@ def test_skew_fx():
 def test_implied_vol():
     replace = Replacer()
     mock_spx = Index('MA890', AssetClass.Equity, 'SPX')
-    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_eq)
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_eq_vol)
+    idx = pd.date_range(end=datetime.date.today(), periods=4, freq='D')
+
     actual = tm.implied_volatility(mock_spx, '1m', tm.VolReference.DELTA_CALL, 25)
-    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='impliedVolatility'), pd.Series(actual))
+    assert_series_equal(pd.Series([5, 1, 2, 3], index=idx, name='impliedVolatility'), pd.Series(actual))
     assert actual.dataset_ids == _test_datasets
     actual = tm.implied_volatility(mock_spx, '1m', tm.VolReference.DELTA_PUT, 75)
-    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='impliedVolatility'), pd.Series(actual))
+    assert_series_equal(pd.Series([5, 1, 2, 3], index=idx, name='impliedVolatility'), pd.Series(actual))
     assert actual.dataset_ids == _test_datasets
     with pytest.raises(MqError):
         tm.implied_volatility(mock_spx, '1m', tm.VolReference.DELTA_NEUTRAL)
     with pytest.raises(MqError):
         tm.implied_volatility(mock_spx, '1m', tm.VolReference.DELTA_CALL)
+    replace.restore()
+
+
+def test_implied_vol_no_last():
+    replace = Replacer()
+    mock_spx = Index('MA890', AssetClass.Equity, 'SPX')
+    idx = pd.date_range(end=datetime.date.today() - datetime.timedelta(days=1), periods=3, freq='D')
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_eq_vol_last_err)
+
+    actual = tm.implied_volatility(mock_spx, '1m', tm.VolReference.DELTA_CALL, 25)
+    assert_series_equal(pd.Series([5, 1, 2], index=idx, name='impliedVolatility'), pd.Series(actual))
+    actual = tm.implied_volatility(mock_spx, '1m', tm.VolReference.DELTA_PUT, 75)
+    assert_series_equal(pd.Series([5, 1, 2], index=idx, name='impliedVolatility'), pd.Series(actual))
+
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_eq_vol_last_empty)
+    actual = tm.implied_volatility(mock_spx, '1m', tm.VolReference.DELTA_CALL, 25)
+    assert_series_equal(pd.Series([5, 1, 2], index=idx, name='impliedVolatility'), pd.Series(actual))
+    actual = tm.implied_volatility(mock_spx, '1m', tm.VolReference.DELTA_PUT, 75)
+    assert_series_equal(pd.Series([5, 1, 2], index=idx, name='impliedVolatility'), pd.Series(actual))
     replace.restore()
 
 
@@ -1032,21 +1101,22 @@ def test_implied_vol_fx():
     replace('gs_quant.markets.securities.SecurityMaster.get_asset', Mock()).return_value = mock
 
     # for different delta strikes
-    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_fx)
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_fx_vol)
     actual = tm.implied_volatility(mock, '1m', tm.VolReference.DELTA_CALL, 25)
-    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='impliedVolatility'), pd.Series(actual))
+    expected = pd.Series([5, 1, 2, 3], index=pd.date_range('2019-01-01', periods=4, freq='D'), name='impliedVolatility')
+    assert_series_equal(expected, pd.Series(actual))
     assert actual.dataset_ids == _test_datasets
     actual = tm.implied_volatility(mock, '1m', tm.VolReference.DELTA_PUT, 25)
-    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='impliedVolatility'), pd.Series(actual))
+    assert_series_equal(expected, pd.Series(actual))
     assert actual.dataset_ids == _test_datasets
     actual = tm.implied_volatility(mock, '1m', tm.VolReference.DELTA_NEUTRAL)
-    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='impliedVolatility'), pd.Series(actual))
+    assert_series_equal(expected, pd.Series(actual))
     assert actual.dataset_ids == _test_datasets
     actual = tm.implied_volatility(mock, '1m', tm.VolReference.FORWARD, 100)
-    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='impliedVolatility'), pd.Series(actual))
+    assert_series_equal(expected, pd.Series(actual))
     assert actual.dataset_ids == _test_datasets
     actual = tm.implied_volatility(mock, '1m', tm.VolReference.SPOT, 100)
-    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='impliedVolatility'), pd.Series(actual))
+    assert_series_equal(expected, pd.Series(actual))
     assert actual.dataset_ids == _test_datasets
 
     # NORMALIZED not supported
@@ -2039,29 +2109,72 @@ def test_forward_var_term():
     replace.restore()
 
 
-def test_var_swap():
-    idx = pd.date_range(start="2019-01-01", periods=4, freq="D")
+def _mock_var_swap_data(_cls, q):
+    queries = q.get('queries', [])
+    if len(queries) > 0 and 'Last' in queries[0]['measures']:
+        return MarketDataResponseFrame({'varSwap': [4]}, index=[pd.Timestamp('2019-01-04T12:00:00Z')])
+
+    idx = pd.date_range(start="2019-01-01", periods=3, freq="D")
     data = {
-        'varSwap': [1, 2, 3, 4]
+        'varSwap': [1, 2, 3]
     }
     out = MarketDataResponseFrame(data=data, index=idx)
     out.dataset_ids = _test_datasets
+    return out
 
+
+def test_var_swap():
     replace = Replacer()
-    market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
-    market_mock.return_value = out
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', _mock_var_swap_data)
 
-    expected = pd.Series([1, 2, 3, 4], name='varSwap', index=idx)
+    expected = pd.Series([1, 2, 3, 4], name='varSwap', index=pd.date_range("2019-01-01", periods=4, freq="D"))
     actual = tm.var_swap(Index('MA123', AssetClass.Equity, '123'), '1m')
     assert_series_equal(expected, pd.Series(actual))
     assert actual.dataset_ids == _test_datasets
-    market_mock.assert_called_once()
 
-    market_mock.reset_mock()
+    market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
     market_mock.return_value = mock_empty_market_data_response()
     actual = tm.var_swap(Index('MA123', AssetClass.Equity, '123'), '1m')
     assert actual.empty
     replace.restore()
+
+
+def _mock_var_swap_fwd(_cls, q):
+    queries = q.get('queries', [])
+    if len(queries) > 0 and 'Last' in queries[0]['measures']:
+        return MarketDataResponseFrame({'varSwap': [4, 4.5], 'tenor': ['1y', '13m']},
+                                       index=[pd.Timestamp('2019-01-04T12:00:00Z')] * 2)
+
+    idx = pd.date_range(start="2019-01-01", periods=3, freq="D")
+    d1 = {
+        'varSwap': [1, 2, 3],
+        'tenor': ['1y'] * 3
+    }
+    d2 = {
+        'varSwap': [1.5, 2.5, 3.5],
+        'tenor': ['13m'] * 3
+    }
+    df1 = MarketDataResponseFrame(data=d1, index=idx)
+    df2 = MarketDataResponseFrame(data=d2, index=idx)
+    out = pd.concat([df1, df2])
+    out.dataset_ids = _test_datasets
+    return out
+
+
+def _mock_var_swap_1t(_cls, q):
+    queries = q.get('queries', [])
+    if len(queries) > 0 and 'Last' in queries[0]['measures']:
+        return MarketDataResponseFrame({'varSwap': [4, 4.5], 'tenor': ['1y', '13m']},
+                                       index=[pd.Timestamp('2019-01-04T12:00:00Z')])
+
+    idx = pd.date_range(start="2019-01-01", periods=3, freq="D")
+    d1 = {
+        'varSwap': [1, 2, 3],
+        'tenor': ['1y'] * 3
+    }
+    df1 = MarketDataResponseFrame(data=d1, index=idx)
+    df1.dataset_ids = _test_datasets
+    return df1
 
 
 def test_var_swap_fwd():
@@ -2070,43 +2183,27 @@ def test_var_swap_fwd():
         tm.var_swap(Index('MA123', AssetClass.Equity, '123'), '1m', 500)
 
     # regular
-    idx = pd.date_range(start="2019-01-01", periods=4, freq="D")
-    d1 = {
-        'varSwap': [1, 2, 3, 4],
-        'tenor': ['1y'] * 4
-    }
-    d2 = {
-        'varSwap': [1.5, 2.5, 3.5, 4.5],
-        'tenor': ['13m'] * 4
-    }
-    df1 = MarketDataResponseFrame(data=d1, index=idx)
-    df2 = MarketDataResponseFrame(data=d2, index=idx)
-    out = pd.concat([df1, df2])
-    out.dataset_ids = _test_datasets
-
     replace = Replacer()
-    market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
-    market_mock.return_value = out
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', _mock_var_swap_fwd)
 
     tenors_mock = replace('gs_quant.timeseries.measures._var_swap_tenors', Mock())
     tenors_mock.return_value = ['1m', '1y', '13m']
 
-    expected = pd.Series([4.1533, 5.7663, 7.1589, 8.4410], name='varSwap', index=idx)
+    expected = pd.Series([4.1533, 5.7663, 7.1589, 8.4410], name='varSwap',
+                         index=pd.date_range(start="2019-01-01", periods=4, freq="D"))
     actual = tm.var_swap(Index('MA123', AssetClass.Equity, '123'), '1m', '1y')
     assert_series_equal(expected, pd.Series(actual))
     assert actual.dataset_ids == _test_datasets
-    market_mock.assert_called_once()
 
     # no data
+    market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
     market_mock.return_value = mock_empty_market_data_response()
     actual = tm.var_swap(Index('MA123', AssetClass.Equity, '123'), '1m', '1y')
     assert actual.empty
     assert actual.dataset_ids == ()
 
     # no data for a tenor
-    out = MarketDataResponseFrame(data=d1, index=idx)
-    out.dataset_ids = _test_datasets
-    market_mock.return_value = out
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', _mock_var_swap_1t)
     actual = tm.var_swap(Index('MA123', AssetClass.Equity, '123'), '1m', '1y')
     assert actual.empty
     assert actual.dataset_ids == ()
