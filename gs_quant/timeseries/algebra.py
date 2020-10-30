@@ -20,6 +20,7 @@ import math
 
 from .datetime import *
 from .helper import plot_function
+from functools import reduce
 from gs_quant.errors import MqTypeError
 
 """
@@ -751,3 +752,52 @@ def if_(flags: pd.Series, x: Union[pd.Series, float], y: Union[pd.Series, float]
     x_flags, x = ensure_series(x)
     y_flags, y = ensure_series(y)
     return pd.concat([x[x_flags == 1], y[y_flags == 0]]).sort_index()
+
+
+@plot_function
+def weighted_sum(series: List[pd.Series], weights: list) -> pd.Series:
+    """
+    Calculate a weighted sum.
+
+    :param series: list of time series
+    :param weights: list of weights
+    :return: time series of weighted average
+
+    **Usage**
+
+    Calculate a weighted sum e.g. for a basket.
+
+    **Examples**
+
+    Generate price series and get a sum (weights 70%/30%).
+
+    >>> prices1 = generate_series(100)
+    >>> prices2 = generate_series(100)
+    >>> mybasket = weighted_sum([prices1, prices2], [0.7, 0.3])
+
+    **See also**
+
+    :func:`basket`
+    """
+    if not all(isinstance(x, pd.Series) for x in series):
+        raise MqTypeError("expected a list of time series")
+    if not all(isinstance(y, (float, int)) for y in weights):
+        raise MqTypeError("expected a list of number for weights")
+    if len(weights) != len(series):
+        raise MqValueError("must have one weight for each time series")
+
+    # for input series, get the intersection of their calendars
+    cal = pd.DatetimeIndex(
+        reduce(
+            np.intersect1d,
+            (
+                curve.index
+                for curve in series
+            ),
+        )
+    )
+
+    # reindex inputs and calculate
+    series = [s.reindex(cal) for s in series]
+    weights = [pd.Series(w, index=cal) for w in weights]
+    return sum(series[i] * weights[i] for i in range(len(series))) / sum(weights)

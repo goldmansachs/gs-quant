@@ -151,6 +151,9 @@ class FloatWithInfo(ScalarWithInfo, float):
                 raise ValueError('FloatWithInfo unit mismatch')
         return super(FloatWithInfo, self).__add__(other)
 
+    def to_frame(self):
+        return self
+
 
 class StringWithInfo(ScalarWithInfo, str):
 
@@ -202,6 +205,9 @@ class SeriesWithInfo(pd.Series, ResultInfo):
     def raw_value(self) -> pd.Series:
         return pd.Series(self)
 
+    def to_frame(self):
+        return pd.DataFrame(self)
+
 
 class DataFrameWithInfo(pd.DataFrame, ResultInfo):
     _internal_names = pd.DataFrame._internal_names + \
@@ -242,6 +248,9 @@ class DataFrameWithInfo(pd.DataFrame, ResultInfo):
         df = pd.concat(v.assign(date=d) for d, v in zip(dates, values)).set_index('date')
 
         return DataFrameWithInfo(df, risk_key=risk_key, unit=unit, error=errors)
+
+    def to_frame(self):
+        return self
 
 
 def aggregate_risk(results: Iterable[Union[DataFrameWithInfo, Future]], threshold: Optional[float] = None) \

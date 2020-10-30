@@ -610,13 +610,15 @@ class CommodOption(Instrument):
         strategy: str = None,
         quantity: Union[float, str] = None,
         quantity_unit: str = None,
-        quantity_period: Union[Period, str] = None,
+        quantity_period: str = None,
         settlement: str = None,
         contract: str = None,
         floating_type: str = None,
         fixing_currency: Union[CurrencyName, str] = None,
         fixing_currency_source: str = None,
         strike: str = None,
+        strike_currency: Union[CurrencyName, str] = None,
+        currency_summary: Union[CurrencyName, str] = None,
         strike_unit: str = None,
         option_type: str = None,
         name: str = None
@@ -639,6 +641,8 @@ class CommodOption(Instrument):
         self.fixing_currency = fixing_currency
         self.fixing_currency_source = fixing_currency_source
         self.strike = strike
+        self.strike_currency = strike_currency
+        self.currency_summary = currency_summary
         self.strike_unit = strike_unit
         self.option_type = option_type
         self.name = name
@@ -754,14 +758,14 @@ class CommodOption(Instrument):
         self.__quantity_unit = value        
 
     @property
-    def quantity_period(self) -> Union[Period, str]:
-        """A coding scheme to define a period corresponding to a quantity amount"""
+    def quantity_period(self) -> str:
+        """period corresponding to a quantity amount"""
         return self.__quantity_period
 
     @quantity_period.setter
-    def quantity_period(self, value: Union[Period, str]):
+    def quantity_period(self, value: str):
         self._property_changed('quantity_period')
-        self.__quantity_period = get_enum_value(Period, value)        
+        self.__quantity_period = value        
 
     @property
     def settlement(self) -> str:
@@ -822,6 +826,26 @@ class CommodOption(Instrument):
     def strike(self, value: str):
         self._property_changed('strike')
         self.__strike = value        
+
+    @property
+    def strike_currency(self) -> Union[CurrencyName, str]:
+        """Currency Names"""
+        return self.__strike_currency
+
+    @strike_currency.setter
+    def strike_currency(self, value: Union[CurrencyName, str]):
+        self._property_changed('strike_currency')
+        self.__strike_currency = get_enum_value(CurrencyName, value)        
+
+    @property
+    def currency_summary(self) -> Union[CurrencyName, str]:
+        """Currency Names"""
+        return self.__currency_summary
+
+    @currency_summary.setter
+    def currency_summary(self, value: Union[CurrencyName, str]):
+        self._property_changed('currency_summary')
+        self.__currency_summary = get_enum_value(CurrencyName, value)        
 
     @property
     def strike_unit(self) -> str:
@@ -2501,7 +2525,7 @@ class FXForward(Instrument):
         self,
         pair: str = None,
         settlement_date: Union[datetime.date, str] = None,
-        forward_rate: float = None,
+        forward_rate: Union[float, str] = None,
         notional_amount: Union[float, str] = None,
         name: str = None
     ):        
@@ -2543,12 +2567,12 @@ class FXForward(Instrument):
         self.__settlement_date = value        
 
     @property
-    def forward_rate(self) -> float:
+    def forward_rate(self) -> Union[float, str]:
         """Forward FX rate"""
         return self.__forward_rate
 
     @forward_rate.setter
-    def forward_rate(self, value: float):
+    def forward_rate(self, value: Union[float, str]):
         self._property_changed('forward_rate')
         self.__forward_rate = value        
 
@@ -4912,8 +4936,8 @@ class IRSwap(Instrument):
         floating_first_stub: Union[Union[datetime.date, str], str] = None,
         fixed_last_stub: Union[Union[datetime.date, str], str] = None,
         floating_last_stub: Union[Union[datetime.date, str], str] = None,
-        fixed_hols: str = None,
-        floating_hols: str = None,
+        fixed_holidays: str = None,
+        floating_holidays: str = None,
         roll_convention: str = None,
         name: str = None
     ):        
@@ -4943,8 +4967,8 @@ class IRSwap(Instrument):
         self.floating_first_stub = floating_first_stub
         self.fixed_last_stub = fixed_last_stub
         self.floating_last_stub = floating_last_stub
-        self.fixed_hols = fixed_hols
-        self.floating_hols = floating_hols
+        self.fixed_holidays = fixed_holidays
+        self.floating_holidays = floating_holidays
         self.roll_convention = roll_convention
         self.name = name
 
@@ -5210,24 +5234,24 @@ class IRSwap(Instrument):
         self.__floating_last_stub = value        
 
     @property
-    def fixed_hols(self) -> str:
+    def fixed_holidays(self) -> str:
         """The accrual calendar for fixed leg"""
-        return self.__fixed_hols
+        return self.__fixed_holidays
 
-    @fixed_hols.setter
-    def fixed_hols(self, value: str):
-        self._property_changed('fixed_hols')
-        self.__fixed_hols = value        
+    @fixed_holidays.setter
+    def fixed_holidays(self, value: str):
+        self._property_changed('fixed_holidays')
+        self.__fixed_holidays = value        
 
     @property
-    def floating_hols(self) -> str:
+    def floating_holidays(self) -> str:
         """The accrual calendar for floating leg"""
-        return self.__floating_hols
+        return self.__floating_holidays
 
-    @floating_hols.setter
-    def floating_hols(self, value: str):
-        self._property_changed('floating_hols')
-        self.__floating_hols = value        
+    @floating_holidays.setter
+    def floating_holidays(self, value: str):
+        self._property_changed('floating_holidays')
+        self.__floating_holidays = value        
 
     @property
     def roll_convention(self) -> str:
@@ -5586,8 +5610,8 @@ class IRXccySwap(Instrument):
         receiver_first_stub: Union[Union[datetime.date, str], str] = None,
         payer_last_stub: Union[Union[datetime.date, str], str] = None,
         receiver_last_stub: Union[Union[datetime.date, str], str] = None,
-        payer_hols: str = None,
-        receiver_hols: str = None,
+        payer_holidays: str = None,
+        receiver_holidays: str = None,
         notional_reset_side: Union[PayReceive, str] = None,
         name: str = None
     ):        
@@ -5618,8 +5642,8 @@ class IRXccySwap(Instrument):
         self.receiver_first_stub = receiver_first_stub
         self.payer_last_stub = payer_last_stub
         self.receiver_last_stub = receiver_last_stub
-        self.payer_hols = payer_hols
-        self.receiver_hols = receiver_hols
+        self.payer_holidays = payer_holidays
+        self.receiver_holidays = receiver_holidays
         self.notional_reset_side = notional_reset_side
         self.name = name
 
@@ -5895,24 +5919,24 @@ class IRXccySwap(Instrument):
         self.__receiver_last_stub = value        
 
     @property
-    def payer_hols(self) -> str:
+    def payer_holidays(self) -> str:
         """The accrual calendar for payer leg"""
-        return self.__payer_hols
+        return self.__payer_holidays
 
-    @payer_hols.setter
-    def payer_hols(self, value: str):
-        self._property_changed('payer_hols')
-        self.__payer_hols = value        
+    @payer_holidays.setter
+    def payer_holidays(self, value: str):
+        self._property_changed('payer_holidays')
+        self.__payer_holidays = value        
 
     @property
-    def receiver_hols(self) -> str:
+    def receiver_holidays(self) -> str:
         """The accrual calendar for receiver leg"""
-        return self.__receiver_hols
+        return self.__receiver_holidays
 
-    @receiver_hols.setter
-    def receiver_hols(self, value: str):
-        self._property_changed('receiver_hols')
-        self.__receiver_hols = value        
+    @receiver_holidays.setter
+    def receiver_holidays(self, value: str):
+        self._property_changed('receiver_holidays')
+        self.__receiver_holidays = value        
 
     @property
     def notional_reset_side(self) -> Union[PayReceive, str]:
@@ -6196,8 +6220,8 @@ class IRXccySwapFixFlt(Instrument):
         floating_first_stub: Union[Union[datetime.date, str], str] = None,
         fixed_last_stub: Union[Union[datetime.date, str], str] = None,
         floating_last_stub: Union[Union[datetime.date, str], str] = None,
-        fixed_hols: str = None,
-        floating_hols: str = None,
+        fixed_holidays: str = None,
+        floating_holidays: str = None,
         name: str = None
     ):        
         super().__init__()
@@ -6226,8 +6250,8 @@ class IRXccySwapFixFlt(Instrument):
         self.floating_first_stub = floating_first_stub
         self.fixed_last_stub = fixed_last_stub
         self.floating_last_stub = floating_last_stub
-        self.fixed_hols = fixed_hols
-        self.floating_hols = floating_hols
+        self.fixed_holidays = fixed_holidays
+        self.floating_holidays = floating_holidays
         self.name = name
 
     @property
@@ -6492,24 +6516,24 @@ class IRXccySwapFixFlt(Instrument):
         self.__floating_last_stub = value        
 
     @property
-    def fixed_hols(self) -> str:
+    def fixed_holidays(self) -> str:
         """The accrual calendar for fixed leg"""
-        return self.__fixed_hols
+        return self.__fixed_holidays
 
-    @fixed_hols.setter
-    def fixed_hols(self, value: str):
-        self._property_changed('fixed_hols')
-        self.__fixed_hols = value        
+    @fixed_holidays.setter
+    def fixed_holidays(self, value: str):
+        self._property_changed('fixed_holidays')
+        self.__fixed_holidays = value        
 
     @property
-    def floating_hols(self) -> str:
+    def floating_holidays(self) -> str:
         """The accrual calendar for floating leg"""
-        return self.__floating_hols
+        return self.__floating_holidays
 
-    @floating_hols.setter
-    def floating_hols(self, value: str):
-        self._property_changed('floating_hols')
-        self.__floating_hols = value        
+    @floating_holidays.setter
+    def floating_holidays(self, value: str):
+        self._property_changed('floating_holidays')
+        self.__floating_holidays = value        
 
 
 class IRXccySwapFltFlt(Instrument):
@@ -6544,8 +6568,8 @@ class IRXccySwapFltFlt(Instrument):
         receiver_first_stub: Union[Union[datetime.date, str], str] = None,
         payer_last_stub: Union[Union[datetime.date, str], str] = None,
         receiver_last_stub: Union[Union[datetime.date, str], str] = None,
-        payer_hols: str = None,
-        receiver_hols: str = None,
+        payer_holidays: str = None,
+        receiver_holidays: str = None,
         name: str = None
     ):        
         super().__init__()
@@ -6574,8 +6598,8 @@ class IRXccySwapFltFlt(Instrument):
         self.receiver_first_stub = receiver_first_stub
         self.payer_last_stub = payer_last_stub
         self.receiver_last_stub = receiver_last_stub
-        self.payer_hols = payer_hols
-        self.receiver_hols = receiver_hols
+        self.payer_holidays = payer_holidays
+        self.receiver_holidays = receiver_holidays
         self.name = name
 
     @property
@@ -6840,24 +6864,24 @@ class IRXccySwapFltFlt(Instrument):
         self.__receiver_last_stub = value        
 
     @property
-    def payer_hols(self) -> str:
+    def payer_holidays(self) -> str:
         """The accrual calendar for payer leg"""
-        return self.__payer_hols
+        return self.__payer_holidays
 
-    @payer_hols.setter
-    def payer_hols(self, value: str):
-        self._property_changed('payer_hols')
-        self.__payer_hols = value        
+    @payer_holidays.setter
+    def payer_holidays(self, value: str):
+        self._property_changed('payer_holidays')
+        self.__payer_holidays = value        
 
     @property
-    def receiver_hols(self) -> str:
+    def receiver_holidays(self) -> str:
         """The accrual calendar for receiver leg"""
-        return self.__receiver_hols
+        return self.__receiver_holidays
 
-    @receiver_hols.setter
-    def receiver_hols(self, value: str):
-        self._property_changed('receiver_hols')
-        self.__receiver_hols = value        
+    @receiver_holidays.setter
+    def receiver_holidays(self, value: str):
+        self._property_changed('receiver_holidays')
+        self.__receiver_holidays = value        
 
 
 class InflationSwap(Instrument):

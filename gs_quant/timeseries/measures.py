@@ -196,7 +196,7 @@ class _FactorProfileMetric(Enum):
     INTEGRATED_SCORE = 'integratedScore'
 
 
-class _CommoditiesForecastType(Enum):
+class _CommodityForecastType(Enum):
     SPOT = 'spot'
     SPOT_RETURN = 'spotReturn'
     ROLL_RETURN = 'rollReturn'
@@ -644,6 +644,15 @@ def _preprocess_implied_vol_strikes_eq(strike_reference: VolReference = None, re
     return ref_string, relative_strike
 
 
+def _check_top_n(top_n):
+    if top_n is None:
+        return
+    try:
+        float(top_n)
+    except (ValueError, TypeError):
+        raise MqValueError(f'top_n should be a number, not a {type(top_n).__name__}')
+
+
 @plot_measure((AssetClass.Equity,), (AssetType.Index, AssetType.ETF,), [QueryType.IMPLIED_CORRELATION])
 def implied_correlation(asset: Asset, tenor: str, strike_reference: EdrDataReference, relative_strike: Real,
                         top_n_of_index: Optional[int] = None, composition_date: Optional[GENERIC_DATE] = None, *,
@@ -668,6 +677,7 @@ def implied_correlation(asset: Asset, tenor: str, strike_reference: EdrDataRefer
     if top_n_of_index is None and composition_date is not None:
         raise MqValueError('specify top_n_of_index to get the implied correlation of top constituents')
 
+    _check_top_n(top_n_of_index)
     if top_n_of_index is not None and top_n_of_index > 100:
         raise MqValueError('maximum number of constituents exceeded while using top_n_of_index')
 
@@ -757,6 +767,7 @@ def average_implied_volatility(asset: Asset, tenor: str, strike_reference: EdrDa
     if top_n_of_index is None and composition_date is not None:
         raise MqValueError('Specify top_n_of_index to get the average implied volatility of top constituents')
 
+    _check_top_n(top_n_of_index)
     if top_n_of_index is not None and top_n_of_index > 100:
         raise NotImplementedError('Maximum number of constituents exceeded. Do not use top_n_of_index to calculate on '
                                   'the full list')
@@ -876,6 +887,7 @@ def average_realized_volatility(asset: Asset, tenor: str, returns_type: Returns 
         raise NotImplementedError('returns type {} not supported for average realized volatility of all constituents'
                                   .format(returns_type))
 
+    _check_top_n(top_n_of_index)
     if top_n_of_index is not None and top_n_of_index > 200:
         raise NotImplementedError('Maximum number of constituents exceeded. Do not use top_n_of_index to calculate on '
                                   'the full list')
@@ -1142,9 +1154,9 @@ def basis(asset: Asset, termination_tenor: str, *, source: str = None, real_time
 
 
 @plot_measure((AssetClass.FX,), (AssetType.Cross,), [MeasureDependency(
-    id_provider=cross_to_usd_based_cross, query_type=QueryType.GIR_FX_FORECAST)])
-def gir_fx_forecast(asset: Asset, relativePeriod: FxForecastHorizon = FxForecastHorizon.THREE_MONTH, *,
-                    source: str = None, real_time: bool = False) -> Series:
+    id_provider=cross_to_usd_based_cross, query_type=QueryType.FX_FORECAST)])
+def fx_forecast(asset: Asset, relativePeriod: FxForecastHorizon = FxForecastHorizon.THREE_MONTH, *,
+                source: str = None, real_time: bool = False) -> Series:
     """
     FX forecasts made by Global Investment Research (GIR) macro analysts.
 
@@ -1155,11 +1167,11 @@ def gir_fx_forecast(asset: Asset, relativePeriod: FxForecastHorizon = FxForecast
     :return: FX forecast curve
     """
     if real_time:
-        raise NotImplementedError('realtime forecast not implemented')
+        raise NotImplementedError('realtime fx_forecast not implemented')
 
     cross_mqid = asset.get_marquee_id()
     usd_based_cross_mqid = cross_to_usd_based_cross(cross_mqid)
-    query_type = QueryType.GIR_FX_FORECAST
+    query_type = QueryType.FX_FORECAST
 
     q = GsDataApi.build_market_data_query(
         [usd_based_cross_mqid],
@@ -2680,6 +2692,7 @@ def realized_correlation(asset: Asset, tenor: str, top_n_of_index: Optional[int]
     if top_n_of_index is None and composition_date is not None:
         raise MqValueError('specify top_n_of_index to get realized correlation of top constituents')
 
+    _check_top_n(top_n_of_index)
     if top_n_of_index is not None and top_n_of_index > 100:
         raise MqValueError('number of constituents (top_n_of_index) must be <= 100')
 
@@ -2826,9 +2839,9 @@ def gir_rating(asset: Asset, metric: _RatingMetric, *, source: str = None, real_
 
 
 @plot_measure((AssetClass.FX,), (AssetType.Cross,), [MeasureDependency(
-    id_provider=cross_to_usd_based_cross, query_type=QueryType.GIR_GSDEER_GSFEER)])
-def gir_gsdeer_gsfeer(asset: Asset, metric: EquilibriumExchangeRateMetric = EquilibriumExchangeRateMetric.GSDEER, *,
-                      source: str = None, real_time: bool = False) -> Series:
+    id_provider=cross_to_usd_based_cross, query_type=QueryType.FAIR_VALUE)])
+def fair_value(asset: Asset, metric: EquilibriumExchangeRateMetric = EquilibriumExchangeRateMetric.GSDEER, *,
+               source: str = None, real_time: bool = False) -> Series:
     """
     GSDEER and GSFEER quarterly estimates for currency fair values made by Global Investment Research (GIR)
     macro analysts.
@@ -2839,7 +2852,7 @@ def gir_gsdeer_gsfeer(asset: Asset, metric: EquilibriumExchangeRateMetric = Equi
     :return: gsdeer/gsfeer data of the asset for the field requested
     """
     if real_time:
-        raise NotImplementedError('real-time gir_gsdeer_gsfeer not implemented')
+        raise NotImplementedError('real-time fair_value not implemented')
     mqid = asset.get_marquee_id()
     usd_based_cross_mqid = cross_to_usd_based_cross(mqid)
     ds = Dataset('GSDEER_GSFEER')
@@ -2894,11 +2907,9 @@ def gir_factor_profile(asset: Asset, metric: _FactorProfileMetric, *, source: st
     return series
 
 
-@plot_measure((AssetClass.Commod,), (AssetType.Commodity, AssetType.Index,), [QueryType.GIR_COMMODITIES_FORECAST])
-def gir_commodities_forecast(asset: Asset, forecastPeriod: str,
-                             forecastType: _CommoditiesForecastType = _CommoditiesForecastType.SPOT_RETURN, *,
-                             source: str = None,
-                             real_time: bool = False) -> Series:
+@plot_measure((AssetClass.Commod,), (AssetType.Commodity, AssetType.Index,), [QueryType.COMMODITY_FORECAST])
+def commodity_forecast(asset: Asset, forecastPeriod: str, forecastType: _CommodityForecastType, *,
+                       source: str = None, real_time: bool = False) -> Series:
     """
     Short and long-term commodities forecast.
     :param asset: asset object loaded from security master
@@ -2911,9 +2922,9 @@ def gir_commodities_forecast(asset: Asset, forecastPeriod: str,
     :return: Forecast Value of the commodity or index as requested
     """
     if real_time:
-        raise NotImplementedError('real-time rating not implemented')
+        raise NotImplementedError('real-time commodity_forecast not implemented')
     mqid = asset.get_marquee_id()
-    query_type = QueryType.GIR_COMMODITIES_FORECAST
+    query_type = QueryType.COMMODITY_FORECAST
     _logger.debug('where assetId=%s, forecastPeriod=%s, forecastType=%s, query_type=%s',
                   mqid, forecastPeriod, forecastType, query_type.value)
     q = GsDataApi.build_market_data_query(

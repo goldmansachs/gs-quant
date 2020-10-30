@@ -95,70 +95,36 @@ class ReportType(EnumBase, Enum):
     Backtest_Run = 'Backtest Run'
     Analytics = 'Analytics'
     Risk_Calculation = 'Risk Calculation'
+    PCO_Generate_Orders = 'PCO Generate Orders'
+    PCO_Program_Change = 'PCO Program Change'
     
     def __repr__(self):
         return self.value
 
 
-class ReportBatchScheduleRequest(Base):
+class ParametersOverrides(Base):
         
-    """Parameters in order to schedule a batch of reports"""
+    """Overriding parameters specific to the report type"""
 
     @camel_case_translate
     def __init__(
         self,
-        reports: Tuple[str, ...] = None,
-        end_date: datetime.date = None,
-        start_date: datetime.date = None,
-        parameters: ReportParameters = None,
+        csa_term: str = None,
         name: str = None
     ):        
         super().__init__()
-        self.reports = reports
-        self.end_date = end_date
-        self.start_date = start_date
-        self.parameters = parameters
+        self.csa_term = csa_term
         self.name = name
 
     @property
-    def reports(self) -> Tuple[str, ...]:
-        """Marquee unique identifier"""
-        return self.__reports
+    def csa_term(self) -> str:
+        """The CSA Term for CSA specific discounting, e.g. EUR-1"""
+        return self.__csa_term
 
-    @reports.setter
-    def reports(self, value: Tuple[str, ...]):
-        self._property_changed('reports')
-        self.__reports = value        
-
-    @property
-    def end_date(self) -> datetime.date:
-        """ISO 8601-formatted date"""
-        return self.__end_date
-
-    @end_date.setter
-    def end_date(self, value: datetime.date):
-        self._property_changed('end_date')
-        self.__end_date = value        
-
-    @property
-    def start_date(self) -> datetime.date:
-        """ISO 8601-formatted date"""
-        return self.__start_date
-
-    @start_date.setter
-    def start_date(self, value: datetime.date):
-        self._property_changed('start_date')
-        self.__start_date = value        
-
-    @property
-    def parameters(self) -> ReportParameters:
-        """Parameters specific to the report type"""
-        return self.__parameters
-
-    @parameters.setter
-    def parameters(self, value: ReportParameters):
-        self._property_changed('parameters')
-        self.__parameters = value        
+    @csa_term.setter
+    def csa_term(self, value: str):
+        self._property_changed('csa_term')
+        self.__csa_term = value        
 
 
 class ReportRescheduleRequest(Base):
@@ -199,8 +165,8 @@ class User(Base):
         email: str,
         name: str,
         internal: bool = None,
-        system_user: bool = False,
-        app_user: bool = False,
+        system_user: bool = None,
+        app_user: bool = None,
         analytics_id: str = None,
         eaa_company: str = None,
         root_oe_id: str = None,
@@ -1211,3 +1177,113 @@ class ReportToggleEntityRequest(Base):
     def is_delete(self, value: bool):
         self._property_changed('is_delete')
         self.__is_delete = value        
+
+
+class ReportWithParametersOverrides(Base):
+        
+    """Reports with their parameters to be overridden"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        report_id: str = None,
+        parameters: ParametersOverrides = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.report_id = report_id
+        self.parameters = parameters
+        self.name = name
+
+    @property
+    def report_id(self) -> str:
+        """Marquee unique identifier"""
+        return self.__report_id
+
+    @report_id.setter
+    def report_id(self, value: str):
+        self._property_changed('report_id')
+        self.__report_id = value        
+
+    @property
+    def parameters(self) -> ParametersOverrides:
+        """Overriding parameters specific to the report type"""
+        return self.__parameters
+
+    @parameters.setter
+    def parameters(self, value: ParametersOverrides):
+        self._property_changed('parameters')
+        self.__parameters = value        
+
+
+class ReportBatchScheduleRequest(Base):
+        
+    """Parameters in order to schedule a batch of reports"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        reports: Tuple[str, ...] = None,
+        reports_with_parameters_overrides: Tuple[ReportWithParametersOverrides, ...] = None,
+        end_date: datetime.date = None,
+        start_date: datetime.date = None,
+        parameters: ReportParameters = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.reports = reports
+        self.reports_with_parameters_overrides = reports_with_parameters_overrides
+        self.end_date = end_date
+        self.start_date = start_date
+        self.parameters = parameters
+        self.name = name
+
+    @property
+    def reports(self) -> Tuple[str, ...]:
+        """Marquee unique identifier"""
+        return self.__reports
+
+    @reports.setter
+    def reports(self, value: Tuple[str, ...]):
+        self._property_changed('reports')
+        self.__reports = value        
+
+    @property
+    def reports_with_parameters_overrides(self) -> Tuple[ReportWithParametersOverrides, ...]:
+        """Reports with their parameters to be overridden"""
+        return self.__reports_with_parameters_overrides
+
+    @reports_with_parameters_overrides.setter
+    def reports_with_parameters_overrides(self, value: Tuple[ReportWithParametersOverrides, ...]):
+        self._property_changed('reports_with_parameters_overrides')
+        self.__reports_with_parameters_overrides = value        
+
+    @property
+    def end_date(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__end_date
+
+    @end_date.setter
+    def end_date(self, value: datetime.date):
+        self._property_changed('end_date')
+        self.__end_date = value        
+
+    @property
+    def start_date(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__start_date
+
+    @start_date.setter
+    def start_date(self, value: datetime.date):
+        self._property_changed('start_date')
+        self.__start_date = value        
+
+    @property
+    def parameters(self) -> ReportParameters:
+        """Parameters specific to the report type"""
+        return self.__parameters
+
+    @parameters.setter
+    def parameters(self, value: ReportParameters):
+        self._property_changed('parameters')
+        self.__parameters = value        

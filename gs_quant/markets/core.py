@@ -79,7 +79,7 @@ class PricingContext(ContextBaseWithDefault):
                  is_async: bool = False,
                  is_batch: bool = False,
                  use_cache: bool = False,
-                 visible_to_gs: bool = False,
+                 visible_to_gs: Optional[bool] = None,
                  csa_term: Optional[str] = None,
                  timeout: Optional[int] = None,
                  market: Optional[Market] = None,
@@ -196,6 +196,9 @@ class PricingContext(ContextBaseWithDefault):
 
         requests_for_provider = {}
         if requests_by_provider:
+            session = GsSession.current
+            request_visible_to_gs = session.is_internal() if self.__visible_to_gs is None else self.__visible_to_gs
+
             for provider, by_params_scenario_date_market in requests_by_provider.items():
                 grouped_requests = {}
 
@@ -216,12 +219,11 @@ class PricingContext(ContextBaseWithDefault):
                             scenario=scenario,
                             pricing_and_market_data_as_of=(PricingDateAndMarketDataAsOf(pricing_date=date,
                                                                                         market=market),),
-                            request_visible_to_gs=self.__visible_to_gs
+                            request_visible_to_gs=request_visible_to_gs,
                         ))
 
                 requests_for_provider[provider] = requests
-
-            session = GsSession.current
+            
             show_status = self.__show_progress and\
                 (len(requests_for_provider) > 1 or len(next(iter(requests_for_provider.values()))) > 1)
             request_pool = ThreadPoolExecutor(len(requests_for_provider))\
@@ -301,7 +303,7 @@ class PricingContext(ContextBaseWithDefault):
         return self.__use_cache
 
     @property
-    def visible_to_gs(self) -> bool:
+    def visible_to_gs(self) -> Optional[bool]:
         """Request contents visible to GS"""
         return self.__visible_to_gs
 

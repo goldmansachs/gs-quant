@@ -28,6 +28,8 @@ class PortfolioType(EnumBase, Enum):
     Securities_Lending = 'Securities Lending'
     Draft_Portfolio = 'Draft Portfolio'
     Draft_Bond = 'Draft Bond'
+    PCO_Portfolio = 'PCO Portfolio'
+    PCO_Share_Class = 'PCO Share Class'
     
     def __repr__(self):
         return self.value

@@ -334,6 +334,9 @@ class GsSession(ContextBase):
             except NameError:
                 raise MqUninitialisedError('Must specify client_id and client_secret')
 
+    def is_internal(self) -> bool:
+        return False
+
 
 class OAuth2Session(GsSession):
 

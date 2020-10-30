@@ -542,3 +542,23 @@ def test_if():
     assert_series_equal(if_(flags, truths, pd.Series([3, 3])), pd.Series([3, 2]))
     assert_series_equal(if_(flags, truths, pd.Series([3], index=[100])),
                         pd.Series([np.nan, 2]), check_dtype=False)
+
+
+def test_weighted_average():
+    empty = pd.Series()
+    with pytest.raises(MqError):
+        weighted_sum([empty, 3], [.4, .6])
+    with pytest.raises(MqError):
+        weighted_sum([empty, empty], [.4, '.6'])
+    with pytest.raises(MqError):
+        weighted_sum([empty, empty], [.4])
+
+    a = pd.Series([1, 2, 3, 4], index=pd.date_range('2020-01-01', periods=4, freq='D'))
+    b = pd.Series([24, 27, 30], index=(pd.date_range('2020-01-01', periods=3, freq='D')))
+    actual = weighted_sum([a, b], [.3, .6])
+    expected = pd.Series([16.333333, 18.666666, 21], index=pd.date_range('2020-01-01', periods=3, freq='D'))
+    assert_series_equal(actual, expected)
+
+
+if __name__ == '__main__':
+    pytest.main(args=["test_algebra.py"])
