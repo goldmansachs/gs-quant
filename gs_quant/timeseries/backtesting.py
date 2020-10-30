@@ -64,10 +64,10 @@ def basket(
     costs = costs or [0] * num_assets
 
     if not all(isinstance(x, pd.Series) for x in series):
-        raise TypeError("Input series must be of Pandas Series type.")
+        raise MqTypeError("expected a list of series")
 
     if len(weights) != num_assets or len(weights) != len(costs):
-        raise ValueError("Series, weights and costs must have the same length.")
+        raise MqValueError("series, weights, and cost lists must have the same length")
 
     # For all inputs which are Pandas series, get the intersection of their calendars
     cal = pd.DatetimeIndex(

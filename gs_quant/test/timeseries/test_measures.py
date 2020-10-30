@@ -675,7 +675,7 @@ def mock_fx_vol(_cls, q):
 
 def mock_fx_forecast(_cls, _q):
     d = {
-        'girFxForecast': [1.1, 1.1, 1.1]
+        'fxForecast': [1.1, 1.1, 1.1]
     }
     df = MarketDataResponseFrame(data=d, index=_index * 3)
     df.dataset_ids = _test_datasets
@@ -980,11 +980,11 @@ def mock_factor_profile(_cls, _q):
     return df
 
 
-def mock_commodities_forecast(_cls, _q):
+def mock_commodity_forecast(_cls, _q):
     d = {
         'forecastPeriod': ['3m', '3m', '3m', '3m'],
         'forecastType': ['spotReturn', 'spotReturn', 'spotReturn', 'spotReturn'],
-        'girCommoditiesForecast': [1700, 1400, 1500, 1600]
+        'commodityForecast': [1700, 1400, 1500, 1600]
     }
     df = MarketDataResponseFrame(data=d, index=pd.to_datetime([datetime.date(2020, 8, 13), datetime.date(2020, 8, 14),
                                                                datetime.date(2020, 8, 17), datetime.date(2020, 8, 18)]))
@@ -1131,7 +1131,7 @@ def test_implied_vol_fx():
     replace.restore()
 
 
-def test_gir_fx_forecast():
+def test_fx_forecast():
     replace = Replacer()
     mock = Cross('MAA0NE9QX2ABETG6', 'USD/EUR')
     xrefs = replace('gs_quant.timeseries.measures.GsAssetApi.get_asset_xrefs', Mock())
@@ -1139,26 +1139,26 @@ def test_gir_fx_forecast():
     replace('gs_quant.markets.securities.SecurityMaster.get_asset', Mock()).return_value = mock
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_fx_forecast)
 
-    actual = tm.gir_fx_forecast(mock, '12m')
-    assert_series_equal(pd.Series([1.1, 1.1, 1.1], index=_index * 3, name='girFxForecast'), pd.Series(actual))
+    actual = tm.fx_forecast(mock, '12m')
+    assert_series_equal(pd.Series([1.1, 1.1, 1.1], index=_index * 3, name='fxForecast'), pd.Series(actual))
     assert actual.dataset_ids == _test_datasets
-    actual = tm.gir_fx_forecast(mock, '3m')
-    assert_series_equal(pd.Series([1.1, 1.1, 1.1], index=_index * 3, name='girFxForecast'), pd.Series(actual))
+    actual = tm.fx_forecast(mock, '3m')
+    assert_series_equal(pd.Series([1.1, 1.1, 1.1], index=_index * 3, name='fxForecast'), pd.Series(actual))
     assert actual.dataset_ids == _test_datasets
     with pytest.raises(NotImplementedError):
-        tm.gir_fx_forecast(mock, '3m', real_time=True)
+        tm.fx_forecast(mock, '3m', real_time=True)
     replace.restore()
 
 
-def test_gir_fx_forecast_inverse():
+def test_fx_forecast_inverse():
     replace = Replacer()
     get_cross = replace('gs_quant.timeseries.measures.cross_to_usd_based_cross', Mock())
     get_cross.return_value = "MATGYV0J9MPX534Z"
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_fx_forecast)
 
     mock = Cross("MAYJPCVVF2RWXCES", 'USD/JPY')
-    actual = tm.gir_fx_forecast(mock, '3m')
-    assert_series_equal(pd.Series([1 / 1.1, 1 / 1.1, 1 / 1.1], index=_index * 3, name='girFxForecast'),
+    actual = tm.fx_forecast(mock, '3m')
+    assert_series_equal(pd.Series([1 / 1.1, 1 / 1.1, 1 / 1.1], index=_index * 3, name='fxForecast'),
                         pd.Series(actual))
     assert actual.dataset_ids == _test_datasets
     replace.restore()
@@ -1198,6 +1198,8 @@ def test_impl_corr():
     assert actual.dataset_ids == _test_datasets
     with pytest.raises(NotImplementedError):
         tm.implied_correlation(..., '1m', tm.EdrDataReference.DELTA_PUT, 75, real_time=True)
+    with pytest.raises(MqError):
+        tm.implied_correlation(..., '1m', tm.EdrDataReference.DELTA_CALL, 50, '')
     replace.restore()
 
 
@@ -3320,7 +3322,7 @@ def test_gir_rating():
     replace.restore()
 
 
-def test_gir_gsdeer_gsfeer(mocker):
+def test_fair_value(mocker):
     mocker.patch.object(GsSession.__class__, 'default_value',
                         return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
     replace = Replacer()
@@ -3333,29 +3335,29 @@ def test_gir_gsdeer_gsfeer(mocker):
     replace('gs_quant.timeseries.measures.Dataset.get_data', mock_gsdeer_gsfeer)
 
     index = [dt.date(2000, 1, 1), dt.date(2010, 4, 1), dt.date(2020, 7, 1)]
-    actual = tm.gir_gsdeer_gsfeer(mock_usdeur,
-                                  tm.EquilibriumExchangeRateMetric.GSDEER)
+    actual = tm.fair_value(mock_usdeur,
+                           tm.EquilibriumExchangeRateMetric.GSDEER)
     assert_series_equal(pd.Series([1, 1.2, 1.1], index=index, name='gsdeer'),
                         pd.Series(actual))
 
-    actual = tm.gir_gsdeer_gsfeer(mock_usdeur,
-                                  tm.EquilibriumExchangeRateMetric.GSFEER)
+    actual = tm.fair_value(mock_usdeur,
+                           tm.EquilibriumExchangeRateMetric.GSFEER)
     assert_series_equal(pd.Series([2, 1.8, 1.9], index=index, name='gsfeer'),
                         pd.Series(actual))
 
-    actual = tm.gir_gsdeer_gsfeer(mock_eurusd,
-                                  tm.EquilibriumExchangeRateMetric.GSDEER)
+    actual = tm.fair_value(mock_eurusd,
+                           tm.EquilibriumExchangeRateMetric.GSDEER)
     assert_series_equal(pd.Series([1 / 1, 1 / 1.2, 1 / 1.1], index=index, name='gsdeer'),
                         pd.Series(actual))
 
-    actual = tm.gir_gsdeer_gsfeer(mock_eurusd,
-                                  tm.EquilibriumExchangeRateMetric.GSFEER)
+    actual = tm.fair_value(mock_eurusd,
+                           tm.EquilibriumExchangeRateMetric.GSFEER)
     assert_series_equal(pd.Series([1 / 2, 1 / 1.8, 1 / 1.9], index=index, name='gsfeer'),
                         pd.Series(actual))
     with pytest.raises(NotImplementedError):
-        tm.gir_gsdeer_gsfeer(mock_usdeur,
-                             tm.EquilibriumExchangeRateMetric.GSDEER,
-                             real_time=True)
+        tm.fair_value(mock_usdeur,
+                      tm.EquilibriumExchangeRateMetric.GSDEER,
+                      real_time=True)
     replace.restore()
 
 
@@ -3402,22 +3404,22 @@ def test_gir_factor_profile():
     replace.restore()
 
 
-def test_gir_commodities_forecast():
+def test_commodity_forecast():
     replace = Replacer()
 
     mock_spgcsb = Index('MA74Y70Z4D4TBX9H', 'SPGCSB', 'GSCI Sugar')
-    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_commodities_forecast)
-    actual = tm.gir_commodities_forecast(mock_spgcsb, '3m',
-                                         tm._CommoditiesForecastType.SPOT_RETURN)
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_commodity_forecast)
+    actual = tm.commodity_forecast(mock_spgcsb, '3m',
+                                   tm._CommodityForecastType.SPOT_RETURN)
     assert_series_equal(pd.Series([1700, 1400, 1500, 1600], index=pd.to_datetime([datetime.date(2020, 8, 13),
                                                                                   datetime.date(2020, 8, 14),
                                                                                   datetime.date(2020, 8, 17),
                                                                                   datetime.date(2020, 8, 18)]),
-                                  name='girCommoditiesForecast'), pd.Series(actual))
+                                  name='commodityForecast'), pd.Series(actual))
 
     with pytest.raises(NotImplementedError):
-        tm.gir_commodities_forecast(mock_spgcsb, '3m',
-                                    tm._CommoditiesForecastType.SPOT_RETURN, real_time=True)
+        tm.commodity_forecast(mock_spgcsb, '3m',
+                              tm._CommodityForecastType.SPOT_RETURN, real_time=True)
     replace.restore()
 
 

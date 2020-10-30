@@ -37,9 +37,9 @@ def test_basket():
     assert_series_equal(x, basket([x, x, x], [1 / 3, 1 / 3, 1 / 3]))
     assert_series_equal(x, basket([x, y], [1, 0]))
     assert_series_equal(y, basket([x, y], [0, 1]))
-    with pytest.raises(ValueError):
+    with pytest.raises(MqValueError):
         basket([x, y], [1])
-    with pytest.raises(TypeError):
+    with pytest.raises(MqTypeError):
         basket([1, 2, 3], [1])
 
     dates = [

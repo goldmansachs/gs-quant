@@ -724,6 +724,7 @@ class Chart(Base):
         entitlement_exclusions: EntitlementExclusions = None,
         folder_name: str = None,
         description: str = None,
+        description_history: Tuple[str, ...] = None,
         expressions: Tuple[ChartExpression, ...] = None,
         chart_type: Union[ChartType, str] = None,
         chart_properties: Tuple[ChartProperties, ...] = None,
@@ -757,6 +758,7 @@ class Chart(Base):
         self.name = name
         self.folder_name = folder_name
         self.description = description
+        self.description_history = description_history
         self.expressions = expressions
         self.chart_type = chart_type
         self.chart_properties = chart_properties
@@ -880,13 +882,23 @@ class Chart(Base):
 
     @property
     def description(self) -> str:
-        """Free text description of a Chart"""
+        """Chart description"""
         return self.__description
 
     @description.setter
     def description(self, value: str):
         self._property_changed('description')
         self.__description = value        
+
+    @property
+    def description_history(self) -> Tuple[str, ...]:
+        """Recent description history."""
+        return self.__description_history
+
+    @description_history.setter
+    def description_history(self, value: Tuple[str, ...]):
+        self._property_changed('description_history')
+        self.__description_history = value        
 
     @property
     def expressions(self) -> Tuple[ChartExpression, ...]:

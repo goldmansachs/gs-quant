@@ -70,7 +70,8 @@ class Portfolio(PriceableImpl):
         elif isinstance(item, PortfolioPath):
             return item(self, rename_to_parent=True)
         else:
-            values = tuple(self[p] for p in self.paths(item))
+            values = tuple(self[p] for it in item for p in self.paths(it)) if isinstance(item, list) else tuple(
+                self[p] for p in self.paths(item))
             return values[0] if len(values) == 1 else values
 
     def __contains__(self, item):

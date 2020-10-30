@@ -176,6 +176,17 @@ class NetExposureClassification(EnumBase, Enum):
         return self.value
 
 
+class ProductType(EnumBase, Enum):    
+    
+    """Product type of basket"""
+
+    Flow = 'Flow'
+    MPS = 'MPS'
+    
+    def __repr__(self):
+        return self.value
+
+
 class Strategy(EnumBase, Enum):    
     
     """More specific descriptor of a fund's investment approach. Same view permissions
@@ -1607,7 +1618,7 @@ class AssetParameters(Base):
         clone_parent_id: str = None,
         on_behalf_of: str = None,
         index_calculation_agent: str = None,
-        product_type: str = None,
+        product_type: Union[ProductType, str] = None,
         vendor: str = None,
         call_first_date: datetime.date = None,
         call_last_date: datetime.date = None,
@@ -2449,14 +2460,14 @@ class AssetParameters(Base):
         self.__index_calculation_agent = value        
 
     @property
-    def product_type(self) -> str:
+    def product_type(self) -> Union[ProductType, str]:
         """Basket Product Type."""
         return self.__product_type
 
     @product_type.setter
-    def product_type(self, value: str):
+    def product_type(self, value: Union[ProductType, str]):
         self._property_changed('product_type')
-        self.__product_type = value        
+        self.__product_type = get_enum_value(ProductType, value)        
 
     @property
     def vendor(self) -> str:

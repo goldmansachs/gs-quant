@@ -91,13 +91,13 @@ class QueryType(Enum):
     ES_DISCLOSURE_PERCENTAGE = "ES Disclosure Percentage"
     RATING = "Rating"
     CONVICTION_LIST = "Conviction List"
-    GIR_GSDEER_GSFEER = "Gir Gsdeer Gsfeer"
-    GIR_FX_FORECAST = "Gir Fx Forecast"
+    FAIR_VALUE = "Fair Value"
+    FX_FORECAST = "Fx Forecast"
     GROWTH_SCORE = "Growth Score"
     FINANCIAL_RETURNS_SCORE = "Financial Returns Score"
     MULTIPLE_SCORE = "Multiple Score"
     INTEGRATED_SCORE = "Integrated Score"
-    GIR_COMMODITIES_FORECAST = "Gir Commodities Forecast"
+    COMMODITY_FORECAST = "Commodity Forecast"
     FORECAST_VALUE = "Forecast Value"
 
 

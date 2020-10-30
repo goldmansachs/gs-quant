@@ -99,6 +99,9 @@ class AssetType(Enum):
     #: Commodity Reference Price
     COMMODITY_REFERENCE_PRICE = "Commodity Reference Price"
 
+    # COMMODITY NATURAL GAS Hub
+    COMMODITY_NATURAL_GAS_HUB = "Commodity Natural Gas Hub"
+
     #: Commodity Power Node
     COMMODITY_POWER_NODE = "Commodity Power Node"
 
@@ -518,6 +521,23 @@ class CommodityReferencePrice(Asset):
         return AssetType.COMMODITY_REFERENCE_PRICE
 
 
+class CommodityNaturalGasHub(Asset):
+    """Commodity Natural Gas Hub
+
+    Represents a distinct location in commodity Natural Gas markets
+
+    """
+
+    def __init__(self,
+                 id_: str,
+                 name: str,
+                 entity: Optional[Dict] = None):
+        Asset.__init__(self, id_, AssetClass.Commod, name, entity=entity)
+
+    def get_type(self) -> AssetType:
+        return AssetType.COMMODITY_NATURAL_GAS_HUB
+
+
 class CommodityPowerNode(Asset):
     """Commodity Power Node
 
@@ -859,6 +879,9 @@ class SecurityMaster:
 
         if asset_type in (GsAssetType.CommodityReferencePrice.value,):
             return CommodityReferencePrice(gs_asset.id, gs_asset.name, entity=asset_entity)
+
+        if asset_type in (GsAssetType.CommodityNaturalGasHub.value,):
+            return CommodityNaturalGasHub(gs_asset.id, gs_asset.name, entity=asset_entity)
 
         if asset_type in (GsAssetType.CommodityPowerNode.value,):
             return CommodityPowerNode(gs_asset.id, gs_asset.name, entity=asset_entity)

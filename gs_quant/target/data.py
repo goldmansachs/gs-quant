@@ -1396,24 +1396,17 @@ class SymbolFilterLink(Base):
     @camel_case_translate
     def __init__(
         self,
-        entity_type: str = None,
         entity_field: str = None,
         name: str = None
     ):        
         super().__init__()
-        self.entity_type = entity_type
         self.entity_field = entity_field
         self.name = name
 
     @property
     def entity_type(self) -> str:
         """The type of the entity to lookup to."""
-        return self.__entity_type
-
-    @entity_type.setter
-    def entity_type(self, value: str):
-        self._property_changed('entity_type')
-        self.__entity_type = value        
+        return 'MktCoordinate'        
 
     @property
     def entity_field(self) -> str:

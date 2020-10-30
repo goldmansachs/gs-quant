@@ -29,6 +29,7 @@ Algebra
    smooth_spikes
    sqrt
    subtract
+   weighted_sum
 
 
 Analysis
