@@ -1,0 +1,265 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>max &mdash; gs_quant 0.1 documentation</title>
+  
+
+    
+  <script crossorigin src="/resources/react/16-8-6/prod/react.production.min.js"></script>
+  <script
+    crossorigin src="/resources/react/16-8-6/prod/react-dom.production.min.js"></script>
+
+     
+    <script src='/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML' async></script> 
+    
+    <script type="text/javascript" src="../_static/../../../auto-mount.js"></script>
+    <link rel="stylesheet" href="../_static/../../../auto-mount.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="next" title="mean" href="gs_quant.timeseries.statistics.mean.html" />
+    <link rel="prev" title="generate_series" href="gs_quant.timeseries.statistics.generate_series.html" /> 
+</head>
+
+<!-- Hello from the future. -->
+<div id="mq-doc-navbar-inject"></div>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    <a data-toggle="wy-nav-top" class="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" class="gs-nav-action"></div>
+    </a>
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Packages</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../data.html">Data Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datetime.html">Datetime Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instrument.html">Instrument Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../market.html">Market Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../risk.html">Risk Package</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../timeseries.html">Timeseries Package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../timeseries.html#algebra">Algebra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../timeseries.html#analysis">Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../timeseries.html#date-time">Date / Time</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../timeseries.html#econometrics">Econometrics</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../timeseries.html#statistics">Statistics</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.statistics.cov.html">cov</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.statistics.generate_series.html">generate_series</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">max</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.statistics.mean.html">mean</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.statistics.median.html">median</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.statistics.min_.html">min</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.statistics.mode.html">mode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.statistics.percentiles.html">percentile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.statistics.product.html">product</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.statistics.range_.html">range</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.statistics.std.html">std</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.statistics.sum_.html">sum</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.statistics.var.html">var</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.statistics.winsorize.html">winsorize</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.statistics.zscores.html">zscores</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../timeseries.html#technical-analysis">Technical Analysis</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Packages</a> /</li>
+        
+          <li><a href="../timeseries.html">Timeseries Package</a> /</li>
+        
+      <li>max</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="max">
+<h1><a class="reference internal" href="#max">max</a><a class="headerlink" href="#max" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="gs_quant.timeseries.statistics.max_">
+<code class="sig-name descname">max_</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">w=Window(w=None</em>, <em class="sig-param">r=0)</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gs_quant/timeseries/statistics.html#max_"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gs_quant.timeseries.statistics.max_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maximum value of series over given window</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code>) – series: timeseries</p></li>
+<li><p><strong>w</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Window</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size</p></li>
+</ul>
+</dd>
+</dl>
+<p>and 10 the ramp up value. Window size defaults to length of series.
+:rtype: <code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code>
+:return: timeseries of maximum value</p>
+<p><strong>Usage</strong></p>
+<p>Returns the maximum value of the series over each window:</p>
+<p><span class="math notranslate nohighlight">\(R_t = max(X_{t-w+1}:X_t)\)</span></p>
+<p>where <span class="math notranslate nohighlight">\(w\)</span> is the size of the rolling window. If window is not provided, returns the minimum value over the
+full series. If the window size is greater than the available data, will return minimum of available values.</p>
+<p><strong>Examples</strong></p>
+<p>Maximum value of price series over the last <span class="math notranslate nohighlight">\(22\)</span> observations:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">prices</span> <span class="o">=</span> <span class="n">generate_series</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">max_</span><span class="p">(</span><span class="n">prices</span><span class="p">,</span> <span class="mi">22</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>See also</strong></p>
+<p><a class="reference internal" href="gs_quant.timeseries.statistics.min_.html#gs_quant.timeseries.statistics.min_" title="gs_quant.timeseries.statistics.min_"><code class="xref py py-func docutils literal notranslate"><span class="pre">min_()</span></code></a></p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  <hr />
+  
+  <div
+    class="container-block-module"
+    role="navigation"
+    aria-label="footer navigation"
+  >
+    
+    <div class="link-block-module">
+      <a
+        href="gs_quant.timeseries.statistics.generate_series.html"
+        class="link-block-module-container"
+        title="generate_series"
+        accesskey="p"
+        rel="prev"
+      >
+        <div class="link-block-module-content">
+          <h4 class="link-block-module-title-label">
+            Previous Topic
+          </h4>
+          <p class="link-block-module-body-label">
+            generate_series
+          </p>
+        </div>
+      </a>
+    </div>
+     
+    <div class="link-block-module">
+      <a
+        href="gs_quant.timeseries.statistics.mean.html"
+        class="link-block-module-container"
+        title="mean"
+        accesskey="n"
+        rel="next"
+      >
+        <div class="link-block-module-content">
+          <h4 class="link-block-module-title-label">
+            Next Topic
+          </h4>
+          <p class="link-block-module-body-label">
+            mean
+          </p>
+        </div>
+      </a>
+    </div>
+    
+  </div>
+  
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  
+  
+    
+   
+
+</body>
+</html>

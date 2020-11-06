@@ -1,0 +1,262 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Datetime Package &mdash; gs_quant 0.1 documentation</title>
+  
+
+    
+  <script crossorigin src="/resources/react/16-8-6/prod/react.production.min.js"></script>
+  <script
+    crossorigin src="/resources/react/16-8-6/prod/react-dom.production.min.js"></script>
+
+     
+    <script src='/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML' async></script> 
+    
+    <script type="text/javascript" src="_static/../../../auto-mount.js"></script>
+    <link rel="stylesheet" href="_static/../../../auto-mount.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="next" title="business_day_count" href="functions/gs_quant.datetime.date.business_day_count.html" />
+    <link rel="prev" title="gs_quant.data.Dataset" href="classes/gs_quant.data.Dataset.html" /> 
+</head>
+
+<!-- Hello from the future. -->
+<div id="mq-doc-navbar-inject"></div>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    <a data-toggle="wy-nav-top" class="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" class="gs-nav-action"></div>
+    </a>
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Packages</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="data.html">Data Package</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Datetime Package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#date">Date</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="functions/gs_quant.datetime.date.business_day_count.html">business_day_count</a></li>
+<li class="toctree-l3"><a class="reference internal" href="functions/gs_quant.datetime.date.business_day_offset.html">business_day_offset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="functions/gs_quant.datetime.date.date_range.html">date_range</a></li>
+<li class="toctree-l3"><a class="reference internal" href="functions/gs_quant.datetime.date.is_business_day.html">is_business_day</a></li>
+<li class="toctree-l3"><a class="reference internal" href="functions/gs_quant.datetime.date.prev_business_date.html">gs_quant.datetime.date.prev_business_date</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#point">Point</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="functions/gs_quant.datetime.point.point_sort_order.html">point_sort_order</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="instrument.html">Instrument Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="market.html">Market Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="risk.html">Risk Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="timeseries.html">Timeseries Package</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Packages</a> /</li>
+        
+      <li>Datetime Package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="datetime-package">
+<h1>Datetime Package<a class="headerlink" href="#datetime-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="date">
+<h2>Date<a class="headerlink" href="#date" title="Permalink to this headline">¶</a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="functions/gs_quant.datetime.date.business_day_count.html#gs_quant.datetime.date.business_day_count" title="gs_quant.datetime.date.business_day_count"><code class="xref py py-obj docutils literal notranslate"><span class="pre">business_day_count</span></code></a>(begin_dates, end_dates[, …])</p></td>
+<td><p>Determine the number of business days between begin_dates and end_dates</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="functions/gs_quant.datetime.date.business_day_offset.html#gs_quant.datetime.date.business_day_offset" title="gs_quant.datetime.date.business_day_offset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">business_day_offset</span></code></a>(dates, offsets[, roll, …])</p></td>
+<td><p>Apply offsets to the dates and move to the nearest business date</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="functions/gs_quant.datetime.date.date_range.html#gs_quant.datetime.date.date_range" title="gs_quant.datetime.date.date_range"><code class="xref py py-obj docutils literal notranslate"><span class="pre">date_range</span></code></a>(begin, end[, calendars, week_mask])</p></td>
+<td><p>Construct a range of dates</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="functions/gs_quant.datetime.date.is_business_day.html#gs_quant.datetime.date.is_business_day" title="gs_quant.datetime.date.is_business_day"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_business_day</span></code></a>(dates[, calendars, week_mask])</p></td>
+<td><p>Determine whether each date in dates is a business day</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="functions/gs_quant.datetime.date.prev_business_date.html#gs_quant.datetime.date.prev_business_date" title="gs_quant.datetime.date.prev_business_date"><code class="xref py py-obj docutils literal notranslate"><span class="pre">prev_business_date</span></code></a>([dates, calendars, week_mask])</p></td>
+<td><p>Returns the previous business date for a given date or date series, defaulting to today.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="point">
+<h2>Point<a class="headerlink" href="#point" title="Permalink to this headline">¶</a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="functions/gs_quant.datetime.point.point_sort_order.html#gs_quant.datetime.point.point_sort_order" title="gs_quant.datetime.point.point_sort_order"><code class="xref py py-obj docutils literal notranslate"><span class="pre">point_sort_order</span></code></a>(point[, ref_date])</p></td>
+<td><p>Calculates a number that can be used to sort Mkt Points by it.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  <hr />
+  
+  <div
+    class="container-block-module"
+    role="navigation"
+    aria-label="footer navigation"
+  >
+    
+    <div class="link-block-module">
+      <a
+        href="classes/gs_quant.data.Dataset.html"
+        class="link-block-module-container"
+        title="gs_quant.data.Dataset"
+        accesskey="p"
+        rel="prev"
+      >
+        <div class="link-block-module-content">
+          <h4 class="link-block-module-title-label">
+            Previous Topic
+          </h4>
+          <p class="link-block-module-body-label">
+            gs_quant.data.Dataset
+          </p>
+        </div>
+      </a>
+    </div>
+     
+    <div class="link-block-module">
+      <a
+        href="functions/gs_quant.datetime.date.business_day_count.html"
+        class="link-block-module-container"
+        title="business_day_count"
+        accesskey="n"
+        rel="next"
+      >
+        <div class="link-block-module-content">
+          <h4 class="link-block-module-title-label">
+            Next Topic
+          </h4>
+          <p class="link-block-module-body-label">
+            business_day_count
+          </p>
+        </div>
+      </a>
+    </div>
+    
+  </div>
+  
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  
+  
+    
+   
+
+</body>
+</html>

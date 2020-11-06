@@ -205,9 +205,6 @@ class SeriesWithInfo(pd.Series, ResultInfo):
     def raw_value(self) -> pd.Series:
         return pd.Series(self)
 
-    def to_frame(self):
-        return pd.DataFrame(self)
-
 
 class DataFrameWithInfo(pd.DataFrame, ResultInfo):
     _internal_names = pd.DataFrame._internal_names + \

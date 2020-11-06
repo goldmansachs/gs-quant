@@ -2908,14 +2908,15 @@ def gir_factor_profile(asset: Asset, metric: _FactorProfileMetric, *, source: st
 
 
 @plot_measure((AssetClass.Commod,), (AssetType.Commodity, AssetType.Index,), [QueryType.COMMODITY_FORECAST])
-def commodity_forecast(asset: Asset, forecastPeriod: str, forecastType: _CommodityForecastType, *,
-                       source: str = None, real_time: bool = False) -> Series:
+def commodity_forecast(asset: Asset, forecastPeriod: str = "3m", forecastType: _CommodityForecastType =
+                       _CommodityForecastType.SPOT_RETURN, *, source: str = None, real_time:
+                       bool = False) -> Series:
     """
     Short and long-term commodities forecast.
     :param asset: asset object loaded from security master
     :param forecastPeriod: Relative, e.g. 3m, 6m, 12m; Quarterly (up to next two years), e.g. 2020Q3;
                             Annual (up to next ten years), e.g. 2023
-    :param forecastType: Type of return for commodity indices. Spot for individual commodities.
+    :param forecastType: Type of return for commodity indices, spot for individual commodities.
                           One of spotReturn/totalReturn/rollReturn/spot
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD

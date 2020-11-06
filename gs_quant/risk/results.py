@@ -282,9 +282,9 @@ class MultipleRiskMeasureResult(dict):
     def to_frame(self):
         lst = [self[r] for r in self]
         if isinstance(lst[0], DataFrameWithInfo):
-            return reduce(
-                lambda df1, df2: pd.merge(df1, df2, on=['date', 'mkt_type', 'mkt_asset', 'mkt_class', 'mkt_point'],
-                                          how='left'), lst)
+            join_on = ['date', 'mkt_type', 'mkt_asset', 'mkt_class', 'mkt_point'] \
+                if isinstance(self.dates[0], dt.date) else ['mkt_type', 'mkt_asset', 'mkt_class', 'mkt_point']
+            return reduce(lambda df1, df2: pd.merge(df1, df2, on=join_on, how='left'), lst)
         else:
             return pd.DataFrame(self)
 
@@ -393,7 +393,12 @@ class PortfolioRiskResult(CompositeResultFuture):
             else:
                 return PortfolioRiskResult(self.__portfolio, (item,), self.futures)
 
-        elif isinstance(item, list) and isinstance(item[0], InstrumentBase):
+        # Inputs from excel always becomes a list
+        # Catch list length = 1 so that it doesn't return a sub-portfolioriskresult
+        elif isinstance(item, list) and len(item) == 1:
+            return self.__results(items=item[0])
+
+        elif isinstance(item, list) and all([isinstance(it, InstrumentBase) for it in item]):
             '''Slicing a list of instruments'''
             from gs_quant.markets.portfolio import Portfolio
             portfolio = Portfolio(self.__portfolio[item])

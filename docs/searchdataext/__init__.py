@@ -14,7 +14,7 @@ class IndexBuilder(sphinx.search.IndexBuilder):
     def __init__(self, env, lang, options, scoring):
         super(IndexBuilder, self).__init__(env, lang, options, scoring)
         self._doc_collector=[]
-        self._outputfile = Path(os.path.dirname(__file__), '..', '_build', 'search', 'searchdata.json').resolve().absolute()
+        self._outputfile = Path(os.path.dirname(__file__), '..', '_build', 'search', 'search-index.json').resolve().absolute()
 
     def feed(self, docname, filename, title, doctree):
         super(IndexBuilder, self).feed(docname, filename, title, doctree)

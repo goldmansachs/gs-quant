@@ -1,0 +1,432 @@
+[
+    {
+        "body": "gs_quant base Priceable class Priceable source A priceable such as a derivative instrument __init__ source Initialize self See help type self for accurate signature Methods Attributes",
+        "key": "classes/gs_quant.base.Priceable",
+        "title": "gs_quant base Priceable"
+    },
+    {
+        "body": "gs_quant data Dataset class Dataset dataset_id provider None source A collection of related data __init__ dataset_id provider None source Parameters dataset_id Union str Vendor The dataset s identifier provider Optional DataApi The data provider Methods Attributes",
+        "key": "classes/gs_quant.data.Dataset",
+        "title": "gs_quant data Dataset"
+    },
+    {
+        "body": "CommodSwap For methods of this class see gs_quant base Priceable class CommodSwap commodity start commodity_reference_price None notional_amount 1000000 0 currency None calculation_periods None calculation_period_frequency None source Object representation of a commodities swap Properties calculation_period_frequency The frequency of the calculation periods Return type Union Frequency str calculation_periods The number of calculation periods Return type int commodity Commodity asset Return type Union CommodityAsset str commodity_reference_price Return type str currency Currency ISO 4217 currency code or exchange quote modifier e g GBP vs GBp Return type Union Currency str notional_amount Notional amount Return type float start Return type Union date str",
+        "key": "classes/gs_quant.instrument.CommodSwap",
+        "title": "CommodSwap"
+    },
+    {
+        "body": "EqOption For methods of this class see gs_quant base Priceable class EqOption asset expiration_date strike_price option_type option_style number_of_options None exchange None multiplier None settlement_date None currency None premium None source Instrument definition for equity option Properties asset Ticker of the underlying stock or index Return type str currency Currency ISO 4217 currency code or exchange quote modifier e g GBP vs GBp Return type Union Currency str exchange Name of marketplace where security derivative or other instrument is traded Return type str expiration_date Date or tenor e g 2018 09 03 3m Return type Union date str multiplier Number of stock units per option contract Return type float number_of_options Number of options Return type float option_style Option Exercise Style Return type Union OptionStyle str option_type Option Type Return type Union OptionType str premium Option premium Return type float settlement_date Date or tenor e g 2018 09 03 3m Return type Union date str strike_price Strike as value percent or string e g 62 5 95 ATM ATMF 25ATM 20CallDelta 10PutDelta 10NS Return type Union float str",
+        "key": "classes/gs_quant.instrument.EqOption",
+        "title": "EqOption"
+    },
+    {
+        "body": "FXForward For methods of this class see gs_quant base Priceable class FXForward pair None settlement_date None forward_rate None notional_amount None source Object representation of an FX forward Properties forward_rate Forward FX rate Return type float notional_amount Notional amount Return type float pair Currency pair Return type str settlement_date Date or tenor e g 2018 09 03 3m Return type Union date str",
+        "key": "classes/gs_quant.instrument.FXForward",
+        "title": "FXForward"
+    },
+    {
+        "body": "FXOption For methods of this class see gs_quant base Priceable class FXOption call_currency put_currency expiration_date option_type call_amount 1000000 0 put_amount 1000000 0 strike None premium 0 source Object representation of a FX option Properties call_amount Amount of the call currency Return type float call_currency Currency ISO 4217 currency code or exchange quote modifier e g GBP vs GBp Return type Union Currency str expiration_date Date or tenor e g 2018 09 03 3m Return type Union date str option_type Option Type Return type Union OptionType str premium Option premium Return type float put_amount Amount of the put currency Return type float put_currency Currency ISO 4217 currency code or exchange quote modifier e g GBP vs GBp Return type Union Currency str strike Strike as value percent or at the money e g 62 5 95 ATM 25 ATMF Return type Union float str",
+        "key": "classes/gs_quant.instrument.FXOption",
+        "title": "FXOption"
+    },
+    {
+        "body": "Forward For methods of this class see gs_quant base Priceable class Forward currency expiration_date notional_amount None source Object representation of a forward Properties currency Currency ISO 4217 currency code or exchange quote modifier e g GBP vs GBp Return type Union Currency str expiration_date Date or tenor e g 2018 09 03 3m Return type Union date str notional_amount Notional amount Return type float",
+        "key": "classes/gs_quant.instrument.Forward",
+        "title": "Forward"
+    },
+    {
+        "body": "IRBasisSwap For methods of this class see gs_quant base Priceable class IRBasisSwap termination_date notional_currency notional_amount 1000000 0 effective_date None payer_spread None payer_rate_option None payer_designated_maturity None payer_frequency None payer_day_count_fraction None payer_business_day_convention None receiver_spread None receiver_rate_option None receiver_designated_maturity None receiver_frequency None receiver_day_count_fraction None receiver_business_day_convention None fee 0 clearing_house None source An exchange of cashflows from different interest rate indices Properties clearing_house Swap Clearing House Return type Union SwapClearingHouse str effective_date The date on which the swap becomes effective Return type Union date str fee The fee Return type float notional_amount Notional amount Return type float notional_currency Notional currency Return type Union Currency str payer_business_day_convention The business day convention for the payer Return type Union BusinessDayConvention str payer_day_count_fraction The day count fraction for the payer Return type Union DayCountFraction str payer_designated_maturity Tenor of the payerRateOption e g 3m 6m Return type str payer_frequency The frequency of payer payments e g 6m Return type str payer_rate_option The underlying benchmark for the payer e g USD LIBOR BBA EUR EURIBOR TELERATE Return type str payer_spread Spread over the payer rate Return type float receiver_business_day_convention The business day convention for the receiver Return type Union BusinessDayConvention str receiver_day_count_fraction The day count fraction for the receiver Return type Union DayCountFraction str receiver_designated_maturity Tenor of the receiverRateOption e g 3m 6m Return type str receiver_frequency The frequency of receiver payments e g 6m Return type str receiver_rate_option The underlying benchmark for the receiver e g USD LIBOR BBA EUR EURIBOR TELERATE Return type str receiver_spread Spread over the receiver rate Return type float termination_date The termination of the swap e g 2050 04 01 10y Return type Union date str",
+        "key": "classes/gs_quant.instrument.IRBasisSwap",
+        "title": "IRBasisSwap"
+    },
+    {
+        "body": "IRCap For methods of this class see gs_quant base Priceable class IRCap termination_date notional_currency notional_amount 1000000 0 effective_date None floating_rate_option None floating_rate_designated_maturity None floating_rate_frequency None floating_rate_day_count_fraction None floating_rate_business_day_convention None cap_rate None premium 0 fee 0 premium_payment_date None source Object representation of an interest rate cap Properties cap_rate The rate of this cap as value percent or at the money e g 62 5 95 ATM 25 ATMF Return type Union float str effective_date The date on which the cap becomes effective Return type Union date str fee The fee Return type float floating_rate_business_day_convention The business day convention of the floating rate Return type Union BusinessDayConvention str floating_rate_day_count_fraction The day count fraction of the floating rate Return type Union DayCountFraction str floating_rate_designated_maturity Tenor of the floatingRateOption e g 3m 6m Return type str floating_rate_frequency The frequency of floating payments e g 3m Return type str floating_rate_option The underlying benchmark for the floating rate e g USD LIBOR BBA EUR EURIBOR TELERATE Return type str notional_amount Notional amount Return type float notional_currency Notional currency Return type Union Currency str premium The premium Return type float premium_payment_date Date or tenor e g 2018 09 03 3m Return type Union date str termination_date The termination of the cap e g 2025 04 01 2y Return type Union date str",
+        "key": "classes/gs_quant.instrument.IRCap",
+        "title": "IRCap"
+    },
+    {
+        "body": "IRFloor For methods of this class see gs_quant base Priceable class IRFloor termination_date notional_currency notional_amount 1000000 0 effective_date None floating_rate_option None floating_rate_designated_maturity None floating_rate_frequency None floating_rate_day_count_fraction None floating_rate_business_day_convention None floor_rate None fee 0 premium_payment_date None source Object representation of an interest rate floor Properties effective_date The date on which the floor becomes effective Return type Union date str fee The fee Return type float floating_rate_business_day_convention The business day convention of the floating rate Return type Union BusinessDayConvention str floating_rate_day_count_fraction The day count fraction of the floating rate Return type Union DayCountFraction str floating_rate_designated_maturity Tenor of the floatingRateOption e g 3m 6m Return type str floating_rate_frequency The frequency of floating payments e g 3m Return type str floating_rate_option The underlying benchmark for the floating rate e g USD LIBOR BBA EUR EURIBOR TELERATE Return type str floor_rate The rate of this floor as value percent or at the money e g 62 5 95 ATM 25 ATMF Return type Union float str notional_amount Notional amount Return type float notional_currency Notional currency Return type Union Currency str premium_payment_date Date or tenor e g 2018 09 03 3m Return type Union date str termination_date The termination of the floor e g 2025 04 01 2y Return type Union date str",
+        "key": "classes/gs_quant.instrument.IRFloor",
+        "title": "IRFloor"
+    },
+    {
+        "body": "IRSwap For methods of this class see gs_quant base Priceable class IRSwap pay_or_receive termination_date notional_currency notional_amount 1000000 0 effective_date None floating_rate_for_the_initial_calculation_period None floating_rate_option None floating_rate_designated_maturity None floating_rate_spread None floating_rate_frequency None floating_rate_day_count_fraction None floating_rate_business_day_convention None fixed_rate None fixed_rate_frequency None fixed_rate_day_count_fraction None fixed_rate_business_day_convention None fee 0 clearing_house None source A vanilla interest rate swap of fixed vs floating cashflows Properties clearing_house Swap Clearing House Return type Union SwapClearingHouse str effective_date The date on which the swap becomes effective Return type Union date str fee The fee Return type float fixed_rate The coupon of the fixed leg Return type Union float str fixed_rate_business_day_convention The business day convention for the fixed rate Return type Union BusinessDayConvention str fixed_rate_day_count_fraction The day count fraction for the fixed rate Return type Union DayCountFraction str fixed_rate_frequency The frequency of fixed payments e g 6m Return type str floating_rate_business_day_convention The business day convention of the floating rate Return type Union BusinessDayConvention str floating_rate_day_count_fraction The day count fraction of the floating rate Return type Union DayCountFraction str floating_rate_designated_maturity Tenor of the floatingRateOption e g 3m 6m Return type str floating_rate_for_the_initial_calculation_period First fixing Return type float floating_rate_frequency The frequency of floating payments e g 3m Return type str floating_rate_option The underlying benchmark for the floating rate e g USD LIBOR BBA EUR EURIBOR TELERATE Return type str floating_rate_spread The spread over the floating rate Return type float notional_amount Notional amount Return type float notional_currency Notional currency Return type Union Currency str pay_or_receive Pay or receive fixed Return type Union PayReceive str termination_date The termination of the swap e g 2050 04 01 10y Return type Union date str",
+        "key": "classes/gs_quant.instrument.IRSwap",
+        "title": "IRSwap"
+    },
+    {
+        "body": "IRSwaption For methods of this class see gs_quant base Priceable class IRSwaption pay_or_receive termination_date notional_currency effective_date None notional_amount 1000000 0 expiration_date None floating_rate_option None floating_rate_designated_maturity None floating_rate_spread None floating_rate_frequency None floating_rate_day_count_fraction None floating_rate_business_day_convention None fixed_rate_frequency None fixed_rate_day_count_fraction None fixed_rate_business_day_convention None strike None premium 0 fee 0 clearing_house None settlement None premium_payment_date None source Object representation of a swaption Properties clearing_house Swap Clearing House Return type Union SwapClearingHouse str effective_date Swaption effective date e g 2019 01 01 10y Return type Union date str expiration_date Swaption expiration date 2020 05 01 3m Return type Union date str fee The fee Return type float fixed_rate_business_day_convention The business day convention for the fixed rate Return type Union BusinessDayConvention str fixed_rate_day_count_fraction The day count fraction for the fixed rate Return type Union DayCountFraction str fixed_rate_frequency The frequency of fixed payments e g 6m Return type str floating_rate_business_day_convention The business day convention of the floating rate Return type Union BusinessDayConvention str floating_rate_day_count_fraction The day count fraction of the floating rate Return type Union DayCountFraction str floating_rate_designated_maturity Tenor Return type str floating_rate_frequency The frequency of floating payments e g 3m Return type str floating_rate_option The underlying benchmark for the floating rate e g USD LIBOR BBA EUR EURIBOR TELERATE Return type str floating_rate_spread The spread over the floating rate Return type float notional_amount Notional amount Return type float notional_currency Notional currency Return type Union Currency str pay_or_receive Pay or receive fixed Return type str premium The premium Return type float premium_payment_date Date or tenor e g 2018 09 03 3m Return type Union date str settlement Swap Settlement Type Return type Union SwapSettlement str strike Strike as value percent or at the money e g 62 5 95 ATM 25 ATMF Return type Union float str termination_date Swaption termination date e g 2030 05 01 10y Return type Union date str",
+        "key": "classes/gs_quant.instrument.IRSwaption",
+        "title": "IRSwaption"
+    },
+    {
+        "body": "InflationSwap For methods of this class see gs_quant base Priceable class InflationSwap termination_date pay_or_receive None notional_currency None notional_amount 1000000 0 effective_date None index None floating_rate_business_day_convention None fixed_rate None fixed_rate_business_day_convention None fee 0 source A vanilla inflation swap of fixed vs floating cashflows adjusted to an inflation rate Properties effective_date The date on which the swap becomes effective Return type Union date str fee The fee Return type float fixed_rate The coupon of the fixed leg Return type Union float str fixed_rate_business_day_convention The business day convention for the fixed rate Return type Union BusinessDayConvention str floating_rate_business_day_convention The business day convention of the floating rate Return type Union BusinessDayConvention str index The underlying benchmark for the floating rate e g CPI U Return type str notional_amount Notional amount Return type float notional_currency Notional currency Return type Union Currency str pay_or_receive Pay or receive fixed Return type Union PayReceive str termination_date The termination of the swap e g 2050 04 01 10y Return type Union date str",
+        "key": "classes/gs_quant.instrument.InflationSwap",
+        "title": "InflationSwap"
+    },
+    {
+        "body": "Security For methods of this class see gs_quant base Priceable class Security ticker None bbid None isin None cusip None prime_id None quantity 1 source A security specified by a well known identifier Properties bbid Bloomberg Id Identifier Return type str bbid_equivalent Bloomberg Equivalent Identifier Return type str bcid Bloomberg Composite Identifier Return type str cid Company Id Identifier Return type str cm_id Client Master Party Id Return type str cross Cross identifier Return type str cusip Cusip Identifier Return type str delisted Whether an asset has been delisted Return type str dollar_cross USD cross identifier for a particular currency Return type str eid EID Identifier Return type str em_id Entity Master Identifier Return type str gsid GSID Identifier Return type str gsideid GSID_EID Identifier Return type str gsn Goldman Sachs internal product number Return type str gss GS Symbol identifier Return type str isin International Security Number Return type str jsn Japan Security Number Return type str lms_id Listed Market Symbol Return type str mdapi MDAPI Asset Return type str mdapi_class MDAPI Asset Class Return type str mic Market Identifier Code Return type str mq_symbol Marquee Symbol for generic MQ entities Return type str prime_id PrimeID Identifier Return type str rcic Reuters Composite Instrument Code Identifier Return type str ric Reuters Instrument Code identifier Return type str sec_name Internal Goldman Sachs security name Return type str sedol Sedol Identifier Return type str sf_id SalesForce ID Return type str simon_id SIMON product identifier Return type str ticker Ticker Identifier Return type str valoren Valoren Identifier Return type str wpk Wertpapier Kenn Nummer Return type str",
+        "key": "classes/gs_quant.instrument.Security",
+        "title": "Security"
+    },
+    {
+        "body": "gs_quant markets HistoricalPricingContext class HistoricalPricingContext start None end None calendars dates None is_async False is_batch False source A context for producing valuations over multiple dates __init__ start None end None calendars dates None is_async False is_batch False source A context for producing valuations over multiple dates Parameters start Union int date None start date end Union int date None end date defaults to today calendars Union str Tuple holiday calendars dates Optional Iterable date a custom iterable of dates is_async bool return immediately True or wait for results False Defaults to False is_batch bool use for calculations expected to run longer than 3 mins to avoid timeouts It can be used with is_aync True False Examples from gs_quant instrument import IRSwap ir_swap IRSwap Pay 10y DKK with HistoricalPricingContext 10 price_f ir_swap price price_series price_f result Methods Attributes",
+        "key": "classes/gs_quant.markets.HistoricalPricingContext",
+        "title": "gs_quant markets HistoricalPricingContext"
+    },
+    {
+        "body": "gs_quant markets PricingContext class PricingContext pricing_date None market_data_as_of None market_data_location None is_async False is_batch False source A context for controlling pricing and market data behaviour __init__ pricing_date None market_data_as_of None market_data_location None is_async False is_batch False source The methods on this class should not be called directly Instead use the methods on the instruments as per the examples Parameters pricing_date Optional date the date for pricing calculations Default is today market_data_as_of Union date datetime None the date datetime for sourcing market data Default is 1 business day before pricing_date market_data_location Optional str the location for sourcing market data NYC LDN or HKG Default is NYC is_async bool if True return a future immediately If False block is_batch bool use for calculations expected to run longer than 3 mins to avoid timeouts It can be used with is_aync True False Examples To change the market data location of the default context from gs_quant risk import PricingContext import datetime as dt PricingContext current PricingContext market_data_location LDN For a blocking synchronous request from gs_quant instrument import IRCap cap IRCap 5y GBP with PricingContext price_f cap dollar_price price price_f result For an asynchronous request with PricingContext is_async True price_f inst dollar_price while not price_f done Methods Attributes",
+        "key": "classes/gs_quant.markets.PricingContext",
+        "title": "gs_quant markets PricingContext"
+    },
+    {
+        "body": "gs_quant markets securities Asset class Asset id_ asset_class name exchange None source __init__ id_ asset_class name exchange None source Initialize self See help type self for accurate signature Methods",
+        "key": "classes/gs_quant.markets.securities.Asset",
+        "title": "gs_quant markets securities Asset"
+    },
+    {
+        "body": "gs_quant markets securities AssetClass class AssetClass source Asset classification of security Assets are classified into broad groups which exhibit similar characteristics and behave in a consistent way under different market conditions __init__ Initialize self See help type self for accurate signature Attributes",
+        "key": "classes/gs_quant.markets.securities.AssetClass",
+        "title": "gs_quant markets securities AssetClass"
+    },
+    {
+        "body": "gs_quant markets securities AssetIdentifier class AssetIdentifier source Asset type enumeration Enumeration of different security identifiers __init__ Initialize self See help type self for accurate signature Attributes",
+        "key": "classes/gs_quant.markets.securities.AssetIdentifier",
+        "title": "gs_quant markets securities AssetIdentifier"
+    },
+    {
+        "body": "gs_quant markets securities AssetType class AssetType source Asset type enumeration Enumeration of different types of asset or security __init__ Initialize self See help type self for accurate signature Attributes",
+        "key": "classes/gs_quant.markets.securities.AssetType",
+        "title": "gs_quant markets securities AssetType"
+    },
+    {
+        "body": "gs_quant markets securities Index class Index id_ asset_class name exchange None source Index Asset Index which tracks an evolving portfolio of securities and can be traded through cash or derivatives markets __init__ id_ asset_class name exchange None source Initialize self See help type self for accurate signature Methods",
+        "key": "classes/gs_quant.markets.securities.Index",
+        "title": "gs_quant markets securities Index"
+    },
+    {
+        "body": "gs_quant markets securities SecurityMaster class SecurityMaster source Security Master The SecurityMaster class provides an interface to security lookup functions This allows querying and retrieval of different security types assets based on a variety of different identifiers through point in time lookups Uses the current PricingContext to provide as of dates if optional arguments are not provided Will return the relevant asset subclass depending on the type of the security See also Asset __init__ Initialize self See help type self for accurate signature Methods",
+        "key": "classes/gs_quant.markets.securities.SecurityMaster",
+        "title": "gs_quant markets securities SecurityMaster"
+    },
+    {
+        "body": "gs_quant markets securities Stock class Stock id_ name exchange None source Base Security Type Represents a financial asset which can be held in a portfolio or has an observable price fixing which can be referenced in a derivative transaction __init__ id_ name exchange None source Initialize self See help type self for accurate signature Methods",
+        "key": "classes/gs_quant.markets.securities.Stock",
+        "title": "gs_quant markets securities Stock"
+    },
+    {
+        "body": "Data Package",
+        "key": "data",
+        "title": "Data Package"
+    },
+    {
+        "body": "Datetime Package Date Point",
+        "key": "datetime",
+        "title": "Datetime Package Date Point"
+    },
+    {
+        "body": "business_day_count business_day_count begin_dates end_dates calendars week_mask None source Determine the number of business days between begin_dates and end_dates Parameters begin_dates Union date Iterable date A date or collection of beginning dates end_dates Union date Iterable date A date or collection of end dates calendars Union str Tuple str Calendars to use for holidays week_mask Optional str Which days are considered weekends defaults to Saturday and Sunday Return type Union int Tuple int Returns An int or tuple of ints representing the number of business days between begin_dates and end_dates Examples import datetime as dt today dt date today bus_days business_day_count today today dt timedelta days 7",
+        "key": "functions/gs_quant.datetime.date.business_day_count",
+        "title": "business_day_count"
+    },
+    {
+        "body": "business_day_offset business_day_offset dates offsets roll raise calendars week_mask None source Apply offsets to the dates and move to the nearest business date Parameters dates Union date Iterable date The input date or dates offsets Union int Iterable int The number of days by which to adjust the dates roll str Which direction to roll in order to get to the nearest business date calendars Union str Tuple str Calendars to use for holidays week_mask Optional str Which days are considered weekends defaults to Saturday and Sunday Return type Union date Iterable date Returns A date if dates is a single date or tuple of dates adjusted by the offsets Examples import datetime as dt prev_bus_date business_day_offset dt date today 1 roll forward",
+        "key": "functions/gs_quant.datetime.date.business_day_offset",
+        "title": "business_day_offset"
+    },
+    {
+        "body": "date_range date_range begin end calendars week_mask None source Construct a range of dates Parameters begin Union int date Beginning date or int An int will be interpreted as the number of business days before end which must be a date type end Union int date param end End date or int An int will be interpreted as the number of business days after begin which must be a date type calendars Union str Tuple str param calendars Calendars to use for holidays type week_mask Optional str param week_mask Which days are considered weekends defaults to Saturday and Sunday rtype Iterable date return A generator of dates import datetime as dt today dt date today dates tuple date_range 5 today for date in date_range dt date 2019 1 1 dt date 2019 2 1 print date",
+        "key": "functions/gs_quant.datetime.date.date_range",
+        "title": "date_range"
+    },
+    {
+        "body": "is_business_day is_business_day dates calendars week_mask None source Determine whether each date in dates is a business day Parameters dates Union date Iterable date The input date or dates calendars Union str Tuple str Calendars to use for holidays week_mask Optional str Which days are considered weekends defaults to Saturday and Sunday Return type Union bool Tuple bool Returns True False if dates is a single date A tuple indicating True False for each date if dates is an iterable Examples import datetime as dt is_bus_date is_business_day dt date today is_bus_date is_business_day dt date 2019 7 4 calendars NYSE",
+        "key": "functions/gs_quant.datetime.date.is_business_day",
+        "title": "is_business_day"
+    },
+    {
+        "body": "gs_quant datetime date prev_business_date prev_business_date dates datetime date 2019 11 18 calendars week_mask None source Returns the previous business date for a given date or date series defaulting to today Parameters dates Union date Iterable date The input date or dates defaults to today calendars Union str Tuple str Calendars to use for holidays week_mask Optional str Which days are considered weekends defaults to Saturday and Sunday Return type Union date Iterable date Returns A date if dates is a single date or tuple of dates adjusted by the offset of one day Example import datetime as dt prev_bus_date prev_business_date",
+        "key": "functions/gs_quant.datetime.date.prev_business_date",
+        "title": "gs_quant datetime date prev_business_date"
+    },
+    {
+        "body": "point_sort_order point_sort_order point ref_date datetime date 2019 11 18 source Calculates a number that can be used to sort Mkt Points by it Parameters point str The point string from MarketDataCoordinate ref_date date Reference date normally the pricing date Return type float Returns The number of days from the reference date to the date specified by the point string Examples import datetime as dt days point_sort_order point Dec20 ref_date dt date today",
+        "key": "functions/gs_quant.datetime.point.point_sort_order",
+        "title": "point_sort_order"
+    },
+    {
+        "body": "abs abs_ x source Absolute value of each element in series Parameters x Series date based time series of prices Return type Series Returns date based time series of absolute value Usage Return the absolute value of X For each value in time series X_t return X_t if X_t is greater than or equal to 0 otherwise return X_t R_t X_t Equivalent to R_t sqrt X_t 2 Examples Generate price series and take absolute value of X_t 100 prices generate_series 100 100 abs_ prices See also exp sqrt",
+        "key": "functions/gs_quant.timeseries.algebra.abs_",
+        "title": "abs"
+    },
+    {
+        "body": "add add x y method Interpolate STEP step source Add two series or scalars Parameters x Union Series Real timeseries or scalar y Union Series Real timeseries or scalar method Interpolate interpolation method default step Only used when both x and y are timeseries Return type Union Series Real Returns timeseries of x y or sum of the given real numbers Usage Add two series or scalar variables with the given interpolation method R_t X_t Y_t Alignment operators Method Behavior intersect Resultant series only has values on the intersection of dates Values for dates present in only one series will be ignored nan Resultant series has values on the union of dates in both series Values for dates only available in one series will be treated as nan in the other series and therefore in the resultant series zero Resultant series has values on the union of dates in both series Values for dates only available in one series will be treated as zero in the other series step Resultant series has values on the union of dates in both series Values for dates only available in one series will be interpolated via step function in the other series time Resultant series have values on the union of dates times Missing values surrounded by valid values will be interpolated given length of interval Input series must use DateTimeIndex Examples Add two series a generate_series 100 b generate_series 100 add a b Interpolate STEP See also subtract",
+        "key": "functions/gs_quant.timeseries.algebra.add",
+        "title": "add"
+    },
+    {
+        "body": "ceil ceil x value 0 source Cap series at maximum value Parameters x Series date based time series of prices value float maximum value Return type Series Returns date based time series of maximum value Usage Returns series where all values are less than or equal to the maximum value R_t min X_t value See Floor and Ceil functions for more details Examples Generate price series and floor all values at 100 prices generate_series 100 floor prices 100 See also floor",
+        "key": "functions/gs_quant.timeseries.algebra.ceil",
+        "title": "ceil"
+    },
+    {
+        "body": "divide divide x y method Interpolate STEP step source Divide two series or scalars Parameters x Union Series Real timeseries or scalar y Union Series Real timeseries or scalar method Interpolate interpolation method default step Only used when both x and y are timeseries Return type Union Series Real Returns timeseries of x y or quotient of the given real numbers Usage Divide two series or scalar variables applying the given interpolation method R_t X_t Y_t Alignment operators Method Behavior intersect Resultant series only has values on the intersection of dates Values for dates present in only one series will be ignored nan Resultant series has values on the union of dates in both series Values for dates only available in one series will be treated as nan in the other series and therefore in the resultant series zero Resultant series has values on the union of dates in both series Values for dates only available in one series will be treated as zero in the other series step Resultant series has values on the union of dates in both series Values for dates only available in one series will be interpolated via step function in the other series time Resultant series have values on the union of dates times Missing values surrounded by valid values will be interpolated given length of interval Input series must use DateTimeIndex Examples Divide two series a generate_series 100 b generate_series 100 divide a b Interpolate STEP See also multiply",
+        "key": "functions/gs_quant.timeseries.algebra.divide",
+        "title": "divide"
+    },
+    {
+        "body": "exp exp x source Exponential of series Parameters x Series timeseries Return type Series Returns exponential of each element Usage For each element in the series X_t raise e Euler s number to the power of X_t Euler s number is the base of the natural logarithm ln R_t e X_t Examples Raise e to the power 1 Returns Euler s number approximately 2 71828 exp 1 See also log",
+        "key": "functions/gs_quant.timeseries.algebra.exp",
+        "title": "exp"
+    },
+    {
+        "body": "floor floor x value 0 source Floor series at minimum value Parameters x Series date based time series of prices value float minimum value Return type Series Returns date based time series of maximum value Usage Returns series where all values are greater than or equal to the minimum value R_t max X_t value See Floor and Ceil functions for more details Examples Generate price series and floor all values at 100 prices generate_series 100 floor prices 100 See also ceil",
+        "key": "functions/gs_quant.timeseries.algebra.floor",
+        "title": "floor"
+    },
+    {
+        "body": "log log x source Natural logarithm of series Parameters x Series timeseries Return type Series Returns series with exponential of each element Usage For each element in the series X_t return the natural logarithm ln of X_t The natural logarithm is the logarithm in base e R_t log X_t This function is the inverse of the exponential function More information on logarithms Examples Take natural logarithm of 3 log 3 See also exp",
+        "key": "functions/gs_quant.timeseries.algebra.log",
+        "title": "log"
+    },
+    {
+        "body": "multiply multiply x y method Interpolate STEP step source Multiply two series or scalars Parameters x Union Series Real timeseries or scalar y Union Series Real timeseries or scalar method Interpolate interpolation method default step Only used when both x and y are timeseries Return type Union Series Real Returns timeseries of x y or product of the given real numbers Usage Multiply two series or scalar variables applying the given interpolation method R_t X_t times Y_t Alignment operators Method Behavior intersect Resultant series only has values on the intersection of dates Values for dates present in only one series will be ignored nan Resultant series has values on the union of dates in both series Values for dates only available in one series will be treated as nan in the other series and therefore in the resultant series zero Resultant series has values on the union of dates in both series Values for dates only available in one series will be treated as zero in the other series step Resultant series has values on the union of dates in both series Values for dates only available in one series will be interpolated via step function in the other series time Resultant series have values on the union of dates times Missing values surrounded by valid values will be interpolated given length of interval Input series must use DateTimeIndex Examples Multiply two series a generate_series 100 b generate_series 100 multiply a b Interpolate STEP See also divide",
+        "key": "functions/gs_quant.timeseries.algebra.multiply",
+        "title": "multiply"
+    },
+    {
+        "body": "power power x y 1 source Raise each element in series to power Parameters x Series timeseries y float value Return type Series Returns date based time series of square roots Usage Raise each value in time series X_t to the power y R_t X_t y Examples Generate price series and raise each value to the power 2 prices generate_series 100 power prices 2 See also sqrt",
+        "key": "functions/gs_quant.timeseries.algebra.power",
+        "title": "power"
+    },
+    {
+        "body": "sqrt sqrt x source Square root of a each element in a series or b a real number Parameters x Union Real Series date based time series of prices or real number Return type Union Real Series Returns date based time series of square roots or square root of given number Usage Return the square root of each value in time series X_t R_t sqrt X_t Examples Generate price series and take square root of each value prices generate_series 100 sqrt prices See also pow",
+        "key": "functions/gs_quant.timeseries.algebra.sqrt",
+        "title": "sqrt"
+    },
+    {
+        "body": "subtract subtract x y method Interpolate STEP step source Add two series or scalars Parameters x Union Series Real timeseries or scalar y Union Series Real timeseries or scalar method Interpolate index alignment operator default intersect Only used when both x and y are timeseries Return type Union Series Real Returns timeseries of x y or difference between the given real numbers Usage Subtracts one series or scalar from another applying the given interpolation method R_t X_t Y_t Alignment operators Method Behavior intersect Resultant series only has values on the intersection of dates Values for dates present in only one series will be ignored nan Resultant series has values on the union of dates in both series Values for dates only available in one series will be treated as nan in the other series and therefore in the resultant series zero Resultant series has values on the union of dates in both series Values for dates only available in one series will be treated as zero in the other series step Resultant series has values on the union of dates in both series Values for dates only available in one series will be interpolated via step function in the other series time Resultant series have values on the union of dates times Missing values surrounded by valid values will be interpolated given length of interval Input series must use DateTimeIndex Examples Subtract one series from another a generate_series 100 b generate_series 100 subtract a b Interpolate STEP See also add",
+        "key": "functions/gs_quant.timeseries.algebra.subtract",
+        "title": "subtract"
+    },
+    {
+        "body": "count count x source Count observations in series Parameters x Series time series Return type Series Returns number of observations Usage Count the number of valid observations in a series R_t R_ t 1 1 if X_t is not NaN and R_t R_ t 1 0 if X_t is NaN Examples Count observations in series series generate_series 100 count count series See also sum",
+        "key": "functions/gs_quant.timeseries.analysis.count",
+        "title": "count"
+    },
+    {
+        "body": "diff diff x obs 1 source Diff observations with given lag Parameters x Series time series of prices obs int number of observations to lag Return type Series Returns date based time series of return Usage Compute the difference in series values over a given lag R_t X_t X_ t obs where obs is the number of observations to lag series in diff function Examples Diff prices levels series generate_series 100 returns diff series See also lag",
+        "key": "functions/gs_quant.timeseries.analysis.diff",
+        "title": "diff"
+    },
+    {
+        "body": "first first x source First value of series Parameters x Series time series Return type Series Returns time series of first value Usage Return series with first value of X for all dates R_t X_0 where X_0 is the first value in the series Examples Last value of series series generate_series 100 returns first series See also last",
+        "key": "functions/gs_quant.timeseries.analysis.first",
+        "title": "first"
+    },
+    {
+        "body": "lag lag x obs 1 source Lag timeseries by a specified number of observations Parameters x Series timeseries of prices obs int number of observations to lag series Return type Series Returns date based time series of return Usage Shift the series backwards by a specified number of observations R_t X_ t obs where obs is the number of observations to lag series Examples Lag series by 2 observations prices generate_series 100 lagged lag prices 2 See also diff",
+        "key": "functions/gs_quant.timeseries.analysis.lag",
+        "title": "lag"
+    },
+    {
+        "body": "last last x source Last value of series Parameters x Series time series Return type Series Returns time series of last value Usage Return series with last value of X for all dates R_t X_T where X_T is the last value in the series Examples Last value of series series generate_series 100 returns last series See also first",
+        "key": "functions/gs_quant.timeseries.analysis.last",
+        "title": "last"
+    },
+    {
+        "body": "align align x y method Interpolate INTERSECT intersect source Align dates of two series or scalars Parameters x Union Series Real first timeseries or scalar y Union Series Real second timeseries or scalar method Interpolate interpolation method default intersect Only used when both x and y are timeseries Return type Union List Series List Real Returns timeseries with specified dates or two scalars from the input Usage Align the dates of two series using the specified interpolation method Returns two series with dates based on the method of interpolation for example can be used to intersect the dates of two series union dates with a defined manner to compute missing values Interpolation methods Type Behavior intersect Resultant series only have values on the intersection of dates times nan Resultant series have values on the union of dates times Values will be NaN for dates or times only present in the other series zero Resultant series have values on the union of dates times Values will be zero for dates or times only present in the other series step Resultant series have values on the union of dates times Each series will use the value of the previous valid point if requested date does not exist Values prior to the first date will be equivalent to the first available value time Resultant series have values on the union of dates times Missing values surrounded by valid values will be interpolated given length of interval Input series must use DateTimeIndex Examples Stepwize interpolation of series based on dates in second series a generate_series 100 b generate_series 100 align a See also sub",
+        "key": "functions/gs_quant.timeseries.datetime.align",
+        "title": "align"
+    },
+    {
+        "body": "day day x source Day of each value in series Parameters x Series time series Return type Series Returns day of observations Usage Returns the day as a numeric value for each observation in the series Y_t day t Day of the time or date is the integer day number within the month e g 1 31 Examples Day for observations in series series generate_series 100 days day series See also month year",
+        "key": "functions/gs_quant.timeseries.datetime.day",
+        "title": "day"
+    },
+    {
+        "body": "interpolate interpolate x dates None method Interpolate INTERSECT intersect source Interpolate over specified dates or times Parameters x Series timeseries to interpolate dates Union List date List time Series None array of dates times or another series to interpolate method Interpolate interpolation method default intersect Return type Series Returns timeseries with specified dates Usage Interpolate the series X over the dates specified by the dates parameter This can be an array of dates or another series in which case the index of the series will be used to specify dates Interpolation methods Type Behavior intersect Resultant series only has values on the intersection of dates times Will only contain intersection of valid dates times in the series nan Resultant series only has values on the intersection of dates times Value will be NaN for dates not present in the series zero Resultant series has values on all requested dates times The series will have a value of zero where the requested date or time was not present in the series step Resultant series has values on all requested dates times The series will use the value of the previous valid point if requested date does not exist Values prior to the first date will be equivalent to the first available value Examples Stepwize interpolation of series based on dates in second series a generate_series 100 b generate_series 100 interpolate a b Interpolate INTERSECT See also sub",
+        "key": "functions/gs_quant.timeseries.datetime.interpolate",
+        "title": "interpolate"
+    },
+    {
+        "body": "month month x source Month of each value in series Parameters x Series time series Return type Series Returns month of observations Usage Returns the month as a numeric value for each observation in the series Y_t month t Month of the time or date is the integer month number e g 1 12 Examples Day for observations in series series generate_series 100 days month series See also day year",
+        "key": "functions/gs_quant.timeseries.datetime.month",
+        "title": "month"
+    },
+    {
+        "body": "quarter quarter x source Quarter of each value in series Parameters x Series time series Return type Series Returns quarter of observations Usage Returns the quarter as a numeric value for each observation in the series Y_t quarter t Quarter of the time or date is the integer quarter number e g 1 2 3 4 Examples Quarter for observations in series series generate_series 100 days quarter series See also day month",
+        "key": "functions/gs_quant.timeseries.datetime.quarter",
+        "title": "quarter"
+    },
+    {
+        "body": "value value x date method Interpolate STEP step source Value at specified date or time Parameters x Series timeseries date Union date time requested date or time method Interpolate interpolation method default step Return type Series Returns value at specified date or time Usage Returns the value of series X at the specified date Y_t X_ date If the requested date or time is not present in the series the value function will return the value from the previous available date or time by default Caller can specify other interpolation styles via the method param Interpolation methods Type Behavior intersect Only returns a value for valid dates nan Value will be NaN for dates not present in the series zero Value will be zero for dates not present in the series step Value of the previous valid point if requested date does not exist Values prior to the first date will be equivalent to the first available value Examples Value of series on 5Mar18 a generate_series 100 value a date 2019 1 3 See also interpolate",
+        "key": "functions/gs_quant.timeseries.datetime.value",
+        "title": "value"
+    },
+    {
+        "body": "weekday weekday x source Weekday of each value in series Parameters x Series time series Return type Series Returns weekday of observations Usage Returns the weekday as a numeric value for each observation in the series Y_t weekday t Weekday of the time or date is the integer day of the week e g 0 6 where 0 represents Monday Examples Weekday for observations in series series generate_series 100 days weekday series See also day month",
+        "key": "functions/gs_quant.timeseries.datetime.weekday",
+        "title": "weekday"
+    },
+    {
+        "body": "year year x source Year of each value in series Parameters x Series time series Return type Series Returns year of observations Usage Returns the year as a numeric value for each observation in the series Y_t year t Year of the time or date is the integer year number e g 2019 2020 Examples Year for observations in series series generate_series 100 days year series See also day month",
+        "key": "functions/gs_quant.timeseries.datetime.year",
+        "title": "year"
+    },
+    {
+        "body": "annualize annualize x source Annualize series based on sample observation frequency Parameters x Series time series of prices Return type Series Returns date based time series of annualized values Usage Based on number of days between observations will determine an annualization factor and then adjust values accordingly Useful for annualizing daily or monthly returns Y_t X_t sqrt F Annualization factors as follows based on period implied by observations Period Annualization Factor F Daily 252 Weekly 52 Bi Weekly 26 Monthly 12 Quarterly 4 Annually 1 Examples Annualize daily returns series prices generate_series 100 ann annualize returns prices See also returns",
+        "key": "functions/gs_quant.timeseries.econometrics.annualize",
+        "title": "annualize"
+    },
+    {
+        "body": "beta beta x b w Window w None r 0 prices True source Rolling beta of price series and benchmark Parameters x Series time series of prices b Series time series of benchmark prices w Union Window int Window or int number of observations and ramp up to use e g Window 22 10 where 22 is the window size and 10 the ramp up value Window size defaults to length of series type prices bool param prices True if input series are prices False if they are returns rtype Series return date based time series of beta Usage Calculate rolling beta beta_t of a series to a benchmark over a given window R_t alpha_t beta S_t epsilon_t Calculated as beta_t frac sum_ i t w 1 t Cov R_t S_t Var S_t where N is the number of observations in each rolling window w and R_t and S_t are the simple returns for each series on time t R_t frac X_t X_ t 1 1 and S_t frac b_t b_ t 1 1 If prices False assumes returns are provided R_t X_t and S_t b_t Cov R_t S_t and Var S_t are the mean and variance of series R_t and S_t over the same window If window is not provided computes beta over the full series Examples Compute rolling 1 month 22 business day beta of two price series series generate_series 100 benchmark generate_series 100 b beta series benchmark 22 See also var cov correlation returns",
+        "key": "functions/gs_quant.timeseries.econometrics.beta",
+        "title": "beta"
+    },
+    {
+        "body": "change change x source Arithmetic series normalization Parameters x Series time series Return type Series Returns normalized time series Usage Compute difference of every value from the initial value of x Y_t X_t X_0 where X_0 is the first value in the series Examples Change in level from initial value series generate_series 100 returns change series See also index",
+        "key": "functions/gs_quant.timeseries.econometrics.change",
+        "title": "change"
+    },
+    {
+        "body": "correlation correlation x y w Window w None r 0 type_ SeriesType PRICES prices source Rolling correlation of two price series Parameters x Series price series y Series price series w Union Window int Window or int number of observations and ramp up to use e g Window 22 10 where 22 is the window size and 10 the ramp up value Window size defaults to length of series param type_ type of both input series rtype Series return date based time series of correlation Usage Calculate rolling realized correlation rho_t of two price series over a given window rho_t frac sum_ i t w 1 t R_t overline R_t Y_t overline S_t N 1 sigma R_t sigma S_t where N is the number of observations in each rolling window w and R_t and S_t are the simple returns for each series on time t R_t frac X_t X_ t 1 1 and S_t frac Y_t Y_ t 1 1 If prices False assumes returns are provided R_t X_t and S_t Y_t overline R_t overline S_t are the mean values and sigma R_ t and sigma S_ t are the sample standard deviations of series R_t and S_t over the same window If window is not provided computes realized correlation over the full series Examples Compute rolling 1 month 22 business day correlation of price series series1 generate_series 100 series2 generate_series 100 corr correlation series1 series2 22 See also std returns",
+        "key": "functions/gs_quant.timeseries.econometrics.correlation",
+        "title": "correlation"
+    },
+    {
+        "body": "index index x initial 1 source Geometric series normalization Parameters x Series time series initial int initial value Return type Series Returns normalized time series Usage Divides every value in x by the initial value of x Y_t initial X_t X_0 where X_0 is the first value in the series Examples Normalize series to 1 series generate_series 100 returns index series See also returns",
+        "key": "functions/gs_quant.timeseries.econometrics.index",
+        "title": "index"
+    },
+    {
+        "body": "max_drawdown max_drawdown x w Window w None r 0 source Compute the maximum peak to trough drawdown over a rolling window Parameters x Series time series w Union Window int Window or int number of observations and ramp up to use e g Window 22 10 where 22 is the window size and 10 the ramp up value Window size defaults to length of series rtype Series return time series of rolling maximum drawdown Examples Compute the maximum peak to trough drawdown series generate_series 100 max_drawdown series See also returns",
+        "key": "functions/gs_quant.timeseries.econometrics.max_drawdown",
+        "title": "max_drawdown"
+    },
+    {
+        "body": "prices prices series initial 1 type Returns SIMPLE simple source Calculate price levels from returns series Parameters series Series time series of returns initial int initial price level type Returns returns type simple log Return type Series Returns date based time series of return Usage Compute price levels from returns series based on the value of type Type Description simple Simple arithmetic returns log Logarithmic returns Simple Compute asset price series from simple returns Y_t 1 X_ t 1 Y_ t 1 where X_t is the asset price at time t and Y_0 initial Logarithmic Compute asset price series from logarithmic returns Y_t e X_ t 1 Y_ t 1 where X_t is the asset price at time t and Y_0 initial Examples Generate price series and take compute returns series generate_series 100 returns prices returns series See also returns product exp",
+        "key": "functions/gs_quant.timeseries.econometrics.prices",
+        "title": "prices"
+    },
+    {
+        "body": "returns returns series obs 1 type Returns SIMPLE simple source Calculate returns from price series Parameters series Series time series of prices obs int number of observations type Returns returns type Return type Series Returns date based time series of return Usage Compute returns series from price levels based on the value of type Type Description simple Simple arithmetic returns log Logarithmic returns Simple Simple geometric change in asset prices which can be aggregated across assets Y_t frac X_t X_ t obs 1 where X_t is the asset price at time t Logarithmic Natural logarithm of asset price changes which can be aggregated through time Y_t log X_t log X_ t obs where X_t is the asset price at time t Examples Generate price series and take compute returns prices generate_series 100 returns returns prices See also prices",
+        "key": "functions/gs_quant.timeseries.econometrics.returns",
+        "title": "returns"
+    },
+    {
+        "body": "volatility volatility x w Window w None r 0 returns_type Returns SIMPLE simple source Realized volatility of price series Parameters x Series time series of prices w Union Window int Window or int number of observations and ramp up to use e g Window 22 10 where 22 is the window size and 10 the ramp up value Window size defaults to length of series type returns_type Returns param returns_type returns type rtype Series return date based time series of return Usage Calculate rolling annualized realized volatility of a price series over a given window Annual volatility of 20 is returned as 20 0 Y_t sqrt frac 1 N 1 sum_ i t w 1 t R_t overline R_t 2 sqrt 252 100 where N is the number of observations in each rolling window w R_t is the simple return on time t R_t frac X_t X_ t 1 1 and overline R_t is the mean value over the same window overline R_t frac sum_ i t w 1 t R_t N If window is not provided computes realized volatility over the full series Examples Compute rolling 1 month 22 business day annualized volatility of price series series generate_series 100 vol_series volatility series 22 vol_series volatility series Window 22 30 See also std annualize returns",
+        "key": "functions/gs_quant.timeseries.econometrics.volatility",
+        "title": "volatility"
+    },
+    {
+        "body": "cov cov x y w Window w None r 0 source Rolling co variance of series over given window Parameters x Series series timeseries y Series series timeseries w Union Window int Window or int number of observations and ramp up to use e g Window 22 10 where 22 is the window size and 10 the ramp up value Window size defaults to length of series rtype Series return timeseries of covariance Usage Provides unbiased estimator of sample co variance over a rolling window R_t frac 1 N 1 sum_ i t w 1 t X_i overline X_t Y_i overline Y_t where N is the number of observations in each rolling window w and overline X_t and overline Y_t represent the sample mean of series X_t and Y_t over the same window overline X_t frac sum_ i t w 1 t X_i N and overline Y_t frac sum_ i t w 1 t Y_i N If window is not provided computes variance over the full series Examples Generate price series and compute variance of returns over 22 observations prices_x generate_series 100 prices_y generate_series 100 cov returns prices_x returns prices_y 22 See also sum mean var",
+        "key": "functions/gs_quant.timeseries.statistics.cov",
+        "title": "cov"
+    },
+    {
+        "body": "generate_series generate_series length source Generate sample timeseries Parameters length int number of observations Return type Series Returns date based time series of randomly generated prices Usage Create timeseries from returns generated from a normally distributed random variables IDD Length determines the number of observations to be generated Assume random variables R which follow a normal distribution with mean 0 and standard deviation of 1 R sim N 0 1 The timeseries is generated from these random numbers through X_t 1 R X_ t 1 Examples Generate price series with 100 observations starting from today s date prices generate_series 100 See also numpy random normal",
+        "key": "functions/gs_quant.timeseries.statistics.generate_series",
+        "title": "generate_series"
+    },
+    {
+        "body": "max max_ x w Window w None r 0 source Maximum value of series over given window Parameters x Series series timeseries w Union Window int Window or int number of observations and ramp up to use e g Window 22 10 where 22 is the window size and 10 the ramp up value Window size defaults to length of series rtype Series return timeseries of maximum value Usage Returns the maximum value of the series over each window R_t max X_ t w 1 X_t where w is the size of the rolling window If window is not provided returns the minimum value over the full series If the window size is greater than the available data will return minimum of available values Examples Maximum value of price series over the last 22 observations prices generate_series 100 max_ prices 22 See also min_",
+        "key": "functions/gs_quant.timeseries.statistics.max_",
+        "title": "max"
+    },
+    {
+        "body": "mean mean x w Window w None r 0 source Arithmetic mean of series over given window Parameters x Series series timeseries w Union Window int Window or int number of observations and ramp up to use e g Window 22 10 where 22 is the window size and 10 the ramp up value Window size defaults to length of series rtype Series return timeseries of mean value Usage Calculates arithmetic mean of the series over a rolling window R_t frac sum_ i t w 1 t X_i N where N is the number of observations in each rolling window w If window is not provided computes rolling mean over the full series If the window size is greater than the available data will return mean of available values Examples Generate price series and compute mean over 22 observations prices generate_series 100 mean prices 22 See also median mode",
+        "key": "functions/gs_quant.timeseries.statistics.mean",
+        "title": "mean"
+    },
+    {
+        "body": "median median x w Window w None r 0 source Median value of series over given window Parameters x Series series timeseries w Union Window int Window or int number of observations and ramp up to use e g Window 22 10 where 22 is the window size and 10 the ramp up value Window size defaults to length of series rtype Series return timeseries of median value Usage Computes the median value over a given window For each window this function will return the middle value when all elements in the window are sorted If the number of observations in the window is even will return the average of the middle two values If the window size is greater than the available data will return median of available values d frac w 1 2 R_t frac X_ lfloor t d rfloor X_ lceil t d rceil 2 where w is the size of the rolling window If window is not provided computes median over the full series Examples Generate price series and compute median over 22 observations prices generate_series 100 median prices 22 See also mean mode",
+        "key": "functions/gs_quant.timeseries.statistics.median",
+        "title": "median"
+    },
+    {
+        "body": "min min_ x w Window w None r 0 source Minimum value of series over given window Parameters x Series series timeseries w Union Window int Window or int number of observations and ramp up to use e g Window 22 10 where 22 is the window size and 10 the ramp up value Window size defaults to length of series rtype Series return timeseries of minimum value Usage Returns the minimum value of the series over each window R_t min X_ t w 1 X_t where w is the size of the rolling window If window is not provided returns the minimum value over the full series If the window size is greater than the available data will return minimum of available values Examples Minimum value of price series over the last 22 observations prices generate_series 100 min_ prices 22 See also max_",
+        "key": "functions/gs_quant.timeseries.statistics.min_",
+        "title": "min"
+    },
+    {
+        "body": "mode mode x w Window w None r 0 source Most common value in series over given window Parameters x Series series timeseries w Union Window int Window or int number of observations and ramp up to use e g Window 22 10 where 22 is the window size and 10 the ramp up value Window size defaults to length of series rtype Series return timeseries of mode value Usage Computes the mode over a given window For each window this function will return the most common value of all elements in the window If there are multiple values with the same frequency of occurrence will return the smallest value If window is not provided computes mode over the full series Examples Generate price series and compute mode over 22 observations prices generate_series 100 mode prices 22 See also mean median",
+        "key": "functions/gs_quant.timeseries.statistics.mode",
+        "title": "mode"
+    },
+    {
+        "body": "percentile percentiles x y None w Window w None r 0 source Rolling percentiles over given window Parameters x Series value series y Optional Series distribution series w Union Window int Window or int number of observations and ramp up to use e g Window 22 10 where 22 is the window size and 10 the ramp up value Window size defaults to length of series rtype Series return timeseries of percentiles Usage Calculate percentile rank of y in the sample distribution of x over a rolling window of length w R_t frac sum_ i t N 1 t X_i Y_t 0 5 sum_ i t N 1 t X_i Y_t N times100 Where N is the number of observations in a rolling window If y is not provided calculates percentiles of x over its historical values If window length w is not provided uses an ever growing history of values If w is greater than the available data size returns empty Examples Compute percentile ranks of a series in the sample distribution of a second series over 22 observations a generate_series 100 b generate_series 100 percentiles a b 22 See also zscores",
+        "key": "functions/gs_quant.timeseries.statistics.percentiles",
+        "title": "percentile"
+    },
+    {
+        "body": "product product x w Window w None r 0 source Rolling product of series over given window Parameters x Series series timeseries w Union Window int Window or int number of observations and ramp up to use e g Window 22 10 where 22 is the window size and 10 the ramp up value Window size defaults to length of series rtype Series return timeseries of rolling product Usage Calculate the product of observations over a given rolling window For each time t returns the value of all observations from t w 1 to t multiplied together R_t prod_ i t w 1 t X_i where w is the size of the rolling window If window is not provided computes product over the full series Examples Generate price series and compute rolling sum over 22 observations prices generate_series 100 product 1 returns prices See also sum_",
+        "key": "functions/gs_quant.timeseries.statistics.product",
+        "title": "product"
+    },
+    {
+        "body": "range range_ x w Window w None r 0 source Range of series over given window Parameters x Series series timeseries w Union Window int Window or int number of observations and ramp up to use e g Window 22 10 where 22 is the window size and 10 the ramp up value Window size defaults to length of series rtype Series return timeseries of range Usage Returns the range of the series max min over rolling window R_t max X_ t w 1 X_t min X_ t w 1 X_t where w is the size of the rolling window If window is not provided returns the range over the full series If the window size is greater than the available data will return range of all available values Examples Range of price series over the last 22 observations prices generate_series 100 range_ prices 22 See also min_ max_",
+        "key": "functions/gs_quant.timeseries.statistics.range_",
+        "title": "range"
+    },
+    {
+        "body": "std std x w Window w None r 0 source Rolling standard deviation of series over given window Parameters x Series series timeseries w Union Window int Window or int number of observations and ramp up to use e g Window 22 10 where 22 is the window size and 10 the ramp up value Window size defaults to length of series Return type Series Returns timeseries of standard deviation Usage Provides unbiased estimator of sample standard deviation over a rolling window R_t sqrt frac 1 N 1 sum_ i t w 1 t X_i overline X_t 2 where N is the number of observations in each rolling window w and overline X_t is the mean value over the same window overline X_t frac sum_ i t w 1 t X_i N If window is not provided computes standard deviation over the full series Examples Generate price series and compute standard deviation of returns over 22 observations prices generate_series 100 std returns prices 22 See also sum mean var",
+        "key": "functions/gs_quant.timeseries.statistics.std",
+        "title": "std"
+    },
+    {
+        "body": "sum sum_ x w Window w None r 0 source Rolling sum of series over given window Parameters x Series series timeseries w Union Window int Window or int number of observations and ramp up to use e g Window 22 10 where 22 is the window size and 10 the ramp up value Window size defaults to length of series rtype Series return timeseries of rolling sum Usage Calculate the sum of observations over a given rolling window For each time t returns the value of all observations from t w 1 to t summed together R_t sum_ i t w 1 t X_i where w is the size of the rolling window If window is not provided computes sum over the full series Examples Generate price series and compute rolling sum over 22 observations prices generate_series 100 sum_ prices 22 See also product",
+        "key": "functions/gs_quant.timeseries.statistics.sum_",
+        "title": "sum"
+    },
+    {
+        "body": "var var x w Window w None r 0 source Rolling variance of series over given window Parameters x Series series timeseries w Union Window int Window or int number of observations and ramp up to use e g Window 22 10 where 22 is the window size and 10 the ramp up value Window size defaults to length of series rtype Series return timeseries of variance Usage Provides unbiased estimator of sample variance over a rolling window R_t frac 1 N 1 sum_ i t w 1 t X_i overline X_t 2 where N is the number of observations in each rolling window w and overline X_t is the mean value over the same window overline X_t frac sum_ i t w 1 t X_i N If window is not provided computes variance over the full series Examples Generate price series and compute variance of returns over 22 observations prices generate_series 100 var returns prices 22 See also var mean std",
+        "key": "functions/gs_quant.timeseries.statistics.var",
+        "title": "var"
+    },
+    {
+        "body": "winsorize winsorize x limit 2 5 w Window w None r 0 source Limit extreme values in series Parameters x Series time series of prices limit float max z score of values w Union Window int Window or int number of observations and ramp up to use e g Window 22 10 where 22 is the window size and 10 the ramp up value Window size defaults to length of series rtype Series return timeseries of winsorized values Usage Cap and floor values in the series which have a z score greater or less than provided value This function will restrict the distribution of values Calculates the sample standard deviation and adjusts values which fall outside the specified range to be equal to the upper or lower limits Lower and upper limits are defined as upper mu sigma times limit lower mu sigma times limit Where mu and sigma are sample mean and standard deviation The series is restricted by R_t max min X_t upper lower See winsorising for additional information Examples Generate price series and winsorize z score of returns over 22 observations prices generate_series 100 winsorize zscore returns prices 22 See also zscore mean std",
+        "key": "functions/gs_quant.timeseries.statistics.winsorize",
+        "title": "winsorize"
+    },
+    {
+        "body": "zscores zscores x w Window w None r 0 source Rolling z scores over a given window Parameters x Series time series of prices w Union Window int Window or int number of observations and ramp up to use e g Window 22 10 where 22 is the window size and 10 the ramp up value Window size defaults to length of series rtype Series return timeseries of z scores Usage Calculate standard score of each value in series over given window Standard deviation and sample mean are computed over the specified rolling window then element is normalized to provide a rolling z score R_t frac X_t mu sigma Where mu and sigma are sample mean and standard deviation over the given window If window is not provided computes z score relative to mean and standard deviation over the full series Examples Generate price series and compute z score of returns over 22 observations prices generate_series 100 zscores returns prices 22 See also mean std",
+        "key": "functions/gs_quant.timeseries.statistics.zscores",
+        "title": "zscores"
+    },
+    {
+        "body": "bollinger_bands bollinger_bands x w Window w None r 0 k 2 source Bollinger bands with given window and width Parameters x Series time series of prices w Union Window int Window or int number of observations and ramp up to use e g Window 22 10 where 22 is the window size and 10 the ramp up value Window size defaults to length of series type k float param k band width in standard deviations default 2 rtype DataFrame return date based time series of return Usage Standard deviation bands around the moving average of asset price level Bollinger bands can be used to determine a range around the price level which responds to local volatility changes Returns two series upper u_t and lower l_t u_t bar X_t k sigma_t l_t bar X_t k sigma_t where bar X_t is the moving average over specified window and sigma_t is the rolling standard deviation over the specified window See Bollinger Bands for more information Examples Compute bollinger bands around 20 day moving average at 2 standard deviations prices generate_series 100 bollinger_bands prices 20 2 See also moving_average std",
+        "key": "functions/gs_quant.timeseries.technicals.bollinger_bands",
+        "title": "bollinger_bands"
+    },
+    {
+        "body": "moving_average moving_average x w Window w None r 0 source Moving average over specified window Parameters x Series time series of prices w Union Window int Window or int number of observations and ramp up to use e g Window 22 10 where 22 is the window size and 10 the ramp up value Window size defaults to length of series Return type Series Returns date based time series of return Usage Simple arithmetic moving average over the specified window number of observations Shorter windows will be more reactive to changes in the asset price but more volatile Larger windows will be smoother but less reactive to near term changes in asset prices R_t frac sum_ i t w 1 t X_t N where N is the number of observations in each rolling window w If window is not provided computes rolling mean over the full series Equivalent to mean Examples Generate price series with 100 observations starting from today s date prices generate_series 100 moving_average prices 22 See also mean",
+        "key": "functions/gs_quant.timeseries.technicals.moving_average",
+        "title": "moving_average"
+    },
+    {
+        "body": "GS Quant API Packages Data Package gs_quant data Dataset Datetime Package Date Point Instrument Package gs_quant base Priceable Instruments Market Package gs_quant markets PricingContext gs_quant markets HistoricalPricingContext Securities Risk Package Functions Measures Timeseries Package Algebra Analysis Date Time Econometrics Statistics Technical Analysis Index",
+        "key": "index",
+        "title": "GS Quant API"
+    },
+    {
+        "body": "Instrument Package Instruments",
+        "key": "instrument",
+        "title": "Instrument Package Instruments"
+    },
+    {
+        "body": "Market Package Securities",
+        "key": "market",
+        "title": "Market Package Securities"
+    },
+    {
+        "body": "Risk Package Functions aggregate_risk results threshold None source Combine the results of multiple Instrument calc calls into a single result Parameters results Iterable Union DataFrame Future An iterable of Dataframes and or Futures returned by Instrument calc threshold Optional float exclude values whose absolute value falls below this threshold Return type DataFrame Returns A Dataframe with the aggregated results Examples with PricingContext delta_f inst calc risk IRDelta for inst in instruments vega_f inst calc risk IRVega for inst in instruments delta aggregate_risk delta_f threshold 0 1 vega aggregate_risk vega_f delta_f and vega_f are lists of futures where the result will be a Dataframe delta and vega are Dataframes representing the merged risk of the individual instruments subtract_risk left right source Subtract bucketed risk Dimensions must be identical Parameters left DataFrame Results to substract from right DataFrame Results to substract Examples ir_swap IRSwap Pay 10y USD delta_today ir_swap calc risk IRDelta with PricingContext pricing_date business_day_offset datetime date today 1 roll preceding delta_yday_f ir_swap calc risk IRDelta delta_diff subtract_risk delta_today delta_yday_f result Return type DataFrame sort_risk df by date time marketDataType assetId point source Sort bucketed risk Parameters df DataFrame Input Dataframe by Tuple str Columns to sort by Returns A sorted Dataframe Measures DollarPrice gs_quant target common RiskMeasure object Present value in USD Price gs_quant target common RiskMeasure object Present value in local currency ForwardPrice gs_quant target common RiskMeasure object Forward price Theta gs_quant target common RiskMeasure object 1 day Theta CommodDelta gs_quant target common RiskMeasure object Commodity Delta CommodTheta gs_quant target common RiskMeasure object Commodity Theta CommodVega gs_quant target common RiskMeasure object Commodity Vega EqDelta gs_quant target common RiskMeasure object Equity Delta EqGamma gs_quant target common RiskMeasure object Equity Gamma EqVega gs_quant target common RiskMeasure object Equity Vega EqSpot gs_quant target common RiskMeasure object Equity Spot Level EqAnnualImpliedVol gs_quant target common RiskMeasure object Equity Annual Implied Volatility FXDelta gs_quant target common RiskMeasure object FX Delta FXGamma gs_quant target common RiskMeasure object FX Gamma FXVega gs_quant target common RiskMeasure object FX Vega IRDelta gs_quant target common RiskMeasure object Interest Rate Delta IRDeltaParallel gs_quant target common RiskMeasure object Interest Rate Parallel Delta IRDeltaLocalCcy gs_quant target common RiskMeasure object Interest Rate Delta Local Ccy IRDeltaParallelLocalCcy gs_quant target common RiskMeasure object Interest Rate Parallel Delta Local Ccy IRGamma gs_quant target common RiskMeasure object Interest Rate Gamma IRVega gs_quant target common RiskMeasure object Interest Rate Vega IRVegaParallel gs_quant target common RiskMeasure object Interest Rate Parallel Vega IRVegaLocalCcy gs_quant target common RiskMeasure object Interest Rate Vega Local Ccy IRVegaParallelLocalCcy gs_quant target common RiskMeasure object Interest Rate Parallel Vega Local Ccy IRAnnualImpliedVol gs_quant target common RiskMeasure object Interest Rate Annual Implied Volatility IRAnnualATMImpliedVol gs_quant target common RiskMeasure object Interest Rate Annual Implied At The Money Volatility IRDailyImpliedVol gs_quant target common RiskMeasure object Interest Rate Daily Implied Volatility bps IRSpotRate gs_quant target common RiskMeasure object At The Money Spot Rate IRFwdRate gs_quant target common RiskMeasure object Par Rate",
+        "key": "risk",
+        "title": "Risk Package Functions Measures"
+    },
+    {
+        "body": "Timeseries Package Algebra Analysis Date Time Econometrics Statistics Technical Analysis",
+        "key": "timeseries",
+        "title": "Timeseries Package Algebra Analysis Date Time Econometrics Statistics Technical Analysis"
+    }
+]

@@ -1,0 +1,646 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>gs_quant.markets.securities &mdash; gs_quant 0.1 documentation</title>
+  
+
+    
+  <script crossorigin src="/resources/react/16-8-6/prod/react.production.min.js"></script>
+  <script
+    crossorigin src="/resources/react/16-8-6/prod/react-dom.production.min.js"></script>
+
+     
+    <script src='/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML' async></script> 
+    
+    <script type="text/javascript" src="../../../_static/../../../auto-mount.js"></script>
+    <link rel="stylesheet" href="../../../_static/../../../auto-mount.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" /> 
+</head>
+
+<!-- Hello from the future. -->
+<div id="mq-doc-navbar-inject"></div>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    <a data-toggle="wy-nav-top" class="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" class="gs-nav-action"></div>
+    </a>
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Packages</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../data.html">Data Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../datetime.html">Datetime Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instrument.html">Instrument Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../market.html">Market Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../risk.html">Risk Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../timeseries.html">Timeseries Package</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Packages</a> /</li>
+        
+          <li><a href="../../index.html">Module code</a> /</li>
+        
+      <li>gs_quant.markets.securities</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for gs_quant.markets.securities</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Copyright 2019 Goldman Sachs.</span>
+<span class="sd">Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="sd">you may not use this file except in compliance with the License.</span>
+<span class="sd">You may obtain a copy of the License at</span>
+
+<span class="sd">  http://www.apache.org/licenses/LICENSE-2.0</span>
+
+<span class="sd">Unless required by applicable law or agreed to in writing,</span>
+<span class="sd">software distributed under the License is distributed on an</span>
+<span class="sd">&quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY</span>
+<span class="sd">KIND, either express or implied.  See the License for the</span>
+<span class="sd">specific language governing permissions and limitations</span>
+<span class="sd">under the License.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="k">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="k">import</span> <span class="n">Enum</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Union</span>
+
+<span class="kn">import</span> <span class="nn">pytz</span>
+
+<span class="kn">from</span> <span class="nn">gs_quant.api.gs.assets</span> <span class="k">import</span> <span class="n">GsAssetApi</span><span class="p">,</span> <span class="n">GsAsset</span><span class="p">,</span> <span class="n">AssetClass</span><span class="p">,</span> <span class="n">AssetType</span> <span class="k">as</span> <span class="n">GsAssetType</span><span class="p">,</span> <span class="n">PositionSet</span>
+<span class="kn">from</span> <span class="nn">gs_quant.base</span> <span class="k">import</span> <span class="n">get_enum_value</span>
+<span class="kn">from</span> <span class="nn">gs_quant.markets</span> <span class="k">import</span> <span class="n">PricingContext</span>
+
+
+<span class="k">class</span> <span class="nc">ExchangeCode</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Exchange enumeration</span>
+
+<span class="sd">    Exchange codes representing global venues where Securities are listed and traded</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">NASDAQ</span> <span class="o">=</span> <span class="s2">&quot;NASD&quot;</span>  <span class="c1"># Nasdaq Global Stock Market</span>
+    <span class="n">NYSE</span> <span class="o">=</span> <span class="s2">&quot;NYSE&quot;</span>  <span class="c1"># New York Stock Exchange</span>
+
+
+<div class="viewcode-block" id="AssetType"><a class="viewcode-back" href="../../../classes/gs_quant.markets.securities.AssetType.html#gs_quant.markets.securities.AssetType">[docs]</a><span class="k">class</span> <span class="nc">AssetType</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Asset type enumeration</span>
+
+<span class="sd">    Enumeration of different types of asset or security.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#: Index which tracks an evolving portfolio of securities, and can be traded through cash or derivatives markets</span>
+    <span class="n">INDEX</span> <span class="o">=</span> <span class="s2">&quot;Index&quot;</span>
+
+    <span class="c1">#: Exchange traded fund which tracks an evolving portfolio of securities and is listed on an exchange to be</span>
+    <span class="c1">#: traded as a security</span>
+    <span class="n">ETF</span> <span class="o">=</span> <span class="s2">&quot;ETF&quot;</span>
+
+    <span class="c1">#: Bespoke basket which provides exposure to a customized collection of assets with levels published daily; can be</span>
+    <span class="c1">#: traded on swap and rebalanced programmatically</span>
+    <span class="n">BASKET</span> <span class="o">=</span> <span class="s2">&quot;Custom Basket&quot;</span>
+
+    <span class="c1">#: Listed equities which provide access to equity holding in a company and participation in dividends and other</span>
+    <span class="c1">#: distributions in common, preferred or other variants which provide different investor rights</span>
+    <span class="n">STOCK</span> <span class="o">=</span> <span class="s2">&quot;Single Stock&quot;</span>
+
+    <span class="c1">#: Standardized listed contract which provides delivery of an asset at a pre-defined forward date and can be</span>
+    <span class="c1">#: settled in cash or physical form</span>
+    <span class="n">FUTURE</span> <span class="o">=</span> <span class="s2">&quot;Future&quot;</span>
+
+    <span class="c1">#: FX cross or currency pair</span>
+    <span class="n">CROSS</span> <span class="o">=</span> <span class="s2">&quot;Cross&quot;</span>
+
+    <span class="c1">#: Currency</span>
+    <span class="n">CURRENCY</span> <span class="o">=</span> <span class="s2">&quot;Currency&quot;</span></div>
+
+
+<div class="viewcode-block" id="AssetIdentifier"><a class="viewcode-back" href="../../../classes/gs_quant.markets.securities.AssetIdentifier.html#gs_quant.markets.securities.AssetIdentifier">[docs]</a><span class="k">class</span> <span class="nc">AssetIdentifier</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Asset type enumeration</span>
+
+<span class="sd">    Enumeration of different security identifiers</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">MARQUEE_ID</span> <span class="o">=</span> <span class="s2">&quot;MQID&quot;</span>  <span class="c1">#: Goldman Sachs Marquee identifier code (MA4B66MW5E27UAHKG34)</span>
+    <span class="n">REUTERS_ID</span> <span class="o">=</span> <span class="s2">&quot;RIC&quot;</span>  <span class="c1">#: Thompson Reuters Instrument Code (RIC), (GS.N)</span>
+    <span class="n">BLOOMBERG_ID</span> <span class="o">=</span> <span class="s2">&quot;BBID&quot;</span>  <span class="c1">#: Bloomberg identifier and exchange code (GS UN)</span>
+    <span class="n">BLOOMBERG_COMPOSITE_ID</span> <span class="o">=</span> <span class="s2">&quot;BCID&quot;</span>  <span class="c1">#: Bloomberg composite identifier and exchange code (GS US)</span>
+    <span class="n">CUSIP</span> <span class="o">=</span> <span class="s2">&quot;CUSIP&quot;</span>  <span class="c1">#: Committee on Uniform Security Identification Procedures code (38141G104)</span>
+    <span class="n">ISIN</span> <span class="o">=</span> <span class="s2">&quot;ISIN&quot;</span>  <span class="c1">#: International Securities Identification Number (US38141G1040)</span>
+    <span class="n">SEDOL</span> <span class="o">=</span> <span class="s2">&quot;SEDOL&quot;</span>  <span class="c1">#: LSE Stock Exchange Daily Official List code (2407966)</span>
+    <span class="n">TICKER</span> <span class="o">=</span> <span class="s2">&quot;TICKER&quot;</span>  <span class="c1">#: Exchange ticker (GS)</span></div>
+
+
+<div class="viewcode-block" id="Asset"><a class="viewcode-back" href="../../../classes/gs_quant.markets.securities.Asset.html#gs_quant.markets.securities.Asset">[docs]</a><span class="k">class</span> <span class="nc">Asset</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
+<div class="viewcode-block" id="Asset.__init__"><a class="viewcode-back" href="../../../classes/gs_quant.markets.securities.Asset.html#gs_quant.markets.securities.Asset.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">asset_class</span><span class="p">:</span> <span class="n">AssetClass</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">exchange</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__id</span> <span class="o">=</span> <span class="n">id_</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">asset_class</span> <span class="o">=</span> <span class="n">asset_class</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exchange</span> <span class="o">=</span> <span class="n">exchange</span></div>
+
+    <span class="k">def</span> <span class="nf">get_marquee_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__id</span>
+
+    <span class="k">def</span> <span class="nf">get_identifiers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">as_of</span><span class="p">:</span> <span class="n">dt</span><span class="o">.</span><span class="n">date</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get asset identifiers</span>
+
+<span class="sd">        :param as_of: As of date for query</span>
+<span class="sd">        :return: dict of identifiers</span>
+
+<span class="sd">        **Usage**</span>
+
+<span class="sd">        Get asset identifiers as of a given date. Where the identifiers are temporal (and can change over time), this</span>
+<span class="sd">        function will return the identifiers as of that point in time. If no date is provided as a parameter, will use</span>
+<span class="sd">        the current PricingContext.</span>
+
+<span class="sd">        **Examples**</span>
+
+<span class="sd">        Get current asset identifiers:</span>
+
+<span class="sd">        &gt;&gt;&gt; gs = SecurityMaster.get_asset(&quot;GS&quot;, AssetIdentifier.TICKER)</span>
+<span class="sd">        &gt;&gt;&gt; gs.get_identifiers()</span>
+
+<span class="sd">        Get identifiers as of 1Jan18:</span>
+
+<span class="sd">        &gt;&gt;&gt; gs.get_identifiers(date(2018,1,1))</span>
+
+<span class="sd">        Use PricingContext to determine as of date:</span>
+
+<span class="sd">        &gt;&gt;&gt; with PricingContext(date(2018,1,1)) as ctx:</span>
+<span class="sd">        &gt;&gt;&gt;     gs.get_identifiers()</span>
+
+<span class="sd">        **See also**</span>
+
+<span class="sd">        :class:`AssetIdentifier`</span>
+<span class="sd">        :func:`get_asset`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">as_of</span><span class="p">:</span>
+            <span class="n">as_of</span> <span class="o">=</span> <span class="n">PricingContext</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">pricing_date</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">as_of</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">):</span>
+                <span class="n">as_of</span> <span class="o">=</span> <span class="n">as_of</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+
+        <span class="n">valid_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">AssetIdentifier</span><span class="p">)</span>
+        <span class="n">xrefs</span> <span class="o">=</span> <span class="n">GsAssetApi</span><span class="o">.</span><span class="n">get_asset_xrefs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__id</span><span class="p">)</span>
+        <span class="n">identifiers</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">xref</span> <span class="ow">in</span> <span class="n">xrefs</span><span class="p">:</span>
+            <span class="n">start_date</span> <span class="o">=</span> <span class="n">xref</span><span class="o">.</span><span class="n">startDate</span>
+            <span class="n">end_date</span> <span class="o">=</span> <span class="n">xref</span><span class="o">.</span><span class="n">endDate</span>
+
+            <span class="k">if</span> <span class="n">start_date</span> <span class="o">&lt;=</span> <span class="n">as_of</span> <span class="o">&lt;=</span> <span class="n">end_date</span><span class="p">:</span>
+                <span class="n">identifiers</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="o">.</span><span class="n">upper</span><span class="p">():</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">xref</span><span class="o">.</span><span class="n">identifiers</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">in</span> <span class="n">valid_ids</span><span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">identifiers</span>
+
+    <span class="k">def</span> <span class="nf">get_identifier</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_type</span><span class="p">:</span> <span class="n">AssetIdentifier</span><span class="p">,</span> <span class="n">as_of</span><span class="p">:</span> <span class="n">dt</span><span class="o">.</span><span class="n">date</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get asset identifier</span>
+
+<span class="sd">        :param as_of: As of date for query</span>
+<span class="sd">        :param id_type: requested id type</span>
+<span class="sd">        :return: identifier value</span>
+
+<span class="sd">        **Usage**</span>
+
+<span class="sd">        Get asset identifier as of a given date. Where the identifiers are temporal (and can change over time), this</span>
+<span class="sd">        function will return the identifier as of that point in time. If no date is provided as a parameter, will use</span>
+<span class="sd">        the current PricingContext.</span>
+
+<span class="sd">        **Examples**</span>
+
+<span class="sd">        Get current SEDOL:</span>
+
+<span class="sd">        &gt;&gt;&gt; gs = SecurityMaster.get_asset(&quot;GS&quot;, AssetIdentifier.TICKER)</span>
+<span class="sd">        &gt;&gt;&gt; gs.get_identifier(AssetIdentifier.SEDOL)</span>
+
+<span class="sd">        Get SEDOL as of 1Jan18:</span>
+
+<span class="sd">        &gt;&gt;&gt; gs.get_identifier(AssetIdentifier.SEDOL, as_of=date(2018,1,1))</span>
+
+<span class="sd">        Use PricingContext to determine as of date:</span>
+
+<span class="sd">        &gt;&gt;&gt; with PricingContext(date(2018,1,1)) as ctx:</span>
+<span class="sd">        &gt;&gt;&gt;     gs.get_identifier(AssetIdentifier.SEDOL)</span>
+
+<span class="sd">        **See also**</span>
+
+<span class="sd">        :class:`AssetIdentifier`</span>
+<span class="sd">        :func:`get_asset_identifiers`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_identifiers</span><span class="p">(</span><span class="n">as_of</span><span class="o">=</span><span class="n">as_of</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ids</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">id_type</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">get_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AssetType</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Overridden by sub-classes to return security type&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="Stock"><a class="viewcode-back" href="../../../classes/gs_quant.markets.securities.Stock.html#gs_quant.markets.securities.Stock">[docs]</a><span class="k">class</span> <span class="nc">Stock</span><span class="p">(</span><span class="n">Asset</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base Security Type</span>
+
+<span class="sd">    Represents a financial asset which can be held in a portfolio, or has an observable price fixing which can be</span>
+<span class="sd">    referenced in a derivative transaction</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Stock.__init__"><a class="viewcode-back" href="../../../classes/gs_quant.markets.securities.Stock.html#gs_quant.markets.securities.Stock.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">exchange</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">Asset</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_</span><span class="p">,</span> <span class="n">AssetClass</span><span class="o">.</span><span class="n">Equity</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">exchange</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">get_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AssetType</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">AssetType</span><span class="o">.</span><span class="n">STOCK</span></div>
+
+
+<span class="k">class</span> <span class="nc">Cross</span><span class="p">(</span><span class="n">Asset</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base Security Type</span>
+
+<span class="sd">    Represents a financial asset which can be held in a portfolio, or has an observable price fixing which can be</span>
+<span class="sd">    referenced in a derivative transaction</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">Asset</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_</span><span class="p">,</span> <span class="n">AssetClass</span><span class="o">.</span><span class="n">FX</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AssetType</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">AssetType</span><span class="o">.</span><span class="n">CROSS</span>
+
+
+<span class="k">class</span> <span class="nc">Future</span><span class="p">(</span><span class="n">Asset</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Future Security Type</span>
+
+<span class="sd">    Represents a standardized listed contract which provides delivery of an asset at a pre-defined forward date and can</span>
+<span class="sd">    be settled in cash or physical form</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">asset_class</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">AssetClass</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">asset_class</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">asset_class</span> <span class="o">=</span> <span class="n">get_enum_value</span><span class="p">(</span><span class="n">AssetClass</span><span class="p">,</span> <span class="n">asset_class</span><span class="p">)</span>
+
+        <span class="n">Asset</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_</span><span class="p">,</span> <span class="n">asset_class</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AssetType</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">AssetType</span><span class="o">.</span><span class="n">FUTURE</span>
+
+
+<span class="k">class</span> <span class="nc">Currency</span><span class="p">(</span><span class="n">Asset</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base Security Type</span>
+
+<span class="sd">    Represents a financial asset which can be held in a portfolio, or has an observable price fixing which can be</span>
+<span class="sd">    referenced in a derivative transaction</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">Asset</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_</span><span class="p">,</span> <span class="n">AssetClass</span><span class="o">.</span><span class="n">Cash</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AssetType</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">AssetType</span><span class="o">.</span><span class="n">CURRENCY</span>
+
+
+<span class="k">class</span> <span class="nc">PositionType</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Position type enumeration</span>
+
+<span class="sd">    Enumeration of different position types for a portfolio or index</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">OPEN</span> <span class="o">=</span> <span class="s2">&quot;open&quot;</span>  <span class="c1">#: Open positions (corporate action adjusted)</span>
+    <span class="n">CLOSE</span> <span class="o">=</span> <span class="s2">&quot;close&quot;</span>  <span class="c1">#: Close positions (reflect trading activity on the close)</span>
+
+
+<span class="k">class</span> <span class="nc">IndexConstituentProvider</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__id</span> <span class="o">=</span> <span class="n">id_</span>
+
+    <span class="k">def</span> <span class="nf">get_constituents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">as_of</span><span class="p">:</span> <span class="n">dt</span><span class="o">.</span><span class="n">date</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">position_type</span><span class="p">:</span> <span class="n">PositionType</span> <span class="o">=</span> <span class="n">PositionType</span><span class="o">.</span><span class="n">CLOSE</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span>
+            <span class="n">PositionSet</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get asset constituents</span>
+
+<span class="sd">        :param as_of: As of date for query</span>
+<span class="sd">        :param position_type:</span>
+<span class="sd">        :return: dict of identifiers</span>
+
+<span class="sd">        **Usage**</span>
+
+<span class="sd">        Get index constituents as of a given date. If no date is provided as a parameter, will use the current</span>
+<span class="sd">        PricingContext.</span>
+
+<span class="sd">        **Examples**</span>
+
+<span class="sd">        Get current index constituents (defaults to close):</span>
+
+<span class="sd">        &gt;&gt;&gt; gs = SecurityMaster.get_asset(&quot;GSTHHVIP&quot;, AssetIdentifier.TICKER)</span>
+<span class="sd">        &gt;&gt;&gt; gs.get_constituents()</span>
+
+<span class="sd">        Get constituents as of market open on 3Jan18:</span>
+
+<span class="sd">        &gt;&gt;&gt; gs.get_constituents(date(2018,1,3), PositionType.OPEN)</span>
+
+<span class="sd">        Use PricingContext to determine as of date:</span>
+
+<span class="sd">        &gt;&gt;&gt; with PricingContext(date(2018,1,1)) as ctx:</span>
+<span class="sd">        &gt;&gt;&gt;     gs.get_constituents()</span>
+
+<span class="sd">        **See also**</span>
+
+<span class="sd">        :class:`AssetIdentifier`</span>
+<span class="sd">        :func:`get_asset`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">as_of</span><span class="p">:</span>
+            <span class="n">as_of</span> <span class="o">=</span> <span class="n">PricingContext</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">pricing_date</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">as_of</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">):</span>
+                <span class="n">as_of</span> <span class="o">=</span> <span class="n">as_of</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">GsAssetApi</span><span class="o">.</span><span class="n">get_asset_positions_for_date</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__id</span><span class="p">,</span> <span class="n">as_of</span><span class="p">,</span> <span class="n">position_type</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Index"><a class="viewcode-back" href="../../../classes/gs_quant.markets.securities.Index.html#gs_quant.markets.securities.Index">[docs]</a><span class="k">class</span> <span class="nc">Index</span><span class="p">(</span><span class="n">Asset</span><span class="p">,</span> <span class="n">IndexConstituentProvider</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Index Asset</span>
+
+<span class="sd">    Index which tracks an evolving portfolio of securities, and can be traded through cash or derivatives markets</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Index.__init__"><a class="viewcode-back" href="../../../classes/gs_quant.markets.securities.Index.html#gs_quant.markets.securities.Index.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">asset_class</span><span class="p">:</span> <span class="n">AssetClass</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">exchange</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">Asset</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_</span><span class="p">,</span> <span class="n">asset_class</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">exchange</span><span class="p">)</span>
+        <span class="n">IndexConstituentProvider</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">get_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AssetType</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">AssetType</span><span class="o">.</span><span class="n">INDEX</span></div>
+
+
+<span class="k">class</span> <span class="nc">ETF</span><span class="p">(</span><span class="n">Asset</span><span class="p">,</span> <span class="n">IndexConstituentProvider</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;ETF Asset</span>
+
+<span class="sd">    ETF which tracks an evolving portfolio of securities, and can be traded on exchange</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">asset_class</span><span class="p">:</span> <span class="n">AssetClass</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">exchange</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">Asset</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_</span><span class="p">,</span> <span class="n">asset_class</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">exchange</span><span class="p">)</span>
+        <span class="n">IndexConstituentProvider</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AssetType</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">AssetType</span><span class="o">.</span><span class="n">ETF</span>
+
+
+<span class="k">class</span> <span class="nc">Basket</span><span class="p">(</span><span class="n">Asset</span><span class="p">,</span> <span class="n">IndexConstituentProvider</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Basket Asset</span>
+
+<span class="sd">    Basket which tracks an evolving portfolio of securities, and can be traded through cash or derivatives markets</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">asset_class</span><span class="p">:</span> <span class="n">AssetClass</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">Asset</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_</span><span class="p">,</span> <span class="n">asset_class</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="n">IndexConstituentProvider</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AssetType</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">AssetType</span><span class="o">.</span><span class="n">BASKET</span>
+
+
+<div class="viewcode-block" id="SecurityMaster"><a class="viewcode-back" href="../../../classes/gs_quant.markets.securities.SecurityMaster.html#gs_quant.markets.securities.SecurityMaster">[docs]</a><span class="k">class</span> <span class="nc">SecurityMaster</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Security Master</span>
+
+<span class="sd">     The SecurityMaster class provides an interface to security lookup functions. This allows querying and retrieval of</span>
+<span class="sd">     different security types (assets) based on a variety of different identifiers through point-in-time lookups.</span>
+
+<span class="sd">     Uses the current PricingContext to provide as of dates if optional arguments are not provided. Will return</span>
+<span class="sd">     the relevant asset subclass depending on the type of the security</span>
+
+<span class="sd">    **See also**</span>
+
+<span class="sd">    :class:`Asset`</span>
+
+<span class="sd">     &quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">__gs_asset_to_asset</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">gs_asset</span><span class="p">:</span> <span class="n">GsAsset</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Asset</span><span class="p">:</span>
+        <span class="n">asset_type</span> <span class="o">=</span> <span class="n">gs_asset</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">value</span>
+
+        <span class="k">if</span> <span class="n">asset_type</span> <span class="ow">in</span> <span class="p">(</span><span class="n">GsAssetType</span><span class="o">.</span><span class="n">Single_Stock</span><span class="o">.</span><span class="n">value</span><span class="p">,):</span>
+            <span class="k">return</span> <span class="n">Stock</span><span class="p">(</span><span class="n">gs_asset</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">gs_asset</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">gs_asset</span><span class="o">.</span><span class="n">exchange</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">asset_type</span> <span class="ow">in</span> <span class="p">(</span><span class="n">GsAssetType</span><span class="o">.</span><span class="n">ETF</span><span class="o">.</span><span class="n">value</span><span class="p">,):</span>
+            <span class="k">return</span> <span class="n">ETF</span><span class="p">(</span><span class="n">gs_asset</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">gs_asset</span><span class="o">.</span><span class="n">assetClass</span><span class="p">,</span> <span class="n">gs_asset</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">gs_asset</span><span class="o">.</span><span class="n">exchange</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">asset_type</span> <span class="ow">in</span> <span class="p">(</span>
+                <span class="n">GsAssetType</span><span class="o">.</span><span class="n">Index</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                <span class="n">GsAssetType</span><span class="o">.</span><span class="n">Risk_Premia</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                <span class="n">GsAssetType</span><span class="o">.</span><span class="n">Access</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                <span class="n">GsAssetType</span><span class="o">.</span><span class="n">Multi_Asset_Allocation</span><span class="o">.</span><span class="n">value</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">Index</span><span class="p">(</span><span class="n">gs_asset</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">gs_asset</span><span class="o">.</span><span class="n">assetClass</span><span class="p">,</span> <span class="n">gs_asset</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">gs_asset</span><span class="o">.</span><span class="n">exchange</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">asset_type</span> <span class="ow">in</span> <span class="p">(</span>
+                <span class="n">GsAssetType</span><span class="o">.</span><span class="n">Custom_Basket</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                <span class="n">GsAssetType</span><span class="o">.</span><span class="n">Research_Basket</span><span class="o">.</span><span class="n">value</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">Basket</span><span class="p">(</span><span class="n">gs_asset</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">gs_asset</span><span class="o">.</span><span class="n">assetClass</span><span class="p">,</span> <span class="n">gs_asset</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">asset_type</span> <span class="ow">in</span> <span class="p">(</span><span class="n">GsAssetType</span><span class="o">.</span><span class="n">Future</span><span class="o">.</span><span class="n">value</span><span class="p">,):</span>
+            <span class="k">return</span> <span class="n">Future</span><span class="p">(</span><span class="n">gs_asset</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">gs_asset</span><span class="o">.</span><span class="n">assetClass</span><span class="p">,</span> <span class="n">gs_asset</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">asset_type</span> <span class="ow">in</span> <span class="p">(</span><span class="n">GsAssetType</span><span class="o">.</span><span class="n">Cross</span><span class="o">.</span><span class="n">value</span><span class="p">,):</span>
+            <span class="k">return</span> <span class="n">Cross</span><span class="p">(</span><span class="n">gs_asset</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">gs_asset</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">asset_type</span> <span class="ow">in</span> <span class="p">(</span><span class="n">GsAssetType</span><span class="o">.</span><span class="n">Currency</span><span class="o">.</span><span class="n">value</span><span class="p">,):</span>
+            <span class="k">return</span> <span class="n">Currency</span><span class="p">(</span><span class="n">gs_asset</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">gs_asset</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;unsupported asset type </span><span class="si">{asset_type}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">__asset_type_to_gs_types</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">asset_type</span><span class="p">:</span> <span class="n">AssetType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">GsAssetType</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="n">asset_map</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">AssetType</span><span class="o">.</span><span class="n">STOCK</span><span class="p">:</span> <span class="p">(</span><span class="n">GsAssetType</span><span class="o">.</span><span class="n">Single_Stock</span><span class="p">,),</span>
+            <span class="n">AssetType</span><span class="o">.</span><span class="n">INDEX</span><span class="p">:</span> <span class="p">(</span>
+                <span class="n">GsAssetType</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span> <span class="n">GsAssetType</span><span class="o">.</span><span class="n">Multi_Asset_Allocation</span><span class="p">,</span> <span class="n">GsAssetType</span><span class="o">.</span><span class="n">Risk_Premia</span><span class="p">,</span> <span class="n">GsAssetType</span><span class="o">.</span><span class="n">Access</span><span class="p">),</span>
+            <span class="n">AssetType</span><span class="o">.</span><span class="n">ETF</span><span class="p">:</span> <span class="p">(</span><span class="n">GsAssetType</span><span class="o">.</span><span class="n">ETF</span><span class="p">,</span> <span class="n">GsAssetType</span><span class="o">.</span><span class="n">ETN</span><span class="p">),</span>
+            <span class="n">AssetType</span><span class="o">.</span><span class="n">BASKET</span><span class="p">:</span> <span class="p">(</span><span class="n">GsAssetType</span><span class="o">.</span><span class="n">Custom_Basket</span><span class="p">,</span> <span class="n">GsAssetType</span><span class="o">.</span><span class="n">Research_Basket</span><span class="p">),</span>
+            <span class="n">AssetType</span><span class="o">.</span><span class="n">FUTURE</span><span class="p">:</span> <span class="p">(</span><span class="n">GsAssetType</span><span class="o">.</span><span class="n">Future</span><span class="p">,),</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">asset_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">asset_type</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_asset</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span>
+                  <span class="n">id_value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                  <span class="n">id_type</span><span class="p">:</span> <span class="n">AssetIdentifier</span><span class="p">,</span>
+                  <span class="n">as_of</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                  <span class="n">exchange_code</span><span class="p">:</span> <span class="n">ExchangeCode</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                  <span class="n">asset_type</span><span class="p">:</span> <span class="n">AssetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Asset</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get an asset by identifier and identifier type</span>
+
+<span class="sd">        :param id_value: identifier value</span>
+<span class="sd">        :param id_type: identifier type</span>
+<span class="sd">        :param exchange_code: exchange code</span>
+<span class="sd">        :param asset_type: asset type</span>
+<span class="sd">        :param as_of: As of date for query</span>
+<span class="sd">        :return: Asset object or None</span>
+
+<span class="sd">        **Usage**</span>
+
+<span class="sd">        Get asset object using a specified identifier and identifier type. Where the identifiers are temporal (and can</span>
+<span class="sd">        change over time), will use the current MarketContext to evaluate based on the specified date.</span>
+
+<span class="sd">        **Examples**</span>
+
+<span class="sd">        Get asset by bloomberg id:</span>
+
+<span class="sd">        &gt;&gt;&gt; gs = SecurityMaster.get_asset(&quot;GS UN&quot;, AssetIdentifier.BLOOMBERG_ID)</span>
+
+<span class="sd">        Get asset by ticker and exchange code:</span>
+
+<span class="sd">        &gt;&gt;&gt; gs = SecurityMaster.get_asset(&quot;GS&quot;, AssetIdentifier.TICKER, exchange_code=ExchangeCode.NYSE)</span>
+
+<span class="sd">        Get asset by ticker and asset type:</span>
+
+<span class="sd">        &gt;&gt;&gt; spx = SecurityMaster.get_asset(&quot;SPX&quot;, AssetIdentifier.TICKER, asset_type=AssetType.INDEX)</span>
+
+<span class="sd">        **See also**</span>
+
+<span class="sd">        :class:`AssetIdentifier`</span>
+<span class="sd">        :func:`get_many_assets`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">as_of</span><span class="p">:</span>
+            <span class="n">as_of</span> <span class="o">=</span> <span class="n">PricingContext</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">pricing_date</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">as_of</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="p">):</span>
+            <span class="n">as_of</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">combine</span><span class="p">(</span><span class="n">as_of</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">time</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">pytz</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">id_type</span> <span class="ow">is</span> <span class="n">AssetIdentifier</span><span class="o">.</span><span class="n">MARQUEE_ID</span><span class="p">:</span>
+            <span class="n">gs_asset</span> <span class="o">=</span> <span class="n">GsAssetApi</span><span class="o">.</span><span class="n">get_asset</span><span class="p">(</span><span class="n">id_value</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__gs_asset_to_asset</span><span class="p">(</span><span class="n">gs_asset</span><span class="p">)</span>
+
+        <span class="n">query</span> <span class="o">=</span> <span class="p">{</span><span class="n">id_type</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span> <span class="n">id_value</span><span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">exchange_code</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">query</span><span class="p">[</span><span class="s1">&#39;exchange&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">exchange_code</span><span class="o">.</span><span class="n">value</span>
+
+        <span class="k">if</span> <span class="n">asset_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">query</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__asset_type_to_gs_types</span><span class="p">(</span><span class="n">asset_type</span><span class="p">)]</span>
+
+        <span class="n">results</span> <span class="o">=</span> <span class="n">GsAssetApi</span><span class="o">.</span><span class="n">get_many_assets</span><span class="p">(</span><span class="n">as_of</span><span class="o">=</span><span class="n">as_of</span><span class="p">,</span> <span class="o">**</span><span class="n">query</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">results</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__gs_asset_to_asset</span><span class="p">(</span><span class="n">result</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  <hr />
+  
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  
+  
+    
+   
+
+</body>
+</html>

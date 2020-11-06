@@ -75,7 +75,8 @@ setuptools.setup(
         "websockets",
         "pydash",
         "tqdm",
-        "certifi"
+        "certifi",
+        "deprecation"
     ],
     extras_require={
         "internal": ["gs_quant_internal>=0.7.4", "requests_kerberos"],

@@ -1,0 +1,284 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Instrument Package &mdash; gs_quant 0.1 documentation</title>
+  
+
+    
+  <script crossorigin src="/resources/react/16-8-6/prod/react.production.min.js"></script>
+  <script
+    crossorigin src="/resources/react/16-8-6/prod/react-dom.production.min.js"></script>
+
+     
+    <script src='/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML' async></script> 
+    
+    <script type="text/javascript" src="_static/../../../auto-mount.js"></script>
+    <link rel="stylesheet" href="_static/../../../auto-mount.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="next" title="gs_quant.base.Priceable" href="classes/gs_quant.base.Priceable.html" />
+    <link rel="prev" title="point_sort_order" href="functions/gs_quant.datetime.point.point_sort_order.html" /> 
+</head>
+
+<!-- Hello from the future. -->
+<div id="mq-doc-navbar-inject"></div>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    <a data-toggle="wy-nav-top" class="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" class="gs-nav-action"></div>
+    </a>
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Packages</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="data.html">Data Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datetime.html">Datetime Package</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Instrument Package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="classes/gs_quant.base.Priceable.html">gs_quant.base.Priceable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#instruments">Instruments</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.CommodSwap.html">CommodSwap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.EqOption.html">EqOption</a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.Forward.html">Forward</a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.FXForward.html">FXForward</a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.FXOption.html">FXOption</a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.InflationSwap.html">InflationSwap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.IRBasisSwap.html">IRBasisSwap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.IRCap.html">IRCap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.IRFloor.html">IRFloor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.IRSwap.html">IRSwap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.IRSwaption.html">IRSwaption</a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.Security.html">Security</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="market.html">Market Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="risk.html">Risk Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="timeseries.html">Timeseries Package</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Packages</a> /</li>
+        
+      <li>Instrument Package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="instrument-package">
+<h1>Instrument Package<a class="headerlink" href="#instrument-package" title="Permalink to this headline">¶</a></h1>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.base.Priceable.html#gs_quant.base.Priceable" title="gs_quant.base.Priceable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Priceable</span></code></a>()</p></td>
+<td><p>A priceable, such as a derivative instrument</p></td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="instruments">
+<h2>Instruments<a class="headerlink" href="#instruments" title="Permalink to this headline">¶</a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.instrument.CommodSwap.html#gs_quant.instrument.CommodSwap" title="gs_quant.instrument.CommodSwap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CommodSwap</span></code></a>(commodity, start[, …])</p></td>
+<td><p>Object representation of a commodities swap</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="classes/gs_quant.instrument.EqOption.html#gs_quant.instrument.EqOption" title="gs_quant.instrument.EqOption"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EqOption</span></code></a>(asset, expiration_date, …[, …])</p></td>
+<td><p>Instrument definition for equity option</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.instrument.Forward.html#gs_quant.instrument.Forward" title="gs_quant.instrument.Forward"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Forward</span></code></a>(currency, expiration_date[, …])</p></td>
+<td><p>Object representation of a forward</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="classes/gs_quant.instrument.FXForward.html#gs_quant.instrument.FXForward" title="gs_quant.instrument.FXForward"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FXForward</span></code></a>([pair, settlement_date, …])</p></td>
+<td><p>Object representation of an FX forward</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.instrument.FXOption.html#gs_quant.instrument.FXOption" title="gs_quant.instrument.FXOption"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FXOption</span></code></a>(call_currency, put_currency, …[, …])</p></td>
+<td><p>Object representation of a FX option</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="classes/gs_quant.instrument.InflationSwap.html#gs_quant.instrument.InflationSwap" title="gs_quant.instrument.InflationSwap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">InflationSwap</span></code></a>(termination_date[, …])</p></td>
+<td><p>A vanilla inflation swap of fixed vs floating cashflows adjusted to an inflation rate</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.instrument.IRBasisSwap.html#gs_quant.instrument.IRBasisSwap" title="gs_quant.instrument.IRBasisSwap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">IRBasisSwap</span></code></a>(termination_date, notional_currency)</p></td>
+<td><p>An exchange of cashflows from different interest rate indices</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="classes/gs_quant.instrument.IRCap.html#gs_quant.instrument.IRCap" title="gs_quant.instrument.IRCap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">IRCap</span></code></a>(termination_date, notional_currency[, …])</p></td>
+<td><p>Object representation of an interest rate cap</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.instrument.IRFloor.html#gs_quant.instrument.IRFloor" title="gs_quant.instrument.IRFloor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">IRFloor</span></code></a>(termination_date, notional_currency)</p></td>
+<td><p>Object representation of an interest rate floor</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="classes/gs_quant.instrument.IRSwap.html#gs_quant.instrument.IRSwap" title="gs_quant.instrument.IRSwap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">IRSwap</span></code></a>(pay_or_receive, termination_date, …)</p></td>
+<td><p>A vanilla interest rate swap of fixed vs floating cashflows</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.instrument.IRSwaption.html#gs_quant.instrument.IRSwaption" title="gs_quant.instrument.IRSwaption"><code class="xref py py-obj docutils literal notranslate"><span class="pre">IRSwaption</span></code></a>(pay_or_receive, termination_date, …)</p></td>
+<td><p>Object representation of a swaption</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="classes/gs_quant.instrument.Security.html#gs_quant.instrument.Security" title="gs_quant.instrument.Security"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Security</span></code></a>([ticker, bbid, isin, cusip, …])</p></td>
+<td><p>A security, specified by a well-known identifier</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  <hr />
+  
+  <div
+    class="container-block-module"
+    role="navigation"
+    aria-label="footer navigation"
+  >
+    
+    <div class="link-block-module">
+      <a
+        href="functions/gs_quant.datetime.point.point_sort_order.html"
+        class="link-block-module-container"
+        title="point_sort_order"
+        accesskey="p"
+        rel="prev"
+      >
+        <div class="link-block-module-content">
+          <h4 class="link-block-module-title-label">
+            Previous Topic
+          </h4>
+          <p class="link-block-module-body-label">
+            point_sort_order
+          </p>
+        </div>
+      </a>
+    </div>
+     
+    <div class="link-block-module">
+      <a
+        href="classes/gs_quant.base.Priceable.html"
+        class="link-block-module-container"
+        title="gs_quant.base.Priceable"
+        accesskey="n"
+        rel="next"
+      >
+        <div class="link-block-module-content">
+          <h4 class="link-block-module-title-label">
+            Next Topic
+          </h4>
+          <p class="link-block-module-body-label">
+            gs_quant.base.Priceable
+          </p>
+        </div>
+      </a>
+    </div>
+    
+  </div>
+  
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  
+  
+    
+   
+
+</body>
+</html>

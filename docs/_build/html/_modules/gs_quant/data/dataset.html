@@ -1,0 +1,403 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>gs_quant.data.dataset &mdash; gs_quant 0.1 documentation</title>
+  
+
+    
+  <script crossorigin src="/resources/react/16-8-6/prod/react.production.min.js"></script>
+  <script
+    crossorigin src="/resources/react/16-8-6/prod/react-dom.production.min.js"></script>
+
+     
+    <script src='/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML' async></script> 
+    
+    <script type="text/javascript" src="../../../_static/../../../auto-mount.js"></script>
+    <link rel="stylesheet" href="../../../_static/../../../auto-mount.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" /> 
+</head>
+
+<!-- Hello from the future. -->
+<div id="mq-doc-navbar-inject"></div>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    <a data-toggle="wy-nav-top" class="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" class="gs-nav-action"></div>
+    </a>
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Packages</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../data.html">Data Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../datetime.html">Datetime Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instrument.html">Instrument Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../market.html">Market Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../risk.html">Risk Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../timeseries.html">Timeseries Package</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Packages</a> /</li>
+        
+          <li><a href="../../index.html">Module code</a> /</li>
+        
+      <li>gs_quant.data.dataset</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for gs_quant.data.dataset</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Copyright 2019 Goldman Sachs.</span>
+<span class="sd">Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="sd">you may not use this file except in compliance with the License.</span>
+<span class="sd">You may obtain a copy of the License at</span>
+
+<span class="sd">  http://www.apache.org/licenses/LICENSE-2.0</span>
+
+<span class="sd">Unless required by applicable law or agreed to in writing,</span>
+<span class="sd">software distributed under the License is distributed on an</span>
+<span class="sd">&quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY</span>
+<span class="sd">KIND, either express or implied.  See the License for the</span>
+<span class="sd">specific language governing permissions and limitations</span>
+<span class="sd">under the License.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="k">import</span> <span class="n">Enum</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="kn">from</span> <span class="nn">gs_quant.api.data</span> <span class="k">import</span> <span class="n">DataApi</span>
+<span class="kn">from</span> <span class="nn">gs_quant.data.fields</span> <span class="k">import</span> <span class="n">Fields</span>
+<span class="kn">from</span> <span class="nn">gs_quant.data.utils</span> <span class="k">import</span> <span class="n">construct_dataframe_with_types</span>
+<span class="kn">from</span> <span class="nn">gs_quant.errors</span> <span class="k">import</span> <span class="n">MqValueError</span>
+
+
+<div class="viewcode-block" id="Dataset"><a class="viewcode-back" href="../../../classes/gs_quant.data.Dataset.html#gs_quant.data.Dataset">[docs]</a><span class="k">class</span> <span class="nc">Dataset</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;A collection of related data&quot;&quot;&quot;</span>
+
+    <span class="k">class</span> <span class="nc">Vendor</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">class</span> <span class="nc">GS</span><span class="p">(</span><span class="n">Vendor</span><span class="p">):</span>
+        <span class="n">HOLIDAY</span> <span class="o">=</span> <span class="s1">&#39;HOLIDAY&#39;</span>
+        <span class="n">EDRVOL_PERCENT_INTRADAY</span> <span class="o">=</span> <span class="s1">&#39;EDRVOL_PERCENT_INTRADAY&#39;</span>
+        <span class="n">EDRVOL_PERCENT_SHORT</span> <span class="o">=</span> <span class="s1">&#39;EDRVOL_PERCENT_SHORT&#39;</span>
+        <span class="n">EDRVOL_PERCENT_LONG</span> <span class="o">=</span> <span class="s1">&#39;EDRVOL_PERCENT_LONG&#39;</span>
+        <span class="n">MA_RANK</span> <span class="o">=</span> <span class="s1">&#39;MA_RANK&#39;</span>
+        <span class="n">EDRVS_INDEX_SHORT</span> <span class="o">=</span> <span class="s1">&#39;EDRVS_INDEX_SHORT&#39;</span>
+        <span class="n">EDRVS_INDEX_LONG</span> <span class="o">=</span> <span class="s1">&#39;EDRVS_INDEX_LONG&#39;</span>
+
+        <span class="c1"># Baskets</span>
+        <span class="n">CBGSSI</span> <span class="o">=</span> <span class="s1">&#39;CBGSSI&#39;</span>
+        <span class="n">CB</span> <span class="o">=</span> <span class="s1">&#39;CB&#39;</span>
+
+        <span class="c1"># STS</span>
+        <span class="n">STSLEVELS</span> <span class="o">=</span> <span class="s1">&#39;STSLEVELS&#39;</span>
+
+        <span class="c1"># Test Datasets</span>
+        <span class="n">WEATHER</span> <span class="o">=</span> <span class="s1">&#39;WEATHER&#39;</span>
+
+    <span class="k">class</span> <span class="nc">TR</span><span class="p">(</span><span class="n">Vendor</span><span class="p">):</span>
+        <span class="n">TREOD</span> <span class="o">=</span> <span class="s1">&#39;TREOD&#39;</span>
+        <span class="n">TR</span> <span class="o">=</span> <span class="s1">&#39;TR&#39;</span>
+        <span class="n">TR_FXSPOT</span> <span class="o">=</span> <span class="s1">&#39;TR_FXSPOT&#39;</span>
+
+<div class="viewcode-block" id="Dataset.__init__"><a class="viewcode-back" href="../../../classes/gs_quant.data.Dataset.html#gs_quant.data.Dataset.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset_id</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Vendor</span><span class="p">],</span> <span class="n">provider</span><span class="p">:</span> <span class="n">DataApi</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param dataset_id: The dataset&#39;s identifier</span>
+<span class="sd">        :param provider: The data provider</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_dataset_id_str</span><span class="p">(</span><span class="n">dataset_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__provider</span> <span class="o">=</span> <span class="n">provider</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_dataset_id_str</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset_id</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">dataset_id</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dataset_id</span><span class="p">,</span> <span class="n">Dataset</span><span class="o">.</span><span class="n">Vendor</span><span class="p">)</span> <span class="k">else</span> <span class="n">dataset_id</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The dataset&#39;s identifier</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__id</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">provider</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">gs_quant.api.gs.data</span> <span class="k">import</span> <span class="n">GsDataApi</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__provider</span> <span class="ow">or</span> <span class="n">GsDataApi</span>
+
+    <span class="k">def</span> <span class="nf">get_data</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">start</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">end</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">as_of</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">since</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">fields</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Fields</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">asset_id_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get data for the given range and parameters</span>
+
+<span class="sd">        :param start: Requested start date/datetime for data</span>
+<span class="sd">        :param end: Requested end date/datetime for data</span>
+<span class="sd">        :param as_of: Request data as_of</span>
+<span class="sd">        :param since: Request data since</span>
+<span class="sd">        :param fields: DataSet fields to include</span>
+<span class="sd">        :param kwargs: Extra query arguments, e.g. ticker=&#39;EDZ19&#39;</span>
+<span class="sd">        :return: A Dataframe of the requested data</span>
+
+<span class="sd">        **Examples**</span>
+
+<span class="sd">        &gt;&gt;&gt; from gs_quant.data import Dataset</span>
+<span class="sd">        &gt;&gt;&gt; import datetime as dt</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; weather = Dataset(&#39;WEATHER&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; weather_data = weather.get_data(dt.date(2016, 1, 15), dt.date(2016, 1, 16), city=(&#39;Boston&#39;, &#39;Austin&#39;))</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">field_names</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">fields</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="n">f</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">fields</span><span class="p">))</span>
+
+        <span class="n">query</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">provider</span><span class="o">.</span><span class="n">build_query</span><span class="p">(</span>
+            <span class="n">start</span><span class="o">=</span><span class="n">start</span><span class="p">,</span>
+            <span class="n">end</span><span class="o">=</span><span class="n">end</span><span class="p">,</span>
+            <span class="n">as_of</span><span class="o">=</span><span class="n">as_of</span><span class="p">,</span>
+            <span class="n">since</span><span class="o">=</span><span class="n">since</span><span class="p">,</span>
+            <span class="n">fields</span><span class="o">=</span><span class="n">field_names</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">provider</span><span class="o">.</span><span class="n">query_data</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">asset_id_type</span><span class="o">=</span><span class="n">asset_id_type</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">construct_dataframe_with_types</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_data_series</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">field</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Fields</span><span class="p">],</span>
+            <span class="n">start</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">end</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">as_of</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">since</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a time series of data for a field of a dataset</span>
+
+<span class="sd">        :param field: The DataSet field to use</span>
+<span class="sd">        :param start: Requested start date/datetime for data</span>
+<span class="sd">        :param end: Requested end date/datetime for data</span>
+<span class="sd">        :param as_of: Request data as_of</span>
+<span class="sd">        :param since: Request data since</span>
+<span class="sd">        :param kwargs: Extra query arguments, e.g. ticker=&#39;EDZ19&#39;</span>
+<span class="sd">        :return: A Series of the requested data, indexed by date or time, depending on the DataSet</span>
+
+<span class="sd">        **Examples**</span>
+
+<span class="sd">        &gt;&gt;&gt; from gs_quant.data import Dataset</span>
+<span class="sd">        &gt;&gt;&gt; import datetime as dt</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; weather = Dataset(&#39;WEATHER&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; dew_point = weather</span>
+<span class="sd">        &gt;&gt;&gt;&gt;    .get_data_series(&#39;dewPoint&#39;, dt.date(2016, 1, 15), dt.date(2016, 1, 16), city=(&#39;Boston&#39;, &#39;Austin&#39;))</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">field_value</span> <span class="o">=</span> <span class="n">field</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">field</span><span class="o">.</span><span class="n">value</span>
+
+        <span class="n">query</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">provider</span><span class="o">.</span><span class="n">build_query</span><span class="p">(</span>
+            <span class="n">start</span><span class="o">=</span><span class="n">start</span><span class="p">,</span>
+            <span class="n">end</span><span class="o">=</span><span class="n">end</span><span class="p">,</span>
+            <span class="n">as_of</span><span class="o">=</span><span class="n">as_of</span><span class="p">,</span>
+            <span class="n">since</span><span class="o">=</span><span class="n">since</span><span class="p">,</span>
+            <span class="n">fields</span><span class="o">=</span><span class="p">(</span><span class="n">field_value</span><span class="p">,),</span>
+            <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span>
+
+        <span class="n">symbol_dimensions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">provider</span><span class="o">.</span><span class="n">symbol_dimensions</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">symbol_dimensions</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">MqValueError</span><span class="p">(</span><span class="s1">&#39;get_data_series only valid for symbol_dimensions of length 1&#39;</span><span class="p">)</span>
+
+        <span class="n">symbol_dimension</span> <span class="o">=</span> <span class="n">symbol_dimensions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">provider</span><span class="o">.</span><span class="n">query_data</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">construct_dataframe_with_types</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+        <span class="n">gb</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">symbol_dimension</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">gb</span><span class="o">.</span><span class="n">groups</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">MqValueError</span><span class="p">(</span><span class="s1">&#39;Not a series for a single </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">symbol_dimension</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">field_value</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_data_last</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">as_of</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">]],</span>
+            <span class="n">start</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">fields</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the last point for this DataSet, at or before as_of</span>
+
+<span class="sd">        :param as_of: The date or time as of which to query</span>
+<span class="sd">        :param start: The start of the range to query</span>
+<span class="sd">        :param fields: The fields for which to query</span>
+<span class="sd">        :param kwargs: Additional query parameters, e.g., city=&#39;Boston&#39;</span>
+<span class="sd">        :return: A Dataframe of values</span>
+
+<span class="sd">        **Examples**</span>
+
+<span class="sd">        &gt;&gt;&gt; from gs_quant.data import Dataset</span>
+<span class="sd">        &gt;&gt;&gt; import datetime as dt</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; weather = Dataset(&#39;WEATHER&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; last = weather.get_data_last(dt.datetime.now())</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">provider</span><span class="o">.</span><span class="n">build_query</span><span class="p">(</span>
+            <span class="n">start</span><span class="o">=</span><span class="n">start</span><span class="p">,</span>
+            <span class="n">end</span><span class="o">=</span><span class="n">as_of</span><span class="p">,</span>
+            <span class="n">fields</span><span class="o">=</span><span class="n">fields</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">provider</span><span class="o">.</span><span class="n">last_data</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">construct_dataframe_with_types</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_coverage</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">fields</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the assets covered by this DataSet</span>
+
+<span class="sd">        :param limit: The maximum number of assets to return</span>
+<span class="sd">        :param offset: The offset</span>
+<span class="sd">        :param fields: The fields to return, e.g. assetId</span>
+<span class="sd">        :return: A Dataframe of the assets covered</span>
+
+<span class="sd">        **Examples**</span>
+
+<span class="sd">        &gt;&gt;&gt; from gs_quant.data import Dataset</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; weather = Dataset(&#39;WEATHER&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; cities = weather.get_coverage()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">coverage</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">provider</span><span class="o">.</span><span class="n">get_coverage</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">limit</span><span class="o">=</span><span class="n">limit</span><span class="p">,</span>
+            <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">,</span>
+            <span class="n">fields</span><span class="o">=</span><span class="n">fields</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">coverage</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  <hr />
+  
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  
+  
+    
+   
+
+</body>
+</html>

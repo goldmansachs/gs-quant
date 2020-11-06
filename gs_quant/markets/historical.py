@@ -18,8 +18,9 @@ from typing import Iterable, Optional, Tuple, Union
 
 from gs_quant.base import InstrumentBase, RiskKey
 from gs_quant.datetime.date import date_range
-from gs_quant.risk import RiskMeasure, CarryScenario, MarketDataScenario
+from gs_quant.risk import RiskMeasure, RollFwd, MarketDataScenario
 from gs_quant.risk.results import HistoricalPricingFuture, PricingFuture
+
 from .core import PricingContext
 from .markets import CloseMarket, close_market_date
 
@@ -175,7 +176,7 @@ class BackToTheFuturePricingContext(HistoricalPricingContext):
         base_market = self.market
         for date in self.__date_range:
             if date > self.pricing_date:
-                scenario = MarketDataScenario(CarryScenario(date=date, roll_to_fwds=self._roll_to_fwds))
+                scenario = MarketDataScenario(RollFwd(date=date, realise_fwd=self._roll_to_fwds))
                 risk_key = RiskKey(provider, date, base_market, parameters, scenario, risk_measure)
                 futures.append(self._calc(instrument, risk_key))
             else:
