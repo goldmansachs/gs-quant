@@ -1,0 +1,266 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>gs_quant.timeseries.technicals &mdash; gs_quant 0.1 documentation</title>
+  
+
+    
+  <script crossorigin src="/resources/react/16-8-6/prod/react.production.min.js"></script>
+  <script
+    crossorigin src="/resources/react/16-8-6/prod/react-dom.production.min.js"></script>
+
+     
+    <script src='/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML' async></script> 
+    
+    <script type="text/javascript" src="../../../_static/../../../auto-mount.js"></script>
+    <link rel="stylesheet" href="../../../_static/../../../auto-mount.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" /> 
+</head>
+
+<!-- Hello from the future. -->
+<div id="mq-doc-navbar-inject"></div>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    <a data-toggle="wy-nav-top" class="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" class="gs-nav-action"></div>
+    </a>
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Packages</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../data.html">Data Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../datetime.html">Datetime Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instrument.html">Instrument Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../market.html">Market Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../risk.html">Risk Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../timeseries.html">Timeseries Package</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Packages</a> /</li>
+        
+          <li><a href="../../index.html">Module code</a> /</li>
+        
+      <li>gs_quant.timeseries.technicals</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for gs_quant.timeseries.technicals</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2018 Goldman Sachs.</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#  http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing,</span>
+<span class="c1"># software distributed under the License is distributed on an</span>
+<span class="c1"># &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY</span>
+<span class="c1"># KIND, either express or implied.  See the License for the</span>
+<span class="c1"># specific language governing permissions and limitations</span>
+<span class="c1"># under the License.</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1"># Marquee Plot Service will attempt to make public functions (not prefixed with _) from this module available.</span>
+<span class="c1"># Such functions should be fully documented: docstrings should describe parameters and the return value, and provide</span>
+<span class="c1"># a 1-line description. Type annotations should be provided for parameters.</span>
+
+<span class="kn">from</span> <span class="nn">.statistics</span> <span class="k">import</span> <span class="o">*</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Technicals library is for technical analysis functions on timeseries, including moving averages,</span>
+<span class="sd">volatility indicators and and other numerical operations which are finance-oriented for analyzing</span>
+<span class="sd">statistical properties of trading activity, such as price movement and volume changes</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="moving_average"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.technicals.moving_average.html#gs_quant.timeseries.technicals.moving_average">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">moving_average</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">w</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Window</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">Window</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Moving average over specified window</span>
+
+<span class="sd">    :param x: time series of prices</span>
+<span class="sd">    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size</span>
+<span class="sd">     and 10 the ramp up value. Window size defaults to length of series.</span>
+<span class="sd">    :return: date-based time series of return</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Simple arithmetic moving average over the specified window (number of observations). Shorter windows will be more</span>
+<span class="sd">    reactive to changes in the asset price, but more volatile. Larger windows will be smoother but less reactive to</span>
+<span class="sd">    near term changes in asset prices.</span>
+
+<span class="sd">    :math:`R_t = \\frac{\sum_{i=t-w+1}^{t} X_t}{N}`</span>
+
+<span class="sd">    where N is the number of observations in each rolling window, :math:`w`. If window is not provided, computes</span>
+<span class="sd">    rolling mean over the full series</span>
+
+<span class="sd">    Equivalent to ``mean``</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    Generate price series with 100 observations starting from today&#39;s date:</span>
+
+<span class="sd">    &gt;&gt;&gt; prices = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; moving_average(prices, 22)</span>
+
+<span class="sd">    **See also**</span>
+
+<span class="sd">    :func:`mean`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">normalize_window</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">apply_ramp</span><span class="p">(</span><span class="n">mean</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Window</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span> <span class="n">w</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="bollinger_bands"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.technicals.bollinger_bands.html#gs_quant.timeseries.technicals.bollinger_bands">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">bollinger_bands</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">w</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Window</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">Window</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">k</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Bollinger bands with given window and width</span>
+
+<span class="sd">    :param x: time series of prices</span>
+<span class="sd">    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size</span>
+<span class="sd">    and 10 the ramp up value. Window size defaults to length of series.</span>
+<span class="sd">    :param k: band width in standard deviations (default: 2)</span>
+<span class="sd">    :return: date-based time series of return</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Standard deviation bands around the moving average of asset price level. Bollinger bands can be used to determine</span>
+<span class="sd">    a range around the price level which responds to local volatility changes. Returns two series,</span>
+<span class="sd">    upper, :math:`u_t` and lower, :math:`l_t`</span>
+
+<span class="sd">    :math:`u_t = \\bar{X_t} + k\sigma_t`</span>
+
+<span class="sd">    :math:`l_t = \\bar{X_t} - k\sigma_t`</span>
+
+<span class="sd">    where :math:`\\bar{X_t}` is the moving average over specified window, and :math:`\\sigma_t` is the rolling</span>
+<span class="sd">    standard deviation over the specified window</span>
+
+<span class="sd">    See `Bollinger Bands &lt;https://en.wikipedia.org/wiki/Bollinger_Bands&gt;`_ for more information</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    Compute bollinger bands around :math:`20` day moving average at :math:`2` standard deviations:</span>
+
+<span class="sd">    &gt;&gt;&gt; prices = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; bollinger_bands(prices, 20, 2)</span>
+
+<span class="sd">    **See also**</span>
+
+<span class="sd">    :func:`moving_average` :func:`std`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">normalize_window</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+    <span class="n">avg</span> <span class="o">=</span> <span class="n">moving_average</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+    <span class="n">sigma_t</span> <span class="o">=</span> <span class="n">std</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+
+    <span class="n">upper</span> <span class="o">=</span> <span class="n">avg</span> <span class="o">+</span> <span class="n">k</span> <span class="o">*</span> <span class="n">sigma_t</span>
+    <span class="n">lower</span> <span class="o">=</span> <span class="n">avg</span> <span class="o">-</span> <span class="n">k</span> <span class="o">*</span> <span class="n">sigma_t</span>
+
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  <hr />
+  
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  
+  
+    
+   
+
+</body>
+</html>

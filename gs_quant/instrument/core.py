@@ -42,6 +42,10 @@ class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
         if ret is not None or name not in self.properties():
             return ret
 
+        attr = getattr(super().__getattribute__('__class__'), name, None)
+        if getattr(attr.fget, 'do_not_resolve', False):
+            return ret
+
         resolved = False
 
         try:
@@ -50,7 +54,6 @@ class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
             pass
 
         if GsSession.current_is_set and not resolved:
-            attr = getattr(super().__getattribute__('__class__'), name, None)
             if attr and isinstance(attr, property):
                 resolved_inst = self.resolve(in_place=False)
                 if isinstance(resolved_inst, PricingFuture):

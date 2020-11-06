@@ -880,8 +880,9 @@ class SecurityMaster:
         if asset_type in (GsAssetType.CommodityReferencePrice.value,):
             return CommodityReferencePrice(gs_asset.id, gs_asset.name, entity=asset_entity)
 
-        if asset_type in (GsAssetType.CommodityNaturalGasHub.value,):
-            return CommodityNaturalGasHub(gs_asset.id, gs_asset.name, entity=asset_entity)
+        # disabled: this asset type would have to be added to target\common.py and the (Prod) Asset Service first!
+        # if asset_type in (GsAssetType.CommodityNaturalGasHub.value,):
+        #     return CommodityNaturalGasHub(gs_asset.id, gs_asset.name, entity=asset_entity)
 
         if asset_type in (GsAssetType.CommodityPowerNode.value,):
             return CommodityPowerNode(gs_asset.id, gs_asset.name, entity=asset_entity)

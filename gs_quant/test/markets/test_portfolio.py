@@ -118,7 +118,6 @@ def test_historical_pricing(mocker):
 
 def test_backtothefuture_pricing(mocker):
     with MockCalc(mocker):
-
         swap1 = IRSwap('Pay', '10y', 'USD', fixed_rate=0.01, name='swap1')
         swap2 = IRSwap('Pay', '10y', 'USD', fixed_rate=0.02, name='swap2')
         swap3 = IRSwap('Pay', '10y', 'USD', fixed_rate=0.03, name='swap3')
@@ -133,7 +132,7 @@ def test_backtothefuture_pricing(mocker):
 
     expected = risk.SeriesWithInfo(
         pd.Series(
-            data=[-35280379.86540368, -35348910.76427929, -36862165.56669486],
+            data=[-35301348.93982054, -35366234.71769963, -35281392.58523489],
             index=business_day_offset(pricing_date, [-1, 0, 1], roll='forward')
         ),
         risk_key=risk_key.ex_date_and_market, )

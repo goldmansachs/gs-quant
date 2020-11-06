@@ -71,6 +71,11 @@ def camel_case_translate(f):
     return wrapper
 
 
+def do_not_resolve(func):
+    func.do_not_resolve = True
+    return func
+
+
 class RiskKey(namedtuple('RiskKey', ('provider', 'date', 'market', 'params', 'scenario', 'risk_measure'))):
 
     @property
@@ -588,6 +593,7 @@ class QuotableBuilder(Base, metaclass=ABCMeta):
         self.valuation_overrides = valuation_overrides
 
     @property
+    @do_not_resolve
     def valuation_overrides(self) -> Optional[dict]:
         return self.__valuation_overrides
 

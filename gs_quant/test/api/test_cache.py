@@ -74,7 +74,7 @@ def test_cache_addition_removal():
     with mock.patch('gs_quant.api.gs.risk.GsRiskApi._exec') as mocker:
         mocker.return_value = [[[[{'$type': 'Risk', 'val': 0.08}]]]]
 
-        with risk.CarryScenario(date='1m'), PricingContext(use_cache=True) as spc:
+        with risk.RollFwd(date='1m'), PricingContext(use_cache=True) as spc:
             # Don't want the price without the scenario
             scenario_risk_key = spc._PricingContext__risk_key(risk.Price, p2.provider)
             assert not PricingCache.get(scenario_risk_key, p2)
@@ -82,7 +82,7 @@ def test_cache_addition_removal():
 
         assert PricingCache.get(scenario_risk_key, p2) == scenario_price.result()
 
-        with PricingContext(use_cache=True) as pc, risk.CarryScenario(date='1m'):
+        with PricingContext(use_cache=True) as pc, risk.RollFwd(date='1m'):
             cached_scenario_price = PricingCache.get(pc._PricingContext__risk_key(risk.Price, p2.provider), p2)
 
     # Check that we get the cached scenario price

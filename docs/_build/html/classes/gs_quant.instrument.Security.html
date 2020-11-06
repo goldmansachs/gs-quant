@@ -1,0 +1,588 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Security &mdash; gs_quant 0.1 documentation</title>
+  
+
+    
+  <script crossorigin src="/resources/react/16-8-6/prod/react.production.min.js"></script>
+  <script
+    crossorigin src="/resources/react/16-8-6/prod/react-dom.production.min.js"></script>
+
+     
+    <script src='/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML' async></script> 
+    
+    <script type="text/javascript" src="../_static/../../../auto-mount.js"></script>
+    <link rel="stylesheet" href="../_static/../../../auto-mount.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="next" title="Market Package" href="../market.html" />
+    <link rel="prev" title="IRSwaption" href="gs_quant.instrument.IRSwaption.html" /> 
+</head>
+
+<!-- Hello from the future. -->
+<div id="mq-doc-navbar-inject"></div>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    <a data-toggle="wy-nav-top" class="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" class="gs-nav-action"></div>
+    </a>
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Packages</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../data.html">Data Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datetime.html">Datetime Package</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../instrument.html">Instrument Package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="gs_quant.base.Priceable.html">gs_quant.base.Priceable</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../instrument.html#instruments">Instruments</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.CommodSwap.html">CommodSwap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.EqOption.html">EqOption</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.Forward.html">Forward</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.FXForward.html">FXForward</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.FXOption.html">FXOption</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.InflationSwap.html">InflationSwap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRBasisSwap.html">IRBasisSwap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRCap.html">IRCap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRFloor.html">IRFloor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRSwap.html">IRSwap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRSwaption.html">IRSwaption</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Security</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../market.html">Market Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../risk.html">Risk Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../timeseries.html">Timeseries Package</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Packages</a> /</li>
+        
+          <li><a href="../instrument.html">Instrument Package</a> /</li>
+        
+      <li>Security</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="security">
+<h1>Security<a class="headerlink" href="#security" title="Permalink to this headline">¶</a></h1>
+<p>For methods of this class, see <a class="reference internal" href="gs_quant.base.Priceable.html"><span class="doc">gs_quant.base.Priceable</span></a></p>
+<dl class="class">
+<dt id="gs_quant.instrument.Security">
+<em class="property">class </em><code class="sig-name descname">Security</code><span class="sig-paren">(</span><em class="sig-param">ticker=None</em>, <em class="sig-param">bbid=None</em>, <em class="sig-param">isin=None</em>, <em class="sig-param">cusip=None</em>, <em class="sig-param">prime_id=None</em>, <em class="sig-param">quantity=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gs_quant/instrument/core.html#Security"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gs_quant.instrument.Security" title="Permalink to this definition">¶</a></dt>
+<dd><p>A security, specified by a well-known identifier</p>
+<p class="rubric">Properties</p>
+<dl class="attribute">
+<dt id="gs_quant.instrument.Security.bbid">
+<code class="sig-name descname">bbid</code><a class="headerlink" href="#gs_quant.instrument.Security.bbid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bloomberg Id Identifier</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.Security.bbid_equivalent">
+<code class="sig-name descname">bbid_equivalent</code><a class="headerlink" href="#gs_quant.instrument.Security.bbid_equivalent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bloomberg Equivalent Identifier</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.Security.bcid">
+<code class="sig-name descname">bcid</code><a class="headerlink" href="#gs_quant.instrument.Security.bcid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bloomberg Composite Identifier</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.Security.cid">
+<code class="sig-name descname">cid</code><a class="headerlink" href="#gs_quant.instrument.Security.cid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Company Id Identifier</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.Security.cm_id">
+<code class="sig-name descname">cm_id</code><a class="headerlink" href="#gs_quant.instrument.Security.cm_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Client Master Party Id</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.Security.cross">
+<code class="sig-name descname">cross</code><a class="headerlink" href="#gs_quant.instrument.Security.cross" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cross identifier</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.Security.cusip">
+<code class="sig-name descname">cusip</code><a class="headerlink" href="#gs_quant.instrument.Security.cusip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cusip Identifier</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.Security.delisted">
+<code class="sig-name descname">delisted</code><a class="headerlink" href="#gs_quant.instrument.Security.delisted" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether an asset has been delisted</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.Security.dollar_cross">
+<code class="sig-name descname">dollar_cross</code><a class="headerlink" href="#gs_quant.instrument.Security.dollar_cross" title="Permalink to this definition">¶</a></dt>
+<dd><p>USD cross identifier for a particular currency</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.Security.eid">
+<code class="sig-name descname">eid</code><a class="headerlink" href="#gs_quant.instrument.Security.eid" title="Permalink to this definition">¶</a></dt>
+<dd><p>EID Identifier</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.Security.em_id">
+<code class="sig-name descname">em_id</code><a class="headerlink" href="#gs_quant.instrument.Security.em_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Entity Master Identifier</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.Security.gsid">
+<code class="sig-name descname">gsid</code><a class="headerlink" href="#gs_quant.instrument.Security.gsid" title="Permalink to this definition">¶</a></dt>
+<dd><p>GSID Identifier</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.Security.gsideid">
+<code class="sig-name descname">gsideid</code><a class="headerlink" href="#gs_quant.instrument.Security.gsideid" title="Permalink to this definition">¶</a></dt>
+<dd><p>GSID_EID Identifier</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.Security.gsn">
+<code class="sig-name descname">gsn</code><a class="headerlink" href="#gs_quant.instrument.Security.gsn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Goldman Sachs internal product number</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.Security.gss">
+<code class="sig-name descname">gss</code><a class="headerlink" href="#gs_quant.instrument.Security.gss" title="Permalink to this definition">¶</a></dt>
+<dd><p>GS Symbol identifier</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.Security.isin">
+<code class="sig-name descname">isin</code><a class="headerlink" href="#gs_quant.instrument.Security.isin" title="Permalink to this definition">¶</a></dt>
+<dd><p>International Security Number</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.Security.jsn">
+<code class="sig-name descname">jsn</code><a class="headerlink" href="#gs_quant.instrument.Security.jsn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Japan Security Number</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.Security.lms_id">
+<code class="sig-name descname">lms_id</code><a class="headerlink" href="#gs_quant.instrument.Security.lms_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Listed Market Symbol</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.Security.mdapi">
+<code class="sig-name descname">mdapi</code><a class="headerlink" href="#gs_quant.instrument.Security.mdapi" title="Permalink to this definition">¶</a></dt>
+<dd><p>MDAPI Asset</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.Security.mdapi_class">
+<code class="sig-name descname">mdapi_class</code><a class="headerlink" href="#gs_quant.instrument.Security.mdapi_class" title="Permalink to this definition">¶</a></dt>
+<dd><p>MDAPI Asset Class</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.Security.mic">
+<code class="sig-name descname">mic</code><a class="headerlink" href="#gs_quant.instrument.Security.mic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Market Identifier Code</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.Security.mq_symbol">
+<code class="sig-name descname">mq_symbol</code><a class="headerlink" href="#gs_quant.instrument.Security.mq_symbol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Marquee Symbol for generic MQ entities</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.Security.prime_id">
+<code class="sig-name descname">prime_id</code><a class="headerlink" href="#gs_quant.instrument.Security.prime_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>PrimeID Identifier</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.Security.rcic">
+<code class="sig-name descname">rcic</code><a class="headerlink" href="#gs_quant.instrument.Security.rcic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reuters Composite Instrument Code Identifier</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.Security.ric">
+<code class="sig-name descname">ric</code><a class="headerlink" href="#gs_quant.instrument.Security.ric" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reuters Instrument Code identifier</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.Security.sec_name">
+<code class="sig-name descname">sec_name</code><a class="headerlink" href="#gs_quant.instrument.Security.sec_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Internal Goldman Sachs security name</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.Security.sedol">
+<code class="sig-name descname">sedol</code><a class="headerlink" href="#gs_quant.instrument.Security.sedol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sedol Identifier</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.Security.sf_id">
+<code class="sig-name descname">sf_id</code><a class="headerlink" href="#gs_quant.instrument.Security.sf_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>SalesForce ID</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.Security.simon_id">
+<code class="sig-name descname">simon_id</code><a class="headerlink" href="#gs_quant.instrument.Security.simon_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>SIMON product identifier</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.Security.ticker">
+<code class="sig-name descname">ticker</code><a class="headerlink" href="#gs_quant.instrument.Security.ticker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ticker Identifier</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.Security.valoren">
+<code class="sig-name descname">valoren</code><a class="headerlink" href="#gs_quant.instrument.Security.valoren" title="Permalink to this definition">¶</a></dt>
+<dd><p>Valoren Identifier</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.Security.wpk">
+<code class="sig-name descname">wpk</code><a class="headerlink" href="#gs_quant.instrument.Security.wpk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wertpapier Kenn-Nummer</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  <hr />
+  
+  <div
+    class="container-block-module"
+    role="navigation"
+    aria-label="footer navigation"
+  >
+    
+    <div class="link-block-module">
+      <a
+        href="gs_quant.instrument.IRSwaption.html"
+        class="link-block-module-container"
+        title="IRSwaption"
+        accesskey="p"
+        rel="prev"
+      >
+        <div class="link-block-module-content">
+          <h4 class="link-block-module-title-label">
+            Previous Topic
+          </h4>
+          <p class="link-block-module-body-label">
+            IRSwaption
+          </p>
+        </div>
+      </a>
+    </div>
+     
+    <div class="link-block-module">
+      <a
+        href="../market.html"
+        class="link-block-module-container"
+        title="Market Package"
+        accesskey="n"
+        rel="next"
+      >
+        <div class="link-block-module-content">
+          <h4 class="link-block-module-title-label">
+            Next Topic
+          </h4>
+          <p class="link-block-module-body-label">
+            Market Package
+          </p>
+        </div>
+      </a>
+    </div>
+    
+  </div>
+  
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -18,5 +18,5 @@ from .core import *
 from .measures import *
 from .scenarios import MarketDataShockBasedScenario
 from gs_quant.target.portfolios import LiquidityRequest
-from gs_quant.target.risk import LiborFallbackScenario, CarryScenario, CompositeScenario, CurveScenario, LiquidityResponse,\
-    MarketDataPattern, MarketDataScenario, MarketDataShock, MarketDataShockType, RiskRequest
+from gs_quant.target.risk import LiborFallbackScenario, CarryScenario, CompositeScenario, CurveScenario, IndexCurveShift,\
+    LiquidityResponse, MarketDataPattern, MarketDataScenario, MarketDataShock, MarketDataShockType, RiskRequest, RollFwd

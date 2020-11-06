@@ -14,6 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 
+import deprecation
 import datetime
 from typing import Tuple, Union
 from enum import Enum
@@ -6030,6 +6031,8 @@ class CarryScenario(Scenario):
         
     """A scenario to manipulate time along the forward curve"""
 
+    @deprecation.deprecated(deprecated_in='0.8.216', removed_in='1.0.0',
+                            details='CarryScenario is now deprecated, please use RollFwd instead. CarryScenario will not be supported in all versions of gs-quant starting 2021.')
     @camel_case_translate
     def __init__(
         self,

@@ -1,0 +1,434 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>IRSwap &mdash; gs_quant 0.1 documentation</title>
+  
+
+    
+  <script crossorigin src="/resources/react/16-8-6/prod/react.production.min.js"></script>
+  <script
+    crossorigin src="/resources/react/16-8-6/prod/react-dom.production.min.js"></script>
+
+     
+    <script src='/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML' async></script> 
+    
+    <script type="text/javascript" src="../_static/../../../auto-mount.js"></script>
+    <link rel="stylesheet" href="../_static/../../../auto-mount.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="next" title="IRSwaption" href="gs_quant.instrument.IRSwaption.html" />
+    <link rel="prev" title="IRFloor" href="gs_quant.instrument.IRFloor.html" /> 
+</head>
+
+<!-- Hello from the future. -->
+<div id="mq-doc-navbar-inject"></div>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    <a data-toggle="wy-nav-top" class="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" class="gs-nav-action"></div>
+    </a>
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Packages</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../data.html">Data Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datetime.html">Datetime Package</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../instrument.html">Instrument Package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="gs_quant.base.Priceable.html">gs_quant.base.Priceable</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../instrument.html#instruments">Instruments</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.CommodSwap.html">CommodSwap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.EqOption.html">EqOption</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.Forward.html">Forward</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.FXForward.html">FXForward</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.FXOption.html">FXOption</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.InflationSwap.html">InflationSwap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRBasisSwap.html">IRBasisSwap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRCap.html">IRCap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRFloor.html">IRFloor</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">IRSwap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRSwaption.html">IRSwaption</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.Security.html">Security</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../market.html">Market Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../risk.html">Risk Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../timeseries.html">Timeseries Package</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Packages</a> /</li>
+        
+          <li><a href="../instrument.html">Instrument Package</a> /</li>
+        
+      <li>IRSwap</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="irswap">
+<h1>IRSwap<a class="headerlink" href="#irswap" title="Permalink to this headline">¶</a></h1>
+<p>For methods of this class, see <a class="reference internal" href="gs_quant.base.Priceable.html"><span class="doc">gs_quant.base.Priceable</span></a></p>
+<dl class="class">
+<dt id="gs_quant.instrument.IRSwap">
+<em class="property">class </em><code class="sig-name descname">IRSwap</code><span class="sig-paren">(</span><em class="sig-param">pay_or_receive</em>, <em class="sig-param">termination_date</em>, <em class="sig-param">notional_currency</em>, <em class="sig-param">notional_amount=1000000.0</em>, <em class="sig-param">effective_date=None</em>, <em class="sig-param">floating_rate_for_the_initial_calculation_period=None</em>, <em class="sig-param">floating_rate_option=None</em>, <em class="sig-param">floating_rate_designated_maturity=None</em>, <em class="sig-param">floating_rate_spread=None</em>, <em class="sig-param">floating_rate_frequency=None</em>, <em class="sig-param">floating_rate_day_count_fraction=None</em>, <em class="sig-param">floating_rate_business_day_convention=None</em>, <em class="sig-param">fixed_rate=None</em>, <em class="sig-param">fixed_rate_frequency=None</em>, <em class="sig-param">fixed_rate_day_count_fraction=None</em>, <em class="sig-param">fixed_rate_business_day_convention=None</em>, <em class="sig-param">fee=0</em>, <em class="sig-param">clearing_house=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gs_quant/target/instrument.html#IRSwap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gs_quant.instrument.IRSwap" title="Permalink to this definition">¶</a></dt>
+<dd><p>A vanilla interest rate swap of fixed vs floating cashflows</p>
+<p class="rubric">Properties</p>
+<dl class="attribute">
+<dt id="gs_quant.instrument.IRSwap.clearing_house">
+<code class="sig-name descname">clearing_house</code><a class="headerlink" href="#gs_quant.instrument.IRSwap.clearing_house" title="Permalink to this definition">¶</a></dt>
+<dd><p>Swap Clearing House</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">SwapClearingHouse</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.IRSwap.effective_date">
+<code class="sig-name descname">effective_date</code><a class="headerlink" href="#gs_quant.instrument.IRSwap.effective_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>The date on which the swap becomes effective</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">date</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.IRSwap.fee">
+<code class="sig-name descname">fee</code><a class="headerlink" href="#gs_quant.instrument.IRSwap.fee" title="Permalink to this definition">¶</a></dt>
+<dd><p>The fee</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.IRSwap.fixed_rate">
+<code class="sig-name descname">fixed_rate</code><a class="headerlink" href="#gs_quant.instrument.IRSwap.fixed_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>The coupon of the fixed leg</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.IRSwap.fixed_rate_business_day_convention">
+<code class="sig-name descname">fixed_rate_business_day_convention</code><a class="headerlink" href="#gs_quant.instrument.IRSwap.fixed_rate_business_day_convention" title="Permalink to this definition">¶</a></dt>
+<dd><p>The business day convention for the fixed rate</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">BusinessDayConvention</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.IRSwap.fixed_rate_day_count_fraction">
+<code class="sig-name descname">fixed_rate_day_count_fraction</code><a class="headerlink" href="#gs_quant.instrument.IRSwap.fixed_rate_day_count_fraction" title="Permalink to this definition">¶</a></dt>
+<dd><p>The day count fraction for the fixed rate</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">DayCountFraction</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.IRSwap.fixed_rate_frequency">
+<code class="sig-name descname">fixed_rate_frequency</code><a class="headerlink" href="#gs_quant.instrument.IRSwap.fixed_rate_frequency" title="Permalink to this definition">¶</a></dt>
+<dd><p>The frequency of fixed payments, e.g. 6m</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.IRSwap.floating_rate_business_day_convention">
+<code class="sig-name descname">floating_rate_business_day_convention</code><a class="headerlink" href="#gs_quant.instrument.IRSwap.floating_rate_business_day_convention" title="Permalink to this definition">¶</a></dt>
+<dd><p>The business day convention of the floating rate</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">BusinessDayConvention</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.IRSwap.floating_rate_day_count_fraction">
+<code class="sig-name descname">floating_rate_day_count_fraction</code><a class="headerlink" href="#gs_quant.instrument.IRSwap.floating_rate_day_count_fraction" title="Permalink to this definition">¶</a></dt>
+<dd><p>The day count fraction of the floating rate</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">DayCountFraction</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.IRSwap.floating_rate_designated_maturity">
+<code class="sig-name descname">floating_rate_designated_maturity</code><a class="headerlink" href="#gs_quant.instrument.IRSwap.floating_rate_designated_maturity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tenor of the floatingRateOption, e.g. 3m, 6m</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.IRSwap.floating_rate_for_the_initial_calculation_period">
+<code class="sig-name descname">floating_rate_for_the_initial_calculation_period</code><a class="headerlink" href="#gs_quant.instrument.IRSwap.floating_rate_for_the_initial_calculation_period" title="Permalink to this definition">¶</a></dt>
+<dd><p>First fixing</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.IRSwap.floating_rate_frequency">
+<code class="sig-name descname">floating_rate_frequency</code><a class="headerlink" href="#gs_quant.instrument.IRSwap.floating_rate_frequency" title="Permalink to this definition">¶</a></dt>
+<dd><p>The frequency of floating payments, e.g. 3m</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.IRSwap.floating_rate_option">
+<code class="sig-name descname">floating_rate_option</code><a class="headerlink" href="#gs_quant.instrument.IRSwap.floating_rate_option" title="Permalink to this definition">¶</a></dt>
+<dd><p>The underlying benchmark for the floating rate, e.g. USD-LIBOR-BBA, EUR-EURIBOR-TELERATE</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.IRSwap.floating_rate_spread">
+<code class="sig-name descname">floating_rate_spread</code><a class="headerlink" href="#gs_quant.instrument.IRSwap.floating_rate_spread" title="Permalink to this definition">¶</a></dt>
+<dd><p>The spread over the floating rate</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.IRSwap.notional_amount">
+<code class="sig-name descname">notional_amount</code><a class="headerlink" href="#gs_quant.instrument.IRSwap.notional_amount" title="Permalink to this definition">¶</a></dt>
+<dd><p>Notional amount</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.IRSwap.notional_currency">
+<code class="sig-name descname">notional_currency</code><a class="headerlink" href="#gs_quant.instrument.IRSwap.notional_currency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Notional currency</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Currency</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.IRSwap.pay_or_receive">
+<code class="sig-name descname">pay_or_receive</code><a class="headerlink" href="#gs_quant.instrument.IRSwap.pay_or_receive" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pay or receive fixed</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">PayReceive</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gs_quant.instrument.IRSwap.termination_date">
+<code class="sig-name descname">termination_date</code><a class="headerlink" href="#gs_quant.instrument.IRSwap.termination_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>The termination of the swap, e.g. 2050-04-01, 10y</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">date</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  <hr />
+  
+  <div
+    class="container-block-module"
+    role="navigation"
+    aria-label="footer navigation"
+  >
+    
+    <div class="link-block-module">
+      <a
+        href="gs_quant.instrument.IRFloor.html"
+        class="link-block-module-container"
+        title="IRFloor"
+        accesskey="p"
+        rel="prev"
+      >
+        <div class="link-block-module-content">
+          <h4 class="link-block-module-title-label">
+            Previous Topic
+          </h4>
+          <p class="link-block-module-body-label">
+            IRFloor
+          </p>
+        </div>
+      </a>
+    </div>
+     
+    <div class="link-block-module">
+      <a
+        href="gs_quant.instrument.IRSwaption.html"
+        class="link-block-module-container"
+        title="IRSwaption"
+        accesskey="n"
+        rel="next"
+      >
+        <div class="link-block-module-content">
+          <h4 class="link-block-module-title-label">
+            Next Topic
+          </h4>
+          <p class="link-block-module-body-label">
+            IRSwaption
+          </p>
+        </div>
+      </a>
+    </div>
+    
+  </div>
+  
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,350 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>gs_quant.timeseries.analysis &mdash; gs_quant 0.1 documentation</title>
+  
+
+    
+  <script crossorigin src="/resources/react/16-8-6/prod/react.production.min.js"></script>
+  <script
+    crossorigin src="/resources/react/16-8-6/prod/react-dom.production.min.js"></script>
+
+     
+    <script src='/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML' async></script> 
+    
+    <script type="text/javascript" src="../../../_static/../../../auto-mount.js"></script>
+    <link rel="stylesheet" href="../../../_static/../../../auto-mount.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" /> 
+</head>
+
+<!-- Hello from the future. -->
+<div id="mq-doc-navbar-inject"></div>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    <a data-toggle="wy-nav-top" class="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" class="gs-nav-action"></div>
+    </a>
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Packages</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../data.html">Data Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../datetime.html">Datetime Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instrument.html">Instrument Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../market.html">Market Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../risk.html">Risk Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../timeseries.html">Timeseries Package</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Packages</a> /</li>
+        
+          <li><a href="../../index.html">Module code</a> /</li>
+        
+      <li>gs_quant.timeseries.analysis</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for gs_quant.timeseries.analysis</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2018 Goldman Sachs.</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#   http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing,</span>
+<span class="c1"># software distributed under the License is distributed on an</span>
+<span class="c1"># &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY</span>
+<span class="c1"># KIND, either express or implied.  See the License for the</span>
+<span class="c1"># specific language governing permissions and limitations</span>
+<span class="c1"># under the License.</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1"># Chart Service will attempt to make public functions (not prefixed with _) from this module available. Such functions</span>
+<span class="c1"># should be fully documented: docstrings should describe parameters and the return value, and provide a 1-line</span>
+<span class="c1"># description. Type annotations should be provided for parameters.</span>
+
+
+<span class="kn">from</span> <span class="nn">gs_quant.timeseries.datetime</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.helper</span> <span class="k">import</span> <span class="n">plot_function</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Timeseries analysis library contains functions used to analyze properties of timeseries, including laging, differencing,</span>
+<span class="sd">autocorrelation, co-integration and other operations</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="first"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.analysis.first.html#gs_quant.timeseries.analysis.first">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">first</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    First value of series</span>
+
+<span class="sd">    :param x: time series</span>
+<span class="sd">    :return: time series of first value</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Return series with first value of `X` for all dates:</span>
+
+<span class="sd">    :math:`R_t = X_0`</span>
+
+<span class="sd">    where :math:`X_0` is the first value in the series</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    Last value of series:</span>
+
+<span class="sd">    &gt;&gt;&gt; series = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; returns = first(series)</span>
+
+<span class="sd">    **See also**</span>
+
+<span class="sd">    :func:`last`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="last"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.analysis.last.html#gs_quant.timeseries.analysis.last">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">last</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Last value of series</span>
+
+<span class="sd">    :param x: time series</span>
+<span class="sd">    :return: time series of last value</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Return series with last value of `X` for all dates:</span>
+
+<span class="sd">    :math:`R_t = X_T`</span>
+
+<span class="sd">    where :math:`X_T` is the last value in the series</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    Last value of series:</span>
+
+<span class="sd">    &gt;&gt;&gt; series = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; returns = last(series)</span>
+
+<span class="sd">    **See also**</span>
+
+<span class="sd">    :func:`first`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="count"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.analysis.count.html#gs_quant.timeseries.analysis.count">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">count</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Count observations in series</span>
+
+<span class="sd">    :param x: time series</span>
+<span class="sd">    :return: number of observations</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Count the number of valid observations in a series:</span>
+
+<span class="sd">    :math:`R_t = R_{t-1} + 1`</span>
+
+<span class="sd">    if :math:`X_t` is not NaN, and</span>
+
+<span class="sd">    :math:`R_t = R_{t-1} + 0`</span>
+
+<span class="sd">    if :math:`X_t` is NaN</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    Count observations in series:</span>
+
+<span class="sd">    &gt;&gt;&gt; series = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; count = count(series)</span>
+
+<span class="sd">    **See also**</span>
+
+<span class="sd">    :func:`sum`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">rolling</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="diff"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.analysis.diff.html#gs_quant.timeseries.analysis.diff">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">diff</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">obs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Diff observations with given lag</span>
+
+<span class="sd">    :param x: time series of prices</span>
+<span class="sd">    :param obs: number of observations to lag</span>
+<span class="sd">    :return: date-based time series of return</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Compute the difference in series values over a given lag:</span>
+
+<span class="sd">    :math:`R_t = X_t - X_{t-obs}`</span>
+
+<span class="sd">    where :math:`obs` is the number of observations to lag series in diff function</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    Diff prices levels:</span>
+
+<span class="sd">    &gt;&gt;&gt; series = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; returns = diff(series)</span>
+
+<span class="sd">    **See also**</span>
+
+<span class="sd">    :func:`lag`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">x</span>
+
+    <span class="n">ret_series</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="n">x</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ret_series</span></div>
+
+
+<div class="viewcode-block" id="lag"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.analysis.lag.html#gs_quant.timeseries.analysis.lag">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">lag</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">obs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Lag timeseries by a specified number of observations</span>
+
+<span class="sd">    :param x: timeseries of prices</span>
+<span class="sd">    :param obs: number of observations to lag series</span>
+<span class="sd">    :return: date-based time series of return</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Shift the series backwards by a specified number of observations:</span>
+
+<span class="sd">    :math:`R_t =  X_{t-obs}`</span>
+
+<span class="sd">    where :math:`obs` is the number of observations to lag series</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    Lag series by 2 observations:</span>
+
+<span class="sd">    &gt;&gt;&gt; prices = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; lagged = lag(prices, 2)</span>
+
+<span class="sd">    **See also**</span>
+
+<span class="sd">    :func:`diff`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Determine how we want to handle observations prior to start date</span>
+
+    <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  <hr />
+  
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  
+  
+    
+   
+
+</body>
+</html>

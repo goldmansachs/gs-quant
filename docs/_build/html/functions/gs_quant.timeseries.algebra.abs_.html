@@ -1,0 +1,261 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>abs &mdash; gs_quant 0.1 documentation</title>
+  
+
+    
+  <script crossorigin src="/resources/react/16-8-6/prod/react.production.min.js"></script>
+  <script
+    crossorigin src="/resources/react/16-8-6/prod/react-dom.production.min.js"></script>
+
+     
+    <script src='/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML' async></script> 
+    
+    <script type="text/javascript" src="../_static/../../../auto-mount.js"></script>
+    <link rel="stylesheet" href="../_static/../../../auto-mount.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="next" title="add" href="gs_quant.timeseries.algebra.add.html" />
+    <link rel="prev" title="Timeseries Package" href="../timeseries.html" /> 
+</head>
+
+<!-- Hello from the future. -->
+<div id="mq-doc-navbar-inject"></div>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    <a data-toggle="wy-nav-top" class="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" class="gs-nav-action"></div>
+    </a>
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Packages</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../data.html">Data Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datetime.html">Datetime Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instrument.html">Instrument Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../market.html">Market Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../risk.html">Risk Package</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../timeseries.html">Timeseries Package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../timeseries.html#algebra">Algebra</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">abs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.algebra.add.html">add</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.algebra.ceil.html">ceil</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.algebra.divide.html">divide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.algebra.exp.html">exp</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.algebra.floor.html">floor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.algebra.log.html">log</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.algebra.multiply.html">multiply</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.algebra.power.html">power</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.algebra.sqrt.html">sqrt</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.algebra.subtract.html">subtract</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../timeseries.html#analysis">Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../timeseries.html#date-time">Date / Time</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../timeseries.html#econometrics">Econometrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../timeseries.html#statistics">Statistics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../timeseries.html#technical-analysis">Technical Analysis</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Packages</a> /</li>
+        
+          <li><a href="../timeseries.html">Timeseries Package</a> /</li>
+        
+      <li>abs</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="abs">
+<h1><a class="reference internal" href="#abs">abs</a><a class="headerlink" href="#abs" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="gs_quant.timeseries.algebra.abs_">
+<code class="sig-name descname">abs_</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gs_quant/timeseries/algebra.html#abs_"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gs_quant.timeseries.algebra.abs_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Absolute value of each element in series</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code>) – date-based time series of prices</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>date-based time series of absolute value</p>
+</dd>
+</dl>
+<p><strong>Usage</strong></p>
+<p>Return the absolute value of <span class="math notranslate nohighlight">\(X\)</span>. For each value in time series <span class="math notranslate nohighlight">\(X_t\)</span>, return <span class="math notranslate nohighlight">\(X_t\)</span> if <span class="math notranslate nohighlight">\(X_t\)</span>
+is greater than or equal to 0; otherwise return <span class="math notranslate nohighlight">\(-X_t\)</span>:</p>
+<p><span class="math notranslate nohighlight">\(R_t = |X_t|\)</span></p>
+<p>Equivalent to <span class="math notranslate nohighlight">\(R_t = \sqrt{X_t^2}\)</span></p>
+<p><strong>Examples</strong></p>
+<p>Generate price series and take absolute value of <span class="math notranslate nohighlight">\(X_t-100\)</span></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">prices</span> <span class="o">=</span> <span class="n">generate_series</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span> <span class="o">-</span> <span class="mi">100</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">abs_</span><span class="p">(</span><span class="n">prices</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>See also</strong></p>
+<p><a class="reference internal" href="gs_quant.timeseries.algebra.exp.html#gs_quant.timeseries.algebra.exp" title="gs_quant.timeseries.algebra.exp"><code class="xref py py-func docutils literal notranslate"><span class="pre">exp()</span></code></a> <a class="reference internal" href="gs_quant.timeseries.algebra.sqrt.html#gs_quant.timeseries.algebra.sqrt" title="gs_quant.timeseries.algebra.sqrt"><code class="xref py py-func docutils literal notranslate"><span class="pre">sqrt()</span></code></a></p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  <hr />
+  
+  <div
+    class="container-block-module"
+    role="navigation"
+    aria-label="footer navigation"
+  >
+    
+    <div class="link-block-module">
+      <a
+        href="../timeseries.html"
+        class="link-block-module-container"
+        title="Timeseries Package"
+        accesskey="p"
+        rel="prev"
+      >
+        <div class="link-block-module-content">
+          <h4 class="link-block-module-title-label">
+            Previous Topic
+          </h4>
+          <p class="link-block-module-body-label">
+            Timeseries Package
+          </p>
+        </div>
+      </a>
+    </div>
+     
+    <div class="link-block-module">
+      <a
+        href="gs_quant.timeseries.algebra.add.html"
+        class="link-block-module-container"
+        title="add"
+        accesskey="n"
+        rel="next"
+      >
+        <div class="link-block-module-content">
+          <h4 class="link-block-module-title-label">
+            Next Topic
+          </h4>
+          <p class="link-block-module-body-label">
+            add
+          </p>
+        </div>
+      </a>
+    </div>
+    
+  </div>
+  
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  
+  
+    
+   
+
+</body>
+</html>

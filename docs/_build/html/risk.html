@@ -1,0 +1,469 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Risk Package &mdash; gs_quant 0.1 documentation</title>
+  
+
+    
+  <script crossorigin src="/resources/react/16-8-6/prod/react.production.min.js"></script>
+  <script
+    crossorigin src="/resources/react/16-8-6/prod/react-dom.production.min.js"></script>
+
+     
+    <script src='/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML' async></script> 
+    
+    <script type="text/javascript" src="_static/../../../auto-mount.js"></script>
+    <link rel="stylesheet" href="_static/../../../auto-mount.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="next" title="Timeseries Package" href="timeseries.html" />
+    <link rel="prev" title="gs_quant.markets.securities.SecurityMaster" href="classes/gs_quant.markets.securities.SecurityMaster.html" /> 
+</head>
+
+<!-- Hello from the future. -->
+<div id="mq-doc-navbar-inject"></div>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    <a data-toggle="wy-nav-top" class="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" class="gs-nav-action"></div>
+    </a>
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Packages</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="data.html">Data Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datetime.html">Datetime Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instrument.html">Instrument Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="market.html">Market Package</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Risk Package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#functions">Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#measures">Measures</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="timeseries.html">Timeseries Package</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Packages</a> /</li>
+        
+      <li>Risk Package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="risk-package">
+<h1>Risk Package<a class="headerlink" href="#risk-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="gs_quant.risk.aggregate_risk">
+<code class="sig-name descname">aggregate_risk</code><span class="sig-paren">(</span><em class="sig-param">results</em>, <em class="sig-param">threshold=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gs_quant/risk/core.html#aggregate_risk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gs_quant.risk.aggregate_risk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Combine the results of multiple Instrument.calc() calls, into a single result</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>results</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Future</span></code>]]) – An iterable of Dataframes and/or Futures (returned by Instrument.calc())</p></li>
+<li><p><strong>threshold</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]) – exclude values whose absolute value falls below this threshold</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A Dataframe with the aggregated results</p>
+</dd>
+</dl>
+<p><strong>Examples</strong></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">PricingContext</span><span class="p">():</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">delta_f</span> <span class="o">=</span> <span class="p">[</span><span class="n">inst</span><span class="o">.</span><span class="n">calc</span><span class="p">(</span><span class="n">risk</span><span class="o">.</span><span class="n">IRDelta</span><span class="p">)</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">instruments</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">vega_f</span> <span class="o">=</span> <span class="p">[</span><span class="n">inst</span><span class="o">.</span><span class="n">calc</span><span class="p">(</span><span class="n">risk</span><span class="o">.</span><span class="n">IRVega</span><span class="p">)</span> <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">instruments</span><span class="p">]</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">delta</span> <span class="o">=</span> <span class="n">aggregate_risk</span><span class="p">(</span><span class="n">delta_f</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">vega</span> <span class="o">=</span> <span class="n">aggregate_risk</span><span class="p">(</span><span class="n">vega_f</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>delta_f and vega_f are lists of futures, where the result will be a Dataframe
+delta and vega are Dataframes, representing the merged risk of the individual instruments</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="gs_quant.risk.subtract_risk">
+<code class="sig-name descname">subtract_risk</code><span class="sig-paren">(</span><em class="sig-param">left</em>, <em class="sig-param">right</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gs_quant/risk/core.html#subtract_risk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gs_quant.risk.subtract_risk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subtract bucketed risk. Dimensions must be identical</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>left</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code>) – Results to substract from</p></li>
+<li><p><strong>right</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code>) – Results to substract</p></li>
+</ul>
+</dd>
+</dl>
+<p><strong>Examples</strong></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ir_swap</span> <span class="o">=</span> <span class="n">IRSwap</span><span class="p">(</span><span class="s1">&#39;Pay&#39;</span><span class="p">,</span> <span class="s1">&#39;10y&#39;</span><span class="p">,</span> <span class="s1">&#39;USD&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">delta_today</span> <span class="o">=</span> <span class="n">ir_swap</span><span class="o">.</span><span class="n">calc</span><span class="p">(</span><span class="n">risk</span><span class="o">.</span><span class="n">IRDelta</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">PricingContext</span><span class="p">(</span><span class="n">pricing_date</span><span class="o">=</span><span class="n">business_day_offset</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">(),</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">roll</span><span class="o">=</span><span class="s1">&#39;preceding&#39;</span><span class="p">)):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">delta_yday_f</span> <span class="o">=</span> <span class="n">ir_swap</span><span class="o">.</span><span class="n">calc</span><span class="p">(</span><span class="n">risk</span><span class="o">.</span><span class="n">IRDelta</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">delta_diff</span> <span class="o">=</span> <span class="n">subtract_risk</span><span class="p">(</span><span class="n">delta_today</span><span class="p">,</span> <span class="n">delta_yday_f</span><span class="o">.</span><span class="n">result</span><span class="p">())</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="gs_quant.risk.sort_risk">
+<code class="sig-name descname">sort_risk</code><span class="sig-paren">(</span><em class="sig-param">df</em>, <em class="sig-param">by=('date'</em>, <em class="sig-param">'time'</em>, <em class="sig-param">'marketDataType'</em>, <em class="sig-param">'assetId'</em>, <em class="sig-param">'point')</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gs_quant/risk/core.html#sort_risk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gs_quant.risk.sort_risk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sort bucketed risk</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>df</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code>) – Input Dataframe</p></li>
+<li><p><strong>by</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – Columns to sort by</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A sorted Dataframe</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="measures">
+<h2>Measures<a class="headerlink" href="#measures" title="Permalink to this headline">¶</a></h2>
+<dl class="data">
+<dt id="gs_quant.risk.DollarPrice">
+<code class="sig-name descname">DollarPrice</code><em class="property"> = &lt;gs_quant.target.common.RiskMeasure object&gt;</em><a class="headerlink" href="#gs_quant.risk.DollarPrice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Present value in USD</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="gs_quant.risk.Price">
+<code class="sig-name descname">Price</code><em class="property"> = &lt;gs_quant.target.common.RiskMeasure object&gt;</em><a class="headerlink" href="#gs_quant.risk.Price" title="Permalink to this definition">¶</a></dt>
+<dd><p>Present value in local currency</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="gs_quant.risk.ForwardPrice">
+<code class="sig-name descname">ForwardPrice</code><em class="property"> = &lt;gs_quant.target.common.RiskMeasure object&gt;</em><a class="headerlink" href="#gs_quant.risk.ForwardPrice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Forward price</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="gs_quant.risk.Theta">
+<code class="sig-name descname">Theta</code><em class="property"> = &lt;gs_quant.target.common.RiskMeasure object&gt;</em><a class="headerlink" href="#gs_quant.risk.Theta" title="Permalink to this definition">¶</a></dt>
+<dd><p>1 day Theta</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="gs_quant.risk.CommodDelta">
+<code class="sig-name descname">CommodDelta</code><em class="property"> = &lt;gs_quant.target.common.RiskMeasure object&gt;</em><a class="headerlink" href="#gs_quant.risk.CommodDelta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Commodity Delta</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="gs_quant.risk.CommodTheta">
+<code class="sig-name descname">CommodTheta</code><em class="property"> = &lt;gs_quant.target.common.RiskMeasure object&gt;</em><a class="headerlink" href="#gs_quant.risk.CommodTheta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Commodity Theta</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="gs_quant.risk.CommodVega">
+<code class="sig-name descname">CommodVega</code><em class="property"> = &lt;gs_quant.target.common.RiskMeasure object&gt;</em><a class="headerlink" href="#gs_quant.risk.CommodVega" title="Permalink to this definition">¶</a></dt>
+<dd><p>Commodity Vega</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="gs_quant.risk.EqDelta">
+<code class="sig-name descname">EqDelta</code><em class="property"> = &lt;gs_quant.target.common.RiskMeasure object&gt;</em><a class="headerlink" href="#gs_quant.risk.EqDelta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Equity Delta</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="gs_quant.risk.EqGamma">
+<code class="sig-name descname">EqGamma</code><em class="property"> = &lt;gs_quant.target.common.RiskMeasure object&gt;</em><a class="headerlink" href="#gs_quant.risk.EqGamma" title="Permalink to this definition">¶</a></dt>
+<dd><p>Equity Gamma</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="gs_quant.risk.EqVega">
+<code class="sig-name descname">EqVega</code><em class="property"> = &lt;gs_quant.target.common.RiskMeasure object&gt;</em><a class="headerlink" href="#gs_quant.risk.EqVega" title="Permalink to this definition">¶</a></dt>
+<dd><p>Equity Vega</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="gs_quant.risk.EqSpot">
+<code class="sig-name descname">EqSpot</code><em class="property"> = &lt;gs_quant.target.common.RiskMeasure object&gt;</em><a class="headerlink" href="#gs_quant.risk.EqSpot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Equity Spot Level</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="gs_quant.risk.EqAnnualImpliedVol">
+<code class="sig-name descname">EqAnnualImpliedVol</code><em class="property"> = &lt;gs_quant.target.common.RiskMeasure object&gt;</em><a class="headerlink" href="#gs_quant.risk.EqAnnualImpliedVol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Equity Annual Implied Volatility (%)</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="gs_quant.risk.FXDelta">
+<code class="sig-name descname">FXDelta</code><em class="property"> = &lt;gs_quant.target.common.RiskMeasure object&gt;</em><a class="headerlink" href="#gs_quant.risk.FXDelta" title="Permalink to this definition">¶</a></dt>
+<dd><p>FX Delta</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="gs_quant.risk.FXGamma">
+<code class="sig-name descname">FXGamma</code><em class="property"> = &lt;gs_quant.target.common.RiskMeasure object&gt;</em><a class="headerlink" href="#gs_quant.risk.FXGamma" title="Permalink to this definition">¶</a></dt>
+<dd><p>FX Gamma</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="gs_quant.risk.FXVega">
+<code class="sig-name descname">FXVega</code><em class="property"> = &lt;gs_quant.target.common.RiskMeasure object&gt;</em><a class="headerlink" href="#gs_quant.risk.FXVega" title="Permalink to this definition">¶</a></dt>
+<dd><p>FX Vega</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="gs_quant.risk.IRDelta">
+<code class="sig-name descname">IRDelta</code><em class="property"> = &lt;gs_quant.target.common.RiskMeasure object&gt;</em><a class="headerlink" href="#gs_quant.risk.IRDelta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interest Rate Delta</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="gs_quant.risk.IRDeltaParallel">
+<code class="sig-name descname">IRDeltaParallel</code><em class="property"> = &lt;gs_quant.target.common.RiskMeasure object&gt;</em><a class="headerlink" href="#gs_quant.risk.IRDeltaParallel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interest Rate Parallel Delta</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="gs_quant.risk.IRDeltaLocalCcy">
+<code class="sig-name descname">IRDeltaLocalCcy</code><em class="property"> = &lt;gs_quant.target.common.RiskMeasure object&gt;</em><a class="headerlink" href="#gs_quant.risk.IRDeltaLocalCcy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interest Rate Delta (Local Ccy)</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="gs_quant.risk.IRDeltaParallelLocalCcy">
+<code class="sig-name descname">IRDeltaParallelLocalCcy</code><em class="property"> = &lt;gs_quant.target.common.RiskMeasure object&gt;</em><a class="headerlink" href="#gs_quant.risk.IRDeltaParallelLocalCcy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interest Rate Parallel Delta (Local Ccy)</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="gs_quant.risk.IRGamma">
+<code class="sig-name descname">IRGamma</code><em class="property"> = &lt;gs_quant.target.common.RiskMeasure object&gt;</em><a class="headerlink" href="#gs_quant.risk.IRGamma" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interest Rate Gamma</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="gs_quant.risk.IRVega">
+<code class="sig-name descname">IRVega</code><em class="property"> = &lt;gs_quant.target.common.RiskMeasure object&gt;</em><a class="headerlink" href="#gs_quant.risk.IRVega" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interest Rate Vega</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="gs_quant.risk.IRVegaParallel">
+<code class="sig-name descname">IRVegaParallel</code><em class="property"> = &lt;gs_quant.target.common.RiskMeasure object&gt;</em><a class="headerlink" href="#gs_quant.risk.IRVegaParallel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interest Rate Parallel Vega</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="gs_quant.risk.IRVegaLocalCcy">
+<code class="sig-name descname">IRVegaLocalCcy</code><em class="property"> = &lt;gs_quant.target.common.RiskMeasure object&gt;</em><a class="headerlink" href="#gs_quant.risk.IRVegaLocalCcy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interest Rate Vega (Local Ccy)</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="gs_quant.risk.IRVegaParallelLocalCcy">
+<code class="sig-name descname">IRVegaParallelLocalCcy</code><em class="property"> = &lt;gs_quant.target.common.RiskMeasure object&gt;</em><a class="headerlink" href="#gs_quant.risk.IRVegaParallelLocalCcy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interest Rate Parallel Vega (Local Ccy)</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="gs_quant.risk.IRAnnualImpliedVol">
+<code class="sig-name descname">IRAnnualImpliedVol</code><em class="property"> = &lt;gs_quant.target.common.RiskMeasure object&gt;</em><a class="headerlink" href="#gs_quant.risk.IRAnnualImpliedVol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interest Rate Annual Implied Volatility (%)</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="gs_quant.risk.IRAnnualATMImpliedVol">
+<code class="sig-name descname">IRAnnualATMImpliedVol</code><em class="property"> = &lt;gs_quant.target.common.RiskMeasure object&gt;</em><a class="headerlink" href="#gs_quant.risk.IRAnnualATMImpliedVol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interest Rate Annual Implied At-The-Money Volatility (%)</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="gs_quant.risk.IRDailyImpliedVol">
+<code class="sig-name descname">IRDailyImpliedVol</code><em class="property"> = &lt;gs_quant.target.common.RiskMeasure object&gt;</em><a class="headerlink" href="#gs_quant.risk.IRDailyImpliedVol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interest Rate Daily Implied Volatility (bps)</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="gs_quant.risk.IRSpotRate">
+<code class="sig-name descname">IRSpotRate</code><em class="property"> = &lt;gs_quant.target.common.RiskMeasure object&gt;</em><a class="headerlink" href="#gs_quant.risk.IRSpotRate" title="Permalink to this definition">¶</a></dt>
+<dd><p>At-The-Money Spot Rate (%)</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="gs_quant.risk.IRFwdRate">
+<code class="sig-name descname">IRFwdRate</code><em class="property"> = &lt;gs_quant.target.common.RiskMeasure object&gt;</em><a class="headerlink" href="#gs_quant.risk.IRFwdRate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Par Rate (%)</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  <hr />
+  
+  <div
+    class="container-block-module"
+    role="navigation"
+    aria-label="footer navigation"
+  >
+    
+    <div class="link-block-module">
+      <a
+        href="classes/gs_quant.markets.securities.SecurityMaster.html"
+        class="link-block-module-container"
+        title="gs_quant.markets.securities.SecurityMaster"
+        accesskey="p"
+        rel="prev"
+      >
+        <div class="link-block-module-content">
+          <h4 class="link-block-module-title-label">
+            Previous Topic
+          </h4>
+          <p class="link-block-module-body-label">
+            gs_quant.markets.securities.SecurityMaster
+          </p>
+        </div>
+      </a>
+    </div>
+     
+    <div class="link-block-module">
+      <a
+        href="timeseries.html"
+        class="link-block-module-container"
+        title="Timeseries Package"
+        accesskey="n"
+        rel="next"
+      >
+        <div class="link-block-module-content">
+          <h4 class="link-block-module-title-label">
+            Next Topic
+          </h4>
+          <p class="link-block-module-body-label">
+            Timeseries Package
+          </p>
+        </div>
+      </a>
+    </div>
+    
+  </div>
+  
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  
+  
+    
+   
+
+</body>
+</html>

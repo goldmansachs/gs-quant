@@ -14,6 +14,9 @@ specific language governing permissions and limitations
 under the License.
 """
 
+import pytest
+
+from gs_quant.base import EnumBase
 from gs_quant.markets.securities import *
 from gs_quant.session import *
 
@@ -173,3 +176,18 @@ def test_asset_identifiers(mocker):
     assert identifiers[AssetIdentifier.BLOOMBERG_ID.value] == 'GSTHHOLD'
     assert identifiers[AssetIdentifier.CUSIP.value] == '9EQ24FOLD'
     assert identifiers[AssetIdentifier.TICKER.value] == 'GSTHHOLD'
+
+
+def test_asset_types(mocker):
+    class MockType(EnumBase, Enum):
+        Foo = "Bar"
+
+    ata = getattr(SecurityMaster, '_SecurityMaster__gs_asset_to_asset')
+    assert ata is not None
+    asset = GsAsset(AssetClass.Equity, None, 'Test Asset')
+    setattr(asset, '_Asset__type', MockType.Foo)
+
+    mocker.patch.object(json, 'dumps', return_value='{}')
+    with pytest.raises(TypeError) as exc_info:
+        ata(asset)
+    assert 'unsupported asset type' in str(exc_info.value)  # reached exception at end of function

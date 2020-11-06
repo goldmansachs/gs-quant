@@ -11,7 +11,6 @@
   src: url("/resources/fonts/Roboto-Regular.ttf"),
     url("/resources/fonts/Roboto-Regular.woff"),
     url("/resources/fonts/Roboto-Regular.woff2");
-  /* url("../../static/resources/Roboto-Regular.ttf"); */
 }
 
 @font-face {
@@ -26,7 +25,13 @@
   src: url("/resources/fonts/Roboto-Mono-Regular.ttf"),
     url("/resources/fonts/Roboto-Mono-Regular.woff"),
     url("/resources/fonts/Roboto-Mono-Regular.woff2");
-  /* url("../../static/resources/Roboto-Mono-Regular.ttf"); */
+}
+
+@font-face {
+  font-family: "Material-Icons";
+  src: url("/resources/fonts/MaterialIcons-Regular.ttf"),
+    url("/resources/fonts/MaterialIcons-Regular.woff"),
+    url("/resources/fonts/MaterialIcons-Regular.woff2");
 }
 
 article,
@@ -2315,9 +2320,6 @@ a {
 a:hover {
   color: #0f6dee;
 }
-a:visited {
-  color: #0f6dee;
-}
 html {
   height: 100%;
   overflow-x: hidden;
@@ -3984,4 +3986,8 @@ td.field-body {
   margin: 0;
   margin-bottom: 0;
   color: rgba(0, 0, 0, 0.8);
+}
+
+i {
+  font-family: "Material-Icons";
 }
