@@ -13,11 +13,13 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-
+import copy
 import inspect
+import pickle
 import sys
 
 from gs_quant.base import Base
+from gs_quant.common import Currency
 
 
 def classes(module_name) -> list:
@@ -25,6 +27,14 @@ def classes(module_name) -> list:
     __import__(module_path)
     module = sys.modules[module_path]
     return [m for n, m in inspect.getmembers(module) if inspect.isclass(m) and issubclass(m, Base)]
+
+
+def test_enum():
+    ccy = copy.deepcopy(Currency.HUF)
+    assert ccy == Currency.HUF
+
+    gbp_pickled = pickle.dumps(Currency.GBP)
+    assert pickle.loads(gbp_pickled) == Currency.GBP
 
 
 def test_classes():

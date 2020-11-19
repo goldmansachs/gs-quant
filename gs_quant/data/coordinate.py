@@ -173,3 +173,36 @@ class DataCoordinate(BaseDataCoordinate):
         measure = self.measure.value if isinstance(self.measure, Enum) else self.measure
 
         return dataset.get_data_last(end, fields=[measure], **self.dimensions).get(measure, default=None)
+
+    def as_dict(self):
+        dimensions = {}
+        for key, value in self.dimensions.items():
+            if isinstance(key, Enum):
+                dimensions[key.value] = value
+            else:
+                dimensions[key] = value
+        coordinate = {
+            'measure': self.measure.value if isinstance(self.measure, Enum) else self.measure,
+            'frequency': self.frequency.value,
+        }
+        if dimensions:
+            coordinate['dimensions'] = dimensions
+        return coordinate
+
+    @classmethod
+    def from_dict(cls, obj):
+        measure = obj.get('measure')
+        dimensions = obj.get('dimensions', {})
+        frequency = obj.get('frequency')
+
+        measure = DataMeasure(measure) if measure in DataMeasure._value2member_map_ else measure
+
+        parsed_dimensions = {}
+        data_dimension_map = DataDimension._value2member_map_
+        for key, value in dimensions.items():
+            if key in data_dimension_map:
+                parsed_dimensions[DataDimension(key)] = value
+            else:
+                parsed_dimensions[key] = value
+
+        return DataCoordinate(measure=measure, dimensions=parsed_dimensions, frequency=DataFrequency(frequency))

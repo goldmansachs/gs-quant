@@ -35,7 +35,7 @@ class EquityVolEngine(object):
                                for p in trigger.actions[0].priceables):
                         return False
                 elif isinstance(trigger.actions[0], a.HedgeAction):
-                    if not isinstance(trigger.actions[0].risk, EqDelta):
+                    if not trigger.actions[0].risk == EqDelta:
                         return False
             else:
                 return False
@@ -54,18 +54,19 @@ class EquityVolEngine(object):
                     underlier_list = trigger.actions[0].priceables
                     roll_frequency = trigger.actions[0].trade_duration
                 elif isinstance(trigger.actions[0], a.HedgeAction):
-                    if trigger.trigger_requirements.frequency == '1B':
+                    if trigger.trigger_requirements.frequency == 'B':
                         frequency = 'Daily'
-                    elif trigger.trigger_requirements.frequency == '1M':
+                    elif trigger.trigger_requirements.frequency == 'M':
                         frequency = 'Monthly'
                     else:
                         raise RuntimeError('unrecognised hedge frequency')
                     hedge = DeltaHedgeParameters(frequency=frequency)
 
+        # TODO: allow quantity type to be varied (perhaps on the action)
         strategy = StrategySystematic(name="Mock Test",
                                       underliers=underlier_list,
                                       delta_hedge=hedge,
-                                      quantity=-1,
+                                      quantity=underlier_list[0].multiplier,
                                       quantity_type=QuantityType.Quantity,
                                       trade_in_method=TradeInMethod.FixedRoll,
                                       roll_frequency=roll_frequency,

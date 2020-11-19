@@ -97,6 +97,9 @@ class EnumBase:
     def _missing_(cls: EnumMeta, key):
         return next((m for m in cls.__members__.values() if m.value.lower() == key.lower()), None)
 
+    def __reduce_ex__(self, protocol):
+        return self.__class__, (self.value,)
+
     def __lt__(self: EnumMeta, other):
         return self.value < other.value
 

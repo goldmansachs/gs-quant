@@ -19,6 +19,7 @@ from typing import Tuple, Union
 
 from gs_quant.instrument import Instrument
 from gs_quant.session import GsSession
+from gs_quant.target.common import RiskRequest
 from gs_quant.target.portfolios import Portfolio, Position, PositionSet
 from gs_quant.target.reports import Report
 
@@ -83,7 +84,8 @@ class GsPortfolioApi:
         return position_sets[0] if len(position_sets) > 0 else PositionSet()
 
     @classmethod
-    def get_instruments_by_position_type(cls, positions_type: str, positions_id: str) -> Tuple[Instrument, ...]:
+    def get_instruments_by_position_type(cls, positions_type: str,
+                                         positions_id: str) -> Tuple[Instrument, ...]:
         root = 'deals' if positions_type == 'ETI' else 'books/' + positions_type
         url = '/risk-internal/{}/{}/positions'.format(root, positions_id)
         results = GsSession.current._get(url, timeout=181)
@@ -113,6 +115,25 @@ class GsPortfolioApi:
         return results
 
     @classmethod
+    def get_instruments_by_workflow_id(cls, workflow_id: str,
+                                       preferInstruments: bool = False) -> Tuple[Instrument, ...]:
+        root = 'quote'
+        url = '/risk{}/{}/{}'.format('-internal' if not preferInstruments else '', root, workflow_id)
+        results = GsSession.current._get(url, timeout=181)
+
+        instruments = []
+        for position in results.get('workflowPositions').get(workflow_id)[0]['positions']:
+            instrument_values = position['instrument']
+            instrument = Instrument.from_dict(instrument_values)
+            name = instrument_values.get('name')
+            if name:
+                instrument.name = name
+
+            instruments.append(instrument)
+
+        return tuple(instruments)
+
+    @classmethod
     def get_position_dates(cls, portfolio_id: str) -> Tuple[dt.date, ...]:
         position_dates = GsSession.current._get('/portfolios/{id}/positions/dates'.format(id=portfolio_id))['results']
         return tuple(dt.datetime.strptime(d, '%Y-%m-%d').date() for d in position_dates)
@@ -120,6 +141,14 @@ class GsPortfolioApi:
     @classmethod
     def update_positions(cls, portfolio_id: str, position_sets: Tuple[PositionSet, ...]) -> float:
         return GsSession.current._put('/portfolios/{id}/positions'.format(id=portfolio_id), position_sets)
+
+    @classmethod
+    def update_quote(cls, portfolio_id: str, request: RiskRequest):
+        return GsSession.current._put('/risk-internal/quote/save/{id}'.format(id=portfolio_id), request)
+
+    @classmethod
+    def save_quote(cls, request: RiskRequest) -> str:
+        return GsSession.current._post('/risk-internal/quote/save', request)['results']
 
     # manage portfolio reports
 

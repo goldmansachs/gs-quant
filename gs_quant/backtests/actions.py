@@ -121,7 +121,7 @@ class AddTradeAction(Action):
 
 
 class HedgeAction(Action):
-    def __init__(self, risk, priceables: Priceable, trade_duration: str = None, risks_on_final_day: bool = False,
+    def __init__(self, risk, priceables: Priceable = None, trade_duration: str = None, risks_on_final_day: bool = False,
                  name: str = None):
         super().__init__(name)
         self._calc_type = CalcType.semi_path_dependent
@@ -129,10 +129,11 @@ class HedgeAction(Action):
         self._risk = risk
         self._trade_duration = trade_duration
         self._risks_on_final_day = risks_on_final_day
-        if self._priceable.name is None:
-            self._priceable.name = '{}_Pricable{}'.format(self._name, 0)
-        else:
-            self._priceable.name = '{}_{}'.format(self._name, self._priceable.name)
+        if priceables is not None:
+            if self._priceable.name is None:
+                self._priceable.name = '{}_Pricable{}'.format(self._name, 0)
+            else:
+                self._priceable.name = '{}_{}'.format(self._name, self._priceable.name)
 
     @property
     def trade_duration(self):

@@ -26,9 +26,10 @@ from gs_quant.context_base import nullcontext
 from gs_quant.instrument import Instrument
 from gs_quant.markets import HistoricalPricingContext, OverlayMarket, PricingContext
 from gs_quant.priceable import PriceableImpl
-from gs_quant.risk import RiskMeasure
+from gs_quant.risk import RiskMeasure, ResolvedInstrumentValues
 from gs_quant.risk.results import CompositeResultFuture, PortfolioRiskResult, PortfolioPath, PricingFuture
-from gs_quant.target.portfolios import Position, PositionSet
+from gs_quant.target.common import RiskPosition
+from gs_quant.target.portfolios import Position, PositionSet, RiskRequest, PricingDateAndMarketDataAsOf
 from more_itertools import unique_everseen
 from itertools import chain
 
@@ -230,6 +231,11 @@ class Portfolio(PriceableImpl):
         portfolio = GsPortfolioApi.get_portfolio_by_name(name)
         return Portfolio.load_from_portfolio_id(portfolio.id)
 
+    @staticmethod
+    def from_quote(quote_id: str):
+        instruments = GsPortfolioApi.get_instruments_by_workflow_id(quote_id)
+        return Portfolio(instruments, name=quote_id)
+
     def save(self, overwrite: Optional[bool] = False):
         if self.portfolios:
             raise ValueError('Cannot save portfolios with nested portfolios')
@@ -257,6 +263,29 @@ class Portfolio(PriceableImpl):
                             for i in self.instruments))
 
         GsPortfolioApi.update_positions(self.__id, (position_set,))
+
+    def save_as_quote(self, overwrite: Optional[bool] = False):
+        if self.portfolios:
+            raise ValueError('Cannot save portfolios with nested portfolios')
+
+        pricing_context = self.__pricing_context
+
+        request = RiskRequest(
+            tuple(RiskPosition(instrument=i, quantity=i.instrument_quantity) for i in self.instruments),
+            (ResolvedInstrumentValues,),
+            pricing_and_market_data_as_of=(PricingDateAndMarketDataAsOf(pricing_date=pricing_context.pricing_date,
+                                                                        market=pricing_context.market),)
+        )
+
+        if self.__id:
+            if not overwrite:
+                raise ValueError(f'Portfolio with id {id} already exists. Use overwrite=True to overwrite')
+            else:
+                GsPortfolioApi.update_quote(self.__id, request)
+                _logger.info(f'Updated Structuring with id {self.__id}')
+        else:
+            self.__id = GsPortfolioApi.save_quote(request)
+            _logger.info(f'Created Structuring with id {self.__id}')
 
     @classmethod
     def from_frame(cls, data: pd.DataFrame, mappings: dict = None):

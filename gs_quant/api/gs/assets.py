@@ -24,7 +24,7 @@ from functools import wraps
 from typing import Iterable, List, Tuple, Optional, Union
 from gs_quant.target.assets import Asset as __Asset, AssetClass, AssetType, AssetToInstrumentResponse, TemporalXRef,\
     Position, EntityQuery, PositionSet, Currency, AssetParameters
-from gs_quant.target.common import FieldFilterMap
+from gs_quant.target.assets import FieldFilterMap
 from gs_quant.errors import MqValueError
 from gs_quant.instrument import Instrument, Security
 from gs_quant.session import GsSession
@@ -32,6 +32,7 @@ from gs_quant.common import PositionType
 
 _logger = logging.getLogger(__name__)
 IdList = Union[Tuple[str, ...], List]
+ENABLE_ASSET_CACHING = 'GSQ_SEC_MASTER_CACHE'
 
 metalock = threading.Lock()
 invocation_locks = cachetools.LRUCache(1024)  # prevent collection from growing without bound
@@ -40,12 +41,16 @@ invocation_locks = cachetools.LRUCache(1024)  # prevent collection from growing 
 def _cached(fn):
     _fn_cache_lock = threading.Lock()
     # short-term cache to avoid retrieving the same data several times in succession
-    cache = cachetools.TTLCache(1024, 30) if os.environ.get('GSQ_SEC_MASTER_CACHE') else None
+    cache = cachetools.TTLCache(1024, 30)
 
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        if cache is not None:
+        if os.environ.get(ENABLE_ASSET_CACHING):
             args = [tuple(x) if isinstance(x, list) else x for x in args]  # tuples are hashable
+            for k, v in kwargs.items():
+                if isinstance(v, list):
+                    kwargs[k] = tuple(v)
+
             k = cachetools.keys.hashkey(GsSession.current, *args, **kwargs)
             with metalock:
                 invocation_lock = invocation_locks.setdefault(f'{fn.__name__}:{k}', threading.Lock())
@@ -97,6 +102,7 @@ class GsAssetApi:
             fields: Union[List, Tuple] = None,
             as_of: dt.datetime = None,
             limit: int = None,
+            order_by: List[str] = None,
             **kwargs
     ) -> EntityQuery:
         keys = set(kwargs.keys())
@@ -111,7 +117,8 @@ class GsAssetApi:
             where=FieldFilterMap(**kwargs),
             fields=fields,
             asOfTime=as_of or dt.datetime.utcnow(),
-            limit=limit
+            limit=limit,
+            order_by=order_by
         )
 
     @classmethod
@@ -122,9 +129,10 @@ class GsAssetApi:
             as_of: dt.datetime = None,
             limit: int = 100,
             return_type: Optional[type] = GsAsset,
+            order_by: List[str] = None,
             **kwargs
     ) -> Union[Tuple[GsAsset, ...], Tuple[dict, ...]]:
-        query = cls.__create_query(fields, as_of, limit, **kwargs)
+        query = cls.__create_query(fields, as_of, limit, order_by=order_by, **kwargs)
         response = GsSession.current._post('/assets/query', payload=query, cls=return_type)
         return response['results']
 
