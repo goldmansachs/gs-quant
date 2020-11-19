@@ -2654,7 +2654,7 @@ class FXBinary(Instrument):
     @property
     def type(self) -> AssetType:
         """Option"""
-        return AssetType.Option        
+        return AssetType.Binary        
 
     @property
     def pair(self) -> str:
