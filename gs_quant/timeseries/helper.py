@@ -60,7 +60,6 @@ CurveType = _create_enum('CurveType', ['prices', 'excess_returns'])
 
 
 class Window:
-
     """
     Create a Window with size and ramp up to use.
 
@@ -88,6 +87,16 @@ class Window:
     def __init__(self, w: Union[int, str, None] = None, r: Union[int, str, None] = None):
         self.w = w
         self.r = w if r is None else r
+
+    def as_dict(self):
+        return {
+            'w': self.w,
+            'r': self.r
+        }
+
+    @classmethod
+    def from_dict(cls, obj):
+        return Window(w=obj.get('w'), r=obj.get('r'))
 
 
 def _check_window(series_length: int, window: Window):

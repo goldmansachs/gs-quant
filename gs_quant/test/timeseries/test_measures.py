@@ -767,7 +767,7 @@ def mock_eq_vol(_cls, q):
     d = {
         'impliedVolatility': [5, 1, 2],
     }
-    end = datetime.date.today() - datetime.timedelta(days=1)
+    end = datetime.datetime.now(pytz.UTC).date() - datetime.timedelta(days=1)
     df = MarketDataResponseFrame(data=d, index=pd.date_range(end=end, periods=3, freq='D'))
     df.dataset_ids = _test_datasets
     return df
@@ -897,12 +897,14 @@ def mock_ois_spot():
 
 def mock_esg(_cls, _q):
     d = {
-        'esNumericScore': [2, 4, 6],
+        "esNumericScore": [2, 4, 6],
         "esNumericPercentile": [81.2, 75.4, 65.7],
         "esPolicyScore": [2, 4, 6],
         "esPolicyPercentile": [81.2, 75.4, 65.7],
         "esScore": [2, 4, 6],
         "esPercentile": [81.2, 75.4, 65.7],
+        "esProductImpactScore": [2, 4, 6],
+        "esProductImpactPercentile": [81.2, 75.4, 65.7],
         "gScore": [2, 4, 6],
         "gPercentile": [81.2, 75.4, 65.7],
         "esMomentumScore": [2, 4, 6],
@@ -1058,7 +1060,7 @@ def test_implied_vol():
     replace = Replacer()
     mock_spx = Index('MA890', AssetClass.Equity, 'SPX')
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_eq_vol)
-    idx = pd.date_range(end=datetime.date.today(), periods=4, freq='D')
+    idx = pd.date_range(end=datetime.datetime.now(pytz.UTC).date(), periods=4, freq='D')
 
     actual = tm.implied_volatility(mock_spx, '1m', tm.VolReference.DELTA_CALL, 25)
     assert_series_equal(pd.Series([5, 1, 2, 3], index=idx, name='impliedVolatility'), pd.Series(actual))
@@ -3220,79 +3222,63 @@ def test_realized_volatility():
     replace.restore()
 
 
-def test_esg_aggregate():
+def test_esg_headline_metric():
     replace = Replacer()
 
     mock_aapl = Stock('MA4B66MW5E27U9VBB94', 'AAPL')
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_esg)
-    actual = tm.esg_aggregate(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_NUMERIC, tm.EsgValueUnit.SCORE)
+    actual = tm.esg_headline_metric(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_NUMERIC_SCORE)
     assert_series_equal(pd.Series([2, 4, 6], index=_index * 3, name='esNumericScore'), pd.Series(actual))
-    assert actual.dataset_ids == _test_datasets
 
-    actual = tm.esg_aggregate(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_POLICY, tm.EsgValueUnit.SCORE)
+    actual = tm.esg_headline_metric(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_POLICY_SCORE)
     assert_series_equal(pd.Series([2, 4, 6], index=_index * 3, name='esPolicyScore'), pd.Series(actual))
-    assert actual.dataset_ids == _test_datasets
 
-    actual = tm.esg_aggregate(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_AGGREGATE, tm.EsgValueUnit.SCORE)
+    actual = tm.esg_headline_metric(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_AGGREGATE_SCORE)
     assert_series_equal(pd.Series([2, 4, 6], index=_index * 3, name='esScore'), pd.Series(actual))
-    assert actual.dataset_ids == _test_datasets
 
-    actual = tm.esg_aggregate(mock_aapl, tm.EsgMetric.GOVERNANCE_AGGREGATE, tm.EsgValueUnit.SCORE)
+    actual = tm.esg_headline_metric(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_PRODUCT_IMPACT_SCORE)
+    assert_series_equal(pd.Series([2, 4, 6], index=_index * 3, name='esProductImpactScore'), pd.Series(actual))
+
+    actual = tm.esg_headline_metric(mock_aapl, tm.EsgMetric.GOVERNANCE_AGGREGATE_SCORE)
     assert_series_equal(pd.Series([2, 4, 6], index=_index * 3, name='gScore'), pd.Series(actual))
-    assert actual.dataset_ids == _test_datasets
 
-    actual = tm.esg_aggregate(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_MOMENTUM, tm.EsgValueUnit.SCORE)
+    actual = tm.esg_headline_metric(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_MOMENTUM_SCORE)
     assert_series_equal(pd.Series([2, 4, 6], index=_index * 3, name='esMomentumScore'), pd.Series(actual))
-    assert actual.dataset_ids == _test_datasets
 
-    actual = tm.esg_aggregate(mock_aapl, tm.EsgMetric.GOVERNANCE_REGIONAL, tm.EsgValueUnit.SCORE)
+    actual = tm.esg_headline_metric(mock_aapl, tm.EsgMetric.GOVERNANCE_REGIONAL_SCORE)
     assert_series_equal(pd.Series([2, 4, 6], index=_index * 3, name='gRegionalScore'), pd.Series(actual))
-    assert actual.dataset_ids == _test_datasets
 
-    actual = tm.esg_aggregate(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_NUMERIC, tm.EsgValueUnit.PERCENTILE)
+    actual = tm.esg_headline_metric(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_NUMERIC_PERCENTILE)
     assert_series_equal(pd.Series([81.2, 75.4, 65.7], index=_index * 3, name='esNumericPercentile'), pd.Series(actual))
-    assert actual.dataset_ids == _test_datasets
 
-    actual = tm.esg_aggregate(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_POLICY, tm.EsgValueUnit.PERCENTILE)
+    actual = tm.esg_headline_metric(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_POLICY_PERCENTILE)
     assert_series_equal(pd.Series([81.2, 75.4, 65.7], index=_index * 3, name='esPolicyPercentile'), pd.Series(actual))
-    assert actual.dataset_ids == _test_datasets
 
-    actual = tm.esg_aggregate(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_AGGREGATE, tm.EsgValueUnit.PERCENTILE)
+    actual = tm.esg_headline_metric(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_AGGREGATE_PERCENTILE)
     assert_series_equal(pd.Series([81.2, 75.4, 65.7], index=_index * 3, name='esPercentile'), pd.Series(actual))
-    assert actual.dataset_ids == _test_datasets
 
-    actual = tm.esg_aggregate(mock_aapl, tm.EsgMetric.GOVERNANCE_AGGREGATE, tm.EsgValueUnit.PERCENTILE)
-    assert_series_equal(pd.Series([81.2, 75.4, 65.7], index=_index * 3, name='gPercentile'), pd.Series(actual))
-    assert actual.dataset_ids == _test_datasets
+    actual = tm.esg_headline_metric(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_PRODUCT_IMPACT_PERCENTILE)
+    assert_series_equal(pd.Series([81.2, 75.4, 65.7], index=_index * 3, name='esProductImpactPercentile'),
+                        pd.Series(actual))
 
-    actual = tm.esg_aggregate(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_MOMENTUM, tm.EsgValueUnit.PERCENTILE)
-    assert_series_equal(pd.Series([81.2, 75.4, 65.7], index=_index * 3, name='esMomentumPercentile'), pd.Series(actual))
-    assert actual.dataset_ids == _test_datasets
+    actual = tm.esg_headline_metric(mock_aapl, tm.EsgMetric.GOVERNANCE_AGGREGATE_PERCENTILE)
+    assert_series_equal(pd.Series([81.2, 75.4, 65.7], index=_index * 3, name='gPercentile'),
+                        pd.Series(actual))
 
-    actual = tm.esg_aggregate(mock_aapl, tm.EsgMetric.GOVERNANCE_REGIONAL, tm.EsgValueUnit.PERCENTILE)
-    assert_series_equal(pd.Series([81.2, 75.4, 65.7], index=_index * 3, name='gRegionalPercentile'), pd.Series(actual))
-    assert actual.dataset_ids == _test_datasets
+    actual = tm.esg_headline_metric(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_MOMENTUM_PERCENTILE)
+    assert_series_equal(pd.Series([81.2, 75.4, 65.7], index=_index * 3, name='esMomentumPercentile'),
+                        pd.Series(actual))
 
-    actual = tm.esg_aggregate(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_DISCLOSURE, tm.EsgValueUnit.SCORE)
+    actual = tm.esg_headline_metric(mock_aapl, tm.EsgMetric.GOVERNANCE_REGIONAL_PERCENTILE)
+    assert_series_equal(pd.Series([81.2, 75.4, 65.7], index=_index * 3, name='gRegionalPercentile'),
+                        pd.Series(actual))
+
+    actual = tm.esg_headline_metric(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_DISCLOSURE)
     assert_series_equal(pd.Series([49.2, 55.7, 98.4], index=_index * 3, name='esDisclosurePercentage'),
                         pd.Series(actual))
-    assert actual.dataset_ids == _test_datasets
-
-    actual = tm.esg_aggregate(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_DISCLOSURE, tm.EsgValueUnit.PERCENTILE)
-    assert_series_equal(pd.Series([49.2, 55.7, 98.4], index=_index * 3, name='esDisclosurePercentage'),
-                        pd.Series(actual))
-    assert actual.dataset_ids == _test_datasets
-
-    actual = tm.esg_aggregate(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_DISCLOSURE)
-    assert_series_equal(pd.Series([49.2, 55.7, 98.4], index=_index * 3, name='esDisclosurePercentage'),
-                        pd.Series(actual))
-    assert actual.dataset_ids == _test_datasets
-
-    with pytest.raises(MqValueError):
-        tm.esg_aggregate(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_NUMERIC)
 
     with pytest.raises(NotImplementedError):
-        tm.esg_aggregate(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_NUMERIC, tm.EsgValueUnit.SCORE, real_time=True)
+        tm.esg_headline_metric(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_NUMERIC_SCORE, real_time=True)
 
     replace.restore()
 

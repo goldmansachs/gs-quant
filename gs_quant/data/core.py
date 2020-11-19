@@ -15,6 +15,7 @@ under the License.
 """
 import datetime
 from enum import Enum
+
 from gs_quant.context_base import ContextBaseWithDefault
 
 
@@ -30,13 +31,13 @@ class DataFrequency(Enum):
     """
 
     #: Data subscription for series updating daily
-    DAILY = 'DAILY'
+    DAILY = 'daily'
 
     #: Data subscription for real-time or intraday series
-    REAL_TIME = 'REALTIME'
+    REAL_TIME = 'realTime'
 
     #: Data subscription for real-time or daily series
-    ANY = 'ANY'
+    ANY = 'any'
 
 
 class DataContext(ContextBaseWithDefault):

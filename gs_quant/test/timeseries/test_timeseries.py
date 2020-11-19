@@ -14,8 +14,6 @@ specific language governing permissions and limitations
 under the License.
 """
 
-import inspect
-import re
 import types
 
 import pytest
@@ -42,6 +40,23 @@ def ts_map():
 def test_have_docstrings(ts_map):
     for k, v in ts_map.items():
         assert v.__doc__
+
+
+def test_window_to_from_dict():
+    window = Window(w=1, r=2)
+    window_dict = window.as_dict()
+
+    assert window_dict['w'] == 1
+    assert window_dict['r'] == 2
+
+    window_dict = {
+        'w': 1,
+        'r': 2
+    }
+
+    window = Window.from_dict(window_dict)
+    assert window.w == 1
+    assert window.r == 2
 
 
 def test_docstrings(ts_map):

@@ -22,6 +22,8 @@ from pydash import get
 from gs_quant.session import GsSession
 from gs_quant.target.workspaces_markets import Workspace
 
+import webbrowser
+
 API = '/workspaces/markets'
 WORKSPACES_MARKETS_HEADERS: Dict[str, str] = {'Content-Type': 'application/json;charset=utf-8'}
 
@@ -56,3 +58,10 @@ class GsWorkspacesMarketsApi:
     @classmethod
     def delete_workspace(cls, workspace_id: str) -> Dict:
         return GsSession.current._delete(f'{API}/{workspace_id}')
+
+    @classmethod
+    def open_workspace(cls, workspace: Workspace):
+        if workspace.alias:
+            webbrowser.open(f'{GsSession.current.domain.replace(".web", "")}/s/markets/{workspace.alias}')
+        else:
+            webbrowser.open(f'{GsSession.current.domain.replace(".web", "")}/s/markets/{workspace.id}')

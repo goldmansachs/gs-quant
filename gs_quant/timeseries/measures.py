@@ -45,6 +45,7 @@ from gs_quant.markets.securities import Asset, AssetIdentifier, SecurityMaster, 
 from gs_quant.target.common import AssetClass, AssetType
 from gs_quant.timeseries import volatility, Window, Returns, sqrt
 from gs_quant.timeseries.helper import log_return, plot_measure, _to_offset
+from gs_quant.timeseries.log import log_debug, log_warning
 
 GENERIC_DATE = Union[datetime.date, str]
 ASSET_SPEC = Union[Asset, str]
@@ -165,18 +166,21 @@ class MeetingType(Enum):
 
 
 class EsgMetric(Enum):
-    ENVIRONMENTAL_SOCIAL_NUMERIC = 'es_numeric'
-    ENVIRONMENTAL_SOCIAL_POLICY = 'es_policy'
-    ENVIRONMENTAL_SOCIAL_AGGREGATE = 'es'
-    GOVERNANCE_AGGREGATE = 'g'
+    ENVIRONMENTAL_SOCIAL_NUMERIC_SCORE = 'es_numeric_score'
+    ENVIRONMENTAL_SOCIAL_NUMERIC_PERCENTILE = 'es_numeric_percentile'
+    ENVIRONMENTAL_SOCIAL_POLICY_SCORE = 'es_policy_score'
+    ENVIRONMENTAL_SOCIAL_POLICY_PERCENTILE = 'es_policy_percentile'
+    ENVIRONMENTAL_SOCIAL_AGGREGATE_SCORE = 'es_score'
+    ENVIRONMENTAL_SOCIAL_AGGREGATE_PERCENTILE = 'es_percentile'
     ENVIRONMENTAL_SOCIAL_DISCLOSURE = 'es_disclosure_percentage'
-    ENVIRONMENTAL_SOCIAL_MOMENTUM = 'es_momentum'
-    GOVERNANCE_REGIONAL = 'g_regional'
-
-
-class EsgValueUnit(Enum):
-    PERCENTILE = 'percentile'
-    SCORE = 'score'
+    GOVERNANCE_AGGREGATE_SCORE = 'g_score'
+    GOVERNANCE_AGGREGATE_PERCENTILE = 'g_percentile'
+    GOVERNANCE_REGIONAL_SCORE = 'g_regional_score'
+    GOVERNANCE_REGIONAL_PERCENTILE = 'g_regional_percentile'
+    ENVIRONMENTAL_SOCIAL_MOMENTUM_SCORE = 'es_momentum_score'
+    ENVIRONMENTAL_SOCIAL_MOMENTUM_PERCENTILE = 'es_momentum_percentile'
+    ENVIRONMENTAL_SOCIAL_PRODUCT_IMPACT_SCORE = 'es_product_impact_score'
+    ENVIRONMENTAL_SOCIAL_PRODUCT_IMPACT_PERCENTILE = 'es_product_impact_percentile'
 
 
 class SwaptionTenorType(Enum):
@@ -215,6 +219,8 @@ ESG_METRIC_TO_QUERY_TYPE = {
     "esPolicyPercentile": QueryType.ES_POLICY_PERCENTILE,
     "esScore": QueryType.ES_SCORE,
     "esPercentile": QueryType.ES_PERCENTILE,
+    "esProductImpactScore": QueryType.ES_PRODUCT_IMPACT_SCORE,
+    "esProductImpactPercentile": QueryType.ES_PRODUCT_IMPACT_PERCENTILE,
     "gScore": QueryType.G_SCORE,
     "gPercentile": QueryType.G_PERCENTILE,
     "esMomentumScore": QueryType.ES_MOMENTUM_SCORE,
@@ -286,6 +292,8 @@ def cross_stored_direction_for_fx_vol(asset_spec: ASSET_SPEC) -> str:
         if asset.asset_class is AssetClass.FX:
             bbid = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
             if bbid is not None:
+                if not re.fullmatch('[A-Z]{6}', bbid):
+                    raise TypeError('not a cross that can be reversed')
                 legit_usd_cross = str.startswith(bbid, "USD") and not str.endswith(bbid, ("EUR", "GBP", "NZD", "AUD"))
                 legit_eur_cross = str.startswith(bbid, "EUR")
                 legit_jpy_cross = str.endswith(bbid, "JPY") and not str.startswith(bbid, ("KRW", "IDR", "CLP", "COP"))
@@ -307,6 +315,8 @@ def cross_to_usd_based_cross(asset_spec: ASSET_SPEC) -> str:
         if asset.asset_class is AssetClass.FX:
             bbid = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
             if bbid is not None and not str.startswith(bbid, "USD"):
+                if not re.fullmatch('[A-Z]{6}', bbid):
+                    raise TypeError('not a cross that can be reversed')
                 cross = bbid[3:] + bbid[:3]
                 cross_asset = SecurityMaster.get_asset(cross, AssetIdentifier.BLOOMBERG_ID)
                 result_id = cross_asset.get_marquee_id()
@@ -413,10 +423,10 @@ def _range_from_pricing_date(exchange, pricing_date: Optional[GENERIC_DATE] = No
     return start, end
 
 
-def _market_data_timed(q):
+def _market_data_timed(q, request_id=None):
     start = time.perf_counter()
     df = GsDataApi.get_market_data(q)
-    _logger.debug('market data query ran in %.3f ms', (time.perf_counter() - start) * 1000)
+    log_debug(request_id, _logger, 'market data query ran in %.3f ms', (time.perf_counter() - start) * 1000)
     return df
 
 
@@ -431,7 +441,7 @@ def _extract_series_from_df(df: pd.DataFrame, query_type: QueryType):
 @plot_measure((AssetClass.FX, AssetClass.Equity, AssetClass.Commod), None, [MeasureDependency(
     id_provider=cross_stored_direction_for_fx_vol, query_type=QueryType.IMPLIED_VOLATILITY)])
 def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Real, *, location: str = 'NYC',
-         source: str = None, real_time: bool = False) -> Series:
+         source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
     Difference in implied volatility of equidistant out-of-the-money put and call options.
 
@@ -442,6 +452,7 @@ def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Re
     :param location: location at which a price fixing has been taken (for FX assets)
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: skew curve
     """
     if real_time:
@@ -479,10 +490,10 @@ def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Re
     kwargs['strikeReference'] = strike_reference.value
     column = 'relativeStrike'
     kwargs[column] = q_strikes
-    _logger.debug('where tenor=%s and %s', tenor, kwargs)
+    log_debug(request_id, _logger, 'where tenor=%s and %s', tenor, kwargs)
     where = dict(tenor=tenor, **kwargs)
     q = GsDataApi.build_market_data_query([asset_id], QueryType.IMPLIED_VOLATILITY, where=where, source=source)
-    _logger.debug('q %s', q)
+    log_debug(request_id, _logger, 'q %s', q)
     df = _market_data_timed(q)
     dataset_ids = getattr(df, 'dataset_ids', ())
 
@@ -544,7 +555,8 @@ def cds_implied_volatility(asset: Asset, expiry: str, tenor: str, strike_referen
               [MeasureDependency(id_provider=cross_stored_direction_for_fx_vol,
                                  query_type=QueryType.IMPLIED_VOLATILITY)])
 def implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference = None,
-                       relative_strike: Real = None, *, source: str = None, real_time: bool = False) -> Series:
+                       relative_strike: Real = None, *, source: str = None, real_time: bool = False,
+                       request_id: Optional[str] = None) -> Series:
     """
     Volatility of an asset implied by observations of market prices.
 
@@ -555,6 +567,7 @@ def implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference 
     :param relative_strike: strike relative to reference
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: implied volatility curve
     """
 
@@ -570,12 +583,13 @@ def implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference 
         asset_id = asset.get_marquee_id()
         ref_string, relative_strike = _preprocess_implied_vol_strikes_eq(strike_reference, relative_strike)
 
-    _logger.debug('where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, ref_string, relative_strike)
+    log_debug(request_id, _logger, 'where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, ref_string,
+              relative_strike)
     where = dict(tenor=tenor, strikeReference=ref_string, relativeStrike=relative_strike)
     q = GsDataApi.build_market_data_query([asset_id], QueryType.IMPLIED_VOLATILITY, where=where, source=source,
                                           real_time=real_time)
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
+    log_debug(request_id, _logger, 'q %s', q)
+    df = _market_data_timed(q, request_id)
     out = _extract_series_from_df(df, QueryType.IMPLIED_VOLATILITY)
     ids = set(out.dataset_ids)
 
@@ -585,15 +599,15 @@ def implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference 
         with DataContext(now - delta, now + delta):
             q_l = GsDataApi.build_market_data_query([asset_id], QueryType.IMPLIED_VOLATILITY, where=where,
                                                     source=source, real_time=True, measure='Last')
-        _logger.debug('q_l %s', q_l)
+        log_debug(request_id, _logger, 'q_l %s', q_l)
 
         try:
-            df_l = _market_data_timed(q_l)
+            df_l = _market_data_timed(q_l, request_id)
         except Exception as e:
-            _logger.warning('error loading Last of implied_vol', exc_info=e)
+            log_warning(request_id, _logger, 'unable to get last of implied_vol', exc_info=e)
         else:
             if df_l.empty:
-                _logger.warning('no data for Last of implied_vol')
+                log_warning(request_id, _logger, 'no data for last of implied_vol')
             else:
                 ids.union(getattr(df_l, 'dataset_ids', ()))
                 s_l = _extract_series_from_df(df_l, QueryType.IMPLIED_VOLATILITY)
@@ -656,7 +670,7 @@ def _check_top_n(top_n):
 @plot_measure((AssetClass.Equity,), (AssetType.Index, AssetType.ETF,), [QueryType.IMPLIED_CORRELATION])
 def implied_correlation(asset: Asset, tenor: str, strike_reference: EdrDataReference, relative_strike: Real,
                         top_n_of_index: Optional[int] = None, composition_date: Optional[GENERIC_DATE] = None, *,
-                        source: str = None, real_time: bool = False) -> Series:
+                        source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
     Correlation of an asset implied by observations of market prices.
 
@@ -669,6 +683,7 @@ def implied_correlation(asset: Asset, tenor: str, strike_reference: EdrDataRefer
         available
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: implied correlation curve
     """
     if real_time:
@@ -689,7 +704,8 @@ def implied_correlation(asset: Asset, tenor: str, strike_reference: EdrDataRefer
     delta_types = (EdrDataReference.DELTA_CALL, EdrDataReference.DELTA_PUT)
     strike_ref = "delta" if strike_reference in delta_types else strike_reference.value
 
-    _logger.debug('where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, strike_ref, relative_strike)
+    log_debug(request_id, _logger, 'where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, strike_ref,
+              relative_strike)
 
     mqid = asset.get_marquee_id()
     where = dict(tenor=tenor, strikeReference=strike_ref, relativeStrike=relative_strike)
@@ -697,7 +713,7 @@ def implied_correlation(asset: Asset, tenor: str, strike_reference: EdrDataRefer
     if top_n_of_index is None:
         q = GsDataApi.build_market_data_query([mqid], QueryType.IMPLIED_CORRELATION, where=where,
                                               source=source, real_time=real_time)
-        _logger.debug('q %s', q)
+        log_debug(request_id, _logger, 'q %s', q)
         df = _market_data_timed(q)
         return _extract_series_from_df(df, QueryType.IMPLIED_CORRELATION)
 
@@ -710,7 +726,7 @@ def implied_correlation(asset: Asset, tenor: str, strike_reference: EdrDataRefer
         source=source,
         real_time=real_time
     )
-    df = _market_data_timed(query)
+    df = _market_data_timed(query, request_id)
     df = df[['assetId', 'impliedVolatility']]
     full_index = pd.date_range(start=df.index.min(), end=df.index.max(), freq='D')
 
@@ -2773,34 +2789,23 @@ def realized_volatility(asset: Asset, w: Union[Window, int, str] = Window(None, 
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.ES_NUMERIC_SCORE])
-def esg_aggregate(asset: Asset, metric: EsgMetric, value_unit: Optional[EsgValueUnit] = None, *,
-                  source: str = None, real_time: bool = False) -> Series:
+def esg_headline_metric(asset: Asset, metricName: EsgMetric, *,
+                        source: str = None, real_time: bool = False) -> Series:
     """
-    Environmental, Social, and Governance (ESG) scores and percentiles for a broad set of companies across the globe.
+    Environmental, Social, and Governance (ESG) scores and percentiles for a broad set of companies across the globe,
+    including, but not limited to, companies covered by Global Investment Research (GIR) analysts.
     :param asset: asset object loaded from security master
-    :param metric: name of ESG metric
-    :param value_unit: the unit type of the metric value, one of percentile, score
+    :param metricName: Name of the metric
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
-    :return:
+    :return: esg data of the asset for the field requested
     """
-
     if real_time:
-        raise NotImplementedError('real-time esg-aggregate not implemented')
-
-    if metric != EsgMetric.ENVIRONMENTAL_SOCIAL_DISCLOSURE and value_unit is None:
-        raise MqValueError("value_unit is required for metric {m}".format(m=metric.value))
-
+        raise NotImplementedError('real-time esg_headline_metric not implemented')
     mqid = asset.get_marquee_id()
-    if metric == EsgMetric.ENVIRONMENTAL_SOCIAL_DISCLOSURE:
-        query_metric = inflection.camelize(metric.value, False)
-    else:
-        query_metric = "{metric}{unit}".format(metric=inflection.camelize(metric.value, False),
-                                               unit=value_unit.value.capitalize())
-
+    query_metric = inflection.camelize(metricName.value, False)
     query_type = ESG_METRIC_TO_QUERY_TYPE.get(query_metric)
-    _logger.debug('where assetId=%s, metric=%s, value_unit=%s, query_type=%s',
-                  mqid, metric.value, value_unit.value if value_unit is not None else None, query_type.value)
+    _logger.debug('where assetId=%s, metric=%s, query_type=%s', mqid, query_metric, query_type.value)
     q = GsDataApi.build_market_data_query([mqid], query_type, source=source, real_time=real_time)
     _logger.debug('q %s', q)
     df = _market_data_timed(q)

@@ -24,7 +24,7 @@ from gs_quant.context_base import ContextMeta
 from gs_quant.errors import MqValueError
 from gs_quant.markets import MarketDataCoordinate
 from gs_quant.session import GsSession, Environment
-from gs_quant.target.common import FieldFilterMap
+from gs_quant.target.assets import FieldFilterMap
 from gs_quant.target.coordinates import MDAPIDataQuery
 from gs_quant.target.data import MarketDataVendor, DataSetEntity, DataQuery
 

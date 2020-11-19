@@ -24,7 +24,8 @@ import cachetools
 import numpy
 import pandas as pd
 from cachetools import TTLCache
-from gs_quant.target.common import FieldFilterMap, MarketDataVendor, PricingLocation
+from gs_quant.target.assets import FieldFilterMap
+from gs_quant.target.common import MarketDataVendor, PricingLocation
 from gs_quant.target.coordinates import MDAPIDataBatchResponse, MDAPIDataQuery, MDAPIDataQueryResponse, MDAPIQueryField
 from gs_quant.target.data import DataQuery, DataQueryResponse
 from gs_quant.target.data import DataSetEntity
@@ -76,19 +77,21 @@ class QueryType(Enum):
     FORWARD_PRICE = "Forward Price"
     FAIR_PRICE = "Fair Price"
     SPOT = "Spot"
-    ES_NUMERIC_SCORE = "ES Numeric Score"
-    ES_NUMERIC_PERCENTILE = "ES Numeric Percentile"
-    ES_POLICY_SCORE = "ES Policy Score"
-    ES_POLICY_PERCENTILE = "ES Policy Percentile"
-    ES_SCORE = "ES Score"
-    ES_PERCENTILE = "ES Percentile"
+    ES_NUMERIC_SCORE = "Es Numeric Score"
+    ES_NUMERIC_PERCENTILE = "Es Numeric Percentile"
+    ES_POLICY_SCORE = "Es Policy Score"
+    ES_POLICY_PERCENTILE = "Es Policy Percentile"
+    ES_SCORE = "Es Score"
+    ES_PERCENTILE = "Es Percentile"
+    ES_PRODUCT_IMPACT_SCORE = "Es Product Impact Score"
+    ES_PRODUCT_IMPACT_PERCENTILE = "Es Product Impact Percentile"
     G_SCORE = "G Score"
     G_PERCENTILE = "G Percentile"
-    ES_MOMENTUM_SCORE = "ES Momentum Score"
-    ES_MOMENTUM_PERCENTILE = "ES Momentum Percentile"
+    ES_MOMENTUM_SCORE = "Es Momentum Score"
+    ES_MOMENTUM_PERCENTILE = "Es Momentum Percentile"
     G_REGIONAL_SCORE = "G Regional Score"
     G_REGIONAL_PERCENTILE = "G Regional Percentile"
-    ES_DISCLOSURE_PERCENTAGE = "ES Disclosure Percentage"
+    ES_DISCLOSURE_PERCENTAGE = "Es Disclosure Percentage"
     RATING = "Rating"
     CONVICTION_LIST = "Conviction List"
     FAIR_VALUE = "Fair Value"

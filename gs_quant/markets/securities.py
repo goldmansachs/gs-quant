@@ -24,6 +24,7 @@ from typing import Optional, Tuple, Union, Dict
 import cachetools
 import pandas as pd
 import pytz
+from pydash import get
 
 from gs_quant.api.gs.assets import GsAssetApi, GsAsset, AssetClass, AssetParameters, \
     AssetType as GsAssetType, PositionSet, Currency
@@ -880,9 +881,8 @@ class SecurityMaster:
         if asset_type in (GsAssetType.CommodityReferencePrice.value,):
             return CommodityReferencePrice(gs_asset.id, gs_asset.name, entity=asset_entity)
 
-        # disabled: this asset type would have to be added to target\common.py and the (Prod) Asset Service first!
-        # if asset_type in (GsAssetType.CommodityNaturalGasHub.value,):
-        #     return CommodityNaturalGasHub(gs_asset.id, gs_asset.name, entity=asset_entity)
+        if asset_type in (GsAssetType.CommodityNaturalGasHub.value,):
+            return CommodityNaturalGasHub(gs_asset.id, gs_asset.name, entity=asset_entity)
 
         if asset_type in (GsAssetType.CommodityPowerNode.value,):
             return CommodityPowerNode(gs_asset.id, gs_asset.name, entity=asset_entity)
@@ -983,9 +983,8 @@ class SecurityMaster:
             query['type'] = [t.value for t in cls.__asset_type_to_gs_types(asset_type)]
 
         if sort_by_rank:
-            results = GsAssetApi.get_many_assets(as_of=as_of, return_type=dict, **query)
-            results = sorted(results, key=lambda d: d.get('rank', 0), reverse=True)
-            result = next(iter(results), None)
+            results = GsAssetApi.get_many_assets(as_of=as_of, return_type=dict, order_by=['>rank'], **query)
+            result = get(results, '0')
 
             if result:
                 result = GsAsset.from_dict(result)

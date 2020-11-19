@@ -21,35 +21,6 @@ from enum import Enum
 from gs_quant.base import Base, EnumBase, InstrumentBase, camel_case_translate, get_enum_value
 
 
-class AssetProperties(EnumBase, Enum):    
-    
-    """Enum listing supported asset properties"""
-
-    assetClass = 'assetClass'
-    currency = 'currency'
-    createdTime = 'createdTime'
-    description = 'description'
-    exchange = 'exchange'
-    id = 'id'
-    liveDate = 'liveDate'
-    name = 'name'
-    underliers = 'underliers'
-    region = 'region'
-    shortName = 'shortName'
-    type = 'type'
-    xref_bbid = 'xref.bbid'
-    xref_bcid = 'xref.bcid'
-    xref_ticker = 'xref.ticker'
-    xref_ric = 'xref.ric'
-    date = 'date'
-    value = 'value'
-    slope = 'slope'
-    OIS_value = 'OIS value'
-    
-    def __repr__(self):
-        return self.value
-
-
 class AvailableUnitTypes(EnumBase, Enum):    
     
     """Enum listing supported unit types"""
@@ -1050,7 +1021,7 @@ class ColumnDefinition(Base):
         render: Union[ParameterRender, str],
         name: str,
         enable_cell_flashing: bool = None,
-        entity_property: Union[AssetProperties, str] = None,
+        entity_property: str = None,
         function: Function = None,
         format_: ColumnFormat = None,
         width: float = None,
@@ -1113,14 +1084,15 @@ class ColumnDefinition(Base):
         self.__render = get_enum_value(ParameterRender, value)        
 
     @property
-    def entity_property(self) -> Union[AssetProperties, str]:
-        """Property to fetch from an entity"""
+    def entity_property(self) -> str:
+        """Property to fetch from an entity like assetClass, id, xref.ric,
+           parameters.strike etc."""
         return self.__entity_property
 
     @entity_property.setter
-    def entity_property(self, value: Union[AssetProperties, str]):
+    def entity_property(self, value: str):
         self._property_changed('entity_property')
-        self.__entity_property = get_enum_value(AssetProperties, value)        
+        self.__entity_property = value        
 
     @property
     def function(self) -> Function:

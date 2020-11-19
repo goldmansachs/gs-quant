@@ -181,6 +181,7 @@ class Subdivision(Base):
 
     @property
     def owner_id(self) -> str:
+        """Marquee unique identifier"""
         return self.__owner_id
 
     @owner_id.setter
@@ -297,6 +298,7 @@ class Country(Base):
 
     @property
     def owner_id(self) -> str:
+        """Marquee unique identifier"""
         return self.__owner_id
 
     @owner_id.setter

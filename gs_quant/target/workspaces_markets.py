@@ -428,6 +428,43 @@ class ContainerComponentParameters(Base):
         self.__component_id = value        
 
 
+class DataGridComponentParameters(Base):
+        
+    """Parameters provided for a datagrid component."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        height: float,
+        tooltip: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.height = height
+        self.tooltip = tooltip
+        self.name = name
+
+    @property
+    def height(self) -> float:
+        """Used for restricting the height in pixels of the component on a workspace"""
+        return self.__height
+
+    @height.setter
+    def height(self, value: float):
+        self._property_changed('height')
+        self.__height = value        
+
+    @property
+    def tooltip(self) -> str:
+        """Tooltip that is displayed in an info icon next to the component title."""
+        return self.__tooltip
+
+    @tooltip.setter
+    def tooltip(self, value: str):
+        self._property_changed('tooltip')
+        self.__tooltip = value        
+
+
 class LegendItem(Base):
         
     """Parameters provided for a legend item"""

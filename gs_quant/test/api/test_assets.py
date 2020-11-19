@@ -17,12 +17,13 @@ under the License.
 import datetime as dt
 
 import dateutil.parser as dup
+import pytest
 import testfixtures
-from gs_quant.api.gs.assets import GsAssetApi, GsAsset, GsTemporalXRef
+from gs_quant.api.gs.assets import GsAssetApi, GsAsset, GsTemporalXRef, ENABLE_ASSET_CACHING
 from gs_quant.session import *
 from gs_quant.common import PositionType
-from gs_quant.target.assets import Position, PositionSet, EntityQuery
-from gs_quant.target.common import FieldFilterMap, XRef
+from gs_quant.target.assets import FieldFilterMap, Position, PositionSet, EntityQuery
+from gs_quant.target.common import XRef
 
 
 def test_get_asset(mocker):
@@ -43,7 +44,7 @@ def test_get_asset(mocker):
     assert response == mock_response
 
 
-def test_get_many_assets(mocker):
+def test_get_many_assets(mocker, monkeypatch):
     marquee_id_1 = 'MQA1234567890'
     marquee_id_2 = 'MQA4567890123'
 
@@ -73,9 +74,15 @@ def test_get_many_assets(mocker):
     mocker.patch.object(GsSession.current, '_post', return_value=mock_response)
 
     # run test
+    monkeypatch.delenv(ENABLE_ASSET_CACHING, raising=False)
     response = GsAssetApi.get_many_assets(id=[marquee_id_1, marquee_id_2], as_of=as_of)
-
     GsSession.current._post.assert_called_with('/assets/query', cls=GsAsset, payload=inputs)
+    assert response == expected_response
+
+    monkeypatch.setenv(ENABLE_ASSET_CACHING, 1)  # run 2x with cache on
+    response = GsAssetApi.get_many_assets(id=[marquee_id_1, marquee_id_2], as_of=as_of)
+    assert response == expected_response
+    response = GsAssetApi.get_many_assets(id=[marquee_id_1, marquee_id_2], as_of=as_of)
     assert response == expected_response
 
 
@@ -286,3 +293,7 @@ def test_get_asset_positions_data(mocker):
                                                      end_date=position_date_str))
 
     testfixtures.compare(response, expected_response)
+
+
+if __name__ == "__main__":
+    pytest.main(args=[__file__])
