@@ -384,7 +384,7 @@ class Portfolio(PriceableImpl):
             for idx, priceable in enumerate(portfolio.__priceables):
                 path = parent + PortfolioPath(idx) if parent is not None else PortfolioPath(idx)
                 if isinstance(priceable, Portfolio):
-                    stack.append((path, priceable))
+                    stack.insert(0, (path, priceable))
                 else:
                     paths += (path,)
 

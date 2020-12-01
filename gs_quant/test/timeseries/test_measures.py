@@ -40,7 +40,8 @@ from gs_quant.data.core import DataContext
 from gs_quant.data.dataset import Dataset
 from gs_quant.data.fields import Fields
 from gs_quant.errors import MqError, MqValueError, MqTypeError
-from gs_quant.markets.securities import AssetClass, Cross, Index, Currency, SecurityMaster, Stock, Swap
+from gs_quant.markets.securities import AssetClass, Cross, Index, Currency, SecurityMaster, Stock, \
+    Swap, CommodityNaturalGasHub
 from gs_quant.session import GsSession, Environment
 from gs_quant.test.timeseries.utils import mock_request
 from gs_quant.timeseries import Returns
@@ -579,6 +580,24 @@ def mock_forward_price(_cls, _q):
 def mock_fair_price(_cls, _q):
     d = {
         'fairPrice': [
+            2.880,
+            2.844,
+            2.726,
+        ],
+        'contract': [
+            "F21",
+            "G21",
+            "H21",
+        ]
+    }
+    df = MarketDataResponseFrame(data=d, index=pd.to_datetime([datetime.date(2019, 1, 2)] * 3))
+    df.dataset_ids = _test_datasets
+    return df
+
+
+def mock_natgas_forward_price(_cls, _q):
+    d = {
+        'forwardPrice': [
             2.880,
             2.844,
             2.726,
@@ -1515,8 +1534,6 @@ def test_swap_rate(mocker):
     args['asset'] = mock_usd
     xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
     xrefs.return_value = 'USD'
-    with pytest.raises(NotImplementedError):
-        tm_rates.swap_rate(..., '1y', real_time=True)
 
     args['swap_tenor'] = '5yr'
     with pytest.raises(MqValueError):
@@ -2672,6 +2689,7 @@ def test_bucketize_price():
 
 
 def test_forward_price():
+    # US Power
     target = {
         '7x24': [19.46101],
         'peak': [23.86745],
@@ -2829,8 +2847,39 @@ def test_forward_price():
                                       index=[datetime.date(2019, 1, 2)],
                                       name='price'),
                             pd.Series(actual))
-
         replace.restore()
+
+
+def test_natgas_forward_price():
+
+    replace = Replacer()
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_natgas_forward_price)
+    mock = CommodityNaturalGasHub('MA001', 'AGT')
+
+    with DataContext(datetime.date(2019, 1, 2), datetime.date(2019, 1, 2)):
+        actual = pd.Series(tm.forward_price(mock,
+                                            price_method='GDD',
+                                            contract_range='F21'))
+        expected = pd.Series([2.880], index=[datetime.date(2019, 1, 2)], name='price')
+        assert_series_equal(expected, actual)
+
+        actual = pd.Series(tm.forward_price(mock,
+                                            price_method='GDD',
+                                            contract_range='F21-G21'))
+        expected = pd.Series([2.8629152542372878], index=[datetime.date(2019, 1, 2)], name='price')
+        assert_series_equal(expected, actual)
+
+        with pytest.raises(ValueError):
+            tm.forward_price(mock,
+                             price_method='GDD',
+                             contract_range='F21-I21')
+
+        with pytest.raises(ValueError):
+            tm.forward_price(mock,
+                             price_method='GDD',
+                             contract_range='I21')
+
+    replace.restore()
 
 
 def test_get_iso_data():

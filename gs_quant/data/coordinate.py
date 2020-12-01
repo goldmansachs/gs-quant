@@ -128,7 +128,9 @@ class DataCoordinate(BaseDataCoordinate):
         return hash((self.dataset_id, self.measure, tuple(self.dimensions)))
 
     def __str__(self):
-        return f'Dataset Id: {self.dataset_id}, Measure: {self.measure.value} Dimensions: {json.dumps(self.dimensions)}'
+        return f'Dataset Id: ({self.dataset_id}) ' \
+               f'Measure: ({self.measure if isinstance(self.measure, str) else self.measure.value}) ' \
+               f'Dimensions: ({json.dumps(self.dimensions)})'
 
     def get_range(self,
                   start: Optional[DateOrDatetime] = None,

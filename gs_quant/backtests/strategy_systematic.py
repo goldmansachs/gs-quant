@@ -20,7 +20,7 @@ from typing import Iterable
 
 import gs_quant.target.backtests as backtests
 from gs_quant.api.gs.backtests import GsBacktestApi
-from gs_quant.backtests.core import Backtest, QuantityType, TradeInMethod
+from gs_quant.backtests.core import Backtest, QuantityType, TradeInMethod, MarketModel
 from gs_quant.errors import MqValueError
 from gs_quant.markets import PricingContext
 from gs_quant.target.backtests import *
@@ -30,7 +30,6 @@ _logger = logging.getLogger(__name__)
 
 BACKTEST_TYPE_NAME = 'VolatilityFlow'
 BACKTEST_TYPE_VALUE = 'Volatility Flow'
-EQ_MARKET_MODEL = 'SFK'
 ISO_FORMAT = r"^([0-9]{4})-([0-9]{2})-([0-9]{2})$"
 
 
@@ -50,13 +49,15 @@ class StrategySystematic:
                  cost_netting: bool = False,
                  currency: Union[Currency, str] = Currency.USD,
                  trade_in_signals: Tuple[BacktestSignalSeriesItem, ...] = None,
-                 trade_out_signals: Tuple[BacktestSignalSeriesItem, ...] = None):
+                 trade_out_signals: Tuple[BacktestSignalSeriesItem, ...] = None,
+                 market_model: Union[MarketModel, str] = MarketModel.STICKY_FIXED_STRIKE):
         self.__cost_netting = cost_netting
         self.__currency = get_enum_value(Currency, currency)
         self.__name = name
         self.__backtest_type = BACKTEST_TYPE_NAME
 
         trade_in_method = get_enum_value(TradeInMethod, trade_in_method).value
+        market_model = get_enum_value(MarketModel, market_model).value
 
         self.__trading_parameters = BacktestTradingParameters(
             quantity=quantity,
@@ -76,7 +77,7 @@ class StrategySystematic:
                 instrument=instrument,
                 notional_percentage=notional_percentage,
                 hedge=BacktestStrategyUnderlierHedge(risk_details=delta_hedge),
-                market_model=EQ_MARKET_MODEL))
+                market_model=market_model))
         else:
             for underlier in underliers:
                 if isinstance(underlier, tuple):
@@ -94,7 +95,7 @@ class StrategySystematic:
                     instrument=instrument,
                     notional_percentage=notional_percentage,
                     hedge=BacktestStrategyUnderlierHedge(risk_details=delta_hedge),
-                    market_model=EQ_MARKET_MODEL))
+                    market_model=market_model))
 
         backtest_parameters_class: Base = getattr(backtests, self.__backtest_type + 'BacktestParameters')
         backtest_parameter_args = {

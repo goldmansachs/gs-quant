@@ -296,6 +296,7 @@ class DataSetParameters(Base):
         coverage_enabled: bool = True,
         use_created_time_for_upload: bool = None,
         apply_entity_entitlements: bool = None,
+        development_status: str = None,
         name: str = None
     ):        
         super().__init__()
@@ -320,6 +321,7 @@ class DataSetParameters(Base):
         self.coverage_enabled = coverage_enabled
         self.use_created_time_for_upload = use_created_time_for_upload
         self.apply_entity_entitlements = apply_entity_entitlements
+        self.development_status = development_status
         self.name = name
 
     @property
@@ -536,6 +538,16 @@ class DataSetParameters(Base):
         self._property_changed('apply_entity_entitlements')
         self.__apply_entity_entitlements = value        
 
+    @property
+    def development_status(self) -> str:
+        """The status of development of this dataset. Controls rate limit on query/upload."""
+        return self.__development_status
+
+    @development_status.setter
+    def development_status(self, value: str):
+        self._property_changed('development_status')
+        self.__development_status = value        
+
 
 class FieldFilterMapDataQuery(Base):
         
@@ -548,7 +560,9 @@ class FieldFilterMapDataQuery(Base):
         self.investment_rate = kwargs.get('investment_rate')
         self.starting_emma_legal_entity_id = kwargs.get('starting_emma_legal_entity_id')
         self.mdapi_class = kwargs.get('mdapi_class')
+        self.total_notional_usd = kwargs.get('total_notional_usd')
         self.bid_unadjusted = kwargs.get('bid_unadjusted')
+        self.aggressive_fills_percentage = kwargs.get('aggressive_fills_percentage')
         self.vehicle_type = kwargs.get('vehicle_type')
         self.total_fatalities_by_state = kwargs.get('total_fatalities_by_state')
         self.new_active = kwargs.get('new_active')
@@ -558,6 +572,7 @@ class FieldFilterMapDataQuery(Base):
         self.sentiment_score = kwargs.get('sentiment_score')
         self.correlation = kwargs.get('correlation')
         self.exposure = kwargs.get('exposure')
+        self.size = kwargs.get('size')
         self.market_data_asset = kwargs.get('market_data_asset')
         self.buy75cents = kwargs.get('buy75cents')
         self.unadjusted_high = kwargs.get('unadjusted_high')
@@ -614,13 +629,16 @@ class FieldFilterMapDataQuery(Base):
         self.solar_generation = kwargs.get('solar_generation')
         self.mtm_price = kwargs.get('mtm_price')
         self.swap_spread_change = kwargs.get('swap_spread_change')
+        self.realized_arrival_performance_usd = kwargs.get('realized_arrival_performance_usd')
         self.portfolio_assets = kwargs.get('portfolio_assets')
+        self.pricingdate = kwargs.get('pricingdate')
         self.tcm_cost_horizon3_hour = kwargs.get('tcm_cost_horizon3_hour')
         self.exchange_rate = kwargs.get('exchange_rate')
         self.potential_bed_cap_inc = kwargs.get('potential_bed_cap_inc')
         self.number_covered = kwargs.get('number_covered')
         self.number_of_positions = kwargs.get('number_of_positions')
         self.open_unadjusted = kwargs.get('open_unadjusted')
+        self.strike_time = kwargs.get('strike_time')
         self.ask_price = kwargs.get('ask_price')
         self.event_id = kwargs.get('event_id')
         self.sectors = kwargs.get('sectors')
@@ -639,6 +657,7 @@ class FieldFilterMapDataQuery(Base):
         self.cleared = kwargs.get('cleared')
         self.prime_id_numeric = kwargs.get('prime_id_numeric')
         self.buy8bps = kwargs.get('buy8bps')
+        self.total_notional_local = kwargs.get('total_notional_local')
         self.cid = kwargs.get('cid')
         self.total_confirmed_senior_home = kwargs.get('total_confirmed_senior_home')
         self.ctd_fwd_price = kwargs.get('ctd_fwd_price')
@@ -649,6 +668,7 @@ class FieldFilterMapDataQuery(Base):
         self.buy50cents = kwargs.get('buy50cents')
         self.sell4bps = kwargs.get('sell4bps')
         self.receiver_day_count_fraction = kwargs.get('receiver_day_count_fraction')
+        self.auction_close_percentage = kwargs.get('auction_close_percentage')
         self.target_price = kwargs.get('target_price')
         self.bos_in_bps_description = kwargs.get('bos_in_bps_description')
         self.low_price = kwargs.get('low_price')
@@ -758,6 +778,7 @@ class FieldFilterMapDataQuery(Base):
         self.residual_variance = kwargs.get('residual_variance')
         self.restrict_internal_derived_data = kwargs.get('restrict_internal_derived_data')
         self.adv5_day_pct = kwargs.get('adv5_day_pct')
+        self.midpoint_fills_percentage = kwargs.get('midpoint_fills_percentage')
         self.open_interest = kwargs.get('open_interest')
         self.turnover_composite_unadjusted = kwargs.get('turnover_composite_unadjusted')
         self.fwd_points = kwargs.get('fwd_points')
@@ -806,6 +827,7 @@ class FieldFilterMapDataQuery(Base):
         self.memory_used = kwargs.get('memory_used')
         self.bpe_quality_stars = kwargs.get('bpe_quality_stars')
         self.ctd = kwargs.get('ctd')
+        self.intended_participation_rate = kwargs.get('intended_participation_rate')
         self.leg1_payment_type = kwargs.get('leg1_payment_type')
         self.trading_pnl = kwargs.get('trading_pnl')
         self.collateral_value_required = kwargs.get('collateral_value_required')
@@ -906,6 +928,7 @@ class FieldFilterMapDataQuery(Base):
         self.taxonomy = kwargs.get('taxonomy')
         self.buy45cents = kwargs.get('buy45cents')
         self.measures = kwargs.get('measures')
+        self.seasonal_adjustment = kwargs.get('seasonal_adjustment')
         self.rank_wtd = kwargs.get('rank_wtd')
         self.underlyer = kwargs.get('underlyer')
         self.identifier = kwargs.get('identifier')
@@ -950,6 +973,7 @@ class FieldFilterMapDataQuery(Base):
         self.future_month_q21 = kwargs.get('future_month_q21')
         self.price_spot_stop_loss_unit = kwargs.get('price_spot_stop_loss_unit')
         self.price_range_in_ticks_description = kwargs.get('price_range_in_ticks_description')
+        self.trade_volume = kwargs.get('trade_volume')
         self.primary_country_ric = kwargs.get('primary_country_ric')
         self.option_expiration_frequency = kwargs.get('option_expiration_frequency')
         self.is_active = kwargs.get('is_active')
@@ -971,6 +995,7 @@ class FieldFilterMapDataQuery(Base):
         self.sustain_japan = kwargs.get('sustain_japan')
         self.history_start_date = kwargs.get('history_start_date')
         self.bid_spread = kwargs.get('bid_spread')
+        self.percentage_complete = kwargs.get('percentage_complete')
         self.hedge_tracking_error = kwargs.get('hedge_tracking_error')
         self.wind_speed_type = kwargs.get('wind_speed_type')
         self.strike_price = kwargs.get('strike_price')
@@ -1028,6 +1053,7 @@ class FieldFilterMapDataQuery(Base):
         self.domain = kwargs.get('domain')
         self.buy80cents = kwargs.get('buy80cents')
         self.forward_tenor = kwargs.get('forward_tenor')
+        self.average_price = kwargs.get('average_price')
         self.target_price_realized_bps = kwargs.get('target_price_realized_bps')
         self.leg2_fixed_rate = kwargs.get('leg2_fixed_rate')
         self.share_class_assets = kwargs.get('share_class_assets')
@@ -1059,9 +1085,11 @@ class FieldFilterMapDataQuery(Base):
         self.quarter = kwargs.get('quarter')
         self.sell18bps = kwargs.get('sell18bps')
         self.asset_parameters_floating_rate_option = kwargs.get('asset_parameters_floating_rate_option')
+        self.realized_vwap_performance_bps = kwargs.get('realized_vwap_performance_bps')
         self.vote_share = kwargs.get('vote_share')
         self.servicing_cost_short_pnl = kwargs.get('servicing_cost_short_pnl')
         self.total_confirmed = kwargs.get('total_confirmed')
+        self.economic_forecast = kwargs.get('economic_forecast')
         self.plot_id = kwargs.get('plot_id')
         self.cluster_description = kwargs.get('cluster_description')
         self.concentration_limit = kwargs.get('concentration_limit')
@@ -1076,6 +1104,7 @@ class FieldFilterMapDataQuery(Base):
         self.data_type = kwargs.get('data_type')
         self.count = kwargs.get('count')
         self.conviction = kwargs.get('conviction')
+        self.rfqstate = kwargs.get('rfqstate')
         self.benchmark_maturity = kwargs.get('benchmark_maturity')
         self.gross_flow_normalized = kwargs.get('gross_flow_normalized')
         self.buy14bps = kwargs.get('buy14bps')
@@ -1111,6 +1140,7 @@ class FieldFilterMapDataQuery(Base):
         self.dist_avg7_day = kwargs.get('dist_avg7_day')
         self.in_risk_model = kwargs.get('in_risk_model')
         self.daily_net_shareholder_flows_percent = kwargs.get('daily_net_shareholder_flows_percent')
+        self.filled_notional_local = kwargs.get('filled_notional_local')
         self.ever_hospitalized = kwargs.get('ever_hospitalized')
         self.meeting_number = kwargs.get('meeting_number')
         self.mid_gspread = kwargs.get('mid_gspread')
@@ -1179,6 +1209,8 @@ class FieldFilterMapDataQuery(Base):
         self.notional_amount = kwargs.get('notional_amount')
         self.pay_or_receive = kwargs.get('pay_or_receive')
         self.total_severe = kwargs.get('total_severe')
+        self.unexecuted_notional_usd = kwargs.get('unexecuted_notional_usd')
+        self.expected_residual_percentage = kwargs.get('expected_residual_percentage')
         self.maturity_date = kwargs.get('maturity_date')
         self.trace_adv_sell = kwargs.get('trace_adv_sell')
         self.event_name = kwargs.get('event_name')
@@ -1193,6 +1225,7 @@ class FieldFilterMapDataQuery(Base):
         self.ois_xccy_ex_spike = kwargs.get('ois_xccy_ex_spike')
         self.total_risk = kwargs.get('total_risk')
         self.mnav = kwargs.get('mnav')
+        self.market_volume = kwargs.get('market_volume')
         self.swap_annuity = kwargs.get('swap_annuity')
         self.par_asset_swap_spread = kwargs.get('par_asset_swap_spread')
         self.curr_yield7_day = kwargs.get('curr_yield7_day')
@@ -1214,6 +1247,7 @@ class FieldFilterMapDataQuery(Base):
         self.leg2_type = kwargs.get('leg2_type')
         self.mkt_point4 = kwargs.get('mkt_point4')
         self.degree_days_type = kwargs.get('degree_days_type')
+        self.sentiment = kwargs.get('sentiment')
         self.investment_income = kwargs.get('investment_income')
         self.group_type = kwargs.get('group_type')
         self.forward_point_imm = kwargs.get('forward_point_imm')
@@ -1233,6 +1267,7 @@ class FieldFilterMapDataQuery(Base):
         self.long_exposure = kwargs.get('long_exposure')
         self.sell4point5bps = kwargs.get('sell4point5bps')
         self.tcm_cost_participation_rate20_pct = kwargs.get('tcm_cost_participation_rate20_pct')
+        self.venue_type = kwargs.get('venue_type')
         self.multi_asset_class_swap = kwargs.get('multi_asset_class_swap')
         self.delta_change_id = kwargs.get('delta_change_id')
         self.implementation_id = kwargs.get('implementation_id')
@@ -1245,6 +1280,7 @@ class FieldFilterMapDataQuery(Base):
         self.ctd_asset_id = kwargs.get('ctd_asset_id')
         self.buy10bps = kwargs.get('buy10bps')
         self.precipitation = kwargs.get('precipitation')
+        self.value_type = kwargs.get('value_type')
         self.beta_adjusted_net_exposure = kwargs.get('beta_adjusted_net_exposure')
         self.estimated_rod_volume = kwargs.get('estimated_rod_volume')
         self.sell14bps = kwargs.get('sell14bps')
@@ -1283,6 +1319,7 @@ class FieldFilterMapDataQuery(Base):
         self.percentage_expected_residual = kwargs.get('percentage_expected_residual')
         self.hospital_name = kwargs.get('hospital_name')
         self.buy90cents = kwargs.get('buy90cents')
+        self.period_type = kwargs.get('period_type')
         self.asset_classifications_country_name = kwargs.get('asset_classifications_country_name')
         self.total_hospitalized = kwargs.get('total_hospitalized')
         self.pegged_refill_interval = kwargs.get('pegged_refill_interval')
@@ -1299,6 +1336,7 @@ class FieldFilterMapDataQuery(Base):
         self.buy70cents = kwargs.get('buy70cents')
         self.strike_reference = kwargs.get('strike_reference')
         self.asset_count = kwargs.get('asset_count')
+        self.is_order_in_limit = kwargs.get('is_order_in_limit')
         self.fundamental_metric = kwargs.get('fundamental_metric')
         self.quote_status_id = kwargs.get('quote_status_id')
         self.absolute_value = kwargs.get('absolute_value')
@@ -1401,6 +1439,7 @@ class FieldFilterMapDataQuery(Base):
         self.twap_unrealized_cash = kwargs.get('twap_unrealized_cash')
         self.sts_credit_market = kwargs.get('sts_credit_market')
         self.ons_code = kwargs.get('ons_code')
+        self.passive_touch_fills_percentage = kwargs.get('passive_touch_fills_percentage')
         self.seniority = kwargs.get('seniority')
         self.leg1_index = kwargs.get('leg1_index')
         self.high_unadjusted = kwargs.get('high_unadjusted')
@@ -1411,6 +1450,7 @@ class FieldFilterMapDataQuery(Base):
         self.price_to_cash = kwargs.get('price_to_cash')
         self.buy10cents = kwargs.get('buy10cents')
         self.nav_spread = kwargs.get('nav_spread')
+        self.venue_mic = kwargs.get('venue_mic')
         self.dollar_total_return = kwargs.get('dollar_total_return')
         self.block_unit = kwargs.get('block_unit')
         self.mid_spread = kwargs.get('mid_spread')
@@ -1427,6 +1467,7 @@ class FieldFilterMapDataQuery(Base):
         self.cal_spread_mis_pricing = kwargs.get('cal_spread_mis_pricing')
         self.total_tested_negative = kwargs.get('total_tested_negative')
         self.rate366 = kwargs.get('rate366')
+        self.platform = kwargs.get('platform')
         self.rate365 = kwargs.get('rate365')
         self.fixed_rate_frequency = kwargs.get('fixed_rate_frequency')
         self.rate360 = kwargs.get('rate360')
@@ -1465,6 +1506,7 @@ class FieldFilterMapDataQuery(Base):
         self.num_beds = kwargs.get('num_beds')
         self.sell20bps = kwargs.get('sell20bps')
         self.client_type = kwargs.get('client_type')
+        self.percentage_close_executed_quantity = kwargs.get('percentage_close_executed_quantity')
         self.macaulay_duration = kwargs.get('macaulay_duration')
         self.available_inventory = kwargs.get('available_inventory')
         self.est1_day_complete_pct = kwargs.get('est1_day_complete_pct')
@@ -1483,6 +1525,7 @@ class FieldFilterMapDataQuery(Base):
         self.policy_rate_expectation = kwargs.get('policy_rate_expectation')
         self.upload_date = kwargs.get('upload_date')
         self.block_off_facility = kwargs.get('block_off_facility')
+        self.unrealized_vwap_performance_usd = kwargs.get('unrealized_vwap_performance_usd')
         self.pace_of_rollp75 = kwargs.get('pace_of_rollp75')
         self.earnings_per_share_positive = kwargs.get('earnings_per_share_positive')
         self.num_icu_beds = kwargs.get('num_icu_beds')
@@ -1493,6 +1536,7 @@ class FieldFilterMapDataQuery(Base):
         self.assessed_test_measure = kwargs.get('assessed_test_measure')
         self.mkt_quoting_style = kwargs.get('mkt_quoting_style')
         self.expiration_tenor = kwargs.get('expiration_tenor')
+        self.price_limit = kwargs.get('price_limit')
         self.market_model_id = kwargs.get('market_model_id')
         self.receiver_frequency = kwargs.get('receiver_frequency')
         self.realized_correlation = kwargs.get('realized_correlation')
@@ -1503,6 +1547,7 @@ class FieldFilterMapDataQuery(Base):
         self.close = kwargs.get('close')
         self.es_product_impact_score = kwargs.get('es_product_impact_score')
         self.equity_vega = kwargs.get('equity_vega')
+        self.executed_fill_quantity = kwargs.get('executed_fill_quantity')
         self.lender_payment = kwargs.get('lender_payment')
         self.five_day_move = kwargs.get('five_day_move')
         self.value_format = kwargs.get('value_format')
@@ -1510,6 +1555,7 @@ class FieldFilterMapDataQuery(Base):
         self.target_notional = kwargs.get('target_notional')
         self.fill_leg_id = kwargs.get('fill_leg_id')
         self.rationale = kwargs.get('rationale')
+        self.realized_twap_performance_bps = kwargs.get('realized_twap_performance_bps')
         self.last_updated_since = kwargs.get('last_updated_since')
         self.total_tests = kwargs.get('total_tests')
         self.equities_contribution = kwargs.get('equities_contribution')
@@ -1518,6 +1564,7 @@ class FieldFilterMapDataQuery(Base):
         self.notes = kwargs.get('notes')
         self.total_probable_senior_home = kwargs.get('total_probable_senior_home')
         self.event_category = kwargs.get('event_category')
+        self.average_fill_rate = kwargs.get('average_fill_rate')
         self.unadjusted_open = kwargs.get('unadjusted_open')
         self.criticality = kwargs.get('criticality')
         self.bid_ask_spread = kwargs.get('bid_ask_spread')
@@ -1525,6 +1572,7 @@ class FieldFilterMapDataQuery(Base):
         self.option_type = kwargs.get('option_type')
         self.termination_date = kwargs.get('termination_date')
         self.queries_per_second = kwargs.get('queries_per_second')
+        self.liquidity_type = kwargs.get('liquidity_type')
         self.credit_limit = kwargs.get('credit_limit')
         self.rank_qtd = kwargs.get('rank_qtd')
         self.combined_key = kwargs.get('combined_key')
@@ -1564,6 +1612,7 @@ class FieldFilterMapDataQuery(Base):
         self.hit_rate_wtd = kwargs.get('hit_rate_wtd')
         self.previous_close_realized_cash = kwargs.get('previous_close_realized_cash')
         self.realized_volatility = kwargs.get('realized_volatility')
+        self.unexecuted_quantity = kwargs.get('unexecuted_quantity')
         self.proceeds_asset_swap_spread1m = kwargs.get('proceeds_asset_swap_spread1m')
         self.clone_parent_id = kwargs.get('clone_parent_id')
         self.wind_speed_hourly_forecast = kwargs.get('wind_speed_hourly_forecast')
@@ -1598,6 +1647,7 @@ class FieldFilterMapDataQuery(Base):
         self.payoff_ytd = kwargs.get('payoff_ytd')
         self.market_impact = kwargs.get('market_impact')
         self.event_type = kwargs.get('event_type')
+        self.fill_price = kwargs.get('fill_price')
         self.asset_count_long = kwargs.get('asset_count_long')
         self.sell180cents = kwargs.get('sell180cents')
         self.spot = kwargs.get('spot')
@@ -1607,6 +1657,7 @@ class FieldFilterMapDataQuery(Base):
         self.trading_restriction = kwargs.get('trading_restriction')
         self.asset_parameters_pay_or_receive = kwargs.get('asset_parameters_pay_or_receive')
         self.price_spot_entry_unit = kwargs.get('price_spot_entry_unit')
+        self.unrealized_arrival_performance_bps = kwargs.get('unrealized_arrival_performance_bps')
         self.city = kwargs.get('city')
         self.pnl_wtd = kwargs.get('pnl_wtd')
         self.covariance = kwargs.get('covariance')
@@ -1622,12 +1673,14 @@ class FieldFilterMapDataQuery(Base):
         self.fatalities_underlying_conditions_present = kwargs.get('fatalities_underlying_conditions_present')
         self.price_range_in_ticks = kwargs.get('price_range_in_ticks')
         self.pace_of_rollp25 = kwargs.get('pace_of_rollp25')
+        self.day_close_realized_usd = kwargs.get('day_close_realized_usd')
         self.pct_change = kwargs.get('pct_change')
         self.brightness_type = kwargs.get('brightness_type')
         self.future_month3_m = kwargs.get('future_month3_m')
         self.number_of_rolls = kwargs.get('number_of_rolls')
         self.iso_country_code_numeric = kwargs.get('iso_country_code_numeric')
         self.price_type = kwargs.get('price_type')
+        self.realized_vwap_performance_usd = kwargs.get('realized_vwap_performance_usd')
         self.fuel_type = kwargs.get('fuel_type')
         self.bbid = kwargs.get('bbid')
         self.vega_notional_amount = kwargs.get('vega_notional_amount')
@@ -1659,6 +1712,7 @@ class FieldFilterMapDataQuery(Base):
         self.leg2_designated_maturity = kwargs.get('leg2_designated_maturity')
         self.matched_maturity_ois_swap_rate = kwargs.get('matched_maturity_ois_swap_rate')
         self.fair_price = kwargs.get('fair_price')
+        self.participation_rate_in_limit = kwargs.get('participation_rate_in_limit')
         self.ext_mkt_class = kwargs.get('ext_mkt_class')
         self.price_currency = kwargs.get('price_currency')
         self.failed_count = kwargs.get('failed_count')
@@ -1697,6 +1751,7 @@ class FieldFilterMapDataQuery(Base):
         self.sell130cents = kwargs.get('sell130cents')
         self.sell32bps = kwargs.get('sell32bps')
         self.pace_of_rollp50 = kwargs.get('pace_of_rollp50')
+        self.price_move_vs_arrival = kwargs.get('price_move_vs_arrival')
         self.strike_relative = kwargs.get('strike_relative')
         self.pressure_type = kwargs.get('pressure_type')
         self.buy40bps = kwargs.get('buy40bps')
@@ -1718,6 +1773,7 @@ class FieldFilterMapDataQuery(Base):
         self.unadjusted_ask = kwargs.get('unadjusted_ask')
         self.contribution_name = kwargs.get('contribution_name')
         self.given_plus_paid = kwargs.get('given_plus_paid')
+        self.last_fill_price = kwargs.get('last_fill_price')
         self.short_conviction_small = kwargs.get('short_conviction_small')
         self.upfront_payment_currency = kwargs.get('upfront_payment_currency')
         self.spot_settlement_date = kwargs.get('spot_settlement_date')
@@ -1745,6 +1801,7 @@ class FieldFilterMapDataQuery(Base):
         self.price_notation3_type = kwargs.get('price_notation3_type')
         self.asset_parameters_floating_rate_designated_maturity = kwargs.get(
             'asset_parameters_floating_rate_designated_maturity')
+        self.executed_notional_local = kwargs.get('executed_notional_local')
         self.business_sponsor = kwargs.get('business_sponsor')
         self.unexplained = kwargs.get('unexplained')
         self.seasonal_adjustment_short = kwargs.get('seasonal_adjustment_short')
@@ -1764,11 +1821,13 @@ class FieldFilterMapDataQuery(Base):
         self.coverage_region = kwargs.get('coverage_region')
         self.absolute_return_ytd = kwargs.get('absolute_return_ytd')
         self.day_count_convention2 = kwargs.get('day_count_convention2')
+        self.fwdtier = kwargs.get('fwdtier')
         self.degree_days = kwargs.get('degree_days')
         self.turnover_adjusted = kwargs.get('turnover_adjusted')
         self.price_spot_target_value = kwargs.get('price_spot_target_value')
         self.market_data_point = kwargs.get('market_data_point')
         self.num_of_funds = kwargs.get('num_of_funds')
+        self.execution_id = kwargs.get('execution_id')
         self.turnover_unadjusted = kwargs.get('turnover_unadjusted')
         self.leg1_floating_index = kwargs.get('leg1_floating_index')
         self.hedge_annualized_volatility = kwargs.get('hedge_annualized_volatility')
@@ -1799,6 +1858,7 @@ class FieldFilterMapDataQuery(Base):
         self.relative_hit_rate_qtd = kwargs.get('relative_hit_rate_qtd')
         self.wam = kwargs.get('wam')
         self.wal = kwargs.get('wal')
+        self.quantityccy = kwargs.get('quantityccy')
         self.backtest_id = kwargs.get('backtest_id')
         self.dirty_price = kwargs.get('dirty_price')
         self.corporate_spread_contribution = kwargs.get('corporate_spread_contribution')
@@ -1815,6 +1875,7 @@ class FieldFilterMapDataQuery(Base):
         self.normalized_performance = kwargs.get('normalized_performance')
         self.bytes_consumed = kwargs.get('bytes_consumed')
         self.swaption_vol = kwargs.get('swaption_vol')
+        self.estimated_closing_volume = kwargs.get('estimated_closing_volume')
         self.issuer = kwargs.get('issuer')
         self.dividend_yield = kwargs.get('dividend_yield')
         self.market_type = kwargs.get('market_type')
@@ -1830,6 +1891,7 @@ class FieldFilterMapDataQuery(Base):
         self.sedol = kwargs.get('sedol')
         self.rounding_cost_pnl = kwargs.get('rounding_cost_pnl')
         self.mid_yield = kwargs.get('mid_yield')
+        self.unexecuted_notional_local = kwargs.get('unexecuted_notional_local')
         self.sustain_global = kwargs.get('sustain_global')
         self.ending_date = kwargs.get('ending_date')
         self.proceeds_asset_swap_spread12m = kwargs.get('proceeds_asset_swap_spread12m')
@@ -1864,6 +1926,7 @@ class FieldFilterMapDataQuery(Base):
         self.cloud_cover_forecast = kwargs.get('cloud_cover_forecast')
         self.tcm_cost_participation_rate5_pct = kwargs.get('tcm_cost_participation_rate5_pct')
         self.default_backcast = kwargs.get('default_backcast')
+        self.news_on_intensity = kwargs.get('news_on_intensity')
         self.price_forming_continuation_data = kwargs.get('price_forming_continuation_data')
         self.adjusted_short_interest = kwargs.get('adjusted_short_interest')
         self.new_hospitalized = kwargs.get('new_hospitalized')
@@ -1888,6 +1951,7 @@ class FieldFilterMapDataQuery(Base):
         self.asset_count_in_model = kwargs.get('asset_count_in_model')
         self.sts_credit_region = kwargs.get('sts_credit_region')
         self.min_temperature = kwargs.get('min_temperature')
+        self.fill_type = kwargs.get('fill_type')
         self.fail_pct = kwargs.get('fail_pct')
         self.iso_country_code_alpha2 = kwargs.get('iso_country_code_alpha2')
         self.iso_country_code_alpha3 = kwargs.get('iso_country_code_alpha3')
@@ -1905,6 +1969,8 @@ class FieldFilterMapDataQuery(Base):
         self.g10_currency = kwargs.get('g10_currency')
         self.humidity_forecast = kwargs.get('humidity_forecast')
         self.relative_period = kwargs.get('relative_period')
+        self.user = kwargs.get('user')
+        self.customer = kwargs.get('customer')
         self.leg1_reset_frequency = kwargs.get('leg1_reset_frequency')
         self.queue_clock_time_label = kwargs.get('queue_clock_time_label')
         self.pace_of_rollp100 = kwargs.get('pace_of_rollp100')
@@ -1912,10 +1978,12 @@ class FieldFilterMapDataQuery(Base):
         self.dew_point_hourly_forecast = kwargs.get('dew_point_hourly_forecast')
         self.location_type = kwargs.get('location_type')
         self.facet_divisional_reporting_group_id = kwargs.get('facet_divisional_reporting_group_id')
+        self.realized_twap_performance_usd = kwargs.get('realized_twap_performance_usd')
         self.swap_rate = kwargs.get('swap_rate')
         self.algo_execution_style = kwargs.get('algo_execution_style')
         self.client_contact = kwargs.get('client_contact')
         self.min_temperature_hour = kwargs.get('min_temperature_hour')
+        self.trading_currency = kwargs.get('trading_currency')
         self.total_by_onset = kwargs.get('total_by_onset')
         self.agency_swap_spread = kwargs.get('agency_swap_spread')
         self.rank = kwargs.get('rank')
@@ -1938,11 +2006,13 @@ class FieldFilterMapDataQuery(Base):
         self.sell45cents = kwargs.get('sell45cents')
         self.gs_sustain_sub_sector = kwargs.get('gs_sustain_sub_sector')
         self.sinkable = kwargs.get('sinkable')
+        self.is_real = kwargs.get('is_real')
         self.max_temperature_hour = kwargs.get('max_temperature_hour')
         self.leg2_averaging_method = kwargs.get('leg2_averaging_method')
         self.jsn = kwargs.get('jsn')
         self.sell160cents = kwargs.get('sell160cents')
         self.knock_in_direction = kwargs.get('knock_in_direction')
+        self.day_close_unrealized_usd = kwargs.get('day_close_unrealized_usd')
         self.tenor = kwargs.get('tenor')
         self.pricing_convention = kwargs.get('pricing_convention')
         self.popularity = kwargs.get('popularity')
@@ -1966,6 +2036,7 @@ class FieldFilterMapDataQuery(Base):
         self.transaction_cost = kwargs.get('transaction_cost')
         self.central_bank_swap_rate = kwargs.get('central_bank_swap_rate')
         self.previous_new_confirmed = kwargs.get('previous_new_confirmed')
+        self.unrealized_vwap_performance_bps = kwargs.get('unrealized_vwap_performance_bps')
         self.degree_days_daily_forecast = kwargs.get('degree_days_daily_forecast')
         self.position_amount = kwargs.get('position_amount')
         self.heat_index_hourly_forecast = kwargs.get('heat_index_hourly_forecast')
@@ -2018,6 +2089,7 @@ class FieldFilterMapDataQuery(Base):
         self.excess_margin_percentage = kwargs.get('excess_margin_percentage')
         self.future_month_g21 = kwargs.get('future_month_g21')
         self.total_mild = kwargs.get('total_mild')
+        self.realized_arrival_performance_bps = kwargs.get('realized_arrival_performance_bps')
         self.precipitation_daily_forecast_inches = kwargs.get('precipitation_daily_forecast_inches')
         self.exchange_id = kwargs.get('exchange_id')
         self.leg2_fixed_payment = kwargs.get('leg2_fixed_payment')
@@ -2030,16 +2102,20 @@ class FieldFilterMapDataQuery(Base):
         self.percentage_near_executed_quantity = kwargs.get('percentage_near_executed_quantity')
         self.order_id = kwargs.get('order_id')
         self.hospital_type = kwargs.get('hospital_type')
+        self.day_close_realized_bps = kwargs.get('day_close_realized_bps')
         self.precipitation_hourly_forecast = kwargs.get('precipitation_hourly_forecast')
         self.market_cap_usd = kwargs.get('market_cap_usd')
+        self.auction_fills_percentage = kwargs.get('auction_fills_percentage')
         self.high_price = kwargs.get('high_price')
         self.absolute_shares = kwargs.get('absolute_shares')
         self.fixed_rate_day_count_fraction = kwargs.get('fixed_rate_day_count_fraction')
         self.model = kwargs.get('model')
+        self.unrealized_twap_performance_usd = kwargs.get('unrealized_twap_performance_usd')
         self.__id = kwargs.get('id_')
         self.maturity = kwargs.get('maturity')
         self.delta_change = kwargs.get('delta_change')
         self.index = kwargs.get('index')
+        self.unrealized_arrival_performance_usd = kwargs.get('unrealized_arrival_performance_usd')
         self.iceberg_slippage = kwargs.get('iceberg_slippage')
         self.sell120cents = kwargs.get('sell120cents')
         self.future_month_x26 = kwargs.get('future_month_x26')
@@ -2074,6 +2150,7 @@ class FieldFilterMapDataQuery(Base):
         self.feature3 = kwargs.get('feature3')
         self.sts_commodity_sector = kwargs.get('sts_commodity_sector')
         self.exception_status = kwargs.get('exception_status')
+        self.overnight_news_intensity = kwargs.get('overnight_news_intensity')
         self.sales_coverage = kwargs.get('sales_coverage')
         self.feature1 = kwargs.get('feature1')
         self.tcm_cost_participation_rate10_pct = kwargs.get('tcm_cost_participation_rate10_pct')
@@ -2124,6 +2201,7 @@ class FieldFilterMapDataQuery(Base):
         self.portfolio_managers = kwargs.get('portfolio_managers')
         self.bos_in_ticks = kwargs.get('bos_in_ticks')
         self.asset_parameters_coupon_type = kwargs.get('asset_parameters_coupon_type')
+        self.expected_residual_quantity = kwargs.get('expected_residual_quantity')
         self.roll_date = kwargs.get('roll_date')
         self.dynamic_hybrid_speed = kwargs.get('dynamic_hybrid_speed')
         self.cap_floor_vol = kwargs.get('cap_floor_vol')
@@ -2132,12 +2210,14 @@ class FieldFilterMapDataQuery(Base):
         self.no = kwargs.get('no')
         self.notional = kwargs.get('notional')
         self.es_disclosure_percentage = kwargs.get('es_disclosure_percentage')
+        self.close_executed_quantity_percentage = kwargs.get('close_executed_quantity_percentage')
         self.twap_realized_cash = kwargs.get('twap_realized_cash')
         self.is_open_auction = kwargs.get('is_open_auction')
         self.leg1_type = kwargs.get('leg1_type')
         self.wet_bulb_temp_hourly_forecast = kwargs.get('wet_bulb_temp_hourly_forecast')
         self.cleanup_price = kwargs.get('cleanup_price')
         self.total = kwargs.get('total')
+        self.filled_notional_usd = kwargs.get('filled_notional_usd')
         self.asset_id = kwargs.get('asset_id')
         self.test_status = kwargs.get('test_status')
         self.mkt_type = kwargs.get('mkt_type')
@@ -2159,6 +2239,7 @@ class FieldFilterMapDataQuery(Base):
         self.excess_returns = kwargs.get('excess_returns')
         self.dollar_return = kwargs.get('dollar_return')
         self.order_in_limit = kwargs.get('order_in_limit')
+        self.expiry_time = kwargs.get('expiry_time')
         self.return_on_equity = kwargs.get('return_on_equity')
         self.future_month_k26 = kwargs.get('future_month_k26')
         self.future_month_k25 = kwargs.get('future_month_k25')
@@ -2226,6 +2307,7 @@ class FieldFilterMapDataQuery(Base):
         self.sell35cents = kwargs.get('sell35cents')
         self.loan_spread_bucket = kwargs.get('loan_spread_bucket')
         self.coronavirus_global_activity_tracker = kwargs.get('coronavirus_global_activity_tracker')
+        self.underlyers = kwargs.get('underlyers')
         self.asset_parameters_pricing_location = kwargs.get('asset_parameters_pricing_location')
         self.event_description = kwargs.get('event_description')
         self.iceberg_max_size = kwargs.get('iceberg_max_size')
@@ -2236,6 +2318,7 @@ class FieldFilterMapDataQuery(Base):
         self.buy20bps = kwargs.get('buy20bps')
         self.epidemic = kwargs.get('epidemic')
         self.mctr = kwargs.get('mctr')
+        self.exchange_time = kwargs.get('exchange_time')
         self.historical_close = kwargs.get('historical_close')
         self.fips_code = kwargs.get('fips_code')
         self.buy32bps = kwargs.get('buy32bps')
@@ -2246,6 +2329,7 @@ class FieldFilterMapDataQuery(Base):
         self.leg1_delivery_point = kwargs.get('leg1_delivery_point')
         self.sell5cents = kwargs.get('sell5cents')
         self.liq_wkly = kwargs.get('liq_wkly')
+        self.unrealized_twap_performance_bps = kwargs.get('unrealized_twap_performance_bps')
         self.region = kwargs.get('region')
         self.temperature_hour = kwargs.get('temperature_hour')
         self.upper_bound = kwargs.get('upper_bound')
@@ -2318,6 +2402,7 @@ class FieldFilterMapDataQuery(Base):
         self.buy5point5bps = kwargs.get('buy5point5bps')
         self.block_large_notional = kwargs.get('block_large_notional')
         self.sell2point5bps = kwargs.get('sell2point5bps')
+        self.capacity = kwargs.get('capacity')
         self.sectors_raw = kwargs.get('sectors_raw')
         self.primary_vwap_in_limit = kwargs.get('primary_vwap_in_limit')
         self.shareclass_price = kwargs.get('shareclass_price')
@@ -2365,6 +2450,8 @@ class FieldFilterMapDataQuery(Base):
         self.relative_payoff_mtd = kwargs.get('relative_payoff_mtd')
         self.daily_net_shareholder_flows = kwargs.get('daily_net_shareholder_flows')
         self.buy2point5bps = kwargs.get('buy2point5bps')
+        self.cai = kwargs.get('cai')
+        self.executed_notional_usd = kwargs.get('executed_notional_usd')
         self.total_home_isolation = kwargs.get('total_home_isolation')
         self.station_name = kwargs.get('station_name')
         self.pass_pct = kwargs.get('pass_pct')
@@ -2375,6 +2462,7 @@ class FieldFilterMapDataQuery(Base):
         self.fatalities_underlying_conditions_unknown = kwargs.get('fatalities_underlying_conditions_unknown')
         self.buy12bps = kwargs.get('buy12bps')
         self.clearing_house = kwargs.get('clearing_house')
+        self.day_close_unrealized_bps = kwargs.get('day_close_unrealized_bps')
         self.sts_rates_maturity = kwargs.get('sts_rates_maturity')
         self.liq_dly = kwargs.get('liq_dly')
         self.contributor_role = kwargs.get('contributor_role')
@@ -2408,6 +2496,15 @@ class FieldFilterMapDataQuery(Base):
         self.__mdapi_class = value        
 
     @property
+    def total_notional_usd(self) -> dict:
+        return self.__total_notional_usd
+
+    @total_notional_usd.setter
+    def total_notional_usd(self, value: dict):
+        self._property_changed('total_notional_usd')
+        self.__total_notional_usd = value        
+
+    @property
     def bid_unadjusted(self) -> dict:
         return self.__bid_unadjusted
 
@@ -2415,6 +2512,15 @@ class FieldFilterMapDataQuery(Base):
     def bid_unadjusted(self, value: dict):
         self._property_changed('bid_unadjusted')
         self.__bid_unadjusted = value        
+
+    @property
+    def aggressive_fills_percentage(self) -> dict:
+        return self.__aggressive_fills_percentage
+
+    @aggressive_fills_percentage.setter
+    def aggressive_fills_percentage(self, value: dict):
+        self._property_changed('aggressive_fills_percentage')
+        self.__aggressive_fills_percentage = value        
 
     @property
     def vehicle_type(self) -> dict:
@@ -2496,6 +2602,15 @@ class FieldFilterMapDataQuery(Base):
     def exposure(self, value: dict):
         self._property_changed('exposure')
         self.__exposure = value        
+
+    @property
+    def size(self) -> dict:
+        return self.__size
+
+    @size.setter
+    def size(self, value: dict):
+        self._property_changed('size')
+        self.__size = value        
 
     @property
     def market_data_asset(self) -> dict:
@@ -3002,6 +3117,15 @@ class FieldFilterMapDataQuery(Base):
         self.__swap_spread_change = value        
 
     @property
+    def realized_arrival_performance_usd(self) -> dict:
+        return self.__realized_arrival_performance_usd
+
+    @realized_arrival_performance_usd.setter
+    def realized_arrival_performance_usd(self, value: dict):
+        self._property_changed('realized_arrival_performance_usd')
+        self.__realized_arrival_performance_usd = value        
+
+    @property
     def portfolio_assets(self) -> dict:
         return self.__portfolio_assets
 
@@ -3009,6 +3133,15 @@ class FieldFilterMapDataQuery(Base):
     def portfolio_assets(self, value: dict):
         self._property_changed('portfolio_assets')
         self.__portfolio_assets = value        
+
+    @property
+    def pricingdate(self) -> dict:
+        return self.__pricingdate
+
+    @pricingdate.setter
+    def pricingdate(self, value: dict):
+        self._property_changed('pricingdate')
+        self.__pricingdate = value        
 
     @property
     def tcm_cost_horizon3_hour(self) -> dict:
@@ -3063,6 +3196,15 @@ class FieldFilterMapDataQuery(Base):
     def open_unadjusted(self, value: dict):
         self._property_changed('open_unadjusted')
         self.__open_unadjusted = value        
+
+    @property
+    def strike_time(self) -> dict:
+        return self.__strike_time
+
+    @strike_time.setter
+    def strike_time(self, value: dict):
+        self._property_changed('strike_time')
+        self.__strike_time = value        
 
     @property
     def ask_price(self) -> dict:
@@ -3227,6 +3369,15 @@ class FieldFilterMapDataQuery(Base):
         self.__buy8bps = value        
 
     @property
+    def total_notional_local(self) -> dict:
+        return self.__total_notional_local
+
+    @total_notional_local.setter
+    def total_notional_local(self, value: dict):
+        self._property_changed('total_notional_local')
+        self.__total_notional_local = value        
+
+    @property
     def cid(self) -> dict:
         return self.__cid
 
@@ -3315,6 +3466,15 @@ class FieldFilterMapDataQuery(Base):
     def receiver_day_count_fraction(self, value: dict):
         self._property_changed('receiver_day_count_fraction')
         self.__receiver_day_count_fraction = value        
+
+    @property
+    def auction_close_percentage(self) -> dict:
+        return self.__auction_close_percentage
+
+    @auction_close_percentage.setter
+    def auction_close_percentage(self, value: dict):
+        self._property_changed('auction_close_percentage')
+        self.__auction_close_percentage = value        
 
     @property
     def target_price(self) -> dict:
@@ -4298,6 +4458,15 @@ class FieldFilterMapDataQuery(Base):
         self.__adv5_day_pct = value        
 
     @property
+    def midpoint_fills_percentage(self) -> dict:
+        return self.__midpoint_fills_percentage
+
+    @midpoint_fills_percentage.setter
+    def midpoint_fills_percentage(self, value: dict):
+        self._property_changed('midpoint_fills_percentage')
+        self.__midpoint_fills_percentage = value        
+
+    @property
     def open_interest(self) -> dict:
         return self.__open_interest
 
@@ -4728,6 +4897,15 @@ class FieldFilterMapDataQuery(Base):
     def ctd(self, value: dict):
         self._property_changed('ctd')
         self.__ctd = value        
+
+    @property
+    def intended_participation_rate(self) -> dict:
+        return self.__intended_participation_rate
+
+    @intended_participation_rate.setter
+    def intended_participation_rate(self, value: dict):
+        self._property_changed('intended_participation_rate')
+        self.__intended_participation_rate = value        
 
     @property
     def leg1_payment_type(self) -> dict:
@@ -5630,6 +5808,15 @@ class FieldFilterMapDataQuery(Base):
         self.__measures = value        
 
     @property
+    def seasonal_adjustment(self) -> dict:
+        return self.__seasonal_adjustment
+
+    @seasonal_adjustment.setter
+    def seasonal_adjustment(self, value: dict):
+        self._property_changed('seasonal_adjustment')
+        self.__seasonal_adjustment = value        
+
+    @property
     def rank_wtd(self) -> dict:
         return self.__rank_wtd
 
@@ -6026,6 +6213,15 @@ class FieldFilterMapDataQuery(Base):
         self.__price_range_in_ticks_description = value        
 
     @property
+    def trade_volume(self) -> dict:
+        return self.__trade_volume
+
+    @trade_volume.setter
+    def trade_volume(self, value: dict):
+        self._property_changed('trade_volume')
+        self.__trade_volume = value        
+
+    @property
     def primary_country_ric(self) -> dict:
         return self.__primary_country_ric
 
@@ -6213,6 +6409,15 @@ class FieldFilterMapDataQuery(Base):
     def bid_spread(self, value: dict):
         self._property_changed('bid_spread')
         self.__bid_spread = value        
+
+    @property
+    def percentage_complete(self) -> dict:
+        return self.__percentage_complete
+
+    @percentage_complete.setter
+    def percentage_complete(self, value: dict):
+        self._property_changed('percentage_complete')
+        self.__percentage_complete = value        
 
     @property
     def hedge_tracking_error(self) -> dict:
@@ -6728,6 +6933,15 @@ class FieldFilterMapDataQuery(Base):
         self.__forward_tenor = value        
 
     @property
+    def average_price(self) -> dict:
+        return self.__average_price
+
+    @average_price.setter
+    def average_price(self, value: dict):
+        self._property_changed('average_price')
+        self.__average_price = value        
+
+    @property
     def target_price_realized_bps(self) -> dict:
         return self.__target_price_realized_bps
 
@@ -7007,6 +7221,15 @@ class FieldFilterMapDataQuery(Base):
         self.__asset_parameters_floating_rate_option = value        
 
     @property
+    def realized_vwap_performance_bps(self) -> dict:
+        return self.__realized_vwap_performance_bps
+
+    @realized_vwap_performance_bps.setter
+    def realized_vwap_performance_bps(self, value: dict):
+        self._property_changed('realized_vwap_performance_bps')
+        self.__realized_vwap_performance_bps = value        
+
+    @property
     def vote_share(self) -> dict:
         return self.__vote_share
 
@@ -7032,6 +7255,15 @@ class FieldFilterMapDataQuery(Base):
     def total_confirmed(self, value: dict):
         self._property_changed('total_confirmed')
         self.__total_confirmed = value        
+
+    @property
+    def economic_forecast(self) -> dict:
+        return self.__economic_forecast
+
+    @economic_forecast.setter
+    def economic_forecast(self, value: dict):
+        self._property_changed('economic_forecast')
+        self.__economic_forecast = value        
 
     @property
     def plot_id(self) -> dict:
@@ -7158,6 +7390,15 @@ class FieldFilterMapDataQuery(Base):
     def conviction(self, value: dict):
         self._property_changed('conviction')
         self.__conviction = value        
+
+    @property
+    def rfqstate(self) -> dict:
+        return self.__rfqstate
+
+    @rfqstate.setter
+    def rfqstate(self, value: dict):
+        self._property_changed('rfqstate')
+        self.__rfqstate = value        
 
     @property
     def benchmark_maturity(self) -> dict:
@@ -7473,6 +7714,15 @@ class FieldFilterMapDataQuery(Base):
     def daily_net_shareholder_flows_percent(self, value: dict):
         self._property_changed('daily_net_shareholder_flows_percent')
         self.__daily_net_shareholder_flows_percent = value        
+
+    @property
+    def filled_notional_local(self) -> dict:
+        return self.__filled_notional_local
+
+    @filled_notional_local.setter
+    def filled_notional_local(self, value: dict):
+        self._property_changed('filled_notional_local')
+        self.__filled_notional_local = value        
 
     @property
     def ever_hospitalized(self) -> dict:
@@ -8078,6 +8328,24 @@ class FieldFilterMapDataQuery(Base):
         self.__total_severe = value        
 
     @property
+    def unexecuted_notional_usd(self) -> dict:
+        return self.__unexecuted_notional_usd
+
+    @unexecuted_notional_usd.setter
+    def unexecuted_notional_usd(self, value: dict):
+        self._property_changed('unexecuted_notional_usd')
+        self.__unexecuted_notional_usd = value        
+
+    @property
+    def expected_residual_percentage(self) -> dict:
+        return self.__expected_residual_percentage
+
+    @expected_residual_percentage.setter
+    def expected_residual_percentage(self, value: dict):
+        self._property_changed('expected_residual_percentage')
+        self.__expected_residual_percentage = value        
+
+    @property
     def maturity_date(self) -> dict:
         return self.__maturity_date
 
@@ -8202,6 +8470,15 @@ class FieldFilterMapDataQuery(Base):
     def mnav(self, value: dict):
         self._property_changed('mnav')
         self.__mnav = value        
+
+    @property
+    def market_volume(self) -> dict:
+        return self.__market_volume
+
+    @market_volume.setter
+    def market_volume(self, value: dict):
+        self._property_changed('market_volume')
+        self.__market_volume = value        
 
     @property
     def swap_annuity(self) -> dict:
@@ -8393,6 +8670,15 @@ class FieldFilterMapDataQuery(Base):
         self.__degree_days_type = value        
 
     @property
+    def sentiment(self) -> dict:
+        return self.__sentiment
+
+    @sentiment.setter
+    def sentiment(self, value: dict):
+        self._property_changed('sentiment')
+        self.__sentiment = value        
+
+    @property
     def investment_income(self) -> dict:
         return self.__investment_income
 
@@ -8564,6 +8850,15 @@ class FieldFilterMapDataQuery(Base):
         self.__tcm_cost_participation_rate20_pct = value        
 
     @property
+    def venue_type(self) -> dict:
+        return self.__venue_type
+
+    @venue_type.setter
+    def venue_type(self, value: dict):
+        self._property_changed('venue_type')
+        self.__venue_type = value        
+
+    @property
     def multi_asset_class_swap(self) -> dict:
         return self.__multi_asset_class_swap
 
@@ -8670,6 +8965,15 @@ class FieldFilterMapDataQuery(Base):
     def precipitation(self, value: dict):
         self._property_changed('precipitation')
         self.__precipitation = value        
+
+    @property
+    def value_type(self) -> dict:
+        return self.__value_type
+
+    @value_type.setter
+    def value_type(self, value: dict):
+        self._property_changed('value_type')
+        self.__value_type = value        
 
     @property
     def beta_adjusted_net_exposure(self) -> dict:
@@ -9014,6 +9318,15 @@ class FieldFilterMapDataQuery(Base):
         self.__buy90cents = value        
 
     @property
+    def period_type(self) -> dict:
+        return self.__period_type
+
+    @period_type.setter
+    def period_type(self, value: dict):
+        self._property_changed('period_type')
+        self.__period_type = value        
+
+    @property
     def asset_classifications_country_name(self) -> dict:
         return self.__asset_classifications_country_name
 
@@ -9156,6 +9469,15 @@ class FieldFilterMapDataQuery(Base):
     def asset_count(self, value: dict):
         self._property_changed('asset_count')
         self.__asset_count = value        
+
+    @property
+    def is_order_in_limit(self) -> dict:
+        return self.__is_order_in_limit
+
+    @is_order_in_limit.setter
+    def is_order_in_limit(self, value: dict):
+        self._property_changed('is_order_in_limit')
+        self.__is_order_in_limit = value        
 
     @property
     def fundamental_metric(self) -> dict:
@@ -10076,6 +10398,15 @@ class FieldFilterMapDataQuery(Base):
         self.__ons_code = value        
 
     @property
+    def passive_touch_fills_percentage(self) -> dict:
+        return self.__passive_touch_fills_percentage
+
+    @passive_touch_fills_percentage.setter
+    def passive_touch_fills_percentage(self, value: dict):
+        self._property_changed('passive_touch_fills_percentage')
+        self.__passive_touch_fills_percentage = value        
+
+    @property
     def seniority(self) -> dict:
         return self.__seniority
 
@@ -10164,6 +10495,15 @@ class FieldFilterMapDataQuery(Base):
     def nav_spread(self, value: dict):
         self._property_changed('nav_spread')
         self.__nav_spread = value        
+
+    @property
+    def venue_mic(self) -> dict:
+        return self.__venue_mic
+
+    @venue_mic.setter
+    def venue_mic(self, value: dict):
+        self._property_changed('venue_mic')
+        self.__venue_mic = value        
 
     @property
     def dollar_total_return(self) -> dict:
@@ -10308,6 +10648,15 @@ class FieldFilterMapDataQuery(Base):
     def rate366(self, value: dict):
         self._property_changed('rate366')
         self.__rate366 = value        
+
+    @property
+    def platform(self) -> dict:
+        return self.__platform
+
+    @platform.setter
+    def platform(self, value: dict):
+        self._property_changed('platform')
+        self.__platform = value        
 
     @property
     def rate365(self) -> dict:
@@ -10652,6 +11001,15 @@ class FieldFilterMapDataQuery(Base):
         self.__client_type = value        
 
     @property
+    def percentage_close_executed_quantity(self) -> dict:
+        return self.__percentage_close_executed_quantity
+
+    @percentage_close_executed_quantity.setter
+    def percentage_close_executed_quantity(self, value: dict):
+        self._property_changed('percentage_close_executed_quantity')
+        self.__percentage_close_executed_quantity = value        
+
+    @property
     def macaulay_duration(self) -> dict:
         return self.__macaulay_duration
 
@@ -10814,6 +11172,15 @@ class FieldFilterMapDataQuery(Base):
         self.__block_off_facility = value        
 
     @property
+    def unrealized_vwap_performance_usd(self) -> dict:
+        return self.__unrealized_vwap_performance_usd
+
+    @unrealized_vwap_performance_usd.setter
+    def unrealized_vwap_performance_usd(self, value: dict):
+        self._property_changed('unrealized_vwap_performance_usd')
+        self.__unrealized_vwap_performance_usd = value        
+
+    @property
     def pace_of_rollp75(self) -> dict:
         return self.__pace_of_rollp75
 
@@ -10902,6 +11269,15 @@ class FieldFilterMapDataQuery(Base):
     def expiration_tenor(self, value: dict):
         self._property_changed('expiration_tenor')
         self.__expiration_tenor = value        
+
+    @property
+    def price_limit(self) -> dict:
+        return self.__price_limit
+
+    @price_limit.setter
+    def price_limit(self, value: dict):
+        self._property_changed('price_limit')
+        self.__price_limit = value        
 
     @property
     def market_model_id(self) -> dict:
@@ -10994,6 +11370,15 @@ class FieldFilterMapDataQuery(Base):
         self.__equity_vega = value        
 
     @property
+    def executed_fill_quantity(self) -> dict:
+        return self.__executed_fill_quantity
+
+    @executed_fill_quantity.setter
+    def executed_fill_quantity(self, value: dict):
+        self._property_changed('executed_fill_quantity')
+        self.__executed_fill_quantity = value        
+
+    @property
     def lender_payment(self) -> dict:
         return self.__lender_payment
 
@@ -11055,6 +11440,15 @@ class FieldFilterMapDataQuery(Base):
     def rationale(self, value: dict):
         self._property_changed('rationale')
         self.__rationale = value        
+
+    @property
+    def realized_twap_performance_bps(self) -> dict:
+        return self.__realized_twap_performance_bps
+
+    @realized_twap_performance_bps.setter
+    def realized_twap_performance_bps(self, value: dict):
+        self._property_changed('realized_twap_performance_bps')
+        self.__realized_twap_performance_bps = value        
 
     @property
     def last_updated_since(self) -> dict:
@@ -11129,6 +11523,15 @@ class FieldFilterMapDataQuery(Base):
         self.__event_category = value        
 
     @property
+    def average_fill_rate(self) -> dict:
+        return self.__average_fill_rate
+
+    @average_fill_rate.setter
+    def average_fill_rate(self, value: dict):
+        self._property_changed('average_fill_rate')
+        self.__average_fill_rate = value        
+
+    @property
     def unadjusted_open(self) -> dict:
         return self.__unadjusted_open
 
@@ -11190,6 +11593,15 @@ class FieldFilterMapDataQuery(Base):
     def queries_per_second(self, value: dict):
         self._property_changed('queries_per_second')
         self.__queries_per_second = value        
+
+    @property
+    def liquidity_type(self) -> dict:
+        return self.__liquidity_type
+
+    @liquidity_type.setter
+    def liquidity_type(self, value: dict):
+        self._property_changed('liquidity_type')
+        self.__liquidity_type = value        
 
     @property
     def credit_limit(self) -> dict:
@@ -11534,6 +11946,15 @@ class FieldFilterMapDataQuery(Base):
         self.__realized_volatility = value        
 
     @property
+    def unexecuted_quantity(self) -> dict:
+        return self.__unexecuted_quantity
+
+    @unexecuted_quantity.setter
+    def unexecuted_quantity(self, value: dict):
+        self._property_changed('unexecuted_quantity')
+        self.__unexecuted_quantity = value        
+
+    @property
     def proceeds_asset_swap_spread1m(self) -> dict:
         return self.__proceeds_asset_swap_spread1m
 
@@ -11840,6 +12261,15 @@ class FieldFilterMapDataQuery(Base):
         self.__event_type = value        
 
     @property
+    def fill_price(self) -> dict:
+        return self.__fill_price
+
+    @fill_price.setter
+    def fill_price(self, value: dict):
+        self._property_changed('fill_price')
+        self.__fill_price = value        
+
+    @property
     def asset_count_long(self) -> dict:
         return self.__asset_count_long
 
@@ -11919,6 +12349,15 @@ class FieldFilterMapDataQuery(Base):
     def price_spot_entry_unit(self, value: dict):
         self._property_changed('price_spot_entry_unit')
         self.__price_spot_entry_unit = value        
+
+    @property
+    def unrealized_arrival_performance_bps(self) -> dict:
+        return self.__unrealized_arrival_performance_bps
+
+    @unrealized_arrival_performance_bps.setter
+    def unrealized_arrival_performance_bps(self, value: dict):
+        self._property_changed('unrealized_arrival_performance_bps')
+        self.__unrealized_arrival_performance_bps = value        
 
     @property
     def city(self) -> dict:
@@ -12056,6 +12495,15 @@ class FieldFilterMapDataQuery(Base):
         self.__pace_of_rollp25 = value        
 
     @property
+    def day_close_realized_usd(self) -> dict:
+        return self.__day_close_realized_usd
+
+    @day_close_realized_usd.setter
+    def day_close_realized_usd(self, value: dict):
+        self._property_changed('day_close_realized_usd')
+        self.__day_close_realized_usd = value        
+
+    @property
     def pct_change(self) -> dict:
         return self.__pct_change
 
@@ -12108,6 +12556,15 @@ class FieldFilterMapDataQuery(Base):
     def price_type(self, value: dict):
         self._property_changed('price_type')
         self.__price_type = value        
+
+    @property
+    def realized_vwap_performance_usd(self) -> dict:
+        return self.__realized_vwap_performance_usd
+
+    @realized_vwap_performance_usd.setter
+    def realized_vwap_performance_usd(self, value: dict):
+        self._property_changed('realized_vwap_performance_usd')
+        self.__realized_vwap_performance_usd = value        
 
     @property
     def fuel_type(self) -> dict:
@@ -12387,6 +12844,15 @@ class FieldFilterMapDataQuery(Base):
     def fair_price(self, value: dict):
         self._property_changed('fair_price')
         self.__fair_price = value        
+
+    @property
+    def participation_rate_in_limit(self) -> dict:
+        return self.__participation_rate_in_limit
+
+    @participation_rate_in_limit.setter
+    def participation_rate_in_limit(self, value: dict):
+        self._property_changed('participation_rate_in_limit')
+        self.__participation_rate_in_limit = value        
 
     @property
     def ext_mkt_class(self) -> dict:
@@ -12731,6 +13197,15 @@ class FieldFilterMapDataQuery(Base):
         self.__pace_of_rollp50 = value        
 
     @property
+    def price_move_vs_arrival(self) -> dict:
+        return self.__price_move_vs_arrival
+
+    @price_move_vs_arrival.setter
+    def price_move_vs_arrival(self, value: dict):
+        self._property_changed('price_move_vs_arrival')
+        self.__price_move_vs_arrival = value        
+
+    @property
     def strike_relative(self) -> dict:
         return self.__strike_relative
 
@@ -12918,6 +13393,15 @@ class FieldFilterMapDataQuery(Base):
     def given_plus_paid(self, value: dict):
         self._property_changed('given_plus_paid')
         self.__given_plus_paid = value        
+
+    @property
+    def last_fill_price(self) -> dict:
+        return self.__last_fill_price
+
+    @last_fill_price.setter
+    def last_fill_price(self, value: dict):
+        self._property_changed('last_fill_price')
+        self.__last_fill_price = value        
 
     @property
     def short_conviction_small(self) -> dict:
@@ -13154,6 +13638,15 @@ class FieldFilterMapDataQuery(Base):
         self.__asset_parameters_floating_rate_designated_maturity = value        
 
     @property
+    def executed_notional_local(self) -> dict:
+        return self.__executed_notional_local
+
+    @executed_notional_local.setter
+    def executed_notional_local(self, value: dict):
+        self._property_changed('executed_notional_local')
+        self.__executed_notional_local = value        
+
+    @property
     def business_sponsor(self) -> dict:
         return self.__business_sponsor
 
@@ -13325,6 +13818,15 @@ class FieldFilterMapDataQuery(Base):
         self.__day_count_convention2 = value        
 
     @property
+    def fwdtier(self) -> dict:
+        return self.__fwdtier
+
+    @fwdtier.setter
+    def fwdtier(self, value: dict):
+        self._property_changed('fwdtier')
+        self.__fwdtier = value        
+
+    @property
     def degree_days(self) -> dict:
         return self.__degree_days
 
@@ -13368,6 +13870,15 @@ class FieldFilterMapDataQuery(Base):
     def num_of_funds(self, value: dict):
         self._property_changed('num_of_funds')
         self.__num_of_funds = value        
+
+    @property
+    def execution_id(self) -> dict:
+        return self.__execution_id
+
+    @execution_id.setter
+    def execution_id(self, value: dict):
+        self._property_changed('execution_id')
+        self.__execution_id = value        
 
     @property
     def turnover_unadjusted(self) -> dict:
@@ -13640,6 +14151,15 @@ class FieldFilterMapDataQuery(Base):
         self.__wal = value        
 
     @property
+    def quantityccy(self) -> dict:
+        return self.__quantityccy
+
+    @quantityccy.setter
+    def quantityccy(self, value: dict):
+        self._property_changed('quantityccy')
+        self.__quantityccy = value        
+
+    @property
     def backtest_id(self) -> dict:
         return self.__backtest_id
 
@@ -13775,6 +14295,15 @@ class FieldFilterMapDataQuery(Base):
         self.__swaption_vol = value        
 
     @property
+    def estimated_closing_volume(self) -> dict:
+        return self.__estimated_closing_volume
+
+    @estimated_closing_volume.setter
+    def estimated_closing_volume(self, value: dict):
+        self._property_changed('estimated_closing_volume')
+        self.__estimated_closing_volume = value        
+
+    @property
     def issuer(self) -> dict:
         return self.__issuer
 
@@ -13908,6 +14437,15 @@ class FieldFilterMapDataQuery(Base):
     def mid_yield(self, value: dict):
         self._property_changed('mid_yield')
         self.__mid_yield = value        
+
+    @property
+    def unexecuted_notional_local(self) -> dict:
+        return self.__unexecuted_notional_local
+
+    @unexecuted_notional_local.setter
+    def unexecuted_notional_local(self, value: dict):
+        self._property_changed('unexecuted_notional_local')
+        self.__unexecuted_notional_local = value        
 
     @property
     def sustain_global(self) -> dict:
@@ -14216,6 +14754,15 @@ class FieldFilterMapDataQuery(Base):
         self.__default_backcast = value        
 
     @property
+    def news_on_intensity(self) -> dict:
+        return self.__news_on_intensity
+
+    @news_on_intensity.setter
+    def news_on_intensity(self, value: dict):
+        self._property_changed('news_on_intensity')
+        self.__news_on_intensity = value        
+
+    @property
     def price_forming_continuation_data(self) -> dict:
         return self.__price_forming_continuation_data
 
@@ -14432,6 +14979,15 @@ class FieldFilterMapDataQuery(Base):
         self.__min_temperature = value        
 
     @property
+    def fill_type(self) -> dict:
+        return self.__fill_type
+
+    @fill_type.setter
+    def fill_type(self, value: dict):
+        self._property_changed('fill_type')
+        self.__fill_type = value        
+
+    @property
     def fail_pct(self) -> dict:
         return self.__fail_pct
 
@@ -14585,6 +15141,24 @@ class FieldFilterMapDataQuery(Base):
         self.__relative_period = value        
 
     @property
+    def user(self) -> dict:
+        return self.__user
+
+    @user.setter
+    def user(self, value: dict):
+        self._property_changed('user')
+        self.__user = value        
+
+    @property
+    def customer(self) -> dict:
+        return self.__customer
+
+    @customer.setter
+    def customer(self, value: dict):
+        self._property_changed('customer')
+        self.__customer = value        
+
+    @property
     def leg1_reset_frequency(self) -> dict:
         return self.__leg1_reset_frequency
 
@@ -14648,6 +15222,15 @@ class FieldFilterMapDataQuery(Base):
         self.__facet_divisional_reporting_group_id = value        
 
     @property
+    def realized_twap_performance_usd(self) -> dict:
+        return self.__realized_twap_performance_usd
+
+    @realized_twap_performance_usd.setter
+    def realized_twap_performance_usd(self, value: dict):
+        self._property_changed('realized_twap_performance_usd')
+        self.__realized_twap_performance_usd = value        
+
+    @property
     def swap_rate(self) -> dict:
         return self.__swap_rate
 
@@ -14682,6 +15265,15 @@ class FieldFilterMapDataQuery(Base):
     def min_temperature_hour(self, value: dict):
         self._property_changed('min_temperature_hour')
         self.__min_temperature_hour = value        
+
+    @property
+    def trading_currency(self) -> dict:
+        return self.__trading_currency
+
+    @trading_currency.setter
+    def trading_currency(self, value: dict):
+        self._property_changed('trading_currency')
+        self.__trading_currency = value        
 
     @property
     def total_by_onset(self) -> dict:
@@ -14882,6 +15474,15 @@ class FieldFilterMapDataQuery(Base):
         self.__sinkable = value        
 
     @property
+    def is_real(self) -> dict:
+        return self.__is_real
+
+    @is_real.setter
+    def is_real(self, value: dict):
+        self._property_changed('is_real')
+        self.__is_real = value        
+
+    @property
     def max_temperature_hour(self) -> dict:
         return self.__max_temperature_hour
 
@@ -14925,6 +15526,15 @@ class FieldFilterMapDataQuery(Base):
     def knock_in_direction(self, value: dict):
         self._property_changed('knock_in_direction')
         self.__knock_in_direction = value        
+
+    @property
+    def day_close_unrealized_usd(self) -> dict:
+        return self.__day_close_unrealized_usd
+
+    @day_close_unrealized_usd.setter
+    def day_close_unrealized_usd(self, value: dict):
+        self._property_changed('day_close_unrealized_usd')
+        self.__day_close_unrealized_usd = value        
 
     @property
     def tenor(self) -> dict:
@@ -15132,6 +15742,15 @@ class FieldFilterMapDataQuery(Base):
     def previous_new_confirmed(self, value: dict):
         self._property_changed('previous_new_confirmed')
         self.__previous_new_confirmed = value        
+
+    @property
+    def unrealized_vwap_performance_bps(self) -> dict:
+        return self.__unrealized_vwap_performance_bps
+
+    @unrealized_vwap_performance_bps.setter
+    def unrealized_vwap_performance_bps(self, value: dict):
+        self._property_changed('unrealized_vwap_performance_bps')
+        self.__unrealized_vwap_performance_bps = value        
 
     @property
     def degree_days_daily_forecast(self) -> dict:
@@ -15602,6 +16221,15 @@ class FieldFilterMapDataQuery(Base):
         self.__total_mild = value        
 
     @property
+    def realized_arrival_performance_bps(self) -> dict:
+        return self.__realized_arrival_performance_bps
+
+    @realized_arrival_performance_bps.setter
+    def realized_arrival_performance_bps(self, value: dict):
+        self._property_changed('realized_arrival_performance_bps')
+        self.__realized_arrival_performance_bps = value        
+
+    @property
     def precipitation_daily_forecast_inches(self) -> dict:
         return self.__precipitation_daily_forecast_inches
 
@@ -15710,6 +16338,15 @@ class FieldFilterMapDataQuery(Base):
         self.__hospital_type = value        
 
     @property
+    def day_close_realized_bps(self) -> dict:
+        return self.__day_close_realized_bps
+
+    @day_close_realized_bps.setter
+    def day_close_realized_bps(self, value: dict):
+        self._property_changed('day_close_realized_bps')
+        self.__day_close_realized_bps = value        
+
+    @property
     def precipitation_hourly_forecast(self) -> dict:
         return self.__precipitation_hourly_forecast
 
@@ -15726,6 +16363,15 @@ class FieldFilterMapDataQuery(Base):
     def market_cap_usd(self, value: dict):
         self._property_changed('market_cap_usd')
         self.__market_cap_usd = value        
+
+    @property
+    def auction_fills_percentage(self) -> dict:
+        return self.__auction_fills_percentage
+
+    @auction_fills_percentage.setter
+    def auction_fills_percentage(self, value: dict):
+        self._property_changed('auction_fills_percentage')
+        self.__auction_fills_percentage = value        
 
     @property
     def high_price(self) -> dict:
@@ -15764,6 +16410,15 @@ class FieldFilterMapDataQuery(Base):
         self.__model = value        
 
     @property
+    def unrealized_twap_performance_usd(self) -> dict:
+        return self.__unrealized_twap_performance_usd
+
+    @unrealized_twap_performance_usd.setter
+    def unrealized_twap_performance_usd(self, value: dict):
+        self._property_changed('unrealized_twap_performance_usd')
+        self.__unrealized_twap_performance_usd = value        
+
+    @property
     def id(self) -> dict:
         return self.__id
 
@@ -15798,6 +16453,15 @@ class FieldFilterMapDataQuery(Base):
     def index(self, value: dict):
         self._property_changed('index')
         self.__index = value        
+
+    @property
+    def unrealized_arrival_performance_usd(self) -> dict:
+        return self.__unrealized_arrival_performance_usd
+
+    @unrealized_arrival_performance_usd.setter
+    def unrealized_arrival_performance_usd(self, value: dict):
+        self._property_changed('unrealized_arrival_performance_usd')
+        self.__unrealized_arrival_performance_usd = value        
 
     @property
     def iceberg_slippage(self) -> dict:
@@ -16104,6 +16768,15 @@ class FieldFilterMapDataQuery(Base):
     def exception_status(self, value: dict):
         self._property_changed('exception_status')
         self.__exception_status = value        
+
+    @property
+    def overnight_news_intensity(self) -> dict:
+        return self.__overnight_news_intensity
+
+    @overnight_news_intensity.setter
+    def overnight_news_intensity(self, value: dict):
+        self._property_changed('overnight_news_intensity')
+        self.__overnight_news_intensity = value        
 
     @property
     def sales_coverage(self) -> dict:
@@ -16547,6 +17220,15 @@ class FieldFilterMapDataQuery(Base):
         self.__asset_parameters_coupon_type = value        
 
     @property
+    def expected_residual_quantity(self) -> dict:
+        return self.__expected_residual_quantity
+
+    @expected_residual_quantity.setter
+    def expected_residual_quantity(self, value: dict):
+        self._property_changed('expected_residual_quantity')
+        self.__expected_residual_quantity = value        
+
+    @property
     def roll_date(self) -> dict:
         return self.__roll_date
 
@@ -16619,6 +17301,15 @@ class FieldFilterMapDataQuery(Base):
         self.__es_disclosure_percentage = value        
 
     @property
+    def close_executed_quantity_percentage(self) -> dict:
+        return self.__close_executed_quantity_percentage
+
+    @close_executed_quantity_percentage.setter
+    def close_executed_quantity_percentage(self, value: dict):
+        self._property_changed('close_executed_quantity_percentage')
+        self.__close_executed_quantity_percentage = value        
+
+    @property
     def twap_realized_cash(self) -> dict:
         return self.__twap_realized_cash
 
@@ -16671,6 +17362,15 @@ class FieldFilterMapDataQuery(Base):
     def total(self, value: dict):
         self._property_changed('total')
         self.__total = value        
+
+    @property
+    def filled_notional_usd(self) -> dict:
+        return self.__filled_notional_usd
+
+    @filled_notional_usd.setter
+    def filled_notional_usd(self, value: dict):
+        self._property_changed('filled_notional_usd')
+        self.__filled_notional_usd = value        
 
     @property
     def asset_id(self) -> dict:
@@ -16860,6 +17560,15 @@ class FieldFilterMapDataQuery(Base):
     def order_in_limit(self, value: dict):
         self._property_changed('order_in_limit')
         self.__order_in_limit = value        
+
+    @property
+    def expiry_time(self) -> dict:
+        return self.__expiry_time
+
+    @expiry_time.setter
+    def expiry_time(self, value: dict):
+        self._property_changed('expiry_time')
+        self.__expiry_time = value        
 
     @property
     def return_on_equity(self) -> dict:
@@ -17465,6 +18174,15 @@ class FieldFilterMapDataQuery(Base):
         self.__coronavirus_global_activity_tracker = value        
 
     @property
+    def underlyers(self) -> dict:
+        return self.__underlyers
+
+    @underlyers.setter
+    def underlyers(self, value: dict):
+        self._property_changed('underlyers')
+        self.__underlyers = value        
+
+    @property
     def asset_parameters_pricing_location(self) -> dict:
         return self.__asset_parameters_pricing_location
 
@@ -17555,6 +18273,15 @@ class FieldFilterMapDataQuery(Base):
         self.__mctr = value        
 
     @property
+    def exchange_time(self) -> dict:
+        return self.__exchange_time
+
+    @exchange_time.setter
+    def exchange_time(self, value: dict):
+        self._property_changed('exchange_time')
+        self.__exchange_time = value        
+
+    @property
     def historical_close(self) -> dict:
         return self.__historical_close
 
@@ -17643,6 +18370,15 @@ class FieldFilterMapDataQuery(Base):
     def liq_wkly(self, value: dict):
         self._property_changed('liq_wkly')
         self.__liq_wkly = value        
+
+    @property
+    def unrealized_twap_performance_bps(self) -> dict:
+        return self.__unrealized_twap_performance_bps
+
+    @unrealized_twap_performance_bps.setter
+    def unrealized_twap_performance_bps(self, value: dict):
+        self._property_changed('unrealized_twap_performance_bps')
+        self.__unrealized_twap_performance_bps = value        
 
     @property
     def region(self) -> dict:
@@ -18293,6 +19029,15 @@ class FieldFilterMapDataQuery(Base):
         self.__sell2point5bps = value        
 
     @property
+    def capacity(self) -> dict:
+        return self.__capacity
+
+    @capacity.setter
+    def capacity(self, value: dict):
+        self._property_changed('capacity')
+        self.__capacity = value        
+
+    @property
     def sectors_raw(self) -> dict:
         return self.__sectors_raw
 
@@ -18716,6 +19461,24 @@ class FieldFilterMapDataQuery(Base):
         self.__buy2point5bps = value        
 
     @property
+    def cai(self) -> dict:
+        return self.__cai
+
+    @cai.setter
+    def cai(self, value: dict):
+        self._property_changed('cai')
+        self.__cai = value        
+
+    @property
+    def executed_notional_usd(self) -> dict:
+        return self.__executed_notional_usd
+
+    @executed_notional_usd.setter
+    def executed_notional_usd(self, value: dict):
+        self._property_changed('executed_notional_usd')
+        self.__executed_notional_usd = value        
+
+    @property
     def total_home_isolation(self) -> dict:
         return self.__total_home_isolation
 
@@ -18804,6 +19567,15 @@ class FieldFilterMapDataQuery(Base):
     def clearing_house(self, value: dict):
         self._property_changed('clearing_house')
         self.__clearing_house = value        
+
+    @property
+    def day_close_unrealized_bps(self) -> dict:
+        return self.__day_close_unrealized_bps
+
+    @day_close_unrealized_bps.setter
+    def day_close_unrealized_bps(self, value: dict):
+        self._property_changed('day_close_unrealized_bps')
+        self.__day_close_unrealized_bps = value        
 
     @property
     def sts_rates_maturity(self) -> dict:

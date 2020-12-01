@@ -2085,8 +2085,8 @@ class EqStock(Instrument):
 
     @property
     def type(self) -> AssetType:
-        """Stock"""
-        return AssetType.Single_Stock
+        """Single Stock"""
+        return AssetType.Single_Stock        
 
     @property
     def asset_name(self) -> str:
@@ -2653,7 +2653,7 @@ class FXBinary(Instrument):
 
     @property
     def type(self) -> AssetType:
-        """Option"""
+        """Binary"""
         return AssetType.Binary        
 
     @property
@@ -5217,6 +5217,425 @@ class IRCap(Instrument):
     def fee_payment_date(self, value: Union[datetime.date, str]):
         self._property_changed('fee_payment_date')
         self.__fee_payment_date = value        
+
+
+class IRFixedLeg(Instrument):
+        
+    """A strip of vanilla fixed rate cashflows"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        buy_sell: Union[BuySell, str] = None,
+        fixed_rate_day_count_fraction: Union[DayCountFraction, str] = None,
+        fixed_first_stub: Union[Union[datetime.date, str], str] = None,
+        fixed_rate_frequency: str = None,
+        fixed_holidays: str = None,
+        fixed_last_stub: Union[Union[datetime.date, str], str] = None,
+        fixed_rate_business_day_convention: Union[BusinessDayConvention, str] = None,
+        fixed_rate: Union[float, str] = None,
+        termination_date: Union[Union[datetime.date, str], str] = None,
+        notional_currency: Union[Currency, str] = None,
+        principal_exchange: Union[PrincipalExchange, str] = None,
+        roll_convention: str = None,
+        notional_amount: Union[float, str] = None,
+        effective_date: Union[Union[datetime.date, str], str] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.buy_sell = buy_sell
+        self.fixed_rate_day_count_fraction = fixed_rate_day_count_fraction
+        self.fixed_first_stub = fixed_first_stub
+        self.fixed_rate_frequency = fixed_rate_frequency
+        self.fixed_holidays = fixed_holidays
+        self.fixed_last_stub = fixed_last_stub
+        self.fixed_rate_business_day_convention = fixed_rate_business_day_convention
+        self.fixed_rate = fixed_rate
+        self.termination_date = termination_date
+        self.notional_currency = notional_currency
+        self.principal_exchange = principal_exchange
+        self.roll_convention = roll_convention
+        self.notional_amount = notional_amount
+        self.effective_date = effective_date
+        self.name = name
+
+    @property
+    def asset_class(self) -> AssetClass:
+        """Rates"""
+        return AssetClass.Rates        
+
+    @property
+    def type(self) -> AssetType:
+        """FixedLeg"""
+        return AssetType.FixedLeg        
+
+    @property
+    def buy_sell(self) -> Union[BuySell, str]:
+        """Buy or Sell side of contract"""
+        return self.__buy_sell
+
+    @buy_sell.setter
+    def buy_sell(self, value: Union[BuySell, str]):
+        self._property_changed('buy_sell')
+        self.__buy_sell = get_enum_value(BuySell, value)        
+
+    @property
+    def fixed_rate_day_count_fraction(self) -> Union[DayCountFraction, str]:
+        """The day count fraction of the fixed rate"""
+        return self.__fixed_rate_day_count_fraction
+
+    @fixed_rate_day_count_fraction.setter
+    def fixed_rate_day_count_fraction(self, value: Union[DayCountFraction, str]):
+        self._property_changed('fixed_rate_day_count_fraction')
+        self.__fixed_rate_day_count_fraction = get_enum_value(DayCountFraction, value)        
+
+    @property
+    def fixed_first_stub(self) -> Union[Union[datetime.date, str], str]:
+        """The date of the first stub for fixed leg"""
+        return self.__fixed_first_stub
+
+    @fixed_first_stub.setter
+    def fixed_first_stub(self, value: Union[Union[datetime.date, str], str]):
+        self._property_changed('fixed_first_stub')
+        self.__fixed_first_stub = value        
+
+    @property
+    def fixed_rate_frequency(self) -> str:
+        """The frequency of fixed payments, e.g. 6m"""
+        return self.__fixed_rate_frequency
+
+    @fixed_rate_frequency.setter
+    def fixed_rate_frequency(self, value: str):
+        self._property_changed('fixed_rate_frequency')
+        self.__fixed_rate_frequency = value        
+
+    @property
+    def fixed_holidays(self) -> str:
+        """The accrual calendar for fixed leg"""
+        return self.__fixed_holidays
+
+    @fixed_holidays.setter
+    def fixed_holidays(self, value: str):
+        self._property_changed('fixed_holidays')
+        self.__fixed_holidays = value        
+
+    @property
+    def fixed_last_stub(self) -> Union[Union[datetime.date, str], str]:
+        """The date of the last stub for fixed leg"""
+        return self.__fixed_last_stub
+
+    @fixed_last_stub.setter
+    def fixed_last_stub(self, value: Union[Union[datetime.date, str], str]):
+        self._property_changed('fixed_last_stub')
+        self.__fixed_last_stub = value        
+
+    @property
+    def fixed_rate_business_day_convention(self) -> Union[BusinessDayConvention, str]:
+        """The business day convention for the fixed rate"""
+        return self.__fixed_rate_business_day_convention
+
+    @fixed_rate_business_day_convention.setter
+    def fixed_rate_business_day_convention(self, value: Union[BusinessDayConvention, str]):
+        self._property_changed('fixed_rate_business_day_convention')
+        self.__fixed_rate_business_day_convention = get_enum_value(BusinessDayConvention, value)        
+
+    @property
+    def fixed_rate(self) -> Union[float, str]:
+        """The coupon of the fixed leg"""
+        return self.__fixed_rate
+
+    @fixed_rate.setter
+    def fixed_rate(self, value: Union[float, str]):
+        self._property_changed('fixed_rate')
+        self.__fixed_rate = value        
+
+    @property
+    def termination_date(self) -> Union[Union[datetime.date, str], str]:
+        """The termination of the leg, e.g. 2050-04-01, 10y"""
+        return self.__termination_date
+
+    @termination_date.setter
+    def termination_date(self, value: Union[Union[datetime.date, str], str]):
+        self._property_changed('termination_date')
+        self.__termination_date = value        
+
+    @property
+    def notional_currency(self) -> Union[Currency, str]:
+        """Notional currency"""
+        return self.__notional_currency
+
+    @notional_currency.setter
+    def notional_currency(self, value: Union[Currency, str]):
+        self._property_changed('notional_currency')
+        self.__notional_currency = get_enum_value(Currency, value)        
+
+    @property
+    def principal_exchange(self) -> Union[PrincipalExchange, str]:
+        """When the exchange of principal is done"""
+        return self.__principal_exchange
+
+    @principal_exchange.setter
+    def principal_exchange(self, value: Union[PrincipalExchange, str]):
+        self._property_changed('principal_exchange')
+        self.__principal_exchange = get_enum_value(PrincipalExchange, value)        
+
+    @property
+    def roll_convention(self) -> str:
+        """The roll convention"""
+        return self.__roll_convention
+
+    @roll_convention.setter
+    def roll_convention(self, value: str):
+        self._property_changed('roll_convention')
+        self.__roll_convention = value        
+
+    @property
+    def notional_amount(self) -> Union[float, str]:
+        """Notional amount"""
+        return self.__notional_amount
+
+    @notional_amount.setter
+    def notional_amount(self, value: Union[float, str]):
+        self._property_changed('notional_amount')
+        self.__notional_amount = value        
+
+    @property
+    def effective_date(self) -> Union[Union[datetime.date, str], str]:
+        """The date on which the instrument becomes effective"""
+        return self.__effective_date
+
+    @effective_date.setter
+    def effective_date(self, value: Union[Union[datetime.date, str], str]):
+        self._property_changed('effective_date')
+        self.__effective_date = value        
+
+
+class IRFloatLeg(Instrument):
+        
+    """A strip of vanilla floating rate cashflows"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        buy_sell: Union[BuySell, str] = None,
+        floating_rate_for_the_initial_calculation_period: float = None,
+        floating_rate_day_count_fraction: Union[DayCountFraction, str] = None,
+        floating_first_stub: Union[Union[datetime.date, str], str] = None,
+        floating_rate_frequency: str = None,
+        floating_holidays: str = None,
+        floating_last_stub: Union[Union[datetime.date, str], str] = None,
+        floating_rate_business_day_convention: Union[BusinessDayConvention, str] = None,
+        floating_rate_option: str = None,
+        floating_rate_designated_maturity: str = None,
+        termination_date: Union[Union[datetime.date, str], str] = None,
+        notional_currency: Union[Currency, str] = None,
+        principal_exchange: Union[PrincipalExchange, str] = None,
+        roll_convention: str = None,
+        notional_amount: Union[float, str] = None,
+        floating_rate_spread: Union[float, str] = None,
+        effective_date: Union[Union[datetime.date, str], str] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.buy_sell = buy_sell
+        self.floating_rate_for_the_initial_calculation_period = floating_rate_for_the_initial_calculation_period
+        self.floating_rate_day_count_fraction = floating_rate_day_count_fraction
+        self.floating_first_stub = floating_first_stub
+        self.floating_rate_frequency = floating_rate_frequency
+        self.floating_holidays = floating_holidays
+        self.floating_last_stub = floating_last_stub
+        self.floating_rate_business_day_convention = floating_rate_business_day_convention
+        self.floating_rate_option = floating_rate_option
+        self.floating_rate_designated_maturity = floating_rate_designated_maturity
+        self.termination_date = termination_date
+        self.notional_currency = notional_currency
+        self.principal_exchange = principal_exchange
+        self.roll_convention = roll_convention
+        self.notional_amount = notional_amount
+        self.floating_rate_spread = floating_rate_spread
+        self.effective_date = effective_date
+        self.name = name
+
+    @property
+    def asset_class(self) -> AssetClass:
+        """Rates"""
+        return AssetClass.Rates        
+
+    @property
+    def type(self) -> AssetType:
+        """FloatLeg"""
+        return AssetType.FloatLeg        
+
+    @property
+    def buy_sell(self) -> Union[BuySell, str]:
+        """Buy or Sell side of contract"""
+        return self.__buy_sell
+
+    @buy_sell.setter
+    def buy_sell(self, value: Union[BuySell, str]):
+        self._property_changed('buy_sell')
+        self.__buy_sell = get_enum_value(BuySell, value)        
+
+    @property
+    def floating_rate_for_the_initial_calculation_period(self) -> float:
+        """First fixing"""
+        return self.__floating_rate_for_the_initial_calculation_period
+
+    @floating_rate_for_the_initial_calculation_period.setter
+    def floating_rate_for_the_initial_calculation_period(self, value: float):
+        self._property_changed('floating_rate_for_the_initial_calculation_period')
+        self.__floating_rate_for_the_initial_calculation_period = value        
+
+    @property
+    def floating_rate_day_count_fraction(self) -> Union[DayCountFraction, str]:
+        """The day count fraction of the floating rate"""
+        return self.__floating_rate_day_count_fraction
+
+    @floating_rate_day_count_fraction.setter
+    def floating_rate_day_count_fraction(self, value: Union[DayCountFraction, str]):
+        self._property_changed('floating_rate_day_count_fraction')
+        self.__floating_rate_day_count_fraction = get_enum_value(DayCountFraction, value)        
+
+    @property
+    def floating_first_stub(self) -> Union[Union[datetime.date, str], str]:
+        """The date of the first stub for floating leg"""
+        return self.__floating_first_stub
+
+    @floating_first_stub.setter
+    def floating_first_stub(self, value: Union[Union[datetime.date, str], str]):
+        self._property_changed('floating_first_stub')
+        self.__floating_first_stub = value        
+
+    @property
+    def floating_rate_frequency(self) -> str:
+        """The frequency of floating payments, e.g. 6m"""
+        return self.__floating_rate_frequency
+
+    @floating_rate_frequency.setter
+    def floating_rate_frequency(self, value: str):
+        self._property_changed('floating_rate_frequency')
+        self.__floating_rate_frequency = value        
+
+    @property
+    def floating_holidays(self) -> str:
+        """The accrual calendar for floating leg"""
+        return self.__floating_holidays
+
+    @floating_holidays.setter
+    def floating_holidays(self, value: str):
+        self._property_changed('floating_holidays')
+        self.__floating_holidays = value        
+
+    @property
+    def floating_last_stub(self) -> Union[Union[datetime.date, str], str]:
+        """The date of the last stub for floating leg"""
+        return self.__floating_last_stub
+
+    @floating_last_stub.setter
+    def floating_last_stub(self, value: Union[Union[datetime.date, str], str]):
+        self._property_changed('floating_last_stub')
+        self.__floating_last_stub = value        
+
+    @property
+    def floating_rate_business_day_convention(self) -> Union[BusinessDayConvention, str]:
+        """The business day convention for the floating rate"""
+        return self.__floating_rate_business_day_convention
+
+    @floating_rate_business_day_convention.setter
+    def floating_rate_business_day_convention(self, value: Union[BusinessDayConvention, str]):
+        self._property_changed('floating_rate_business_day_convention')
+        self.__floating_rate_business_day_convention = get_enum_value(BusinessDayConvention, value)        
+
+    @property
+    def floating_rate_option(self) -> str:
+        """The underlying benchmark for the floating rate, e.g. USD-LIBOR-BBA, EUR-EURIBOR-
+           TELERATE"""
+        return self.__floating_rate_option
+
+    @floating_rate_option.setter
+    def floating_rate_option(self, value: str):
+        self._property_changed('floating_rate_option')
+        self.__floating_rate_option = value        
+
+    @property
+    def floating_rate_designated_maturity(self) -> str:
+        """Tenor of the floatingRateOption, e.g. 3m, 6m"""
+        return self.__floating_rate_designated_maturity
+
+    @floating_rate_designated_maturity.setter
+    def floating_rate_designated_maturity(self, value: str):
+        self._property_changed('floating_rate_designated_maturity')
+        self.__floating_rate_designated_maturity = value        
+
+    @property
+    def termination_date(self) -> Union[Union[datetime.date, str], str]:
+        """The termination of the leg, e.g. 2050-04-01, 10y"""
+        return self.__termination_date
+
+    @termination_date.setter
+    def termination_date(self, value: Union[Union[datetime.date, str], str]):
+        self._property_changed('termination_date')
+        self.__termination_date = value        
+
+    @property
+    def notional_currency(self) -> Union[Currency, str]:
+        """Notional currency"""
+        return self.__notional_currency
+
+    @notional_currency.setter
+    def notional_currency(self, value: Union[Currency, str]):
+        self._property_changed('notional_currency')
+        self.__notional_currency = get_enum_value(Currency, value)        
+
+    @property
+    def principal_exchange(self) -> Union[PrincipalExchange, str]:
+        """When the exchange of principals is done"""
+        return self.__principal_exchange
+
+    @principal_exchange.setter
+    def principal_exchange(self, value: Union[PrincipalExchange, str]):
+        self._property_changed('principal_exchange')
+        self.__principal_exchange = get_enum_value(PrincipalExchange, value)        
+
+    @property
+    def roll_convention(self) -> str:
+        """The roll convention"""
+        return self.__roll_convention
+
+    @roll_convention.setter
+    def roll_convention(self, value: str):
+        self._property_changed('roll_convention')
+        self.__roll_convention = value        
+
+    @property
+    def notional_amount(self) -> Union[float, str]:
+        """Notional amount"""
+        return self.__notional_amount
+
+    @notional_amount.setter
+    def notional_amount(self, value: Union[float, str]):
+        self._property_changed('notional_amount')
+        self.__notional_amount = value        
+
+    @property
+    def floating_rate_spread(self) -> Union[float, str]:
+        """The spread over the floating rate"""
+        return self.__floating_rate_spread
+
+    @floating_rate_spread.setter
+    def floating_rate_spread(self, value: Union[float, str]):
+        self._property_changed('floating_rate_spread')
+        self.__floating_rate_spread = value        
+
+    @property
+    def effective_date(self) -> Union[Union[datetime.date, str], str]:
+        """The date on which the instrument becomes effective"""
+        return self.__effective_date
+
+    @effective_date.setter
+    def effective_date(self, value: Union[Union[datetime.date, str], str]):
+        self._property_changed('effective_date')
+        self.__effective_date = value        
 
 
 class IRFloor(Instrument):

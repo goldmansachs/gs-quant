@@ -401,8 +401,8 @@ def _get_swap_data(asset: Asset, swap_tenor: str, benchmark_type: str = None, fl
                    forward_tenor: Optional[GENERIC_DATE] = None, clearing_house: _ClearingHouse = None,
                    source: str = None, real_time: bool = False,
                    query_type: QueryType = QueryType.SWAP_RATE) -> pd.DataFrame:
-    if real_time:
-        raise NotImplementedError('realtime swap_rate not implemented')
+    if real_time and not (query_type == QueryType.SWAP_RATE):
+        raise NotImplementedError('realtime swap_rate not implemented for anything but rates')
     currency = CurrencyEnum(asset.get_identifier(AssetIdentifier.BLOOMBERG_ID))
 
     if currency.value not in CURRENCY_TO_SWAP_RATE_BENCHMARK.keys():

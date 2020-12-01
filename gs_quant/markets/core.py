@@ -126,7 +126,7 @@ class PricingContext(ContextBaseWithDefault):
         """
         super().__init__()
 
-        if market and market_data_location and market.location is not market_data_location:
+        if market and market_data_location and market.location.value is not market_data_location:
             raise ValueError('market.location and market_data_location cannot be different')
 
         if not market_data_location:

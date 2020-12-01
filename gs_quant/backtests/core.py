@@ -59,3 +59,8 @@ class Backtest(__Backtest):
     def get_results(self) -> Tuple[BacktestResult, ...]:
         from gs_quant.api.gs.backtests import GsBacktestApi
         return GsBacktestApi.get_results(backtest_id=self.id)
+
+
+class MarketModel(EnumBase, Enum):
+    STICKY_FIXED_STRIKE = "SFK"
+    STICKY_DELTA = "SD"

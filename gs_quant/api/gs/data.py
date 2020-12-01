@@ -24,11 +24,6 @@ import cachetools
 import numpy
 import pandas as pd
 from cachetools import TTLCache
-from gs_quant.target.assets import FieldFilterMap
-from gs_quant.target.common import MarketDataVendor, PricingLocation
-from gs_quant.target.coordinates import MDAPIDataBatchResponse, MDAPIDataQuery, MDAPIDataQueryResponse, MDAPIQueryField
-from gs_quant.target.data import DataQuery, DataQueryResponse
-from gs_quant.target.data import DataSetEntity
 
 from gs_quant.api.data import DataApi
 from gs_quant.base import Base
@@ -36,8 +31,12 @@ from gs_quant.data.core import DataContext, DataFrequency
 from gs_quant.errors import MqValueError
 from gs_quant.markets import MarketDataCoordinate
 from gs_quant.session import GsSession
+from gs_quant.target.common import MarketDataVendor, PricingLocation
+from gs_quant.target.coordinates import MDAPIDataBatchResponse, MDAPIDataQuery, MDAPIDataQueryResponse, MDAPIQueryField
+from gs_quant.target.data import DataQuery, DataQueryResponse
+from gs_quant.target.data import DataSetEntity
 from .assets import GsIdType
-from ...target.assets import EntityQuery
+from ...target.assets import EntityQuery, FieldFilterMap
 
 _logger = logging.getLogger(__name__)
 
@@ -316,10 +315,13 @@ class GsDataApi(DataApi):
         }
 
     @classmethod
-    def get_data_providers(cls, entity_id: str) -> Dict:
+    def get_data_providers(cls,
+                           entity_id: str,
+                           availability: Optional[Dict] = None) -> Dict:
         """Return daily and real-time data providers
 
         :param entity_id: identifier of entity i.e. asset, country, subdivision
+        :param availability: Optional Measures Availability response for the entity
         :return: dictionary of available data providers
 
         ** Usage **
@@ -327,31 +329,29 @@ class GsDataApi(DataApi):
         Return a dictionary containing a set of dataset providers for each available data field.
         For each field will return a dict of daily and real-time dataset providers where available.
         """
+        response = availability if availability else GsSession.current._get(f'/data/measures/{entity_id}/availability')
+        if 'errorMessages' in response:
+            raise MqValueError(f"Data availability request {response['requestId']} "
+                               f"failed: {response.get('errorMessages', '')}")
 
-        GsSession.current: GsSession
-        body = GsSession.current._get(f'/data/measures/{entity_id}/availability')
-        if 'errorMessages' in body:
-            raise MqValueError(f"data availablity request {body['requestId']} failed: {body.get('errorMessages', '')}")
-        if 'data' not in body:
-            providers = {}
-        else:
-            providers = {}
+        if 'data' not in response:
+            return {}
 
-            all_data_mappings = sorted(body['data'], key=lambda x: x['rank'], reverse=True)
+        providers = {}
+        all_data_mappings = sorted(response['data'], key=lambda x: x['rank'], reverse=True)
 
-            for source in all_data_mappings:
+        for source in all_data_mappings:
+            freq = source.get('frequency', 'End Of Day')
+            dataset_field = source.get('datasetField', '')
+            rank = source.get('rank')
 
-                freq = source.get('frequency', 'End Of Day')
-                dataset_field = source.get('datasetField', '')
-                rank = source.get('rank')
+            providers.setdefault(dataset_field, {})
 
-                providers.setdefault(dataset_field, {})
-
-                if rank:
-                    if freq == 'End Of Day':
-                        providers[dataset_field][DataFrequency.DAILY] = source['datasetId']
-                    elif freq == 'Real Time':
-                        providers[dataset_field][DataFrequency.REAL_TIME] = source['datasetId']
+            if rank:
+                if freq == 'End Of Day':
+                    providers[dataset_field][DataFrequency.DAILY] = source['datasetId']
+                elif freq == 'Real Time':
+                    providers[dataset_field][DataFrequency.REAL_TIME] = source['datasetId']
 
         return providers
 

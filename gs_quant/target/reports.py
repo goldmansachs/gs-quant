@@ -127,267 +127,6 @@ class ParametersOverrides(Base):
         self.__csa_term = value        
 
 
-class Report(Base):
-        
-    @camel_case_translate
-    def __init__(
-        self,
-        position_source_id: str,
-        position_source_type: Union[PositionSourceType, str],
-        type_: Union[ReportType, str],
-        parameters: ReportParameters,
-        calculation_time: float = None,
-        data_set_id: str = None,
-        asset_id: str = None,
-        created_by_id: str = None,
-        created_time: datetime.datetime = None,
-        entitlements: Entitlements = None,
-        entitlement_exclusions: EntitlementExclusions = None,
-        id_: str = None,
-        last_updated_by_id: str = None,
-        last_updated_time: datetime.datetime = None,
-        measures: Tuple[Union[ReportMeasures, str], ...] = None,
-        name: str = None,
-        owner_id: str = None,
-        status: Union[ReportStatus, str] = None,
-        latest_execution_time: datetime.datetime = None,
-        latest_end_date: datetime.date = None,
-        percentage_complete: float = None
-    ):        
-        super().__init__()
-        self.calculation_time = calculation_time
-        self.data_set_id = data_set_id
-        self.asset_id = asset_id
-        self.created_by_id = created_by_id
-        self.created_time = created_time
-        self.entitlements = entitlements
-        self.entitlement_exclusions = entitlement_exclusions
-        self.__id = id_
-        self.last_updated_by_id = last_updated_by_id
-        self.last_updated_time = last_updated_time
-        self.measures = measures
-        self.name = name
-        self.owner_id = owner_id
-        self.parameters = parameters
-        self.position_source_id = position_source_id
-        self.position_source_type = position_source_type
-        self.__type = get_enum_value(ReportType, type_)
-        self.status = status
-        self.latest_execution_time = latest_execution_time
-        self.latest_end_date = latest_end_date
-        self.percentage_complete = percentage_complete
-
-    @property
-    def calculation_time(self) -> float:
-        """The calculation time between request to and response from Boltweb"""
-        return self.__calculation_time
-
-    @calculation_time.setter
-    def calculation_time(self, value: float):
-        self._property_changed('calculation_time')
-        self.__calculation_time = value        
-
-    @property
-    def data_set_id(self) -> str:
-        """Unique id of dataset."""
-        return self.__data_set_id
-
-    @data_set_id.setter
-    def data_set_id(self, value: str):
-        self._property_changed('data_set_id')
-        self.__data_set_id = value        
-
-    @property
-    def asset_id(self) -> str:
-        """Marquee unique asset identifier."""
-        return self.__asset_id
-
-    @asset_id.setter
-    def asset_id(self, value: str):
-        self._property_changed('asset_id')
-        self.__asset_id = value        
-
-    @property
-    def created_by_id(self) -> str:
-        """Marquee unique identifier"""
-        return self.__created_by_id
-
-    @created_by_id.setter
-    def created_by_id(self, value: str):
-        self._property_changed('created_by_id')
-        self.__created_by_id = value        
-
-    @property
-    def created_time(self) -> datetime.datetime:
-        """Time created. ISO 8601 formatted string."""
-        return self.__created_time
-
-    @created_time.setter
-    def created_time(self, value: datetime.datetime):
-        self._property_changed('created_time')
-        self.__created_time = value        
-
-    @property
-    def entitlements(self) -> Entitlements:
-        """Defines the entitlements of a given resource."""
-        return self.__entitlements
-
-    @entitlements.setter
-    def entitlements(self, value: Entitlements):
-        self._property_changed('entitlements')
-        self.__entitlements = value        
-
-    @property
-    def entitlement_exclusions(self) -> EntitlementExclusions:
-        """Defines the exclusion entitlements of a given resource."""
-        return self.__entitlement_exclusions
-
-    @entitlement_exclusions.setter
-    def entitlement_exclusions(self, value: EntitlementExclusions):
-        self._property_changed('entitlement_exclusions')
-        self.__entitlement_exclusions = value        
-
-    @property
-    def id(self) -> str:
-        """Marquee unique identifier"""
-        return self.__id
-
-    @id.setter
-    def id(self, value: str):
-        self._property_changed('id')
-        self.__id = value        
-
-    @property
-    def last_updated_by_id(self) -> str:
-        """Marquee unique identifier"""
-        return self.__last_updated_by_id
-
-    @last_updated_by_id.setter
-    def last_updated_by_id(self, value: str):
-        self._property_changed('last_updated_by_id')
-        self.__last_updated_by_id = value        
-
-    @property
-    def last_updated_time(self) -> datetime.datetime:
-        """Timestamp of when the object was last updated."""
-        return self.__last_updated_time
-
-    @last_updated_time.setter
-    def last_updated_time(self, value: datetime.datetime):
-        self._property_changed('last_updated_time')
-        self.__last_updated_time = value        
-
-    @property
-    def measures(self) -> Tuple[Union[ReportMeasures, str], ...]:
-        """measures to be outputted for the report"""
-        return self.__measures
-
-    @measures.setter
-    def measures(self, value: Tuple[Union[ReportMeasures, str], ...]):
-        self._property_changed('measures')
-        self.__measures = value        
-
-    @property
-    def name(self) -> str:
-        """Report name"""
-        return self.__name
-
-    @name.setter
-    def name(self, value: str):
-        self._property_changed('name')
-        self.__name = value        
-
-    @property
-    def owner_id(self) -> str:
-        """Marquee unique identifier for user who owns the object."""
-        return self.__owner_id
-
-    @owner_id.setter
-    def owner_id(self, value: str):
-        self._property_changed('owner_id')
-        self.__owner_id = value        
-
-    @property
-    def parameters(self) -> ReportParameters:
-        """Parameters specific to the report type"""
-        return self.__parameters
-
-    @parameters.setter
-    def parameters(self, value: ReportParameters):
-        self._property_changed('parameters')
-        self.__parameters = value        
-
-    @property
-    def position_source_id(self) -> str:
-        """Marquee unique identifier"""
-        return self.__position_source_id
-
-    @position_source_id.setter
-    def position_source_id(self, value: str):
-        self._property_changed('position_source_id')
-        self.__position_source_id = value        
-
-    @property
-    def position_source_type(self) -> Union[PositionSourceType, str]:
-        """Source object for position data"""
-        return self.__position_source_type
-
-    @position_source_type.setter
-    def position_source_type(self, value: Union[PositionSourceType, str]):
-        self._property_changed('position_source_type')
-        self.__position_source_type = get_enum_value(PositionSourceType, value)        
-
-    @property
-    def type(self) -> Union[ReportType, str]:
-        """Type of report to execute"""
-        return self.__type
-
-    @type.setter
-    def type(self, value: Union[ReportType, str]):
-        self._property_changed('type')
-        self.__type = get_enum_value(ReportType, value)        
-
-    @property
-    def status(self) -> Union[ReportStatus, str]:
-        """Status of report run"""
-        return self.__status
-
-    @status.setter
-    def status(self, value: Union[ReportStatus, str]):
-        self._property_changed('status')
-        self.__status = get_enum_value(ReportStatus, value)        
-
-    @property
-    def latest_execution_time(self) -> datetime.datetime:
-        """ISO 8601-formatted timestamp"""
-        return self.__latest_execution_time
-
-    @latest_execution_time.setter
-    def latest_execution_time(self, value: datetime.datetime):
-        self._property_changed('latest_execution_time')
-        self.__latest_execution_time = value        
-
-    @property
-    def latest_end_date(self) -> datetime.date:
-        """ISO 8601-formatted date"""
-        return self.__latest_end_date
-
-    @latest_end_date.setter
-    def latest_end_date(self, value: datetime.date):
-        self._property_changed('latest_end_date')
-        self.__latest_end_date = value        
-
-    @property
-    def percentage_complete(self) -> float:
-        """Percentage that the report has been completed so far"""
-        return self.__percentage_complete
-
-    @percentage_complete.setter
-    def percentage_complete(self, value: float):
-        self._property_changed('percentage_complete')
-        self.__percentage_complete = value        
-
-
 class ReportRescheduleRequest(Base):
         
     """Parameters in order to re-schedule a report"""
@@ -879,6 +618,267 @@ class User(Base):
     def app_managers(self, value: Tuple[str, ...]):
         self._property_changed('app_managers')
         self.__app_managers = value        
+
+
+class Report(Base):
+        
+    @camel_case_translate
+    def __init__(
+        self,
+        position_source_id: str,
+        position_source_type: Union[PositionSourceType, str],
+        type_: Union[ReportType, str],
+        parameters: ReportParameters,
+        calculation_time: float = None,
+        data_set_id: str = None,
+        asset_id: str = None,
+        created_by_id: str = None,
+        created_time: datetime.datetime = None,
+        entitlements: Entitlements = None,
+        entitlement_exclusions: EntitlementExclusions = None,
+        id_: str = None,
+        last_updated_by_id: str = None,
+        last_updated_time: datetime.datetime = None,
+        measures: Tuple[Union[ReportMeasures, str], ...] = None,
+        name: str = None,
+        owner_id: str = None,
+        status: Union[ReportStatus, str] = None,
+        latest_execution_time: datetime.datetime = None,
+        latest_end_date: datetime.date = None,
+        percentage_complete: float = None
+    ):        
+        super().__init__()
+        self.calculation_time = calculation_time
+        self.data_set_id = data_set_id
+        self.asset_id = asset_id
+        self.created_by_id = created_by_id
+        self.created_time = created_time
+        self.entitlements = entitlements
+        self.entitlement_exclusions = entitlement_exclusions
+        self.__id = id_
+        self.last_updated_by_id = last_updated_by_id
+        self.last_updated_time = last_updated_time
+        self.measures = measures
+        self.name = name
+        self.owner_id = owner_id
+        self.parameters = parameters
+        self.position_source_id = position_source_id
+        self.position_source_type = position_source_type
+        self.__type = get_enum_value(ReportType, type_)
+        self.status = status
+        self.latest_execution_time = latest_execution_time
+        self.latest_end_date = latest_end_date
+        self.percentage_complete = percentage_complete
+
+    @property
+    def calculation_time(self) -> float:
+        """The calculation time between request to and response from Boltweb"""
+        return self.__calculation_time
+
+    @calculation_time.setter
+    def calculation_time(self, value: float):
+        self._property_changed('calculation_time')
+        self.__calculation_time = value        
+
+    @property
+    def data_set_id(self) -> str:
+        """Unique id of dataset."""
+        return self.__data_set_id
+
+    @data_set_id.setter
+    def data_set_id(self, value: str):
+        self._property_changed('data_set_id')
+        self.__data_set_id = value        
+
+    @property
+    def asset_id(self) -> str:
+        """Marquee unique asset identifier."""
+        return self.__asset_id
+
+    @asset_id.setter
+    def asset_id(self, value: str):
+        self._property_changed('asset_id')
+        self.__asset_id = value        
+
+    @property
+    def created_by_id(self) -> str:
+        """Marquee unique identifier"""
+        return self.__created_by_id
+
+    @created_by_id.setter
+    def created_by_id(self, value: str):
+        self._property_changed('created_by_id')
+        self.__created_by_id = value        
+
+    @property
+    def created_time(self) -> datetime.datetime:
+        """Time created. ISO 8601 formatted string."""
+        return self.__created_time
+
+    @created_time.setter
+    def created_time(self, value: datetime.datetime):
+        self._property_changed('created_time')
+        self.__created_time = value        
+
+    @property
+    def entitlements(self) -> Entitlements:
+        """Defines the entitlements of a given resource."""
+        return self.__entitlements
+
+    @entitlements.setter
+    def entitlements(self, value: Entitlements):
+        self._property_changed('entitlements')
+        self.__entitlements = value        
+
+    @property
+    def entitlement_exclusions(self) -> EntitlementExclusions:
+        """Defines the exclusion entitlements of a given resource."""
+        return self.__entitlement_exclusions
+
+    @entitlement_exclusions.setter
+    def entitlement_exclusions(self, value: EntitlementExclusions):
+        self._property_changed('entitlement_exclusions')
+        self.__entitlement_exclusions = value        
+
+    @property
+    def id(self) -> str:
+        """Marquee unique identifier"""
+        return self.__id
+
+    @id.setter
+    def id(self, value: str):
+        self._property_changed('id')
+        self.__id = value        
+
+    @property
+    def last_updated_by_id(self) -> str:
+        """Marquee unique identifier"""
+        return self.__last_updated_by_id
+
+    @last_updated_by_id.setter
+    def last_updated_by_id(self, value: str):
+        self._property_changed('last_updated_by_id')
+        self.__last_updated_by_id = value        
+
+    @property
+    def last_updated_time(self) -> datetime.datetime:
+        """Timestamp of when the object was last updated."""
+        return self.__last_updated_time
+
+    @last_updated_time.setter
+    def last_updated_time(self, value: datetime.datetime):
+        self._property_changed('last_updated_time')
+        self.__last_updated_time = value        
+
+    @property
+    def measures(self) -> Tuple[Union[ReportMeasures, str], ...]:
+        """measures to be outputted for the report"""
+        return self.__measures
+
+    @measures.setter
+    def measures(self, value: Tuple[Union[ReportMeasures, str], ...]):
+        self._property_changed('measures')
+        self.__measures = value        
+
+    @property
+    def name(self) -> str:
+        """Report name"""
+        return self.__name
+
+    @name.setter
+    def name(self, value: str):
+        self._property_changed('name')
+        self.__name = value        
+
+    @property
+    def owner_id(self) -> str:
+        """Marquee unique identifier for user who owns the object."""
+        return self.__owner_id
+
+    @owner_id.setter
+    def owner_id(self, value: str):
+        self._property_changed('owner_id')
+        self.__owner_id = value        
+
+    @property
+    def parameters(self) -> ReportParameters:
+        """Parameters specific to the report type"""
+        return self.__parameters
+
+    @parameters.setter
+    def parameters(self, value: ReportParameters):
+        self._property_changed('parameters')
+        self.__parameters = value        
+
+    @property
+    def position_source_id(self) -> str:
+        """Marquee unique identifier"""
+        return self.__position_source_id
+
+    @position_source_id.setter
+    def position_source_id(self, value: str):
+        self._property_changed('position_source_id')
+        self.__position_source_id = value        
+
+    @property
+    def position_source_type(self) -> Union[PositionSourceType, str]:
+        """Source object for position data"""
+        return self.__position_source_type
+
+    @position_source_type.setter
+    def position_source_type(self, value: Union[PositionSourceType, str]):
+        self._property_changed('position_source_type')
+        self.__position_source_type = get_enum_value(PositionSourceType, value)        
+
+    @property
+    def type(self) -> Union[ReportType, str]:
+        """Type of report to execute"""
+        return self.__type
+
+    @type.setter
+    def type(self, value: Union[ReportType, str]):
+        self._property_changed('type')
+        self.__type = get_enum_value(ReportType, value)        
+
+    @property
+    def status(self) -> Union[ReportStatus, str]:
+        """Status of report run"""
+        return self.__status
+
+    @status.setter
+    def status(self, value: Union[ReportStatus, str]):
+        self._property_changed('status')
+        self.__status = get_enum_value(ReportStatus, value)        
+
+    @property
+    def latest_execution_time(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
+        return self.__latest_execution_time
+
+    @latest_execution_time.setter
+    def latest_execution_time(self, value: datetime.datetime):
+        self._property_changed('latest_execution_time')
+        self.__latest_execution_time = value        
+
+    @property
+    def latest_end_date(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__latest_end_date
+
+    @latest_end_date.setter
+    def latest_end_date(self, value: datetime.date):
+        self._property_changed('latest_end_date')
+        self.__latest_end_date = value        
+
+    @property
+    def percentage_complete(self) -> float:
+        """Percentage that the report has been completed so far"""
+        return self.__percentage_complete
+
+    @percentage_complete.setter
+    def percentage_complete(self, value: float):
+        self._property_changed('percentage_complete')
+        self.__percentage_complete = value        
 
 
 class ReportJob(Base):
