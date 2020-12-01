@@ -125,7 +125,8 @@ class CompositeResultFuture(PricingFuture):
         rm = self.risk_measures
 
         def to_records(p: PortfolioRiskResult) -> list:
-            return [to_records(res) if isinstance(res, PortfolioRiskResult) else res for res in p]
+            records = [to_records(res) if isinstance(res, PortfolioRiskResult) else res for res in p]
+            return records
 
         def flatten_list(lst):
             return [item for sublist in lst for item in sublist]
@@ -183,7 +184,7 @@ class CompositeResultFuture(PricingFuture):
                                                                                   rec in record]
             join_on = ['date', 'mkt_type', 'mkt_asset', 'mkt_class', 'mkt_point'] \
                 if isinstance(self.dates[0], dt.date) else ['mkt_type', 'mkt_asset', 'mkt_class', 'mkt_point']
-            df = reduce(lambda df1, df2: pd.merge(df1, df2, on=join_on, how='left'), dfs_list)
+            df = reduce(lambda df1, df2: pd.merge(df1, df2, on=join_on, how='outer'), dfs_list)
             cols = ['mkt_type', 'mkt_asset', 'mkt_class', 'mkt_point']
             cols.extend(combine_names)
             df.columns = cols
@@ -284,7 +285,7 @@ class MultipleRiskMeasureResult(dict):
         if isinstance(lst[0], DataFrameWithInfo):
             join_on = ['date', 'mkt_type', 'mkt_asset', 'mkt_class', 'mkt_point'] \
                 if isinstance(self.dates[0], dt.date) else ['mkt_type', 'mkt_asset', 'mkt_class', 'mkt_point']
-            return reduce(lambda df1, df2: pd.merge(df1, df2, on=join_on, how='left'), lst)
+            return reduce(lambda df1, df2: pd.merge(df1, df2, on=join_on, how='outer'), lst)
         else:
             return pd.DataFrame(self)
 

@@ -103,6 +103,9 @@ class AssetType(Enum):
     # COMMODITY NATURAL GAS Hub
     COMMODITY_NATURAL_GAS_HUB = "Commodity Natural Gas Hub"
 
+    # COMMODITY EU NATURAL GAS Hub
+    COMMODITY_EU_NATURAL_GAS_HUB = "Commodity EU Natural Gas Hub"
+
     #: Commodity Power Node
     COMMODITY_POWER_NODE = "Commodity Power Node"
 
@@ -120,6 +123,9 @@ class AssetType(Enum):
 
     #: Commodity
     COMMODITY = "Commodity"
+
+    #: Crypto
+    CRYPTO_CURRENCY = "Crypto Currency"
 
 
 class AssetIdentifier(EntityIdentifier):
@@ -539,6 +545,41 @@ class CommodityNaturalGasHub(Asset):
         return AssetType.COMMODITY_NATURAL_GAS_HUB
 
 
+class CommodityEUNaturalGasHub(Asset):
+    """Commodity EU Natural Gas Hub
+
+    Represents a virtual/physical hub in EU Natural Gas markets
+
+    """
+
+    def __init__(self,
+                 id_: str,
+                 name: str,
+                 entity: Optional[Dict] = None):
+        Asset.__init__(self, id_, AssetClass.Commod, name, entity=entity)
+
+    def get_type(self) -> AssetType:
+        return AssetType.COMMODITY_EU_NATURAL_GAS_HUB
+
+
+class CryptoCurrency(Asset):
+    """Crypto Currency
+
+    Represents a cryptocurrency
+
+    """
+
+    def __init__(self,
+                 id_: str,
+                 asset_class: Union[AssetClass, str],
+                 name: str,
+                 entity: Optional[Dict] = None):
+        Asset.__init__(self, id_, asset_class, name, entity=entity)
+
+    def get_type(self) -> AssetType:
+        return AssetType.CRYPTO_CURRENCY
+
+
 class CommodityPowerNode(Asset):
     """Commodity Power Node
 
@@ -884,6 +925,9 @@ class SecurityMaster:
         if asset_type in (GsAssetType.CommodityNaturalGasHub.value,):
             return CommodityNaturalGasHub(gs_asset.id, gs_asset.name, entity=asset_entity)
 
+        if asset_type in (GsAssetType.CommodityEUNaturalGasHub.value,):
+            return CommodityEUNaturalGasHub(gs_asset.id, gs_asset.name, entity=asset_entity)
+
         if asset_type in (GsAssetType.CommodityPowerNode.value,):
             return CommodityPowerNode(gs_asset.id, gs_asset.name, entity=asset_entity)
 
@@ -901,6 +945,9 @@ class SecurityMaster:
 
         if asset_type in (GsAssetType.FutureContract.value,):
             return FutureContract(gs_asset.id, gs_asset.assetClass, gs_asset.name, entity=asset_entity)
+
+        if asset_type in (GsAssetType.Crypto_Currency.value,):
+            return CryptoCurrency(gs_asset.id, gs_asset.assetClass, gs_asset.name, entity=asset_entity)
 
         raise TypeError(f'unsupported asset type {asset_type}')
 
