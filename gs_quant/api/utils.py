@@ -14,14 +14,12 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.session import GsSession
 import socket
 import requests
 
 
 def handle_proxy(url, params):
-    session = GsSession.get()
-    if socket.getfqdn().split('.')[-2:] == ['gs', 'com'] or session.is_internal():
+    if socket.getfqdn().split('.')[-2:] == ['gs', 'com']:
         try:
             import gs_quant_internal
             proxies = gs_quant_internal.__proxies__
