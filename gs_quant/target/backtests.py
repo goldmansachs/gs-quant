@@ -52,6 +52,17 @@ class BacktestType(EnumBase, Enum):
         return self.value
 
 
+class EquityMarketModel(EnumBase, Enum):    
+    
+    """Market model for pricing"""
+
+    SFK = 'SFK'
+    SD = 'SD'
+    
+    def __repr__(self):
+        return self.value
+
+
 class FlowVolBacktestMeasure(EnumBase, Enum):    
     
     """Metric which can be calculated using Flow Vol. Backtester"""
@@ -258,40 +269,6 @@ class BacktestRisk(Base):
     def timeseries(self, value: Tuple[FieldValueMap, ...]):
         self._property_changed('timeseries')
         self.__timeseries = value        
-
-
-class BacktestRiskPosition(Base):
-        
-    @camel_case_translate
-    def __init__(
-        self,
-        instrument: dict,
-        quantity: float = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.instrument = instrument
-        self.quantity = quantity
-        self.name = name
-
-    @property
-    def instrument(self) -> dict:
-        return self.__instrument
-
-    @instrument.setter
-    def instrument(self, value: dict):
-        self._property_changed('instrument')
-        self.__instrument = value        
-
-    @property
-    def quantity(self) -> float:
-        """Quantity of instrument"""
-        return self.__quantity
-
-    @quantity.setter
-    def quantity(self, value: float):
-        self._property_changed('quantity')
-        self.__quantity = value        
 
 
 class BacktestSignalSeriesItem(Base):
@@ -1521,67 +1498,50 @@ class BacktestResult(Base):
         self.__backtest_version = value        
 
 
-class BacktestRiskRequest(Base):
+class BacktestRiskPosition(Base):
         
-    """Request to compute Backtest Price and Risk"""
-
     @camel_case_translate
     def __init__(
         self,
-        positions: Tuple[BacktestRiskPosition, ...],
-        measures: Tuple[Union[BacktestRiskMeasureType, str], ...],
-        start_date: datetime.date = None,
-        end_date: datetime.date = None,
+        instrument: dict,
+        quantity: float = None,
+        market_model: Union[EquityMarketModel, str] = None,
         name: str = None
     ):        
         super().__init__()
-        self.positions = positions
-        self.measures = measures
-        self.start_date = start_date
-        self.end_date = end_date
+        self.instrument = instrument
+        self.quantity = quantity
+        self.market_model = market_model
         self.name = name
 
     @property
-    def positions(self) -> Tuple[BacktestRiskPosition, ...]:
-        """The positions on which to run the risk calculation"""
-        return self.__positions
+    def instrument(self) -> dict:
+        return self.__instrument
 
-    @positions.setter
-    def positions(self, value: Tuple[BacktestRiskPosition, ...]):
-        self._property_changed('positions')
-        self.__positions = value        
-
-    @property
-    def measures(self) -> Tuple[Union[BacktestRiskMeasureType, str], ...]:
-        """A collection of risk measures to compute. E.g. { 'measureType': 'Delta',
-           'assetClass': 'Equity'"""
-        return self.__measures
-
-    @measures.setter
-    def measures(self, value: Tuple[Union[BacktestRiskMeasureType, str], ...]):
-        self._property_changed('measures')
-        self.__measures = value        
+    @instrument.setter
+    def instrument(self, value: dict):
+        self._property_changed('instrument')
+        self.__instrument = value        
 
     @property
-    def start_date(self) -> datetime.date:
-        """Start date of backtest risk computation selected by user."""
-        return self.__start_date
+    def quantity(self) -> float:
+        """Quantity of instrument"""
+        return self.__quantity
 
-    @start_date.setter
-    def start_date(self, value: datetime.date):
-        self._property_changed('start_date')
-        self.__start_date = value        
+    @quantity.setter
+    def quantity(self, value: float):
+        self._property_changed('quantity')
+        self.__quantity = value        
 
     @property
-    def end_date(self) -> datetime.date:
-        """End date of backtest risk computation selected by user. If not selected,
-           defaults to the last date for which we can compute price"""
-        return self.__end_date
+    def market_model(self) -> Union[EquityMarketModel, str]:
+        """Market model for pricing"""
+        return self.__market_model
 
-    @end_date.setter
-    def end_date(self, value: datetime.date):
-        self._property_changed('end_date')
-        self.__end_date = value        
+    @market_model.setter
+    def market_model(self, value: Union[EquityMarketModel, str]):
+        self._property_changed('market_model')
+        self.__market_model = get_enum_value(EquityMarketModel, value)        
 
 
 class BacktestStrategyUnderlierHedge(Base):
@@ -2227,6 +2187,69 @@ class UnderlyingAssetIdDataRefData(Base):
     def frequency(self, value: FrequencyRefData):
         self._property_changed('frequency')
         self.__frequency = value        
+
+
+class BacktestRiskRequest(Base):
+        
+    """Request to compute Backtest Price and Risk"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        positions: Tuple[BacktestRiskPosition, ...],
+        measures: Tuple[Union[BacktestRiskMeasureType, str], ...],
+        start_date: datetime.date = None,
+        end_date: datetime.date = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.positions = positions
+        self.measures = measures
+        self.start_date = start_date
+        self.end_date = end_date
+        self.name = name
+
+    @property
+    def positions(self) -> Tuple[BacktestRiskPosition, ...]:
+        """The positions on which to run the risk calculation"""
+        return self.__positions
+
+    @positions.setter
+    def positions(self, value: Tuple[BacktestRiskPosition, ...]):
+        self._property_changed('positions')
+        self.__positions = value        
+
+    @property
+    def measures(self) -> Tuple[Union[BacktestRiskMeasureType, str], ...]:
+        """A collection of risk measures to compute. E.g. { 'measureType': 'Delta',
+           'assetClass': 'Equity'"""
+        return self.__measures
+
+    @measures.setter
+    def measures(self, value: Tuple[Union[BacktestRiskMeasureType, str], ...]):
+        self._property_changed('measures')
+        self.__measures = value        
+
+    @property
+    def start_date(self) -> datetime.date:
+        """Start date of backtest risk computation selected by user."""
+        return self.__start_date
+
+    @start_date.setter
+    def start_date(self, value: datetime.date):
+        self._property_changed('start_date')
+        self.__start_date = value        
+
+    @property
+    def end_date(self) -> datetime.date:
+        """End date of backtest risk computation selected by user. If not selected,
+           defaults to the last date for which we can compute price"""
+        return self.__end_date
+
+    @end_date.setter
+    def end_date(self, value: datetime.date):
+        self._property_changed('end_date')
+        self.__end_date = value        
 
 
 class BacktestStrategyUnderlier(Base):

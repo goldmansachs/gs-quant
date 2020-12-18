@@ -256,6 +256,9 @@ def _match_floating_tenors(swap_args) -> dict:
 
 
 def _get_tdapi_rates_assets(allow_many=False, **kwargs) -> Union[str, list]:
+    # sanitize input for asset query.
+    if("pricing_location" in kwargs):
+        del kwargs["pricing_location"]
     assets = GsAssetApi.get_many_assets(**kwargs)
     # change order of basis swap legs and check if swap in dataset
     if len(assets) == 0 and ('asset_parameters_payer_rate_option' in kwargs):  # flip legs

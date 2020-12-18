@@ -1,4 +1,4 @@
-EqForward
+﻿EqForward
 =========
 
 For methods of this class, see :doc:`gs_quant.base.Priceable`
@@ -13,14 +13,22 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    
-   
    .. autoattribute:: expiration_date
    
    
    .. autoattribute:: forward_price
    
    
+   .. autoattribute:: instrument_quantity
+   
+   
    .. autoattribute:: number_of_shares
+   
+   
+   .. autoattribute:: provider
+   
+   
+   .. autoattribute:: resolution_key
    
    
    
@@ -28,6 +36,9 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    .. autoattribute:: underlier_type
+   
+   
+   .. autoattribute:: unresolved
    
    
    

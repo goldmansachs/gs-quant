@@ -1,4 +1,4 @@
-IRSwaption
+﻿IRSwaption
 ==========
 
 For methods of this class, see :doc:`gs_quant.base.Priceable`
@@ -13,6 +13,8 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    
+   .. autoattribute:: buy_sell
+   
    
    .. autoattribute:: clearing_house
    
@@ -24,6 +26,12 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    .. autoattribute:: fee
+   
+   
+   .. autoattribute:: fee_currency
+   
+   
+   .. autoattribute:: fee_payment_date
    
    
    .. autoattribute:: fixed_rate_business_day_convention
@@ -53,6 +61,9 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: floating_rate_spread
    
    
+   .. autoattribute:: instrument_quantity
+   
+   
    .. autoattribute:: notional_amount
    
    
@@ -68,6 +79,12 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: premium_payment_date
    
    
+   .. autoattribute:: provider
+   
+   
+   .. autoattribute:: resolution_key
+   
+   
    .. autoattribute:: settlement
    
    
@@ -76,6 +93,9 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    .. autoattribute:: termination_date
    
+   
+   
+   .. autoattribute:: unresolved
    
    
    

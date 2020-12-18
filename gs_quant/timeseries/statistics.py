@@ -25,7 +25,6 @@ import statsmodels.api as sm
 from ..models.epidemiology import SIR, SEIR, EpidemicModel
 from ..data import DataContext
 
-
 """
 Stats library is for basic arithmetic and statistical operations on timeseries.
 These include basic algebraic operations, probability and distribution analysis.
@@ -737,12 +736,18 @@ def winsorize(x: pd.Series, limit: float = 2.5, w: Union[Window, int, str] = Win
     return apply_ramp(ret, w)
 
 
+class Direction(Enum):
+    START_TODAY = 'start_today'
+    END_TODAY = 'end_today'
+
+
 @plot_function
-def generate_series(length: int) -> pd.Series:
+def generate_series(length: int, direction: Direction = Direction.START_TODAY) -> pd.Series:
     """
     Generate sample timeseries
 
     :param length: number of observations
+    :param direction: whether generated series should start from today or end on today
     :return: date-based time series of randomly generated prices
 
     **Usage**
@@ -771,7 +776,10 @@ def generate_series(length: int) -> pd.Series:
 
     """
     levels = [100]
-    dates = [datetime.date.today()]
+    first = datetime.date.today()
+    if direction == Direction.END_TODAY:
+        first -= datetime.timedelta(days=length - 1)
+    dates = [first]
 
     for i in range(length - 1):
         levels.append(levels[i] * 1 + numpy.random.normal())
@@ -886,7 +894,6 @@ def percentile(x: pd.Series, n: float, w: Union[Window, int, str] = None) -> Uni
 
 
 class LinearRegression:
-
     """
     Fit an Ordinary least squares (OLS) linear regression model.
 
@@ -973,7 +980,6 @@ class LinearRegression:
 
 
 class RollingLinearRegression:
-
     """
     Fit a rolling ordinary least squares (OLS) linear regression model.
 
@@ -1056,7 +1062,6 @@ class RollingLinearRegression:
 
 
 class SIRModel:
-
     """SIR Compartmental model for transmission of infectious disease
 
     :param beta: transmission rate of the infection
@@ -1092,6 +1097,7 @@ class SIRModel:
     compartment once calibrated
 
     """
+
     def __init__(self, beta: float = None, gamma: float = None, s: Union[pd.Series, float] = None,
                  i: Union[pd.Series, float] = None, r: Union[pd.Series, float] = None,
                  n: Union[pd.Series, float] = None, fit: bool = True,
@@ -1231,7 +1237,6 @@ class SIRModel:
 
 
 class SEIRModel(SIRModel):
-
     """SEIR Compartmental model for transmission of infectious disease
 
     :param beta: transmission rate of the infection
@@ -1271,6 +1276,7 @@ class SEIRModel(SIRModel):
     predict the populations of each compartment once calibrated.
 
     """
+
     def __init__(self, beta: float = None, gamma: float = None, sigma: float = None, s: Union[pd.Series, float] = None,
                  e: Union[pd.Series, float] = None, i: Union[pd.Series, float] = None,
                  r: Union[pd.Series, float] = None, n: Union[pd.Series, float] = None,

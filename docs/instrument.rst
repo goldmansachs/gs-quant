@@ -26,8 +26,12 @@ Instruments
    EqSynthetic
    EqVarianceSwap
    Forward
+   FXBinary
    FXForward
+   FXMultiCrossBinary
+   FXMultiCrossBinaryLeg
    FXOption
+   FXVolatilitySwap
    InflationSwap
    IRBasisSwap
    IRCap
@@ -40,4 +44,5 @@ Instruments
    IRSwaption
    IRXccySwap
    IRXccySwapFixFix
+   IRXccySwapFixFlt
    Security

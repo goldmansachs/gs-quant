@@ -1,4 +1,4 @@
-CommodOTCSwap
+﻿CommodOTCSwap
 =============
 
 For methods of this class, see :doc:`gs_quant.base.Priceable`
@@ -13,14 +13,19 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    
-   
    .. autoattribute:: end
+   
+   
+   .. autoattribute:: instrument_quantity
    
    
    .. autoattribute:: legs
    
    
    .. autoattribute:: number_of_periods
+   
+   
+   .. autoattribute:: provider
    
    
    .. autoattribute:: quantity
@@ -32,6 +37,9 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: quantity_unit
    
    
+   .. autoattribute:: resolution_key
+   
+   
    .. autoattribute:: settlement
    
    
@@ -40,6 +48,9 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    .. autoattribute:: strategy
    
+   
+   
+   .. autoattribute:: unresolved
    
    
    

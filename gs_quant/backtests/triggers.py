@@ -22,6 +22,7 @@ import pandas as pd
 from gs_quant.backtests.actions import Action
 from gs_quant.backtests.backtest_utils import make_list, CalcType
 from gs_quant.backtests.generic_engine import BackTest
+import datetime as dt
 
 
 class TriggerDirection(Enum):
@@ -42,6 +43,14 @@ class PeriodicTriggerRequirements(TriggerRequirements):
         self.end_date = end_date
         self.frequency = frequency
         self.calendar = calendar
+
+
+class IntradayTriggerRequirements(TriggerRequirements):
+    def __init__(self, start_time, end_time, frequency):
+        super().__init__()
+        self.start_time = start_time
+        self.end_time = end_time
+        self.frequency = frequency
 
 
 class MktTriggerRequirements(TriggerRequirements):
@@ -120,6 +129,30 @@ class PeriodicTrigger(Trigger):
         if not self._trigger_dates:
             self.get_trigger_dates()
         return state in self._trigger_dates
+
+
+class IntradayPeriodicTrigger(Trigger):
+    def __init__(self,
+                 trigger_requirements: IntradayTriggerRequirements,
+                 actions: Union[Action, Iterable[Action]]):
+        super().__init__(trigger_requirements, actions)
+
+        # generate all the trigger times
+        start = trigger_requirements.start_time
+        end = trigger_requirements.end_time
+        freq = trigger_requirements.frequency
+
+        self._trigger_times = []
+        time = start
+        while time <= end:
+            self._trigger_times.append(time)
+            time = (dt.datetime.combine(dt.date.today(), time) + dt.timedelta(minutes=freq)).time()
+
+    def get_trigger_times(self):
+        return self._trigger_times
+
+    def has_triggered(self, state: Union[datetime.date, datetime.datetime], backtest: BackTest = None) -> bool:
+        return state.time() in self._trigger_times
 
 
 class MktTrigger(Trigger):

@@ -17,11 +17,13 @@ import inspect
 import logging
 from enum import Enum, IntEnum
 from functools import wraps
-from typing import Optional, Union, List
+from typing import Optional, Union, List, Iterable
 
 import pandas as pd
 
 from gs_quant.api.gs.data import QueryType
+from gs_quant.entities.entity import EntityType
+from gs_quant.errors import MqValueError
 
 
 def _create_enum(name, members):
@@ -36,7 +38,7 @@ def _to_offset(tenor: str) -> pd.DateOffset:
     import re
     matcher = re.fullmatch('(\\d+)([dwmy])', tenor)
     if not matcher:
-        raise ValueError('invalid tenor ' + tenor)
+        raise MqValueError('invalid tenor ' + tenor)
 
     ab = matcher.group(2)
     if ab == 'd':
@@ -102,9 +104,9 @@ class Window:
 def _check_window(series_length: int, window: Window):
     if series_length > 0 and isinstance(window.w, int) and isinstance(window.r, int):
         if window.w <= 0:
-            raise ValueError('Window value must be greater than zero.')
+            raise MqValueError('Window value must be greater than zero.')
         if window.r > series_length or window.r < 0:
-            raise ValueError('Ramp value must be less than the length of the series and greater than zero.')
+            raise MqValueError('Ramp value must be less than the length of the series and greater than zero.')
 
 
 def apply_ramp(x: pd.Series, window: Window) -> pd.Series:
@@ -154,7 +156,7 @@ def plot_session_function(fn):
 
 
 def plot_measure(asset_class: Optional[tuple] = None, asset_type: Optional[tuple] = None,
-                 dependencies: Optional[List[QueryType]] = []):
+                 dependencies: Optional[List[QueryType]] = tuple()):
     # Indicates that fn should be exported to plottool as a member function / pseudo-measure.
     # Set category to None for no restrictions, else provide a tuple of allowed values.
     def decorator(fn):
@@ -162,9 +164,27 @@ def plot_measure(asset_class: Optional[tuple] = None, asset_type: Optional[tuple
         assert asset_type is None or isinstance(asset_type, tuple)
 
         fn.plot_measure = True
+        fn.entity_type = EntityType.ASSET
         fn.asset_class = asset_class
         fn.asset_type = asset_type
         fn.dependencies = dependencies
+
+        return fn
+
+    return decorator
+
+
+def plot_measure_entity(entity_type: EntityType, dependencies: Optional[Iterable[QueryType]] = tuple()):
+
+    def decorator(fn):
+        assert isinstance(entity_type, EntityType)
+        if dependencies is not None:
+            assert isinstance(dependencies, Iterable)
+            assert all(isinstance(x, QueryType) for x in dependencies)
+
+        fn.plot_measure_entity = True
+        fn.entity_type = entity_type
+        fn.dependencies = tuple(dependencies)  # immutable
 
         return fn
 

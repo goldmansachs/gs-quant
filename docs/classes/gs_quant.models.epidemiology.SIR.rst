@@ -1,4 +1,4 @@
-SIR
+﻿gs\_quant.models.epidemiology.SIR
 =================================
 
 .. currentmodule:: gs_quant.models.epidemiology

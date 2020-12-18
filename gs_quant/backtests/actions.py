@@ -14,14 +14,15 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from typing import Union, Iterable
 import datetime
 
 from gs_quant.backtests.backtest_utils import *
 from gs_quant.backtests.generic_engine import BackTest, ScalingPortfolio
 from gs_quant.base import Priceable
-from gs_quant.markets import HistoricalPricingContext, PricingContext
+from gs_quant.datetime.date import *
+from gs_quant.markets import HistoricalPricingContext
 from gs_quant.markets.portfolio import Portfolio
+from gs_quant.markets.securities import *
 
 action_count = 1
 
@@ -60,6 +61,15 @@ class Action(object):
         :return:
         """
         raise RuntimeError('apply_action must be implemented by subclass')
+
+    def raise_order(self, state: datetime.date, backtest: BackTest = None):
+        """
+        Get new trade orders
+        :param backtest:
+        :param state:
+        :return:
+        """
+        raise RuntimeError('raise_order must be implemented by subclass')
 
     @property
     def calc_type(self):
@@ -101,17 +111,22 @@ class AddTradeAction(Action):
     def set_dated_priceables(self, state, priceables):
         self._dated_priceables[state] = make_list(priceables)
 
-    def apply_action(self, state: Union[datetime.date, Iterable[datetime.date]], backtest: BackTest):
+    def raise_order(self, state: Union[datetime.date, Iterable[datetime.date]], backtest: BackTest = None):
         with PricingContext(is_batch=True):
-            f = {}
+            orders = {}
             for s in state:
                 active_portfolio = self._dated_priceables.get(s) or self._priceables
                 with PricingContext(pricing_date=s):
-                    f[s] = Portfolio(active_portfolio).resolve(in_place=False)
+                    orders[s] = Portfolio(active_portfolio).resolve(in_place=False)
+        return orders
+
+    def apply_action(self, state: Union[datetime.date, Iterable[datetime.date]], backtest: BackTest):
+
+        orders = self.raise_order(state, backtest)
 
         for s in backtest.states:
             pos = []
-            for create_date, portfolio in f.items():
+            for create_date, portfolio in orders.items():
                 pos += [inst for inst in portfolio.result().instruments
                         if get_final_date(inst, create_date, self.trade_duration) >= s >= create_date]
             if len(pos) > 0:

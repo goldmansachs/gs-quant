@@ -18,7 +18,6 @@ from copy import deepcopy
 from collections import defaultdict
 import pandas as pd
 from typing import Optional
-
 from gs_quant.backtests.backtest_utils import make_list, CalcType
 from gs_quant.instrument import Instrument
 from gs_quant.markets.portfolio import Portfolio
@@ -116,6 +115,10 @@ class GenericEngine(object):
 
         backtest = BackTest(strategy, dates, risks)
 
+        if strategy.initial_portfolio is not None:
+            for date in dates:
+                backtest.portfolio_dict[date].append(strategy.initial_portfolio)
+
         for trigger in strategy.triggers:
             if trigger.calc_type != CalcType.path_dependent:
                 triggered_dates = [date for date in dates if trigger.has_triggered(date, backtest)]
@@ -145,10 +148,10 @@ class GenericEngine(object):
                     scale_date = p.dates[0]
                     scaling_factor = backtest.results[scale_date][p.risk][0] / p.results[scale_date][p.risk][0]
                     scaled_trade = p.trade.as_dict()
-                    scaled_trade['notional_amount'] *= scaling_factor
+                    scaled_trade['notional_amount'] *= -scaling_factor
                     scaled_trade = Instrument.from_dict(scaled_trade)
                     for day in p.dates:
-                        backtest.add_results(day, p.results[day] * scaling_factor)
+                        backtest.add_results(day, p.results[day] * -scaling_factor)
                         backtest.portfolio_dict[day] += Portfolio(scaled_trade)
 
             # path dependent

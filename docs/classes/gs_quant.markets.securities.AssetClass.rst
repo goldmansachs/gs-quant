@@ -1,4 +1,4 @@
-AssetClass
+﻿gs\_quant.markets.securities.AssetClass
 =======================================
 
 .. currentmodule:: gs_quant.markets.securities
@@ -21,11 +21,14 @@ AssetClass
       ~AssetClass.Commod
       ~AssetClass.Credit
       ~AssetClass.Cross_Asset
+      ~AssetClass.Cryptocurrency
+      ~AssetClass.Econ
       ~AssetClass.Equity
       ~AssetClass.FX
       ~AssetClass.Fund
       ~AssetClass.Loan
       ~AssetClass.Mortgage
       ~AssetClass.Rates
+      ~AssetClass.Social
    
    

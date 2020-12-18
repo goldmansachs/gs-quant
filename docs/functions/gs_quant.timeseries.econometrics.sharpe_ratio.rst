@@ -1,5 +1,5 @@
-sharpe_ratio
-========================================
+﻿gs\_quant.timeseries.econometrics.sharpe\_ratio
+===============================================
 
 .. currentmodule:: gs_quant.timeseries.econometrics
 

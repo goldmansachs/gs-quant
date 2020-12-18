@@ -462,7 +462,7 @@ class DataGridComponentParameters(Base):
     @tooltip.setter
     def tooltip(self, value: str):
         self._property_changed('tooltip')
-        self.__tooltip = value        
+        self.__tooltip = value
 
 
 class LegendItem(Base):

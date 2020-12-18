@@ -1,4 +1,4 @@
-FXForward
+﻿FXForward
 =========
 
 For methods of this class, see :doc:`gs_quant.base.Priceable`
@@ -13,8 +13,10 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    
-   
    .. autoattribute:: forward_rate
+   
+   
+   .. autoattribute:: instrument_quantity
    
    
    .. autoattribute:: notional_amount
@@ -23,8 +25,17 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: pair
    
    
+   .. autoattribute:: provider
+   
+   
+   .. autoattribute:: resolution_key
+   
+   
    .. autoattribute:: settlement_date
    
+   
+   
+   .. autoattribute:: unresolved
    
    
    

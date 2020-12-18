@@ -1,4 +1,4 @@
-moving\_average
+﻿gs\_quant.timeseries.technicals.moving\_average
 ===============================================
 
 .. currentmodule:: gs_quant.timeseries.technicals

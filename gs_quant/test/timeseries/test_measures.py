@@ -930,6 +930,8 @@ def mock_esg(_cls, _q):
         "esMomentumPercentile": [81.2, 75.4, 65.7],
         "gRegionalScore": [2, 4, 6],
         "gRegionalPercentile": [81.2, 75.4, 65.7],
+        "controversyScore": [2, 4, 6],
+        "controversyPercentile": [81.2, 75.4, 65.7],
         "esDisclosurePercentage": [49.2, 55.7, 98.4]
     }
     df = MarketDataResponseFrame(data=d, index=_index * 3)
@@ -1044,9 +1046,6 @@ def test_skew():
 
     with pytest.raises(MqError):
         tm.skew(mock_spx, '1m', None, 25)
-
-    with pytest.raises(MqError):
-        tm.skew(mock_spx, '1m', tm.SkewReference.SPOT, 25, real_time=True)
 
 
 def test_skew_fx():
@@ -3297,6 +3296,9 @@ def test_esg_headline_metric():
     actual = tm.esg_headline_metric(mock_aapl, tm.EsgMetric.GOVERNANCE_REGIONAL_SCORE)
     assert_series_equal(pd.Series([2, 4, 6], index=_index * 3, name='gRegionalScore'), pd.Series(actual))
 
+    actual = tm.esg_headline_metric(mock_aapl, tm.EsgMetric.CONTROVERSY_SCORE)
+    assert_series_equal(pd.Series([2, 4, 6], index=_index * 3, name='controversyScore'), pd.Series(actual))
+
     actual = tm.esg_headline_metric(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_NUMERIC_PERCENTILE)
     assert_series_equal(pd.Series([81.2, 75.4, 65.7], index=_index * 3, name='esNumericPercentile'), pd.Series(actual))
 
@@ -3320,6 +3322,10 @@ def test_esg_headline_metric():
 
     actual = tm.esg_headline_metric(mock_aapl, tm.EsgMetric.GOVERNANCE_REGIONAL_PERCENTILE)
     assert_series_equal(pd.Series([81.2, 75.4, 65.7], index=_index * 3, name='gRegionalPercentile'),
+                        pd.Series(actual))
+
+    actual = tm.esg_headline_metric(mock_aapl, tm.EsgMetric.CONTROVERSY_PERCENTILE)
+    assert_series_equal(pd.Series([81.2, 75.4, 65.7], index=_index * 3, name='controversyPercentile'),
                         pd.Series(actual))
 
     actual = tm.esg_headline_metric(mock_aapl, tm.EsgMetric.ENVIRONMENTAL_SOCIAL_DISCLOSURE)

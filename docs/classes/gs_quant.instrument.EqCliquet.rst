@@ -1,4 +1,4 @@
-EqCliquet
+﻿EqCliquet
 =========
 
 For methods of this class, see :doc:`gs_quant.base.Priceable`
@@ -9,7 +9,6 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
 
    
    .. rubric:: Properties
-   
    
    
    
@@ -29,6 +28,9 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: global_floor
    
    
+   .. autoattribute:: instrument_quantity
+   
+   
    .. autoattribute:: last_valuation_date
    
    
@@ -36,6 +38,12 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    .. autoattribute:: payment_frequency
+   
+   
+   .. autoattribute:: provider
+   
+   
+   .. autoattribute:: resolution_key
    
    
    .. autoattribute:: return_style
@@ -52,6 +60,9 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    .. autoattribute:: underlier_type
+   
+   
+   .. autoattribute:: unresolved
    
    
    .. autoattribute:: valuation_period

@@ -1,4 +1,4 @@
-EqOption
+﻿EqOption
 ========
 
 For methods of this class, see :doc:`gs_quant.base.Priceable`
@@ -13,7 +13,6 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    
-   
    .. autoattribute:: buy_sell
    
    
@@ -21,6 +20,9 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    .. autoattribute:: expiration_date
+   
+   
+   .. autoattribute:: instrument_quantity
    
    
    .. autoattribute:: method_of_settlement
@@ -47,6 +49,12 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: premium_payment_date
    
    
+   .. autoattribute:: provider
+   
+   
+   .. autoattribute:: resolution_key
+   
+   
    .. autoattribute:: settlement_currency
    
    
@@ -64,6 +72,9 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    .. autoattribute:: underlier_type
+   
+   
+   .. autoattribute:: unresolved
    
    
    .. autoattribute:: valuation_time

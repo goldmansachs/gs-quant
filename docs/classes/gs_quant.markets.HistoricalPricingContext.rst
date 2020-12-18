@@ -1,4 +1,4 @@
-HistoricalPricingContext
+﻿HistoricalPricingContext
 ==========================================
 
 .. currentmodule:: gs_quant.markets
@@ -15,8 +15,8 @@ HistoricalPricingContext
    
       ~HistoricalPricingContext.__init__
       ~HistoricalPricingContext.calc
-      ~PricingContext.default_value
-      ~HistoricalPricingContext.resolve_fields
+      ~HistoricalPricingContext.clone
+      ~HistoricalPricingContext.default_value
    
    
 
@@ -26,8 +26,17 @@ HistoricalPricingContext
 
    .. autosummary::
    
-      ~HistoricalPricingContext.market_data_as_of
+      ~HistoricalPricingContext.active_context
+      ~HistoricalPricingContext.csa_term
+      ~HistoricalPricingContext.is_async
+      ~HistoricalPricingContext.is_batch
+      ~HistoricalPricingContext.is_current
+      ~HistoricalPricingContext.is_entered
+      ~HistoricalPricingContext.market
       ~HistoricalPricingContext.market_data_location
       ~HistoricalPricingContext.pricing_date
+      ~HistoricalPricingContext.prior_context
+      ~HistoricalPricingContext.use_cache
+      ~HistoricalPricingContext.visible_to_gs
    
    

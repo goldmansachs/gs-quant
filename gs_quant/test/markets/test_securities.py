@@ -22,7 +22,6 @@ from gs_quant.session import *
 
 
 def test_get_asset(mocker):
-
     marquee_id = 'MA1234567890'
     mock_response = GsAsset(AssetClass.Equity, GsAssetType.Single_Stock, 'Test Asset')
 
@@ -191,3 +190,7 @@ def test_asset_types(mocker):
     with pytest.raises(TypeError) as exc_info:
         ata(asset)
     assert 'unsupported asset type' in str(exc_info.value)  # reached exception at end of function
+
+
+if __name__ == "__main__":
+    pytest.main([__file__])

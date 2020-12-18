@@ -1,4 +1,4 @@
-AssetIdentifier
+﻿gs\_quant.markets.securities.AssetIdentifier
 ============================================
 
 .. currentmodule:: gs_quant.markets.securities

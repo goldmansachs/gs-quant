@@ -125,7 +125,7 @@ class AssetType(Enum):
     COMMODITY = "Commodity"
 
     #: Crypto
-    CRYPTO_CURRENCY = "Crypto Currency"
+    CRYPTOCURRENCY = "Cryptocurrency"
 
 
 class AssetIdentifier(EntityIdentifier):
@@ -143,6 +143,7 @@ class AssetIdentifier(EntityIdentifier):
     ISIN = "ISIN"  #: International Securities Identification Number (US38141G1040)
     SEDOL = "SEDOL"  #: LSE Stock Exchange Daily Official List code (2407966)
     TICKER = "TICKER"  #: Exchange ticker (GS)
+    PLOT_ID = "PLOT_ID"  #: ID for Marquee PlotTool
 
 
 class ReturnType(Enum):
@@ -562,8 +563,8 @@ class CommodityEUNaturalGasHub(Asset):
         return AssetType.COMMODITY_EU_NATURAL_GAS_HUB
 
 
-class CryptoCurrency(Asset):
-    """Crypto Currency
+class Cryptocurrency(Asset):
+    """Cryptocurrency
 
     Represents a cryptocurrency
 
@@ -577,7 +578,7 @@ class CryptoCurrency(Asset):
         Asset.__init__(self, id_, asset_class, name, entity=entity)
 
     def get_type(self) -> AssetType:
-        return AssetType.CRYPTO_CURRENCY
+        return AssetType.CRYPTOCURRENCY
 
 
 class CommodityPowerNode(Asset):
@@ -946,8 +947,9 @@ class SecurityMaster:
         if asset_type in (GsAssetType.FutureContract.value,):
             return FutureContract(gs_asset.id, gs_asset.assetClass, gs_asset.name, entity=asset_entity)
 
-        if asset_type in (GsAssetType.Crypto_Currency.value,):
-            return CryptoCurrency(gs_asset.id, gs_asset.assetClass, gs_asset.name, entity=asset_entity)
+        # workaround as casing is being migrated
+        if asset_type in (GsAssetType.Cryptocurrency.value, GsAssetType.Crypto_Currency.value):
+            return Cryptocurrency(gs_asset.id, gs_asset.assetClass, gs_asset.name, entity=asset_entity)
 
         raise TypeError(f'unsupported asset type {asset_type}')
 

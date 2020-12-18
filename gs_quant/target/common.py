@@ -14,6 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 
+import deprecation
 import datetime
 from typing import Tuple, Union
 from enum import Enum
@@ -81,6 +82,7 @@ class AssetType(EnumBase, Enum):
     Convertible = 'Convertible'
     Credit_Basket = 'Credit Basket'
     Cross = 'Cross'
+    Cryptocurrency = 'Cryptocurrency'
     Crypto_Currency = 'Crypto Currency'
     CSL = 'CSL'
     Currency = 'Currency'
@@ -5397,14 +5399,14 @@ class SimpleParty(Base):
 
 
 class SocialDomain(Base):
-        
+
     @camel_case_translate
     def __init__(
         self,
         onboarded: dict,
         returns_enabled: bool = None,
         name: str = None
-    ):        
+    ):
         super().__init__()
         self.onboarded = onboarded
         self.returns_enabled = returns_enabled
@@ -5417,7 +5419,7 @@ class SocialDomain(Base):
     @onboarded.setter
     def onboarded(self, value: dict):
         self._property_changed('onboarded')
-        self.__onboarded = value        
+        self.__onboarded = value
 
     @property
     def returns_enabled(self) -> bool:
@@ -5427,7 +5429,7 @@ class SocialDomain(Base):
     @returns_enabled.setter
     def returns_enabled(self, value: bool):
         self._property_changed('returns_enabled')
-        self.__returns_enabled = value        
+        self.__returns_enabled = value
 
 
 class TimeFilter(Base):
@@ -6259,6 +6261,7 @@ class CarryScenario(Scenario):
         
     """A scenario to manipulate time along the forward curve"""
 
+    @deprecation.deprecated(deprecated_in='0.8.216', removed_in='1.0.0', details='CarryScenario is now deprecated, please use RollFwd instead. CarryScenario will not be supported in all versions of gs-quant starting 2021.')
     @camel_case_translate
     def __init__(
         self,
@@ -8100,51 +8103,36 @@ class CSLSchedule(Base):
     @extra_dates_by_offset.setter
     def extra_dates_by_offset(self, value: Tuple[CSLSymCaseNamedParam, ...]):
         self._property_changed('extra_dates_by_offset')
-        self.__extra_dates_by_offset = value        
+        self.__extra_dates_by_offset = value
 
 
 class CurveScenario(Scenario):
-        
     """A scenario to manipulate curve shape"""
 
     @camel_case_translate
     def __init__(
-        self,
-        market_data_pattern: MarketDataPattern = None,
-        annualised_parallel_shift: float = None,
-        annualised_slope_shift: float = None,
-        pivot_point: float = None,
-        cutoff: float = None,
-        floor: float = None,
-        denominated: str = None,
-        tenor: str = None,
-        rate_option: str = None,
-        bucket_shift: float = None,
-        bucket_start: str = None,
-        bucket_end: str = None,
-        style: str = 'MarketData',
-        name: str = None
-    ):        
+            self,
+            market_data_pattern: MarketDataPattern = None,
+            parallel_shift: float = None,
+            curve_shift: float = None,
+            pivot_point: float = None,
+            tenor_start: float = None,
+            tenor_end: float = None,
+            name: str = None
+    ):
         super().__init__()
         self.market_data_pattern = market_data_pattern
-        self.annualised_parallel_shift = annualised_parallel_shift
-        self.annualised_slope_shift = annualised_slope_shift
+        self.parallel_shift = parallel_shift
+        self.curve_shift = curve_shift
         self.pivot_point = pivot_point
-        self.cutoff = cutoff
-        self.floor = floor
-        self.denominated = denominated
-        self.tenor = tenor
-        self.rate_option = rate_option
-        self.bucket_shift = bucket_shift
-        self.bucket_start = bucket_start
-        self.bucket_end = bucket_end
-        self.style = style
+        self.tenor_start = tenor_start
+        self.tenor_end = tenor_end
         self.name = name
 
     @property
     def scenario_type(self) -> str:
         """CurveScenario"""
-        return 'CurveScenario'        
+        return 'CurveScenario'
 
     @property
     def market_data_pattern(self) -> MarketDataPattern:
@@ -8154,127 +8142,59 @@ class CurveScenario(Scenario):
     @market_data_pattern.setter
     def market_data_pattern(self, value: MarketDataPattern):
         self._property_changed('market_data_pattern')
-        self.__market_data_pattern = value        
+        self.__market_data_pattern = value
 
     @property
-    def annualised_parallel_shift(self) -> float:
-        """Size of the parallel shift (in bps/year)"""
-        return self.__annualised_parallel_shift
+    def parallel_shift(self) -> float:
+        """A constant (X bps) which shifts all points by the same amount"""
+        return self.__parallel_shift
 
-    @annualised_parallel_shift.setter
-    def annualised_parallel_shift(self, value: float):
-        self._property_changed('annualised_parallel_shift')
-        self.__annualised_parallel_shift = value        
+    @parallel_shift.setter
+    def parallel_shift(self, value: float):
+        self._property_changed('parallel_shift')
+        self.__parallel_shift = value
 
     @property
-    def annualised_slope_shift(self) -> float:
-        """Size of the slope shift (in bps/year)"""
-        return self.__annualised_slope_shift
+    def curve_shift(self) -> float:
+        """A double which represents the net rate change (X bps) between tenorStart and
+           tenorEnd"""
+        return self.__curve_shift
 
-    @annualised_slope_shift.setter
-    def annualised_slope_shift(self, value: float):
-        self._property_changed('annualised_slope_shift')
-        self.__annualised_slope_shift = value        
+    @curve_shift.setter
+    def curve_shift(self, value: float):
+        self._property_changed('curve_shift')
+        self.__curve_shift = value
 
     @property
     def pivot_point(self) -> float:
-        """The pivot point (in years)"""
+        """The tenor at which there is zero rate change, which is between tenorStart and
+           tenorEnd inclusive, informing the type of curve shift"""
         return self.__pivot_point
 
     @pivot_point.setter
     def pivot_point(self, value: float):
         self._property_changed('pivot_point')
-        self.__pivot_point = value        
+        self.__pivot_point = value
 
     @property
-    def cutoff(self) -> float:
-        """The cutoff point (in years)"""
-        return self.__cutoff
+    def tenor_start(self) -> float:
+        """The tenor, in years, which is the starting point of the curve shift"""
+        return self.__tenor_start
 
-    @cutoff.setter
-    def cutoff(self, value: float):
-        self._property_changed('cutoff')
-        self.__cutoff = value        
-
-    @property
-    def floor(self) -> float:
-        """The floor value (in bps)"""
-        return self.__floor
-
-    @floor.setter
-    def floor(self, value: float):
-        self._property_changed('floor')
-        self.__floor = value        
+    @tenor_start.setter
+    def tenor_start(self, value: float):
+        self._property_changed('tenor_start')
+        self.__tenor_start = value
 
     @property
-    def denominated(self) -> str:
-        """Currency to which shock is applied"""
-        return self.__denominated
+    def tenor_end(self) -> float:
+        """The tenor, in years, which is the end point of the curve shift"""
+        return self.__tenor_end
 
-    @denominated.setter
-    def denominated(self, value: str):
-        self._property_changed('denominated')
-        self.__denominated = value        
-
-    @property
-    def tenor(self) -> str:
-        """Tenor of rate option to which shock is applied"""
-        return self.__tenor
-
-    @tenor.setter
-    def tenor(self, value: str):
-        self._property_changed('tenor')
-        self.__tenor = value        
-
-    @property
-    def rate_option(self) -> str:
-        """Rate option to which shock is applied"""
-        return self.__rate_option
-
-    @rate_option.setter
-    def rate_option(self, value: str):
-        self._property_changed('rate_option')
-        self.__rate_option = value        
-
-    @property
-    def bucket_shift(self) -> float:
-        """Size of the bucket shift (in bps)"""
-        return self.__bucket_shift
-
-    @bucket_shift.setter
-    def bucket_shift(self, value: float):
-        self._property_changed('bucket_shift')
-        self.__bucket_shift = value        
-
-    @property
-    def bucket_start(self) -> str:
-        """The start date of the custom bucket"""
-        return self.__bucket_start
-
-    @bucket_start.setter
-    def bucket_start(self, value: str):
-        self._property_changed('bucket_start')
-        self.__bucket_start = value        
-
-    @property
-    def bucket_end(self) -> str:
-        """The end date of the custom bucket"""
-        return self.__bucket_end
-
-    @bucket_end.setter
-    def bucket_end(self, value: str):
-        self._property_changed('bucket_end')
-        self.__bucket_end = value        
-
-    @property
-    def style(self) -> str:
-        """Different styles for risk calculation"""
-        return self.__style
-
-    @style.setter
-    def style(self, value: str):
-        self._property_changed('style')
-        self.__style = value        
+    @tenor_end.setter
+    def tenor_end(self, value: float):
+        self._property_changed('tenor_end')
+        self.__tenor_end = value
 
 
 class DataSetFieldMap(Base):

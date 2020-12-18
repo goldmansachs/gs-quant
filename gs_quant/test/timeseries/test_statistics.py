@@ -19,6 +19,7 @@ import pytest
 from pandas.testing import assert_series_equal
 from scipy.integrate import odeint
 from gs_quant.timeseries import *
+from gs_quant.timeseries.statistics import Direction
 
 
 def test_generate_series():
@@ -26,6 +27,11 @@ def test_generate_series():
 
     assert (len(x) == 100)
     assert (x.index[0] == datetime.date.today())
+    assert (x[0] == 100)
+
+    x = generate_series(100, Direction.END_TODAY)
+    assert (len(x) == 100)
+    assert (x.index[-1] == datetime.date.today())
     assert (x[0] == 100)
 
 

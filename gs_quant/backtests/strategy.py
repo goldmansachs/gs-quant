@@ -14,15 +14,15 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from typing import Tuple, Optional
-
+from typing import Tuple
 from gs_quant.backtests.triggers import *
 from gs_quant.backtests.generic_engine import GenericEngine
+from gs_quant.backtests.generic_price_engine import GenericPriceEngine
 from gs_quant.backtests.equity_vol_engine import EquityVolEngine
 from gs_quant.base import Priceable
 
 
-backtest_engines = [GenericEngine, EquityVolEngine]
+backtest_engines = [GenericEngine, GenericPriceEngine, EquityVolEngine]
 
 
 class Strategy(object):
@@ -37,6 +37,10 @@ class Strategy(object):
     @property
     def triggers(self):
         return self._triggers
+
+    @property
+    def initial_portfolio(self):
+        return self._initial_portfolio
 
     @property
     def risks(self):

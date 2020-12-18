@@ -34,7 +34,7 @@ dummy_series2 = pd.Series([2790.37, 2700.06, 2695.95, 2633.08, 2637.72, 2636.78,
 @pytest.fixture(scope='module')
 def ts_map():
     return {k: v for k, v in globals().items() if isinstance(v, types.FunctionType) and
-            (getattr(v, 'plot_function', False) or getattr(v, 'plot_measure', False))}
+            (hasattr(v, 'plot_function') or hasattr(v, 'plot_measure') or hasattr(v, 'plot_measure_entity'))}
 
 
 def test_have_docstrings(ts_map):
@@ -93,6 +93,25 @@ def test_annotations(ts_map):
             'specifies parameter types'
 
 
+def _check_measure_args(params, request_required, fn_name):
+    param = params.popitem()
+    name = param[1].name
+    if request_required:
+        assert name == 'request_id'
+    if request_required or name == 'request_id':
+        assert param[1].kind == inspect.Parameter.KEYWORD_ONLY
+        param = params.popitem()
+
+    assert param[1].name == 'real_time'
+    assert param[1].kind == inspect.Parameter.KEYWORD_ONLY
+    param = params.popitem()
+    assert param[1].name == 'source'
+    assert param[1].kind == inspect.Parameter.KEYWORD_ONLY
+    while len(params) > 0:
+        param = params.popitem()
+        assert param[1].kind == inspect.Parameter.POSITIONAL_OR_KEYWORD, f'wrong parameter type on {fn_name}'
+
+
 def test_measures(ts_map):
     for k, v in ts_map.items():
         if not hasattr(v, 'plot_measure'):
@@ -101,5 +120,21 @@ def test_measures(ts_map):
         param = params.popitem(last=False)
         assert param[1].name == 'asset'
         assert param[1].annotation == Asset
-        assert 'source' in params
-        assert 'real_time' in params
+        assert param[1].kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
+        _check_measure_args(params, False, v.__name__)
+
+
+def test_measures_on_entities(ts_map):
+    for k, v in ts_map.items():
+        if not hasattr(v, 'plot_measure_entity'):
+            continue
+        params = inspect.signature(v).parameters.copy()
+        param = params.popitem(last=False)
+        assert param[1].name == f'{v.entity_type.value}_id'
+        assert param[1].annotation == str
+        assert param[1].kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
+        _check_measure_args(params, True, v.__name__)
+
+
+if __name__ == '__main__':
+    pytest.main(args=[__file__])

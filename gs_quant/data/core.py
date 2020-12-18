@@ -14,9 +14,11 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime
+import re
 from enum import Enum
 
 from gs_quant.context_base import ContextBaseWithDefault
+from gs_quant.errors import MqTypeError, MqValueError
 
 
 def _now():
@@ -41,10 +43,19 @@ class DataFrequency(Enum):
 
 
 class DataContext(ContextBaseWithDefault):
-    def __init__(self, start=None, end=None):
+    def __init__(self, start=None, end=None, interval=None):
         super().__init__()
         self.__start = start
         self.__end = end
+        if interval is None:
+            self.__interval = None
+            return
+
+        if not isinstance(interval, str):
+            raise MqTypeError('interval must be a str')
+        if not re.fullmatch('[1-9]\\d{0,2}[a-z]', interval):
+            raise MqValueError('interval must be a valid str e.g. 1m, 2h, 3d')
+        self.__interval = interval
 
     @staticmethod
     def _get_date(o, default):
@@ -91,6 +102,10 @@ class DataContext(ContextBaseWithDefault):
     @property
     def end_time(self):
         return self._get_datetime(self.__end, _now())
+
+    @property
+    def interval(self):
+        return self.__interval
 
 
 if __name__ == '__main__':
