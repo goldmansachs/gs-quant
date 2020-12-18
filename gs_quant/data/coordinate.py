@@ -35,7 +35,7 @@ class BaseDataCoordinate(metaclass=ABCMeta):
     __slots__ = ['__measure', '__dimensions']
 
     def __init__(self,
-                 measure: DataMeasure,
+                 measure: Union[DataMeasure, str],
                  dimensions: Optional[DataDimensions] = None):
         self.__measure = measure
         # Sorted so different dimension orders doesn't matter
@@ -79,7 +79,7 @@ class DataCoordinate(BaseDataCoordinate):
     __slots__ = ['__dataset_id', '__frequency']
 
     def __init__(self,
-                 measure: DataMeasure,
+                 measure: Union[DataMeasure, str],
                  dataset_id: Optional[str] = None,
                  dimensions: Optional[DataDimensions] = None,
                  frequency: Optional[DataFrequency] = None):
@@ -122,7 +122,9 @@ class DataCoordinate(BaseDataCoordinate):
         Equality check for two coordinates. Validates if the dataset id, data measure and dimensions are equivalent.
 
         """
-        return (self.dataset_id, self.measure, self.dimensions) == (other.dataset_id, other.measure, other.dimensions)
+        measure = self.measure if isinstance(self.measure, str) else self.measure.value
+        other_measure = other.measure if isinstance(other.measure, str) else other.measure.value
+        return (self.dataset_id, measure, self.dimensions) == (other.dataset_id, other_measure, other.dimensions)
 
     def __hash__(self):
         return hash((self.dataset_id, self.measure, tuple(self.dimensions)))

@@ -1,5 +1,5 @@
-exponential\_moving\_average
-===============================================
+﻿gs\_quant.timeseries.technicals.exponential\_moving\_average
+============================================================
 
 .. currentmodule:: gs_quant.timeseries.technicals
 

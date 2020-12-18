@@ -1,4 +1,4 @@
-Priceable
+﻿Priceable
 ========================
 
 .. currentmodule:: gs_quant.base
@@ -16,25 +16,19 @@ Priceable
       ~Priceable.__init__
       ~Priceable.as_dict
       ~Priceable.calc
+      ~Priceable.clone
       ~Priceable.default_instance
       ~Priceable.dollar_price
       ~Priceable.from_dict
-      ~Priceable.get_quantity
+      ~Priceable.from_instance
       ~Priceable.price
       ~Priceable.prop_item_type
       ~Priceable.prop_type
       ~Priceable.properties
-      ~Priceable.provider
       ~Priceable.resolve
    
    
 
    
-   
-   .. rubric:: Attributes
-
-   .. autosummary::
-   
-      ~Priceable.PROVIDER
    
    

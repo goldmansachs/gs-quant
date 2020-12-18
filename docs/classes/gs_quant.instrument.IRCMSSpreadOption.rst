@@ -1,4 +1,4 @@
-IRCMSSpreadOption
+﻿IRCMSSpreadOption
 =================
 
 For methods of this class, see :doc:`gs_quant.base.Priceable`
@@ -9,7 +9,6 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
 
    
    .. rubric:: Properties
-   
    
    
    
@@ -38,6 +37,9 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: index2_tenor
    
    
+   .. autoattribute:: instrument_quantity
+   
+   
    .. autoattribute:: notional_amount
    
    
@@ -50,11 +52,20 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: premium_payment_date
    
    
+   .. autoattribute:: provider
+   
+   
+   .. autoattribute:: resolution_key
+   
+   
    .. autoattribute:: strike
    
    
    .. autoattribute:: termination_date
    
+   
+   
+   .. autoattribute:: unresolved
    
    
    

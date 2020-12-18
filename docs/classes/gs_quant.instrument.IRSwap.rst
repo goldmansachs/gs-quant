@@ -1,4 +1,4 @@
-IRSwap
+﻿IRSwap
 ======
 
 For methods of this class, see :doc:`gs_quant.base.Priceable`
@@ -13,7 +13,6 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    
-   
    .. autoattribute:: clearing_house
    
    
@@ -21,6 +20,21 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    .. autoattribute:: fee
+   
+   
+   .. autoattribute:: fee_currency
+   
+   
+   .. autoattribute:: fee_payment_date
+   
+   
+   .. autoattribute:: fixed_first_stub
+   
+   
+   .. autoattribute:: fixed_holidays
+   
+   
+   .. autoattribute:: fixed_last_stub
    
    
    .. autoattribute:: fixed_rate
@@ -33,6 +47,15 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    .. autoattribute:: fixed_rate_frequency
+   
+   
+   .. autoattribute:: floating_first_stub
+   
+   
+   .. autoattribute:: floating_holidays
+   
+   
+   .. autoattribute:: floating_last_stub
    
    
    .. autoattribute:: floating_rate_business_day_convention
@@ -56,6 +79,9 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: floating_rate_spread
    
    
+   .. autoattribute:: instrument_quantity
+   
+   
    .. autoattribute:: notional_amount
    
    
@@ -65,8 +91,23 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: pay_or_receive
    
    
+   .. autoattribute:: principal_exchange
+   
+   
+   .. autoattribute:: provider
+   
+   
+   .. autoattribute:: resolution_key
+   
+   
+   .. autoattribute:: roll_convention
+   
+   
    .. autoattribute:: termination_date
    
+   
+   
+   .. autoattribute:: unresolved
    
    
    

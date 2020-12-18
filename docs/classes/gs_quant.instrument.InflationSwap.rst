@@ -1,4 +1,4 @@
-InflationSwap
+﻿InflationSwap
 =============
 
 For methods of this class, see :doc:`gs_quant.base.Priceable`
@@ -12,6 +12,11 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    
+   
+   .. autoattribute:: base_cpi
+   
+   
+   .. autoattribute:: clearing_house
    
    
    .. autoattribute:: effective_date
@@ -32,6 +37,9 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: index
    
    
+   .. autoattribute:: instrument_quantity
+   
+   
    .. autoattribute:: notional_amount
    
    
@@ -41,8 +49,17 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: pay_or_receive
    
    
+   .. autoattribute:: provider
+   
+   
+   .. autoattribute:: resolution_key
+   
+   
    .. autoattribute:: termination_date
    
+   
+   
+   .. autoattribute:: unresolved
    
    
    

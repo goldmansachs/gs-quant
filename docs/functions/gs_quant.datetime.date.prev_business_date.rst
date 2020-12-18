@@ -1,4 +1,4 @@
-prev\_business\_date
+﻿gs\_quant.datetime.date.prev\_business\_date
 ============================================
 
 .. currentmodule:: gs_quant.datetime.date

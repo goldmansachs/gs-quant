@@ -1,5 +1,5 @@
-smoothed\_moving\_average
-================================================
+﻿gs\_quant.timeseries.technicals.smoothed\_moving\_average
+=========================================================
 
 .. currentmodule:: gs_quant.timeseries.technicals
 

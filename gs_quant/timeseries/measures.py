@@ -166,21 +166,23 @@ class MeetingType(Enum):
 
 
 class EsgMetric(Enum):
+    ENVIRONMENTAL_SOCIAL_AGGREGATE_SCORE = 'es_score'
+    ENVIRONMENTAL_SOCIAL_AGGREGATE_PERCENTILE = 'es_percentile'
+    ENVIRONMENTAL_SOCIAL_DISCLOSURE = 'es_disclosure_percentage'
     ENVIRONMENTAL_SOCIAL_NUMERIC_SCORE = 'es_numeric_score'
     ENVIRONMENTAL_SOCIAL_NUMERIC_PERCENTILE = 'es_numeric_percentile'
     ENVIRONMENTAL_SOCIAL_POLICY_SCORE = 'es_policy_score'
     ENVIRONMENTAL_SOCIAL_POLICY_PERCENTILE = 'es_policy_percentile'
-    ENVIRONMENTAL_SOCIAL_AGGREGATE_SCORE = 'es_score'
-    ENVIRONMENTAL_SOCIAL_AGGREGATE_PERCENTILE = 'es_percentile'
-    ENVIRONMENTAL_SOCIAL_DISCLOSURE = 'es_disclosure_percentage'
+    ENVIRONMENTAL_SOCIAL_PRODUCT_IMPACT_SCORE = 'es_product_impact_score'
+    ENVIRONMENTAL_SOCIAL_PRODUCT_IMPACT_PERCENTILE = 'es_product_impact_percentile'
     GOVERNANCE_AGGREGATE_SCORE = 'g_score'
     GOVERNANCE_AGGREGATE_PERCENTILE = 'g_percentile'
     GOVERNANCE_REGIONAL_SCORE = 'g_regional_score'
     GOVERNANCE_REGIONAL_PERCENTILE = 'g_regional_percentile'
     ENVIRONMENTAL_SOCIAL_MOMENTUM_SCORE = 'es_momentum_score'
     ENVIRONMENTAL_SOCIAL_MOMENTUM_PERCENTILE = 'es_momentum_percentile'
-    ENVIRONMENTAL_SOCIAL_PRODUCT_IMPACT_SCORE = 'es_product_impact_score'
-    ENVIRONMENTAL_SOCIAL_PRODUCT_IMPACT_PERCENTILE = 'es_product_impact_percentile'
+    CONTROVERSY_SCORE = 'controversy_score'
+    CONTROVERSY_PERCENTILE = 'controversy_percentile'
 
 
 class SwaptionTenorType(Enum):
@@ -227,7 +229,9 @@ ESG_METRIC_TO_QUERY_TYPE = {
     "esMomentumPercentile": QueryType.ES_MOMENTUM_PERCENTILE,
     "gRegionalScore": QueryType.G_REGIONAL_SCORE,
     "gRegionalPercentile": QueryType.G_REGIONAL_PERCENTILE,
-    "esDisclosurePercentage": QueryType.ES_DISCLOSURE_PERCENTAGE
+    "esDisclosurePercentage": QueryType.ES_DISCLOSURE_PERCENTAGE,
+    "controversyScore": QueryType.CONTROVERSY_SCORE,
+    "controversyPercentile": QueryType.CONTROVERSY_PERCENTILE
 }
 
 CURRENCY_TO_OIS_RATE_BENCHMARK = {
@@ -430,17 +434,20 @@ def _market_data_timed(q, request_id=None):
     return df
 
 
-def _extract_series_from_df(df: pd.DataFrame, query_type: QueryType):
+def _extract_series_from_df(df: pd.DataFrame, query_type: QueryType, handle_missing_column=False):
     col_name = query_type.value.replace(' ', '')
     col_name = col_name[0].lower() + col_name[1:]
-    series = ExtendedSeries() if df.empty else ExtendedSeries(df[col_name])
+    if df.empty or (handle_missing_column and col_name not in df.columns):
+        series = ExtendedSeries()
+    else:
+        series = ExtendedSeries(df[col_name])
     series.dataset_ids = getattr(df, 'dataset_ids', ())
     return series
 
 
 @plot_measure((AssetClass.FX, AssetClass.Equity, AssetClass.Commod), None, [MeasureDependency(
     id_provider=cross_stored_direction_for_fx_vol, query_type=QueryType.IMPLIED_VOLATILITY)])
-def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Real, *, location: str = 'NYC',
+def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Real, *,
          source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
     Difference in implied volatility of equidistant out-of-the-money put and call options.
@@ -449,17 +456,16 @@ def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Re
     :param tenor: relative date representation of expiration date e.g. 1m
     :param strike_reference: reference for strike level (for equities)
     :param distance: distance from at-the-money option
-    :param location: location at which a price fixing has been taken (for FX assets)
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :param request_id: service request id, if any
     :return: skew curve
     """
-    if real_time:
-        raise MqValueError('real-time skew not supported')
-
     asset_id = asset.get_marquee_id()
     kwargs = {}
+
+    if real_time and asset.asset_class in (AssetClass.FX, AssetClass.Commod):
+        raise MqValueError(f'real-time skew not supported for asset {asset_id}')
 
     if asset.asset_class == AssetClass.FX:
         asset_id = cross_stored_direction_for_fx_vol(asset_id)
@@ -492,7 +498,8 @@ def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Re
     kwargs[column] = q_strikes
     log_debug(request_id, _logger, 'where tenor=%s and %s', tenor, kwargs)
     where = dict(tenor=tenor, **kwargs)
-    q = GsDataApi.build_market_data_query([asset_id], QueryType.IMPLIED_VOLATILITY, where=where, source=source)
+    q = GsDataApi.build_market_data_query([asset_id], QueryType.IMPLIED_VOLATILITY, where=where, source=source,
+                                          real_time=real_time)
     log_debug(request_id, _logger, 'q %s', q)
     df = _market_data_timed(q)
     dataset_ids = getattr(df, 'dataset_ids', ())
@@ -764,7 +771,9 @@ def average_implied_volatility(asset: Asset, tenor: str, strike_reference: EdrDa
                                source: str = None, real_time: bool = False) -> Series:
     """
     Historical weighted average implied volatility of the top constituents of an equity index. If top_n_of_index and
-    composition_date are not provided, the average is of all constituents based on the weights at each evaluation date
+    composition_date are not provided, the average is of all constituents based on the weights at each evaluation date.
+    If implied volatility is missing for a constituent, that is ignored. The average result is normalized by dividing
+    by the sum of weights of the constituents that have implied volatility data.
 
     :param asset: asset object loaded from security master
     :param tenor: relative date representation of expiration date e.g. 1m
@@ -1761,7 +1770,7 @@ def _filter_by_bucket(df, bucket, holidays, region):
         df = df.loc[((df['date'].isin(holidays)) | df['day'].isin(weekends)) & ((df['hour'] > peak_start - 1) &
                                                                                 (df['hour'] < peak_end))]
     else:
-        raise ValueError('Invalid bucket: ' + bucket + '. Expected Value: peak, offpeak, 7x24, 7x8, 2x16h.')
+        raise MqValueError('Invalid bucket: ' + bucket + '. Expected Value: peak, offpeak, 7x24, 7x8, 2x16h.')
     return df
 
 
@@ -1872,12 +1881,12 @@ def _weighted_average_valuation_curve_for_calendar_strip(asset, contract_range, 
     """
     start_date_interval = _string_to_date_interval(contract_range.split("-")[0])
     if type(start_date_interval) == str:
-        raise ValueError(start_date_interval)
+        raise MqValueError(start_date_interval)
     start_contract_range = start_date_interval['start_date']
     if "-" in contract_range:
         end_date_interval = _string_to_date_interval(contract_range.split("-")[1])
         if type(end_date_interval) == str:
-            raise ValueError(end_date_interval)
+            raise MqValueError(end_date_interval)
         end_contract_range = end_date_interval['end_date']
     else:
         end_contract_range = start_date_interval['end_date']
@@ -1926,7 +1935,7 @@ def fair_price(asset: Asset, tenor: str = None, *,
 
     if asset_type == SecAssetType.INDEX:
         if tenor is None:
-            raise ValueError('Contract month range query input is not specified')
+            raise MqValueError('Contract month range query input is not specified')
         return _weighted_average_valuation_curve_for_calendar_strip(asset, tenor, QueryType.FAIR_PRICE, "fairPrice")
 
     asset_id = asset.get_marquee_id()
@@ -1939,12 +1948,12 @@ def fair_price(asset: Asset, tenor: str = None, *,
 def _get_start_and_end_dates(contract_range: str) -> (int, int):
     start_date_interval = _string_to_date_interval(contract_range.split("-")[0])
     if type(start_date_interval) == str:
-        raise ValueError(start_date_interval)
+        raise MqValueError(start_date_interval)
     start_contract_range = start_date_interval['start_date']
     if "-" in contract_range:
         end_date_interval = _string_to_date_interval(contract_range.split("-")[1])
         if type(end_date_interval) == str:
-            raise ValueError(end_date_interval)
+            raise MqValueError(end_date_interval)
         end_contract_range = end_date_interval['end_date']
     else:
         end_contract_range = start_date_interval['end_date']
@@ -2048,7 +2057,7 @@ def forward_price(asset: Asset, price_method: str = 'LMP', bucket: str = 'PEAK',
     :return: Forward Prices
     """
     if real_time:
-        raise ValueError('Use daily frequency instead of intraday')
+        raise MqValueError('Use daily frequency instead of intraday')
 
     if (asset.get_type() == SecAssetType.COMMODITY_NATURAL_GAS_HUB):
         return _forward_price_natgas(asset, price_method, contract_range)
@@ -2093,7 +2102,7 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
     :return: Bucketized elec energy prices
     """
     if real_time:
-        raise ValueError('Bucketize function returns aggregated daily data')
+        raise MqValueError('Bucketize function returns aggregated daily data')
 
     # create granularity indicator
     if granularity.lower() in ['daily', 'd']:
@@ -2101,7 +2110,7 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
     elif granularity.lower() in ['monthly', 'm']:
         granularity = 'M'
     else:
-        raise ValueError('Invalid granularity: ' + granularity + '. Expected Value: daily or monthly.')
+        raise MqValueError('Invalid granularity: ' + granularity + '. Expected Value: daily or monthly.')
 
     bbid = Asset.get_identifier(asset, AssetIdentifier.BLOOMBERG_ID)
     region = bbid.split(" ")[0]
@@ -2855,8 +2864,8 @@ def realized_volatility(asset: Asset, w: Union[Window, int, str] = Window(None, 
     return series
 
 
-@plot_measure((AssetClass.Equity,), None, [QueryType.ES_NUMERIC_SCORE])
-def esg_headline_metric(asset: Asset, metricName: EsgMetric, *,
+@plot_measure((AssetClass.Equity,), None, [QueryType.ES_SCORE])
+def esg_headline_metric(asset: Asset, metricName: EsgMetric = EsgMetric.ENVIRONMENTAL_SOCIAL_AGGREGATE_SCORE, *,
                         source: str = None, real_time: bool = False) -> Series:
     """
     Environmental, Social, and Governance (ESG) scores and percentiles for a broad set of companies across the globe,

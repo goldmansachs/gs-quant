@@ -1,4 +1,4 @@
-IRCMSOptionStrip
+﻿IRCMSOptionStrip
 ================
 
 For methods of this class, see :doc:`gs_quant.base.Priceable`
@@ -9,7 +9,6 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
 
    
    .. rubric:: Properties
-   
    
    
    
@@ -44,6 +43,9 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: index
    
    
+   .. autoattribute:: instrument_quantity
+   
+   
    .. autoattribute:: multiplier
    
    
@@ -59,7 +61,13 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: premium_payment_date
    
    
+   .. autoattribute:: provider
+   
+   
    .. autoattribute:: reset_delay
+   
+   
+   .. autoattribute:: resolution_key
    
    
    .. autoattribute:: strike
@@ -67,6 +75,9 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    .. autoattribute:: termination_date
    
+   
+   
+   .. autoattribute:: unresolved
    
    
    

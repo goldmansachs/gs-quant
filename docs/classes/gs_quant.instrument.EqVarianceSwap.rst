@@ -1,4 +1,4 @@
-EqVarianceSwap
+﻿EqVarianceSwap
 ==============
 
 For methods of this class, see :doc:`gs_quant.base.Priceable`
@@ -13,11 +13,19 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    
-   
    .. autoattribute:: expiration_date
    
    
+   .. autoattribute:: instrument_quantity
+   
+   
    .. autoattribute:: premium
+   
+   
+   .. autoattribute:: provider
+   
+   
+   .. autoattribute:: resolution_key
    
    
    .. autoattribute:: settlement_date
@@ -31,6 +39,9 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    .. autoattribute:: underlier_type
+   
+   
+   .. autoattribute:: unresolved
    
    
    .. autoattribute:: variance_cap

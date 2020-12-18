@@ -1,4 +1,4 @@
-EqSynthetic
+﻿EqSynthetic
 ===========
 
 For methods of this class, see :doc:`gs_quant.base.Priceable`
@@ -13,6 +13,8 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    
+   .. autoattribute:: buy_sell
+   
    
    .. autoattribute:: currency
    
@@ -20,10 +22,19 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: effective_date
    
    
-   .. autoattribute:: notional_amount
+   .. autoattribute:: expiry
    
    
-   .. autoattribute:: strike_price
+   .. autoattribute:: instrument_quantity
+   
+   
+   .. autoattribute:: num_of_underlyers
+   
+   
+   .. autoattribute:: provider
+   
+   
+   .. autoattribute:: resolution_key
    
    
    .. autoattribute:: swap_type
@@ -34,6 +45,9 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    .. autoattribute:: underlier_type
+   
+   
+   .. autoattribute:: unresolved
    
    
    

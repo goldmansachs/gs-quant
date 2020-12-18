@@ -22,7 +22,7 @@ class MqError(Exception):
     pass
 
 
-class MqValueError(MqError):
+class MqValueError(MqError, ValueError):
     pass
 
 

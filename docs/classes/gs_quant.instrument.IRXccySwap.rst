@@ -1,4 +1,4 @@
-IRXccySwap
+﻿IRXccySwap
 ==========
 
 For methods of this class, see :doc:`gs_quant.base.Priceable`
@@ -9,7 +9,6 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
 
    
    .. rubric:: Properties
-   
    
    
    
@@ -26,7 +25,16 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: fee_payment_date
    
    
+   .. autoattribute:: initial_fx_rate
+   
+   
+   .. autoattribute:: instrument_quantity
+   
+   
    .. autoattribute:: notional_amount
+   
+   
+   .. autoattribute:: notional_reset_side
    
    
    .. autoattribute:: payer_business_day_convention
@@ -41,13 +49,28 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: payer_designated_maturity
    
    
+   .. autoattribute:: payer_first_stub
+   
+   
    .. autoattribute:: payer_frequency
+   
+   
+   .. autoattribute:: payer_holidays
+   
+   
+   .. autoattribute:: payer_last_stub
    
    
    .. autoattribute:: payer_rate_option
    
    
    .. autoattribute:: payer_spread
+   
+   
+   .. autoattribute:: principal_exchange
+   
+   
+   .. autoattribute:: provider
    
    
    .. autoattribute:: receiver_business_day_convention
@@ -62,7 +85,16 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: receiver_designated_maturity
    
    
+   .. autoattribute:: receiver_first_stub
+   
+   
    .. autoattribute:: receiver_frequency
+   
+   
+   .. autoattribute:: receiver_holidays
+   
+   
+   .. autoattribute:: receiver_last_stub
    
    
    .. autoattribute:: receiver_rate_option
@@ -71,8 +103,14 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: receiver_spread
    
    
+   .. autoattribute:: resolution_key
+   
+   
    .. autoattribute:: termination_date
    
+   
+   
+   .. autoattribute:: unresolved
    
    
    

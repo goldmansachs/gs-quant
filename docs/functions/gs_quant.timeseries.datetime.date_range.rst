@@ -1,5 +1,5 @@
-slice_date_range
-==================================
+﻿gs\_quant.timeseries.datetime.date\_range
+=========================================
 
 .. currentmodule:: gs_quant.timeseries.datetime
 

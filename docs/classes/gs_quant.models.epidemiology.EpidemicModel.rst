@@ -1,4 +1,4 @@
-EpidemicModel
+﻿gs\_quant.models.epidemiology.EpidemicModel
 ===========================================
 
 .. currentmodule:: gs_quant.models.epidemiology

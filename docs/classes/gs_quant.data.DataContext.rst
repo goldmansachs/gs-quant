@@ -1,4 +1,4 @@
-DataContext
+﻿DataContext
 ==========================
 
 .. currentmodule:: gs_quant.data

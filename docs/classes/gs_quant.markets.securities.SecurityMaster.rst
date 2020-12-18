@@ -1,4 +1,4 @@
-SecurityMaster
+﻿gs\_quant.markets.securities.SecurityMaster
 ===========================================
 
 .. currentmodule:: gs_quant.markets.securities

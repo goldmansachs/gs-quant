@@ -1,4 +1,4 @@
-PricingContext
+﻿PricingContext
 ================================
 
 .. currentmodule:: gs_quant.markets
@@ -15,8 +15,8 @@ PricingContext
    
       ~PricingContext.__init__
       ~PricingContext.calc
+      ~PricingContext.clone
       ~PricingContext.default_value
-      ~PricingContext.resolve_fields
    
    
 
@@ -26,8 +26,17 @@ PricingContext
 
    .. autosummary::
    
-      ~PricingContext.market_data_as_of
+      ~PricingContext.active_context
+      ~PricingContext.csa_term
+      ~PricingContext.is_async
+      ~PricingContext.is_batch
+      ~PricingContext.is_current
+      ~PricingContext.is_entered
+      ~PricingContext.market
       ~PricingContext.market_data_location
       ~PricingContext.pricing_date
+      ~PricingContext.prior_context
+      ~PricingContext.use_cache
+      ~PricingContext.visible_to_gs
    
    

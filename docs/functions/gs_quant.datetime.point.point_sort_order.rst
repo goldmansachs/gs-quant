@@ -1,5 +1,5 @@
-point\_sort\_order
-==================
+﻿gs\_quant.datetime.point.point\_sort\_order
+===========================================
 
 .. currentmodule:: gs_quant.datetime.point
 

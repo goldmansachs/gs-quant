@@ -91,6 +91,8 @@ class QueryType(Enum):
     G_REGIONAL_SCORE = "G Regional Score"
     G_REGIONAL_PERCENTILE = "G Regional Percentile"
     ES_DISCLOSURE_PERCENTAGE = "Es Disclosure Percentage"
+    CONTROVERSY_SCORE = "Controversy Score"
+    CONTROVERSY_PERCENTILE = "Controversy Percentile"
     RATING = "Rating"
     CONVICTION_LIST = "Conviction List"
     FAIR_VALUE = "Fair Value"
@@ -101,6 +103,18 @@ class QueryType(Enum):
     INTEGRATED_SCORE = "Integrated Score"
     COMMODITY_FORECAST = "Commodity Forecast"
     FORECAST_VALUE = "Forecast Value"
+    FCI = "Fci"
+    LONG_RATES_CONTRIBUTION = "Long Rates Contribution"
+    SHORT_RATES_CONTRIBUTION = "Short Rates Contribution"
+    CORPORATE_SPREAD_CONTRIBUTION = "Corporate Spread Contribution"
+    SOVEREIGN_SPREAD_CONTRIBUTION = "Sovereign Spread Contribution"
+    EQUITIES_CONTRIBUTION = "Equities Contribution"
+    REAL_LONG_RATES_CONTRIBUTION = "Real Long Rates Contribution"
+    REAL_SHORT_RATES_CONTRIBUTION = "Real Short Rates Contribution"
+    REAL_FCI = "Real Fci"
+    DWI_CONTRIBUTION = "Dwi Contribution"
+    REAL_TWI_CONTRIBUTION = "Real Twi Contribution"
+    TWI_CONTRIBUTION = "Twi Contribution"
 
 
 class GsDataApi(DataApi):
@@ -295,7 +309,7 @@ class GsDataApi(DataApi):
     def build_market_data_query(asset_ids: List[str], query_type: QueryType, where: Union[FieldFilterMap, Dict] = None,
                                 source: Union[str] = None, real_time: bool = False, measure='Curve'):
         inner = {
-            'assetIds': asset_ids,
+            'entityIds': asset_ids,
             'queryType': query_type.value,
             'where': where or {},
             'source': source or 'any',
@@ -304,6 +318,8 @@ class GsDataApi(DataApi):
                 measure
             ]
         }
+        if DataContext.current.interval is not None:
+            inner['interval'] = DataContext.current.interval
         if real_time:
             inner['startTime'] = DataContext.current.start_time
             inner['endTime'] = DataContext.current.end_time
@@ -358,7 +374,7 @@ class GsDataApi(DataApi):
     @classmethod
     def get_market_data(cls, query) -> pd.DataFrame:
         GsSession.current: GsSession
-        body = GsSession.current._post('/data/markets', payload=query)
+        body = GsSession.current._post('/data/measures', payload=query)
 
         ids = []
         parts = []
@@ -366,7 +382,7 @@ class GsDataApi(DataApi):
             container = e['queryResponse'][0]
             ids.extend(container.get('dataSetIds', ()))
             if 'errorMessages' in container:
-                raise MqValueError(f"market data request {body['requestId']} failed: {container['errorMessages']}")
+                raise MqValueError(f"measure service request {body['requestId']} failed: {container['errorMessages']}")
             if 'response' in container:
                 df = MarketDataResponseFrame(container['response']['data'])
                 df.set_index('date' if 'date' in df.columns else 'time', inplace=True)

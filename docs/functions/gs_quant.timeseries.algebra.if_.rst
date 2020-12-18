@@ -1,5 +1,5 @@
-if_
-================================
+﻿gs\_quant.timeseries.algebra.if\_
+=================================
 
 .. currentmodule:: gs_quant.timeseries.algebra
 

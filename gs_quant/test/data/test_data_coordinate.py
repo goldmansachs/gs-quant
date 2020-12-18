@@ -63,17 +63,26 @@ def test_equals():
         DataDimension.TENOR: '1m'
     }
 
-    coord_a = DataCoordinate('EDRVOL_PERCENT_STOCK_STANDARD',
-                             DataMeasure.IMPLIED_VOLATILITY,
-                             dimensions_a)
+    coord_a = DataCoordinate(dataset_id='EDRVOL_PERCENT_STOCK_STANDARD',
+                             measure=DataMeasure.IMPLIED_VOLATILITY,
+                             dimensions=dimensions_a)
 
-    coord_b = DataCoordinate('EDRVOL_PERCENT_STOCK_STANDARD',
-                             DataMeasure.IMPLIED_VOLATILITY,
-                             dimensions_b)
+    coord_b = DataCoordinate(dataset_id='EDRVOL_PERCENT_STOCK_STANDARD',
+                             measure=DataMeasure.IMPLIED_VOLATILITY,
+                             dimensions=dimensions_b)
 
     assert coord_a == coord_b
     assert coord_a == coord_b
     assert hash(coord_a) == hash(coord_b)
+
+
+def test_equals_measure_str():
+    coord_a = DataCoordinate(dataset_id='EDRVOL_PERCENT_STOCK_STANDARD',
+                             measure=DataMeasure.IMPLIED_VOLATILITY)
+
+    coord_b = DataCoordinate(dataset_id='EDRVOL_PERCENT_STOCK_STANDARD',
+                             measure='impliedVolatility')
+    assert coord_a == coord_b
 
 
 if __name__ == "__main__":

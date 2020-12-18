@@ -87,6 +87,7 @@ def excess_returns(price_series: pd.Series, benchmark_or_rate: Union[Asset, Curr
         df = GsDataApi.get_market_data(q)
     if df.empty:
         raise MqValueError(f'could not retrieve risk-free rate {marquee_id}')
+    df = df[~df.index.duplicated(keep='first')]  # handle bad data (duplicate rows)
 
     return excess_returns_pure(price_series, df['spot'])
 
@@ -123,11 +124,18 @@ def _get_ratio(input_series: pd.Series, benchmark_or_rate: Union[Asset, float, s
 class RiskFreeRateCurrency(Enum):
     USD = "USD"
     AUD = "AUD"
-    CHF = "CFH"
+    CHF = "CHF"
     EUR = "EUR"
     GBP = "GBP"
     JPY = "JPY"
     SEK = "SEK"
+    _USD = "usd"
+    _AUD = "aud"
+    _CHF = "chf"
+    _EUR = "eur"
+    _GBP = "gbp"
+    _JPY = "jpy"
+    _SEK = "sek"
 
 
 @plot_session_function
@@ -174,7 +182,7 @@ def sharpe_ratio(series: pd.Series, currency: RiskFreeRateCurrency = RiskFreeRat
     Given a price series P, risk-free rate R, and window of size w returns the rolling
     `Sharpe ratio <https://en.wikipedia.org/wiki/Sharpe_ratio>`_ S:
 
-    :math:`S_t = \\frac{(E_t / E_{t-w+1})^{365.25 / (D_t - D_{t-w} - 1)}}{volatility(E, w)_t}`
+    :math:`S_t = \\frac{(E_t / E_{t-w+1})^{365.25 / (D_t - D_{t-w})}-1}{volatility(E, w)_t}`
 
     Excess returns E are defined as:
 
@@ -185,9 +193,9 @@ def sharpe_ratio(series: pd.Series, currency: RiskFreeRateCurrency = RiskFreeRat
 
     **Examples**
 
-    Get rolling sharpe ratio of a price series (with window of 252).
+    Get rolling sharpe ratio of a price series (with window of 22).
 
-    >>> sr = sharpe_ratio(generate_series(100), USD, 252, CurveType.PRICES)
+    >>> sr = sharpe_ratio(generate_series(365, END_TODAY), USD, 22, PRICES)
 
     **See also**
 

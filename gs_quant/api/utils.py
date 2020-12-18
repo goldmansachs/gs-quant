@@ -14,12 +14,18 @@ specific language governing permissions and limitations
 under the License.
 """
 
+from gs_quant.session import GsSession
+from gs_quant.errors import MqUninitialisedError
 import socket
 import requests
 
 
 def handle_proxy(url, params):
-    if socket.getfqdn().split('.')[-2:] == ['gs', 'com']:
+    try:
+        internal = GsSession.current.is_internal()
+    except MqUninitialisedError:
+        internal = False
+    if internal or socket.getfqdn().split('.')[-2:] == ['gs', 'com']:
         try:
             import gs_quant_internal
             proxies = gs_quant_internal.__proxies__
