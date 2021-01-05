@@ -739,11 +739,11 @@ def _get_swaption_measure(asset: Asset, benchmark_type: str = None, floating_rat
                           source: str = None, real_time: bool = False, allow_many: bool = False,
                           query_type: QueryType = QueryType.SWAPTION_PREMIUM) -> Series:
     if real_time:
-        raise NotImplementedError('realtime swap_rate not implemented')
+        raise NotImplementedError(f'realtime {query_type.value} not implemented')
     currency = CurrencyEnum(asset.get_identifier(AssetIdentifier.BLOOMBERG_ID))
 
     if not swaptions_defaults_provider.is_supported(currency):
-        raise NotImplementedError('Data not available for {} swap rates'.format(currency.value))
+        raise NotImplementedError(f'Data not available for {currency.value} {query_type.value}')
 
     query = _swaption_build_asset_query(currency, benchmark_type, effective_date, expiration_tenor, floating_rate_tenor,
                                         strike_reference, termination_tenor, clearing_house)

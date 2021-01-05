@@ -16,7 +16,7 @@ under the License.
 
 from gs_quant.target.common import *
 import datetime
-from typing import Tuple, Union
+from typing import Mapping, Tuple, Union
 from gs_quant.base import Base, InstrumentBase, camel_case_translate, get_enum_value
 
 
@@ -79,125 +79,6 @@ class CountryXref(Base):
     def country_code(self, value: str):
         self._property_changed('country_code')
         self.__country_code = value        
-
-
-class Subdivision(Base):
-        
-    """A marquee subdivision (or state) object"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        name: str,
-        id_: str,
-        country_id: str,
-        created_time: datetime.datetime = None,
-        last_updated_time: datetime.datetime = None,
-        created_by_id: str = None,
-        last_updated_by_id: str = None,
-        owner_id: str = None,
-        entitlements: Entitlements = None
-    ):        
-        super().__init__()
-        self.__id = id_
-        self.country_id = country_id
-        self.name = name
-        self.created_time = created_time
-        self.last_updated_time = last_updated_time
-        self.created_by_id = created_by_id
-        self.last_updated_by_id = last_updated_by_id
-        self.owner_id = owner_id
-        self.entitlements = entitlements
-
-    @property
-    def id(self) -> str:
-        """Marquee unique identifier"""
-        return self.__id
-
-    @id.setter
-    def id(self, value: str):
-        self._property_changed('id')
-        self.__id = value        
-
-    @property
-    def country_id(self) -> str:
-        """Marquee unique identifier"""
-        return self.__country_id
-
-    @country_id.setter
-    def country_id(self, value: str):
-        self._property_changed('country_id')
-        self.__country_id = value        
-
-    @property
-    def name(self) -> str:
-        """Name of the subdivision (or state)"""
-        return self.__name
-
-    @name.setter
-    def name(self, value: str):
-        self._property_changed('name')
-        self.__name = value        
-
-    @property
-    def created_time(self) -> datetime.datetime:
-        """Time created. ISO 8601 formatted string"""
-        return self.__created_time
-
-    @created_time.setter
-    def created_time(self, value: datetime.datetime):
-        self._property_changed('created_time')
-        self.__created_time = value        
-
-    @property
-    def last_updated_time(self) -> datetime.datetime:
-        """Timestamp of when the object was last updated"""
-        return self.__last_updated_time
-
-    @last_updated_time.setter
-    def last_updated_time(self, value: datetime.datetime):
-        self._property_changed('last_updated_time')
-        self.__last_updated_time = value        
-
-    @property
-    def created_by_id(self) -> str:
-        """Unique identifier of user who created the object"""
-        return self.__created_by_id
-
-    @created_by_id.setter
-    def created_by_id(self, value: str):
-        self._property_changed('created_by_id')
-        self.__created_by_id = value        
-
-    @property
-    def last_updated_by_id(self) -> str:
-        """Unique identifier of user who last updated the object"""
-        return self.__last_updated_by_id
-
-    @last_updated_by_id.setter
-    def last_updated_by_id(self, value: str):
-        self._property_changed('last_updated_by_id')
-        self.__last_updated_by_id = value        
-
-    @property
-    def owner_id(self) -> str:
-        """Marquee unique identifier"""
-        return self.__owner_id
-
-    @owner_id.setter
-    def owner_id(self, value: str):
-        self._property_changed('owner_id')
-        self.__owner_id = value        
-
-    @property
-    def entitlements(self) -> Entitlements:
-        """Defines the entitlements of a given resource"""
-        return self.__entitlements
-
-    @entitlements.setter
-    def entitlements(self, value: Entitlements):
-        self._property_changed('entitlements')
-        self.__entitlements = value        
 
 
 class Country(Base):
@@ -365,3 +246,122 @@ class Country(Base):
     def xref(self, value: CountryXref):
         self._property_changed('xref')
         self.__xref = value        
+
+
+class Subdivision(Base):
+        
+    """A marquee subdivision (or state) object"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        name: str,
+        id_: str,
+        country_id: str,
+        created_time: datetime.datetime = None,
+        last_updated_time: datetime.datetime = None,
+        created_by_id: str = None,
+        last_updated_by_id: str = None,
+        owner_id: str = None,
+        entitlements: Entitlements = None
+    ):        
+        super().__init__()
+        self.__id = id_
+        self.country_id = country_id
+        self.name = name
+        self.created_time = created_time
+        self.last_updated_time = last_updated_time
+        self.created_by_id = created_by_id
+        self.last_updated_by_id = last_updated_by_id
+        self.owner_id = owner_id
+        self.entitlements = entitlements
+
+    @property
+    def id(self) -> str:
+        """Marquee unique identifier"""
+        return self.__id
+
+    @id.setter
+    def id(self, value: str):
+        self._property_changed('id')
+        self.__id = value        
+
+    @property
+    def country_id(self) -> str:
+        """Marquee unique identifier"""
+        return self.__country_id
+
+    @country_id.setter
+    def country_id(self, value: str):
+        self._property_changed('country_id')
+        self.__country_id = value        
+
+    @property
+    def name(self) -> str:
+        """Name of the subdivision (or state)"""
+        return self.__name
+
+    @name.setter
+    def name(self, value: str):
+        self._property_changed('name')
+        self.__name = value        
+
+    @property
+    def created_time(self) -> datetime.datetime:
+        """Time created. ISO 8601 formatted string"""
+        return self.__created_time
+
+    @created_time.setter
+    def created_time(self, value: datetime.datetime):
+        self._property_changed('created_time')
+        self.__created_time = value        
+
+    @property
+    def last_updated_time(self) -> datetime.datetime:
+        """Timestamp of when the object was last updated"""
+        return self.__last_updated_time
+
+    @last_updated_time.setter
+    def last_updated_time(self, value: datetime.datetime):
+        self._property_changed('last_updated_time')
+        self.__last_updated_time = value        
+
+    @property
+    def created_by_id(self) -> str:
+        """Unique identifier of user who created the object"""
+        return self.__created_by_id
+
+    @created_by_id.setter
+    def created_by_id(self, value: str):
+        self._property_changed('created_by_id')
+        self.__created_by_id = value        
+
+    @property
+    def last_updated_by_id(self) -> str:
+        """Unique identifier of user who last updated the object"""
+        return self.__last_updated_by_id
+
+    @last_updated_by_id.setter
+    def last_updated_by_id(self, value: str):
+        self._property_changed('last_updated_by_id')
+        self.__last_updated_by_id = value        
+
+    @property
+    def owner_id(self) -> str:
+        """Marquee unique identifier"""
+        return self.__owner_id
+
+    @owner_id.setter
+    def owner_id(self, value: str):
+        self._property_changed('owner_id')
+        self.__owner_id = value        
+
+    @property
+    def entitlements(self) -> Entitlements:
+        """Defines the entitlements of a given resource"""
+        return self.__entitlements
+
+    @entitlements.setter
+    def entitlements(self, value: Entitlements):
+        self._property_changed('entitlements')
+        self.__entitlements = value        

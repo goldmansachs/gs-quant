@@ -21,6 +21,8 @@ from abc import ABCMeta
 from concurrent.futures import ThreadPoolExecutor
 from inspect import signature
 from itertools import zip_longest
+import queue
+import sys
 from tqdm import tqdm
 from typing import Optional, Union
 
@@ -166,61 +168,71 @@ class PricingContext(ContextBaseWithDefault):
             if create_event_loop:
                 asyncio.set_event_loop(asyncio.new_event_loop())
 
-            results = {}
+            results = queue.Queue()
+            done = False
 
             try:
                 with session:
-                    results = provider_.run(requests_, 1000, progress_bar, timeout=self.__timeout)
+                    provider_.run(requests_, results, 1000, progress_bar, timeout=self.__timeout)
             except Exception as e:
-                results = {k: e for k in self.__pending.keys()}
-            finally:
-                while self.__pending:
-                    (risk_key_, priceable_), future = self.__pending.popitem()
-                    result = results.get((risk_key_, priceable_))
+                provider_.enqueue(results, ((k, e) for k in self.__pending.keys()))
 
-                    if result is not None:
+            while not done:
+                done, chunk_results = provider_.drain_queue(results)
+                for (risk_key_, priceable_), result in chunk_results:
+                    if (risk_key_, priceable_) in self.__pending:
+                        future = self.__pending.pop((risk_key_, priceable_))
+
                         if self.__use_cache:
                             PricingCache.put(risk_key_, priceable_, result)
-                    else:
-                        result = ErrorValue(risk_key_, 'No result returned')
 
-                    future.set_result(result)
+                        future.set_result(result)
+
+            while self.__pending:
+                (risk_key_, _), future = self.__pending.popitem()
+                future.set_result(ErrorValue(risk_key_, 'No result returned'))
 
         # Group requests optimally
         requests_by_provider = {}
         for (key, instrument) in self.__pending.keys():
-            requests_by_provider.setdefault(key.provider, {})\
-                .setdefault((key.params, key.scenario, key.date, key.market), {})\
-                .setdefault(instrument, set())\
-                .add(key.risk_measure)
+            dates_markets, measures = requests_by_provider.setdefault(key.provider, {})\
+                .setdefault((key.params, key.scenario), {})\
+                .setdefault(instrument, (set(), set()))
+            dates_markets.add((key.date, key.market))
+            measures.add(key.risk_measure)
 
         requests_for_provider = {}
         if requests_by_provider:
             session = GsSession.current
             request_visible_to_gs = session.is_internal() if self.__visible_to_gs is None else self.__visible_to_gs
 
-            for provider, by_params_scenario_date_market in requests_by_provider.items():
+            for provider, by_params_scenario in requests_by_provider.items():
                 grouped_requests = {}
 
-                for (params, scenario, date, market), positions_by_measures in by_params_scenario_date_market.items():
-                    for instrument, risk_measures in positions_by_measures.items():
-                        grouped_requests.setdefault((params, scenario, date, market, tuple(sorted(risk_measures))),
+                for (params, scenario), positions_by_dates_markets_measures in by_params_scenario.items():
+                    for instrument, (dates_markets, risk_measures) in positions_by_dates_markets_measures.items():
+                        grouped_requests.setdefault((params, scenario, tuple(sorted(dates_markets)),
+                                                     tuple(sorted(risk_measures))),
                                                     []).append(instrument)
 
                 requests = []
 
-                for (params, scenario, date, market, risk_measures), instruments in grouped_requests.items():
-                    for chunk in [tuple(filter(None, i)) for i in zip_longest(*[iter(instruments)] * 1000)]:
-                        requests.append(RiskRequest(
-                            tuple(RiskPosition(instrument=i, quantity=i.instrument_quantity) for i in chunk),
-                            risk_measures,
-                            parameters=self._parameters,
-                            wait_for_results=not self.__is_batch,
-                            scenario=scenario,
-                            pricing_and_market_data_as_of=(PricingDateAndMarketDataAsOf(pricing_date=date,
-                                                                                        market=market),),
-                            request_visible_to_gs=request_visible_to_gs,
-                        ))
+                # Restrict to 1,000 instruments and 1 date in a batch, until server side changes are made
+
+                for (params, scenario, dates_markets, risk_measures), instruments in grouped_requests.items():
+                    for insts_chunk in [tuple(filter(None, i)) for i in zip_longest(*[iter(instruments)] * 1000)]:
+                        for dates_chunk in [tuple(filter(None, i)) for i in zip_longest(*[iter(dates_markets)] * 1)]:
+                            requests.append(RiskRequest(
+                                tuple(RiskPosition(instrument=i, quantity=i.instrument_quantity) for i in insts_chunk),
+                                risk_measures,
+                                parameters=self._parameters,
+                                wait_for_results=not self.__is_batch,
+                                scenario=scenario,
+                                pricing_and_market_data_as_of=tuple(
+                                    PricingDateAndMarketDataAsOf(pricing_date=d, market=m)
+                                    for d, m in dates_chunk),
+                                request_visible_to_gs=request_visible_to_gs
+                            ))
 
                 requests_for_provider[provider] = requests
             
@@ -228,7 +240,7 @@ class PricingContext(ContextBaseWithDefault):
                 (len(requests_for_provider) > 1 or len(next(iter(requests_for_provider.values()))) > 1)
             request_pool = ThreadPoolExecutor(len(requests_for_provider))\
                 if len(requests_for_provider) > 1 or self.__is_async else None
-            progress_bar = tqdm(total=len(self.__pending), position=0, maxinterval=1) if show_status else None
+            progress_bar = tqdm(total=len(self.__pending), position=0, maxinterval=1, file=sys.stdout) if show_status else None
             completion_futures = []
 
             for provider, requests in requests_for_provider.items():
@@ -313,7 +325,8 @@ class PricingContext(ContextBaseWithDefault):
         return self.__class__(**clone_kwargs)
 
     def _calc(self, instrument: InstrumentBase, risk_key: RiskKey) -> PricingFuture:
-        future = self.active_context.__pending.get((risk_key, instrument))
+        pending = self.active_context.__pending
+        future = pending.get((risk_key, instrument))
 
         if future is None:
             future = PricingFuture()
@@ -322,7 +335,7 @@ class PricingContext(ContextBaseWithDefault):
             if cached_result is not None:
                 future.set_result(cached_result)
             else:
-                self.active_context.__pending[(risk_key, instrument)] = future
+                pending[(risk_key, instrument)] = future
 
         if not (self.is_entered or self.is_async):
             self.__calc()

@@ -16,6 +16,7 @@ under the License.
 from abc import ABCMeta, abstractmethod
 import asyncio
 from concurrent.futures import TimeoutError
+import itertools
 import logging
 import queue
 import sys
@@ -109,9 +110,10 @@ class RiskApi(metaclass=ABCMeta):
     @classmethod
     def run(cls,
             requests: list,
+            results: queue.Queue,
             max_concurrent: int,
             progress_bar: Optional[tqdm] = None,
-            timeout: Optional[int] = None) -> dict:
+            timeout: Optional[int] = None):
         def execute_requests(outstanding_requests: queue.Queue,
                              responses: asyncio.Queue,
                              raw_results: asyncio.Queue,
@@ -137,6 +139,9 @@ class RiskApi(metaclass=ABCMeta):
                     cls.shutdown_queue_listener(responses, loop=loop)
 
         async def run_async():
+            def num_risk_keys(request: RiskRequest):
+                return len(request.pricing_and_market_data_as_of) * len(request.positions) * len(request.measures)
+
             is_async = not requests[0].wait_for_results
             loop = asyncio.get_event_loop()
             raw_results = asyncio.Queue()
@@ -153,15 +158,22 @@ class RiskApi(metaclass=ABCMeta):
                 # If async we need a task to handle result subscription
                 results_handler = loop.create_task(cls.get_results(responses, raw_results, timeout=timeout))
 
-            results = {}
-            expected = len(requests)
+            expected = sum(num_risk_keys(r) for r in requests)
             received = 0
-            chunk_size = min(max_concurrent, len(requests))
+            chunk_size = min(max_concurrent, expected)
 
             while received < expected:
                 if requests:
                     # Enqueue requests for dispatch
-                    cls.enqueue(outstanding_requests, (requests.pop(0) for _ in range(chunk_size)), loop=loop)
+                    dispatch_risk_keys = 0
+                    dispatch_requests = []
+                    while requests and dispatch_risk_keys < chunk_size:
+                        dispatch_request = requests.pop()
+                        dispatch_requests.append(dispatch_request)
+                        dispatch_risk_keys += num_risk_keys(dispatch_request)
+
+                    cls.enqueue(outstanding_requests, dispatch_requests, loop=loop)
+
                     if not requests:
                         # No more requests - shutdown the listener queue, the thread will exit
                         cls.shutdown_queue_listener(outstanding_requests, loop=loop)
@@ -172,25 +184,31 @@ class RiskApi(metaclass=ABCMeta):
                     # Only happens on error
                     break
 
-                # Enable as many new requests as we've received results, to keep the outstanding number constant
-                chunk_size = min(len(completed), len(requests))
-
                 # Handle the results
-                for request, result in completed:
-                    received += 1
-                    results_by_key = cls._handle_results(request, result)
-                    if progress_bar:
-                        progress_bar.update(len(results_by_key))
+                chunk_results = tuple(itertools.chain.from_iterable(cls._handle_results(request, result).items()
+                                                                    for request, result in completed))
+                chunk_received = len(chunk_results)
 
-                    results.update(results_by_key)
+                # Enable as many new requests as we've received results, to keep the outstanding number constant
+                chunk_size = min(chunk_received, expected - received)
+
+                if progress_bar:
+                    progress_bar.update(chunk_received)
+                    progress_bar.refresh()
+
+                cls.enqueue(results, chunk_results)
+                received += chunk_received
 
             if results_handler:
                 await results_handler
 
-            return results
+            if progress_bar:
+                progress_bar.close()
+
+            cls.shutdown_queue_listener(results)
 
         if sys.version_info >= (3, 7):
-            return asyncio.run(run_async())
+            asyncio.run(run_async())
         else:
             try:
                 existing_event_loop = asyncio.get_event_loop()
@@ -204,7 +222,7 @@ class RiskApi(metaclass=ABCMeta):
                 asyncio.set_event_loop(main_loop)
 
             try:
-                return main_loop.run_until_complete(run_async())
+                main_loop.run_until_complete(run_async())
             except Exception:
                 if not use_existing:
                     main_loop.stop()

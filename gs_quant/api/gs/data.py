@@ -75,6 +75,7 @@ class QueryType(Enum):
     CENTRAL_BANK_SWAP_RATE = "Central Bank Swap Rate"
     FORWARD_PRICE = "Forward Price"
     FAIR_PRICE = "Fair Price"
+    PNL = "Pnl"
     SPOT = "Spot"
     ES_NUMERIC_SCORE = "Es Numeric Score"
     ES_NUMERIC_PERCENTILE = "Es Numeric Percentile"

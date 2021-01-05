@@ -19,7 +19,7 @@ from typing import Tuple, Dict, List
 
 from gs_quant.session import GsSession
 from gs_quant.target.risk_models import RiskModel, RiskModelCalendar, RiskModelFactor, Term, RiskModelData, Format, \
-    DataAssetsRequest, Measures
+    DataAssetsRequest, Measure
 
 _logger = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ class GsRiskModelApi:
     @classmethod
     def get_risk_models(cls,
                         ids: List[str] = None,
-                        limit: int = 100,
+                        limit: int = None,
                         offset: int = None,
                         terms: List[str] = None,
                         last_updated_by_ids: List[str] = None,
@@ -49,7 +49,9 @@ class GsRiskModelApi:
                         names: List[str] = None,
                         descriptions: List[str] = None,
                         coverages: List[str] = None) -> Tuple[RiskModel, ...]:
-        url = '/risk/models?limit={limit}'.format(limit=limit)
+        url = ''
+        if limit is not None:
+            url += '&limit={limit}'.format(limit=limit)
         if ids is not None:
             url += '&id={ids}'.format(ids='&id='.join(ids))
         if offset is not None:
@@ -73,6 +75,11 @@ class GsRiskModelApi:
         if coverages is not None:
             url += '&coverage={cov}'.format(cov='&coverage='.join(coverages))
 
+        if url:
+            url = '/risk/models?' + url[1:]  # remove first '&'
+        else:
+            url = '/risk/models'
+
         return GsSession.current._get(url, cls=RiskModel)['results']
 
     @classmethod
@@ -95,8 +102,8 @@ class GsRiskModelApi:
     @classmethod
     def get_risk_model_dates(cls,
                              model_id: str,
-                             start_date: dt.datetime = None,
-                             end_date: dt.datetime = None) -> List:
+                             start_date: dt.date = None,
+                             end_date: dt.date = None) -> List:
         url = '/risk/models/{id}/dates'
         if start_date is not None:
             url += '&startDate={date}'.format(date=start_date.strftime('%Y-%m-%d'))
@@ -115,7 +122,7 @@ class GsRiskModelApi:
     @classmethod
     def get_risk_model_factor(cls, model_id: str, factor_id: str) -> RiskModelFactor:
         return GsSession.current._get(
-            '/risk/models/{id}/factors/{identifier}'.format(id=model_id, identifier=factor_id), cls=RiskModelFactor)
+            '/risk/models/{id}/factors/{identifier}'.format(id=model_id, identifier=factor_id))
 
     @classmethod
     def update_risk_model_factor(cls, model_id: str, factor_id: str, factor: RiskModelFactor) -> RiskModelFactor:
@@ -131,8 +138,8 @@ class GsRiskModelApi:
     @classmethod
     def get_risk_model_factor_data(cls,
                                    model_id: str,
-                                   start_date: dt.datetime = None,
-                                   end_date: dt.datetime = None,
+                                   start_date: dt.date = None,
+                                   end_date: dt.date = None,
                                    identifiers: List[str] = None,
                                    include_performance_curve: bool = None) -> List[Dict]:
         url = '/risk/models/{id}/factors/data'.format(id=model_id)
@@ -164,12 +171,12 @@ class GsRiskModelApi:
 
     @classmethod
     def upload_risk_model_data(cls, model_id: str, model_data: RiskModelData) -> RiskModelData:
-        return GsSession.current._post('/risk/models/data/{id}'.format(id=model_id), model_data, cls=RiskModelData)
+        return GsSession.current._post('/risk/models/data/{id}'.format(id=model_id), model_data)
 
     @classmethod
     def get_risk_model_data(cls, model_id: str, start_date: dt.date, end_date: dt.date,
-                            assets: DataAssetsRequest = None, measures: List[Measures] = None,
-                            limit_factors: bool = None, format: Format = None) -> Dict:
+                            assets: DataAssetsRequest = None, measures: List[Measure] = None,
+                            limit_factors: bool = None, data_format: Format = None) -> Dict:
         query = {
             'startDate': start_date.strftime('%Y-%m-%d'),
             'endDate': end_date.strftime('%Y-%m-%d')
@@ -180,6 +187,6 @@ class GsRiskModelApi:
             query['measures'] = measures
         if limit_factors is not None:
             query['limitFactors'] = limit_factors
-        if format is not None:
-            query['format'] = format
+        if data_format is not None:
+            query['format'] = data_format
         return GsSession.current._post('/risk/models/data/{id}/query'.format(id=model_id), query)

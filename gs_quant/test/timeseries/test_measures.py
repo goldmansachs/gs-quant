@@ -2686,6 +2686,17 @@ def test_bucketize_price():
 
     replace.restore()
 
+    # No market data
+    market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    market_mock.return_value = mock_empty_market_data_response()
+    with DataContext(datetime.date(2019, 1, 2), datetime.date(2019, 1, 2)):
+        bbid_mock = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+        bbid_mock.return_value = 'MISO'
+        actual = tm.bucketize_price(mock_miso, 'LMP', bucket='7x24')
+        assert_series_equal(pd.Series(dtype='float64'), pd.Series(actual))
+
+    replace.restore()
+
 
 def test_forward_price():
     # US Power
@@ -2848,6 +2859,20 @@ def test_forward_price():
                             pd.Series(actual))
         replace.restore()
 
+        # No market data
+        market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+        market_mock.return_value = mock_empty_market_data_response()
+        bbid_mock = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+        bbid_mock.return_value = 'SPP'
+        with DataContext(datetime.date(2019, 1, 2), datetime.date(2019, 1, 2)):
+            actual = tm.forward_price(mock_spp,
+                                      price_method='LMP',
+                                      contract_range='2Q20',
+                                      bucket='7x24'
+                                      )
+            assert_series_equal(pd.Series(dtype='float64'), pd.Series(actual))
+        replace.restore()
+
 
 def test_natgas_forward_price():
 
@@ -2878,6 +2903,16 @@ def test_natgas_forward_price():
                              price_method='GDD',
                              contract_range='I21')
 
+    replace.restore()
+
+    # No market data
+    market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    market_mock.return_value = mock_empty_market_data_response()
+    with DataContext(datetime.date(2019, 1, 2), datetime.date(2019, 1, 2)):
+        actual = tm.forward_price(mock,
+                                  price_method='GDD',
+                                  contract_range='F21')
+        assert_series_equal(pd.Series(dtype='float64'), pd.Series(actual))
     replace.restore()
 
 

@@ -16,7 +16,7 @@ under the License.
 
 from gs_quant.target.common import *
 import datetime
-from typing import Tuple, Union
+from typing import Mapping, Tuple, Union
 from enum import Enum
 from gs_quant.base import Base, EnumBase, InstrumentBase, camel_case_translate, get_enum_value
 
@@ -26,6 +26,17 @@ class DelayExclusionType(EnumBase, Enum):
     """Type of the delay exclusion"""
 
     LAST_DAY_OF_THE_MONTH = 'LAST_DAY_OF_THE_MONTH'
+    
+    def __repr__(self):
+        return self.value
+
+
+class DevelopmentStatus(EnumBase, Enum):    
+    
+    """The status of development of this dataset. Controls rate limit on query/upload."""
+
+    Development = 'Development'
+    Production = 'Production'
     
     def __repr__(self):
         return self.value
@@ -53,6 +64,7 @@ class MeasureEntityType(EnumBase, Enum):
     SUBDIVISION = 'SUBDIVISION'
     REPORT = 'REPORT'
     HEDGE = 'HEDGE'
+    PORTFOLIO = 'PORTFOLIO'
     
     def __repr__(self):
         return self.value
@@ -69,6 +81,7 @@ class AdvancedFilter(Base):
         operator: str,
         value: float = None,
         values: Tuple[str, ...] = None,
+        format_: str = None,
         name: str = None
     ):        
         super().__init__()
@@ -76,6 +89,7 @@ class AdvancedFilter(Base):
         self.value = value
         self.values = values
         self.operator = operator
+        self.__format = format_
         self.name = name
 
     @property
@@ -119,42 +133,15 @@ class AdvancedFilter(Base):
         self._property_changed('operator')
         self.__operator = value        
 
-
-class DataGroup(Base):
-        
-    """Dataset grouped by context (key dimensions)"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        context: FieldValueMap = None,
-        data: Tuple[FieldValueMap, ...] = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.context = context
-        self.data = data
-        self.name = name
-
     @property
-    def context(self) -> FieldValueMap:
-        """Context map for the grouped data (key dimensions)"""
-        return self.__context
+    def format(self) -> str:
+        """Format like relativeToDate"""
+        return self.__format
 
-    @context.setter
-    def context(self, value: FieldValueMap):
-        self._property_changed('context')
-        self.__context = value        
-
-    @property
-    def data(self) -> Tuple[FieldValueMap, ...]:
-        """Array of grouped data objects"""
-        return self.__data
-
-    @data.setter
-    def data(self, value: Tuple[FieldValueMap, ...]):
-        self._property_changed('data')
-        self.__data = value        
+    @format.setter
+    def format(self, value: str):
+        self._property_changed('format')
+        self.__format = value        
 
 
 class DataSetCondition(Base):
@@ -268,6 +255,558 @@ class DataSetDefaults(Base):
         self.__delay_seconds = value        
 
 
+class FieldLinkSelector(Base):
+        
+    """Stores selector and name how field is presented in dataset."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        field_selector: str = None,
+        description: str = None,
+        display_name: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.field_selector = field_selector
+        self.description = description
+        self.display_name = display_name
+        self.name = name
+
+    @property
+    def field_selector(self) -> str:
+        """Selector which captures the field from the Entity."""
+        return self.__field_selector
+
+    @field_selector.setter
+    def field_selector(self, value: str):
+        self._property_changed('field_selector')
+        self.__field_selector = value        
+
+    @property
+    def description(self) -> str:
+        """Custom description (overrides field default)."""
+        return self.__description
+
+    @description.setter
+    def description(self, value: str):
+        self._property_changed('description')
+        self.__description = value        
+
+    @property
+    def display_name(self) -> str:
+        """Name under which the captured field will be displayed. The name must be
+           registered in fields."""
+        return self.__display_name
+
+    @display_name.setter
+    def display_name(self, value: str):
+        self._property_changed('display_name')
+        self.__display_name = value        
+
+
+class MDAPI(Base):
+        
+    """Defines MDAPI fields."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        type_: str,
+        quoting_styles: Tuple[dict, ...],
+        class_: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.__class = class_
+        self.__type = type_
+        self.quoting_styles = quoting_styles
+        self.name = name
+
+    @property
+    def class_(self) -> str:
+        """MDAPI Class."""
+        return self.__class
+
+    @class_.setter
+    def class_(self, value: str):
+        self._property_changed('class_')
+        self.__class = value        
+
+    @property
+    def type(self) -> str:
+        """The MDAPI Type field (private)"""
+        return self.__type
+
+    @type.setter
+    def type(self, value: str):
+        self._property_changed('type')
+        self.__type = value        
+
+    @property
+    def quoting_styles(self) -> Tuple[dict, ...]:
+        """Map from MDAPI QuotingStyles to database columns"""
+        return self.__quoting_styles
+
+    @quoting_styles.setter
+    def quoting_styles(self, value: Tuple[dict, ...]):
+        self._property_changed('quoting_styles')
+        self.__quoting_styles = value        
+
+
+class MarketDataField(Base):
+        
+    @camel_case_translate
+    def __init__(
+        self,
+        name: str = None,
+        mapping: str = None
+    ):        
+        super().__init__()
+        self.name = name
+        self.mapping = mapping
+
+    @property
+    def name(self) -> str:
+        return self.__name
+
+    @name.setter
+    def name(self, value: str):
+        self._property_changed('name')
+        self.__name = value        
+
+    @property
+    def mapping(self) -> str:
+        return self.__mapping
+
+    @mapping.setter
+    def mapping(self, value: str):
+        self._property_changed('mapping')
+        self.__mapping = value        
+
+
+class MarketDataFilteredField(Base):
+        
+    @camel_case_translate
+    def __init__(
+        self,
+        field: str = None,
+        default_value: str = None,
+        default_numerical_value: float = None,
+        default_boolean_value: bool = None,
+        numerical_values: Tuple[float, ...] = None,
+        values: Tuple[str, ...] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.field = field
+        self.default_value = default_value
+        self.default_numerical_value = default_numerical_value
+        self.default_boolean_value = default_boolean_value
+        self.numerical_values = numerical_values
+        self.values = values
+        self.name = name
+
+    @property
+    def field(self) -> str:
+        """Filtered field name"""
+        return self.__field
+
+    @field.setter
+    def field(self, value: str):
+        self._property_changed('field')
+        self.__field = value        
+
+    @property
+    def default_value(self) -> str:
+        """Default filtered field"""
+        return self.__default_value
+
+    @default_value.setter
+    def default_value(self, value: str):
+        self._property_changed('default_value')
+        self.__default_value = value        
+
+    @property
+    def default_numerical_value(self) -> float:
+        """Default numerical filtered field"""
+        return self.__default_numerical_value
+
+    @default_numerical_value.setter
+    def default_numerical_value(self, value: float):
+        self._property_changed('default_numerical_value')
+        self.__default_numerical_value = value        
+
+    @property
+    def default_boolean_value(self) -> bool:
+        """Default for boolean field"""
+        return self.__default_boolean_value
+
+    @default_boolean_value.setter
+    def default_boolean_value(self, value: bool):
+        self._property_changed('default_boolean_value')
+        self.__default_boolean_value = value        
+
+    @property
+    def numerical_values(self) -> Tuple[float, ...]:
+        """Array of numerical filtered fields"""
+        return self.__numerical_values
+
+    @numerical_values.setter
+    def numerical_values(self, value: Tuple[float, ...]):
+        self._property_changed('numerical_values')
+        self.__numerical_values = value        
+
+    @property
+    def values(self) -> Tuple[str, ...]:
+        """Array of filtered fields"""
+        return self.__values
+
+    @values.setter
+    def values(self, value: Tuple[str, ...]):
+        self._property_changed('values')
+        self.__values = value        
+
+
+class MeasureBacktest(Base):
+        
+    """Describes backtests that should be associated with a measure."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        name: str = None
+    ):        
+        super().__init__()
+        self.name = name
+
+
+class MeasureKpi(Base):
+        
+    """Describes KPIs that should be associated with a measure."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        name: str = None
+    ):        
+        super().__init__()
+        self.name = name
+
+
+class MidPrice(Base):
+        
+    """Specification for a mid price column derived from bid and ask columns."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        bid_column: str = None,
+        ask_column: str = None,
+        mid_column: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.bid_column = bid_column
+        self.ask_column = ask_column
+        self.mid_column = mid_column
+        self.name = name
+
+    @property
+    def bid_column(self) -> str:
+        """Database column name."""
+        return self.__bid_column
+
+    @bid_column.setter
+    def bid_column(self, value: str):
+        self._property_changed('bid_column')
+        self.__bid_column = value        
+
+    @property
+    def ask_column(self) -> str:
+        """Database column name."""
+        return self.__ask_column
+
+    @ask_column.setter
+    def ask_column(self, value: str):
+        self._property_changed('ask_column')
+        self.__ask_column = value        
+
+    @property
+    def mid_column(self) -> str:
+        """Database column name."""
+        return self.__mid_column
+
+    @mid_column.setter
+    def mid_column(self, value: str):
+        self._property_changed('mid_column')
+        self.__mid_column = value        
+
+
+class ParserEntity(Base):
+        
+    """Settings for a parser processor"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        only_normalized_fields: bool = None,
+        quotes: bool = None,
+        trades: bool = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.only_normalized_fields = only_normalized_fields
+        self.quotes = quotes
+        self.trades = trades
+        self.name = name
+
+    @property
+    def only_normalized_fields(self) -> bool:
+        """Setting for onlyNormalizedFields."""
+        return self.__only_normalized_fields
+
+    @only_normalized_fields.setter
+    def only_normalized_fields(self, value: bool):
+        self._property_changed('only_normalized_fields')
+        self.__only_normalized_fields = value        
+
+    @property
+    def quotes(self) -> bool:
+        """Setting for quotes."""
+        return self.__quotes
+
+    @quotes.setter
+    def quotes(self, value: bool):
+        self._property_changed('quotes')
+        self.__quotes = value        
+
+    @property
+    def trades(self) -> bool:
+        """Setting for trades."""
+        return self.__trades
+
+    @trades.setter
+    def trades(self, value: bool):
+        self._property_changed('trades')
+        self.__trades = value        
+
+
+class RemapFieldPair(Base):
+        
+    """Field and remapTo field pair."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        field: str = None,
+        remap_to: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.field = field
+        self.remap_to = remap_to
+        self.name = name
+
+    @property
+    def field(self) -> str:
+        """Field to remap."""
+        return self.__field
+
+    @field.setter
+    def field(self, value: str):
+        self._property_changed('field')
+        self.__field = value        
+
+    @property
+    def remap_to(self) -> str:
+        """Field to remap to."""
+        return self.__remap_to
+
+    @remap_to.setter
+    def remap_to(self, value: str):
+        self._property_changed('remap_to')
+        self.__remap_to = value        
+
+
+class SymbolFilterLink(Base):
+        
+    """The entity type and field used to filter symbols."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        entity_field: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.entity_field = entity_field
+        self.name = name
+
+    @property
+    def entity_type(self) -> str:
+        """The type of the entity to lookup to."""
+        return 'MktCoordinate'        
+
+    @property
+    def entity_field(self) -> str:
+        """The field of the entity to lookup to."""
+        return self.__entity_field
+
+    @entity_field.setter
+    def entity_field(self, value: str):
+        self._property_changed('entity_field')
+        self.__entity_field = value        
+
+
+class DataFilter(Base):
+        
+    """Filter on specified field."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        field: str,
+        values: Tuple[str, ...],
+        column: str = None,
+        where: DataSetCondition = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.field = field
+        self.column = column
+        self.values = values
+        self.where = where
+        self.name = name
+
+    @property
+    def field(self) -> str:
+        """Field to filter on."""
+        return self.__field
+
+    @field.setter
+    def field(self, value: str):
+        self._property_changed('field')
+        self.__field = value        
+
+    @property
+    def column(self) -> str:
+        """Database column name."""
+        return self.__column
+
+    @column.setter
+    def column(self, value: str):
+        self._property_changed('column')
+        self.__column = value        
+
+    @property
+    def values(self) -> Tuple[str, ...]:
+        """Value(s) to match."""
+        return self.__values
+
+    @values.setter
+    def values(self, value: Tuple[str, ...]):
+        self._property_changed('values')
+        self.__values = value        
+
+    @property
+    def where(self) -> DataSetCondition:
+        """Only apply the filter where this condition matches."""
+        return self.__where
+
+    @where.setter
+    def where(self, value: DataSetCondition):
+        self._property_changed('where')
+        self.__where = value        
+
+
+class DataSetDelay(Base):
+        
+    """Specifies the delayed data properties."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        until_seconds: float,
+        at_time_zone: str,
+        when: Tuple[Union[DelayExclusionType, str], ...] = None,
+        history_up_to_seconds: float = None,
+        history_up_to_time: datetime.datetime = None,
+        history_up_to_months: float = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.until_seconds = until_seconds
+        self.at_time_zone = at_time_zone
+        self.when = when
+        self.history_up_to_seconds = history_up_to_seconds
+        self.history_up_to_time = history_up_to_time
+        self.history_up_to_months = history_up_to_months
+        self.name = name
+
+    @property
+    def until_seconds(self) -> float:
+        """Seconds from midnight until which the delay will be applicable."""
+        return self.__until_seconds
+
+    @until_seconds.setter
+    def until_seconds(self, value: float):
+        self._property_changed('until_seconds')
+        self.__until_seconds = value        
+
+    @property
+    def at_time_zone(self) -> str:
+        """The time zone with respect to which the delay will be applied (must be a valid
+           IANA TimeZone identifier)."""
+        return self.__at_time_zone
+
+    @at_time_zone.setter
+    def at_time_zone(self, value: str):
+        self._property_changed('at_time_zone')
+        self.__at_time_zone = value        
+
+    @property
+    def when(self) -> Tuple[Union[DelayExclusionType, str], ...]:
+        """Apply this delay filter only when the day belongs to this exclusion list."""
+        return self.__when
+
+    @when.setter
+    def when(self, value: Tuple[Union[DelayExclusionType, str], ...]):
+        self._property_changed('when')
+        self.__when = value        
+
+    @property
+    def history_up_to_seconds(self) -> float:
+        """Relative seconds up to which the data history will be shown for the business
+           day."""
+        return self.__history_up_to_seconds
+
+    @history_up_to_seconds.setter
+    def history_up_to_seconds(self, value: float):
+        self._property_changed('history_up_to_seconds')
+        self.__history_up_to_seconds = value        
+
+    @property
+    def history_up_to_time(self) -> datetime.datetime:
+        """Absolute time up to which the data history will be shown for the business day."""
+        return self.__history_up_to_time
+
+    @history_up_to_time.setter
+    def history_up_to_time(self, value: datetime.datetime):
+        self._property_changed('history_up_to_time')
+        self.__history_up_to_time = value        
+
+    @property
+    def history_up_to_months(self) -> float:
+        """Months time up to which the data history will be shown for the business day."""
+        return self.__history_up_to_months
+
+    @history_up_to_months.setter
+    def history_up_to_months(self, value: float):
+        self._property_changed('history_up_to_months')
+        self.__history_up_to_months = value        
+
+
 class DataSetParameters(Base):
         
     """Dataset parameters."""
@@ -292,11 +831,12 @@ class DataSetParameters(Base):
         approver_ids: Tuple[str, ...] = None,
         support_ids: Tuple[str, ...] = None,
         support_distribution_list: Tuple[str, ...] = None,
+        include_in_catalog: bool = False,
         plot: bool = None,
         coverage_enabled: bool = True,
         use_created_time_for_upload: bool = None,
         apply_entity_entitlements: bool = None,
-        development_status: str = None,
+        development_status: Union[DevelopmentStatus, str] = None,
         name: str = None
     ):        
         super().__init__()
@@ -317,6 +857,7 @@ class DataSetParameters(Base):
         self.approver_ids = approver_ids
         self.support_ids = support_ids
         self.support_distribution_list = support_distribution_list
+        self.include_in_catalog = include_in_catalog
         self.plot = plot
         self.coverage_enabled = coverage_enabled
         self.use_created_time_for_upload = use_created_time_for_upload
@@ -497,6 +1038,16 @@ class DataSetParameters(Base):
         self.__support_distribution_list = value        
 
     @property
+    def include_in_catalog(self) -> bool:
+        """Whether dataset should be in the catalog."""
+        return self.__include_in_catalog
+
+    @include_in_catalog.setter
+    def include_in_catalog(self, value: bool):
+        self._property_changed('include_in_catalog')
+        self.__include_in_catalog = value        
+
+    @property
     def plot(self) -> bool:
         """Whether dataset is intended for use in Plottool."""
         return self.__plot
@@ -539,18 +1090,558 @@ class DataSetParameters(Base):
         self.__apply_entity_entitlements = value        
 
     @property
-    def development_status(self) -> str:
+    def development_status(self) -> Union[DevelopmentStatus, str]:
         """The status of development of this dataset. Controls rate limit on query/upload."""
         return self.__development_status
 
     @development_status.setter
-    def development_status(self, value: str):
+    def development_status(self, value: Union[DevelopmentStatus, str]):
         self._property_changed('development_status')
-        self.__development_status = value        
+        self.__development_status = get_enum_value(DevelopmentStatus, value)        
+
+
+class DataSetTransforms(Base):
+        
+    """Dataset transformation specifiers."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        redact_columns: Tuple[str, ...] = None,
+        round_columns: Tuple[str, ...] = None,
+        remap_fields: Tuple[RemapFieldPair, ...] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.redact_columns = redact_columns
+        self.round_columns = round_columns
+        self.remap_fields = remap_fields
+        self.name = name
+
+    @property
+    def redact_columns(self) -> Tuple[str, ...]:
+        """Redact (exclude) a list of database columns."""
+        return self.__redact_columns
+
+    @redact_columns.setter
+    def redact_columns(self, value: Tuple[str, ...]):
+        self._property_changed('redact_columns')
+        self.__redact_columns = value        
+
+    @property
+    def round_columns(self) -> Tuple[str, ...]:
+        """Rounds list of database columns."""
+        return self.__round_columns
+
+    @round_columns.setter
+    def round_columns(self, value: Tuple[str, ...]):
+        self._property_changed('round_columns')
+        self.__round_columns = value        
+
+    @property
+    def remap_fields(self) -> Tuple[RemapFieldPair, ...]:
+        """Remaps a list of output fields to a different list of fields."""
+        return self.__remap_fields
+
+    @remap_fields.setter
+    def remap_fields(self, value: Tuple[RemapFieldPair, ...]):
+        self._property_changed('remap_fields')
+        self.__remap_fields = value        
+
+
+class FieldLink(Base):
+        
+    """Link the dataset field to an entity to also fetch its fields. It has two
+       mutually exclusive modes of operation: prefixing or explicit inclusion
+       entity fields."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        entity_identifier: str = None,
+        prefix: str = None,
+        additional_entity_fields: Tuple[FieldLinkSelector, ...] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.entity_identifier = entity_identifier
+        self.prefix = prefix
+        self.additional_entity_fields = additional_entity_fields
+        self.name = name
+
+    @property
+    def entity_type(self) -> str:
+        """The type of the entity to lookup to."""
+        return 'Asset'        
+
+    @property
+    def entity_identifier(self) -> str:
+        """The identifier of the entity to link the dataset field to."""
+        return self.__entity_identifier
+
+    @entity_identifier.setter
+    def entity_identifier(self, value: str):
+        self._property_changed('entity_identifier')
+        self.__entity_identifier = value        
+
+    @property
+    def prefix(self) -> str:
+        """Prefix to put before the fields fetched from the linked entity (must be unique
+           for each dataset field). Prefix cannot be applied with
+           additionalEntityFields."""
+        return self.__prefix
+
+    @prefix.setter
+    def prefix(self, value: str):
+        self._property_changed('prefix')
+        self.__prefix = value        
+
+    @property
+    def additional_entity_fields(self) -> Tuple[FieldLinkSelector, ...]:
+        """List of fields from the linked entity to include. It cannot be applied with
+           prefix"""
+        return self.__additional_entity_fields
+
+    @additional_entity_fields.setter
+    def additional_entity_fields(self, value: Tuple[FieldLinkSelector, ...]):
+        self._property_changed('additional_entity_fields')
+        self.__additional_entity_fields = value        
+
+
+class MarketDataMapping(Base):
+        
+    @camel_case_translate
+    def __init__(
+        self,
+        asset_class: Union[AssetClass, str] = None,
+        query_type: str = None,
+        description: str = None,
+        scale: float = None,
+        frequency: Union[MarketDataFrequency, str] = None,
+        measures: Tuple[Union[MarketDataMeasure, str], ...] = None,
+        data_set: str = None,
+        vendor: Union[MarketDataVendor, str] = None,
+        fields: Tuple[MarketDataField, ...] = None,
+        rank: float = None,
+        filtered_fields: Tuple[MarketDataFilteredField, ...] = None,
+        asset_types: Tuple[Union[AssetType, str], ...] = None,
+        entity_type: Union[MeasureEntityType, str] = None,
+        backtest_entity: MeasureBacktest = None,
+        kpi_entity: MeasureKpi = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.asset_class = asset_class
+        self.query_type = query_type
+        self.description = description
+        self.scale = scale
+        self.frequency = frequency
+        self.measures = measures
+        self.data_set = data_set
+        self.vendor = vendor
+        self.fields = fields
+        self.rank = rank
+        self.filtered_fields = filtered_fields
+        self.asset_types = asset_types
+        self.entity_type = entity_type
+        self.backtest_entity = backtest_entity
+        self.kpi_entity = kpi_entity
+        self.name = name
+
+    @property
+    def asset_class(self) -> Union[AssetClass, str]:
+        """Asset class that is applicable for mapping."""
+        return self.__asset_class
+
+    @asset_class.setter
+    def asset_class(self, value: Union[AssetClass, str]):
+        self._property_changed('asset_class')
+        self.__asset_class = get_enum_value(AssetClass, value)        
+
+    @property
+    def query_type(self) -> str:
+        """Market data query type."""
+        return self.__query_type
+
+    @query_type.setter
+    def query_type(self, value: str):
+        self._property_changed('query_type')
+        self.__query_type = value        
+
+    @property
+    def description(self) -> str:
+        """Query type description"""
+        return self.__description
+
+    @description.setter
+    def description(self, value: str):
+        self._property_changed('description')
+        self.__description = value        
+
+    @property
+    def scale(self) -> float:
+        """Scale multiplier for time series"""
+        return self.__scale
+
+    @scale.setter
+    def scale(self, value: float):
+        self._property_changed('scale')
+        self.__scale = value        
+
+    @property
+    def frequency(self) -> Union[MarketDataFrequency, str]:
+        return self.__frequency
+
+    @frequency.setter
+    def frequency(self, value: Union[MarketDataFrequency, str]):
+        self._property_changed('frequency')
+        self.__frequency = get_enum_value(MarketDataFrequency, value)        
+
+    @property
+    def measures(self) -> Tuple[Union[MarketDataMeasure, str], ...]:
+        return self.__measures
+
+    @measures.setter
+    def measures(self, value: Tuple[Union[MarketDataMeasure, str], ...]):
+        self._property_changed('measures')
+        self.__measures = value        
+
+    @property
+    def data_set(self) -> str:
+        """Marquee unique identifier"""
+        return self.__data_set
+
+    @data_set.setter
+    def data_set(self, value: str):
+        self._property_changed('data_set')
+        self.__data_set = value        
+
+    @property
+    def vendor(self) -> Union[MarketDataVendor, str]:
+        return self.__vendor
+
+    @vendor.setter
+    def vendor(self, value: Union[MarketDataVendor, str]):
+        self._property_changed('vendor')
+        self.__vendor = get_enum_value(MarketDataVendor, value)        
+
+    @property
+    def fields(self) -> Tuple[MarketDataField, ...]:
+        return self.__fields
+
+    @fields.setter
+    def fields(self, value: Tuple[MarketDataField, ...]):
+        self._property_changed('fields')
+        self.__fields = value        
+
+    @property
+    def rank(self) -> float:
+        return self.__rank
+
+    @rank.setter
+    def rank(self, value: float):
+        self._property_changed('rank')
+        self.__rank = value        
+
+    @property
+    def filtered_fields(self) -> Tuple[MarketDataFilteredField, ...]:
+        return self.__filtered_fields
+
+    @filtered_fields.setter
+    def filtered_fields(self, value: Tuple[MarketDataFilteredField, ...]):
+        self._property_changed('filtered_fields')
+        self.__filtered_fields = value        
+
+    @property
+    def asset_types(self) -> Tuple[Union[AssetType, str], ...]:
+        """Asset type differentiates the product categorization or contract type"""
+        return self.__asset_types
+
+    @asset_types.setter
+    def asset_types(self, value: Tuple[Union[AssetType, str], ...]):
+        self._property_changed('asset_types')
+        self.__asset_types = value        
+
+    @property
+    def entity_type(self) -> Union[MeasureEntityType, str]:
+        """Entity type associated with a measure."""
+        return self.__entity_type
+
+    @entity_type.setter
+    def entity_type(self, value: Union[MeasureEntityType, str]):
+        self._property_changed('entity_type')
+        self.__entity_type = get_enum_value(MeasureEntityType, value)        
+
+    @property
+    def backtest_entity(self) -> MeasureBacktest:
+        """Describes backtests that should be associated with a measure."""
+        return self.__backtest_entity
+
+    @backtest_entity.setter
+    def backtest_entity(self, value: MeasureBacktest):
+        self._property_changed('backtest_entity')
+        self.__backtest_entity = value        
+
+    @property
+    def kpi_entity(self) -> MeasureKpi:
+        """Describes KPIs that should be associated with a measure."""
+        return self.__kpi_entity
+
+    @kpi_entity.setter
+    def kpi_entity(self, value: MeasureKpi):
+        self._property_changed('kpi_entity')
+        self.__kpi_entity = value        
+
+
+class ProcessorEntity(Base):
+        
+    """Query processors for dataset."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        filters: Tuple[str, ...] = None,
+        parsers: Tuple[ParserEntity, ...] = None,
+        deduplicate: Tuple[str, ...] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.filters = filters
+        self.parsers = parsers
+        self.deduplicate = deduplicate
+        self.name = name
+
+    @property
+    def filters(self) -> Tuple[str, ...]:
+        """List of filter processors."""
+        return self.__filters
+
+    @filters.setter
+    def filters(self, value: Tuple[str, ...]):
+        self._property_changed('filters')
+        self.__filters = value        
+
+    @property
+    def parsers(self) -> Tuple[ParserEntity, ...]:
+        """List of parser processors."""
+        return self.__parsers
+
+    @parsers.setter
+    def parsers(self, value: Tuple[ParserEntity, ...]):
+        self._property_changed('parsers')
+        self.__parsers = value        
+
+    @property
+    def deduplicate(self) -> Tuple[str, ...]:
+        """Columns on which a deduplication processor should be run."""
+        return self.__deduplicate
+
+    @deduplicate.setter
+    def deduplicate(self, value: Tuple[str, ...]):
+        self._property_changed('deduplicate')
+        self.__deduplicate = value        
+
+
+class SymbolFilterDimension(Base):
+        
+    """Map the dataset field with an entity for filtering arctic symbols."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        field: str = None,
+        field_description: str = None,
+        symbol_filter_link: SymbolFilterLink = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.field = field
+        self.field_description = field_description
+        self.symbol_filter_link = symbol_filter_link
+        self.name = name
+
+    @property
+    def field(self) -> str:
+        """Field name."""
+        return self.__field
+
+    @field.setter
+    def field(self, value: str):
+        self._property_changed('field')
+        self.__field = value        
+
+    @property
+    def field_description(self) -> str:
+        """Custom description (overrides field default)."""
+        return self.__field_description
+
+    @field_description.setter
+    def field_description(self, value: str):
+        self._property_changed('field_description')
+        self.__field_description = value        
+
+    @property
+    def symbol_filter_link(self) -> SymbolFilterLink:
+        """The entity type and field used to filter symbols."""
+        return self.__symbol_filter_link
+
+    @symbol_filter_link.setter
+    def symbol_filter_link(self, value: SymbolFilterLink):
+        self._property_changed('symbol_filter_link')
+        self.__symbol_filter_link = value        
+
+
+class ComplexFilter(Base):
+        
+    """A compound filter for data requests."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        operator: str,
+        simple_filters: Tuple[DataFilter, ...],
+        name: str = None
+    ):        
+        super().__init__()
+        self.operator = operator
+        self.simple_filters = simple_filters
+        self.name = name
+
+    @property
+    def operator(self) -> str:
+        return self.__operator
+
+    @operator.setter
+    def operator(self, value: str):
+        self._property_changed('operator')
+        self.__operator = value        
+
+    @property
+    def simple_filters(self) -> Tuple[DataFilter, ...]:
+        """Filter on specified field."""
+        return self.__simple_filters
+
+    @simple_filters.setter
+    def simple_filters(self, value: Tuple[DataFilter, ...]):
+        self._property_changed('simple_filters')
+        self.__simple_filters = value        
+
+
+class DataSetTransformation(Base):
+        
+    """Transform the Dataset output. Can be used with or without certain conditions."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        transforms: DataSetTransforms,
+        condition: DataSetCondition = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.condition = condition
+        self.transforms = transforms
+        self.name = name
+
+    @property
+    def condition(self) -> DataSetCondition:
+        """Condition to match before applying the transformations."""
+        return self.__condition
+
+    @condition.setter
+    def condition(self, value: DataSetCondition):
+        self._property_changed('condition')
+        self.__condition = value        
+
+    @property
+    def transforms(self) -> DataSetTransforms:
+        """Series of transformation actions to perform."""
+        return self.__transforms
+
+    @transforms.setter
+    def transforms(self, value: DataSetTransforms):
+        self._property_changed('transforms')
+        self.__transforms = value        
+
+
+class FieldColumnPair(Base):
+        
+    """Map from fields to database columns."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        field: str = None,
+        column: str = None,
+        field_description: str = None,
+        link: FieldLink = None,
+        aliases: Tuple[str, ...] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.field = field
+        self.column = column
+        self.field_description = field_description
+        self.link = link
+        self.aliases = aliases
+        self.name = name
+
+    @property
+    def field(self) -> str:
+        """Field name."""
+        return self.__field
+
+    @field.setter
+    def field(self, value: str):
+        self._property_changed('field')
+        self.__field = value        
+
+    @property
+    def column(self) -> str:
+        """Database column name."""
+        return self.__column
+
+    @column.setter
+    def column(self, value: str):
+        self._property_changed('column')
+        self.__column = value        
+
+    @property
+    def field_description(self) -> str:
+        """Custom description (overrides field default)."""
+        return self.__field_description
+
+    @field_description.setter
+    def field_description(self, value: str):
+        self._property_changed('field_description')
+        self.__field_description = value        
+
+    @property
+    def link(self) -> FieldLink:
+        """Link the field with other entity to also fetch its fields."""
+        return self.__link
+
+    @link.setter
+    def link(self, value: FieldLink):
+        self._property_changed('link')
+        self.__link = value        
+
+    @property
+    def aliases(self) -> Tuple[str, ...]:
+        """Set of alias fields that can be used to refer to the current field when
+           querying."""
+        return self.__aliases
+
+    @aliases.setter
+    def aliases(self, value: Tuple[str, ...]):
+        self._property_changed('aliases')
+        self.__aliases = value        
 
 
 class FieldFilterMapDataQuery(Base):
         
+    """Filters on data fields."""
+
     @camel_case_translate
     def __init__(
         self,
@@ -563,6 +1654,7 @@ class FieldFilterMapDataQuery(Base):
         self.total_notional_usd = kwargs.get('total_notional_usd')
         self.bid_unadjusted = kwargs.get('bid_unadjusted')
         self.aggressive_fills_percentage = kwargs.get('aggressive_fills_percentage')
+        self.future10yr_market_cap = kwargs.get('future10yr_market_cap')
         self.vehicle_type = kwargs.get('vehicle_type')
         self.total_fatalities_by_state = kwargs.get('total_fatalities_by_state')
         self.new_active = kwargs.get('new_active')
@@ -610,6 +1702,7 @@ class FieldFilterMapDataQuery(Base):
         self.sc02 = kwargs.get('sc02')
         self.geography_name = kwargs.get('geography_name')
         self.borrower = kwargs.get('borrower')
+        self.share_class_type = kwargs.get('share_class_type')
         self.settle_price = kwargs.get('settle_price')
         self.performance_contribution = kwargs.get('performance_contribution')
         self.sc09 = kwargs.get('sc09')
@@ -624,6 +1717,7 @@ class FieldFilterMapDataQuery(Base):
         self.statement_id = kwargs.get('statement_id')
         self.future_month_u21 = kwargs.get('future_month_u21')
         self.modified_duration = kwargs.get('modified_duration')
+        self.vol180d = kwargs.get('vol180d')
         self.short_rates_contribution = kwargs.get('short_rates_contribution')
         self.implied_normal_volatility = kwargs.get('implied_normal_volatility')
         self.solar_generation = kwargs.get('solar_generation')
@@ -649,6 +1743,7 @@ class FieldFilterMapDataQuery(Base):
         self.midcurve_premium = kwargs.get('midcurve_premium')
         self.volume_composite = kwargs.get('volume_composite')
         self.sharpe_qtd = kwargs.get('sharpe_qtd')
+        self.clearing_exception_or_exemption_indicator = kwargs.get('clearing_exception_or_exemption_indicator')
         self.estimated_holding_time_long = kwargs.get('estimated_holding_time_long')
         self.external = kwargs.get('external')
         self.tracker_name = kwargs.get('tracker_name')
@@ -663,6 +1758,7 @@ class FieldFilterMapDataQuery(Base):
         self.ctd_fwd_price = kwargs.get('ctd_fwd_price')
         self.sink_factor = kwargs.get('sink_factor')
         self.temperature_forecast = kwargs.get('temperature_forecast')
+        self.primary_asset_class = kwargs.get('primary_asset_class')
         self.bid_high = kwargs.get('bid_high')
         self.pnl_qtd = kwargs.get('pnl_qtd')
         self.buy50cents = kwargs.get('buy50cents')
@@ -673,6 +1769,7 @@ class FieldFilterMapDataQuery(Base):
         self.bos_in_bps_description = kwargs.get('bos_in_bps_description')
         self.low_price = kwargs.get('low_price')
         self.adv22_day_pct = kwargs.get('adv22_day_pct')
+        self.gate_type = kwargs.get('gate_type')
         self.matched_maturity_swap_spread12m = kwargs.get('matched_maturity_swap_spread12m')
         self.price_range_in_ticks_label = kwargs.get('price_range_in_ticks_label')
         self.ticker = kwargs.get('ticker')
@@ -684,6 +1781,7 @@ class FieldFilterMapDataQuery(Base):
         self.source_value_forecast = kwargs.get('source_value_forecast')
         self.leg2_spread = kwargs.get('leg2_spread')
         self.short_conviction_large = kwargs.get('short_conviction_large')
+        self.leg1_floating_rate_index = kwargs.get('leg1_floating_rate_index')
         self.ccg_name = kwargs.get('ccg_name')
         self.dollar_excess_return = kwargs.get('dollar_excess_return')
         self.gsn = kwargs.get('gsn')
@@ -719,10 +1817,12 @@ class FieldFilterMapDataQuery(Base):
         self.mkt_asset = kwargs.get('mkt_asset')
         self.leg2_index_location = kwargs.get('leg2_index_location')
         self.twap_unrealized_bps = kwargs.get('twap_unrealized_bps')
+        self.quantity_unit_of_measure = kwargs.get('quantity_unit_of_measure')
         self.last_updated_message = kwargs.get('last_updated_message')
         self.loan_value = kwargs.get('loan_value')
         self.option_adjusted_ois_spread = kwargs.get('option_adjusted_ois_spread')
         self.total_return_price = kwargs.get('total_return_price')
+        self.value_currency = kwargs.get('value_currency')
         self.weighted_percent_in_model = kwargs.get('weighted_percent_in_model')
         self.init_loan_spread_required = kwargs.get('init_loan_spread_required')
         self.election_period = kwargs.get('election_period')
@@ -744,6 +1844,7 @@ class FieldFilterMapDataQuery(Base):
         self.option_strike_price = kwargs.get('option_strike_price')
         self.precipitation_type = kwargs.get('precipitation_type')
         self.lower_bound = kwargs.get('lower_bound')
+        self.active1yr_market_cap = kwargs.get('active1yr_market_cap')
         self.arrival_mid_normalized = kwargs.get('arrival_mid_normalized')
         self.underlying_asset2 = kwargs.get('underlying_asset2')
         self.underlying_asset1 = kwargs.get('underlying_asset1')
@@ -766,6 +1867,7 @@ class FieldFilterMapDataQuery(Base):
         self.weighted_average_mid = kwargs.get('weighted_average_mid')
         self.cluster_region = kwargs.get('cluster_region')
         self.valoren = kwargs.get('valoren')
+        self.index_name = kwargs.get('index_name')
         self.average_execution_price = kwargs.get('average_execution_price')
         self.proceeds_asset_ois_swap_spread1m = kwargs.get('proceeds_asset_ois_swap_spread1m')
         self.payoff_wtd = kwargs.get('payoff_wtd')
@@ -822,6 +1924,7 @@ class FieldFilterMapDataQuery(Base):
         self.short_interest = kwargs.get('short_interest')
         self.reference_period = kwargs.get('reference_period')
         self.adjusted_volume = kwargs.get('adjusted_volume')
+        self.underlying_asset_id_type = kwargs.get('underlying_asset_id_type')
         self.ctd_fwd_yield = kwargs.get('ctd_fwd_yield')
         self.sec_db = kwargs.get('sec_db')
         self.memory_used = kwargs.get('memory_used')
@@ -832,6 +1935,7 @@ class FieldFilterMapDataQuery(Base):
         self.trading_pnl = kwargs.get('trading_pnl')
         self.collateral_value_required = kwargs.get('collateral_value_required')
         self.buy45bps = kwargs.get('buy45bps')
+        self.free_float_market_cap_ratio = kwargs.get('free_float_market_cap_ratio')
         self.price_to_earnings_positive = kwargs.get('price_to_earnings_positive')
         self.forecast = kwargs.get('forecast')
         self.forecast_value = kwargs.get('forecast_value')
@@ -868,6 +1972,7 @@ class FieldFilterMapDataQuery(Base):
         self.future_month_m25 = kwargs.get('future_month_m25')
         self.future_month_m24 = kwargs.get('future_month_m24')
         self.future_month_m23 = kwargs.get('future_month_m23')
+        self.development_status = kwargs.get('development_status')
         self.future_month_m22 = kwargs.get('future_month_m22')
         self.flow_pct = kwargs.get('flow_pct')
         self.source = kwargs.get('source')
@@ -888,13 +1993,17 @@ class FieldFilterMapDataQuery(Base):
         self.wtd_degree_days = kwargs.get('wtd_degree_days')
         self.absolute_weight = kwargs.get('absolute_weight')
         self.measure = kwargs.get('measure')
+        self.return30d = kwargs.get('return30d')
         self.temperature_hourly_forecast = kwargs.get('temperature_hourly_forecast')
         self.iceberg_tip_rate_type = kwargs.get('iceberg_tip_rate_type')
         self.sharpe_ytd = kwargs.get('sharpe_ytd')
         self.wind_speed_forecast = kwargs.get('wind_speed_forecast')
         self.gross_investment_ytd = kwargs.get('gross_investment_ytd')
         self.yield_price = kwargs.get('yield_price')
+        self.payment_frequency_period_multiplier2 = kwargs.get('payment_frequency_period_multiplier2')
+        self.payment_frequency_period_multiplier1 = kwargs.get('payment_frequency_period_multiplier1')
         self.leg1_total_notional_unit = kwargs.get('leg1_total_notional_unit')
+        self.absolute_attribution = kwargs.get('absolute_attribution')
         self.issue_price = kwargs.get('issue_price')
         self.ask_high = kwargs.get('ask_high')
         self.expected_data_quality = kwargs.get('expected_data_quality')
@@ -931,6 +2040,7 @@ class FieldFilterMapDataQuery(Base):
         self.seasonal_adjustment = kwargs.get('seasonal_adjustment')
         self.rank_wtd = kwargs.get('rank_wtd')
         self.underlyer = kwargs.get('underlyer')
+        self.return1yr = kwargs.get('return1yr')
         self.identifier = kwargs.get('identifier')
         self.price_unit = kwargs.get('price_unit')
         self.trade_report_ref_id = kwargs.get('trade_report_ref_id')
@@ -939,9 +2049,11 @@ class FieldFilterMapDataQuery(Base):
         self.buy160cents = kwargs.get('buy160cents')
         self.portfolio_id = kwargs.get('portfolio_id')
         self.z_spread = kwargs.get('z_spread')
+        self.floating_rate_reset_frequency_period2 = kwargs.get('floating_rate_reset_frequency_period2')
         self.cap_floor_atm_fwd_rate = kwargs.get('cap_floor_atm_fwd_rate')
         self.es_percentile = kwargs.get('es_percentile')
         self.tdapi = kwargs.get('tdapi')
+        self.floating_rate_reset_frequency_period1 = kwargs.get('floating_rate_reset_frequency_period1')
         self.location_code = kwargs.get('location_code')
         self.rcic = kwargs.get('rcic')
         self.name_raw = kwargs.get('name_raw')
@@ -956,6 +2068,7 @@ class FieldFilterMapDataQuery(Base):
         self.five_day_price_change_bps = kwargs.get('five_day_price_change_bps')
         self.holdings = kwargs.get('holdings')
         self.precipitation_daily_forecast = kwargs.get('precipitation_daily_forecast')
+        self.fixed_recovery_cds_final_price = kwargs.get('fixed_recovery_cds_final_price')
         self.price_method = kwargs.get('price_method')
         self.asset_parameters_fixed_rate_frequency = kwargs.get('asset_parameters_fixed_rate_frequency')
         self.ois_xccy = kwargs.get('ois_xccy')
@@ -963,6 +2076,7 @@ class FieldFilterMapDataQuery(Base):
         self.buy110cents = kwargs.get('buy110cents')
         self.average_spread_bps = kwargs.get('average_spread_bps')
         self.buy55cents = kwargs.get('buy55cents')
+        self.underlying_asset_id_sdr = kwargs.get('underlying_asset_id_sdr')
         self.future_month_q26 = kwargs.get('future_month_q26')
         self.issue_size = kwargs.get('issue_size')
         self.future_month_q25 = kwargs.get('future_month_q25')
@@ -982,6 +2096,7 @@ class FieldFilterMapDataQuery(Base):
         self.buffer_threshold = kwargs.get('buffer_threshold')
         self.buy120cents = kwargs.get('buy120cents')
         self.matched_maturity_swap_rate = kwargs.get('matched_maturity_swap_rate')
+        self.underlying_asset_name = kwargs.get('underlying_asset_name')
         self.primary_vwap = kwargs.get('primary_vwap')
         self.exchange_type_id = kwargs.get('exchange_type_id')
         self.basis_swap_rate = kwargs.get('basis_swap_rate')
@@ -997,6 +2112,7 @@ class FieldFilterMapDataQuery(Base):
         self.bid_spread = kwargs.get('bid_spread')
         self.percentage_complete = kwargs.get('percentage_complete')
         self.hedge_tracking_error = kwargs.get('hedge_tracking_error')
+        self.term_status = kwargs.get('term_status')
         self.wind_speed_type = kwargs.get('wind_speed_type')
         self.strike_price = kwargs.get('strike_price')
         self.par_asset_swap_spread12m = kwargs.get('par_asset_swap_spread12m')
@@ -1039,7 +2155,9 @@ class FieldFilterMapDataQuery(Base):
         self.path = kwargs.get('path')
         self.vwap_unrealized_cash = kwargs.get('vwap_unrealized_cash')
         self.payoff_mtd = kwargs.get('payoff_mtd')
+        self.spread2 = kwargs.get('spread2')
         self.bos_in_bps_label = kwargs.get('bos_in_bps_label')
+        self.spread1 = kwargs.get('spread1')
         self.bos_in_bps = kwargs.get('bos_in_bps')
         self.point_class = kwargs.get('point_class')
         self.fx_spot = kwargs.get('fx_spot')
@@ -1153,6 +2271,7 @@ class FieldFilterMapDataQuery(Base):
         self.division = kwargs.get('division')
         self.cloud_cover_daily_forecast = kwargs.get('cloud_cover_daily_forecast')
         self.wind_speed_daily_forecast = kwargs.get('wind_speed_daily_forecast')
+        self.execution_venue_type = kwargs.get('execution_venue_type')
         self.asset_parameters_floating_rate_day_count_fraction = kwargs.get(
             'asset_parameters_floating_rate_day_count_fraction')
         self.trade_action = kwargs.get('trade_action')
@@ -1169,8 +2288,10 @@ class FieldFilterMapDataQuery(Base):
         self.buy18bps = kwargs.get('buy18bps')
         self.value_actual = kwargs.get('value_actual')
         self.upi = kwargs.get('upi')
+        self.fixed_rate1 = kwargs.get('fixed_rate1')
         self.collateral_currency = kwargs.get('collateral_currency')
         self.original_country = kwargs.get('original_country')
+        self.fixed_rate2 = kwargs.get('fixed_rate2')
         self.field = kwargs.get('field')
         self.geographic_focus = kwargs.get('geographic_focus')
         self.days_open_realized_bps = kwargs.get('days_open_realized_bps')
@@ -1189,13 +2310,17 @@ class FieldFilterMapDataQuery(Base):
         self.ccg_code = kwargs.get('ccg_code')
         self.short_exposure = kwargs.get('short_exposure')
         self.leg1_fixed_payment_currency = kwargs.get('leg1_fixed_payment_currency')
+        self.__map = kwargs.get('map_')
         self.arrival_haircut_vwap = kwargs.get('arrival_haircut_vwap')
         self.execution_days = kwargs.get('execution_days')
         self.recall_due_date = kwargs.get('recall_due_date')
         self.forward = kwargs.get('forward')
         self.strike = kwargs.get('strike')
         self.spread_limit = kwargs.get('spread_limit')
+        self.sopr = kwargs.get('sopr')
+        self.other_payment_amount = kwargs.get('other_payment_amount')
         self.product_scope = kwargs.get('product_scope')
+        self.redemption_period = kwargs.get('redemption_period')
         self.asset_parameters_issuer_type = kwargs.get('asset_parameters_issuer_type')
         self.currency1 = kwargs.get('currency1')
         self.currency2 = kwargs.get('currency2')
@@ -1207,6 +2332,7 @@ class FieldFilterMapDataQuery(Base):
         self.__return = kwargs.get('return_')
         self.is_pair_basket = kwargs.get('is_pair_basket')
         self.notional_amount = kwargs.get('notional_amount')
+        self.option_premium_amount = kwargs.get('option_premium_amount')
         self.pay_or_receive = kwargs.get('pay_or_receive')
         self.total_severe = kwargs.get('total_severe')
         self.unexecuted_notional_usd = kwargs.get('unexecuted_notional_usd')
@@ -1268,6 +2394,7 @@ class FieldFilterMapDataQuery(Base):
         self.sell4point5bps = kwargs.get('sell4point5bps')
         self.tcm_cost_participation_rate20_pct = kwargs.get('tcm_cost_participation_rate20_pct')
         self.venue_type = kwargs.get('venue_type')
+        self.current_activity_indicator = kwargs.get('current_activity_indicator')
         self.multi_asset_class_swap = kwargs.get('multi_asset_class_swap')
         self.delta_change_id = kwargs.get('delta_change_id')
         self.implementation_id = kwargs.get('implementation_id')
@@ -1275,8 +2402,12 @@ class FieldFilterMapDataQuery(Base):
         self.es_numeric_score = kwargs.get('es_numeric_score')
         self.in_benchmark = kwargs.get('in_benchmark')
         self.action_sdr = kwargs.get('action_sdr')
+        self.quantity_frequency = kwargs.get('quantity_frequency')
         self.count_ideas_qtd = kwargs.get('count_ideas_qtd')
         self.knock_out_price = kwargs.get('knock_out_price')
+        self.spread_currency1 = kwargs.get('spread_currency1')
+        self.spread_currency2 = kwargs.get('spread_currency2')
+        self.current_supply = kwargs.get('current_supply')
         self.ctd_asset_id = kwargs.get('ctd_asset_id')
         self.buy10bps = kwargs.get('buy10bps')
         self.precipitation = kwargs.get('precipitation')
@@ -1286,7 +2417,9 @@ class FieldFilterMapDataQuery(Base):
         self.sell14bps = kwargs.get('sell14bps')
         self.excess_return_price = kwargs.get('excess_return_price')
         self.fx_pnl = kwargs.get('fx_pnl')
+        self.leg2_floating_rate_index = kwargs.get('leg2_floating_rate_index')
         self.asset_classifications_gics_industry_group = kwargs.get('asset_classifications_gics_industry_group')
+        self.index_constituents = kwargs.get('index_constituents')
         self.lending_sec_id = kwargs.get('lending_sec_id')
         self.dollar_duration = kwargs.get('dollar_duration')
         self.equity_theta = kwargs.get('equity_theta')
@@ -1296,7 +2429,9 @@ class FieldFilterMapDataQuery(Base):
         self.swaption_premium = kwargs.get('swaption_premium')
         self.snowfall = kwargs.get('snowfall')
         self.liquidity_bucket_buy = kwargs.get('liquidity_bucket_buy')
+        self.day_open = kwargs.get('day_open')
         self.mic = kwargs.get('mic')
+        self.hurdle_type = kwargs.get('hurdle_type')
         self.latitude = kwargs.get('latitude')
         self.mid = kwargs.get('mid')
         self.implied_repo = kwargs.get('implied_repo')
@@ -1310,6 +2445,7 @@ class FieldFilterMapDataQuery(Base):
         self.days_open_unrealized_cash = kwargs.get('days_open_unrealized_cash')
         self.temperature = kwargs.get('temperature')
         self.average_realized_variance = kwargs.get('average_realized_variance')
+        self.leg1_commodity_underlyer_id = kwargs.get('leg1_commodity_underlyer_id')
         self.rating_fitch = kwargs.get('rating_fitch')
         self.financial_returns_score = kwargs.get('financial_returns_score')
         self.year_or_quarter = kwargs.get('year_or_quarter')
@@ -1331,6 +2467,7 @@ class FieldFilterMapDataQuery(Base):
         self.wind_attribute = kwargs.get('wind_attribute')
         self.spread_option_atm_fwd_rate = kwargs.get('spread_option_atm_fwd_rate')
         self.net_exposure = kwargs.get('net_exposure')
+        self.option_entitlement = kwargs.get('option_entitlement')
         self.is_legacy_pair_basket = kwargs.get('is_legacy_pair_basket')
         self.issuer_type = kwargs.get('issuer_type')
         self.buy70cents = kwargs.get('buy70cents')
@@ -1341,6 +2478,7 @@ class FieldFilterMapDataQuery(Base):
         self.quote_status_id = kwargs.get('quote_status_id')
         self.absolute_value = kwargs.get('absolute_value')
         self.closing_report = kwargs.get('closing_report')
+        self.redemption_notice_period = kwargs.get('redemption_notice_period')
         self.previous_total_confirmed = kwargs.get('previous_total_confirmed')
         self.long_tenor = kwargs.get('long_tenor')
         self.multiplier = kwargs.get('multiplier')
@@ -1399,6 +2537,7 @@ class FieldFilterMapDataQuery(Base):
         self.contract_type = kwargs.get('contract_type')
         self.momentum_type = kwargs.get('momentum_type')
         self.specific_risk = kwargs.get('specific_risk')
+        self.free_float_market_cap = kwargs.get('free_float_market_cap')
         self.mdapi = kwargs.get('mdapi')
         self.payoff_qtd = kwargs.get('payoff_qtd')
         self.loss = kwargs.get('loss')
@@ -1411,11 +2550,12 @@ class FieldFilterMapDataQuery(Base):
         self.redemption_date = kwargs.get('redemption_date')
         self.leg2_notional_currency = kwargs.get('leg2_notional_currency')
         self.sub_region = kwargs.get('sub_region')
+        self.product_id = kwargs.get('product_id')
         self.benchmark = kwargs.get('benchmark')
+        self.nvt_adj = kwargs.get('nvt_adj')
         self.tcm_cost_participation_rate15_pct = kwargs.get('tcm_cost_participation_rate15_pct')
         self.fiscal_year = kwargs.get('fiscal_year')
         self.recall_date = kwargs.get('recall_date')
-        self.esg_metric_value = kwargs.get('esg_metric_value')
         self.internal = kwargs.get('internal')
         self.gender = kwargs.get('gender')
         self.asset_classifications_gics_industry = kwargs.get('asset_classifications_gics_industry')
@@ -1423,6 +2563,7 @@ class FieldFilterMapDataQuery(Base):
         self.low_unadjusted = kwargs.get('low_unadjusted')
         self.macs_secondary_asset_class = kwargs.get('macs_secondary_asset_class')
         self.confirmed_per_million = kwargs.get('confirmed_per_million')
+        self.exchange_rate_basis = kwargs.get('exchange_rate_basis')
         self.data_source_id = kwargs.get('data_source_id')
         self.integrated_score = kwargs.get('integrated_score')
         self.buy7bps = kwargs.get('buy7bps')
@@ -1434,6 +2575,7 @@ class FieldFilterMapDataQuery(Base):
         self.coupon = kwargs.get('coupon')
         self.percentage_auction_executed_quantity = kwargs.get('percentage_auction_executed_quantity')
         self.avg_yield7_day = kwargs.get('avg_yield7_day')
+        self.reference_rate_eur = kwargs.get('reference_rate_eur')
         self.original_dissemination_id = kwargs.get('original_dissemination_id')
         self.total_on_vent = kwargs.get('total_on_vent')
         self.twap_unrealized_cash = kwargs.get('twap_unrealized_cash')
@@ -1449,6 +2591,7 @@ class FieldFilterMapDataQuery(Base):
         self.last_activity_date = kwargs.get('last_activity_date')
         self.price_to_cash = kwargs.get('price_to_cash')
         self.buy10cents = kwargs.get('buy10cents')
+        self.realized_market_cap_ratio = kwargs.get('realized_market_cap_ratio')
         self.nav_spread = kwargs.get('nav_spread')
         self.venue_mic = kwargs.get('venue_mic')
         self.dollar_total_return = kwargs.get('dollar_total_return')
@@ -1471,11 +2614,14 @@ class FieldFilterMapDataQuery(Base):
         self.rate365 = kwargs.get('rate365')
         self.fixed_rate_frequency = kwargs.get('fixed_rate_frequency')
         self.rate360 = kwargs.get('rate360')
+        self.notional_quantity2 = kwargs.get('notional_quantity2')
+        self.notional_quantity1 = kwargs.get('notional_quantity1')
         self.is_continuous = kwargs.get('is_continuous')
         self.value = kwargs.get('value')
         self.payer_designated_maturity = kwargs.get('payer_designated_maturity')
         self.product_type = kwargs.get('product_type')
         self.mdv22_day = kwargs.get('mdv22_day')
+        self.nvt_adj_ff90 = kwargs.get('nvt_adj_ff90')
         self.twap_realized_bps = kwargs.get('twap_realized_bps')
         self.test_measure_label = kwargs.get('test_measure_label')
         self.quantity = kwargs.get('quantity')
@@ -1484,7 +2630,11 @@ class FieldFilterMapDataQuery(Base):
         self.macs_primary_asset_class = kwargs.get('macs_primary_asset_class')
         self.trader = kwargs.get('trader')
         self.leg2_price_type = kwargs.get('leg2_price_type')
+        self.floating_rate_reset_frequency_period_multiplier2 = kwargs.get(
+            'floating_rate_reset_frequency_period_multiplier2')
         self.total_active = kwargs.get('total_active')
+        self.floating_rate_reset_frequency_period_multiplier1 = kwargs.get(
+            'floating_rate_reset_frequency_period_multiplier1')
         self.gsid2 = kwargs.get('gsid2')
         self.matched_maturity_ois_swap_spread = kwargs.get('matched_maturity_ois_swap_spread')
         self.valuation_date = kwargs.get('valuation_date')
@@ -1545,11 +2695,13 @@ class FieldFilterMapDataQuery(Base):
         self.atm_fwd_rate = kwargs.get('atm_fwd_rate')
         self.tcm_cost_participation_rate75_pct = kwargs.get('tcm_cost_participation_rate75_pct')
         self.close = kwargs.get('close')
+        self.vol30d = kwargs.get('vol30d')
         self.es_product_impact_score = kwargs.get('es_product_impact_score')
         self.equity_vega = kwargs.get('equity_vega')
         self.executed_fill_quantity = kwargs.get('executed_fill_quantity')
         self.lender_payment = kwargs.get('lender_payment')
         self.five_day_move = kwargs.get('five_day_move')
+        self.realized_market_cap = kwargs.get('realized_market_cap')
         self.value_format = kwargs.get('value_format')
         self.wind_chill_forecast = kwargs.get('wind_chill_forecast')
         self.target_notional = kwargs.get('target_notional')
@@ -1561,10 +2713,12 @@ class FieldFilterMapDataQuery(Base):
         self.equities_contribution = kwargs.get('equities_contribution')
         self.simon_id = kwargs.get('simon_id')
         self.congestion = kwargs.get('congestion')
+        self.leg2_commodity_instrument_id = kwargs.get('leg2_commodity_instrument_id')
         self.notes = kwargs.get('notes')
         self.total_probable_senior_home = kwargs.get('total_probable_senior_home')
         self.event_category = kwargs.get('event_category')
         self.average_fill_rate = kwargs.get('average_fill_rate')
+        self.cins = kwargs.get('cins')
         self.unadjusted_open = kwargs.get('unadjusted_open')
         self.criticality = kwargs.get('criticality')
         self.bid_ask_spread = kwargs.get('bid_ask_spread')
@@ -1743,12 +2897,14 @@ class FieldFilterMapDataQuery(Base):
         self.end_user_exception = kwargs.get('end_user_exception')
         self.sell90cents = kwargs.get('sell90cents')
         self.execution_venue = kwargs.get('execution_venue')
+        self.non_standardized_pricing_indicator = kwargs.get('non_standardized_pricing_indicator')
         self.primary_vwap_in_limit_realized_bps = kwargs.get('primary_vwap_in_limit_realized_bps')
         self.approve_rebalance = kwargs.get('approve_rebalance')
         self.adjusted_close_price = kwargs.get('adjusted_close_price')
         self.lms_id = kwargs.get('lms_id')
         self.rebate_rate = kwargs.get('rebate_rate')
         self.sell130cents = kwargs.get('sell130cents')
+        self.price_unit_of_measure1 = kwargs.get('price_unit_of_measure1')
         self.sell32bps = kwargs.get('sell32bps')
         self.pace_of_rollp50 = kwargs.get('pace_of_rollp50')
         self.price_move_vs_arrival = kwargs.get('price_move_vs_arrival')
@@ -1757,6 +2913,7 @@ class FieldFilterMapDataQuery(Base):
         self.buy40bps = kwargs.get('buy40bps')
         self.price_notation = kwargs.get('price_notation')
         self.strategy = kwargs.get('strategy')
+        self.price_unit_of_measure2 = kwargs.get('price_unit_of_measure2')
         self.issue_status_date = kwargs.get('issue_status_date')
         self.lender_income = kwargs.get('lender_income')
         self.pb_client_id = kwargs.get('pb_client_id')
@@ -1774,10 +2931,12 @@ class FieldFilterMapDataQuery(Base):
         self.contribution_name = kwargs.get('contribution_name')
         self.given_plus_paid = kwargs.get('given_plus_paid')
         self.last_fill_price = kwargs.get('last_fill_price')
+        self.sopr_out = kwargs.get('sopr_out')
         self.short_conviction_small = kwargs.get('short_conviction_small')
         self.upfront_payment_currency = kwargs.get('upfront_payment_currency')
         self.spot_settlement_date = kwargs.get('spot_settlement_date')
         self.matrix_order = kwargs.get('matrix_order')
+        self.day_close = kwargs.get('day_close')
         self.date_index = kwargs.get('date_index')
         self.payer_day_count_fraction = kwargs.get('payer_day_count_fraction')
         self.asset_classifications_is_primary = kwargs.get('asset_classifications_is_primary')
@@ -1785,6 +2944,7 @@ class FieldFilterMapDataQuery(Base):
         self.buy130cents = kwargs.get('buy130cents')
         self.dwi_contribution = kwargs.get('dwi_contribution')
         self.asset2_id = kwargs.get('asset2_id')
+        self.economic_forecasts = kwargs.get('economic_forecasts')
         self.average_fill_price = kwargs.get('average_fill_price')
         self.depth_spread_score = kwargs.get('depth_spread_score')
         self.sell10cents = kwargs.get('sell10cents')
@@ -1793,6 +2953,8 @@ class FieldFilterMapDataQuery(Base):
         self.bond_cds_basis = kwargs.get('bond_cds_basis')
         self.vendor = kwargs.get('vendor')
         self.data_set = kwargs.get('data_set')
+        self.total_notional_quantity2 = kwargs.get('total_notional_quantity2')
+        self.total_notional_quantity1 = kwargs.get('total_notional_quantity1')
         self.notional_amount2 = kwargs.get('notional_amount2')
         self.notional_amount1 = kwargs.get('notional_amount1')
         self.queueing_time = kwargs.get('queueing_time')
@@ -1840,8 +3002,10 @@ class FieldFilterMapDataQuery(Base):
         self.folder_name = kwargs.get('folder_name')
         self.api_usage = kwargs.get('api_usage')
         self.twap_interval = kwargs.get('twap_interval')
+        self.payment_frequency_period1 = kwargs.get('payment_frequency_period1')
         self.unique_id = kwargs.get('unique_id')
         self.option_expiration_date = kwargs.get('option_expiration_date')
+        self.payment_frequency_period2 = kwargs.get('payment_frequency_period2')
         self.swaption_atm_fwd_rate = kwargs.get('swaption_atm_fwd_rate')
         self.live_date = kwargs.get('live_date')
         self.corporate_action_type = kwargs.get('corporate_action_type')
@@ -1865,6 +3029,7 @@ class FieldFilterMapDataQuery(Base):
         self.relative_humidity_hourly_forecast = kwargs.get('relative_humidity_hourly_forecast')
         self.multiple_score = kwargs.get('multiple_score')
         self.beta_adjusted_exposure = kwargs.get('beta_adjusted_exposure')
+        self.is_annualized = kwargs.get('is_annualized')
         self.dividend_points = kwargs.get('dividend_points')
         self.brightness = kwargs.get('brightness')
         self.asset_parameters_receiver_designated_maturity = kwargs.get(
@@ -1895,6 +3060,7 @@ class FieldFilterMapDataQuery(Base):
         self.sustain_global = kwargs.get('sustain_global')
         self.ending_date = kwargs.get('ending_date')
         self.proceeds_asset_swap_spread12m = kwargs.get('proceeds_asset_swap_spread12m')
+        self.rvt_adj90 = kwargs.get('rvt_adj90')
         self.gross_investment_wtd = kwargs.get('gross_investment_wtd')
         self.ann_return3_year = kwargs.get('ann_return3_year')
         self.sharpe_wtd = kwargs.get('sharpe_wtd')
@@ -1905,6 +3071,7 @@ class FieldFilterMapDataQuery(Base):
         self.forward_point = kwargs.get('forward_point')
         self.fci = kwargs.get('fci')
         self.recall_quantity = kwargs.get('recall_quantity')
+        self.strike_price_currency = kwargs.get('strike_price_currency')
         self.fx_positioning = kwargs.get('fx_positioning')
         self.gsid_equivalent = kwargs.get('gsid_equivalent')
         self.categories = kwargs.get('categories')
@@ -1926,6 +3093,8 @@ class FieldFilterMapDataQuery(Base):
         self.cloud_cover_forecast = kwargs.get('cloud_cover_forecast')
         self.tcm_cost_participation_rate5_pct = kwargs.get('tcm_cost_participation_rate5_pct')
         self.default_backcast = kwargs.get('default_backcast')
+        self.lockup = kwargs.get('lockup')
+        self.lockup_type = kwargs.get('lockup_type')
         self.news_on_intensity = kwargs.get('news_on_intensity')
         self.price_forming_continuation_data = kwargs.get('price_forming_continuation_data')
         self.adjusted_short_interest = kwargs.get('adjusted_short_interest')
@@ -1938,6 +3107,7 @@ class FieldFilterMapDataQuery(Base):
         self.num_adult_icu_beds = kwargs.get('num_adult_icu_beds')
         self.days_to_expiration = kwargs.get('days_to_expiration')
         self.continuation_event = kwargs.get('continuation_event')
+        self.leg2_commodity_underlyer_id = kwargs.get('leg2_commodity_underlyer_id')
         self.wi_id = kwargs.get('wi_id')
         self.market_cap_category = kwargs.get('market_cap_category')
         self.historical_volume = kwargs.get('historical_volume')
@@ -2011,6 +3181,7 @@ class FieldFilterMapDataQuery(Base):
         self.leg2_averaging_method = kwargs.get('leg2_averaging_method')
         self.jsn = kwargs.get('jsn')
         self.sell160cents = kwargs.get('sell160cents')
+        self.first_exercise_date = kwargs.get('first_exercise_date')
         self.knock_in_direction = kwargs.get('knock_in_direction')
         self.day_close_unrealized_usd = kwargs.get('day_close_unrealized_usd')
         self.tenor = kwargs.get('tenor')
@@ -2025,6 +3196,7 @@ class FieldFilterMapDataQuery(Base):
         self.deployment_version = kwargs.get('deployment_version')
         self.buy16bps = kwargs.get('buy16bps')
         self.trade_day_count = kwargs.get('trade_day_count')
+        self.transaction_type = kwargs.get('transaction_type')
         self.price_to_sales = kwargs.get('price_to_sales')
         self.new_ideas_qtd = kwargs.get('new_ideas_qtd')
         self.subdivision_name = kwargs.get('subdivision_name')
@@ -2042,6 +3214,7 @@ class FieldFilterMapDataQuery(Base):
         self.heat_index_hourly_forecast = kwargs.get('heat_index_hourly_forecast')
         self.ma_rank = kwargs.get('ma_rank')
         self.fx_positioning_source = kwargs.get('fx_positioning_source')
+        self.vol60d = kwargs.get('vol60d')
         self.implied_volatility_by_delta_strike = kwargs.get('implied_volatility_by_delta_strike')
         self.mq_symbol = kwargs.get('mq_symbol')
         self.num_total_units = kwargs.get('num_total_units')
@@ -2077,6 +3250,7 @@ class FieldFilterMapDataQuery(Base):
         self.rate = kwargs.get('rate')
         self.coupon_type = kwargs.get('coupon_type')
         self.client = kwargs.get('client')
+        self.esg_detailed_metric = kwargs.get('esg_detailed_metric')
         self.conviction_list = kwargs.get('conviction_list')
         self.passive_etf_ratio = kwargs.get('passive_etf_ratio')
         self.future_month_g26 = kwargs.get('future_month_g26')
@@ -2095,8 +3269,10 @@ class FieldFilterMapDataQuery(Base):
         self.leg2_fixed_payment = kwargs.get('leg2_fixed_payment')
         self.tcm_cost_horizon20_day = kwargs.get('tcm_cost_horizon20_day')
         self.realm = kwargs.get('realm')
+        self.gate = kwargs.get('gate')
         self.bid = kwargs.get('bid')
         self.hedge_value = kwargs.get('hedge_value')
+        self.is_seasonally_adjusted = kwargs.get('is_seasonally_adjusted')
         self.is_aggressive = kwargs.get('is_aggressive')
         self.floating_rate_designated_maturity = kwargs.get('floating_rate_designated_maturity')
         self.percentage_near_executed_quantity = kwargs.get('percentage_near_executed_quantity')
@@ -2148,6 +3324,7 @@ class FieldFilterMapDataQuery(Base):
         self.shareclass_id = kwargs.get('shareclass_id')
         self.feature2 = kwargs.get('feature2')
         self.feature3 = kwargs.get('feature3')
+        self.settlement_currency2 = kwargs.get('settlement_currency2')
         self.sts_commodity_sector = kwargs.get('sts_commodity_sector')
         self.exception_status = kwargs.get('exception_status')
         self.overnight_news_intensity = kwargs.get('overnight_news_intensity')
@@ -2157,6 +3334,7 @@ class FieldFilterMapDataQuery(Base):
         self.event_time = kwargs.get('event_time')
         self.position_source_name = kwargs.get('position_source_name')
         self.delivery_date = kwargs.get('delivery_date')
+        self.settlement_currency1 = kwargs.get('settlement_currency1')
         self.interest_rate = kwargs.get('interest_rate')
         self.side = kwargs.get('side')
         self.dynamic_hybrid_aggressive_style = kwargs.get('dynamic_hybrid_aggressive_style')
@@ -2189,13 +3367,18 @@ class FieldFilterMapDataQuery(Base):
         self.sell70cents = kwargs.get('sell70cents')
         self.sell110cents = kwargs.get('sell110cents')
         self.pnode_id = kwargs.get('pnode_id')
+        self.price1 = kwargs.get('price1')
+        self.price2 = kwargs.get('price2')
+        self.reference_rate = kwargs.get('reference_rate')
         self.humidity_type = kwargs.get('humidity_type')
         self.prev_close_ask = kwargs.get('prev_close_ask')
         self.level = kwargs.get('level')
         self.implied_volatility_by_expiration = kwargs.get('implied_volatility_by_expiration')
+        self.hurdle = kwargs.get('hurdle')
         self.asset_parameters_fixed_rate_day_count_fraction = kwargs.get(
             'asset_parameters_fixed_rate_day_count_fraction')
         self.es_momentum_score = kwargs.get('es_momentum_score')
+        self.leg1_commodity_instrument_id = kwargs.get('leg1_commodity_instrument_id')
         self.leg2_index = kwargs.get('leg2_index')
         self.net_weight = kwargs.get('net_weight')
         self.portfolio_managers = kwargs.get('portfolio_managers')
@@ -2219,6 +3402,7 @@ class FieldFilterMapDataQuery(Base):
         self.total = kwargs.get('total')
         self.filled_notional_usd = kwargs.get('filled_notional_usd')
         self.asset_id = kwargs.get('asset_id')
+        self.block_trade_election_indicator = kwargs.get('block_trade_election_indicator')
         self.test_status = kwargs.get('test_status')
         self.mkt_type = kwargs.get('mkt_type')
         self.yield30_day = kwargs.get('yield30_day')
@@ -2250,6 +3434,7 @@ class FieldFilterMapDataQuery(Base):
         self.objective = kwargs.get('objective')
         self.nav_price = kwargs.get('nav_price')
         self.leg1_underlying_asset = kwargs.get('leg1_underlying_asset')
+        self.bbgid = kwargs.get('bbgid')
         self.private_placement_type = kwargs.get('private_placement_type')
         self.hedge_notional = kwargs.get('hedge_notional')
         self.ask_low = kwargs.get('ask_low')
@@ -2297,6 +3482,7 @@ class FieldFilterMapDataQuery(Base):
         self.matched_maturity_swap_spread3m = kwargs.get('matched_maturity_swap_spread3m')
         self.source_id = kwargs.get('source_id')
         self.country = kwargs.get('country')
+        self.option_premium_currency = kwargs.get('option_premium_currency')
         self.vwap = kwargs.get('vwap')
         self.touch_spread_score = kwargs.get('touch_spread_score')
         self.rating_second_highest = kwargs.get('rating_second_highest')
@@ -2316,6 +3502,7 @@ class FieldFilterMapDataQuery(Base):
         self.sector = kwargs.get('sector')
         self.avg_bed_util_rate = kwargs.get('avg_bed_util_rate')
         self.buy20bps = kwargs.get('buy20bps')
+        self.index_level = kwargs.get('index_level')
         self.epidemic = kwargs.get('epidemic')
         self.mctr = kwargs.get('mctr')
         self.exchange_time = kwargs.get('exchange_time')
@@ -2348,6 +3535,7 @@ class FieldFilterMapDataQuery(Base):
         self.price_spot_target_unit = kwargs.get('price_spot_target_unit')
         self.coverage = kwargs.get('coverage')
         self.g_percentile = kwargs.get('g_percentile')
+        self.rvt_adj = kwargs.get('rvt_adj')
         self.cloud_cover_hourly_forecast = kwargs.get('cloud_cover_hourly_forecast')
         self.lending_fund_nav = kwargs.get('lending_fund_nav')
         self.source_original_category = kwargs.get('source_original_category')
@@ -2377,8 +3565,10 @@ class FieldFilterMapDataQuery(Base):
         self.sec_name = kwargs.get('sec_name')
         self.implied_volatility_by_relative_strike = kwargs.get('implied_volatility_by_relative_strike')
         self.percent_adv = kwargs.get('percent_adv')
+        self.reference_rate_usd = kwargs.get('reference_rate_usd')
         self.leg1_total_notional = kwargs.get('leg1_total_notional')
         self.contract = kwargs.get('contract')
+        self.nvt_adj90 = kwargs.get('nvt_adj90')
         self.payment_frequency1 = kwargs.get('payment_frequency1')
         self.payment_frequency2 = kwargs.get('payment_frequency2')
         self.bespoke = kwargs.get('bespoke')
@@ -2394,6 +3584,7 @@ class FieldFilterMapDataQuery(Base):
         self.gsid = kwargs.get('gsid')
         self.lending_fund = kwargs.get('lending_fund')
         self.sensitivity = kwargs.get('sensitivity')
+        self.embedded_option_type = kwargs.get('embedded_option_type')
         self.day_count = kwargs.get('day_count')
         self.sell16bps = kwargs.get('sell16bps')
         self.relative_break_even_inflation_change = kwargs.get('relative_break_even_inflation_change')
@@ -2411,6 +3602,7 @@ class FieldFilterMapDataQuery(Base):
         self.buy8point5bps = kwargs.get('buy8point5bps')
         self.symbol_dimensions = kwargs.get('symbol_dimensions')
         self.buy24bps = kwargs.get('buy24bps')
+        self.side_pocket = kwargs.get('side_pocket')
         self.observation = kwargs.get('observation')
         self.option_type_sdr = kwargs.get('option_type_sdr')
         self.scenario_group_id = kwargs.get('scenario_group_id')
@@ -2521,6 +3713,15 @@ class FieldFilterMapDataQuery(Base):
     def aggressive_fills_percentage(self, value: dict):
         self._property_changed('aggressive_fills_percentage')
         self.__aggressive_fills_percentage = value        
+
+    @property
+    def future10yr_market_cap(self) -> dict:
+        return self.__future10yr_market_cap
+
+    @future10yr_market_cap.setter
+    def future10yr_market_cap(self, value: dict):
+        self._property_changed('future10yr_market_cap')
+        self.__future10yr_market_cap = value        
 
     @property
     def vehicle_type(self) -> dict:
@@ -2946,6 +4147,15 @@ class FieldFilterMapDataQuery(Base):
         self.__borrower = value        
 
     @property
+    def share_class_type(self) -> dict:
+        return self.__share_class_type
+
+    @share_class_type.setter
+    def share_class_type(self, value: dict):
+        self._property_changed('share_class_type')
+        self.__share_class_type = value        
+
+    @property
     def settle_price(self) -> dict:
         return self.__settle_price
 
@@ -3070,6 +4280,15 @@ class FieldFilterMapDataQuery(Base):
     def modified_duration(self, value: dict):
         self._property_changed('modified_duration')
         self.__modified_duration = value        
+
+    @property
+    def vol180d(self) -> dict:
+        return self.__vol180d
+
+    @vol180d.setter
+    def vol180d(self, value: dict):
+        self._property_changed('vol180d')
+        self.__vol180d = value        
 
     @property
     def short_rates_contribution(self) -> dict:
@@ -3297,6 +4516,15 @@ class FieldFilterMapDataQuery(Base):
         self.__sharpe_qtd = value        
 
     @property
+    def clearing_exception_or_exemption_indicator(self) -> dict:
+        return self.__clearing_exception_or_exemption_indicator
+
+    @clearing_exception_or_exemption_indicator.setter
+    def clearing_exception_or_exemption_indicator(self, value: dict):
+        self._property_changed('clearing_exception_or_exemption_indicator')
+        self.__clearing_exception_or_exemption_indicator = value        
+
+    @property
     def estimated_holding_time_long(self) -> dict:
         return self.__estimated_holding_time_long
 
@@ -3423,6 +4651,15 @@ class FieldFilterMapDataQuery(Base):
         self.__temperature_forecast = value        
 
     @property
+    def primary_asset_class(self) -> dict:
+        return self.__primary_asset_class
+
+    @primary_asset_class.setter
+    def primary_asset_class(self, value: dict):
+        self._property_changed('primary_asset_class')
+        self.__primary_asset_class = value        
+
+    @property
     def bid_high(self) -> dict:
         return self.__bid_high
 
@@ -3511,6 +4748,15 @@ class FieldFilterMapDataQuery(Base):
     def adv22_day_pct(self, value: dict):
         self._property_changed('adv22_day_pct')
         self.__adv22_day_pct = value        
+
+    @property
+    def gate_type(self) -> dict:
+        return self.__gate_type
+
+    @gate_type.setter
+    def gate_type(self, value: dict):
+        self._property_changed('gate_type')
+        self.__gate_type = value        
 
     @property
     def matched_maturity_swap_spread12m(self) -> dict:
@@ -3610,6 +4856,15 @@ class FieldFilterMapDataQuery(Base):
     def short_conviction_large(self, value: dict):
         self._property_changed('short_conviction_large')
         self.__short_conviction_large = value        
+
+    @property
+    def leg1_floating_rate_index(self) -> dict:
+        return self.__leg1_floating_rate_index
+
+    @leg1_floating_rate_index.setter
+    def leg1_floating_rate_index(self, value: dict):
+        self._property_changed('leg1_floating_rate_index')
+        self.__leg1_floating_rate_index = value        
 
     @property
     def ccg_name(self) -> dict:
@@ -3927,6 +5182,15 @@ class FieldFilterMapDataQuery(Base):
         self.__twap_unrealized_bps = value        
 
     @property
+    def quantity_unit_of_measure(self) -> dict:
+        return self.__quantity_unit_of_measure
+
+    @quantity_unit_of_measure.setter
+    def quantity_unit_of_measure(self, value: dict):
+        self._property_changed('quantity_unit_of_measure')
+        self.__quantity_unit_of_measure = value        
+
+    @property
     def last_updated_message(self) -> dict:
         return self.__last_updated_message
 
@@ -3961,6 +5225,15 @@ class FieldFilterMapDataQuery(Base):
     def total_return_price(self, value: dict):
         self._property_changed('total_return_price')
         self.__total_return_price = value        
+
+    @property
+    def value_currency(self) -> dict:
+        return self.__value_currency
+
+    @value_currency.setter
+    def value_currency(self, value: dict):
+        self._property_changed('value_currency')
+        self.__value_currency = value        
 
     @property
     def weighted_percent_in_model(self) -> dict:
@@ -4150,6 +5423,15 @@ class FieldFilterMapDataQuery(Base):
     def lower_bound(self, value: dict):
         self._property_changed('lower_bound')
         self.__lower_bound = value        
+
+    @property
+    def active1yr_market_cap(self) -> dict:
+        return self.__active1yr_market_cap
+
+    @active1yr_market_cap.setter
+    def active1yr_market_cap(self, value: dict):
+        self._property_changed('active1yr_market_cap')
+        self.__active1yr_market_cap = value        
 
     @property
     def arrival_mid_normalized(self) -> dict:
@@ -4348,6 +5630,15 @@ class FieldFilterMapDataQuery(Base):
     def valoren(self, value: dict):
         self._property_changed('valoren')
         self.__valoren = value        
+
+    @property
+    def index_name(self) -> dict:
+        return self.__index_name
+
+    @index_name.setter
+    def index_name(self, value: dict):
+        self._property_changed('index_name')
+        self.__index_name = value        
 
     @property
     def average_execution_price(self) -> dict:
@@ -4854,6 +6145,15 @@ class FieldFilterMapDataQuery(Base):
         self.__adjusted_volume = value        
 
     @property
+    def underlying_asset_id_type(self) -> dict:
+        return self.__underlying_asset_id_type
+
+    @underlying_asset_id_type.setter
+    def underlying_asset_id_type(self, value: dict):
+        self._property_changed('underlying_asset_id_type')
+        self.__underlying_asset_id_type = value        
+
+    @property
     def ctd_fwd_yield(self) -> dict:
         return self.__ctd_fwd_yield
 
@@ -4942,6 +6242,15 @@ class FieldFilterMapDataQuery(Base):
     def buy45bps(self, value: dict):
         self._property_changed('buy45bps')
         self.__buy45bps = value        
+
+    @property
+    def free_float_market_cap_ratio(self) -> dict:
+        return self.__free_float_market_cap_ratio
+
+    @free_float_market_cap_ratio.setter
+    def free_float_market_cap_ratio(self, value: dict):
+        self._property_changed('free_float_market_cap_ratio')
+        self.__free_float_market_cap_ratio = value        
 
     @property
     def price_to_earnings_positive(self) -> dict:
@@ -5268,6 +6577,15 @@ class FieldFilterMapDataQuery(Base):
         self.__future_month_m23 = value        
 
     @property
+    def development_status(self) -> dict:
+        return self.__development_status
+
+    @development_status.setter
+    def development_status(self, value: dict):
+        self._property_changed('development_status')
+        self.__development_status = value        
+
+    @property
     def future_month_m22(self) -> dict:
         return self.__future_month_m22
 
@@ -5448,6 +6766,15 @@ class FieldFilterMapDataQuery(Base):
         self.__measure = value        
 
     @property
+    def return30d(self) -> dict:
+        return self.__return30d
+
+    @return30d.setter
+    def return30d(self, value: dict):
+        self._property_changed('return30d')
+        self.__return30d = value        
+
+    @property
     def temperature_hourly_forecast(self) -> dict:
         return self.__temperature_hourly_forecast
 
@@ -5502,6 +6829,24 @@ class FieldFilterMapDataQuery(Base):
         self.__yield_price = value        
 
     @property
+    def payment_frequency_period_multiplier2(self) -> dict:
+        return self.__payment_frequency_period_multiplier2
+
+    @payment_frequency_period_multiplier2.setter
+    def payment_frequency_period_multiplier2(self, value: dict):
+        self._property_changed('payment_frequency_period_multiplier2')
+        self.__payment_frequency_period_multiplier2 = value        
+
+    @property
+    def payment_frequency_period_multiplier1(self) -> dict:
+        return self.__payment_frequency_period_multiplier1
+
+    @payment_frequency_period_multiplier1.setter
+    def payment_frequency_period_multiplier1(self, value: dict):
+        self._property_changed('payment_frequency_period_multiplier1')
+        self.__payment_frequency_period_multiplier1 = value        
+
+    @property
     def leg1_total_notional_unit(self) -> dict:
         return self.__leg1_total_notional_unit
 
@@ -5509,6 +6854,15 @@ class FieldFilterMapDataQuery(Base):
     def leg1_total_notional_unit(self, value: dict):
         self._property_changed('leg1_total_notional_unit')
         self.__leg1_total_notional_unit = value        
+
+    @property
+    def absolute_attribution(self) -> dict:
+        return self.__absolute_attribution
+
+    @absolute_attribution.setter
+    def absolute_attribution(self, value: dict):
+        self._property_changed('absolute_attribution')
+        self.__absolute_attribution = value        
 
     @property
     def issue_price(self) -> dict:
@@ -5835,6 +7189,15 @@ class FieldFilterMapDataQuery(Base):
         self.__underlyer = value        
 
     @property
+    def return1yr(self) -> dict:
+        return self.__return1yr
+
+    @return1yr.setter
+    def return1yr(self, value: dict):
+        self._property_changed('return1yr')
+        self.__return1yr = value        
+
+    @property
     def identifier(self) -> dict:
         return self.__identifier
 
@@ -5907,6 +7270,15 @@ class FieldFilterMapDataQuery(Base):
         self.__z_spread = value        
 
     @property
+    def floating_rate_reset_frequency_period2(self) -> dict:
+        return self.__floating_rate_reset_frequency_period2
+
+    @floating_rate_reset_frequency_period2.setter
+    def floating_rate_reset_frequency_period2(self, value: dict):
+        self._property_changed('floating_rate_reset_frequency_period2')
+        self.__floating_rate_reset_frequency_period2 = value        
+
+    @property
     def cap_floor_atm_fwd_rate(self) -> dict:
         return self.__cap_floor_atm_fwd_rate
 
@@ -5932,6 +7304,15 @@ class FieldFilterMapDataQuery(Base):
     def tdapi(self, value: dict):
         self._property_changed('tdapi')
         self.__tdapi = value        
+
+    @property
+    def floating_rate_reset_frequency_period1(self) -> dict:
+        return self.__floating_rate_reset_frequency_period1
+
+    @floating_rate_reset_frequency_period1.setter
+    def floating_rate_reset_frequency_period1(self, value: dict):
+        self._property_changed('floating_rate_reset_frequency_period1')
+        self.__floating_rate_reset_frequency_period1 = value        
 
     @property
     def location_code(self) -> dict:
@@ -6060,6 +7441,15 @@ class FieldFilterMapDataQuery(Base):
         self.__precipitation_daily_forecast = value        
 
     @property
+    def fixed_recovery_cds_final_price(self) -> dict:
+        return self.__fixed_recovery_cds_final_price
+
+    @fixed_recovery_cds_final_price.setter
+    def fixed_recovery_cds_final_price(self, value: dict):
+        self._property_changed('fixed_recovery_cds_final_price')
+        self.__fixed_recovery_cds_final_price = value        
+
+    @property
     def price_method(self) -> dict:
         return self.__price_method
 
@@ -6121,6 +7511,15 @@ class FieldFilterMapDataQuery(Base):
     def buy55cents(self, value: dict):
         self._property_changed('buy55cents')
         self.__buy55cents = value        
+
+    @property
+    def underlying_asset_id_sdr(self) -> dict:
+        return self.__underlying_asset_id_sdr
+
+    @underlying_asset_id_sdr.setter
+    def underlying_asset_id_sdr(self, value: dict):
+        self._property_changed('underlying_asset_id_sdr')
+        self.__underlying_asset_id_sdr = value        
 
     @property
     def future_month_q26(self) -> dict:
@@ -6294,6 +7693,15 @@ class FieldFilterMapDataQuery(Base):
         self.__matched_maturity_swap_rate = value        
 
     @property
+    def underlying_asset_name(self) -> dict:
+        return self.__underlying_asset_name
+
+    @underlying_asset_name.setter
+    def underlying_asset_name(self, value: dict):
+        self._property_changed('underlying_asset_name')
+        self.__underlying_asset_name = value        
+
+    @property
     def primary_vwap(self) -> dict:
         return self.__primary_vwap
 
@@ -6427,6 +7835,15 @@ class FieldFilterMapDataQuery(Base):
     def hedge_tracking_error(self, value: dict):
         self._property_changed('hedge_tracking_error')
         self.__hedge_tracking_error = value        
+
+    @property
+    def term_status(self) -> dict:
+        return self.__term_status
+
+    @term_status.setter
+    def term_status(self, value: dict):
+        self._property_changed('term_status')
+        self.__term_status = value        
 
     @property
     def wind_speed_type(self) -> dict:
@@ -6807,6 +8224,15 @@ class FieldFilterMapDataQuery(Base):
         self.__payoff_mtd = value        
 
     @property
+    def spread2(self) -> dict:
+        return self.__spread2
+
+    @spread2.setter
+    def spread2(self, value: dict):
+        self._property_changed('spread2')
+        self.__spread2 = value        
+
+    @property
     def bos_in_bps_label(self) -> tuple:
         return self.__bos_in_bps_label
 
@@ -6814,6 +8240,15 @@ class FieldFilterMapDataQuery(Base):
     def bos_in_bps_label(self, value: tuple):
         self._property_changed('bos_in_bps_label')
         self.__bos_in_bps_label = value        
+
+    @property
+    def spread1(self) -> dict:
+        return self.__spread1
+
+    @spread1.setter
+    def spread1(self, value: dict):
+        self._property_changed('spread1')
+        self.__spread1 = value        
 
     @property
     def bos_in_bps(self) -> dict:
@@ -7833,6 +9268,15 @@ class FieldFilterMapDataQuery(Base):
         self.__wind_speed_daily_forecast = value        
 
     @property
+    def execution_venue_type(self) -> dict:
+        return self.__execution_venue_type
+
+    @execution_venue_type.setter
+    def execution_venue_type(self, value: dict):
+        self._property_changed('execution_venue_type')
+        self.__execution_venue_type = value        
+
+    @property
     def asset_parameters_floating_rate_day_count_fraction(self) -> dict:
         return self.__asset_parameters_floating_rate_day_count_fraction
 
@@ -7968,6 +9412,15 @@ class FieldFilterMapDataQuery(Base):
         self.__upi = value        
 
     @property
+    def fixed_rate1(self) -> dict:
+        return self.__fixed_rate1
+
+    @fixed_rate1.setter
+    def fixed_rate1(self, value: dict):
+        self._property_changed('fixed_rate1')
+        self.__fixed_rate1 = value        
+
+    @property
     def collateral_currency(self) -> dict:
         return self.__collateral_currency
 
@@ -7984,6 +9437,15 @@ class FieldFilterMapDataQuery(Base):
     def original_country(self, value: dict):
         self._property_changed('original_country')
         self.__original_country = value        
+
+    @property
+    def fixed_rate2(self) -> dict:
+        return self.__fixed_rate2
+
+    @fixed_rate2.setter
+    def fixed_rate2(self, value: dict):
+        self._property_changed('fixed_rate2')
+        self.__fixed_rate2 = value        
 
     @property
     def field(self) -> dict:
@@ -8148,6 +9610,15 @@ class FieldFilterMapDataQuery(Base):
         self.__leg1_fixed_payment_currency = value        
 
     @property
+    def map(self) -> dict:
+        return self.__map
+
+    @map.setter
+    def map(self, value: dict):
+        self._property_changed('map')
+        self.__map = value        
+
+    @property
     def arrival_haircut_vwap(self) -> dict:
         return self.__arrival_haircut_vwap
 
@@ -8202,6 +9673,24 @@ class FieldFilterMapDataQuery(Base):
         self.__spread_limit = value        
 
     @property
+    def sopr(self) -> dict:
+        return self.__sopr
+
+    @sopr.setter
+    def sopr(self, value: dict):
+        self._property_changed('sopr')
+        self.__sopr = value        
+
+    @property
+    def other_payment_amount(self) -> dict:
+        return self.__other_payment_amount
+
+    @other_payment_amount.setter
+    def other_payment_amount(self, value: dict):
+        self._property_changed('other_payment_amount')
+        self.__other_payment_amount = value        
+
+    @property
     def product_scope(self) -> dict:
         return self.__product_scope
 
@@ -8209,6 +9698,15 @@ class FieldFilterMapDataQuery(Base):
     def product_scope(self, value: dict):
         self._property_changed('product_scope')
         self.__product_scope = value        
+
+    @property
+    def redemption_period(self) -> dict:
+        return self.__redemption_period
+
+    @redemption_period.setter
+    def redemption_period(self, value: dict):
+        self._property_changed('redemption_period')
+        self.__redemption_period = value        
 
     @property
     def asset_parameters_issuer_type(self) -> dict:
@@ -8308,6 +9806,15 @@ class FieldFilterMapDataQuery(Base):
     def notional_amount(self, value: dict):
         self._property_changed('notional_amount')
         self.__notional_amount = value        
+
+    @property
+    def option_premium_amount(self) -> dict:
+        return self.__option_premium_amount
+
+    @option_premium_amount.setter
+    def option_premium_amount(self, value: dict):
+        self._property_changed('option_premium_amount')
+        self.__option_premium_amount = value        
 
     @property
     def pay_or_receive(self) -> dict:
@@ -8859,6 +10366,15 @@ class FieldFilterMapDataQuery(Base):
         self.__venue_type = value        
 
     @property
+    def current_activity_indicator(self) -> dict:
+        return self.__current_activity_indicator
+
+    @current_activity_indicator.setter
+    def current_activity_indicator(self, value: dict):
+        self._property_changed('current_activity_indicator')
+        self.__current_activity_indicator = value        
+
+    @property
     def multi_asset_class_swap(self) -> dict:
         return self.__multi_asset_class_swap
 
@@ -8922,6 +10438,15 @@ class FieldFilterMapDataQuery(Base):
         self.__action_sdr = value        
 
     @property
+    def quantity_frequency(self) -> dict:
+        return self.__quantity_frequency
+
+    @quantity_frequency.setter
+    def quantity_frequency(self, value: dict):
+        self._property_changed('quantity_frequency')
+        self.__quantity_frequency = value        
+
+    @property
     def count_ideas_qtd(self) -> dict:
         return self.__count_ideas_qtd
 
@@ -8938,6 +10463,33 @@ class FieldFilterMapDataQuery(Base):
     def knock_out_price(self, value: dict):
         self._property_changed('knock_out_price')
         self.__knock_out_price = value        
+
+    @property
+    def spread_currency1(self) -> dict:
+        return self.__spread_currency1
+
+    @spread_currency1.setter
+    def spread_currency1(self, value: dict):
+        self._property_changed('spread_currency1')
+        self.__spread_currency1 = value        
+
+    @property
+    def spread_currency2(self) -> dict:
+        return self.__spread_currency2
+
+    @spread_currency2.setter
+    def spread_currency2(self, value: dict):
+        self._property_changed('spread_currency2')
+        self.__spread_currency2 = value        
+
+    @property
+    def current_supply(self) -> dict:
+        return self.__current_supply
+
+    @current_supply.setter
+    def current_supply(self, value: dict):
+        self._property_changed('current_supply')
+        self.__current_supply = value        
 
     @property
     def ctd_asset_id(self) -> dict:
@@ -9021,6 +10573,15 @@ class FieldFilterMapDataQuery(Base):
         self.__fx_pnl = value        
 
     @property
+    def leg2_floating_rate_index(self) -> dict:
+        return self.__leg2_floating_rate_index
+
+    @leg2_floating_rate_index.setter
+    def leg2_floating_rate_index(self, value: dict):
+        self._property_changed('leg2_floating_rate_index')
+        self.__leg2_floating_rate_index = value        
+
+    @property
     def asset_classifications_gics_industry_group(self) -> dict:
         return self.__asset_classifications_gics_industry_group
 
@@ -9028,6 +10589,15 @@ class FieldFilterMapDataQuery(Base):
     def asset_classifications_gics_industry_group(self, value: dict):
         self._property_changed('asset_classifications_gics_industry_group')
         self.__asset_classifications_gics_industry_group = value        
+
+    @property
+    def index_constituents(self) -> dict:
+        return self.__index_constituents
+
+    @index_constituents.setter
+    def index_constituents(self, value: dict):
+        self._property_changed('index_constituents')
+        self.__index_constituents = value        
 
     @property
     def lending_sec_id(self) -> dict:
@@ -9111,6 +10681,15 @@ class FieldFilterMapDataQuery(Base):
         self.__liquidity_bucket_buy = value        
 
     @property
+    def day_open(self) -> dict:
+        return self.__day_open
+
+    @day_open.setter
+    def day_open(self, value: dict):
+        self._property_changed('day_open')
+        self.__day_open = value        
+
+    @property
     def mic(self) -> dict:
         return self.__mic
 
@@ -9118,6 +10697,15 @@ class FieldFilterMapDataQuery(Base):
     def mic(self, value: dict):
         self._property_changed('mic')
         self.__mic = value        
+
+    @property
+    def hurdle_type(self) -> dict:
+        return self.__hurdle_type
+
+    @hurdle_type.setter
+    def hurdle_type(self, value: dict):
+        self._property_changed('hurdle_type')
+        self.__hurdle_type = value        
 
     @property
     def latitude(self) -> dict:
@@ -9235,6 +10823,15 @@ class FieldFilterMapDataQuery(Base):
     def average_realized_variance(self, value: dict):
         self._property_changed('average_realized_variance')
         self.__average_realized_variance = value        
+
+    @property
+    def leg1_commodity_underlyer_id(self) -> dict:
+        return self.__leg1_commodity_underlyer_id
+
+    @leg1_commodity_underlyer_id.setter
+    def leg1_commodity_underlyer_id(self, value: dict):
+        self._property_changed('leg1_commodity_underlyer_id')
+        self.__leg1_commodity_underlyer_id = value        
 
     @property
     def rating_fitch(self) -> dict:
@@ -9426,6 +11023,15 @@ class FieldFilterMapDataQuery(Base):
         self.__net_exposure = value        
 
     @property
+    def option_entitlement(self) -> dict:
+        return self.__option_entitlement
+
+    @option_entitlement.setter
+    def option_entitlement(self, value: dict):
+        self._property_changed('option_entitlement')
+        self.__option_entitlement = value        
+
+    @property
     def is_legacy_pair_basket(self) -> dict:
         return self.__is_legacy_pair_basket
 
@@ -9514,6 +11120,15 @@ class FieldFilterMapDataQuery(Base):
     def closing_report(self, value: dict):
         self._property_changed('closing_report')
         self.__closing_report = value        
+
+    @property
+    def redemption_notice_period(self) -> dict:
+        return self.__redemption_notice_period
+
+    @redemption_notice_period.setter
+    def redemption_notice_period(self, value: dict):
+        self._property_changed('redemption_notice_period')
+        self.__redemption_notice_period = value        
 
     @property
     def previous_total_confirmed(self) -> dict:
@@ -10038,6 +11653,15 @@ class FieldFilterMapDataQuery(Base):
         self.__specific_risk = value        
 
     @property
+    def free_float_market_cap(self) -> dict:
+        return self.__free_float_market_cap
+
+    @free_float_market_cap.setter
+    def free_float_market_cap(self, value: dict):
+        self._property_changed('free_float_market_cap')
+        self.__free_float_market_cap = value        
+
+    @property
     def mdapi(self) -> dict:
         return self.__mdapi
 
@@ -10146,6 +11770,15 @@ class FieldFilterMapDataQuery(Base):
         self.__sub_region = value        
 
     @property
+    def product_id(self) -> dict:
+        return self.__product_id
+
+    @product_id.setter
+    def product_id(self, value: dict):
+        self._property_changed('product_id')
+        self.__product_id = value        
+
+    @property
     def benchmark(self) -> dict:
         return self.__benchmark
 
@@ -10153,6 +11786,15 @@ class FieldFilterMapDataQuery(Base):
     def benchmark(self, value: dict):
         self._property_changed('benchmark')
         self.__benchmark = value        
+
+    @property
+    def nvt_adj(self) -> dict:
+        return self.__nvt_adj
+
+    @nvt_adj.setter
+    def nvt_adj(self, value: dict):
+        self._property_changed('nvt_adj')
+        self.__nvt_adj = value        
 
     @property
     def tcm_cost_participation_rate15_pct(self) -> dict:
@@ -10180,15 +11822,6 @@ class FieldFilterMapDataQuery(Base):
     def recall_date(self, value: dict):
         self._property_changed('recall_date')
         self.__recall_date = value        
-
-    @property
-    def esg_metric_value(self) -> dict:
-        return self.__esg_metric_value
-
-    @esg_metric_value.setter
-    def esg_metric_value(self, value: dict):
-        self._property_changed('esg_metric_value')
-        self.__esg_metric_value = value        
 
     @property
     def internal(self) -> dict:
@@ -10252,6 +11885,15 @@ class FieldFilterMapDataQuery(Base):
     def confirmed_per_million(self, value: dict):
         self._property_changed('confirmed_per_million')
         self.__confirmed_per_million = value        
+
+    @property
+    def exchange_rate_basis(self) -> dict:
+        return self.__exchange_rate_basis
+
+    @exchange_rate_basis.setter
+    def exchange_rate_basis(self, value: dict):
+        self._property_changed('exchange_rate_basis')
+        self.__exchange_rate_basis = value        
 
     @property
     def data_source_id(self) -> dict:
@@ -10351,6 +11993,15 @@ class FieldFilterMapDataQuery(Base):
     def avg_yield7_day(self, value: dict):
         self._property_changed('avg_yield7_day')
         self.__avg_yield7_day = value        
+
+    @property
+    def reference_rate_eur(self) -> dict:
+        return self.__reference_rate_eur
+
+    @reference_rate_eur.setter
+    def reference_rate_eur(self, value: dict):
+        self._property_changed('reference_rate_eur')
+        self.__reference_rate_eur = value        
 
     @property
     def original_dissemination_id(self) -> dict:
@@ -10486,6 +12137,15 @@ class FieldFilterMapDataQuery(Base):
     def buy10cents(self, value: dict):
         self._property_changed('buy10cents')
         self.__buy10cents = value        
+
+    @property
+    def realized_market_cap_ratio(self) -> dict:
+        return self.__realized_market_cap_ratio
+
+    @realized_market_cap_ratio.setter
+    def realized_market_cap_ratio(self, value: dict):
+        self._property_changed('realized_market_cap_ratio')
+        self.__realized_market_cap_ratio = value        
 
     @property
     def nav_spread(self) -> dict:
@@ -10686,6 +12346,24 @@ class FieldFilterMapDataQuery(Base):
         self.__rate360 = value        
 
     @property
+    def notional_quantity2(self) -> dict:
+        return self.__notional_quantity2
+
+    @notional_quantity2.setter
+    def notional_quantity2(self, value: dict):
+        self._property_changed('notional_quantity2')
+        self.__notional_quantity2 = value        
+
+    @property
+    def notional_quantity1(self) -> dict:
+        return self.__notional_quantity1
+
+    @notional_quantity1.setter
+    def notional_quantity1(self, value: dict):
+        self._property_changed('notional_quantity1')
+        self.__notional_quantity1 = value        
+
+    @property
     def is_continuous(self) -> dict:
         return self.__is_continuous
 
@@ -10729,6 +12407,15 @@ class FieldFilterMapDataQuery(Base):
     def mdv22_day(self, value: dict):
         self._property_changed('mdv22_day')
         self.__mdv22_day = value        
+
+    @property
+    def nvt_adj_ff90(self) -> dict:
+        return self.__nvt_adj_ff90
+
+    @nvt_adj_ff90.setter
+    def nvt_adj_ff90(self, value: dict):
+        self._property_changed('nvt_adj_ff90')
+        self.__nvt_adj_ff90 = value        
 
     @property
     def twap_realized_bps(self) -> dict:
@@ -10803,6 +12490,15 @@ class FieldFilterMapDataQuery(Base):
         self.__leg2_price_type = value        
 
     @property
+    def floating_rate_reset_frequency_period_multiplier2(self) -> dict:
+        return self.__floating_rate_reset_frequency_period_multiplier2
+
+    @floating_rate_reset_frequency_period_multiplier2.setter
+    def floating_rate_reset_frequency_period_multiplier2(self, value: dict):
+        self._property_changed('floating_rate_reset_frequency_period_multiplier2')
+        self.__floating_rate_reset_frequency_period_multiplier2 = value        
+
+    @property
     def total_active(self) -> dict:
         return self.__total_active
 
@@ -10810,6 +12506,15 @@ class FieldFilterMapDataQuery(Base):
     def total_active(self, value: dict):
         self._property_changed('total_active')
         self.__total_active = value        
+
+    @property
+    def floating_rate_reset_frequency_period_multiplier1(self) -> dict:
+        return self.__floating_rate_reset_frequency_period_multiplier1
+
+    @floating_rate_reset_frequency_period_multiplier1.setter
+    def floating_rate_reset_frequency_period_multiplier1(self, value: dict):
+        self._property_changed('floating_rate_reset_frequency_period_multiplier1')
+        self.__floating_rate_reset_frequency_period_multiplier1 = value        
 
     @property
     def gsid2(self) -> dict:
@@ -11352,6 +13057,15 @@ class FieldFilterMapDataQuery(Base):
         self.__close = value        
 
     @property
+    def vol30d(self) -> dict:
+        return self.__vol30d
+
+    @vol30d.setter
+    def vol30d(self, value: dict):
+        self._property_changed('vol30d')
+        self.__vol30d = value        
+
+    @property
     def es_product_impact_score(self) -> dict:
         return self.__es_product_impact_score
 
@@ -11395,6 +13109,15 @@ class FieldFilterMapDataQuery(Base):
     def five_day_move(self, value: dict):
         self._property_changed('five_day_move')
         self.__five_day_move = value        
+
+    @property
+    def realized_market_cap(self) -> dict:
+        return self.__realized_market_cap
+
+    @realized_market_cap.setter
+    def realized_market_cap(self, value: dict):
+        self._property_changed('realized_market_cap')
+        self.__realized_market_cap = value        
 
     @property
     def value_format(self) -> dict:
@@ -11496,6 +13219,15 @@ class FieldFilterMapDataQuery(Base):
         self.__congestion = value        
 
     @property
+    def leg2_commodity_instrument_id(self) -> dict:
+        return self.__leg2_commodity_instrument_id
+
+    @leg2_commodity_instrument_id.setter
+    def leg2_commodity_instrument_id(self, value: dict):
+        self._property_changed('leg2_commodity_instrument_id')
+        self.__leg2_commodity_instrument_id = value        
+
+    @property
     def notes(self) -> dict:
         return self.__notes
 
@@ -11530,6 +13262,15 @@ class FieldFilterMapDataQuery(Base):
     def average_fill_rate(self, value: dict):
         self._property_changed('average_fill_rate')
         self.__average_fill_rate = value        
+
+    @property
+    def cins(self) -> dict:
+        return self.__cins
+
+    @cins.setter
+    def cins(self, value: dict):
+        self._property_changed('cins')
+        self.__cins = value        
 
     @property
     def unadjusted_open(self) -> dict:
@@ -13125,6 +14866,15 @@ class FieldFilterMapDataQuery(Base):
         self.__execution_venue = value        
 
     @property
+    def non_standardized_pricing_indicator(self) -> dict:
+        return self.__non_standardized_pricing_indicator
+
+    @non_standardized_pricing_indicator.setter
+    def non_standardized_pricing_indicator(self, value: dict):
+        self._property_changed('non_standardized_pricing_indicator')
+        self.__non_standardized_pricing_indicator = value        
+
+    @property
     def primary_vwap_in_limit_realized_bps(self) -> dict:
         return self.__primary_vwap_in_limit_realized_bps
 
@@ -13177,6 +14927,15 @@ class FieldFilterMapDataQuery(Base):
     def sell130cents(self, value: dict):
         self._property_changed('sell130cents')
         self.__sell130cents = value        
+
+    @property
+    def price_unit_of_measure1(self) -> dict:
+        return self.__price_unit_of_measure1
+
+    @price_unit_of_measure1.setter
+    def price_unit_of_measure1(self, value: dict):
+        self._property_changed('price_unit_of_measure1')
+        self.__price_unit_of_measure1 = value        
 
     @property
     def sell32bps(self) -> dict:
@@ -13249,6 +15008,15 @@ class FieldFilterMapDataQuery(Base):
     def strategy(self, value: dict):
         self._property_changed('strategy')
         self.__strategy = value        
+
+    @property
+    def price_unit_of_measure2(self) -> dict:
+        return self.__price_unit_of_measure2
+
+    @price_unit_of_measure2.setter
+    def price_unit_of_measure2(self, value: dict):
+        self._property_changed('price_unit_of_measure2')
+        self.__price_unit_of_measure2 = value        
 
     @property
     def issue_status_date(self) -> dict:
@@ -13404,6 +15172,15 @@ class FieldFilterMapDataQuery(Base):
         self.__last_fill_price = value        
 
     @property
+    def sopr_out(self) -> dict:
+        return self.__sopr_out
+
+    @sopr_out.setter
+    def sopr_out(self, value: dict):
+        self._property_changed('sopr_out')
+        self.__sopr_out = value        
+
+    @property
     def short_conviction_small(self) -> dict:
         return self.__short_conviction_small
 
@@ -13438,6 +15215,15 @@ class FieldFilterMapDataQuery(Base):
     def matrix_order(self, value: dict):
         self._property_changed('matrix_order')
         self.__matrix_order = value        
+
+    @property
+    def day_close(self) -> dict:
+        return self.__day_close
+
+    @day_close.setter
+    def day_close(self, value: dict):
+        self._property_changed('day_close')
+        self.__day_close = value        
 
     @property
     def date_index(self) -> dict:
@@ -13501,6 +15287,15 @@ class FieldFilterMapDataQuery(Base):
     def asset2_id(self, value: dict):
         self._property_changed('asset2_id')
         self.__asset2_id = value        
+
+    @property
+    def economic_forecasts(self) -> dict:
+        return self.__economic_forecasts
+
+    @economic_forecasts.setter
+    def economic_forecasts(self, value: dict):
+        self._property_changed('economic_forecasts')
+        self.__economic_forecasts = value        
 
     @property
     def average_fill_price(self) -> dict:
@@ -13573,6 +15368,24 @@ class FieldFilterMapDataQuery(Base):
     def data_set(self, value: dict):
         self._property_changed('data_set')
         self.__data_set = value        
+
+    @property
+    def total_notional_quantity2(self) -> dict:
+        return self.__total_notional_quantity2
+
+    @total_notional_quantity2.setter
+    def total_notional_quantity2(self, value: dict):
+        self._property_changed('total_notional_quantity2')
+        self.__total_notional_quantity2 = value        
+
+    @property
+    def total_notional_quantity1(self) -> dict:
+        return self.__total_notional_quantity1
+
+    @total_notional_quantity1.setter
+    def total_notional_quantity1(self, value: dict):
+        self._property_changed('total_notional_quantity1')
+        self.__total_notional_quantity1 = value        
 
     @property
     def notional_amount2(self) -> dict:
@@ -13989,6 +15802,15 @@ class FieldFilterMapDataQuery(Base):
         self.__twap_interval = value        
 
     @property
+    def payment_frequency_period1(self) -> dict:
+        return self.__payment_frequency_period1
+
+    @payment_frequency_period1.setter
+    def payment_frequency_period1(self, value: dict):
+        self._property_changed('payment_frequency_period1')
+        self.__payment_frequency_period1 = value        
+
+    @property
     def unique_id(self) -> dict:
         return self.__unique_id
 
@@ -14005,6 +15827,15 @@ class FieldFilterMapDataQuery(Base):
     def option_expiration_date(self, value: dict):
         self._property_changed('option_expiration_date')
         self.__option_expiration_date = value        
+
+    @property
+    def payment_frequency_period2(self) -> dict:
+        return self.__payment_frequency_period2
+
+    @payment_frequency_period2.setter
+    def payment_frequency_period2(self, value: dict):
+        self._property_changed('payment_frequency_period2')
+        self.__payment_frequency_period2 = value        
 
     @property
     def swaption_atm_fwd_rate(self) -> dict:
@@ -14212,6 +16043,15 @@ class FieldFilterMapDataQuery(Base):
     def beta_adjusted_exposure(self, value: dict):
         self._property_changed('beta_adjusted_exposure')
         self.__beta_adjusted_exposure = value        
+
+    @property
+    def is_annualized(self) -> dict:
+        return self.__is_annualized
+
+    @is_annualized.setter
+    def is_annualized(self, value: dict):
+        self._property_changed('is_annualized')
+        self.__is_annualized = value        
 
     @property
     def dividend_points(self) -> dict:
@@ -14475,6 +16315,15 @@ class FieldFilterMapDataQuery(Base):
         self.__proceeds_asset_swap_spread12m = value        
 
     @property
+    def rvt_adj90(self) -> dict:
+        return self.__rvt_adj90
+
+    @rvt_adj90.setter
+    def rvt_adj90(self, value: dict):
+        self._property_changed('rvt_adj90')
+        self.__rvt_adj90 = value        
+
+    @property
     def gross_investment_wtd(self) -> dict:
         return self.__gross_investment_wtd
 
@@ -14563,6 +16412,15 @@ class FieldFilterMapDataQuery(Base):
     def recall_quantity(self, value: dict):
         self._property_changed('recall_quantity')
         self.__recall_quantity = value        
+
+    @property
+    def strike_price_currency(self) -> dict:
+        return self.__strike_price_currency
+
+    @strike_price_currency.setter
+    def strike_price_currency(self, value: dict):
+        self._property_changed('strike_price_currency')
+        self.__strike_price_currency = value        
 
     @property
     def fx_positioning(self) -> dict:
@@ -14754,6 +16612,24 @@ class FieldFilterMapDataQuery(Base):
         self.__default_backcast = value        
 
     @property
+    def lockup(self) -> dict:
+        return self.__lockup
+
+    @lockup.setter
+    def lockup(self, value: dict):
+        self._property_changed('lockup')
+        self.__lockup = value        
+
+    @property
+    def lockup_type(self) -> dict:
+        return self.__lockup_type
+
+    @lockup_type.setter
+    def lockup_type(self, value: dict):
+        self._property_changed('lockup_type')
+        self.__lockup_type = value        
+
+    @property
     def news_on_intensity(self) -> dict:
         return self.__news_on_intensity
 
@@ -14860,6 +16736,15 @@ class FieldFilterMapDataQuery(Base):
     def continuation_event(self, value: dict):
         self._property_changed('continuation_event')
         self.__continuation_event = value        
+
+    @property
+    def leg2_commodity_underlyer_id(self) -> dict:
+        return self.__leg2_commodity_underlyer_id
+
+    @leg2_commodity_underlyer_id.setter
+    def leg2_commodity_underlyer_id(self, value: dict):
+        self._property_changed('leg2_commodity_underlyer_id')
+        self.__leg2_commodity_underlyer_id = value        
 
     @property
     def wi_id(self) -> dict:
@@ -15519,6 +17404,15 @@ class FieldFilterMapDataQuery(Base):
         self.__sell160cents = value        
 
     @property
+    def first_exercise_date(self) -> dict:
+        return self.__first_exercise_date
+
+    @first_exercise_date.setter
+    def first_exercise_date(self, value: dict):
+        self._property_changed('first_exercise_date')
+        self.__first_exercise_date = value        
+
+    @property
     def knock_in_direction(self) -> dict:
         return self.__knock_in_direction
 
@@ -15643,6 +17537,15 @@ class FieldFilterMapDataQuery(Base):
     def trade_day_count(self, value: dict):
         self._property_changed('trade_day_count')
         self.__trade_day_count = value        
+
+    @property
+    def transaction_type(self) -> dict:
+        return self.__transaction_type
+
+    @transaction_type.setter
+    def transaction_type(self, value: dict):
+        self._property_changed('transaction_type')
+        self.__transaction_type = value        
 
     @property
     def price_to_sales(self) -> dict:
@@ -15796,6 +17699,15 @@ class FieldFilterMapDataQuery(Base):
     def fx_positioning_source(self, value: dict):
         self._property_changed('fx_positioning_source')
         self.__fx_positioning_source = value        
+
+    @property
+    def vol60d(self) -> dict:
+        return self.__vol60d
+
+    @vol60d.setter
+    def vol60d(self, value: dict):
+        self._property_changed('vol60d')
+        self.__vol60d = value        
 
     @property
     def implied_volatility_by_delta_strike(self) -> dict:
@@ -16113,6 +18025,15 @@ class FieldFilterMapDataQuery(Base):
         self.__client = value        
 
     @property
+    def esg_detailed_metric(self) -> dict:
+        return self.__esg_detailed_metric
+
+    @esg_detailed_metric.setter
+    def esg_detailed_metric(self, value: dict):
+        self._property_changed('esg_detailed_metric')
+        self.__esg_detailed_metric = value        
+
+    @property
     def conviction_list(self) -> dict:
         return self.__conviction_list
 
@@ -16275,6 +18196,15 @@ class FieldFilterMapDataQuery(Base):
         self.__realm = value        
 
     @property
+    def gate(self) -> dict:
+        return self.__gate
+
+    @gate.setter
+    def gate(self, value: dict):
+        self._property_changed('gate')
+        self.__gate = value        
+
+    @property
     def bid(self) -> dict:
         return self.__bid
 
@@ -16291,6 +18221,15 @@ class FieldFilterMapDataQuery(Base):
     def hedge_value(self, value: dict):
         self._property_changed('hedge_value')
         self.__hedge_value = value        
+
+    @property
+    def is_seasonally_adjusted(self) -> dict:
+        return self.__is_seasonally_adjusted
+
+    @is_seasonally_adjusted.setter
+    def is_seasonally_adjusted(self, value: dict):
+        self._property_changed('is_seasonally_adjusted')
+        self.__is_seasonally_adjusted = value        
 
     @property
     def is_aggressive(self) -> dict:
@@ -16752,6 +18691,15 @@ class FieldFilterMapDataQuery(Base):
         self.__feature3 = value        
 
     @property
+    def settlement_currency2(self) -> dict:
+        return self.__settlement_currency2
+
+    @settlement_currency2.setter
+    def settlement_currency2(self, value: dict):
+        self._property_changed('settlement_currency2')
+        self.__settlement_currency2 = value        
+
+    @property
     def sts_commodity_sector(self) -> dict:
         return self.__sts_commodity_sector
 
@@ -16831,6 +18779,15 @@ class FieldFilterMapDataQuery(Base):
     def delivery_date(self, value: dict):
         self._property_changed('delivery_date')
         self.__delivery_date = value        
+
+    @property
+    def settlement_currency1(self) -> dict:
+        return self.__settlement_currency1
+
+    @settlement_currency1.setter
+    def settlement_currency1(self, value: dict):
+        self._property_changed('settlement_currency1')
+        self.__settlement_currency1 = value        
 
     @property
     def interest_rate(self) -> dict:
@@ -17121,6 +19078,33 @@ class FieldFilterMapDataQuery(Base):
         self.__pnode_id = value        
 
     @property
+    def price1(self) -> dict:
+        return self.__price1
+
+    @price1.setter
+    def price1(self, value: dict):
+        self._property_changed('price1')
+        self.__price1 = value        
+
+    @property
+    def price2(self) -> dict:
+        return self.__price2
+
+    @price2.setter
+    def price2(self, value: dict):
+        self._property_changed('price2')
+        self.__price2 = value        
+
+    @property
+    def reference_rate(self) -> dict:
+        return self.__reference_rate
+
+    @reference_rate.setter
+    def reference_rate(self, value: dict):
+        self._property_changed('reference_rate')
+        self.__reference_rate = value        
+
+    @property
     def humidity_type(self) -> dict:
         return self.__humidity_type
 
@@ -17157,6 +19141,15 @@ class FieldFilterMapDataQuery(Base):
         self.__implied_volatility_by_expiration = value        
 
     @property
+    def hurdle(self) -> dict:
+        return self.__hurdle
+
+    @hurdle.setter
+    def hurdle(self, value: dict):
+        self._property_changed('hurdle')
+        self.__hurdle = value        
+
+    @property
     def asset_parameters_fixed_rate_day_count_fraction(self) -> dict:
         return self.__asset_parameters_fixed_rate_day_count_fraction
 
@@ -17173,6 +19166,15 @@ class FieldFilterMapDataQuery(Base):
     def es_momentum_score(self, value: dict):
         self._property_changed('es_momentum_score')
         self.__es_momentum_score = value        
+
+    @property
+    def leg1_commodity_instrument_id(self) -> dict:
+        return self.__leg1_commodity_instrument_id
+
+    @leg1_commodity_instrument_id.setter
+    def leg1_commodity_instrument_id(self, value: dict):
+        self._property_changed('leg1_commodity_instrument_id')
+        self.__leg1_commodity_instrument_id = value        
 
     @property
     def leg2_index(self) -> dict:
@@ -17380,6 +19382,15 @@ class FieldFilterMapDataQuery(Base):
     def asset_id(self, value: dict):
         self._property_changed('asset_id')
         self.__asset_id = value        
+
+    @property
+    def block_trade_election_indicator(self) -> dict:
+        return self.__block_trade_election_indicator
+
+    @block_trade_election_indicator.setter
+    def block_trade_election_indicator(self, value: dict):
+        self._property_changed('block_trade_election_indicator')
+        self.__block_trade_election_indicator = value        
 
     @property
     def test_status(self) -> dict:
@@ -17659,6 +19670,15 @@ class FieldFilterMapDataQuery(Base):
     def leg1_underlying_asset(self, value: dict):
         self._property_changed('leg1_underlying_asset')
         self.__leg1_underlying_asset = value        
+
+    @property
+    def bbgid(self) -> dict:
+        return self.__bbgid
+
+    @bbgid.setter
+    def bbgid(self, value: dict):
+        self._property_changed('bbgid')
+        self.__bbgid = value        
 
     @property
     def private_placement_type(self) -> dict:
@@ -18084,6 +20104,15 @@ class FieldFilterMapDataQuery(Base):
         self.__country = value        
 
     @property
+    def option_premium_currency(self) -> dict:
+        return self.__option_premium_currency
+
+    @option_premium_currency.setter
+    def option_premium_currency(self, value: dict):
+        self._property_changed('option_premium_currency')
+        self.__option_premium_currency = value        
+
+    @property
     def vwap(self) -> dict:
         return self.__vwap
 
@@ -18253,6 +20282,15 @@ class FieldFilterMapDataQuery(Base):
     def buy20bps(self, value: dict):
         self._property_changed('buy20bps')
         self.__buy20bps = value        
+
+    @property
+    def index_level(self) -> dict:
+        return self.__index_level
+
+    @index_level.setter
+    def index_level(self, value: dict):
+        self._property_changed('index_level')
+        self.__index_level = value        
 
     @property
     def epidemic(self) -> dict:
@@ -18543,6 +20581,15 @@ class FieldFilterMapDataQuery(Base):
         self.__g_percentile = value        
 
     @property
+    def rvt_adj(self) -> dict:
+        return self.__rvt_adj
+
+    @rvt_adj.setter
+    def rvt_adj(self, value: dict):
+        self._property_changed('rvt_adj')
+        self.__rvt_adj = value        
+
+    @property
     def cloud_cover_hourly_forecast(self) -> dict:
         return self.__cloud_cover_hourly_forecast
 
@@ -18804,6 +20851,15 @@ class FieldFilterMapDataQuery(Base):
         self.__percent_adv = value        
 
     @property
+    def reference_rate_usd(self) -> dict:
+        return self.__reference_rate_usd
+
+    @reference_rate_usd.setter
+    def reference_rate_usd(self, value: dict):
+        self._property_changed('reference_rate_usd')
+        self.__reference_rate_usd = value        
+
+    @property
     def leg1_total_notional(self) -> dict:
         return self.__leg1_total_notional
 
@@ -18820,6 +20876,15 @@ class FieldFilterMapDataQuery(Base):
     def contract(self, value: dict):
         self._property_changed('contract')
         self.__contract = value        
+
+    @property
+    def nvt_adj90(self) -> dict:
+        return self.__nvt_adj90
+
+    @nvt_adj90.setter
+    def nvt_adj90(self, value: dict):
+        self._property_changed('nvt_adj90')
+        self.__nvt_adj90 = value        
 
     @property
     def payment_frequency1(self) -> dict:
@@ -18955,6 +21020,15 @@ class FieldFilterMapDataQuery(Base):
     def sensitivity(self, value: dict):
         self._property_changed('sensitivity')
         self.__sensitivity = value        
+
+    @property
+    def embedded_option_type(self) -> dict:
+        return self.__embedded_option_type
+
+    @embedded_option_type.setter
+    def embedded_option_type(self, value: dict):
+        self._property_changed('embedded_option_type')
+        self.__embedded_option_type = value        
 
     @property
     def day_count(self) -> dict:
@@ -19108,6 +21182,15 @@ class FieldFilterMapDataQuery(Base):
     def buy24bps(self, value: dict):
         self._property_changed('buy24bps')
         self.__buy24bps = value        
+
+    @property
+    def side_pocket(self) -> dict:
+        return self.__side_pocket
+
+    @side_pocket.setter
+    def side_pocket(self, value: dict):
+        self._property_changed('side_pocket')
+        self.__side_pocket = value        
 
     @property
     def observation(self) -> dict:
@@ -19614,469 +21697,113 @@ class FieldFilterMapDataQuery(Base):
         self.__total_fatalities = value        
 
 
-class FieldLinkSelector(Base):
+class HistoryFilter(Base):
         
-    """Stores selector and name how field is presented in dataset."""
+    """Restricts queries against dataset to a time range."""
 
     @camel_case_translate
     def __init__(
         self,
-        field_selector: str = None,
-        description: str = None,
-        display_name: str = None,
+        absolute_start: datetime.datetime = None,
+        absolute_end: datetime.datetime = None,
+        relative_start_seconds: float = None,
+        relative_end_seconds: float = None,
+        delay: dict = None,
         name: str = None
     ):        
         super().__init__()
-        self.field_selector = field_selector
-        self.description = description
-        self.display_name = display_name
+        self.absolute_start = absolute_start
+        self.absolute_end = absolute_end
+        self.relative_start_seconds = relative_start_seconds
+        self.relative_end_seconds = relative_end_seconds
+        self.delay = delay
         self.name = name
 
     @property
-    def field_selector(self) -> str:
-        """Selector which captures the field from the Entity."""
-        return self.__field_selector
+    def absolute_start(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
+        return self.__absolute_start
 
-    @field_selector.setter
-    def field_selector(self, value: str):
-        self._property_changed('field_selector')
-        self.__field_selector = value        
-
-    @property
-    def description(self) -> str:
-        """Custom description (overrides field default)."""
-        return self.__description
-
-    @description.setter
-    def description(self, value: str):
-        self._property_changed('description')
-        self.__description = value        
+    @absolute_start.setter
+    def absolute_start(self, value: datetime.datetime):
+        self._property_changed('absolute_start')
+        self.__absolute_start = value        
 
     @property
-    def display_name(self) -> str:
-        """Name under which the captured field will be displayed. The name must be
-           registered in fields."""
-        return self.__display_name
+    def absolute_end(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
+        return self.__absolute_end
 
-    @display_name.setter
-    def display_name(self, value: str):
-        self._property_changed('display_name')
-        self.__display_name = value        
+    @absolute_end.setter
+    def absolute_end(self, value: datetime.datetime):
+        self._property_changed('absolute_end')
+        self.__absolute_end = value        
+
+    @property
+    def relative_start_seconds(self) -> float:
+        """Earliest start time in seconds before current time."""
+        return self.__relative_start_seconds
+
+    @relative_start_seconds.setter
+    def relative_start_seconds(self, value: float):
+        self._property_changed('relative_start_seconds')
+        self.__relative_start_seconds = value        
+
+    @property
+    def relative_end_seconds(self) -> float:
+        """Latest end time in seconds before current time."""
+        return self.__relative_end_seconds
+
+    @relative_end_seconds.setter
+    def relative_end_seconds(self, value: float):
+        self._property_changed('relative_end_seconds')
+        self.__relative_end_seconds = value        
+
+    @property
+    def delay(self) -> dict:
+        return self.__delay
+
+    @delay.setter
+    def delay(self, value: dict):
+        self._property_changed('delay')
+        self.__delay = value        
 
 
-class MDAPI(Base):
+class DataGroup(Base):
         
-    """Defines MDAPI fields."""
+    """Dataset grouped by context (key dimensions)"""
 
     @camel_case_translate
     def __init__(
         self,
-        type_: str,
-        quoting_styles: Tuple[dict, ...],
-        class_: str = None,
+        context: FieldValueMap = None,
+        data: Tuple[FieldValueMap, ...] = None,
         name: str = None
     ):        
         super().__init__()
-        self.__class = class_
-        self.__type = type_
-        self.quoting_styles = quoting_styles
+        self.context = context
+        self.data = data
         self.name = name
 
     @property
-    def class_(self) -> str:
-        """MDAPI Class."""
-        return self.__class
+    def context(self) -> FieldValueMap:
+        """Context map for the grouped data (key dimensions)"""
+        return self.__context
 
-    @class_.setter
-    def class_(self, value: str):
-        self._property_changed('class_')
-        self.__class = value        
-
-    @property
-    def type(self) -> str:
-        """The MDAPI Type field (private)"""
-        return self.__type
-
-    @type.setter
-    def type(self, value: str):
-        self._property_changed('type')
-        self.__type = value        
+    @context.setter
+    def context(self, value: FieldValueMap):
+        self._property_changed('context')
+        self.__context = value        
 
     @property
-    def quoting_styles(self) -> Tuple[dict, ...]:
-        """Map from MDAPI QuotingStyles to database columns"""
-        return self.__quoting_styles
-
-    @quoting_styles.setter
-    def quoting_styles(self, value: Tuple[dict, ...]):
-        self._property_changed('quoting_styles')
-        self.__quoting_styles = value        
-
-
-class MarketDataField(Base):
-        
-    @camel_case_translate
-    def __init__(
-        self,
-        name: str = None,
-        mapping: str = None
-    ):        
-        super().__init__()
-        self.name = name
-        self.mapping = mapping
-
-    @property
-    def name(self) -> str:
-        return self.__name
-
-    @name.setter
-    def name(self, value: str):
-        self._property_changed('name')
-        self.__name = value        
-
-    @property
-    def mapping(self) -> str:
-        return self.__mapping
-
-    @mapping.setter
-    def mapping(self, value: str):
-        self._property_changed('mapping')
-        self.__mapping = value        
-
-
-class MarketDataFilteredField(Base):
-        
-    @camel_case_translate
-    def __init__(
-        self,
-        field: str = None,
-        default_value: str = None,
-        default_numerical_value: float = None,
-        default_boolean_value: bool = None,
-        numerical_values: Tuple[float, ...] = None,
-        values: Tuple[str, ...] = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.field = field
-        self.default_value = default_value
-        self.default_numerical_value = default_numerical_value
-        self.default_boolean_value = default_boolean_value
-        self.numerical_values = numerical_values
-        self.values = values
-        self.name = name
-
-    @property
-    def field(self) -> str:
-        """Filtered field name"""
-        return self.__field
-
-    @field.setter
-    def field(self, value: str):
-        self._property_changed('field')
-        self.__field = value        
-
-    @property
-    def default_value(self) -> str:
-        """Default filtered field"""
-        return self.__default_value
-
-    @default_value.setter
-    def default_value(self, value: str):
-        self._property_changed('default_value')
-        self.__default_value = value        
-
-    @property
-    def default_numerical_value(self) -> float:
-        """Default numerical filtered field"""
-        return self.__default_numerical_value
-
-    @default_numerical_value.setter
-    def default_numerical_value(self, value: float):
-        self._property_changed('default_numerical_value')
-        self.__default_numerical_value = value        
-
-    @property
-    def default_boolean_value(self) -> bool:
-        """Default for boolean field"""
-        return self.__default_boolean_value
-
-    @default_boolean_value.setter
-    def default_boolean_value(self, value: bool):
-        self._property_changed('default_boolean_value')
-        self.__default_boolean_value = value        
-
-    @property
-    def numerical_values(self) -> Tuple[float, ...]:
-        """Array of numerical filtered fields"""
-        return self.__numerical_values
-
-    @numerical_values.setter
-    def numerical_values(self, value: Tuple[float, ...]):
-        self._property_changed('numerical_values')
-        self.__numerical_values = value        
-
-    @property
-    def values(self) -> Tuple[str, ...]:
-        """Array of filtered fields"""
-        return self.__values
-
-    @values.setter
-    def values(self, value: Tuple[str, ...]):
-        self._property_changed('values')
-        self.__values = value        
-
-
-class MeasureBacktest(Base):
-        
-    """Describes backtests that should be associated with a measure."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        name: str = None
-    ):        
-        super().__init__()
-        self.name = name
-
-
-class MeasureKpi(Base):
-        
-    """Describes KPIs that should be associated with a measure."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        name: str = None
-    ):        
-        super().__init__()
-        self.name = name
-
-
-class MidPrice(Base):
-        
-    """Specification for a mid price column derived from bid and ask columns."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        bid_column: str = None,
-        ask_column: str = None,
-        mid_column: str = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.bid_column = bid_column
-        self.ask_column = ask_column
-        self.mid_column = mid_column
-        self.name = name
-
-    @property
-    def bid_column(self) -> str:
-        """Database column name."""
-        return self.__bid_column
-
-    @bid_column.setter
-    def bid_column(self, value: str):
-        self._property_changed('bid_column')
-        self.__bid_column = value        
-
-    @property
-    def ask_column(self) -> str:
-        """Database column name."""
-        return self.__ask_column
-
-    @ask_column.setter
-    def ask_column(self, value: str):
-        self._property_changed('ask_column')
-        self.__ask_column = value        
-
-    @property
-    def mid_column(self) -> str:
-        """Database column name."""
-        return self.__mid_column
-
-    @mid_column.setter
-    def mid_column(self, value: str):
-        self._property_changed('mid_column')
-        self.__mid_column = value        
-
-
-class ParserEntity(Base):
-        
-    """Settings for a parser processor"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        only_normalized_fields: bool = None,
-        quotes: bool = None,
-        trades: bool = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.only_normalized_fields = only_normalized_fields
-        self.quotes = quotes
-        self.trades = trades
-        self.name = name
-
-    @property
-    def only_normalized_fields(self) -> bool:
-        """Setting for onlyNormalizedFields."""
-        return self.__only_normalized_fields
-
-    @only_normalized_fields.setter
-    def only_normalized_fields(self, value: bool):
-        self._property_changed('only_normalized_fields')
-        self.__only_normalized_fields = value        
-
-    @property
-    def quotes(self) -> bool:
-        """Setting for quotes."""
-        return self.__quotes
-
-    @quotes.setter
-    def quotes(self, value: bool):
-        self._property_changed('quotes')
-        self.__quotes = value        
-
-    @property
-    def trades(self) -> bool:
-        """Setting for trades."""
-        return self.__trades
-
-    @trades.setter
-    def trades(self, value: bool):
-        self._property_changed('trades')
-        self.__trades = value        
-
-
-class RemapFieldPair(Base):
-        
-    """Field and remapTo field pair."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        field: str = None,
-        remap_to: str = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.field = field
-        self.remap_to = remap_to
-        self.name = name
-
-    @property
-    def field(self) -> str:
-        """Field to remap."""
-        return self.__field
-
-    @field.setter
-    def field(self, value: str):
-        self._property_changed('field')
-        self.__field = value        
-
-    @property
-    def remap_to(self) -> str:
-        """Field to remap to."""
-        return self.__remap_to
-
-    @remap_to.setter
-    def remap_to(self, value: str):
-        self._property_changed('remap_to')
-        self.__remap_to = value        
-
-
-class SymbolFilterLink(Base):
-        
-    """The entity type and field used to filter symbols."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        entity_field: str = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.entity_field = entity_field
-        self.name = name
-
-    @property
-    def entity_type(self) -> str:
-        """The type of the entity to lookup to."""
-        return 'MktCoordinate'        
-
-    @property
-    def entity_field(self) -> str:
-        """The field of the entity to lookup to."""
-        return self.__entity_field
-
-    @entity_field.setter
-    def entity_field(self, value: str):
-        self._property_changed('entity_field')
-        self.__entity_field = value        
-
-
-class DataFilter(Base):
-        
-    """Filter on specified field."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        field: str,
-        values: Tuple[str, ...],
-        column: str = None,
-        where: DataSetCondition = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.field = field
-        self.column = column
-        self.values = values
-        self.where = where
-        self.name = name
-
-    @property
-    def field(self) -> str:
-        """Field to filter on."""
-        return self.__field
-
-    @field.setter
-    def field(self, value: str):
-        self._property_changed('field')
-        self.__field = value        
-
-    @property
-    def column(self) -> str:
-        """Database column name."""
-        return self.__column
-
-    @column.setter
-    def column(self, value: str):
-        self._property_changed('column')
-        self.__column = value        
-
-    @property
-    def values(self) -> Tuple[str, ...]:
-        """Value(s) to match."""
-        return self.__values
-
-    @values.setter
-    def values(self, value: Tuple[str, ...]):
-        self._property_changed('values')
-        self.__values = value        
-
-    @property
-    def where(self) -> DataSetCondition:
-        """Only apply the filter where this condition matches."""
-        return self.__where
-
-    @where.setter
-    def where(self, value: DataSetCondition):
-        self._property_changed('where')
-        self.__where = value        
+    def data(self) -> Tuple[FieldValueMap, ...]:
+        """Array of grouped data objects"""
+        return self.__data
+
+    @data.setter
+    def data(self, value: Tuple[FieldValueMap, ...]):
+        self._property_changed('data')
+        self.__data = value        
 
 
 class DataQuery(Base):
@@ -20095,6 +21822,8 @@ class DataQuery(Base):
         page: int = None,
         page_size: int = None,
         end_time: datetime.datetime = None,
+        relative_start_date: str = None,
+        relative_end_date: str = None,
         as_of_time: datetime.datetime = None,
         id_as_of_date: datetime.date = None,
         use_temporal_x_ref: bool = False,
@@ -20129,6 +21858,8 @@ class DataQuery(Base):
         self.page = page
         self.page_size = page_size
         self.end_time = end_time
+        self.relative_start_date = relative_start_date
+        self.relative_end_date = relative_end_date
         self.as_of_time = as_of_time
         self.id_as_of_date = id_as_of_date
         self.use_temporal_x_ref = use_temporal_x_ref
@@ -20259,6 +21990,28 @@ class DataQuery(Base):
     def end_time(self, value: datetime.datetime):
         self._property_changed('end_time')
         self.__end_time = value        
+
+    @property
+    def relative_start_date(self) -> str:
+        """Number of days, weeks, months or years relative from today.  Max input number is
+           99."""
+        return self.__relative_start_date
+
+    @relative_start_date.setter
+    def relative_start_date(self, value: str):
+        self._property_changed('relative_start_date')
+        self.__relative_start_date = value        
+
+    @property
+    def relative_end_date(self) -> str:
+        """Number of days, weeks, months or years relative from today.  Max input number is
+           99."""
+        return self.__relative_end_date
+
+    @relative_end_date.setter
+    def relative_end_date(self, value: str):
+        self._property_changed('relative_end_date')
+        self.__relative_end_date = value        
 
     @property
     def as_of_time(self) -> datetime.datetime:
@@ -20470,865 +22223,6 @@ class DataQuery(Base):
         self.__remap_schema_to_alias = value        
 
 
-class DataQueryResponse(Base):
-        
-    @camel_case_translate
-    def __init__(
-        self,
-        type_: str,
-        request_id: str = None,
-        error_message: str = None,
-        id_: str = None,
-        total_pages: int = None,
-        data_set_id: str = None,
-        entity_type: Union[MeasureEntityType, str] = None,
-        delay: int = None,
-        data: Tuple[FieldValueMap, ...] = None,
-        groups: Tuple[DataGroup, ...] = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.request_id = request_id
-        self.__type = type_
-        self.error_message = error_message
-        self.__id = id_
-        self.total_pages = total_pages
-        self.data_set_id = data_set_id
-        self.entity_type = entity_type
-        self.delay = delay
-        self.data = data
-        self.groups = groups
-        self.name = name
-
-    @property
-    def request_id(self) -> str:
-        """Marquee unique identifier"""
-        return self.__request_id
-
-    @request_id.setter
-    def request_id(self, value: str):
-        self._property_changed('request_id')
-        self.__request_id = value        
-
-    @property
-    def type(self) -> str:
-        return self.__type
-
-    @type.setter
-    def type(self, value: str):
-        self._property_changed('type')
-        self.__type = value        
-
-    @property
-    def error_message(self) -> str:
-        return self.__error_message
-
-    @error_message.setter
-    def error_message(self, value: str):
-        self._property_changed('error_message')
-        self.__error_message = value        
-
-    @property
-    def id(self) -> str:
-        """Marquee unique identifier"""
-        return self.__id
-
-    @id.setter
-    def id(self, value: str):
-        self._property_changed('id')
-        self.__id = value        
-
-    @property
-    def total_pages(self) -> int:
-        """Number of total symbol pages"""
-        return self.__total_pages
-
-    @total_pages.setter
-    def total_pages(self, value: int):
-        self._property_changed('total_pages')
-        self.__total_pages = value        
-
-    @property
-    def data_set_id(self) -> str:
-        """Unique id of dataset."""
-        return self.__data_set_id
-
-    @data_set_id.setter
-    def data_set_id(self, value: str):
-        self._property_changed('data_set_id')
-        self.__data_set_id = value        
-
-    @property
-    def entity_type(self) -> Union[MeasureEntityType, str]:
-        """Entity type associated with a measure."""
-        return self.__entity_type
-
-    @entity_type.setter
-    def entity_type(self, value: Union[MeasureEntityType, str]):
-        self._property_changed('entity_type')
-        self.__entity_type = get_enum_value(MeasureEntityType, value)        
-
-    @property
-    def delay(self) -> int:
-        return self.__delay
-
-    @delay.setter
-    def delay(self, value: int):
-        self._property_changed('delay')
-        self.__delay = value        
-
-    @property
-    def data(self) -> Tuple[FieldValueMap, ...]:
-        """Array of data elements from dataset"""
-        return self.__data
-
-    @data.setter
-    def data(self, value: Tuple[FieldValueMap, ...]):
-        self._property_changed('data')
-        self.__data = value        
-
-    @property
-    def groups(self) -> Tuple[DataGroup, ...]:
-        """If the data is requested in grouped mode, will return data group object"""
-        return self.__groups
-
-    @groups.setter
-    def groups(self, value: Tuple[DataGroup, ...]):
-        self._property_changed('groups')
-        self.__groups = value        
-
-
-class DataSetDelay(Base):
-        
-    """Specifies the delayed data properties."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        until_seconds: float,
-        at_time_zone: str,
-        when: Tuple[Union[DelayExclusionType, str], ...] = None,
-        history_up_to_seconds: float = None,
-        history_up_to_time: datetime.datetime = None,
-        history_up_to_months: float = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.until_seconds = until_seconds
-        self.at_time_zone = at_time_zone
-        self.when = when
-        self.history_up_to_seconds = history_up_to_seconds
-        self.history_up_to_time = history_up_to_time
-        self.history_up_to_months = history_up_to_months
-        self.name = name
-
-    @property
-    def until_seconds(self) -> float:
-        """Seconds from midnight until which the delay will be applicable."""
-        return self.__until_seconds
-
-    @until_seconds.setter
-    def until_seconds(self, value: float):
-        self._property_changed('until_seconds')
-        self.__until_seconds = value        
-
-    @property
-    def at_time_zone(self) -> str:
-        """The time zone with respect to which the delay will be applied (must be a valid
-           IANA TimeZone identifier)."""
-        return self.__at_time_zone
-
-    @at_time_zone.setter
-    def at_time_zone(self, value: str):
-        self._property_changed('at_time_zone')
-        self.__at_time_zone = value        
-
-    @property
-    def when(self) -> Tuple[Union[DelayExclusionType, str], ...]:
-        """Apply this delay filter only when the day belongs to this exclusion list."""
-        return self.__when
-
-    @when.setter
-    def when(self, value: Tuple[Union[DelayExclusionType, str], ...]):
-        self._property_changed('when')
-        self.__when = value        
-
-    @property
-    def history_up_to_seconds(self) -> float:
-        """Relative seconds up to which the data history will be shown for the business
-           day."""
-        return self.__history_up_to_seconds
-
-    @history_up_to_seconds.setter
-    def history_up_to_seconds(self, value: float):
-        self._property_changed('history_up_to_seconds')
-        self.__history_up_to_seconds = value        
-
-    @property
-    def history_up_to_time(self) -> datetime.datetime:
-        """Absolute time up to which the data history will be shown for the business day."""
-        return self.__history_up_to_time
-
-    @history_up_to_time.setter
-    def history_up_to_time(self, value: datetime.datetime):
-        self._property_changed('history_up_to_time')
-        self.__history_up_to_time = value        
-
-    @property
-    def history_up_to_months(self) -> float:
-        """Months time up to which the data history will be shown for the business day."""
-        return self.__history_up_to_months
-
-    @history_up_to_months.setter
-    def history_up_to_months(self, value: float):
-        self._property_changed('history_up_to_months')
-        self.__history_up_to_months = value        
-
-
-class DataSetTransforms(Base):
-        
-    """Dataset transformation specifiers."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        redact_columns: Tuple[str, ...] = None,
-        round_columns: Tuple[str, ...] = None,
-        remap_fields: Tuple[RemapFieldPair, ...] = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.redact_columns = redact_columns
-        self.round_columns = round_columns
-        self.remap_fields = remap_fields
-        self.name = name
-
-    @property
-    def redact_columns(self) -> Tuple[str, ...]:
-        """Redact (exclude) a list of database columns."""
-        return self.__redact_columns
-
-    @redact_columns.setter
-    def redact_columns(self, value: Tuple[str, ...]):
-        self._property_changed('redact_columns')
-        self.__redact_columns = value        
-
-    @property
-    def round_columns(self) -> Tuple[str, ...]:
-        """Rounds list of database columns."""
-        return self.__round_columns
-
-    @round_columns.setter
-    def round_columns(self, value: Tuple[str, ...]):
-        self._property_changed('round_columns')
-        self.__round_columns = value        
-
-    @property
-    def remap_fields(self) -> Tuple[RemapFieldPair, ...]:
-        """Remaps a list of output fields to a different list of fields."""
-        return self.__remap_fields
-
-    @remap_fields.setter
-    def remap_fields(self, value: Tuple[RemapFieldPair, ...]):
-        self._property_changed('remap_fields')
-        self.__remap_fields = value        
-
-
-class DeleteCoverageQuery(Base):
-        
-    @camel_case_translate
-    def __init__(
-        self,
-        where: FieldFilterMapDataQuery = None,
-        delete_all: bool = False,
-        name: str = None
-    ):        
-        super().__init__()
-        self.where = where
-        self.delete_all = delete_all
-        self.name = name
-
-    @property
-    def where(self) -> FieldFilterMapDataQuery:
-        """Filters on data fields."""
-        return self.__where
-
-    @where.setter
-    def where(self, value: FieldFilterMapDataQuery):
-        self._property_changed('where')
-        self.__where = value        
-
-    @property
-    def delete_all(self) -> bool:
-        return self.__delete_all
-
-    @delete_all.setter
-    def delete_all(self, value: bool):
-        self._property_changed('delete_all')
-        self.__delete_all = value        
-
-
-class FieldLink(Base):
-        
-    """Link the dataset field to an entity to also fetch its fields. It has two
-       mutually exclusive modes of operation: prefixing or explicit inclusion
-       entity fields."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        entity_identifier: str = None,
-        prefix: str = None,
-        additional_entity_fields: Tuple[FieldLinkSelector, ...] = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.entity_identifier = entity_identifier
-        self.prefix = prefix
-        self.additional_entity_fields = additional_entity_fields
-        self.name = name
-
-    @property
-    def entity_type(self) -> str:
-        """The type of the entity to lookup to."""
-        return 'Asset'        
-
-    @property
-    def entity_identifier(self) -> str:
-        """The identifier of the entity to link the dataset field to."""
-        return self.__entity_identifier
-
-    @entity_identifier.setter
-    def entity_identifier(self, value: str):
-        self._property_changed('entity_identifier')
-        self.__entity_identifier = value        
-
-    @property
-    def prefix(self) -> str:
-        """Prefix to put before the fields fetched from the linked entity (must be unique
-           for each dataset field). Prefix cannot be applied with
-           additionalEntityFields."""
-        return self.__prefix
-
-    @prefix.setter
-    def prefix(self, value: str):
-        self._property_changed('prefix')
-        self.__prefix = value        
-
-    @property
-    def additional_entity_fields(self) -> Tuple[FieldLinkSelector, ...]:
-        """List of fields from the linked entity to include. It cannot be applied with
-           prefix"""
-        return self.__additional_entity_fields
-
-    @additional_entity_fields.setter
-    def additional_entity_fields(self, value: Tuple[FieldLinkSelector, ...]):
-        self._property_changed('additional_entity_fields')
-        self.__additional_entity_fields = value        
-
-
-class MarketDataMapping(Base):
-        
-    @camel_case_translate
-    def __init__(
-        self,
-        asset_class: Union[AssetClass, str] = None,
-        query_type: str = None,
-        description: str = None,
-        scale: float = None,
-        frequency: Union[MarketDataFrequency, str] = None,
-        measures: Tuple[Union[MarketDataMeasure, str], ...] = None,
-        data_set: str = None,
-        vendor: Union[MarketDataVendor, str] = None,
-        fields: Tuple[MarketDataField, ...] = None,
-        rank: float = None,
-        filtered_fields: Tuple[MarketDataFilteredField, ...] = None,
-        asset_types: Tuple[Union[AssetType, str], ...] = None,
-        entity_type: Union[MeasureEntityType, str] = None,
-        backtest_entity: MeasureBacktest = None,
-        kpi_entity: MeasureKpi = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.asset_class = asset_class
-        self.query_type = query_type
-        self.description = description
-        self.scale = scale
-        self.frequency = frequency
-        self.measures = measures
-        self.data_set = data_set
-        self.vendor = vendor
-        self.fields = fields
-        self.rank = rank
-        self.filtered_fields = filtered_fields
-        self.asset_types = asset_types
-        self.entity_type = entity_type
-        self.backtest_entity = backtest_entity
-        self.kpi_entity = kpi_entity
-        self.name = name
-
-    @property
-    def asset_class(self) -> Union[AssetClass, str]:
-        """Asset class that is applicable for mapping."""
-        return self.__asset_class
-
-    @asset_class.setter
-    def asset_class(self, value: Union[AssetClass, str]):
-        self._property_changed('asset_class')
-        self.__asset_class = get_enum_value(AssetClass, value)        
-
-    @property
-    def query_type(self) -> str:
-        """Market data query type."""
-        return self.__query_type
-
-    @query_type.setter
-    def query_type(self, value: str):
-        self._property_changed('query_type')
-        self.__query_type = value        
-
-    @property
-    def description(self) -> str:
-        """Query type description"""
-        return self.__description
-
-    @description.setter
-    def description(self, value: str):
-        self._property_changed('description')
-        self.__description = value        
-
-    @property
-    def scale(self) -> float:
-        """Scale multiplier for time series"""
-        return self.__scale
-
-    @scale.setter
-    def scale(self, value: float):
-        self._property_changed('scale')
-        self.__scale = value        
-
-    @property
-    def frequency(self) -> Union[MarketDataFrequency, str]:
-        return self.__frequency
-
-    @frequency.setter
-    def frequency(self, value: Union[MarketDataFrequency, str]):
-        self._property_changed('frequency')
-        self.__frequency = get_enum_value(MarketDataFrequency, value)        
-
-    @property
-    def measures(self) -> Tuple[Union[MarketDataMeasure, str], ...]:
-        return self.__measures
-
-    @measures.setter
-    def measures(self, value: Tuple[Union[MarketDataMeasure, str], ...]):
-        self._property_changed('measures')
-        self.__measures = value        
-
-    @property
-    def data_set(self) -> str:
-        """Marquee unique identifier"""
-        return self.__data_set
-
-    @data_set.setter
-    def data_set(self, value: str):
-        self._property_changed('data_set')
-        self.__data_set = value        
-
-    @property
-    def vendor(self) -> Union[MarketDataVendor, str]:
-        return self.__vendor
-
-    @vendor.setter
-    def vendor(self, value: Union[MarketDataVendor, str]):
-        self._property_changed('vendor')
-        self.__vendor = get_enum_value(MarketDataVendor, value)        
-
-    @property
-    def fields(self) -> Tuple[MarketDataField, ...]:
-        return self.__fields
-
-    @fields.setter
-    def fields(self, value: Tuple[MarketDataField, ...]):
-        self._property_changed('fields')
-        self.__fields = value        
-
-    @property
-    def rank(self) -> float:
-        return self.__rank
-
-    @rank.setter
-    def rank(self, value: float):
-        self._property_changed('rank')
-        self.__rank = value        
-
-    @property
-    def filtered_fields(self) -> Tuple[MarketDataFilteredField, ...]:
-        return self.__filtered_fields
-
-    @filtered_fields.setter
-    def filtered_fields(self, value: Tuple[MarketDataFilteredField, ...]):
-        self._property_changed('filtered_fields')
-        self.__filtered_fields = value        
-
-    @property
-    def asset_types(self) -> Tuple[Union[AssetType, str], ...]:
-        """Asset type differentiates the product categorization or contract type"""
-        return self.__asset_types
-
-    @asset_types.setter
-    def asset_types(self, value: Tuple[Union[AssetType, str], ...]):
-        self._property_changed('asset_types')
-        self.__asset_types = value        
-
-    @property
-    def entity_type(self) -> Union[MeasureEntityType, str]:
-        """Entity type associated with a measure."""
-        return self.__entity_type
-
-    @entity_type.setter
-    def entity_type(self, value: Union[MeasureEntityType, str]):
-        self._property_changed('entity_type')
-        self.__entity_type = get_enum_value(MeasureEntityType, value)        
-
-    @property
-    def backtest_entity(self) -> MeasureBacktest:
-        """Describes backtests that should be associated with a measure."""
-        return self.__backtest_entity
-
-    @backtest_entity.setter
-    def backtest_entity(self, value: MeasureBacktest):
-        self._property_changed('backtest_entity')
-        self.__backtest_entity = value        
-
-    @property
-    def kpi_entity(self) -> MeasureKpi:
-        """Describes KPIs that should be associated with a measure."""
-        return self.__kpi_entity
-
-    @kpi_entity.setter
-    def kpi_entity(self, value: MeasureKpi):
-        self._property_changed('kpi_entity')
-        self.__kpi_entity = value        
-
-
-class ProcessorEntity(Base):
-        
-    """Query processors for dataset."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        filters: Tuple[str, ...] = None,
-        parsers: Tuple[ParserEntity, ...] = None,
-        deduplicate: Tuple[str, ...] = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.filters = filters
-        self.parsers = parsers
-        self.deduplicate = deduplicate
-        self.name = name
-
-    @property
-    def filters(self) -> Tuple[str, ...]:
-        """List of filter processors."""
-        return self.__filters
-
-    @filters.setter
-    def filters(self, value: Tuple[str, ...]):
-        self._property_changed('filters')
-        self.__filters = value        
-
-    @property
-    def parsers(self) -> Tuple[ParserEntity, ...]:
-        """List of parser processors."""
-        return self.__parsers
-
-    @parsers.setter
-    def parsers(self, value: Tuple[ParserEntity, ...]):
-        self._property_changed('parsers')
-        self.__parsers = value        
-
-    @property
-    def deduplicate(self) -> Tuple[str, ...]:
-        """Columns on which a deduplication processor should be run."""
-        return self.__deduplicate
-
-    @deduplicate.setter
-    def deduplicate(self, value: Tuple[str, ...]):
-        self._property_changed('deduplicate')
-        self.__deduplicate = value        
-
-
-class SymbolFilterDimension(Base):
-        
-    """Map the dataset field with an entity for filtering arctic symbols."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        field: str = None,
-        field_description: str = None,
-        symbol_filter_link: SymbolFilterLink = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.field = field
-        self.field_description = field_description
-        self.symbol_filter_link = symbol_filter_link
-        self.name = name
-
-    @property
-    def field(self) -> str:
-        """Field name."""
-        return self.__field
-
-    @field.setter
-    def field(self, value: str):
-        self._property_changed('field')
-        self.__field = value        
-
-    @property
-    def field_description(self) -> str:
-        """Custom description (overrides field default)."""
-        return self.__field_description
-
-    @field_description.setter
-    def field_description(self, value: str):
-        self._property_changed('field_description')
-        self.__field_description = value        
-
-    @property
-    def symbol_filter_link(self) -> SymbolFilterLink:
-        """The entity type and field used to filter symbols."""
-        return self.__symbol_filter_link
-
-    @symbol_filter_link.setter
-    def symbol_filter_link(self, value: SymbolFilterLink):
-        self._property_changed('symbol_filter_link')
-        self.__symbol_filter_link = value        
-
-
-class ComplexFilter(Base):
-        
-    """A compound filter for data requests."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        operator: str,
-        simple_filters: Tuple[DataFilter, ...],
-        name: str = None
-    ):        
-        super().__init__()
-        self.operator = operator
-        self.simple_filters = simple_filters
-        self.name = name
-
-    @property
-    def operator(self) -> str:
-        return self.__operator
-
-    @operator.setter
-    def operator(self, value: str):
-        self._property_changed('operator')
-        self.__operator = value        
-
-    @property
-    def simple_filters(self) -> Tuple[DataFilter, ...]:
-        """Filter on specified field."""
-        return self.__simple_filters
-
-    @simple_filters.setter
-    def simple_filters(self, value: Tuple[DataFilter, ...]):
-        self._property_changed('simple_filters')
-        self.__simple_filters = value        
-
-
-class DataSetTransformation(Base):
-        
-    """Transform the Dataset output. Can be used with or without certain conditions."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        transforms: DataSetTransforms,
-        condition: DataSetCondition = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.condition = condition
-        self.transforms = transforms
-        self.name = name
-
-    @property
-    def condition(self) -> DataSetCondition:
-        """Condition to match before applying the transformations."""
-        return self.__condition
-
-    @condition.setter
-    def condition(self, value: DataSetCondition):
-        self._property_changed('condition')
-        self.__condition = value        
-
-    @property
-    def transforms(self) -> DataSetTransforms:
-        """Series of transformation actions to perform."""
-        return self.__transforms
-
-    @transforms.setter
-    def transforms(self, value: DataSetTransforms):
-        self._property_changed('transforms')
-        self.__transforms = value        
-
-
-class FieldColumnPair(Base):
-        
-    """Map from fields to database columns."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        field: str = None,
-        column: str = None,
-        field_description: str = None,
-        link: FieldLink = None,
-        aliases: Tuple[str, ...] = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.field = field
-        self.column = column
-        self.field_description = field_description
-        self.link = link
-        self.aliases = aliases
-        self.name = name
-
-    @property
-    def field(self) -> str:
-        """Field name."""
-        return self.__field
-
-    @field.setter
-    def field(self, value: str):
-        self._property_changed('field')
-        self.__field = value        
-
-    @property
-    def column(self) -> str:
-        """Database column name."""
-        return self.__column
-
-    @column.setter
-    def column(self, value: str):
-        self._property_changed('column')
-        self.__column = value        
-
-    @property
-    def field_description(self) -> str:
-        """Custom description (overrides field default)."""
-        return self.__field_description
-
-    @field_description.setter
-    def field_description(self, value: str):
-        self._property_changed('field_description')
-        self.__field_description = value        
-
-    @property
-    def link(self) -> FieldLink:
-        """Link the field with other entity to also fetch its fields."""
-        return self.__link
-
-    @link.setter
-    def link(self, value: FieldLink):
-        self._property_changed('link')
-        self.__link = value        
-
-    @property
-    def aliases(self) -> Tuple[str, ...]:
-        """Set of alias fields that can be used to refer to the current field when
-           querying."""
-        return self.__aliases
-
-    @aliases.setter
-    def aliases(self, value: Tuple[str, ...]):
-        self._property_changed('aliases')
-        self.__aliases = value        
-
-
-class HistoryFilter(Base):
-        
-    """Restricts queries against dataset to a time range."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        absolute_start: datetime.datetime = None,
-        absolute_end: datetime.datetime = None,
-        relative_start_seconds: float = None,
-        relative_end_seconds: float = None,
-        delay: dict = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.absolute_start = absolute_start
-        self.absolute_end = absolute_end
-        self.relative_start_seconds = relative_start_seconds
-        self.relative_end_seconds = relative_end_seconds
-        self.delay = delay
-        self.name = name
-
-    @property
-    def absolute_start(self) -> datetime.datetime:
-        """ISO 8601-formatted timestamp"""
-        return self.__absolute_start
-
-    @absolute_start.setter
-    def absolute_start(self, value: datetime.datetime):
-        self._property_changed('absolute_start')
-        self.__absolute_start = value        
-
-    @property
-    def absolute_end(self) -> datetime.datetime:
-        """ISO 8601-formatted timestamp"""
-        return self.__absolute_end
-
-    @absolute_end.setter
-    def absolute_end(self, value: datetime.datetime):
-        self._property_changed('absolute_end')
-        self.__absolute_end = value        
-
-    @property
-    def relative_start_seconds(self) -> float:
-        """Earliest start time in seconds before current time."""
-        return self.__relative_start_seconds
-
-    @relative_start_seconds.setter
-    def relative_start_seconds(self, value: float):
-        self._property_changed('relative_start_seconds')
-        self.__relative_start_seconds = value        
-
-    @property
-    def relative_end_seconds(self) -> float:
-        """Latest end time in seconds before current time."""
-        return self.__relative_end_seconds
-
-    @relative_end_seconds.setter
-    def relative_end_seconds(self, value: float):
-        self._property_changed('relative_end_seconds')
-        self.__relative_end_seconds = value        
-
-    @property
-    def delay(self) -> dict:
-        return self.__delay
-
-    @delay.setter
-    def delay(self, value: dict):
-        self._property_changed('delay')
-        self.__delay = value        
-
-
 class DataSetDimensions(Base):
         
     """Dataset dimensions."""
@@ -21475,6 +22369,40 @@ class DataSetDimensions(Base):
         self.__entity_dimension = value        
 
 
+class DeleteCoverageQuery(Base):
+        
+    @camel_case_translate
+    def __init__(
+        self,
+        where: FieldFilterMapDataQuery = None,
+        delete_all: bool = False,
+        name: str = None
+    ):        
+        super().__init__()
+        self.where = where
+        self.delete_all = delete_all
+        self.name = name
+
+    @property
+    def where(self) -> FieldFilterMapDataQuery:
+        """Filters on data fields."""
+        return self.__where
+
+    @where.setter
+    def where(self, value: FieldFilterMapDataQuery):
+        self._property_changed('where')
+        self.__where = value        
+
+    @property
+    def delete_all(self) -> bool:
+        return self.__delete_all
+
+    @delete_all.setter
+    def delete_all(self, value: bool):
+        self._property_changed('delete_all')
+        self.__delete_all = value        
+
+
 class EntityFilter(Base):
         
     """Filter on entities."""
@@ -21521,6 +22449,134 @@ class EntityFilter(Base):
     def complex_filters(self, value: Tuple[ComplexFilter, ...]):
         self._property_changed('complex_filters')
         self.__complex_filters = value        
+
+
+class DataQueryResponse(Base):
+        
+    @camel_case_translate
+    def __init__(
+        self,
+        type_: str,
+        request_id: str = None,
+        error_message: str = None,
+        id_: str = None,
+        total_pages: int = None,
+        data_set_id: str = None,
+        entity_type: Union[MeasureEntityType, str] = None,
+        delay: int = None,
+        data: Tuple[FieldValueMap, ...] = None,
+        groups: Tuple[DataGroup, ...] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.request_id = request_id
+        self.__type = type_
+        self.error_message = error_message
+        self.__id = id_
+        self.total_pages = total_pages
+        self.data_set_id = data_set_id
+        self.entity_type = entity_type
+        self.delay = delay
+        self.data = data
+        self.groups = groups
+        self.name = name
+
+    @property
+    def request_id(self) -> str:
+        """Marquee unique identifier"""
+        return self.__request_id
+
+    @request_id.setter
+    def request_id(self, value: str):
+        self._property_changed('request_id')
+        self.__request_id = value        
+
+    @property
+    def type(self) -> str:
+        return self.__type
+
+    @type.setter
+    def type(self, value: str):
+        self._property_changed('type')
+        self.__type = value        
+
+    @property
+    def error_message(self) -> str:
+        return self.__error_message
+
+    @error_message.setter
+    def error_message(self, value: str):
+        self._property_changed('error_message')
+        self.__error_message = value        
+
+    @property
+    def id(self) -> str:
+        """Marquee unique identifier"""
+        return self.__id
+
+    @id.setter
+    def id(self, value: str):
+        self._property_changed('id')
+        self.__id = value        
+
+    @property
+    def total_pages(self) -> int:
+        """Number of total symbol pages"""
+        return self.__total_pages
+
+    @total_pages.setter
+    def total_pages(self, value: int):
+        self._property_changed('total_pages')
+        self.__total_pages = value        
+
+    @property
+    def data_set_id(self) -> str:
+        """Unique id of dataset."""
+        return self.__data_set_id
+
+    @data_set_id.setter
+    def data_set_id(self, value: str):
+        self._property_changed('data_set_id')
+        self.__data_set_id = value        
+
+    @property
+    def entity_type(self) -> Union[MeasureEntityType, str]:
+        """Entity type associated with a measure."""
+        return self.__entity_type
+
+    @entity_type.setter
+    def entity_type(self, value: Union[MeasureEntityType, str]):
+        self._property_changed('entity_type')
+        self.__entity_type = get_enum_value(MeasureEntityType, value)        
+
+    @property
+    def delay(self) -> int:
+        return self.__delay
+
+    @delay.setter
+    def delay(self, value: int):
+        self._property_changed('delay')
+        self.__delay = value        
+
+    @property
+    def data(self) -> Tuple[FieldValueMap, ...]:
+        """Array of data elements from dataset"""
+        return self.__data
+
+    @data.setter
+    def data(self, value: Tuple[FieldValueMap, ...]):
+        self._property_changed('data')
+        self.__data = value        
+
+    @property
+    def groups(self) -> Tuple[DataGroup, ...]:
+        """If the data is requested in grouped mode, will return data group object"""
+        return self.__groups
+
+    @groups.setter
+    def groups(self, value: Tuple[DataGroup, ...]):
+        self._property_changed('groups')
+        self.__groups = value        
 
 
 class DataSetFilters(Base):

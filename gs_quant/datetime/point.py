@@ -17,6 +17,8 @@ import datetime as dt
 import re
 import string
 
+from gs_quant.errors import MqValueError
+
 ConstPoints = {
     "O/N": 0,
     "T/N": 0.1,
@@ -107,10 +109,10 @@ def relative_date_add(date_rule: str, strict: bool = False) -> float:
             d = float(days)
             return d
         else:
-            raise ValueError('There are no valid day rule for the point provided.')
+            raise MqValueError('There are no valid day rule for the point provided.')
 
     if strict:
-        raise ValueError(f'invalid date rule {date_rule}')
+        raise MqValueError(f'invalid date rule {date_rule}')
     return 0
 
 

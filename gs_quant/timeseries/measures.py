@@ -1989,14 +1989,16 @@ def _forward_price_natgas(asset: Asset, price_method: str = 'GDD',
                                               where=where,
                                               source=None,
                                               real_time=False)
+        _logger.debug('q %s', q)
         data = _market_data_timed(q)
         dataset_ids = getattr(data, 'dataset_ids', ())
 
+    if data.empty:
+        result = ExtendedSeries(dtype='float64')
+    else:
         data['dates'] = data.index.date
-        print('q %s', q)
-
-    keys = ['contract', 'dates']
-    result = _merge_curves_by_weighted_average(data, weights, keys, "forwardPrice")
+        keys = ['contract', 'dates']
+        result = _merge_curves_by_weighted_average(data, weights, keys, "forwardPrice")
     result.dataset_ids = dataset_ids
     return result
 
@@ -2028,15 +2030,17 @@ def _forward_price_elec(asset: Asset, price_method: str = 'LMP', bucket: str = '
         q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.FORWARD_PRICE,
                                               where=where, source=None,
                                               real_time=False)
+        _logger.debug('q %s', q)
         forwards_data = _market_data_timed(q)
         dataset_ids = getattr(forwards_data, 'dataset_ids', ())
 
+    if forwards_data.empty:
+        result = ExtendedSeries(dtype='float64')
+    else:
         forwards_data['dates'] = forwards_data.index.date
-        print('q %s', q)
-
-    keys = ['quantityBucket', 'contract', 'dates']
-    measure_column = 'forwardPrice'
-    result = _merge_curves_by_weighted_average(forwards_data, weights, keys, measure_column)
+        keys = ['quantityBucket', 'contract', 'dates']
+        measure_column = 'forwardPrice'
+        result = _merge_curves_by_weighted_average(forwards_data, weights, keys, measure_column)
     result.dataset_ids = dataset_ids
     return result
 
@@ -2138,35 +2142,40 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
         _logger.debug('q %s', q)
 
     dataset_ids = getattr(df, 'dataset_ids', ())
-    df = df.tz_convert(timezone)
 
-    df['month'] = df.index.to_period('M')
-    df['date'] = df.index.date
-    df['day'] = df.index.dayofweek
-    df['hour'] = df.index.hour
-    df['timestamp'] = df.index
+    if df.empty:
+        series = ExtendedSeries()
+    else:
+        df = df.tz_convert(timezone)
 
-    # This will remove any duplicate prices uploaded with the same timestamp
-    df = df.drop_duplicates()
-    # freq is the frequency at which the ISO publishes data for e.g. 15 min, 1hr
-    freq = int(min(np.diff(df.index).astype('timedelta64[s]') / np.timedelta64(1, 's')))
-    # checking missing data points
-    ref_hour_range = pd.date_range(str(start_date), str(end_date + datetime.timedelta(days=1)),
-                                   freq=str(freq) + "S", tz=timezone, closed='left')
-    missing_hours = ref_hour_range[~ref_hour_range.isin(df.index)]
-    missing_dates = np.unique(missing_hours.date)
-    missing_months = np.unique(np.array(missing_dates, dtype='M8[D]').astype('M8[M]'))
+        df['month'] = df.index.to_period('M')
+        df['date'] = df.index.date
+        df['day'] = df.index.dayofweek
+        df['hour'] = df.index.hour
+        df['timestamp'] = df.index
 
-    # drop dates and months which have missing data
-    df = df.loc[(~df['date'].isin(missing_dates))]
-    if granularity == 'M':
-        df = df.loc[(~df['month'].isin(missing_months))]
+        # This will remove any duplicate prices uploaded with the same timestamp
+        df = df.drop_duplicates()
+        # freq is the frequency at which the ISO publishes data for e.g. 15 min, 1hr
+        freq = int(min(np.diff(df.index).astype('timedelta64[s]') / np.timedelta64(1, 's')))
+        # checking missing data points
+        ref_hour_range = pd.date_range(str(start_date), str(end_date + datetime.timedelta(days=1)),
+                                       freq=str(freq) + "S", tz=timezone, closed='left')
+        missing_hours = ref_hour_range[~ref_hour_range.isin(df.index)]
+        missing_dates = np.unique(missing_hours.date)
+        missing_months = np.unique(np.array(missing_dates, dtype='M8[D]').astype('M8[M]'))
 
-    df = _filter_by_bucket(df, bucket, holidays, region)
-    df = df['price'].resample(granularity).mean()
-    df.index = df.index.date
-    df = df.loc[start_date: end_date]
-    series = ExtendedSeries(df)
+        # drop dates and months which have missing data
+        df = df.loc[(~df['date'].isin(missing_dates))]
+        if granularity == 'M':
+            df = df.loc[(~df['month'].isin(missing_months))]
+
+        df = _filter_by_bucket(df, bucket, holidays, region)
+        df = df['price'].resample(granularity).mean()
+        df.index = df.index.date
+        df = df.loc[start_date: end_date]
+        series = ExtendedSeries(df)
+
     series.dataset_ids = dataset_ids
     return series
 

@@ -16,14 +16,14 @@ under the License.
 
 from gs_quant.target.common import *
 import datetime
-from typing import Tuple, Union
+from typing import Mapping, Tuple, Union
 from enum import Enum
 from gs_quant.base import Base, EnumBase, InstrumentBase, camel_case_translate, get_enum_value
 
 
 class ComponentType(EnumBase, Enum):    
     
-    """Enum listing supported component types"""
+    """Enum listing supported component types."""
 
     article = 'article'
     assetPlot = 'assetPlot'
@@ -32,6 +32,7 @@ class ComponentType(EnumBase, Enum):
     commentary = 'commentary'
     commentaryPromo = 'commentaryPromo'
     container = 'container'
+    datagrid = 'datagrid'
     legend = 'legend'
     market = 'market'
     monitor = 'monitor'
@@ -43,6 +44,7 @@ class ComponentType(EnumBase, Enum):
     selector = 'selector'
     separator = 'separator'
     stackedBarChart = 'stackedBarChart'
+    treemap = 'treemap'
     video = 'video'
     webinar = 'webinar'
     
@@ -52,7 +54,7 @@ class ComponentType(EnumBase, Enum):
 
 class WorkspaceType(EnumBase, Enum):    
     
-    """Enum listing support workspace types"""
+    """Enum listing support workspace types."""
 
     cashboard = 'cashboard'
     multiplot = 'multiplot'
@@ -61,351 +63,9 @@ class WorkspaceType(EnumBase, Enum):
         return self.value
 
 
-class ArticleComponentParameters(Base):
-        
-    """Parameters provided for a article component"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        height: float,
-        tooltip: str = None,
-        commentary_channels: Tuple[str, ...] = None,
-        commentary_to_desktop_link: bool = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.height = height
-        self.tooltip = tooltip
-        self.commentary_channels = commentary_channels
-        self.commentary_to_desktop_link = commentary_to_desktop_link
-        self.name = name
-
-    @property
-    def height(self) -> float:
-        """Used for restricting the height in pixels of the component on a workspace"""
-        return self.__height
-
-    @height.setter
-    def height(self, value: float):
-        self._property_changed('height')
-        self.__height = value        
-
-    @property
-    def tooltip(self) -> str:
-        """Tooltip that is displayed in an info icon next to the component title."""
-        return self.__tooltip
-
-    @tooltip.setter
-    def tooltip(self, value: str):
-        self._property_changed('tooltip')
-        self.__tooltip = value        
-
-    @property
-    def commentary_channels(self) -> Tuple[str, ...]:
-        """Optional channels associated with a commentary component"""
-        return self.__commentary_channels
-
-    @commentary_channels.setter
-    def commentary_channels(self, value: Tuple[str, ...]):
-        self._property_changed('commentary_channels')
-        self.__commentary_channels = value        
-
-    @property
-    def commentary_to_desktop_link(self) -> bool:
-        """Whether or not to display a link from commentary to desktop in the header"""
-        return self.__commentary_to_desktop_link
-
-    @commentary_to_desktop_link.setter
-    def commentary_to_desktop_link(self, value: bool):
-        self._property_changed('commentary_to_desktop_link')
-        self.__commentary_to_desktop_link = value        
-
-
-class AssetPlotComponentParameters(Base):
-        
-    """Parameters provided for a asset plot component"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        height: float,
-        tooltip: str = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.height = height
-        self.tooltip = tooltip
-        self.name = name
-
-    @property
-    def height(self) -> float:
-        """Used for restricting the height in pixels of the component on a workspace"""
-        return self.__height
-
-    @height.setter
-    def height(self, value: float):
-        self._property_changed('height')
-        self.__height = value        
-
-    @property
-    def tooltip(self) -> str:
-        """Tooltip that is displayed in an info icon next to the component title."""
-        return self.__tooltip
-
-    @tooltip.setter
-    def tooltip(self, value: str):
-        self._property_changed('tooltip')
-        self.__tooltip = value        
-
-
-class BarChartComponentParameters(Base):
-        
-    """Parameters provided for a bar chart component"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        height: float,
-        tooltip: str = None,
-        hide_legend: bool = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.height = height
-        self.tooltip = tooltip
-        self.hide_legend = hide_legend
-        self.name = name
-
-    @property
-    def height(self) -> float:
-        """Used for restricting the height in pixels of the component on a workspace"""
-        return self.__height
-
-    @height.setter
-    def height(self, value: float):
-        self._property_changed('height')
-        self.__height = value        
-
-    @property
-    def tooltip(self) -> str:
-        """Tooltip that is displayed in an info icon next to the component title."""
-        return self.__tooltip
-
-    @tooltip.setter
-    def tooltip(self, value: str):
-        self._property_changed('tooltip')
-        self.__tooltip = value        
-
-    @property
-    def hide_legend(self) -> bool:
-        """Whether to hide a chart or plot component legend"""
-        return self.__hide_legend
-
-    @hide_legend.setter
-    def hide_legend(self, value: bool):
-        self._property_changed('hide_legend')
-        self.__hide_legend = value        
-
-
-class ChartComponentParameters(Base):
-        
-    """Parameters provided for a chart component"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        height: float,
-        tooltip: str = None,
-        hide_legend: bool = None,
-        chart_name: str = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.height = height
-        self.tooltip = tooltip
-        self.hide_legend = hide_legend
-        self.chart_name = chart_name
-        self.name = name
-
-    @property
-    def height(self) -> float:
-        """Used for restricting the height in pixels of the component on a workspace"""
-        return self.__height
-
-    @height.setter
-    def height(self, value: float):
-        self._property_changed('height')
-        self.__height = value        
-
-    @property
-    def tooltip(self) -> str:
-        """Tooltip that is displayed in an info icon next to the component title."""
-        return self.__tooltip
-
-    @tooltip.setter
-    def tooltip(self, value: str):
-        self._property_changed('tooltip')
-        self.__tooltip = value        
-
-    @property
-    def hide_legend(self) -> bool:
-        """Whether to hide a chart or plot component legend"""
-        return self.__hide_legend
-
-    @hide_legend.setter
-    def hide_legend(self, value: bool):
-        self._property_changed('hide_legend')
-        self.__hide_legend = value        
-
-    @property
-    def chart_name(self) -> str:
-        """Name of the chart, only if component type is chart"""
-        return self.__chart_name
-
-    @chart_name.setter
-    def chart_name(self, value: str):
-        self._property_changed('chart_name')
-        self.__chart_name = value        
-
-
-class CommentaryComponentParameters(Base):
-        
-    """Parameters provided for a commentary component"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        height: float,
-        tooltip: str = None,
-        commentary_channels: Tuple[str, ...] = None,
-        commentary_to_desktop_link: bool = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.height = height
-        self.tooltip = tooltip
-        self.commentary_channels = commentary_channels
-        self.commentary_to_desktop_link = commentary_to_desktop_link
-        self.name = name
-
-    @property
-    def height(self) -> float:
-        """Used for restricting the height in pixels of the component on a workspace"""
-        return self.__height
-
-    @height.setter
-    def height(self, value: float):
-        self._property_changed('height')
-        self.__height = value        
-
-    @property
-    def tooltip(self) -> str:
-        """Tooltip that is displayed in an info icon next to the component title."""
-        return self.__tooltip
-
-    @tooltip.setter
-    def tooltip(self, value: str):
-        self._property_changed('tooltip')
-        self.__tooltip = value        
-
-    @property
-    def commentary_channels(self) -> Tuple[str, ...]:
-        """Optional channels associated with a commentary component"""
-        return self.__commentary_channels
-
-    @commentary_channels.setter
-    def commentary_channels(self, value: Tuple[str, ...]):
-        self._property_changed('commentary_channels')
-        self.__commentary_channels = value        
-
-    @property
-    def commentary_to_desktop_link(self) -> bool:
-        """Whether or not to display a link from commentary to desktop in the header"""
-        return self.__commentary_to_desktop_link
-
-    @commentary_to_desktop_link.setter
-    def commentary_to_desktop_link(self, value: bool):
-        self._property_changed('commentary_to_desktop_link')
-        self.__commentary_to_desktop_link = value        
-
-
-class CommentaryPromoComponentParameters(Base):
-        
-    """Parameters provided for a commentary promo component"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        height: float = None,
-        tooltip: str = None,
-        commentary_channels: Tuple[str, ...] = None,
-        transparent: bool = None,
-        body: str = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.height = height
-        self.tooltip = tooltip
-        self.commentary_channels = commentary_channels
-        self.transparent = transparent
-        self.body = body
-        self.name = name
-
-    @property
-    def height(self) -> float:
-        """Used for restricting the height in pixels of the component on a workspace"""
-        return self.__height
-
-    @height.setter
-    def height(self, value: float):
-        self._property_changed('height')
-        self.__height = value        
-
-    @property
-    def tooltip(self) -> str:
-        """Tooltip that is displayed in an info icon next to the component title."""
-        return self.__tooltip
-
-    @tooltip.setter
-    def tooltip(self, value: str):
-        self._property_changed('tooltip')
-        self.__tooltip = value        
-
-    @property
-    def commentary_channels(self) -> Tuple[str, ...]:
-        """Optional channels associated with a commentary component"""
-        return self.__commentary_channels
-
-    @commentary_channels.setter
-    def commentary_channels(self, value: Tuple[str, ...]):
-        self._property_changed('commentary_channels')
-        self.__commentary_channels = value        
-
-    @property
-    def transparent(self) -> bool:
-        """Sets the component card to have a transparent background"""
-        return self.__transparent
-
-    @transparent.setter
-    def transparent(self, value: bool):
-        self._property_changed('transparent')
-        self.__transparent = value        
-
-    @property
-    def body(self) -> str:
-        """The body of content to be injected into the promo component type."""
-        return self.__body
-
-    @body.setter
-    def body(self, value: str):
-        self._property_changed('body')
-        self.__body = value        
-
-
 class ContainerComponentParameters(Base):
         
-    """Parameters provided for a container component"""
+    """Parameters provided for a container component."""
 
     @camel_case_translate
     def __init__(
@@ -419,7 +79,7 @@ class ContainerComponentParameters(Base):
 
     @property
     def component_id(self) -> str:
-        """The id of the component, that the container should render initially."""
+        """The identifier of the component that the container will initially render."""
         return self.__component_id
 
     @component_id.setter
@@ -428,46 +88,9 @@ class ContainerComponentParameters(Base):
         self.__component_id = value        
 
 
-class DataGridComponentParameters(Base):
-        
-    """Parameters provided for a datagrid component."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        height: float,
-        tooltip: str = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.height = height
-        self.tooltip = tooltip
-        self.name = name
-
-    @property
-    def height(self) -> float:
-        """Used for restricting the height in pixels of the component on a workspace"""
-        return self.__height
-
-    @height.setter
-    def height(self, value: float):
-        self._property_changed('height')
-        self.__height = value        
-
-    @property
-    def tooltip(self) -> str:
-        """Tooltip that is displayed in an info icon next to the component title."""
-        return self.__tooltip
-
-    @tooltip.setter
-    def tooltip(self, value: str):
-        self._property_changed('tooltip')
-        self.__tooltip = value
-
-
 class LegendItem(Base):
         
-    """Parameters provided for a legend item"""
+    """Parameters provided for a legend item."""
 
     @camel_case_translate
     def __init__(
@@ -540,116 +163,18 @@ class MarketComponentParameters(Base):
 
     @property
     def height(self) -> float:
-        """Used for restricting the height in pixels of the component on a workspace"""
+        """Used for restricting the height in pixels of the component."""
         return self.__height
 
     @height.setter
     def height(self, value: float):
         self._property_changed('height')
         self.__height = value        
-
-
-class MonitorComponentParameters(Base):
-        
-    """Parameters provided for a monitor component."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        height: float,
-        tooltip: str = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.height = height
-        self.tooltip = tooltip
-        self.name = name
-
-    @property
-    def height(self) -> float:
-        """Used for restricting the height in pixels of the component on a workspace"""
-        return self.__height
-
-    @height.setter
-    def height(self, value: float):
-        self._property_changed('height')
-        self.__height = value        
-
-    @property
-    def tooltip(self) -> str:
-        """Tooltip that is displayed in an info icon next to the component title."""
-        return self.__tooltip
-
-    @tooltip.setter
-    def tooltip(self, value: str):
-        self._property_changed('tooltip')
-        self.__tooltip = value        
-
-
-class PlotComponentParameters(Base):
-        
-    """Parameters provided for a plot component"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        height: float,
-        tooltip: str = None,
-        hide_legend: bool = None,
-        plot_frequency_mode: str = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.height = height
-        self.tooltip = tooltip
-        self.hide_legend = hide_legend
-        self.plot_frequency_mode = plot_frequency_mode
-        self.name = name
-
-    @property
-    def height(self) -> float:
-        """Used for restricting the height in pixels of the component on a workspace"""
-        return self.__height
-
-    @height.setter
-    def height(self, value: float):
-        self._property_changed('height')
-        self.__height = value        
-
-    @property
-    def tooltip(self) -> str:
-        """Tooltip that is displayed in an info icon next to the component title."""
-        return self.__tooltip
-
-    @tooltip.setter
-    def tooltip(self, value: str):
-        self._property_changed('tooltip')
-        self.__tooltip = value        
-
-    @property
-    def hide_legend(self) -> bool:
-        """Whether to hide a chart or plot component legend"""
-        return self.__hide_legend
-
-    @hide_legend.setter
-    def hide_legend(self, value: bool):
-        self._property_changed('hide_legend')
-        self.__hide_legend = value        
-
-    @property
-    def plot_frequency_mode(self) -> str:
-        """For plot component types, set the plot frequency mode."""
-        return self.__plot_frequency_mode
-
-    @plot_frequency_mode.setter
-    def plot_frequency_mode(self, value: str):
-        self._property_changed('plot_frequency_mode')
-        self.__plot_frequency_mode = value        
 
 
 class PromoComponentParameters(Base):
         
-    """Parameters provided for a promo component"""
+    """Parameters provided for a promo component."""
 
     @camel_case_translate
     def __init__(
@@ -671,7 +196,7 @@ class PromoComponentParameters(Base):
 
     @property
     def height(self) -> float:
-        """Used for restricting the height in pixels of the component on a workspace"""
+        """Used for restricting the height in pixels of the component."""
         return self.__height
 
     @height.setter
@@ -681,7 +206,7 @@ class PromoComponentParameters(Base):
 
     @property
     def transparent(self) -> bool:
-        """Sets the component card to have a transparent background"""
+        """Sets the component card to have a transparent background."""
         return self.__transparent
 
     @transparent.setter
@@ -720,46 +245,9 @@ class PromoComponentParameters(Base):
         self.__hide_border = value        
 
 
-class RatesComponentParameters(Base):
-        
-    """Parameters provided for a rates component"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        height: float,
-        tooltip: str = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.height = height
-        self.tooltip = tooltip
-        self.name = name
-
-    @property
-    def height(self) -> float:
-        """Used for restricting the height in pixels of the component on a workspace"""
-        return self.__height
-
-    @height.setter
-    def height(self, value: float):
-        self._property_changed('height')
-        self.__height = value        
-
-    @property
-    def tooltip(self) -> str:
-        """Tooltip that is displayed in an info icon next to the component title."""
-        return self.__tooltip
-
-    @tooltip.setter
-    def tooltip(self, value: str):
-        self._property_changed('tooltip')
-        self.__tooltip = value        
-
-
 class RelatedLink(Base):
         
-    """Parameters provided for a related link"""
+    """Parameters provided for a related link."""
 
     @camel_case_translate
     def __init__(
@@ -777,7 +265,7 @@ class RelatedLink(Base):
 
     @property
     def type(self) -> str:
-        """Type of related link eg. internal or external"""
+        """Type of related link eg. internal or external."""
         return self.__type
 
     @type.setter
@@ -816,119 +304,9 @@ class RelatedLink(Base):
         self.__link = value        
 
 
-class ResearchComponentParameters(Base):
-        
-    """Parameters provided for a research component"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        height: float,
-        tooltip: str = None,
-        commentary_channels: Tuple[str, ...] = None,
-        commentary_to_desktop_link: bool = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.height = height
-        self.tooltip = tooltip
-        self.commentary_channels = commentary_channels
-        self.commentary_to_desktop_link = commentary_to_desktop_link
-        self.name = name
-
-    @property
-    def height(self) -> float:
-        """Used for restricting the height in pixels of the component on a workspace"""
-        return self.__height
-
-    @height.setter
-    def height(self, value: float):
-        self._property_changed('height')
-        self.__height = value        
-
-    @property
-    def tooltip(self) -> str:
-        """Tooltip that is displayed in an info icon next to the component title."""
-        return self.__tooltip
-
-    @tooltip.setter
-    def tooltip(self, value: str):
-        self._property_changed('tooltip')
-        self.__tooltip = value        
-
-    @property
-    def commentary_channels(self) -> Tuple[str, ...]:
-        """Optional channels associated with a commentary component"""
-        return self.__commentary_channels
-
-    @commentary_channels.setter
-    def commentary_channels(self, value: Tuple[str, ...]):
-        self._property_changed('commentary_channels')
-        self.__commentary_channels = value        
-
-    @property
-    def commentary_to_desktop_link(self) -> bool:
-        """Whether or not to display a link from commentary to desktop in the header"""
-        return self.__commentary_to_desktop_link
-
-    @commentary_to_desktop_link.setter
-    def commentary_to_desktop_link(self, value: bool):
-        self._property_changed('commentary_to_desktop_link')
-        self.__commentary_to_desktop_link = value        
-
-
-class SelectorComponentOption(Base):
-        
-    """A selector component option."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        id_: str,
-        name: str,
-        tags: Tuple[str, ...]
-    ):        
-        super().__init__()
-        self.__id = id_
-        self.name = name
-        self.tags = tags
-
-    @property
-    def id(self) -> str:
-        """A unique id of the selector option."""
-        return self.__id
-
-    @id.setter
-    def id(self, value: str):
-        self._property_changed('id')
-        self.__id = value        
-
-    @property
-    def name(self) -> str:
-        """Name of the option in the dropdown. This will be the text displayed in the
-           dropdown."""
-        return self.__name
-
-    @name.setter
-    def name(self, value: str):
-        self._property_changed('name')
-        self.__name = value        
-
-    @property
-    def tags(self) -> Tuple[str, ...]:
-        """An array of component tags for this selector option. This should match in length
-           the selector component containerIds length."""
-        return self.__tags
-
-    @tags.setter
-    def tags(self, value: Tuple[str, ...]):
-        self._property_changed('tags')
-        self.__tags = value        
-
-
 class SeparatorComponentParameters(Base):
         
-    """Parameters provided for a separator component"""
+    """Parameters provided for a separator component."""
 
     @camel_case_translate
     def __init__(
@@ -946,7 +324,7 @@ class SeparatorComponentParameters(Base):
 
     @property
     def height(self) -> float:
-        """Used for restricting the height in pixels of the component on a workspace"""
+        """Used for restricting the height in pixels of the component."""
         return self.__height
 
     @height.setter
@@ -956,7 +334,7 @@ class SeparatorComponentParameters(Base):
 
     @property
     def name(self) -> str:
-        """Name of the component. For example a separator name"""
+        """Name of the component. For example a separator name."""
         return self.__name
 
     @name.setter
@@ -1031,7 +409,7 @@ class VideoComponentParameters(Base):
 
     @property
     def height(self) -> float:
-        """Used for restricting the height in pixels of the component on a workspace."""
+        """Used for restricting the height in pixels of the component."""
         return self.__height
 
     @height.setter
@@ -1061,7 +439,7 @@ class VideoComponentParameters(Base):
 
     @property
     def transparent(self) -> bool:
-        """Sets the component card to have a transparent background"""
+        """Sets the component card to have a transparent background."""
         return self.__transparent
 
     @transparent.setter
@@ -1196,7 +574,8 @@ class WorkspaceTab(Base):
 
     @property
     def id(self) -> str:
-        """Marquee unique identifier"""
+        """Workspace unique identifier that starts with CB followed by 16 alphanumeric
+           characters."""
         return self.__id
 
     @id.setter
@@ -1213,6 +592,385 @@ class WorkspaceTab(Base):
     def name(self, value: str):
         self._property_changed('name')
         self.__name = value        
+
+
+class ArticleComponentParameters(Base):
+        
+    """Parameters provided for a article component."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        height: float,
+        tooltip: str = None,
+        commentary_channels: Tuple[str, ...] = None,
+        commentary_to_desktop_link: bool = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.height = height
+        self.tooltip = tooltip
+        self.commentary_channels = commentary_channels
+        self.commentary_to_desktop_link = commentary_to_desktop_link
+        self.name = name
+
+    @property
+    def height(self) -> float:
+        """Used for restricting the height in pixels of the component."""
+        return self.__height
+
+    @height.setter
+    def height(self, value: float):
+        self._property_changed('height')
+        self.__height = value        
+
+    @property
+    def tooltip(self) -> str:
+        """Tooltip that is displayed when hovering mouse on the component title."""
+        return self.__tooltip
+
+    @tooltip.setter
+    def tooltip(self, value: str):
+        self._property_changed('tooltip')
+        self.__tooltip = value        
+
+    @property
+    def commentary_channels(self) -> Tuple[str, ...]:
+        """Channels to subscribe for articles."""
+        return self.__commentary_channels
+
+    @commentary_channels.setter
+    def commentary_channels(self, value: Tuple[str, ...]):
+        self._property_changed('commentary_channels')
+        self.__commentary_channels = value        
+
+    @property
+    def commentary_to_desktop_link(self) -> bool:
+        """Whether or not to display a link from commentary to desktop in the header."""
+        return self.__commentary_to_desktop_link
+
+    @commentary_to_desktop_link.setter
+    def commentary_to_desktop_link(self, value: bool):
+        self._property_changed('commentary_to_desktop_link')
+        self.__commentary_to_desktop_link = value        
+
+
+class AssetPlotComponentParameters(Base):
+        
+    """Parameters provided for a asset plot component."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        height: float,
+        tooltip: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.height = height
+        self.tooltip = tooltip
+        self.name = name
+
+    @property
+    def height(self) -> float:
+        """Used for restricting the height in pixels of the component."""
+        return self.__height
+
+    @height.setter
+    def height(self, value: float):
+        self._property_changed('height')
+        self.__height = value        
+
+    @property
+    def tooltip(self) -> str:
+        """Tooltip that is displayed when hovering mouse on the component title."""
+        return self.__tooltip
+
+    @tooltip.setter
+    def tooltip(self, value: str):
+        self._property_changed('tooltip')
+        self.__tooltip = value        
+
+
+class BarChartComponentParameters(Base):
+        
+    """Parameters provided for a bar chart component."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        height: float,
+        tooltip: str = None,
+        hide_legend: bool = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.height = height
+        self.tooltip = tooltip
+        self.hide_legend = hide_legend
+        self.name = name
+
+    @property
+    def height(self) -> float:
+        """Used for restricting the height in pixels of the component."""
+        return self.__height
+
+    @height.setter
+    def height(self, value: float):
+        self._property_changed('height')
+        self.__height = value        
+
+    @property
+    def tooltip(self) -> str:
+        """Tooltip that is displayed when hovering mouse on the component title."""
+        return self.__tooltip
+
+    @tooltip.setter
+    def tooltip(self, value: str):
+        self._property_changed('tooltip')
+        self.__tooltip = value        
+
+    @property
+    def hide_legend(self) -> bool:
+        """Whether to hide a chart or plot component legend."""
+        return self.__hide_legend
+
+    @hide_legend.setter
+    def hide_legend(self, value: bool):
+        self._property_changed('hide_legend')
+        self.__hide_legend = value        
+
+
+class ChartComponentParameters(Base):
+        
+    """Parameters provided for a chart component."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        height: float,
+        tooltip: str = None,
+        hide_legend: bool = None,
+        chart_name: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.height = height
+        self.tooltip = tooltip
+        self.hide_legend = hide_legend
+        self.chart_name = chart_name
+        self.name = name
+
+    @property
+    def height(self) -> float:
+        """Used for restricting the height in pixels of the component."""
+        return self.__height
+
+    @height.setter
+    def height(self, value: float):
+        self._property_changed('height')
+        self.__height = value        
+
+    @property
+    def tooltip(self) -> str:
+        """Tooltip that is displayed when hovering mouse on the component title."""
+        return self.__tooltip
+
+    @tooltip.setter
+    def tooltip(self, value: str):
+        self._property_changed('tooltip')
+        self.__tooltip = value        
+
+    @property
+    def hide_legend(self) -> bool:
+        """Whether to hide a chart or plot component legend."""
+        return self.__hide_legend
+
+    @hide_legend.setter
+    def hide_legend(self, value: bool):
+        self._property_changed('hide_legend')
+        self.__hide_legend = value        
+
+    @property
+    def chart_name(self) -> str:
+        """Name of the chart, only if component type is chart."""
+        return self.__chart_name
+
+    @chart_name.setter
+    def chart_name(self, value: str):
+        self._property_changed('chart_name')
+        self.__chart_name = value        
+
+
+class CommentaryComponentParameters(Base):
+        
+    """Parameters provided for a commentary component."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        height: float,
+        tooltip: str = None,
+        commentary_channels: Tuple[str, ...] = None,
+        commentary_to_desktop_link: bool = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.height = height
+        self.tooltip = tooltip
+        self.commentary_channels = commentary_channels
+        self.commentary_to_desktop_link = commentary_to_desktop_link
+        self.name = name
+
+    @property
+    def height(self) -> float:
+        """Used for restricting the height in pixels of the component."""
+        return self.__height
+
+    @height.setter
+    def height(self, value: float):
+        self._property_changed('height')
+        self.__height = value        
+
+    @property
+    def tooltip(self) -> str:
+        """Tooltip that is displayed when hovering mouse on the component title."""
+        return self.__tooltip
+
+    @tooltip.setter
+    def tooltip(self, value: str):
+        self._property_changed('tooltip')
+        self.__tooltip = value        
+
+    @property
+    def commentary_channels(self) -> Tuple[str, ...]:
+        """Optional channels associated with a commentary component."""
+        return self.__commentary_channels
+
+    @commentary_channels.setter
+    def commentary_channels(self, value: Tuple[str, ...]):
+        self._property_changed('commentary_channels')
+        self.__commentary_channels = value        
+
+    @property
+    def commentary_to_desktop_link(self) -> bool:
+        """Whether or not to display a link from commentary to desktop in the header."""
+        return self.__commentary_to_desktop_link
+
+    @commentary_to_desktop_link.setter
+    def commentary_to_desktop_link(self, value: bool):
+        self._property_changed('commentary_to_desktop_link')
+        self.__commentary_to_desktop_link = value        
+
+
+class CommentaryPromoComponentParameters(Base):
+        
+    """Parameters provided for a commentary promo component."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        height: float = None,
+        tooltip: str = None,
+        commentary_channels: Tuple[str, ...] = None,
+        transparent: bool = None,
+        body: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.height = height
+        self.tooltip = tooltip
+        self.commentary_channels = commentary_channels
+        self.transparent = transparent
+        self.body = body
+        self.name = name
+
+    @property
+    def height(self) -> float:
+        """Used for restricting the height in pixels of the component."""
+        return self.__height
+
+    @height.setter
+    def height(self, value: float):
+        self._property_changed('height')
+        self.__height = value        
+
+    @property
+    def tooltip(self) -> str:
+        """Tooltip that is displayed when hovering mouse on the component title."""
+        return self.__tooltip
+
+    @tooltip.setter
+    def tooltip(self, value: str):
+        self._property_changed('tooltip')
+        self.__tooltip = value        
+
+    @property
+    def commentary_channels(self) -> Tuple[str, ...]:
+        """Optional channels associated with a commentary component."""
+        return self.__commentary_channels
+
+    @commentary_channels.setter
+    def commentary_channels(self, value: Tuple[str, ...]):
+        self._property_changed('commentary_channels')
+        self.__commentary_channels = value        
+
+    @property
+    def transparent(self) -> bool:
+        """Sets the component card to have a transparent background."""
+        return self.__transparent
+
+    @transparent.setter
+    def transparent(self, value: bool):
+        self._property_changed('transparent')
+        self.__transparent = value        
+
+    @property
+    def body(self) -> str:
+        """The body of content to be injected into the promo component type."""
+        return self.__body
+
+    @body.setter
+    def body(self, value: str):
+        self._property_changed('body')
+        self.__body = value        
+
+
+class DataGridComponentParameters(Base):
+        
+    """Parameters provided for a datagrid component."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        height: float,
+        tooltip: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.height = height
+        self.tooltip = tooltip
+        self.name = name
+
+    @property
+    def height(self) -> float:
+        """Used for restricting the height in pixels of the component."""
+        return self.__height
+
+    @height.setter
+    def height(self, value: float):
+        self._property_changed('height')
+        self.__height = value        
+
+    @property
+    def tooltip(self) -> str:
+        """Tooltip that is displayed when hovering mouse on the component title."""
+        return self.__tooltip
+
+    @tooltip.setter
+    def tooltip(self, value: str):
+        self._property_changed('tooltip')
+        self.__tooltip = value        
 
 
 class LegendComponentParameters(Base):
@@ -1237,7 +995,7 @@ class LegendComponentParameters(Base):
 
     @property
     def height(self) -> float:
-        """Used for restricting the height in pixels of the component on a workspace."""
+        """Used for restricting the height in pixels of the component."""
         return self.__height
 
     @height.setter
@@ -1276,9 +1034,107 @@ class LegendComponentParameters(Base):
         self.__transparent = value        
 
 
+class MonitorComponentParameters(Base):
+        
+    """Parameters provided for a monitor component."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        height: float,
+        tooltip: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.height = height
+        self.tooltip = tooltip
+        self.name = name
+
+    @property
+    def height(self) -> float:
+        """Used for restricting the height in pixels of the component."""
+        return self.__height
+
+    @height.setter
+    def height(self, value: float):
+        self._property_changed('height')
+        self.__height = value        
+
+    @property
+    def tooltip(self) -> str:
+        """Tooltip that is displayed when hovering mouse on the component title."""
+        return self.__tooltip
+
+    @tooltip.setter
+    def tooltip(self, value: str):
+        self._property_changed('tooltip')
+        self.__tooltip = value        
+
+
+class PlotComponentParameters(Base):
+        
+    """Parameters provided for a plot component."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        height: float,
+        tooltip: str = None,
+        hide_legend: bool = None,
+        plot_frequency_mode: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.height = height
+        self.tooltip = tooltip
+        self.hide_legend = hide_legend
+        self.plot_frequency_mode = plot_frequency_mode
+        self.name = name
+
+    @property
+    def height(self) -> float:
+        """Used for restricting the height in pixels of the component."""
+        return self.__height
+
+    @height.setter
+    def height(self, value: float):
+        self._property_changed('height')
+        self.__height = value        
+
+    @property
+    def tooltip(self) -> str:
+        """Tooltip that is displayed when hovering mouse on the component title."""
+        return self.__tooltip
+
+    @tooltip.setter
+    def tooltip(self, value: str):
+        self._property_changed('tooltip')
+        self.__tooltip = value        
+
+    @property
+    def hide_legend(self) -> bool:
+        """Whether to hide a chart or plot component legend."""
+        return self.__hide_legend
+
+    @hide_legend.setter
+    def hide_legend(self, value: bool):
+        self._property_changed('hide_legend')
+        self.__hide_legend = value        
+
+    @property
+    def plot_frequency_mode(self) -> str:
+        """For plot component types, set the plot frequency mode."""
+        return self.__plot_frequency_mode
+
+    @plot_frequency_mode.setter
+    def plot_frequency_mode(self, value: str):
+        self._property_changed('plot_frequency_mode')
+        self.__plot_frequency_mode = value        
+
+
 class RelatedLinksComponentParameters(Base):
         
-    """Parameters provided for a related link components"""
+    """Parameters provided for a related link components."""
 
     @camel_case_translate
     def __init__(
@@ -1296,7 +1152,7 @@ class RelatedLinksComponentParameters(Base):
 
     @property
     def height(self) -> float:
-        """Used for restricting the height in pixels of the component on a workspace"""
+        """Used for restricting the height in pixels of the component."""
         return self.__height
 
     @height.setter
@@ -1306,7 +1162,7 @@ class RelatedLinksComponentParameters(Base):
 
     @property
     def links(self) -> Tuple[RelatedLink, ...]:
-        """Description associated with link"""
+        """Description associated with link."""
         return self.__links
 
     @links.setter
@@ -1325,56 +1181,29 @@ class RelatedLinksComponentParameters(Base):
         self.__title = value        
 
 
-class SelectorComponentParameters(Base):
+class ResearchComponentParameters(Base):
         
-    """Parameters provided for a selector component"""
+    """Parameters provided for a research component."""
 
     @camel_case_translate
     def __init__(
         self,
-        container_ids: Tuple[str, ...],
         height: float,
-        options: Tuple[SelectorComponentOption, ...],
-        default_option_index: float = None,
-        title: str = None,
         tooltip: str = None,
-        width: float = None,
+        commentary_channels: Tuple[str, ...] = None,
+        commentary_to_desktop_link: bool = None,
         name: str = None
     ):        
         super().__init__()
-        self.container_ids = container_ids
-        self.default_option_index = default_option_index
         self.height = height
-        self.options = options
-        self.title = title
         self.tooltip = tooltip
-        self.width = width
+        self.commentary_channels = commentary_channels
+        self.commentary_to_desktop_link = commentary_to_desktop_link
         self.name = name
 
     @property
-    def container_ids(self) -> Tuple[str, ...]:
-        """The component ids of the containers the selector will fill using it's options."""
-        return self.__container_ids
-
-    @container_ids.setter
-    def container_ids(self, value: Tuple[str, ...]):
-        self._property_changed('container_ids')
-        self.__container_ids = value        
-
-    @property
-    def default_option_index(self) -> float:
-        """The default option for the selector. This references the index in the options
-           array. Defaults to 0."""
-        return self.__default_option_index
-
-    @default_option_index.setter
-    def default_option_index(self, value: float):
-        self._property_changed('default_option_index')
-        self.__default_option_index = value        
-
-    @property
     def height(self) -> float:
-        """Used for restricting the height in pixels of the component on a workspace"""
+        """Used for restricting the height in pixels of the component."""
         return self.__height
 
     @height.setter
@@ -1383,29 +1212,8 @@ class SelectorComponentParameters(Base):
         self.__height = value        
 
     @property
-    def options(self) -> Tuple[SelectorComponentOption, ...]:
-        """A list of options for the selector dropdown. Options references other components
-           in the workspace"""
-        return self.__options
-
-    @options.setter
-    def options(self, value: Tuple[SelectorComponentOption, ...]):
-        self._property_changed('options')
-        self.__options = value        
-
-    @property
-    def title(self) -> str:
-        """Title of the text to the left of the selector component."""
-        return self.__title
-
-    @title.setter
-    def title(self, value: str):
-        self._property_changed('title')
-        self.__title = value        
-
-    @property
     def tooltip(self) -> str:
-        """Tooltip for the title to the left of the selector component."""
+        """Tooltip that is displayed when hovering mouse on the component title."""
         return self.__tooltip
 
     @tooltip.setter
@@ -1414,15 +1222,110 @@ class SelectorComponentParameters(Base):
         self.__tooltip = value        
 
     @property
-    def width(self) -> float:
-        """Used for restricting the width in pixels of the component on a workspace.
-           Defaults to 280px."""
-        return self.__width
+    def commentary_channels(self) -> Tuple[str, ...]:
+        """Optional channels associated with a commentary component."""
+        return self.__commentary_channels
 
-    @width.setter
-    def width(self, value: float):
-        self._property_changed('width')
-        self.__width = value        
+    @commentary_channels.setter
+    def commentary_channels(self, value: Tuple[str, ...]):
+        self._property_changed('commentary_channels')
+        self.__commentary_channels = value        
+
+    @property
+    def commentary_to_desktop_link(self) -> bool:
+        """Whether or not to display a link from commentary to desktop in the header."""
+        return self.__commentary_to_desktop_link
+
+    @commentary_to_desktop_link.setter
+    def commentary_to_desktop_link(self, value: bool):
+        self._property_changed('commentary_to_desktop_link')
+        self.__commentary_to_desktop_link = value        
+
+
+class SelectorComponentOption(Base):
+        
+    """A selector component option."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        id_: str,
+        name: str,
+        tags: Tuple[str, ...]
+    ):        
+        super().__init__()
+        self.__id = id_
+        self.name = name
+        self.tags = tags
+
+    @property
+    def id(self) -> str:
+        """A unique id of the selector option."""
+        return self.__id
+
+    @id.setter
+    def id(self, value: str):
+        self._property_changed('id')
+        self.__id = value        
+
+    @property
+    def name(self) -> str:
+        """Name of the option in the dropdown. This will be the text displayed in the
+           dropdown."""
+        return self.__name
+
+    @name.setter
+    def name(self, value: str):
+        self._property_changed('name')
+        self.__name = value        
+
+    @property
+    def tags(self) -> Tuple[str, ...]:
+        """An array of component tags for this selector option. This should match in length
+           the selector component containerIds length."""
+        return self.__tags
+
+    @tags.setter
+    def tags(self, value: Tuple[str, ...]):
+        self._property_changed('tags')
+        self.__tags = value        
+
+
+class TreemapComponentParameters(Base):
+        
+    """Parameters provided for a treemap component."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        height: float,
+        tooltip: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.height = height
+        self.tooltip = tooltip
+        self.name = name
+
+    @property
+    def height(self) -> float:
+        """Used for restricting the height in pixels of the component."""
+        return self.__height
+
+    @height.setter
+    def height(self, value: float):
+        self._property_changed('height')
+        self.__height = value        
+
+    @property
+    def tooltip(self) -> str:
+        """Tooltip that is displayed when hovering mouse on the component title."""
+        return self.__tooltip
+
+    @tooltip.setter
+    def tooltip(self, value: str):
+        self._property_changed('tooltip')
+        self.__tooltip = value        
 
 
 class WebinarComponentParameters(Base):
@@ -1492,7 +1395,7 @@ class WebinarComponentParameters(Base):
 
     @property
     def height(self) -> float:
-        """Used for restricting the height in pixels of the component on a workspace."""
+        """Used for restricting the height in pixels of the component."""
         return self.__height
 
     @height.setter
@@ -1571,9 +1474,109 @@ class WebinarComponentParameters(Base):
         self.__title = value        
 
 
+class SelectorComponentParameters(Base):
+        
+    """Parameters provided for a selector component."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        container_ids: Tuple[str, ...],
+        height: float,
+        options: Tuple[SelectorComponentOption, ...],
+        default_option_index: float = None,
+        title: str = None,
+        tooltip: str = None,
+        width: float = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.container_ids = container_ids
+        self.default_option_index = default_option_index
+        self.height = height
+        self.options = options
+        self.title = title
+        self.tooltip = tooltip
+        self.width = width
+        self.name = name
+
+    @property
+    def container_ids(self) -> Tuple[str, ...]:
+        """The component ids of the containers the selector will fill using it's options."""
+        return self.__container_ids
+
+    @container_ids.setter
+    def container_ids(self, value: Tuple[str, ...]):
+        self._property_changed('container_ids')
+        self.__container_ids = value        
+
+    @property
+    def default_option_index(self) -> float:
+        """The default option for the selector. This references the index in the options
+           array. Defaults to 0."""
+        return self.__default_option_index
+
+    @default_option_index.setter
+    def default_option_index(self, value: float):
+        self._property_changed('default_option_index')
+        self.__default_option_index = value        
+
+    @property
+    def height(self) -> float:
+        """Used for restricting the height in pixels of the component."""
+        return self.__height
+
+    @height.setter
+    def height(self, value: float):
+        self._property_changed('height')
+        self.__height = value        
+
+    @property
+    def options(self) -> Tuple[SelectorComponentOption, ...]:
+        """A list of options for the selector dropdown. Options references other components
+           in the workspace."""
+        return self.__options
+
+    @options.setter
+    def options(self, value: Tuple[SelectorComponentOption, ...]):
+        self._property_changed('options')
+        self.__options = value        
+
+    @property
+    def title(self) -> str:
+        """Title of the text to the left of the selector component."""
+        return self.__title
+
+    @title.setter
+    def title(self, value: str):
+        self._property_changed('title')
+        self.__title = value        
+
+    @property
+    def tooltip(self) -> str:
+        """Tooltip that is displayed when hovering mouse on the component title."""
+        return self.__tooltip
+
+    @tooltip.setter
+    def tooltip(self, value: str):
+        self._property_changed('tooltip')
+        self.__tooltip = value        
+
+    @property
+    def width(self) -> float:
+        """Used for restricting the width in pixels of the component on a workspace.
+           Defaults to 280px."""
+        return self.__width
+
+    @width.setter
+    def width(self, value: float):
+        self._property_changed('width')
+        self.__width = value        
+
+
 class WorkspaceComponent(Base):
         
-    """Parameters provided for a market workspace"""
+    """Parameters provided for a market workspace."""
 
     @camel_case_translate
     def __init__(
@@ -1625,7 +1628,7 @@ class WorkspaceComponent(Base):
 
     @property
     def type(self) -> Union[ComponentType, str]:
-        """Enum listing supported component types"""
+        """Enum listing supported component types."""
         return self.__type
 
     @type.setter
@@ -1645,7 +1648,7 @@ class WorkspaceComponent(Base):
 
 class WorkspaceParameters(Base):
         
-    """Parameters provided for a market workspace"""
+    """Parameters provided for a market workspace."""
 
     @camel_case_translate
     def __init__(
@@ -1671,7 +1674,7 @@ class WorkspaceParameters(Base):
 
     @property
     def can_share(self) -> bool:
-        """ whether the user has the ability to share a cashboard"""
+        """ whether the user has the ability to share a cashboard."""
         return self.__can_share
 
     @can_share.setter
@@ -1681,7 +1684,7 @@ class WorkspaceParameters(Base):
 
     @property
     def components(self) -> Tuple[WorkspaceComponent, ...]:
-        """Array of workspace components"""
+        """Array of workspace components."""
         return self.__components
 
     @components.setter
@@ -1742,7 +1745,7 @@ class WorkspaceParameters(Base):
 
 class Workspace(Base):
         
-    """A market workspace object"""
+    """A market workspace object."""
 
     @camel_case_translate
     def __init__(
@@ -1782,7 +1785,8 @@ class Workspace(Base):
 
     @property
     def id(self) -> str:
-        """Marquee unique identifier"""
+        """Workspace unique identifier that starts with CB followed by 16 alphanumeric
+           characters."""
         return self.__id
 
     @id.setter
@@ -1792,7 +1796,8 @@ class Workspace(Base):
 
     @property
     def alias(self) -> str:
-        """Market workspace alias"""
+        """Configurable unique identifier for a Workspace. Allows user to choose the URL
+           for the Workspace, i.e. https://marquee.gs.com/s/markets/{alias}."""
         return self.__alias
 
     @alias.setter
@@ -1802,7 +1807,7 @@ class Workspace(Base):
 
     @property
     def name(self) -> str:
-        """Market workspace name"""
+        """Workspace name that is shown as the title on the UI."""
         return self.__name
 
     @name.setter
@@ -1812,7 +1817,7 @@ class Workspace(Base):
 
     @property
     def type(self) -> Union[WorkspaceType, str]:
-        """Enum listing support workspace types"""
+        """Enum listing support workspace types."""
         return self.__type
 
     @type.setter
@@ -1822,7 +1827,7 @@ class Workspace(Base):
 
     @property
     def tags(self) -> Tuple[str, ...]:
-        """Array of tags"""
+        """Array of strings that can be queried."""
         return self.__tags
 
     @tags.setter
@@ -1832,7 +1837,7 @@ class Workspace(Base):
 
     @property
     def parameters(self) -> WorkspaceParameters:
-        """Parameters provided for a market workspace"""
+        """Parameters provided for a market workspace."""
         return self.__parameters
 
     @parameters.setter
@@ -1842,7 +1847,7 @@ class Workspace(Base):
 
     @property
     def created_time(self) -> datetime.datetime:
-        """Time created. ISO 8601 formatted string"""
+        """Time created. ISO 8601 formatted string."""
         return self.__created_time
 
     @created_time.setter
@@ -1852,7 +1857,7 @@ class Workspace(Base):
 
     @property
     def last_updated_time(self) -> datetime.datetime:
-        """Timestamp of when the object was last updated"""
+        """Timestamp of when the object was last updated."""
         return self.__last_updated_time
 
     @last_updated_time.setter
@@ -1882,7 +1887,7 @@ class Workspace(Base):
 
     @property
     def owner_id(self) -> str:
-        """Marquee unique identifier"""
+        """Marquee unique identifier of a user."""
         return self.__owner_id
 
     @owner_id.setter
@@ -1892,7 +1897,7 @@ class Workspace(Base):
 
     @property
     def entitlements(self) -> Entitlements:
-        """Defines the entitlements of a given resource"""
+        """Defines the entitlements of a given resource."""
         return self.__entitlements
 
     @entitlements.setter
@@ -1902,7 +1907,7 @@ class Workspace(Base):
 
     @property
     def folder_name(self) -> str:
-        """Folder name of the monitor"""
+        """Folder name of the workspace."""
         return self.__folder_name
 
     @folder_name.setter
@@ -1912,7 +1917,7 @@ class Workspace(Base):
 
     @property
     def description(self) -> str:
-        """Market workspace description"""
+        """Workspace description that is displayed under the workspace title on the UI."""
         return self.__description
 
     @description.setter
@@ -1922,7 +1927,7 @@ class Workspace(Base):
 
     @property
     def children_aliases(self) -> Tuple[str, ...]:
-        """Child workspaces for navigation"""
+        """Child workspaces for navigation."""
         return self.__children_aliases
 
     @children_aliases.setter

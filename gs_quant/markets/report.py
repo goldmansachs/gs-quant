@@ -18,7 +18,7 @@ from gs_quant.target.reports import Report
 from gs_quant.api.gs.reports import GsReportApi
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.target.data import DataQuery
-from gs_quant.target.common import FieldFilterMap
+from gs_quant.target.common import FieldValueMap
 from typing import Tuple
 
 PPA_DATASET = "PPA"
@@ -109,7 +109,7 @@ class PerformanceReport(BaseReport):
     @classmethod
     def get_measure(cls, report_id: str, field: str, start_date: dt.date = None, end_date: dt.date = None):
         fields = [field]
-        where = FieldFilterMap(report_id=report_id)
+        where = FieldValueMap(report_id=report_id)
         query = DataQuery(where=where, fields=fields, start_date=start_date, end_date=end_date)
         return GsDataApi.query_data(query=query, dataset_id=PPA_DATASET)
 
@@ -119,7 +119,7 @@ class PerformanceReport(BaseReport):
         fields = []
         for measure in measures:
             fields.append(measure)
-        where = FieldFilterMap(report_id=report_id)
+        where = FieldValueMap(report_id=report_id)
         query = DataQuery(where=where, fields=fields, start_date=start_date, end_date=end_date)
         return GsDataApi.query_data(query=query, dataset_id=PPA_DATASET)
 
@@ -129,6 +129,6 @@ class RiskReport(BaseReport):
     @classmethod
     def get_factor_exposure(cls, report_id: str, factor: str, factor_category: str, start_date: dt.date = None,
                             end_date: dt.date = None):
-        where = FieldFilterMap(report_id=report_id, factor=factor, factor_category=factor_category)
+        where = FieldValueMap(report_id=report_id, factor=factor, factor_category=factor_category)
         query = DataQuery(where=where, start_date=start_date, end_date=end_date)
         return GsDataApi.query_data(query=query, dataset_id=PFR_DATASET)

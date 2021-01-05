@@ -16,7 +16,7 @@ under the License.
 
 from gs_quant.target.common import *
 import datetime
-from typing import Tuple, Union
+from typing import Mapping, Tuple, Union
 from enum import Enum
 from gs_quant.base import Base, EnumBase, InstrumentBase, camel_case_translate, get_enum_value
 
@@ -31,64 +31,6 @@ class MDAPIQueryField(EnumBase, Enum):
     
     def __repr__(self):
         return self.value
-
-
-class MDAPIDataQueryResponse(Base):
-        
-    @camel_case_translate
-    def __init__(
-        self,
-        data: Tuple[FieldValueMap, ...] = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.data = data
-        self.name = name
-
-    @property
-    def data(self) -> Tuple[FieldValueMap, ...]:
-        """Array of data elements from dataset"""
-        return self.__data
-
-    @data.setter
-    def data(self, value: Tuple[FieldValueMap, ...]):
-        self._property_changed('data')
-        self.__data = value        
-
-
-class MDAPIDataBatchResponse(Base):
-        
-    @camel_case_translate
-    def __init__(
-        self,
-        request_id: str = None,
-        responses: Tuple[MDAPIDataQueryResponse, ...] = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.request_id = request_id
-        self.responses = responses
-        self.name = name
-
-    @property
-    def request_id(self) -> str:
-        """Marquee unique identifier"""
-        return self.__request_id
-
-    @request_id.setter
-    def request_id(self, value: str):
-        self._property_changed('request_id')
-        self.__request_id = value        
-
-    @property
-    def responses(self) -> Tuple[MDAPIDataQueryResponse, ...]:
-        """MDAPI Data query responses"""
-        return self.__responses
-
-    @responses.setter
-    def responses(self, value: Tuple[MDAPIDataQueryResponse, ...]):
-        self._property_changed('responses')
-        self.__responses = value        
 
 
 class MDAPIDataQuery(Base):
@@ -269,3 +211,61 @@ class MDAPIDataQuery(Base):
     def time_filter(self, value: TimeFilter):
         self._property_changed('time_filter')
         self.__time_filter = value        
+
+
+class MDAPIDataQueryResponse(Base):
+        
+    @camel_case_translate
+    def __init__(
+        self,
+        data: Tuple[FieldValueMap, ...] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.data = data
+        self.name = name
+
+    @property
+    def data(self) -> Tuple[FieldValueMap, ...]:
+        """Array of data elements from dataset"""
+        return self.__data
+
+    @data.setter
+    def data(self, value: Tuple[FieldValueMap, ...]):
+        self._property_changed('data')
+        self.__data = value        
+
+
+class MDAPIDataBatchResponse(Base):
+        
+    @camel_case_translate
+    def __init__(
+        self,
+        request_id: str = None,
+        responses: Tuple[MDAPIDataQueryResponse, ...] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.request_id = request_id
+        self.responses = responses
+        self.name = name
+
+    @property
+    def request_id(self) -> str:
+        """Marquee unique identifier"""
+        return self.__request_id
+
+    @request_id.setter
+    def request_id(self, value: str):
+        self._property_changed('request_id')
+        self.__request_id = value        
+
+    @property
+    def responses(self) -> Tuple[MDAPIDataQueryResponse, ...]:
+        """MDAPI Data query responses"""
+        return self.__responses
+
+    @responses.setter
+    def responses(self, value: Tuple[MDAPIDataQueryResponse, ...]):
+        self._property_changed('responses')
+        self.__responses = value        

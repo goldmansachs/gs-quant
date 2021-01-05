@@ -948,7 +948,7 @@ class SecurityMaster:
             return FutureContract(gs_asset.id, gs_asset.assetClass, gs_asset.name, entity=asset_entity)
 
         # workaround as casing is being migrated
-        if asset_type in (GsAssetType.Cryptocurrency.value, GsAssetType.Crypto_Currency.value):
+        if asset_type == GsAssetType.Cryptocurrency.value:
             return Cryptocurrency(gs_asset.id, gs_asset.assetClass, gs_asset.name, entity=asset_entity)
 
         raise TypeError(f'unsupported asset type {asset_type}')
