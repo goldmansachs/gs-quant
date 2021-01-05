@@ -32,11 +32,6 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -53,11 +48,11 @@
 
    
   <div class="wy-grid-for-nav">
-    <a data-toggle="wy-nav-top" class="gs-developer-action-button-container" ontouchstart="">
-      <div data-toggle="gs-nav-action" class="gs-nav-action"></div>
+    <a data-toggle="wy-nav-top" id="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" id="gs-nav-action"></div>
     </a>
     
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+    <nav id="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         
         
@@ -73,7 +68,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../data.html">Data Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../datetime.html">Datetime Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../instrument.html">Instrument Package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../market.html">Market Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../markets.html">Markets Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../models.html">Models Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../risk.html">Risk Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../timeseries.html">Timeseries Package</a></li>
 </ul>
@@ -145,32 +141,47 @@
 <span class="sd">specific language governing permissions and limitations</span>
 <span class="sd">under the License.</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">concurrent.futures</span> <span class="k">import</span> <span class="n">Future</span>
+<span class="kn">import</span> <span class="nn">builtins</span>
+<span class="kn">import</span> <span class="nn">copy</span>
 <span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
-<span class="kn">import</span> <span class="nn">dateutil</span>
-<span class="kn">from</span> <span class="nn">enum</span> <span class="k">import</span> <span class="n">EnumMeta</span>
-<span class="kn">import</span> <span class="nn">inflection</span>
-<span class="kn">from</span> <span class="nn">inspect</span> <span class="k">import</span> <span class="n">signature</span><span class="p">,</span> <span class="n">Parameter</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">keyword</span>
 <span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">get_type_hints</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">namedtuple</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">EnumMeta</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">wraps</span>
+<span class="kn">from</span> <span class="nn">inspect</span> <span class="kn">import</span> <span class="n">signature</span><span class="p">,</span> <span class="n">Parameter</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">get_type_hints</span>
 
+<span class="kn">import</span> <span class="nn">inflection</span>
+<span class="kn">from</span> <span class="nn">dateutil.parser</span> <span class="kn">import</span> <span class="n">isoparse</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">gs_quant.context_base</span> <span class="kn">import</span> <span class="n">ContextBase</span><span class="p">,</span> <span class="n">ContextMeta</span><span class="p">,</span> <span class="n">do_not_serialise</span>
 
 <span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
-
-<span class="k">class</span> <span class="nc">EnumBase</span><span class="p">:</span>
-
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">_missing_</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span> <span class="n">EnumMeta</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">next</span><span class="p">((</span><span class="n">m</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__members__</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">key</span><span class="o">.</span><span class="n">lower</span><span class="p">()),</span> <span class="kc">None</span><span class="p">)</span>
+<span class="n">_valid_date_formats</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">,</span>  <span class="c1"># &#39;2020-07-28&#39;</span>
+                       <span class="s1">&#39;</span><span class="si">%d</span><span class="s1">%b%y&#39;</span><span class="p">,</span>    <span class="c1"># &#39;28Jul20&#39;</span>
+                       <span class="s1">&#39;</span><span class="si">%d</span><span class="s1">-%b-%y&#39;</span><span class="p">,</span>  <span class="c1"># &#39;28-Jul-20&#39;</span>
+                       <span class="s1">&#39;</span><span class="si">%d</span><span class="s1">/%m/%Y&#39;</span><span class="p">)</span>  <span class="c1"># &#39;28/07/2020</span>
 
 
-<span class="k">class</span> <span class="nc">BaseMeta</span><span class="p">(</span><span class="nb">type</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_normalise_arg</span><span class="p">(</span><span class="n">arg</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">keyword</span><span class="o">.</span><span class="n">iskeyword</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="ow">or</span> <span class="n">arg</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">builtins</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">arg</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">arg</span>
 
-    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+<span class="k">def</span> <span class="nf">camel_case_translate</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="nd">@wraps</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">normalised_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">arg</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">arg</span> <span class="o">=</span> <span class="n">_normalise_arg</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+
             <span class="k">if</span> <span class="ow">not</span> <span class="n">arg</span><span class="o">.</span><span class="n">isupper</span><span class="p">():</span>
                 <span class="n">snake_case_arg</span> <span class="o">=</span> <span class="n">inflection</span><span class="o">.</span><span class="n">underscore</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">snake_case_arg</span> <span class="o">!=</span> <span class="n">arg</span><span class="p">:</span>
@@ -183,74 +194,178 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">normalised_kwargs</span><span class="p">[</span><span class="n">arg</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
 
-        <span class="n">obj</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">normalised_kwargs</span><span class="p">)</span>
-        <span class="n">obj</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">normalised_kwargs</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">obj</span>
+        <span class="k">return</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">normalised_kwargs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">wrapper</span>
 
 
-<span class="k">class</span> <span class="nc">Base</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">BaseMeta</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">do_not_resolve</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="n">func</span><span class="o">.</span><span class="n">do_not_resolve</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="n">func</span>
 
+
+<span class="k">class</span> <span class="nc">RiskKey</span><span class="p">(</span><span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;RiskKey&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;provider&#39;</span><span class="p">,</span> <span class="s1">&#39;date&#39;</span><span class="p">,</span> <span class="s1">&#39;market&#39;</span><span class="p">,</span> <span class="s1">&#39;params&#39;</span><span class="p">,</span> <span class="s1">&#39;scenario&#39;</span><span class="p">,</span> <span class="s1">&#39;risk_measure&#39;</span><span class="p">))):</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">ex_date_and_market</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">RiskKey</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">provider</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scenario</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">risk_measure</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">ex_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">RiskKey</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">provider</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">date</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">market</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scenario</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fields</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fields</span>
+
+
+<span class="k">class</span> <span class="nc">EnumBase</span><span class="p">:</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_missing_</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span> <span class="n">EnumMeta</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">next</span><span class="p">((</span><span class="n">m</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__members__</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">key</span><span class="o">.</span><span class="n">lower</span><span class="p">()),</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__reduce_ex__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">protocol</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,)</span>
+
+    <span class="k">def</span> <span class="fm">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">EnumMeta</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">&lt;</span> <span class="n">other</span><span class="o">.</span><span class="n">value</span>
+
+
+<span class="k">class</span> <span class="nc">Base</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;The base class for all generated classes&quot;&quot;&quot;</span>
 
     <span class="n">__properties</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__calced_hash</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__calced_hash</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__as_dict</span> <span class="o">=</span> <span class="p">{</span><span class="kc">False</span><span class="p">:</span> <span class="p">{},</span> <span class="kc">True</span><span class="p">:</span> <span class="p">{}}</span>
 
-    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="c1"># Regrettably, read-only properties called name exist</span>
+            <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
         <span class="n">snake_case_item</span> <span class="o">=</span> <span class="n">inflection</span><span class="o">.</span><span class="n">underscore</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
-        <span class="n">attr</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="s1">&#39;__class__&#39;</span><span class="p">),</span> <span class="n">snake_case_item</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">attr</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="nb">property</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">snake_case_item</span> <span class="ow">in</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="s1">&#39;properties&#39;</span><span class="p">)():</span>
             <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">snake_case_item</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="n">properties</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="s1">&#39;properties&#39;</span><span class="p">)()</span>
         <span class="n">snake_case_key</span> <span class="o">=</span> <span class="n">inflection</span><span class="o">.</span><span class="n">underscore</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
-        <span class="n">attr</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="s1">&#39;__class__&#39;</span><span class="p">),</span> <span class="n">snake_case_key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">attr</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="nb">property</span><span class="p">):</span>
+        <span class="n">key_is_property</span> <span class="o">=</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">properties</span>
+        <span class="n">snake_case_key_is_property</span> <span class="o">=</span> <span class="n">snake_case_key</span> <span class="ow">in</span> <span class="n">properties</span>
+
+        <span class="k">if</span> <span class="n">snake_case_key_is_property</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">key_is_property</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="n">snake_case_key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> (</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span>
+
     <span class="k">def</span> <span class="nf">_property_changed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__calced_hash</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__as_dict</span> <span class="o">=</span> <span class="p">{</span><span class="kc">False</span><span class="p">:</span> <span class="p">{},</span> <span class="kc">True</span><span class="p">:</span> <span class="p">{}}</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__calced_hash</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">properties</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="p">())</span>
-            <span class="n">prop</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">properties</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">__calced_hash</span> <span class="o">=</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">prop</span><span class="p">))</span> <span class="k">if</span> <span class="n">prop</span> <span class="k">else</span> <span class="mi">1</span>
-            <span class="k">for</span> <span class="n">prop</span> <span class="ow">in</span> <span class="n">properties</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">__calced_hash</span> <span class="o">^=</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">prop</span><span class="p">))</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_hash_is_calced</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__calced_hash</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hash_is_calced</span><span class="p">:</span>
+            <span class="n">calced_hash</span> <span class="o">=</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">prop</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="p">():</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">prop</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="n">calced_hash</span> <span class="o">^=</span> <span class="nb">hash</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">__calced_hash</span> <span class="o">=</span> <span class="n">calced_hash</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__calced_hash</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="k">return</span>\
-            <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="ow">and</span>\
-            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__calced_hash</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">__calced_hash</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">__calced_hash</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">__calced_hash</span><span class="p">)</span> <span class="ow">and</span>\
-            <span class="nb">all</span><span class="p">(</span><span class="nb">super</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">==</span> <span class="nb">super</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="p">())</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> \
+            <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="ow">and</span> \
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__calced_hash</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">__calced_hash</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">__calced_hash</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">__calced_hash</span><span class="p">)</span> \
+            <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="nb">super</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">==</span> <span class="nb">super</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="p">())</span>
 
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">&lt;</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
+
+        <span class="k">for</span> <span class="n">prop</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="p">((</span><span class="s1">&#39;name&#39;</span><span class="p">,),</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="p">())):</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">prop</span><span class="p">)</span>
+            <span class="n">other_val</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">prop</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">val</span> <span class="o">!=</span> <span class="n">other_val</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+                <span class="k">return</span> <span class="n">val</span> <span class="o">&lt;</span> <span class="n">other_val</span>
+
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">clone</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Clone this object, overriding specified values</span>
+
+<span class="sd">            :param kwargs: property names and values, e.g. swap.clone(fixed_rate=0.01)</span>
+
+<span class="sd">            **Examples**</span>
+
+<span class="sd">            To change the market data location of the default context:</span>
+
+<span class="sd">            &gt;&gt;&gt; from gs_quant.instrument import IRCap</span>
+<span class="sd">            &gt;&gt;&gt; cap = IRCap(&#39;5y&#39;, &#39;GBP&#39;)</span>
+<span class="sd">            &gt;&gt;&gt;</span>
+<span class="sd">            &gt;&gt;&gt; new_cap = cap.clone(cap_rate=0.01)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">clone</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">properties</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">properties</span><span class="p">:</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="n">clone</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Only properties may be passed as kwargs&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">clone</span>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">properties</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;The public property names of this class&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__properties</span><span class="p">:</span>
-            <span class="bp">cls</span><span class="o">.</span><span class="n">__properties</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">i</span><span class="p">),</span> <span class="nb">property</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">i</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">))</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">__properties</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">i</span><span class="p">),</span> <span class="nb">property</span><span class="p">)</span>
+                                   <span class="ow">and</span> <span class="ow">not</span> <span class="n">i</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span>
+                                   <span class="nb">getattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">fget</span><span class="p">,</span> <span class="s1">&#39;do_not_serialise&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__properties</span>
 
-    <span class="k">def</span> <span class="nf">as_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">as_camel_case</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">as_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">as_camel_case</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Dictionary of the public, non-null properties and values&quot;&quot;&quot;</span>
-        <span class="n">raw_properties</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="p">()</span>
-        <span class="n">properties</span> <span class="o">=</span> <span class="p">(</span><span class="n">inflection</span><span class="o">.</span><span class="n">camelize</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">uppercase_first_letter</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">raw_properties</span><span class="p">)</span> <span class="k">if</span> <span class="n">as_camel_case</span> <span class="k">else</span> <span class="n">raw_properties</span>
-        <span class="n">values</span> <span class="o">=</span> <span class="p">(</span><span class="nb">super</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">raw_properties</span><span class="p">)</span>
-        <span class="k">return</span> <span class="nb">dict</span><span class="p">((</span><span class="n">p</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">properties</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__as_dict</span><span class="p">[</span><span class="n">as_camel_case</span><span class="p">]:</span>
+            <span class="n">raw_properties</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="p">()</span>
+            <span class="n">properties</span> <span class="o">=</span> <span class="p">(</span><span class="n">inflection</span><span class="o">.</span><span class="n">camelize</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">uppercase_first_letter</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">raw_properties</span><span class="p">)</span> \
+                <span class="k">if</span> <span class="n">as_camel_case</span> <span class="k">else</span> <span class="n">raw_properties</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="p">(</span><span class="nb">super</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">raw_properties</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__as_dict</span><span class="p">[</span><span class="n">as_camel_case</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">p</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">properties</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__as_dict</span><span class="p">[</span><span class="n">as_camel_case</span><span class="p">])</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">prop_type</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">prop</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">prop_type</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">prop</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">additional</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">:</span>
         <span class="n">return_hints</span> <span class="o">=</span> <span class="n">get_type_hints</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">prop</span><span class="p">)</span><span class="o">.</span><span class="n">fget</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;return&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">return_hints</span><span class="p">,</span> <span class="s1">&#39;__origin__&#39;</span><span class="p">):</span>
             <span class="n">prop_type</span> <span class="o">=</span> <span class="n">return_hints</span><span class="o">.</span><span class="n">__origin__</span>
@@ -259,20 +374,50 @@
 
         <span class="k">if</span> <span class="n">prop_type</span> <span class="o">==</span> <span class="n">Union</span><span class="p">:</span>
             <span class="n">prop_type</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">return_hints</span><span class="o">.</span><span class="n">__args__</span> <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">EnumBase</span><span class="p">))),</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">prop_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">typ</span> <span class="ow">in</span> <span class="p">(</span><span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">typ</span> <span class="ow">in</span> <span class="n">return_hints</span><span class="o">.</span><span class="n">__args__</span><span class="p">:</span>
+                        <span class="n">prop_type</span> <span class="o">=</span> <span class="n">typ</span>
+
+                        <span class="k">if</span> <span class="n">additional</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="n">additional</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">return_hints</span><span class="o">.</span><span class="n">__args__</span> <span class="k">if</span> <span class="n">a</span> <span class="o">!=</span> <span class="n">prop_type</span><span class="p">])</span>
+                        <span class="k">break</span>
+
+            <span class="k">if</span> <span class="n">prop_type</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">additional</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">prop_type</span> <span class="o">=</span> <span class="n">return_hints</span><span class="o">.</span><span class="n">__args__</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">additional</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">return_hints</span><span class="o">.</span><span class="n">__args__</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">prop_type</span> <span class="ow">is</span> <span class="n">InstrumentBase</span><span class="p">:</span>
+            <span class="c1"># TODO Fix this</span>
+            <span class="kn">from</span> <span class="nn">.instrument</span> <span class="kn">import</span> <span class="n">Instrument</span>
+            <span class="n">prop_type</span> <span class="o">=</span> <span class="n">Instrument</span>
 
         <span class="k">return</span> <span class="n">prop_type</span>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">prop_item_type</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">prop</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">:</span>
         <span class="n">return_hints</span> <span class="o">=</span> <span class="n">get_type_hints</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">prop</span><span class="p">)</span><span class="o">.</span><span class="n">fget</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;return&#39;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">return_hints</span><span class="o">.</span><span class="n">__args__</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">item_type</span> <span class="o">=</span> <span class="n">return_hints</span><span class="o">.</span><span class="n">__args__</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">item_args</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">item_type</span><span class="p">,</span> <span class="s1">&#39;__args__&#39;</span><span class="p">,</span> <span class="p">())</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">type</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="n">item_args</span><span class="p">:</span>
+            <span class="n">item_type</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">item_args</span> <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">EnumBase</span><span class="p">))),</span> <span class="n">item_args</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">item_type</span>
 
     <span class="k">def</span> <span class="nf">__from_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">prop</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">prop</span><span class="p">)</span><span class="o">.</span><span class="n">fset</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+
             <span class="n">prop_value</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">inflection</span><span class="o">.</span><span class="n">camelize</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="n">uppercase_first_letter</span><span class="o">=</span><span class="kc">False</span><span class="p">)))</span>
 
             <span class="k">if</span> <span class="n">prop_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">prop_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prop_type</span><span class="p">(</span><span class="n">prop</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prop_value</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">generic</span><span class="p">):</span>
+                    <span class="n">prop_value</span> <span class="o">=</span> <span class="n">prop_value</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+
+                <span class="n">additional_types</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">prop_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prop_type</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="n">additional</span><span class="o">=</span><span class="n">additional_types</span><span class="p">)</span>
 
                 <span class="k">if</span> <span class="n">prop_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="c1"># This shouldn&#39;t happen</span>
@@ -282,14 +427,39 @@
                         <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">prop_value</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">())</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="kn">import</span> <span class="nn">re</span>
-                        <span class="n">matcher</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s1">&#39;\.([0-9]*)Z$&#39;</span><span class="p">,</span> <span class="n">prop_value</span><span class="p">)</span>
+                        <span class="n">matcher</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">.([0-9]*)Z$&#39;</span><span class="p">,</span> <span class="n">prop_value</span><span class="p">)</span>
                         <span class="k">if</span> <span class="n">matcher</span><span class="p">:</span>
                             <span class="n">sub_seconds</span> <span class="o">=</span> <span class="n">matcher</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
                             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sub_seconds</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">6</span><span class="p">:</span>
                                 <span class="n">prop_value</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">matcher</span><span class="o">.</span><span class="n">re</span><span class="p">,</span> <span class="s1">&#39;.</span><span class="si">{}</span><span class="s1">Z&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sub_seconds</span><span class="p">[:</span><span class="mi">6</span><span class="p">]),</span> <span class="n">prop_value</span><span class="p">)</span>
-                        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop</span><span class="p">,</span> <span class="n">dateutil</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">isoparse</span><span class="p">(</span><span class="n">prop_value</span><span class="p">))</span>
-                <span class="k">elif</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">prop_type</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="p">):</span>
-                    <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop</span><span class="p">,</span> <span class="n">dateutil</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">isoparse</span><span class="p">(</span><span class="n">prop_value</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">())</span>
+
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop</span><span class="p">,</span> <span class="n">isoparse</span><span class="p">(</span><span class="n">prop_value</span><span class="p">))</span>
+                        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="nb">str</span> <span class="ow">in</span> <span class="n">additional_types</span><span class="p">:</span>
+                                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop</span><span class="p">,</span> <span class="n">prop_value</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">prop_type</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">prop_value</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="p">:</span>
+                    <span class="n">date_value</span> <span class="o">=</span> <span class="kc">None</span>
+
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prop_value</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+                        <span class="c1"># Assume it&#39;s an Excel date</span>
+                        <span class="k">if</span> <span class="n">prop_value</span> <span class="o">&gt;</span> <span class="mi">59</span><span class="p">:</span>
+                            <span class="n">prop_value</span> <span class="o">-=</span> <span class="mi">1</span>  <span class="c1"># Excel leap year bug, 1900 is not a leap year!</span>
+                        <span class="n">date_value</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">1899</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">31</span><span class="p">)</span> <span class="o">+</span> <span class="n">dt</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">prop_value</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+                    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prop_value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                        <span class="k">for</span> <span class="nb">format</span> <span class="ow">in</span> <span class="n">_valid_date_formats</span><span class="p">:</span>
+                            <span class="k">try</span><span class="p">:</span>
+                                <span class="n">date_value</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">prop_value</span><span class="p">,</span> <span class="nb">format</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+                                <span class="k">break</span>
+                            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                                <span class="k">pass</span>
+
+                    <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop</span><span class="p">,</span> <span class="n">date_value</span> <span class="ow">or</span> <span class="n">prop_value</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">prop_type</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prop_value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">prop_value</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;%&#39;</span><span class="p">):</span>
+                        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">prop_value</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="mi">100</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">prop_value</span><span class="p">))</span>
                 <span class="k">elif</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">prop_type</span><span class="p">,</span> <span class="n">EnumBase</span><span class="p">):</span>
                     <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop</span><span class="p">,</span> <span class="n">get_enum_value</span><span class="p">(</span><span class="n">prop_type</span><span class="p">,</span> <span class="n">prop_value</span><span class="p">))</span>
                 <span class="k">elif</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">prop_type</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
@@ -299,12 +469,9 @@
                         <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop</span><span class="p">,</span> <span class="n">prop_type</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">prop_value</span><span class="p">))</span>
                 <span class="k">elif</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">prop_type</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
                     <span class="n">item_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prop_item_type</span><span class="p">(</span><span class="n">prop</span><span class="p">)</span>
-                    <span class="n">item_args</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">item_type</span><span class="p">,</span> <span class="s1">&#39;__args__&#39;</span><span class="p">,</span> <span class="p">())</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">type</span><span class="p">)]</span>
-                    <span class="k">if</span> <span class="n">item_args</span><span class="p">:</span>
-                        <span class="n">item_type</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">item_args</span> <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">EnumBase</span><span class="p">))),</span> <span class="n">item_args</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-
                     <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">item_type</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
-                        <span class="n">item_values</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">v</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">EnumBase</span><span class="p">))</span> <span class="k">else</span> <span class="n">item_type</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">prop_value</span><span class="p">)</span>
+                        <span class="n">item_values</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">v</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">EnumBase</span><span class="p">))</span> <span class="k">else</span> <span class="n">item_type</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                                            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">prop_value</span><span class="p">)</span>
                     <span class="k">elif</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">item_type</span><span class="p">,</span> <span class="n">EnumBase</span><span class="p">):</span>
                         <span class="n">item_values</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">get_enum_value</span><span class="p">(</span><span class="n">item_type</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">prop_value</span><span class="p">)</span>
                     <span class="k">else</span><span class="p">:</span>
@@ -314,18 +481,23 @@
                     <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop</span><span class="p">,</span> <span class="n">prop_value</span><span class="p">)</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">_from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Base&#39;</span><span class="p">:</span>
-        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">signature</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="fm">__init__</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="s1">&#39;kwargs&#39;</span> <span class="ow">and</span> <span class="n">v</span><span class="o">.</span><span class="n">default</span> <span class="o">==</span> <span class="n">Parameter</span><span class="o">.</span><span class="n">empty</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="k">def</span> <span class="nf">_from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">signature</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="fm">__init__</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;kwargs&#39;</span><span class="p">,</span> <span class="s1">&#39;_kwargs&#39;</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="n">v</span><span class="o">.</span><span class="n">default</span> <span class="o">==</span> <span class="n">Parameter</span><span class="o">.</span><span class="n">empty</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
         <span class="n">required</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
-            <span class="n">prop_type</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">prop_type</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+            <span class="n">prop_name</span> <span class="o">=</span> <span class="n">arg</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">keyword</span><span class="o">.</span><span class="n">iskeyword</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">else</span> <span class="n">arg</span>
+            <span class="n">prop_type</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">prop_type</span><span class="p">(</span><span class="n">prop_name</span><span class="p">)</span>
             <span class="n">value</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">prop_type</span><span class="p">:</span>
-                <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">prop_type</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
-                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-                        <span class="n">value</span> <span class="o">=</span> <span class="n">prop_type</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">prop_type</span><span class="p">,</span> <span class="n">Base</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="n">prop_type</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">prop_type</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+                    <span class="n">item_type</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">prop_item_type</span><span class="p">(</span><span class="n">prop_name</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">item_type</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
+                        <span class="n">value</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">v</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">EnumBase</span><span class="p">))</span> <span class="k">else</span> <span class="n">item_type</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value</span><span class="p">)</span>
                 <span class="k">elif</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">prop_type</span><span class="p">,</span> <span class="n">EnumBase</span><span class="p">):</span>
                     <span class="n">value</span> <span class="o">=</span> <span class="n">get_enum_value</span><span class="p">(</span><span class="n">prop_type</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 
@@ -336,7 +508,7 @@
         <span class="k">return</span> <span class="n">instance</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Base&#39;</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Construct an instance of this type from a dictionary</span>
 
@@ -346,7 +518,7 @@
         <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_from_dict</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">default_instance</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Base&#39;</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">default_instance</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Construct a default instance of this type</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -354,46 +526,24 @@
         <span class="n">required</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="p">:</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">args</span><span class="p">}</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">required</span><span class="p">)</span>
 
-
-<div class="viewcode-block" id="Priceable"><a class="viewcode-back" href="../../classes/gs_quant.base.Priceable.html#gs_quant.base.Priceable">[docs]</a><span class="k">class</span> <span class="nc">Priceable</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
-
-    <span class="sd">&quot;&quot;&quot;A priceable, such as a derivative instrument&quot;&quot;&quot;</span>
-
-    <span class="n">PROVIDER</span> <span class="o">=</span> <span class="kc">None</span>
-
-<div class="viewcode-block" id="Priceable.__init__"><a class="viewcode-back" href="../../classes/gs_quant.base.Priceable.html#gs_quant.base.Priceable.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_resolved</span> <span class="o">=</span> <span class="kc">False</span></div>
-
-    <span class="k">def</span> <span class="nf">__getattribute__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="s1">&#39;_resolved&#39;</span><span class="p">):</span>
-            <span class="n">attr</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="s1">&#39;__class__&#39;</span><span class="p">),</span> <span class="n">name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">attr</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="nb">property</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
-
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">_property_changed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_property_changed</span><span class="p">(</span><span class="n">prop</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_resolved</span> <span class="o">=</span> <span class="kc">False</span>
-
-    <span class="k">def</span> <span class="nf">get_quantity</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">from_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Quantity of the instrument</span>
+<span class="sd">        Copy the values from an existing instance of the same type to our self</span>
+<span class="sd">        :param instance: from which to copy:</span>
+<span class="sd">        :return:</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Can only use from_instance with an object of the same type&#39;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">provider</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;RiskApi&#39;</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The risk provider - defaults to GsRiskApi</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">PROVIDER</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="kn">from</span> <span class="nn">gs_quant.api.gs.risk</span> <span class="k">import</span> <span class="n">GsRiskApi</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">PROVIDER</span> <span class="o">=</span> <span class="n">GsRiskApi</span>
+        <span class="k">for</span> <span class="n">prop</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="p">():</span>
+            <span class="n">attr</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="s1">&#39;__class__&#39;</span><span class="p">),</span> <span class="n">prop</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">attr</span><span class="o">.</span><span class="n">fset</span><span class="p">:</span>
+                <span class="nb">super</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="nb">super</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">instance</span><span class="p">)</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">prop</span><span class="p">))</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">PROVIDER</span>
 
-    <span class="k">def</span> <span class="nf">resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_place</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="s1">&#39;Priceable&#39;</span><span class="p">]:</span>
+<div class="viewcode-block" id="Priceable"><a class="viewcode-back" href="../../classes/gs_quant.base.Priceable.html#gs_quant.base.Priceable">[docs]</a><span class="k">class</span> <span class="nc">Priceable</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_place</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Resolve non-supplied properties of an instrument</span>
 
@@ -411,13 +561,9 @@
 
 <span class="sd">        rates is now the solved fixed rate</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">gs_quant.risk</span> <span class="k">import</span> <span class="n">PricingContext</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolved</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Already resolved&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
-        <span class="k">return</span> <span class="n">PricingContext</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">resolve_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_place</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">dollar_price</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Future</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">dollar_price</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Present value in USD</span>
 
@@ -435,7 +581,7 @@
 <span class="sd">        &gt;&gt;&gt; cap_usd = IRCap(&#39;1y&#39;, &#39;USD&#39;)</span>
 <span class="sd">        &gt;&gt;&gt; cap_eur = IRCap(&#39;1y&#39;, &#39;EUR&#39;)</span>
 <span class="sd">        &gt;&gt;&gt;</span>
-<span class="sd">        &gt;&gt;&gt; from gs_quant.risk import PricingContext</span>
+<span class="sd">        &gt;&gt;&gt; from gs_quant.markets import PricingContext</span>
 <span class="sd">        &gt;&gt;&gt;</span>
 <span class="sd">        &gt;&gt;&gt; with PricingContext():</span>
 <span class="sd">        &gt;&gt;&gt;     price_usd_f = cap_usd.dollar_price()</span>
@@ -446,11 +592,9 @@
 
 <span class="sd">        price_usd_f and price_eur_f are futures, price_usd and price_eur are floats</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
-        <span class="kn">from</span> <span class="nn">gs_quant.risk</span> <span class="k">import</span> <span class="n">DollarPrice</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="p">(</span><span class="n">DollarPrice</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">price</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Future</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">price</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Present value in local currency. Note that this is not yet supported on all instruments</span>
 
@@ -463,15 +607,16 @@
 
 <span class="sd">        price is the present value in EUR (a float)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">gs_quant.risk</span> <span class="k">import</span> <span class="n">Price</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="p">(</span><span class="n">Price</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
-    <span class="k">def</span> <span class="nf">calc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">risk_measure</span><span class="p">:</span> <span class="s1">&#39;RiskMeasure&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">Future</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">calc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">risk_measure</span><span class="p">,</span> <span class="n">fn</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate the value of the risk_measure</span>
 
 <span class="sd">        :param risk_measure: the risk measure to compute, e.g. IRDelta (from gs_quant.risk)</span>
-<span class="sd">        :return: a float or dataframe, depending on whether the value is scalar or structured, or a future thereof (depending on how PricingContext is being used)</span>
+<span class="sd">        :param fn: a function for post-processing results</span>
+<span class="sd">        :return: a float or dataframe, depending on whether the value is scalar or structured, or a future thereof</span>
+<span class="sd">        (depending on how PricingContext is being used)</span>
 
 <span class="sd">        **Examples**</span>
 
@@ -491,7 +636,7 @@
 
 <span class="sd">        delta is a float</span>
 
-<span class="sd">        &gt;&gt;&gt; from gs_quant.risk import PricingContext</span>
+<span class="sd">        &gt;&gt;&gt; from gs_quant.markets import PricingContext</span>
 <span class="sd">        &gt;&gt;&gt;</span>
 <span class="sd">        &gt;&gt;&gt; cap_usd = IRCap(&#39;1y&#39;, &#39;USD&#39;)</span>
 <span class="sd">        &gt;&gt;&gt; cap_eur = IRCap(&#39;1y&#39;, &#39;EUR&#39;)</span>
@@ -505,54 +650,108 @@
 
 <span class="sd">        usd_delta_f and eur_delta_f are futures, usd_delta and eur_delta are dataframes</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">gs_quant.risk</span> <span class="k">import</span> <span class="n">PricingContext</span><span class="p">,</span> <span class="n">get_specific_risk_measure</span>
-        <span class="n">specific_risk_measure</span> <span class="o">=</span> <span class="n">get_specific_risk_measure</span><span class="p">(</span><span class="n">risk_measure</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">specific_risk_measure</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unsupported risk measure&#39;</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">PricingContext</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">calc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">specific_risk_measure</span><span class="p">)</span></div>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
 
 
-<span class="k">class</span> <span class="nc">Instrument</span><span class="p">(</span><span class="n">Priceable</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">__ScenarioMeta</span><span class="p">(</span><span class="n">ABCMeta</span><span class="p">,</span> <span class="n">ContextMeta</span><span class="p">):</span>
+    <span class="k">pass</span>
 
-    <span class="n">__asset_class_and_type_to_instrument</span> <span class="o">=</span> <span class="p">{}</span>
 
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">asset_class_and_type_to_instrument</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="s1">&#39;AssetClass&#39;</span><span class="p">,</span> <span class="s1">&#39;AssetType&#39;</span><span class="p">],</span> <span class="s1">&#39;Instrument&#39;</span><span class="p">]:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__asset_class_and_type_to_instrument</span><span class="p">:</span>
-            <span class="kn">import</span> <span class="nn">gs_quant.target.instrument</span> <span class="k">as</span> <span class="nn">instrument</span>
-            <span class="kn">import</span> <span class="nn">inspect</span>
-            <span class="n">instrument_classes</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getmembers</span><span class="p">(</span><span class="n">instrument</span><span class="p">,</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isclass</span><span class="p">)</span> <span class="k">if</span>
-                                  <span class="nb">issubclass</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">Instrument</span><span class="p">)</span> <span class="ow">and</span> <span class="n">c</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Instrument</span><span class="p">]</span>
+<span class="k">class</span> <span class="nc">Scenario</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">ContextBase</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">__ScenarioMeta</span><span class="p">):</span>
+    <span class="k">pass</span>
 
-            <span class="bp">cls</span><span class="o">.</span><span class="n">__asset_class_and_type_to_instrument</span><span class="p">[(</span><span class="n">instrument</span><span class="o">.</span><span class="n">AssetClass</span><span class="o">.</span><span class="n">Cash</span><span class="p">,</span> <span class="n">instrument</span><span class="o">.</span><span class="n">AssetType</span><span class="o">.</span><span class="n">Currency</span><span class="p">)]</span> <span class="o">=</span> <span class="n">instrument</span><span class="o">.</span><span class="n">Forward</span>
 
-            <span class="k">for</span> <span class="n">clazz</span> <span class="ow">in</span> <span class="n">instrument_classes</span><span class="p">:</span>
-                <span class="n">instrument</span> <span class="o">=</span> <span class="n">clazz</span><span class="o">.</span><span class="n">default_instance</span><span class="p">()</span>
-                <span class="bp">cls</span><span class="o">.</span><span class="n">__asset_class_and_type_to_instrument</span><span class="p">[(</span><span class="n">instrument</span><span class="o">.</span><span class="n">asset_class</span><span class="p">,</span> <span class="n">instrument</span><span class="o">.</span><span class="n">type</span><span class="p">)]</span> <span class="o">=</span> <span class="n">clazz</span>
+<span class="k">class</span> <span class="nc">InstrumentBase</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
 
-        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__asset_class_and_type_to_instrument</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">quantity</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__instrument_quantity</span> <span class="o">=</span> <span class="n">quantity</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__resolution_key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RiskKey</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__unresolved</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">InstrumentBase</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="s1">&#39;Instrument&#39;</span><span class="p">,</span> <span class="s1">&#39;Security&#39;</span><span class="p">]]:</span>
-        <span class="kn">from</span> <span class="nn">gs_quant.target.instrument</span> <span class="k">import</span> <span class="n">AssetClass</span><span class="p">,</span> <span class="n">AssetType</span>
+    <span class="nd">@property</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="nd">@do_not_serialise</span>
+    <span class="k">def</span> <span class="nf">provider</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="o">...</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">values</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">None</span>
+    <span class="nd">@property</span>
+    <span class="nd">@do_not_serialise</span>
+    <span class="k">def</span> <span class="nf">instrument_quantity</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__instrument_quantity</span>
 
-        <span class="n">instrument_type</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">asset_class_and_type_to_instrument</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">((</span>
-            <span class="n">get_enum_value</span><span class="p">(</span><span class="n">AssetClass</span><span class="p">,</span> <span class="n">values</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;asset_class&#39;</span><span class="p">)),</span>
-            <span class="n">get_enum_value</span><span class="p">(</span><span class="n">AssetType</span><span class="p">,</span> <span class="n">values</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">))))</span>
+    <span class="nd">@property</span>
+    <span class="nd">@do_not_serialise</span>
+    <span class="k">def</span> <span class="nf">resolution_key</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RiskKey</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__resolution_key</span>
 
-        <span class="k">if</span> <span class="n">instrument_type</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">instrument_type</span><span class="o">.</span><span class="n">_from_dict</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="kn">from</span> <span class="nn">gs_quant.instrument</span> <span class="k">import</span> <span class="n">Security</span>
-            <span class="k">return</span> <span class="n">Security</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+    <span class="nd">@property</span>
+    <span class="nd">@do_not_serialise</span>
+    <span class="k">def</span> <span class="nf">unresolved</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__unresolved</span>
+
+    <span class="k">def</span> <span class="nf">_property_changed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__resolution_key</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__resolution_key</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">unresolve</span><span class="p">()</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_property_changed</span><span class="p">(</span><span class="n">prop</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">from_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__resolution_key</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">from_instance</span><span class="p">(</span><span class="n">instance</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__unresolved</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">__unresolved</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__resolution_key</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">__resolution_key</span>
+
+    <span class="k">def</span> <span class="nf">resolved</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">resolution_key</span><span class="p">:</span> <span class="n">RiskKey</span><span class="p">):</span>
+        <span class="n">new_instrument</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+        <span class="n">new_instrument</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">new_instrument</span><span class="o">.</span><span class="n">__unresolved</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">new_instrument</span><span class="o">.</span><span class="n">__resolution_key</span> <span class="o">=</span> <span class="n">resolution_key</span>
+        <span class="k">return</span> <span class="n">new_instrument</span>
+
+    <span class="k">def</span> <span class="nf">unresolve</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__resolution_key</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">__unresolved</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">from_instance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__unresolved</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__resolution_key</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__unresolved</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<span class="k">class</span> <span class="nc">QuotableBuilder</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">valuation_overrides</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">valuation_overrides</span> <span class="o">=</span> <span class="n">valuation_overrides</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@do_not_resolve</span>
+    <span class="k">def</span> <span class="nf">valuation_overrides</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__valuation_overrides</span>
+
+    <span class="nd">@valuation_overrides</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">valuation_overrides</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__valuation_overrides</span> <span class="o">=</span> <span class="n">value</span>
+
+
+<span class="k">class</span> <span class="nc">Market</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">location</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="o">...</span>
+
+
+<span class="k">class</span> <span class="nc">Sentinel</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__name</span> <span class="o">=</span> <span class="n">name</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__name</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">__name</span>
 
 
 <span class="k">def</span> <span class="nf">get_enum_value</span><span class="p">(</span><span class="n">enum_type</span><span class="p">:</span> <span class="n">EnumMeta</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">EnumBase</span><span class="p">,</span> <span class="nb">str</span><span class="p">]):</span>
-    <span class="k">if</span> <span class="n">value</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;None&#39;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,):</span>
         <span class="k">return</span> <span class="kc">None</span>
 
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">enum_type</span><span class="p">):</span>
@@ -565,6 +764,20 @@
         <span class="n">enum_value</span> <span class="o">=</span> <span class="n">value</span>
 
     <span class="k">return</span> <span class="n">enum_value</span>
+
+
+<span class="k">def</span> <span class="nf">as_tuple</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">wrap</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="nb">iter</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="p">(</span><span class="n">value</span><span class="p">,)</span>
+
+        <span class="k">return</span> <span class="n">f</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">wrap</span>
 </pre></div>
 
            </div>

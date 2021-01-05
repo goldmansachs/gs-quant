@@ -1,0 +1,705 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>gs_quant.models.epidemiology &mdash; gs_quant 0.1 documentation</title>
+  
+
+    
+  <script crossorigin src="/resources/react/16-8-6/prod/react.production.min.js"></script>
+  <script
+    crossorigin src="/resources/react/16-8-6/prod/react-dom.production.min.js"></script>
+
+     
+    <script src='/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML' async></script> 
+    
+    <script type="text/javascript" src="../../../_static/../../../auto-mount.js"></script>
+    <link rel="stylesheet" href="../../../_static/../../../auto-mount.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" /> 
+</head>
+
+<!-- Hello from the future. -->
+<div id="mq-doc-navbar-inject"></div>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    <a data-toggle="wy-nav-top" id="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" id="gs-nav-action"></div>
+    </a>
+    
+    <nav id="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Packages</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../data.html">Data Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../datetime.html">Datetime Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instrument.html">Instrument Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../markets.html">Markets Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../models.html">Models Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../risk.html">Risk Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../timeseries.html">Timeseries Package</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Packages</a> /</li>
+        
+          <li><a href="../../index.html">Module code</a> /</li>
+        
+      <li>gs_quant.models.epidemiology</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for gs_quant.models.epidemiology</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Copyright 2020 Goldman Sachs.</span>
+<span class="sd">Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="sd">you may not use this file except in compliance with the License.</span>
+<span class="sd">You may obtain a copy of the License at</span>
+
+<span class="sd">  http://www.apache.org/licenses/LICENSE-2.0</span>
+
+<span class="sd">Unless required by applicable law or agreed to in writing,</span>
+<span class="sd">software distributed under the License is distributed on an</span>
+<span class="sd">&quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY</span>
+<span class="sd">KIND, either express or implied.  See the License for the</span>
+<span class="sd">specific language governing permissions and limitations</span>
+<span class="sd">under the License.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Type</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.integrate</span> <span class="kn">import</span> <span class="n">odeint</span>
+<span class="kn">from</span> <span class="nn">lmfit</span> <span class="kn">import</span> <span class="n">minimize</span><span class="p">,</span> <span class="n">Parameters</span><span class="p">,</span> <span class="n">report_fit</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Statistical models for the transmission of infectious diseases</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="k">class</span> <span class="nc">CompartmentalModel</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">calibrate</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">parameters</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; Should be of form callable(y, t, ...)</span>
+<span class="sd">            See https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.odeint.html &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">get_parameters</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+
+<div class="viewcode-block" id="SIR"><a class="viewcode-back" href="../../../classes/gs_quant.models.epidemiology.SIR.html#gs_quant.models.epidemiology.SIR">[docs]</a><span class="k">class</span> <span class="nc">SIR</span><span class="p">(</span><span class="n">CompartmentalModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;SIR Model&quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">calibrate</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">xs</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">parameters</span><span class="p">:</span> <span class="p">[</span><span class="n">Parameters</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        SIR model derivatives at t.</span>
+
+<span class="sd">        :param xs: variables that we are solving for, i.e. [S]usceptible, [I]nfected, [R]emoved</span>
+<span class="sd">        :param t: time parameter, inactive for this model</span>
+<span class="sd">        :param parameters: parameters of the model (not including initial conditions), i.e. beta, gamma, N</span>
+<span class="sd">        :return: tuple, the derivatives dSdt, dIdt, dRdt of each of the S, I, R variables</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">s</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">xs</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">Parameters</span><span class="p">):</span>
+            <span class="n">beta</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;beta&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+            <span class="n">gamma</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;gamma&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+            <span class="n">N</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;N&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="n">beta</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="n">parameters</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot recognize parameter input&quot;</span><span class="p">)</span>
+
+        <span class="n">dSdt</span> <span class="o">=</span> <span class="o">-</span> <span class="n">beta</span> <span class="o">*</span> <span class="n">s</span> <span class="o">*</span> <span class="n">i</span> <span class="o">/</span> <span class="n">N</span>
+        <span class="n">dIdt</span> <span class="o">=</span> <span class="n">beta</span> <span class="o">*</span> <span class="n">s</span> <span class="o">*</span> <span class="n">i</span> <span class="o">/</span> <span class="n">N</span> <span class="o">-</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">i</span>
+        <span class="n">dRdt</span> <span class="o">=</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">i</span>
+
+        <span class="k">return</span> <span class="n">dSdt</span><span class="p">,</span> <span class="n">dIdt</span><span class="p">,</span> <span class="n">dRdt</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_parameters</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">S0</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">I0</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">R0</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">N</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">beta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span>
+                       <span class="n">beta_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">gamma_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">S0_fixed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">S0_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e6</span><span class="p">,</span>
+                       <span class="n">beta_fixed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">gamma_fixed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">R0_fixed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">R0_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e6</span><span class="p">,</span>
+                       <span class="n">I0_fixed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">I0_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e6</span><span class="p">)</span>\
+            <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Produce a set of parameters for the SIR model.</span>
+
+<span class="sd">        :param S0: initial number of susceptible in the population</span>
+<span class="sd">        :param I0: initial number of infected in the population, usually set to 1</span>
+<span class="sd">        :param R0: initial number of recovered/removed in the population, usually set to 0</span>
+<span class="sd">        :param N: size of the population</span>
+<span class="sd">        :param beta: transmission rate parameter</span>
+<span class="sd">        :param gamma: recovery rate parameter</span>
+<span class="sd">        :param beta_max: maximum value to consider for beta during parameter fitting</span>
+<span class="sd">        :param gamma_max: maximum value of gamma to consider during parameter fitting</span>
+<span class="sd">        :param S0_fixed: whether to keep S0 fixed during fitting</span>
+<span class="sd">        :param S0_max: maximum value of S0 to consider during parameter fitting</span>
+<span class="sd">        :param R0_fixed: whether to keep R0 fixed during fitting</span>
+<span class="sd">        :param R0_max: maximum value of R0 to consider during parameter fitting</span>
+<span class="sd">        :param I0_fixed: whether to keep I0 fixed during fitting</span>
+<span class="sd">        :param I0_max: maximum value of I0 to consider during parameter fitting</span>
+<span class="sd">        :return: tuple[Parameters, list]: (parameters, a list of the names of the variables for initial conditions)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="n">Parameters</span><span class="p">()</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;N&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">N</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">N</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;S0&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">S0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">S0_max</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="ow">not</span> <span class="n">S0_fixed</span><span class="p">)</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;I0&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">I0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">I0_max</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="ow">not</span> <span class="n">I0_fixed</span><span class="p">)</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;R0&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">R0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">R0_max</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="ow">not</span> <span class="n">R0_fixed</span><span class="p">)</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;beta&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">beta</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">beta_max</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="ow">not</span> <span class="n">beta_fixed</span><span class="p">)</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;gamma&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">gamma</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">gamma_max</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="ow">not</span> <span class="n">gamma_fixed</span><span class="p">)</span>
+        <span class="n">initial_conditions</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;S0&#39;</span><span class="p">,</span> <span class="s1">&#39;I0&#39;</span><span class="p">,</span> <span class="s1">&#39;R0&#39;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">initial_conditions</span></div>
+
+
+<div class="viewcode-block" id="SEIR"><a class="viewcode-back" href="../../../classes/gs_quant.models.epidemiology.SEIR.html#gs_quant.models.epidemiology.SEIR">[docs]</a><span class="k">class</span> <span class="nc">SEIR</span><span class="p">(</span><span class="n">CompartmentalModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;SEIR Model&quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">calibrate</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">xs</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">parameters</span><span class="p">:</span> <span class="p">[</span><span class="n">Parameters</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        SEIR model derivatives at t.</span>
+
+<span class="sd">        :param xs: variables that we are solving for, i.e. [S]usceptible, [E]xposed, [I]nfected, [R]emoved</span>
+<span class="sd">        :param t: time parameter, inactive for this model</span>
+<span class="sd">        :param parameters: parameters of the model (not including initial conditions), i.e. beta, gamma, sigma, N</span>
+<span class="sd">        :return: tuple, the derivatives dSdt, dEdt, dIdt, dRdt of each of the S, E, I, R variables</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">s</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">xs</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">Parameters</span><span class="p">):</span>
+            <span class="n">beta</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;beta&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+            <span class="n">gamma</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;gamma&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+            <span class="n">sigma</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+            <span class="n">N</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;N&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="n">beta</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="n">parameters</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot recognize parameter input&quot;</span><span class="p">)</span>
+
+        <span class="n">dSdt</span> <span class="o">=</span> <span class="o">-</span><span class="n">beta</span> <span class="o">*</span> <span class="n">s</span> <span class="o">*</span> <span class="n">i</span> <span class="o">/</span> <span class="n">N</span>
+        <span class="n">dEdt</span> <span class="o">=</span> <span class="n">beta</span> <span class="o">*</span> <span class="n">s</span> <span class="o">*</span> <span class="n">i</span> <span class="o">/</span> <span class="n">N</span> <span class="o">-</span> <span class="n">sigma</span> <span class="o">*</span> <span class="n">e</span>
+        <span class="n">dIdt</span> <span class="o">=</span> <span class="n">sigma</span> <span class="o">*</span> <span class="n">e</span> <span class="o">-</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">i</span>
+        <span class="n">dRdt</span> <span class="o">=</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">i</span>
+
+        <span class="k">return</span> <span class="n">dSdt</span><span class="p">,</span> <span class="n">dEdt</span><span class="p">,</span> <span class="n">dIdt</span><span class="p">,</span> <span class="n">dRdt</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_parameters</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">S0</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">E0</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">I0</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">R0</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">N</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">beta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span>
+                       <span class="n">sigma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">beta_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">gamma_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">sigma_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+                       <span class="n">beta_fixed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">gamma_fixed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">sigma_fixed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                       <span class="n">S0_fixed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">S0_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e6</span><span class="p">,</span> <span class="n">R0_fixed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">R0_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e6</span><span class="p">,</span>
+                       <span class="n">I0_fixed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">I0_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e6</span><span class="p">,</span> <span class="n">E0_fixed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">E0_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e6</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Produce a set of parameters for the SIR model.</span>
+
+<span class="sd">        :param S0: initial number of susceptible in the population</span>
+<span class="sd">        :param E0: initial number of exposed in the population</span>
+<span class="sd">        :param I0: initial number of infected in the population, usually set to 1</span>
+<span class="sd">        :param R0: initial number of recovered/removed in the population, usually set to 0</span>
+<span class="sd">        :param N: size of the population</span>
+<span class="sd">        :param beta: transmission rate parameter</span>
+<span class="sd">        :param gamma: recovery rate parameter</span>
+<span class="sd">        :param sigma: parameter controlling transition from exposed to infectious</span>
+<span class="sd">        :param beta_max: maximum value to consider for beta during parameter fitting</span>
+<span class="sd">        :param gamma_max: maximum value of gamma to consider during parameter fitting</span>
+<span class="sd">        :param sigma_max: maximum value of gamma to consider during parameter fitting</span>
+<span class="sd">        :param S0_fixed: whether to keep S0 fixed during fitting</span>
+<span class="sd">        :param S0_max: maximum value of S0 to consider during parameter fitting</span>
+<span class="sd">        :param E0_fixed: whether to keep E0 fixed during fitting</span>
+<span class="sd">        :param E0_max: maximum value of E0 to consider during parameter fitting</span>
+<span class="sd">        :param R0_fixed: whether to keep R0 fixed during fitting</span>
+<span class="sd">        :param R0_max: maximum value of R0 to consider during parameter fitting</span>
+<span class="sd">        :param I0_fixed: whether to keep I0 fixed during fitting</span>
+<span class="sd">        :param I0_max: maximum value of I0 to consider during parameter fitting</span>
+<span class="sd">        :return: tuple[Parameters, list]: (parameters, a list of the names of the variables for initial conditions)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="n">Parameters</span><span class="p">()</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;N&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">N</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">N</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;S0&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">S0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">S0_max</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="ow">not</span> <span class="n">S0_fixed</span><span class="p">)</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;E0&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">E0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">E0_max</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="ow">not</span> <span class="n">E0_fixed</span><span class="p">)</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;I0&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">I0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">I0_max</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="ow">not</span> <span class="n">I0_fixed</span><span class="p">)</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;R0&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">R0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">R0_max</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="ow">not</span> <span class="n">R0_fixed</span><span class="p">)</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;beta&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">beta</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">beta_max</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="ow">not</span> <span class="n">beta_fixed</span><span class="p">)</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;gamma&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">gamma</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">gamma_max</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="ow">not</span> <span class="n">gamma_fixed</span><span class="p">)</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;sigma&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">sigma</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">sigma_max</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="ow">not</span> <span class="n">sigma_fixed</span><span class="p">)</span>
+        <span class="n">initial_conditions</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;S0&#39;</span><span class="p">,</span> <span class="s1">&#39;E0&#39;</span><span class="p">,</span> <span class="s1">&#39;I0&#39;</span><span class="p">,</span> <span class="s1">&#39;R0&#39;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">initial_conditions</span></div>
+
+
+<span class="k">def</span> <span class="nf">switch</span><span class="p">(</span><span class="n">t</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">T</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">eta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">xi</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span> <span class="n">nu</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a time-dependent factor that decreases exponentially, to scale parameters that are affected at some</span>
+<span class="sd">    time point T.</span>
+
+<span class="sd">    Ex. quarantine control measures were instated at some point T &gt; t0, where t0 is the first day in available data.</span>
+<span class="sd">    After this point, transmission rate was effectively reduced. This is modeled as a time-varying exponential decrease</span>
+<span class="sd">    from 1 (no effect) to some fixed coefficient eta (the full effect) (ie. at time t0 it is 1 * beta, and by</span>
+<span class="sd">    time T + nu, it is around eta * beta). If quarantine reduces transmission rate by 60%, eta would be 0.4. The</span>
+<span class="sd">    paramater xi controls the steepness of this decrease, the nu controls the shift relative to time T at which the</span>
+<span class="sd">    decrease peaks (ie. effects from quarantine measures at time T are visible at T+5 so nu=5). If nu=0, steepest</span>
+<span class="sd">    point is at time T.</span>
+
+<span class="sd">    To disable the &#39;switch&#39;, set eta = 1.0</span>
+
+<span class="sd">    :param t: current time step</span>
+<span class="sd">    :param T: some fixed time step at which the regime &#39;switches&#39; - T is relative to t0, which is positioned at 0</span>
+<span class="sd">              NOTE: this is not necessarily the steepest point of decrease. That is controlled by nu.</span>
+<span class="sd">    :param eta: optional - the proportional reduction in transmission rate after control measures (ie. quarantine)</span>
+<span class="sd">    :param xi: optional - the slope of the exponential decrease</span>
+<span class="sd">    :param nu: optional - the shift of the exponential decrease</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">eta</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">eta</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">xi</span> <span class="o">*</span> <span class="p">(</span><span class="n">t</span> <span class="o">-</span> <span class="n">T</span> <span class="o">-</span> <span class="n">nu</span><span class="p">)))</span>
+
+
+<span class="k">class</span> <span class="nc">SEIRCM</span><span class="p">(</span><span class="n">CompartmentalModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; SEIR Model from https://www.medrxiv.org/content/10.1101/2020.03.04.20031104v1.full.pdf</span>
+<span class="sd">        with cumulative cases (C) and cumulative fatalities (M) &quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">calibrate</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">xs</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">parameters</span><span class="p">:</span> <span class="p">[</span><span class="n">Parameters</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        SEIRCM model derivatives at t.</span>
+
+<span class="sd">        :param xs: variables that we are solving for</span>
+<span class="sd">                   i.e. [S]usceptible, [E]xposed, [I]nfected, [R]emoved, [C]ases, [M]ortality</span>
+<span class="sd">        :param t: time parameter</span>
+<span class="sd">        :param parameters: parameters of the model (not including initial conditions)</span>
+<span class="sd">                           i.e. beta, gamma, sigma, eta, epsilon</span>
+<span class="sd">        :return: the derivatives of each of the S, E, I, R, C, M variables</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">s</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">xs</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">Parameters</span><span class="p">):</span>
+            <span class="n">beta</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;beta&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>  <span class="c1"># transmission rate</span>
+            <span class="n">gamma</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;gamma&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>  <span class="c1"># removal rate</span>
+            <span class="n">sigma</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>  <span class="c1"># infection rate</span>
+            <span class="n">eta</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;eta&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>  <span class="c1"># control measure redux</span>
+            <span class="n">epsilon</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>  <span class="c1"># case fatality rate</span>
+            <span class="n">T_quarantine</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;T&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>  <span class="c1"># time of quarantine policy, relative to t=0 (first reported case)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="n">beta</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">eta</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">,</span> <span class="n">T_quarantine</span> <span class="o">=</span> <span class="n">parameters</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot recognize parameter input&quot;</span><span class="p">)</span>
+
+        <span class="c1"># total population</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="n">s</span> <span class="o">+</span> <span class="n">e</span> <span class="o">+</span> <span class="n">i</span> <span class="o">+</span> <span class="n">r</span>
+
+        <span class="c1"># if T_quarantine is 0, we are not considering effect of quarantine policy so scale factor is fixed at 1</span>
+        <span class="n">quarantine_factor</span> <span class="o">=</span> <span class="n">switch</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">T_quarantine</span><span class="p">,</span> <span class="n">eta</span><span class="o">=</span><span class="n">eta</span><span class="p">)</span> <span class="k">if</span> <span class="n">T_quarantine</span> <span class="k">else</span> <span class="mi">1</span>
+
+        <span class="n">dSdt</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">quarantine_factor</span> <span class="o">*</span> <span class="n">beta</span><span class="p">)</span> <span class="o">*</span> <span class="n">s</span> <span class="o">*</span> <span class="n">i</span> <span class="o">/</span> <span class="n">N</span>  <span class="c1"># susceptible -&gt; exposed</span>
+        <span class="n">dEdt</span> <span class="o">=</span> <span class="p">(</span><span class="n">quarantine_factor</span> <span class="o">*</span> <span class="n">beta</span><span class="p">)</span> <span class="o">*</span> <span class="n">s</span> <span class="o">*</span> <span class="n">i</span> <span class="o">/</span> <span class="n">N</span> <span class="o">-</span> <span class="n">sigma</span> <span class="o">*</span> <span class="n">e</span>  <span class="c1"># exposed -&gt; infected AND recorded cases</span>
+        <span class="n">dIdt</span> <span class="o">=</span> <span class="n">sigma</span> <span class="o">*</span> <span class="n">e</span> <span class="o">-</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">i</span>  <span class="c1"># infected -&gt; removed (recovered AND dead)</span>
+        <span class="n">dRdt</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">epsilon</span><span class="p">)</span> <span class="o">*</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">i</span>  <span class="c1"># recovered (from removed)</span>
+        <span class="n">dCdt</span> <span class="o">=</span> <span class="n">sigma</span> <span class="o">*</span> <span class="n">e</span>  <span class="c1"># recorded cases (from infected)</span>
+        <span class="n">dMdt</span> <span class="o">=</span> <span class="n">epsilon</span> <span class="o">*</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">i</span>  <span class="c1"># dead (from removed)</span>
+
+        <span class="k">return</span> <span class="n">dSdt</span><span class="p">,</span> <span class="n">dEdt</span><span class="p">,</span> <span class="n">dIdt</span><span class="p">,</span> <span class="n">dRdt</span><span class="p">,</span> <span class="n">dCdt</span><span class="p">,</span> <span class="n">dMdt</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_parameters</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span>
+                       <span class="n">S0</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">E0</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">I0</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">R0</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">C0</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">M0</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+                       <span class="n">T_quarantine</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+                       <span class="n">beta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span> <span class="n">sigma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span>
+                       <span class="n">eta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.6</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.02</span><span class="p">,</span>
+                       <span class="n">beta_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">gamma_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">sigma_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+                       <span class="n">eta_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">epsilon_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+                       <span class="n">beta_fixed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">gamma_fixed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">sigma_fixed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                       <span class="n">eta_fixed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">epsilon_fixed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                       <span class="n">S0_fixed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">S0_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e6</span><span class="p">,</span>
+                       <span class="n">R0_fixed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">R0_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e6</span><span class="p">,</span>
+                       <span class="n">I0_fixed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">I0_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e6</span><span class="p">,</span>
+                       <span class="n">E0_fixed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">E0_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e6</span><span class="p">,</span>
+                       <span class="n">C0_fixed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">C0_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e6</span><span class="p">,</span>
+                       <span class="n">M0_fixed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">M0_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e6</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Produce a set of parameters for the SIERCM model.</span>
+
+<span class="sd">        :param S0: initial number of susceptible in the population</span>
+<span class="sd">        :param E0: initial number of exposed in the population</span>
+<span class="sd">        :param I0: initial number of infected in the population, usually set to 1</span>
+<span class="sd">        :param R0: initial number of recovered/removed in the population, usually set to 0</span>
+<span class="sd">        :param C0: initial number of cumulative infected cases</span>
+<span class="sd">        :param M0: initial number of cumulative fatalities</span>
+<span class="sd">        :param T_quarantine: relative time at which quarantine policy goes in effect. If 0, not used.</span>
+<span class="sd">        :param beta: transmission rate parameter</span>
+<span class="sd">        :param gamma: recovery rate parameter</span>
+<span class="sd">        :param sigma: parameter controlling transition from exposed to infectious</span>
+<span class="sd">        :param eta: parameter controlling proportion by which quarantine measure reduces rate of transmission</span>
+<span class="sd">        :param epsilon: parameter controlling rate of death</span>
+<span class="sd">        :param beta_max: maximum value to consider for beta during parameter fitting</span>
+<span class="sd">        :param gamma_max: maximum value of gamma to consider during parameter fitting</span>
+<span class="sd">        :param sigma_max: maximum value to consider for sigma during parameter fitting</span>
+<span class="sd">        :param eta_max: maximum value to consider for eta during parameter fitting</span>
+<span class="sd">        :param epsilon_max: maximum value to consider for epsilon during parameter fitting</span>
+<span class="sd">        :param beta_fixed: whether to keep beta fixed during fitting</span>
+<span class="sd">        :param gamma_fixed: whether to keep gamma fixed during fitting</span>
+<span class="sd">        :param sigma_fixed: whether to keep sigma fixed during fitting</span>
+<span class="sd">        :param eta_fixed: whether to keep eta fixed during fitting</span>
+<span class="sd">        :param epsilon_fixed: whether to keep epsilon fixed during fitting</span>
+<span class="sd">        :param S0_fixed: whether to keep S0 fixed during fitting</span>
+<span class="sd">        :param S0_max: maximum value of S0 to consider during parameter fitting</span>
+<span class="sd">        :param E0_fixed: whether to keep E0 fixed during fitting</span>
+<span class="sd">        :param E0_max: maximum value of E0 to consider during parameter fitting</span>
+<span class="sd">        :param R0_fixed: whether to keep R0 fixed during fitting</span>
+<span class="sd">        :param R0_max: maximum value of R0 to consider during parameter fitting</span>
+<span class="sd">        :param I0_fixed: whether to keep I0 fixed during fitting</span>
+<span class="sd">        :param I0_max: maximum value of I0 to consider during parameter fitting</span>
+<span class="sd">        :param C0_fixed: whether to keep C0 fixed during fitting</span>
+<span class="sd">        :param C0_max: maximum value of C0 to consider during parameter fitting</span>
+<span class="sd">        :param M0_fixed: whether to keep M0 fixed during fitting</span>
+<span class="sd">        :param M0_max: maximum value of M0 to consider during parameter fitting</span>
+<span class="sd">        :return: tuple[Parameters, list]: (parameters, a list of the names of the variables for initial conditions)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="n">Parameters</span><span class="p">()</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;T&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">T_quarantine</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">T_quarantine</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;S0&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">S0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">S0_max</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="ow">not</span> <span class="n">S0_fixed</span><span class="p">)</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;E0&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">E0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">E0_max</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="ow">not</span> <span class="n">E0_fixed</span><span class="p">)</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;I0&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">I0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">I0_max</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="ow">not</span> <span class="n">I0_fixed</span><span class="p">)</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;R0&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">R0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">R0_max</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="ow">not</span> <span class="n">R0_fixed</span><span class="p">)</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;C0&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">C0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">C0_max</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="ow">not</span> <span class="n">C0_fixed</span><span class="p">)</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;M0&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">M0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">M0_max</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="ow">not</span> <span class="n">M0_fixed</span><span class="p">)</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;beta&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">beta</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">beta_max</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="ow">not</span> <span class="n">beta_fixed</span><span class="p">)</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;gamma&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">gamma</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">gamma_max</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="ow">not</span> <span class="n">gamma_fixed</span><span class="p">)</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;sigma&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">sigma</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">sigma_max</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="ow">not</span> <span class="n">sigma_fixed</span><span class="p">)</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;eta&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">eta</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">eta_max</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="ow">not</span> <span class="n">eta_fixed</span><span class="p">)</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;epsilon&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">epsilon</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">epsilon_max</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="ow">not</span> <span class="n">epsilon_fixed</span><span class="p">)</span>
+
+        <span class="n">initial_conditions</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;S0&#39;</span><span class="p">,</span> <span class="s1">&#39;E0&#39;</span><span class="p">,</span> <span class="s1">&#39;I0&#39;</span><span class="p">,</span> <span class="s1">&#39;R0&#39;</span><span class="p">,</span> <span class="s1">&#39;C0&#39;</span><span class="p">,</span> <span class="s1">&#39;M0&#39;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">initial_conditions</span>
+
+
+<span class="k">class</span> <span class="nc">SEIRCMAgeStratified</span><span class="p">(</span><span class="n">CompartmentalModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Age-structured SEIRCM Model from https://www.medrxiv.org/content/10.1101/2020.03.04.20031104v1.full.pdf &quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">calibrate</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">parameters</span><span class="p">:</span> <span class="n">Parameters</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        SEIR model derivatives at t.</span>
+
+<span class="sd">        :param y: variables that we are solving for</span>
+<span class="sd">                  i.e. [S]usceptible, [E]xposed, [I]nfected, [R]emoved, [C]ases, [M]ortality</span>
+<span class="sd">        :param t: time parameter</span>
+<span class="sd">        :param parameters: parameters of the model (not including initial conditions)</span>
+<span class="sd">                           i.e. beta, gamma, sigma, eta, epsilon</span>
+<span class="sd">        :return: the derivatives dydt of each of the variable in y</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">beta</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;beta&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>  <span class="c1"># transmission rate</span>
+        <span class="n">gamma</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;gamma&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>  <span class="c1"># removal rate</span>
+        <span class="n">sigma</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>  <span class="c1"># infection rate</span>
+        <span class="n">eta</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;eta&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>  <span class="c1"># control measure redux</span>
+        <span class="n">T_quarantine</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;T&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>  <span class="c1"># time of quarantine policy, relative to t=0 (first reported case)</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;K&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>  <span class="c1"># number of age groups</span>
+
+        <span class="c1"># y is of dimension (6 * K) x 1, where the first K are &#39;S&#39;, next K are &#39;E&#39;, and so on for each age group...</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">==</span> <span class="mi">6</span> <span class="o">*</span> <span class="n">K</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;Error: SEIRCM states not organized into </span><span class="si">{</span><span class="n">K</span><span class="si">}</span><span class="s1"> age groups!&#39;</span>
+        <span class="n">dydt</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">epsilon</span><span class="p">(</span><span class="n">k</span><span class="p">):</span>  <span class="c1"># case fatality rate per age group</span>
+            <span class="k">return</span> <span class="n">parameters</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;epsilon_</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+
+        <span class="n">N</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">y</span><span class="p">[:</span><span class="mi">4</span> <span class="o">*</span> <span class="n">K</span><span class="p">])</span>  <span class="c1"># sum(S) + sum(E) + sum(I) + sum(R) where sum is over age groups</span>
+        <span class="n">I_total</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">K</span><span class="p">:</span><span class="mi">3</span> <span class="o">*</span> <span class="n">K</span><span class="p">])</span>  <span class="c1"># total number of infectious people across age groups</span>
+        <span class="n">s</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">i</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="n">y</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="n">y</span><span class="p">[</span><span class="n">K</span> <span class="o">+</span> <span class="n">k</span><span class="p">],</span> <span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="n">y</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">K</span> <span class="o">+</span> <span class="n">k</span><span class="p">]</span>
+
+        <span class="c1"># if T_quarantine is 0, we are not considering effect of quarantine policy so scale factor is fixed at 1</span>
+        <span class="n">quarantine_factor</span> <span class="o">=</span> <span class="n">switch</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">T_quarantine</span><span class="p">,</span> <span class="n">eta</span><span class="o">=</span><span class="n">eta</span><span class="p">)</span> <span class="k">if</span> <span class="n">T_quarantine</span> <span class="k">else</span> <span class="mi">1</span>
+
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">K</span><span class="p">):</span>
+            <span class="n">dydt</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">quarantine_factor</span> <span class="o">*</span> <span class="n">beta</span><span class="p">)</span> <span class="o">*</span> <span class="n">s</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">*</span> <span class="n">I_total</span> <span class="o">/</span> <span class="n">N</span>  <span class="c1"># susceptible -&gt; exposed</span>
+            <span class="n">dydt</span><span class="p">[</span><span class="n">K</span> <span class="o">+</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">quarantine_factor</span> <span class="o">*</span> <span class="n">beta</span><span class="p">)</span> <span class="o">*</span> <span class="n">s</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">*</span> <span class="n">I_total</span> <span class="o">/</span> <span class="n">N</span> <span class="o">-</span> <span class="n">sigma</span> <span class="o">*</span> <span class="n">e</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>  <span class="c1"># exposed -&gt; infected</span>
+            <span class="n">dydt</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">K</span> <span class="o">+</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">sigma</span> <span class="o">*</span> <span class="n">e</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">-</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">i</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>  <span class="c1"># infected -&gt; removed</span>
+            <span class="n">dydt</span><span class="p">[</span><span class="mi">3</span> <span class="o">*</span> <span class="n">K</span> <span class="o">+</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">epsilon</span><span class="p">(</span><span class="n">k</span><span class="p">))</span> <span class="o">*</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">i</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>  <span class="c1"># -&gt; cumulative recovered (from removed)</span>
+            <span class="n">dydt</span><span class="p">[</span><span class="mi">4</span> <span class="o">*</span> <span class="n">K</span> <span class="o">+</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">sigma</span> <span class="o">*</span> <span class="n">e</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>  <span class="c1"># -&gt; cumulative recorded cases (from infected)</span>
+            <span class="n">dydt</span><span class="p">[</span><span class="mi">5</span> <span class="o">*</span> <span class="n">K</span> <span class="o">+</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">epsilon</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">*</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">i</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>  <span class="c1"># -&gt; cumulative fatalities (from removed)</span>
+
+        <span class="k">return</span> <span class="n">dydt</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_parameters</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span>
+                       <span class="n">S0</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">E0</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">I0</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">R0</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">C0</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">M0</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+                       <span class="n">K</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">T_quarantine</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+                       <span class="n">beta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span> <span class="n">sigma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span>
+                       <span class="n">eta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.6</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                       <span class="n">beta_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">gamma_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">sigma_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+                       <span class="n">eta_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">epsilon_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+                       <span class="n">beta_fixed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">gamma_fixed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">sigma_fixed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                       <span class="n">eta_fixed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">epsilon_fixed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                       <span class="n">S0_fixed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">S0_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e6</span><span class="p">,</span>
+                       <span class="n">R0_fixed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">R0_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e6</span><span class="p">,</span>
+                       <span class="n">I0_fixed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">I0_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e6</span><span class="p">,</span>
+                       <span class="n">E0_fixed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">E0_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e6</span><span class="p">,</span>
+                       <span class="n">C0_fixed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">C0_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e6</span><span class="p">,</span>
+                       <span class="n">M0_fixed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">M0_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e6</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Produce a set of parameters for the age-stratified SIERCM model.</span>
+
+<span class="sd">        :param S0: initial number of susceptible in the population per age group</span>
+<span class="sd">        :param E0: initial number of exposed in the population per age group</span>
+<span class="sd">        :param I0: initial number of infected in the population per age group</span>
+<span class="sd">        :param R0: initial number of recovered/removed in the population  per age group</span>
+<span class="sd">        :param C0: initial number of cumulative infected cases per age group</span>
+<span class="sd">        :param M0: initial number of cumulative fatalities per age group</span>
+<span class="sd">        :param K: number of age groups</span>
+<span class="sd">        :param T_quarantine: relative time at which quarantine policy goes in effect. If 0, not used.</span>
+<span class="sd">        :param beta: transmission rate parameter</span>
+<span class="sd">        :param gamma: removal rate parameter</span>
+<span class="sd">        :param sigma: parameter controlling transition from exposed to infectious</span>
+<span class="sd">        :param eta: parameter controlling proportion by which quarantine measure reduces rate of transmission</span>
+<span class="sd">        :param epsilon: parameter controlling rate of death per age group. Recovery rate == 1 - epsilon</span>
+<span class="sd">        :param beta_max: maximum value to consider for beta during parameter fitting</span>
+<span class="sd">        :param gamma_max: maximum value of gamma to consider during parameter fitting</span>
+<span class="sd">        :param sigma_max: maximum value to consider for sigma during parameter fitting</span>
+<span class="sd">        :param eta_max: maximum value to consider for eta during parameter fitting</span>
+<span class="sd">        :param epsilon_max: maximum value to consider for epsilon during parameter fitting</span>
+<span class="sd">        :param beta_fixed: whether to keep beta fixed during fitting</span>
+<span class="sd">        :param gamma_fixed: whether to keep gamma fixed during fitting</span>
+<span class="sd">        :param sigma_fixed: whether to keep sigma fixed during fitting</span>
+<span class="sd">        :param eta_fixed: whether to keep eta fixed during fitting</span>
+<span class="sd">        :param epsilon_fixed: whether to keep epsilon fixed during fitting</span>
+<span class="sd">        :param S0_fixed: whether to keep S0 fixed during fitting</span>
+<span class="sd">        :param S0_max: maximum value of S0 to consider during parameter fitting</span>
+<span class="sd">        :param E0_fixed: whether to keep E0 fixed during fitting</span>
+<span class="sd">        :param E0_max: maximum value of E0 to consider during parameter fitting</span>
+<span class="sd">        :param R0_fixed: whether to keep R0 fixed during fitting</span>
+<span class="sd">        :param R0_max: maximum value of R0 to consider during parameter fitting</span>
+<span class="sd">        :param I0_fixed: whether to keep I0 fixed during fitting</span>
+<span class="sd">        :param I0_max: maximum value of I0 to consider during parameter fitting</span>
+<span class="sd">        :param C0_fixed: whether to keep C0 fixed during fitting</span>
+<span class="sd">        :param C0_max: maximum value of C0 to consider during parameter fitting</span>
+<span class="sd">        :param M0_fixed: whether to keep M0 fixed during fitting</span>
+<span class="sd">        :param M0_max: maximum value of M0 to consider during parameter fitting</span>
+<span class="sd">        :return: tuple[Parameters, list]: (parameters, a list of the names of the variables for initial conditions)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="n">Parameters</span><span class="p">()</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;K&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">K</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">K</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;T&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">T_quarantine</span><span class="p">,</span> <span class="nb">min</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">T_quarantine</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;beta&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">beta</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">beta_max</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="ow">not</span> <span class="n">beta_fixed</span><span class="p">)</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;gamma&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">gamma</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">gamma_max</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="ow">not</span> <span class="n">gamma_fixed</span><span class="p">)</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;sigma&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">sigma</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">sigma_max</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="ow">not</span> <span class="n">sigma_fixed</span><span class="p">)</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;eta&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">eta</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">eta_max</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="ow">not</span> <span class="n">eta_fixed</span><span class="p">)</span>
+
+        <span class="c1"># add parameters that vary by age group</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">K</span><span class="p">):</span>
+            <span class="n">parameters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;epsilon_</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">epsilon</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">epsilon_max</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="ow">not</span> <span class="n">epsilon_fixed</span><span class="p">)</span>
+
+        <span class="c1"># add initial state conditions that vary by age group</span>
+        <span class="n">initial_conditions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;S0&#39;</span><span class="p">,</span> <span class="s1">&#39;E0&#39;</span><span class="p">,</span> <span class="s1">&#39;I0&#39;</span><span class="p">,</span> <span class="s1">&#39;R0&#39;</span><span class="p">,</span> <span class="s1">&#39;C0&#39;</span><span class="p">,</span> <span class="s1">&#39;M0&#39;</span><span class="p">]:</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">K</span><span class="p">):</span>
+                <span class="n">parameters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="nb">eval</span><span class="p">(</span><span class="n">param</span><span class="p">)[</span><span class="n">k</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="nb">eval</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s1">_max&#39;</span><span class="p">),</span>
+                               <span class="n">vary</span><span class="o">=</span><span class="ow">not</span> <span class="nb">eval</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s1">_fixed&#39;</span><span class="p">))</span>
+                <span class="n">initial_conditions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">initial_conditions</span>
+
+
+<div class="viewcode-block" id="EpidemicModel"><a class="viewcode-back" href="../../../classes/gs_quant.models.epidemiology.EpidemicModel.html#gs_quant.models.epidemiology.EpidemicModel">[docs]</a><span class="k">class</span> <span class="nc">EpidemicModel</span><span class="p">:</span>
+
+    <span class="sd">&quot;&quot;&quot;Class to perform solutions and parameter-fitting of epidemic models&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="EpidemicModel.__init__"><a class="viewcode-back" href="../../../classes/gs_quant.models.epidemiology.EpidemicModel.html#gs_quant.models.epidemiology.EpidemicModel.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">CompartmentalModel</span><span class="p">],</span> <span class="n">parameters</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">initial_conditions</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">fit_method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;leastsq&#39;</span><span class="p">,</span> <span class="n">error</span><span class="p">:</span> <span class="n">callable</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">fit_period</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A class to standardize fitting and solving epidemiological models.</span>
+
+<span class="sd">        :param model: the model to use, currently a class in the form of SIR, SEIR above</span>
+<span class="sd">        :param parameters: tuple, parameters to use for the model, defaults to the output of [model].get_parameters</span>
+<span class="sd">        :param data: np.array, data that can be used to calibrate the model</span>
+<span class="sd">        :param initial_conditions: list, initial conditions for the model</span>
+<span class="sd">        :param fit_method: str, the method to use to minimize the (given) error. Available methods are those in the</span>
+<span class="sd">                           lmfit.minimizer.minimize function. Default is Levenberg-Marquardt least squares minimization.</span>
+<span class="sd">        :param error: callable, control which residuals (and in what form) to minimize for fitting.</span>
+<span class="sd">        :param fit_period: float, how far back to fit the data, defaults to fitting all data</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="n">parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initial_conditions</span> <span class="o">=</span> <span class="n">initial_conditions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_method</span> <span class="o">=</span> <span class="n">fit_method</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">error</span> <span class="o">=</span> <span class="n">error</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_period</span> <span class="o">=</span> <span class="n">fit_period</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">result</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fitted_parameters</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_range</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">initial_conditions</span><span class="p">:</span> <span class="p">[</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">],</span> <span class="n">parameters</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Integrate the model ODEs to get a solution.</span>
+
+<span class="sd">        :param time_range: the time range to solve for</span>
+<span class="sd">        :param initial_conditions: the initial conditions for the solution</span>
+<span class="sd">        :param parameters: the parameters for the solution</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">odeint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">calibrate</span><span class="p">,</span> <span class="n">initial_conditions</span><span class="p">,</span> <span class="n">time_range</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">parameters</span><span class="p">,))</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span>
+
+    <span class="k">def</span> <span class="nf">residual</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">:</span> <span class="n">Parameters</span><span class="p">,</span> <span class="n">time_range</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Obtain fit error (to minimize).</span>
+
+<span class="sd">        :param parameters: parameters to use (which we are usually minimizing the residual for)</span>
+<span class="sd">        :param time_range: time range for solution (over which we obtain the residual)</span>
+<span class="sd">        :param data: data to fit the models too (i.e. compute residuals in terms of)</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">initial_conditions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">variable</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">:</span>
+            <span class="n">initial_conditions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">parameters</span><span class="p">[</span><span class="n">variable</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="c1"># obtain solution given current initial conditions and parameters</span>
+        <span class="n">solution</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">time_range</span><span class="p">,</span> <span class="n">initial_conditions</span><span class="p">,</span> <span class="n">parameters</span><span class="p">)</span>
+
+        <span class="c1"># compute residual, using custom error function if it has been passed in</span>
+        <span class="n">residual</span> <span class="o">=</span> <span class="n">solution</span> <span class="o">-</span> <span class="n">data</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">error</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">solution</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">parameters</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_period</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">residual</span> <span class="o">=</span> <span class="n">residual</span><span class="p">[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_period</span><span class="p">:]</span>
+
+        <span class="k">return</span> <span class="n">residual</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_range</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">parameters</span><span class="p">:</span> <span class="p">[</span><span class="n">Parameters</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">initial_conditions</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">residual</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">fit_period</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fit the model based on data in the form np.array([X1,...,Xn])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No data to fit the model on!&quot;</span><span class="p">)</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span>
+        <span class="k">if</span> <span class="n">initial_conditions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">initial_conditions</span> <span class="o">=</span> <span class="n">initial_conditions</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_conditions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No initial conditions to fit the model with!&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">parameters</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No parameters to fit the model with!&quot;</span><span class="p">)</span>
+            <span class="n">parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span>
+        <span class="k">if</span> <span class="n">time_range</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">time_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">fit_period</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fit_period</span> <span class="o">=</span> <span class="n">fit_period</span>
+        <span class="k">if</span> <span class="n">residual</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">residual</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">residual</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">residual</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">time_range</span><span class="p">,</span> <span class="n">data</span><span class="p">),</span> <span class="n">method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_method</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">result</span> <span class="o">=</span> <span class="n">result</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fitted_parameters</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">valuesdict</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="n">report_fit</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">result</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  <hr />
+  
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  
+  
+    
+   
+
+</body>
+</html>

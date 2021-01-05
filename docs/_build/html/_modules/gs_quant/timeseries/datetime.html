@@ -32,11 +32,6 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
@@ -53,11 +48,11 @@
 
    
   <div class="wy-grid-for-nav">
-    <a data-toggle="wy-nav-top" class="gs-developer-action-button-container" ontouchstart="">
-      <div data-toggle="gs-nav-action" class="gs-nav-action"></div>
+    <a data-toggle="wy-nav-top" id="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" id="gs-nav-action"></div>
     </a>
     
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+    <nav id="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         
         
@@ -73,7 +68,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../data.html">Data Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../datetime.html">Datetime Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../instrument.html">Instrument Package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../market.html">Market Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../markets.html">Markets Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../models.html">Models Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../risk.html">Risk Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../timeseries.html">Timeseries Package</a></li>
 </ul>
@@ -146,14 +142,13 @@
 <span class="c1"># Chart Service will attempt to make public functions (not prefixed with _) from this module available. Such functions</span>
 <span class="c1"># should be fully documented: docstrings should describe parameters and the return value, and provide a 1-line</span>
 <span class="c1"># description. Type annotations should be provided for parameters.</span>
-
-<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">date</span><span class="p">,</span> <span class="n">time</span>
-<span class="kn">from</span> <span class="nn">numbers</span> <span class="k">import</span> <span class="n">Real</span>
-
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">date</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">from</span> <span class="nn">numbers</span> <span class="kn">import</span> <span class="n">Real</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-
-<span class="kn">from</span> <span class="nn">.helper</span> <span class="k">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">..errors</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.helper</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="kn">import</span> <span class="n">MqValueError</span>
+<span class="kn">from</span> <span class="nn">..datetime.date</span> <span class="kn">import</span> <span class="n">DayCountConvention</span><span class="p">,</span> <span class="n">PaymentFrequency</span><span class="p">,</span> <span class="n">day_count_fraction</span>
+<span class="kn">from</span> <span class="nn">..datetime.date</span> <span class="kn">import</span> <span class="n">date_range</span> <span class="k">as</span> <span class="n">_date_range</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Date and time manipulation for timeseries, including date or time shifting, calendar operations, curve alignment and</span>
@@ -224,7 +219,7 @@
 
 <span class="sd">    &gt;&gt;&gt; a = generate_series(100)</span>
 <span class="sd">    &gt;&gt;&gt; b = generate_series(100)</span>
-<span class="sd">    &gt;&gt;&gt; align(a)</span>
+<span class="sd">    &gt;&gt;&gt; align(a, b)</span>
 
 <span class="sd">    **See also**</span>
 
@@ -527,6 +522,186 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">to_series</span><span class="p">())</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">weekday</span></div>
+
+
+<span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">day_count_fractions</span><span class="p">(</span>
+    <span class="n">dates</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">date</span><span class="p">],</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">],</span>
+    <span class="n">convention</span><span class="p">:</span> <span class="n">DayCountConvention</span> <span class="o">=</span> <span class="n">DayCountConvention</span><span class="o">.</span><span class="n">ACTUAL_360</span><span class="p">,</span>
+    <span class="n">frequency</span><span class="p">:</span> <span class="n">PaymentFrequency</span> <span class="o">=</span> <span class="n">PaymentFrequency</span><span class="o">.</span><span class="n">MONTHLY</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Day count fractions between dates in series</span>
+
+<span class="sd">    :param dates: time series or array of dates</span>
+<span class="sd">    :param convention: day count convention (default: Actual/360 ISDA)</span>
+<span class="sd">    :param frequency: payment frequency of instrument (optional)</span>
+<span class="sd">    :return: series of day count fractions</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Returns the day count fraction between dates in the series</span>
+
+<span class="sd">    :math:`Y_t = DCF(t_{-1}, t)`</span>
+
+<span class="sd">    Default is Actual/360 per ISDA specification:</span>
+
+<span class="sd">    :math:`Y_t = \frac{Days(t_{-1}, t)}{360}`</span>
+
+<span class="sd">    For a full list of available conventions, see</span>
+<span class="sd">    `Day Count Conventions &lt;https://developer.gs.com/docs/gsquant/guides/Dates/1-day-count-conventions&gt;`_.</span>
+<span class="sd">    For more information on day count conventions, see the</span>
+<span class="sd">    `day count conventions &lt;https://en.wikipedia.org/wiki/Day_count_convention&gt;`_ page on Wikipedia</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    Weekday for observations in series:</span>
+
+<span class="sd">    &gt;&gt;&gt; series = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; days = day_count_fractions(series)</span>
+
+<span class="sd">    **See also**</span>
+
+<span class="sd">    :func:`day` :func:`month` :func:`year`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dates</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+        <span class="n">date_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">dates</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">date_list</span> <span class="o">=</span> <span class="n">dates</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">date_list</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([])</span>
+
+    <span class="n">start_dates</span> <span class="o">=</span> <span class="n">date_list</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">end_dates</span> <span class="o">=</span> <span class="n">date_list</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="nb">len</span><span class="p">(</span><span class="n">date_list</span><span class="p">)]</span>
+
+    <span class="n">dcfs</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">day_count_fraction</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">convention</span><span class="p">,</span> <span class="n">frequency</span><span class="p">),</span> <span class="n">start_dates</span><span class="p">,</span> <span class="n">end_dates</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">NaN</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">dcfs</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="n">date_list</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="nb">len</span><span class="p">(</span><span class="n">date_list</span><span class="p">)])</span>
+
+
+<div class="viewcode-block" id="date_range"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.datetime.date_range.html#gs_quant.timeseries.datetime.date_range">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">date_range</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">start_date</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">date</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">end_date</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">date</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+               <span class="n">weekdays_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a time series from a (sub-)range of dates in an existing time series.</span>
+
+<span class="sd">    :param x: time series</span>
+<span class="sd">    :param start_date: start date for the sliced time series. If integer, number of observations after the first</span>
+<span class="sd">    :param end_date: end date for the sliced time series. If integer, number of observations before the last</span>
+<span class="sd">    :param weekdays_only: whether to include only weekdays in the sliced ranges</span>
+<span class="sd">    :return: sliced time series</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Returns a restricted (&quot;sliced&quot;) time series based on start and end dates:</span>
+
+<span class="sd">    :math:`Y_t = R_t |_{start &lt; t &lt; end}`</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    Slice the first and last week of a time series:</span>
+
+<span class="sd">    &gt;&gt;&gt; series = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; sliced_series = date_range(series,7,7)</span>
+
+<span class="sd">    **See also**</span>
+
+<span class="sd">    :func:`day` :func: `lag`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">is_all_dates</span> <span class="ow">or</span> <span class="nb">all</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">a</span><span class="p">:</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">date</span><span class="p">),</span> <span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">))):</span>
+        <span class="k">raise</span> <span class="n">MqValueError</span><span class="p">(</span><span class="s1">&#39;input is not a time series&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">start_date</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">start_date</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">end_date</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">end_date</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">end_date</span><span class="p">)]</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">start_date</span> <span class="o">=</span> <span class="n">start_date</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+        <span class="n">end_date</span> <span class="o">=</span> <span class="n">end_date</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="k">if</span> <span class="n">weekdays_only</span><span class="p">:</span>
+        <span class="n">week_mask</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">wd</span> <span class="o">=</span> <span class="n">start_date</span><span class="o">.</span><span class="n">weekday</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">wd</span> <span class="o">&gt;</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">start_date</span> <span class="o">+=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">7</span> <span class="o">-</span> <span class="n">wd</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">week_mask</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="kc">True</span><span class="p">]</span> <span class="o">*</span> <span class="mi">7</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">_date_range</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">,</span> <span class="n">week_mask</span><span class="o">=</span><span class="n">week_mask</span><span class="p">)))]</span></div>
+
+
+<div class="viewcode-block" id="prepend"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.datetime.prepend.html#gs_quant.timeseries.datetime.prepend">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">prepend</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Prepend data series</span>
+
+<span class="sd">    :param x: an array of timeseries</span>
+<span class="sd">    :return: concatenated timeseries</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    For input series [:math:`x_1`, :math:`x_2`, ... , :math:`X_n`], takes data from series :math:`X_i` until</span>
+<span class="sd">    the first date for which :math:`X_{i+1}` has data, useful when a higher quality series has a shorter history</span>
+<span class="sd">    than a lower quality series.</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    Prepend two series:</span>
+
+<span class="sd">    &gt;&gt;&gt; x = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; y = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; prepend([x, y])</span>
+
+<span class="sd">    **See also**</span>
+
+<span class="sd">    :func:`union`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float64&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)):</span>
+        <span class="n">this</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">this</span><span class="p">)</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">this</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">this</span><span class="o">.</span><span class="n">index</span> <span class="o">&lt;</span> <span class="n">end</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">res</span></div>
+
+
+<div class="viewcode-block" id="union"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.datetime.union.html#gs_quant.timeseries.datetime.union">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">union</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Fill in missing dates or times of one series with another</span>
+
+<span class="sd">    :param x: an array of timeseries</span>
+<span class="sd">    :return: combined series</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Starting from :math:`i=1`, takes points from series :math:`x_i`. Where points are missing from :math:`x_i`,</span>
+<span class="sd">    returns points from :math:`x_{i+1}`.</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    Union of two series:</span>
+
+<span class="sd">    &gt;&gt;&gt; x = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; y = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; union([x, y])</span>
+
+<span class="sd">    **See also**</span>
+
+<span class="sd">    :func:`prepend`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float64&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">series</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">combine_first</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">res</span></div>
 </pre></div>
 
            </div>

@@ -1,0 +1,282 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Markets Package &mdash; gs_quant 0.1 documentation</title>
+  
+
+    
+  <script crossorigin src="/resources/react/16-8-6/prod/react.production.min.js"></script>
+  <script
+    crossorigin src="/resources/react/16-8-6/prod/react-dom.production.min.js"></script>
+
+     
+    <script src='/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML' async></script> 
+    
+    <script type="text/javascript" src="_static/../../../auto-mount.js"></script>
+    <link rel="stylesheet" href="_static/../../../auto-mount.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="next" title="gs_quant.markets.PricingContext" href="classes/gs_quant.markets.PricingContext.html" />
+    <link rel="prev" title="Security" href="classes/gs_quant.instrument.Security.html" /> 
+</head>
+
+<!-- Hello from the future. -->
+<div id="mq-doc-navbar-inject"></div>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    <a data-toggle="wy-nav-top" id="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" id="gs-nav-action"></div>
+    </a>
+    
+    <nav id="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Packages</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="data.html">Data Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datetime.html">Datetime Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instrument.html">Instrument Package</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Markets Package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="classes/gs_quant.markets.PricingContext.html">gs_quant.markets.PricingContext</a></li>
+<li class="toctree-l2"><a class="reference internal" href="classes/gs_quant.markets.HistoricalPricingContext.html">gs_quant.markets.HistoricalPricingContext</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#portfolio">Portfolio</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.markets.portfolio.Portfolio.html">gs_quant.markets.portfolio.Portfolio</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#securities">Securities</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.markets.securities.Asset.html">gs_quant.markets.securities.Asset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.markets.securities.AssetClass.html">gs_quant.markets.securities.AssetClass</a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.markets.securities.AssetIdentifier.html">gs_quant.markets.securities.AssetIdentifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.markets.securities.AssetType.html">gs_quant.markets.securities.AssetType</a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.markets.securities.Index.html">gs_quant.markets.securities.Index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.markets.securities.Stock.html">gs_quant.markets.securities.Stock</a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.markets.securities.SecurityMaster.html">gs_quant.markets.securities.SecurityMaster</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">Models Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="risk.html">Risk Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="timeseries.html">Timeseries Package</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Packages</a> /</li>
+        
+      <li>Markets Package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="markets-package">
+<h1>Markets Package<a class="headerlink" href="#markets-package" title="Permalink to this headline">¶</a></h1>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.markets.PricingContext.html#gs_quant.markets.PricingContext" title="gs_quant.markets.PricingContext"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PricingContext</span></code></a>([pricing_date, …])</p></td>
+<td><p>A context for controlling pricing and market data behaviour</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="classes/gs_quant.markets.HistoricalPricingContext.html#gs_quant.markets.HistoricalPricingContext" title="gs_quant.markets.HistoricalPricingContext"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HistoricalPricingContext</span></code></a>([start, end, …])</p></td>
+<td><p>A context for producing valuations over multiple dates</p></td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="portfolio">
+<h2>Portfolio<a class="headerlink" href="#portfolio" title="Permalink to this headline">¶</a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.markets.portfolio.Portfolio.html#gs_quant.markets.portfolio.Portfolio" title="gs_quant.markets.portfolio.Portfolio"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Portfolio</span></code></a>([priceables, name])</p></td>
+<td><p>A collection of instruments</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="securities">
+<h2>Securities<a class="headerlink" href="#securities" title="Permalink to this headline">¶</a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.markets.securities.Asset.html#gs_quant.markets.securities.Asset" title="gs_quant.markets.securities.Asset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Asset</span></code></a>(id_, asset_class, name[, exchange, …])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="classes/gs_quant.markets.securities.AssetClass.html#gs_quant.markets.securities.AssetClass" title="gs_quant.markets.securities.AssetClass"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AssetClass</span></code></a>(value)</p></td>
+<td><p>Asset classification of security.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.markets.securities.AssetIdentifier.html#gs_quant.markets.securities.AssetIdentifier" title="gs_quant.markets.securities.AssetIdentifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AssetIdentifier</span></code></a>(value)</p></td>
+<td><p>Asset type enumeration</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="classes/gs_quant.markets.securities.AssetType.html#gs_quant.markets.securities.AssetType" title="gs_quant.markets.securities.AssetType"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AssetType</span></code></a>(value)</p></td>
+<td><p>Asset type enumeration</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.markets.securities.Index.html#gs_quant.markets.securities.Index" title="gs_quant.markets.securities.Index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Index</span></code></a>(id_, asset_class, name[, exchange, …])</p></td>
+<td><p>Index Asset</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="classes/gs_quant.markets.securities.Stock.html#gs_quant.markets.securities.Stock" title="gs_quant.markets.securities.Stock"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Stock</span></code></a>(id_, name[, exchange, currency, entity])</p></td>
+<td><p>Base Security Type</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.markets.securities.SecurityMaster.html#gs_quant.markets.securities.SecurityMaster" title="gs_quant.markets.securities.SecurityMaster"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SecurityMaster</span></code></a>()</p></td>
+<td><p>Security Master</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  <hr />
+  
+  <div
+    class="container-block-module"
+    role="navigation"
+    aria-label="footer navigation"
+  >
+    
+    <div class="link-block-module">
+      <a
+        href="classes/gs_quant.instrument.Security.html"
+        class="link-block-module-container"
+        title="Security"
+        accesskey="p"
+        rel="prev"
+      >
+        <div class="link-block-module-content">
+          <h4 class="link-block-module-title-label">
+            Previous Topic
+          </h4>
+          <p class="link-block-module-body-label">
+            Security
+          </p>
+        </div>
+      </a>
+    </div>
+     
+    <div class="link-block-module">
+      <a
+        href="classes/gs_quant.markets.PricingContext.html"
+        class="link-block-module-container"
+        title="PricingContext"
+        accesskey="n"
+        rel="next"
+      >
+        <div class="link-block-module-content">
+          <h4 class="link-block-module-title-label">
+            Next Topic
+          </h4>
+          <p class="link-block-module-body-label">
+            PricingContext
+          </p>
+        </div>
+      </a>
+    </div>
+    
+  </div>
+  
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  
+  
+    
+   
+
+</body>
+</html>

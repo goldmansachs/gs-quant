@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>gs_quant.data.Dataset &mdash; gs_quant 0.1 documentation</title>
+  <title>Dataset &mdash; gs_quant 0.1 documentation</title>
   
 
     
@@ -32,11 +32,6 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -44,8 +39,8 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="next" title="Datetime Package" href="../datetime.html" />
-    <link rel="prev" title="Data Package" href="../data.html" /> 
+    <link rel="next" title="Fields" href="Fields.html" />
+    <link rel="prev" title="DataContext" href="DataContext.html" />
 </head>
 
 <!-- Hello from the future. -->
@@ -55,11 +50,11 @@
 
    
   <div class="wy-grid-for-nav">
-    <a data-toggle="wy-nav-top" class="gs-developer-action-button-container" ontouchstart="">
-      <div data-toggle="gs-nav-action" class="gs-nav-action"></div>
+    <a data-toggle="wy-nav-top" id="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" id="gs-nav-action"></div>
     </a>
     
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+    <nav id="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         
         
@@ -73,12 +68,15 @@
               <p class="caption"><span class="caption-text">Packages</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../data.html">Data Package</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">gs_quant.data.Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gs_quant.data.DataContext.html">DataContext</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="gs_quant.data.Dataset.html">Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gs_quant.data.Fields.html">Fields</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../datetime.html">Datetime Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../instrument.html">Instrument Package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../market.html">Market Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../markets.html">Markets Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../models.html">Models Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../risk.html">Risk Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../timeseries.html">Timeseries Package</a></li>
 </ul>
@@ -120,7 +118,7 @@
         
           <li><a href="../data.html">Data Package</a> /</li>
         
-      <li>gs_quant.data.Dataset</li>
+      <li>Dataset</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -139,14 +137,14 @@
            <div itemprop="articleBody">
             
   <div class="section" id="gs-quant-data-dataset">
-<h1>gs_quant.data.Dataset<a class="headerlink" href="#gs-quant-data-dataset" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
-<dt id="gs_quant.data.Dataset">
-<em class="property">class </em><code class="sig-name descname">Dataset</code><span class="sig-paren">(</span><em class="sig-param">dataset_id</em>, <em class="sig-param">provider=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gs_quant/data/dataset.html#Dataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gs_quant.data.Dataset" title="Permalink to this definition">¶</a></dt>
+<h1>Dataset<a class="headerlink" href="#dataset" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="Dataset">
+<em class="property">class </em><code class="sig-name descname">Dataset</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dataset_id</span></em>, <em class="sig-param"><span class="n">provider</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gs_quant/data/dataset.html#Dataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Dataset" title="Permalink to this definition">¶</a></dt>
 <dd><p>A collection of related data</p>
-<dl class="method">
+<dl class="py method">
 <dt id="gs_quant.data.Dataset.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">dataset_id</em>, <em class="sig-param">provider=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gs_quant/data/dataset.html#Dataset.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gs_quant.data.Dataset.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dataset_id</span></em>, <em class="sig-param"><span class="n">provider</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gs_quant/data/dataset.html#Dataset.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Dataset.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -164,7 +162,7 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#gs_quant.data.Dataset.__init__" title="gs_quant.data.Dataset.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(dataset_id[, provider])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Dataset.__init__" title="Dataset.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(dataset_id[, provider])</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">type dataset_id</dt>
 <dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Vendor</span></code>]</p>
@@ -172,7 +170,7 @@
 </dl>
 </p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_coverage</span></code>([limit, offset, fields])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_coverage</span></code>([limit, offset, fields, …])</p></td>
 <td><p>Get the assets covered by this DataSet</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_data</span></code>([start, end, as_of, since, fields, …])</p></td>
@@ -223,9 +221,9 @@
     
     <div class="link-block-module">
       <a
-        href="../data.html"
+        href="gs_quant.data.DataContext.html"
         class="link-block-module-container"
-        title="Data Package"
+        title="DataContext"
         accesskey="p"
         rel="prev"
       >
@@ -234,7 +232,7 @@
             Previous Topic
           </h4>
           <p class="link-block-module-body-label">
-            Data Package
+            DataContext
           </p>
         </div>
       </a>
@@ -242,9 +240,9 @@
      
     <div class="link-block-module">
       <a
-        href="../datetime.html"
+        href="gs_quant.data.Fields.html"
         class="link-block-module-container"
-        title="Datetime Package"
+        title="Fields"
         accesskey="n"
         rel="next"
       >
@@ -253,7 +251,7 @@
             Next Topic
           </h4>
           <p class="link-block-module-body-label">
-            Datetime Package
+            Fields
           </p>
         </div>
       </a>

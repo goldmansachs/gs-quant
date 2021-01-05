@@ -1,0 +1,276 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>gs_quant.timeseries.statistics.std &mdash; gs_quant 0.1 documentation</title>
+  
+
+    
+  <script crossorigin src="/resources/react/16-8-6/prod/react.production.min.js"></script>
+  <script
+    crossorigin src="/resources/react/16-8-6/prod/react-dom.production.min.js"></script>
+
+     
+    <script src='/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML' async></script> 
+    
+    <script type="text/javascript" src="../_static/../../../auto-mount.js"></script>
+    <link rel="stylesheet" href="../_static/../../../auto-mount.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="next" title="gs_quant.timeseries.statistics.sum_" href="gs_quant.timeseries.statistics.sum_.html" />
+    <link rel="prev" title="gs_quant.timeseries.statistics.range_" href="gs_quant.timeseries.statistics.range_.html" /> 
+</head>
+
+<!-- Hello from the future. -->
+<div id="mq-doc-navbar-inject"></div>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    <a data-toggle="wy-nav-top" id="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" id="gs-nav-action"></div>
+    </a>
+    
+    <nav id="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Packages</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../data.html">Data Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datetime.html">Datetime Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instrument.html">Instrument Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../markets.html">Markets Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../models.html">Models Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../risk.html">Risk Package</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../timeseries.html">Timeseries Package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../timeseries.html#algebra">Algebra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../timeseries.html#analysis">Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../timeseries.html#backtesting">Backtesting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../timeseries.html#date-time">Date / Time</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../timeseries.html#econometrics">Econometrics</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../timeseries.html#statistics">Statistics</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.statistics.cov.html">gs_quant.timeseries.statistics.cov</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.statistics.exponential_std.html">gs_quant.timeseries.statistics.exponential_std</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.statistics.generate_series.html">gs_quant.timeseries.statistics.generate_series</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.statistics.max_.html">gs_quant.timeseries.statistics.max_</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.statistics.mean.html">gs_quant.timeseries.statistics.mean</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.statistics.median.html">gs_quant.timeseries.statistics.median</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.statistics.min_.html">gs_quant.timeseries.statistics.min_</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.statistics.mode.html">gs_quant.timeseries.statistics.mode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.statistics.percentile.html">gs_quant.timeseries.statistics.percentile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.statistics.percentiles.html">gs_quant.timeseries.statistics.percentiles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.statistics.product.html">gs_quant.timeseries.statistics.product</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.statistics.range_.html">gs_quant.timeseries.statistics.range_</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">gs_quant.timeseries.statistics.std</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.statistics.sum_.html">gs_quant.timeseries.statistics.sum_</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.statistics.var.html">gs_quant.timeseries.statistics.var</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.statistics.winsorize.html">gs_quant.timeseries.statistics.winsorize</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.statistics.zscores.html">gs_quant.timeseries.statistics.zscores</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../classes/gs_quant.timeseries.statistics.LinearRegression.html">gs_quant.timeseries.statistics.LinearRegression</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../classes/gs_quant.timeseries.statistics.RollingLinearRegression.html">gs_quant.timeseries.statistics.RollingLinearRegression</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../classes/gs_quant.timeseries.statistics.SIRModel.html">gs_quant.timeseries.statistics.SIRModel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../classes/gs_quant.timeseries.statistics.SEIRModel.html">gs_quant.timeseries.statistics.SEIRModel</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../timeseries.html#technical-analysis">Technical Analysis</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Packages</a> /</li>
+        
+          <li><a href="../timeseries.html">Timeseries Package</a> /</li>
+        
+      <li>gs_quant.timeseries.statistics.std</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="gs-quant-timeseries-statistics-std">
+<h1>gs_quant.timeseries.statistics.std<a class="headerlink" href="#gs-quant-timeseries-statistics-std" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="gs_quant.timeseries.statistics.std">
+<code class="sig-name descname">std</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">w=&lt;gs_quant.timeseries.helper.Window object&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gs_quant/timeseries/statistics.html#std"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gs_quant.timeseries.statistics.std" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rolling standard deviation of series over given window</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code>) – series: timeseries</p></li>
+<li><p><strong>w</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Window</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+and 10 the ramp up value.  If w is a string, it should be a relative date like ‘1m’, ‘1d’, etc.
+Window size defaults to length of series.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>timeseries of standard deviation</p>
+</dd>
+</dl>
+<p><strong>Usage</strong></p>
+<p>Provides <a class="reference external" href="https://en.wikipedia.org/wiki/Unbiased_estimation_of_standard_deviation">unbiased estimator</a> of sample
+<a class="reference external" href="https://en.wikipedia.org/wiki/Standard_deviation">standard deviation</a> over a rolling window:</p>
+<p><span class="math notranslate nohighlight">\(R_t = \sqrt{\frac{1}{N-1} \sum_{i=t-w+1}^t (X_i - \overline{X_t})^2}\)</span></p>
+<p>where <span class="math notranslate nohighlight">\(N\)</span> is the number of observations in each rolling window, <span class="math notranslate nohighlight">\(w\)</span>, and <span class="math notranslate nohighlight">\(\overline{X_t}\)</span> is the
+mean value over the same window:</p>
+<p><span class="math notranslate nohighlight">\(\overline{X_t} = \frac{\sum_{i=t-w+1}^{t} X_i}{N}\)</span></p>
+<p>If window is not provided, computes standard deviation over the full series</p>
+<p><strong>Examples</strong></p>
+<p>Generate price series and compute standard deviation of returns over <span class="math notranslate nohighlight">\(22\)</span> observations</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">prices</span> <span class="o">=</span> <span class="n">generate_series</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">std</span><span class="p">(</span><span class="n">returns</span><span class="p">(</span><span class="n">prices</span><span class="p">),</span> <span class="mi">22</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>See also</strong></p>
+<p><code class="xref py py-func docutils literal notranslate"><span class="pre">sum()</span></code> <a class="reference internal" href="gs_quant.timeseries.statistics.mean.html#gs_quant.timeseries.statistics.mean" title="gs_quant.timeseries.statistics.mean"><code class="xref py py-func docutils literal notranslate"><span class="pre">mean()</span></code></a> <a class="reference internal" href="gs_quant.timeseries.statistics.var.html#gs_quant.timeseries.statistics.var" title="gs_quant.timeseries.statistics.var"><code class="xref py py-func docutils literal notranslate"><span class="pre">var()</span></code></a></p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  <hr />
+  
+  <div
+    class="container-block-module"
+    role="navigation"
+    aria-label="footer navigation"
+  >
+    
+    <div class="link-block-module">
+      <a
+        href="gs_quant.timeseries.statistics.range_.html"
+        class="link-block-module-container"
+        title="gs_quant.timeseries.statistics.range_"
+        accesskey="p"
+        rel="prev"
+      >
+        <div class="link-block-module-content">
+          <h4 class="link-block-module-title-label">
+            Previous Topic
+          </h4>
+          <p class="link-block-module-body-label">
+            gs_quant.timeseries.statistics.range_
+          </p>
+        </div>
+      </a>
+    </div>
+     
+    <div class="link-block-module">
+      <a
+        href="gs_quant.timeseries.statistics.sum_.html"
+        class="link-block-module-container"
+        title="gs_quant.timeseries.statistics.sum_"
+        accesskey="n"
+        rel="next"
+      >
+        <div class="link-block-module-content">
+          <h4 class="link-block-module-title-label">
+            Next Topic
+          </h4>
+          <p class="link-block-module-body-label">
+            gs_quant.timeseries.statistics.sum_
+          </p>
+        </div>
+      </a>
+    </div>
+    
+  </div>
+  
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  
+  
+    
+   
+
+</body>
+</html>

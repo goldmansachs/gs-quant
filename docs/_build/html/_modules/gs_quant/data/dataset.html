@@ -32,11 +32,6 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
@@ -53,11 +48,11 @@
 
    
   <div class="wy-grid-for-nav">
-    <a data-toggle="wy-nav-top" class="gs-developer-action-button-container" ontouchstart="">
-      <div data-toggle="gs-nav-action" class="gs-nav-action"></div>
+    <a data-toggle="wy-nav-top" id="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" id="gs-nav-action"></div>
     </a>
     
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+    <nav id="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         
         
@@ -73,7 +68,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../data.html">Data Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../datetime.html">Datetime Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../instrument.html">Instrument Package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../market.html">Market Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../markets.html">Markets Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../models.html">Models Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../risk.html">Risk Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../timeseries.html">Timeseries Package</a></li>
 </ul>
@@ -146,15 +142,14 @@
 <span class="sd">under the License.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
-<span class="kn">from</span> <span class="nn">enum</span> <span class="k">import</span> <span class="n">Enum</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span>
 
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 
-<span class="kn">from</span> <span class="nn">gs_quant.api.data</span> <span class="k">import</span> <span class="n">DataApi</span>
-<span class="kn">from</span> <span class="nn">gs_quant.data.fields</span> <span class="k">import</span> <span class="n">Fields</span>
-<span class="kn">from</span> <span class="nn">gs_quant.data.utils</span> <span class="k">import</span> <span class="n">construct_dataframe_with_types</span>
-<span class="kn">from</span> <span class="nn">gs_quant.errors</span> <span class="k">import</span> <span class="n">MqValueError</span>
+<span class="kn">from</span> <span class="nn">gs_quant.api.data</span> <span class="kn">import</span> <span class="n">DataApi</span>
+<span class="kn">from</span> <span class="nn">gs_quant.data.fields</span> <span class="kn">import</span> <span class="n">Fields</span>
+<span class="kn">from</span> <span class="nn">gs_quant.errors</span> <span class="kn">import</span> <span class="n">MqValueError</span>
 
 
 <div class="viewcode-block" id="Dataset"><a class="viewcode-back" href="../../../classes/gs_quant.data.Dataset.html#gs_quant.data.Dataset">[docs]</a><span class="k">class</span> <span class="nc">Dataset</span><span class="p">:</span>
@@ -166,8 +161,7 @@
     <span class="k">class</span> <span class="nc">GS</span><span class="p">(</span><span class="n">Vendor</span><span class="p">):</span>
         <span class="n">HOLIDAY</span> <span class="o">=</span> <span class="s1">&#39;HOLIDAY&#39;</span>
         <span class="n">EDRVOL_PERCENT_INTRADAY</span> <span class="o">=</span> <span class="s1">&#39;EDRVOL_PERCENT_INTRADAY&#39;</span>
-        <span class="n">EDRVOL_PERCENT_SHORT</span> <span class="o">=</span> <span class="s1">&#39;EDRVOL_PERCENT_SHORT&#39;</span>
-        <span class="n">EDRVOL_PERCENT_LONG</span> <span class="o">=</span> <span class="s1">&#39;EDRVOL_PERCENT_LONG&#39;</span>
+        <span class="n">EDRVOL_PERCENT_STANDARD</span> <span class="o">=</span> <span class="s1">&#39;EDRVOL_PERCENT_STANDARD&#39;</span>
         <span class="n">MA_RANK</span> <span class="o">=</span> <span class="s1">&#39;MA_RANK&#39;</span>
         <span class="n">EDRVS_INDEX_SHORT</span> <span class="o">=</span> <span class="s1">&#39;EDRVS_INDEX_SHORT&#39;</span>
         <span class="n">EDRVS_INDEX_LONG</span> <span class="o">=</span> <span class="s1">&#39;EDRVS_INDEX_LONG&#39;</span>
@@ -187,7 +181,10 @@
         <span class="n">TR</span> <span class="o">=</span> <span class="s1">&#39;TR&#39;</span>
         <span class="n">TR_FXSPOT</span> <span class="o">=</span> <span class="s1">&#39;TR_FXSPOT&#39;</span>
 
-<div class="viewcode-block" id="Dataset.__init__"><a class="viewcode-back" href="../../../classes/gs_quant.data.Dataset.html#gs_quant.data.Dataset.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset_id</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Vendor</span><span class="p">],</span> <span class="n">provider</span><span class="p">:</span> <span class="n">DataApi</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">FRED</span><span class="p">(</span><span class="n">Vendor</span><span class="p">):</span>
+        <span class="n">GDP</span> <span class="o">=</span> <span class="s1">&#39;GDP&#39;</span>
+
+<div class="viewcode-block" id="Dataset.__init__"><a class="viewcode-back" href="../../../classes/gs_quant.data.Dataset.html#gs_quant.data.Dataset.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset_id</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Vendor</span><span class="p">],</span> <span class="n">provider</span><span class="p">:</span> <span class="n">DataApi</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">        :param dataset_id: The dataset&#39;s identifier</span>
@@ -212,7 +209,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">provider</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">gs_quant.api.gs.data</span> <span class="k">import</span> <span class="n">GsDataApi</span>
+        <span class="kn">from</span> <span class="nn">gs_quant.api.gs.data</span> <span class="kn">import</span> <span class="n">GsDataApi</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__provider</span> <span class="ow">or</span> <span class="n">GsDataApi</span>
 
     <span class="k">def</span> <span class="nf">get_data</span><span class="p">(</span>
@@ -257,7 +254,7 @@
         <span class="p">)</span>
         <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">provider</span><span class="o">.</span><span class="n">query_data</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">asset_id_type</span><span class="o">=</span><span class="n">asset_id_type</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">construct_dataframe_with_types</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">provider</span><span class="o">.</span><span class="n">construct_dataframe_with_types</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">get_data_series</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
@@ -306,12 +303,17 @@
 
         <span class="n">symbol_dimension</span> <span class="o">=</span> <span class="n">symbol_dimensions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">provider</span><span class="o">.</span><span class="n">query_data</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-        <span class="n">df</span> <span class="o">=</span> <span class="n">construct_dataframe_with_types</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">provider</span><span class="o">.</span><span class="n">construct_dataframe_with_types</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
 
-        <span class="n">gb</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">symbol_dimension</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">gb</span><span class="o">.</span><span class="n">groups</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">MqValueError</span><span class="p">(</span><span class="s1">&#39;Not a series for a single </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">symbol_dimension</span><span class="p">))</span>
+        <span class="kn">from</span> <span class="nn">gs_quant.api.gs.data</span> <span class="kn">import</span> <span class="n">GsDataApi</span>
 
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">provider</span><span class="p">,</span> <span class="n">GsDataApi</span><span class="p">):</span>
+            <span class="n">gb</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">symbol_dimension</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">gb</span><span class="o">.</span><span class="n">groups</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">MqValueError</span><span class="p">(</span><span class="s1">&#39;Not a series for a single </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">symbol_dimension</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">df</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">field_value</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">get_data_last</span><span class="p">(</span>
@@ -342,17 +344,21 @@
             <span class="n">start</span><span class="o">=</span><span class="n">start</span><span class="p">,</span>
             <span class="n">end</span><span class="o">=</span><span class="n">as_of</span><span class="p">,</span>
             <span class="n">fields</span><span class="o">=</span><span class="n">fields</span><span class="p">,</span>
+            <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;JSON&#39;</span><span class="p">,</span>
             <span class="o">**</span><span class="n">kwargs</span>
         <span class="p">)</span>
+        <span class="n">query</span><span class="o">.</span><span class="n">format</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># &quot;last&quot; endpoint does not support MessagePack</span>
 
         <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">provider</span><span class="o">.</span><span class="n">last_data</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">construct_dataframe_with_types</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">provider</span><span class="o">.</span><span class="n">construct_dataframe_with_types</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">get_coverage</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="n">fields</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">fields</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">include_history</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the assets covered by this DataSet</span>
@@ -360,6 +366,7 @@
 <span class="sd">        :param limit: The maximum number of assets to return</span>
 <span class="sd">        :param offset: The offset</span>
 <span class="sd">        :param fields: The fields to return, e.g. assetId</span>
+<span class="sd">        :param include_history: Return column for historyStartDate</span>
 <span class="sd">        :return: A Dataframe of the assets covered</span>
 
 <span class="sd">        **Examples**</span>
@@ -373,7 +380,9 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
             <span class="n">limit</span><span class="o">=</span><span class="n">limit</span><span class="p">,</span>
             <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">,</span>
-            <span class="n">fields</span><span class="o">=</span><span class="n">fields</span>
+            <span class="n">fields</span><span class="o">=</span><span class="n">fields</span><span class="p">,</span>
+            <span class="n">include_history</span><span class="o">=</span><span class="n">include_history</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span>
         <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">coverage</span><span class="p">)</span></div>

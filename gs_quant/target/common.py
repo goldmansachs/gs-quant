@@ -50,8 +50,8 @@ class AssetType(EnumBase, Enum):
     """Asset type differentiates the product categorization or contract type"""
 
     Access = 'Access'
-    Any = 'Any'
     AssetSwapFxdFlt = 'AssetSwapFxdFlt'
+    Any = 'Any'
     AveragePriceOption = 'AveragePriceOption'
     Basis = 'Basis'
     BasisSwap = 'BasisSwap'
@@ -83,10 +83,10 @@ class AssetType(EnumBase, Enum):
     Convertible = 'Convertible'
     Credit_Basket = 'Credit Basket'
     Cross = 'Cross'
-    Cryptocurrency = 'Cryptocurrency'
     CSL = 'CSL'
     Currency = 'Currency'
     Custom_Basket = 'Custom Basket'
+    Cryptocurrency = 'Cryptocurrency'
     Default_Swap = 'Default Swap'
     Economic = 'Economic'
     Endowment = 'Endowment'
@@ -148,7 +148,7 @@ class AssetType(EnumBase, Enum):
     XccySwapFixFix = 'XccySwapFixFix'
     XccySwapFixFlt = 'XccySwapFixFlt'
     XccySwapMTM = 'XccySwapMTM'
-
+    
     def __repr__(self):
         return self.value
 
@@ -878,9 +878,12 @@ class DayCountFraction(EnumBase, Enum):
     """Day Count Fraction"""
 
     ACT_OVER_360 = 'ACT/360'
+    ACT_OVER_360_ISDA = 'ACT/360 ISDA'
     ACT_OVER_365_Fixed = 'ACT/365 (Fixed)'
-    ACT_OVER_365_ISDA = 'ACT/365 ISDA'
+    ACT_OVER_365_Fixed_ISDA = 'ACT/365 Fixed ISDA'
+    ACT_OVER_365L_ISDA = 'ACT/365L ISDA'
     ACT_OVER_ACT_ISDA = 'ACT/ACT ISDA'
+    ACT_OVER_ACT_ISMA = 'ACT/ACT ISMA'
     _30_OVER_360 = '30/360'
     _30E_OVER_360 = '30E/360'
     

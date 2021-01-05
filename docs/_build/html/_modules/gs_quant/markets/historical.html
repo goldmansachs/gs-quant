@@ -32,11 +32,6 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
@@ -53,11 +48,11 @@
 
    
   <div class="wy-grid-for-nav">
-    <a data-toggle="wy-nav-top" class="gs-developer-action-button-container" ontouchstart="">
-      <div data-toggle="gs-nav-action" class="gs-nav-action"></div>
+    <a data-toggle="wy-nav-top" id="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" id="gs-nav-action"></div>
     </a>
     
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+    <nav id="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         
         
@@ -73,7 +68,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../data.html">Data Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../datetime.html">Datetime Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../instrument.html">Instrument Package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../market.html">Market Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../markets.html">Markets Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../models.html">Models Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../risk.html">Risk Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../timeseries.html">Timeseries Package</a></li>
 </ul>
@@ -146,30 +142,36 @@
 <span class="sd">under the License.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
-<span class="kn">from</span> <span class="nn">concurrent.futures</span> <span class="k">import</span> <span class="n">Future</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">from</span> <span class="nn">gs_quant.base</span> <span class="k">import</span> <span class="n">Priceable</span>
-<span class="kn">from</span> <span class="nn">gs_quant.datetime.date</span> <span class="k">import</span> <span class="n">business_day_offset</span><span class="p">,</span> <span class="n">date_range</span>
-<span class="kn">from</span> <span class="nn">gs_quant.target.risk</span> <span class="k">import</span> <span class="n">PricingDateAndMarketDataAsOf</span>
-<span class="kn">from</span> <span class="nn">.core</span> <span class="k">import</span> <span class="n">PricingContext</span>
+<span class="kn">from</span> <span class="nn">gs_quant.base</span> <span class="kn">import</span> <span class="n">InstrumentBase</span><span class="p">,</span> <span class="n">RiskKey</span>
+<span class="kn">from</span> <span class="nn">gs_quant.datetime.date</span> <span class="kn">import</span> <span class="n">date_range</span>
+<span class="kn">from</span> <span class="nn">gs_quant.risk</span> <span class="kn">import</span> <span class="n">RiskMeasure</span><span class="p">,</span> <span class="n">RollFwd</span><span class="p">,</span> <span class="n">MarketDataScenario</span>
+<span class="kn">from</span> <span class="nn">gs_quant.risk.results</span> <span class="kn">import</span> <span class="n">HistoricalPricingFuture</span><span class="p">,</span> <span class="n">PricingFuture</span>
+
+<span class="kn">from</span> <span class="nn">.core</span> <span class="kn">import</span> <span class="n">PricingContext</span>
+<span class="kn">from</span> <span class="nn">.markets</span> <span class="kn">import</span> <span class="n">CloseMarket</span><span class="p">,</span> <span class="n">close_market_date</span>
 
 
 <div class="viewcode-block" id="HistoricalPricingContext"><a class="viewcode-back" href="../../../classes/gs_quant.markets.HistoricalPricingContext.html#gs_quant.markets.HistoricalPricingContext">[docs]</a><span class="k">class</span> <span class="nc">HistoricalPricingContext</span><span class="p">(</span><span class="n">PricingContext</span><span class="p">):</span>
-
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A context for producing valuations over multiple dates</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="HistoricalPricingContext.__init__"><a class="viewcode-back" href="../../../classes/gs_quant.markets.HistoricalPricingContext.html#gs_quant.markets.HistoricalPricingContext.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+<div class="viewcode-block" id="HistoricalPricingContext.__init__"><a class="viewcode-back" href="../../../classes/gs_quant.markets.HistoricalPricingContext.html#gs_quant.markets.HistoricalPricingContext.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">start</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">end</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">calendars</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
             <span class="n">dates</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">is_async</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-            <span class="n">is_batch</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="p">):</span>
+            <span class="n">is_batch</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="n">use_cache</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="n">visible_to_gs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="n">csa_term</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">market_data_location</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">show_progress</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A context for producing valuations over multiple dates</span>
 
@@ -177,9 +179,13 @@
 <span class="sd">        :param end: end date (defaults to today)</span>
 <span class="sd">        :param calendars: holiday calendars</span>
 <span class="sd">        :param dates: a custom iterable of dates</span>
-<span class="sd">        :param is_async: return immediately (True) or wait for results (False). Defaults to False</span>
-<span class="sd">        :param is_batch: use for calculations expected to run longer than 3 mins, to avoid timeouts. It can be used</span>
-<span class="sd">        with is_aync=True|False</span>
+<span class="sd">        :param is_async: return immediately (True) or wait for results (False) (defaults to False)</span>
+<span class="sd">        :param is_batch: use for calculations expected to run longer than 3 mins, to avoid timeouts.</span>
+<span class="sd">            It can be used with is_async=True|False (defaults to False)</span>
+<span class="sd">        :param use_cache: store results in the pricing cache (defaults to False)</span>
+<span class="sd">        :param visible_to_gs: are the contents of risk requests visible to GS (defaults to False)</span>
+<span class="sd">        :param csa_term: the csa under which the calculations are made. Default is local ccy ois index</span>
+<span class="sd">        :param market_data_location: the location for sourcing market data (&#39;NYC&#39;, &#39;LDN&#39; or &#39;HKG&#39; (defaults to LDN)</span>
 
 <span class="sd">        **Examples**</span>
 
@@ -191,8 +197,9 @@
 <span class="sd">        &gt;&gt;&gt;</span>
 <span class="sd">        &gt;&gt;&gt; price_series = price_f.result()</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">is_async</span><span class="o">=</span><span class="n">is_async</span><span class="p">,</span> <span class="n">is_batch</span><span class="o">=</span><span class="n">is_batch</span><span class="p">)</span>
-
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">is_async</span><span class="o">=</span><span class="n">is_async</span><span class="p">,</span> <span class="n">is_batch</span><span class="o">=</span><span class="n">is_batch</span><span class="p">,</span> <span class="n">use_cache</span><span class="o">=</span><span class="n">use_cache</span><span class="p">,</span> <span class="n">visible_to_gs</span><span class="o">=</span><span class="n">visible_to_gs</span><span class="p">,</span>
+                         <span class="n">csa_term</span><span class="o">=</span><span class="n">csa_term</span><span class="p">,</span> <span class="n">market_data_location</span><span class="o">=</span><span class="n">market_data_location</span><span class="p">,</span>
+                         <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">show_progress</span><span class="o">=</span><span class="n">show_progress</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">dates</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Must supply start or dates, not both&#39;</span><span class="p">)</span>
@@ -206,18 +213,106 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Must supply start or dates&#39;</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">resolve_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">priceable</span><span class="p">:</span> <span class="n">Priceable</span><span class="p">,</span> <span class="n">in_place</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Priceable</span><span class="p">,</span> <span class="n">Future</span><span class="p">]]:</span>
-        <span class="k">if</span> <span class="n">in_place</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Cannot resolve in place under a HistoricalPricingContext&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">calc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instrument</span><span class="p">:</span> <span class="n">InstrumentBase</span><span class="p">,</span> <span class="n">risk_measure</span><span class="p">:</span> <span class="n">RiskMeasure</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PricingFuture</span><span class="p">:</span>
+        <span class="n">futures</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">resolve_fields</span><span class="p">(</span><span class="n">priceable</span><span class="p">,</span> <span class="n">in_place</span><span class="p">)</span>
+        <span class="n">provider</span> <span class="o">=</span> <span class="n">instrument</span><span class="o">.</span><span class="n">provider</span>
+        <span class="n">scenario</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scenario</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span>
+        <span class="n">location</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">market</span><span class="o">.</span><span class="n">location</span>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">_pricing_market_data_as_of</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">PricingDateAndMarketDataAsOf</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
-            <span class="n">PricingDateAndMarketDataAsOf</span><span class="p">(</span>
-                <span class="n">d</span><span class="p">,</span> <span class="n">business_day_offset</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">roll</span><span class="o">=</span><span class="s1">&#39;preceding&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">d</span> <span class="o">==</span> <span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span> <span class="k">else</span> <span class="n">d</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__date_range</span><span class="p">)</span></div>
+        <span class="k">for</span> <span class="n">date</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__date_range</span><span class="p">:</span>
+            <span class="n">market</span> <span class="o">=</span> <span class="n">CloseMarket</span><span class="p">(</span><span class="n">location</span><span class="o">=</span><span class="n">location</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="n">close_market_date</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">date</span><span class="p">))</span>
+            <span class="n">risk_key</span> <span class="o">=</span> <span class="n">RiskKey</span><span class="p">(</span><span class="n">provider</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">market</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">scenario</span><span class="p">,</span> <span class="n">risk_measure</span><span class="p">)</span>
+            <span class="n">futures</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_calc</span><span class="p">(</span><span class="n">instrument</span><span class="p">,</span> <span class="n">risk_key</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">HistoricalPricingFuture</span><span class="p">(</span><span class="n">futures</span><span class="p">)</span></div>
+
+
+<span class="k">class</span> <span class="nc">BackToTheFuturePricingContext</span><span class="p">(</span><span class="n">HistoricalPricingContext</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A context for producing valuations over multiple dates both in the past and into the future</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">start</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">end</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">calendars</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+            <span class="n">dates</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">roll_to_fwds</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="n">is_async</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="n">is_batch</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="n">use_cache</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="n">visible_to_gs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="n">csa_term</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">market_data_location</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">show_progress</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A context for producing valuations over multiple dates</span>
+
+<span class="sd">        :param start: start date</span>
+<span class="sd">        :param end: end date (defaults to today)</span>
+<span class="sd">        :param calendars: holiday calendars</span>
+<span class="sd">        :param dates: a custom iterable of dates</span>
+<span class="sd">        :param roll_to_fwds: if True then for future dates assume fwd curve is realised.  If False assume spot rates</span>
+<span class="sd">            are realised.  (defaults to True)</span>
+<span class="sd">        :param is_async: return immediately (True) or wait for results (False) (defaults to False)</span>
+<span class="sd">        :param is_batch: use for calculations expected to run longer than 3 mins, to avoid timeouts.</span>
+<span class="sd">            It can be used with is_async=True|False (defaults to False)</span>
+<span class="sd">        :param use_cache: store results in the pricing cache (defaults to False)</span>
+<span class="sd">        :param visible_to_gs: are the contents of risk requests visible to GS (defaults to False)</span>
+<span class="sd">        :param csa_term: the csa under which the calculations are made. Default is local ccy ois index</span>
+<span class="sd">        :param market_data_location: the location for sourcing market data (&#39;NYC&#39;, &#39;LDN&#39; or &#39;HKG&#39; (defaults to LDN)</span>
+
+<span class="sd">        **Examples** assuming today is between dt.date(2020, 7, 6) and dt.date(2020, 7, 14)</span>
+
+<span class="sd">        &gt;&gt;&gt; from gs_quant.instrument import IRSwap</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; ir_swap = IRSwap(&#39;Pay&#39;, &#39;10y&#39;, &#39;DKK&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; with BackToTheFuturePricingContext(dt.date(2020, 7, 6), dt.date(2020, 7, 14), roll_to_fwds=True):</span>
+<span class="sd">        &gt;&gt;&gt;     price_f = ir_swap.price()</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; price_series = price_f.result()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="n">end</span><span class="p">,</span> <span class="n">calendars</span><span class="o">=</span><span class="n">calendars</span><span class="p">,</span> <span class="n">dates</span><span class="o">=</span><span class="n">dates</span><span class="p">,</span>
+                         <span class="n">is_async</span><span class="o">=</span><span class="n">is_async</span><span class="p">,</span> <span class="n">is_batch</span><span class="o">=</span><span class="n">is_batch</span><span class="p">,</span> <span class="n">use_cache</span><span class="o">=</span><span class="n">use_cache</span><span class="p">,</span> <span class="n">visible_to_gs</span><span class="o">=</span><span class="n">visible_to_gs</span><span class="p">,</span>
+                         <span class="n">csa_term</span><span class="o">=</span><span class="n">csa_term</span><span class="p">,</span> <span class="n">market_data_location</span><span class="o">=</span><span class="n">market_data_location</span><span class="p">,</span>
+                         <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">show_progress</span><span class="o">=</span><span class="n">show_progress</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roll_to_fwds</span> <span class="o">=</span> <span class="n">roll_to_fwds</span>
+        <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">dates</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Must supply start or dates, not both&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">end</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">end</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">__date_range</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">date_range</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">calendars</span><span class="o">=</span><span class="n">calendars</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">dates</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__date_range</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">dates</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Must supply start or dates&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">calc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instrument</span><span class="p">:</span> <span class="n">InstrumentBase</span><span class="p">,</span> <span class="n">risk_measure</span><span class="p">:</span> <span class="n">RiskMeasure</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PricingFuture</span><span class="p">:</span>
+        <span class="n">futures</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">provider</span> <span class="o">=</span> <span class="n">instrument</span><span class="o">.</span><span class="n">provider</span>
+        <span class="n">base_scenario</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scenario</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span>
+        <span class="n">location</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">market</span><span class="o">.</span><span class="n">location</span>
+        <span class="n">base_market</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">market</span>
+        <span class="k">for</span> <span class="n">date</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__date_range</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">date</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">pricing_date</span><span class="p">:</span>
+                <span class="n">scenario</span> <span class="o">=</span> <span class="n">MarketDataScenario</span><span class="p">(</span><span class="n">RollFwd</span><span class="p">(</span><span class="n">date</span><span class="o">=</span><span class="n">date</span><span class="p">,</span> <span class="n">realise_fwd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_roll_to_fwds</span><span class="p">))</span>
+                <span class="n">risk_key</span> <span class="o">=</span> <span class="n">RiskKey</span><span class="p">(</span><span class="n">provider</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">base_market</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">scenario</span><span class="p">,</span> <span class="n">risk_measure</span><span class="p">)</span>
+                <span class="n">futures</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_calc</span><span class="p">(</span><span class="n">instrument</span><span class="p">,</span> <span class="n">risk_key</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">market</span> <span class="o">=</span> <span class="n">CloseMarket</span><span class="p">(</span><span class="n">location</span><span class="o">=</span><span class="n">location</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="n">close_market_date</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">date</span><span class="p">))</span>
+                <span class="n">risk_key</span> <span class="o">=</span> <span class="n">RiskKey</span><span class="p">(</span><span class="n">provider</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">market</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">base_scenario</span><span class="p">,</span> <span class="n">risk_measure</span><span class="p">)</span>
+                <span class="n">futures</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_calc</span><span class="p">(</span><span class="n">instrument</span><span class="p">,</span> <span class="n">risk_key</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">HistoricalPricingFuture</span><span class="p">(</span><span class="n">futures</span><span class="p">)</span>
 </pre></div>
 
            </div>

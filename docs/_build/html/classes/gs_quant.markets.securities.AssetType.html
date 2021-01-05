@@ -32,11 +32,6 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -55,11 +50,11 @@
 
    
   <div class="wy-grid-for-nav">
-    <a data-toggle="wy-nav-top" class="gs-developer-action-button-container" ontouchstart="">
-      <div data-toggle="gs-nav-action" class="gs-nav-action"></div>
+    <a data-toggle="wy-nav-top" id="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" id="gs-nav-action"></div>
     </a>
     
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+    <nav id="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         
         
@@ -75,10 +70,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../data.html">Data Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../datetime.html">Datetime Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../instrument.html">Instrument Package</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../market.html">Market Package</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../markets.html">Markets Package</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="gs_quant.markets.PricingContext.html">gs_quant.markets.PricingContext</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gs_quant.markets.HistoricalPricingContext.html">gs_quant.markets.HistoricalPricingContext</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="../market.html#securities">Securities</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../markets.html#portfolio">Portfolio</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../markets.html#securities">Securities</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="gs_quant.markets.securities.Asset.html">gs_quant.markets.securities.Asset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gs_quant.markets.securities.AssetClass.html">gs_quant.markets.securities.AssetClass</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gs_quant.markets.securities.AssetIdentifier.html">gs_quant.markets.securities.AssetIdentifier</a></li>
@@ -90,6 +86,7 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../models.html">Models Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../risk.html">Risk Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../timeseries.html">Timeseries Package</a></li>
 </ul>
@@ -129,7 +126,7 @@
     
       <li><a href="../index.html">Packages</a> /</li>
         
-          <li><a href="../market.html">Market Package</a> /</li>
+          <li><a href="../markets.html">Markets Package</a> /</li>
         
       <li>gs_quant.markets.securities.AssetType</li>
     
@@ -151,12 +148,12 @@
             
   <div class="section" id="gs-quant-markets-securities-assettype">
 <h1>gs_quant.markets.securities.AssetType<a class="headerlink" href="#gs-quant-markets-securities-assettype" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
+<dl class="py class">
 <dt id="gs_quant.markets.securities.AssetType">
-<em class="property">class </em><code class="sig-name descname">AssetType</code><a class="reference internal" href="../_modules/gs_quant/markets/securities.html#AssetType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gs_quant.markets.securities.AssetType" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-name descname">AssetType</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gs_quant/markets/securities.html#AssetType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gs_quant.markets.securities.AssetType" title="Permalink to this definition">¶</a></dt>
 <dd><p>Asset type enumeration</p>
 <p>Enumeration of different types of asset or security.</p>
-<dl class="method">
+<dl class="py method">
 <dt id="gs_quant.markets.securities.AssetType.__init__">
 <code class="sig-name descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gs_quant.markets.securities.AssetType.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
@@ -172,23 +169,68 @@
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BASKET</span></code></p></td>
 <td><p>Bespoke basket which provides exposure to a customized collection of assets with levels published daily; can be traded on swap and rebalanced programmatically</p></td>
 </tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BOND</span></code></p></td>
+<td><p>Bond</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">CASH</span></code></p></td>
+<td><p>Cash</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">COMMODITY</span></code></p></td>
+<td><p>Commodity</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">COMMODITY_EU_NATURAL_GAS_HUB</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">COMMODITY_NATURAL_GAS_HUB</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">COMMODITY_POWER_AGGREGATED_NODES</span></code></p></td>
+<td><p>Commodity Power Aggregated Nodes</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">COMMODITY_POWER_NODE</span></code></p></td>
+<td><p>Commodity Power Node</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">COMMODITY_REFERENCE_PRICE</span></code></p></td>
+<td><p>Commodity Reference Price</p></td>
+</tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">CROSS</span></code></p></td>
 <td><p>FX cross or currency pair</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">CURRENCY</span></code></p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">CRYPTO_CURRENCY</span></code></p></td>
+<td><p>Crypto</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">CURRENCY</span></code></p></td>
 <td><p>Currency</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ETF</span></code></p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ETF</span></code></p></td>
 <td><p>Exchange traded fund which tracks an evolving portfolio of securities and is listed on an exchange to be traded as a security</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">FUTURE</span></code></p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">FUTURE</span></code></p></td>
 <td><p>Standardized listed contract which provides delivery of an asset at a pre-defined forward date and can be settled in cash or physical form</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">INDEX</span></code></p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">FUTURE_CONTRACT</span></code></p></td>
+<td><p>Future Contract</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">FUTURE_MARKET</span></code></p></td>
+<td><p>Future Market</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">INDEX</span></code></p></td>
 <td><p>Index which tracks an evolving portfolio of securities, and can be traded through cash or derivatives markets</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">STOCK</span></code></p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">OPTION</span></code></p></td>
+<td><p>Option</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">RATE</span></code></p></td>
+<td><p>Rate</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">STOCK</span></code></p></td>
 <td><p>Listed equities which provide access to equity holding in a company and participation in dividends and other distributions in common, preferred or other variants which provide different investor rights</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">SWAP</span></code></p></td>
+<td><p>Swap</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">WEATHER_INDEX</span></code></p></td>
+<td><p>Weather Index</p></td>
 </tr>
 </tbody>
 </table>

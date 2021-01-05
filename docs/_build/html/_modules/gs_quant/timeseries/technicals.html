@@ -32,11 +32,6 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
@@ -53,11 +48,11 @@
 
    
   <div class="wy-grid-for-nav">
-    <a data-toggle="wy-nav-top" class="gs-developer-action-button-container" ontouchstart="">
-      <div data-toggle="gs-nav-action" class="gs-nav-action"></div>
+    <a data-toggle="wy-nav-top" id="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" id="gs-nav-action"></div>
     </a>
     
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+    <nav id="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         
         
@@ -73,7 +68,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../data.html">Data Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../datetime.html">Datetime Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../instrument.html">Instrument Package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../market.html">Market Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../markets.html">Markets Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../models.html">Models Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../risk.html">Risk Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../timeseries.html">Timeseries Package</a></li>
 </ul>
@@ -146,8 +142,8 @@
 <span class="c1"># Marquee Plot Service will attempt to make public functions (not prefixed with _) from this module available.</span>
 <span class="c1"># Such functions should be fully documented: docstrings should describe parameters and the return value, and provide</span>
 <span class="c1"># a 1-line description. Type annotations should be provided for parameters.</span>
-
-<span class="kn">from</span> <span class="nn">.statistics</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">gs_quant.timeseries</span> <span class="kn">import</span> <span class="n">diff</span><span class="p">,</span> <span class="n">annualize</span><span class="p">,</span> <span class="n">returns</span>
+<span class="kn">from</span> <span class="nn">.statistics</span> <span class="kn">import</span> <span class="o">*</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Technicals library is for technical analysis functions on timeseries, including moving averages,</span>
@@ -157,13 +153,14 @@
 
 
 <div class="viewcode-block" id="moving_average"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.technicals.moving_average.html#gs_quant.timeseries.technicals.moving_average">[docs]</a><span class="nd">@plot_function</span>
-<span class="k">def</span> <span class="nf">moving_average</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">w</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Window</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">Window</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">moving_average</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">w</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Window</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Window</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Moving average over specified window</span>
 
 <span class="sd">    :param x: time series of prices</span>
-<span class="sd">    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size</span>
-<span class="sd">     and 10 the ramp up value. Window size defaults to length of series.</span>
+<span class="sd">    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size</span>
+<span class="sd">              and 10 the ramp up value.  If w is a string, it should be a relative date like &#39;1m&#39;, &#39;1d&#39;, etc.</span>
+<span class="sd">              Window size defaults to length of series.</span>
 <span class="sd">    :return: date-based time series of return</span>
 
 <span class="sd">    **Usage**</span>
@@ -196,13 +193,14 @@
 
 
 <div class="viewcode-block" id="bollinger_bands"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.technicals.bollinger_bands.html#gs_quant.timeseries.technicals.bollinger_bands">[docs]</a><span class="nd">@plot_function</span>
-<span class="k">def</span> <span class="nf">bollinger_bands</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">w</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Window</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">Window</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">k</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">bollinger_bands</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">w</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Window</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Window</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">k</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Bollinger bands with given window and width</span>
 
 <span class="sd">    :param x: time series of prices</span>
-<span class="sd">    :param w: Window or int: number of observations and ramp up to use. e.g. Window(22, 10) where 22 is the window size</span>
-<span class="sd">    and 10 the ramp up value. Window size defaults to length of series.</span>
+<span class="sd">    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size</span>
+<span class="sd">              and 10 the ramp up value.  If w is a string, it should be a relative date like &#39;1m&#39;, &#39;1d&#39;, etc.</span>
+<span class="sd">              Window size defaults to length of series.</span>
 <span class="sd">    :param k: band width in standard deviations (default: 2)</span>
 <span class="sd">    :return: date-based time series of return</span>
 
@@ -240,6 +238,224 @@
     <span class="n">lower</span> <span class="o">=</span> <span class="n">avg</span> <span class="o">-</span> <span class="n">k</span> <span class="o">*</span> <span class="n">sigma_t</span>
 
     <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="smoothed_moving_average"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.technicals.smoothed_moving_average.html#gs_quant.timeseries.technicals.smoothed_moving_average">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">smoothed_moving_average</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">w</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Window</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Window</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Smoothed moving average over specified window</span>
+
+<span class="sd">    :param x: time series of prices</span>
+<span class="sd">    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size</span>
+<span class="sd">              and 10 the ramp up value.  If w is a string, it should be a relative date like &#39;1m&#39;, &#39;1d&#39;, etc.</span>
+<span class="sd">              Window size defaults to length of series.</span>
+<span class="sd">    :return: date-based time series of return</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    A modified moving average (MMA), running moving average (RMA), or smoothed moving average (SMMA) is defined as:</span>
+
+<span class="sd">    :math:`P_{MM,today} = \\frac{(N-1)P_{MM,yesterday} + P_today}{N}`</span>
+
+<span class="sd">    where N is the number of observations in each rolling window, :math:`w`. If window is not provided, computes</span>
+<span class="sd">    rolling mean over the full series</span>
+
+<span class="sd">    See `Modified moving average &lt;https://en.wikipedia.org/wiki/Moving_average#Modified_moving_average&gt;`_ for more</span>
+<span class="sd">    information</span>
+
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    Generate price series with 100 observations starting from today&#39;s date:</span>
+
+<span class="sd">    &gt;&gt;&gt; prices = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; smoothed_moving_average(prices, 22)</span>
+
+<span class="sd">    **See also**</span>
+
+<span class="sd">    :func:`mean` :func:&#39;moving_average&#39;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">normalize_window</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+    <span class="n">window_size</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">w</span>
+    <span class="n">ramp</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">r</span>
+    <span class="n">means</span> <span class="o">=</span> <span class="n">apply_ramp</span><span class="p">(</span><span class="n">mean</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Window</span><span class="p">(</span><span class="n">window_size</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span> <span class="n">w</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">means</span><span class="o">.</span><span class="n">size</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">()</span>
+    <span class="n">initial_moving_average</span> <span class="o">=</span> <span class="n">means</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">ramp</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">ramp</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ramp</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DateOffset</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">apply_ramp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+
+    <span class="n">smoothed_moving_averages</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">smoothed_moving_averages</span> <span class="o">*=</span> <span class="mi">0</span>
+    <span class="n">smoothed_moving_averages</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">initial_moving_average</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">window_size</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">window_num_elem</span> <span class="o">=</span> <span class="n">window_size</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">window_num_elem</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">[(</span><span class="n">x</span><span class="o">.</span><span class="n">index</span> <span class="o">&gt;</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">window_size</span><span class="p">))</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">index</span> <span class="o">&lt;=</span> <span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">i</span><span class="p">])])</span>
+        <span class="n">smoothed_moving_averages</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="n">window_num_elem</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">smoothed_moving_averages</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">/</span> <span class="n">window_num_elem</span>
+    <span class="k">return</span> <span class="n">smoothed_moving_averages</span></div>
+
+
+<div class="viewcode-block" id="relative_strength_index"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.technicals.relative_strength_index.html#gs_quant.timeseries.technicals.relative_strength_index">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">relative_strength_index</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">w</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Window</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="mi">14</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Relative Strength Index</span>
+
+<span class="sd">    :param x: time series of prices</span>
+<span class="sd">    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size</span>
+<span class="sd">              and 10 the ramp up value.  If w is a string, it should be a relative date like &#39;1m&#39;, &#39;1d&#39;, etc.</span>
+<span class="sd">              Window size defaults to length of series.</span>
+<span class="sd">    :return: date-based time series of RSI</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    The RSI computes momentum as the ratio of higher closes to lower closes: stocks which have had more or stronger</span>
+<span class="sd">    positive changes have a higher RSI than stocks which have had more or stronger negative changes.</span>
+
+<span class="sd">    See `RSI &lt;https://en.wikipedia.org/wiki/Relative_strength_index&gt;`_ for more information</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    Compute relative strength index over a :math:`14` day window:</span>
+
+<span class="sd">    &gt;&gt;&gt; prices = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; relative_strength_index(prices, 14)</span>
+
+<span class="sd">    **See also**</span>
+
+<span class="sd">    :func:`moving_average` :func:`std` :func:`smoothed_moving_average`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">normalize_window</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+    <span class="n">one_period_change</span> <span class="o">=</span> <span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="n">gains</span> <span class="o">=</span> <span class="n">one_period_change</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">losses</span> <span class="o">=</span> <span class="n">one_period_change</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">gains</span><span class="p">[</span><span class="n">gains</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">losses</span><span class="p">[</span><span class="n">losses</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">losses</span><span class="p">[</span><span class="n">losses</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="n">moving_avg_gains</span> <span class="o">=</span> <span class="n">smoothed_moving_average</span><span class="p">(</span><span class="n">gains</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+    <span class="n">moving_avg_losses</span> <span class="o">=</span> <span class="n">smoothed_moving_average</span><span class="p">(</span><span class="n">losses</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+
+    <span class="n">rsi_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">moving_avg_gains</span><span class="p">)</span>
+    <span class="n">rsi</span> <span class="o">=</span> <span class="n">moving_avg_gains</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">rsi</span> <span class="o">*=</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">rsi_len</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">moving_avg_losses</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">rsi</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">relative_strength</span> <span class="o">=</span> <span class="n">moving_avg_gains</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">/</span> <span class="n">moving_avg_losses</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+            <span class="n">rsi</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">-</span> <span class="p">(</span><span class="mi">100</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">relative_strength</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">rsi</span></div>
+
+
+<div class="viewcode-block" id="exponential_moving_average"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.technicals.exponential_moving_average.html#gs_quant.timeseries.technicals.exponential_moving_average">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">exponential_moving_average</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">beta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.75</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Exponentially weighted moving average</span>
+
+<span class="sd">    :param x: time series of prices</span>
+<span class="sd">    :param beta: how much to weigh the previous observations in the time series, thus controlling how much importance we</span>
+<span class="sd">        place on the (more distant) past. Must be between 0 (inclusive) and 1 (exclusive)</span>
+<span class="sd">    :return: date-based time series of return</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    The exponential(ly weighted) moving average (EMA) of a series [:math:`X_0`, :math:`X_1`, :math:`X_2`, ...],</span>
+<span class="sd">    is defined as:</span>
+
+<span class="sd">    :math:`Y_0 = X_0`</span>
+
+<span class="sd">    :math:`Y_t = \\beta \cdot Y_{t-1} + (1 - \\beta) \cdot X_t`</span>
+
+<span class="sd">    where :math:`\\beta` is the weight we place on the previous average.</span>
+
+<span class="sd">    See `Exponential moving average &lt;https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average&gt;`_ for</span>
+<span class="sd">    more information</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    Generate price series with 100 observations starting from today&#39;s date:</span>
+
+<span class="sd">    &gt;&gt;&gt; prices = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; exponential_moving_average(prices, 0.9)</span>
+
+<span class="sd">    **See also**</span>
+
+<span class="sd">    :func:`mean` :func:`moving_average` :func:`smoothed_moving_average`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">ewm</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mi">1</span> <span class="o">-</span> <span class="n">beta</span><span class="p">,</span> <span class="n">adjust</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="exponential_volatility"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.technicals.exponential_volatility.html#gs_quant.timeseries.technicals.exponential_volatility">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">exponential_volatility</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">beta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.75</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Exponentially weighted volatility</span>
+
+<span class="sd">    :param x: time series of prices</span>
+<span class="sd">    :param beta: how much to weigh the previous price in the time series, thus controlling how much importance we</span>
+<span class="sd">                  place on the (more distant) past. Must be between 0 (inclusive) and 1 (exclusive)</span>
+<span class="sd">    :return: date-based time series of exponential volatility of the input series</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Calculates the exponentially weighted standard deviation of the return of the input series, and annualizes the</span>
+<span class="sd">    standard deviation</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    Generate price series and compute exponentially weighted standard deviation of returns</span>
+
+<span class="sd">    &gt;&gt;&gt; prices = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; exponential_volatility(prices, 0.9)</span>
+
+<span class="sd">    The above is equivalent to</span>
+
+<span class="sd">    &gt;&gt;&gt; annualize(exponential_std(returns(prices), 0.9)) * 100</span>
+
+<span class="sd">    **See also**</span>
+
+<span class="sd">    :func:`volatility` :func:`exponential_std` :func:`exponential_spread_volatility`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">annualize</span><span class="p">(</span><span class="n">exponential_std</span><span class="p">(</span><span class="n">returns</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">beta</span><span class="p">))</span><span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="exponential_spread_volatility"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.technicals.exponential_spread_volatility.html#gs_quant.timeseries.technicals.exponential_spread_volatility">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">exponential_spread_volatility</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">beta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.75</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Exponentially weighted spread volatility</span>
+
+<span class="sd">    :param x: time series of prices</span>
+<span class="sd">    :param beta: how much to weigh the previous price in the time series, thus controlling how much importance we</span>
+<span class="sd">                  place on the (more distant) past. Must be between 0 (inclusive) and 1 (exclusive)</span>
+<span class="sd">    :return: date-based time series of exponential spread volatility of the input series</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Exponentially weights the daily differences of the input series, calculates the annualized standard deviation</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    Generate price series and compute exponentially weighted standard deviation of returns</span>
+
+<span class="sd">    &gt;&gt;&gt; prices = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; exponential_volatility(prices, 0.9)</span>
+
+<span class="sd">    The above is equivalent to</span>
+
+<span class="sd">    &gt;&gt;&gt; annualize(exponential_std(diff(prices, 1), 0.9))</span>
+
+<span class="sd">    **See also**</span>
+
+<span class="sd">    :func:`volatility` :func:`exponential_std` :func:`exponential_volatility`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">annualize</span><span class="p">(</span><span class="n">exponential_std</span><span class="p">(</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">beta</span><span class="p">))</span></div>
 </pre></div>
 
            </div>

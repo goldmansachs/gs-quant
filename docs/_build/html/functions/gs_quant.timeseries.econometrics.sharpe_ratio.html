@@ -1,0 +1,266 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>gs_quant.timeseries.econometrics.sharpe_ratio &mdash; gs_quant 0.1 documentation</title>
+  
+
+    
+  <script crossorigin src="/resources/react/16-8-6/prod/react.production.min.js"></script>
+  <script
+    crossorigin src="/resources/react/16-8-6/prod/react-dom.production.min.js"></script>
+
+     
+    <script src='/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML' async></script> 
+    
+    <script type="text/javascript" src="../_static/../../../auto-mount.js"></script>
+    <link rel="stylesheet" href="../_static/../../../auto-mount.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="next" title="gs_quant.timeseries.econometrics.volatility" href="gs_quant.timeseries.econometrics.volatility.html" />
+    <link rel="prev" title="gs_quant.timeseries.econometrics.returns" href="gs_quant.timeseries.econometrics.returns.html" /> 
+</head>
+
+<!-- Hello from the future. -->
+<div id="mq-doc-navbar-inject"></div>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    <a data-toggle="wy-nav-top" id="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" id="gs-nav-action"></div>
+    </a>
+    
+    <nav id="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Packages</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../data.html">Data Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datetime.html">Datetime Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instrument.html">Instrument Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../markets.html">Markets Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../models.html">Models Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../risk.html">Risk Package</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../timeseries.html">Timeseries Package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../timeseries.html#algebra">Algebra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../timeseries.html#analysis">Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../timeseries.html#backtesting">Backtesting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../timeseries.html#date-time">Date / Time</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../timeseries.html#econometrics">Econometrics</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.annualize.html">gs_quant.timeseries.econometrics.annualize</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.beta.html">gs_quant.timeseries.econometrics.beta</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.change.html">gs_quant.timeseries.econometrics.change</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.correlation.html">gs_quant.timeseries.econometrics.correlation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.excess_returns_.html">gs_quant.timeseries.econometrics.excess_returns_</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.index.html">gs_quant.timeseries.econometrics.index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.max_drawdown.html">gs_quant.timeseries.econometrics.max_drawdown</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.prices.html">gs_quant.timeseries.econometrics.prices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.returns.html">gs_quant.timeseries.econometrics.returns</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">gs_quant.timeseries.econometrics.sharpe_ratio</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.volatility.html">gs_quant.timeseries.econometrics.volatility</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../timeseries.html#statistics">Statistics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../timeseries.html#technical-analysis">Technical Analysis</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Packages</a> /</li>
+        
+          <li><a href="../timeseries.html">Timeseries Package</a> /</li>
+        
+      <li>gs_quant.timeseries.econometrics.sharpe_ratio</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="gs-quant-timeseries-econometrics-sharpe-ratio">
+<h1>gs_quant.timeseries.econometrics.sharpe_ratio<a class="headerlink" href="#gs-quant-timeseries-econometrics-sharpe-ratio" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="gs_quant.timeseries.econometrics.sharpe_ratio">
+<code class="sig-name descname">sharpe_ratio</code><span class="sig-paren">(</span><em class="sig-param">series</em>, <em class="sig-param">currency=&lt;RiskFreeRateCurrency.USD: 'USD'&gt;</em>, <em class="sig-param">w=None</em>, <em class="sig-param">curve_type=&lt;CurveType.PRICES: 'prices'&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gs_quant/timeseries/econometrics.html#sharpe_ratio"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gs_quant.timeseries.econometrics.sharpe_ratio" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate Sharpe ratio</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>series</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code>) – series of prices or excess returns for an asset</p></li>
+<li><p><strong>currency</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">RiskFreeRateCurrency</span></code>) – currency for risk-free rate, defaults to USD</p></li>
+<li><p><strong>curve_type</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">CurveType</span></code>) – whether input series is of prices or excess returns, defaults to prices</p></li>
+<li><p><strong>w</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Window</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]) – Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+and 10 the ramp up value.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Sharpe ratio</p>
+</dd>
+</dl>
+<p><strong>Usage</strong></p>
+<p>Given a price series P, risk-free rate R, and window of size w returns the rolling
+<a class="reference external" href="https://en.wikipedia.org/wiki/Sharpe_ratio">Sharpe ratio</a> S:</p>
+<p><span class="math notranslate nohighlight">\(S_t = \frac{(E_t / E_{t-w+1})^{365.25 / (D_t - D_{t-w} - 1)}}{volatility(E, w)_t}\)</span></p>
+<p>Excess returns E are defined as:</p>
+<p><span class="math notranslate nohighlight">\(E_t = E_{t-1} + P_t - P_{t-1} * (1 + R * (D_t - D_{t-1}) / 360)\)</span></p>
+<p>where D is the date for a data point. The
+<a class="reference external" href="https://en.wikipedia.org/wiki/Day_count_convention#Actual/360">Actual/360</a> day count convention is used.</p>
+<p><strong>Examples</strong></p>
+<p>Get rolling sharpe ratio of a price series (with window of 252).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sr</span> <span class="o">=</span> <span class="n">sharpe_ratio</span><span class="p">(</span><span class="n">generate_series</span><span class="p">(</span><span class="mi">100</span><span class="p">),</span> <span class="n">USD</span><span class="p">,</span> <span class="mi">252</span><span class="p">,</span> <span class="n">CurveType</span><span class="o">.</span><span class="n">PRICES</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>See also</strong></p>
+<p><a class="reference internal" href="gs_quant.timeseries.econometrics.volatility.html#gs_quant.timeseries.econometrics.volatility" title="gs_quant.timeseries.econometrics.volatility"><code class="xref py py-func docutils literal notranslate"><span class="pre">volatility()</span></code></a></p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  <hr />
+  
+  <div
+    class="container-block-module"
+    role="navigation"
+    aria-label="footer navigation"
+  >
+    
+    <div class="link-block-module">
+      <a
+        href="gs_quant.timeseries.econometrics.returns.html"
+        class="link-block-module-container"
+        title="gs_quant.timeseries.econometrics.returns"
+        accesskey="p"
+        rel="prev"
+      >
+        <div class="link-block-module-content">
+          <h4 class="link-block-module-title-label">
+            Previous Topic
+          </h4>
+          <p class="link-block-module-body-label">
+            gs_quant.timeseries.econometrics.returns
+          </p>
+        </div>
+      </a>
+    </div>
+     
+    <div class="link-block-module">
+      <a
+        href="gs_quant.timeseries.econometrics.volatility.html"
+        class="link-block-module-container"
+        title="gs_quant.timeseries.econometrics.volatility"
+        accesskey="n"
+        rel="next"
+      >
+        <div class="link-block-module-content">
+          <h4 class="link-block-module-title-label">
+            Next Topic
+          </h4>
+          <p class="link-block-module-body-label">
+            gs_quant.timeseries.econometrics.volatility
+          </p>
+        </div>
+      </a>
+    </div>
+    
+  </div>
+  
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  
+  
+    
+   
+
+</body>
+</html>

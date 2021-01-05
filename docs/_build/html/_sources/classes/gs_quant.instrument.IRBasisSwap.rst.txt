@@ -1,4 +1,4 @@
-IRBasisSwap
+﻿IRBasisSwap
 ===========
 
 For methods of this class, see :doc:`gs_quant.base.Priceable`
@@ -13,7 +13,6 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    
-   
    .. autoattribute:: clearing_house
    
    
@@ -21,6 +20,15 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    .. autoattribute:: fee
+   
+   
+   .. autoattribute:: fee_currency
+   
+   
+   .. autoattribute:: fee_payment_date
+   
+   
+   .. autoattribute:: instrument_quantity
    
    
    .. autoattribute:: notional_amount
@@ -47,6 +55,12 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: payer_spread
    
    
+   .. autoattribute:: principal_exchange
+   
+   
+   .. autoattribute:: provider
+   
+   
    .. autoattribute:: receiver_business_day_convention
    
    
@@ -65,8 +79,14 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: receiver_spread
    
    
+   .. autoattribute:: resolution_key
+   
+   
    .. autoattribute:: termination_date
    
+   
+   
+   .. autoattribute:: unresolved
    
    
    

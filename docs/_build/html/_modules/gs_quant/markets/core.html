@@ -32,11 +32,6 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
@@ -53,11 +48,11 @@
 
    
   <div class="wy-grid-for-nav">
-    <a data-toggle="wy-nav-top" class="gs-developer-action-button-container" ontouchstart="">
-      <div data-toggle="gs-nav-action" class="gs-nav-action"></div>
+    <a data-toggle="wy-nav-top" id="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" id="gs-nav-action"></div>
     </a>
     
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+    <nav id="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         
         
@@ -73,7 +68,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../data.html">Data Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../datetime.html">Datetime Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../instrument.html">Instrument Package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../market.html">Market Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../markets.html">Markets Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../models.html">Models Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../risk.html">Risk Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../timeseries.html">Timeseries Package</a></li>
 </ul>
@@ -145,27 +141,58 @@
 <span class="sd">specific language governing permissions and limitations</span>
 <span class="sd">under the License.</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">concurrent.futures</span> <span class="k">import</span> <span class="n">Future</span><span class="p">,</span> <span class="n">ThreadPoolExecutor</span>
+<span class="kn">import</span> <span class="nn">asyncio</span>
 <span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
-<span class="kn">import</span> <span class="nn">functools</span>
-<span class="kn">import</span> <span class="nn">inflection</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">weakref</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABCMeta</span>
+<span class="kn">from</span> <span class="nn">concurrent.futures</span> <span class="kn">import</span> <span class="n">ThreadPoolExecutor</span>
+<span class="kn">from</span> <span class="nn">inspect</span> <span class="kn">import</span> <span class="n">signature</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">zip_longest</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">.markets</span> <span class="kn">import</span> <span class="n">CloseMarket</span><span class="p">,</span> <span class="n">LiveMarket</span><span class="p">,</span> <span class="n">Market</span><span class="p">,</span> <span class="n">close_market_date</span>
+<span class="kn">from</span> <span class="nn">gs_quant.base</span> <span class="kn">import</span> <span class="n">InstrumentBase</span><span class="p">,</span> <span class="n">RiskKey</span><span class="p">,</span> <span class="n">Scenario</span><span class="p">,</span> <span class="n">get_enum_value</span>
+<span class="kn">from</span> <span class="nn">gs_quant.common</span> <span class="kn">import</span> <span class="n">PricingLocation</span>
+<span class="kn">from</span> <span class="nn">gs_quant.context_base</span> <span class="kn">import</span> <span class="n">ContextBaseWithDefault</span>
+<span class="kn">from</span> <span class="nn">gs_quant.datetime.date</span> <span class="kn">import</span> <span class="n">business_day_offset</span>
+<span class="kn">from</span> <span class="nn">gs_quant.risk</span> <span class="kn">import</span> <span class="n">CompositeScenario</span><span class="p">,</span> <span class="n">DataFrameWithInfo</span><span class="p">,</span> <span class="n">ErrorValue</span><span class="p">,</span> <span class="n">FloatWithInfo</span><span class="p">,</span> <span class="n">MarketDataScenario</span><span class="p">,</span> \
+    <span class="n">RiskMeasure</span><span class="p">,</span> <span class="n">StringWithInfo</span>
+<span class="kn">from</span> <span class="nn">gs_quant.risk.results</span> <span class="kn">import</span> <span class="n">PricingFuture</span>
+<span class="kn">from</span> <span class="nn">gs_quant.session</span> <span class="kn">import</span> <span class="n">GsSession</span>
+<span class="kn">from</span> <span class="nn">gs_quant.target.common</span> <span class="kn">import</span> <span class="n">PricingDateAndMarketDataAsOf</span>
+<span class="kn">from</span> <span class="nn">gs_quant.target.risk</span> <span class="kn">import</span> <span class="n">RiskPosition</span><span class="p">,</span> <span class="n">RiskRequest</span><span class="p">,</span> <span class="n">RiskRequestParameters</span>
 
-<span class="kn">from</span> <span class="nn">gs_quant.base</span> <span class="k">import</span> <span class="n">Priceable</span>
-<span class="kn">from</span> <span class="nn">gs_quant.context_base</span> <span class="k">import</span> <span class="n">ContextBaseWithDefault</span>
-<span class="kn">from</span> <span class="nn">gs_quant.datetime.date</span> <span class="k">import</span> <span class="n">business_day_offset</span>
-<span class="kn">from</span> <span class="nn">gs_quant.session</span> <span class="k">import</span> <span class="n">GsSession</span>
-<span class="kn">from</span> <span class="nn">gs_quant.target.common</span> <span class="k">import</span> <span class="n">MarketDataCoordinate</span> <span class="k">as</span> <span class="n">__MarketDataCoordinate</span>
-<span class="kn">from</span> <span class="nn">gs_quant.target.risk</span> <span class="k">import</span> <span class="n">PricingDateAndMarketDataAsOf</span><span class="p">,</span> <span class="n">RiskMeasure</span><span class="p">,</span> <span class="n">RiskPosition</span><span class="p">,</span> <span class="n">RiskRequest</span>
+
+<span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">CacheResult</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">DataFrameWithInfo</span><span class="p">,</span> <span class="n">FloatWithInfo</span><span class="p">,</span> <span class="n">StringWithInfo</span><span class="p">]</span>
 
 
-<span class="k">class</span> <span class="nc">MarketDataCoordinate</span><span class="p">(</span><span class="n">__MarketDataCoordinate</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">PricingCache</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Weakref cache for instrument calcs</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__cache</span> <span class="o">=</span> <span class="n">weakref</span><span class="o">.</span><span class="n">WeakKeyDictionary</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;|&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">f</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mkt_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mkt_asset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mkt_class</span><span class="p">,</span>
-                                          <span class="s1">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mkt_point</span> <span class="ow">or</span> <span class="p">()),</span> <span class="bp">self</span><span class="o">.</span><span class="n">mkt_quoting_style</span><span class="p">))</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="n">__cache</span> <span class="o">=</span> <span class="n">weakref</span><span class="o">.</span><span class="n">WeakKeyDictionary</span><span class="p">()</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">risk_key</span><span class="p">:</span> <span class="n">RiskKey</span><span class="p">,</span> <span class="n">instrument</span><span class="p">:</span> <span class="n">InstrumentBase</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CacheResult</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">instrument</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">risk_key</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">put</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">risk_key</span><span class="p">:</span> <span class="n">RiskKey</span><span class="p">,</span> <span class="n">instrument</span><span class="p">:</span> <span class="n">InstrumentBase</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="n">CacheResult</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">ErrorValue</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">risk_key</span><span class="o">.</span><span class="n">market</span><span class="p">,</span> <span class="n">LiveMarket</span><span class="p">):</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">__cache</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">instrument</span><span class="p">,</span> <span class="p">{})[</span><span class="n">risk_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">drop</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">instrument</span><span class="p">:</span> <span class="n">InstrumentBase</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">instrument</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__cache</span><span class="p">:</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">__cache</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">instrument</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="PricingContext"><a class="viewcode-back" href="../../../classes/gs_quant.markets.PricingContext.html#gs_quant.markets.PricingContext">[docs]</a><span class="k">class</span> <span class="nc">PricingContext</span><span class="p">(</span><span class="n">ContextBaseWithDefault</span><span class="p">):</span>
@@ -174,26 +201,35 @@
 <span class="sd">    A context for controlling pricing and market data behaviour</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="PricingContext.__init__"><a class="viewcode-back" href="../../../classes/gs_quant.markets.PricingContext.html#gs_quant.markets.PricingContext.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+<div class="viewcode-block" id="PricingContext.__init__"><a class="viewcode-back" href="../../../classes/gs_quant.markets.PricingContext.html#gs_quant.markets.PricingContext.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">pricing_date</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-                 <span class="n">market_data_as_of</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-                 <span class="n">market_data_location</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">market_data_location</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">PricingLocation</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                  <span class="n">is_async</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-                 <span class="n">is_batch</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+                 <span class="n">is_batch</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                 <span class="n">use_cache</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                 <span class="n">visible_to_gs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">csa_term</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">market</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Market</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">show_progress</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The methods on this class should not be called directly. Instead, use the methods on the instruments, as per the examples</span>
+<span class="sd">        The methods on this class should not be called directly. Instead, use the methods on the instruments,</span>
+<span class="sd">        as per the examples</span>
 
 <span class="sd">        :param pricing_date: the date for pricing calculations. Default is today</span>
-<span class="sd">        :param market_data_as_of: the date/datetime for sourcing market data. Default is 1 business day before pricing_date</span>
-<span class="sd">        :param market_data_location: the location for sourcing market data (&#39;NYC&#39;, &#39;LDN&#39; or &#39;HKG&#39;. Default is NYC</span>
-<span class="sd">        :param is_async: if True, return (a future) immediately. If False, block</span>
-<span class="sd">        :param is_batch: use for calculations expected to run longer than 3 mins, to avoid timeouts. It can be used with is_aync=True|False</span>
+<span class="sd">        :param market_data_location: the location for sourcing market data (&#39;NYC&#39;, &#39;LDN&#39; or &#39;HKG&#39; (defaults to LDN)</span>
+<span class="sd">        :param is_async: if True, return (a future) immediately. If False, block (defaults to False)</span>
+<span class="sd">        :param is_batch: use for calculations expected to run longer than 3 mins, to avoid timeouts.</span>
+<span class="sd">            It can be used with is_async=True|False (defaults to False)</span>
+<span class="sd">        :param use_cache: store results in the pricing cache (defaults to False)</span>
+<span class="sd">        :param visible_to_gs: are the contents of risk requests visible to GS (defaults to False)</span>
+<span class="sd">        :param csa_term: the csa under which the calculations are made. Default is local ccy ois index</span>
 
 <span class="sd">        **Examples**</span>
 
 <span class="sd">        To change the market data location of the default context:</span>
 
-<span class="sd">        &gt;&gt;&gt; from gs_quant.risk import PricingContext</span>
+<span class="sd">        &gt;&gt;&gt; from gs_quant.markets import PricingContext</span>
 <span class="sd">        &gt;&gt;&gt; import datetime as dt</span>
 <span class="sd">        &gt;&gt;&gt;</span>
 <span class="sd">        &gt;&gt;&gt; PricingContext.current = PricingContext(market_data_location=&#39;LDN&#39;)</span>
@@ -211,99 +247,178 @@
 <span class="sd">        For an asynchronous request:</span>
 
 <span class="sd">        &gt;&gt;&gt; with PricingContext(is_async=True):</span>
-<span class="sd">        &gt;&gt;&gt;     price_f = inst.dollar_price()</span>
+<span class="sd">        &gt;&gt;&gt;     price_f = cap.dollar_price()</span>
 <span class="sd">        &gt;&gt;&gt;</span>
-<span class="sd">        &gt;&gt;&gt; while not price_f.done():</span>
+<span class="sd">        &gt;&gt;&gt; while not price_f.done:</span>
 <span class="sd">        &gt;&gt;&gt;     ...</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__pricing_date</span> <span class="o">=</span> <span class="n">pricing_date</span> <span class="ow">or</span> <span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__market_data_as_of</span> <span class="o">=</span> <span class="n">market_data_as_of</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__market_data_location</span> <span class="o">=</span> <span class="n">market_data_location</span> <span class="ow">or</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">market_data_location</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">default_is_set</span> <span class="k">else</span> <span class="s1">&#39;LDN&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">market</span> <span class="ow">and</span> <span class="n">market_data_location</span> <span class="ow">and</span> <span class="n">market</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">market_data_location</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;market.location and market_data_location cannot be different&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">market_data_location</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">market</span><span class="p">:</span>
+                <span class="c1"># use parent context&#39;s market_data_location</span>
+                <span class="k">if</span> <span class="bp">self</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_context</span><span class="p">:</span>
+                    <span class="n">market_data_location</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_context</span><span class="o">.</span><span class="n">market_data_location</span>
+                <span class="c1"># if no parent but there was a context set previously, use that</span>
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">prior_context</span><span class="p">:</span>
+                    <span class="n">market_data_location</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prior_context</span><span class="o">.</span><span class="n">market_data_location</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">market_data_location</span> <span class="o">=</span> <span class="n">market</span><span class="o">.</span><span class="n">location</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__pricing_date</span> <span class="o">=</span> <span class="n">pricing_date</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prior_context</span><span class="o">.</span><span class="n">pricing_date</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prior_context</span> <span class="k">else</span>
+                                               <span class="n">business_day_offset</span><span class="p">(</span><span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">(),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">roll</span><span class="o">=</span><span class="s1">&#39;preceding&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__csa_term</span> <span class="o">=</span> <span class="n">csa_term</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__is_async</span> <span class="o">=</span> <span class="n">is_async</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__is_batch</span> <span class="o">=</span> <span class="n">is_batch</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__risk_measures_by_provider_and_position</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__futures</span> <span class="o">=</span> <span class="p">{}</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__timeout</span> <span class="o">=</span> <span class="n">timeout</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__use_cache</span> <span class="o">=</span> <span class="n">use_cache</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__visible_to_gs</span> <span class="o">=</span> <span class="n">visible_to_gs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__market_data_location</span> <span class="o">=</span> <span class="n">get_enum_value</span><span class="p">(</span><span class="n">PricingLocation</span><span class="p">,</span> <span class="n">market_data_location</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__market</span> <span class="o">=</span> <span class="n">market</span> <span class="ow">or</span> <span class="n">CloseMarket</span><span class="p">(</span>
+            <span class="n">date</span><span class="o">=</span><span class="n">close_market_date</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__market_data_location</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__pricing_date</span><span class="p">)</span> <span class="k">if</span> <span class="n">pricing_date</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">location</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__market_data_location</span> <span class="k">if</span> <span class="n">market_data_location</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__pending</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__show_progress</span> <span class="o">=</span> <span class="n">show_progress</span></div>
 
     <span class="k">def</span> <span class="nf">_on_exit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_calc</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">exc_val</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">exc_val</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__calc</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">_calc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">gs_quant.risk</span> <span class="k">import</span> <span class="n">ScenarioContext</span>
+    <span class="k">def</span> <span class="nf">__calc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">run_requests</span><span class="p">(</span><span class="n">requests_</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">provider_</span><span class="p">,</span> <span class="n">create_event_loop</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">create_event_loop</span><span class="p">:</span>
+                <span class="n">asyncio</span><span class="o">.</span><span class="n">set_event_loop</span><span class="p">(</span><span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">())</span>
 
-        <span class="k">def</span> <span class="nf">run_request</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">RiskRequest</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">GsSession</span><span class="p">):</span>
-            <span class="n">calc_result</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
 
             <span class="k">try</span><span class="p">:</span>
                 <span class="k">with</span> <span class="n">session</span><span class="p">:</span>
-                    <span class="n">calc_result</span> <span class="o">=</span> <span class="n">provider</span><span class="o">.</span><span class="n">calc</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+                    <span class="n">results</span> <span class="o">=</span> <span class="n">provider_</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">requests_</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="n">progress_bar</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__timeout</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">risk_measure</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">measures</span><span class="p">:</span>
-                    <span class="n">measure_results</span> <span class="o">=</span> <span class="p">{}</span>
-                    <span class="k">for</span> <span class="n">result_position</span> <span class="ow">in</span> <span class="n">risk_request</span><span class="o">.</span><span class="n">positions</span><span class="p">:</span>
-                        <span class="n">measure_results</span><span class="p">[</span><span class="n">result_position</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-
-                    <span class="n">calc_result</span><span class="p">[</span><span class="n">risk_measure</span><span class="p">]</span> <span class="o">=</span> <span class="n">measure_results</span>
+                <span class="n">results</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">e</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__pending</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span>
             <span class="k">finally</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_handle_results</span><span class="p">(</span><span class="n">calc_result</span><span class="p">)</span>
+                <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">__pending</span><span class="p">:</span>
+                    <span class="p">(</span><span class="n">risk_key_</span><span class="p">,</span> <span class="n">priceable_</span><span class="p">),</span> <span class="n">future</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__pending</span><span class="o">.</span><span class="n">popitem</span><span class="p">()</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">risk_key_</span><span class="p">,</span> <span class="n">priceable_</span><span class="p">))</span>
 
-        <span class="kn">from</span> <span class="nn">gs_quant.api.risk</span> <span class="k">import</span> <span class="n">RiskApi</span>
+                    <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__use_cache</span><span class="p">:</span>
+                            <span class="n">PricingCache</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">risk_key_</span><span class="p">,</span> <span class="n">priceable_</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">result</span> <span class="o">=</span> <span class="n">ErrorValue</span><span class="p">(</span><span class="n">risk_key_</span><span class="p">,</span> <span class="s1">&#39;No result returned&#39;</span><span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">get_batch_results</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">RiskRequest</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">GsSession</span><span class="p">,</span>
-                              <span class="n">batch_provider</span><span class="p">:</span> <span class="n">RiskApi</span><span class="p">,</span> <span class="n">batch_result_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="k">with</span> <span class="n">session</span><span class="p">:</span>
-                <span class="n">results</span> <span class="o">=</span> <span class="n">batch_provider</span><span class="o">.</span><span class="n">get_results</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">batch_result_id</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_handle_results</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+                    <span class="n">future</span><span class="o">.</span><span class="n">set_result</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
 
-        <span class="n">batch_results</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">pool</span> <span class="o">=</span> <span class="n">ThreadPoolExecutor</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__risk_measures_by_provider_and_position</span><span class="p">))</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__is_async</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="c1"># Group requests optimally</span>
+        <span class="n">requests_by_provider</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">instrument</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__pending</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">requests_by_provider</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">provider</span><span class="p">,</span> <span class="p">{})</span>\
+                <span class="o">.</span><span class="n">setdefault</span><span class="p">((</span><span class="n">key</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="n">key</span><span class="o">.</span><span class="n">scenario</span><span class="p">,</span> <span class="n">key</span><span class="o">.</span><span class="n">date</span><span class="p">,</span> <span class="n">key</span><span class="o">.</span><span class="n">market</span><span class="p">),</span> <span class="p">{})</span>\
+                <span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">instrument</span><span class="p">,</span> <span class="nb">set</span><span class="p">())</span>\
+                <span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">risk_measure</span><span class="p">)</span>
 
-        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">__risk_measures_by_provider_and_position</span><span class="p">:</span>
-            <span class="n">provider</span><span class="p">,</span> <span class="n">risk_measures_by_position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__risk_measures_by_provider_and_position</span><span class="o">.</span><span class="n">popitem</span><span class="p">()</span>
-            <span class="n">positions_by_risk_measures</span> <span class="o">=</span> <span class="p">{}</span>
-            <span class="k">for</span> <span class="n">position</span><span class="p">,</span> <span class="n">risk_measures</span> <span class="ow">in</span> <span class="n">risk_measures_by_position</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="n">positions_by_risk_measures</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">risk_measures</span><span class="p">),</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">position</span><span class="p">)</span>
+        <span class="n">requests_for_provider</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">requests_by_provider</span><span class="p">:</span>
+            <span class="n">session</span> <span class="o">=</span> <span class="n">GsSession</span><span class="o">.</span><span class="n">current</span>
+            <span class="n">request_visible_to_gs</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">is_internal</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__visible_to_gs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">__visible_to_gs</span>
 
-            <span class="k">for</span> <span class="n">risk_measures</span><span class="p">,</span> <span class="n">positions</span> <span class="ow">in</span> <span class="n">positions_by_risk_measures</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="n">risk_request</span> <span class="o">=</span> <span class="n">RiskRequest</span><span class="p">(</span>
-                    <span class="nb">tuple</span><span class="p">(</span><span class="n">positions</span><span class="p">),</span>
-                    <span class="n">risk_measures</span><span class="p">,</span>
-                    <span class="n">wait_for_results</span><span class="o">=</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__is_batch</span><span class="p">,</span>
-                    <span class="n">pricing_location</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">market_data_location</span><span class="p">,</span>
-                    <span class="n">scenario</span><span class="o">=</span><span class="n">ScenarioContext</span><span class="o">.</span><span class="n">current</span> <span class="k">if</span> <span class="n">ScenarioContext</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">scenario</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-                    <span class="n">pricing_and_market_data_as_of</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_pricing_market_data_as_of</span>
-                <span class="p">)</span>
+            <span class="k">for</span> <span class="n">provider</span><span class="p">,</span> <span class="n">by_params_scenario_date_market</span> <span class="ow">in</span> <span class="n">requests_by_provider</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">grouped_requests</span> <span class="o">=</span> <span class="p">{}</span>
 
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__is_batch</span><span class="p">:</span>
-                    <span class="n">batch_results</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">provider</span><span class="p">,</span> <span class="n">risk_request</span><span class="p">,</span> <span class="n">provider</span><span class="o">.</span><span class="n">calc</span><span class="p">(</span><span class="n">risk_request</span><span class="p">)))</span>
-                <span class="k">elif</span> <span class="n">pool</span><span class="p">:</span>
-                    <span class="n">pool</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">run_request</span><span class="p">,</span> <span class="n">risk_request</span><span class="p">,</span> <span class="n">GsSession</span><span class="o">.</span><span class="n">current</span><span class="p">)</span>
+                <span class="k">for</span> <span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">scenario</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">market</span><span class="p">),</span> <span class="n">positions_by_measures</span> <span class="ow">in</span> <span class="n">by_params_scenario_date_market</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">for</span> <span class="n">instrument</span><span class="p">,</span> <span class="n">risk_measures</span> <span class="ow">in</span> <span class="n">positions_by_measures</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                        <span class="n">grouped_requests</span><span class="o">.</span><span class="n">setdefault</span><span class="p">((</span><span class="n">params</span><span class="p">,</span> <span class="n">scenario</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">market</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">risk_measures</span><span class="p">))),</span>
+                                                    <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">instrument</span><span class="p">)</span>
+
+                <span class="n">requests</span> <span class="o">=</span> <span class="p">[]</span>
+
+                <span class="k">for</span> <span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">scenario</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">market</span><span class="p">,</span> <span class="n">risk_measures</span><span class="p">),</span> <span class="n">instruments</span> <span class="ow">in</span> <span class="n">grouped_requests</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">zip_longest</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="nb">iter</span><span class="p">(</span><span class="n">instruments</span><span class="p">)]</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">)]:</span>
+                        <span class="n">requests</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">RiskRequest</span><span class="p">(</span>
+                            <span class="nb">tuple</span><span class="p">(</span><span class="n">RiskPosition</span><span class="p">(</span><span class="n">instrument</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">quantity</span><span class="o">=</span><span class="n">i</span><span class="o">.</span><span class="n">instrument_quantity</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">chunk</span><span class="p">),</span>
+                            <span class="n">risk_measures</span><span class="p">,</span>
+                            <span class="n">parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">,</span>
+                            <span class="n">wait_for_results</span><span class="o">=</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__is_batch</span><span class="p">,</span>
+                            <span class="n">scenario</span><span class="o">=</span><span class="n">scenario</span><span class="p">,</span>
+                            <span class="n">pricing_and_market_data_as_of</span><span class="o">=</span><span class="p">(</span><span class="n">PricingDateAndMarketDataAsOf</span><span class="p">(</span><span class="n">pricing_date</span><span class="o">=</span><span class="n">date</span><span class="p">,</span>
+                                                                                        <span class="n">market</span><span class="o">=</span><span class="n">market</span><span class="p">),),</span>
+                            <span class="n">request_visible_to_gs</span><span class="o">=</span><span class="n">request_visible_to_gs</span><span class="p">,</span>
+                        <span class="p">))</span>
+
+                <span class="n">requests_for_provider</span><span class="p">[</span><span class="n">provider</span><span class="p">]</span> <span class="o">=</span> <span class="n">requests</span>
+            
+            <span class="n">show_status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__show_progress</span> <span class="ow">and</span>\
+                <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">requests_for_provider</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">requests_for_provider</span><span class="o">.</span><span class="n">values</span><span class="p">())))</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">request_pool</span> <span class="o">=</span> <span class="n">ThreadPoolExecutor</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">requests_for_provider</span><span class="p">))</span>\
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">requests_for_provider</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">__is_async</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="n">progress_bar</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__pending</span><span class="p">),</span> <span class="n">position</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">maxinterval</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">show_status</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="n">completion_futures</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">for</span> <span class="n">provider</span><span class="p">,</span> <span class="n">requests</span> <span class="ow">in</span> <span class="n">requests_for_provider</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">request_pool</span><span class="p">:</span>
+                    <span class="n">completion_future</span> <span class="o">=</span> <span class="n">request_pool</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">run_requests</span><span class="p">,</span> <span class="n">requests</span><span class="p">,</span> <span class="n">provider</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__is_async</span><span class="p">:</span>
+                        <span class="n">completion_futures</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">completion_future</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">run_request</span><span class="p">(</span><span class="n">risk_request</span><span class="p">,</span> <span class="n">GsSession</span><span class="o">.</span><span class="n">current</span><span class="p">)</span>
+                    <span class="n">run_requests</span><span class="p">(</span><span class="n">requests</span><span class="p">,</span> <span class="n">provider</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 
-        <span class="k">for</span> <span class="n">provider</span><span class="p">,</span> <span class="n">risk_request</span><span class="p">,</span> <span class="n">result_id</span> <span class="ow">in</span> <span class="n">batch_results</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">pool</span><span class="p">:</span>
-                <span class="n">pool</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">get_batch_results</span><span class="p">,</span> <span class="n">risk_request</span><span class="p">,</span> <span class="n">GsSession</span><span class="o">.</span><span class="n">current</span><span class="p">,</span> <span class="n">provider</span><span class="p">,</span> <span class="n">result_id</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">get_batch_results</span><span class="p">(</span><span class="n">risk_request</span><span class="p">,</span> <span class="n">GsSession</span><span class="o">.</span><span class="n">current</span><span class="p">,</span> <span class="n">provider</span><span class="p">,</span> <span class="n">result_id</span><span class="p">)</span>
+            <span class="c1"># Wait on results if not async, so exceptions are surfaced</span>
+            <span class="k">if</span> <span class="n">request_pool</span><span class="p">:</span>
+                <span class="n">request_pool</span><span class="o">.</span><span class="n">shutdown</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+                <span class="nb">all</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">result</span><span class="p">()</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">completion_futures</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">pool</span><span class="p">:</span>
-            <span class="n">pool</span><span class="o">.</span><span class="n">shutdown</span><span class="p">(</span><span class="n">wait</span><span class="o">=</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__is_async</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">_handle_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">results</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">risk_measure</span><span class="p">,</span> <span class="n">position_results</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">for</span> <span class="n">position</span><span class="p">,</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">position_results</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="n">positions_for_measure</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__futures</span><span class="p">[</span><span class="n">risk_measure</span><span class="p">]</span>
-                <span class="n">future</span> <span class="o">=</span> <span class="n">positions_for_measure</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">position</span><span class="p">)</span>
-                <span class="n">future</span><span class="o">.</span><span class="n">set_result</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
-
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">positions_for_measure</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">__futures</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">risk_measure</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__risk_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">risk_measure</span><span class="p">:</span> <span class="n">RiskMeasure</span><span class="p">,</span> <span class="n">provider</span><span class="p">:</span> <span class="nb">type</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RiskKey</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">RiskKey</span><span class="p">(</span><span class="n">provider</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__pricing_date</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__market</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scenario</span><span class="p">,</span> <span class="n">risk_measure</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">_pricing_market_data_as_of</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">PricingDateAndMarketDataAsOf</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="n">PricingDateAndMarketDataAsOf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pricing_date</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">market_data_as_of</span><span class="p">),</span>
+    <span class="k">def</span> <span class="nf">_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RiskRequestParameters</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">RiskRequestParameters</span><span class="p">(</span><span class="n">csa_term</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__csa_term</span><span class="p">,</span> <span class="n">raw_results</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_scenario</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MarketDataScenario</span><span class="p">]:</span>
+        <span class="n">scenarios</span> <span class="o">=</span> <span class="n">Scenario</span><span class="o">.</span><span class="n">path</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">scenarios</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="n">MarketDataScenario</span><span class="p">(</span><span class="n">scenario</span><span class="o">=</span><span class="n">scenarios</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">scenarios</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span>
+                                  <span class="n">CompositeScenario</span><span class="p">(</span><span class="n">scenarios</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">scenarios</span><span class="p">))))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">active_context</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">next</span><span class="p">((</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">PricingContext</span><span class="o">.</span><span class="n">path</span><span class="p">)</span> <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">is_entered</span><span class="p">),</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">prior_context</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">PricingContext</span><span class="o">.</span><span class="n">path</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">PricingContext</span><span class="o">.</span><span class="n">path</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_current</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">PricingContext</span><span class="o">.</span><span class="n">current</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_async</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__is_async</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__is_batch</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">market</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Market</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__market</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">market_data_location</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PricingLocation</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__market_data_location</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">csa_term</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="o">.</span><span class="n">csa_term</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">pricing_date</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="p">:</span>
@@ -311,121 +426,54 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__pricing_date</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">market_data_as_of</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;Market data as of&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__market_data_as_of</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__market_data_as_of</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">pricing_date</span> <span class="o">==</span> <span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">():</span>
-            <span class="k">return</span> <span class="n">business_day_offset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pricing_date</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">roll</span><span class="o">=</span><span class="s1">&#39;preceding&#39;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pricing_date</span>
+    <span class="k">def</span> <span class="nf">use_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Cache results&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__use_cache</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">market_data_location</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Market data location&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__market_data_location</span>
+    <span class="k">def</span> <span class="nf">visible_to_gs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Request contents visible to GS&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__visible_to_gs</span>
 
-    <span class="k">def</span> <span class="nf">calc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">priceable</span><span class="p">:</span> <span class="n">Priceable</span><span class="p">,</span>
-             <span class="n">risk_measure</span><span class="p">:</span> <span class="n">RiskMeasure</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">Future</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">clone</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">clone_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">signature</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="fm">__init__</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span>
+        <span class="n">clone_kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="o">**</span><span class="n">clone_kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_calc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instrument</span><span class="p">:</span> <span class="n">InstrumentBase</span><span class="p">,</span> <span class="n">risk_key</span><span class="p">:</span> <span class="n">RiskKey</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PricingFuture</span><span class="p">:</span>
+        <span class="n">future</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_context</span><span class="o">.</span><span class="n">__pending</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">risk_key</span><span class="p">,</span> <span class="n">instrument</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">future</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">future</span> <span class="o">=</span> <span class="n">PricingFuture</span><span class="p">()</span>
+            <span class="n">cached_result</span> <span class="o">=</span> <span class="n">PricingCache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">risk_key</span><span class="p">,</span> <span class="n">instrument</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_cache</span> <span class="k">else</span> <span class="kc">None</span>
+
+            <span class="k">if</span> <span class="n">cached_result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">future</span><span class="o">.</span><span class="n">set_result</span><span class="p">(</span><span class="n">cached_result</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">active_context</span><span class="o">.</span><span class="n">__pending</span><span class="p">[(</span><span class="n">risk_key</span><span class="p">,</span> <span class="n">instrument</span><span class="p">)]</span> <span class="o">=</span> <span class="n">future</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">is_entered</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_async</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__calc</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">future</span>
+    
+    <span class="k">def</span> <span class="nf">calc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instrument</span><span class="p">:</span> <span class="n">InstrumentBase</span><span class="p">,</span> <span class="n">risk_measure</span><span class="p">:</span> <span class="n">RiskMeasure</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PricingFuture</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Calculate the risk measure for the priceable instrument. Do not use directly, use via instruments</span>
+<span class="sd">        Calculate the risk measure for the instrument. Do not use directly, use via instruments</span>
 
-<span class="sd">        :param priceable: The priceable (e.g. instrument)</span>
+<span class="sd">        :param instrument: The instrument</span>
 <span class="sd">        :param risk_measure: The measure we wish to calculate</span>
-<span class="sd">        :return: A float, Dataframe, Series or Future (depending on is_async or whether the context is entered)</span>
+<span class="sd">        :return: A PricingFuture whose result will be the calculation result</span>
 
 <span class="sd">        **Examples**</span>
 
 <span class="sd">        &gt;&gt;&gt; from gs_quant.instrument import IRSwap</span>
 <span class="sd">        &gt;&gt;&gt; from gs_quant.risk import IRDelta</span>
 <span class="sd">        &gt;&gt;&gt;</span>
-<span class="sd">        &gt;&gt;&gt; swap = IRSwap(&#39;Pay&#39;, &#39;10y&#39;, &#39;USD&#39;, fixedRate=0.03)</span>
+<span class="sd">        &gt;&gt;&gt; swap = IRSwap(&#39;Pay&#39;, &#39;10y&#39;, &#39;USD&#39;, fixed_rate=0.01)</span>
 <span class="sd">        &gt;&gt;&gt; delta = swap.calc(IRDelta)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">position</span> <span class="o">=</span> <span class="n">RiskPosition</span><span class="p">(</span><span class="n">priceable</span><span class="p">,</span> <span class="n">priceable</span><span class="o">.</span><span class="n">get_quantity</span><span class="p">())</span>
-        <span class="n">future</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__futures</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">risk_measure</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">position</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">future</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">future</span> <span class="o">=</span> <span class="n">Future</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">__risk_measures_by_provider_and_position</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span>
-                <span class="n">priceable</span><span class="o">.</span><span class="n">provider</span><span class="p">(),</span> <span class="p">{})</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span>
-                <span class="n">position</span><span class="p">,</span> <span class="nb">set</span><span class="p">())</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">risk_measure</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">__futures</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">risk_measure</span><span class="p">,</span> <span class="p">{})[</span><span class="n">position</span><span class="p">]</span> <span class="o">=</span> <span class="n">future</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_entered</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__is_async</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_calc</span><span class="p">()</span>
-            <span class="k">return</span> <span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">future</span>
-
-    <span class="k">def</span> <span class="nf">resolve_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">priceable</span><span class="p">:</span> <span class="n">Priceable</span><span class="p">,</span> <span class="n">in_place</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Priceable</span><span class="p">,</span> <span class="n">Future</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Resolve fields on the priceable which were not supplied. Do not use directly, use via instruments</span>
-
-<span class="sd">        :param priceable:  The priceable (e.g. instrument)</span>
-<span class="sd">        :param in_place:   Resolve in place or return a new Priceable</span>
-
-<span class="sd">        **Examples**</span>
-
-<span class="sd">        &gt;&gt;&gt; from gs_quant.instrument import IRSwap</span>
-<span class="sd">        &gt;&gt;&gt;</span>
-<span class="sd">        &gt;&gt;&gt; swap = IRSwap(&#39;Pay&#39;, &#39;10y&#39;, &#39;USD&#39;)</span>
-<span class="sd">        &gt;&gt;&gt; rate = swap.fixedRate</span>
-
-<span class="sd">        fixedRate is None</span>
-
-<span class="sd">        &gt;&gt;&gt; swap.resolve()</span>
-<span class="sd">        &gt;&gt;&gt; rate = swap.fixedRate</span>
-
-<span class="sd">        fixedRate is now the solved value</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># TODO Handle these correctly in the risk service</span>
-        <span class="n">invalid_defaults</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;-- N/A --&#39;</span><span class="p">,</span> <span class="s1">&#39;NaN&#39;</span><span class="p">)</span>
-        <span class="n">value_mappings</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Payer&#39;</span><span class="p">:</span> <span class="s1">&#39;Pay&#39;</span><span class="p">,</span> <span class="s1">&#39;Rec&#39;</span><span class="p">:</span> <span class="s1">&#39;Receive&#39;</span><span class="p">,</span> <span class="s1">&#39;Receiver&#39;</span><span class="p">:</span> <span class="s1">&#39;Receive&#39;</span><span class="p">}</span>
-
-        <span class="k">def</span> <span class="nf">apply_field_values</span><span class="p">(</span>
-                <span class="n">field_values</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">,</span> <span class="n">Future</span><span class="p">],</span>
-                <span class="n">priceable_inst</span><span class="p">:</span> <span class="n">Priceable</span><span class="p">,</span>
-                <span class="n">future</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Future</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="p">):</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field_values</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">field_values</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field_values</span><span class="p">,</span> <span class="n">Future</span><span class="p">):</span>
-                <span class="n">field_values</span> <span class="o">=</span> <span class="n">field_values</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
-
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field_values</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">field_values</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                    <span class="n">field_values</span> <span class="o">=</span> <span class="n">field_values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">future</span><span class="o">.</span><span class="n">set_result</span><span class="p">(</span>
-                        <span class="p">{</span><span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">fv</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="mf">1e9</span><span class="p">):</span> <span class="n">apply_field_values</span><span class="p">(</span><span class="n">fv</span><span class="p">,</span> <span class="n">priceable_inst</span><span class="p">)</span>
-                         <span class="k">for</span> <span class="n">fv</span> <span class="ow">in</span> <span class="n">field_values</span><span class="p">})</span>
-                    <span class="k">return</span>
-
-            <span class="n">field_values</span> <span class="o">=</span> <span class="p">{</span><span class="n">field</span><span class="p">:</span> <span class="n">value_mappings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">field</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">field_values</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-                            <span class="k">if</span> <span class="n">inflection</span><span class="o">.</span><span class="n">underscore</span><span class="p">(</span><span class="n">field</span><span class="p">)</span> <span class="ow">in</span> <span class="n">priceable_inst</span><span class="o">.</span><span class="n">properties</span><span class="p">()</span> <span class="ow">and</span> <span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">invalid_defaults</span><span class="p">}</span>
-
-            <span class="k">if</span> <span class="n">in_place</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">future</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">field</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">field_values</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                    <span class="nb">setattr</span><span class="p">(</span><span class="n">priceable_inst</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
-
-                <span class="n">priceable_inst</span><span class="o">.</span><span class="n">_resolved</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">new_inst</span> <span class="o">=</span> <span class="n">priceable_inst</span><span class="o">.</span><span class="n">_from_dict</span><span class="p">(</span><span class="n">field_values</span><span class="p">)</span>
-                <span class="n">new_inst</span><span class="o">.</span><span class="n">_resolved</span> <span class="o">=</span> <span class="kc">True</span>
-
-                <span class="k">if</span> <span class="n">future</span><span class="p">:</span>
-                    <span class="n">future</span><span class="o">.</span><span class="n">set_result</span><span class="p">(</span><span class="n">new_inst</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">return</span> <span class="n">new_inst</span>
-
-        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="p">(</span><span class="n">priceable</span><span class="p">,</span> <span class="n">RiskMeasure</span><span class="p">(</span><span class="n">measure_type</span><span class="o">=</span><span class="s1">&#39;Resolved Instrument Values&#39;</span><span class="p">))</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">Future</span><span class="p">):</span>
-            <span class="n">ret</span> <span class="o">=</span> <span class="n">Future</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">in_place</span> <span class="k">else</span> <span class="kc">None</span>
-            <span class="n">res</span><span class="o">.</span><span class="n">add_done_callback</span><span class="p">(</span><span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">apply_field_values</span><span class="p">,</span> <span class="n">priceable_inst</span><span class="o">=</span><span class="n">priceable</span><span class="p">,</span> <span class="n">future</span><span class="o">=</span><span class="n">ret</span><span class="p">))</span>
-            <span class="k">return</span> <span class="n">ret</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">apply_field_values</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">priceable</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc</span><span class="p">(</span><span class="n">instrument</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__risk_key</span><span class="p">(</span><span class="n">risk_measure</span><span class="p">,</span> <span class="n">instrument</span><span class="o">.</span><span class="n">provider</span><span class="p">))</span></div>
 </pre></div>
 
            </div>

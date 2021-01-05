@@ -1,5 +1,5 @@
-date\_range
-===========
+﻿gs\_quant.datetime.date.date\_range
+===================================
 
 .. currentmodule:: gs_quant.datetime.date
 

@@ -32,11 +32,6 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
@@ -53,11 +48,11 @@
 
    
   <div class="wy-grid-for-nav">
-    <a data-toggle="wy-nav-top" class="gs-developer-action-button-container" ontouchstart="">
-      <div data-toggle="gs-nav-action" class="gs-nav-action"></div>
+    <a data-toggle="wy-nav-top" id="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" id="gs-nav-action"></div>
     </a>
     
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+    <nav id="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         
         
@@ -73,7 +68,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../data.html">Data Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../datetime.html">Datetime Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../instrument.html">Instrument Package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../market.html">Market Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../markets.html">Markets Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../models.html">Models Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../risk.html">Risk Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../timeseries.html">Timeseries Package</a></li>
 </ul>
@@ -175,7 +171,7 @@
 <span class="n">PricerBFReg</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;^([-]*[0-9]+[mydwbfMYDWBFM])([-]*[0-9]+[mydwbfMYDWBF])([-]*[0-9]+[mydwbfMYDWBF])?$&quot;</span>
 <span class="n">PricerBondSpreadReg</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;^[0-9][SQHT]([0-9]</span><span class="si">{2}</span><span class="s2">)[/][0-9][SQHT]([0-9]</span><span class="si">{2}</span><span class="s2">)&quot;</span>
 <span class="n">SeasonalFrontReg</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;(Front|Back)&quot;</span>
-<span class="n">InflVolReg</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;(Caplet|ZCCap|Swaption|ZCSwo)&quot;</span>
+<span class="n">infl_volReg</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;(Caplet|ZCCap|Swaption|ZCSwo)&quot;</span>
 <span class="n">MMMReg</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)$&quot;</span>
 <span class="n">MMMYYReg</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC) ([0-9]</span><span class="si">{2}</span><span class="s2">)&quot;</span>
 <span class="n">DatePairReg</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;^([0-9]</span><span class="si">{8}</span><span class="s2">)/([0-9]</span><span class="si">{8}</span><span class="s2">)$&quot;</span>
@@ -220,15 +216,13 @@
 <span class="p">}</span>
 
 
-<span class="k">def</span> <span class="nf">relative_days_add</span><span class="p">(</span><span class="n">date_rule</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">strict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">relative_date_add</span><span class="p">(</span><span class="n">date_rule</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">strict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Change the string in date rule format to the number of days. E.g 1d to 1, 1y to 365, 1m to 30, -1w to -7&quot;&quot;&quot;</span>
     <span class="n">days</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
 
     <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">DateRuleReg</span><span class="p">,</span> <span class="n">date_rule</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">res</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">DateRuleReg</span><span class="p">,</span> <span class="n">date_rule</span><span class="p">)</span>
         <span class="n">date_str</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">scale</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="n">num</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">if</span> <span class="n">date_str</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;-&#39;</span><span class="p">:</span>
             <span class="n">num</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">date_str</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
             <span class="n">days</span> <span class="o">=</span> <span class="s1">&#39;-&#39;</span>
@@ -244,7 +238,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;There are no valid day rule for the point provided.&#39;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">strict</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;invalid date rule </span><span class="si">{date_rule}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;invalid date rule </span><span class="si">{</span><span class="n">date_rule</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
     <span class="k">return</span> <span class="mi">0</span>
 
 
@@ -293,29 +287,26 @@
         <span class="n">days</span> <span class="o">=</span> <span class="mf">0.1</span>
     <span class="k">elif</span> <span class="n">point</span> <span class="o">==</span> <span class="s1">&#39;Out&#39;</span><span class="p">:</span>
         <span class="n">days</span> <span class="o">=</span> <span class="mf">0.2</span>
-    <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">InflVolReg</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># TODO: check whether required</span>
-        <span class="n">res</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">InflVolReg</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span>
-        <span class="n">inflVol</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">inflVol</span> <span class="o">==</span> <span class="s1">&#39;Caplet&#39;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">infl_volReg</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">infl_volReg</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span>
+        <span class="n">infl_vol</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">infl_vol</span> <span class="o">==</span> <span class="s1">&#39;Caplet&#39;</span><span class="p">:</span>
             <span class="n">days</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">elif</span> <span class="n">inflVol</span> <span class="o">==</span> <span class="s1">&#39;ZCCap&#39;</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">infl_vol</span> <span class="o">==</span> <span class="s1">&#39;ZCCap&#39;</span><span class="p">:</span>
             <span class="n">days</span> <span class="o">=</span> <span class="mi">1</span>
-        <span class="k">elif</span> <span class="n">inflVol</span> <span class="o">==</span> <span class="s1">&#39;Swaption&#39;</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">infl_vol</span> <span class="o">==</span> <span class="s1">&#39;Swaption&#39;</span><span class="p">:</span>
             <span class="n">days</span> <span class="o">=</span> <span class="mi">2</span>
-        <span class="k">elif</span> <span class="n">inflVol</span> <span class="o">==</span> <span class="s1">&#39;ZCSwo&#39;</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">infl_vol</span> <span class="o">==</span> <span class="s1">&#39;ZCSwo&#39;</span><span class="p">:</span>
             <span class="n">days</span> <span class="o">=</span> <span class="mi">3</span>
     <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">CopulaReg</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">pass</span>
     <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">SeasonalFrontReg</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># TODO: check whether required</span>
         <span class="n">res</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">SeasonalFrontReg</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">res</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;Front&#39;</span><span class="p">:</span>
             <span class="n">days</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">days</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">MMMReg</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># TODO: to confirm the behavior</span>
         <span class="n">res</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">MMMReg</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span>
         <span class="n">date_str</span> <span class="o">=</span> <span class="s1">&#39;1&#39;</span> <span class="o">+</span> <span class="n">res</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;2000&#39;</span>
         <span class="n">format_str</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%d</span><span class="s1">%b%Y&#39;</span>
@@ -328,30 +319,32 @@
     <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">RDatePartReg</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">res</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">RDatePartReg</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span>
         <span class="n">date_str</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">days</span> <span class="o">=</span> <span class="n">relative_days_add</span><span class="p">(</span><span class="n">date_str</span><span class="p">)</span>
+        <span class="n">days</span> <span class="o">=</span> <span class="n">relative_date_add</span><span class="p">(</span><span class="n">date_str</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">CashFXReg</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">res</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">CashFXReg</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span>
         <span class="n">date_str</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">days</span> <span class="o">=</span> <span class="n">relative_days_add</span><span class="p">(</span><span class="n">date_str</span><span class="p">)</span>
+        <span class="n">days</span> <span class="o">=</span> <span class="n">relative_date_add</span><span class="p">(</span><span class="n">date_str</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">PricerBFReg</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">res</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">PricerBFReg</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span>
         <span class="n">date_str</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">days</span> <span class="o">=</span> <span class="n">relative_days_add</span><span class="p">(</span><span class="n">date_str</span><span class="p">)</span>
+        <span class="n">days</span> <span class="o">=</span> <span class="n">relative_date_add</span><span class="p">(</span><span class="n">date_str</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">FRAxReg</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">res</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">FRAxReg</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span>
         <span class="n">date_str</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;m&#39;</span>
-        <span class="n">days</span> <span class="o">=</span> <span class="n">relative_days_add</span><span class="p">(</span><span class="n">date_str</span><span class="p">)</span>
+        <span class="n">days</span> <span class="o">=</span> <span class="n">relative_date_add</span><span class="p">(</span><span class="n">date_str</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">SpikeQEReg</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">res</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">SpikeQEReg</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span>
-        <span class="n">QE</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">QE</span> <span class="o">==</span> <span class="s1">&#39;QE1&#39;</span><span class="p">:</span>
+        <span class="n">qe</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">qe</span> <span class="o">==</span> <span class="s1">&#39;QE1&#39;</span><span class="p">:</span>
             <span class="n">month</span> <span class="o">=</span> <span class="s2">&quot;Mar&quot;</span>
-        <span class="k">elif</span> <span class="n">QE</span> <span class="o">==</span> <span class="s1">&#39;QE2&#39;</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">qe</span> <span class="o">==</span> <span class="s1">&#39;QE2&#39;</span><span class="p">:</span>
             <span class="n">month</span> <span class="o">=</span> <span class="s2">&quot;Jun&quot;</span>
-        <span class="k">elif</span> <span class="n">QE</span> <span class="o">==</span> <span class="s1">&#39;QE3&#39;</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">qe</span> <span class="o">==</span> <span class="s1">&#39;QE3&#39;</span><span class="p">:</span>
             <span class="n">month</span> <span class="o">=</span> <span class="s2">&quot;Sep&quot;</span>
-        <span class="k">elif</span> <span class="n">QE</span> <span class="o">==</span> <span class="s1">&#39;QE4&#39;</span><span class="p">:</span>
-            <span class="n">month</span> <span class="o">=</span> <span class="s2">&quot;Dec&quot;</span>
+        <span class="k">elif</span> <span class="n">qe</span> <span class="o">==</span> <span class="s1">&#39;QE4&#39;</span><span class="p">:</span>
+            <span class="n">month</span> <span class="o">=</span> <span class="s1">&#39;Dec&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">month</span> <span class="o">=</span> <span class="s1">&#39;Dec&#39;</span>
         <span class="n">date_str</span> <span class="o">=</span> <span class="s2">&quot;1&quot;</span> <span class="o">+</span> <span class="n">month</span> <span class="o">+</span> <span class="n">res</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
         <span class="n">format_str</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%d</span><span class="s1">%b%Y&#39;</span>
         <span class="n">days</span> <span class="o">=</span> <span class="p">(</span><span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">date_str</span><span class="p">,</span> <span class="n">format_str</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span> <span class="o">-</span> <span class="n">ref_date</span><span class="p">)</span><span class="o">.</span><span class="n">days</span>
@@ -410,17 +403,15 @@
         <span class="n">format_str</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%d</span><span class="s1">/%m/%Y&#39;</span>
         <span class="n">days</span> <span class="o">=</span> <span class="p">(</span><span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">date_str</span><span class="p">,</span> <span class="n">format_str</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span> <span class="o">-</span> <span class="n">ref_date</span><span class="p">)</span><span class="o">.</span><span class="n">days</span>
     <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">BondFutReg</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># TODO: to confirm the behavior</span>
         <span class="n">res</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">BondFutReg</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span>
         <span class="n">month</span> <span class="o">=</span> <span class="n">FutMonth</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span>
-        <span class="n">date_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">ref_date</span><span class="o">.</span><span class="n">year</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;-&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">month</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;-1&quot;</span>
+        <span class="n">date_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">ref_date</span><span class="o">.</span><span class="n">year</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">month</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;-1&#39;</span>
         <span class="n">format_str</span> <span class="o">=</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span>
         <span class="n">days</span> <span class="o">=</span> <span class="p">(</span><span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">date_str</span><span class="p">,</span> <span class="n">format_str</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span> <span class="o">-</span> <span class="n">ref_date</span><span class="p">)</span><span class="o">.</span><span class="n">days</span>
     <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">FFFutReg</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># TODO: to confirm the behavior</span>
         <span class="n">res</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">FFFutReg</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span>
         <span class="n">month</span> <span class="o">=</span> <span class="n">FutMonth</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span>
-        <span class="n">date_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">ref_date</span><span class="o">.</span><span class="n">year</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;-&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">month</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;-1&quot;</span>
+        <span class="n">date_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">ref_date</span><span class="o">.</span><span class="n">year</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">month</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;-1&#39;</span>
         <span class="n">format_str</span> <span class="o">=</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span>
         <span class="n">days</span> <span class="o">=</span> <span class="p">(</span><span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">date_str</span><span class="p">,</span> <span class="n">format_str</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span> <span class="o">-</span> <span class="n">ref_date</span><span class="p">)</span><span class="o">.</span><span class="n">days</span>
     <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">RepoGCReg</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
