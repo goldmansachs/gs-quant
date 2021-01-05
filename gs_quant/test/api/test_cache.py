@@ -179,15 +179,19 @@ def test_multiple_measures(mocker):
                 ]
             }]
         ],
-        [{
-            '$type': 'RiskVector',
-            'asset': [0.01, 0.015],
-            'points': [
-                {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
-                {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
-            ]
-        }],
-        [{'$type': 'Risk', 'val': 0.01}]
+        [
+            [{
+                '$type': 'RiskVector',
+                'asset': [0.01, 0.015],
+                'points': [
+                    {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '1y'},
+                    {'type': 'IR', 'asset': 'USD', 'class_': 'Swap', 'point': '2y'}
+                ]
+            }],
+        ],
+        [
+            [{'$type': 'Risk', 'val': 0.01}]
+        ]
     ]
 
     mocker.return_value = [day, day, day]

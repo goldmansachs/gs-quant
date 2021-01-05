@@ -16,7 +16,7 @@ under the License.
 
 from gs_quant.target.common import *
 import datetime
-from typing import Tuple, Union
+from typing import Mapping, Tuple, Union
 from enum import Enum
 from gs_quant.base import Base, EnumBase, InstrumentBase, camel_case_translate, get_enum_value
 
@@ -469,331 +469,6 @@ class LiquidityBucket(Base):
         self.__short_beta_adjusted_exposure = value        
 
 
-class LiquidityConstituent(Base):
-        
-    """A constituent of the portfolio enriched with liquidity and estimated transaction
-       cost information."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        asset_id: str = None,
-        name: str = None,
-        exchange: str = None,
-        quantity: float = None,
-        gross_weight: float = None,
-        net_weight: float = None,
-        currency: Union[Currency, str] = None,
-        gross_exposure: float = None,
-        net_exposure: float = None,
-        transaction_cost: float = None,
-        marginal_cost: float = None,
-        country: str = None,
-        region: Union[Region, str] = None,
-        type_: Union[AssetType, str] = None,
-        market_cap_bucket=None,
-        est1_day_complete_pct: float = None,
-        in_benchmark: bool = None,
-        in_risk_model: bool = None,
-        in_cost_predict_model: bool = None,
-        beta: float = None,
-        daily_risk: float = None,
-        annualized_risk: float = None,
-        one_day_price_change_pct: float = None,
-        beta_adjusted_exposure: float = None,
-        adv_bucket=None,
-        settlement_date: datetime.date = None
-    ):        
-        super().__init__()
-        self.asset_id = asset_id
-        self.name = name
-        self.exchange = exchange
-        self.quantity = quantity
-        self.gross_weight = gross_weight
-        self.net_weight = net_weight
-        self.currency = currency
-        self.gross_exposure = gross_exposure
-        self.net_exposure = net_exposure
-        self.transaction_cost = transaction_cost
-        self.marginal_cost = marginal_cost
-        self.country = country
-        self.region = region
-        self.__type = get_enum_value(AssetType, type_)
-        self.market_cap_bucket = market_cap_bucket
-        self.est1_day_complete_pct = est1_day_complete_pct
-        self.in_benchmark = in_benchmark
-        self.in_risk_model = in_risk_model
-        self.in_cost_predict_model = in_cost_predict_model
-        self.beta = beta
-        self.daily_risk = daily_risk
-        self.annualized_risk = annualized_risk
-        self.one_day_price_change_pct = one_day_price_change_pct
-        self.beta_adjusted_exposure = beta_adjusted_exposure
-        self.adv_bucket = adv_bucket
-        self.settlement_date = settlement_date
-
-    @property
-    def asset_id(self) -> str:
-        """Marquee unique asset identifier."""
-        return self.__asset_id
-
-    @asset_id.setter
-    def asset_id(self, value: str):
-        self._property_changed('asset_id')
-        self.__asset_id = value        
-
-    @property
-    def name(self) -> str:
-        """Display name of the asset"""
-        return self.__name
-
-    @name.setter
-    def name(self, value: str):
-        self._property_changed('name')
-        self.__name = value        
-
-    @property
-    def exchange(self) -> str:
-        """Name of marketplace where security, derivative or other instrument is traded"""
-        return self.__exchange
-
-    @exchange.setter
-    def exchange(self, value: str):
-        self._property_changed('exchange')
-        self.__exchange = value        
-
-    @property
-    def quantity(self) -> float:
-        """The quantity of shares."""
-        return self.__quantity
-
-    @quantity.setter
-    def quantity(self, value: float):
-        self._property_changed('quantity')
-        self.__quantity = value        
-
-    @property
-    def gross_weight(self) -> float:
-        """Gross weight of the constituent."""
-        return self.__gross_weight
-
-    @gross_weight.setter
-    def gross_weight(self, value: float):
-        self._property_changed('gross_weight')
-        self.__gross_weight = value        
-
-    @property
-    def net_weight(self) -> float:
-        """Net weight of the constituent."""
-        return self.__net_weight
-
-    @net_weight.setter
-    def net_weight(self, value: float):
-        self._property_changed('net_weight')
-        self.__net_weight = value        
-
-    @property
-    def currency(self) -> Union[Currency, str]:
-        """Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)"""
-        return self.__currency
-
-    @currency.setter
-    def currency(self, value: Union[Currency, str]):
-        self._property_changed('currency')
-        self.__currency = get_enum_value(Currency, value)        
-
-    @property
-    def gross_exposure(self) -> float:
-        """Gross exposure of the constituent."""
-        return self.__gross_exposure
-
-    @gross_exposure.setter
-    def gross_exposure(self, value: float):
-        self._property_changed('gross_exposure')
-        self.__gross_exposure = value        
-
-    @property
-    def net_exposure(self) -> float:
-        """Net exposure of the constituent."""
-        return self.__net_exposure
-
-    @net_exposure.setter
-    def net_exposure(self, value: float):
-        self._property_changed('net_exposure')
-        self.__net_exposure = value        
-
-    @property
-    def transaction_cost(self) -> float:
-        """The estimated transaction cost for the position."""
-        return self.__transaction_cost
-
-    @transaction_cost.setter
-    def transaction_cost(self, value: float):
-        self._property_changed('transaction_cost')
-        self.__transaction_cost = value        
-
-    @property
-    def marginal_cost(self) -> float:
-        """The estimated transaction cost multiplied by the position's gross weight in the
-           portfolio."""
-        return self.__marginal_cost
-
-    @marginal_cost.setter
-    def marginal_cost(self, value: float):
-        self._property_changed('marginal_cost')
-        self.__marginal_cost = value        
-
-    @property
-    def country(self) -> str:
-        """Country name of asset."""
-        return self.__country
-
-    @country.setter
-    def country(self, value: str):
-        self._property_changed('country')
-        self.__country = value        
-
-    @property
-    def region(self) -> Union[Region, str]:
-        """Regional classification for the asset"""
-        return self.__region
-
-    @region.setter
-    def region(self, value: Union[Region, str]):
-        self._property_changed('region')
-        self.__region = get_enum_value(Region, value)        
-
-    @property
-    def type(self) -> Union[AssetType, str]:
-        """Asset type differentiates the product categorization or contract type"""
-        return self.__type
-
-    @type.setter
-    def type(self, value: Union[AssetType, str]):
-        self._property_changed('type')
-        self.__type = get_enum_value(AssetType, value)        
-
-    @property
-    def market_cap_bucket(self):
-        """Market capitalization bucket of the constituent."""
-        return self.__market_cap_bucket
-
-    @market_cap_bucket.setter
-    def market_cap_bucket(self, value):
-        self._property_changed('market_cap_bucket')
-        self.__market_cap_bucket = value        
-
-    @property
-    def est1_day_complete_pct(self) -> float:
-        """Estimated percentage of the position traded in one day."""
-        return self.__est1_day_complete_pct
-
-    @est1_day_complete_pct.setter
-    def est1_day_complete_pct(self, value: float):
-        self._property_changed('est1_day_complete_pct')
-        self.__est1_day_complete_pct = value        
-
-    @property
-    def in_benchmark(self) -> bool:
-        """Whether or not the asset is in the benchmark."""
-        return self.__in_benchmark
-
-    @in_benchmark.setter
-    def in_benchmark(self, value: bool):
-        self._property_changed('in_benchmark')
-        self.__in_benchmark = value        
-
-    @property
-    def in_risk_model(self) -> bool:
-        """Whether or not the asset is in the risk model universe."""
-        return self.__in_risk_model
-
-    @in_risk_model.setter
-    def in_risk_model(self, value: bool):
-        self._property_changed('in_risk_model')
-        self.__in_risk_model = value        
-
-    @property
-    def in_cost_predict_model(self) -> bool:
-        """Whether or not the asset is in the cost prediction model universe."""
-        return self.__in_cost_predict_model
-
-    @in_cost_predict_model.setter
-    def in_cost_predict_model(self, value: bool):
-        self._property_changed('in_cost_predict_model')
-        self.__in_cost_predict_model = value        
-
-    @property
-    def beta(self) -> float:
-        """Beta of the constituent with respect to the risk model universe."""
-        return self.__beta
-
-    @beta.setter
-    def beta(self, value: float):
-        self._property_changed('beta')
-        self.__beta = value        
-
-    @property
-    def daily_risk(self) -> float:
-        """Daily risk of the position in bps."""
-        return self.__daily_risk
-
-    @daily_risk.setter
-    def daily_risk(self, value: float):
-        self._property_changed('daily_risk')
-        self.__daily_risk = value        
-
-    @property
-    def annualized_risk(self) -> float:
-        """Annualized risk of the position in bps."""
-        return self.__annualized_risk
-
-    @annualized_risk.setter
-    def annualized_risk(self, value: float):
-        self._property_changed('annualized_risk')
-        self.__annualized_risk = value        
-
-    @property
-    def one_day_price_change_pct(self) -> float:
-        """One day percentage change in price."""
-        return self.__one_day_price_change_pct
-
-    @one_day_price_change_pct.setter
-    def one_day_price_change_pct(self, value: float):
-        self._property_changed('one_day_price_change_pct')
-        self.__one_day_price_change_pct = value        
-
-    @property
-    def beta_adjusted_exposure(self) -> float:
-        """Beta adjusted exposure."""
-        return self.__beta_adjusted_exposure
-
-    @beta_adjusted_exposure.setter
-    def beta_adjusted_exposure(self, value: float):
-        self._property_changed('beta_adjusted_exposure')
-        self.__beta_adjusted_exposure = value        
-
-    @property
-    def adv_bucket(self):
-        """Category based off of the position's notional with respect to its ADV."""
-        return self.__adv_bucket
-
-    @adv_bucket.setter
-    def adv_bucket(self, value):
-        self._property_changed('adv_bucket')
-        self.__adv_bucket = value        
-
-    @property
-    def settlement_date(self) -> datetime.date:
-        """ISO 8601-formatted date"""
-        return self.__settlement_date
-
-    @settlement_date.setter
-    def settlement_date(self, value: datetime.date):
-        self._property_changed('settlement_date')
-        self.__settlement_date = value        
-
-
 class LiquidityFactor(Base):
         
     @camel_case_translate
@@ -1095,290 +770,6 @@ class LiquiditySummarySection(Base):
     def weight_of_top_five_positions(self, value: float):
         self._property_changed('weight_of_top_five_positions')
         self.__weight_of_top_five_positions = value        
-
-
-class LiquidityTableRow(Base):
-        
-    @camel_case_translate
-    def __init__(
-        self,
-        asset_id: str = None,
-        name: str = None,
-        adv22_day_pct: float = None,
-        shares: float = None,
-        net_weight: float = None,
-        gross_weight: float = None,
-        gross_exposure: float = None,
-        net_exposure: float = None,
-        transaction_cost: float = None,
-        marginal_cost: float = None,
-        one_day_price_change_pct: float = None,
-        normalized_performance: Tuple[Tuple[Union[datetime.date, float], ...], ...] = None
-    ):        
-        super().__init__()
-        self.asset_id = asset_id
-        self.name = name
-        self.adv22_day_pct = adv22_day_pct
-        self.shares = shares
-        self.net_weight = net_weight
-        self.gross_weight = gross_weight
-        self.gross_exposure = gross_exposure
-        self.net_exposure = net_exposure
-        self.transaction_cost = transaction_cost
-        self.marginal_cost = marginal_cost
-        self.one_day_price_change_pct = one_day_price_change_pct
-        self.normalized_performance = normalized_performance
-
-    @property
-    def asset_id(self) -> str:
-        """Marquee unique asset identifier."""
-        return self.__asset_id
-
-    @asset_id.setter
-    def asset_id(self, value: str):
-        self._property_changed('asset_id')
-        self.__asset_id = value        
-
-    @property
-    def name(self) -> str:
-        """Display name of the asset"""
-        return self.__name
-
-    @name.setter
-    def name(self, value: str):
-        self._property_changed('name')
-        self.__name = value        
-
-    @property
-    def adv22_day_pct(self) -> float:
-        """Percentage of the constituent's notional to it's 22 day average daily dollar
-           volume."""
-        return self.__adv22_day_pct
-
-    @adv22_day_pct.setter
-    def adv22_day_pct(self, value: float):
-        self._property_changed('adv22_day_pct')
-        self.__adv22_day_pct = value        
-
-    @property
-    def shares(self) -> float:
-        """The quantity of shares."""
-        return self.__shares
-
-    @shares.setter
-    def shares(self, value: float):
-        self._property_changed('shares')
-        self.__shares = value        
-
-    @property
-    def net_weight(self) -> float:
-        """Net weight of the constituent."""
-        return self.__net_weight
-
-    @net_weight.setter
-    def net_weight(self, value: float):
-        self._property_changed('net_weight')
-        self.__net_weight = value        
-
-    @property
-    def gross_weight(self) -> float:
-        """Gross weight of the constituent."""
-        return self.__gross_weight
-
-    @gross_weight.setter
-    def gross_weight(self, value: float):
-        self._property_changed('gross_weight')
-        self.__gross_weight = value        
-
-    @property
-    def gross_exposure(self) -> float:
-        """Gross exposure of the constituent."""
-        return self.__gross_exposure
-
-    @gross_exposure.setter
-    def gross_exposure(self, value: float):
-        self._property_changed('gross_exposure')
-        self.__gross_exposure = value        
-
-    @property
-    def net_exposure(self) -> float:
-        """Net exposure of the constituent."""
-        return self.__net_exposure
-
-    @net_exposure.setter
-    def net_exposure(self, value: float):
-        self._property_changed('net_exposure')
-        self.__net_exposure = value        
-
-    @property
-    def transaction_cost(self) -> float:
-        """The estimated transaction cost for the position."""
-        return self.__transaction_cost
-
-    @transaction_cost.setter
-    def transaction_cost(self, value: float):
-        self._property_changed('transaction_cost')
-        self.__transaction_cost = value        
-
-    @property
-    def marginal_cost(self) -> float:
-        """The estimated transaction cost multiplied by the position's gross weight in the
-           portfolio."""
-        return self.__marginal_cost
-
-    @marginal_cost.setter
-    def marginal_cost(self, value: float):
-        self._property_changed('marginal_cost')
-        self.__marginal_cost = value        
-
-    @property
-    def one_day_price_change_pct(self) -> float:
-        """One day percentage change in price."""
-        return self.__one_day_price_change_pct
-
-    @one_day_price_change_pct.setter
-    def one_day_price_change_pct(self, value: float):
-        self._property_changed('one_day_price_change_pct')
-        self.__one_day_price_change_pct = value        
-
-    @property
-    def normalized_performance(self) -> Tuple[Tuple[Union[datetime.date, float], ...], ...]:
-        """Time series of normalized performance."""
-        return self.__normalized_performance
-
-    @normalized_performance.setter
-    def normalized_performance(self, value: Tuple[Tuple[Union[datetime.date, float], ...], ...]):
-        self._property_changed('normalized_performance')
-        self.__normalized_performance = value        
-
-
-class LiquidityTimeSeriesItem(Base):
-        
-    @camel_case_translate
-    def __init__(
-        self,
-        name: str = None,
-        normalized_performance: Tuple[Tuple[Union[datetime.date, float], ...], ...] = None,
-        annualized_return: Tuple[Tuple[Union[datetime.date, float], ...], ...] = None,
-        annualized_correlation: Tuple[Tuple[Union[datetime.date, float], ...], ...] = None,
-        annualized_volatility: Tuple[Tuple[Union[datetime.date, float], ...], ...] = None,
-        annualized_sharp_ratio: Tuple[Tuple[Union[datetime.date, float], ...], ...] = None,
-        annualized_tracking_error: Tuple[Tuple[Union[datetime.date, float], ...], ...] = None,
-        max_drawdown: Tuple[Tuple[Union[datetime.date, float], ...], ...] = None,
-        net_exposure: Tuple[Tuple[Union[datetime.date, float], ...], ...] = None,
-        cumulative_pnl: Tuple[Tuple[Union[datetime.date, float], ...], ...] = None
-    ):        
-        super().__init__()
-        self.name = name
-        self.normalized_performance = normalized_performance
-        self.annualized_return = annualized_return
-        self.annualized_correlation = annualized_correlation
-        self.annualized_volatility = annualized_volatility
-        self.annualized_sharp_ratio = annualized_sharp_ratio
-        self.annualized_tracking_error = annualized_tracking_error
-        self.max_drawdown = max_drawdown
-        self.net_exposure = net_exposure
-        self.cumulative_pnl = cumulative_pnl
-
-    @property
-    def name(self) -> str:
-        """Name of the time series item."""
-        return self.__name
-
-    @name.setter
-    def name(self, value: str):
-        self._property_changed('name')
-        self.__name = value        
-
-    @property
-    def normalized_performance(self) -> Tuple[Tuple[Union[datetime.date, float], ...], ...]:
-        """Time series of normalized performance."""
-        return self.__normalized_performance
-
-    @normalized_performance.setter
-    def normalized_performance(self, value: Tuple[Tuple[Union[datetime.date, float], ...], ...]):
-        self._property_changed('normalized_performance')
-        self.__normalized_performance = value        
-
-    @property
-    def annualized_return(self) -> Tuple[Tuple[Union[datetime.date, float], ...], ...]:
-        """Time series of annualized return."""
-        return self.__annualized_return
-
-    @annualized_return.setter
-    def annualized_return(self, value: Tuple[Tuple[Union[datetime.date, float], ...], ...]):
-        self._property_changed('annualized_return')
-        self.__annualized_return = value        
-
-    @property
-    def annualized_correlation(self) -> Tuple[Tuple[Union[datetime.date, float], ...], ...]:
-        """Time series of annualized correlation."""
-        return self.__annualized_correlation
-
-    @annualized_correlation.setter
-    def annualized_correlation(self, value: Tuple[Tuple[Union[datetime.date, float], ...], ...]):
-        self._property_changed('annualized_correlation')
-        self.__annualized_correlation = value        
-
-    @property
-    def annualized_volatility(self) -> Tuple[Tuple[Union[datetime.date, float], ...], ...]:
-        """Time series of annualized volatility."""
-        return self.__annualized_volatility
-
-    @annualized_volatility.setter
-    def annualized_volatility(self, value: Tuple[Tuple[Union[datetime.date, float], ...], ...]):
-        self._property_changed('annualized_volatility')
-        self.__annualized_volatility = value        
-
-    @property
-    def annualized_sharp_ratio(self) -> Tuple[Tuple[Union[datetime.date, float], ...], ...]:
-        """Time series of annualized sharp ratio."""
-        return self.__annualized_sharp_ratio
-
-    @annualized_sharp_ratio.setter
-    def annualized_sharp_ratio(self, value: Tuple[Tuple[Union[datetime.date, float], ...], ...]):
-        self._property_changed('annualized_sharp_ratio')
-        self.__annualized_sharp_ratio = value        
-
-    @property
-    def annualized_tracking_error(self) -> Tuple[Tuple[Union[datetime.date, float], ...], ...]:
-        """Time series of annualized tracking error."""
-        return self.__annualized_tracking_error
-
-    @annualized_tracking_error.setter
-    def annualized_tracking_error(self, value: Tuple[Tuple[Union[datetime.date, float], ...], ...]):
-        self._property_changed('annualized_tracking_error')
-        self.__annualized_tracking_error = value        
-
-    @property
-    def max_drawdown(self) -> Tuple[Tuple[Union[datetime.date, float], ...], ...]:
-        """Time series of max drawdown."""
-        return self.__max_drawdown
-
-    @max_drawdown.setter
-    def max_drawdown(self, value: Tuple[Tuple[Union[datetime.date, float], ...], ...]):
-        self._property_changed('max_drawdown')
-        self.__max_drawdown = value        
-
-    @property
-    def net_exposure(self) -> Tuple[Tuple[Union[datetime.date, float], ...], ...]:
-        """Time series of net exposure."""
-        return self.__net_exposure
-
-    @net_exposure.setter
-    def net_exposure(self, value: Tuple[Tuple[Union[datetime.date, float], ...], ...]):
-        self._property_changed('net_exposure')
-        self.__net_exposure = value        
-
-    @property
-    def cumulative_pnl(self) -> Tuple[Tuple[Union[datetime.date, float], ...], ...]:
-        """Time series of cumulative PnL."""
-        return self.__cumulative_pnl
-
-    @cumulative_pnl.setter
-    def cumulative_pnl(self, value: Tuple[Tuple[Union[datetime.date, float], ...], ...]):
-        self._property_changed('cumulative_pnl')
-        self.__cumulative_pnl = value        
 
 
 class OptimizationAssetAnalyticsDaily(Base):
@@ -3163,6 +2554,331 @@ class TradeCompleteAtHorizon(Base):
         self.__notional_complete_pct = value        
 
 
+class LiquidityConstituent(Base):
+        
+    """A constituent of the portfolio enriched with liquidity and estimated transaction
+       cost information."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        asset_id: str = None,
+        name: str = None,
+        exchange: str = None,
+        quantity: float = None,
+        gross_weight: float = None,
+        net_weight: float = None,
+        currency: Union[Currency, str] = None,
+        gross_exposure: float = None,
+        net_exposure: float = None,
+        transaction_cost: float = None,
+        marginal_cost: float = None,
+        country: str = None,
+        region: Union[Region, str] = None,
+        type_: Union[AssetType, str] = None,
+        market_cap_bucket=None,
+        est1_day_complete_pct: float = None,
+        in_benchmark: bool = None,
+        in_risk_model: bool = None,
+        in_cost_predict_model: bool = None,
+        beta: float = None,
+        daily_risk: float = None,
+        annualized_risk: float = None,
+        one_day_price_change_pct: float = None,
+        beta_adjusted_exposure: float = None,
+        adv_bucket=None,
+        settlement_date: datetime.date = None
+    ):        
+        super().__init__()
+        self.asset_id = asset_id
+        self.name = name
+        self.exchange = exchange
+        self.quantity = quantity
+        self.gross_weight = gross_weight
+        self.net_weight = net_weight
+        self.currency = currency
+        self.gross_exposure = gross_exposure
+        self.net_exposure = net_exposure
+        self.transaction_cost = transaction_cost
+        self.marginal_cost = marginal_cost
+        self.country = country
+        self.region = region
+        self.__type = get_enum_value(AssetType, type_)
+        self.market_cap_bucket = market_cap_bucket
+        self.est1_day_complete_pct = est1_day_complete_pct
+        self.in_benchmark = in_benchmark
+        self.in_risk_model = in_risk_model
+        self.in_cost_predict_model = in_cost_predict_model
+        self.beta = beta
+        self.daily_risk = daily_risk
+        self.annualized_risk = annualized_risk
+        self.one_day_price_change_pct = one_day_price_change_pct
+        self.beta_adjusted_exposure = beta_adjusted_exposure
+        self.adv_bucket = adv_bucket
+        self.settlement_date = settlement_date
+
+    @property
+    def asset_id(self) -> str:
+        """Marquee unique asset identifier."""
+        return self.__asset_id
+
+    @asset_id.setter
+    def asset_id(self, value: str):
+        self._property_changed('asset_id')
+        self.__asset_id = value        
+
+    @property
+    def name(self) -> str:
+        """Display name of the asset"""
+        return self.__name
+
+    @name.setter
+    def name(self, value: str):
+        self._property_changed('name')
+        self.__name = value        
+
+    @property
+    def exchange(self) -> str:
+        """Name of marketplace where security, derivative or other instrument is traded"""
+        return self.__exchange
+
+    @exchange.setter
+    def exchange(self, value: str):
+        self._property_changed('exchange')
+        self.__exchange = value        
+
+    @property
+    def quantity(self) -> float:
+        """The quantity of shares."""
+        return self.__quantity
+
+    @quantity.setter
+    def quantity(self, value: float):
+        self._property_changed('quantity')
+        self.__quantity = value        
+
+    @property
+    def gross_weight(self) -> float:
+        """Gross weight of the constituent."""
+        return self.__gross_weight
+
+    @gross_weight.setter
+    def gross_weight(self, value: float):
+        self._property_changed('gross_weight')
+        self.__gross_weight = value        
+
+    @property
+    def net_weight(self) -> float:
+        """Net weight of the constituent."""
+        return self.__net_weight
+
+    @net_weight.setter
+    def net_weight(self, value: float):
+        self._property_changed('net_weight')
+        self.__net_weight = value        
+
+    @property
+    def currency(self) -> Union[Currency, str]:
+        """Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)"""
+        return self.__currency
+
+    @currency.setter
+    def currency(self, value: Union[Currency, str]):
+        self._property_changed('currency')
+        self.__currency = get_enum_value(Currency, value)        
+
+    @property
+    def gross_exposure(self) -> float:
+        """Gross exposure of the constituent."""
+        return self.__gross_exposure
+
+    @gross_exposure.setter
+    def gross_exposure(self, value: float):
+        self._property_changed('gross_exposure')
+        self.__gross_exposure = value        
+
+    @property
+    def net_exposure(self) -> float:
+        """Net exposure of the constituent."""
+        return self.__net_exposure
+
+    @net_exposure.setter
+    def net_exposure(self, value: float):
+        self._property_changed('net_exposure')
+        self.__net_exposure = value        
+
+    @property
+    def transaction_cost(self) -> float:
+        """The estimated transaction cost for the position."""
+        return self.__transaction_cost
+
+    @transaction_cost.setter
+    def transaction_cost(self, value: float):
+        self._property_changed('transaction_cost')
+        self.__transaction_cost = value        
+
+    @property
+    def marginal_cost(self) -> float:
+        """The estimated transaction cost multiplied by the position's gross weight in the
+           portfolio."""
+        return self.__marginal_cost
+
+    @marginal_cost.setter
+    def marginal_cost(self, value: float):
+        self._property_changed('marginal_cost')
+        self.__marginal_cost = value        
+
+    @property
+    def country(self) -> str:
+        """Country name of asset."""
+        return self.__country
+
+    @country.setter
+    def country(self, value: str):
+        self._property_changed('country')
+        self.__country = value        
+
+    @property
+    def region(self) -> Union[Region, str]:
+        """Regional classification for the asset"""
+        return self.__region
+
+    @region.setter
+    def region(self, value: Union[Region, str]):
+        self._property_changed('region')
+        self.__region = get_enum_value(Region, value)        
+
+    @property
+    def type(self) -> Union[AssetType, str]:
+        """Asset type differentiates the product categorization or contract type"""
+        return self.__type
+
+    @type.setter
+    def type(self, value: Union[AssetType, str]):
+        self._property_changed('type')
+        self.__type = get_enum_value(AssetType, value)        
+
+    @property
+    def market_cap_bucket(self):
+        """Market capitalization bucket of the constituent."""
+        return self.__market_cap_bucket
+
+    @market_cap_bucket.setter
+    def market_cap_bucket(self, value):
+        self._property_changed('market_cap_bucket')
+        self.__market_cap_bucket = value        
+
+    @property
+    def est1_day_complete_pct(self) -> float:
+        """Estimated percentage of the position traded in one day."""
+        return self.__est1_day_complete_pct
+
+    @est1_day_complete_pct.setter
+    def est1_day_complete_pct(self, value: float):
+        self._property_changed('est1_day_complete_pct')
+        self.__est1_day_complete_pct = value        
+
+    @property
+    def in_benchmark(self) -> bool:
+        """Whether or not the asset is in the benchmark."""
+        return self.__in_benchmark
+
+    @in_benchmark.setter
+    def in_benchmark(self, value: bool):
+        self._property_changed('in_benchmark')
+        self.__in_benchmark = value        
+
+    @property
+    def in_risk_model(self) -> bool:
+        """Whether or not the asset is in the risk model universe."""
+        return self.__in_risk_model
+
+    @in_risk_model.setter
+    def in_risk_model(self, value: bool):
+        self._property_changed('in_risk_model')
+        self.__in_risk_model = value        
+
+    @property
+    def in_cost_predict_model(self) -> bool:
+        """Whether or not the asset is in the cost prediction model universe."""
+        return self.__in_cost_predict_model
+
+    @in_cost_predict_model.setter
+    def in_cost_predict_model(self, value: bool):
+        self._property_changed('in_cost_predict_model')
+        self.__in_cost_predict_model = value        
+
+    @property
+    def beta(self) -> float:
+        """Beta of the constituent with respect to the risk model universe."""
+        return self.__beta
+
+    @beta.setter
+    def beta(self, value: float):
+        self._property_changed('beta')
+        self.__beta = value        
+
+    @property
+    def daily_risk(self) -> float:
+        """Daily risk of the position in bps."""
+        return self.__daily_risk
+
+    @daily_risk.setter
+    def daily_risk(self, value: float):
+        self._property_changed('daily_risk')
+        self.__daily_risk = value        
+
+    @property
+    def annualized_risk(self) -> float:
+        """Annualized risk of the position in bps."""
+        return self.__annualized_risk
+
+    @annualized_risk.setter
+    def annualized_risk(self, value: float):
+        self._property_changed('annualized_risk')
+        self.__annualized_risk = value        
+
+    @property
+    def one_day_price_change_pct(self) -> float:
+        """One day percentage change in price."""
+        return self.__one_day_price_change_pct
+
+    @one_day_price_change_pct.setter
+    def one_day_price_change_pct(self, value: float):
+        self._property_changed('one_day_price_change_pct')
+        self.__one_day_price_change_pct = value        
+
+    @property
+    def beta_adjusted_exposure(self) -> float:
+        """Beta adjusted exposure."""
+        return self.__beta_adjusted_exposure
+
+    @beta_adjusted_exposure.setter
+    def beta_adjusted_exposure(self, value: float):
+        self._property_changed('beta_adjusted_exposure')
+        self.__beta_adjusted_exposure = value        
+
+    @property
+    def adv_bucket(self):
+        """Category based off of the position's notional with respect to its ADV."""
+        return self.__adv_bucket
+
+    @adv_bucket.setter
+    def adv_bucket(self, value):
+        self._property_changed('adv_bucket')
+        self.__adv_bucket = value        
+
+    @property
+    def settlement_date(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__settlement_date
+
+    @settlement_date.setter
+    def settlement_date(self, value: datetime.date):
+        self._property_changed('settlement_date')
+        self.__settlement_date = value        
+
+
 class LiquidityFactorCategory(Base):
         
     @camel_case_translate
@@ -3419,190 +3135,470 @@ class OptimizationPortfolioCharacteristics(Base):
         self.__gross = value        
 
 
-class OptimizationRequest(Base):
+class LiquidityTableRow(Base):
         
-    """Required payload in order to get optimization and analytics information given a
-       set of positions."""
+    @camel_case_translate
+    def __init__(
+        self,
+        asset_id: str = None,
+        name: str = None,
+        adv22_day_pct: float = None,
+        shares: float = None,
+        net_weight: float = None,
+        gross_weight: float = None,
+        gross_exposure: float = None,
+        net_exposure: float = None,
+        transaction_cost: float = None,
+        marginal_cost: float = None,
+        one_day_price_change_pct: float = None,
+        normalized_performance: Tuple[Tuple[Union[datetime.date, float], ...], ...] = None
+    ):        
+        super().__init__()
+        self.asset_id = asset_id
+        self.name = name
+        self.adv22_day_pct = adv22_day_pct
+        self.shares = shares
+        self.net_weight = net_weight
+        self.gross_weight = gross_weight
+        self.gross_exposure = gross_exposure
+        self.net_exposure = net_exposure
+        self.transaction_cost = transaction_cost
+        self.marginal_cost = marginal_cost
+        self.one_day_price_change_pct = one_day_price_change_pct
+        self.normalized_performance = normalized_performance
+
+    @property
+    def asset_id(self) -> str:
+        """Marquee unique asset identifier."""
+        return self.__asset_id
+
+    @asset_id.setter
+    def asset_id(self, value: str):
+        self._property_changed('asset_id')
+        self.__asset_id = value        
+
+    @property
+    def name(self) -> str:
+        """Display name of the asset"""
+        return self.__name
+
+    @name.setter
+    def name(self, value: str):
+        self._property_changed('name')
+        self.__name = value        
+
+    @property
+    def adv22_day_pct(self) -> float:
+        """Percentage of the constituent's notional to it's 22 day average daily dollar
+           volume."""
+        return self.__adv22_day_pct
+
+    @adv22_day_pct.setter
+    def adv22_day_pct(self, value: float):
+        self._property_changed('adv22_day_pct')
+        self.__adv22_day_pct = value        
+
+    @property
+    def shares(self) -> float:
+        """The quantity of shares."""
+        return self.__shares
+
+    @shares.setter
+    def shares(self, value: float):
+        self._property_changed('shares')
+        self.__shares = value        
+
+    @property
+    def net_weight(self) -> float:
+        """Net weight of the constituent."""
+        return self.__net_weight
+
+    @net_weight.setter
+    def net_weight(self, value: float):
+        self._property_changed('net_weight')
+        self.__net_weight = value        
+
+    @property
+    def gross_weight(self) -> float:
+        """Gross weight of the constituent."""
+        return self.__gross_weight
+
+    @gross_weight.setter
+    def gross_weight(self, value: float):
+        self._property_changed('gross_weight')
+        self.__gross_weight = value        
+
+    @property
+    def gross_exposure(self) -> float:
+        """Gross exposure of the constituent."""
+        return self.__gross_exposure
+
+    @gross_exposure.setter
+    def gross_exposure(self, value: float):
+        self._property_changed('gross_exposure')
+        self.__gross_exposure = value        
+
+    @property
+    def net_exposure(self) -> float:
+        """Net exposure of the constituent."""
+        return self.__net_exposure
+
+    @net_exposure.setter
+    def net_exposure(self, value: float):
+        self._property_changed('net_exposure')
+        self.__net_exposure = value        
+
+    @property
+    def transaction_cost(self) -> float:
+        """The estimated transaction cost for the position."""
+        return self.__transaction_cost
+
+    @transaction_cost.setter
+    def transaction_cost(self, value: float):
+        self._property_changed('transaction_cost')
+        self.__transaction_cost = value        
+
+    @property
+    def marginal_cost(self) -> float:
+        """The estimated transaction cost multiplied by the position's gross weight in the
+           portfolio."""
+        return self.__marginal_cost
+
+    @marginal_cost.setter
+    def marginal_cost(self, value: float):
+        self._property_changed('marginal_cost')
+        self.__marginal_cost = value        
+
+    @property
+    def one_day_price_change_pct(self) -> float:
+        """One day percentage change in price."""
+        return self.__one_day_price_change_pct
+
+    @one_day_price_change_pct.setter
+    def one_day_price_change_pct(self, value: float):
+        self._property_changed('one_day_price_change_pct')
+        self.__one_day_price_change_pct = value        
+
+    @property
+    def normalized_performance(self) -> Tuple[Tuple[Union[datetime.date, float], ...], ...]:
+        """Time series of normalized performance."""
+        return self.__normalized_performance
+
+    @normalized_performance.setter
+    def normalized_performance(self, value: Tuple[Tuple[Union[datetime.date, float], ...], ...]):
+        self._property_changed('normalized_performance')
+        self.__normalized_performance = value        
+
+
+class LiquidityTimeSeriesItem(Base):
+        
+    @camel_case_translate
+    def __init__(
+        self,
+        name: str = None,
+        normalized_performance: Tuple[Tuple[Union[datetime.date, float], ...], ...] = None,
+        annualized_return: Tuple[Tuple[Union[datetime.date, float], ...], ...] = None,
+        annualized_correlation: Tuple[Tuple[Union[datetime.date, float], ...], ...] = None,
+        annualized_volatility: Tuple[Tuple[Union[datetime.date, float], ...], ...] = None,
+        annualized_sharp_ratio: Tuple[Tuple[Union[datetime.date, float], ...], ...] = None,
+        annualized_tracking_error: Tuple[Tuple[Union[datetime.date, float], ...], ...] = None,
+        max_drawdown: Tuple[Tuple[Union[datetime.date, float], ...], ...] = None,
+        net_exposure: Tuple[Tuple[Union[datetime.date, float], ...], ...] = None,
+        cumulative_pnl: Tuple[Tuple[Union[datetime.date, float], ...], ...] = None
+    ):        
+        super().__init__()
+        self.name = name
+        self.normalized_performance = normalized_performance
+        self.annualized_return = annualized_return
+        self.annualized_correlation = annualized_correlation
+        self.annualized_volatility = annualized_volatility
+        self.annualized_sharp_ratio = annualized_sharp_ratio
+        self.annualized_tracking_error = annualized_tracking_error
+        self.max_drawdown = max_drawdown
+        self.net_exposure = net_exposure
+        self.cumulative_pnl = cumulative_pnl
+
+    @property
+    def name(self) -> str:
+        """Name of the time series item."""
+        return self.__name
+
+    @name.setter
+    def name(self, value: str):
+        self._property_changed('name')
+        self.__name = value        
+
+    @property
+    def normalized_performance(self) -> Tuple[Tuple[Union[datetime.date, float], ...], ...]:
+        """Time series of normalized performance."""
+        return self.__normalized_performance
+
+    @normalized_performance.setter
+    def normalized_performance(self, value: Tuple[Tuple[Union[datetime.date, float], ...], ...]):
+        self._property_changed('normalized_performance')
+        self.__normalized_performance = value        
+
+    @property
+    def annualized_return(self) -> Tuple[Tuple[Union[datetime.date, float], ...], ...]:
+        """Time series of annualized return."""
+        return self.__annualized_return
+
+    @annualized_return.setter
+    def annualized_return(self, value: Tuple[Tuple[Union[datetime.date, float], ...], ...]):
+        self._property_changed('annualized_return')
+        self.__annualized_return = value        
+
+    @property
+    def annualized_correlation(self) -> Tuple[Tuple[Union[datetime.date, float], ...], ...]:
+        """Time series of annualized correlation."""
+        return self.__annualized_correlation
+
+    @annualized_correlation.setter
+    def annualized_correlation(self, value: Tuple[Tuple[Union[datetime.date, float], ...], ...]):
+        self._property_changed('annualized_correlation')
+        self.__annualized_correlation = value        
+
+    @property
+    def annualized_volatility(self) -> Tuple[Tuple[Union[datetime.date, float], ...], ...]:
+        """Time series of annualized volatility."""
+        return self.__annualized_volatility
+
+    @annualized_volatility.setter
+    def annualized_volatility(self, value: Tuple[Tuple[Union[datetime.date, float], ...], ...]):
+        self._property_changed('annualized_volatility')
+        self.__annualized_volatility = value        
+
+    @property
+    def annualized_sharp_ratio(self) -> Tuple[Tuple[Union[datetime.date, float], ...], ...]:
+        """Time series of annualized sharp ratio."""
+        return self.__annualized_sharp_ratio
+
+    @annualized_sharp_ratio.setter
+    def annualized_sharp_ratio(self, value: Tuple[Tuple[Union[datetime.date, float], ...], ...]):
+        self._property_changed('annualized_sharp_ratio')
+        self.__annualized_sharp_ratio = value        
+
+    @property
+    def annualized_tracking_error(self) -> Tuple[Tuple[Union[datetime.date, float], ...], ...]:
+        """Time series of annualized tracking error."""
+        return self.__annualized_tracking_error
+
+    @annualized_tracking_error.setter
+    def annualized_tracking_error(self, value: Tuple[Tuple[Union[datetime.date, float], ...], ...]):
+        self._property_changed('annualized_tracking_error')
+        self.__annualized_tracking_error = value        
+
+    @property
+    def max_drawdown(self) -> Tuple[Tuple[Union[datetime.date, float], ...], ...]:
+        """Time series of max drawdown."""
+        return self.__max_drawdown
+
+    @max_drawdown.setter
+    def max_drawdown(self, value: Tuple[Tuple[Union[datetime.date, float], ...], ...]):
+        self._property_changed('max_drawdown')
+        self.__max_drawdown = value        
+
+    @property
+    def net_exposure(self) -> Tuple[Tuple[Union[datetime.date, float], ...], ...]:
+        """Time series of net exposure."""
+        return self.__net_exposure
+
+    @net_exposure.setter
+    def net_exposure(self, value: Tuple[Tuple[Union[datetime.date, float], ...], ...]):
+        self._property_changed('net_exposure')
+        self.__net_exposure = value        
+
+    @property
+    def cumulative_pnl(self) -> Tuple[Tuple[Union[datetime.date, float], ...], ...]:
+        """Time series of cumulative PnL."""
+        return self.__cumulative_pnl
+
+    @cumulative_pnl.setter
+    def cumulative_pnl(self, value: Tuple[Tuple[Union[datetime.date, float], ...], ...]):
+        self._property_changed('cumulative_pnl')
+        self.__cumulative_pnl = value        
+
+
+class OptimizationFactorAnalyticsIntraday(Base):
+        
+    """Residual factor exposures, per asset."""
 
     @camel_case_translate
     def __init__(
         self,
-        positions: Tuple[Position, ...],
-        execution_start_time: datetime.datetime,
-        execution_end_time: datetime.datetime,
-        parameters: dict,
-        type_: Union[OptimizationType, str],
-        created_by_id: str = None,
-        created_time: datetime.datetime = None,
-        entitlements: Entitlements = None,
-        entitlement_exclusions: EntitlementExclusions = None,
-        id_: str = None,
-        last_updated_by_id: str = None,
-        last_updated_time: datetime.datetime = None,
-        owner_id: str = None,
-        wait_for_results: bool = False,
+        country: Tuple[OptimizationFactorAnalyticsItem, ...],
+        sector: Tuple[OptimizationFactorAnalyticsItem, ...],
+        domestic_china: Tuple[OptimizationFactorAnalyticsItem, ...],
+        market: Tuple[OptimizationFactorAnalyticsItem, ...],
+        currency: Tuple[OptimizationFactorAnalyticsItem, ...],
+        industry: Tuple[OptimizationFactorAnalyticsItem, ...],
+        risk: Tuple[OptimizationFactorAnalyticsItem, ...],
+        cluster_classification: Tuple[OptimizationFactorAnalyticsItem, ...],
         name: str = None
     ):        
         super().__init__()
-        self.created_by_id = created_by_id
-        self.created_time = created_time
-        self.entitlements = entitlements
-        self.entitlement_exclusions = entitlement_exclusions
-        self.__id = id_
-        self.last_updated_by_id = last_updated_by_id
-        self.last_updated_time = last_updated_time
-        self.owner_id = owner_id
-        self.positions = positions
-        self.execution_start_time = execution_start_time
-        self.execution_end_time = execution_end_time
-        self.__type = get_enum_value(OptimizationType, type_)
-        self.wait_for_results = wait_for_results
-        self.parameters = parameters
+        self.country = country
+        self.sector = sector
+        self.domestic_china = domestic_china
+        self.market = market
+        self.currency = currency
+        self.industry = industry
+        self.risk = risk
+        self.cluster_classification = cluster_classification
         self.name = name
 
     @property
-    def created_by_id(self) -> str:
-        """Unique identifier of user who created the object."""
-        return self.__created_by_id
+    def country(self) -> Tuple[OptimizationFactorAnalyticsItem, ...]:
+        """Country factorized analytics."""
+        return self.__country
 
-    @created_by_id.setter
-    def created_by_id(self, value: str):
-        self._property_changed('created_by_id')
-        self.__created_by_id = value        
-
-    @property
-    def created_time(self) -> datetime.datetime:
-        """Time created. ISO 8601 formatted string."""
-        return self.__created_time
-
-    @created_time.setter
-    def created_time(self, value: datetime.datetime):
-        self._property_changed('created_time')
-        self.__created_time = value        
+    @country.setter
+    def country(self, value: Tuple[OptimizationFactorAnalyticsItem, ...]):
+        self._property_changed('country')
+        self.__country = value        
 
     @property
-    def entitlements(self) -> Entitlements:
-        """Defines the entitlements of a given resource."""
-        return self.__entitlements
+    def sector(self) -> Tuple[OptimizationFactorAnalyticsItem, ...]:
+        """Sector factorized analytics."""
+        return self.__sector
 
-    @entitlements.setter
-    def entitlements(self, value: Entitlements):
-        self._property_changed('entitlements')
-        self.__entitlements = value        
-
-    @property
-    def entitlement_exclusions(self) -> EntitlementExclusions:
-        """Defines the exclusion entitlements of a given resource."""
-        return self.__entitlement_exclusions
-
-    @entitlement_exclusions.setter
-    def entitlement_exclusions(self, value: EntitlementExclusions):
-        self._property_changed('entitlement_exclusions')
-        self.__entitlement_exclusions = value        
+    @sector.setter
+    def sector(self, value: Tuple[OptimizationFactorAnalyticsItem, ...]):
+        self._property_changed('sector')
+        self.__sector = value        
 
     @property
-    def id(self) -> str:
-        """Marquee unique identifier of a portfolio optimization and analytics request."""
-        return self.__id
+    def domestic_china(self) -> Tuple[OptimizationFactorAnalyticsItem, ...]:
+        """Domestic China factorized analytics."""
+        return self.__domestic_china
 
-    @id.setter
-    def id(self, value: str):
-        self._property_changed('id')
-        self.__id = value        
-
-    @property
-    def last_updated_by_id(self) -> str:
-        """Unique identifier of user who last updated the object."""
-        return self.__last_updated_by_id
-
-    @last_updated_by_id.setter
-    def last_updated_by_id(self, value: str):
-        self._property_changed('last_updated_by_id')
-        self.__last_updated_by_id = value        
+    @domestic_china.setter
+    def domestic_china(self, value: Tuple[OptimizationFactorAnalyticsItem, ...]):
+        self._property_changed('domestic_china')
+        self.__domestic_china = value        
 
     @property
-    def last_updated_time(self) -> datetime.datetime:
-        """Timestamp of when the object was last updated."""
-        return self.__last_updated_time
+    def market(self) -> Tuple[OptimizationFactorAnalyticsItem, ...]:
+        """Market factorized analytics."""
+        return self.__market
 
-    @last_updated_time.setter
-    def last_updated_time(self, value: datetime.datetime):
-        self._property_changed('last_updated_time')
-        self.__last_updated_time = value        
-
-    @property
-    def owner_id(self) -> str:
-        """Marquee unique identifier for user who owns the object."""
-        return self.__owner_id
-
-    @owner_id.setter
-    def owner_id(self, value: str):
-        self._property_changed('owner_id')
-        self.__owner_id = value        
+    @market.setter
+    def market(self, value: Tuple[OptimizationFactorAnalyticsItem, ...]):
+        self._property_changed('market')
+        self.__market = value        
 
     @property
-    def positions(self) -> Tuple[Position, ...]:
-        """A set of positions with asset id and quantity."""
-        return self.__positions
+    def currency(self) -> Tuple[OptimizationFactorAnalyticsItem, ...]:
+        """Currency factorized analytics."""
+        return self.__currency
 
-    @positions.setter
-    def positions(self, value: Tuple[Position, ...]):
-        self._property_changed('positions')
-        self.__positions = value        
-
-    @property
-    def execution_start_time(self) -> datetime.datetime:
-        """Start time of a pretrade schedule. Currently only a timestamp of current
-           business date is supported."""
-        return self.__execution_start_time
-
-    @execution_start_time.setter
-    def execution_start_time(self, value: datetime.datetime):
-        self._property_changed('execution_start_time')
-        self.__execution_start_time = value        
+    @currency.setter
+    def currency(self, value: Tuple[OptimizationFactorAnalyticsItem, ...]):
+        self._property_changed('currency')
+        self.__currency = value        
 
     @property
-    def execution_end_time(self) -> datetime.datetime:
-        """End time of a pretrade schedule. Currently only a timestamp of current business
-           date is supported."""
-        return self.__execution_end_time
+    def industry(self) -> Tuple[OptimizationFactorAnalyticsItem, ...]:
+        """Industry factorized analytics."""
+        return self.__industry
 
-    @execution_end_time.setter
-    def execution_end_time(self, value: datetime.datetime):
-        self._property_changed('execution_end_time')
-        self.__execution_end_time = value        
-
-    @property
-    def type(self) -> Union[OptimizationType, str]:
-        """Pretrade optimization algorithm type."""
-        return self.__type
-
-    @type.setter
-    def type(self, value: Union[OptimizationType, str]):
-        self._property_changed('type')
-        self.__type = get_enum_value(OptimizationType, value)        
+    @industry.setter
+    def industry(self, value: Tuple[OptimizationFactorAnalyticsItem, ...]):
+        self._property_changed('industry')
+        self.__industry = value        
 
     @property
-    def wait_for_results(self) -> bool:
-        """For short-running requests this may be set to true and the results will be
-           returned directly. If false, the response will contain the
-           optimizationId for retrieving the results."""
-        return self.__wait_for_results
+    def risk(self) -> Tuple[OptimizationFactorAnalyticsItem, ...]:
+        """Risk factor factorized analytics."""
+        return self.__risk
 
-    @wait_for_results.setter
-    def wait_for_results(self, value: bool):
-        self._property_changed('wait_for_results')
-        self.__wait_for_results = value        
+    @risk.setter
+    def risk(self, value: Tuple[OptimizationFactorAnalyticsItem, ...]):
+        self._property_changed('risk')
+        self.__risk = value        
 
     @property
-    def parameters(self) -> dict:
-        """Constraints which the trade scheduler uses to optimize execution."""
-        return self.__parameters
+    def cluster_classification(self) -> Tuple[OptimizationFactorAnalyticsItem, ...]:
+        """Cluster Classification factorized analytics."""
+        return self.__cluster_classification
 
-    @parameters.setter
-    def parameters(self, value: dict):
-        self._property_changed('parameters')
-        self.__parameters = value        
+    @cluster_classification.setter
+    def cluster_classification(self, value: Tuple[OptimizationFactorAnalyticsItem, ...]):
+        self._property_changed('cluster_classification')
+        self.__cluster_classification = value        
+
+
+class OptimizationTradeSchedule(Base):
+        
+    """Quantity to trade and residual per asset, in each intraday interval."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        period_number: int,
+        trade_day_number: int,
+        period_start_time: datetime.datetime,
+        period_end_time: datetime.datetime,
+        traded_positions: Tuple[OptimizationTradedPosition, ...],
+        name: str = None
+    ):        
+        super().__init__()
+        self.period_number = period_number
+        self.trade_day_number = trade_day_number
+        self.period_start_time = period_start_time
+        self.period_end_time = period_end_time
+        self.traded_positions = traded_positions
+        self.name = name
+
+    @property
+    def period_number(self) -> int:
+        """The number of the intraday trade period."""
+        return self.__period_number
+
+    @period_number.setter
+    def period_number(self, value: int):
+        self._property_changed('period_number')
+        self.__period_number = value        
+
+    @property
+    def trade_day_number(self) -> int:
+        """The number of the trade day."""
+        return self.__trade_day_number
+
+    @trade_day_number.setter
+    def trade_day_number(self, value: int):
+        self._property_changed('trade_day_number')
+        self.__trade_day_number = value        
+
+    @property
+    def period_start_time(self) -> datetime.datetime:
+        """Start time of the intraday trade period."""
+        return self.__period_start_time
+
+    @period_start_time.setter
+    def period_start_time(self, value: datetime.datetime):
+        self._property_changed('period_start_time')
+        self.__period_start_time = value        
+
+    @property
+    def period_end_time(self) -> datetime.datetime:
+        """End time of the intraday trade period."""
+        return self.__period_end_time
+
+    @period_end_time.setter
+    def period_end_time(self, value: datetime.datetime):
+        self._property_changed('period_end_time')
+        self.__period_end_time = value        
+
+    @property
+    def traded_positions(self) -> Tuple[OptimizationTradedPosition, ...]:
+        """Array of traded quantity position objects."""
+        return self.__traded_positions
+
+    @traded_positions.setter
+    def traded_positions(self, value: Tuple[OptimizationTradedPosition, ...]):
+        self._property_changed('traded_positions')
+        self.__traded_positions = value        
 
 
 class LiquidityResponse(Base):
@@ -3979,188 +3975,6 @@ class LiquidityResponse(Base):
         self.__error_message = value        
 
 
-class OptimizationFactorAnalyticsIntraday(Base):
-        
-    """Residual factor exposures, per asset."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        country: Tuple[OptimizationFactorAnalyticsItem, ...],
-        sector: Tuple[OptimizationFactorAnalyticsItem, ...],
-        domestic_china: Tuple[OptimizationFactorAnalyticsItem, ...],
-        market: Tuple[OptimizationFactorAnalyticsItem, ...],
-        currency: Tuple[OptimizationFactorAnalyticsItem, ...],
-        industry: Tuple[OptimizationFactorAnalyticsItem, ...],
-        risk: Tuple[OptimizationFactorAnalyticsItem, ...],
-        cluster_classification: Tuple[OptimizationFactorAnalyticsItem, ...],
-        name: str = None
-    ):        
-        super().__init__()
-        self.country = country
-        self.sector = sector
-        self.domestic_china = domestic_china
-        self.market = market
-        self.currency = currency
-        self.industry = industry
-        self.risk = risk
-        self.cluster_classification = cluster_classification
-        self.name = name
-
-    @property
-    def country(self) -> Tuple[OptimizationFactorAnalyticsItem, ...]:
-        """Country factorized analytics."""
-        return self.__country
-
-    @country.setter
-    def country(self, value: Tuple[OptimizationFactorAnalyticsItem, ...]):
-        self._property_changed('country')
-        self.__country = value        
-
-    @property
-    def sector(self) -> Tuple[OptimizationFactorAnalyticsItem, ...]:
-        """Sector factorized analytics."""
-        return self.__sector
-
-    @sector.setter
-    def sector(self, value: Tuple[OptimizationFactorAnalyticsItem, ...]):
-        self._property_changed('sector')
-        self.__sector = value        
-
-    @property
-    def domestic_china(self) -> Tuple[OptimizationFactorAnalyticsItem, ...]:
-        """Domestic China factorized analytics."""
-        return self.__domestic_china
-
-    @domestic_china.setter
-    def domestic_china(self, value: Tuple[OptimizationFactorAnalyticsItem, ...]):
-        self._property_changed('domestic_china')
-        self.__domestic_china = value        
-
-    @property
-    def market(self) -> Tuple[OptimizationFactorAnalyticsItem, ...]:
-        """Market factorized analytics."""
-        return self.__market
-
-    @market.setter
-    def market(self, value: Tuple[OptimizationFactorAnalyticsItem, ...]):
-        self._property_changed('market')
-        self.__market = value        
-
-    @property
-    def currency(self) -> Tuple[OptimizationFactorAnalyticsItem, ...]:
-        """Currency factorized analytics."""
-        return self.__currency
-
-    @currency.setter
-    def currency(self, value: Tuple[OptimizationFactorAnalyticsItem, ...]):
-        self._property_changed('currency')
-        self.__currency = value        
-
-    @property
-    def industry(self) -> Tuple[OptimizationFactorAnalyticsItem, ...]:
-        """Industry factorized analytics."""
-        return self.__industry
-
-    @industry.setter
-    def industry(self, value: Tuple[OptimizationFactorAnalyticsItem, ...]):
-        self._property_changed('industry')
-        self.__industry = value        
-
-    @property
-    def risk(self) -> Tuple[OptimizationFactorAnalyticsItem, ...]:
-        """Risk factor factorized analytics."""
-        return self.__risk
-
-    @risk.setter
-    def risk(self, value: Tuple[OptimizationFactorAnalyticsItem, ...]):
-        self._property_changed('risk')
-        self.__risk = value        
-
-    @property
-    def cluster_classification(self) -> Tuple[OptimizationFactorAnalyticsItem, ...]:
-        """Cluster Classification factorized analytics."""
-        return self.__cluster_classification
-
-    @cluster_classification.setter
-    def cluster_classification(self, value: Tuple[OptimizationFactorAnalyticsItem, ...]):
-        self._property_changed('cluster_classification')
-        self.__cluster_classification = value        
-
-
-class OptimizationTradeSchedule(Base):
-        
-    """Quantity to trade and residual per asset, in each intraday interval."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        period_number: int,
-        trade_day_number: int,
-        period_start_time: datetime.datetime,
-        period_end_time: datetime.datetime,
-        traded_positions: Tuple[OptimizationTradedPosition, ...],
-        name: str = None
-    ):        
-        super().__init__()
-        self.period_number = period_number
-        self.trade_day_number = trade_day_number
-        self.period_start_time = period_start_time
-        self.period_end_time = period_end_time
-        self.traded_positions = traded_positions
-        self.name = name
-
-    @property
-    def period_number(self) -> int:
-        """The number of the intraday trade period."""
-        return self.__period_number
-
-    @period_number.setter
-    def period_number(self, value: int):
-        self._property_changed('period_number')
-        self.__period_number = value        
-
-    @property
-    def trade_day_number(self) -> int:
-        """The number of the trade day."""
-        return self.__trade_day_number
-
-    @trade_day_number.setter
-    def trade_day_number(self, value: int):
-        self._property_changed('trade_day_number')
-        self.__trade_day_number = value        
-
-    @property
-    def period_start_time(self) -> datetime.datetime:
-        """Start time of the intraday trade period."""
-        return self.__period_start_time
-
-    @period_start_time.setter
-    def period_start_time(self, value: datetime.datetime):
-        self._property_changed('period_start_time')
-        self.__period_start_time = value        
-
-    @property
-    def period_end_time(self) -> datetime.datetime:
-        """End time of the intraday trade period."""
-        return self.__period_end_time
-
-    @period_end_time.setter
-    def period_end_time(self, value: datetime.datetime):
-        self._property_changed('period_end_time')
-        self.__period_end_time = value        
-
-    @property
-    def traded_positions(self) -> Tuple[OptimizationTradedPosition, ...]:
-        """Array of traded quantity position objects."""
-        return self.__traded_positions
-
-    @traded_positions.setter
-    def traded_positions(self, value: Tuple[OptimizationTradedPosition, ...]):
-        self._property_changed('traded_positions')
-        self.__traded_positions = value        
-
-
 class OptimizationAnalytics(Base):
         
     """Optimization and analytics information for the portfolio."""
@@ -4475,3 +4289,189 @@ class OptimizationResult(Base):
     def status(self, value: Union[OptimizationStatus, str]):
         self._property_changed('status')
         self.__status = get_enum_value(OptimizationStatus, value)        
+
+
+class OptimizationRequest(Base):
+        
+    """Required payload in order to get optimization and analytics information given a
+       set of positions."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        positions: Tuple[Position, ...],
+        execution_start_time: datetime.datetime,
+        execution_end_time: datetime.datetime,
+        parameters: dict,
+        type_: Union[OptimizationType, str],
+        created_by_id: str = None,
+        created_time: datetime.datetime = None,
+        entitlements: Entitlements = None,
+        entitlement_exclusions: EntitlementExclusions = None,
+        id_: str = None,
+        last_updated_by_id: str = None,
+        last_updated_time: datetime.datetime = None,
+        owner_id: str = None,
+        wait_for_results: bool = False,
+        name: str = None
+    ):        
+        super().__init__()
+        self.created_by_id = created_by_id
+        self.created_time = created_time
+        self.entitlements = entitlements
+        self.entitlement_exclusions = entitlement_exclusions
+        self.__id = id_
+        self.last_updated_by_id = last_updated_by_id
+        self.last_updated_time = last_updated_time
+        self.owner_id = owner_id
+        self.positions = positions
+        self.execution_start_time = execution_start_time
+        self.execution_end_time = execution_end_time
+        self.__type = get_enum_value(OptimizationType, type_)
+        self.wait_for_results = wait_for_results
+        self.parameters = parameters
+        self.name = name
+
+    @property
+    def created_by_id(self) -> str:
+        """Unique identifier of user who created the object."""
+        return self.__created_by_id
+
+    @created_by_id.setter
+    def created_by_id(self, value: str):
+        self._property_changed('created_by_id')
+        self.__created_by_id = value        
+
+    @property
+    def created_time(self) -> datetime.datetime:
+        """Time created. ISO 8601 formatted string."""
+        return self.__created_time
+
+    @created_time.setter
+    def created_time(self, value: datetime.datetime):
+        self._property_changed('created_time')
+        self.__created_time = value        
+
+    @property
+    def entitlements(self) -> Entitlements:
+        """Defines the entitlements of a given resource."""
+        return self.__entitlements
+
+    @entitlements.setter
+    def entitlements(self, value: Entitlements):
+        self._property_changed('entitlements')
+        self.__entitlements = value        
+
+    @property
+    def entitlement_exclusions(self) -> EntitlementExclusions:
+        """Defines the exclusion entitlements of a given resource."""
+        return self.__entitlement_exclusions
+
+    @entitlement_exclusions.setter
+    def entitlement_exclusions(self, value: EntitlementExclusions):
+        self._property_changed('entitlement_exclusions')
+        self.__entitlement_exclusions = value        
+
+    @property
+    def id(self) -> str:
+        """Marquee unique identifier of a portfolio optimization and analytics request."""
+        return self.__id
+
+    @id.setter
+    def id(self, value: str):
+        self._property_changed('id')
+        self.__id = value        
+
+    @property
+    def last_updated_by_id(self) -> str:
+        """Unique identifier of user who last updated the object."""
+        return self.__last_updated_by_id
+
+    @last_updated_by_id.setter
+    def last_updated_by_id(self, value: str):
+        self._property_changed('last_updated_by_id')
+        self.__last_updated_by_id = value        
+
+    @property
+    def last_updated_time(self) -> datetime.datetime:
+        """Timestamp of when the object was last updated."""
+        return self.__last_updated_time
+
+    @last_updated_time.setter
+    def last_updated_time(self, value: datetime.datetime):
+        self._property_changed('last_updated_time')
+        self.__last_updated_time = value        
+
+    @property
+    def owner_id(self) -> str:
+        """Marquee unique identifier for user who owns the object."""
+        return self.__owner_id
+
+    @owner_id.setter
+    def owner_id(self, value: str):
+        self._property_changed('owner_id')
+        self.__owner_id = value        
+
+    @property
+    def positions(self) -> Tuple[Position, ...]:
+        """A set of positions with asset id and quantity."""
+        return self.__positions
+
+    @positions.setter
+    def positions(self, value: Tuple[Position, ...]):
+        self._property_changed('positions')
+        self.__positions = value        
+
+    @property
+    def execution_start_time(self) -> datetime.datetime:
+        """Start time of a pretrade schedule. Currently only a timestamp of current
+           business date is supported."""
+        return self.__execution_start_time
+
+    @execution_start_time.setter
+    def execution_start_time(self, value: datetime.datetime):
+        self._property_changed('execution_start_time')
+        self.__execution_start_time = value        
+
+    @property
+    def execution_end_time(self) -> datetime.datetime:
+        """End time of a pretrade schedule. Currently only a timestamp of current business
+           date is supported."""
+        return self.__execution_end_time
+
+    @execution_end_time.setter
+    def execution_end_time(self, value: datetime.datetime):
+        self._property_changed('execution_end_time')
+        self.__execution_end_time = value        
+
+    @property
+    def type(self) -> Union[OptimizationType, str]:
+        """Pretrade optimization algorithm type."""
+        return self.__type
+
+    @type.setter
+    def type(self, value: Union[OptimizationType, str]):
+        self._property_changed('type')
+        self.__type = get_enum_value(OptimizationType, value)        
+
+    @property
+    def wait_for_results(self) -> bool:
+        """For short-running requests this may be set to true and the results will be
+           returned directly. If false, the response will contain the
+           optimizationId for retrieving the results."""
+        return self.__wait_for_results
+
+    @wait_for_results.setter
+    def wait_for_results(self, value: bool):
+        self._property_changed('wait_for_results')
+        self.__wait_for_results = value        
+
+    @property
+    def parameters(self) -> dict:
+        """Constraints which the trade scheduler uses to optimize execution."""
+        return self.__parameters
+
+    @parameters.setter
+    def parameters(self, value: dict):
+        self._property_changed('parameters')
+        self.__parameters = value        

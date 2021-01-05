@@ -18,7 +18,7 @@ import datetime as dt
 
 from gs_quant.api.gs.risk_models import GsRiskModelApi
 from gs_quant.session import *
-from gs_quant.target.risk_models import RiskModel, RiskModelData, RiskModelFactor, RiskModelCalendar
+from gs_quant.target.risk_models import RiskModel, RiskModelFactor, RiskModelCalendar
 
 
 def test_get_risk_models(mocker):
@@ -65,7 +65,7 @@ def test_get_risk_models(mocker):
 
     # run test
     response = GsRiskModelApi.get_risk_models()
-    GsSession.current._get.assert_called_with('/risk/models?limit=100', cls=RiskModel)
+    GsSession.current._get.assert_called_with('/risk/models', cls=RiskModel)
     assert response == expected_response
 
 
@@ -303,7 +303,7 @@ def test_get_risk_model_factor(mocker):
     # run test
     response = GsRiskModelApi.get_risk_model_factor(model_id='id', factor_id='factor')
     GsSession.current._get.assert_called_with('/risk/models/{id}/factors/{identifier}'
-                                              .format(id='id', identifier='factor'), cls=RiskModelFactor)
+                                              .format(id='id', identifier='factor'))
     assert response == expected_response
 
 
@@ -395,13 +395,12 @@ def test_upload_risk_model_data(mocker):
             Environment.QA,
             'client_id',
             'secret'))
-    mocker.patch.object(GsSession.current, '_post', return_value=risk_model_data)
+    mocker.patch.object(GsSession.current, '_post', return_value='Successfully uploaded')
 
     # run test
     response = GsRiskModelApi.upload_risk_model_data(model_id='id', model_data=risk_model_data)
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}'.format(id='id'), risk_model_data,
-                                               cls=RiskModelData)
-    assert response == risk_model_data
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}'.format(id='id'), risk_model_data)
+    assert response == 'Successfully uploaded'
 
 
 def test_get_risk_model_data(mocker):

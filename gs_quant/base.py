@@ -39,12 +39,11 @@ _valid_date_formats = ('%Y-%m-%d',  # '2020-07-28'
                        '%d-%b-%y',  # '28-Jul-20'
                        '%d/%m/%Y')  # '28/07/2020
 
-
-def _normalise_arg(arg: str) -> str:
-    if keyword.iskeyword(arg) or arg in dir(builtins):
-        return arg + '_'
-    else:
-        return arg
+__builtins = set(dir(builtins))
+__iskeyword = keyword.iskeyword
+__getattribute__ = object.__getattribute__
+__setattr__ = object.__setattr__
+_underscore = inflection.underscore
 
 
 def camel_case_translate(f):
@@ -52,10 +51,11 @@ def camel_case_translate(f):
     def wrapper(*args, **kwargs):
         normalised_kwargs = {}
         for arg, value in kwargs.items():
-            arg = _normalise_arg(arg)
+            if arg in __builtins or __iskeyword(arg):
+                arg += '_'
 
             if not arg.isupper():
-                snake_case_arg = inflection.underscore(arg)
+                snake_case_arg = _underscore(arg)
                 if snake_case_arg != arg:
                     if snake_case_arg in kwargs:
                         raise ValueError('{} and {} both specified'.format(arg, snake_case_arg))
@@ -120,22 +120,29 @@ class Base(metaclass=ABCMeta):
             pass
 
     def __getattr__(self, item):
-        snake_case_item = inflection.underscore(item)
-        if snake_case_item in super().__getattribute__('properties')():
-            return super().__getattribute__(snake_case_item)
+        properties = __getattribute__(self, 'properties')()
+
+        if item.startswith('_') or item == 'name' or item in properties:
+            return __getattribute__(self, item)
+
+        snake_case_item = _underscore(item)
+        if snake_case_item in properties:
+            return __getattribute__(self, snake_case_item)
         else:
-            return super().__getattribute__(item)
+            return __getattribute__(self, item)
 
     def __setattr__(self, key, value):
-        properties = super().__getattribute__('properties')()
-        snake_case_key = inflection.underscore(key)
-        key_is_property = key in properties
-        snake_case_key_is_property = snake_case_key in properties
+        properties = __getattribute__(self, 'properties')()
 
-        if snake_case_key_is_property and not key_is_property:
-            return super().__setattr__(snake_case_key, value)
+        if key.startswith('_') or key == 'name' or key in properties:
+            return __setattr__(self, key, value)
+
+        snake_case_key = inflection.underscore(key)
+
+        if snake_case_key in properties:
+            return __setattr__(self, snake_case_key, value)
         else:
-            return super().__setattr__(key, value)
+            return __setattr__(self, key, value)
 
     def __repr__(self):
         if self.name is not None:
@@ -155,7 +162,7 @@ class Base(metaclass=ABCMeta):
         if not self._hash_is_calced:
             calced_hash = hash(self.name)
             for prop in self.properties():
-                value = super().__getattribute__(prop)
+                value = __getattribute__(self, prop)
                 if isinstance(value, dict):
                     value = tuple(value.items())
                 elif isinstance(value, list):
@@ -170,8 +177,7 @@ class Base(metaclass=ABCMeta):
         return \
             type(self) == type(other) and (self.name is None or other.name is None or self.name == other.name) and \
             (self.__calced_hash is None or other.__calced_hash is None or self.__calced_hash == other.__calced_hash) \
-            and all(super(Base, self).__getattribute__(p) == super(Base, other).__getattribute__(p)
-                    for p in self.properties())
+            and all(__getattribute__(self, p) == __getattribute__(other, p) for p in self.properties())
 
     def __ne__(self, other) -> bool:
         return not self.__eq__(other)
@@ -181,8 +187,8 @@ class Base(metaclass=ABCMeta):
             return type(self).__name__ < type(other).__name__
 
         for prop in itertools.chain(('name',), sorted(self.properties())):
-            val = super(Base, self).__getattribute__(prop)
-            other_val = super(Base, other).__getattribute__(prop)
+            val = __getattribute__(self, prop)
+            other_val = __getattribute__(other, prop)
 
             if val != other_val:
                 if val is None:
@@ -231,7 +237,7 @@ class Base(metaclass=ABCMeta):
             raw_properties = self.properties()
             properties = (inflection.camelize(p, uppercase_first_letter=False) for p in raw_properties) \
                 if as_camel_case else raw_properties
-            values = (super(Base, self).__getattribute__(p) for p in raw_properties)
+            values = (__getattribute__(self, p) for p in raw_properties)
             self.__as_dict[as_camel_case] = dict((p, v) for p, v in zip(properties, values) if v is not None)
 
         return copy.copy(self.__as_dict[as_camel_case])
@@ -408,9 +414,9 @@ class Base(metaclass=ABCMeta):
             raise ValueError('Can only use from_instance with an object of the same type')
 
         for prop in self.properties():
-            attr = getattr(super().__getattribute__('__class__'), prop)
+            attr = getattr(__getattribute__(self, '__class__'), prop)
             if attr.fset:
-                super(Base, self).__setattr__(prop, super(Base, instance).__getattribute__(prop))
+                __setattr__(self, prop, __getattribute__(instance, prop))
 
 
 class Priceable(Base, metaclass=ABCMeta):

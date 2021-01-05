@@ -16,7 +16,7 @@ under the License.
 
 from gs_quant.target.common import *
 import datetime
-from typing import Tuple, Union
+from typing import Mapping, Tuple, Union
 from enum import Enum
 from gs_quant.base import Base, EnumBase, InstrumentBase, camel_case_translate, get_enum_value
 
@@ -30,6 +30,66 @@ class InvestmentRecommendationDirection(EnumBase, Enum):
     
     def __repr__(self):
         return self.value
+
+
+class Content(Base):
+        
+    """Body of the content piece"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        body: str,
+        mime_type,
+        encoding,
+        name: str = None
+    ):        
+        super().__init__()
+        self.body = body
+        self.mime_type = mime_type
+        self.encoding = encoding
+        self.name = name
+
+    @property
+    def body(self) -> str:
+        """Content body - text/* or base64-encoded binary"""
+        return self.__body
+
+    @body.setter
+    def body(self, value: str):
+        self._property_changed('body')
+        self.__body = value        
+
+    @property
+    def mime_type(self):
+        """Allowed mime-types"""
+        return self.__mime_type
+
+    @mime_type.setter
+    def mime_type(self, value):
+        self._property_changed('mime_type')
+        self.__mime_type = value        
+
+    @property
+    def encoding(self):
+        """Encoding for content piece body"""
+        return self.__encoding
+
+    @encoding.setter
+    def encoding(self, value):
+        self._property_changed('encoding')
+        self.__encoding = value        
+
+
+class Object(Base):
+        
+    @camel_case_translate
+    def __init__(
+        self,
+        name: str = None
+    ):        
+        super().__init__()
+        self.name = name
 
 
 class Author(Base):
@@ -147,113 +207,6 @@ class BulkDeleteContentResponse(Base):
         self.__data = value        
 
 
-class Content(Base):
-        
-    """Body of the content piece"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        body: str,
-        mime_type,
-        encoding,
-        name: str = None
-    ):        
-        super().__init__()
-        self.body = body
-        self.mime_type = mime_type
-        self.encoding = encoding
-        self.name = name
-
-    @property
-    def body(self) -> str:
-        """Content body - text/* or base64-encoded binary"""
-        return self.__body
-
-    @body.setter
-    def body(self, value: str):
-        self._property_changed('body')
-        self.__body = value        
-
-    @property
-    def mime_type(self):
-        """Allowed mime-types"""
-        return self.__mime_type
-
-    @mime_type.setter
-    def mime_type(self, value):
-        self._property_changed('mime_type')
-        self.__mime_type = value        
-
-    @property
-    def encoding(self):
-        """Encoding for content piece body"""
-        return self.__encoding
-
-    @encoding.setter
-    def encoding(self, value):
-        self._property_changed('encoding')
-        self.__encoding = value        
-
-
-class DeleteContentResponse(Base):
-        
-    @camel_case_translate
-    def __init__(
-        self,
-        status: int = None,
-        message: str = None,
-        data: str = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.status = status
-        self.message = message
-        self.data = data
-        self.name = name
-
-    @property
-    def status(self) -> int:
-        """HTTP Status Code"""
-        return self.__status
-
-    @status.setter
-    def status(self, value: int):
-        self._property_changed('status')
-        self.__status = value        
-
-    @property
-    def message(self) -> str:
-        """Field to store any informational message / error returned by the server"""
-        return self.__message
-
-    @message.setter
-    def message(self, value: str):
-        self._property_changed('message')
-        self.__message = value        
-
-    @property
-    def data(self) -> str:
-        """Content ID which was successfully deleted"""
-        return self.__data
-
-    @data.setter
-    def data(self, value: str):
-        self._property_changed('data')
-        self.__data = value        
-
-
-class Object(Base):
-        
-    @camel_case_translate
-    def __init__(
-        self,
-        name: str = None
-    ):        
-        super().__init__()
-        self.name = name
-
-
 class Certification(Base):
         
     """Field to store SEAL certification object"""
@@ -337,6 +290,190 @@ class Certification(Base):
     def tags(self, value: Tuple[None, ...]):
         self._property_changed('tags')
         self.__tags = value        
+
+
+class DeleteContentResponse(Base):
+        
+    @camel_case_translate
+    def __init__(
+        self,
+        status: int = None,
+        message: str = None,
+        data: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.status = status
+        self.message = message
+        self.data = data
+        self.name = name
+
+    @property
+    def status(self) -> int:
+        """HTTP Status Code"""
+        return self.__status
+
+    @status.setter
+    def status(self, value: int):
+        self._property_changed('status')
+        self.__status = value        
+
+    @property
+    def message(self) -> str:
+        """Field to store any informational message / error returned by the server"""
+        return self.__message
+
+    @message.setter
+    def message(self, value: str):
+        self._property_changed('message')
+        self.__message = value        
+
+    @property
+    def data(self) -> str:
+        """Content ID which was successfully deleted"""
+        return self.__data
+
+    @data.setter
+    def data(self, value: str):
+        self._property_changed('data')
+        self.__data = value        
+
+
+class InvestmentRecommendationAsset(Base):
+        
+    """An asset that exists in the system."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        asset_id: str,
+        direction: Union[InvestmentRecommendationDirection, str] = None,
+        currency: str = None,
+        price: float = None,
+        price_target: float = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.asset_id = asset_id
+        self.direction = direction
+        self.currency = currency
+        self.price = price
+        self.price_target = price_target
+        self.name = name
+
+    @property
+    def asset_id(self) -> str:
+        """Marquee Asset identifier"""
+        return self.__asset_id
+
+    @asset_id.setter
+    def asset_id(self, value: str):
+        self._property_changed('asset_id')
+        self.__asset_id = value        
+
+    @property
+    def direction(self) -> Union[InvestmentRecommendationDirection, str]:
+        return self.__direction
+
+    @direction.setter
+    def direction(self, value: Union[InvestmentRecommendationDirection, str]):
+        self._property_changed('direction')
+        self.__direction = get_enum_value(InvestmentRecommendationDirection, value)        
+
+    @property
+    def currency(self) -> str:
+        return self.__currency
+
+    @currency.setter
+    def currency(self, value: str):
+        self._property_changed('currency')
+        self.__currency = value        
+
+    @property
+    def price(self) -> float:
+        return self.__price
+
+    @price.setter
+    def price(self, value: float):
+        self._property_changed('price')
+        self.__price = value        
+
+    @property
+    def price_target(self) -> float:
+        return self.__price_target
+
+    @price_target.setter
+    def price_target(self, value: float):
+        self._property_changed('price_target')
+        self.__price_target = value        
+
+
+class InvestmentRecommendationCustomAsset(Base):
+        
+    """An asset that does not exist in the system."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        asset_name: str,
+        direction: Union[InvestmentRecommendationDirection, str] = None,
+        currency: str = None,
+        price: float = None,
+        price_target: float = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.asset_name = asset_name
+        self.direction = direction
+        self.currency = currency
+        self.price = price
+        self.price_target = price_target
+        self.name = name
+
+    @property
+    def asset_name(self) -> str:
+        return self.__asset_name
+
+    @asset_name.setter
+    def asset_name(self, value: str):
+        self._property_changed('asset_name')
+        self.__asset_name = value        
+
+    @property
+    def direction(self) -> Union[InvestmentRecommendationDirection, str]:
+        return self.__direction
+
+    @direction.setter
+    def direction(self, value: Union[InvestmentRecommendationDirection, str]):
+        self._property_changed('direction')
+        self.__direction = get_enum_value(InvestmentRecommendationDirection, value)        
+
+    @property
+    def currency(self) -> str:
+        return self.__currency
+
+    @currency.setter
+    def currency(self, value: str):
+        self._property_changed('currency')
+        self.__currency = value        
+
+    @property
+    def price(self) -> float:
+        return self.__price
+
+    @price.setter
+    def price(self, value: float):
+        self._property_changed('price')
+        self.__price = value        
+
+    @property
+    def price_target(self) -> float:
+        return self.__price_target
+
+    @price_target.setter
+    def price_target(self, value: float):
+        self._property_changed('price_target')
+        self.__price_target = value        
 
 
 class ContentResponse(Base):
@@ -525,141 +662,41 @@ class ContentUpdateRequest(Base):
         self.__content = value        
 
 
-class InvestmentRecommendationAsset(Base):
+class InvestmentRecommendations(Base):
         
-    """An asset that exists in the system."""
+    """Investment recommendations for an article."""
 
     @camel_case_translate
     def __init__(
         self,
-        asset_id: str,
-        direction: Union[InvestmentRecommendationDirection, str] = None,
-        currency: str = None,
-        price: float = None,
-        price_target: float = None,
+        assets: Tuple[InvestmentRecommendationAsset, ...],
+        custom_assets: Tuple[InvestmentRecommendationCustomAsset, ...] = None,
         name: str = None
     ):        
         super().__init__()
-        self.asset_id = asset_id
-        self.direction = direction
-        self.currency = currency
-        self.price = price
-        self.price_target = price_target
+        self.assets = assets
+        self.custom_assets = custom_assets
         self.name = name
 
     @property
-    def asset_id(self) -> str:
-        """Marquee Asset identifier"""
-        return self.__asset_id
+    def assets(self) -> Tuple[InvestmentRecommendationAsset, ...]:
+        """A list of assets."""
+        return self.__assets
 
-    @asset_id.setter
-    def asset_id(self, value: str):
-        self._property_changed('asset_id')
-        self.__asset_id = value        
-
-    @property
-    def direction(self) -> Union[InvestmentRecommendationDirection, str]:
-        return self.__direction
-
-    @direction.setter
-    def direction(self, value: Union[InvestmentRecommendationDirection, str]):
-        self._property_changed('direction')
-        self.__direction = get_enum_value(InvestmentRecommendationDirection, value)        
+    @assets.setter
+    def assets(self, value: Tuple[InvestmentRecommendationAsset, ...]):
+        self._property_changed('assets')
+        self.__assets = value        
 
     @property
-    def currency(self) -> str:
-        return self.__currency
+    def custom_assets(self) -> Tuple[InvestmentRecommendationCustomAsset, ...]:
+        """A list of assets that do not exist in the system."""
+        return self.__custom_assets
 
-    @currency.setter
-    def currency(self, value: str):
-        self._property_changed('currency')
-        self.__currency = value        
-
-    @property
-    def price(self) -> float:
-        return self.__price
-
-    @price.setter
-    def price(self, value: float):
-        self._property_changed('price')
-        self.__price = value        
-
-    @property
-    def price_target(self) -> float:
-        return self.__price_target
-
-    @price_target.setter
-    def price_target(self, value: float):
-        self._property_changed('price_target')
-        self.__price_target = value        
-
-
-class InvestmentRecommendationCustomAsset(Base):
-        
-    """An asset that does not exist in the system."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        asset_name: str,
-        direction: Union[InvestmentRecommendationDirection, str] = None,
-        currency: str = None,
-        price: float = None,
-        price_target: float = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.asset_name = asset_name
-        self.direction = direction
-        self.currency = currency
-        self.price = price
-        self.price_target = price_target
-        self.name = name
-
-    @property
-    def asset_name(self) -> str:
-        return self.__asset_name
-
-    @asset_name.setter
-    def asset_name(self, value: str):
-        self._property_changed('asset_name')
-        self.__asset_name = value        
-
-    @property
-    def direction(self) -> Union[InvestmentRecommendationDirection, str]:
-        return self.__direction
-
-    @direction.setter
-    def direction(self, value: Union[InvestmentRecommendationDirection, str]):
-        self._property_changed('direction')
-        self.__direction = get_enum_value(InvestmentRecommendationDirection, value)        
-
-    @property
-    def currency(self) -> str:
-        return self.__currency
-
-    @currency.setter
-    def currency(self, value: str):
-        self._property_changed('currency')
-        self.__currency = value        
-
-    @property
-    def price(self) -> float:
-        return self.__price
-
-    @price.setter
-    def price(self, value: float):
-        self._property_changed('price')
-        self.__price = value        
-
-    @property
-    def price_target(self) -> float:
-        return self.__price_target
-
-    @price_target.setter
-    def price_target(self, value: float):
-        self._property_changed('price_target')
-        self.__price_target = value        
+    @custom_assets.setter
+    def custom_assets(self, value: Tuple[InvestmentRecommendationCustomAsset, ...]):
+        self._property_changed('custom_assets')
+        self.__custom_assets = value        
 
 
 class BulkContentUpdateRequestItem(Base):
@@ -811,183 +848,6 @@ class ContentAuditFields(Base):
     def last_updated_time(self, value: datetime.datetime):
         self._property_changed('last_updated_time')
         self.__last_updated_time = value        
-
-
-class GetManyContentsResponse(Base):
-        
-    @camel_case_translate
-    def __init__(
-        self,
-        status: int = None,
-        message: str = None,
-        data: Tuple[ContentResponse, ...] = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.status = status
-        self.message = message
-        self.data = data
-        self.name = name
-
-    @property
-    def status(self) -> int:
-        """HTTP Status Code"""
-        return self.__status
-
-    @status.setter
-    def status(self, value: int):
-        self._property_changed('status')
-        self.__status = value        
-
-    @property
-    def message(self) -> str:
-        """Field to store any informational message / error returned by the server"""
-        return self.__message
-
-    @message.setter
-    def message(self, value: str):
-        self._property_changed('message')
-        self.__message = value        
-
-    @property
-    def data(self) -> Tuple[ContentResponse, ...]:
-        """Array of content pieces"""
-        return self.__data
-
-    @data.setter
-    def data(self, value: Tuple[ContentResponse, ...]):
-        self._property_changed('data')
-        self.__data = value        
-
-
-class InvestmentRecommendations(Base):
-        
-    """Investment recommendations for an article."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        assets: Tuple[InvestmentRecommendationAsset, ...],
-        custom_assets: Tuple[InvestmentRecommendationCustomAsset, ...] = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.assets = assets
-        self.custom_assets = custom_assets
-        self.name = name
-
-    @property
-    def assets(self) -> Tuple[InvestmentRecommendationAsset, ...]:
-        """A list of assets."""
-        return self.__assets
-
-    @assets.setter
-    def assets(self, value: Tuple[InvestmentRecommendationAsset, ...]):
-        self._property_changed('assets')
-        self.__assets = value        
-
-    @property
-    def custom_assets(self) -> Tuple[InvestmentRecommendationCustomAsset, ...]:
-        """A list of assets that do not exist in the system."""
-        return self.__custom_assets
-
-    @custom_assets.setter
-    def custom_assets(self, value: Tuple[InvestmentRecommendationCustomAsset, ...]):
-        self._property_changed('custom_assets')
-        self.__custom_assets = value        
-
-
-class BulkContentUpdateResponse(Base):
-        
-    @camel_case_translate
-    def __init__(
-        self,
-        status: int = None,
-        message: str = None,
-        data: Tuple[ContentAuditFields, ...] = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.status = status
-        self.message = message
-        self.data = data
-        self.name = name
-
-    @property
-    def status(self) -> int:
-        """HTTP Status Code"""
-        return self.__status
-
-    @status.setter
-    def status(self, value: int):
-        self._property_changed('status')
-        self.__status = value        
-
-    @property
-    def message(self) -> str:
-        """Field to store any informational message / error returned by the server"""
-        return self.__message
-
-    @message.setter
-    def message(self, value: str):
-        self._property_changed('message')
-        self.__message = value        
-
-    @property
-    def data(self) -> Tuple[ContentAuditFields, ...]:
-        """Array of updated content data"""
-        return self.__data
-
-    @data.setter
-    def data(self, value: Tuple[ContentAuditFields, ...]):
-        self._property_changed('data')
-        self.__data = value        
-
-
-class ContentCreateResponse(Base):
-        
-    @camel_case_translate
-    def __init__(
-        self,
-        status: int = None,
-        message: str = None,
-        data: ContentAuditFields = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.status = status
-        self.message = message
-        self.data = data
-        self.name = name
-
-    @property
-    def status(self) -> int:
-        """HTTP Status Code"""
-        return self.__status
-
-    @status.setter
-    def status(self, value: int):
-        self._property_changed('status')
-        self.__status = value        
-
-    @property
-    def message(self) -> str:
-        """Field to store any informational message / error returned by the server"""
-        return self.__message
-
-    @message.setter
-    def message(self, value: str):
-        self._property_changed('message')
-        self.__message = value        
-
-    @property
-    def data(self) -> ContentAuditFields:
-        return self.__data
-
-    @data.setter
-    def data(self, value: ContentAuditFields):
-        self._property_changed('data')
-        self.__data = value        
 
 
 class ContentParameters(Base):
@@ -1180,14 +1040,14 @@ class ContentParameters(Base):
         self.__is_restricted = value        
 
 
-class ContentUpdateResponse(Base):
+class GetManyContentsResponse(Base):
         
     @camel_case_translate
     def __init__(
         self,
         status: int = None,
         message: str = None,
-        data: ContentAuditFields = None,
+        data: Tuple[ContentResponse, ...] = None,
         name: str = None
     ):        
         super().__init__()
@@ -1217,11 +1077,59 @@ class ContentUpdateResponse(Base):
         self.__message = value        
 
     @property
-    def data(self) -> ContentAuditFields:
+    def data(self) -> Tuple[ContentResponse, ...]:
+        """Array of content pieces"""
         return self.__data
 
     @data.setter
-    def data(self, value: ContentAuditFields):
+    def data(self, value: Tuple[ContentResponse, ...]):
+        self._property_changed('data')
+        self.__data = value        
+
+
+class BulkContentUpdateResponse(Base):
+        
+    @camel_case_translate
+    def __init__(
+        self,
+        status: int = None,
+        message: str = None,
+        data: Tuple[ContentAuditFields, ...] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.status = status
+        self.message = message
+        self.data = data
+        self.name = name
+
+    @property
+    def status(self) -> int:
+        """HTTP Status Code"""
+        return self.__status
+
+    @status.setter
+    def status(self, value: int):
+        self._property_changed('status')
+        self.__status = value        
+
+    @property
+    def message(self) -> str:
+        """Field to store any informational message / error returned by the server"""
+        return self.__message
+
+    @message.setter
+    def message(self, value: str):
+        self._property_changed('message')
+        self.__message = value        
+
+    @property
+    def data(self) -> Tuple[ContentAuditFields, ...]:
+        """Array of updated content data"""
+        return self.__data
+
+    @data.setter
+    def data(self, value: Tuple[ContentAuditFields, ...]):
         self._property_changed('data')
         self.__data = value        
 
@@ -1293,3 +1201,95 @@ class ContentCreateRequest(Base):
     def parameters(self, value: ContentParameters):
         self._property_changed('parameters')
         self.__parameters = value        
+
+
+class ContentCreateResponse(Base):
+        
+    @camel_case_translate
+    def __init__(
+        self,
+        status: int = None,
+        message: str = None,
+        data: ContentAuditFields = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.status = status
+        self.message = message
+        self.data = data
+        self.name = name
+
+    @property
+    def status(self) -> int:
+        """HTTP Status Code"""
+        return self.__status
+
+    @status.setter
+    def status(self, value: int):
+        self._property_changed('status')
+        self.__status = value        
+
+    @property
+    def message(self) -> str:
+        """Field to store any informational message / error returned by the server"""
+        return self.__message
+
+    @message.setter
+    def message(self, value: str):
+        self._property_changed('message')
+        self.__message = value        
+
+    @property
+    def data(self) -> ContentAuditFields:
+        return self.__data
+
+    @data.setter
+    def data(self, value: ContentAuditFields):
+        self._property_changed('data')
+        self.__data = value        
+
+
+class ContentUpdateResponse(Base):
+        
+    @camel_case_translate
+    def __init__(
+        self,
+        status: int = None,
+        message: str = None,
+        data: ContentAuditFields = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.status = status
+        self.message = message
+        self.data = data
+        self.name = name
+
+    @property
+    def status(self) -> int:
+        """HTTP Status Code"""
+        return self.__status
+
+    @status.setter
+    def status(self, value: int):
+        self._property_changed('status')
+        self.__status = value        
+
+    @property
+    def message(self) -> str:
+        """Field to store any informational message / error returned by the server"""
+        return self.__message
+
+    @message.setter
+    def message(self, value: str):
+        self._property_changed('message')
+        self.__message = value        
+
+    @property
+    def data(self) -> ContentAuditFields:
+        return self.__data
+
+    @data.setter
+    def data(self, value: ContentAuditFields):
+        self._property_changed('data')
+        self.__data = value        

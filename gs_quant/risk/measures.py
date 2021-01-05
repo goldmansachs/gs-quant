@@ -157,6 +157,11 @@ IRBasis = __risk_measure_with_doc_string(
     'Interest Rate Basis',
     RiskMeasureType.Basis,
     asset_class=AssetClass.Rates)
+IRBasisParallel = __risk_measure_with_doc_string(
+    'IRBasisParallel',
+    'Interest Rate Parallel Basis',
+    RiskMeasureType.ParallelBasis,
+    asset_class=AssetClass.Rates)
 InflationDelta = __risk_measure_with_doc_string(
     'InflationDelta',
     'Inflation Delta',

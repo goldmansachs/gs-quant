@@ -39,7 +39,7 @@ class WebsocketUnavailable(Exception):
 
 class GsRiskApi(RiskApi):
 
-    USE_MSGPACK = False
+    USE_MSGPACK = True
     POLL_FOR_BATCH_RESULTS = False
 
     @classmethod
@@ -179,6 +179,9 @@ class GsRiskApi(RiskApi):
 
                             all_requests_dispatched, items = request_listener.result()
                             if items:
+                                if not isinstance(items[0][1], dict):
+                                    raise RuntimeError(items[0][1][0][0][0]['errorString'])
+
                                 # ... extract the request IDs ...
                                 request_ids = [i[1]['reportId'] for i in items]
 

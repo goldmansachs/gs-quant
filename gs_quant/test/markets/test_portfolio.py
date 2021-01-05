@@ -95,7 +95,7 @@ def test_historical_pricing(mocker):
 
         expected = risk.SeriesWithInfo(
             pd.Series(
-                data=[-564854.3640043922, -565604.2636791412, -564751.5121349357],
+                data=[-564854.3640043903, -565604.2636791412, -564751.5121349357],
                 index=[dt.date(2019, 10, 7), dt.date(2019, 10, 8), dt.date(2019, 10, 9)]
             ),
             risk_key=risk_key.ex_date_and_market, )
@@ -132,7 +132,7 @@ def test_backtothefuture_pricing(mocker):
 
     expected = risk.SeriesWithInfo(
         pd.Series(
-            data=[-35301348.93982054, -35366234.71769963, -35281392.58523489],
+            data=[-35280379.86540368, -35348910.76427929, -30830994.939595155],
             index=business_day_offset(pricing_date, [-1, 0, 1], roll='forward')
         ),
         risk_key=risk_key.ex_date_and_market, )

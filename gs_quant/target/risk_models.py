@@ -35,6 +35,7 @@ class Term(EnumBase, Enum):
 
     Short = 'Short'
     Medium = 'Medium'
+    Long = 'Long'
 
     def __repr__(self):
         return self.value
@@ -62,7 +63,7 @@ class FactorType(EnumBase, Enum):
         return self.value
 
 
-class Measures(EnumBase, Enum):
+class Measure(EnumBase, Enum):
     """Different risk model data measures to choose from"""
 
     Asset_Universe = 'Asset Universe'
@@ -568,7 +569,7 @@ class RiskModel(Base):
         return self.__version
 
     @version.setter
-    def version(self, value: str):
+    def version(self, value: float):
         self._property_changed('version')
         self.__version = value
 

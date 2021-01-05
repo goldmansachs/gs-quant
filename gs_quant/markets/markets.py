@@ -97,19 +97,31 @@ class CloseMarket(_CloseMarket, Market):
     """
     __date_cache = {}
 
-    def __init__(self, date: Optional[dt.date] = None, location: Optional[Union[str, PricingLocation]] = None):
+    def __init__(self,
+                 date: Optional[dt.date] = None,
+                 location: Optional[Union[str, PricingLocation]] = None,
+                 check: Optional[bool] = True):
         super().__init__(date=date, location=location)
+        self.check = check
 
     def __repr__(self):
         return f'{self.date} ({self.location.value})'
 
     @_CloseMarket.location.getter
     def location(self) -> PricingLocation:
-        return market_location(super().location)
+        location = super().location
+        if location is not None and not self.check:
+            return location
+        else:
+            return market_location(super().location)
 
     @_CloseMarket.date.getter
     def date(self) -> dt.date:
-        return close_market_date(self.location, super().date)
+        date = super().date
+        if date is not None and not self.check:
+            return date
+        else:
+            return close_market_date(self.location, super().date)
 
 
 class TimestampedMarket(_TimestampedMarket, Market):

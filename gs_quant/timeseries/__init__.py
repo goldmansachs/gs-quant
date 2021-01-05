@@ -22,6 +22,7 @@ from .econometrics import *
 from .technicals import *
 from .measures import *
 from .measures_countries import *
+from .measures_portfolios import *
 from .measures_rates import *
 from .helper import *
 from .backtesting import *

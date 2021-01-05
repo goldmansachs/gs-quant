@@ -16,7 +16,7 @@ under the License.
 
 from gs_quant.target.common import *
 import datetime
-from typing import Tuple, Union
+from typing import Mapping, Tuple, Union
 from enum import Enum
 from gs_quant.base import Base, EnumBase, InstrumentBase, camel_case_translate, get_enum_value
 
@@ -274,162 +274,6 @@ class FactorExposure(Base):
         self.__exposure = value        
 
 
-class HedgeBenchmark(Base):
-        
-    @camel_case_translate
-    def __init__(
-        self,
-        asset_id: str,
-        cumulative_pnl: Tuple[Tuple[Union[datetime.date, float], ...], ...] = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.asset_id = asset_id
-        self.cumulative_pnl = cumulative_pnl
-        self.name = name
-
-    @property
-    def asset_id(self) -> str:
-        """Marquee unique asset identifier."""
-        return self.__asset_id
-
-    @asset_id.setter
-    def asset_id(self, value: str):
-        self._property_changed('asset_id')
-        self.__asset_id = value        
-
-    @property
-    def cumulative_pnl(self) -> Tuple[Tuple[Union[datetime.date, float], ...], ...]:
-        """An array of tuples that represent values in a time series."""
-        return self.__cumulative_pnl
-
-    @cumulative_pnl.setter
-    def cumulative_pnl(self, value: Tuple[Tuple[Union[datetime.date, float], ...], ...]):
-        self._property_changed('cumulative_pnl')
-        self.__cumulative_pnl = value        
-
-
-class HedgeConstituent(Base):
-        
-    """Fields returned for each hedge constituent."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        asset_id: str,
-        name: str,
-        weight: float,
-        currency: Union[Currency, str],
-        country: str = None,
-        correlation: float = None,
-        transaction_cost: float = None,
-        marginal_cost: float = None,
-        borrow_cost: float = None
-    ):        
-        super().__init__()
-        self.asset_id = asset_id
-        self.name = name
-        self.weight = weight
-        self.currency = currency
-        self.country = country
-        self.correlation = correlation
-        self.transaction_cost = transaction_cost
-        self.marginal_cost = marginal_cost
-        self.borrow_cost = borrow_cost
-
-    @property
-    def asset_id(self) -> str:
-        """Marquee unique asset identifier."""
-        return self.__asset_id
-
-    @asset_id.setter
-    def asset_id(self, value: str):
-        self._property_changed('asset_id')
-        self.__asset_id = value        
-
-    @property
-    def name(self) -> str:
-        """Display name of the asset"""
-        return self.__name
-
-    @name.setter
-    def name(self, value: str):
-        self._property_changed('name')
-        self.__name = value        
-
-    @property
-    def weight(self) -> float:
-        """Weight of the constituent."""
-        return self.__weight
-
-    @weight.setter
-    def weight(self, value: float):
-        self._property_changed('weight')
-        self.__weight = value        
-
-    @property
-    def currency(self) -> Union[Currency, str]:
-        """Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)"""
-        return self.__currency
-
-    @currency.setter
-    def currency(self, value: Union[Currency, str]):
-        self._property_changed('currency')
-        self.__currency = get_enum_value(Currency, value)        
-
-    @property
-    def country(self) -> str:
-        """Country name of asset."""
-        return self.__country
-
-    @country.setter
-    def country(self, value: str):
-        self._property_changed('country')
-        self.__country = value        
-
-    @property
-    def correlation(self) -> float:
-        """Max 44 day rolling correlation between the constituent and target returns."""
-        return self.__correlation
-
-    @correlation.setter
-    def correlation(self, value: float):
-        self._property_changed('correlation')
-        self.__correlation = value        
-
-    @property
-    def transaction_cost(self) -> float:
-        """The estimated market impact cost for trading a position or set of positions at a
-           specified market participation rate or trade-out period."""
-        return self.__transaction_cost
-
-    @transaction_cost.setter
-    def transaction_cost(self, value: float):
-        self._property_changed('transaction_cost')
-        self.__transaction_cost = value        
-
-    @property
-    def marginal_cost(self) -> float:
-        """The estimated market impact cost multiplied by the position's gross weight in
-           the portfolio."""
-        return self.__marginal_cost
-
-    @marginal_cost.setter
-    def marginal_cost(self, value: float):
-        self._property_changed('marginal_cost')
-        self.__marginal_cost = value        
-
-    @property
-    def borrow_cost(self) -> float:
-        """The estimated borrow cost in bps for a position or position set."""
-        return self.__borrow_cost
-
-    @borrow_cost.setter
-    def borrow_cost(self, value: float):
-        self._property_changed('borrow_cost')
-        self.__borrow_cost = value        
-
-
 class HedgerComparisonProperties(Base):
         
     """properties used to hedge the comparison."""
@@ -464,43 +308,6 @@ class HedgerComparisonProperties(Base):
     def hedge_value(self, value: float):
         self._property_changed('hedge_value')
         self.__hedge_value = value        
-
-
-class Target(Base):
-        
-    """The asset id, portfolio id, or set of positions that make up the hedge target."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        id_: str = None,
-        positions: Tuple[Position, ...] = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.__id = id_
-        self.positions = positions
-        self.name = name
-
-    @property
-    def id(self) -> str:
-        """Marquee unique identifier"""
-        return self.__id
-
-    @id.setter
-    def id(self, value: str):
-        self._property_changed('id')
-        self.__id = value        
-
-    @property
-    def positions(self) -> Tuple[Position, ...]:
-        """Array of quantity position objects."""
-        return self.__positions
-
-    @positions.setter
-    def positions(self, value: Tuple[Position, ...]):
-        self._property_changed('positions')
-        self.__positions = value        
 
 
 class FactorExposures(Base):
@@ -824,66 +631,125 @@ class FactorHedgerConstraintPrioritySettings(Base):
         self.__sector_exposures = get_enum_value(HedgerConstraintPrioritySetting, value)        
 
 
-class PerformanceHedgeResult(Base):
+class HedgeConstituent(Base):
         
-    """Result of a performance replication hedge."""
+    """Fields returned for each hedge constituent."""
 
     @camel_case_translate
     def __init__(
         self,
-        target: dict,
-        hedge: dict = None,
-        hedged_target: dict = None,
-        benchmarks: Tuple[dict, ...] = None,
-        name: str = None
+        asset_id: str,
+        name: str,
+        weight: float,
+        currency: Union[Currency, str],
+        country: str = None,
+        correlation: float = None,
+        transaction_cost: float = None,
+        marginal_cost: float = None,
+        borrow_cost: float = None
     ):        
         super().__init__()
-        self.target = target
-        self.hedge = hedge
-        self.hedged_target = hedged_target
-        self.benchmarks = benchmarks
+        self.asset_id = asset_id
         self.name = name
+        self.weight = weight
+        self.currency = currency
+        self.country = country
+        self.correlation = correlation
+        self.transaction_cost = transaction_cost
+        self.marginal_cost = marginal_cost
+        self.borrow_cost = borrow_cost
 
     @property
-    def target(self) -> dict:
-        """Statistics of the target."""
-        return self.__target
+    def asset_id(self) -> str:
+        """Marquee unique asset identifier."""
+        return self.__asset_id
 
-    @target.setter
-    def target(self, value: dict):
-        self._property_changed('target')
-        self.__target = value        
-
-    @property
-    def hedge(self) -> dict:
-        """Statistics of the portfolio of assets making up the hedge."""
-        return self.__hedge
-
-    @hedge.setter
-    def hedge(self, value: dict):
-        self._property_changed('hedge')
-        self.__hedge = value        
+    @asset_id.setter
+    def asset_id(self, value: str):
+        self._property_changed('asset_id')
+        self.__asset_id = value        
 
     @property
-    def hedged_target(self) -> dict:
-        """Statistics of the portfolio resulting from combining the target and hedge
-           portfolios."""
-        return self.__hedged_target
+    def name(self) -> str:
+        """Display name of the asset"""
+        return self.__name
 
-    @hedged_target.setter
-    def hedged_target(self, value: dict):
-        self._property_changed('hedged_target')
-        self.__hedged_target = value        
+    @name.setter
+    def name(self, value: str):
+        self._property_changed('name')
+        self.__name = value        
 
     @property
-    def benchmarks(self) -> Tuple[dict, ...]:
-        """Benchmarks compared against the target."""
-        return self.__benchmarks
+    def weight(self) -> float:
+        """Weight of the constituent."""
+        return self.__weight
 
-    @benchmarks.setter
-    def benchmarks(self, value: Tuple[dict, ...]):
-        self._property_changed('benchmarks')
-        self.__benchmarks = value        
+    @weight.setter
+    def weight(self, value: float):
+        self._property_changed('weight')
+        self.__weight = value        
+
+    @property
+    def currency(self) -> Union[Currency, str]:
+        """Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)"""
+        return self.__currency
+
+    @currency.setter
+    def currency(self, value: Union[Currency, str]):
+        self._property_changed('currency')
+        self.__currency = get_enum_value(Currency, value)        
+
+    @property
+    def country(self) -> str:
+        """Country name of asset."""
+        return self.__country
+
+    @country.setter
+    def country(self, value: str):
+        self._property_changed('country')
+        self.__country = value        
+
+    @property
+    def correlation(self) -> float:
+        """Max 44 day rolling correlation between the constituent and target returns."""
+        return self.__correlation
+
+    @correlation.setter
+    def correlation(self, value: float):
+        self._property_changed('correlation')
+        self.__correlation = value        
+
+    @property
+    def transaction_cost(self) -> float:
+        """The estimated market impact cost for trading a position or set of positions at a
+           specified market participation rate or trade-out period."""
+        return self.__transaction_cost
+
+    @transaction_cost.setter
+    def transaction_cost(self, value: float):
+        self._property_changed('transaction_cost')
+        self.__transaction_cost = value        
+
+    @property
+    def marginal_cost(self) -> float:
+        """The estimated market impact cost multiplied by the position's gross weight in
+           the portfolio."""
+        return self.__marginal_cost
+
+    @marginal_cost.setter
+    def marginal_cost(self, value: float):
+        self._property_changed('marginal_cost')
+        self.__marginal_cost = value        
+
+    @property
+    def borrow_cost(self) -> float:
+        """The estimated borrow cost in bps for a position or position set."""
+        return self.__borrow_cost
+
+    @borrow_cost.setter
+    def borrow_cost(self, value: float):
+        self._property_changed('borrow_cost')
+        self.__borrow_cost = value        
 
 
 class FactorHedgerResultPositions(Base):
@@ -1155,6 +1021,103 @@ class FactorHedgerResultPositions(Base):
         self.__total_pnl = value        
 
 
+class HedgeBenchmark(Base):
+        
+    @camel_case_translate
+    def __init__(
+        self,
+        asset_id: str,
+        cumulative_pnl: Tuple[Tuple[Union[datetime.date, float], ...], ...] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.asset_id = asset_id
+        self.cumulative_pnl = cumulative_pnl
+        self.name = name
+
+    @property
+    def asset_id(self) -> str:
+        """Marquee unique asset identifier."""
+        return self.__asset_id
+
+    @asset_id.setter
+    def asset_id(self, value: str):
+        self._property_changed('asset_id')
+        self.__asset_id = value        
+
+    @property
+    def cumulative_pnl(self) -> Tuple[Tuple[Union[datetime.date, float], ...], ...]:
+        """An array of tuples that represent values in a time series."""
+        return self.__cumulative_pnl
+
+    @cumulative_pnl.setter
+    def cumulative_pnl(self, value: Tuple[Tuple[Union[datetime.date, float], ...], ...]):
+        self._property_changed('cumulative_pnl')
+        self.__cumulative_pnl = value        
+
+
+class PerformanceHedgeResult(Base):
+        
+    """Result of a performance replication hedge."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        target: dict,
+        hedge: dict = None,
+        hedged_target: dict = None,
+        benchmarks: Tuple[dict, ...] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.target = target
+        self.hedge = hedge
+        self.hedged_target = hedged_target
+        self.benchmarks = benchmarks
+        self.name = name
+
+    @property
+    def target(self) -> dict:
+        """Statistics of the target."""
+        return self.__target
+
+    @target.setter
+    def target(self, value: dict):
+        self._property_changed('target')
+        self.__target = value        
+
+    @property
+    def hedge(self) -> dict:
+        """Statistics of the portfolio of assets making up the hedge."""
+        return self.__hedge
+
+    @hedge.setter
+    def hedge(self, value: dict):
+        self._property_changed('hedge')
+        self.__hedge = value        
+
+    @property
+    def hedged_target(self) -> dict:
+        """Statistics of the portfolio resulting from combining the target and hedge
+           portfolios."""
+        return self.__hedged_target
+
+    @hedged_target.setter
+    def hedged_target(self, value: dict):
+        self._property_changed('hedged_target')
+        self.__hedged_target = value        
+
+    @property
+    def benchmarks(self) -> Tuple[dict, ...]:
+        """Benchmarks compared against the target."""
+        return self.__benchmarks
+
+    @benchmarks.setter
+    def benchmarks(self, value: Tuple[dict, ...]):
+        self._property_changed('benchmarks')
+        self.__benchmarks = value        
+
+
 class FactorHedgeResult(Base):
         
     """Result of a hedge calculation with an objective to minimize factor risk."""
@@ -1263,6 +1226,43 @@ class HedgerComparison(Base):
     def result(self, value: dict):
         self._property_changed('result')
         self.__result = value        
+
+
+class Target(Base):
+        
+    """The asset id, portfolio id, or set of positions that make up the hedge target."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        id_: str = None,
+        positions: Tuple[Position, ...] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.__id = id_
+        self.positions = positions
+        self.name = name
+
+    @property
+    def id(self) -> str:
+        """Marquee unique identifier"""
+        return self.__id
+
+    @id.setter
+    def id(self, value: str):
+        self._property_changed('id')
+        self.__id = value        
+
+    @property
+    def positions(self) -> Tuple[Position, ...]:
+        """Array of quantity position objects."""
+        return self.__positions
+
+    @positions.setter
+    def positions(self, value: Tuple[Position, ...]):
+        self._property_changed('positions')
+        self.__positions = value        
 
 
 class FactorHedgeParameters(Base):

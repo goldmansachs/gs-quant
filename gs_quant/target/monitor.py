@@ -16,7 +16,7 @@ under the License.
 
 from gs_quant.target.common import *
 import datetime
-from typing import Tuple, Union
+from typing import Mapping, Tuple, Union
 from enum import Enum
 from gs_quant.base import Base, EnumBase, InstrumentBase, camel_case_translate, get_enum_value
 
@@ -193,79 +193,6 @@ class ColumnProperty(Base):
     def property(self, value: str):
         self._property_changed('property')
         self.__property = value        
-
-
-class ExportParameters(Base):
-        
-    """Object with properties specifying how to export individual row or complete
-       monitor data."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        tokens: Tuple[str, ...],
-        data_set_id: str = None,
-        fields: Tuple[str, ...] = None,
-        label: str = None,
-        start_date: str = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.data_set_id = data_set_id
-        self.fields = fields
-        self.label = label
-        self.start_date = start_date
-        self.tokens = tokens
-        self.name = name
-
-    @property
-    def data_set_id(self) -> str:
-        """Id of the DataSet in which the export will retrieve data from."""
-        return self.__data_set_id
-
-    @data_set_id.setter
-    def data_set_id(self, value: str):
-        self._property_changed('data_set_id')
-        self.__data_set_id = value        
-
-    @property
-    def fields(self) -> Tuple[str, ...]:
-        """The fields to be exported from the DataSet."""
-        return self.__fields
-
-    @fields.setter
-    def fields(self, value: Tuple[str, ...]):
-        self._property_changed('fields')
-        self.__fields = value        
-
-    @property
-    def label(self) -> str:
-        """The label for the export button. For example: Export Historical Data."""
-        return self.__label
-
-    @label.setter
-    def label(self, value: str):
-        self._property_changed('label')
-        self.__label = value        
-
-    @property
-    def start_date(self) -> str:
-        """The relative start date for the history of data to retrieve. Eg: -1y."""
-        return self.__start_date
-
-    @start_date.setter
-    def start_date(self, value: str):
-        self._property_changed('start_date')
-        self.__start_date = value        
-
-    @property
-    def tokens(self) -> Tuple[str, ...]:
-        return self.__tokens
-
-    @tokens.setter
-    def tokens(self, value: Tuple[str, ...]):
-        self._property_changed('tokens')
-        self.__tokens = value        
 
 
 class FieldMap(Base):
@@ -544,7 +471,7 @@ class ColumnMappings(Base):
     def __init__(
         self,
         column_name: str = None,
-        parameters: FieldMap = None,
+        parameters: float = None,
         color: str = None,
         name: str = None
     ):        
@@ -565,11 +492,11 @@ class ColumnMappings(Base):
         self.__column_name = value        
 
     @property
-    def parameters(self) -> FieldMap:
+    def parameters(self) -> float:
         return self.__parameters
 
     @parameters.setter
-    def parameters(self, value: FieldMap):
+    def parameters(self, value: float):
         self._property_changed('parameters')
         self.__parameters = value        
 
@@ -594,7 +521,7 @@ class ColumnOperation(Base):
         column_names: Tuple[str, ...] = None,
         function_name: str = None,
         type_: str = None,
-        parameters: FieldMap = None,
+        parameters: float = None,
         name: str = None
     ):        
         super().__init__()
@@ -638,14 +565,87 @@ class ColumnOperation(Base):
         self.__type = value        
 
     @property
-    def parameters(self) -> FieldMap:
+    def parameters(self) -> float:
         """Parameters to be passed into GS Quant functions. For example, window (w)."""
         return self.__parameters
 
     @parameters.setter
-    def parameters(self, value: FieldMap):
+    def parameters(self, value: float):
         self._property_changed('parameters')
         self.__parameters = value        
+
+
+class ExportParameters(Base):
+        
+    """Object with properties specifying how to export individual row or complete
+       monitor data."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        tokens: Tuple[str, ...],
+        data_set_id: str = None,
+        fields: Tuple[str, ...] = None,
+        label: str = None,
+        start_date: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.data_set_id = data_set_id
+        self.fields = fields
+        self.label = label
+        self.start_date = start_date
+        self.tokens = tokens
+        self.name = name
+
+    @property
+    def data_set_id(self) -> str:
+        """Id of the DataSet in which the export will retrieve data from."""
+        return self.__data_set_id
+
+    @data_set_id.setter
+    def data_set_id(self, value: str):
+        self._property_changed('data_set_id')
+        self.__data_set_id = value        
+
+    @property
+    def fields(self) -> Tuple[str, ...]:
+        """The fields to be exported from the DataSet."""
+        return self.__fields
+
+    @fields.setter
+    def fields(self, value: Tuple[str, ...]):
+        self._property_changed('fields')
+        self.__fields = value        
+
+    @property
+    def label(self) -> str:
+        """The label for the export button. For example: Export Historical Data."""
+        return self.__label
+
+    @label.setter
+    def label(self, value: str):
+        self._property_changed('label')
+        self.__label = value        
+
+    @property
+    def start_date(self) -> str:
+        """The relative start date for the history of data to retrieve. Eg: -1y."""
+        return self.__start_date
+
+    @start_date.setter
+    def start_date(self, value: str):
+        self._property_changed('start_date')
+        self.__start_date = value        
+
+    @property
+    def tokens(self) -> Tuple[str, ...]:
+        return self.__tokens
+
+    @tokens.setter
+    def tokens(self, value: Tuple[str, ...]):
+        self._property_changed('tokens')
+        self.__tokens = value        
 
 
 class Function(Base):
@@ -663,8 +663,8 @@ class Function(Base):
         start_time: str = None,
         end_time: str = None,
         fields: Tuple[str, ...] = None,
-        parameters: FieldMap = None,
-        where: FieldMap = None,
+        parameters: float = None,
+        where: float = None,
         vendor: str = None,
         data_set_id: str = None
     ):        
@@ -764,21 +764,21 @@ class Function(Base):
         self.__fields = value        
 
     @property
-    def parameters(self) -> FieldMap:
+    def parameters(self) -> float:
         """Parameters to be passed into GS Quant functions. For example, window (w)."""
         return self.__parameters
 
     @parameters.setter
-    def parameters(self, value: FieldMap):
+    def parameters(self, value: float):
         self._property_changed('parameters')
         self.__parameters = value        
 
     @property
-    def where(self) -> FieldMap:
+    def where(self) -> float:
         return self.__where
 
     @where.setter
-    def where(self, value: FieldMap):
+    def where(self, value: float):
         self._property_changed('where')
         self.__where = value        
 

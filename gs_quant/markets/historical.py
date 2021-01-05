@@ -17,12 +17,12 @@ import datetime as dt
 from typing import Iterable, Optional, Tuple, Union
 
 from gs_quant.base import InstrumentBase, RiskKey
-from gs_quant.datetime.date import date_range
+from gs_quant.datetime.date import date_range, prev_business_date
 from gs_quant.risk import RiskMeasure, RollFwd, MarketDataScenario
 from gs_quant.risk.results import HistoricalPricingFuture, PricingFuture
 
 from .core import PricingContext
-from .markets import CloseMarket, close_market_date
+from .markets import CloseMarket
 
 
 class HistoricalPricingContext(PricingContext):
@@ -72,6 +72,7 @@ class HistoricalPricingContext(PricingContext):
         super().__init__(is_async=is_async, is_batch=is_batch, use_cache=use_cache, visible_to_gs=visible_to_gs,
                          csa_term=csa_term, market_data_location=market_data_location,
                          timeout=timeout, show_progress=show_progress)
+
         if start is not None:
             if dates is not None:
                 raise ValueError('Must supply start or dates, not both')
@@ -85,6 +86,10 @@ class HistoricalPricingContext(PricingContext):
         else:
             raise ValueError('Must supply start or dates')
 
+    def _market(self, date: dt.date, location: str) -> CloseMarket:
+        date = prev_business_date(date) if date == dt.date.today() else date
+        return CloseMarket(location=location, date=date, check=False)
+
     def calc(self, instrument: InstrumentBase, risk_measure: RiskMeasure) -> PricingFuture:
         futures = []
 
@@ -94,8 +99,7 @@ class HistoricalPricingContext(PricingContext):
         location = self.market.location
 
         for date in self.__date_range:
-            market = CloseMarket(location=location, date=close_market_date(location, date))
-            risk_key = RiskKey(provider, date, market, parameters, scenario, risk_measure)
+            risk_key = RiskKey(provider, date, self._market(date, location), parameters, scenario, risk_measure)
             futures.append(self._calc(instrument, risk_key))
 
         return HistoricalPricingFuture(futures)
@@ -174,14 +178,15 @@ class BackToTheFuturePricingContext(HistoricalPricingContext):
         parameters = self._parameters
         location = self.market.location
         base_market = self.market
+
         for date in self.__date_range:
             if date > self.pricing_date:
                 scenario = MarketDataScenario(RollFwd(date=date, realise_fwd=self._roll_to_fwds))
                 risk_key = RiskKey(provider, date, base_market, parameters, scenario, risk_measure)
                 futures.append(self._calc(instrument, risk_key))
             else:
-                market = CloseMarket(location=location, date=close_market_date(location, date))
-                risk_key = RiskKey(provider, date, market, parameters, base_scenario, risk_measure)
+                risk_key = RiskKey(provider, date, self._market(date, location), parameters, base_scenario,
+                                   risk_measure)
                 futures.append(self._calc(instrument, risk_key))
 
         return HistoricalPricingFuture(futures)
