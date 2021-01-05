@@ -32,11 +32,6 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -45,7 +40,7 @@
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="next" title="IRBasisSwap" href="gs_quant.instrument.IRBasisSwap.html" />
-    <link rel="prev" title="FXOption" href="gs_quant.instrument.FXOption.html" /> 
+    <link rel="prev" title="FXVolatilitySwap" href="gs_quant.instrument.FXVolatilitySwap.html" /> 
 </head>
 
 <!-- Hello from the future. -->
@@ -55,11 +50,11 @@
 
    
   <div class="wy-grid-for-nav">
-    <a data-toggle="wy-nav-top" class="gs-developer-action-button-container" ontouchstart="">
-      <div data-toggle="gs-nav-action" class="gs-nav-action"></div>
+    <a data-toggle="wy-nav-top" id="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" id="gs-nav-action"></div>
     </a>
     
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+    <nav id="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         
         
@@ -77,23 +72,39 @@
 <li class="toctree-l1 current"><a class="reference internal" href="../instrument.html">Instrument Package</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="gs_quant.base.Priceable.html">gs_quant.base.Priceable</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../instrument.html#instruments">Instruments</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.CommodSwap.html">CommodSwap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.CommodOTCSwap.html">CommodOTCSwap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.EqCliquet.html">EqCliquet</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.EqForward.html">EqForward</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.EqOption.html">EqOption</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.EqSynthetic.html">EqSynthetic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.EqVarianceSwap.html">EqVarianceSwap</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.Forward.html">Forward</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.FXBinary.html">FXBinary</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.FXForward.html">FXForward</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.FXMultiCrossBinary.html">FXMultiCrossBinary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.FXMultiCrossBinaryLeg.html">FXMultiCrossBinaryLeg</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.FXOption.html">FXOption</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.FXVolatilitySwap.html">FXVolatilitySwap</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">InflationSwap</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRBasisSwap.html">IRBasisSwap</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRCap.html">IRCap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRCMSOption.html">IRCMSOption</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRCMSOptionStrip.html">IRCMSOptionStrip</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRCMSSpreadOption.html">IRCMSSpreadOption</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRCMSSpreadOptionStrip.html">IRCMSSpreadOptionStrip</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRFloor.html">IRFloor</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRSwap.html">IRSwap</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRSwaption.html">IRSwaption</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRXccySwap.html">IRXccySwap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRXccySwapFixFix.html">IRXccySwapFixFix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRXccySwapFixFlt.html">IRXccySwapFixFlt</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.Security.html">Security</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../market.html">Market Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../markets.html">Markets Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../models.html">Models Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../risk.html">Risk Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../timeseries.html">Timeseries Package</a></li>
 </ul>
@@ -156,12 +167,35 @@
   <div class="section" id="inflationswap">
 <h1>InflationSwap<a class="headerlink" href="#inflationswap" title="Permalink to this headline">¶</a></h1>
 <p>For methods of this class, see <a class="reference internal" href="gs_quant.base.Priceable.html"><span class="doc">gs_quant.base.Priceable</span></a></p>
-<dl class="class">
+<dl class="py class">
 <dt id="gs_quant.instrument.InflationSwap">
-<em class="property">class </em><code class="sig-name descname">InflationSwap</code><span class="sig-paren">(</span><em class="sig-param">termination_date</em>, <em class="sig-param">pay_or_receive=None</em>, <em class="sig-param">notional_currency=None</em>, <em class="sig-param">notional_amount=1000000.0</em>, <em class="sig-param">effective_date=None</em>, <em class="sig-param">index=None</em>, <em class="sig-param">floating_rate_business_day_convention=None</em>, <em class="sig-param">fixed_rate=None</em>, <em class="sig-param">fixed_rate_business_day_convention=None</em>, <em class="sig-param">fee=0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gs_quant/target/instrument.html#InflationSwap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gs_quant.instrument.InflationSwap" title="Permalink to this definition">¶</a></dt>
-<dd><p>A vanilla inflation swap of fixed vs floating cashflows adjusted to an inflation rate</p>
+<em class="property">class </em><code class="sig-name descname">InflationSwap</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pay_or_receive</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">termination_date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">notional_currency</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">effective_date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">notional_amount</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">index</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">floating_rate_business_day_convention</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fixed_rate</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fixed_rate_business_day_convention</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fee</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">base_cpi</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">clearing_house</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gs_quant/target/instrument.html#InflationSwap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gs_quant.instrument.InflationSwap" title="Permalink to this definition">¶</a></dt>
+<dd><p>A vanilla inflation swap of fixed vs floating cashflows adjusted to an inflation
+rate</p>
 <p class="rubric">Properties</p>
-<dl class="attribute">
+<dl class="py attribute">
+<dt id="gs_quant.instrument.InflationSwap.base_cpi">
+<code class="sig-name descname">base_cpi</code><a class="headerlink" href="#gs_quant.instrument.InflationSwap.base_cpi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base CPI level</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="gs_quant.instrument.InflationSwap.clearing_house">
+<code class="sig-name descname">clearing_house</code><a class="headerlink" href="#gs_quant.instrument.InflationSwap.clearing_house" title="Permalink to this definition">¶</a></dt>
+<dd><p>Swap Clearing House</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">SwapClearingHouse</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
 <dt id="gs_quant.instrument.InflationSwap.effective_date">
 <code class="sig-name descname">effective_date</code><a class="headerlink" href="#gs_quant.instrument.InflationSwap.effective_date" title="Permalink to this definition">¶</a></dt>
 <dd><p>The date on which the swap becomes effective</p>
@@ -172,7 +206,7 @@
 </dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="gs_quant.instrument.InflationSwap.fee">
 <code class="sig-name descname">fee</code><a class="headerlink" href="#gs_quant.instrument.InflationSwap.fee" title="Permalink to this definition">¶</a></dt>
 <dd><p>The fee</p>
@@ -183,7 +217,7 @@
 </dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="gs_quant.instrument.InflationSwap.fixed_rate">
 <code class="sig-name descname">fixed_rate</code><a class="headerlink" href="#gs_quant.instrument.InflationSwap.fixed_rate" title="Permalink to this definition">¶</a></dt>
 <dd><p>The coupon of the fixed leg</p>
@@ -194,7 +228,7 @@
 </dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="gs_quant.instrument.InflationSwap.fixed_rate_business_day_convention">
 <code class="sig-name descname">fixed_rate_business_day_convention</code><a class="headerlink" href="#gs_quant.instrument.InflationSwap.fixed_rate_business_day_convention" title="Permalink to this definition">¶</a></dt>
 <dd><p>The business day convention for the fixed rate</p>
@@ -205,7 +239,7 @@
 </dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="gs_quant.instrument.InflationSwap.floating_rate_business_day_convention">
 <code class="sig-name descname">floating_rate_business_day_convention</code><a class="headerlink" href="#gs_quant.instrument.InflationSwap.floating_rate_business_day_convention" title="Permalink to this definition">¶</a></dt>
 <dd><p>The business day convention of the floating rate</p>
@@ -216,7 +250,7 @@
 </dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="gs_quant.instrument.InflationSwap.index">
 <code class="sig-name descname">index</code><a class="headerlink" href="#gs_quant.instrument.InflationSwap.index" title="Permalink to this definition">¶</a></dt>
 <dd><p>The underlying benchmark for the floating rate, e.g. CPI-U</p>
@@ -227,18 +261,28 @@
 </dl>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="gs_quant.instrument.InflationSwap.notional_amount">
-<code class="sig-name descname">notional_amount</code><a class="headerlink" href="#gs_quant.instrument.InflationSwap.notional_amount" title="Permalink to this definition">¶</a></dt>
-<dd><p>Notional amount</p>
-<dl class="field-list simple">
+<dl class="py attribute">
+<dt id="gs_quant.instrument.InflationSwap.instrument_quantity">
+<code class="sig-name descname">instrument_quantity</code><a class="headerlink" href="#gs_quant.instrument.InflationSwap.instrument_quantity" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
+<dt id="gs_quant.instrument.InflationSwap.notional_amount">
+<code class="sig-name descname">notional_amount</code><a class="headerlink" href="#gs_quant.instrument.InflationSwap.notional_amount" title="Permalink to this definition">¶</a></dt>
+<dd><p>Notional amount</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
 <dt id="gs_quant.instrument.InflationSwap.notional_currency">
 <code class="sig-name descname">notional_currency</code><a class="headerlink" href="#gs_quant.instrument.InflationSwap.notional_currency" title="Permalink to this definition">¶</a></dt>
 <dd><p>Notional currency</p>
@@ -249,7 +293,7 @@
 </dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="gs_quant.instrument.InflationSwap.pay_or_receive">
 <code class="sig-name descname">pay_or_receive</code><a class="headerlink" href="#gs_quant.instrument.InflationSwap.pay_or_receive" title="Permalink to this definition">¶</a></dt>
 <dd><p>Pay or receive fixed</p>
@@ -260,7 +304,22 @@
 </dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
+<dt id="gs_quant.instrument.InflationSwap.provider">
+<code class="sig-name descname">provider</code><a class="headerlink" href="#gs_quant.instrument.InflationSwap.provider" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gs_quant.instrument.InflationSwap.resolution_key">
+<code class="sig-name descname">resolution_key</code><a class="headerlink" href="#gs_quant.instrument.InflationSwap.resolution_key" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">RiskKey</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
 <dt id="gs_quant.instrument.InflationSwap.termination_date">
 <code class="sig-name descname">termination_date</code><a class="headerlink" href="#gs_quant.instrument.InflationSwap.termination_date" title="Permalink to this definition">¶</a></dt>
 <dd><p>The termination of the swap, e.g. 2050-04-01, 10y</p>
@@ -270,6 +329,11 @@
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="py attribute">
+<dt id="gs_quant.instrument.InflationSwap.unresolved">
+<code class="sig-name descname">unresolved</code><a class="headerlink" href="#gs_quant.instrument.InflationSwap.unresolved" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -290,9 +354,9 @@
     
     <div class="link-block-module">
       <a
-        href="gs_quant.instrument.FXOption.html"
+        href="gs_quant.instrument.FXVolatilitySwap.html"
         class="link-block-module-container"
-        title="FXOption"
+        title="FXVolatilitySwap"
         accesskey="p"
         rel="prev"
       >
@@ -301,7 +365,7 @@
             Previous Topic
           </h4>
           <p class="link-block-module-body-label">
-            FXOption
+            FXVolatilitySwap
           </p>
         </div>
       </a>

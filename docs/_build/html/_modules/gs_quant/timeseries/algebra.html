@@ -32,11 +32,6 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
@@ -53,11 +48,11 @@
 
    
   <div class="wy-grid-for-nav">
-    <a data-toggle="wy-nav-top" class="gs-developer-action-button-container" ontouchstart="">
-      <div data-toggle="gs-nav-action" class="gs-nav-action"></div>
+    <a data-toggle="wy-nav-top" id="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" id="gs-nav-action"></div>
     </a>
     
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+    <nav id="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         
         
@@ -73,7 +68,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../data.html">Data Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../datetime.html">Datetime Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../instrument.html">Instrument Package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../market.html">Market Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../markets.html">Markets Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../models.html">Models Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../risk.html">Risk Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../timeseries.html">Timeseries Package</a></li>
 </ul>
@@ -150,8 +146,10 @@
 
 <span class="kn">import</span> <span class="nn">math</span>
 
-<span class="kn">from</span> <span class="nn">.datetime</span> <span class="k">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">.helper</span> <span class="k">import</span> <span class="n">plot_function</span>
+<span class="kn">from</span> <span class="nn">.datetime</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.helper</span> <span class="kn">import</span> <span class="n">plot_function</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">reduce</span>
+<span class="kn">from</span> <span class="nn">gs_quant.errors</span> <span class="kn">import</span> <span class="n">MqTypeError</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Algebra library contains basic numerical and algebraic operations, including addition, division, multiplication,</span>
@@ -402,7 +400,7 @@
     <span class="k">return</span> <span class="n">x_align</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">y_align</span><span class="p">)</span></div>
 
 
-<span class="nd">@plot_function</span>
+<div class="viewcode-block" id="floordiv"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.algebra.floordiv.html#gs_quant.timeseries.algebra.floordiv">[docs]</a><span class="nd">@plot_function</span>
 <span class="k">def</span> <span class="nf">floordiv</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">Real</span><span class="p">],</span> <span class="n">y</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">Real</span><span class="p">],</span> <span class="n">method</span><span class="p">:</span> <span class="n">Interpolate</span> <span class="o">=</span> <span class="n">Interpolate</span><span class="o">.</span><span class="n">STEP</span><span class="p">)</span> \
         <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">Real</span><span class="p">]:</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -454,7 +452,7 @@
         <span class="k">return</span> <span class="n">x</span> <span class="o">//</span> <span class="n">y</span>
 
     <span class="p">[</span><span class="n">x_align</span><span class="p">,</span> <span class="n">y_align</span><span class="p">]</span> <span class="o">=</span> <span class="n">align</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">x_align</span><span class="o">.</span><span class="n">floordiv</span><span class="p">(</span><span class="n">y_align</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">x_align</span><span class="o">.</span><span class="n">floordiv</span><span class="p">(</span><span class="n">y_align</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="exp"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.algebra.exp.html#gs_quant.timeseries.algebra.exp">[docs]</a><span class="nd">@plot_function</span>
@@ -681,11 +679,12 @@
     <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">y</span><span class="p">:</span> <span class="nb">min</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span></div>
 
 
-<span class="nd">@plot_function</span>
+<div class="viewcode-block" id="filter_"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.algebra.filter_.html#gs_quant.timeseries.algebra.filter_">[docs]</a><span class="nd">@plot_function</span>
 <span class="k">def</span> <span class="nf">filter_</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">operator</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">FilterOperator</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Real</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Removes values where comparison with the operator and value combination results in true, defaults to removing</span>
 <span class="sd">    missing values from the series</span>
+
 <span class="sd">    :param x: timeseries</span>
 <span class="sd">    :param operator: FilterOperator describing logic for value removal, e.g &#39;less_than&#39;</span>
 <span class="sd">    :param value: number indicating value(s) to remove from the series</span>
@@ -737,7 +736,199 @@
                 <span class="n">operator</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">operator</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">MqValueError</span><span class="p">(</span><span class="s1">&#39;Unexpected operator: &#39;</span> <span class="o">+</span> <span class="n">operator</span><span class="p">)</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">remove</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">x</span>
+    <span class="k">return</span> <span class="n">x</span></div>
+
+
+<div class="viewcode-block" id="smooth_spikes"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.algebra.smooth_spikes.html#gs_quant.timeseries.algebra.smooth_spikes">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">smooth_spikes</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Smooth out the spikes of a series. If a point is larger/smaller than (1 +/- threshold) times both neighbors, replace</span>
+<span class="sd">    it with the average of those neighbours. Note: the first and last points in the input series are dropped.</span>
+
+<span class="sd">    :param x: timeseries</span>
+<span class="sd">    :param threshold: minimum increment to trigger filter</span>
+<span class="sd">    :return: smoothed timeseries</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Returns series where values that exceed the threshold relative to both neighbors are replaced.</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    Generate price series and smooth spikes over a threshold of 0.5.</span>
+
+<span class="sd">    &gt;&gt;&gt; prices = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; smooth_spikes(prices, 0.5)</span>
+
+<span class="sd">    **See also**</span>
+
+<span class="sd">    :func:`exponential_moving_average`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">()</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">multiplier</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">threshold</span><span class="p">)</span>
+    <span class="n">current</span><span class="p">,</span> <span class="n">next_</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">previous</span> <span class="o">=</span> <span class="n">current</span>
+        <span class="n">current</span> <span class="o">=</span> <span class="n">next_</span>
+        <span class="n">next_</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">scaled</span> <span class="o">=</span> <span class="n">current</span> <span class="o">*</span> <span class="n">multiplier</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">current</span> <span class="o">&gt;</span> <span class="n">previous</span> <span class="o">*</span> <span class="n">multiplier</span> <span class="ow">and</span> <span class="n">current</span> <span class="o">&gt;</span> <span class="n">next_</span> <span class="o">*</span> <span class="n">multiplier</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">previous</span> <span class="o">&gt;</span> <span class="n">scaled</span> <span class="ow">and</span> <span class="n">next_</span> <span class="o">&gt;</span> <span class="n">scaled</span><span class="p">):</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">previous</span> <span class="o">+</span> <span class="n">next_</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+
+    <span class="k">return</span> <span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="repeat"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.algebra.repeat.html#gs_quant.timeseries.algebra.repeat">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">repeat</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Repeats values for days where data is missing. For any date with missing data, the last recorded value is used.</span>
+<span class="sd">    Optionally downsamples the result such that there are data points every n days.</span>
+
+<span class="sd">    :param x: date-based timeseries</span>
+<span class="sd">    :param n: desired frequency of output</span>
+<span class="sd">    :return: a timeseries that has been forward-filled, and optionally downsampled</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Fill missing values with last seen value e.g. to combine daily with weekly or monthly data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">367</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">MqValueError</span><span class="p">(</span><span class="s1">&#39;n must be between 0 and 367&#39;</span><span class="p">)</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="n">freq</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s1">D&#39;</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">end</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;ffill&#39;</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_sum_boolean_series</span><span class="p">(</span><span class="o">*</span><span class="n">series</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="mi">2</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">series</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">100</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">MqValueError</span><span class="p">(</span><span class="s1">&#39;expected between 2 and 100 arguments&#39;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">series</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">MqTypeError</span><span class="p">(</span><span class="s1">&#39;all arguments must be series&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">a</span><span class="p">:</span> <span class="n">a</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">s</span><span class="o">.</span><span class="n">values</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="n">MqValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;cannot perform operation on series with value(s) other than 1 and 0: </span><span class="si">{</span><span class="n">s</span><span class="o">.</span><span class="n">values</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">current</span> <span class="o">=</span> <span class="n">series</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">series</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">fill_value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">series</span><span class="p">[</span><span class="mi">2</span><span class="p">:]:</span>
+        <span class="n">current</span> <span class="o">=</span> <span class="n">current</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">current</span>
+
+
+<div class="viewcode-block" id="and_"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.algebra.and_.html#gs_quant.timeseries.algebra.and_">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">and_</span><span class="p">(</span><span class="o">*</span><span class="n">series</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Logical &quot;and&quot; of two or more boolean series.</span>
+
+<span class="sd">    :param series: input series</span>
+<span class="sd">    :return: result series (of numeric type, with booleans represented as 1s and 0s)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">_sum_boolean_series</span><span class="p">(</span><span class="o">*</span><span class="n">series</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">s</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">series</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="or_"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.algebra.or_.html#gs_quant.timeseries.algebra.or_">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">or_</span><span class="p">(</span><span class="o">*</span><span class="n">series</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Logical &quot;or&quot; of two or more boolean series.</span>
+
+<span class="sd">    :param series: input series</span>
+<span class="sd">    :return: result series (of numeric type, with booleans represented as 1s and 0s)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">_sum_boolean_series</span><span class="p">(</span><span class="o">*</span><span class="n">series</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">s</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="not_"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.algebra.not_.html#gs_quant.timeseries.algebra.not_">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">not_</span><span class="p">(</span><span class="n">series</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Logical negation of a single boolean series.</span>
+
+<span class="sd">    :param series: single input series</span>
+<span class="sd">    :return: result series (of numeric type, with booleans represented as 1s and 0s)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">a</span><span class="p">:</span> <span class="n">a</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">series</span><span class="o">.</span><span class="n">values</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="n">MqValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;cannot negate series with value(s) other than 1 and 0: </span><span class="si">{</span><span class="n">series</span><span class="o">.</span><span class="n">values</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">series</span><span class="o">.</span><span class="n">replace</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="if_"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.algebra.if_.html#gs_quant.timeseries.algebra.if_">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">if_</span><span class="p">(</span><span class="n">flags</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">y</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a series s. For i in the index of flags, s[i] = x[i] if flags[i] == 1 else y[i].</span>
+
+<span class="sd">    :param flags: series of 1s and 0s</span>
+<span class="sd">    :param x: values to use when flag is 1</span>
+<span class="sd">    :param y: values to use when flag is 0</span>
+<span class="sd">    :return: result series</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">a</span><span class="p">:</span> <span class="n">a</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">flags</span><span class="o">.</span><span class="n">values</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="n">MqValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;cannot perform &quot;if&quot; on series with value(s) other than 1 and 0: </span><span class="si">{</span><span class="n">flags</span><span class="o">.</span><span class="n">values</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">ensure_series</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">flags</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="n">s</span><span class="p">]</span> <span class="o">*</span> <span class="n">flags</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="n">flags</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">flags</span><span class="o">.</span><span class="n">align</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">MqTypeError</span><span class="p">(</span><span class="s1">&#39;expected a number or series&#39;</span><span class="p">)</span>
+
+    <span class="n">x_flags</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="n">ensure_series</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">y_flags</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">ensure_series</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="n">x_flags</span> <span class="o">==</span> <span class="mi">1</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">y_flags</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]])</span><span class="o">.</span><span class="n">sort_index</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="weighted_sum"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.algebra.weighted_sum.html#gs_quant.timeseries.algebra.weighted_sum">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">weighted_sum</span><span class="p">(</span><span class="n">series</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">],</span> <span class="n">weights</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate a weighted sum.</span>
+
+<span class="sd">    :param series: list of time series</span>
+<span class="sd">    :param weights: list of weights</span>
+<span class="sd">    :return: time series of weighted average</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Calculate a weighted sum e.g. for a basket.</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    Generate price series and get a sum (weights 70%/30%).</span>
+
+<span class="sd">    &gt;&gt;&gt; prices1 = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; prices2 = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; mybasket = weighted_sum([prices1, prices2], [0.7, 0.3])</span>
+
+<span class="sd">    **See also**</span>
+
+<span class="sd">    :func:`basket`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">series</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">MqTypeError</span><span class="p">(</span><span class="s2">&quot;expected a list of time series&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">))</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">weights</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">MqTypeError</span><span class="p">(</span><span class="s2">&quot;expected a list of number for weights&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">series</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">MqValueError</span><span class="p">(</span><span class="s2">&quot;must have one weight for each time series&quot;</span><span class="p">)</span>
+
+    <span class="c1"># for input series, get the intersection of their calendars</span>
+    <span class="n">cal</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span><span class="p">(</span>
+        <span class="n">reduce</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">,</span>
+            <span class="p">(</span>
+                <span class="n">curve</span><span class="o">.</span><span class="n">index</span>
+                <span class="k">for</span> <span class="n">curve</span> <span class="ow">in</span> <span class="n">series</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="c1"># reindex inputs and calculate</span>
+    <span class="n">series</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">cal</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">series</span><span class="p">]</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">cal</span><span class="p">)</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">weights</span><span class="p">]</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">series</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">weights</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">series</span><span class="p">)))</span> <span class="o">/</span> <span class="nb">sum</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span></div>
 </pre></div>
 
            </div>

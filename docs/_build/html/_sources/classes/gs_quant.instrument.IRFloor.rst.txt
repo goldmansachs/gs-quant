@@ -1,4 +1,4 @@
-IRFloor
+﻿IRFloor
 =======
 
 For methods of this class, see :doc:`gs_quant.base.Priceable`
@@ -13,11 +13,16 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    
-   
    .. autoattribute:: effective_date
    
    
    .. autoattribute:: fee
+   
+   
+   .. autoattribute:: fee_currency
+   
+   
+   .. autoattribute:: fee_payment_date
    
    
    .. autoattribute:: floating_rate_business_day_convention
@@ -38,17 +43,32 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: floor_rate
    
    
+   .. autoattribute:: instrument_quantity
+   
+   
    .. autoattribute:: notional_amount
    
    
    .. autoattribute:: notional_currency
    
    
+   .. autoattribute:: premium
+   
+   
    .. autoattribute:: premium_payment_date
+   
+   
+   .. autoattribute:: provider
+   
+   
+   .. autoattribute:: resolution_key
    
    
    .. autoattribute:: termination_date
    
+   
+   
+   .. autoattribute:: unresolved
    
    
    

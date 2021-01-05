@@ -32,11 +32,6 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -45,7 +40,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="next" title="gs_quant.base.Priceable" href="classes/gs_quant.base.Priceable.html" />
-    <link rel="prev" title="point_sort_order" href="functions/gs_quant.datetime.point.point_sort_order.html" /> 
+    <link rel="prev" title="gs_quant.datetime.point.point_sort_order" href="functions/gs_quant.datetime.point.point_sort_order.html" /> 
 </head>
 
 <!-- Hello from the future. -->
@@ -55,11 +50,11 @@
 
    
   <div class="wy-grid-for-nav">
-    <a data-toggle="wy-nav-top" class="gs-developer-action-button-container" ontouchstart="">
-      <div data-toggle="gs-nav-action" class="gs-nav-action"></div>
+    <a data-toggle="wy-nav-top" id="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" id="gs-nav-action"></div>
     </a>
     
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+    <nav id="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         
         
@@ -77,23 +72,39 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Instrument Package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="classes/gs_quant.base.Priceable.html">gs_quant.base.Priceable</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#instruments">Instruments</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.CommodSwap.html">CommodSwap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.CommodOTCSwap.html">CommodOTCSwap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.EqCliquet.html">EqCliquet</a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.EqForward.html">EqForward</a></li>
 <li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.EqOption.html">EqOption</a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.EqSynthetic.html">EqSynthetic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.EqVarianceSwap.html">EqVarianceSwap</a></li>
 <li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.Forward.html">Forward</a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.FXBinary.html">FXBinary</a></li>
 <li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.FXForward.html">FXForward</a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.FXMultiCrossBinary.html">FXMultiCrossBinary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.FXMultiCrossBinaryLeg.html">FXMultiCrossBinaryLeg</a></li>
 <li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.FXOption.html">FXOption</a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.FXVolatilitySwap.html">FXVolatilitySwap</a></li>
 <li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.InflationSwap.html">InflationSwap</a></li>
 <li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.IRBasisSwap.html">IRBasisSwap</a></li>
 <li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.IRCap.html">IRCap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.IRCMSOption.html">IRCMSOption</a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.IRCMSOptionStrip.html">IRCMSOptionStrip</a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.IRCMSSpreadOption.html">IRCMSSpreadOption</a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.IRCMSSpreadOptionStrip.html">IRCMSSpreadOptionStrip</a></li>
 <li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.IRFloor.html">IRFloor</a></li>
 <li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.IRSwap.html">IRSwap</a></li>
 <li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.IRSwaption.html">IRSwaption</a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.IRXccySwap.html">IRXccySwap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.IRXccySwapFixFix.html">IRXccySwapFixFix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.IRXccySwapFixFlt.html">IRXccySwapFixFlt</a></li>
 <li class="toctree-l3"><a class="reference internal" href="classes/gs_quant.instrument.Security.html">Security</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="market.html">Market Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="markets.html">Markets Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">Models Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="risk.html">Risk Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="timeseries.html">Timeseries Package</a></li>
 </ul>
@@ -159,8 +170,8 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.base.Priceable.html#gs_quant.base.Priceable" title="gs_quant.base.Priceable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Priceable</span></code></a>()</p></td>
-<td><p>A priceable, such as a derivative instrument</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.base.Priceable.html#gs_quant.base.Priceable" title="gs_quant.base.Priceable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Priceable</span></code></a>(**kwargs)</p></td>
+<td><p></p></td>
 </tr>
 </tbody>
 </table>
@@ -172,40 +183,85 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.instrument.CommodSwap.html#gs_quant.instrument.CommodSwap" title="gs_quant.instrument.CommodSwap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CommodSwap</span></code></a>(commodity, start[, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.instrument.CommodOTCSwap.html#gs_quant.instrument.CommodOTCSwap" title="gs_quant.instrument.CommodOTCSwap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CommodOTCSwap</span></code></a>([start, end, …])</p></td>
 <td><p>Object representation of a commodities swap</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="classes/gs_quant.instrument.EqOption.html#gs_quant.instrument.EqOption" title="gs_quant.instrument.EqOption"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EqOption</span></code></a>(asset, expiration_date, …[, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="classes/gs_quant.instrument.EqCliquet.html#gs_quant.instrument.EqCliquet" title="gs_quant.instrument.EqCliquet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EqCliquet</span></code></a>([underlier, underlier_type, …])</p></td>
+<td><p>Object representation of an Equity Cliquet</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.instrument.EqForward.html#gs_quant.instrument.EqForward" title="gs_quant.instrument.EqForward"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EqForward</span></code></a>([underlier, underlier_type, …])</p></td>
+<td><p>Object representation of an equity forward</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="classes/gs_quant.instrument.EqOption.html#gs_quant.instrument.EqOption" title="gs_quant.instrument.EqOption"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EqOption</span></code></a>([underlier, expiration_date, …])</p></td>
 <td><p>Instrument definition for equity option</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.instrument.Forward.html#gs_quant.instrument.Forward" title="gs_quant.instrument.Forward"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Forward</span></code></a>(currency, expiration_date[, …])</p></td>
-<td><p>Object representation of a forward</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.instrument.EqSynthetic.html#gs_quant.instrument.EqSynthetic" title="gs_quant.instrument.EqSynthetic"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EqSynthetic</span></code></a>(underlier, expiry[, currency, …])</p></td>
+<td><p>Instrument definition for equity synthetics</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="classes/gs_quant.instrument.FXForward.html#gs_quant.instrument.FXForward" title="gs_quant.instrument.FXForward"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FXForward</span></code></a>([pair, settlement_date, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="classes/gs_quant.instrument.EqVarianceSwap.html#gs_quant.instrument.EqVarianceSwap" title="gs_quant.instrument.EqVarianceSwap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EqVarianceSwap</span></code></a>([underlier, underlier_type, …])</p></td>
+<td><p>Instrument definition for equity variance swap</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.instrument.Forward.html#gs_quant.instrument.Forward" title="gs_quant.instrument.Forward"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Forward</span></code></a>([currency, expiration_date, …])</p></td>
+<td><p>Forward cash payment</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="classes/gs_quant.instrument.FXBinary.html#gs_quant.instrument.FXBinary" title="gs_quant.instrument.FXBinary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FXBinary</span></code></a>([pair, buy_sell, option_type, …])</p></td>
+<td><p>Object representation of a FX binary option</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.instrument.FXForward.html#gs_quant.instrument.FXForward" title="gs_quant.instrument.FXForward"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FXForward</span></code></a>([pair, settlement_date, …])</p></td>
 <td><p>Object representation of an FX forward</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.instrument.FXOption.html#gs_quant.instrument.FXOption" title="gs_quant.instrument.FXOption"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FXOption</span></code></a>(call_currency, put_currency, …[, …])</p></td>
-<td><p>Object representation of a FX option</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="classes/gs_quant.instrument.FXMultiCrossBinary.html#gs_quant.instrument.FXMultiCrossBinary" title="gs_quant.instrument.FXMultiCrossBinary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FXMultiCrossBinary</span></code></a>([buy_sell, legs, …])</p></td>
+<td><p>Object representation of an FX multi-cross binary</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="classes/gs_quant.instrument.InflationSwap.html#gs_quant.instrument.InflationSwap" title="gs_quant.instrument.InflationSwap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">InflationSwap</span></code></a>(termination_date[, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.instrument.FXMultiCrossBinaryLeg.html#gs_quant.instrument.FXMultiCrossBinaryLeg" title="gs_quant.instrument.FXMultiCrossBinaryLeg"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FXMultiCrossBinaryLeg</span></code></a>([pair, option_type, …])</p></td>
+<td><p>Object representation of a single leg of a multi-cross binary option</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="classes/gs_quant.instrument.FXOption.html#gs_quant.instrument.FXOption" title="gs_quant.instrument.FXOption"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FXOption</span></code></a>([pair, buy_sell, option_type, …])</p></td>
+<td><p>Object representation of an FX option</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.instrument.FXVolatilitySwap.html#gs_quant.instrument.FXVolatilitySwap" title="gs_quant.instrument.FXVolatilitySwap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FXVolatilitySwap</span></code></a>([pair, buy_sell, …])</p></td>
+<td><p>Object representation of an FX Vol Swap</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="classes/gs_quant.instrument.InflationSwap.html#gs_quant.instrument.InflationSwap" title="gs_quant.instrument.InflationSwap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">InflationSwap</span></code></a>([pay_or_receive, …])</p></td>
 <td><p>A vanilla inflation swap of fixed vs floating cashflows adjusted to an inflation rate</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.instrument.IRBasisSwap.html#gs_quant.instrument.IRBasisSwap" title="gs_quant.instrument.IRBasisSwap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">IRBasisSwap</span></code></a>(termination_date, notional_currency)</p></td>
-<td><p>An exchange of cashflows from different interest rate indices</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.instrument.IRBasisSwap.html#gs_quant.instrument.IRBasisSwap" title="gs_quant.instrument.IRBasisSwap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">IRBasisSwap</span></code></a>([termination_date, …])</p></td>
+<td><p>A single currency exchange of cashflows from different interest rate indices</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="classes/gs_quant.instrument.IRCap.html#gs_quant.instrument.IRCap" title="gs_quant.instrument.IRCap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">IRCap</span></code></a>(termination_date, notional_currency[, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="classes/gs_quant.instrument.IRCap.html#gs_quant.instrument.IRCap" title="gs_quant.instrument.IRCap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">IRCap</span></code></a>([termination_date, notional_currency, …])</p></td>
 <td><p>Object representation of an interest rate cap</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.instrument.IRFloor.html#gs_quant.instrument.IRFloor" title="gs_quant.instrument.IRFloor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">IRFloor</span></code></a>(termination_date, notional_currency)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.instrument.IRCMSOption.html#gs_quant.instrument.IRCMSOption" title="gs_quant.instrument.IRCMSOption"><code class="xref py py-obj docutils literal notranslate"><span class="pre">IRCMSOption</span></code></a>([cap_floor, termination_date, …])</p></td>
+<td><p>Object representation of a constant maturity option (cap, floor, straddle)</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="classes/gs_quant.instrument.IRCMSOptionStrip.html#gs_quant.instrument.IRCMSOptionStrip" title="gs_quant.instrument.IRCMSOptionStrip"><code class="xref py py-obj docutils literal notranslate"><span class="pre">IRCMSOptionStrip</span></code></a>([cap_floor, …])</p></td>
+<td><p>Object representation of a constant maturity option strip (cap, floor, straddle)</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.instrument.IRCMSSpreadOption.html#gs_quant.instrument.IRCMSSpreadOption" title="gs_quant.instrument.IRCMSSpreadOption"><code class="xref py py-obj docutils literal notranslate"><span class="pre">IRCMSSpreadOption</span></code></a>([cap_floor, …])</p></td>
+<td><p>Object representation of a constant maturity spread option (cap, floor, straddle)</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="classes/gs_quant.instrument.IRCMSSpreadOptionStrip.html#gs_quant.instrument.IRCMSSpreadOptionStrip" title="gs_quant.instrument.IRCMSSpreadOptionStrip"><code class="xref py py-obj docutils literal notranslate"><span class="pre">IRCMSSpreadOptionStrip</span></code></a>([cap_floor, …])</p></td>
+<td><p>Object representation of a constant maturity spread option strip (cap, floor, straddle)</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.instrument.IRFloor.html#gs_quant.instrument.IRFloor" title="gs_quant.instrument.IRFloor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">IRFloor</span></code></a>([termination_date, …])</p></td>
 <td><p>Object representation of an interest rate floor</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="classes/gs_quant.instrument.IRSwap.html#gs_quant.instrument.IRSwap" title="gs_quant.instrument.IRSwap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">IRSwap</span></code></a>(pay_or_receive, termination_date, …)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="classes/gs_quant.instrument.IRSwap.html#gs_quant.instrument.IRSwap" title="gs_quant.instrument.IRSwap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">IRSwap</span></code></a>([pay_or_receive, termination_date, …])</p></td>
 <td><p>A vanilla interest rate swap of fixed vs floating cashflows</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.instrument.IRSwaption.html#gs_quant.instrument.IRSwaption" title="gs_quant.instrument.IRSwaption"><code class="xref py py-obj docutils literal notranslate"><span class="pre">IRSwaption</span></code></a>(pay_or_receive, termination_date, …)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.instrument.IRSwaption.html#gs_quant.instrument.IRSwaption" title="gs_quant.instrument.IRSwaption"><code class="xref py py-obj docutils literal notranslate"><span class="pre">IRSwaption</span></code></a>([pay_or_receive, …])</p></td>
 <td><p>Object representation of a swaption</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="classes/gs_quant.instrument.Security.html#gs_quant.instrument.Security" title="gs_quant.instrument.Security"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Security</span></code></a>([ticker, bbid, isin, cusip, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="classes/gs_quant.instrument.IRXccySwap.html#gs_quant.instrument.IRXccySwap" title="gs_quant.instrument.IRXccySwap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">IRXccySwap</span></code></a>([termination_date, …])</p></td>
+<td><p>An exchange of cashflows from different interest rate indices</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.instrument.IRXccySwapFixFix.html#gs_quant.instrument.IRXccySwapFixFix" title="gs_quant.instrument.IRXccySwapFixFix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">IRXccySwapFixFix</span></code></a>([termination_date, …])</p></td>
+<td><p>An exchange of fixed cashflows in different currencies</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="classes/gs_quant.instrument.IRXccySwapFixFlt.html#gs_quant.instrument.IRXccySwapFixFlt" title="gs_quant.instrument.IRXccySwapFixFlt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">IRXccySwapFixFlt</span></code></a>([pay_or_receive, …])</p></td>
+<td><p>An exchange of fixed vs floating cashflows in different currencies</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.instrument.Security.html#gs_quant.instrument.Security" title="gs_quant.instrument.Security"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Security</span></code></a>([ticker, bbid, ric, isin, cusip, …])</p></td>
 <td><p>A security, specified by a well-known identifier</p></td>
 </tr>
 </tbody>
@@ -230,7 +286,7 @@
       <a
         href="functions/gs_quant.datetime.point.point_sort_order.html"
         class="link-block-module-container"
-        title="point_sort_order"
+        title="gs_quant.datetime.point.point_sort_order"
         accesskey="p"
         rel="prev"
       >
@@ -249,7 +305,7 @@
       <a
         href="classes/gs_quant.base.Priceable.html"
         class="link-block-module-container"
-        title="gs_quant.base.Priceable"
+        title="Priceable"
         accesskey="n"
         rel="next"
       >
@@ -258,7 +314,7 @@
             Next Topic
           </h4>
           <p class="link-block-module-body-label">
-            gs_quant.base.Priceable
+            Priceable
           </p>
         </div>
       </a>

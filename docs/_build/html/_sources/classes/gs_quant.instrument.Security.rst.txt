@@ -1,4 +1,4 @@
-Security
+﻿Security
 ========
 
 For methods of this class, see :doc:`gs_quant.base.Priceable`
@@ -9,7 +9,6 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
 
    
    .. rubric:: Properties
-   
    
    
    
@@ -46,7 +45,13 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: em_id
    
    
+   .. autoattribute:: exchange_code
+   
+   
    .. autoattribute:: gsid
+   
+   
+   .. autoattribute:: gsid_equivalent
    
    
    .. autoattribute:: gsideid
@@ -56,6 +61,9 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    .. autoattribute:: gss
+   
+   
+   .. autoattribute:: instrument_quantity
    
    
    .. autoattribute:: isin
@@ -79,10 +87,31 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: mq_symbol
    
    
+   .. autoattribute:: pl_id
+   
+   
+   .. autoattribute:: plot_id
+   
+   
+   .. autoattribute:: pnode_id
+   
+   
+   .. autoattribute:: primary_country_ric
+   
+   
    .. autoattribute:: prime_id
    
    
+   .. autoattribute:: provider
+   
+   
+   .. autoattribute:: ps_id
+   
+   
    .. autoattribute:: rcic
+   
+   
+   .. autoattribute:: resolution_key
    
    
    .. autoattribute:: ric
@@ -100,10 +129,19 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: simon_id
    
    
+   .. autoattribute:: tdapi
+   
+   
    .. autoattribute:: ticker
    
    
+   .. autoattribute:: unresolved
+   
+   
    .. autoattribute:: valoren
+   
+   
+   .. autoattribute:: wi_id
    
    
    .. autoattribute:: wpk

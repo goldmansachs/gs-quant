@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>point_sort_order &mdash; gs_quant 0.1 documentation</title>
+  <title>gs_quant.datetime.point.point_sort_order &mdash; gs_quant 0.1 documentation</title>
   
 
     
@@ -32,11 +32,6 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -55,11 +50,11 @@
 
    
   <div class="wy-grid-for-nav">
-    <a data-toggle="wy-nav-top" class="gs-developer-action-button-container" ontouchstart="">
-      <div data-toggle="gs-nav-action" class="gs-nav-action"></div>
+    <a data-toggle="wy-nav-top" id="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" id="gs-nav-action"></div>
     </a>
     
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+    <nav id="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         
         
@@ -76,13 +71,14 @@
 <li class="toctree-l1 current"><a class="reference internal" href="../datetime.html">Datetime Package</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../datetime.html#date">Date</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../datetime.html#point">Point</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#">point_sort_order</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">gs_quant.datetime.point.point_sort_order</a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../instrument.html">Instrument Package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../market.html">Market Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../markets.html">Markets Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../models.html">Models Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../risk.html">Risk Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../timeseries.html">Timeseries Package</a></li>
 </ul>
@@ -124,7 +120,7 @@
         
           <li><a href="../datetime.html">Datetime Package</a> /</li>
         
-      <li>point_sort_order</li>
+      <li>gs_quant.datetime.point.point_sort_order</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -142,11 +138,11 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="point-sort-order">
-<h1>point_sort_order<a class="headerlink" href="#point-sort-order" title="Permalink to this headline">¶</a></h1>
-<dl class="function">
+  <div class="section" id="gs-quant-datetime-point-point-sort-order">
+<h1>gs_quant.datetime.point.point_sort_order<a class="headerlink" href="#gs-quant-datetime-point-point-sort-order" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
 <dt id="gs_quant.datetime.point.point_sort_order">
-<code class="sig-name descname">point_sort_order</code><span class="sig-paren">(</span><em class="sig-param">point</em>, <em class="sig-param">ref_date=datetime.date(2019</em>, <em class="sig-param">11</em>, <em class="sig-param">18)</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gs_quant/datetime/point.html#point_sort_order"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gs_quant.datetime.point.point_sort_order" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">point_sort_order</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">point</span></em>, <em class="sig-param"><span class="n">ref_date</span><span class="o">=</span><span class="default_value">datetime.date(2021, 1, 5)</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gs_quant/datetime/point.html#point_sort_order"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gs_quant.datetime.point.point_sort_order" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates a number that can be used to sort Mkt Points by it.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -163,7 +159,7 @@
 </dd>
 </dl>
 <p><strong>Examples</strong></p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">days</span> <span class="o">=</span> <span class="n">point_sort_order</span><span class="p">(</span><span class="n">point</span> <span class="o">=</span> <span class="s1">&#39;Dec20&#39;</span><span class="p">,</span> <span class="n">ref_date</span><span class="o">=</span><span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">())</span>
 </pre></div>
 </div>

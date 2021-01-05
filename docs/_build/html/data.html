@@ -32,11 +32,6 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -44,7 +39,7 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="next" title="gs_quant.data.Dataset" href="classes/gs_quant.data.Dataset.html" />
+    <link rel="next" title="gs_quant.data.DataContext" href="classes/gs_quant.data.DataContext.html" />
     <link rel="prev" title="GS Quant API" href="index.html" /> 
 </head>
 
@@ -55,11 +50,11 @@
 
    
   <div class="wy-grid-for-nav">
-    <a data-toggle="wy-nav-top" class="gs-developer-action-button-container" ontouchstart="">
-      <div data-toggle="gs-nav-action" class="gs-nav-action"></div>
+    <a data-toggle="wy-nav-top" id="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" id="gs-nav-action"></div>
     </a>
     
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+    <nav id="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         
         
@@ -73,12 +68,15 @@
               <p class="caption"><span class="caption-text">Packages</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Data Package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="classes/gs_quant.data.DataContext.html">gs_quant.data.DataContext</a></li>
 <li class="toctree-l2"><a class="reference internal" href="classes/gs_quant.data.Dataset.html">gs_quant.data.Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="classes/gs_quant.data.Fields.html">gs_quant.data.Fields</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="datetime.html">Datetime Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="instrument.html">Instrument Package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="market.html">Market Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="markets.html">Markets Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">Models Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="risk.html">Risk Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="timeseries.html">Timeseries Package</a></li>
 </ul>
@@ -144,8 +142,14 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.data.Dataset.html#gs_quant.data.Dataset" title="gs_quant.data.Dataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Dataset</span></code></a>(dataset_id[, provider])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.data.DataContext.html#gs_quant.data.DataContext" title="gs_quant.data.DataContext"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DataContext</span></code></a>([start, end])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="classes/gs_quant.data.Dataset.html#gs_quant.data.Dataset" title="gs_quant.data.Dataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Dataset</span></code></a>(dataset_id[, provider])</p></td>
 <td><p>A collection of related data</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="classes/gs_quant.data.Fields.html#gs_quant.data.Fields" title="gs_quant.data.Fields"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Fields</span></code></a>([value, names, module, type, start])</p></td>
+<td><p>Data field enumeration</p></td>
 </tr>
 </tbody>
 </table>
@@ -185,9 +189,9 @@
      
     <div class="link-block-module">
       <a
-        href="classes/gs_quant.data.Dataset.html"
+        href="classes/gs_quant.data.DataContext.html"
         class="link-block-module-container"
-        title="gs_quant.data.Dataset"
+        title="gs_quant.data.DataContext"
         accesskey="n"
         rel="next"
       >
@@ -196,7 +200,7 @@
             Next Topic
           </h4>
           <p class="link-block-module-body-label">
-            gs_quant.data.Dataset
+            gs_quant.data.DataContext
           </p>
         </div>
       </a>

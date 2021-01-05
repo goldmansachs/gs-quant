@@ -1,0 +1,261 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>EpidemicModel &mdash; gs_quant 0.1 documentation</title>
+  
+
+    
+  <script crossorigin src="/resources/react/16-8-6/prod/react.production.min.js"></script>
+  <script
+    crossorigin src="/resources/react/16-8-6/prod/react-dom.production.min.js"></script>
+
+     
+    <script src='/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML' async></script> 
+    
+    <script type="text/javascript" src="../_static/../../../auto-mount.js"></script>
+    <link rel="stylesheet" href="../_static/../../../auto-mount.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="next" title="Risk Package" href="../risk.html" />
+    <link rel="prev" title="SEIR" href="gs_quant.models.epidemiology.SEIR.html" />
+</head>
+
+<!-- Hello from the future. -->
+<div id="mq-doc-navbar-inject"></div>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    <a data-toggle="wy-nav-top" id="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" id="gs-nav-action"></div>
+    </a>
+    
+    <nav id="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Packages</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../data.html">Data Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datetime.html">Datetime Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instrument.html">Instrument Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../markets.html">Markets Package</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../models.html">Models Package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../models.html#epidemiology">Epidemiology</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.models.epidemiology.SIR.html">SIR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.models.epidemiology.SEIR.html">SEIR</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">EpidemicModel</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../risk.html">Risk Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../timeseries.html">Timeseries Package</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Packages</a> /</li>
+        
+          <li><a href="../models.html">Models Package</a> /</li>
+        
+      <li>gs_quant.models.epidemiology.EpidemicModel</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="gs-quant-models-epidemiology-epidemicmodel">
+<h1>gs_quant.models.epidemiology.EpidemicModel<a class="headerlink" href="#gs-quant-models-epidemiology-epidemicmodel" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="gs_quant.models.epidemiology.EpidemicModel">
+<em class="property">class </em><code class="sig-name descname">EpidemicModel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">parameters</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">initial_conditions</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fit_method</span><span class="o">=</span><span class="default_value">'leastsq'</span></em>, <em class="sig-param"><span class="n">error</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fit_period</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gs_quant/models/epidemiology.html#EpidemicModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gs_quant.models.epidemiology.EpidemicModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to perform solutions and parameter-fitting of epidemic models</p>
+<dl class="py method">
+<dt id="gs_quant.models.epidemiology.EpidemicModel.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">parameters</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">initial_conditions</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fit_method</span><span class="o">=</span><span class="default_value">'leastsq'</span></em>, <em class="sig-param"><span class="n">error</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fit_period</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gs_quant/models/epidemiology.html#EpidemicModel.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gs_quant.models.epidemiology.EpidemicModel.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class to standardize fitting and solving epidemiological models.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">CompartmentalModel</span></code>]) – the model to use, currently a class in the form of SIR, SEIR above</p></li>
+<li><p><strong>parameters</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>]) – tuple, parameters to use for the model, defaults to the output of [model].get_parameters</p></li>
+<li><p><strong>data</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">array</span></code>]) – np.array, data that can be used to calibrate the model</p></li>
+<li><p><strong>initial_conditions</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>]) – list, initial conditions for the model</p></li>
+<li><p><strong>fit_method</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – str, the method to use to minimize the (given) error. Available methods are those in the
+lmfit.minimizer.minimize function. Default is Levenberg-Marquardt least squares minimization.</p></li>
+<li><p><strong>error</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">callable</span></code>]) – callable, control which residuals (and in what form) to minimize for fitting.</p></li>
+<li><p><strong>fit_period</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]) – float, how far back to fit the data, defaults to fitting all data</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#gs_quant.models.epidemiology.EpidemicModel.__init__" title="gs_quant.models.epidemiology.EpidemicModel.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(model[, parameters, data, …])</p></td>
+<td><p>A class to standardize fitting and solving epidemiological models.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code>([time_range, parameters, …])</p></td>
+<td><p>Fit the model based on data in the form np.array([X1,…,Xn])</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">residual</span></code>(parameters, time_range, data)</p></td>
+<td><p>Obtain fit error (to minimize).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">solve</span></code>(time_range, initial_conditions, parameters)</p></td>
+<td><p>Integrate the model ODEs to get a solution.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  <hr />
+  
+  <div
+    class="container-block-module"
+    role="navigation"
+    aria-label="footer navigation"
+  >
+    
+    <div class="link-block-module">
+      <a
+        href="gs_quant.models.epidemiology.SEIR.html"
+        class="link-block-module-container"
+        title="gs_quant.models.epidemiology.SEIR"
+        accesskey="p"
+        rel="prev"
+      >
+        <div class="link-block-module-content">
+          <h4 class="link-block-module-title-label">
+            Previous Topic
+          </h4>
+          <p class="link-block-module-body-label">
+            gs_quant.models.epidemiology.SEIR
+          </p>
+        </div>
+      </a>
+    </div>
+     
+    <div class="link-block-module">
+      <a
+        href="../risk.html"
+        class="link-block-module-container"
+        title="Risk Package"
+        accesskey="n"
+        rel="next"
+      >
+        <div class="link-block-module-content">
+          <h4 class="link-block-module-title-label">
+            Next Topic
+          </h4>
+          <p class="link-block-module-body-label">
+            Risk Package
+          </p>
+        </div>
+      </a>
+    </div>
+    
+  </div>
+  
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  
+  
+    
+   
+
+</body>
+</html>

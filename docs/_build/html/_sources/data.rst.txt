@@ -6,4 +6,6 @@ Data Package
 .. autosummary::
    :toctree: classes
 
+   DataContext
    Dataset
+   Fields

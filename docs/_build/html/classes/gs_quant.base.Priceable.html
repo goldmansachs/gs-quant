@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>gs_quant.base.Priceable &mdash; gs_quant 0.1 documentation</title>
+  <title>Priceable &mdash; gs_quant 0.1 documentation</title>
   
 
     
@@ -32,11 +32,6 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -44,7 +39,7 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="next" title="CommodSwap" href="gs_quant.instrument.CommodSwap.html" />
+    <link rel="next" title="CommodOTCSwap" href="gs_quant.instrument.CommodOTCSwap.html" />
     <link rel="prev" title="Instrument Package" href="../instrument.html" /> 
 </head>
 
@@ -55,11 +50,11 @@
 
    
   <div class="wy-grid-for-nav">
-    <a data-toggle="wy-nav-top" class="gs-developer-action-button-container" ontouchstart="">
-      <div data-toggle="gs-nav-action" class="gs-nav-action"></div>
+    <a data-toggle="wy-nav-top" id="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" id="gs-nav-action"></div>
     </a>
     
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+    <nav id="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         
         
@@ -75,11 +70,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../data.html">Data Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../datetime.html">Datetime Package</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../instrument.html">Instrument Package</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">gs_quant.base.Priceable</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#"Priceable</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../instrument.html#instruments">Instruments</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../market.html">Market Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../markets.html">Markets Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../models.html">Models Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../risk.html">Risk Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../timeseries.html">Timeseries Package</a></li>
 </ul>
@@ -121,7 +117,7 @@
         
           <li><a href="../instrument.html">Instrument Package</a> /</li>
         
-      <li>gs_quant.base.Priceable</li>
+      <li>Priceable</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -140,14 +136,13 @@
            <div itemprop="articleBody">
             
   <div class="section" id="gs-quant-base-priceable">
-<h1>gs_quant.base.Priceable<a class="headerlink" href="#gs-quant-base-priceable" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
-<dt id="gs_quant.base.Priceable">
-<em class="property">class </em><code class="sig-name descname">Priceable</code><a class="reference internal" href="../_modules/gs_quant/base.html#Priceable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gs_quant.base.Priceable" title="Permalink to this definition">¶</a></dt>
-<dd><p>A priceable, such as a derivative instrument</p>
-<dl class="method">
-<dt id="gs_quant.base.Priceable.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gs_quant/base.html#Priceable.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gs_quant.base.Priceable.__init__" title="Permalink to this definition">¶</a></dt>
+<h1>Priceable<a class="headerlink" href="#priceable" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="Priceable">
+<em class="property">class </em><code class="sig-name descname">Priceable</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gs_quant/base.html#Priceable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gs_quant.base.Priceable" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="Priceable.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#gs_quant.base.Priceable.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
@@ -158,31 +153,34 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#gs_quant.base.Priceable.__init__" title="gs_quant.base.Priceable.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#gs_quant.base.Priceable.__init__" title="gs_quant.base.Priceable.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(**kwargs)</p></td>
 <td><p>Initialize self.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">as_dict</span></code>([as_camel_case])</p></td>
 <td><p>Dictionary of the public, non-null properties and values</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">calc</span></code>(risk_measure)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">calc</span></code>(risk_measure[, fn])</p></td>
 <td><p>Calculate the value of the risk_measure</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">default_instance</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">clone</span></code>(**kwargs)</p></td>
+<td><p>Clone this object, overriding specified values</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">default_instance</span></code>()</p></td>
 <td><p>Construct a default instance of this type</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">dollar_price</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">dollar_price</span></code>()</p></td>
 <td><p>Present value in USD</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_dict</span></code>(values)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_dict</span></code>(values)</p></td>
 <td><p>Construct an instance of this type from a dictionary</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_quantity</span></code>()</p></td>
-<td><p>Quantity of the instrument</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_instance</span></code>(instance)</p></td>
+<td><p>Copy the values from an existing instance of the same type to our self :param instance: from which to copy: :return:</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">price</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">price</span></code>()</p></td>
 <td><p>Present value in local currency.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">prop_item_type</span></code>(prop)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">prop_item_type</span></code>(prop)</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">rtype</dt>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">type</span></code></p>
@@ -190,7 +188,7 @@
 </dl>
 </p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">prop_type</span></code>(prop)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">prop_type</span></code>(prop[, additional])</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">rtype</dt>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">type</span></code></p>
@@ -198,26 +196,11 @@
 </dl>
 </p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">properties</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">properties</span></code>()</p></td>
 <td><p>The public property names of this class</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">provider</span></code>()</p></td>
-<td><p>The risk provider - defaults to GsRiskApi</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([in_place])</p></td>
 <td><p>Resolve non-supplied properties of an instrument</p></td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Attributes</p>
-<table class="longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">PROVIDER</span></code></p></td>
-<td><p></p></td>
 </tr>
 </tbody>
 </table>
@@ -259,9 +242,9 @@
      
     <div class="link-block-module">
       <a
-        href="gs_quant.instrument.CommodSwap.html"
+        href="gs_quant.instrument.CommodOTCSwap.html"
         class="link-block-module-container"
-        title="CommodSwap"
+        title="CommodOTCSwap"
         accesskey="n"
         rel="next"
       >
@@ -270,7 +253,7 @@
             Next Topic
           </h4>
           <p class="link-block-module-body-label">
-            CommodSwap
+            CommodOTCSwap
           </p>
         </div>
       </a>

@@ -1,4 +1,4 @@
-bollinger\_bands
+﻿gs\_quant.timeseries.technicals.bollinger\_bands
 ================================================
 
 .. currentmodule:: gs_quant.timeseries.technicals

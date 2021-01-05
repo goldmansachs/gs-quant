@@ -32,11 +32,6 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
@@ -53,11 +48,11 @@
 
    
   <div class="wy-grid-for-nav">
-    <a data-toggle="wy-nav-top" class="gs-developer-action-button-container" ontouchstart="">
-      <div data-toggle="gs-nav-action" class="gs-nav-action"></div>
+    <a data-toggle="wy-nav-top" id="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" id="gs-nav-action"></div>
     </a>
     
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+    <nav id="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         
         
@@ -73,7 +68,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../data.html">Data Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../datetime.html">Datetime Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../instrument.html">Instrument Package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../market.html">Market Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../markets.html">Markets Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../models.html">Models Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../risk.html">Risk Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../timeseries.html">Timeseries Package</a></li>
 </ul>
@@ -145,20 +141,283 @@
 <span class="sd">specific language governing permissions and limitations</span>
 <span class="sd">under the License.</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">gs_quant.target.common</span> <span class="k">import</span> <span class="n">RiskPosition</span>
-<span class="kn">from</span> <span class="nn">gs_quant.target.instrument</span> <span class="k">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">gs_quant.common</span> <span class="k">import</span> <span class="n">XRef</span>
+<span class="kn">from</span> <span class="nn">gs_quant.api.gs.parser</span> <span class="kn">import</span> <span class="n">GsParserApi</span>
+<span class="kn">from</span> <span class="nn">gs_quant.api.gs.risk</span> <span class="kn">import</span> <span class="n">GsRiskApi</span>
+<span class="kn">from</span> <span class="nn">gs_quant.base</span> <span class="kn">import</span> <span class="n">get_enum_value</span><span class="p">,</span> <span class="n">InstrumentBase</span><span class="p">,</span> <span class="n">QuotableBuilder</span>
+<span class="kn">from</span> <span class="nn">gs_quant.common</span> <span class="kn">import</span> <span class="n">AssetClass</span><span class="p">,</span> <span class="n">AssetType</span><span class="p">,</span> <span class="n">XRef</span>
+<span class="kn">from</span> <span class="nn">gs_quant.context_base</span> <span class="kn">import</span> <span class="n">do_not_serialise</span>
+<span class="kn">from</span> <span class="nn">gs_quant.markets</span> <span class="kn">import</span> <span class="n">HistoricalPricingContext</span><span class="p">,</span> <span class="n">MarketDataCoordinate</span><span class="p">,</span> <span class="n">PricingCache</span><span class="p">,</span> <span class="n">PricingContext</span>
+<span class="kn">from</span> <span class="nn">gs_quant.priceable</span> <span class="kn">import</span> <span class="n">PriceableImpl</span>
+<span class="kn">from</span> <span class="nn">gs_quant.risk</span> <span class="kn">import</span> <span class="n">FloatWithInfo</span><span class="p">,</span> <span class="n">DataFrameWithInfo</span><span class="p">,</span> <span class="n">SeriesWithInfo</span><span class="p">,</span> <span class="n">ResolvedInstrumentValues</span><span class="p">,</span> <span class="n">RiskMeasure</span>
+<span class="kn">from</span> <span class="nn">gs_quant.risk.results</span> <span class="kn">import</span> <span class="n">ErrorValue</span><span class="p">,</span> <span class="n">MultipleRiskMeasureFuture</span><span class="p">,</span> <span class="n">PricingFuture</span>
+<span class="kn">from</span> <span class="nn">gs_quant.session</span> <span class="kn">import</span> <span class="n">GsSession</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABCMeta</span>
+<span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
 
-<span class="n">__asset_class_and_type_to_instrument</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="Security"><a class="viewcode-back" href="../../../classes/gs_quant.instrument.Security.html#gs_quant.instrument.Security">[docs]</a><span class="k">class</span> <span class="nc">Security</span><span class="p">(</span><span class="n">XRef</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">Instrument</span><span class="p">(</span><span class="n">PriceableImpl</span><span class="p">,</span> <span class="n">InstrumentBase</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
+    <span class="n">PROVIDER</span> <span class="o">=</span> <span class="n">GsRiskApi</span>
+    <span class="n">__instrument_mappings</span> <span class="o">=</span> <span class="p">{}</span>
 
+    <span class="k">def</span> <span class="fm">__getattribute__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ret</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="p">():</span>
+            <span class="k">return</span> <span class="n">ret</span>
+
+        <span class="n">attr</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="s1">&#39;__class__&#39;</span><span class="p">),</span> <span class="n">name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">attr</span><span class="o">.</span><span class="n">fget</span><span class="p">,</span> <span class="s1">&#39;do_not_resolve&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">ret</span>
+
+        <span class="n">resolved</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">resolved</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="s1">&#39;resolution_key&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="k">if</span> <span class="n">GsSession</span><span class="o">.</span><span class="n">current_is_set</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">resolved</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">attr</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="nb">property</span><span class="p">):</span>
+                <span class="n">resolved_inst</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="n">in_place</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">resolved_inst</span><span class="p">,</span> <span class="n">PricingFuture</span><span class="p">):</span>
+                    <span class="n">ret</span> <span class="o">=</span> <span class="n">PricingFuture</span><span class="p">()</span>
+                    <span class="n">resolved_inst</span><span class="o">.</span><span class="n">add_done_callback</span><span class="p">(</span><span class="k">lambda</span> <span class="n">inst_f</span><span class="p">:</span> <span class="n">ret</span><span class="o">.</span><span class="n">set_result</span><span class="p">(</span>
+                        <span class="nb">object</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">inst_f</span><span class="o">.</span><span class="n">result</span><span class="p">(),</span> <span class="n">name</span><span class="p">)))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">ret</span> <span class="o">=</span> <span class="nb">object</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">resolved_inst</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ret</span>
+
+    <span class="k">def</span> <span class="nf">_property_changed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hash_is_calced</span><span class="p">:</span>
+            <span class="n">PricingCache</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_property_changed</span><span class="p">(</span><span class="n">prop</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">__asset_class_and_type_to_instrument</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__instrument_mappings</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">gs_quant.target.instrument</span> <span class="k">as</span> <span class="nn">instrument_</span>
+            <span class="n">instrument_classes</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getmembers</span><span class="p">(</span><span class="n">instrument_</span><span class="p">,</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isclass</span><span class="p">)</span> <span class="k">if</span>
+                                  <span class="nb">issubclass</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">Instrument</span><span class="p">)</span> <span class="ow">and</span> <span class="n">c</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Instrument</span><span class="p">]</span>
+
+            <span class="bp">cls</span><span class="o">.</span><span class="n">__instrument_mappings</span><span class="p">[(</span><span class="n">AssetClass</span><span class="o">.</span><span class="n">Cash</span><span class="p">,</span> <span class="n">AssetType</span><span class="o">.</span><span class="n">Currency</span><span class="p">)]</span> <span class="o">=</span> <span class="n">instrument_</span><span class="o">.</span><span class="n">Forward</span>
+
+            <span class="k">for</span> <span class="n">clazz</span> <span class="ow">in</span> <span class="n">instrument_classes</span><span class="p">:</span>
+                <span class="n">instrument</span> <span class="o">=</span> <span class="n">clazz</span><span class="o">.</span><span class="n">default_instance</span><span class="p">()</span>
+                <span class="bp">cls</span><span class="o">.</span><span class="n">__instrument_mappings</span><span class="p">[(</span><span class="n">instrument</span><span class="o">.</span><span class="n">asset_class</span><span class="p">,</span> <span class="n">instrument</span><span class="o">.</span><span class="n">type</span><span class="p">)]</span> <span class="o">=</span> <span class="n">clazz</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__instrument_mappings</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@do_not_serialise</span>
+    <span class="k">def</span> <span class="nf">provider</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">PROVIDER</span>
+
+    <span class="k">def</span> <span class="nf">resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_place</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">PriceableImpl</span><span class="p">,</span> <span class="n">PricingFuture</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Resolve non-supplied properties of an instrument</span>
+
+<span class="sd">        **Examples**</span>
+
+<span class="sd">        &gt;&gt;&gt; from gs_quant.instrument import IRSwap</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; swap = IRSwap(&#39;Pay&#39;, &#39;10y&#39;, &#39;USD&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; rate = swap.fixedRate</span>
+
+<span class="sd">        rate is None</span>
+
+<span class="sd">        &gt;&gt;&gt; swap.resolve()</span>
+<span class="sd">        &gt;&gt;&gt; rate = swap.fixedRate</span>
+
+<span class="sd">        rates is now the solved fixed rate</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">is_historical</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">PricingContext</span><span class="o">.</span><span class="n">current</span><span class="p">,</span> <span class="n">HistoricalPricingContext</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">handle_result</span><span class="p">(</span><span class="n">result</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">ErrorValue</span><span class="p">,</span> <span class="n">InstrumentBase</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PriceableImpl</span><span class="p">]:</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">in_place</span> <span class="k">else</span> <span class="n">result</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">ErrorValue</span><span class="p">):</span>
+                <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Failed to resolve instrument fields: &#39;</span> <span class="o">+</span> <span class="n">result</span><span class="o">.</span><span class="n">error</span><span class="p">)</span>
+                <span class="n">ret</span> <span class="o">=</span> <span class="p">{</span><span class="n">result</span><span class="o">.</span><span class="n">risk_key</span><span class="o">.</span><span class="n">date</span><span class="p">:</span> <span class="bp">self</span><span class="p">}</span> <span class="k">if</span> <span class="n">is_historical</span> <span class="k">else</span> <span class="bp">self</span>
+            <span class="k">elif</span> <span class="n">result</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Unknown error resolving instrument fields&#39;</span><span class="p">)</span>
+                <span class="n">ret</span> <span class="o">=</span> <span class="p">{</span><span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">():</span> <span class="bp">self</span><span class="p">}</span> <span class="k">if</span> <span class="n">is_historical</span> <span class="k">else</span> <span class="bp">self</span>
+            <span class="k">elif</span> <span class="n">in_place</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">from_instance</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">ret</span>
+
+        <span class="k">if</span> <span class="n">in_place</span> <span class="ow">and</span> <span class="n">is_historical</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Cannot resolve in place under a HistoricalPricingContext&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="p">(</span><span class="n">ResolvedInstrumentValues</span><span class="p">,</span> <span class="n">fn</span><span class="o">=</span><span class="n">handle_result</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">calc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">risk_measure</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">RiskMeasure</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">RiskMeasure</span><span class="p">]],</span> <span class="n">fn</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> \
+            <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">DataFrameWithInfo</span><span class="p">,</span> <span class="n">ErrorValue</span><span class="p">,</span> <span class="n">FloatWithInfo</span><span class="p">,</span> <span class="n">PriceableImpl</span><span class="p">,</span> <span class="n">PricingFuture</span><span class="p">,</span>
+                     <span class="n">SeriesWithInfo</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">MarketDataCoordinate</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the value of the risk_measure</span>
+
+<span class="sd">        :param risk_measure: the risk measure to compute, e.g. IRDelta (from gs_quant.risk)</span>
+<span class="sd">        :param fn: post-processing function (optional)</span>
+<span class="sd">        :return: a float or dataframe, depending on whether the value is scalar or structured, or a future thereof</span>
+<span class="sd">        (depending on how PricingContext is being used)</span>
+
+<span class="sd">        **Examples**</span>
+
+<span class="sd">        &gt;&gt;&gt; from gs_quant.instrument import IRCap</span>
+<span class="sd">        &gt;&gt;&gt; from gs_quant.risk import IRDelta</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; cap = IRCap(&#39;1y&#39;, &#39;USD&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; delta = cap.calc(IRDelta)</span>
+
+<span class="sd">        delta is a dataframe</span>
+
+<span class="sd">        &gt;&gt;&gt; from gs_quant.instrument import EqOption</span>
+<span class="sd">        &gt;&gt;&gt; from gs_quant.risk import EqDelta</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; option = EqOption(&#39;.SPX&#39;, &#39;3m&#39;, &#39;ATMF&#39;, &#39;Call&#39;, &#39;European&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; delta = option.calc(EqDelta)</span>
+
+<span class="sd">        delta is a float</span>
+
+<span class="sd">        &gt;&gt;&gt; from gs_quant.markets import PricingContext</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; cap_usd = IRCap(&#39;1y&#39;, &#39;USD&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; cap_eur = IRCap(&#39;1y&#39;, &#39;EUR&#39;)</span>
+
+<span class="sd">        &gt;&gt;&gt; with PricingContext():</span>
+<span class="sd">        &gt;&gt;&gt;     usd_delta_f = cap_usd.calc(IRDelta)</span>
+<span class="sd">        &gt;&gt;&gt;     eur_delta_f = cap_eur.calc(IRDelta)</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; usd_delta = usd_delta_f.result()</span>
+<span class="sd">        &gt;&gt;&gt; eur_delta = eur_delta_f.result()</span>
+
+<span class="sd">        usd_delta_f and eur_delta_f are futures, usd_delta and eur_delta are dataframes</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">futures</span> <span class="o">=</span> <span class="p">{</span><span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">pricing_context</span><span class="o">.</span><span class="n">calc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+                   <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="p">((</span><span class="n">risk_measure</span><span class="p">,)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">risk_measure</span><span class="p">,</span> <span class="n">RiskMeasure</span><span class="p">)</span> <span class="k">else</span> <span class="n">risk_measure</span><span class="p">)}</span>
+        <span class="n">future</span> <span class="o">=</span> <span class="n">MultipleRiskMeasureFuture</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">futures</span><span class="p">)</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">futures</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">futures</span><span class="p">[</span>
+            <span class="n">risk_measure</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">risk_measure</span><span class="p">,</span> <span class="n">RiskMeasure</span><span class="p">)</span> <span class="k">else</span> <span class="n">risk_measure</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+
+        <span class="k">if</span> <span class="n">fn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="n">PricingFuture</span><span class="p">()</span>
+
+            <span class="k">def</span> <span class="nf">cb</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">ret</span><span class="o">.</span><span class="n">set_result</span><span class="p">(</span><span class="n">fn</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">result</span><span class="p">()))</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">ret</span><span class="o">.</span><span class="n">set_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+            <span class="n">future</span><span class="o">.</span><span class="n">add_done_callback</span><span class="p">(</span><span class="n">cb</span><span class="p">)</span>
+            <span class="n">future</span> <span class="o">=</span> <span class="n">ret</span>
+
+        <span class="k">return</span> <span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">PricingContext</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">is_entered</span> <span class="ow">or</span> <span class="n">PricingContext</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">is_async</span><span class="p">)</span> <span class="k">else</span> <span class="n">future</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">values</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">QuotableBuilder</span><span class="p">):</span>
+                <span class="k">if</span> <span class="s1">&#39;properties&#39;</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+                    <span class="n">values</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;properties&#39;</span><span class="p">))</span>
+                <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_from_dict</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;asset_class&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_from_dict</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s1">&#39;$type&#39;</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+                    <span class="kn">from</span> <span class="nn">gs_quant_internal</span> <span class="kn">import</span> <span class="n">tdapi</span>
+                    <span class="n">tdapi_cls</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">tdapi</span><span class="p">,</span> <span class="n">values</span><span class="p">[</span><span class="s1">&#39;$type&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;Defn&#39;</span><span class="p">,</span> <span class="s1">&#39;Builder&#39;</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">tdapi_cls</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Cannot resolve TDAPI type </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tdapi_cls</span><span class="p">))</span>
+
+                    <span class="k">return</span> <span class="n">tdapi_cls</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+
+                <span class="n">asset_class_field</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;asset_class&#39;</span><span class="p">,</span> <span class="s1">&#39;assetClass&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">values</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">asset_class_field</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;assetClass/asset_class not specified&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="s1">&#39;type&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;type not specified&#39;</span><span class="p">)</span>
+
+                <span class="n">asset_type</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">)</span>
+                <span class="n">asset_class</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">asset_class_field</span><span class="p">)</span>
+                <span class="n">default_type</span> <span class="o">=</span> <span class="n">Security</span> <span class="k">if</span> <span class="n">asset_type</span> <span class="ow">in</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;Security&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">asset_class</span> <span class="ow">in</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                                                                                                    <span class="s2">&quot;Security&quot;</span><span class="p">]</span> \
+                    <span class="k">else</span> <span class="kc">None</span>
+
+                <span class="n">instrument</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__asset_class_and_type_to_instrument</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">((</span>
+                    <span class="n">get_enum_value</span><span class="p">(</span><span class="n">AssetClass</span><span class="p">,</span> <span class="n">asset_class</span><span class="p">),</span>
+                    <span class="n">get_enum_value</span><span class="p">(</span><span class="n">AssetType</span><span class="p">,</span> <span class="n">asset_type</span><span class="p">)),</span> <span class="n">default_type</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">instrument</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;unable to build instrument&#39;</span><span class="p">)</span>
+
+                <span class="k">return</span> <span class="n">instrument</span><span class="o">.</span><span class="n">_from_dict</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_quick_entry</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">asset_class</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AssetClass</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">asset_class</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">inst</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">default_instance</span><span class="p">()</span>
+                <span class="n">asset_class</span> <span class="o">=</span> <span class="n">inst</span><span class="o">.</span><span class="n">asset_class</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">asset_class</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">GsParserApi</span><span class="o">.</span><span class="n">get_instrument_from_text</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">res</span><span class="p">):</span>  <span class="c1"># multiple instruments returned</span>
+                <span class="n">instrument</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Could not resolve instrument&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">instrument</span> <span class="o">=</span> <span class="n">GsParserApi</span><span class="o">.</span><span class="n">get_instrument_from_text_asset_class</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">asset_class</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">instrument</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Invalid instrument specification&#39;</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_asset_ids</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">asset_ids</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">InstrumentBase</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="kn">from</span> <span class="nn">gs_quant.api.gs.assets</span> <span class="kn">import</span> <span class="n">GsAssetApi</span>
+        <span class="n">instruments</span> <span class="o">=</span> <span class="n">GsAssetApi</span><span class="o">.</span><span class="n">get_instruments_for_asset_ids</span><span class="p">(</span><span class="n">asset_ids</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">inst</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">default_instance</span><span class="p">()</span>
+            <span class="n">asset_class</span> <span class="o">=</span> <span class="n">inst</span><span class="o">.</span><span class="n">asset_class</span>
+            <span class="n">asset_type</span> <span class="o">=</span> <span class="n">inst</span><span class="o">.</span><span class="n">type</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">asset_class</span> <span class="o">==</span> <span class="n">asset_class</span> <span class="ow">and</span> <span class="n">i</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">asset_type</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">instruments</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Instrument(s) not all of type </span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="k">return</span> <span class="n">instruments</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_asset_id</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">asset_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InstrumentBase</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_asset_ids</span><span class="p">((</span><span class="n">asset_id</span><span class="p">,))[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">compose</span><span class="p">(</span><span class="n">components</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">c</span><span class="o">.</span><span class="n">risk_key</span><span class="o">.</span><span class="n">date</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">ErrorValue</span><span class="p">)</span> <span class="k">else</span> <span class="n">c</span><span class="o">.</span><span class="n">resolution_key</span><span class="o">.</span><span class="n">date</span><span class="p">:</span> <span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">components</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="Security"><a class="viewcode-back" href="../../../classes/gs_quant.instrument.Security.html#gs_quant.instrument.Security">[docs]</a><span class="k">class</span> <span class="nc">Security</span><span class="p">(</span><span class="n">XRef</span><span class="p">,</span> <span class="n">Instrument</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A security, specified by a well-known identifier&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ticker</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bbid</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">isin</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cusip</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">prime_id</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">quantity</span><span class="p">:</span> <span class="nb">float</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">ticker</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">bbid</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">ric</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">isin</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">cusip</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">prime_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">quantity</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a security by passing one identifier only and, optionally, a quantity</span>
 
@@ -172,14 +431,8 @@
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="p">(</span><span class="n">f</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="p">(</span><span class="n">ticker</span><span class="p">,</span> <span class="n">bbid</span><span class="p">,</span> <span class="n">isin</span><span class="p">,</span> <span class="n">cusip</span><span class="p">,</span> <span class="n">prime_id</span><span class="p">)))))</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Only specify one identifier&#39;</span><span class="p">)</span>
 
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">ticker</span><span class="o">=</span><span class="n">ticker</span><span class="p">,</span> <span class="n">bbid</span><span class="o">=</span><span class="n">bbid</span><span class="p">,</span> <span class="n">isin</span><span class="o">=</span><span class="n">isin</span><span class="p">,</span> <span class="n">cusip</span><span class="o">=</span><span class="n">cusip</span><span class="p">,</span> <span class="n">prime_id</span><span class="o">=</span><span class="n">prime_id</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">quantity</span> <span class="o">=</span> <span class="n">quantity</span>
-
-    <span class="k">def</span> <span class="nf">get_quantity</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Quantity of the security</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">quantity</span></div>
+        <span class="n">XRef</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ticker</span><span class="o">=</span><span class="n">ticker</span><span class="p">,</span> <span class="n">bbid</span><span class="o">=</span><span class="n">bbid</span><span class="p">,</span> <span class="n">ric</span><span class="o">=</span><span class="n">ric</span><span class="p">,</span> <span class="n">isin</span><span class="o">=</span><span class="n">isin</span><span class="p">,</span> <span class="n">cusip</span><span class="o">=</span><span class="n">cusip</span><span class="p">,</span> <span class="n">prime_id</span><span class="o">=</span><span class="n">prime_id</span><span class="p">)</span>
+        <span class="n">Instrument</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">quantity</span><span class="p">)</span></div>
 </pre></div>
 
            </div>

@@ -1,0 +1,275 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>gs_quant.timeseries.econometrics.correlation &mdash; gs_quant 0.1 documentation</title>
+  
+
+    
+  <script crossorigin src="/resources/react/16-8-6/prod/react.production.min.js"></script>
+  <script
+    crossorigin src="/resources/react/16-8-6/prod/react-dom.production.min.js"></script>
+
+     
+    <script src='/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML' async></script> 
+    
+    <script type="text/javascript" src="../_static/../../../auto-mount.js"></script>
+    <link rel="stylesheet" href="../_static/../../../auto-mount.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="next" title="gs_quant.timeseries.econometrics.excess_returns_" href="gs_quant.timeseries.econometrics.excess_returns_.html" />
+    <link rel="prev" title="gs_quant.timeseries.econometrics.change" href="gs_quant.timeseries.econometrics.change.html" /> 
+</head>
+
+<!-- Hello from the future. -->
+<div id="mq-doc-navbar-inject"></div>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    <a data-toggle="wy-nav-top" id="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" id="gs-nav-action"></div>
+    </a>
+    
+    <nav id="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Packages</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../data.html">Data Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datetime.html">Datetime Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instrument.html">Instrument Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../markets.html">Markets Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../models.html">Models Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../risk.html">Risk Package</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../timeseries.html">Timeseries Package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../timeseries.html#algebra">Algebra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../timeseries.html#analysis">Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../timeseries.html#backtesting">Backtesting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../timeseries.html#date-time">Date / Time</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../timeseries.html#econometrics">Econometrics</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.annualize.html">gs_quant.timeseries.econometrics.annualize</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.beta.html">gs_quant.timeseries.econometrics.beta</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.change.html">gs_quant.timeseries.econometrics.change</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">gs_quant.timeseries.econometrics.correlation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.excess_returns_.html">gs_quant.timeseries.econometrics.excess_returns_</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.index.html">gs_quant.timeseries.econometrics.index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.max_drawdown.html">gs_quant.timeseries.econometrics.max_drawdown</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.prices.html">gs_quant.timeseries.econometrics.prices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.returns.html">gs_quant.timeseries.econometrics.returns</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.sharpe_ratio.html">gs_quant.timeseries.econometrics.sharpe_ratio</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.volatility.html">gs_quant.timeseries.econometrics.volatility</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../timeseries.html#statistics">Statistics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../timeseries.html#technical-analysis">Technical Analysis</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Packages</a> /</li>
+        
+          <li><a href="../timeseries.html">Timeseries Package</a> /</li>
+        
+      <li>gs_quant.timeseries.econometrics.correlation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="gs-quant-timeseries-econometrics-correlation">
+<h1>gs_quant.timeseries.econometrics.correlation<a class="headerlink" href="#gs-quant-timeseries-econometrics-correlation" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="gs_quant.timeseries.econometrics.correlation">
+<code class="sig-name descname">correlation</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em>, <em class="sig-param">w=&lt;gs_quant.timeseries.helper.Window object&gt;</em>, <em class="sig-param">type_=&lt;SeriesType.PRICES: 'prices'&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gs_quant/timeseries/econometrics.html#correlation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gs_quant.timeseries.econometrics.correlation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rolling correlation of two price series</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code>) – price series</p></li>
+<li><p><strong>y</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code>) – price series</p></li>
+<li><p><strong>w</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Window</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – Window, int, or str: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+and 10 the ramp up value. If w is a string, it should be a relative date like ‘1m’, ‘1d’, etc.
+Window size defaults to length of series.</p></li>
+<li><p><strong>type</strong> – type of both input series: prices or returns</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>date-based time series of correlation</p>
+</dd>
+</dl>
+<p><strong>Usage</strong></p>
+<p>Calculate rolling <a class="reference external" href="https://en.wikipedia.org/wiki/Correlation_and_dependence">realized correlation</a>,
+<span class="math notranslate nohighlight">\(\rho_t\)</span> of two price series over a given window:</p>
+<p><span class="math notranslate nohighlight">\(\rho_t = \frac{\sum_{i=t-w+1}^t (R_t - \overline{R_t})(Y_t - \overline{S_t})}{(N-1)\sigma R_t\sigma S_t}\)</span></p>
+<p>where N is the number of observations in each rolling window, <span class="math notranslate nohighlight">\(w\)</span>, and <span class="math notranslate nohighlight">\(R_t\)</span> and <span class="math notranslate nohighlight">\(S_t\)</span> are the
+simple returns for each series on time <span class="math notranslate nohighlight">\(t\)</span></p>
+<p>If prices are provided:</p>
+<p><span class="math notranslate nohighlight">\(R_t = \frac{X_t}{X_{t-1}} - 1\)</span> and <span class="math notranslate nohighlight">\(S_t = \frac{Y_t}{Y_{t-1}} - 1\)</span></p>
+<p>If returns are provided:</p>
+<p><span class="math notranslate nohighlight">\(R_t = X_t\)</span> and <span class="math notranslate nohighlight">\(S_t = Y_t\)</span></p>
+<p><span class="math notranslate nohighlight">\(\overline{R_t}\)</span>, <span class="math notranslate nohighlight">\(\overline{S_t}\)</span> are the mean values, and <span class="math notranslate nohighlight">\(\sigma R_{t}\)</span> and
+<span class="math notranslate nohighlight">\(\sigma S_{t}\)</span> are the sample standard deviations, of  series
+<span class="math notranslate nohighlight">\(R_t\)</span> and <span class="math notranslate nohighlight">\(S_t\)</span> over the same window</p>
+<p>If window is not provided, computes realized correlation over the full series</p>
+<p><strong>Examples</strong></p>
+<p>Compute rolling <span class="math notranslate nohighlight">\(1\)</span> month (<span class="math notranslate nohighlight">\(22\)</span> business day) correlation of price series</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">series1</span> <span class="o">=</span> <span class="n">generate_series</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">series2</span> <span class="o">=</span> <span class="n">generate_series</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">corr</span> <span class="o">=</span> <span class="n">correlation</span><span class="p">(</span><span class="n">series1</span><span class="p">,</span> <span class="n">series2</span><span class="p">,</span> <span class="mi">22</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>See also</strong></p>
+<p><code class="xref py py-func docutils literal notranslate"><span class="pre">std()</span></code> <a class="reference internal" href="gs_quant.timeseries.econometrics.returns.html#gs_quant.timeseries.econometrics.returns" title="gs_quant.timeseries.econometrics.returns"><code class="xref py py-func docutils literal notranslate"><span class="pre">returns()</span></code></a></p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  <hr />
+  
+  <div
+    class="container-block-module"
+    role="navigation"
+    aria-label="footer navigation"
+  >
+    
+    <div class="link-block-module">
+      <a
+        href="gs_quant.timeseries.econometrics.change.html"
+        class="link-block-module-container"
+        title="gs_quant.timeseries.econometrics.change"
+        accesskey="p"
+        rel="prev"
+      >
+        <div class="link-block-module-content">
+          <h4 class="link-block-module-title-label">
+            Previous Topic
+          </h4>
+          <p class="link-block-module-body-label">
+            gs_quant.timeseries.econometrics.change
+          </p>
+        </div>
+      </a>
+    </div>
+     
+    <div class="link-block-module">
+      <a
+        href="gs_quant.timeseries.econometrics.excess_returns_.html"
+        class="link-block-module-container"
+        title="gs_quant.timeseries.econometrics.excess_returns_"
+        accesskey="n"
+        rel="next"
+      >
+        <div class="link-block-module-content">
+          <h4 class="link-block-module-title-label">
+            Next Topic
+          </h4>
+          <p class="link-block-module-body-label">
+            gs_quant.timeseries.econometrics.excess_returns_
+          </p>
+        </div>
+      </a>
+    </div>
+    
+  </div>
+  
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  
+  
+    
+   
+
+</body>
+</html>

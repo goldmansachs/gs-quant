@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>change &mdash; gs_quant 0.1 documentation</title>
+  <title>gs_quant.timeseries.econometrics.change &mdash; gs_quant 0.1 documentation</title>
   
 
     
@@ -32,11 +32,6 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -44,8 +39,8 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="next" title="correlation" href="gs_quant.timeseries.econometrics.correlation.html" />
-    <link rel="prev" title="beta" href="gs_quant.timeseries.econometrics.beta.html" /> 
+    <link rel="next" title="gs_quant.timeseries.econometrics.correlation" href="gs_quant.timeseries.econometrics.correlation.html" />
+    <link rel="prev" title="gs_quant.timeseries.econometrics.beta" href="gs_quant.timeseries.econometrics.beta.html" /> 
 </head>
 
 <!-- Hello from the future. -->
@@ -55,11 +50,11 @@
 
    
   <div class="wy-grid-for-nav">
-    <a data-toggle="wy-nav-top" class="gs-developer-action-button-container" ontouchstart="">
-      <div data-toggle="gs-nav-action" class="gs-nav-action"></div>
+    <a data-toggle="wy-nav-top" id="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" id="gs-nav-action"></div>
     </a>
     
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+    <nav id="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         
         
@@ -75,22 +70,26 @@
 <li class="toctree-l1"><a class="reference internal" href="../data.html">Data Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../datetime.html">Datetime Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../instrument.html">Instrument Package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../market.html">Market Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../markets.html">Markets Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../models.html">Models Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../risk.html">Risk Package</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../timeseries.html">Timeseries Package</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../timeseries.html#algebra">Algebra</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../timeseries.html#analysis">Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../timeseries.html#backtesting">Backtesting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../timeseries.html#date-time">Date / Time</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../timeseries.html#econometrics">Econometrics</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.annualize.html">annualize</a></li>
-<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.beta.html">beta</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">change</a></li>
-<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.correlation.html">correlation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.index.html">index</a></li>
-<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.max_drawdown.html">max_drawdown</a></li>
-<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.prices.html">prices</a></li>
-<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.returns.html">returns</a></li>
-<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.volatility.html">volatility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.annualize.html">gs_quant.timeseries.econometrics.annualize</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.beta.html">gs_quant.timeseries.econometrics.beta</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">gs_quant.timeseries.econometrics.change</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.correlation.html">gs_quant.timeseries.econometrics.correlation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.excess_returns_.html">gs_quant.timeseries.econometrics.excess_returns_</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.index.html">gs_quant.timeseries.econometrics.index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.max_drawdown.html">gs_quant.timeseries.econometrics.max_drawdown</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.prices.html">gs_quant.timeseries.econometrics.prices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.returns.html">gs_quant.timeseries.econometrics.returns</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.sharpe_ratio.html">gs_quant.timeseries.econometrics.sharpe_ratio</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.timeseries.econometrics.volatility.html">gs_quant.timeseries.econometrics.volatility</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../timeseries.html#statistics">Statistics</a></li>
@@ -136,7 +135,7 @@
         
           <li><a href="../timeseries.html">Timeseries Package</a> /</li>
         
-      <li>change</li>
+      <li>gs_quant.timeseries.econometrics.change</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -154,11 +153,11 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="change">
-<h1>change<a class="headerlink" href="#change" title="Permalink to this headline">¶</a></h1>
-<dl class="function">
+  <div class="section" id="gs-quant-timeseries-econometrics-change">
+<h1>gs_quant.timeseries.econometrics.change<a class="headerlink" href="#gs-quant-timeseries-econometrics-change" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
 <dt id="gs_quant.timeseries.econometrics.change">
-<code class="sig-name descname">change</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gs_quant/timeseries/econometrics.html#change"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gs_quant.timeseries.econometrics.change" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">change</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gs_quant/timeseries/econometrics.html#change"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gs_quant.timeseries.econometrics.change" title="Permalink to this definition">¶</a></dt>
 <dd><p>Arithmetic series normalization</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -177,7 +176,7 @@
 <p>where <span class="math notranslate nohighlight">\(X_0\)</span> is the first value in the series</p>
 <p><strong>Examples</strong></p>
 <p>Change in level from initial value:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">series</span> <span class="o">=</span> <span class="n">generate_series</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">series</span> <span class="o">=</span> <span class="n">generate_series</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">returns</span> <span class="o">=</span> <span class="n">change</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -204,7 +203,7 @@
       <a
         href="gs_quant.timeseries.econometrics.beta.html"
         class="link-block-module-container"
-        title="beta"
+        title="gs_quant.timeseries.econometrics.beta"
         accesskey="p"
         rel="prev"
       >
@@ -213,7 +212,7 @@
             Previous Topic
           </h4>
           <p class="link-block-module-body-label">
-            beta
+            gs_quant.timeseries.econometrics.beta
           </p>
         </div>
       </a>
@@ -223,7 +222,7 @@
       <a
         href="gs_quant.timeseries.econometrics.correlation.html"
         class="link-block-module-container"
-        title="correlation"
+        title="gs_quant.timeseries.econometrics.correlation"
         accesskey="n"
         rel="next"
       >
@@ -232,7 +231,7 @@
             Next Topic
           </h4>
           <p class="link-block-module-body-label">
-            correlation
+            gs_quant.timeseries.econometrics.correlation
           </p>
         </div>
       </a>

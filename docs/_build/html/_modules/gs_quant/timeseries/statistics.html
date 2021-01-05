@@ -1,0 +1,1543 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>gs_quant.timeseries.statistics &mdash; gs_quant 0.1 documentation</title>
+  
+
+    
+  <script crossorigin src="/resources/react/16-8-6/prod/react.production.min.js"></script>
+  <script
+    crossorigin src="/resources/react/16-8-6/prod/react-dom.production.min.js"></script>
+
+     
+    <script src='/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML' async></script> 
+    
+    <script type="text/javascript" src="../../../_static/../../../auto-mount.js"></script>
+    <link rel="stylesheet" href="../../../_static/../../../auto-mount.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" /> 
+</head>
+
+<!-- Hello from the future. -->
+<div id="mq-doc-navbar-inject"></div>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    <a data-toggle="wy-nav-top" id="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" id="gs-nav-action"></div>
+    </a>
+    
+    <nav id="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Packages</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../data.html">Data Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../datetime.html">Datetime Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instrument.html">Instrument Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../markets.html">Markets Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../models.html">Models Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../risk.html">Risk Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../timeseries.html">Timeseries Package</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Packages</a> /</li>
+        
+          <li><a href="../../index.html">Module code</a> /</li>
+        
+      <li>gs_quant.timeseries.statistics</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for gs_quant.timeseries.statistics</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2018 Goldman Sachs.</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#  http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing,</span>
+<span class="c1"># software distributed under the License is distributed on an</span>
+<span class="c1"># &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY</span>
+<span class="c1"># KIND, either express or implied.  See the License for the</span>
+<span class="c1"># specific language governing permissions and limitations</span>
+<span class="c1"># under the License.</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1"># Marquee Plot Service will attempt to make public functions (not prefixed with _) from this module available.</span>
+<span class="c1"># Such functions should be fully documented: docstrings should describe parameters and the return value, and provide</span>
+<span class="c1"># a 1-line description. Type annotations should be provided for parameters.</span>
+
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">scipy.stats.mstats</span> <span class="k">as</span> <span class="nn">stats</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">percentileofscore</span>
+<span class="kn">from</span> <span class="nn">statsmodels.regression.rolling</span> <span class="kn">import</span> <span class="n">RollingOLS</span>
+<span class="kn">from</span> <span class="nn">.algebra</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">statsmodels.api</span> <span class="k">as</span> <span class="nn">sm</span>
+<span class="kn">from</span> <span class="nn">..models.epidemiology</span> <span class="kn">import</span> <span class="n">SIR</span><span class="p">,</span> <span class="n">SEIR</span><span class="p">,</span> <span class="n">EpidemicModel</span>
+<span class="kn">from</span> <span class="nn">..data</span> <span class="kn">import</span> <span class="n">DataContext</span>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Stats library is for basic arithmetic and statistical operations on timeseries.</span>
+<span class="sd">These include basic algebraic operations, probability and distribution analysis.</span>
+<span class="sd">Generally not finance-specific routines.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="k">def</span> <span class="nf">_concat_series</span><span class="p">(</span><span class="n">series</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">]):</span>
+    <span class="n">curves</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">constants</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">series</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">!=</span> <span class="n">s</span><span class="o">.</span><span class="n">max</span><span class="p">():</span>
+            <span class="n">curves</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">constants</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;temp</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+            <span class="n">k</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">curves</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="o">**</span><span class="n">constants</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="min_"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.statistics.min_.html#gs_quant.timeseries.statistics.min_">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">min_</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">]],</span> <span class="n">w</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Window</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Window</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Minimum value of series over given window</span>
+
+<span class="sd">    :param x: series: a timeseries or an array of timeseries</span>
+
+<span class="sd">    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size</span>
+<span class="sd">              and 10 the ramp up value.  If w is a string, it should be a relative date like &#39;1m&#39;, &#39;1d&#39;, etc.</span>
+<span class="sd">              Window size defaults to length of series.</span>
+<span class="sd">    :return: timeseries of minimum value</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Returns the minimum value of the series over each window.</span>
+
+<span class="sd">    If :math:`x` is a series:</span>
+
+<span class="sd">    :math:`R_t = min(X_{t-w+1}:X_t)`</span>
+
+<span class="sd">    where :math:`w` is the size of the rolling window.</span>
+
+
+<span class="sd">    If :math:`x` is an array of series:</span>
+
+<span class="sd">    :math:`R_t = min(X_{1, t-w+1}:X_{n, t})`</span>
+
+<span class="sd">    where :math:`w` is the size of the rolling window, and :math:`n` is the number of series.</span>
+
+<span class="sd">    If window is not provided, returns the minimum value over the</span>
+<span class="sd">    full series. If the window size is greater than the available data, will return minimum of available values.</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    Minimum value of price series over the last :math:`22` observations:</span>
+
+<span class="sd">    &gt;&gt;&gt; prices = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; min_(prices, 22)</span>
+
+<span class="sd">    **See also**</span>
+
+<span class="sd">    :func:`max_`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">_concat_series</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">normalize_window</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">is_monotonic_increasing</span><span class="p">,</span> <span class="s2">&quot;series index is monotonic increasing&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DateOffset</span><span class="p">):</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">x</span><span class="o">.</span><span class="n">index</span> <span class="o">&gt;</span> <span class="n">idx</span> <span class="o">-</span> <span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">index</span> <span class="o">&lt;=</span> <span class="n">idx</span><span class="p">)]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">apply_ramp</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="nb">float</span><span class="p">)),</span> <span class="n">w</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">apply_ramp</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">rolling</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">w</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="max_"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.statistics.max_.html#gs_quant.timeseries.statistics.max_">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">max_</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">]],</span> <span class="n">w</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Window</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Window</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Maximum value of series over given window</span>
+
+<span class="sd">    :param x: series: a timeseries or an array of timeseries</span>
+<span class="sd">    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size</span>
+<span class="sd">              and 10 the ramp up value.  If w is a string, it should be a relative date like &#39;1m&#39;, &#39;1d&#39;, etc.</span>
+<span class="sd">              Window size defaults to length of series.</span>
+<span class="sd">    :return: timeseries of maximum value</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Returns the maximum value of the series over each window.</span>
+
+<span class="sd">    If :math:`x` is a series:</span>
+
+<span class="sd">    :math:`R_t = max(X_{t-w+1}:X_t)`</span>
+
+<span class="sd">    where :math:`w` is the size of the rolling window.</span>
+
+<span class="sd">    If :math:`x` is an array of series:</span>
+
+<span class="sd">    :math:`R_t = max(X_{1, t-w+1}:X_{n, t})`</span>
+
+<span class="sd">    where :math:`w` is the size of the rolling window, and :math:`n` is the number of series.</span>
+
+<span class="sd">    If window is not provided, returns the maximum value over the full series. If the window size is greater than the</span>
+<span class="sd">    available data, will return maximum of available values.</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    Maximum value of price series over the last :math:`22` observations:</span>
+
+<span class="sd">    &gt;&gt;&gt; prices = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; max_(prices, 22)</span>
+
+<span class="sd">    **See also**</span>
+
+<span class="sd">    :func:`min_`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">_concat_series</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">normalize_window</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">is_monotonic_increasing</span><span class="p">,</span> <span class="s2">&quot;series index is monotonic increasing&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DateOffset</span><span class="p">):</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">x</span><span class="o">.</span><span class="n">index</span> <span class="o">&gt;</span> <span class="n">idx</span> <span class="o">-</span> <span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">index</span> <span class="o">&lt;=</span> <span class="n">idx</span><span class="p">)]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">apply_ramp</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="nb">float</span><span class="p">)),</span> <span class="n">w</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">apply_ramp</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">rolling</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="n">w</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="range_"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.statistics.range_.html#gs_quant.timeseries.statistics.range_">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">range_</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">w</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Window</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Window</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Range of series over given window</span>
+
+<span class="sd">    :param x: series: timeseries</span>
+<span class="sd">    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size</span>
+<span class="sd">              and 10 the ramp up value.  If w is a string, it should be a relative date like &#39;1m&#39;, &#39;1d&#39;, etc.</span>
+<span class="sd">              Window size defaults to length of series.</span>
+<span class="sd">    :return: timeseries of range</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Returns the range of the series (max - min) over rolling window:</span>
+
+<span class="sd">    :math:`R_t = max(X_{t-w+1}:X_t) - min(X_{t-w+1}:X_t)`</span>
+
+<span class="sd">    where :math:`w` is the size of the rolling window. If window is not provided, returns the range over the</span>
+<span class="sd">    full series. If the window size is greater than the available data, will return range of all available values.</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    Range of price series over the last :math:`22` observations:</span>
+
+<span class="sd">    &gt;&gt;&gt; prices = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; range_(prices, 22)</span>
+
+<span class="sd">    **See also**</span>
+
+<span class="sd">    :func:`min_` :func:`max_`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">normalize_window</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">is_monotonic_increasing</span><span class="p">,</span> <span class="s2">&quot;series index is monotonic increasing&quot;</span>
+
+    <span class="nb">max</span> <span class="o">=</span> <span class="n">max_</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Window</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="nb">min</span> <span class="o">=</span> <span class="n">min_</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Window</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">apply_ramp</span><span class="p">(</span><span class="nb">max</span> <span class="o">-</span> <span class="nb">min</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="mean"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.statistics.mean.html#gs_quant.timeseries.statistics.mean">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">mean</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">]],</span> <span class="n">w</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Window</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Window</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Arithmetic mean of series over given window</span>
+
+<span class="sd">    :param x: series: a timeseries or an array of timeseries</span>
+<span class="sd">    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size</span>
+<span class="sd">              and 10 the ramp up value.  If w is a string, it should be a relative date like &#39;1m&#39;, &#39;1d&#39;, etc.</span>
+<span class="sd">              Window size defaults to length of series.</span>
+<span class="sd">    :return: timeseries of mean value</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Calculates `arithmetic mean &lt;https://en.wikipedia.org/wiki/Arithmetic_mean&gt;`_ of the series over a rolling window</span>
+
+<span class="sd">    If a timeseries is provided:</span>
+
+<span class="sd">    :math:`R_t = \\frac{\sum_{i=t-w+1}^{t} X_i}{N}`</span>
+
+<span class="sd">    where :math:`N` is the number of observations in each rolling window, :math:`w`.</span>
+
+<span class="sd">    If an array of timeseries is provided:</span>
+
+<span class="sd">    :math:`R_t = \\frac{\sum_{i=t-w+1}^{t} {\sum_{j=1}^{n}} X_{ij}}{N}`</span>
+
+<span class="sd">    where :math:`n` is the number of series, and :math:`N` is the number of observations in each rolling window,</span>
+<span class="sd">    :math:`w`.</span>
+
+<span class="sd">    If window is not provided, computes rolling mean over the full series. If the window size is greater than the</span>
+<span class="sd">    available data, will return mean of available values.</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    Generate price series and compute mean over :math:`22` observations</span>
+
+<span class="sd">    &gt;&gt;&gt; prices = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; mean(prices, 22)</span>
+
+<span class="sd">    **See also**</span>
+
+<span class="sd">    :func:`median` :func:`mode`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">normalize_window</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">is_monotonic_increasing</span><span class="p">,</span> <span class="s2">&quot;series index is monotonic increasing&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DateOffset</span><span class="p">):</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">x</span><span class="o">.</span><span class="n">index</span> <span class="o">&gt;</span> <span class="n">idx</span> <span class="o">-</span> <span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">index</span> <span class="o">&lt;=</span> <span class="n">idx</span><span class="p">)])</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="n">idx</span> <span class="o">-</span> <span class="n">w</span><span class="o">.</span><span class="n">w</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span> <span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">))]</span>
+    <span class="k">return</span> <span class="n">apply_ramp</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="nb">float</span><span class="p">)),</span> <span class="n">w</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="median"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.statistics.median.html#gs_quant.timeseries.statistics.median">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">median</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">w</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Window</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Window</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Median value of series over given window</span>
+
+<span class="sd">    :param x: series: timeseries</span>
+<span class="sd">    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size</span>
+<span class="sd">              and 10 the ramp up value.  If w is a string, it should be a relative date like &#39;1m&#39;, &#39;1d&#39;, etc.</span>
+<span class="sd">              Window size defaults to length of series.</span>
+<span class="sd">    :return: timeseries of median value</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Computes the `median &lt;https://en.wikipedia.org/wiki/Median&gt;`_ value over a given window. For each window, this</span>
+<span class="sd">    function will return the middle value when all elements in the window are sorted. If the number of observations in</span>
+<span class="sd">    the window is even, will return the average of the middle two values. If the window size is greater than the</span>
+<span class="sd">    available data, will return median of available values:</span>
+
+<span class="sd">    :math:`d = \\frac{w-1}{2}`</span>
+
+<span class="sd">    :math:`R_t = \\frac{X_{\lfloor t-d \\rfloor} + X_{\lceil t-d \\rceil}}{2}`</span>
+
+<span class="sd">    where :math:`w` is the size of the rolling window. If window is not provided, computes median over the full series</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    Generate price series and compute median over :math:`22` observations</span>
+
+<span class="sd">    &gt;&gt;&gt; prices = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; median(prices, 22)</span>
+
+<span class="sd">    **See also**</span>
+
+<span class="sd">    :func:`mean` :func:`mode`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">normalize_window</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">is_monotonic_increasing</span><span class="p">,</span> <span class="s2">&quot;series index is monotonic increasing&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DateOffset</span><span class="p">):</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">x</span><span class="o">.</span><span class="n">index</span> <span class="o">&gt;</span> <span class="n">idx</span> <span class="o">-</span> <span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">index</span> <span class="o">&lt;=</span> <span class="n">idx</span><span class="p">)]</span><span class="o">.</span><span class="n">median</span><span class="p">()</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">apply_ramp</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="nb">float</span><span class="p">)),</span> <span class="n">w</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">apply_ramp</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">rolling</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">median</span><span class="p">(),</span> <span class="n">w</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="mode"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.statistics.mode.html#gs_quant.timeseries.statistics.mode">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">mode</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">w</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Window</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Window</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Most common value in series over given window</span>
+
+<span class="sd">    :param x: series: timeseries</span>
+<span class="sd">    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size</span>
+<span class="sd">              and 10 the ramp up value.  If w is a string, it should be a relative date like &#39;1m&#39;, &#39;1d&#39;, etc.</span>
+<span class="sd">              Window size defaults to length of series.</span>
+<span class="sd">    :return: timeseries of mode value</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Computes the `mode &lt;https://en.wikipedia.org/wiki/Mode_(statistics)&gt;`_ over a given window. For each window, this</span>
+<span class="sd">    function will return the most common value of all elements in the window. If there are multiple values with the same</span>
+<span class="sd">    frequency of occurrence, will return the smallest value.</span>
+
+<span class="sd">    If window is not provided, computes mode over the full series.</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    Generate price series and compute mode over :math:`22` observations</span>
+
+<span class="sd">    &gt;&gt;&gt; prices = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; mode(prices, 22)</span>
+
+<span class="sd">    **See also**</span>
+
+<span class="sd">    :func:`mean` :func:`median`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">normalize_window</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">is_monotonic_increasing</span><span class="p">,</span> <span class="s2">&quot;series index is monotonic increasing&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DateOffset</span><span class="p">):</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">stats</span><span class="o">.</span><span class="n">mode</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">x</span><span class="o">.</span><span class="n">index</span> <span class="o">&gt;</span> <span class="n">idx</span> <span class="o">-</span> <span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">index</span> <span class="o">&lt;=</span> <span class="n">idx</span><span class="p">)])</span><span class="o">.</span><span class="n">mode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">apply_ramp</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="nb">float</span><span class="p">)),</span> <span class="n">w</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">apply_ramp</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">rolling</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">y</span><span class="p">:</span> <span class="n">stats</span><span class="o">.</span><span class="n">mode</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">mode</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">w</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="sum_"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.statistics.sum_.html#gs_quant.timeseries.statistics.sum_">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">sum_</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">]],</span> <span class="n">w</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Window</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Window</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Rolling sum of series over given window</span>
+
+<span class="sd">    :param x: series: a timeseries or an array of timeseries</span>
+<span class="sd">    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size</span>
+<span class="sd">              and 10 the ramp up value.  If w is a string, it should be a relative date like &#39;1m&#39;, &#39;1d&#39;, etc.</span>
+<span class="sd">              Window size defaults to length of series.</span>
+<span class="sd">    :return: timeseries of rolling sum</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Calculate the sum of observations over a given rolling window.</span>
+
+<span class="sd">    If :math:`x` is a series:</span>
+
+<span class="sd">    :math:`R_t = \sum_{i=t-w+1}^{t} X_i`</span>
+
+<span class="sd">    where :math:`w` is the size of the rolling window.</span>
+
+<span class="sd">    If :math:`x` is an array of series:</span>
+
+<span class="sd">    :math:`R_t = \sum_{i=t-w+1}^{t} \sum_{j=1}^{n} X_{ij}`</span>
+
+<span class="sd">    where :math:`w` is the size of the rolling window and :math:`n` is the number of series</span>
+
+<span class="sd">    If window is not provided, computes sum over the full series. If the window size is greater than the available data,</span>
+<span class="sd">    will return sum of available values.</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    Generate price series and compute rolling sum over :math:`22` observations</span>
+
+<span class="sd">    &gt;&gt;&gt; prices = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; sum_(prices, 22)</span>
+
+<span class="sd">    **See also**</span>
+
+<span class="sd">    :func:`product`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">normalize_window</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">is_monotonic_increasing</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DateOffset</span><span class="p">):</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">x</span><span class="o">.</span><span class="n">index</span> <span class="o">&gt;</span> <span class="n">idx</span> <span class="o">-</span> <span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">index</span> <span class="o">&lt;=</span> <span class="n">idx</span><span class="p">)]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">apply_ramp</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="nb">float</span><span class="p">)),</span> <span class="n">w</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">apply_ramp</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">rolling</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span> <span class="n">w</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="product"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.statistics.product.html#gs_quant.timeseries.statistics.product">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">product</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">w</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Window</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Window</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Rolling product of series over given window</span>
+
+<span class="sd">    :param x: series: timeseries</span>
+<span class="sd">    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size</span>
+<span class="sd">              and 10 the ramp up value.  If w is a string, it should be a relative date like &#39;1m&#39;, &#39;1d&#39;, etc.</span>
+<span class="sd">              Window size defaults to length of series.</span>
+<span class="sd">    :return: timeseries of rolling product</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Calculate the product of observations over a given rolling window. For each time, :math:`t`, returns the value</span>
+<span class="sd">    of all observations from :math:`t-w+1` to :math:`t` multiplied together:</span>
+
+<span class="sd">    :math:`R_t = \prod_{i=t-w+1}^{t} X_i`</span>
+
+<span class="sd">    where :math:`w` is the size of the rolling window. If window is not provided, computes product over the full series</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    Generate price series and compute rolling sum over :math:`22` observations</span>
+
+<span class="sd">    &gt;&gt;&gt; prices = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; product(1+returns(prices))</span>
+
+<span class="sd">    **See also**</span>
+
+<span class="sd">    :func:`sum_`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">normalize_window</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">is_monotonic_increasing</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DateOffset</span><span class="p">):</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">x</span><span class="o">.</span><span class="n">index</span> <span class="o">&gt;</span> <span class="n">idx</span> <span class="o">-</span> <span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">index</span> <span class="o">&lt;=</span> <span class="n">idx</span><span class="p">)]</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="o">.</span><span class="n">prod</span><span class="p">)</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">apply_ramp</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="nb">float</span><span class="p">)),</span> <span class="n">w</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">apply_ramp</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">rolling</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="o">.</span><span class="n">prod</span><span class="p">),</span> <span class="n">w</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="std"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.statistics.std.html#gs_quant.timeseries.statistics.std">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">std</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">w</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Window</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Window</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Rolling standard deviation of series over given window</span>
+
+<span class="sd">    :param x: series: timeseries</span>
+<span class="sd">    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size</span>
+<span class="sd">              and 10 the ramp up value.  If w is a string, it should be a relative date like &#39;1m&#39;, &#39;1d&#39;, etc.</span>
+<span class="sd">              Window size defaults to length of series.</span>
+<span class="sd">    :return: timeseries of standard deviation</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Provides `unbiased estimator &lt;https://en.wikipedia.org/wiki/Unbiased_estimation_of_standard_deviation&gt;`_ of sample</span>
+<span class="sd">    `standard deviation &lt;https://en.wikipedia.org/wiki/Standard_deviation&gt;`_ over a rolling window:</span>
+
+<span class="sd">    :math:`R_t = \sqrt{\\frac{1}{N-1} \sum_{i=t-w+1}^t (X_i - \overline{X_t})^2}`</span>
+
+<span class="sd">    where :math:`N` is the number of observations in each rolling window, :math:`w`, and :math:`\overline{X_t}` is the</span>
+<span class="sd">    mean value over the same window:</span>
+
+<span class="sd">    :math:`\overline{X_t} = \\frac{\sum_{i=t-w+1}^{t} X_i}{N}`</span>
+
+<span class="sd">    If window is not provided, computes standard deviation over the full series</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    Generate price series and compute standard deviation of returns over :math:`22` observations</span>
+
+<span class="sd">    &gt;&gt;&gt; prices = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; std(returns(prices), 22)</span>
+
+<span class="sd">    **See also**</span>
+
+<span class="sd">    :func:`sum` :func:`mean` :func:`var`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">normalize_window</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">is_monotonic_increasing</span><span class="p">,</span> <span class="s2">&quot;series index is monotonic increasing&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DateOffset</span><span class="p">):</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">x</span><span class="o">.</span><span class="n">index</span> <span class="o">&gt;</span> <span class="n">idx</span> <span class="o">-</span> <span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">index</span> <span class="o">&lt;=</span> <span class="n">idx</span><span class="p">)]</span><span class="o">.</span><span class="n">std</span><span class="p">()</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">apply_ramp</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="nb">float</span><span class="p">)),</span> <span class="n">w</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">apply_ramp</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">rolling</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">std</span><span class="p">(),</span> <span class="n">w</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="exponential_std"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.statistics.exponential_std.html#gs_quant.timeseries.statistics.exponential_std">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">exponential_std</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">beta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.75</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Exponentially weighted standard deviation</span>
+
+<span class="sd">    :param x: time series</span>
+<span class="sd">    :param beta: how much to weigh the previous price in the time series, thus controlling how much importance we</span>
+<span class="sd">                  place on the (more distant) past. Must be between 0 (inclusive) and 1 (exclusive)</span>
+<span class="sd">    :return: time series of standard deviation of the input series</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Provides an unbiased estimator of `exponentially weighted standard deviation</span>
+<span class="sd">    &lt;https://en.wikipedia.org/wiki/Moving_average#Exponentially_weighted_moving_variance_and_standard_deviation&gt;`_ of</span>
+<span class="sd">    a series [:math:`X_0`, :math:`X_1`, :math:`X_2`, ...]:</span>
+
+<span class="sd">    :math:`S_t = \\sqrt{[EWMA(X_t^2) - EWMA(X_t)^2] * DF_t}`</span>
+
+<span class="sd">    where :math:`EWMA(X_t)` is the `exponential moving average</span>
+<span class="sd">    &lt;https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average&gt;`_ at :math:`t` (see function</span>
+<span class="sd">    :func:`exponential_moving_average`), :math:`DF_t` is the debiasing factor (see</span>
+<span class="sd">    `Weighted sample variance &lt;https://en.wikipedia.org/wiki/Weighted_arithmetic_mean#Weighted_sample_variance&gt;`_</span>
+<span class="sd">    for further details):</span>
+
+<span class="sd">    :math:`DF_t = \\frac{(\sum_{i=0}^t w_i)^2} {(\sum_{i=0}^t w_i)^2 - \sum_{i=0}^t w_i^2}`</span>
+
+<span class="sd">    where :math:`w_i` is the weight assigned to :math:`i` th observation:</span>
+
+<span class="sd">    :math:`w_i = (1-\\beta)\\beta^i` for i&lt;t; :math:`\\beta^i` for i=t</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    Generate price series and compute exponentially weighted standard deviation of returns</span>
+
+<span class="sd">    &gt;&gt;&gt; prices = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; exponential_std(returns(prices), 0.9)</span>
+
+<span class="sd">    **See also**</span>
+
+<span class="sd">    :func:`std` :func:`var` :func:`exponential_moving_average`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">ewm</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mi">1</span> <span class="o">-</span> <span class="n">beta</span><span class="p">,</span> <span class="n">adjust</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">std</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="var"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.statistics.var.html#gs_quant.timeseries.statistics.var">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">var</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">w</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Window</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Window</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Rolling variance of series over given window</span>
+
+<span class="sd">    :param x: series: timeseries</span>
+<span class="sd">    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size</span>
+<span class="sd">              and 10 the ramp up value.  If w is a string, it should be a relative date like &#39;1m&#39;, &#39;1d&#39;, etc.</span>
+<span class="sd">              Window size defaults to length of series.</span>
+<span class="sd">    :return: timeseries of variance</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Provides `unbiased estimator &lt;https://en.wikipedia.org/wiki/Unbiased_estimation_of_standard_deviation&gt;`_ of sample</span>
+<span class="sd">    `variance &lt;https://en.wikipedia.org/wiki/Variance&gt;`_ over a rolling window:</span>
+
+<span class="sd">    :math:`R_t = \\frac{1}{N-1} \sum_{i=t-w+1}^t (X_i - \overline{X_t})^2`</span>
+
+<span class="sd">    where :math:`N` is the number of observations in each rolling window, :math:`w`, and :math:`\overline{X_t}` is the</span>
+<span class="sd">    mean value over the same window:</span>
+
+<span class="sd">    :math:`\overline{X_t} = \\frac{\sum_{i=t-w+1}^{t} X_i}{N}`</span>
+
+<span class="sd">    If window is not provided, computes variance over the full series</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    Generate price series and compute variance of returns over :math:`22` observations</span>
+
+<span class="sd">    &gt;&gt;&gt; prices = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; var(returns(prices), 22)</span>
+
+<span class="sd">    **See also**</span>
+
+<span class="sd">    :func:`var` :func:`mean` :func:`std`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">normalize_window</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">is_monotonic_increasing</span><span class="p">,</span> <span class="s2">&quot;series index is monotonic increasing&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DateOffset</span><span class="p">):</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">x</span><span class="o">.</span><span class="n">index</span> <span class="o">&gt;</span> <span class="n">idx</span> <span class="o">-</span> <span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">index</span> <span class="o">&lt;=</span> <span class="n">idx</span><span class="p">)]</span><span class="o">.</span><span class="n">var</span><span class="p">()</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">apply_ramp</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="nb">float</span><span class="p">)),</span> <span class="n">w</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">apply_ramp</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">rolling</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">var</span><span class="p">(),</span> <span class="n">w</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="cov"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.statistics.cov.html#gs_quant.timeseries.statistics.cov">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">cov</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">w</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Window</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Window</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Rolling co-variance of series over given window</span>
+
+<span class="sd">    :param x: series: timeseries</span>
+<span class="sd">    :param y: series: timeseries</span>
+<span class="sd">    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size</span>
+<span class="sd">              and 10 the ramp up value.  If w is a string, it should be a relative date like &#39;1m&#39;, &#39;1d&#39;, etc.</span>
+<span class="sd">              Window size defaults to length of series.</span>
+<span class="sd">    :return: timeseries of covariance</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Provides `unbiased estimator &lt;https://en.wikipedia.org/wiki/Unbiased_estimation_of_standard_deviation&gt;`_ of sample</span>
+<span class="sd">    `co-variance &lt;https://en.wikipedia.org/wiki/Covariance&gt;`_ over a rolling window:</span>
+
+<span class="sd">    :math:`R_t = \\frac{1}{N-1} \sum_{i=t-w+1}^t (X_i - \overline{X_t}) (Y_i - \overline{Y_t})`</span>
+
+<span class="sd">    where :math:`N` is the number of observations in each rolling window, :math:`w`, and :math:`\overline{X_t}` and</span>
+<span class="sd">    :math:`\overline{Y_t}` represent the sample mean of series :math:`X_t` and :math:`Y_t` over the same window:</span>
+
+<span class="sd">    :math:`\overline{X_t} = \\frac{\sum_{i=t-w+1}^{t} X_i}{N}` and</span>
+<span class="sd">    :math:`\overline{Y_t} = \\frac{\sum_{i=t-w+1}^{t} Y_i}{N}`</span>
+
+<span class="sd">    If window is not provided, computes variance over the full series</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    Generate price series and compute variance of returns over :math:`22` observations</span>
+
+<span class="sd">    &gt;&gt;&gt; prices_x = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; prices_y = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; cov(returns(prices_x) returns(prices_y), 22)</span>
+
+<span class="sd">    **See also**</span>
+
+<span class="sd">    :func:`sum` :func:`mean` :func:`var`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">normalize_window</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">is_monotonic_increasing</span><span class="p">,</span> <span class="s2">&quot;series index is monotonic increasing&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DateOffset</span><span class="p">):</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">x</span><span class="o">.</span><span class="n">index</span> <span class="o">&gt;</span> <span class="n">idx</span> <span class="o">-</span> <span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">index</span> <span class="o">&lt;=</span> <span class="n">idx</span><span class="p">)]</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">apply_ramp</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="nb">float</span><span class="p">)),</span> <span class="n">w</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">apply_ramp</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">rolling</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="n">w</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_zscore</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="k">return</span> <span class="n">stats</span><span class="o">.</span><span class="n">zscore</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="zscores"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.statistics.zscores.html#gs_quant.timeseries.statistics.zscores">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">zscores</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">w</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Window</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Window</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Rolling z-scores over a given window</span>
+
+<span class="sd">    :param x: time series of prices</span>
+<span class="sd">    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size</span>
+<span class="sd">              and 10 the ramp up value.  If w is a string, it should be a relative date like &#39;1m&#39;, &#39;1d&#39;, etc.</span>
+<span class="sd">              Window size defaults to length of series.</span>
+<span class="sd">    :return: timeseries of z-scores</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Calculate `standard score &lt;https://en.wikipedia.org/wiki/Standard_score&gt;`_ of each value in series over given</span>
+<span class="sd">    window. Standard deviation and sample mean are computed over the specified rolling window, then element is</span>
+<span class="sd">    normalized to provide a rolling z-score:</span>
+
+<span class="sd">    :math:`R_t = \\frac { X_t - \mu }{ \sigma }`</span>
+
+<span class="sd">    Where :math:`\mu` and :math:`\sigma` are sample mean and standard deviation over the given window</span>
+
+<span class="sd">    If window is not provided, computes z-score relative to mean and standard deviation over the full series</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    Generate price series and compute z-score of returns over :math:`22` observations</span>
+
+<span class="sd">    &gt;&gt;&gt; prices = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; zscores(returns(prices), 22)</span>
+
+<span class="sd">    **See also**</span>
+
+<span class="sd">    :func:`mean` :func:`std`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">x</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">normalize_window</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="n">MqValueError</span><span class="p">(</span><span class="s2">&quot;When string is passed window index must be a DatetimeIndex or of type datetime.date&quot;</span><span class="p">)</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">normalize_window</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="mf">0.0</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="nb">float</span><span class="p">))</span>
+
+        <span class="n">clean_series</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+        <span class="n">zscore_series</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">zscore</span><span class="p">(</span><span class="n">clean_series</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">clean_series</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="nb">float</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">interpolate</span><span class="p">(</span><span class="n">zscore_series</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">Interpolate</span><span class="o">.</span><span class="n">NAN</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">normalize_window</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">_zscore</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">x</span><span class="o">.</span><span class="n">index</span> <span class="o">&gt;</span> <span class="n">idx</span> <span class="o">-</span> <span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">index</span> <span class="o">&lt;=</span> <span class="n">idx</span><span class="p">)])</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">apply_ramp</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="nb">float</span><span class="p">)),</span> <span class="n">w</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">apply_ramp</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">rolling</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">_zscore</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span> <span class="n">w</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="winsorize"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.statistics.winsorize.html#gs_quant.timeseries.statistics.winsorize">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">winsorize</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">limit</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.5</span><span class="p">,</span> <span class="n">w</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Window</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Window</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Limit extreme values in series</span>
+
+<span class="sd">    :param x: time series of prices</span>
+<span class="sd">    :param limit: max z-score of values</span>
+<span class="sd">    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size</span>
+<span class="sd">              and 10 the ramp up value.  If w is a string, it should be a relative date like &#39;1m&#39;, &#39;1d&#39;, etc.</span>
+<span class="sd">              Window size defaults to length of series.</span>
+<span class="sd">    :return: timeseries of winsorized values</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Cap and floor values in the series which have a z-score greater or less than provided value. This function will</span>
+<span class="sd">    restrict the distribution of values. Calculates the sample standard deviation and adjusts values which</span>
+<span class="sd">    fall outside the specified range to be equal to the upper or lower limits</span>
+
+<span class="sd">    Lower and upper limits are defined as:</span>
+
+<span class="sd">    :math:`upper = \mu + \sigma \\times limit`</span>
+
+<span class="sd">    :math:`lower = \mu - \sigma \\times limit`</span>
+
+<span class="sd">    Where :math:`\mu` and :math:`\sigma` are sample mean and standard deviation. The series is restricted by:</span>
+
+<span class="sd">    :math:`R_t = max( min( X_t, upper), lower )`</span>
+
+<span class="sd">    See `winsorising &lt;https://en.wikipedia.org/wiki/Winsorizing&gt;`_ for additional information</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    Generate price series and winsorize z-score of returns over :math:`22` observations</span>
+
+<span class="sd">    &gt;&gt;&gt; prices = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; winsorize(zscore(returns(prices), 22))</span>
+
+<span class="sd">    **See also**</span>
+
+<span class="sd">    :func:`zscore` :func:`mean` :func:`std`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">normalize_window</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">x</span>
+
+    <span class="k">assert</span> <span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="s2">&quot;window is not 0&quot;</span>
+
+    <span class="n">mu</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+    <span class="n">sigma</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
+
+    <span class="n">high</span> <span class="o">=</span> <span class="n">mu</span> <span class="o">+</span> <span class="n">sigma</span> <span class="o">*</span> <span class="n">limit</span>
+    <span class="n">low</span> <span class="o">=</span> <span class="n">mu</span> <span class="o">-</span> <span class="n">sigma</span> <span class="o">*</span> <span class="n">limit</span>
+
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">ceil</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">high</span><span class="p">)</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">floor</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">low</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">apply_ramp</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="generate_series"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.statistics.generate_series.html#gs_quant.timeseries.statistics.generate_series">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">generate_series</span><span class="p">(</span><span class="n">length</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate sample timeseries</span>
+
+<span class="sd">    :param length: number of observations</span>
+<span class="sd">    :return: date-based time series of randomly generated prices</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Create timeseries from returns generated from a normally distributed random variables (IDD). Length determines the</span>
+<span class="sd">    number of observations to be generated.</span>
+
+<span class="sd">    Assume random variables :math:`R` which follow a normal distribution with mean :math:`0` and standard deviation</span>
+<span class="sd">    of :math:`1`</span>
+
+<span class="sd">    :math:`R \sim N(0, 1)`</span>
+
+<span class="sd">    The timeseries is generated from these random numbers through:</span>
+
+<span class="sd">    :math:`X_t = (1 + R)X_{t-1}`</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    Generate price series with 100 observations starting from today&#39;s date:</span>
+
+<span class="sd">    &gt;&gt;&gt; prices = generate_series(100)</span>
+
+<span class="sd">    **See also**</span>
+
+<span class="sd">    :func:`numpy.random.normal()`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">levels</span> <span class="o">=</span> <span class="p">[</span><span class="mi">100</span><span class="p">]</span>
+    <span class="n">dates</span> <span class="o">=</span> <span class="p">[</span><span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()]</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">levels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">levels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">())</span>
+        <span class="n">dates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">fromordinal</span><span class="p">(</span><span class="n">dates</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">toordinal</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">levels</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">dates</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="nb">float</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="percentiles"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.statistics.percentiles.html#gs_quant.timeseries.statistics.percentiles">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">percentiles</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">w</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Window</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Window</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Rolling percentiles over given window</span>
+
+<span class="sd">    :param x: value series</span>
+<span class="sd">    :param y: distribution series</span>
+<span class="sd">    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size</span>
+<span class="sd">              and 10 the ramp up value.  If w is a string, it should be a relative date like &#39;1m&#39;, &#39;1d&#39;, etc.</span>
+<span class="sd">              Window size defaults to length of series.</span>
+<span class="sd">    :return: timeseries of percentiles</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Calculate `percentile rank &lt;https://en.wikipedia.org/wiki/Percentile_rank&gt;`_ of :math:`y` in the sample distribution</span>
+<span class="sd">    of :math:`x` over a rolling window of length :math:`w`:</span>
+
+<span class="sd">    :math:`R_t = \\frac{\sum_{i=t-N+1}^{t}{[X_i&lt;{Y_t}]}+0.5\sum_{i=t-N+1}^{t}{[X_i={Y_t}]}}{N}\\times100\%`</span>
+
+<span class="sd">    Where :math:`N` is the number of observations in a rolling window. If :math:`y` is not provided, calculates</span>
+<span class="sd">    percentiles of :math:`x` over its historical values. If window length :math:`w` is not provided, uses an</span>
+<span class="sd">    ever-growing history of values. If :math:`w` is greater than the available data size, returns empty.</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    Compute percentile ranks of a series in the sample distribution of a second series over :math:`22` observations</span>
+
+<span class="sd">    &gt;&gt;&gt; a = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; b = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; percentiles(a, b, 22)</span>
+
+<span class="sd">    **See also**</span>
+
+<span class="sd">    :func:`zscores`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">normalize_window</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">x</span>
+
+    <span class="k">if</span> <span class="n">y</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">r</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">w</span><span class="o">.</span><span class="n">r</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Ramp value must be less than the length of the series y.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">w</span><span class="o">.</span><span class="n">w</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">()</span>
+
+    <span class="n">res</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="nb">float</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">y</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="n">sample</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">x</span><span class="o">.</span><span class="n">index</span> <span class="o">&gt;</span> <span class="n">idx</span> <span class="o">-</span> <span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">index</span> <span class="o">&lt;=</span> <span class="n">idx</span><span class="p">)]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DateOffset</span><span class="p">)</span> <span class="k">else</span> <span class="n">x</span><span class="p">[:</span><span class="n">idx</span><span class="p">][</span><span class="o">-</span><span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">:]</span>
+        <span class="n">res</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">percentileofscore</span><span class="p">(</span><span class="n">sample</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;mean&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">r</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DateOffset</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">res</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">res</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">w</span><span class="o">.</span><span class="n">r</span><span class="p">:]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">res</span><span class="p">[</span><span class="n">w</span><span class="o">.</span><span class="n">r</span><span class="p">:]</span></div>
+
+
+<div class="viewcode-block" id="percentile"><a class="viewcode-back" href="../../../functions/gs_quant.timeseries.statistics.percentile.html#gs_quant.timeseries.statistics.percentile">[docs]</a><span class="nd">@plot_function</span>
+<span class="k">def</span> <span class="nf">percentile</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">w</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Window</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the nth percentile of a series.</span>
+
+<span class="sd">    :param x: series</span>
+<span class="sd">    :param n: percentile</span>
+<span class="sd">    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size</span>
+<span class="sd">              and 10 the ramp up value.  If w is a string, it should be a relative date like &#39;1m&#39;, &#39;1d&#39;, etc.</span>
+<span class="sd">    :return: nth percentile</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Calculates the `nth percentile rank &lt;https://en.wikipedia.org/wiki/Percentile_rank&gt;`_ of :math:`x`. Rolling nth</span>
+<span class="sd">    percentile is returned if a window is specified, else a scalar for nth percentile over the entire series.</span>
+
+<span class="sd">    **Example**</span>
+
+<span class="sd">    Compute the 90th percentile of a series.</span>
+
+<span class="sd">    &gt;&gt;&gt; a = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; percentile(a, 90)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">n</span> <span class="o">&lt;=</span> <span class="mi">100</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">MqValueError</span><span class="p">(</span><span class="s1">&#39;percentile must be in range [0, 100]&#39;</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">x</span>
+    <span class="k">if</span> <span class="n">w</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+
+    <span class="n">n</span> <span class="o">/=</span> <span class="mi">100</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">normalize_window</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DateOffset</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">x</span><span class="o">.</span><span class="n">index</span> <span class="o">&gt;</span> <span class="n">idx</span> <span class="o">-</span> <span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">index</span> <span class="o">&lt;=</span> <span class="n">idx</span><span class="p">)]</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">MqTypeError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;cannot use relative dates with index </span><span class="si">{</span><span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="nb">float</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">rolling</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">apply_ramp</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LinearRegression"><a class="viewcode-back" href="../../../classes/gs_quant.timeseries.statistics.LinearRegression.html#gs_quant.timeseries.statistics.LinearRegression">[docs]</a><span class="k">class</span> <span class="nc">LinearRegression</span><span class="p">:</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Fit an Ordinary least squares (OLS) linear regression model.</span>
+
+<span class="sd">    :param X: observations of the explanatory variable(s)</span>
+<span class="sd">    :param y: observations of the dependant variable</span>
+<span class="sd">    :param fit_intercept: whether to calculate intercept in the model</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Fit `OLS Model &lt;https://en.wikipedia.org/wiki/Ordinary_least_squares&gt;`_ based on observations of the explanatory</span>
+<span class="sd">    variables(s) X and the dependant variable y. If X and y are not aligned, only use the intersection of dates/times</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    R Squared of an OLS model:</span>
+
+<span class="sd">    &gt;&gt;&gt; x = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; y = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; r = LinearRegression(x, y)</span>
+<span class="sd">    &gt;&gt;&gt; r.r_squared()</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">]],</span> <span class="n">y</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">fit_intercept</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="n">X</span><span class="o">.</span><span class="n">to_frame</span><span class="p">()</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">add_constant</span><span class="p">(</span><span class="n">df</span><span class="p">)</span> <span class="k">if</span> <span class="n">fit_intercept</span> <span class="k">else</span> <span class="n">df</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">))</span> <span class="k">if</span> <span class="n">fit_intercept</span> <span class="k">else</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="o">~</span><span class="n">df</span><span class="o">.</span><span class="n">isin</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">])</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="mi">1</span><span class="p">)]</span>  <span class="c1"># filter out nan and inf</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="o">~</span><span class="n">y</span><span class="o">.</span><span class="n">isin</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">])]</span>
+        <span class="n">df_aligned</span><span class="p">,</span> <span class="n">y_aligned</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">align</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="s1">&#39;inner&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># align series</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_index_scope</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">))</span> <span class="k">if</span> <span class="n">fit_intercept</span> <span class="k">else</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_res</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">OLS</span><span class="p">(</span><span class="n">y_aligned</span><span class="p">,</span> <span class="n">df_aligned</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fit_intercept</span> <span class="o">=</span> <span class="n">fit_intercept</span>
+
+    <span class="nd">@plot_method</span>
+    <span class="k">def</span> <span class="nf">coefficient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Estimated coefficient</span>
+
+<span class="sd">        :param i: coefficient of which predictor to get. If intercept is used, start from 0, else start from 1</span>
+<span class="sd">        :return: estimated coefficient of the i-th predictor</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_res</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="nd">@plot_method</span>
+    <span class="k">def</span> <span class="nf">r_squared</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Coefficient of determination (R Squared)</span>
+
+<span class="sd">        :return: R Squared</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_res</span><span class="o">.</span><span class="n">rsquared</span>
+
+    <span class="nd">@plot_method</span>
+    <span class="k">def</span> <span class="nf">fitted_values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fitted values</span>
+
+<span class="sd">        :return: fitted values</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_res</span><span class="o">.</span><span class="n">fittedvalues</span>
+
+    <span class="nd">@plot_method</span>
+    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X_predict</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Use the model for prediction</span>
+
+<span class="sd">        :param X_predict: the values for which to predict</span>
+<span class="sd">        :return: predicted values</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">X_predict</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X_predict</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="n">X_predict</span><span class="o">.</span><span class="n">to_frame</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_res</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">sm</span><span class="o">.</span><span class="n">add_constant</span><span class="p">(</span><span class="n">df</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit_intercept</span> <span class="k">else</span> <span class="n">df</span><span class="p">)</span>
+
+    <span class="nd">@plot_method</span>
+    <span class="k">def</span> <span class="nf">standard_deviation_of_errors</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Standard deviation of the error term</span>
+
+<span class="sd">        :return: standard deviation of the error term</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_res</span><span class="o">.</span><span class="n">mse_resid</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RollingLinearRegression"><a class="viewcode-back" href="../../../classes/gs_quant.timeseries.statistics.RollingLinearRegression.html#gs_quant.timeseries.statistics.RollingLinearRegression">[docs]</a><span class="k">class</span> <span class="nc">RollingLinearRegression</span><span class="p">:</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Fit a rolling ordinary least squares (OLS) linear regression model.</span>
+
+<span class="sd">    :param X: observations of the explanatory variable(s)</span>
+<span class="sd">    :param y: observations of the dependant variable</span>
+<span class="sd">    :param w: number of observations in each rolling window. Must be larger than the number of observations or</span>
+<span class="sd">              explanatory variables</span>
+<span class="sd">    :param fit_intercept: whether to calculate intercept in the model</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Fit `OLS Model &lt;https://en.wikipedia.org/wiki/Ordinary_least_squares&gt;`_ based on observations of the explanatory</span>
+<span class="sd">    variables(s) X and the dependant variable y across a rolling window with fixed number of observations.</span>
+<span class="sd">    The parameters of each rolling window are stored at the end of each window.</span>
+<span class="sd">    If X and y are not aligned, only use the intersection of dates/times</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    R Squared of a rolling OLS model:</span>
+
+<span class="sd">    &gt;&gt;&gt; x = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; y = generate_series(100)</span>
+<span class="sd">    &gt;&gt;&gt; r = RollingLinearRegression(x, y, 5)</span>
+<span class="sd">    &gt;&gt;&gt; r.r_squared()</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">]],</span> <span class="n">y</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">w</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">fit_intercept</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="n">X</span><span class="o">.</span><span class="n">to_frame</span><span class="p">()</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">add_constant</span><span class="p">(</span><span class="n">df</span><span class="p">)</span> <span class="k">if</span> <span class="n">fit_intercept</span> <span class="k">else</span> <span class="n">df</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">))</span> <span class="k">if</span> <span class="n">fit_intercept</span> <span class="k">else</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">w</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">MqValueError</span><span class="p">(</span><span class="s1">&#39;Window length must be larger than the number of explanatory variables&#39;</span><span class="p">)</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="o">~</span><span class="n">df</span><span class="o">.</span><span class="n">isin</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">])</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="mi">1</span><span class="p">)]</span>  <span class="c1"># filter out nan and inf</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="o">~</span><span class="n">y</span><span class="o">.</span><span class="n">isin</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">])]</span>
+        <span class="n">df_aligned</span><span class="p">,</span> <span class="n">y_aligned</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">align</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="s1">&#39;inner&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># align series</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_X</span> <span class="o">=</span> <span class="n">df_aligned</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_res</span> <span class="o">=</span> <span class="n">RollingOLS</span><span class="p">(</span><span class="n">y_aligned</span><span class="p">,</span> <span class="n">df_aligned</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+
+    <span class="nd">@plot_method</span>
+    <span class="k">def</span> <span class="nf">coefficient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Estimated coefficients</span>
+
+<span class="sd">        :param i: coefficients of which predictor to get. If intercept is used, start from 0, else start from 1</span>
+<span class="sd">        :return: estimated coefficients of the i-th predictor</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_res</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="nd">@plot_method</span>
+    <span class="k">def</span> <span class="nf">r_squared</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Coefficients of determination (R Squared) of rolling regressions</span>
+
+<span class="sd">        :return: R Squared</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_res</span><span class="o">.</span><span class="n">rsquared</span>
+
+    <span class="nd">@plot_method</span>
+    <span class="k">def</span> <span class="nf">fitted_values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fitted values at the end of each rolling window</span>
+
+<span class="sd">        :return: fitted values</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">comp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_X</span><span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_res</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">comp</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">min_count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">comp</span><span class="o">.</span><span class="n">columns</span><span class="p">))</span>
+
+    <span class="nd">@plot_method</span>
+    <span class="k">def</span> <span class="nf">standard_deviation_of_errors</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Standard deviations of the error terms</span>
+
+<span class="sd">        :return: standard deviations of the error terms</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_res</span><span class="o">.</span><span class="n">mse_resid</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SIRModel"><a class="viewcode-back" href="../../../classes/gs_quant.timeseries.statistics.SIRModel.html#gs_quant.timeseries.statistics.SIRModel">[docs]</a><span class="k">class</span> <span class="nc">SIRModel</span><span class="p">:</span>
+
+    <span class="sd">&quot;&quot;&quot;SIR Compartmental model for transmission of infectious disease</span>
+
+<span class="sd">    :param beta: transmission rate of the infection</span>
+<span class="sd">    :param gamma: recovery rate of the infection</span>
+<span class="sd">    :param s: number of susceptible individuals in population</span>
+<span class="sd">    :param i: number of infectious individuals in population</span>
+<span class="sd">    :param r: number of recovered individuals in population</span>
+<span class="sd">    :param n: total population size</span>
+<span class="sd">    :param end_date: end date for the evolution of the model</span>
+<span class="sd">    :param fit: whether to fit the model to the data</span>
+<span class="sd">    :param fit_period: on how many days back to fit the model</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Fit `SIR Model &lt;https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology#The_SIR_model&gt;`_ based on the</span>
+<span class="sd">    population in each compartment over a given time period.</span>
+
+<span class="sd">    The SIR models the movement of individuals between three compartments: susceptible (S), infected (I), and resistant</span>
+<span class="sd">    (R). The model calibrates parameters :</span>
+
+<span class="sd">    ===========   =======================================================</span>
+<span class="sd">    Parameter     Description</span>
+<span class="sd">    ===========   =======================================================</span>
+<span class="sd">    S0            initial susceptible individuals</span>
+<span class="sd">    I0            initial infected individuals</span>
+<span class="sd">    R0            initial recovered individuals</span>
+<span class="sd">    beta          Transmission rate from susceptible to infected</span>
+<span class="sd">    gamma         Immunity rate from infected to resistant</span>
+<span class="sd">    ===========   =======================================================</span>
+
+<span class="sd">    The parameters beta and gamma model how fast people move from being susceptible to infected (beta), and</span>
+<span class="sd">    subsequently from infected to resistant (gamma). This model can be used to forecast the populations of each</span>
+<span class="sd">    compartment once calibrated</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">beta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">i</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">r</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">n</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">fit</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                 <span class="n">fit_period</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">dropna</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="k">else</span> <span class="n">n</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="mi">100</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">n</span>
+        <span class="n">fit</span> <span class="o">=</span> <span class="kc">False</span> <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">i</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">r</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">fit</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">n</span> <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">s</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">i</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">r</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">r</span>
+
+        <span class="n">data_start</span> <span class="o">=</span> <span class="p">[</span><span class="n">ts</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="o">.</span><span class="n">date</span><span class="p">()</span> <span class="k">for</span> <span class="n">ts</span> <span class="ow">in</span> <span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">r</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ts</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)]</span>
+        <span class="n">data_start</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">DataContext</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">start_date</span><span class="p">)</span>
+        <span class="n">start_date</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">data_start</span><span class="p">)</span>
+
+        <span class="n">data_end</span> <span class="o">=</span> <span class="p">[</span><span class="n">ts</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">date</span><span class="p">()</span> <span class="k">for</span> <span class="n">ts</span> <span class="ow">in</span> <span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">r</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ts</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)]</span>
+        <span class="n">data_end</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">DataContext</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">end_date</span><span class="p">)</span>
+        <span class="n">end_date</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">data_end</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">s</span> <span class="o">=</span> <span class="n">s</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">s</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">r</span> <span class="o">=</span> <span class="n">r</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">r</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">n</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">beta_init</span> <span class="o">=</span> <span class="n">beta</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gamma_init</span> <span class="o">=</span> <span class="n">gamma</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit</span> <span class="o">=</span> <span class="n">fit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_period</span> <span class="o">=</span> <span class="n">fit_period</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">beta_fixed</span> <span class="o">=</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fit</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">beta_init</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gamma_fixed</span> <span class="o">=</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fit</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma_init</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">))</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">i</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="n">beta_init</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta_init</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta_init</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mf">0.9</span>
+        <span class="n">gamma_init</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma_init</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma_init</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mf">0.01</span>
+
+        <span class="n">parameters</span><span class="p">,</span> <span class="n">initial_conditions</span> <span class="o">=</span> <span class="n">SIR</span><span class="o">.</span><span class="n">get_parameters</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">n</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="n">beta_init</span><span class="p">,</span>
+                                                            <span class="n">gamma</span><span class="o">=</span><span class="n">gamma_init</span><span class="p">,</span> <span class="n">beta_fixed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">beta_fixed</span><span class="p">,</span>
+                                                            <span class="n">gamma_fixed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma_fixed</span><span class="p">,</span> <span class="n">S0_fixed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">I0_fixed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                                            <span class="n">R0_fixed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="n">parameters</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="o">=</span> <span class="n">EpidemicModel</span><span class="p">(</span><span class="n">SIR</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">initial_conditions</span><span class="o">=</span><span class="n">initial_conditions</span><span class="p">,</span>
+                                    <span class="n">fit_period</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_period</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">((</span><span class="n">end_date</span> <span class="o">-</span> <span class="n">start_date</span><span class="p">)</span><span class="o">.</span><span class="n">days</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">predict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">s0</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">i0</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">r0</span><span class="p">()),</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">(),</span> <span class="n">n</span><span class="p">))</span>
+
+        <span class="n">predict_dates</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">s_predict</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">predict</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">predict_dates</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">i_predict</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">predict</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">predict_dates</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">r_predict</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">predict</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">predict_dates</span><span class="p">)</span>
+
+    <span class="nd">@plot_method</span>
+    <span class="k">def</span> <span class="nf">s0</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Model calibration for initial susceptible individuals</span>
+
+<span class="sd">        :return: initial susceptible individuals</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">fitted_parameters</span><span class="p">[</span><span class="s1">&#39;S0&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;S0&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+
+    <span class="nd">@plot_method</span>
+    <span class="k">def</span> <span class="nf">i0</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Model calibration for initial infectious individuals</span>
+
+<span class="sd">        :return: initial infectious individuals</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">fitted_parameters</span><span class="p">[</span><span class="s1">&#39;I0&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;I0&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+
+    <span class="nd">@plot_method</span>
+    <span class="k">def</span> <span class="nf">r0</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Model calibration for initial recovered individuals</span>
+
+<span class="sd">        :return: initial recovered individuals</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">fitted_parameters</span><span class="p">[</span><span class="s1">&#39;R0&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;R0&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+
+    <span class="nd">@plot_method</span>
+    <span class="k">def</span> <span class="nf">beta</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Model calibration for transmission rate (susceptible to infected)</span>
+
+<span class="sd">        :return: beta</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">fitted_parameters</span><span class="p">[</span><span class="s1">&#39;beta&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;beta&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+
+    <span class="nd">@plot_method</span>
+    <span class="k">def</span> <span class="nf">gamma</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Model calibration for immunity (infected to resistant)</span>
+
+<span class="sd">        :return: beta</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">fitted_parameters</span><span class="p">[</span><span class="s1">&#39;gamma&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;gamma&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+
+    <span class="nd">@plot_method</span>
+    <span class="k">def</span> <span class="nf">predict_s</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Model calibration for susceptible individuals through time</span>
+
+<span class="sd">        :return: susceptible predict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">s_predict</span>
+
+    <span class="nd">@plot_method</span>
+    <span class="k">def</span> <span class="nf">predict_i</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Model calibration for infected individuals through time</span>
+
+<span class="sd">        :return: infected predict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">i_predict</span>
+
+    <span class="nd">@plot_method</span>
+    <span class="k">def</span> <span class="nf">predict_r</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Model calibration for recovered individuals through time</span>
+
+<span class="sd">        :return: infected predict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">r_predict</span></div>
+
+
+<div class="viewcode-block" id="SEIRModel"><a class="viewcode-back" href="../../../classes/gs_quant.timeseries.statistics.SEIRModel.html#gs_quant.timeseries.statistics.SEIRModel">[docs]</a><span class="k">class</span> <span class="nc">SEIRModel</span><span class="p">(</span><span class="n">SIRModel</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;SEIR Compartmental model for transmission of infectious disease</span>
+
+<span class="sd">    :param beta: transmission rate of the infection</span>
+<span class="sd">    :param gamma: recovery rate of the infection</span>
+<span class="sd">    :param sigma: immunity rate from exposed to infected</span>
+<span class="sd">    :param s: number of susceptible individuals in population</span>
+<span class="sd">    :param e: number of exposed individuals in population</span>
+<span class="sd">    :param i: number of infectious individuals in population</span>
+<span class="sd">    :param r: number of recovered individuals in population</span>
+<span class="sd">    :param n: total population size</span>
+<span class="sd">    :param end_date: end date for the evolution of the model</span>
+<span class="sd">    :param fit: whether to fit the model to the data</span>
+<span class="sd">    :param fit_period: on how many days back to fit the model</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">    Fit `SEIR Model &lt;https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology#The_SEIR_model&gt;`_ based on the</span>
+<span class="sd">    population in each compartment over a given time period.</span>
+
+<span class="sd">    The SEIR models the movement of individuals between four compartments: susceptible (S), exposed (E), infected (I),</span>
+<span class="sd">    and resistant (R). The model calibrates parameters :</span>
+
+<span class="sd">    ===========   =======================================================</span>
+<span class="sd">    Parameter     Description</span>
+<span class="sd">    ===========   =======================================================</span>
+<span class="sd">    S0            initial susceptible individuals</span>
+<span class="sd">    E0            initial exposed individuals</span>
+<span class="sd">    I0            initial infected individuals</span>
+<span class="sd">    R0            initial recovered individuals</span>
+<span class="sd">    beta          Transmission rate from susceptible to exposed</span>
+<span class="sd">    gamma         Immunity rate from infected to resistant</span>
+<span class="sd">    sigma         Immunity rate from exposed to infected</span>
+<span class="sd">    ===========   =======================================================</span>
+
+<span class="sd">    The parameters beta, gamma, and sigma, model how fast people move from being susceptible to exposed (beta),</span>
+<span class="sd">    from exposed to infected (sigma), and subsequently from infected to resistant (gamma). This model can be used to</span>
+<span class="sd">    predict the populations of each compartment once calibrated.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">beta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sigma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">e</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">r</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">fit</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">fit_period</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">dropna</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="k">else</span> <span class="n">n</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="mi">100</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">n</span>
+        <span class="n">fit</span> <span class="o">=</span> <span class="kc">False</span> <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">state</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">r</span><span class="p">))</span> <span class="k">else</span> <span class="n">fit</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">n</span> <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">s</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">e</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">e</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">i</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">r</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">r</span>
+
+        <span class="n">data_start</span> <span class="o">=</span> <span class="p">[</span><span class="n">ts</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="o">.</span><span class="n">date</span><span class="p">()</span> <span class="k">for</span> <span class="n">ts</span> <span class="ow">in</span> <span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">r</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ts</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)]</span>
+        <span class="n">data_start</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">DataContext</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">start_date</span><span class="p">)</span>
+        <span class="n">start_date</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">data_start</span><span class="p">)</span>
+
+        <span class="n">data_end</span> <span class="o">=</span> <span class="p">[</span><span class="n">ts</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">date</span><span class="p">()</span> <span class="k">for</span> <span class="n">ts</span> <span class="ow">in</span> <span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">r</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ts</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)]</span>
+        <span class="n">data_end</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">DataContext</span><span class="o">.</span><span class="n">current</span><span class="o">.</span><span class="n">end_date</span><span class="p">)</span>
+        <span class="n">end_date</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">data_end</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">s</span> <span class="o">=</span> <span class="n">s</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">s</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">e</span> <span class="o">=</span> <span class="n">e</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">e</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">r</span> <span class="o">=</span> <span class="n">r</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">r</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">n</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">beta_init</span> <span class="o">=</span> <span class="n">beta</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gamma_init</span> <span class="o">=</span> <span class="n">gamma</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma_init</span> <span class="o">=</span> <span class="n">sigma</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit</span> <span class="o">=</span> <span class="n">fit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_period</span> <span class="o">=</span> <span class="n">fit_period</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">beta_fixed</span> <span class="o">=</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fit</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gamma_fixed</span> <span class="o">=</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fit</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma_fixed</span> <span class="o">=</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fit</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">))</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">e</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">i</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="n">beta_init</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta_init</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta_init</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mf">0.9</span>
+        <span class="n">gamma_init</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma_init</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma_init</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mf">0.01</span>
+        <span class="n">sigma_init</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma_init</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma_init</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mf">0.2</span>
+
+        <span class="n">parameters</span><span class="p">,</span> <span class="n">initial_conditions</span> <span class="o">=</span> <span class="n">SEIR</span><span class="o">.</span><span class="n">get_parameters</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">n</span><span class="p">,</span>
+                                                             <span class="n">beta</span><span class="o">=</span><span class="n">beta_init</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="n">gamma_init</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sigma_init</span><span class="p">,</span>
+                                                             <span class="n">beta_fixed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">beta_fixed</span><span class="p">,</span>
+                                                             <span class="n">gamma_fixed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma_fixed</span><span class="p">,</span>
+                                                             <span class="n">sigma_fixed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma_fixed</span><span class="p">,</span>
+                                                             <span class="n">S0_fixed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">I0_fixed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                                             <span class="n">R0_fixed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">E0_fixed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">S0_max</span><span class="o">=</span><span class="mf">5e6</span><span class="p">,</span> <span class="n">I0_max</span><span class="o">=</span><span class="mf">5e6</span><span class="p">,</span>
+                                                             <span class="n">E0_max</span><span class="o">=</span><span class="mf">10e6</span><span class="p">,</span> <span class="n">R0_max</span><span class="o">=</span><span class="mf">10e6</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="n">parameters</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="o">=</span> <span class="n">EpidemicModel</span><span class="p">(</span><span class="n">SEIR</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">initial_conditions</span><span class="o">=</span><span class="n">initial_conditions</span><span class="p">,</span>
+                                    <span class="n">fit_period</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_period</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">((</span><span class="n">end_date</span> <span class="o">-</span> <span class="n">start_date</span><span class="p">)</span><span class="o">.</span><span class="n">days</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">predict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">s0</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">e0</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">i0</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">r0</span><span class="p">()),</span>
+                                    <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">(),</span> <span class="n">n</span><span class="p">))</span>
+
+        <span class="n">predict_dates</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">s_predict</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">predict</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">predict_dates</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">e_predict</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">predict</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">predict_dates</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">i_predict</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">predict</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">predict_dates</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">r_predict</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">predict</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">],</span> <span class="n">predict_dates</span><span class="p">)</span>
+
+    <span class="nd">@plot_method</span>
+    <span class="k">def</span> <span class="nf">e0</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Model calibration for initial exposed individuals</span>
+
+<span class="sd">        :return: initial exposed individuals</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">fitted_parameters</span><span class="p">[</span><span class="s1">&#39;E0&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;E0&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+
+    <span class="nd">@plot_method</span>
+    <span class="k">def</span> <span class="nf">beta</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Model calibration for transmission rate (susceptible to exposed)</span>
+
+<span class="sd">        :return: beta</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">fitted_parameters</span><span class="p">[</span><span class="s1">&#39;beta&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;beta&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+
+    <span class="nd">@plot_method</span>
+    <span class="k">def</span> <span class="nf">gamma</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Model calibration for immunity (infected to resistant)</span>
+
+<span class="sd">        :return: gamma</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">fitted_parameters</span><span class="p">[</span><span class="s1">&#39;gamma&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;gamma&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+
+    <span class="nd">@plot_method</span>
+    <span class="k">def</span> <span class="nf">sigma</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Model calibration for infection rate (exposed to infected)</span>
+
+<span class="sd">        :return: sigma</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">fitted_parameters</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+
+    <span class="nd">@plot_method</span>
+    <span class="k">def</span> <span class="nf">predict_e</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Model calibration for exposed individuals through time</span>
+
+<span class="sd">        :return: exposed predict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">e_predict</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  <hr />
+  
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  
+  
+    
+   
+
+</body>
+</html>

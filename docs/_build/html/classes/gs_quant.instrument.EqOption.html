@@ -32,11 +32,6 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -44,8 +39,8 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="next" title="Forward" href="gs_quant.instrument.Forward.html" />
-    <link rel="prev" title="CommodSwap" href="gs_quant.instrument.CommodSwap.html" /> 
+    <link rel="next" title="EqSynthetic" href="gs_quant.instrument.EqSynthetic.html" />
+    <link rel="prev" title="EqForward" href="gs_quant.instrument.EqForward.html" /> 
 </head>
 
 <!-- Hello from the future. -->
@@ -55,11 +50,11 @@
 
    
   <div class="wy-grid-for-nav">
-    <a data-toggle="wy-nav-top" class="gs-developer-action-button-container" ontouchstart="">
-      <div data-toggle="gs-nav-action" class="gs-nav-action"></div>
+    <a data-toggle="wy-nav-top" id="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" id="gs-nav-action"></div>
     </a>
     
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+    <nav id="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         
         
@@ -77,23 +72,39 @@
 <li class="toctree-l1 current"><a class="reference internal" href="../instrument.html">Instrument Package</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="gs_quant.base.Priceable.html">gs_quant.base.Priceable</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../instrument.html#instruments">Instruments</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.CommodSwap.html">CommodSwap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.CommodOTCSwap.html">CommodOTCSwap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.EqCliquet.html">EqCliquet</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.EqForward.html">EqForward</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">EqOption</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.EqSynthetic.html">EqSynthetic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.EqVarianceSwap.html">EqVarianceSwap</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.Forward.html">Forward</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.FXBinary.html">FXBinary</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.FXForward.html">FXForward</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.FXMultiCrossBinary.html">FXMultiCrossBinary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.FXMultiCrossBinaryLeg.html">FXMultiCrossBinaryLeg</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.FXOption.html">FXOption</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.FXVolatilitySwap.html">FXVolatilitySwap</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.InflationSwap.html">InflationSwap</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRBasisSwap.html">IRBasisSwap</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRCap.html">IRCap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRCMSOption.html">IRCMSOption</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRCMSOptionStrip.html">IRCMSOptionStrip</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRCMSSpreadOption.html">IRCMSSpreadOption</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRCMSSpreadOptionStrip.html">IRCMSSpreadOptionStrip</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRFloor.html">IRFloor</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRSwap.html">IRSwap</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRSwaption.html">IRSwaption</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRXccySwap.html">IRXccySwap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRXccySwapFixFix.html">IRXccySwapFixFix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRXccySwapFixFlt.html">IRXccySwapFixFlt</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.Security.html">Security</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../market.html">Market Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../markets.html">Markets Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../models.html">Models Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../risk.html">Risk Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../timeseries.html">Timeseries Package</a></li>
 </ul>
@@ -156,34 +167,23 @@
   <div class="section" id="eqoption">
 <h1>EqOption<a class="headerlink" href="#eqoption" title="Permalink to this headline">¶</a></h1>
 <p>For methods of this class, see <a class="reference internal" href="gs_quant.base.Priceable.html"><span class="doc">gs_quant.base.Priceable</span></a></p>
-<dl class="class">
+<dl class="py class">
 <dt id="gs_quant.instrument.EqOption">
-<em class="property">class </em><code class="sig-name descname">EqOption</code><span class="sig-paren">(</span><em class="sig-param">asset</em>, <em class="sig-param">expiration_date</em>, <em class="sig-param">strike_price</em>, <em class="sig-param">option_type</em>, <em class="sig-param">option_style</em>, <em class="sig-param">number_of_options=None</em>, <em class="sig-param">exchange=None</em>, <em class="sig-param">multiplier=None</em>, <em class="sig-param">settlement_date=None</em>, <em class="sig-param">currency=None</em>, <em class="sig-param">premium=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gs_quant/target/instrument.html#EqOption"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gs_quant.instrument.EqOption" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-name descname">EqOption</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">underlier</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">expiration_date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">strike_price</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">option_type</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">option_style</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">number_of_options</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">exchange</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">multiplier</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">settlement_date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">settlement_currency</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">premium</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">premium_payment_date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">valuation_time</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">method_of_settlement</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">underlier_type</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">buy_sell</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">premium_currency</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">trade_as</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gs_quant/target/instrument.html#EqOption"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gs_quant.instrument.EqOption" title="Permalink to this definition">¶</a></dt>
 <dd><p>Instrument definition for equity option</p>
 <p class="rubric">Properties</p>
-<dl class="attribute">
-<dt id="gs_quant.instrument.EqOption.asset">
-<code class="sig-name descname">asset</code><a class="headerlink" href="#gs_quant.instrument.EqOption.asset" title="Permalink to this definition">¶</a></dt>
-<dd><p>Ticker of the underlying stock or index</p>
+<dl class="py attribute">
+<dt id="gs_quant.instrument.EqOption.buy_sell">
+<code class="sig-name descname">buy_sell</code><a class="headerlink" href="#gs_quant.instrument.EqOption.buy_sell" title="Permalink to this definition">¶</a></dt>
+<dd><p>Buy or Sell side of contract</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">BuySell</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="gs_quant.instrument.EqOption.currency">
-<code class="sig-name descname">currency</code><a class="headerlink" href="#gs_quant.instrument.EqOption.currency" title="Permalink to this definition">¶</a></dt>
-<dd><p>Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Currency</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="gs_quant.instrument.EqOption.exchange">
 <code class="sig-name descname">exchange</code><a class="headerlink" href="#gs_quant.instrument.EqOption.exchange" title="Permalink to this definition">¶</a></dt>
 <dd><p>Name of marketplace where security, derivative or other instrument is traded</p>
@@ -194,10 +194,10 @@
 </dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="gs_quant.instrument.EqOption.expiration_date">
 <code class="sig-name descname">expiration_date</code><a class="headerlink" href="#gs_quant.instrument.EqOption.expiration_date" title="Permalink to this definition">¶</a></dt>
-<dd><p>Date or tenor, e.g. 2018-09-03, 3m</p>
+<dd><p>Date or tenor, e.g. 2018-09-03, 3m, Dec21</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">date</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
@@ -205,7 +205,28 @@
 </dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
+<dt id="gs_quant.instrument.EqOption.instrument_quantity">
+<code class="sig-name descname">instrument_quantity</code><a class="headerlink" href="#gs_quant.instrument.EqOption.instrument_quantity" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="gs_quant.instrument.EqOption.method_of_settlement">
+<code class="sig-name descname">method_of_settlement</code><a class="headerlink" href="#gs_quant.instrument.EqOption.method_of_settlement" title="Permalink to this definition">¶</a></dt>
+<dd><p>How the option is settled (e.g. Cash, Physical)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">OptionSettlementMethod</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
 <dt id="gs_quant.instrument.EqOption.multiplier">
 <code class="sig-name descname">multiplier</code><a class="headerlink" href="#gs_quant.instrument.EqOption.multiplier" title="Permalink to this definition">¶</a></dt>
 <dd><p>Number of stock units per option contract</p>
@@ -216,7 +237,7 @@
 </dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="gs_quant.instrument.EqOption.number_of_options">
 <code class="sig-name descname">number_of_options</code><a class="headerlink" href="#gs_quant.instrument.EqOption.number_of_options" title="Permalink to this definition">¶</a></dt>
 <dd><p>Number of options</p>
@@ -227,7 +248,7 @@
 </dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="gs_quant.instrument.EqOption.option_style">
 <code class="sig-name descname">option_style</code><a class="headerlink" href="#gs_quant.instrument.EqOption.option_style" title="Permalink to this definition">¶</a></dt>
 <dd><p>Option Exercise Style</p>
@@ -238,7 +259,7 @@
 </dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="gs_quant.instrument.EqOption.option_type">
 <code class="sig-name descname">option_type</code><a class="headerlink" href="#gs_quant.instrument.EqOption.option_type" title="Permalink to this definition">¶</a></dt>
 <dd><p>Option Type</p>
@@ -249,7 +270,7 @@
 </dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="gs_quant.instrument.EqOption.premium">
 <code class="sig-name descname">premium</code><a class="headerlink" href="#gs_quant.instrument.EqOption.premium" title="Permalink to this definition">¶</a></dt>
 <dd><p>Option premium</p>
@@ -260,10 +281,21 @@
 </dl>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="gs_quant.instrument.EqOption.settlement_date">
-<code class="sig-name descname">settlement_date</code><a class="headerlink" href="#gs_quant.instrument.EqOption.settlement_date" title="Permalink to this definition">¶</a></dt>
-<dd><p>Date or tenor, e.g. 2018-09-03, 3m</p>
+<dl class="py attribute">
+<dt id="gs_quant.instrument.EqOption.premium_currency">
+<code class="sig-name descname">premium_currency</code><a class="headerlink" href="#gs_quant.instrument.EqOption.premium_currency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Currency of the option premium</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Currency</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="gs_quant.instrument.EqOption.premium_payment_date">
+<code class="sig-name descname">premium_payment_date</code><a class="headerlink" href="#gs_quant.instrument.EqOption.premium_payment_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Option premium</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">date</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
@@ -271,13 +303,101 @@
 </dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
+<dt id="gs_quant.instrument.EqOption.provider">
+<code class="sig-name descname">provider</code><a class="headerlink" href="#gs_quant.instrument.EqOption.provider" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gs_quant.instrument.EqOption.resolution_key">
+<code class="sig-name descname">resolution_key</code><a class="headerlink" href="#gs_quant.instrument.EqOption.resolution_key" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">RiskKey</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="gs_quant.instrument.EqOption.settlement_currency">
+<code class="sig-name descname">settlement_currency</code><a class="headerlink" href="#gs_quant.instrument.EqOption.settlement_currency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Currency</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="gs_quant.instrument.EqOption.settlement_date">
+<code class="sig-name descname">settlement_date</code><a class="headerlink" href="#gs_quant.instrument.EqOption.settlement_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Date or tenor, e.g. 2018-09-03, 3m, Dec21</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">date</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
 <dt id="gs_quant.instrument.EqOption.strike_price">
 <code class="sig-name descname">strike_price</code><a class="headerlink" href="#gs_quant.instrument.EqOption.strike_price" title="Permalink to this definition">¶</a></dt>
-<dd><p>Strike as value, percent or string e.g. 62.5, 95%, ATM, ATMF, 25ATM, 20CallDelta, 10PutDelta, 10NS</p>
+<dd><p>Strike as value, percent or at-the-money e.g. 62.5, 95%, ATM-25, ATMF, 10/vol,
+100k/pv, p=10000, p=10000USD, $200K/BP, or multiple strikes
+65.4/-45.8</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="gs_quant.instrument.EqOption.trade_as">
+<code class="sig-name descname">trade_as</code><a class="headerlink" href="#gs_quant.instrument.EqOption.trade_as" title="Permalink to this definition">¶</a></dt>
+<dd><p>Option trade as (i.e. listed, otc, lookalike etc)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TradeAs</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="gs_quant.instrument.EqOption.underlier">
+<code class="sig-name descname">underlier</code><a class="headerlink" href="#gs_quant.instrument.EqOption.underlier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Underlier security identifier</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="gs_quant.instrument.EqOption.underlier_type">
+<code class="sig-name descname">underlier_type</code><a class="headerlink" href="#gs_quant.instrument.EqOption.underlier_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Type of underlyer</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">UnderlierType</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="gs_quant.instrument.EqOption.unresolved">
+<code class="sig-name descname">unresolved</code><a class="headerlink" href="#gs_quant.instrument.EqOption.unresolved" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gs_quant.instrument.EqOption.valuation_time">
+<code class="sig-name descname">valuation_time</code><a class="headerlink" href="#gs_quant.instrument.EqOption.valuation_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Valuation time (e.g. MktClose, MktOpen) of the underlying level for exercise</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ValuationTime</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -301,9 +421,9 @@
     
     <div class="link-block-module">
       <a
-        href="gs_quant.instrument.CommodSwap.html"
+        href="gs_quant.instrument.EqForward.html"
         class="link-block-module-container"
-        title="CommodSwap"
+        title="EqForward"
         accesskey="p"
         rel="prev"
       >
@@ -312,7 +432,7 @@
             Previous Topic
           </h4>
           <p class="link-block-module-body-label">
-            CommodSwap
+            EqForward
           </p>
         </div>
       </a>
@@ -320,9 +440,9 @@
      
     <div class="link-block-module">
       <a
-        href="gs_quant.instrument.Forward.html"
+        href="gs_quant.instrument.EqSynthetic.html"
         class="link-block-module-container"
-        title="Forward"
+        title="EqSynthetic"
         accesskey="n"
         rel="next"
       >
@@ -331,7 +451,7 @@
             Next Topic
           </h4>
           <p class="link-block-module-body-label">
-            Forward
+            EqSynthetic
           </p>
         </div>
       </a>

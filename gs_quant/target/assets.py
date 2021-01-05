@@ -3720,8 +3720,8 @@ class FieldFilterMap(Base):
         portfolio_type: dict = None,
         vendor: dict = None,
         popularity: dict = None,
-        currency: dict = None,
         term: dict = None,
+        currency: dict = None,
         real_time_restriction_status: dict = None,
         asset_parameters_clearing_house: dict = None,
         rating_fitch: dict = None,
@@ -3976,8 +3976,8 @@ class FieldFilterMap(Base):
         self.portfolio_type = portfolio_type
         self.vendor = vendor
         self.popularity = popularity
-        self.currency = currency
         self.term = term
+        self.currency = currency
         self.real_time_restriction_status = real_time_restriction_status
         self.asset_parameters_clearing_house = asset_parameters_clearing_house
         self.rating_fitch = rating_fitch
@@ -4592,15 +4592,6 @@ class FieldFilterMap(Base):
         self.__popularity = value        
 
     @property
-    def currency(self) -> dict:
-        return self.__currency
-
-    @currency.setter
-    def currency(self, value: dict):
-        self._property_changed('currency')
-        self.__currency = value        
-
-    @property
     def term(self) -> dict:
         return self.__term
 
@@ -4608,6 +4599,15 @@ class FieldFilterMap(Base):
     def term(self, value: dict):
         self._property_changed('term')
         self.__term = value        
+
+    @property
+    def currency(self) -> dict:
+        return self.__currency
+
+    @currency.setter
+    def currency(self, value: dict):
+        self._property_changed('currency')
+        self.__currency = value        
 
     @property
     def real_time_restriction_status(self) -> dict:

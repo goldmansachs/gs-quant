@@ -1,0 +1,478 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>IRCMSSpreadOptionStrip &mdash; gs_quant 0.1 documentation</title>
+  
+
+    
+  <script crossorigin src="/resources/react/16-8-6/prod/react.production.min.js"></script>
+  <script
+    crossorigin src="/resources/react/16-8-6/prod/react-dom.production.min.js"></script>
+
+     
+    <script src='/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML' async></script> 
+    
+    <script type="text/javascript" src="../_static/../../../auto-mount.js"></script>
+    <link rel="stylesheet" href="../_static/../../../auto-mount.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="next" title="IRFloor" href="gs_quant.instrument.IRFloor.html" />
+    <link rel="prev" title="IRCMSSpreadOption" href="gs_quant.instrument.IRCMSSpreadOption.html" /> 
+</head>
+
+<!-- Hello from the future. -->
+<div id="mq-doc-navbar-inject"></div>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    <a data-toggle="wy-nav-top" id="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" id="gs-nav-action"></div>
+    </a>
+    
+    <nav id="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Packages</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../data.html">Data Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datetime.html">Datetime Package</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../instrument.html">Instrument Package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="gs_quant.base.Priceable.html">gs_quant.base.Priceable</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../instrument.html#instruments">Instruments</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.CommodOTCSwap.html">CommodOTCSwap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.EqCliquet.html">EqCliquet</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.EqForward.html">EqForward</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.EqOption.html">EqOption</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.EqSynthetic.html">EqSynthetic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.EqVarianceSwap.html">EqVarianceSwap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.Forward.html">Forward</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.FXBinary.html">FXBinary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.FXForward.html">FXForward</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.FXMultiCrossBinary.html">FXMultiCrossBinary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.FXMultiCrossBinaryLeg.html">FXMultiCrossBinaryLeg</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.FXOption.html">FXOption</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.FXVolatilitySwap.html">FXVolatilitySwap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.InflationSwap.html">InflationSwap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRBasisSwap.html">IRBasisSwap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRCap.html">IRCap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRCMSOption.html">IRCMSOption</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRCMSOptionStrip.html">IRCMSOptionStrip</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRCMSSpreadOption.html">IRCMSSpreadOption</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">IRCMSSpreadOptionStrip</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRFloor.html">IRFloor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRSwap.html">IRSwap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRSwaption.html">IRSwaption</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRXccySwap.html">IRXccySwap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRXccySwapFixFix.html">IRXccySwapFixFix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.IRXccySwapFixFlt.html">IRXccySwapFixFlt</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gs_quant.instrument.Security.html">Security</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../markets.html">Markets Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../models.html">Models Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../risk.html">Risk Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../timeseries.html">Timeseries Package</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Packages</a> /</li>
+        
+          <li><a href="../instrument.html">Instrument Package</a> /</li>
+        
+      <li>IRCMSSpreadOptionStrip</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="ircmsspreadoptionstrip">
+<h1>IRCMSSpreadOptionStrip<a class="headerlink" href="#ircmsspreadoptionstrip" title="Permalink to this headline">¶</a></h1>
+<p>For methods of this class, see <a class="reference internal" href="gs_quant.base.Priceable.html"><span class="doc">gs_quant.base.Priceable</span></a></p>
+<dl class="py class">
+<dt id="gs_quant.instrument.IRCMSSpreadOptionStrip">
+<em class="property">class </em><code class="sig-name descname">IRCMSSpreadOptionStrip</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cap_floor</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">termination_date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">notional_currency</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">notional_amount</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">effective_date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">strike</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">index1</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">index2</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">floating_rate_frequency</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">floating_rate_day_count_fraction</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">floating_rate_business_day_convention</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">reset_delay</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">premium</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">premium_payment_date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fee</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">fee_currency</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fee_payment_date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">buy_sell</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gs_quant/target/instrument.html#IRCMSSpreadOptionStrip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gs_quant.instrument.IRCMSSpreadOptionStrip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Object representation of a constant maturity spread option strip (cap, floor,
+straddle)</p>
+<p class="rubric">Properties</p>
+<dl class="py attribute">
+<dt id="gs_quant.instrument.IRCMSSpreadOptionStrip.buy_sell">
+<code class="sig-name descname">buy_sell</code><a class="headerlink" href="#gs_quant.instrument.IRCMSSpreadOptionStrip.buy_sell" title="Permalink to this definition">¶</a></dt>
+<dd><p>Buy or Sell side of contract</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">BuySell</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="gs_quant.instrument.IRCMSSpreadOptionStrip.cap_floor">
+<code class="sig-name descname">cap_floor</code><a class="headerlink" href="#gs_quant.instrument.IRCMSSpreadOptionStrip.cap_floor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Structure type, e.g. Cap, Floor, Straddle, Binary Cap</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="gs_quant.instrument.IRCMSSpreadOptionStrip.effective_date">
+<code class="sig-name descname">effective_date</code><a class="headerlink" href="#gs_quant.instrument.IRCMSSpreadOptionStrip.effective_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>CMS option effective date, e.g. 2019-01-01, 10y</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">date</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="gs_quant.instrument.IRCMSSpreadOptionStrip.fee">
+<code class="sig-name descname">fee</code><a class="headerlink" href="#gs_quant.instrument.IRCMSSpreadOptionStrip.fee" title="Permalink to this definition">¶</a></dt>
+<dd><p>The fee</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="gs_quant.instrument.IRCMSSpreadOptionStrip.fee_currency">
+<code class="sig-name descname">fee_currency</code><a class="headerlink" href="#gs_quant.instrument.IRCMSSpreadOptionStrip.fee_currency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Currency of the fee</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Currency</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="gs_quant.instrument.IRCMSSpreadOptionStrip.fee_payment_date">
+<code class="sig-name descname">fee_payment_date</code><a class="headerlink" href="#gs_quant.instrument.IRCMSSpreadOptionStrip.fee_payment_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Payment date of the fee</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">date</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="gs_quant.instrument.IRCMSSpreadOptionStrip.floating_rate_business_day_convention">
+<code class="sig-name descname">floating_rate_business_day_convention</code><a class="headerlink" href="#gs_quant.instrument.IRCMSSpreadOptionStrip.floating_rate_business_day_convention" title="Permalink to this definition">¶</a></dt>
+<dd><p>The business day convention of the floating rate</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">BusinessDayConvention</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="gs_quant.instrument.IRCMSSpreadOptionStrip.floating_rate_day_count_fraction">
+<code class="sig-name descname">floating_rate_day_count_fraction</code><a class="headerlink" href="#gs_quant.instrument.IRCMSSpreadOptionStrip.floating_rate_day_count_fraction" title="Permalink to this definition">¶</a></dt>
+<dd><p>The day count fraction of the floating rate</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">DayCountFraction</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="gs_quant.instrument.IRCMSSpreadOptionStrip.floating_rate_frequency">
+<code class="sig-name descname">floating_rate_frequency</code><a class="headerlink" href="#gs_quant.instrument.IRCMSSpreadOptionStrip.floating_rate_frequency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Period e.g. 3m, 1y</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="gs_quant.instrument.IRCMSSpreadOptionStrip.index1">
+<code class="sig-name descname">index1</code><a class="headerlink" href="#gs_quant.instrument.IRCMSSpreadOptionStrip.index1" title="Permalink to this definition">¶</a></dt>
+<dd><p>The underlying benchmark to be the first element from i.e. 30yUSD</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="gs_quant.instrument.IRCMSSpreadOptionStrip.index2">
+<code class="sig-name descname">index2</code><a class="headerlink" href="#gs_quant.instrument.IRCMSSpreadOptionStrip.index2" title="Permalink to this definition">¶</a></dt>
+<dd><p>The underlying benchmark to be the second element from i.e. 5yUSD</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="gs_quant.instrument.IRCMSSpreadOptionStrip.instrument_quantity">
+<code class="sig-name descname">instrument_quantity</code><a class="headerlink" href="#gs_quant.instrument.IRCMSSpreadOptionStrip.instrument_quantity" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="gs_quant.instrument.IRCMSSpreadOptionStrip.notional_amount">
+<code class="sig-name descname">notional_amount</code><a class="headerlink" href="#gs_quant.instrument.IRCMSSpreadOptionStrip.notional_amount" title="Permalink to this definition">¶</a></dt>
+<dd><p>Notional amount</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="gs_quant.instrument.IRCMSSpreadOptionStrip.notional_currency">
+<code class="sig-name descname">notional_currency</code><a class="headerlink" href="#gs_quant.instrument.IRCMSSpreadOptionStrip.notional_currency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Notional currency</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Currency</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="gs_quant.instrument.IRCMSSpreadOptionStrip.premium">
+<code class="sig-name descname">premium</code><a class="headerlink" href="#gs_quant.instrument.IRCMSSpreadOptionStrip.premium" title="Permalink to this definition">¶</a></dt>
+<dd><p>The premium</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="gs_quant.instrument.IRCMSSpreadOptionStrip.premium_payment_date">
+<code class="sig-name descname">premium_payment_date</code><a class="headerlink" href="#gs_quant.instrument.IRCMSSpreadOptionStrip.premium_payment_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Payment date of the premium</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">date</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="gs_quant.instrument.IRCMSSpreadOptionStrip.provider">
+<code class="sig-name descname">provider</code><a class="headerlink" href="#gs_quant.instrument.IRCMSSpreadOptionStrip.provider" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gs_quant.instrument.IRCMSSpreadOptionStrip.reset_delay">
+<code class="sig-name descname">reset_delay</code><a class="headerlink" href="#gs_quant.instrument.IRCMSSpreadOptionStrip.reset_delay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delay of the reset e.g. 2d</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="gs_quant.instrument.IRCMSSpreadOptionStrip.resolution_key">
+<code class="sig-name descname">resolution_key</code><a class="headerlink" href="#gs_quant.instrument.IRCMSSpreadOptionStrip.resolution_key" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">RiskKey</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="gs_quant.instrument.IRCMSSpreadOptionStrip.strike">
+<code class="sig-name descname">strike</code><a class="headerlink" href="#gs_quant.instrument.IRCMSSpreadOptionStrip.strike" title="Permalink to this definition">¶</a></dt>
+<dd><p>Strike as value, percent or at-the-money e.g. 62.5, 95%, ATM-25, ATMF, 10/vol,
+100k/pv, p=10000, p=10000USD, $200K/BP, or multiple strikes
+65.4/-45.8</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="gs_quant.instrument.IRCMSSpreadOptionStrip.termination_date">
+<code class="sig-name descname">termination_date</code><a class="headerlink" href="#gs_quant.instrument.IRCMSSpreadOptionStrip.termination_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Swap termination date, e.g. 2030-05-01, 10y</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">date</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="gs_quant.instrument.IRCMSSpreadOptionStrip.unresolved">
+<code class="sig-name descname">unresolved</code><a class="headerlink" href="#gs_quant.instrument.IRCMSSpreadOptionStrip.unresolved" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  <hr />
+  
+  <div
+    class="container-block-module"
+    role="navigation"
+    aria-label="footer navigation"
+  >
+    
+    <div class="link-block-module">
+      <a
+        href="gs_quant.instrument.IRCMSSpreadOption.html"
+        class="link-block-module-container"
+        title="IRCMSSpreadOption"
+        accesskey="p"
+        rel="prev"
+      >
+        <div class="link-block-module-content">
+          <h4 class="link-block-module-title-label">
+            Previous Topic
+          </h4>
+          <p class="link-block-module-body-label">
+            IRCMSSpreadOption
+          </p>
+        </div>
+      </a>
+    </div>
+     
+    <div class="link-block-module">
+      <a
+        href="gs_quant.instrument.IRFloor.html"
+        class="link-block-module-container"
+        title="IRFloor"
+        accesskey="n"
+        rel="next"
+      >
+        <div class="link-block-module-content">
+          <h4 class="link-block-module-title-label">
+            Next Topic
+          </h4>
+          <p class="link-block-module-body-label">
+            IRFloor
+          </p>
+        </div>
+      </a>
+    </div>
+    
+  </div>
+  
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,4 +1,4 @@
-gs\_quant.data.Dataset
+﻿gs\_quant.data.Dataset
 ======================
 
 .. currentmodule:: gs_quant.data

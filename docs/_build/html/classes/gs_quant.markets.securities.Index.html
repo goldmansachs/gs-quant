@@ -32,11 +32,6 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -55,11 +50,11 @@
 
    
   <div class="wy-grid-for-nav">
-    <a data-toggle="wy-nav-top" class="gs-developer-action-button-container" ontouchstart="">
-      <div data-toggle="gs-nav-action" class="gs-nav-action"></div>
+    <a data-toggle="wy-nav-top" id="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" id="gs-nav-action"></div>
     </a>
     
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+    <nav id="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         
         
@@ -75,10 +70,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../data.html">Data Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../datetime.html">Datetime Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../instrument.html">Instrument Package</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../market.html">Market Package</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../markets.html">Markets Package</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="gs_quant.markets.PricingContext.html">gs_quant.markets.PricingContext</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gs_quant.markets.HistoricalPricingContext.html">gs_quant.markets.HistoricalPricingContext</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="../market.html#securities">Securities</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../markets.html#portfolio">Portfolio</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../markets.html#securities">Securities</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="gs_quant.markets.securities.Asset.html">gs_quant.markets.securities.Asset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gs_quant.markets.securities.AssetClass.html">gs_quant.markets.securities.AssetClass</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gs_quant.markets.securities.AssetIdentifier.html">gs_quant.markets.securities.AssetIdentifier</a></li>
@@ -90,6 +86,7 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../models.html">Models Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../risk.html">Risk Package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../timeseries.html">Timeseries Package</a></li>
 </ul>
@@ -129,7 +126,7 @@
     
       <li><a href="../index.html">Packages</a> /</li>
         
-          <li><a href="../market.html">Market Package</a> /</li>
+          <li><a href="../markets.html">Markets Package</a> /</li>
         
       <li>gs_quant.markets.securities.Index</li>
     
@@ -151,14 +148,14 @@
             
   <div class="section" id="gs-quant-markets-securities-index">
 <h1>gs_quant.markets.securities.Index<a class="headerlink" href="#gs-quant-markets-securities-index" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
+<dl class="py class">
 <dt id="gs_quant.markets.securities.Index">
-<em class="property">class </em><code class="sig-name descname">Index</code><span class="sig-paren">(</span><em class="sig-param">id_</em>, <em class="sig-param">asset_class</em>, <em class="sig-param">name</em>, <em class="sig-param">exchange=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gs_quant/markets/securities.html#Index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gs_quant.markets.securities.Index" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-name descname">Index</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">id_</span></em>, <em class="sig-param"><span class="n">asset_class</span></em>, <em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">exchange</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">currency</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">entity</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gs_quant/markets/securities.html#Index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gs_quant.markets.securities.Index" title="Permalink to this definition">¶</a></dt>
 <dd><p>Index Asset</p>
 <p>Index which tracks an evolving portfolio of securities, and can be traded through cash or derivatives markets</p>
-<dl class="method">
+<dl class="py method">
 <dt id="gs_quant.markets.securities.Index.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">id_</em>, <em class="sig-param">asset_class</em>, <em class="sig-param">name</em>, <em class="sig-param">exchange=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gs_quant/markets/securities.html#Index.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gs_quant.markets.securities.Index.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">id_</span></em>, <em class="sig-param"><span class="n">asset_class</span></em>, <em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">exchange</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">currency</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">entity</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gs_quant/markets/securities.html#Index.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gs_quant.markets.securities.Index.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
@@ -169,23 +166,102 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#gs_quant.markets.securities.Index.__init__" title="gs_quant.markets.securities.Index.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(id_, asset_class, name[, exchange])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#gs_quant.markets.securities.Index.__init__" title="gs_quant.markets.securities.Index.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(id_, asset_class, name[, exchange, …])</p></td>
 <td><p>Initialize self.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_constituents</span></code>([as_of, position_type])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">entity_type</span></code>()</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">rtype</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">EntityType</span></code></p>
+</dd>
+</dl>
+</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get</span></code>(id_value, id_type[, as_of, …])</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">rtype</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="gs_quant.markets.securities.Asset.html#gs_quant.markets.securities.Asset" title="gs_quant.markets.securities.Asset"><code class="xref py py-class docutils literal notranslate"><span class="pre">Asset</span></code></a>]</p>
+</dd>
+</dl>
+</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_close_prices</span></code>([start, end])</p></td>
+<td><p>Get close price series</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_constituents</span></code>([as_of, position_type])</p></td>
 <td><p>Get asset constituents</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_identifier</span></code>(id_type[, as_of])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_currency</span></code>()</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">rtype</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Currency</span></code>]</p>
+</dd>
+</dl>
+</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_data_coordinate</span></code>(measure[, dimensions, …])</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">rtype</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">DataCoordinate</span></code></p>
+</dd>
+</dl>
+</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_data_series</span></code>(measure[, dimensions, …])</p></td>
+<td><p>Get asset series</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_entity</span></code>()</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">rtype</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>]</p>
+</dd>
+</dl>
+</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_identifier</span></code>(id_type[, as_of])</p></td>
 <td><p>Get asset identifier</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_identifiers</span></code>([as_of])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_identifiers</span></code>([as_of])</p></td>
 <td><p>Get asset identifiers</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_marquee_id</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_marquee_id</span></code>()</p></td>
 <td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_return_type</span></code>()</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">rtype</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ReturnType</span></code></p>
+</dd>
+</dl>
+</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_type</span></code>()</p></td>
 <td><p>Overridden by sub-classes to return security type</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_unique_entity_key</span></code>()</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">rtype</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">EntityKey</span></code></p>
+</dd>
+</dl>
+</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">data_dimension</span></code></p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">rtype</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</p></td>
 </tr>
 </tbody>
 </table>

@@ -1,0 +1,235 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>gs_quant.data.fields &mdash; gs_quant 0.1 documentation</title>
+  
+
+    
+  <script crossorigin src="/resources/react/16-8-6/prod/react.production.min.js"></script>
+  <script
+    crossorigin src="/resources/react/16-8-6/prod/react-dom.production.min.js"></script>
+
+     
+    <script src='/resources/mathjax/latest.js?config=TeX-AMS-MML_HTMLorMML' async></script> 
+    
+    <script type="text/javascript" src="../../../_static/../../../auto-mount.js"></script>
+    <link rel="stylesheet" href="../../../_static/../../../auto-mount.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" /> 
+</head>
+
+<!-- Hello from the future. -->
+<div id="mq-doc-navbar-inject"></div>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    <a data-toggle="wy-nav-top" id="gs-developer-action-button-container" ontouchstart="">
+      <div data-toggle="gs-nav-action" id="gs-nav-action"></div>
+    </a>
+    
+    <nav id="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Packages</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../data.html">Data Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../datetime.html">Datetime Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instrument.html">Instrument Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../markets.html">Markets Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../models.html">Models Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../risk.html">Risk Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../timeseries.html">Timeseries Package</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Packages</a> /</li>
+        
+          <li><a href="../../index.html">Module code</a> /</li>
+        
+      <li>gs_quant.data.fields</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for gs_quant.data.fields</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Copyright 2019 Goldman Sachs.</span>
+<span class="sd">Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="sd">you may not use this file except in compliance with the License.</span>
+<span class="sd">You may obtain a copy of the License at</span>
+
+<span class="sd">  http://www.apache.org/licenses/LICENSE-2.0</span>
+
+<span class="sd">Unless required by applicable law or agreed to in writing,</span>
+<span class="sd">software distributed under the License is distributed on an</span>
+<span class="sd">&quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY</span>
+<span class="sd">KIND, either express or implied.  See the License for the</span>
+<span class="sd">specific language governing permissions and limitations</span>
+<span class="sd">under the License.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">aenum</span> <span class="kn">import</span> <span class="n">Enum</span><span class="p">,</span> <span class="n">extend_enum</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
+
+
+<span class="k">class</span> <span class="nc">DataMeasure</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Data measure definitions</span>
+
+<span class="sd">    Enumeration of measures available through data APIs. Measures are facts that are usually quantities and that can</span>
+<span class="sd">    be aggregated over a defined period of time. For example: tradePrice and volume are measures</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ASK_PRICE</span> <span class="o">=</span> <span class="s1">&#39;askPrice&#39;</span>
+    <span class="n">BID_PRICE</span> <span class="o">=</span> <span class="s1">&#39;bidPrice&#39;</span>
+    <span class="n">HIGH_PRICE</span> <span class="o">=</span> <span class="s1">&#39;highPrice&#39;</span>
+    <span class="n">MID_PRICE</span> <span class="o">=</span> <span class="s1">&#39;midPrice&#39;</span>
+    <span class="n">LOW_PRICE</span> <span class="o">=</span> <span class="s1">&#39;lowPrice&#39;</span>
+    <span class="n">OPEN_PRICE</span> <span class="o">=</span> <span class="s1">&#39;openPrice&#39;</span>
+    <span class="n">CLOSE_PRICE</span> <span class="o">=</span> <span class="s1">&#39;closePrice&#39;</span>
+    <span class="n">TRADE_PRICE</span> <span class="o">=</span> <span class="s1">&#39;tradePrice&#39;</span>
+    <span class="n">SPOT_PRICE</span> <span class="o">=</span> <span class="s1">&#39;spot&#39;</span>
+    <span class="n">VOLUME</span> <span class="o">=</span> <span class="s1">&#39;volume&#39;</span>
+    <span class="n">ADJUSTED_ASK_PRICE</span> <span class="o">=</span> <span class="s1">&#39;adjustedAskPrice&#39;</span>
+    <span class="n">ADJUSTED_BID_PRICE</span> <span class="o">=</span> <span class="s1">&#39;adjustedBidPrice&#39;</span>
+    <span class="n">ADJUSTED_HIGH_PRICE</span> <span class="o">=</span> <span class="s1">&#39;adjustedHighPrice&#39;</span>
+    <span class="n">ADJUSTED_LOW_PRICE</span> <span class="o">=</span> <span class="s1">&#39;adjustedLowPrice&#39;</span>
+    <span class="n">ADJUSTED_OPEN_PRICE</span> <span class="o">=</span> <span class="s1">&#39;adjustedBidPrice&#39;</span>
+    <span class="n">ADJUSTED_TRADE_PRICE</span> <span class="o">=</span> <span class="s1">&#39;adjustedTradePrice&#39;</span>
+    <span class="n">ADJUSTED_VOLUME</span> <span class="o">=</span> <span class="s1">&#39;adjustedVolume&#39;</span>
+    <span class="n">IMPLIED_VOLATILITY</span> <span class="o">=</span> <span class="s1">&#39;impliedVolatility&#39;</span>
+    <span class="n">VAR_SWAP</span> <span class="o">=</span> <span class="s1">&#39;varSwap&#39;</span>
+
+
+<span class="k">class</span> <span class="nc">DataDimension</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Data dimension definitions</span>
+
+<span class="sd">    Enumeration of dimensions available through data APIs. Dimensions describe or provide context to measures, and can</span>
+<span class="sd">    be used to select or group data. For example: ticker and exchange are dimensions</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ASSET_ID</span> <span class="o">=</span> <span class="s1">&#39;assetId&#39;</span>
+    <span class="n">NAME</span> <span class="o">=</span> <span class="s1">&#39;name&#39;</span>
+    <span class="n">RIC</span> <span class="o">=</span> <span class="s1">&#39;ric&#39;</span>
+    <span class="n">TENOR</span> <span class="o">=</span> <span class="s1">&#39;tenor&#39;</span>
+    <span class="n">STRIKE_REFERENCE</span> <span class="o">=</span> <span class="s1">&#39;strikeReference&#39;</span>
+    <span class="n">RELATIVE_STRIKE</span> <span class="o">=</span> <span class="s1">&#39;relativeStrike&#39;</span>
+    <span class="n">EXPIRATION_DATE</span> <span class="o">=</span> <span class="s1">&#39;expirationDate&#39;</span>
+    <span class="n">UPDATE_TIME</span> <span class="o">=</span> <span class="s1">&#39;updateTime&#39;</span>
+
+
+<div class="viewcode-block" id="Fields"><a class="viewcode-back" href="../../../classes/gs_quant.data.Fields.html#gs_quant.data.Fields">[docs]</a><span class="k">class</span> <span class="nc">Fields</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Data field enumeration</span>
+
+<span class="sd">    Enumeration of fields available through data APIs</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">unit</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="c1"># TODO: Define units and look up appropriate unit for self</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<span class="k">for</span> <span class="n">enum</span> <span class="ow">in</span> <span class="n">DataMeasure</span><span class="p">:</span>
+    <span class="n">extend_enum</span><span class="p">(</span><span class="n">Fields</span><span class="p">,</span> <span class="n">enum</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">enum</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">enum</span> <span class="ow">in</span> <span class="n">DataDimension</span><span class="p">:</span>
+    <span class="n">extend_enum</span><span class="p">(</span><span class="n">Fields</span><span class="p">,</span> <span class="n">enum</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">enum</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  <hr />
+  
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  
+  
+    
+   
+
+</body>
+</html>
