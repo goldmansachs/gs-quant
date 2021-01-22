@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import datetime
 import inspect
 import logging
 from enum import Enum, IntEnum
@@ -22,6 +23,8 @@ from typing import Optional, Union, List, Iterable
 import pandas as pd
 
 from gs_quant.api.gs.data import QueryType
+from gs_quant.data import DataContext
+from gs_quant.datetime.relative_date import RelativeDate
 from gs_quant.entities.entity import EntityType
 from gs_quant.errors import MqValueError
 
@@ -76,7 +79,7 @@ class Window:
 
     **Examples**
 
-    Window size is :math:`22` obversations and the ramp up value is :math:`10`:
+    Window size is :math:`22` observations and the ramp up value is :math:`10`:
 
     >>> Window(22, 10)
 
@@ -155,6 +158,15 @@ def plot_session_function(fn):
     return fn
 
 
+def check_forward_looking(pricing_date, source, name="function"):
+    if pricing_date is not None or source != 'plottool':
+        return
+    if DataContext.current.end_date <= datetime.date.today():
+        msg = (f'{name}() requires a forward looking date range e.g. [0d, 3y]. '
+               'Please update the date range via the date picker.')
+        raise MqValueError(msg)
+
+
 def plot_measure(asset_class: Optional[tuple] = None, asset_type: Optional[tuple] = None,
                  dependencies: Optional[List[QueryType]] = tuple()):
     # Indicates that fn should be exported to plottool as a member function / pseudo-measure.
@@ -175,7 +187,6 @@ def plot_measure(asset_class: Optional[tuple] = None, asset_type: Optional[tuple
 
 
 def plot_measure_entity(entity_type: EntityType, dependencies: Optional[Iterable[QueryType]] = tuple()):
-
     def decorator(fn):
         assert isinstance(entity_type, EntityType)
         if dependencies is not None:
@@ -217,3 +228,30 @@ def log_return(logger: logging.Logger, message):
         return inner
 
     return outer
+
+
+def get_df_with_retries(fetcher, start_date, end_date, exchange, retries=1):
+    """
+    Loads results from Data Service by calling fetcher function. Shifts query date range back by business days until
+    result is not empty or retry limit reached. This is a fallback feature in case a data upload is late. Measure
+    implementations should be written such that retries are usually not required.
+
+    :param fetcher: a no-argument function runs a data query and returns a DataFrame
+    :param start_date: initial start date for query
+    :param end_date: initial end date for query
+    :param exchange: exchange to use for holiday calendar
+    :param retries: maximum number of retries
+    :return: DataFrame
+    """
+    retries = max(retries, 0)
+    while retries > -1:
+        with DataContext(start_date, end_date):
+            result = fetcher()
+        if not result.empty:
+            break
+        kwargs = {'exchanges': [exchange]} if exchange else {}
+        # no need to include any part of the previous date range since it's known to be empty
+        end_date = RelativeDate('-1b', base_date=start_date).apply_rule(**kwargs)
+        start_date = end_date
+        retries -= 1
+    return result

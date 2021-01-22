@@ -21,7 +21,8 @@ import pandas as pd
 import gs_quant.risk as risk
 from gs_quant.datetime import business_day_offset
 from gs_quant.instrument import IRSwap, IRSwaption
-from gs_quant.markets import HistoricalPricingContext, PricingContext, BackToTheFuturePricingContext
+from gs_quant.markets import HistoricalPricingContext, PricingContext, BackToTheFuturePricingContext,\
+    historical_risk_key
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk.results import PortfolioPath, PortfolioRiskResult
 from gs_quant.session import Environment, GsSession
@@ -98,7 +99,7 @@ def test_historical_pricing(mocker):
                 data=[-564854.3640043903, -565604.2636791412, -564751.5121349357],
                 index=[dt.date(2019, 10, 7), dt.date(2019, 10, 8), dt.date(2019, 10, 9)]
             ),
-            risk_key=risk_key.ex_date_and_market, )
+            risk_key=historical_risk_key(risk_key), )
 
         assert results.dates == dates
         actual = results[risk.DollarPrice].aggregate()
@@ -132,10 +133,10 @@ def test_backtothefuture_pricing(mocker):
 
     expected = risk.SeriesWithInfo(
         pd.Series(
-            data=[-35280379.86540368, -35348910.76427929, -30830994.939595155],
+            data=[-35280379.86540368, -35348910.76427929, -23671267.111283153],
             index=business_day_offset(pricing_date, [-1, 0, 1], roll='forward')
         ),
-        risk_key=risk_key.ex_date_and_market, )
+        risk_key=historical_risk_key(risk_key), )
 
     actual = results[risk.DollarPrice].aggregate()
 

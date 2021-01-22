@@ -2,6 +2,10 @@
 Instrument Package
 ==================
 
+
+Priceable
+---------
+
 .. currentmodule:: gs_quant.base
 
 .. autosummary::

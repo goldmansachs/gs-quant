@@ -17,7 +17,7 @@ under the License.
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 
 from pydash import get
 
@@ -29,9 +29,14 @@ from gs_quant.session import GsSession
 
 class EntityType(Enum):
     ASSET = 'asset'
+    BACKTEST = 'backtest'
     COUNTRY = 'country'
-    SUBDIVISION = 'subdivision'
+    HEDGE = 'hedge'
     KPI = 'kpi'
+    PORTFOLIO = 'portfolio'
+    REPORT = 'report'
+    RISK_MODEL = 'riskModel'
+    SUBDIVISION = 'subdivision'
 
 
 @dataclass
@@ -74,20 +79,34 @@ class Entity(metaclass=ABCMeta):
     @classmethod
     def get(cls,
             id_value: str,
-            id_type: EntityIdentifier) -> Optional['Entity']:
-        if id_type.value == 'MQID':
-            result = GsSession.current._get(f'/{cls._entity_to_endpoint[cls.entity_type()]}/{id_value}')
+            id_type: Union[EntityIdentifier, str],
+            entity_type: Optional[Union[EntityType, str]] = None) -> Optional['Entity']:
+        id_type = id_type.value if isinstance(id_type, Enum) else id_type
+
+        if entity_type is None:
+            entity_type = cls.entity_type()
+            endpoint = cls._entity_to_endpoint[entity_type]
         else:
-            result = get(GsSession.current._get(
-                f'/{cls._entity_to_endpoint[cls.entity_type()]}?{id_type.value.lower()}={id_value}'), 'results.0')
+            entity_type = entity_type.value if isinstance(entity_type, Enum) else entity_type
+            endpoint = cls._entity_to_endpoint[EntityType(entity_type)]
+
+        if entity_type == 'asset':
+            from gs_quant.markets.securities import SecurityMaster, AssetIdentifier
+            return SecurityMaster.get_asset(id_value, AssetIdentifier.MARQUEE_ID)
+
+        if id_type == 'MQID':
+            result = GsSession.current._get(f'/{endpoint}/{id_value}')
+        else:
+            result = get(GsSession.current._get(f'/{endpoint}?{id_type.lower()}={id_value}'), 'results.0')
         if result:
-            return cls._get_entity_from_type(result)
+            return cls._get_entity_from_type(result, EntityType(entity_type))
 
     @classmethod
     def _get_entity_from_type(cls,
-                              entity: Dict):
+                              entity: Dict,
+                              entity_type: EntityType = None):
         id_ = entity.get('id')
-        entity_type = cls.entity_type()
+        entity_type = entity_type or cls.entity_type()
         if entity_type == EntityType.COUNTRY:
             return Country(id_, entity=entity)
         if entity_type == EntityType.KPI:
@@ -105,13 +124,15 @@ class Entity(metaclass=ABCMeta):
         return EntityKey(self.__id, self.__entity_type)
 
     def get_data_coordinate(self,
-                            measure: DataMeasure,
+                            measure: Union[DataMeasure, str],
                             dimensions: Optional[DataDimensions] = None,
-                            frequency: Optional[DataFrequency] = None) -> DataCoordinate:
+                            frequency: DataFrequency = DataFrequency.DAILY,
+                            availability=None) -> DataCoordinate:
         id_ = self.get_marquee_id()
         dimensions = dimensions or {}
         dimensions[self.data_dimension] = id_
-        available: Dict = GsDataApi.get_data_providers(id_).get(measure.value, {})
+        measure = measure if isinstance(measure, str) else measure.value
+        available: Dict = GsDataApi.get_data_providers(id_, availability).get(measure, {})
 
         if frequency == DataFrequency.DAILY:
             daily_dataset_id = available.get(DataFrequency.DAILY)
@@ -146,6 +167,33 @@ class Country(Entity):
                           id_type: Identifier) -> Optional['Entity']:
         super().get(id_value, id_type)
 
+    def get_name(self) -> Optional[str]:
+        return get(self.get_entity(), 'name')
+
+    def get_region(self) -> Optional[str]:
+        return get(self.get_entity(), 'region')
+
+    def get_sub_region(self):
+        return get(self.get_entity(), 'subRegion')
+
+    def get_region_code(self):
+        return get(self.get_entity(), 'regionCode')
+
+    def get_sub_region_code(self):
+        return get(self.get_entity(), 'subRegionCode')
+
+    def get_alpha3(self):
+        return get(self.get_entity(), 'xref.alpha3')
+
+    def get_bbid(self):
+        return get(self.get_entity(), 'xref.bbid')
+
+    def get_alpha2(self):
+        return get(self.get_entity(), 'xref.alpha2')
+
+    def get_country_code(self):
+        return get(self.get_entity(), 'xref.countryCode')
+
 
 class Subdivision(Entity):
     class Identifier(EntityIdentifier):
@@ -171,6 +219,9 @@ class Subdivision(Entity):
                           id_type: Identifier) -> Optional['Entity']:
         super().get(id_value, id_type)
 
+    def get_name(self) -> Optional[str]:
+        return get(self.get_entity(), 'name')
+
 
 class KPI(Entity):
     class Identifier(EntityIdentifier):
@@ -195,3 +246,12 @@ class KPI(Entity):
                           id_value: str,
                           id_type: Identifier) -> Optional['Entity']:
         super().get(id_value, id_type)
+
+    def get_name(self) -> Optional[str]:
+        return get(self.get_entity(), 'name')
+
+    def get_category(self) -> Optional[str]:
+        return get(self.get_entity(), 'category')
+
+    def get_sub_category(self):
+        return get(self.get_entity(), 'subCategory')

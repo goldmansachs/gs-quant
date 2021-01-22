@@ -25,7 +25,7 @@ ReturnType = _create_enum('ReturnType', ['excess_return'])
 
 
 @plot_function
-def basket(
+def basket_series(
     series: list,
     weights: list,
     costs: list = None,
@@ -53,7 +53,7 @@ def basket(
 
     >>> prices1 = generate_series(100)
     >>> prices2 = generate_series(100)
-    >>> mybasket = basket([prices1, prices2], [0.7, 0.3], [0.0005, 0.001], monthly)
+    >>> mybasket = basket_series([prices1, prices2], [0.7, 0.3], [0.0005, 0.001], monthly)
 
     **See also**
 
@@ -138,3 +138,26 @@ def basket(
             ]
 
     return output
+
+
+@plot_function
+def basket(
+    series: list,
+    weights: list,
+    costs: list = None,
+    rebal_freq: RebalFreq = RebalFreq.DAILY,
+    return_type: ReturnType = ReturnType.EXCESS_RETURN,
+) -> pd.Series:
+    """
+    Deprecated. Please use basket_series instead.
+
+    :param series: list of time series of instrument prices
+    :param weights: list of weights
+    :param costs: list of execution costs in decimal; defaults to costs of 0
+    :param rebal_freq: rebalancing frequency - Daily or Monthly
+    :param return_type: return type of underlying instruments - only excess return is supported
+    :return: time series of the resulting basket
+
+    :func:`basket_series`
+    """
+    return basket_series(series, weights, costs, rebal_freq, return_type)

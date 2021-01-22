@@ -79,10 +79,6 @@ def do_not_resolve(func):
 class RiskKey(namedtuple('RiskKey', ('provider', 'date', 'market', 'params', 'scenario', 'risk_measure'))):
 
     @property
-    def ex_date_and_market(self):
-        return RiskKey(self.provider, None, None, self.params, self.scenario, self.risk_measure)
-
-    @property
     def ex_measure(self):
         return RiskKey(self.provider, self.date, self.market, self.params, self.scenario, None)
 

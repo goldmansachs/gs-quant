@@ -57,6 +57,7 @@ Backtesting
    :toctree: functions
 
    basket
+   basket_series
 
 
 Date / Time

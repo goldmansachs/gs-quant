@@ -15,7 +15,7 @@ under the License.
 """
 
 import datetime as dt
-from gs_quant.base import Market
+from gs_quant.base import Market, RiskKey
 from gs_quant.common import PricingLocation
 from gs_quant.context_base import do_not_serialise
 from gs_quant.datetime.date import prev_business_date
@@ -24,6 +24,11 @@ from gs_quant.target.common import CloseMarket as _CloseMarket, LiveMarket as _L
 from gs_quant.target.data import MarketDataCoordinate as __MarketDataCoordinate, \
     MarketDataCoordinateValue as __MarketDataCoordinateValue
 from typing import Mapping, Optional, Tuple, Union
+
+
+def historical_risk_key(risk_key: RiskKey) -> RiskKey:
+    market = LocationOnlyMarket(risk_key.market.location)
+    return RiskKey(risk_key.provider, None, market, risk_key.params, risk_key.scenario, risk_key.risk_measure)
 
 
 def market_location(location: Optional[PricingLocation] = None) -> PricingLocation:
@@ -89,6 +94,17 @@ class MarketDataCoordinateValue(__MarketDataCoordinateValue):
 
 
 MarketDataMap = Mapping[MarketDataCoordinate, float]
+
+
+class LocationOnlyMarket(Market):
+
+    def __init__(self, location: Optional[Union[str, PricingLocation]]):
+        super().__init__()
+        self.__location = location
+
+    @property
+    def location(self) -> PricingLocation:
+        return self.__location
 
 
 class CloseMarket(_CloseMarket, Market):
