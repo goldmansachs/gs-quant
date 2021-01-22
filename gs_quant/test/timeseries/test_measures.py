@@ -534,6 +534,14 @@ def mock_commod(_cls, _q):
     return df
 
 
+def mock_commod_dup(_cls, _q):
+    d = {'price': [35.929686, 35]}
+    idx = pd.date_range('2019-05-01', periods=1, freq='H', tz=timezone('UTC'))
+    df = MarketDataResponseFrame(data=d, index=idx.repeat(2))
+    df.dataset_ids = _test_datasets
+    return df
+
+
 def mock_forward_price(_cls, _q):
     d = {
         'forwardPrice': [
@@ -1195,7 +1203,7 @@ def test_vol_smile():
     assert_series_equal(pd.Series([5, 1, 2], index=[0.75, 0.25, 0.5]), pd.Series(actual))
     assert actual.dataset_ids == _test_datasets
 
-    market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    market_mock = replace('gs_quant.timeseries.measures.get_df_with_retries', Mock())
     market_mock.return_value = mock_empty_market_data_response()
     actual = tm.vol_smile(mock_spx, '1m', tm.VolSmileReference.SPOT, '1d')
     assert actual.empty
@@ -2462,7 +2470,7 @@ def _vol_term_typical(reference, value):
 
 def _vol_term_empty():
     replace = Replacer()
-    market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    market_mock = replace('gs_quant.timeseries.measures.get_df_with_retries', Mock())
     market_mock.return_value = MarketDataResponseFrame()
 
     actual = tm.vol_term(Index('MAXYZ', AssetClass.Equity, 'XYZ'), tm.VolReference.DELTA_CALL, 777)
@@ -2486,6 +2494,12 @@ def test_vol_term():
         tm.vol_term(..., tm.VolReference.SPOT, 100, real_time=True)
     with pytest.raises(MqError):
         tm.vol_term(Index('MA123', AssetClass.Equity, '123'), tm.VolReference.DELTA_NEUTRAL, 0)
+    with DataContext('2020-01-01', '2021-01-01'):
+        with pytest.raises(MqError, match='forward looking date range'):
+            tm.vol_term(Index('MA123', AssetClass.Equity, '123'), tm.VolReference.SPOT, 100, source='plottool')
+    with DataContext(datetime.date.today(), datetime.date.today()):
+        with pytest.raises(MqError, match='forward looking date range'):
+            tm.vol_term(Index('MA123', AssetClass.Equity, '123'), tm.VolReference.SPOT, 100, source='plottool')
 
 
 def _vol_term_fx(reference, value):
@@ -2694,6 +2708,14 @@ def test_bucketize_price():
         bbid_mock.return_value = 'MISO'
         actual = tm.bucketize_price(mock_miso, 'LMP', bucket='7x24')
         assert_series_equal(pd.Series(dtype='float64'), pd.Series(actual))
+
+    # Duplicate data in dataset
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_commod_dup)
+    with DataContext(datetime.date(2019, 1, 2), datetime.date(2019, 1, 2)):
+        bbid_mock = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+        bbid_mock.return_value = 'MISO'
+        with pytest.raises(ValueError):
+            tm.bucketize_price(mock_miso, 'LMP', bucket='peak')
 
     replace.restore()
 
@@ -3606,6 +3628,15 @@ def test_forward_curve():
         # Test for invalid market_date string format
         with pytest.raises(MqValueError):
             actual = tm.forward_curve(mock_CAISO, bucket='Peak', market_date='9, Jan 2020')
+
+        # Test for default date always returning a weekday
+        replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_forward_curve_peak)
+        mock_todate = replace('pandas.Timestamp.today', Mock())
+        mock_todate.return_value = pd.Timestamp('2020-08-22')
+        mock_get_data.return_value = pd.DataFrame(data=[0], index=[datetime.date(2020, 8, 20)])
+        actual = tm.forward_curve(mock_CAISO, bucket='Peak')
+        assert_series_equal(pd.Series(target['Peak_CAISO'], index=[datetime.date(2020, 9, 1)], name='forwardPrice'),
+                            pd.Series(actual))
 
     replace.restore()
 

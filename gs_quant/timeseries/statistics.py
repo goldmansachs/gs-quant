@@ -789,7 +789,7 @@ def generate_series(length: int, direction: Direction = Direction.START_TODAY) -
 
 
 @plot_function
-def percentiles(x: pd.Series, y: pd.Series = None, w: Union[Window, int, str] = Window(None, 0)) -> pd.Series:
+def percentiles(x: pd.Series, y: Optional[pd.Series] = None, w: Union[Window, int, str] = Window(None, 0)) -> pd.Series:
     """
     Rolling percentiles over given window
 
@@ -807,8 +807,8 @@ def percentiles(x: pd.Series, y: pd.Series = None, w: Union[Window, int, str] = 
 
     :math:`R_t = \\frac{\sum_{i=t-N+1}^{t}{[X_i<{Y_t}]}+0.5\sum_{i=t-N+1}^{t}{[X_i={Y_t}]}}{N}\\times100\%`
 
-    Where :math:`N` is the number of observations in a rolling window. If :math:`y` is not provided, calculates
-    percentiles of :math:`x` over its historical values. If window length :math:`w` is not provided, uses an
+    Where :math:`N` is the number of observations in a rolling window. If :math:`y` is not provided (or is NULL),
+    calculates percentiles of :math:`x` over its historical values. If window length :math:`w` is not provided, uses an
     ever-growing history of values. If :math:`w` is greater than the available data size, returns empty.
 
     **Examples**

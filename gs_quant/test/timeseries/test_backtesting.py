@@ -17,6 +17,8 @@ under the License.
 import pytest
 from pandas.util.testing import assert_series_equal
 from gs_quant.timeseries import *
+from testfixtures import Replacer
+from testfixtures.mock import Mock, call
 
 
 def test_basket():
@@ -32,15 +34,15 @@ def test_basket():
     x = pd.Series([100.0, 101, 103.02, 100.9596, 100.9596, 102.978792], index=dates)
     y = pd.Series([100.0, 100, 100, 100, 100, 100], index=dates)
 
-    assert_series_equal(x, basket([x], [1]))
-    assert_series_equal(x, basket([x, x], [0.5, 0.5]))
-    assert_series_equal(x, basket([x, x, x], [1 / 3, 1 / 3, 1 / 3]))
-    assert_series_equal(x, basket([x, y], [1, 0]))
-    assert_series_equal(y, basket([x, y], [0, 1]))
+    assert_series_equal(x, basket_series([x], [1]))
+    assert_series_equal(x, basket_series([x, x], [0.5, 0.5]))
+    assert_series_equal(x, basket_series([x, x, x], [1 / 3, 1 / 3, 1 / 3]))
+    assert_series_equal(x, basket_series([x, y], [1, 0]))
+    assert_series_equal(y, basket_series([x, y], [0, 1]))
     with pytest.raises(MqValueError):
-        basket([x, y], [1])
+        basket_series([x, y], [1])
     with pytest.raises(MqTypeError):
-        basket([1, 2, 3], [1])
+        basket_series([1, 2, 3], [1])
 
     dates = [
         datetime.datetime(2019, 1, 1),
@@ -60,4 +62,15 @@ def test_basket():
         [100.0, 101, 103.02, 100.9596, 100.9596, 102.978792,
          100.0, 101, 103.02, 100.9596, 100.9596, 102.978792],
         index=dates)
-    assert_series_equal(mreb, basket([mreb], [1], rebal_freq=RebalFreq.MONTHLY))
+    assert_series_equal(mreb, basket_series([mreb], [1], rebal_freq=RebalFreq.MONTHLY))
+
+    replace = Replacer()
+    mock = replace('gs_quant.timeseries.backtesting.basket_series', Mock())
+    args = ([mreb], [1], None, RebalFreq.MONTHLY, ReturnType.EXCESS_RETURN)
+    basket(*args)
+    assert mock.call_args == call(*args)  # basket passes args through to basket_series
+    replace.restore()
+
+
+if __name__ == '__main__':
+    pytest.main(args=[__file__])

@@ -13,14 +13,17 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-
 from enum import IntEnum
+import datetime
 import pandas as pd
 import pytest
+from testfixtures import Replace
+from gs_quant.data import DataContext
 
 import gs_quant.timeseries as ts
+from gs_quant.errors import MqError
 from gs_quant.timeseries.helper import _create_int_enum, plot_function, plot_measure, plot_method, normalize_window, \
-    Window, apply_ramp
+    Window, apply_ramp, check_forward_looking, get_df_with_retries
 
 # TODO test the instance of IntEnum when we have any.
 
@@ -172,6 +175,55 @@ def test_apply_ramp_raises_on_edge_cases():
     with pytest.raises(ValueError):
         x = ts.generate_series(10)
         apply_ramp(x, Window(2, 11))
+
+
+def test_get_df_with_retries():
+    start = datetime.date(2020, 12, 1)
+    end = datetime.date(2020, 12, 2)
+    counter = 0
+
+    def fetch0():
+        return pd.DataFrame()
+
+    def fetch1():
+        nonlocal counter
+        counter += 1
+        if counter > 1:
+            return pd.DataFrame([['foo'], ['bar']])
+        return pd.DataFrame()
+
+    def mock_apply(self, *_args, **_kwargs):
+        return self.base_date - datetime.timedelta(days=1)
+
+    with Replace('gs_quant.timeseries.helper.RelativeDate.apply_rule', mock_apply):
+        df = get_df_with_retries(fetch0, start, end, 'NYSE')
+        assert df.empty
+        df = get_df_with_retries(fetch1, start, end, 'NYSE', 0)
+        assert df.empty
+        df = get_df_with_retries(fetch1, start, end, 'NYSE', 1)
+        assert not df.empty
+        df = get_df_with_retries(fetch1, start, end, 'NYSE', 2)
+        assert not df.empty
+
+
+def test_forward_looking():
+    today = datetime.date.today()
+    source = 'plottool'
+    with DataContext(today, today + datetime.timedelta(days=1)):
+        assert check_forward_looking('1b', None) is None
+        assert check_forward_looking(today, None) is None
+        assert check_forward_looking(None, None) is None
+        assert check_forward_looking('1b', source) is None
+        assert check_forward_looking(today, source) is None
+        assert check_forward_looking(None, source) is None
+    with DataContext(today - datetime.timedelta(days=1), today):
+        assert check_forward_looking('1b', None) is None
+        assert check_forward_looking(today, None) is None
+        assert check_forward_looking(None, None) is None
+        assert check_forward_looking('1b', source) is None
+        assert check_forward_looking(today, source) is None
+        with pytest.raises(MqError):
+            check_forward_looking(None, source)
 
 
 if __name__ == "__main__":

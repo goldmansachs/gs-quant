@@ -24,7 +24,6 @@ from numbers import Real
 import cachetools.func
 import inflection
 import numpy as np
-import pandas as pd
 from dateutil import tz
 from dateutil.relativedelta import relativedelta
 from pandas import Series
@@ -39,12 +38,12 @@ from gs_quant.data.core import DataContext
 from gs_quant.data.fields import Fields
 from gs_quant.datetime.gscalendar import GsCalendar
 from gs_quant.datetime.point import relative_date_add
-from gs_quant.errors import MqTypeError, MqValueError
+from gs_quant.errors import MqTypeError
 from gs_quant.markets.securities import *
 from gs_quant.markets.securities import Asset, AssetIdentifier, SecurityMaster, AssetType as SecAssetType
 from gs_quant.target.common import AssetClass, AssetType
 from gs_quant.timeseries import volatility, Window, Returns, sqrt
-from gs_quant.timeseries.helper import log_return, plot_measure, _to_offset
+from gs_quant.timeseries.helper import log_return, plot_measure, _to_offset, check_forward_looking, get_df_with_retries
 from gs_quant.timeseries.log import log_debug, log_warning
 
 GENERIC_DATE = Union[datetime.date, str]
@@ -1310,6 +1309,7 @@ def forward_vol_term(asset: Asset, strike_reference: VolReference, relative_stri
     if real_time:
         raise NotImplementedError('real-time forward vol term not implemented')
 
+    check_forward_looking(pricing_date, source, 'forward_vol_term')
     if asset.asset_class == AssetClass.FX:
         sr_string, relative_strike = _preprocess_implied_vol_strikes_fx(strike_reference, relative_strike)
         asset_id = cross_stored_direction_for_fx_vol(asset)
@@ -1351,6 +1351,7 @@ def vol_term(asset: Asset, strike_reference: VolReference, relative_strike: Real
     if real_time:
         raise NotImplementedError('realtime forward term not implemented')  # TODO
 
+    check_forward_looking(pricing_date, source, 'vol_term')
     if asset.asset_class == AssetClass.FX:
         sr_string, relative_strike = _preprocess_implied_vol_strikes_fx(strike_reference, relative_strike)
         asset_id = cross_stored_direction_for_fx_vol(asset)
@@ -1361,15 +1362,17 @@ def vol_term(asset: Asset, strike_reference: VolReference, relative_strike: Real
         buffer = 0
 
     start, end = _range_from_pricing_date(asset.exchange, pricing_date, buffer=buffer)
-    with DataContext(start, end):
-        _logger.debug('where strikeReference=%s, relativeStrike=%s', sr_string, relative_strike)
-        where = dict(strikeReference=sr_string, relativeStrike=relative_strike)
+    _logger.debug('where strikeReference=%s, relativeStrike=%s', sr_string, relative_strike)
+    where = dict(strikeReference=sr_string, relativeStrike=relative_strike)
+
+    def fetcher():
         q = GsDataApi.build_market_data_query([asset_id], QueryType.IMPLIED_VOLATILITY, where=where,
                                               source=source,
                                               real_time=real_time)
         _logger.debug('q %s', q)
-        df = _market_data_timed(q)
+        return _market_data_timed(q)
 
+    df = get_df_with_retries(fetcher, start, end, asset.exchange)
     dataset_ids = getattr(df, 'dataset_ids', ())
     if df.empty:
         series = ExtendedSeries()
@@ -1406,10 +1409,9 @@ def vol_smile(asset: Asset, tenor: str, strike_reference: VolSmileReference,
         raise NotImplementedError('realtime vol_smile not implemented')
 
     mqid = asset.get_marquee_id()
-
     start, end = _range_from_pricing_date(asset.exchange, pricing_date)
 
-    with DataContext(start, end):
+    def fetcher():
         q = GsDataApi.build_market_data_query(
             [mqid],
             QueryType.IMPLIED_VOLATILITY,
@@ -1418,8 +1420,9 @@ def vol_smile(asset: Asset, tenor: str, strike_reference: VolSmileReference,
             real_time=real_time
         )
         _logger.debug('q %s', q)
-        df = _market_data_timed(q)
+        return _market_data_timed(q)
 
+    df = get_df_with_retries(fetcher, start, end, asset.exchange)
     dataset_ids = getattr(df, 'dataset_ids', ())
     if df.empty:
         series = ExtendedSeries()
@@ -1450,6 +1453,7 @@ def fwd_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None, *, sourc
     if real_time:
         raise NotImplementedError('realtime forward term not implemented')  # TODO
 
+    check_forward_looking(pricing_date, source, 'fwd_term')
     start, end = _range_from_pricing_date(asset.exchange, pricing_date)
     with DataContext(start, end):
         where = dict(strikeReference='forward', relativeStrike=1)
@@ -1516,6 +1520,7 @@ def forward_var_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None, 
     if real_time:
         raise NotImplementedError('real-time forward var term not implemented')
 
+    check_forward_looking(pricing_date, source, 'forward_var_term')
     start, end = _range_from_pricing_date(asset.exchange, pricing_date)
     with DataContext(start, end):
         q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.VAR_SWAP, source=source,
@@ -1545,6 +1550,7 @@ def var_term(asset: Asset, pricing_date: Optional[str] = None, forward_start_dat
     if not (pricing_date is None or isinstance(pricing_date, str)):
         raise MqTypeError('pricing_date should be a relative date')
 
+    check_forward_looking(pricing_date, source, 'var_term')
     start, end = _range_from_pricing_date(asset.exchange, pricing_date)
     with DataContext(start, end):
         if forward_start_date:
@@ -2158,6 +2164,8 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
         df = df.drop_duplicates()
         # freq is the frequency at which the ISO publishes data for e.g. 15 min, 1hr
         freq = int(min(np.diff(df.index).astype('timedelta64[s]') / np.timedelta64(1, 's')))
+        if freq == 0:
+            raise MqValueError('Duplicate data rows probable for this period')
         # checking missing data points
         ref_hour_range = pd.date_range(str(start_date), str(end_date + datetime.timedelta(days=1)),
                                        freq=str(freq) + "S", tz=timezone, closed='left')
@@ -3051,9 +3059,11 @@ def forward_curve(asset: Asset, bucket: str = 'PEAK', market_date: str = "",
     start, end = DataContext.current.start_date, DataContext.current.end_date
     if type(market_date) != str:
         raise MqTypeError('Market date should be of string data type as \'YYYYMMDD\'')
-    # If no date entered by user, assign today or convert entered string format to date object
+    # If no date entered by user, assign last weekday or convert entered string format to date object
     if len(market_date) == 0:
         market_date = pd.Timestamp.today().date()
+        while market_date.weekday() > 4:
+            market_date -= datetime.timedelta(days=1)
     else:
         try:
             market_date = pd.datetime.strptime(market_date, "%Y%m%d").date()

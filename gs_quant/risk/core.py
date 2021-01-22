@@ -13,16 +13,14 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import datetime as dt
+import itertools
 from abc import ABCMeta, abstractmethod
 from concurrent.futures import Future
 from copy import copy
-import itertools
-import datetime as dt
-from typing import Iterable, Optional, Tuple, Union, Any, Callable
+from typing import Iterable, Optional, Tuple, Union
 
 import pandas as pd
-
-from .measures import RiskMeasure
 from gs_quant.base import RiskKey
 from gs_quant.datetime import point_sort_order
 
@@ -67,6 +65,8 @@ class ResultInfo(metaclass=ABCMeta):
 
     @staticmethod
     def composition_info(components: Iterable):
+        from gs_quant.markets.markets import historical_risk_key
+
         dates = []
         values = []
         errors = {}
@@ -75,7 +75,10 @@ class ResultInfo(metaclass=ABCMeta):
 
         for component in components:
             date = component.risk_key.date
-            risk_key = component.risk_key.ex_date_and_market if risk_key is None else risk_key
+            risk_key = historical_risk_key(component.risk_key) if risk_key is None else risk_key
+
+            if risk_key.market.location != component.risk_key.market.location:
+                raise ValueError('Cannot compose results with different markets')
 
             if isinstance(component, (ErrorValue, Exception)):
                 errors[date] = component
@@ -86,8 +89,15 @@ class ResultInfo(metaclass=ABCMeta):
 
         return dates, values, errors, risk_key, unit
 
+    @abstractmethod
+    def _get_raw_df(self):
+        ...
+
 
 class ErrorValue(ResultInfo):
+
+    def _get_raw_df(self):
+        pass
 
     def __init__(self, risk_key: RiskKey, error: Union[str, dict]):
         super().__init__(risk_key, error=error)
@@ -123,6 +133,9 @@ class ScalarWithInfo(ResultInfo, metaclass=ABCMeta):
                               risk_key=risk_key,
                               unit=unit,
                               error=errors)
+
+    def _get_raw_df(self):
+        return pd.DataFrame(self, index=[0], columns=['value'])
 
 
 class FloatWithInfo(ScalarWithInfo, float):
@@ -205,6 +218,11 @@ class SeriesWithInfo(pd.Series, ResultInfo):
     def raw_value(self) -> pd.Series:
         return pd.Series(self)
 
+    def _get_raw_df(self):
+        df = pd.DataFrame(self).reset_index()
+        df.columns = ['dates', 'value']
+        return df
+
 
 class DataFrameWithInfo(pd.DataFrame, ResultInfo):
     _internal_names = pd.DataFrame._internal_names + \
@@ -237,7 +255,13 @@ class DataFrameWithInfo(pd.DataFrame, ResultInfo):
 
     @property
     def raw_value(self) -> pd.DataFrame:
-        return pd.DataFrame(self)
+        if self.empty:
+            return pd.DataFrame(self)
+        df = self.copy()
+        if isinstance(self.index.values[0], dt.date):
+            df.index.name = 'dates'
+            df.reset_index(inplace=True)
+        return pd.DataFrame(df)
 
     @staticmethod
     def compose(components: Iterable):
@@ -248,6 +272,11 @@ class DataFrameWithInfo(pd.DataFrame, ResultInfo):
 
     def to_frame(self):
         return self
+
+    def _get_raw_df(self):
+        if self.empty:
+            return None
+        return self.raw_value
 
 
 def aggregate_risk(results: Iterable[Union[DataFrameWithInfo, Future]], threshold: Optional[float] = None) \
@@ -280,7 +309,7 @@ def aggregate_risk(results: Iterable[Union[DataFrameWithInfo, Future]], threshol
     delta and vega are Dataframes, representing the merged risk of the individual instruments
     """
     dfs = [r.result().raw_value if isinstance(r, Future) else r.raw_value for r in results]
-    result = pd.concat(df.reset_index(level=0) if df.index.name == 'date' else df for df in dfs)
+    result = pd.concat(dfs)
     result = result.groupby([c for c in result.columns if c != 'value'], as_index=False).sum()
 
     if threshold is not None:

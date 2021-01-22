@@ -23,12 +23,12 @@ from typing import List, Union
 from cachetools import TTLCache
 from cachetools.keys import hashkey
 from dateutil.relativedelta import relativedelta, FR, SA, SU, TH, TU, WE, MO
-from gs_quant.target.common import Currency
 from numpy import busday_offset
 from pandas import Series, to_datetime, DataFrame
 
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.markets.securities import ExchangeCode
+from gs_quant.target.common import Currency
 
 DATE_LOW_LIMIT = date(1952, 1, 1)
 DATE_HIGH_LIMIT = date(2052, 12, 31)
@@ -151,7 +151,8 @@ class FRule(RDateRule):
 class gRule(RDateRule):
     def handle(self) -> date:
         self.result = self.result + relativedelta(weeks=self.number)
-        return self._apply_business_days_logic([])
+        holidays = self._get_holidays(use_usd=False)
+        return self._apply_business_days_logic(holidays, offset=0)
 
 
 class NRule(RDateRule):
@@ -169,9 +170,18 @@ class IRule(RDateRule):
         return self.result + relativedelta(weekday=SA(self.number))
 
 
+class JRule(RDateRule):
+    def handle(self) -> date:
+        return self.result.replace(day=1)
+
+
 class kRule(RDateRule):
     def handle(self) -> date:
-        return self.add_years(self._get_holidays())
+        self.result = self.result + relativedelta(years=self.number)
+        while self.week_mask[self.result.isoweekday() - 1] == '0':
+            self.result += relativedelta(days=1)
+        holidays = self._get_holidays(use_usd=False)
+        return self._apply_business_days_logic(holidays, offset=0)
 
 
 class MRule(RDateRule):
@@ -256,7 +266,11 @@ class XRule(RDateRule):
 
 class yRule(RDateRule):
     def handle(self) -> date:
-        return self.add_years([])
+        self.result = self.result + relativedelta(years=self.number)
+        while self.week_mask[self.result.isoweekday() - 1] == '0':
+            self.result += relativedelta(days=1)
+        holidays = self._get_holidays()
+        return self._apply_business_days_logic(holidays, offset=0)
 
 
 class ZRule(RDateRule):

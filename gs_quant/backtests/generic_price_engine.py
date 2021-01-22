@@ -182,7 +182,7 @@ class SimulatedExecutionEngine(ExecutionEngine):
 
     def _calculate_fill(self, order: OrderEvent):
         times = order.execution_time if order.execution_window is None else [
-            order.execution_time - dt.timedelta(minutes=i * 5) for i in range(int(order.execution_window / 5), 0, -1)]
+            order.execution_time + dt.timedelta(minutes=i * 5) for i in range(1, int(order.execution_window / 5) + 1)]
         price = self.data_sources[order.instrument + ' Intraday'].get_data(times)
         slip = self.slippage if self.absolute_slippage else price * self.slippage
         fill = price + slip if order.units > 0 else price - slip

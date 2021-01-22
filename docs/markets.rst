@@ -2,12 +2,25 @@
 Markets Package
 ===============
 
-.. currentmodule:: gs_quant.markets
+PricingContext
+--------------
+
+.. currentmodule:: gs_quant.markets.core
 
 .. autosummary::
    :toctree: classes
 
    PricingContext
+
+
+HistoricalPricingContext
+------------------------
+
+.. currentmodule:: gs_quant.markets.historical
+
+.. autosummary::
+   :toctree: classes
+
    HistoricalPricingContext
 
 

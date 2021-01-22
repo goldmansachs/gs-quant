@@ -22,3 +22,14 @@ Point
    :toctree: functions
 
    point_sort_order
+
+
+RelativeDate
+-----
+.. currentmodule:: gs_quant.datetime.relative_date
+
+.. autosummary::
+   :toctree: classes
+   :template: timeseries_class.rst
+
+   RelativeDate

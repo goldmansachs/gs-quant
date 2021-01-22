@@ -30,7 +30,30 @@ _logger = logging.getLogger(__name__)
 
 
 class RelativeDate:
+    """
+    RelativeDates are objects which provide utilities for getting dates given a relative date rule.
+    Some rules require a business day calendar.
 
+    :param rule: Rule to use
+    :param base_date: Base date to use (Optional).
+    :return: new RelativeDate object
+
+    **Usage**
+
+    Create a RelativeDate object and then call `apply_rule` to get a date back.
+
+    **Examples**
+
+    RelativeDate to return relative previous day:
+
+    >>> my_date: date = RelativeDate('-1d').apply_rule()
+
+    **Documentation**
+
+    Full Documentation and examples can be found here:
+    https://developer.gs.com/docs/gsquant/tutorials/Markets/dates/
+
+    """
     def __init__(self,
                  rule: str,
                  base_date: Optional[date] = None):
@@ -59,7 +82,7 @@ class RelativeDate:
         currencies/exchanges.
         :param currencies: List of currency holiday calendars to use. (GS Internal only)
         :param exchanges: List of exchange holiday calendars to use.
-        :param week_mask: String of seven-element boolean mask indicating valid days
+        :param week_mask: String of seven-element boolean mask indicating valid days. Default weekend is Sat and Sun.
         :return: dt.date
         """
 
@@ -72,7 +95,7 @@ class RelativeDate:
         return result
 
     def _get_rules(self) -> List[str]:
-        rules = []
+        rule_list = []
         current_rule = ''
         if not len(self.rule):
             raise MqValueError('Invalid Rule ""')
@@ -81,19 +104,19 @@ class RelativeDate:
             is_alpha = c.isalpha()
             if current_alpha and not is_alpha:
                 if current_rule.startswith('+'):
-                    rules.append(current_rule[1:])
+                    rule_list.append(current_rule[1:])
                 else:
-                    rules.append(current_rule)
+                    rule_list.append(current_rule)
                 current_rule = ''
                 current_alpha = False
             if is_alpha:
                 current_alpha = True
             current_rule += c
         if current_rule.startswith('+'):
-            rules.append(current_rule[1:])
+            rule_list.append(current_rule[1:])
         else:
-            rules.append(current_rule)
-        return rules
+            rule_list.append(current_rule)
+        return rule_list
 
     def __handle_rule(self,
                       rule: str,
