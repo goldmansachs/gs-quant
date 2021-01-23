@@ -24,6 +24,7 @@ from collections import namedtuple
 from enum import EnumMeta
 from functools import wraps
 from inspect import signature, Parameter
+import re
 from typing import Optional, Union, get_type_hints
 
 import inflection
@@ -414,6 +415,26 @@ class Base(metaclass=ABCMeta):
             if attr.fset:
                 __setattr__(self, prop, __getattribute__(instance, prop))
 
+    def to_json(self) -> dict:
+        return {re.sub('_$', '', k): v for k, v in self.as_dict(as_camel_case=True).items()}
+
+
+class TypeMixin(metaclass=ABCMeta):
+
+    @property
+    @abstractmethod
+    def _type(self) -> str:
+        ...
+
+    def to_json(self) -> dict:
+        ret = super().to_json()
+        ret['$type'] = self._type
+        return ret
+
+
+class TypedBase(TypeMixin, Base):
+    pass
+
 
 class Priceable(Base, metaclass=ABCMeta):
 
@@ -591,7 +612,7 @@ class InstrumentBase(Base):
             self.__unresolved = None
 
 
-class QuotableBuilder(Base, metaclass=ABCMeta):
+class QuotableBuilder(TypeMixin):
 
     def __init__(self, valuation_overrides: Optional[dict] = None):
         super().__init__()
@@ -599,12 +620,22 @@ class QuotableBuilder(Base, metaclass=ABCMeta):
 
     @property
     @do_not_resolve
+    @do_not_serialise
     def valuation_overrides(self) -> Optional[dict]:
         return self.__valuation_overrides
 
     @valuation_overrides.setter
     def valuation_overrides(self, value: dict):
         self.__valuation_overrides = value
+
+    def to_json(self):
+        ret = {'properties': TypeMixin.to_json(self)}
+        ret['$type'] = ret['properties'].pop('$type')
+
+        if self.__valuation_overrides:
+            ret['valuationOverrides'] = self.__valuation_overrides
+
+        return ret
 
 
 class Market(Base):

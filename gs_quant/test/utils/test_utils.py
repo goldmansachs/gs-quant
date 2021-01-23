@@ -14,13 +14,13 @@ specific language governing permissions and limitations
 under the License.
 """
 
-import datetime
 import json
 import pathlib
 from unittest import mock
 
 from gs_quant.api.gs.risk import GsRiskApi
 from gs_quant.json_encoder import JSONEncoder
+from gs_quant.markets import PricingContext
 from gs_quant.session import Environment, GsSession
 
 
@@ -90,7 +90,7 @@ def get_risk_request_id(requests):
         identifier += '-'.join([pos.instrument.name for pos in request.positions])
         identifier += '-'.join([str(risk) for risk in request.measures])
         date = request.pricing_and_market_data_as_of[0].pricing_date.strftime('%Y%b%d')
-        today = datetime.date.today().strftime('%Y%b%d')
+        today = PricingContext().pricing_date.strftime('%Y%b%d')
         identifier += 'today' if date == today else date
         identifier += '+'.join(sorted(str(k) + "=" + str(v) for k, v in request.scenario.scenario.as_dict().items())) \
             if request.scenario is not None else ''
@@ -100,8 +100,8 @@ def get_risk_request_id(requests):
 def mock_calc_create_files(*args, **kwargs):
     # never leave a side_effect calling this function.  Call it once to create the files, check them in and switch to
     # mock_calc
-    def get_json(*args, **kwargs):
-        this_json = gs_risk_api_exec(*args, **kwargs)
+    def get_json(*i_args, **i_kwargs):
+        this_json = gs_risk_api_exec(*i_args, **i_kwargs)
         return this_json
 
     result_json = get_json(*args, **kwargs)

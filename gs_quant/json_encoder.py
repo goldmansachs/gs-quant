@@ -18,9 +18,8 @@ import datetime
 from enum import Enum
 import json
 import pandas as pd
-import re
 
-from gs_quant.base import Base, QuotableBuilder
+from gs_quant.base import Base
 
 
 def default(o):
@@ -33,16 +32,7 @@ def default(o):
     elif isinstance(o, pd.DataFrame):
         return o.to_json()
     elif isinstance(o, Base):
-        properties = {re.sub('_$', '', k): v for k, v in o.as_dict(as_camel_case=True).items()}
-
-        if isinstance(o, QuotableBuilder):
-            ret = {'$type': o._type, 'properties': properties}
-            if 'valuationOverrides' in properties:
-                ret['valuationOverrides'] = properties.pop('valuationOverrides')
-
-            return ret
-        else:
-            return properties
+        return o.to_json()
 
 
 class JSONEncoder(json.JSONEncoder):

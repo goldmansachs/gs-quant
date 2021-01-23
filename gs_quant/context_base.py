@@ -53,7 +53,8 @@ class ContextMeta(type):
         """
         The current instance of this context
         """
-        current = next(iter(cls.path), cls.default)
+        path = cls.path
+        current = cls.__default if not path else next(iter(path))
         if current is None:
             raise MqUninitialisedError('{} is not initialised'.format(cls.__name__))
 
@@ -66,11 +67,11 @@ class ContextMeta(type):
     @property
     @do_not_serialise
     def current_is_set(cls) -> bool:
-        return bool(cls.path) or cls.default is not None
+        return bool(cls.path) or cls.__default is not None
 
     @property
     @do_not_serialise
-    def default(cls):
+    def __default(cls):
         default = getattr(thread_local, cls.__default_key, None)
         if default is None:
             default = cls.default_value()
