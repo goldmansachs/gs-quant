@@ -196,13 +196,26 @@ class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
     def from_dict(cls, values: dict):
         if values:
             if issubclass(cls, QuotableBuilder):
+                valuation_overrides = None
+                if 'builder' in values:
+                    valuation_overrides = values.get('overrides', {}).get('properties')
+                    values = values['builder']
+                elif 'defn' in values:
+                    values = values['defn']
+
                 if 'properties' in values:
                     values.update(values.pop('properties'))
-                return cls._from_dict(values)
+
+                ret = cls._from_dict(values)
+                if valuation_overrides:
+                    ret.valuation_overrides = valuation_overrides
+
+                return ret
             elif hasattr(cls, 'asset_class'):
                 return cls._from_dict(values)
             else:
-                if '$type' in values:
+                builder_type = values.get('$type') or values.get('builder', {}).get('$type')
+                if builder_type:
                     from gs_quant_internal import tdapi
                     tdapi_cls = getattr(tdapi, values['$type'].replace('Defn', 'Builder'))
                     if not tdapi_cls:
@@ -222,7 +235,7 @@ class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
                                                                                                     "Security"] \
                     else None
 
-                instrument = cls.__asset_class_and_type_to_instrument().get((
+                instrument = Instrument.__asset_class_and_type_to_instrument().get((
                     get_enum_value(AssetClass, asset_class),
                     get_enum_value(AssetType, asset_type)), default_type)
 
