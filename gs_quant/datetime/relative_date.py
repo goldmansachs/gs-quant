@@ -58,8 +58,10 @@ class RelativeDate:
                  rule: str,
                  base_date: Optional[date] = None):
         self.rule = rule
+        self.base_date_passed_in = False
         if base_date:
             self.base_date = base_date
+            self.base_date_passed_in = True
         elif PricingContext.current.pricing_date:
             d = PricingContext.current.pricing_date.date() \
                 if isinstance(PricingContext.current.pricing_date, datetime) \
@@ -152,3 +154,9 @@ class RelativeDate:
                               holiday_calendar=holiday_calendar).handle()
         except AttributeError:
             raise NotImplementedError(f'Rule {rule} not implemented')
+
+    def as_dict(self):
+        rdate_dict = {'rule': self.rule}
+        if self.base_date_passed_in:
+            rdate_dict['baseDate'] = str(self.base_date)
+        return rdate_dict

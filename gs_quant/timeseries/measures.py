@@ -625,6 +625,53 @@ def implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference 
     return out
 
 
+@plot_measure((AssetClass.Commod,), (AssetType.CommodityNaturalGasHub,), [QueryType.IMPLIED_VOLATILITY])
+def implied_volatility_ng(asset: Asset, contract_range: str = 'F20', price_method: str = 'GDD', *, source: str = None,
+                          real_time: bool = False) -> Series:
+    """
+    Volatility of an asset implied by observations of market prices.
+
+    :param asset: asset object loaded from security master
+    :param price_method: price method - GDD/FERC/Exchange for US NG assets: Default value = GDD
+    :param contract_range: e.g. inputs - 'Cal20', 'F20-G20', '2Q20', '2H20', 'Cal20-Cal21': Default Value = F20
+    :param source: name of function caller: default source = None
+    :param real_time: whether to retrieve intraday data instead of EOD: default value = False
+    :return: implied volatility curve
+    """
+    if real_time:
+        raise MqValueError('Use daily frequency instead of intraday')
+
+    (start_contract_range, end_contract_range) = _get_start_and_end_dates(contract_range=contract_range)
+
+    dates_contract_range = get_contract_range(start_contract_range, end_contract_range, None)
+
+    weights = dates_contract_range.groupby('contract_month').size()
+    weights = pd.DataFrame({'contract': weights.index, 'weight': weights.values})
+
+    start, end = DataContext.current.start_date, DataContext.current.end_date
+
+    contracts_to_query = weights['contract'].unique().tolist()
+    where = dict(contract=contracts_to_query, priceMethod=price_method)
+
+    with DataContext(start, end):
+        q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.IMPLIED_VOLATILITY,
+                                              where=where,
+                                              source=source,
+                                              real_time=False)
+        data = _market_data_timed(q)
+        dataset_ids = getattr(data, 'dataset_ids', ())
+
+    if data.empty:
+        result = ExtendedSeries(dtype='float64')
+    else:
+        data['dates'] = data.index.date
+        keys = ['contract', 'dates']
+        result = _merge_curves_by_weighted_average(data, weights, keys, "impliedVolatility")
+    result.dataset_ids = dataset_ids
+
+    return result
+
+
 def _preprocess_implied_vol_strikes_fx(strike_reference: VolReference = None, relative_strike: Real = None):
     if relative_strike is None and strike_reference != VolReference.DELTA_NEUTRAL:
         raise MqValueError('Relative strike must be provided if your strike reference is not delta_neutral')
@@ -1993,7 +2040,7 @@ def _forward_price_natgas(asset: Asset, price_method: str = 'GDD',
     with DataContext(start, end):
         q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.FORWARD_PRICE,
                                               where=where,
-                                              source=None,
+                                              source=source,
                                               real_time=False)
         _logger.debug('q %s', q)
         data = _market_data_timed(q)
@@ -2069,10 +2116,29 @@ def forward_price(asset: Asset, price_method: str = 'LMP', bucket: str = 'PEAK',
     if real_time:
         raise MqValueError('Use daily frequency instead of intraday')
 
+    return _forward_price_elec(asset, price_method, bucket, contract_range)
+
+
+@plot_measure((AssetClass.Commod,), (AssetType.CommodityNaturalGasHub,), [QueryType.FORWARD_PRICE])
+def forward_price_ng(asset: Asset, contract_range: str = 'F20', price_method: str = 'GDD', *, source: str = None,
+                     real_time: bool = False) -> pd.Series:
+    """
+    Forward Prices
+
+    :param asset: asset object loaded from security master
+    :param price_method: price method - GDD/FERC/Exchange for US NG assets: Default value = GDD
+    :param contract_range: e.g. inputs - 'Cal20', 'F20-G20', '2Q20', '2H20', 'Cal20-Cal21': Default Value = F20
+    :param source: name of function caller: default source = None
+    :param real_time: whether to retrieve intraday data instead of EOD: default value = False
+    :return: Forward Prices
+    """
+    if real_time:
+        raise MqValueError('Use daily frequency instead of intraday')
+
     if (asset.get_type() == SecAssetType.COMMODITY_NATURAL_GAS_HUB):
-        return _forward_price_natgas(asset, price_method, contract_range)
+        return _forward_price_natgas(asset, price_method, contract_range, source=source)
     else:
-        return _forward_price_elec(asset, price_method, bucket, contract_range)
+        raise MqTypeError('The forward_price_ng is not supported for this asset')
 
 
 def get_contract_range(start_contract_range, end_contract_range, timezone):
@@ -2097,7 +2163,8 @@ def get_contract_range(start_contract_range, end_contract_range, timezone):
     return df
 
 
-@plot_measure((AssetClass.Commod,), None, [QueryType.PRICE])
+@plot_measure((AssetClass.Commod,), (AssetType.Index, AssetType.CommodityPowerAggregatedNodes,
+                                     AssetType.CommodityPowerNode,), [QueryType.PRICE])
 def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
                     granularity: str = 'daily', *, source: str = None, real_time: bool = False) -> pd.Series:
     """'

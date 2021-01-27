@@ -87,6 +87,7 @@ class ParameterRender(EnumBase, Enum):
     sparkline = 'sparkline'
     stackedBarChart = 'stackedBarChart'
     text = 'text'
+    treemap = 'treemap'
     triColor = 'triColor'
     
     def __repr__(self):
@@ -471,7 +472,7 @@ class ColumnMappings(Base):
     def __init__(
         self,
         column_name: str = None,
-        parameters: float = None,
+        parameters: FieldMap = None,
         color: str = None,
         name: str = None
     ):        
@@ -492,11 +493,11 @@ class ColumnMappings(Base):
         self.__column_name = value        
 
     @property
-    def parameters(self) -> float:
+    def parameters(self) -> FieldMap:
         return self.__parameters
 
     @parameters.setter
-    def parameters(self, value: float):
+    def parameters(self, value: FieldMap):
         self._property_changed('parameters')
         self.__parameters = value        
 
@@ -521,7 +522,7 @@ class ColumnOperation(Base):
         column_names: Tuple[str, ...] = None,
         function_name: str = None,
         type_: str = None,
-        parameters: float = None,
+        parameters: FieldMap = None,
         name: str = None
     ):        
         super().__init__()
@@ -565,12 +566,12 @@ class ColumnOperation(Base):
         self.__type = value        
 
     @property
-    def parameters(self) -> float:
+    def parameters(self) -> FieldMap:
         """Parameters to be passed into GS Quant functions. For example, window (w)."""
         return self.__parameters
 
     @parameters.setter
-    def parameters(self, value: float):
+    def parameters(self, value: FieldMap):
         self._property_changed('parameters')
         self.__parameters = value        
 
@@ -663,8 +664,8 @@ class Function(Base):
         start_time: str = None,
         end_time: str = None,
         fields: Tuple[str, ...] = None,
-        parameters: float = None,
-        where: float = None,
+        parameters: FieldMap = None,
+        where: FieldMap = None,
         vendor: str = None,
         data_set_id: str = None
     ):        
@@ -764,21 +765,21 @@ class Function(Base):
         self.__fields = value        
 
     @property
-    def parameters(self) -> float:
+    def parameters(self) -> FieldMap:
         """Parameters to be passed into GS Quant functions. For example, window (w)."""
         return self.__parameters
 
     @parameters.setter
-    def parameters(self, value: float):
+    def parameters(self, value: FieldMap):
         self._property_changed('parameters')
         self.__parameters = value        
 
     @property
-    def where(self) -> float:
+    def where(self) -> FieldMap:
         return self.__where
 
     @where.setter
-    def where(self, value: float):
+    def where(self, value: FieldMap):
         self._property_changed('where')
         self.__where = value        
 
@@ -1033,7 +1034,9 @@ class ColumnDefinition(Base):
         end_date: str = None,
         tooltip: str = None,
         parent_column_name: str = None,
-        primary: bool = None
+        primary: bool = None,
+        pivots: Tuple[str, ...] = None,
+        disable_cell_tooltips: bool = None
     ):        
         super().__init__()
         self.enable_cell_flashing = enable_cell_flashing
@@ -1052,6 +1055,8 @@ class ColumnDefinition(Base):
         self.tooltip = tooltip
         self.parent_column_name = parent_column_name
         self.primary = primary
+        self.pivots = pivots
+        self.disable_cell_tooltips = disable_cell_tooltips
 
     @property
     def enable_cell_flashing(self) -> bool:
@@ -1214,6 +1219,26 @@ class ColumnDefinition(Base):
         self._property_changed('primary')
         self.__primary = value        
 
+    @property
+    def pivots(self) -> Tuple[str, ...]:
+        """Array of columns to pivot. Specifically for treemap component."""
+        return self.__pivots
+
+    @pivots.setter
+    def pivots(self, value: Tuple[str, ...]):
+        self._property_changed('pivots')
+        self.__pivots = value        
+
+    @property
+    def disable_cell_tooltips(self) -> bool:
+        """Whether or not to disable cell tooltips."""
+        return self.__disable_cell_tooltips
+
+    @disable_cell_tooltips.setter
+    def disable_cell_tooltips(self, value: bool):
+        self._property_changed('disable_cell_tooltips')
+        self.__disable_cell_tooltips = value        
+
 
 class EntityId(Base):
         
@@ -1225,12 +1250,14 @@ class EntityId(Base):
         id_: str = None,
         column_mappings: Tuple[ColumnMappings, ...] = None,
         color: str = None,
+        route_url: str = None,
         name: str = None
     ):        
         super().__init__()
         self.__id = id_
         self.column_mappings = column_mappings
         self.color = color
+        self.route_url = route_url
         self.name = name
 
     @property
@@ -1263,10 +1290,22 @@ class EntityId(Base):
         self._property_changed('color')
         self.__color = value        
 
+    @property
+    def route_url(self) -> str:
+        """The url to route to, when the row is clicked on"""
+        return self.__route_url
+
+    @route_url.setter
+    def route_url(self, value: str):
+        self._property_changed('route_url')
+        self.__route_url = value        
+
 
 class RatesResponseData(Base):
         
     """Rates calculated response data."""
+
+    _name_mappings = {'libor_id': 'libor_id'}
 
     @camel_case_translate
     def __init__(
@@ -1408,6 +1447,9 @@ class MonitorParameters(Base):
         row_groups: Tuple[RowGroup, ...],
         export: ExportParameters = None,
         ignore_business_day_logic: bool = None,
+        horizontal_scroll: bool = None,
+        mid_value_average: bool = None,
+        aggregate_queries: bool = None,
         name: str = None
     ):        
         super().__init__()
@@ -1415,6 +1457,9 @@ class MonitorParameters(Base):
         self.row_groups = row_groups
         self.export = export
         self.ignore_business_day_logic = ignore_business_day_logic
+        self.horizontal_scroll = horizontal_scroll
+        self.mid_value_average = mid_value_average
+        self.aggregate_queries = aggregate_queries
         self.name = name
 
     @property
@@ -1457,6 +1502,38 @@ class MonitorParameters(Base):
     def ignore_business_day_logic(self, value: bool):
         self._property_changed('ignore_business_day_logic')
         self.__ignore_business_day_logic = value        
+
+    @property
+    def horizontal_scroll(self) -> bool:
+        """Whether or not the monitor has a horizontal scroll on the UI if the monitor does
+           not fit the screen."""
+        return self.__horizontal_scroll
+
+    @horizontal_scroll.setter
+    def horizontal_scroll(self, value: bool):
+        self._property_changed('horizontal_scroll')
+        self.__horizontal_scroll = value        
+
+    @property
+    def mid_value_average(self) -> bool:
+        """Whether or not the midColor value for heatmaps should be the average value
+           instead of 0."""
+        return self.__mid_value_average
+
+    @mid_value_average.setter
+    def mid_value_average(self, value: bool):
+        self._property_changed('mid_value_average')
+        self.__mid_value_average = value        
+
+    @property
+    def aggregate_queries(self) -> bool:
+        """Whether or not to aggregate queries for direct to dataset columns."""
+        return self.__aggregate_queries
+
+    @aggregate_queries.setter
+    def aggregate_queries(self, value: bool):
+        self._property_changed('aggregate_queries')
+        self.__aggregate_queries = value        
 
 
 class Monitor(Base):

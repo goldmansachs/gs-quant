@@ -32,8 +32,8 @@ LOGGER = logging.getLogger(__name__)
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.PNL])
-def pnl(portfolio_id: str, start_date: dt.date = None, end_date: dt.date = None, *, source: str = None,
-        real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_pnl(portfolio_id: str, start_date: dt.date = None, end_date: dt.date = None, *, source: str = None,
+                  real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Returns the PnL of a portfolio
     :param portfolio_id: id of portfolio

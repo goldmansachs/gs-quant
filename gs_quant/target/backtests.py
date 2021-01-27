@@ -1072,6 +1072,8 @@ class VolatilityWeightedWeightingModifier(Base):
         
     """Volatility Weighted backtest weighting modifier."""
 
+    _name_mappings = {'em_aalpha': 'EMAalpha'}
+
     @camel_case_translate
     def __init__(
         self,
@@ -1125,6 +1127,8 @@ class VolatilityWeightedWeightingModifier(Base):
 class VolatilityWeightedWeightingModifierRefData(Base):
         
     """Volatility Weighted Weighting Modifier reference data object."""
+
+    _name_mappings = {'em_aalpha': 'EMAalpha'}
 
     @camel_case_translate
     def __init__(
@@ -1747,6 +1751,88 @@ class UnderlyingAssetIdDataRefData(Base):
         self.__frequency = value        
 
 
+class BacktestPerformanceDecomposition(Base):
+        
+    """Decomposition of backtest performance"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        name: str = None,
+        performance: Tuple[FieldValueMap, ...] = None,
+        stats: PerformanceStats = None
+    ):        
+        super().__init__()
+        self.name = name
+        self.performance = performance
+        self.stats = stats
+
+    @property
+    def name(self) -> str:
+        """Name of this performance decomposition"""
+        return self.__name
+
+    @name.setter
+    def name(self, value: str):
+        self._property_changed('name')
+        self.__name = value        
+
+    @property
+    def performance(self) -> Tuple[FieldValueMap, ...]:
+        """Backtest performance curve."""
+        return self.__performance
+
+    @performance.setter
+    def performance(self, value: Tuple[FieldValueMap, ...]):
+        self._property_changed('performance')
+        self.__performance = value        
+
+    @property
+    def stats(self) -> PerformanceStats:
+        """Performance statistics."""
+        return self.__stats
+
+    @stats.setter
+    def stats(self, value: PerformanceStats):
+        self._property_changed('stats')
+        self.__stats = value        
+
+
+class BacktestRisk(Base):
+        
+    """Risks of the backtest portfolio"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        name: str = None,
+        timeseries: Tuple[FieldValueMap, ...] = None
+    ):        
+        super().__init__()
+        self.name = name
+        self.timeseries = timeseries
+
+    @property
+    def name(self) -> str:
+        """Name of this risk"""
+        return self.__name
+
+    @name.setter
+    def name(self, value: str):
+        self._property_changed('name')
+        self.__name = value        
+
+    @property
+    def timeseries(self) -> Tuple[FieldValueMap, ...]:
+        """Backtest portfolio risk curve."""
+        return self.__timeseries
+
+    @timeseries.setter
+    def timeseries(self, value: Tuple[FieldValueMap, ...]):
+        self._property_changed('timeseries')
+        self.__timeseries = value        
+
+
 class BacktestRiskPosition(Base):
         
     @camel_case_translate
@@ -1925,6 +2011,55 @@ class BasketBacktestRefData(Base):
         self.__weighting_modifiers = value        
 
 
+class ComparisonBacktestResult(Base):
+        
+    """Comparisons of backtest results"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        stats: PerformanceStats = None,
+        performance: Tuple[FieldValueMap, ...] = None,
+        id_: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.stats = stats
+        self.performance = performance
+        self.__id = id_
+        self.name = name
+
+    @property
+    def stats(self) -> PerformanceStats:
+        """Performance statistics."""
+        return self.__stats
+
+    @stats.setter
+    def stats(self, value: PerformanceStats):
+        self._property_changed('stats')
+        self.__stats = value        
+
+    @property
+    def performance(self) -> Tuple[FieldValueMap, ...]:
+        """Performance for the comparison asset or backtest curve"""
+        return self.__performance
+
+    @performance.setter
+    def performance(self, value: Tuple[FieldValueMap, ...]):
+        self._property_changed('performance')
+        self.__performance = value        
+
+    @property
+    def id(self) -> str:
+        """Marquee unique identifier"""
+        return self.__id
+
+    @id.setter
+    def id(self, value: str):
+        self._property_changed('id')
+        self.__id = value        
+
+
 class EnhancedBetaRefData(Base):
         
     """Enhanced Beta backtest reference data"""
@@ -2094,31 +2229,47 @@ class VolatilityBacktestParameters(Base):
         self.__scaling_method = value        
 
 
-class BacktestPerformanceDecomposition(Base):
+class BacktestResult(Base):
         
-    """Decomposition of backtest performance"""
+    """backtest result"""
 
     @camel_case_translate
     def __init__(
         self,
-        name: str = None,
+        backtest_id: str = None,
         performance: Tuple[FieldValueMap, ...] = None,
-        stats: PerformanceStats = None
+        portfolio: Tuple[FieldValueMap, ...] = None,
+        stats: PerformanceStats = None,
+        performance_decompositions: Tuple[BacktestPerformanceDecomposition, ...] = None,
+        risks: Tuple[BacktestRisk, ...] = None,
+        history: Tuple[PerformanceRange, ...] = None,
+        underlier_correlation: Tuple[EntityCorrelation, ...] = None,
+        comparisons: Tuple[BacktestComparison, ...] = None,
+        backtest_version: float = None,
+        name: str = None
     ):        
         super().__init__()
-        self.name = name
+        self.backtest_id = backtest_id
         self.performance = performance
+        self.portfolio = portfolio
         self.stats = stats
+        self.performance_decompositions = performance_decompositions
+        self.risks = risks
+        self.history = history
+        self.underlier_correlation = underlier_correlation
+        self.comparisons = comparisons
+        self.backtest_version = backtest_version
+        self.name = name
 
     @property
-    def name(self) -> str:
-        """Name of this performance decomposition"""
-        return self.__name
+    def backtest_id(self) -> str:
+        """Marquee unique backtest identifier"""
+        return self.__backtest_id
 
-    @name.setter
-    def name(self, value: str):
-        self._property_changed('name')
-        self.__name = value        
+    @backtest_id.setter
+    def backtest_id(self, value: str):
+        self._property_changed('backtest_id')
+        self.__backtest_id = value        
 
     @property
     def performance(self) -> Tuple[FieldValueMap, ...]:
@@ -2131,6 +2282,16 @@ class BacktestPerformanceDecomposition(Base):
         self.__performance = value        
 
     @property
+    def portfolio(self) -> Tuple[FieldValueMap, ...]:
+        """Backtest entry/exit transactions and portfolio composition."""
+        return self.__portfolio
+
+    @portfolio.setter
+    def portfolio(self, value: Tuple[FieldValueMap, ...]):
+        self._property_changed('portfolio')
+        self.__portfolio = value        
+
+    @property
     def stats(self) -> PerformanceStats:
         """Performance statistics."""
         return self.__stats
@@ -2140,40 +2301,65 @@ class BacktestPerformanceDecomposition(Base):
         self._property_changed('stats')
         self.__stats = value        
 
+    @property
+    def performance_decompositions(self) -> Tuple[BacktestPerformanceDecomposition, ...]:
+        """Decompositions of the performance of the backtest"""
+        return self.__performance_decompositions
 
-class BacktestRisk(Base):
-        
-    """Risks of the backtest portfolio"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        name: str = None,
-        timeseries: Tuple[FieldValueMap, ...] = None
-    ):        
-        super().__init__()
-        self.name = name
-        self.timeseries = timeseries
+    @performance_decompositions.setter
+    def performance_decompositions(self, value: Tuple[BacktestPerformanceDecomposition, ...]):
+        self._property_changed('performance_decompositions')
+        self.__performance_decompositions = value        
 
     @property
-    def name(self) -> str:
-        """Name of this risk"""
-        return self.__name
+    def risks(self) -> Tuple[BacktestRisk, ...]:
+        """Risks of the backtest portfolio"""
+        return self.__risks
 
-    @name.setter
-    def name(self, value: str):
-        self._property_changed('name')
-        self.__name = value        
+    @risks.setter
+    def risks(self, value: Tuple[BacktestRisk, ...]):
+        self._property_changed('risks')
+        self.__risks = value        
 
     @property
-    def timeseries(self) -> Tuple[FieldValueMap, ...]:
-        """Backtest portfolio risk curve."""
-        return self.__timeseries
+    def history(self) -> Tuple[PerformanceRange, ...]:
+        """Backtest historical calculations."""
+        return self.__history
 
-    @timeseries.setter
-    def timeseries(self, value: Tuple[FieldValueMap, ...]):
-        self._property_changed('timeseries')
-        self.__timeseries = value        
+    @history.setter
+    def history(self, value: Tuple[PerformanceRange, ...]):
+        self._property_changed('history')
+        self.__history = value        
+
+    @property
+    def underlier_correlation(self) -> Tuple[EntityCorrelation, ...]:
+        """entity correlation"""
+        return self.__underlier_correlation
+
+    @underlier_correlation.setter
+    def underlier_correlation(self, value: Tuple[EntityCorrelation, ...]):
+        self._property_changed('underlier_correlation')
+        self.__underlier_correlation = value        
+
+    @property
+    def comparisons(self) -> Tuple[BacktestComparison, ...]:
+        """Array of comparisons btw the backtest and comparison entity."""
+        return self.__comparisons
+
+    @comparisons.setter
+    def comparisons(self, value: Tuple[BacktestComparison, ...]):
+        self._property_changed('comparisons')
+        self.__comparisons = value        
+
+    @property
+    def backtest_version(self) -> float:
+        """Backtest version number."""
+        return self.__backtest_version
+
+    @backtest_version.setter
+    def backtest_version(self, value: float):
+        self._property_changed('backtest_version')
+        self.__backtest_version = value        
 
 
 class BacktestRiskRequest(Base):
@@ -2237,55 +2423,6 @@ class BacktestRiskRequest(Base):
     def end_date(self, value: datetime.date):
         self._property_changed('end_date')
         self.__end_date = value        
-
-
-class ComparisonBacktestResult(Base):
-        
-    """Comparisons of backtest results"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        stats: PerformanceStats = None,
-        performance: Tuple[FieldValueMap, ...] = None,
-        id_: str = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.stats = stats
-        self.performance = performance
-        self.__id = id_
-        self.name = name
-
-    @property
-    def stats(self) -> PerformanceStats:
-        """Performance statistics."""
-        return self.__stats
-
-    @stats.setter
-    def stats(self, value: PerformanceStats):
-        self._property_changed('stats')
-        self.__stats = value        
-
-    @property
-    def performance(self) -> Tuple[FieldValueMap, ...]:
-        """Performance for the comparison asset or backtest curve"""
-        return self.__performance
-
-    @performance.setter
-    def performance(self, value: Tuple[FieldValueMap, ...]):
-        self._property_changed('performance')
-        self.__performance = value        
-
-    @property
-    def id(self) -> str:
-        """Marquee unique identifier"""
-        return self.__id
-
-    @id.setter
-    def id(self, value: str):
-        self._property_changed('id')
-        self.__id = value        
 
 
 class VolBacktestRefData(Base):
@@ -2787,6 +2924,8 @@ class BacktestRefData(Base):
         
     """Backtest reference data"""
 
+    _name_mappings = {'enhanced_beta': 'enhanced_beta'}
+
     @camel_case_translate
     def __init__(
         self,
@@ -2902,136 +3041,3 @@ class BacktestRefData(Base):
     def last_updated_time(self, value: datetime.datetime):
         self._property_changed('last_updated_time')
         self.__last_updated_time = value        
-
-
-class BacktestResult(Base):
-        
-    """backtest result"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        backtest_id: str = None,
-        performance: Tuple[FieldValueMap, ...] = None,
-        portfolio: Tuple[FieldValueMap, ...] = None,
-        stats: PerformanceStats = None,
-        performance_decompositions: Tuple[BacktestPerformanceDecomposition, ...] = None,
-        risks: Tuple[BacktestRisk, ...] = None,
-        history: Tuple[PerformanceRange, ...] = None,
-        underlier_correlation: Tuple[EntityCorrelation, ...] = None,
-        comparisons: Tuple[BacktestComparison, ...] = None,
-        backtest_version: float = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.backtest_id = backtest_id
-        self.performance = performance
-        self.portfolio = portfolio
-        self.stats = stats
-        self.performance_decompositions = performance_decompositions
-        self.risks = risks
-        self.history = history
-        self.underlier_correlation = underlier_correlation
-        self.comparisons = comparisons
-        self.backtest_version = backtest_version
-        self.name = name
-
-    @property
-    def backtest_id(self) -> str:
-        """Marquee unique backtest identifier"""
-        return self.__backtest_id
-
-    @backtest_id.setter
-    def backtest_id(self, value: str):
-        self._property_changed('backtest_id')
-        self.__backtest_id = value        
-
-    @property
-    def performance(self) -> Tuple[FieldValueMap, ...]:
-        """Backtest performance curve."""
-        return self.__performance
-
-    @performance.setter
-    def performance(self, value: Tuple[FieldValueMap, ...]):
-        self._property_changed('performance')
-        self.__performance = value        
-
-    @property
-    def portfolio(self) -> Tuple[FieldValueMap, ...]:
-        """Backtest entry/exit transactions and portfolio composition."""
-        return self.__portfolio
-
-    @portfolio.setter
-    def portfolio(self, value: Tuple[FieldValueMap, ...]):
-        self._property_changed('portfolio')
-        self.__portfolio = value        
-
-    @property
-    def stats(self) -> PerformanceStats:
-        """Performance statistics."""
-        return self.__stats
-
-    @stats.setter
-    def stats(self, value: PerformanceStats):
-        self._property_changed('stats')
-        self.__stats = value        
-
-    @property
-    def performance_decompositions(self) -> Tuple[BacktestPerformanceDecomposition, ...]:
-        """Decompositions of the performance of the backtest"""
-        return self.__performance_decompositions
-
-    @performance_decompositions.setter
-    def performance_decompositions(self, value: Tuple[BacktestPerformanceDecomposition, ...]):
-        self._property_changed('performance_decompositions')
-        self.__performance_decompositions = value        
-
-    @property
-    def risks(self) -> Tuple[BacktestRisk, ...]:
-        """Risks of the backtest portfolio"""
-        return self.__risks
-
-    @risks.setter
-    def risks(self, value: Tuple[BacktestRisk, ...]):
-        self._property_changed('risks')
-        self.__risks = value        
-
-    @property
-    def history(self) -> Tuple[PerformanceRange, ...]:
-        """Backtest historical calculations."""
-        return self.__history
-
-    @history.setter
-    def history(self, value: Tuple[PerformanceRange, ...]):
-        self._property_changed('history')
-        self.__history = value        
-
-    @property
-    def underlier_correlation(self) -> Tuple[EntityCorrelation, ...]:
-        """entity correlation"""
-        return self.__underlier_correlation
-
-    @underlier_correlation.setter
-    def underlier_correlation(self, value: Tuple[EntityCorrelation, ...]):
-        self._property_changed('underlier_correlation')
-        self.__underlier_correlation = value        
-
-    @property
-    def comparisons(self) -> Tuple[BacktestComparison, ...]:
-        """Array of comparisons btw the backtest and comparison entity."""
-        return self.__comparisons
-
-    @comparisons.setter
-    def comparisons(self, value: Tuple[BacktestComparison, ...]):
-        self._property_changed('comparisons')
-        self.__comparisons = value        
-
-    @property
-    def backtest_version(self) -> float:
-        """Backtest version number."""
-        return self.__backtest_version
-
-    @backtest_version.setter
-    def backtest_version(self, value: float):
-        self._property_changed('backtest_version')
-        self.__backtest_version = value        

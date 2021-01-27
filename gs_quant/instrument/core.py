@@ -198,7 +198,10 @@ class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
             if issubclass(cls, QuotableBuilder):
                 valuation_overrides = None
                 if 'builder' in values:
-                    valuation_overrides = values.get('overrides', {}).get('properties')
+                    valuation_overrides = values.get('overrides', {})
+                    if valuation_overrides:
+                        valuation_overrides = valuation_overrides.get('properties')
+
                     values = values['builder']
                 elif 'defn' in values:
                     values = values['defn']
@@ -214,10 +217,10 @@ class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
             elif hasattr(cls, 'asset_class'):
                 return cls._from_dict(values)
             else:
-                builder_type = values.get('$type') or values.get('builder', {}).get('$type')
+                builder_type = values.get('$type') or values.get('builder', values.get('defn', {})).get('$type')
                 if builder_type:
                     from gs_quant_internal import tdapi
-                    tdapi_cls = getattr(tdapi, values['$type'].replace('Defn', 'Builder'))
+                    tdapi_cls = getattr(tdapi, builder_type.replace('Defn', 'Builder'))
                     if not tdapi_cls:
                         raise RuntimeError('Cannot resolve TDAPI type {}'.format(tdapi_cls))
 

@@ -230,9 +230,12 @@ class Base(metaclass=ABCMeta):
 
     def as_dict(self, as_camel_case: bool = False) -> dict:
         """Dictionary of the public, non-null properties and values"""
+        name_mappings = getattr(self, '_name_mappings', {})
+
         if not self.__as_dict[as_camel_case]:
             raw_properties = self.properties()
-            properties = (inflection.camelize(p, uppercase_first_letter=False) for p in raw_properties) \
+            properties = (name_mappings[p] if p in name_mappings else
+                          inflection.camelize(p, uppercase_first_letter=False) for p in raw_properties) \
                 if as_camel_case else raw_properties
             values = (__getattribute__(self, p) for p in raw_properties)
             self.__as_dict[as_camel_case] = dict((p, v) for p, v in zip(properties, values) if v is not None)
@@ -281,11 +284,14 @@ class Base(metaclass=ABCMeta):
         return item_type
 
     def __from_dict(self, values: dict):
+        name_mappings = getattr(self, '_name_mappings', {})
+
         for prop in self.properties():
             if getattr(type(self), prop).fset is None:
                 continue
 
-            prop_value = values.get(prop, values.get(inflection.camelize(prop, uppercase_first_letter=False)))
+            prop_value = values.get(name_mappings.get(prop, prop),
+                                    values.get(inflection.camelize(prop, uppercase_first_letter=False)))
 
             if prop_value is not None:
                 if isinstance(prop_value, np.generic):

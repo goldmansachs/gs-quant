@@ -621,6 +621,24 @@ def mock_natgas_forward_price(_cls, _q):
     return df
 
 
+def mock_natgas_implied_volatility(_cls, _q):
+    d = {
+        'impliedVolatility': [
+            2.880,
+            2.844,
+            2.726,
+        ],
+        'contract': [
+            "F21",
+            "G21",
+            "H21",
+        ]
+    }
+    df = MarketDataResponseFrame(data=d, index=pd.to_datetime([datetime.date(2019, 1, 2)] * 3))
+    df.dataset_ids = _test_datasets
+    return df
+
+
 def mock_fair_price_swap(_cls, _q):
     d = {'fairPrice': [2.880]}
     df = MarketDataResponseFrame(data=d, index=pd.to_datetime([datetime.date(2019, 1, 2)]))
@@ -2896,45 +2914,104 @@ def test_forward_price():
         replace.restore()
 
 
-def test_natgas_forward_price():
+def test_forward_price_ng():
 
     replace = Replacer()
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_natgas_forward_price)
     mock = CommodityNaturalGasHub('MA001', 'AGT')
 
     with DataContext(datetime.date(2019, 1, 2), datetime.date(2019, 1, 2)):
-        actual = pd.Series(tm.forward_price(mock,
-                                            price_method='GDD',
-                                            contract_range='F21'))
+        actual = pd.Series(tm.forward_price_ng(mock,
+                                               price_method='GDD',
+                                               contract_range='F21'))
         expected = pd.Series([2.880], index=[datetime.date(2019, 1, 2)], name='price')
         assert_series_equal(expected, actual)
 
-        actual = pd.Series(tm.forward_price(mock,
-                                            price_method='GDD',
-                                            contract_range='F21-G21'))
+        actual = pd.Series(tm.forward_price_ng(mock,
+                                               price_method='GDD',
+                                               contract_range='F21-G21'))
         expected = pd.Series([2.8629152542372878], index=[datetime.date(2019, 1, 2)], name='price')
         assert_series_equal(expected, actual)
 
         with pytest.raises(ValueError):
-            tm.forward_price(mock,
-                             price_method='GDD',
-                             contract_range='F21-I21')
+            tm.forward_price_ng(mock,
+                                price_method='GDD',
+                                contract_range='F21-I21')
 
         with pytest.raises(ValueError):
-            tm.forward_price(mock,
-                             price_method='GDD',
-                             contract_range='I21')
+            tm.forward_price_ng(mock,
+                                price_method='GDD',
+                                contract_range='I21')
 
-    replace.restore()
+        with pytest.raises(MqTypeError):
+            wrong_mock = Index('MA001', AssetClass.Commod, 'SPP')
+            tm.forward_price_ng(wrong_mock,
+                                price_method='GDD',
+                                contract_range='I21')
+        with pytest.raises(ValueError):
+            tm.forward_price_ng(mock,
+                                price_method='GDD',
+                                contract_range='I21',
+                                real_time=True)
 
     # No market data
     market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
     market_mock.return_value = mock_empty_market_data_response()
     with DataContext(datetime.date(2019, 1, 2), datetime.date(2019, 1, 2)):
-        actual = tm.forward_price(mock,
-                                  price_method='GDD',
-                                  contract_range='F21')
-        assert_series_equal(pd.Series(dtype='float64'), pd.Series(actual))
+        actual = tm.forward_price_ng(mock,
+                                     price_method='LMP',
+                                     contract_range='2Q20')
+        assert_series_equal(pd.Series(dtype='float64'),
+                            pd.Series(actual)
+                            )
+    replace.restore()
+
+
+def test_implied_volatility_ng():
+
+    replace = Replacer()
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_natgas_implied_volatility)
+    mock = CommodityNaturalGasHub('MA001', 'AGT')
+
+    with DataContext(datetime.date(2019, 1, 2), datetime.date(2019, 1, 2)):
+        actual = pd.Series(tm.implied_volatility_ng(mock,
+                                                    price_method='GDD',
+                                                    contract_range='F21'))
+        expected = pd.Series([2.880], index=[datetime.date(2019, 1, 2)], name='price')
+        assert_series_equal(expected, actual)
+
+        actual = pd.Series(tm.implied_volatility_ng(mock,
+                                                    price_method='GDD',
+                                                    contract_range='F21-G21'))
+        expected = pd.Series([2.8629152542372878], index=[datetime.date(2019, 1, 2)], name='price')
+        assert_series_equal(expected, actual)
+
+        with pytest.raises(ValueError):
+            tm.implied_volatility_ng(mock,
+                                     price_method='GDD',
+                                     contract_range='F21-I21')
+
+        with pytest.raises(ValueError):
+            tm.implied_volatility_ng(mock,
+                                     price_method='GDD',
+                                     contract_range='I21')
+
+        with pytest.raises(ValueError):
+            tm.implied_volatility_ng(mock,
+                                     price_method='GDD',
+                                     contract_range='I21',
+                                     real_time=True)
+
+    # No market data
+    market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    market_mock.return_value = mock_empty_market_data_response()
+    with DataContext(datetime.date(2019, 1, 2), datetime.date(2019, 1, 2)):
+        actual = tm.implied_volatility_ng(mock,
+                                          price_method='LMP',
+                                          contract_range='2Q20')
+        assert_series_equal(pd.Series(dtype='float64'),
+                            pd.Series(actual)
+                            )
     replace.restore()
 
 

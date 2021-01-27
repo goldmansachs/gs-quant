@@ -23,7 +23,7 @@ from pydash import get
 from gs_quant.analytics.datagrid import DataGrid
 from gs_quant.session import GsSession
 
-API = '/datagrids'
+API = '/data/grids'
 DATAGRID_HEADERS: Dict[str, str] = {'Content-Type': 'application/json;charset=utf-8'}
 
 

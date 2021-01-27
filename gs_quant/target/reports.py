@@ -90,6 +90,7 @@ class ReportType(EnumBase, Enum):
     Asset_Factor_Risk = 'Asset Factor Risk'
     Basket_Create = 'Basket Create'
     Basket_Backcast = 'Basket Backcast'
+    Basket_Rebalance_Auto_Approval = 'Basket Rebalance Auto Approval'
     Scenario = 'Scenario'
     Iselect_Backtest = 'Iselect Backtest'
     Backtest_Run = 'Backtest Run'
@@ -452,6 +453,8 @@ class ReportWithParametersOverrides(Base):
 
 class User(Base):
         
+    _name_mappings = {'root_oe_id': 'rootOEId', 'root_oe_name': 'rootOEName', 'internal_id': 'internalID', 'mi_fidii_trade_idea_declined': 'miFIDIITradeIdeaDeclined'}
+
     @camel_case_translate
     def __init__(
         self,

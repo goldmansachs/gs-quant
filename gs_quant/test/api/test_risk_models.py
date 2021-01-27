@@ -282,31 +282,6 @@ def test_create_risk_model_factor(mocker):
     assert response == expected_response
 
 
-def test_get_risk_model_factor(mocker):
-    factor = RiskModelFactor.from_dict({
-        "identifier": "Factor1",
-        "type": "Factor"
-    })
-
-    expected_response = RiskModelFactor(identifier='Factor1', type='Factor')
-
-    # mock GsSession
-    mocker.patch.object(
-        GsSession.__class__,
-        'default_value',
-        return_value=GsSession.get(
-            Environment.QA,
-            'client_id',
-            'secret'))
-    mocker.patch.object(GsSession.current, '_get', return_value=factor)
-
-    # run test
-    response = GsRiskModelApi.get_risk_model_factor(model_id='id', factor_id='factor')
-    GsSession.current._get.assert_called_with('/risk/models/{id}/factors/{identifier}'
-                                              .format(id='id', identifier='factor'))
-    assert response == expected_response
-
-
 def test_update_risk_model_factor(mocker):
     factor = RiskModelFactor.from_dict({
         "identifier": "factor",
