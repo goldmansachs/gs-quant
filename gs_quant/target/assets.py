@@ -283,6 +283,32 @@ class SupraStrategy(EnumBase, Enum):
         return self.value
 
 
+class AssetMetadata(Base):
+        
+    """Asset Meta Data that holds information related to the source of the asset rather
+       than economics"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        version_timestamp: datetime.datetime = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.version_timestamp = version_timestamp
+        self.name = name
+
+    @property
+    def version_timestamp(self) -> datetime.datetime:
+        """Timestamp when object was milestoned in source database."""
+        return self.__version_timestamp
+
+    @version_timestamp.setter
+    def version_timestamp(self, value: datetime.datetime):
+        self._property_changed('version_timestamp')
+        self.__version_timestamp = value        
+
+
 class Benchmark(Base):
         
     """Reference rate that can based on an absolute value or absolute value + index"""
@@ -747,6 +773,67 @@ class NumberRange(Base):
     def upper_bound(self, value: float):
         self._property_changed('upper_bound')
         self.__upper_bound = value        
+
+
+class Op(Base):
+        
+    """Operations for searches."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        gte: Union[datetime.date, float] = None,
+        lte: Union[datetime.date, float] = None,
+        lt: Union[datetime.date, float] = None,
+        gt: Union[datetime.date, float] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.gte = gte
+        self.lte = lte
+        self.lt = lt
+        self.gt = gt
+        self.name = name
+
+    @property
+    def gte(self) -> Union[datetime.date, float]:
+        """search for values greater than or equal."""
+        return self.__gte
+
+    @gte.setter
+    def gte(self, value: Union[datetime.date, float]):
+        self._property_changed('gte')
+        self.__gte = value        
+
+    @property
+    def lte(self) -> Union[datetime.date, float]:
+        """search for values less than or equal to."""
+        return self.__lte
+
+    @lte.setter
+    def lte(self, value: Union[datetime.date, float]):
+        self._property_changed('lte')
+        self.__lte = value        
+
+    @property
+    def lt(self) -> Union[datetime.date, float]:
+        """search for values less than."""
+        return self.__lt
+
+    @lt.setter
+    def lt(self, value: Union[datetime.date, float]):
+        self._property_changed('lt')
+        self.__lt = value        
+
+    @property
+    def gt(self) -> Union[datetime.date, float]:
+        """search for values greater than."""
+        return self.__gt
+
+    @gt.setter
+    def gt(self, value: Union[datetime.date, float]):
+        self._property_changed('gt')
+        self.__gt = value        
 
 
 class People(Base):
@@ -1312,6 +1399,7 @@ class AssetParameters(Base):
         is_legacy_pair_basket: bool = None,
         fixed_rate_day_count_fraction: Union[DayCountFraction, str] = None,
         floating_rate_day_count_fraction: Union[DayCountFraction, str] = None,
+        pair_calculation: str = None,
         pay_day_count_fraction: Union[DayCountFraction, str] = None,
         receive_day_count_fraction: Union[DayCountFraction, str] = None,
         pay_frequency: str = None,
@@ -1410,6 +1498,7 @@ class AssetParameters(Base):
         self.is_legacy_pair_basket = is_legacy_pair_basket
         self.fixed_rate_day_count_fraction = fixed_rate_day_count_fraction
         self.floating_rate_day_count_fraction = floating_rate_day_count_fraction
+        self.pair_calculation = pair_calculation
         self.pay_day_count_fraction = pay_day_count_fraction
         self.receive_day_count_fraction = receive_day_count_fraction
         self.pay_frequency = pay_frequency
@@ -2065,6 +2154,17 @@ class AssetParameters(Base):
     def floating_rate_day_count_fraction(self, value: Union[DayCountFraction, str]):
         self._property_changed('floating_rate_day_count_fraction')
         self.__floating_rate_day_count_fraction = get_enum_value(DayCountFraction, value)        
+
+    @property
+    def pair_calculation(self) -> str:
+        """Pair basket calculation composed of long and short coefficients for each leg, as
+           well as cash amount"""
+        return self.__pair_calculation
+
+    @pair_calculation.setter
+    def pair_calculation(self, value: str):
+        self._property_changed('pair_calculation')
+        self.__pair_calculation = value        
 
     @property
     def pay_day_count_fraction(self) -> Union[DayCountFraction, str]:
@@ -3672,519 +3772,278 @@ class AssetStatsRequest(Base):
 
 class FieldFilterMap(Base):
         
+    _name_mappings = {'sec_db': 'secDB'}
+
     @camel_case_translate
     def __init__(
         self,
-        internal_index_calc_region: dict = None,
-        issue_status_date: dict = None,
-        pl_id: dict = None,
-        last_returns_start_date: dict = None,
-        amount_outstanding: dict = None,
-        asset_classifications_gics_sub_industry: dict = None,
-        mdapi_class: dict = None,
-        data_set_ids: dict = None,
-        call_first_date: dict = None,
-        pb_client_id: dict = None,
-        owner_id: dict = None,
-        economic_terms_hash: dict = None,
-        sec_db: dict = None,
-        objective: dict = None,
-        simon_intl_asset_tags: dict = None,
-        private_placement_type: dict = None,
-        hedge_notional: dict = None,
-        rank: dict = None,
-        data_set_category: dict = None,
-        created_by_id: dict = None,
-        vehicle_type: dict = None,
-        market_data_type: dict = None,
-        asset_parameters_payer_day_count_fraction: dict = None,
-        point_class: dict = None,
-        minimum_increment: dict = None,
-        hedge_volatility: dict = None,
-        version: dict = None,
-        tags: dict = None,
-        asset_classifications_gics_industry_group: dict = None,
-        market_data_asset: dict = None,
-        asset_classifications_is_primary: dict = None,
-        styles: dict = None,
-        short_name: dict = None,
-        eid: dict = None,
-        jsn: dict = None,
-        mkt_quoting_style: dict = None,
-        hurdle_type: dict = None,
-        mic: dict = None,
-        ps_id: dict = None,
-        issue_status: dict = None,
-        region_code: dict = None,
-        dollar_cross: dict = None,
-        portfolio_type: dict = None,
-        vendor: dict = None,
-        popularity: dict = None,
-        term: dict = None,
-        currency: dict = None,
-        real_time_restriction_status: dict = None,
-        asset_parameters_clearing_house: dict = None,
-        rating_fitch: dict = None,
-        non_symbol_dimensions: dict = None,
-        share_class_type: dict = None,
-        asset_parameters_floating_rate_designated_maturity: dict = None,
-        target_notional: dict = None,
-        mkt_class: dict = None,
-        delisted: dict = None,
-        last_updated_since: dict = None,
-        regional_focus: dict = None,
-        asset_parameters_payer_designated_maturity: dict = None,
-        seasonal_adjustment_short: dict = None,
-        asset_parameters_exchange_currency: dict = None,
-        asset_classifications_country_name: dict = None,
-        management_fee: dict = None,
-        rating_moodys: dict = None,
-        simon_id: dict = None,
-        development_status: dict = None,
-        cusip: dict = None,
-        notes: dict = None,
-        asset_parameters_floating_rate_option: dict = None,
-        internal_index_calc_agent: dict = None,
-        rating_second_highest: dict = None,
-        asset_classifications_country_code: dict = None,
-        frequency: dict = None,
-        option_type: dict = None,
-        data_set_sub_category: dict = None,
-        is_legacy_pair_basket: dict = None,
-        issuer_type: dict = None,
-        asset_parameters_pricing_location: dict = None,
-        plot_id: dict = None,
-        asset_parameters_coupon: dict = None,
-        data_product: dict = None,
-        mq_symbol: dict = None,
-        sectors: dict = None,
-        redemption_notice_period: dict = None,
-        multiplier: dict = None,
-        asset_parameters_payer_rate_option: dict = None,
-        market_data_point: dict = None,
-        external: dict = None,
-        wpk: dict = None,
-        sts_fx_currency: dict = None,
-        hedge_annualized_volatility: dict = None,
-        name: dict = None,
-        asset_parameters_expiration_date: dict = None,
-        aum: dict = None,
-        exchange: dict = None,
-        folder_name: dict = None,
-        region: dict = None,
-        cid: dict = None,
-        onboarded: dict = None,
-        live_date: dict = None,
-        issue_price: dict = None,
-        sink_factor: dict = None,
-        underlying_data_set_id: dict = None,
-        asset_parameters_payer_frequency: dict = None,
-        prime_id: dict = None,
-        asset_classifications_gics_sector: dict = None,
-        sts_asset_name: dict = None,
-        description: dict = None,
-        asset_classifications_is_country_primary: dict = None,
-        title: dict = None,
-        net_exposure_classification: dict = None,
-        coupon_type: dict = None,
-        last_updated_by_id: dict = None,
-        clone_parent_id: dict = None,
-        company: dict = None,
-        gate_type: dict = None,
-        issue_date: dict = None,
-        expiration_date: dict = None,
-        coverage: dict = None,
-        ticker: dict = None,
-        asset_parameters_receiver_rate_option: dict = None,
-        call_last_date: dict = None,
-        sts_rates_country: dict = None,
-        latest_execution_time: dict = None,
-        asset_parameters_receiver_designated_maturity: dict = None,
-        gate: dict = None,
-        gsn: dict = None,
-        gss: dict = None,
-        rating_linear: dict = None,
-        asset_class: dict = None,
-        cm_id: dict = None,
-        gsideid: dict = None,
-        type_: dict = None,
-        mdapi: dict = None,
-        ric: dict = None,
-        issuer: dict = None,
-        position_source_id: dict = None,
-        measures: dict = None,
-        asset_parameters_floating_rate_day_count_fraction: dict = None,
-        action: dict = None,
-        id_: dict = None,
-        asset_parameters_seniority: dict = None,
-        redemption_date: dict = None,
-        identifier: dict = None,
-        index_create_source: dict = None,
-        sec_name: dict = None,
-        sub_region: dict = None,
-        asset_parameters_receiver_day_count_fraction: dict = None,
-        asset_parameters_notional_currency: dict = None,
-        sedol: dict = None,
-        mkt_asset: dict = None,
-        rating_standard_and_poors: dict = None,
-        asset_types: dict = None,
-        bcid: dict = None,
-        gsid: dict = None,
-        tdapi: dict = None,
-        last_updated_message: dict = None,
-        rcic: dict = None,
-        trading_restriction: dict = None,
-        status: dict = None,
-        asset_parameters_pay_or_receive: dict = None,
-        name_raw: dict = None,
-        asset_classifications_gics_industry: dict = None,
-        on_behalf_of: dict = None,
-        accrued_interest_standard: dict = None,
-        sts_commodity: dict = None,
-        sectors_raw: dict = None,
-        sts_commodity_sector: dict = None,
-        asset_parameters_receiver_frequency: dict = None,
-        position_source_name: dict = None,
-        gsid_equivalent: dict = None,
-        categories: dict = None,
-        symbol_dimensions: dict = None,
-        ext_mkt_asset: dict = None,
-        asset_parameters_fixed_rate_frequency: dict = None,
-        coupon: dict = None,
-        side_pocket: dict = None,
-        compliance_restricted_status: dict = None,
-        quoting_style: dict = None,
-        scenario_group_id: dict = None,
-        redemption_period: dict = None,
-        asset_parameters_issuer_type: dict = None,
-        sts_credit_market: dict = None,
-        bbid: dict = None,
-        asset_classifications_risk_country_code: dict = None,
-        sts_em_dm: dict = None,
-        issue_size: dict = None,
-        returns_enabled: dict = None,
-        seniority: dict = None,
-        asset_parameters_settlement: dict = None,
-        primary_country_ric: dict = None,
-        is_pair_basket: dict = None,
-        default_backcast: dict = None,
-        use_machine_learning: dict = None,
-        performance_fee: dict = None,
-        report_type: dict = None,
-        lockup_type: dict = None,
-        lockup: dict = None,
-        underlying_asset_ids: dict = None,
-        encoded_stats: dict = None,
-        pnode_id: dict = None,
-        backtest_type: dict = None,
-        asset_parameters_issuer: dict = None,
-        exchange_code: dict = None,
-        asset_parameters_strike: dict = None,
-        asset_parameters_termination_date: dict = None,
-        resource: dict = None,
-        bbid_equivalent: dict = None,
-        hurdle: dict = None,
-        asset_parameters_effective_date: dict = None,
-        valoren: dict = None,
-        asset_parameters_fixed_rate_day_count_fraction: dict = None,
-        auto_tags: dict = None,
-        short_description: dict = None,
-        ext_mkt_class: dict = None,
-        mkt_point1: dict = None,
-        portfolio_managers: dict = None,
-        asset_parameters_commodity_sector: dict = None,
-        hedge_tracking_error: dict = None,
-        asset_parameters_coupon_type: dict = None,
-        supra_strategy: dict = None,
-        term_status: dict = None,
-        wi_id: dict = None,
-        market_cap_category: dict = None,
-        mkt_point3: dict = None,
-        mkt_point2: dict = None,
-        strike_price: dict = None,
-        mkt_point4: dict = None,
-        units: dict = None,
-        em_id: dict = None,
-        sts_credit_region: dict = None,
-        ext_mkt_point3: dict = None,
-        asset_classifications_risk_country_name: dict = None,
-        asset_parameters_vendor: dict = None,
-        mkt_type: dict = None,
-        ext_mkt_point1: dict = None,
-        product_type: dict = None,
-        ext_mkt_point2: dict = None,
-        sub_region_code: dict = None,
-        asset_parameters_fixed_rate: dict = None,
-        last_returns_end_date: dict = None,
-        position_source_type: dict = None,
-        minimum_denomination: dict = None,
-        flagship: dict = None,
-        lms_id: dict = None,
-        cross: dict = None,
-        sts_rates_maturity: dict = None,
-        position_source: dict = None,
-        listed: dict = None,
-        shock_style: dict = None,
-        g10_currency: dict = None,
-        strategy: dict = None,
-        methodology: dict = None,
-        isin: dict = None
+        **kwargs
     ):        
         super().__init__()
-        self.internal_index_calc_region = internal_index_calc_region
-        self.issue_status_date = issue_status_date
-        self.pl_id = pl_id
-        self.last_returns_start_date = last_returns_start_date
-        self.amount_outstanding = amount_outstanding
-        self.asset_classifications_gics_sub_industry = asset_classifications_gics_sub_industry
-        self.mdapi_class = mdapi_class
-        self.data_set_ids = data_set_ids
-        self.call_first_date = call_first_date
-        self.pb_client_id = pb_client_id
-        self.owner_id = owner_id
-        self.economic_terms_hash = economic_terms_hash
-        self.sec_db = sec_db
-        self.objective = objective
-        self.simon_intl_asset_tags = simon_intl_asset_tags
-        self.private_placement_type = private_placement_type
-        self.hedge_notional = hedge_notional
-        self.rank = rank
-        self.data_set_category = data_set_category
-        self.created_by_id = created_by_id
-        self.vehicle_type = vehicle_type
-        self.market_data_type = market_data_type
-        self.asset_parameters_payer_day_count_fraction = asset_parameters_payer_day_count_fraction
-        self.point_class = point_class
-        self.minimum_increment = minimum_increment
-        self.hedge_volatility = hedge_volatility
-        self.version = version
-        self.tags = tags
-        self.asset_classifications_gics_industry_group = asset_classifications_gics_industry_group
-        self.market_data_asset = market_data_asset
-        self.asset_classifications_is_primary = asset_classifications_is_primary
-        self.styles = styles
-        self.short_name = short_name
-        self.eid = eid
-        self.jsn = jsn
-        self.mkt_quoting_style = mkt_quoting_style
-        self.hurdle_type = hurdle_type
-        self.mic = mic
-        self.ps_id = ps_id
-        self.issue_status = issue_status
-        self.region_code = region_code
-        self.dollar_cross = dollar_cross
-        self.portfolio_type = portfolio_type
-        self.vendor = vendor
-        self.popularity = popularity
-        self.term = term
-        self.currency = currency
-        self.real_time_restriction_status = real_time_restriction_status
-        self.asset_parameters_clearing_house = asset_parameters_clearing_house
-        self.rating_fitch = rating_fitch
-        self.non_symbol_dimensions = non_symbol_dimensions
-        self.share_class_type = share_class_type
-        self.asset_parameters_floating_rate_designated_maturity = asset_parameters_floating_rate_designated_maturity
-        self.target_notional = target_notional
-        self.mkt_class = mkt_class
-        self.delisted = delisted
-        self.last_updated_since = last_updated_since
-        self.regional_focus = regional_focus
-        self.asset_parameters_payer_designated_maturity = asset_parameters_payer_designated_maturity
-        self.seasonal_adjustment_short = seasonal_adjustment_short
-        self.asset_parameters_exchange_currency = asset_parameters_exchange_currency
-        self.asset_classifications_country_name = asset_classifications_country_name
-        self.management_fee = management_fee
-        self.rating_moodys = rating_moodys
-        self.simon_id = simon_id
-        self.development_status = development_status
-        self.cusip = cusip
-        self.notes = notes
-        self.asset_parameters_floating_rate_option = asset_parameters_floating_rate_option
-        self.internal_index_calc_agent = internal_index_calc_agent
-        self.rating_second_highest = rating_second_highest
-        self.asset_classifications_country_code = asset_classifications_country_code
-        self.frequency = frequency
-        self.option_type = option_type
-        self.data_set_sub_category = data_set_sub_category
-        self.is_legacy_pair_basket = is_legacy_pair_basket
-        self.issuer_type = issuer_type
-        self.asset_parameters_pricing_location = asset_parameters_pricing_location
-        self.plot_id = plot_id
-        self.asset_parameters_coupon = asset_parameters_coupon
-        self.data_product = data_product
-        self.mq_symbol = mq_symbol
-        self.sectors = sectors
-        self.redemption_notice_period = redemption_notice_period
-        self.multiplier = multiplier
-        self.asset_parameters_payer_rate_option = asset_parameters_payer_rate_option
-        self.market_data_point = market_data_point
-        self.external = external
-        self.wpk = wpk
-        self.sts_fx_currency = sts_fx_currency
-        self.hedge_annualized_volatility = hedge_annualized_volatility
-        self.name = name
-        self.asset_parameters_expiration_date = asset_parameters_expiration_date
-        self.aum = aum
-        self.exchange = exchange
-        self.folder_name = folder_name
-        self.region = region
-        self.cid = cid
-        self.onboarded = onboarded
-        self.live_date = live_date
-        self.issue_price = issue_price
-        self.sink_factor = sink_factor
-        self.underlying_data_set_id = underlying_data_set_id
-        self.asset_parameters_payer_frequency = asset_parameters_payer_frequency
-        self.prime_id = prime_id
-        self.asset_classifications_gics_sector = asset_classifications_gics_sector
-        self.sts_asset_name = sts_asset_name
-        self.description = description
-        self.asset_classifications_is_country_primary = asset_classifications_is_country_primary
-        self.title = title
-        self.net_exposure_classification = net_exposure_classification
-        self.coupon_type = coupon_type
-        self.last_updated_by_id = last_updated_by_id
-        self.clone_parent_id = clone_parent_id
-        self.company = company
-        self.gate_type = gate_type
-        self.issue_date = issue_date
-        self.expiration_date = expiration_date
-        self.coverage = coverage
-        self.ticker = ticker
-        self.asset_parameters_receiver_rate_option = asset_parameters_receiver_rate_option
-        self.call_last_date = call_last_date
-        self.sts_rates_country = sts_rates_country
-        self.latest_execution_time = latest_execution_time
-        self.asset_parameters_receiver_designated_maturity = asset_parameters_receiver_designated_maturity
-        self.gate = gate
-        self.gsn = gsn
-        self.gss = gss
-        self.rating_linear = rating_linear
-        self.asset_class = asset_class
-        self.cm_id = cm_id
-        self.gsideid = gsideid
-        self.__type = type_
-        self.mdapi = mdapi
-        self.ric = ric
-        self.issuer = issuer
-        self.position_source_id = position_source_id
-        self.measures = measures
-        self.asset_parameters_floating_rate_day_count_fraction = asset_parameters_floating_rate_day_count_fraction
-        self.action = action
-        self.__id = id_
-        self.asset_parameters_seniority = asset_parameters_seniority
-        self.redemption_date = redemption_date
-        self.identifier = identifier
-        self.index_create_source = index_create_source
-        self.sec_name = sec_name
-        self.sub_region = sub_region
-        self.asset_parameters_receiver_day_count_fraction = asset_parameters_receiver_day_count_fraction
-        self.asset_parameters_notional_currency = asset_parameters_notional_currency
-        self.sedol = sedol
-        self.mkt_asset = mkt_asset
-        self.rating_standard_and_poors = rating_standard_and_poors
-        self.asset_types = asset_types
-        self.bcid = bcid
-        self.gsid = gsid
-        self.tdapi = tdapi
-        self.last_updated_message = last_updated_message
-        self.rcic = rcic
-        self.trading_restriction = trading_restriction
-        self.status = status
-        self.asset_parameters_pay_or_receive = asset_parameters_pay_or_receive
-        self.name_raw = name_raw
-        self.asset_classifications_gics_industry = asset_classifications_gics_industry
-        self.on_behalf_of = on_behalf_of
-        self.accrued_interest_standard = accrued_interest_standard
-        self.sts_commodity = sts_commodity
-        self.sectors_raw = sectors_raw
-        self.sts_commodity_sector = sts_commodity_sector
-        self.asset_parameters_receiver_frequency = asset_parameters_receiver_frequency
-        self.position_source_name = position_source_name
-        self.gsid_equivalent = gsid_equivalent
-        self.categories = categories
-        self.symbol_dimensions = symbol_dimensions
-        self.ext_mkt_asset = ext_mkt_asset
-        self.asset_parameters_fixed_rate_frequency = asset_parameters_fixed_rate_frequency
-        self.coupon = coupon
-        self.side_pocket = side_pocket
-        self.compliance_restricted_status = compliance_restricted_status
-        self.quoting_style = quoting_style
-        self.scenario_group_id = scenario_group_id
-        self.redemption_period = redemption_period
-        self.asset_parameters_issuer_type = asset_parameters_issuer_type
-        self.sts_credit_market = sts_credit_market
-        self.bbid = bbid
-        self.asset_classifications_risk_country_code = asset_classifications_risk_country_code
-        self.sts_em_dm = sts_em_dm
-        self.issue_size = issue_size
-        self.returns_enabled = returns_enabled
-        self.seniority = seniority
-        self.asset_parameters_settlement = asset_parameters_settlement
-        self.primary_country_ric = primary_country_ric
-        self.is_pair_basket = is_pair_basket
-        self.default_backcast = default_backcast
-        self.use_machine_learning = use_machine_learning
-        self.performance_fee = performance_fee
-        self.report_type = report_type
-        self.lockup_type = lockup_type
-        self.lockup = lockup
-        self.underlying_asset_ids = underlying_asset_ids
-        self.encoded_stats = encoded_stats
-        self.pnode_id = pnode_id
-        self.backtest_type = backtest_type
-        self.asset_parameters_issuer = asset_parameters_issuer
-        self.exchange_code = exchange_code
-        self.asset_parameters_strike = asset_parameters_strike
-        self.asset_parameters_termination_date = asset_parameters_termination_date
-        self.resource = resource
-        self.bbid_equivalent = bbid_equivalent
-        self.hurdle = hurdle
-        self.asset_parameters_effective_date = asset_parameters_effective_date
-        self.valoren = valoren
-        self.asset_parameters_fixed_rate_day_count_fraction = asset_parameters_fixed_rate_day_count_fraction
-        self.auto_tags = auto_tags
-        self.short_description = short_description
-        self.ext_mkt_class = ext_mkt_class
-        self.mkt_point1 = mkt_point1
-        self.portfolio_managers = portfolio_managers
-        self.asset_parameters_commodity_sector = asset_parameters_commodity_sector
-        self.hedge_tracking_error = hedge_tracking_error
-        self.asset_parameters_coupon_type = asset_parameters_coupon_type
-        self.supra_strategy = supra_strategy
-        self.term_status = term_status
-        self.wi_id = wi_id
-        self.market_cap_category = market_cap_category
-        self.mkt_point3 = mkt_point3
-        self.mkt_point2 = mkt_point2
-        self.strike_price = strike_price
-        self.mkt_point4 = mkt_point4
-        self.units = units
-        self.em_id = em_id
-        self.sts_credit_region = sts_credit_region
-        self.ext_mkt_point3 = ext_mkt_point3
-        self.asset_classifications_risk_country_name = asset_classifications_risk_country_name
-        self.asset_parameters_vendor = asset_parameters_vendor
-        self.mkt_type = mkt_type
-        self.ext_mkt_point1 = ext_mkt_point1
-        self.product_type = product_type
-        self.ext_mkt_point2 = ext_mkt_point2
-        self.sub_region_code = sub_region_code
-        self.asset_parameters_fixed_rate = asset_parameters_fixed_rate
-        self.last_returns_end_date = last_returns_end_date
-        self.position_source_type = position_source_type
-        self.minimum_denomination = minimum_denomination
-        self.flagship = flagship
-        self.lms_id = lms_id
-        self.cross = cross
-        self.sts_rates_maturity = sts_rates_maturity
-        self.position_source = position_source
-        self.listed = listed
-        self.shock_style = shock_style
-        self.g10_currency = g10_currency
-        self.strategy = strategy
-        self.methodology = methodology
-        self.isin = isin
+        self.internal_index_calc_region = kwargs.get('internal_index_calc_region')
+        self.issue_status_date = kwargs.get('issue_status_date')
+        self.pl_id = kwargs.get('pl_id')
+        self.last_returns_start_date = kwargs.get('last_returns_start_date')
+        self.amount_outstanding = kwargs.get('amount_outstanding')
+        self.asset_classifications_gics_sub_industry = kwargs.get('asset_classifications_gics_sub_industry')
+        self.mdapi_class = kwargs.get('mdapi_class')
+        self.data_set_ids = kwargs.get('data_set_ids')
+        self.call_first_date = kwargs.get('call_first_date')
+        self.pb_client_id = kwargs.get('pb_client_id')
+        self.owner_id = kwargs.get('owner_id')
+        self.economic_terms_hash = kwargs.get('economic_terms_hash')
+        self.sec_db = kwargs.get('sec_db')
+        self.objective = kwargs.get('objective')
+        self.simon_intl_asset_tags = kwargs.get('simon_intl_asset_tags')
+        self.private_placement_type = kwargs.get('private_placement_type')
+        self.hedge_notional = kwargs.get('hedge_notional')
+        self.rank = kwargs.get('rank')
+        self.data_set_category = kwargs.get('data_set_category')
+        self.pair_calculation = kwargs.get('pair_calculation')
+        self.created_by_id = kwargs.get('created_by_id')
+        self.vehicle_type = kwargs.get('vehicle_type')
+        self.market_data_type = kwargs.get('market_data_type')
+        self.asset_parameters_payer_day_count_fraction = kwargs.get('asset_parameters_payer_day_count_fraction')
+        self.point_class = kwargs.get('point_class')
+        self.minimum_increment = kwargs.get('minimum_increment')
+        self.hedge_volatility = kwargs.get('hedge_volatility')
+        self.version = kwargs.get('version')
+        self.tags = kwargs.get('tags')
+        self.asset_classifications_gics_industry_group = kwargs.get('asset_classifications_gics_industry_group')
+        self.market_data_asset = kwargs.get('market_data_asset')
+        self.asset_classifications_is_primary = kwargs.get('asset_classifications_is_primary')
+        self.styles = kwargs.get('styles')
+        self.short_name = kwargs.get('short_name')
+        self.eid = kwargs.get('eid')
+        self.jsn = kwargs.get('jsn')
+        self.mkt_quoting_style = kwargs.get('mkt_quoting_style')
+        self.hurdle_type = kwargs.get('hurdle_type')
+        self.mic = kwargs.get('mic')
+        self.ps_id = kwargs.get('ps_id')
+        self.issue_status = kwargs.get('issue_status')
+        self.region_code = kwargs.get('region_code')
+        self.dollar_cross = kwargs.get('dollar_cross')
+        self.portfolio_type = kwargs.get('portfolio_type')
+        self.vendor = kwargs.get('vendor')
+        self.popularity = kwargs.get('popularity')
+        self.term = kwargs.get('term')
+        self.currency = kwargs.get('currency')
+        self.real_time_restriction_status = kwargs.get('real_time_restriction_status')
+        self.asset_parameters_clearing_house = kwargs.get('asset_parameters_clearing_house')
+        self.rating_fitch = kwargs.get('rating_fitch')
+        self.non_symbol_dimensions = kwargs.get('non_symbol_dimensions')
+        self.share_class_type = kwargs.get('share_class_type')
+        self.asset_parameters_floating_rate_designated_maturity = kwargs.get(
+            'asset_parameters_floating_rate_designated_maturity')
+        self.target_notional = kwargs.get('target_notional')
+        self.mkt_class = kwargs.get('mkt_class')
+        self.delisted = kwargs.get('delisted')
+        self.last_updated_since = kwargs.get('last_updated_since')
+        self.regional_focus = kwargs.get('regional_focus')
+        self.asset_parameters_payer_designated_maturity = kwargs.get('asset_parameters_payer_designated_maturity')
+        self.seasonal_adjustment_short = kwargs.get('seasonal_adjustment_short')
+        self.asset_parameters_exchange_currency = kwargs.get('asset_parameters_exchange_currency')
+        self.asset_classifications_country_name = kwargs.get('asset_classifications_country_name')
+        self.management_fee = kwargs.get('management_fee')
+        self.asset_parameters_settlement_date = kwargs.get('asset_parameters_settlement_date')
+        self.rating_moodys = kwargs.get('rating_moodys')
+        self.simon_id = kwargs.get('simon_id')
+        self.development_status = kwargs.get('development_status')
+        self.cusip = kwargs.get('cusip')
+        self.notes = kwargs.get('notes')
+        self.asset_parameters_floating_rate_option = kwargs.get('asset_parameters_floating_rate_option')
+        self.internal_index_calc_agent = kwargs.get('internal_index_calc_agent')
+        self.rating_second_highest = kwargs.get('rating_second_highest')
+        self.asset_classifications_country_code = kwargs.get('asset_classifications_country_code')
+        self.frequency = kwargs.get('frequency')
+        self.option_type = kwargs.get('option_type')
+        self.data_set_sub_category = kwargs.get('data_set_sub_category')
+        self.is_legacy_pair_basket = kwargs.get('is_legacy_pair_basket')
+        self.issuer_type = kwargs.get('issuer_type')
+        self.asset_parameters_pricing_location = kwargs.get('asset_parameters_pricing_location')
+        self.plot_id = kwargs.get('plot_id')
+        self.asset_parameters_coupon = kwargs.get('asset_parameters_coupon')
+        self.data_product = kwargs.get('data_product')
+        self.mq_symbol = kwargs.get('mq_symbol')
+        self.sectors = kwargs.get('sectors')
+        self.redemption_notice_period = kwargs.get('redemption_notice_period')
+        self.multiplier = kwargs.get('multiplier')
+        self.asset_parameters_payer_rate_option = kwargs.get('asset_parameters_payer_rate_option')
+        self.market_data_point = kwargs.get('market_data_point')
+        self.external = kwargs.get('external')
+        self.wpk = kwargs.get('wpk')
+        self.sts_fx_currency = kwargs.get('sts_fx_currency')
+        self.hedge_annualized_volatility = kwargs.get('hedge_annualized_volatility')
+        self.name = kwargs.get('name')
+        self.asset_parameters_expiration_date = kwargs.get('asset_parameters_expiration_date')
+        self.aum = kwargs.get('aum')
+        self.exchange = kwargs.get('exchange')
+        self.folder_name = kwargs.get('folder_name')
+        self.region = kwargs.get('region')
+        self.cid = kwargs.get('cid')
+        self.onboarded = kwargs.get('onboarded')
+        self.live_date = kwargs.get('live_date')
+        self.issue_price = kwargs.get('issue_price')
+        self.sink_factor = kwargs.get('sink_factor')
+        self.underlying_data_set_id = kwargs.get('underlying_data_set_id')
+        self.asset_parameters_payer_frequency = kwargs.get('asset_parameters_payer_frequency')
+        self.prime_id = kwargs.get('prime_id')
+        self.asset_classifications_gics_sector = kwargs.get('asset_classifications_gics_sector')
+        self.asset_parameters_pair = kwargs.get('asset_parameters_pair')
+        self.sts_asset_name = kwargs.get('sts_asset_name')
+        self.description = kwargs.get('description')
+        self.asset_classifications_is_country_primary = kwargs.get('asset_classifications_is_country_primary')
+        self.title = kwargs.get('title')
+        self.net_exposure_classification = kwargs.get('net_exposure_classification')
+        self.coupon_type = kwargs.get('coupon_type')
+        self.last_updated_by_id = kwargs.get('last_updated_by_id')
+        self.clone_parent_id = kwargs.get('clone_parent_id')
+        self.company = kwargs.get('company')
+        self.gate_type = kwargs.get('gate_type')
+        self.issue_date = kwargs.get('issue_date')
+        self.expiration_date = kwargs.get('expiration_date')
+        self.coverage = kwargs.get('coverage')
+        self.ticker = kwargs.get('ticker')
+        self.asset_parameters_receiver_rate_option = kwargs.get('asset_parameters_receiver_rate_option')
+        self.call_last_date = kwargs.get('call_last_date')
+        self.sts_rates_country = kwargs.get('sts_rates_country')
+        self.latest_execution_time = kwargs.get('latest_execution_time')
+        self.asset_parameters_forward_rate = kwargs.get('asset_parameters_forward_rate')
+        self.asset_parameters_receiver_designated_maturity = kwargs.get(
+            'asset_parameters_receiver_designated_maturity')
+        self.gate = kwargs.get('gate')
+        self.gsn = kwargs.get('gsn')
+        self.gss = kwargs.get('gss')
+        self.rating_linear = kwargs.get('rating_linear')
+        self.asset_class = kwargs.get('asset_class')
+        self.cm_id = kwargs.get('cm_id')
+        self.gsideid = kwargs.get('gsideid')
+        self.__type = kwargs.get('type_')
+        self.mdapi = kwargs.get('mdapi')
+        self.ric = kwargs.get('ric')
+        self.issuer = kwargs.get('issuer')
+        self.position_source_id = kwargs.get('position_source_id')
+        self.measures = kwargs.get('measures')
+        self.asset_parameters_floating_rate_day_count_fraction = kwargs.get(
+            'asset_parameters_floating_rate_day_count_fraction')
+        self.asset_parameters_notional_amount = kwargs.get('asset_parameters_notional_amount')
+        self.action = kwargs.get('action')
+        self.__id = kwargs.get('id_')
+        self.asset_parameters_seniority = kwargs.get('asset_parameters_seniority')
+        self.redemption_date = kwargs.get('redemption_date')
+        self.identifier = kwargs.get('identifier')
+        self.index_create_source = kwargs.get('index_create_source')
+        self.sec_name = kwargs.get('sec_name')
+        self.sub_region = kwargs.get('sub_region')
+        self.asset_parameters_receiver_day_count_fraction = kwargs.get('asset_parameters_receiver_day_count_fraction')
+        self.asset_parameters_notional_currency = kwargs.get('asset_parameters_notional_currency')
+        self.sedol = kwargs.get('sedol')
+        self.mkt_asset = kwargs.get('mkt_asset')
+        self.rating_standard_and_poors = kwargs.get('rating_standard_and_poors')
+        self.asset_types = kwargs.get('asset_types')
+        self.bcid = kwargs.get('bcid')
+        self.gsid = kwargs.get('gsid')
+        self.tdapi = kwargs.get('tdapi')
+        self.last_updated_message = kwargs.get('last_updated_message')
+        self.rcic = kwargs.get('rcic')
+        self.trading_restriction = kwargs.get('trading_restriction')
+        self.status = kwargs.get('status')
+        self.asset_parameters_pay_or_receive = kwargs.get('asset_parameters_pay_or_receive')
+        self.name_raw = kwargs.get('name_raw')
+        self.asset_classifications_gics_industry = kwargs.get('asset_classifications_gics_industry')
+        self.on_behalf_of = kwargs.get('on_behalf_of')
+        self.accrued_interest_standard = kwargs.get('accrued_interest_standard')
+        self.sts_commodity = kwargs.get('sts_commodity')
+        self.sectors_raw = kwargs.get('sectors_raw')
+        self.sts_commodity_sector = kwargs.get('sts_commodity_sector')
+        self.asset_parameters_receiver_frequency = kwargs.get('asset_parameters_receiver_frequency')
+        self.position_source_name = kwargs.get('position_source_name')
+        self.gsid_equivalent = kwargs.get('gsid_equivalent')
+        self.categories = kwargs.get('categories')
+        self.symbol_dimensions = kwargs.get('symbol_dimensions')
+        self.ext_mkt_asset = kwargs.get('ext_mkt_asset')
+        self.asset_parameters_fixed_rate_frequency = kwargs.get('asset_parameters_fixed_rate_frequency')
+        self.coupon = kwargs.get('coupon')
+        self.side_pocket = kwargs.get('side_pocket')
+        self.compliance_restricted_status = kwargs.get('compliance_restricted_status')
+        self.quoting_style = kwargs.get('quoting_style')
+        self.scenario_group_id = kwargs.get('scenario_group_id')
+        self.redemption_period = kwargs.get('redemption_period')
+        self.asset_parameters_issuer_type = kwargs.get('asset_parameters_issuer_type')
+        self.sts_credit_market = kwargs.get('sts_credit_market')
+        self.bbid = kwargs.get('bbid')
+        self.asset_classifications_risk_country_code = kwargs.get('asset_classifications_risk_country_code')
+        self.sts_em_dm = kwargs.get('sts_em_dm')
+        self.issue_size = kwargs.get('issue_size')
+        self.returns_enabled = kwargs.get('returns_enabled')
+        self.seniority = kwargs.get('seniority')
+        self.asset_parameters_settlement = kwargs.get('asset_parameters_settlement')
+        self.primary_country_ric = kwargs.get('primary_country_ric')
+        self.is_pair_basket = kwargs.get('is_pair_basket')
+        self.default_backcast = kwargs.get('default_backcast')
+        self.use_machine_learning = kwargs.get('use_machine_learning')
+        self.performance_fee = kwargs.get('performance_fee')
+        self.report_type = kwargs.get('report_type')
+        self.lockup_type = kwargs.get('lockup_type')
+        self.lockup = kwargs.get('lockup')
+        self.underlying_asset_ids = kwargs.get('underlying_asset_ids')
+        self.encoded_stats = kwargs.get('encoded_stats')
+        self.pnode_id = kwargs.get('pnode_id')
+        self.backtest_type = kwargs.get('backtest_type')
+        self.asset_parameters_issuer = kwargs.get('asset_parameters_issuer')
+        self.exchange_code = kwargs.get('exchange_code')
+        self.asset_parameters_strike = kwargs.get('asset_parameters_strike')
+        self.asset_parameters_termination_date = kwargs.get('asset_parameters_termination_date')
+        self.resource = kwargs.get('resource')
+        self.bbid_equivalent = kwargs.get('bbid_equivalent')
+        self.hurdle = kwargs.get('hurdle')
+        self.asset_parameters_effective_date = kwargs.get('asset_parameters_effective_date')
+        self.valoren = kwargs.get('valoren')
+        self.asset_parameters_fixed_rate_day_count_fraction = kwargs.get(
+            'asset_parameters_fixed_rate_day_count_fraction')
+        self.auto_tags = kwargs.get('auto_tags')
+        self.short_description = kwargs.get('short_description')
+        self.ext_mkt_class = kwargs.get('ext_mkt_class')
+        self.mkt_point1 = kwargs.get('mkt_point1')
+        self.portfolio_managers = kwargs.get('portfolio_managers')
+        self.asset_parameters_commodity_sector = kwargs.get('asset_parameters_commodity_sector')
+        self.hedge_tracking_error = kwargs.get('hedge_tracking_error')
+        self.asset_parameters_coupon_type = kwargs.get('asset_parameters_coupon_type')
+        self.supra_strategy = kwargs.get('supra_strategy')
+        self.term_status = kwargs.get('term_status')
+        self.wi_id = kwargs.get('wi_id')
+        self.market_cap_category = kwargs.get('market_cap_category')
+        self.mkt_point3 = kwargs.get('mkt_point3')
+        self.display_id = kwargs.get('display_id')
+        self.mkt_point2 = kwargs.get('mkt_point2')
+        self.strike_price = kwargs.get('strike_price')
+        self.mkt_point4 = kwargs.get('mkt_point4')
+        self.units = kwargs.get('units')
+        self.em_id = kwargs.get('em_id')
+        self.sts_credit_region = kwargs.get('sts_credit_region')
+        self.ext_mkt_point3 = kwargs.get('ext_mkt_point3')
+        self.asset_classifications_risk_country_name = kwargs.get('asset_classifications_risk_country_name')
+        self.asset_parameters_vendor = kwargs.get('asset_parameters_vendor')
+        self.mkt_type = kwargs.get('mkt_type')
+        self.ext_mkt_point1 = kwargs.get('ext_mkt_point1')
+        self.product_type = kwargs.get('product_type')
+        self.ext_mkt_point2 = kwargs.get('ext_mkt_point2')
+        self.sub_region_code = kwargs.get('sub_region_code')
+        self.asset_parameters_fixed_rate = kwargs.get('asset_parameters_fixed_rate')
+        self.last_returns_end_date = kwargs.get('last_returns_end_date')
+        self.position_source_type = kwargs.get('position_source_type')
+        self.minimum_denomination = kwargs.get('minimum_denomination')
+        self.flagship = kwargs.get('flagship')
+        self.lms_id = kwargs.get('lms_id')
+        self.cross = kwargs.get('cross')
+        self.sts_rates_maturity = kwargs.get('sts_rates_maturity')
+        self.position_source = kwargs.get('position_source')
+        self.listed = kwargs.get('listed')
+        self.shock_style = kwargs.get('shock_style')
+        self.g10_currency = kwargs.get('g10_currency')
+        self.strategy = kwargs.get('strategy')
+        self.methodology = kwargs.get('methodology')
+        self.isin = kwargs.get('isin')
 
     @property
     def internal_index_calc_region(self) -> dict:
@@ -4356,6 +4215,15 @@ class FieldFilterMap(Base):
     def data_set_category(self, value: dict):
         self._property_changed('data_set_category')
         self.__data_set_category = value        
+
+    @property
+    def pair_calculation(self) -> dict:
+        return self.__pair_calculation
+
+    @pair_calculation.setter
+    def pair_calculation(self, value: dict):
+        self._property_changed('pair_calculation')
+        self.__pair_calculation = value        
 
     @property
     def created_by_id(self) -> dict:
@@ -4754,6 +4622,15 @@ class FieldFilterMap(Base):
         self.__management_fee = value        
 
     @property
+    def asset_parameters_settlement_date(self) -> dict:
+        return self.__asset_parameters_settlement_date
+
+    @asset_parameters_settlement_date.setter
+    def asset_parameters_settlement_date(self, value: dict):
+        self._property_changed('asset_parameters_settlement_date')
+        self.__asset_parameters_settlement_date = value        
+
+    @property
     def rating_moodys(self) -> dict:
         return self.__rating_moodys
 
@@ -5141,6 +5018,15 @@ class FieldFilterMap(Base):
         self.__asset_classifications_gics_sector = value        
 
     @property
+    def asset_parameters_pair(self) -> dict:
+        return self.__asset_parameters_pair
+
+    @asset_parameters_pair.setter
+    def asset_parameters_pair(self, value: dict):
+        self._property_changed('asset_parameters_pair')
+        self.__asset_parameters_pair = value        
+
+    @property
     def sts_asset_name(self) -> dict:
         return self.__sts_asset_name
 
@@ -5303,6 +5189,15 @@ class FieldFilterMap(Base):
         self.__latest_execution_time = value        
 
     @property
+    def asset_parameters_forward_rate(self) -> dict:
+        return self.__asset_parameters_forward_rate
+
+    @asset_parameters_forward_rate.setter
+    def asset_parameters_forward_rate(self, value: dict):
+        self._property_changed('asset_parameters_forward_rate')
+        self.__asset_parameters_forward_rate = value        
+
+    @property
     def asset_parameters_receiver_designated_maturity(self) -> dict:
         return self.__asset_parameters_receiver_designated_maturity
 
@@ -5436,6 +5331,15 @@ class FieldFilterMap(Base):
     def asset_parameters_floating_rate_day_count_fraction(self, value: dict):
         self._property_changed('asset_parameters_floating_rate_day_count_fraction')
         self.__asset_parameters_floating_rate_day_count_fraction = value        
+
+    @property
+    def asset_parameters_notional_amount(self) -> dict:
+        return self.__asset_parameters_notional_amount
+
+    @asset_parameters_notional_amount.setter
+    def asset_parameters_notional_amount(self, value: dict):
+        self._property_changed('asset_parameters_notional_amount')
+        self.__asset_parameters_notional_amount = value        
 
     @property
     def action(self) -> dict:
@@ -6212,6 +6116,15 @@ class FieldFilterMap(Base):
         self.__mkt_point3 = value        
 
     @property
+    def display_id(self) -> dict:
+        return self.__display_id
+
+    @display_id.setter
+    def display_id(self, value: dict):
+        self._property_changed('display_id')
+        self.__display_id = value        
+
+    @property
     def mkt_point2(self) -> dict:
         return self.__mkt_point2
 
@@ -6689,7 +6602,8 @@ class Asset(Base):
         underliers: Tuple[str, ...] = None,
         underlying_asset_ids: Tuple[str, ...] = None,
         xrefs: Tuple[TemporalXRef, ...] = None,
-        xref: XRef = None
+        xref: XRef = None,
+        metadata: AssetMetadata = None
     ):        
         super().__init__()
         self.active = active
@@ -6730,6 +6644,7 @@ class Asset(Base):
         self.underlying_asset_ids = underlying_asset_ids
         self.xrefs = xrefs
         self.xref = xref
+        self.metadata = metadata
 
     @property
     def active(self) -> bool:
@@ -7106,6 +7021,17 @@ class Asset(Base):
     def xref(self, value: XRef):
         self._property_changed('xref')
         self.__xref = value        
+
+    @property
+    def metadata(self) -> AssetMetadata:
+        """Asset Meta Data that holds information related to the source of the asset rather
+           than economics"""
+        return self.__metadata
+
+    @metadata.setter
+    def metadata(self, value: AssetMetadata):
+        self._property_changed('metadata')
+        self.__metadata = value        
 
 
 class AssetToInstrumentResponse(Base):

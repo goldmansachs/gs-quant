@@ -144,6 +144,7 @@ class AssetIdentifier(EntityIdentifier):
     SEDOL = "SEDOL"  #: LSE Stock Exchange Daily Official List code (2407966)
     TICKER = "TICKER"  #: Exchange ticker (GS)
     PLOT_ID = "PLOT_ID"  #: ID for Marquee PlotTool
+    GSID = "GSID"
 
 
 class ReturnType(Enum):

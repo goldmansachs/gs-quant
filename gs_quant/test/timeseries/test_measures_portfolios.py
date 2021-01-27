@@ -56,7 +56,7 @@ def test_financial_conditions_index():
                                            'parameters': {'transactionCostModel': 'FIXED'}})]
 
     with DataContext(datetime.date(2020, 1, 1), datetime.date(2019, 1, 3)):
-        actual = mp.pnl('MP1')
+        actual = mp.portfolio_pnl('MP1')
         assert actual.index.equals(idx)
         assert all(actual.values == data['pnl'])
     replace.restore()

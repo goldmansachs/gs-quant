@@ -116,6 +116,9 @@ class QueryType(Enum):
     DWI_CONTRIBUTION = "Dwi Contribution"
     REAL_TWI_CONTRIBUTION = "Real Twi Contribution"
     TWI_CONTRIBUTION = "Twi Contribution"
+    COVARIANCE = "Covariance"
+    FACTOR_EXPOSURE = "Factor Exposure"
+    FACTOR_RETURN = "Factor Return"
 
 
 class GsDataApi(DataApi):

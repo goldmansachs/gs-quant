@@ -202,7 +202,7 @@ class ClassificationConstraint(Base):
 
 class FactorConstraint(Base):
         
-    """Constraint on a specific axioma factor."""
+    """Constraint on a specific risk model factor."""
 
     @camel_case_translate
     def __init__(
@@ -218,7 +218,7 @@ class FactorConstraint(Base):
 
     @property
     def factor(self) -> str:
-        """Axioma factor name."""
+        """Risk model factor name."""
         return self.__factor
 
     @factor.setter
@@ -255,7 +255,7 @@ class FactorExposure(Base):
 
     @property
     def factor(self) -> str:
-        """Name of the Axioma factor."""
+        """Name of the Risk Model factor."""
         return self.__factor
 
     @factor.setter
@@ -646,7 +646,15 @@ class HedgeConstituent(Base):
         correlation: float = None,
         transaction_cost: float = None,
         marginal_cost: float = None,
-        borrow_cost: float = None
+        borrow_cost: float = None,
+        shares: float = None,
+        price: float = None,
+        multiplier: float = None,
+        notional: float = None,
+        bbid: str = None,
+        adv_percentage: float = None,
+        sector: str = None,
+        industry: str = None
     ):        
         super().__init__()
         self.asset_id = asset_id
@@ -658,6 +666,14 @@ class HedgeConstituent(Base):
         self.transaction_cost = transaction_cost
         self.marginal_cost = marginal_cost
         self.borrow_cost = borrow_cost
+        self.shares = shares
+        self.price = price
+        self.multiplier = multiplier
+        self.notional = notional
+        self.bbid = bbid
+        self.adv_percentage = adv_percentage
+        self.sector = sector
+        self.industry = industry
 
     @property
     def asset_id(self) -> str:
@@ -743,13 +759,94 @@ class HedgeConstituent(Base):
 
     @property
     def borrow_cost(self) -> float:
-        """The estimated borrow cost in bps for a position or position set."""
+        """The estimated borrow fee in bps to short the position or position set."""
         return self.__borrow_cost
 
     @borrow_cost.setter
     def borrow_cost(self, value: float):
         self._property_changed('borrow_cost')
         self.__borrow_cost = value        
+
+    @property
+    def shares(self) -> float:
+        """The quantity of shares."""
+        return self.__shares
+
+    @shares.setter
+    def shares(self, value: float):
+        self._property_changed('shares')
+        self.__shares = value        
+
+    @property
+    def price(self) -> float:
+        """The price in USD."""
+        return self.__price
+
+    @price.setter
+    def price(self, value: float):
+        self._property_changed('price')
+        self.__price = value        
+
+    @property
+    def multiplier(self) -> float:
+        """Underlying unit per asset multiplier"""
+        return self.__multiplier
+
+    @multiplier.setter
+    def multiplier(self, value: float):
+        self._property_changed('multiplier')
+        self.__multiplier = value        
+
+    @property
+    def notional(self) -> float:
+        """Notional of the position"""
+        return self.__notional
+
+    @notional.setter
+    def notional(self, value: float):
+        self._property_changed('notional')
+        self.__notional = value        
+
+    @property
+    def bbid(self) -> str:
+        """Bloomberg Id Identifier"""
+        return self.__bbid
+
+    @bbid.setter
+    def bbid(self, value: str):
+        self._property_changed('bbid')
+        self.__bbid = value        
+
+    @property
+    def adv_percentage(self) -> float:
+        """Percentage of the constituent's notional in the hedge to it's average daily
+           dollar volume."""
+        return self.__adv_percentage
+
+    @adv_percentage.setter
+    def adv_percentage(self, value: float):
+        self._property_changed('adv_percentage')
+        self.__adv_percentage = value        
+
+    @property
+    def sector(self) -> str:
+        """GICS Sector classification (level 1)."""
+        return self.__sector
+
+    @sector.setter
+    def sector(self, value: str):
+        self._property_changed('sector')
+        self.__sector = value        
+
+    @property
+    def industry(self) -> str:
+        """GICS industry classification (level 3)."""
+        return self.__industry
+
+    @industry.setter
+    def industry(self, value: str):
+        self._property_changed('industry')
+        self.__industry = value        
 
 
 class FactorHedgerResultPositions(Base):
@@ -911,7 +1008,7 @@ class FactorHedgerResultPositions(Base):
 
     @property
     def borrow_cost_bps(self) -> float:
-        """The estimated borrow cost in bps for a position or position set."""
+        """The estimated borrow fee in bps to short the position or position set."""
         return self.__borrow_cost_bps
 
     @borrow_cost_bps.setter
@@ -921,7 +1018,7 @@ class FactorHedgerResultPositions(Base):
 
     @property
     def volatility(self) -> float:
-        """Standard deviation of the annualized returns."""
+        """Annualized ex-ante risk a percentage of your portfolio's notional."""
         return self.__volatility
 
     @volatility.setter
@@ -1435,7 +1532,9 @@ class FactorHedgeParameters(Base):
 
     @property
     def exclude_corporate_actions(self) -> bool:
-        """Exclude assets pending for corporate actions from being in the hedge"""
+        """Exclude assets pending for corporate actions from being in the hedge. Default
+           corporate action types excluded are Merges, Quote lot adjustments,
+           Rights, Spinoffs, and Reorganizations."""
         return self.__exclude_corporate_actions
 
     @exclude_corporate_actions.setter
@@ -1559,7 +1658,7 @@ class FactorHedgeParameters(Base):
     @property
     def market_participation_rate(self) -> float:
         """Maximum market participation rate used to estimate the cost of trading a
-           portfolio of stocks."""
+           portfolio of stocks. This does not effect the optimization."""
         return self.__market_participation_rate
 
     @market_participation_rate.setter
@@ -1579,7 +1678,7 @@ class FactorHedgeParameters(Base):
 
     @property
     def factor_constraints(self) -> Tuple[FactorConstraint, ...]:
-        """Constraints to be applied to specific axioma factors in the hedge."""
+        """Constraints to be applied to specific risk model factors in the hedge."""
         return self.__factor_constraints
 
     @factor_constraints.setter
@@ -1907,7 +2006,7 @@ class PerformanceHedgeParameters(Base):
     @property
     def market_participation_rate(self) -> float:
         """Maximum market participation rate used to estimate the cost of trading a
-           portfolio of stocks."""
+           portfolio of stocks. This does not effect the optimization."""
         return self.__market_participation_rate
 
     @market_participation_rate.setter
@@ -1993,7 +2092,6 @@ class Hedge(Base):
         last_updated_by_id: str = None,
         last_updated_time: datetime.datetime = None,
         entitlements: Entitlements = None,
-        entitlement_exclusions: EntitlementExclusions = None,
         tags: Tuple[str, ...] = None,
         description: str = None,
         objective: Union[HedgeObjective, str] = None,
@@ -2008,7 +2106,6 @@ class Hedge(Base):
         self.last_updated_by_id = last_updated_by_id
         self.last_updated_time = last_updated_time
         self.entitlements = entitlements
-        self.entitlement_exclusions = entitlement_exclusions
         self.tags = tags
         self.name = name
         self.description = description
@@ -2086,16 +2183,6 @@ class Hedge(Base):
     def entitlements(self, value: Entitlements):
         self._property_changed('entitlements')
         self.__entitlements = value        
-
-    @property
-    def entitlement_exclusions(self) -> EntitlementExclusions:
-        """Defines the exclusion entitlements of a given resource."""
-        return self.__entitlement_exclusions
-
-    @entitlement_exclusions.setter
-    def entitlement_exclusions(self, value: EntitlementExclusions):
-        self._property_changed('entitlement_exclusions')
-        self.__entitlement_exclusions = value        
 
     @property
     def tags(self) -> Tuple[str, ...]:

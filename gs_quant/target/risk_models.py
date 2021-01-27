@@ -95,7 +95,7 @@ class Format(EnumBase, Enum):
         return self.value
 
 
-class DataAssetIdentifier(EnumBase, Enum):
+class AssetUniverseIdentifier(EnumBase, Enum):
     """Identifier by which risk model is queried"""
 
     gsid = 'gsid'
@@ -358,22 +358,22 @@ class DataAssetsRequest(Base):
     @camel_case_translate
     def __init__(
             self,
-            identifier: Union[DataAssetIdentifier, str],
+            identifier: Union[AssetUniverseIdentifier, str],
             universe: List[str]
     ):
         super().__init__()
-        self.identifier = get_enum_value(DataAssetIdentifier, identifier)
+        self.identifier = get_enum_value(AssetUniverseIdentifier, identifier)
         self.universe = universe
 
     @property
-    def identifier(self) -> Union[DataAssetIdentifier, str]:
+    def identifier(self) -> Union[AssetUniverseIdentifier, str]:
         """The identifier by which the risk model is queried"""
         return self.__identifier
 
     @identifier.setter
-    def identifier(self, value: Union[DataAssetIdentifier, str]):
+    def identifier(self, value: Union[AssetUniverseIdentifier, str]):
         self._property_changed('identifier')
-        self.__identifier = get_enum_value(DataAssetIdentifier, value)
+        self.__identifier = get_enum_value(AssetUniverseIdentifier, value)
 
     @property
     def universe(self) -> List[str]:
@@ -651,6 +651,7 @@ class RiskModelFactor(Base):
             self,
             identifier: str,
             type_: Union[FactorType, str],
+            name: str = None,
             description: str = None,
             glossary_description: str = None,
             tooltip: str = None,
@@ -662,6 +663,7 @@ class RiskModelFactor(Base):
         super().__init__()
         self.identifier = identifier
         self.__type = get_enum_value(FactorType, type_)
+        self.name = name
         self.description = description
         self.glossary_description = glossary_description
         self.tooltip = tooltip
@@ -689,6 +691,16 @@ class RiskModelFactor(Base):
     def type(self, value: Union[FactorType, str]):
         self._property_changed('type')
         self.__type = get_enum_value(FactorType, value)
+
+    @property
+    def name(self) -> str:
+        """Factor name"""
+        return self.__name
+
+    @name.setter
+    def name(self, value: str):
+        self._property_changed('name')
+        self.__name = value
 
     @property
     def description(self) -> str:
@@ -766,7 +778,7 @@ class RiskModelCalendar(Base):
     @camel_case_translate
     def __init__(
             self,
-            business_dates: List[datetime.date],
+            business_dates: List[str],
             created_by_id: str = None,
             created_time: datetime.datetime = None,
             last_updated_by_id: str = None,
@@ -780,12 +792,12 @@ class RiskModelCalendar(Base):
         self.last_updated_time = last_updated_time
 
     @property
-    def business_dates(self) -> List[datetime.date]:
+    def business_dates(self) -> List[str]:
         """Array of quantity position objects"""
         return self.__business_dates
 
     @business_dates.setter
-    def business_dates(self, value: List[datetime.datetime]):
+    def business_dates(self, value: List[str]):
         self._property_changed('business_dates')
         self.__business_dates = value
 

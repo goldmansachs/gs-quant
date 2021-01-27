@@ -70,150 +70,143 @@ class RiskModel:
                            start_date: dt.date,
                            end_date: dt.date,
                            assets: DataAssetsRequest = None,
-                           limit_factors: bool = None,
                            data_format: Format = None) -> Dict:
         """ Retrieve asset universe data for existing risk model """
-        return GsRiskModelApi.get_risk_model_data(self.model.id,
-                                                  start_date,
-                                                  end_date,
-                                                  assets,
-                                                  [Measure.Asset_Universe],
-                                                  limit_factors, data_format)
+        return GsRiskModelApi.get_risk_model_data(model_id=self.model.id,
+                                                  start_date=start_date,
+                                                  end_date=end_date,
+                                                  assets=assets,
+                                                  measures=[Measure.Asset_Universe],
+                                                  limit_factors=False,
+                                                  data_format=data_format)
 
     def get_historical_beta(self,
                             start_date: dt.date,
                             end_date: dt.date,
                             assets: DataAssetsRequest = None,
-                            limit_factors: bool = None,
                             data_format: Format = None) -> Dict:
         """ Retrieve historical beta data for existing risk model """
-        return GsRiskModelApi.get_risk_model_data(self.model.id,
-                                                  start_date,
-                                                  end_date,
-                                                  assets,
-                                                  [Measure.Historical_Beta],
-                                                  limit_factors,
-                                                  data_format)
+        return GsRiskModelApi.get_risk_model_data(model_id=self.model.id,
+                                                  start_date=start_date,
+                                                  end_date=end_date,
+                                                  assets=assets,
+                                                  measures=[Measure.Historical_Beta, Measure.Asset_Universe],
+                                                  limit_factors=False,
+                                                  data_format=data_format)
 
     def get_total_risk(self,
                        start_date: dt.date,
                        end_date: dt.date,
                        assets: DataAssetsRequest = None,
-                       limit_factors: bool = None,
                        data_format: Format = None) -> Dict:
         """ Retrieve total risk data for existing risk model """
-        return GsRiskModelApi.get_risk_model_data(self.model.id,
-                                                  start_date,
-                                                  end_date,
-                                                  assets,
-                                                  [Measure.Total_Risk],
-                                                  limit_factors,
-                                                  data_format)
+        return GsRiskModelApi.get_risk_model_data(model_id=self.model.id,
+                                                  start_date=start_date,
+                                                  end_date=end_date,
+                                                  assets=assets,
+                                                  measures=[Measure.Total_Risk, Measure.Asset_Universe],
+                                                  limit_factors=False,
+                                                  data_format=data_format)
 
     def get_specific_risk(self,
                           start_date: dt.date,
                           end_date: dt.date,
                           assets: DataAssetsRequest = None,
-                          limit_factors: bool = None,
                           data_format: Format = None) -> Dict:
         """ Retrieve specific risk data for existing risk model """
-        return GsRiskModelApi.get_risk_model_data(self.model.id,
-                                                  start_date,
-                                                  end_date,
-                                                  assets,
-                                                  [Measure.Specific_Risk],
-                                                  limit_factors,
-                                                  data_format)
+        return GsRiskModelApi.get_risk_model_data(model_id=self.model.id,
+                                                  start_date=start_date,
+                                                  end_date=end_date,
+                                                  assets=assets,
+                                                  measures=[Measure.Specific_Risk, Measure.Asset_Universe],
+                                                  limit_factors=False,
+                                                  data_format=data_format)
 
     def get_residual_variance(self,
                               start_date: dt.date,
                               end_date: dt.date,
                               assets: DataAssetsRequest = None,
-                              limit_factors: bool = None,
                               data_format: Format = None) -> Dict:
         """ Retrieve residual variance data for existing risk model """
-        return GsRiskModelApi.get_risk_model_data(self.model.id,
-                                                  start_date,
-                                                  end_date,
-                                                  assets,
-                                                  [Measure.Residual_Variance],
-                                                  limit_factors,
-                                                  data_format)
+        return GsRiskModelApi.get_risk_model_data(model_id=self.model.id,
+                                                  start_date=start_date,
+                                                  end_date=end_date,
+                                                  assets=assets,
+                                                  measures=[Measure.Residual_Variance, Measure.Asset_Universe],
+                                                  limit_factors=False,
+                                                  data_format=data_format)
 
     def get_universe_factor_exposure(self,
                                      start_date: dt.date,
                                      end_date: dt.date,
                                      assets: DataAssetsRequest = None,
-                                     limit_factors: bool = None,
                                      data_format: Format = None) -> Dict:
         """ Retrieve universe factor exposure data for existing risk model """
-        return GsRiskModelApi.get_risk_model_data(self.model.id,
-                                                  start_date,
-                                                  end_date,
-                                                  assets,
-                                                  [Measure.Universe_Factor_Exposure],
-                                                  limit_factors,
-                                                  data_format)
+        return GsRiskModelApi.get_risk_model_data(model_id=self.model.id,
+                                                  start_date=start_date,
+                                                  end_date=end_date,
+                                                  assets=assets,
+                                                  measures=[Measure.Universe_Factor_Exposure, Measure.Asset_Universe],
+                                                  limit_factors=False,
+                                                  data_format=data_format)
 
     def get_factor_returns(self,
                            start_date: dt.date,
                            end_date: dt.date,
                            assets: DataAssetsRequest = None,
-                           limit_factors: bool = None,
                            data_format: Format = None) -> Dict:
         """ Retrieve factor return data for existing risk model """
-        return GsRiskModelApi.get_risk_model_data(self.model.id,
-                                                  start_date,
-                                                  end_date,
-                                                  assets,
-                                                  [Measure.Factor_Return],
-                                                  limit_factors,
-                                                  data_format)
+        return GsRiskModelApi.get_risk_model_data(model_id=self.model.id,
+                                                  start_date=start_date,
+                                                  end_date=end_date,
+                                                  assets=assets,
+                                                  measures=[Measure.Factor_Return, Measure.Factor_Name,
+                                                            Measure.Factor_Id],
+                                                  limit_factors=False,
+                                                  data_format=data_format)
 
     def get_covariance_matrix(self,
                               start_date: dt.date,
                               end_date: dt.date,
-                              assets: DataAssetsRequest = None,
-                              limit_factors: bool = None,
                               data_format: Format = None) -> Dict:
         """ Retrieve covariance matrix data for existing risk model """
-        return GsRiskModelApi.get_risk_model_data(self.model.id,
-                                                  start_date,
-                                                  end_date,
-                                                  assets,
-                                                  [Measure.Covariance_Matrix],
-                                                  limit_factors,
-                                                  data_format)
+
+        return GsRiskModelApi.get_risk_model_data(model_id=self.model.id,
+                                                  start_date=start_date,
+                                                  end_date=end_date,
+                                                  assets=None,
+                                                  measures=[Measure.Covariance_Matrix, Measure.Factor_Name,
+                                                            Measure.Factor_Id],
+                                                  limit_factors=False,
+                                                  data_format=data_format)
 
     def get_issuer_specific_covariance(self,
                                        start_date: dt.date,
                                        end_date: dt.date,
                                        assets: DataAssetsRequest = None,
-                                       limit_factors: bool = None,
                                        data_format: Format = None) -> Dict:
         """ Retrieve issuer specific covariance data for existing risk model """
-        return GsRiskModelApi.get_risk_model_data(self.model.id,
-                                                  start_date,
-                                                  end_date,
-                                                  assets,
-                                                  [Measure.Issuer_Specific_Covariance],
-                                                  limit_factors,
-                                                  data_format)
+        return GsRiskModelApi.get_risk_model_data(model_id=self.model.id,
+                                                  start_date=start_date,
+                                                  end_date=end_date,
+                                                  assets=assets,
+                                                  measures=[Measure.Issuer_Specific_Covariance],
+                                                  limit_factors=False,
+                                                  data_format=data_format)
 
     def get_factor_portfolios(self,
                               start_date: dt.date,
                               end_date: dt.date,
                               assets: DataAssetsRequest = None,
-                              limit_factors: bool = None,
                               data_format: Format = None) -> Dict:
         """ Retrieve factor portfolios data for existing risk model """
-        return GsRiskModelApi.get_risk_model_data(self.model.id,
-                                                  start_date,
-                                                  end_date,
-                                                  assets,
-                                                  [Measure.Factor_Portfolios],
-                                                  limit_factors,
-                                                  data_format)
+        return GsRiskModelApi.get_risk_model_data(model_id=self.model.id,
+                                                  start_date=start_date,
+                                                  end_date=end_date,
+                                                  assets=assets,
+                                                  measures=[Measure.Factor_Portfolios],
+                                                  limit_factors=False,
+                                                  data_format=data_format)
 
     def get_data(self,
                  measures: List[Measure],
@@ -223,13 +216,13 @@ class RiskModel:
                  limit_factors: bool = None,
                  data_format: Format = None) -> Dict:
         """ Retrieve data for multiple measures for existing risk model """
-        return GsRiskModelApi.get_risk_model_data(self.model.id,
-                                                  start_date,
-                                                  end_date,
-                                                  assets,
-                                                  measures,
-                                                  limit_factors,
-                                                  data_format)
+        return GsRiskModelApi.get_risk_model_data(model_id=self.model.id,
+                                                  start_date=start_date,
+                                                  end_date=end_date,
+                                                  assets=assets,
+                                                  measures=measures,
+                                                  limit_factors=limit_factors,
+                                                  data_format=data_format)
 
     def upload_data(self, data: RiskModelData):
         """ Upload risk model data to existing risk model """
