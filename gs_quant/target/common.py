@@ -986,7 +986,6 @@ class Field(EnumBase, Enum):
     swapSpreadChange = 'swapSpreadChange'
     realizedArrivalPerformanceUSD = 'realizedArrivalPerformanceUSD'
     portfolioAssets = 'portfolioAssets'
-    pricingdate = 'pricingdate'
     tcmCostHorizon3Hour = 'tcmCostHorizon3Hour'
     exchangeRate = 'exchangeRate'
     potentialBedCapInc = 'potentialBedCapInc'
@@ -1267,6 +1266,7 @@ class Field(EnumBase, Enum):
     otherPriceTerm = 'otherPriceTerm'
     bidGspread = 'bidGspread'
     openPrice = 'openPrice'
+    rfqState = 'rfqState'
     psId = 'psId'
     hitRateMtd = 'hitRateMtd'
     fairVolatility = 'fairVolatility'
@@ -1321,6 +1321,7 @@ class Field(EnumBase, Enum):
     leg1TotalNotionalUnit = 'leg1TotalNotionalUnit'
     absoluteAttribution = 'absoluteAttribution'
     issuePrice = 'issuePrice'
+    quantityCcy = 'quantityCcy'
     askHigh = 'askHigh'
     expectedDataQuality = 'expectedDataQuality'
     regionName = 'regionName'
@@ -1549,7 +1550,6 @@ class Field(EnumBase, Enum):
     dataType = 'dataType'
     count = 'count'
     conviction = 'conviction'
-    rfqstate = 'rfqstate'
     benchmarkMaturity = 'benchmarkMaturity'
     grossFlowNormalized = 'grossFlowNormalized'
     buy14bps = 'buy14bps'
@@ -1767,6 +1767,7 @@ class Field(EnumBase, Enum):
     startDate = 'startDate'
     _20 = '20'
     _21 = '21'
+    fwdTier = 'fwdTier'
     _22 = '22'
     _23 = '23'
     mixedSwap = 'mixedSwap'
@@ -2420,7 +2421,6 @@ class Field(EnumBase, Enum):
     coverageRegion = 'coverageRegion'
     absoluteReturnYtd = 'absoluteReturnYtd'
     dayCountConvention2 = 'dayCountConvention2'
-    fwdtier = 'fwdtier'
     degreeDays = 'degreeDays'
     turnoverAdjusted = 'turnoverAdjusted'
     priceSpotTargetValue = 'priceSpotTargetValue'
@@ -2461,7 +2461,6 @@ class Field(EnumBase, Enum):
     relativeHitRateQtd = 'relativeHitRateQtd'
     wam = 'wam'
     wal = 'wal'
-    quantityccy = 'quantityccy'
     backtestId = 'backtestId'
     dirtyPrice = 'dirtyPrice'
     corporateSpreadContribution = 'corporateSpreadContribution'
@@ -2517,6 +2516,7 @@ class Field(EnumBase, Enum):
     categories = 'categories'
     extMktAsset = 'extMktAsset'
     quotingStyle = 'quotingStyle'
+    isInPosition = 'isInPosition'
     errorMessage = 'errorMessage'
     midPrice = 'midPrice'
     proceedsAssetSwapSpread6m = 'proceedsAssetSwapSpread6m'
@@ -2621,6 +2621,7 @@ class Field(EnumBase, Enum):
     isReal = 'isReal'
     maxTemperatureHour = 'maxTemperatureHour'
     leg2AveragingMethod = 'leg2AveragingMethod'
+    pricingDate = 'pricingDate'
     jsn = 'jsn'
     sell160cents = 'sell160cents'
     firstExerciseDate = 'firstExerciseDate'
@@ -3685,7 +3686,9 @@ class RiskMeasureType(EnumBase, Enum):
     Market_Data = 'Market Data'
     Market_Data_Assets = 'Market Data Assets'
     MV = 'MV'
+    NonUSDOisDomesticRate = 'NonUSDOisDomesticRate'
     OAS = 'OAS'
+    OisFXSpreadRate = 'OisFXSpreadRate'
     ParallelBasis = 'ParallelBasis'
     ParallelDelta = 'ParallelDelta'
     ParallelDeltaLocalCcy = 'ParallelDeltaLocalCcy'
@@ -3701,8 +3704,10 @@ class RiskMeasureType(EnumBase, Enum):
     ParallelGammaLocalCcy = 'ParallelGammaLocalCcy'
     ParallelVega = 'ParallelVega'
     ParallelVegaLocalCcy = 'ParallelVegaLocalCcy'
+    Points = 'Points'
     Premium_In_Cents = 'Premium In Cents'
     Premium = 'Premium'
+    Probability_Of_Exercise = 'Probability Of Exercise'
     Resolved_Instrument_Values = 'Resolved Instrument Values'
     PNL = 'PNL'
     PnlExplain = 'PnlExplain'
@@ -3714,6 +3719,7 @@ class RiskMeasureType(EnumBase, Enum):
     Spot_Rate = 'Spot Rate'
     Strike = 'Strike'
     Theta = 'Theta'
+    USDOisDomesticRate = 'USDOisDomesticRate'
     Vanna = 'Vanna'
     Vega = 'Vega'
     VegaLocalCcy = 'VegaLocalCcy'
@@ -4461,6 +4467,54 @@ class MarketDataCoordinate(Base):
         self.__mkt_quoting_style = value        
 
 
+class MarketDataVolSlice(Base):
+        
+    """A volatility slice"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        date: datetime.date,
+        strikes: Tuple[float, ...],
+        levels: Tuple[float, ...],
+        name: str = None
+    ):        
+        super().__init__()
+        self.date = date
+        self.strikes = strikes
+        self.levels = levels
+        self.name = name
+
+    @property
+    def date(self) -> datetime.date:
+        return self.__date
+
+    @date.setter
+    def date(self, value: datetime.date):
+        self._property_changed('date')
+        self.__date = value        
+
+    @property
+    def strikes(self) -> Tuple[float, ...]:
+        """list of vol strikes"""
+        return self.__strikes
+
+    @strikes.setter
+    def strikes(self, value: Tuple[float, ...]):
+        self._property_changed('strikes')
+        self.__strikes = value        
+
+    @property
+    def levels(self) -> Tuple[float, ...]:
+        """list of vol levels"""
+        return self.__levels
+
+    @levels.setter
+    def levels(self, value: Tuple[float, ...]):
+        self._property_changed('levels')
+        self.__levels = value        
+
+
 class PCOBenchmarkOptions(Base):
         
     """Parameters required for PCO Benchmark"""
@@ -4498,8 +4552,6 @@ class PCOBenchmarkOptions(Base):
 class PCOExposureAdjustments(Base):
         
     """Parameters required for PCO Exposure Adjustments"""
-
-    _name_mappings = {'pco_number_as_string': 'PCONumberAsString'}
 
     @camel_case_translate
     def __init__(
@@ -6510,8 +6562,6 @@ class GIRDomain(Base):
 
 class ISelectNewParameter(Base):
         
-    _name_mappings = {'is_fsr_target_factor': 'isFSRTargetFactor'}
-
     @camel_case_translate
     def __init__(
         self,
@@ -8370,6 +8420,71 @@ class MarketDataPatternAndShock(Base):
     def shock(self, value: MarketDataShock):
         self._property_changed('shock')
         self.__shock = value        
+
+
+class MarketDataVolShockScenario(Scenario):
+        
+    """A scenario to shock volatility surface"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        pattern: MarketDataPattern,
+        shock_type: Union[MarketDataShockType, str],
+        vol_levels: Tuple[MarketDataVolSlice, ...],
+        ref_spot: float,
+        name: str = None
+    ):        
+        super().__init__()
+        self.pattern = pattern
+        self.shock_type = shock_type
+        self.vol_levels = vol_levels
+        self.ref_spot = ref_spot
+        self.name = name
+
+    @property
+    def scenario_type(self) -> str:
+        """MarketDataVolShockScenario"""
+        return 'MarketDataVolShockScenario'        
+
+    @property
+    def pattern(self) -> MarketDataPattern:
+        """A pattern used to match market coordinates"""
+        return self.__pattern
+
+    @pattern.setter
+    def pattern(self, value: MarketDataPattern):
+        self._property_changed('pattern')
+        self.__pattern = value        
+
+    @property
+    def shock_type(self) -> Union[MarketDataShockType, str]:
+        """Market data shock type"""
+        return self.__shock_type
+
+    @shock_type.setter
+    def shock_type(self, value: Union[MarketDataShockType, str]):
+        self._property_changed('shock_type')
+        self.__shock_type = get_enum_value(MarketDataShockType, value)        
+
+    @property
+    def vol_levels(self) -> Tuple[MarketDataVolSlice, ...]:
+        """A volatility slice"""
+        return self.__vol_levels
+
+    @vol_levels.setter
+    def vol_levels(self, value: Tuple[MarketDataVolSlice, ...]):
+        self._property_changed('vol_levels')
+        self.__vol_levels = value        
+
+    @property
+    def ref_spot(self) -> float:
+        return self.__ref_spot
+
+    @ref_spot.setter
+    def ref_spot(self, value: float):
+        self._property_changed('ref_spot')
+        self.__ref_spot = value        
 
 
 class PCOExposureLeg(Base):

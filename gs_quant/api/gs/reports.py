@@ -15,7 +15,7 @@ under the License.
 """
 import datetime as dt
 import logging
-from typing import Tuple
+from typing import Tuple, List
 
 from gs_quant.session import GsSession
 from gs_quant.target.reports import Report, ReportScheduleRequest, ReportJob
@@ -88,3 +88,26 @@ class GsReportApi:
         }
         return GsSession.current._post('/reports/jobs/{report_job_id}/update'.format(report_job_id=report_job_id),
                                        status_body)
+
+    @classmethod
+    def get_risk_factor_data_results(cls,
+                                     risk_report_id: str,
+                                     factors: List[str] = None,
+                                     factor_categories: List[str] = None,
+                                     start_date: dt.date = None,
+                                     end_date: dt.date = None) -> dict:
+        url = ''
+        if factors is not None:
+            url += '&factors={factors}'.format(factors='&factors='.join(factors))
+        if factor_categories is not None:
+            url += '&factorCategories={categories}'.format(categories='&factorCategories='.join(factors))
+        if start_date is not None:
+            url += '&startDate={date}'.format(date=start_date.strftime('%Y-%m-%d'))
+        if end_date is not None:
+            url += '&endDate={date}'.format(date=end_date.strftime('%Y-%m-%d'))
+
+        if url:
+            url = f'/risk/factors/reports/{risk_report_id}/results?' + url[1:]
+        else:
+            url = f'/risk/factors/reports/{risk_report_id}/results'
+        return GsSession.current._get(url)

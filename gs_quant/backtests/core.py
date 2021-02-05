@@ -23,12 +23,6 @@ from gs_quant.target.backtests import Backtest as __Backtest, BacktestResult
 
 # TODO add these in Studio as a standalone JSON, so they will be generated
 
-class QuantityType(EnumBase, Enum):
-    Notional = 'notional'
-    Quantity = 'quantity'
-    Vega = 'vega'
-    Gamma = 'gamma'
-
 
 class TradeInMethod(EnumBase, Enum):
     FixedRoll = 'fixedRoll'

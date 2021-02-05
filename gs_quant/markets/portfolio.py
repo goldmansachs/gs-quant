@@ -408,6 +408,9 @@ class Portfolio(PriceableImpl):
         with pricing_context:
             futures = [p.resolve(in_place) for p in self.__priceables]
 
+        # ensure that priceables_lookup is updated when portfolio is resolved
+        self.priceables = self.__priceables
+
         if not in_place:
             ret = {} if isinstance(PricingContext.current, HistoricalPricingContext) else Portfolio(name=self.name)
             result_future = PricingFuture() if not isinstance(

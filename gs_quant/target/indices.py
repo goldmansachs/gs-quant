@@ -465,8 +465,6 @@ class CustomBasketsEditInputs(Base):
 
 class ISelectResponse(Base):
         
-    _name_mappings = {'action': 'Action', 'action_comment': 'ActionComment'}
-
     @camel_case_translate
     def __init__(
         self,

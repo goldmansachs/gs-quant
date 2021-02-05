@@ -3772,8 +3772,6 @@ class AssetStatsRequest(Base):
 
 class FieldFilterMap(Base):
         
-    _name_mappings = {'sec_db': 'secDB'}
-
     @camel_case_translate
     def __init__(
         self,
@@ -4027,8 +4025,8 @@ class FieldFilterMap(Base):
         self.mkt_type = kwargs.get('mkt_type')
         self.ext_mkt_point1 = kwargs.get('ext_mkt_point1')
         self.product_type = kwargs.get('product_type')
-        self.ext_mkt_point2 = kwargs.get('ext_mkt_point2')
         self.sub_region_code = kwargs.get('sub_region_code')
+        self.ext_mkt_point2 = kwargs.get('ext_mkt_point2')
         self.asset_parameters_fixed_rate = kwargs.get('asset_parameters_fixed_rate')
         self.last_returns_end_date = kwargs.get('last_returns_end_date')
         self.position_source_type = kwargs.get('position_source_type')
@@ -6233,15 +6231,6 @@ class FieldFilterMap(Base):
         self.__product_type = value        
 
     @property
-    def ext_mkt_point2(self) -> dict:
-        return self.__ext_mkt_point2
-
-    @ext_mkt_point2.setter
-    def ext_mkt_point2(self, value: dict):
-        self._property_changed('ext_mkt_point2')
-        self.__ext_mkt_point2 = value        
-
-    @property
     def sub_region_code(self) -> dict:
         return self.__sub_region_code
 
@@ -6249,6 +6238,15 @@ class FieldFilterMap(Base):
     def sub_region_code(self, value: dict):
         self._property_changed('sub_region_code')
         self.__sub_region_code = value        
+
+    @property
+    def ext_mkt_point2(self) -> dict:
+        return self.__ext_mkt_point2
+
+    @ext_mkt_point2.setter
+    def ext_mkt_point2(self, value: dict):
+        self._property_changed('ext_mkt_point2')
+        self.__ext_mkt_point2 = value        
 
     @property
     def asset_parameters_fixed_rate(self) -> dict:

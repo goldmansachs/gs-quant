@@ -290,3 +290,41 @@ def test_update_report_job(mocker):
     }
     GsSession.current._post.assert_called_with('/reports/jobs/{id}/update'.format(id=id_1), status_body)
     assert response == mock_response
+
+
+def test_get_risk_factor_data_results(mocker):
+    mock_response = [
+        {
+            "date": "2003-01-03",
+            "factor": "Value",
+            "factorCategory": "Style",
+            "pnl": 0.002877605406002121,
+            "exposure": 12.105457414400002,
+            "sensitivity": 0.026861678358408886,
+            "proportionOfRisk": 0.0038230454885067183
+        },
+        {
+            "date": "2003-01-06",
+            "factor": "Value",
+            "factorCategory": "Style",
+            "pnl": 0,
+            "exposure": 12.1028697664,
+            "sensitivity": 0.02668134999120776,
+            "proportionOfRisk": 0.0036290846167489335
+        }
+    ]
+    # mock GsSession
+    mocker.patch.object(
+        GsSession.__class__,
+        'default_value',
+        return_value=GsSession.get(
+            Environment.QA,
+            'client_id',
+            'secret'))
+    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+
+    # run test
+    response = GsReportApi.get_risk_factor_data_results('reportId')
+
+    GsSession.current._get.assert_called_with('/risk/factors/reports/reportId/results')
+    assert response == mock_response

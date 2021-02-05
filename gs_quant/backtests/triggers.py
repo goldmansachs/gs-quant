@@ -21,7 +21,7 @@ import pandas as pd
 
 from gs_quant.backtests.actions import Action
 from gs_quant.backtests.backtest_utils import make_list, CalcType
-from gs_quant.backtests.generic_engine import BackTest
+from gs_quant.backtests.backtest_objects import BackTest
 import datetime as dt
 
 

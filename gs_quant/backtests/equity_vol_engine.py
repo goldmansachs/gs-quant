@@ -14,31 +14,71 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.backtests.strategy_systematic import StrategySystematic, DeltaHedgeParameters, QuantityType, TradeInMethod
+from gs_quant.backtests.strategy_systematic import StrategySystematic, DeltaHedgeParameters, TradeInMethod
 from gs_quant.backtests import triggers as t
 from gs_quant.backtests import actions as a
 from gs_quant.instrument import EqOption, EqVarianceSwap
 from gs_quant.risk import EqDelta
+from gs_quant.target.backtests import FlowVolBacktestMeasure
+import pandas as pd
+from functools import reduce
+
+
+class BacktestResult(object):
+    def __init__(self, results):
+        self._results = results
+
+    def get_measure_series(self, measure: FlowVolBacktestMeasure):
+        df = pd.DataFrame(self._results[measure.value])
+        df['date'] = pd.to_datetime(df['date'])
+        return df.set_index('date').value
 
 
 class EquityVolEngine(object):
 
     @classmethod
     def supports_strategy(cls, strategy):
+        if len(strategy.initial_portfolio) > 0:
+            return False
+
+        if len(strategy.triggers) > 2:
+            return False
+
+        if not all((isinstance(x, t.PeriodicTrigger)) for x in strategy.triggers):
+            return False
+
+        all_actions = reduce(lambda x, y: x + y, (map(lambda x: x.actions, strategy.triggers)))
+        if not all((isinstance(x, a.AddTradesQuantityScaledAction) | isinstance(x, a.HedgeAction))
+                   for x in all_actions):
+            return False
+
+        # no duplicate actions
+        if not len(set(map(lambda x: type(x), all_actions))) == len(all_actions):
+            return False
+
         for trigger in strategy.triggers:
-            if isinstance(trigger, t.PeriodicTrigger):
-                # could be the equity options or the hedge
-                if len(trigger.actions) != 1:
+            # could be the equity options or the hedge
+            if len(trigger.actions) != 1:
+                return False
+
+            action = trigger.actions[0]
+            if not trigger.trigger_requirements.frequency == action.trade_duration:
+                return False
+
+            if isinstance(action, a.AddTradesQuantityScaledAction):
+                if not all((isinstance(p, EqOption) | isinstance(p, EqVarianceSwap))
+                           for p in action.priceables):
                     return False
-                elif isinstance(trigger.actions[0], a.AddTradeAction):
-                    if not all((isinstance(p, EqOption) | isinstance(p, EqVarianceSwap))
-                               for p in trigger.actions[0].priceables):
-                        return False
-                elif isinstance(trigger.actions[0], a.HedgeAction):
-                    if not trigger.actions[0].risk == EqDelta:
-                        return False
+                if action.trade_quantity is None or action.trade_quantity_type is None:
+                    return False
+            elif isinstance(action, a.HedgeAction):
+                if not action.risk == EqDelta:
+                    return False
+                if not trigger.trigger_requirements.frequency == 'B':
+                    return False
             else:
                 return False
+
         return True
 
     @classmethod
@@ -47,32 +87,33 @@ class EquityVolEngine(object):
             raise RuntimeError('unsupported strategy')
         underlier_list = None
         roll_frequency = None
+        trade_quantity = None
+        trade_quantity_type = None
         hedge = None
         for trigger in strategy.triggers:
-            if isinstance(trigger, t.PeriodicTrigger):
-                if isinstance(trigger.actions[0], a.AddTradeAction):
-                    underlier_list = trigger.actions[0].priceables
-                    roll_frequency = trigger.actions[0].trade_duration
-                elif isinstance(trigger.actions[0], a.HedgeAction):
-                    if trigger.trigger_requirements.frequency == 'B':
-                        frequency = 'Daily'
-                    elif trigger.trigger_requirements.frequency == 'M':
-                        frequency = 'Monthly'
-                    else:
-                        raise RuntimeError('unrecognised hedge frequency')
-                    hedge = DeltaHedgeParameters(frequency=frequency)
+            action = trigger.actions[0]
+            if isinstance(action, a.AddTradesQuantityScaledAction):
+                underlier_list = action.priceables
+                roll_frequency = action.trade_duration
+                trade_quantity = action.trade_quantity
+                trade_quantity_type = action.trade_quantity_type
+            elif isinstance(action, a.HedgeAction):
+                if trigger.trigger_requirements.frequency == 'B':
+                    frequency = 'Daily'
+                else:
+                    raise RuntimeError('unrecognised hedge frequency')
+                hedge = DeltaHedgeParameters(frequency=frequency)
 
-        # TODO: allow quantity type to be varied (perhaps on the action)
-        strategy = StrategySystematic(name="Mock Test",
+        strategy = StrategySystematic(name="Flow Vol Backtest",
                                       underliers=underlier_list,
                                       delta_hedge=hedge,
-                                      quantity=underlier_list[0].multiplier,
-                                      quantity_type=QuantityType.Quantity,
+                                      quantity=trade_quantity,
+                                      quantity_type=trade_quantity_type,
                                       trade_in_method=TradeInMethod.FixedRoll,
                                       roll_frequency=roll_frequency,
                                       # entry_signal= Mapping of Date->0/1,
                                       # exit_signal= Mapping of Date->0/1
                                       )
+
         result = strategy.backtest(start, end)
-        perf = result.performance
-        return perf
+        return BacktestResult(result.risks)

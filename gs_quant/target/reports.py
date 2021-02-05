@@ -35,6 +35,17 @@ class PositionSourceType(EnumBase, Enum):
         return self.value
 
 
+class ReportGenerateTemplateId(EnumBase, Enum):    
+    
+    """The Report Template ID to generate the report from."""
+
+    analytics_factor_attribution_pdf = 'analytics-factor-attribution-pdf'
+    analytics_factor_risk_pdf = 'analytics-factor-risk-pdf'
+    
+    def __repr__(self):
+        return self.value
+
+
 class ReportMeasures(EnumBase, Enum):    
     
     """Enums for measures to be outputted for the report"""
@@ -389,6 +400,92 @@ class Report(Base):
         self.__percentage_complete = value        
 
 
+class ReportGenerateParameters(Base):
+        
+    """Parameters for generating a report file."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        report_id: str = None,
+        start_date: datetime.date = None,
+        end_date: datetime.date = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.report_id = report_id
+        self.start_date = start_date
+        self.end_date = end_date
+        self.name = name
+
+    @property
+    def report_id(self) -> str:
+        """Report ID to generate the report file for."""
+        return self.__report_id
+
+    @report_id.setter
+    def report_id(self, value: str):
+        self._property_changed('report_id')
+        self.__report_id = value        
+
+    @property
+    def start_date(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__start_date
+
+    @start_date.setter
+    def start_date(self, value: datetime.date):
+        self._property_changed('start_date')
+        self.__start_date = value        
+
+    @property
+    def end_date(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__end_date
+
+    @end_date.setter
+    def end_date(self, value: datetime.date):
+        self._property_changed('end_date')
+        self.__end_date = value        
+
+
+class ReportGenerateRequest(Base):
+        
+    """Request body to synchronously generate a report file."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        template_id: Union[ReportGenerateTemplateId, str] = None,
+        parameters: ReportGenerateParameters = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.template_id = template_id
+        self.parameters = parameters
+        self.name = name
+
+    @property
+    def template_id(self) -> Union[ReportGenerateTemplateId, str]:
+        """The Report Template ID to generate the report from."""
+        return self.__template_id
+
+    @template_id.setter
+    def template_id(self, value: Union[ReportGenerateTemplateId, str]):
+        self._property_changed('template_id')
+        self.__template_id = get_enum_value(ReportGenerateTemplateId, value)        
+
+    @property
+    def parameters(self) -> ReportGenerateParameters:
+        """Parameters for generating a report file."""
+        return self.__parameters
+
+    @parameters.setter
+    def parameters(self, value: ReportGenerateParameters):
+        self._property_changed('parameters')
+        self.__parameters = value        
+
+
 class ReportRescheduleRequest(Base):
         
     """Parameters in order to re-schedule a report"""
@@ -453,8 +550,6 @@ class ReportWithParametersOverrides(Base):
 
 class User(Base):
         
-    _name_mappings = {'root_oe_id': 'rootOEId', 'root_oe_name': 'rootOEName', 'internal_id': 'internalID', 'mi_fidii_trade_idea_declined': 'miFIDIITradeIdeaDeclined'}
-
     @camel_case_translate
     def __init__(
         self,

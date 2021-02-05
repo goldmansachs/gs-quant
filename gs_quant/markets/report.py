@@ -14,19 +14,35 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime as dt
-from gs_quant.target.reports import Report
-from gs_quant.api.gs.reports import GsReportApi
-from gs_quant.api.gs.data import GsDataApi
-from gs_quant.target.data import DataQuery
-from gs_quant.target.common import FieldValueMap
 from typing import Tuple
+
+from gs_quant.api.gs.data import GsDataApi
+from gs_quant.api.gs.reports import GsReportApi
+from gs_quant.target.common import FieldValueMap
+from gs_quant.target.data import DataQuery
+from gs_quant.target.reports import Report
 
 PPA_DATASET = "PPA"
 PFR_DATASET = "PFR"
+AFR_DATASET = "AFR"
 
 
 class BaseReport:
     """"Private variables"""
+    def __init__(self, report_id: str):
+        self.report = GsReportApi.get_report(report_id=report_id)
+
+    def get_id(self):
+        return self.report.id
+
+    def get_position_source_type(self):
+        return self.report.position_source_type
+
+    def get_parameters(self):
+        return self.report.parameters
+
+    def get_type(self):
+        return self.report.type
 
     @staticmethod
     def get_report_by_id(report_id: str) -> Report:
@@ -126,9 +142,8 @@ class PerformanceReport(BaseReport):
 
 class RiskReport(BaseReport):
 
-    @classmethod
-    def get_factor_exposure(cls, report_id: str, factor: str, factor_category: str, start_date: dt.date = None,
-                            end_date: dt.date = None):
-        where = FieldValueMap(report_id=report_id, factor=factor, factor_category=factor_category)
-        query = DataQuery(where=where, start_date=start_date, end_date=end_date)
-        return GsDataApi.query_data(query=query, dataset_id=PFR_DATASET)
+    def get_factor_data(self, factor: str, start_date: dt.date = None, end_date: dt.date = None):
+        return GsReportApi.get_risk_factor_data_results(self.get_id(), [factor], start_date, end_date)
+
+    def get_risk_model_id(self):
+        return self.get_parameters().risk_model

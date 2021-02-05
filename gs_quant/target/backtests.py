@@ -38,6 +38,20 @@ class BacktestRiskMeasureType(EnumBase, Enum):
         return self.value
 
 
+class BacktestTradingQuantityType(EnumBase, Enum):    
+    
+    """The trading quantity unit of a backtest strategy"""
+
+    notional = 'notional'
+    quantity = 'quantity'
+    vega = 'vega'
+    gamma = 'gamma'
+    NAV = 'NAV'
+    
+    def __repr__(self):
+        return self.value
+
+
 class BacktestType(EnumBase, Enum):    
     
     """Backtest type differentiates the backtest type."""
@@ -85,6 +99,7 @@ class FlowVolBacktestMeasure(EnumBase, Enum):
     gamma = 'gamma'
     vega = 'vega'
     portfolio = 'portfolio'
+    NAV = 'NAV'
     
     def __repr__(self):
         return self.value
@@ -1072,8 +1087,6 @@ class VolatilityWeightedWeightingModifier(Base):
         
     """Volatility Weighted backtest weighting modifier."""
 
-    _name_mappings = {'em_aalpha': 'EMAalpha'}
-
     @camel_case_translate
     def __init__(
         self,
@@ -1127,8 +1140,6 @@ class VolatilityWeightedWeightingModifier(Base):
 class VolatilityWeightedWeightingModifierRefData(Base):
         
     """Volatility Weighted Weighting Modifier reference data object."""
-
-    _name_mappings = {'em_aalpha': 'EMAalpha'}
 
     @camel_case_translate
     def __init__(
@@ -1208,7 +1219,7 @@ class BacktestTradingParameters(Base):
     @camel_case_translate
     def __init__(
         self,
-        quantity_type: str = None,
+        quantity_type: Union[BacktestTradingQuantityType, str] = None,
         quantity: float = None,
         trade_in_method: str = None,
         roll_frequency: str = None,
@@ -1228,14 +1239,14 @@ class BacktestTradingParameters(Base):
         self.name = name
 
     @property
-    def quantity_type(self) -> str:
-        """The unit of the quantity of backtest strategy"""
+    def quantity_type(self) -> Union[BacktestTradingQuantityType, str]:
+        """The trading quantity unit of a backtest strategy"""
         return self.__quantity_type
 
     @quantity_type.setter
-    def quantity_type(self, value: str):
+    def quantity_type(self, value: Union[BacktestTradingQuantityType, str]):
         self._property_changed('quantity_type')
-        self.__quantity_type = value        
+        self.__quantity_type = get_enum_value(BacktestTradingQuantityType, value)        
 
     @property
     def quantity(self) -> float:
@@ -2923,8 +2934,6 @@ class Backtest(Base):
 class BacktestRefData(Base):
         
     """Backtest reference data"""
-
-    _name_mappings = {'enhanced_beta': 'enhanced_beta'}
 
     @camel_case_translate
     def __init__(

@@ -3472,19 +3472,19 @@ def test_esg_headline_metric():
     replace.restore()
 
 
-def test_gir_rating():
+def test_rating():
     replace = Replacer()
 
     mock_aapl = Stock('MA4B66MW5E27U9VBB94', 'AAPL')
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_rating)
-    actual = tm.gir_rating(mock_aapl, tm._RatingMetric.RATING)
+    actual = tm.rating(mock_aapl, tm._RatingMetric.RATING)
     assert_series_equal(pd.Series([1, -1, 1, 0], index=pd.to_datetime([datetime.date(2020, 8, 13),
                                                                        datetime.date(2020, 8, 14),
                                                                        datetime.date(2020, 8, 17),
                                                                        datetime.date(2020, 8, 18)]),
                                   name='rating'), pd.Series(actual))
 
-    actual = tm.gir_rating(mock_aapl, tm._RatingMetric.CONVICTION_LIST)
+    actual = tm.rating(mock_aapl, tm._RatingMetric.CONVICTION_LIST)
     assert_series_equal(pd.Series([1, 0, 0, 0], index=pd.to_datetime([datetime.date(2020, 8, 13),
                                                                       datetime.date(2020, 8, 14),
                                                                       datetime.date(2020, 8, 17),
@@ -3493,7 +3493,7 @@ def test_gir_rating():
     assert actual.dataset_ids == _test_datasets
 
     with pytest.raises(NotImplementedError):
-        tm.gir_rating(mock_aapl, tm._RatingMetric.RATING, real_time=True)
+        tm.rating(mock_aapl, tm._RatingMetric.RATING, real_time=True)
     replace.restore()
 
 
@@ -3536,12 +3536,12 @@ def test_fair_value(mocker):
     replace.restore()
 
 
-def test_gir_factor_profile():
+def test_factor_profile():
     replace = Replacer()
 
     mock_aapl = Stock('MA4B66MW5E27U9VBB94', 'AAPL')
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_factor_profile)
-    actual = tm.gir_factor_profile(mock_aapl, tm._FactorProfileMetric.GROWTH_SCORE)
+    actual = tm.factor_profile(mock_aapl, tm._FactorProfileMetric.GROWTH_SCORE)
     assert_series_equal(pd.Series([0.238, 0.234, 0.234, 0.230], index=pd.to_datetime([datetime.date(2020, 8, 13),
                                                                                       datetime.date(2020, 8, 14),
                                                                                       datetime.date(2020, 8, 17),
@@ -3549,7 +3549,7 @@ def test_gir_factor_profile():
                                   name='growthScore'), pd.Series(actual))
     assert actual.dataset_ids == _test_datasets
 
-    actual = tm.gir_factor_profile(mock_aapl, tm._FactorProfileMetric.FINANCIAL_RETURNS_SCORE)
+    actual = tm.factor_profile(mock_aapl, tm._FactorProfileMetric.FINANCIAL_RETURNS_SCORE)
     assert_series_equal(pd.Series([0.982, 0.982, 0.982, 0.982], index=pd.to_datetime([datetime.date(2020, 8, 13),
                                                                                       datetime.date(2020, 8, 14),
                                                                                       datetime.date(2020, 8, 17),
@@ -3557,7 +3557,7 @@ def test_gir_factor_profile():
                                   name='financialReturnsScore'), pd.Series(actual))
     assert actual.dataset_ids == _test_datasets
 
-    actual = tm.gir_factor_profile(mock_aapl, tm._FactorProfileMetric.MULTIPLE_SCORE)
+    actual = tm.factor_profile(mock_aapl, tm._FactorProfileMetric.MULTIPLE_SCORE)
     assert_series_equal(pd.Series([0.204, 0.192, 0.190, 0.190], index=pd.to_datetime([datetime.date(2020, 8, 13),
                                                                                       datetime.date(2020, 8, 14),
                                                                                       datetime.date(2020, 8, 17),
@@ -3565,7 +3565,7 @@ def test_gir_factor_profile():
                                   name='multipleScore'), pd.Series(actual))
     assert actual.dataset_ids == _test_datasets
 
-    actual = tm.gir_factor_profile(mock_aapl, tm._FactorProfileMetric.INTEGRATED_SCORE)
+    actual = tm.factor_profile(mock_aapl, tm._FactorProfileMetric.INTEGRATED_SCORE)
     assert_series_equal(pd.Series([0.672, 0.676, 0.676, 0.674], index=pd.to_datetime([datetime.date(2020, 8, 13),
                                                                                       datetime.date(2020, 8, 14),
                                                                                       datetime.date(2020, 8, 17),
@@ -3574,7 +3574,7 @@ def test_gir_factor_profile():
     assert actual.dataset_ids == _test_datasets
 
     with pytest.raises(NotImplementedError):
-        tm.gir_factor_profile(mock_aapl, tm._FactorProfileMetric.GROWTH_SCORE, real_time=True)
+        tm.factor_profile(mock_aapl, tm._FactorProfileMetric.GROWTH_SCORE, real_time=True)
 
     replace.restore()
 

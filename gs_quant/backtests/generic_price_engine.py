@@ -79,6 +79,11 @@ class PriceBacktest(object):
 
 
 class GenericPriceEngine(object):
+
+    @classmethod
+    def supports_strategy(cls, strategy):
+        return False
+
     def __init__(self, data_sources, eod_valuation_time: dt.datetime = dt.time(23, 0, 0)):
         self.eod_valuation_time = eod_valuation_time
         self.data_sources = data_sources

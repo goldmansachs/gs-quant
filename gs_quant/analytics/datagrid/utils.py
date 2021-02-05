@@ -14,7 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from enum import Enum
 from typing import Union, List
 
@@ -57,6 +57,11 @@ class DataGridSort:
         self.sortType = SortType(self.sortType)
         self.order = SortOrder(self.order)
 
+    @classmethod
+    def from_dict(cls, dict_):
+        class_fields = {f.name for f in fields(cls)}
+        return DataGridSort(**{k: v for k, v in dict_.items() if k in class_fields})
+
 
 @dataclass
 class DataGridFilter:
@@ -68,3 +73,8 @@ class DataGridFilter:
     def __post_init__(self):
         self.operation = FilterOperation(self.operation)
         self.condition = FilterCondition(self.condition)
+
+    @classmethod
+    def from_dict(cls, dict_):
+        class_fields = {f.name for f in fields(cls)}
+        return DataGridFilter(**{k: v for k, v in dict_.items() if k in class_fields})

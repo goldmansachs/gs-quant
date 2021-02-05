@@ -1,5 +1,5 @@
 """
-Copyright 2018 Goldman Sachs.
+Copyright 2020 Goldman Sachs.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -14,19 +14,12 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from .datetime import *
-from .algebra import *
-from .analysis import *
-from .statistics import *
-from .econometrics import *
-from .technicals import *
-from .measures import *
-from .measures_countries import *
-from .measures_reports import *
-from .measures_risk_models import *
-from .measures_portfolios import *
-from .measures_rates import *
-from .helper import *
-from .backtesting import *
+NO_REQUEST_ID = 'no-request-id'
 
-__name__ = 'timeseries'
+
+def log_debug(request_id, logger, fmt_str, *args, **kwargs):
+    logger.debug(f'{request_id or NO_REQUEST_ID}: {fmt_str}', *args, **kwargs)
+
+
+def log_warning(request_id, logger, fmt_str, *args, **kwargs):
+    logger.warning(f'{request_id or NO_REQUEST_ID}: {fmt_str}', *args, **kwargs)

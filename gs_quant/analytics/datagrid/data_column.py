@@ -13,7 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, fields
 from typing import Dict, List
 
 from gs_quant.analytics.core.processor import BaseProcessor
@@ -31,6 +31,12 @@ class ColumnFormat:
     renderType: RenderType = RenderType.DEFAULT
     precision: int = 2
     humanReadable: bool = True
+    tooltip: str = None
+
+    @classmethod
+    def from_dict(cls, dict_):
+        class_fields = {f.name for f in fields(cls)}
+        return ColumnFormat(**{k: v for k, v in dict_.items() if k in class_fields})
 
 
 class DataColumn:
@@ -39,6 +45,7 @@ class DataColumn:
     def __init__(self,
                  name: str,
                  processor: BaseProcessor,
+                 *,
                  format: ColumnFormat = ColumnFormat(),
                  width: int = DEFAULT_WIDTH):
         """ Data row
@@ -54,11 +61,15 @@ class DataColumn:
         self.width = width
 
     def as_dict(self):
+        format_ = asdict(self.format)
+        if format_['tooltip'] is None:
+            del format_['tooltip']
+
         return {
             'name': self.name,
             'processorName': self.processor.__class__.__name__,
             **self.processor.as_dict(),
-            'format': asdict(self.format),
+            'format': format_,
             'width': self.width
         }
 
@@ -68,5 +79,5 @@ class DataColumn:
 
         return DataColumn(name=obj['name'],
                           processor=processor,
-                          format=ColumnFormat(**obj.get('format', {})),
+                          format=ColumnFormat.from_dict(obj.get('format', {})),
                           width=obj.get('width', DEFAULT_WIDTH))

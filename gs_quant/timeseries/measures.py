@@ -16,7 +16,6 @@ import calendar
 import datetime
 import logging
 import re
-import time
 from collections import namedtuple
 from enum import auto
 from numbers import Real
@@ -44,7 +43,7 @@ from gs_quant.markets.securities import Asset, AssetIdentifier, SecurityMaster, 
 from gs_quant.target.common import AssetClass, AssetType
 from gs_quant.timeseries import volatility, Window, Returns, sqrt
 from gs_quant.timeseries.helper import log_return, plot_measure, _to_offset, check_forward_looking, get_df_with_retries
-from gs_quant.timeseries.log import log_debug, log_warning
+from gs_quant.data.log import log_debug, log_warning
 
 GENERIC_DATE = Union[datetime.date, str]
 ASSET_SPEC = Union[Asset, str]
@@ -427,10 +426,8 @@ def _range_from_pricing_date(exchange, pricing_date: Optional[GENERIC_DATE] = No
 
 
 def _market_data_timed(q, request_id=None):
-    start = time.perf_counter()
-    df = GsDataApi.get_market_data(q)
-    log_debug(request_id, _logger, 'market data query ran in %.3f ms', (time.perf_counter() - start) * 1000)
-    return df
+    args = [q, request_id] if request_id else [q]
+    return GsDataApi.get_market_data(*args)
 
 
 def _extract_series_from_df(df: pd.DataFrame, query_type: QueryType, handle_missing_column=False):
@@ -780,11 +777,17 @@ def implied_correlation(asset: Asset, tenor: str, strike_reference: EdrDataRefer
         real_time=real_time
     )
     df = _market_data_timed(query, request_id)
+    dataset_ids = getattr(df, 'dataset_ids', ())
     df = df[['assetId', 'impliedVolatility']]
     full_index = pd.date_range(start=df.index.min(), end=df.index.max(), freq='D')
 
     all_groups = []
     for name, group in df.groupby('assetId'):
+        before = group.shape[0]
+        group = group[~group.index.duplicated(keep='first')]
+        after = group.shape[0]
+        if before > after:
+            log_debug(request_id, _logger, 'removed %d duplicates for %s', before - after, name)
         g = group.reindex(full_index)
         g['assetId'] = name
         g['impliedVolatility'].interpolate(inplace=True)
@@ -806,7 +809,7 @@ def implied_correlation(asset: Asset, tenor: str, strike_reference: EdrDataRefer
     inter = df_rest.groupby(df_rest.index).apply(calculate_vol)
     values = (pow(df_asset['impliedVolatility'], 2) - inter['second']) / (pow(inter['first'], 2) - inter['second'])
     series = ExtendedSeries(values * 100)
-    series.dataset_ids = getattr(df, 'dataset_ids', ())
+    series.dataset_ids = dataset_ids
     return series
 
 
@@ -2974,14 +2977,20 @@ def esg_headline_metric(asset: Asset, metricName: EsgMetric = EsgMetric.ENVIRONM
     return series
 
 
-@plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,), [QueryType.RATING, QueryType.CONVICTION_LIST])
-def gir_rating(asset: Asset, metric: _RatingMetric, *, source: str = None, real_time: bool = False) -> Series:
+@plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,), [QueryType.RATING])
+def rating(asset: Asset, metric: _RatingMetric, *, source: str = None, real_time: bool = False) -> Series:
     """
     Analyst Rating, which may take on the following values
     {'Sell': -1, 'Neutral': 0, 'Buy': 1}
     Conviction List, which is true if the security is on the Conviction Buy List or false otherwise.
     Securities with a convictionList value equal to true are by definition a subset of the securities
-    with a rating equal to Buy
+    with a rating equal to Buy. *Note that there may be periods when stock coverage has been suspended,
+    or a stock is not actively rated by GIR for legal or policy reasons. The lack of an active rating
+    for those dates may not be visible when graphed because the default visualization connects individual
+    data points where an active rating did exist and does not indicate whether there was a time gap in
+    active coverage between such points.  Please refer to the Data Sheet tab for the specific dates and
+    values that are available, or access the relevant research reports on the research portal to see
+    rating history.
 
     :param asset: asset object loaded from security master
     :param metric: Name of metric. Either rating or conviction list
@@ -3034,16 +3043,21 @@ def fair_value(asset: Asset, metric: EquilibriumExchangeRateMetric = Equilibrium
 
 
 @plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,),
-              [QueryType.GROWTH_SCORE, QueryType.FINANCIAL_RETURNS_SCORE,
-               QueryType.MULTIPLE_SCORE, QueryType.INTEGRATED_SCORE])
-def gir_factor_profile(asset: Asset, metric: _FactorProfileMetric, *, source: str = None,
-                       real_time: bool = False) -> Series:
+              [QueryType.GROWTH_SCORE])
+def factor_profile(asset: Asset, metric: _FactorProfileMetric, *, source: str = None,
+                   real_time: bool = False) -> Series:
     """
     This dataset consists of Goldman Sachs Investment Profile ("IP") percentiles for US and Canadian securities
     covered by Goldman Sachs GIR analysts. Beginning in mid-2017, IP was renamed GS Factor Profile;
     the dataset provided hereunder refers to both IP and GS Factor Profile percentiles, and is referred
-    to herein as "GS Factor Profile"
+    to herein as "GS Factor Profile".
     Percentiles are generated daily, and historical values are available going back to January 1, 2009.
+    *Note that there may be periods when stock coverage has been suspended, or a stock is not actively
+    rated by GIR for legal or policy reasons. The lack of an active rating for those dates may not be
+    visible when graphed because the default visualization connects individual data points where an active
+    rating did exist and does not indicate whether there was a time gap in active coverage between such points.
+    Please refer to the Data Sheet tab for the specific dates and values that are available, or access the
+    relevant research reports on the research portal to see rating history.
     :param asset: asset object loaded from security master
     :param metric: Growth Score, i.e. Growth percentile relative to Americas coverage universe
                    (a higher score means faster growth);

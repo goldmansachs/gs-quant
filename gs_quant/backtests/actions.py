@@ -17,12 +17,13 @@ under the License.
 import datetime
 
 from gs_quant.backtests.backtest_utils import *
-from gs_quant.backtests.generic_engine import BackTest, ScalingPortfolio
+from gs_quant.backtests.backtest_objects import BackTest, ScalingPortfolio
 from gs_quant.base import Priceable
 from gs_quant.datetime.date import *
 from gs_quant.markets import HistoricalPricingContext
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.markets.securities import *
+from gs_quant.target.backtests import BacktestTradingQuantityType
 
 action_count = 1
 
@@ -135,6 +136,49 @@ class AddTradeAction(Action):
         return backtest
 
 
+class AddTradesQuantityScaledAction(Action):
+    def __init__(self, priceables: Union[Priceable, Iterable[Priceable]], trade_duration: str = None, name: str = None,
+                 trade_quantity: float = 1,
+                 trade_quantity_type: Union[BacktestTradingQuantityType, str] = BacktestTradingQuantityType.quantity):
+        """
+        create an action which adds trades when triggered.  The trades are executed on the trigger date and
+        last until the trade_duration if specified or for all future dates if not.
+        :param priceables: a priceable or a list of pricables.
+        :param trade_duration: an instrument attribute eg. 'expiration_date' or a date or a tenor if left as None the
+                               trade will be added for all future dates
+        :param name: optional additional name to the priceable name
+        :param trade_quantity: the amount, in units of trade_quantity_type to be traded
+        :param trade_quantity_type: the quantity type used to scale trade. eg. quantity for units, notional for
+                                    underlier notional
+        """
+        super().__init__(name)
+        self._priceables = make_list(priceables)
+        self._trade_duration = trade_duration
+        for i, p in enumerate(self._priceables):
+            if p.name is None:
+                p.name = '{}_Priceable{}'.format(self._name, i)
+            else:
+                p.name = '{}_{}'.format(self._name, p.name)
+        self._trade_quantity = trade_quantity
+        self._trade_quantity_type = trade_quantity_type
+
+    @property
+    def priceables(self):
+        return self._priceables
+
+    @property
+    def trade_duration(self):
+        return self._trade_duration
+
+    @property
+    def trade_quantity(self):
+        return self._trade_quantity
+
+    @property
+    def trade_quantity_type(self):
+        return self._trade_quantity_type
+
+
 class HedgeAction(Action):
     def __init__(self, risk, priceables: Priceable = None, trade_duration: str = None, risks_on_final_day: bool = False,
                  name: str = None):
@@ -163,7 +207,8 @@ class HedgeAction(Action):
         for create_date, portfolio in f.result().items():
             active_dates = [s for s in backtest.states if get_final_date(portfolio.instruments[0], create_date,
                                                                          self.trade_duration) >= s >= create_date]
-            backtest.scaling_portfolios[create_date].append(
-                ScalingPortfolio(trade=portfolio.instruments[0], dates=active_dates, risk=self.risk))
+            if len(active_dates):
+                backtest.scaling_portfolios[create_date].append(
+                    ScalingPortfolio(trade=portfolio.instruments[0], dates=active_dates, risk=self.risk))
 
         return backtest

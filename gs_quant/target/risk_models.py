@@ -392,14 +392,14 @@ class RiskModelData(Base):
     def __init__(
             self,
             date: datetime.date,
-            asset_data: AssetData,
-            factor_data: List[FactorData],
-            covariance_matrix: List,
+            asset_data: AssetData = None,
+            factor_data: List[FactorData] = None,
+            covariance_matrix: List = None,
             issuer_specific_covariance: CovarianceData = None,
             factor_portfolios: FactorPortfolioData = None
     ):
         super().__init__()
-        self.date = date
+        self.date = date.strftime('%Y-%m-%d')
         self.asset_data = asset_data
         self.factor_data = factor_data
         self.covariance_matrix = covariance_matrix

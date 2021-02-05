@@ -335,6 +335,8 @@ class ColumnFormat(Base):
         mid_color: str = None,
         low_value: float = None,
         high_value: float = None,
+        mid_value: float = None,
+        hide_value: bool = None,
         name: str = None
     ):        
         super().__init__()
@@ -349,6 +351,8 @@ class ColumnFormat(Base):
         self.mid_color = mid_color
         self.low_value = low_value
         self.high_value = high_value
+        self.mid_value = mid_value
+        self.hide_value = hide_value
         self.name = name
 
     @property
@@ -462,6 +466,26 @@ class ColumnFormat(Base):
     def high_value(self, value: float):
         self._property_changed('high_value')
         self.__high_value = value        
+
+    @property
+    def mid_value(self) -> float:
+        """Value to compare for the middle."""
+        return self.__mid_value
+
+    @mid_value.setter
+    def mid_value(self, value: float):
+        self._property_changed('mid_value')
+        self.__mid_value = value        
+
+    @property
+    def hide_value(self) -> bool:
+        """Whether to hide the value of a column."""
+        return self.__hide_value
+
+    @hide_value.setter
+    def hide_value(self, value: bool):
+        self._property_changed('hide_value')
+        self.__hide_value = value        
 
 
 class ColumnMappings(Base):
@@ -1305,8 +1329,6 @@ class RatesResponseData(Base):
         
     """Rates calculated response data."""
 
-    _name_mappings = {'libor_id': 'libor_id'}
-
     @camel_case_translate
     def __init__(
         self,
@@ -1450,6 +1472,7 @@ class MonitorParameters(Base):
         horizontal_scroll: bool = None,
         mid_value_average: bool = None,
         aggregate_queries: bool = None,
+        row_heatmap: bool = None,
         name: str = None
     ):        
         super().__init__()
@@ -1460,6 +1483,7 @@ class MonitorParameters(Base):
         self.horizontal_scroll = horizontal_scroll
         self.mid_value_average = mid_value_average
         self.aggregate_queries = aggregate_queries
+        self.row_heatmap = row_heatmap
         self.name = name
 
     @property
@@ -1534,6 +1558,16 @@ class MonitorParameters(Base):
     def aggregate_queries(self, value: bool):
         self._property_changed('aggregate_queries')
         self.__aggregate_queries = value        
+
+    @property
+    def row_heatmap(self) -> bool:
+        """Whether or not to all rows are their own heatmap. Ignore any column renders"""
+        return self.__row_heatmap
+
+    @row_heatmap.setter
+    def row_heatmap(self, value: bool):
+        self._property_changed('row_heatmap')
+        self.__row_heatmap = value        
 
 
 class Monitor(Base):

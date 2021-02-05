@@ -26,6 +26,10 @@ class RiskModel:
     def __init__(self, model_id: str):
         self.model = GsRiskModelApi.get_risk_model(model_id)
 
+    def get_id(self) -> str:
+        """ Retrieve risk model id for existing risk model """
+        return self.model.id
+
     def get_dates(self, start_date: dt.date = None, end_date: dt.date = None) -> List:
         """ Retrieve risk model dates for existing risk model """
         return GsRiskModelApi.get_risk_model_dates(self.model.id, start_date, end_date)
@@ -153,13 +157,12 @@ class RiskModel:
     def get_factor_returns(self,
                            start_date: dt.date,
                            end_date: dt.date,
-                           assets: DataAssetsRequest = None,
                            data_format: Format = None) -> Dict:
         """ Retrieve factor return data for existing risk model """
         return GsRiskModelApi.get_risk_model_data(model_id=self.model.id,
                                                   start_date=start_date,
                                                   end_date=end_date,
-                                                  assets=assets,
+                                                  assets=None,
                                                   measures=[Measure.Factor_Return, Measure.Factor_Name,
                                                             Measure.Factor_Id],
                                                   limit_factors=False,
@@ -227,3 +230,11 @@ class RiskModel:
     def upload_data(self, data: RiskModelData):
         """ Upload risk model data to existing risk model """
         GsRiskModelApi.upload_risk_model_data(self.model.id, data)
+
+    def upload_partial_data(self, data: RiskModelData, target_universe_size: float = None):
+        """ Upload partial risk model data to existing risk model, if repeats in partial upload,
+            newer posted data will replace existing data on upload day """
+        GsRiskModelApi.upload_risk_model_data(self.model.id,
+                                              data,
+                                              partial_upload=True,
+                                              target_universe_size=target_universe_size)

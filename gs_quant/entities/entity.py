@@ -35,7 +35,7 @@ class EntityType(Enum):
     KPI = 'kpi'
     PORTFOLIO = 'portfolio'
     REPORT = 'report'
-    RISK_MODEL = 'riskModel'
+    RISK_MODEL = 'risk_model'
     SUBDIVISION = 'subdivision'
 
 
