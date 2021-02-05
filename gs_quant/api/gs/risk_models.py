@@ -170,8 +170,17 @@ class GsRiskModelApi:
         return GsSession.current._post('/risk/models/coverage', query)['results']
 
     @classmethod
-    def upload_risk_model_data(cls, model_id: str, model_data: RiskModelData) -> RiskModelData:
-        return GsSession.current._post('/risk/models/data/{id}'.format(id=model_id), model_data)
+    def upload_risk_model_data(cls,
+                               model_id: str,
+                               model_data: RiskModelData,
+                               partial_upload: bool = False,
+                               target_universe_size: float = None) -> str:
+        url = f'/risk/models/data/{model_id}'
+        if partial_upload:
+            url += '?partialUpload=true'
+            if target_universe_size:
+                url += f'&targetUniverseSize={target_universe_size}'
+        return GsSession.current._post(url, model_data)
 
     @classmethod
     def get_risk_model_data(cls, model_id: str, start_date: dt.date, end_date: dt.date,

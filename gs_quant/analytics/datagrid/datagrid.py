@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import json
 import logging
 from collections import defaultdict
 from dataclasses import asdict
@@ -43,9 +44,54 @@ from gs_quant.session import GsSession
 
 _logger = logging.getLogger(__name__)
 
+API = '/data/grids'
+DATAGRID_HEADERS: Dict[str, str] = {'Content-Type': 'application/json;charset=utf-8'}
+
 
 class DataGrid:
-    """DataGrid classes for fetching data in the Marquee Data Platform and applying processors (functions). """
+    """
+    DataGrid is a object for fetching Marquee data and applying processors (functions). DataGrids can be
+    persisted via the DataGrid API and utilized on the Marquee Markets platform.
+
+    :param name: Name of the DataGrid
+    :param rows: List of DataGrid rows for the grid
+    :param columns: List of DataGrid columns for the grid
+    :param id_: Unique identifier of the grid
+    :param entitlements: Marquee entitlements of the grid for the Marquee Market's platform
+
+    **Usage**
+
+    To create a DataGrid, we define two components, rows and columns:
+
+    >>> from gs_quant.markets.securities import Asset, AssetIdentifier
+    >>> from gs_quant.data.coordinate import DataMeasure, DataFrequency
+    >>> from gs_quant.analytics.processors import LastProcessor
+    >>>
+    >>> GS = Asset.get("GS UN", AssetIdentifier.BLOOMBERG_ID)
+    >>> AAPL = Asset.get("AAPL UW", AssetIdentifier.BLOOMBERG_ID)
+    >>> rows = [
+    >>>     DataRow(GS),
+    >>>     DataRow(AAPL)
+    >>> ]
+    >>> trade_price = DataCoordinate(
+    >>>    measure=DataMeasure.TRADE_PRICE,
+    >>>    frequency=DataFrequency.REAL_TIME,
+    >>> )
+    >>>
+    >>> col_0 = DataColumn(name="Name", processor=EntityProcessor(field="short_name"))
+    >>> col_1 = DataColumn(name="Last", processor=LastProcessor(trade_price))
+    >>> columns = [ col_0, col_1 ]
+    >>>
+    >>> datagrid = DataGrid(name="Example DataGrid", rows=rows, columns=columns)
+    >>> datagrid.initialize()
+    >>> datagrid.poll()
+    >>> print(datagrid.to_frame())
+
+    **Documentation**
+
+    Full Documentation and examples can be found here:
+    https://developer.gs.com/docs/gsquant/tutorials/Data/DataGrid/
+    """
 
     def __init__(self,
                  name: str,
@@ -57,17 +103,6 @@ class DataGrid:
                  sorts: Optional[List[DataGridSort]] = None,
                  filters: Optional[List[DataGridFilter]] = None,
                  **kwargs):
-        """ DataGrid is a object for fetching Marquee data and applying processors (functions). DataGrids can be
-        persisted via the DataGrid API and utilized on the Marquee Markets platform.
-
-        :param name: Name of the DataGrid
-        :param rows: List of DataGrid rows for the grid
-        :param columns: List of DataGrid columns for the grid
-        :param id_: Unique identifier of the grid
-        :param entitlements: Marquee entitlements of the grid for the Marquee Market's platform
-        :param sorts: List of sort objects to sort the results of a grid
-        :param filters: List of filter objects to filter the results of a grid
-        """
         self.id_ = id_
         self.entitlements = entitlements
         self.name = name
@@ -88,6 +123,7 @@ class DataGrid:
         print(DATAGRID_HELP_MSG)
 
     def get_id(self) -> Optional[str]:
+        """Get the unique DataGrid identifier. Will only exists if the DataGrid has been persisted. """
         return self.id_
 
     def initialize(self) -> None:
@@ -181,6 +217,41 @@ class DataGrid:
                 processor.calculate(attr, ProcessorResult(False, f'Error getting series for '
                                                                  f'{coordinate} due to {e}'))
 
+    def save(self) -> str:
+        """
+        Saves the DataGrid. If the DataGrid has already been created, the DataGrid will be updated.
+        If the DataGrid has not been created it will be added to the DataGrid service.
+        :return: Unique identifier of the DataGrid
+        """
+        datagrid_json = self.__as_json()
+        if self.id_:
+            response = GsSession.current._put(f'{API}/{self.id_}', datagrid_json, request_headers=DATAGRID_HEADERS)
+        else:
+            response = GsSession.current._post(f'{API}', datagrid_json, request_headers=DATAGRID_HEADERS)
+            self.id_ = response['id']
+        return DataGrid.from_dict(response).id_
+
+    def create(self):
+        """
+        Creates a new DataGrid even if the DataGrid already exists.
+        If the DataGrid has already been persisted, the DataGrid id will be replaced with the newly persisted DataGrid.
+        :return: New DataGrid unique identifier
+        """
+        datagrid_json = self.__as_json()
+        response = GsSession.current._post(f'{API}', datagrid_json, request_headers=DATAGRID_HEADERS)
+        self.id_ = response['id']
+        return response['id']
+
+    def delete(self):
+        """
+        Deletes the DataGrid if it has been persisted.
+        :return: None
+        """
+        if self.id_:
+            GsSession.current._delete(f'{API}/{self.id_}', request_headers=DATAGRID_HEADERS)
+        else:
+            raise MqValueError('DataGrid has not been persisted.')
+
     def _process_special_cells(self) -> None:
         """
         Processes Coordinate and Entity cells
@@ -220,15 +291,14 @@ class DataGrid:
             entity_dict = entity.get_entity()
             currency = entity_dict.get("currency")
             exchange = entity_dict.get("exchange")
+            currencies = [currency] if currency else None
+            exchanges = [exchange] if exchange else None
 
-            if (query_start or query_end) and \
-                    (isinstance(query_start, RelativeDate) or isinstance(query_start, RelativeDate)):
-                currencies = [currency] if currency else None
-                exchanges = [exchange] if exchange else None
-                query.start = query_start.apply_rule(currencies=currencies, exchanges=exchanges) \
-                    if query_start else None
-                query.end = query_end.apply_rule(currencies=currencies, exchanges=exchanges) \
-                    if query_end else None
+            if isinstance(query_start, RelativeDate):
+                query.start = query_start.apply_rule(currencies=currencies, exchanges=exchanges)
+
+            if isinstance(query_end, RelativeDate):
+                query.end = query_end.apply_rule(currencies=currencies, exchanges=exchanges)
 
             if entity_dimension not in coord.dimensions:
                 if coord.dataset_id:
@@ -371,8 +441,8 @@ class DataGrid:
 
         rows = [DataRow.from_dict(row, reference_list) for row in parameters.get('rows', [])]
         columns = [DataColumn.from_dict(column, reference_list) for column in parameters.get('columns', [])]
-        sorts = [DataGridSort(**sort) for sort in parameters.get('sorts', [])]
-        filters = [DataGridFilter(**filter_) for filter_ in parameters.get('filters', [])]
+        sorts = [DataGridSort.from_dict(sort) for sort in parameters.get('sorts', [])]
+        filters = [DataGridFilter.from_dict(filter_) for filter_ in parameters.get('filters', [])]
 
         if should_resolve_entities:
             resolve_entities(reference_list)
@@ -450,6 +520,9 @@ class DataGrid:
             self.filters.insert(index, filter_)
         else:
             self.filters.append(filter_)
+
+    def __as_json(self) -> str:
+        return json.dumps(self.as_dict())
 
     def __send_activity(self):
         try:

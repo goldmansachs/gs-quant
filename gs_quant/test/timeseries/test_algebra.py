@@ -266,7 +266,7 @@ def test_floordiv():
     assert_series_equal(result, expected, obj="Floor divide NaN right")
 
     result = algebra.floordiv(x, y, Interpolate.ZERO)
-    expected = pd.Series([0.0, 2.0, 1.0, np.nan], index=dates1)
+    expected = pd.Series([0.0, 2.0, 1.0, np.floor_divide(1.0, 0.0)], index=dates1)
     assert_series_equal(result, expected, obj="Floor divide zero left")
 
     result = algebra.floordiv(x, y, Interpolate.STEP)

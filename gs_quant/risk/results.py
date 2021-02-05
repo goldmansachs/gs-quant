@@ -56,7 +56,7 @@ def _compose(lhs: ResultInfo, rhs: ResultInfo) -> ResultInfo:
     raise RuntimeError(f'{lhs} and {rhs} cannot be composed')
 
 
-def _value_for_date(result: Union[DataFrameWithInfo, SeriesWithInfo], date: dt.date) -> \
+def _value_for_date(result: Union[DataFrameWithInfo, SeriesWithInfo], date: Union[Iterable, dt.date]) -> \
         Union[DataFrameWithInfo, ErrorValue, FloatWithInfo]:
     from gs_quant.markets import CloseMarket
 
@@ -65,7 +65,7 @@ def _value_for_date(result: Union[DataFrameWithInfo, SeriesWithInfo], date: dt.d
 
     risk_key = RiskKey(
         key.provider,
-        date,
+        date if isinstance(date, dt.date) else tuple(date),
         CloseMarket(date=date, location=key.market.location if isinstance(key.market, CloseMarket) else None),
         key.params,
         key.scenario,
@@ -74,9 +74,16 @@ def _value_for_date(result: Union[DataFrameWithInfo, SeriesWithInfo], date: dt.d
     if isinstance(raw_value, ErrorValue):
         return raw_value
     elif isinstance(raw_value, DataFrameWithInfo):
+        raw_df = raw_value.raw_value.set_index('dates')
         return DataFrameWithInfo(
-            raw_value.raw_value.reset_index(drop=True),
-            risk_key,
+            raw_df.reset_index(drop=True) if isinstance(date, dt.date) else raw_df,
+            risk_key=risk_key,
+            unit=result.unit,
+            error=result.error)
+    elif isinstance(raw_value, SeriesWithInfo):
+        return SeriesWithInfo(
+            raw_value.raw_value,
+            risk_key=risk_key,
             unit=result.unit,
             error=result.error)
     else:
@@ -97,6 +104,19 @@ def _risk_keys_compatible(lhs, rhs) -> bool:
         rhs = next(iter(rhs.values()))
 
     return historical_risk_key(lhs.risk_key).ex_measure == historical_risk_key(rhs.risk_key).ex_measure
+
+
+def _value_for_risk_measure(res: dict, risk_measure: Union[Iterable, RiskMeasure]) -> dict:
+    result = copy.copy(res)
+    if isinstance(risk_measure, Iterable):
+        for value in list(result):
+            if value not in risk_measure:
+                del result[value]
+    else:
+        for value in list(result):
+            if value != risk_measure:
+                del result[value]
+    return result
 
 
 class PricingFuture(Future):
@@ -183,7 +203,7 @@ class MultipleRiskMeasureResult(dict):
         self.__instrument = instrument
 
     def __getitem__(self, item):
-        if isinstance(item, dt.date):
+        if isinstance(item, dt.date) or (isinstance(item, Iterable) and all([isinstance(it, dt.date) for it in item])):
             if all(isinstance(v, (DataFrameWithInfo, SeriesWithInfo)) for v in self.values()):
                 return MultipleRiskMeasureResult(self.__instrument, ((k, _value_for_date(v, item))
                                                                      for k, v in self.items()))
@@ -259,16 +279,35 @@ class MultipleRiskMeasureResult(dict):
 
         return tuple(sorted(dates))
 
-    def to_frame(self):
-        return pd.concat(
-            [self[r] if isinstance(self[r], DataFrameWithInfo) else pd.DataFrame({r: [self[r]]}) for r in self])
+    def to_frame(self, values='default', index='default', columns='default', aggfunc=pd.unique):
+        df = self._get_raw_df()
+        if values is None and index is None and columns is None:
+            return df
+        elif values == 'default' and index == 'default' and columns == 'default':
+            if 'mkt_type' in df.columns:
+                return df.set_index(df.columns[0])
+            values = 'value'
+            columns = 'risk_measure'
+            index = 'dates' if 'dates' in df.columns else None
+        else:
+            values = 'value' if values == 'default' or values is ['value'] else values
+            index = None if index == 'default' else index
+            columns = None if columns == 'default' else columns
+        pivot_df = df.pivot_table(values=values, index=index, columns=columns, aggfunc=aggfunc)
+        if index is not None:
+            idx = df.set_index(list(pivot_df.index.names)).index.unique()
+            pivot_df = pivot_df.reindex(index=idx)
+        if columns is not None:
+            cols = df.set_index(list(pivot_df.columns.names)).index.unique()
+            pivot_df = pivot_df.reindex(columns=cols)
+        return pivot_df
 
     def _get_raw_df(self):
         list_df = []
         for rm in list(self):
             curr_raw_df = self[rm]._get_raw_df()
             if curr_raw_df is not None:
-                curr_raw_df.insert(0, 'risk_measure', str(rm))
+                curr_raw_df.insert(0, 'risk_measure', rm)
                 list_df.append(curr_raw_df)
         return pd.concat(list_df, ignore_index=True)
 
@@ -368,9 +407,10 @@ class PortfolioRiskResult(CompositeResultFuture):
     def __getitem__(self, item):
         futures = []
 
-        if isinstance(item, RiskMeasure) or (isinstance(item, list) and isinstance(item[0], RiskMeasure)):
+        if isinstance(item, RiskMeasure) or (
+                isinstance(item, Iterable) and all([isinstance(it, RiskMeasure) for it in item])):
             '''Slicing a list of risk measures'''
-            if isinstance(item, list):
+            if isinstance(item, Iterable):
                 if any([it not in self.risk_measures for it in item]):
                     raise ValueError('{} not computed'.format(item))
             else:
@@ -379,34 +419,37 @@ class PortfolioRiskResult(CompositeResultFuture):
 
             if len(self.risk_measures) == 1:
                 return self
-            elif isinstance(item, list):
-                return PortfolioRiskResult(self.__portfolio, tuple([it for it in item]), self.futures)
             else:
-                return PortfolioRiskResult(self.__portfolio, (item,), self.futures)
+                for priceable in self.portfolio:
+                    if isinstance(self[priceable], PortfolioRiskResult):
+                        futures.append(self[priceable][item])
+                    else:
+                        futures.append(MultipleRiskMeasureFuture(priceable, {k: PricingFuture(v) for k, v in
+                                                                             _value_for_risk_measure(
+                                                                                 self[priceable], item).items()}))
+                risk_measure = tuple(item) if isinstance(item, Iterable) else (item,)
+                return PortfolioRiskResult(self.__portfolio, risk_measure, futures)
+
+        elif isinstance(item, dt.date) or (
+                isinstance(item, Iterable) and all([isinstance(it, dt.date) for it in item])):
+            for priceable in self.portfolio:
+                if isinstance(self[priceable], (MultipleRiskMeasureResult, PortfolioRiskResult)):
+                    futures.append(PricingFuture(self[priceable][item]))
+                elif isinstance(self[priceable], (DataFrameWithInfo, SeriesWithInfo)):
+                    futures.append(PricingFuture(_value_for_date(self[priceable], item)))
+                else:
+                    raise RuntimeError('Can only index by date on historical results')
+            return PortfolioRiskResult(self.__portfolio, self.risk_measures, futures)
+
+        elif (isinstance(item, list) or isinstance(item, tuple)) and all(
+                [isinstance(it, InstrumentBase) for it in item]):
+            '''Slicing a list/tuple of instruments (not an Portfolio iterable)'''
+            return self.subset(item)
 
         # Inputs from excel always becomes a list
         # Catch list length = 1 so that it doesn't return a sub-PortfolioRiskResult
         elif isinstance(item, list) and len(item) == 1:
             return self.__results(items=item[0])
-
-        elif isinstance(item, list) and all([isinstance(it, InstrumentBase) for it in item]):
-            '''Slicing a list of instruments'''
-            from gs_quant.markets.portfolio import Portfolio
-            portfolio = Portfolio(self.__portfolio[item])
-            for idx, result in enumerate(self):
-                instr = self.portfolio[idx]
-                futures.extend([PricingFuture(result) for it in item if instr == it])
-            return PortfolioRiskResult(portfolio, self.risk_measures, futures)
-
-        elif isinstance(item, dt.date):
-            for result in self:
-                if isinstance(result, (MultipleRiskMeasureResult, PortfolioRiskResult)):
-                    futures.append(PricingFuture(result[item]))
-                elif isinstance(result, (DataFrameWithInfo, SeriesWithInfo)):
-                    futures.append(PricingFuture(_value_for_date(result, item)))
-                else:
-                    raise RuntimeError('Can only index by date on historical results')
-            return PortfolioRiskResult(self.__portfolio, self.risk_measures, futures)
 
         else:
             return self.__results(items=item)
@@ -532,7 +575,7 @@ class PortfolioRiskResult(CompositeResultFuture):
         else:
             return aggregate_results(self.__results())
 
-    def to_frame(self, values='default', index='default', columns='default'):
+    def to_frame(self, values='default', index='default', columns='default', aggfunc=pd.unique):
         def get_df(priceable, port_info=None, inst_idx=0):
             if port_info is None:
                 port_info = {}
@@ -555,18 +598,18 @@ class PortfolioRiskResult(CompositeResultFuture):
                 for port_idx, (key, value) in enumerate(port_info.items()):
                     sub_df.insert(port_idx, key, value)
                 if 'risk_measure' not in sub_df.columns.values:
-                    sub_df.insert(len(port_info), 'risk_measure', str(self.risk_measures[0]))
+                    sub_df.insert(len(port_info), 'risk_measure', self.risk_measures[0])
                 return sub_df
 
         def get_default_pivots(ori_cols, has_dates: bool, multi_measures: bool, simple_port: bool) -> tuple:
             portfolio_names = list(filter(lambda x: 'portfolio_name_' in x, ori_cols))
-            port_and_inst_names = portfolio_names.append('instrument_name')
+            port_and_inst_names = portfolio_names + ['instrument_name']
             pivot_rules = [
-                # portfolio depth, num instruments, num risk measures, has bucketed risk, has dates,
+                # has_dates, multi_measures,  simple_port
                 # output: (value,index,columns)
-                [True, False, None, ('value', ('risk_measure', 'dates'), port_and_inst_names)],
-                [True, True, None, ('value', 'dates', port_and_inst_names)],
-                [False, False, False, ('value', portfolio_names, ('instrument_name', 'risk_measure'))],
+                [True, True, None, ('value', 'dates', port_and_inst_names + ['risk_measure'])],
+                [True, False, None, ('value', 'dates', port_and_inst_names)],
+                [False, False, False, ('value', portfolio_names, 'instrument_name')],
                 [False, True, False, ('value', port_and_inst_names, 'risk_measure')],
                 [False, None, True, ('value', 'instrument_name', 'risk_measure')],
             ]
@@ -604,7 +647,7 @@ class PortfolioRiskResult(CompositeResultFuture):
         else:  # user defined pivoting
             values = 'value' if values == 'default' or values is ['value'] else values
 
-        pivot_df = ori_df.pivot_table(values=values, index=index, columns=columns)
+        pivot_df = ori_df.pivot_table(values=values, index=index, columns=columns, aggfunc=aggfunc)
         try:  # attempt to correct order of index
             ori_index = ori_df.set_index(list(pivot_df.index.names)).index.unique()
             ori_columns = ori_df.set_index(list(pivot_df.columns.names)).index.unique()

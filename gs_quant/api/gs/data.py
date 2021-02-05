@@ -15,6 +15,7 @@ under the License.
 """
 import datetime as dt
 import logging
+import time
 from enum import Enum
 from itertools import chain
 from typing import Iterable, List, Optional, Tuple, Union, Dict
@@ -35,6 +36,7 @@ from gs_quant.target.common import MarketDataVendor, PricingLocation
 from gs_quant.target.coordinates import MDAPIDataBatchResponse, MDAPIDataQuery, MDAPIDataQueryResponse, MDAPIQueryField
 from gs_quant.target.data import DataQuery, DataQueryResponse
 from gs_quant.target.data import DataSetEntity
+from gs_quant.data.log import log_debug
 from .assets import GsIdType
 from ...target.assets import EntityQuery, FieldFilterMap
 
@@ -119,6 +121,8 @@ class QueryType(Enum):
     COVARIANCE = "Covariance"
     FACTOR_EXPOSURE = "Factor Exposure"
     FACTOR_RETURN = "Factor Return"
+    FACTOR_PNL = "Factor Pnl"
+    FACTOR_PROPORTION_OF_RISK = "Factor Proportion Of Risk"
 
 
 class GsDataApi(DataApi):
@@ -376,9 +380,12 @@ class GsDataApi(DataApi):
         return providers
 
     @classmethod
-    def get_market_data(cls, query) -> pd.DataFrame:
+    def get_market_data(cls, query, request_id=None) -> pd.DataFrame:
         GsSession.current: GsSession
+        start = time.perf_counter()
         body = GsSession.current._post('/data/measures', payload=query)
+        log_debug(request_id, _logger, 'market data query (%s) ran in %.3f ms', body.get('requestId'),
+                  (time.perf_counter() - start) * 1000)
 
         ids = []
         parts = []

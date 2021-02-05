@@ -14,6 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime as dt
+from typing import Optional
 
 import pandas as pd
 
@@ -30,17 +31,22 @@ from gs_quant.timeseries.measures import _extract_series_from_df
 
 
 @plot_measure_entity(EntityType.RISK_MODEL, [QueryType.FACTOR_RETURN])
-def covariance(model: RiskModel, factor_1: str, factor_2: str) -> pd.Series:
+def covariance(risk_model_id: str, factor_1: str, factor_2: str, *, source: str = None,
+               real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Covariance timeseries between two factors in a risk model
 
-    :param model: risk model entity
+    :param risk_model_id: risk model entity
     :param factor_1: first factor name
     :param factor_2: second factor name
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
     :return: Timeseries of covariances between the two factors across available risk model dates
     """
-    factor_1 = Factor(model.model.id, factor_1)
-    factor_2 = Factor(model.model.id, factor_2)
+    model = RiskModel(risk_model_id)
+    factor_1 = Factor(risk_model_id, factor_1)
+    factor_2 = Factor(risk_model_id, factor_2)
     if None in [factor_1.factor, factor_2.factor]:
         raise MqValueError('Factor names requested are not available for this risk model')
 
@@ -53,23 +59,28 @@ def covariance(model: RiskModel, factor_1: str, factor_2: str) -> pd.Series:
 
     # Create and return timeseries
     df = pd.DataFrame(covariances)
-    df.set_index('date')
+    df.set_index('date', inplace=True)
+    df.index = pd.to_datetime(df.index)
     return _extract_series_from_df(df, QueryType.COVARIANCE)
 
 
 @plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,), [QueryType.FACTOR_RETURN])
-def factor_exposure(asset: Asset, risk_model_id: str, factor_name: str) -> pd.Series:
+def factor_exposure(asset: Asset, risk_model_id: str, factor_name: str, *,
+                    source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Asset factor Exposure (in the form of z-scores) for a factor using specified risk model
 
     :param asset: asset object loaded from security master
     :param risk_model_id: requested risk model id
     :param factor_name: requested factor name
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: Timeseries of asset factor exposure across available risk model dates
     """
     risk_model = RiskModel(risk_model_id)
     factor = Factor(risk_model_id, factor_name)
-    if factor.factor is None or risk_model.model.id != factor.risk_model_id:
+    if factor.factor is None or risk_model_id != factor.risk_model_id:
         raise MqValueError('Requested factor not available in requested risk model')
 
     asset_gsid = asset.get_identifiers().get('GSID')
@@ -96,5 +107,6 @@ def factor_exposure(asset: Asset, risk_model_id: str, factor_name: str) -> pd.Se
 
     # Create and return timeseries
     df = pd.DataFrame(all_exposures)
-    df.set_index('date')
+    df.set_index('date', inplace=True)
+    df.index = pd.to_datetime(df.index)
     return _extract_series_from_df(df, QueryType.FACTOR_EXPOSURE)

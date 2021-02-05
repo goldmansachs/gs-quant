@@ -20,7 +20,7 @@ from typing import Iterable
 
 import gs_quant.target.backtests as backtests
 from gs_quant.api.gs.backtests import GsBacktestApi
-from gs_quant.backtests.core import Backtest, QuantityType, TradeInMethod, MarketModel
+from gs_quant.backtests.core import Backtest, TradeInMethod, MarketModel
 from gs_quant.errors import MqValueError
 from gs_quant.markets import PricingContext
 from gs_quant.target.backtests import *
@@ -39,7 +39,7 @@ class StrategySystematic:
     def __init__(self,
                  underliers: Union[EqOption, Iterable[EqOption], EqVarianceSwap, Iterable[EqVarianceSwap]],
                  quantity: float = 1,
-                 quantity_type: Union[QuantityType, str] = QuantityType.Notional,
+                 quantity_type: Union[BacktestTradingQuantityType, str] = BacktestTradingQuantityType.notional,
                  trade_in_method: Union[TradeInMethod, str] = TradeInMethod.FixedRoll,
                  roll_frequency: str = None,
                  scaling_method: str = None,
@@ -61,7 +61,7 @@ class StrategySystematic:
 
         self.__trading_parameters = BacktestTradingParameters(
             quantity=quantity,
-            quantity_type=get_enum_value(QuantityType, quantity_type).value,
+            quantity_type=get_enum_value(BacktestTradingQuantityType, quantity_type).value,
             trade_in_method=trade_in_method,
             roll_frequency=roll_frequency,
             trade_in_signals=trade_in_signals,

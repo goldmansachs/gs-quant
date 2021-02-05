@@ -16,15 +16,13 @@ under the License.
 
 import json
 import urllib.parse
-from typing import Dict, List
+from typing import List
 
 from pydash import get
 
 from gs_quant.analytics.datagrid import DataGrid
+from gs_quant.analytics.datagrid.datagrid import API, DATAGRID_HEADERS
 from gs_quant.session import GsSession
-
-API = '/data/grids'
-DATAGRID_HEADERS: Dict[str, str] = {'Content-Type': 'application/json;charset=utf-8'}
 
 
 class GsDataGridApi:
@@ -32,8 +30,18 @@ class GsDataGridApi:
 
     @classmethod
     def get_datagrids(cls, limit: int = 10, **kwargs) -> List[DataGrid]:
-        raw_datagrids = get(GsSession.current._get(f'{API}?limit={limit}&{urllib.parse.urlencode(kwargs)}'), 'results',
-                            [])
+        raw_datagrids = get(
+            GsSession.current._get(f'{API}?limit={limit}&orderBy=>lastUpdatedTime&{urllib.parse.urlencode(kwargs)}'),
+            'results', [])
+        return [DataGrid.from_dict(raw_datagrid) for raw_datagrid in raw_datagrids]
+
+    @classmethod
+    def get_your_datagrids(cls, limit: int = 10, **kwargs) -> List[DataGrid]:
+        user_id = GsSession.current._get('/users/self')['id']
+        raw_datagrids = get(
+            GsSession.current._get(
+                f'{API}?limit={limit}&ownerId={user_id}&orderBy=>lastUpdatedTime&{urllib.parse.urlencode(kwargs)}'),
+            'results', [])
         return [DataGrid.from_dict(raw_datagrid) for raw_datagrid in raw_datagrids]
 
     @classmethod

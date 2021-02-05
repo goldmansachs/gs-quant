@@ -152,6 +152,18 @@ FXDelta = __risk_measure_with_doc_string('FXDelta', 'FX Delta', RiskMeasureType.
 FXGamma = __risk_measure_with_doc_string('FXGamma', 'FX Gamma', RiskMeasureType.Gamma, asset_class=AssetClass.FX)
 FXVega = __risk_measure_with_doc_string('FXVega', 'FX Vega', RiskMeasureType.Vega, asset_class=AssetClass.FX)
 FXSpot = __risk_measure_with_doc_string('FXSpot', 'FX Spot Rate', RiskMeasureType.Spot, asset_class=AssetClass.FX)
+FXAnnualATMImpliedVol = __risk_measure_with_doc_string(
+    'FXAnnualATMImpliedVol',
+    'FX Annual ATM Implied Volatility',
+    RiskMeasureType.Annual_ATM_Implied_Volatility,
+    asset_class=AssetClass.FX,
+    unit=RiskMeasureUnit.Percent)
+FXAnnualImpliedVol = __risk_measure_with_doc_string(
+    'FXAnnualImpliedVol',
+    'FX Annual Implied Volatility',
+    RiskMeasureType.Annual_Implied_Volatility,
+    asset_class=AssetClass.FX,
+    unit=RiskMeasureUnit.Percent)
 IRBasis = __risk_measure_with_doc_string(
     'IRBasis',
     'Interest Rate Basis',

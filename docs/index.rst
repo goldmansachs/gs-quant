@@ -10,6 +10,7 @@ GS Quant API
    :maxdepth: 2
    :caption: Packages
 
+   analytics
    data
    datetime
    instrument 

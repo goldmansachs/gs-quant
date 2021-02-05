@@ -838,6 +838,7 @@ class DataSetParameters(Base):
         use_created_time_for_upload: bool = None,
         apply_entity_entitlements: bool = None,
         development_status: Union[DevelopmentStatus, str] = None,
+        restrict_secondary_identifier: bool = None,
         name: str = None
     ):        
         super().__init__()
@@ -864,6 +865,7 @@ class DataSetParameters(Base):
         self.use_created_time_for_upload = use_created_time_for_upload
         self.apply_entity_entitlements = apply_entity_entitlements
         self.development_status = development_status
+        self.restrict_secondary_identifier = restrict_secondary_identifier
         self.name = name
 
     @property
@@ -1099,6 +1101,17 @@ class DataSetParameters(Base):
     def development_status(self, value: Union[DevelopmentStatus, str]):
         self._property_changed('development_status')
         self.__development_status = get_enum_value(DevelopmentStatus, value)        
+
+    @property
+    def restrict_secondary_identifier(self) -> bool:
+        """When 'TRUE', will truncate data based on secondary identifier's continuously
+           active time period till now. Otherwise will not truncate data."""
+        return self.__restrict_secondary_identifier
+
+    @restrict_secondary_identifier.setter
+    def restrict_secondary_identifier(self, value: bool):
+        self._property_changed('restrict_secondary_identifier')
+        self.__restrict_secondary_identifier = value        
 
 
 class DataSetTransforms(Base):
