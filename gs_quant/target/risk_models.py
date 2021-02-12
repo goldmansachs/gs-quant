@@ -99,6 +99,9 @@ class AssetUniverseIdentifier(EnumBase, Enum):
     """Identifier by which risk model is queried"""
 
     gsid = 'gsid'
+    sedol = 'sedol'
+    bcid = 'bcid'
+    cusip = 'cusip'
 
     def __repr__(self):
         return self.value

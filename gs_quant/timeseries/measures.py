@@ -2924,7 +2924,8 @@ def realized_correlation(asset: Asset, tenor: str, top_n_of_index: Optional[int]
     return series
 
 
-@plot_measure((AssetClass.Commod, AssetClass.Equity, AssetClass.FX), None, [QueryType.SPOT])
+@plot_measure((AssetClass.Commod, AssetClass.Equity, AssetClass.FX), None, [QueryType.SPOT],
+              asset_type_excluded=(AssetType.CommodityEUNaturalGasHub,))
 def realized_volatility(asset: Asset, w: Union[Window, int, str] = Window(None, 0),
                         returns_type: Returns = Returns.SIMPLE, *, source: str = None, real_time: bool = False) \
         -> Series:
@@ -2978,13 +2979,15 @@ def esg_headline_metric(asset: Asset, metricName: EsgMetric = EsgMetric.ENVIRONM
 
 
 @plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,), [QueryType.RATING])
-def rating(asset: Asset, metric: _RatingMetric, *, source: str = None, real_time: bool = False) -> Series:
+def rating(asset: Asset, metric: _RatingMetric = _RatingMetric.RATING, *, source: str = None,
+           real_time: bool = False) -> Series:
     """
     Analyst Rating, which may take on the following values
     {'Sell': -1, 'Neutral': 0, 'Buy': 1}
     Conviction List, which is true if the security is on the Conviction Buy List or false otherwise.
     Securities with a convictionList value equal to true are by definition a subset of the securities
-    with a rating equal to Buy. *Note that there may be periods when stock coverage has been suspended,
+    with a rating equal to Buy.
+    *Note that there may be periods when stock coverage has been suspended,
     or a stock is not actively rated by GIR for legal or policy reasons. The lack of an active rating
     for those dates may not be visible when graphed because the default visualization connects individual
     data points where an active rating did exist and does not indicate whether there was a time gap in
@@ -3044,8 +3047,8 @@ def fair_value(asset: Asset, metric: EquilibriumExchangeRateMetric = Equilibrium
 
 @plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,),
               [QueryType.GROWTH_SCORE])
-def factor_profile(asset: Asset, metric: _FactorProfileMetric, *, source: str = None,
-                   real_time: bool = False) -> Series:
+def factor_profile(asset: Asset, metric: _FactorProfileMetric = _FactorProfileMetric.GROWTH_SCORE,
+                   *, source: str = None, real_time: bool = False) -> Series:
     """
     This dataset consists of Goldman Sachs Investment Profile ("IP") percentiles for US and Canadian securities
     covered by Goldman Sachs GIR analysts. Beginning in mid-2017, IP was renamed GS Factor Profile;
@@ -3072,7 +3075,7 @@ def factor_profile(asset: Asset, metric: _FactorProfileMetric, *, source: str = 
     :return: Factor Profile data of the asset for the field requested
     """
     if real_time:
-        raise NotImplementedError('real-time gir_factor_profile not implemented')
+        raise NotImplementedError('real-time factor_profile not implemented')
 
     mqid = asset.get_marquee_id()
 

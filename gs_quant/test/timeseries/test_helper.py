@@ -66,6 +66,7 @@ def test_decorators():
     assert pmt.plot_method
     assert pm.asset_class is None
     assert pm.asset_type == ('abc',)
+    assert pm.asset_type_excluded is None
     assert pmt(1, real_time=True) == 1
 
 

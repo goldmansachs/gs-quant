@@ -104,7 +104,7 @@ class GsRiskModelApi:
                              model_id: str,
                              start_date: dt.date = None,
                              end_date: dt.date = None) -> List:
-        url = '/risk/models/{id}/dates'
+        url = '/risk/models/{id}/dates?'
         if start_date is not None:
             url += '&startDate={date}'.format(date=start_date.strftime('%Y-%m-%d'))
         if end_date is not None:
@@ -142,7 +142,7 @@ class GsRiskModelApi:
                                    end_date: dt.date = None,
                                    identifiers: List[str] = None,
                                    include_performance_curve: bool = None) -> List[Dict]:
-        url = '/risk/models/{id}/factors/data'.format(id=model_id)
+        url = '/risk/models/{id}/factors/data?'.format(id=model_id)
 
         if start_date is not None:
             url += '&startDate={date}'.format(date=start_date.strftime('%Y-%m-%d'))

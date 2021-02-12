@@ -36,7 +36,7 @@ class GsDataGridApi:
         return [DataGrid.from_dict(raw_datagrid) for raw_datagrid in raw_datagrids]
 
     @classmethod
-    def get_your_datagrids(cls, limit: int = 10, **kwargs) -> List[DataGrid]:
+    def get_my_datagrids(cls, limit: int = 10, **kwargs) -> List[DataGrid]:
         user_id = GsSession.current._get('/users/self')['id']
         raw_datagrids = get(
             GsSession.current._get(

@@ -56,3 +56,6 @@ class DataQuery:
 
     def get_data_series(self) -> DataSeries:
         return DataSeries(self.get_series(), self.coordinate)
+
+    def get_range_string(self) -> str:
+        return f'start={self.start}|end={self.end}'

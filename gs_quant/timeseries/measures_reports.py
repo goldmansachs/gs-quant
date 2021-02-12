@@ -18,11 +18,13 @@ from typing import Optional
 import pandas as pd
 
 from gs_quant.api.gs.data import QueryType
+from gs_quant.data.core import DataContext
 from gs_quant.entities.entity import EntityType
 from gs_quant.errors import MqValueError
 from gs_quant.markets.factor import Factor
 from gs_quant.markets.report import RiskReport
 from gs_quant.target.reports import ReportType
+from gs_quant.target.risk_models import FactorType, RiskModelFactor
 from gs_quant.timeseries import plot_measure_entity
 from gs_quant.timeseries.measures import _extract_series_from_df
 
@@ -89,19 +91,28 @@ def _get_factor_data(report_id: str, factor_name: str, query_type: QueryType) ->
     risk_model_id = report.get_risk_model_id()
     factor = Factor(risk_model_id, factor_name)
     if factor.factor is None:
-        raise MqValueError('Factor name requested is not available in the risk model associated with this report')
+        if factor_name not in ['Factor', 'Specific', 'Total']:
+            raise MqValueError('Factor name requested is not available in the risk model associated with this report')
+        factor.factor = RiskModelFactor(identifier=factor_name,
+                                        type=FactorType.Factor,
+                                        name=factor_name)
 
     # Extract relevant data for each date
     col_name = query_type.value.replace(' ', '')
     col_name = col_name[0].lower() + col_name[1:]
     data_type = QUERY_TO_FIELD_MAP[query_type]
 
-    factor_data = report.get_factor_data(factor=factor.get_name())
+    factor_data = report.get_factor_data(
+        factor=factor.get_name(),
+        start_date=DataContext.current.start_time,
+        end_date=DataContext.current.end_time
+    )
     factor_exposures = [{'date': data['date'], col_name: data[data_type]} for data in factor_data
                         if data.get(data_type)]
 
     # Create and return timeseries
     df = pd.DataFrame(factor_exposures)
-    df.set_index('date', inplace=True)
-    df.index = pd.to_datetime(df.index)
+    if not df.empty:
+        df.set_index('date', inplace=True)
+        df.index = pd.to_datetime(df.index)
     return _extract_series_from_df(df, query_type)

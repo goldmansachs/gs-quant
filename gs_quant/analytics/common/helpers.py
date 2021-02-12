@@ -53,3 +53,7 @@ def resolve_entities(reference_list: List[Dict]):
                     f'{reference[PARAMETER]} does not exist in children of '
                     f'{reference[REFERENCE].__class__.__name__}')
             data_query_info.entity = entity
+
+
+def get_rdate_cache_key(rule: str, currencies: List[str], exchanges: List[str]) -> str:
+    return f'{rule}{currencies}{exchanges}'

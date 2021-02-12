@@ -46,22 +46,22 @@ class DataColumn:
                  name: str,
                  processor: BaseProcessor,
                  *,
-                 format: ColumnFormat = ColumnFormat(),
+                 format_: ColumnFormat = ColumnFormat(),
                  width: int = DEFAULT_WIDTH):
-        """ Data row
+        """ DataColumn
 
         :param name: Name of the column
         :param processor: Processor to apply to the column for calculation
-        :param format: Formatting information for the column result
+        :param format_: Formatting information for the column result
         :param width: Size of the column in pixels when presented on the UI
         """
         self.name = name
         self.processor = processor
-        self.format = format
+        self.format_ = format_
         self.width = width
 
     def as_dict(self):
-        format_ = asdict(self.format)
+        format_ = asdict(self.format_)
         if format_['tooltip'] is None:
             del format_['tooltip']
 
@@ -79,5 +79,5 @@ class DataColumn:
 
         return DataColumn(name=obj['name'],
                           processor=processor,
-                          format=ColumnFormat.from_dict(obj.get('format', {})),
+                          format_=ColumnFormat.from_dict(obj.get('format', {})),
                           width=obj.get('width', DEFAULT_WIDTH))

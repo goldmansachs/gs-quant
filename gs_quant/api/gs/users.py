@@ -23,11 +23,11 @@ from gs_quant.session import GsSession
 
 class GsUsersApi:
     @classmethod
-    def get_your_user_id(cls) -> str:
+    def get_my_user_id(cls) -> str:
         return GsSession.current._get('/users/self')['id']
 
     @classmethod
-    def get_your_guid(cls) -> str:
+    def get_my_guid(cls) -> str:
         return f"guid:{GsSession.current._get('/users/self')['id']}"
 
     @classmethod

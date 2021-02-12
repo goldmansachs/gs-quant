@@ -21,6 +21,7 @@ from datetime import date, datetime
 from enum import Enum, EnumMeta
 from typing import List, Optional, Union, Dict, get_type_hints
 
+from pandas import Series
 from pydash import decapitalize
 
 from gs_quant.analytics.common import TYPE, PROCESSOR, PARAMETERS, DATA_COORDINATE, \
@@ -48,6 +49,7 @@ class DataQueryInfo:
     processor: 'BaseProcessor'
     query: DataQuery
     entity: Entity
+    data: Series = None
 
 
 DateOrDatetimeOrRDate = Union[DateOrDatetime, RelativeDate]
