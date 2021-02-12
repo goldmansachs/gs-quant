@@ -143,7 +143,11 @@ class PerformanceReport(BaseReport):
 class RiskReport(BaseReport):
 
     def get_factor_data(self, factor: str, start_date: dt.date = None, end_date: dt.date = None):
-        return GsReportApi.get_risk_factor_data_results(self.get_id(), [factor], start_date, end_date)
+        return GsReportApi.get_risk_factor_data_results(risk_report_id=self.get_id(),
+                                                        factors=[factor],
+                                                        factor_categories=None,
+                                                        start_date=start_date,
+                                                        end_date=end_date)
 
     def get_risk_model_id(self):
         return self.get_parameters().risk_model

@@ -13,12 +13,12 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-import datetime as dt
 from typing import Optional
 
 import pandas as pd
 
 from gs_quant.api.gs.data import QueryType
+from gs_quant.data.core import DataContext
 from gs_quant.entities.entity import EntityType
 from gs_quant.errors import MqValueError
 from gs_quant.markets.factor import Factor
@@ -44,31 +44,31 @@ def covariance(risk_model_id: str, factor_1: str, factor_2: str, *, source: str 
     :param request_id: server request id
     :return: Timeseries of covariances between the two factors across available risk model dates
     """
-    model = RiskModel(risk_model_id)
     factor_1 = Factor(risk_model_id, factor_1)
     factor_2 = Factor(risk_model_id, factor_2)
     if None in [factor_1.factor, factor_2.factor]:
         raise MqValueError('Factor names requested are not available for this risk model')
 
-    # Find all covariances between two factors for date range
-    dates = model.get_dates()
+    # Get start date and end date
+    start_date = DataContext.current.start_time
+    end_date = DataContext.current.end_time
 
-    start_date = dt.datetime.strptime(min(dates), '%Y-%m-%d') if dates else None
-    end_date = dt.datetime.strptime(max(dates), '%Y-%m-%d') if dates else None
+    # Find all covariances between two factors for date range
     covariances = factor_1.get_covariance(factor_2, start_date, end_date)
 
     # Create and return timeseries
     df = pd.DataFrame(covariances)
-    df.set_index('date', inplace=True)
-    df.index = pd.to_datetime(df.index)
+    if not df.empty:
+        df.set_index('date', inplace=True)
+        df.index = pd.to_datetime(df.index)
     return _extract_series_from_df(df, QueryType.COVARIANCE)
 
 
 @plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,), [QueryType.FACTOR_RETURN])
-def factor_exposure(asset: Asset, risk_model_id: str, factor_name: str, *,
-                    source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def factor_zscore(asset: Asset, risk_model_id: str, factor_name: str, *,
+                  source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
-    Asset factor Exposure (in the form of z-scores) for a factor using specified risk model
+    Asset factor exposure (in the form of z-scores) for a factor using specified risk model
 
     :param asset: asset object loaded from security master
     :param risk_model_id: requested risk model id
@@ -85,10 +85,10 @@ def factor_exposure(asset: Asset, risk_model_id: str, factor_name: str, *,
 
     asset_gsid = asset.get_identifiers().get('GSID')
 
-    # Establish date interval for data query
+    # Get start date and end date
     dates = risk_model.get_dates()
-    start_date = dt.datetime.strptime(min(dates), "%Y-%m-%d").date() if dates else None
-    end_date = dt.datetime.strptime(max(dates), "%Y-%m-%d").date() if dates else None
+    start_date = DataContext.current.start_time
+    end_date = DataContext.current.end_time
 
     # Query data and append pull requested factor exposure
     all_exposures = []
@@ -107,6 +107,7 @@ def factor_exposure(asset: Asset, risk_model_id: str, factor_name: str, *,
 
     # Create and return timeseries
     df = pd.DataFrame(all_exposures)
-    df.set_index('date', inplace=True)
-    df.index = pd.to_datetime(df.index)
+    if not df.empty:
+        df.set_index('date', inplace=True)
+        df.index = pd.to_datetime(df.index)
     return _extract_series_from_df(df, QueryType.FACTOR_EXPOSURE)

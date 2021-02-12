@@ -73,6 +73,36 @@ factor_data = [
     }
 ]
 
+aggregate_factor_data = [
+    {
+        'date': '2020-11-23',
+        'reportId': 'report_id',
+        'factor': 'Factor',
+        'factorCategory': 'CNT',
+        'pnl': 11.23,
+        'exposure': -11.23,
+        'proportionOfRisk': 1
+    },
+    {
+        'date': '2020-11-24',
+        'reportId': 'report_id',
+        'factor': 'Factor',
+        'factorCategory': 'CNT',
+        'pnl': 11.24,
+        'exposure': -11.24,
+        'proportionOfRisk': 2
+    },
+    {
+        'date': '2020-11-25',
+        'reportId': 'report_id',
+        'factor': 'Factor',
+        'factorCategory': 'CNT',
+        'pnl': 11.25,
+        'exposure': -11.25,
+        'proportionOfRisk': 3
+    }
+]
+
 
 def mock_risk_model():
     risk_model = RiskModel(coverage=CoverageType.Country, id_='model_id', name='Fake Risk Model',
@@ -192,6 +222,33 @@ def test_get_factor_data():
     with pytest.raises(MqValueError):
         mr.factor_proportion_of_risk('report_id', 'Factor Name')
     replace.restore()
+
+
+def test_aggregate_factor_support():
+    replace = Replacer()
+
+    # mock getting risk model entity()
+    mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model', Mock())
+    mock.return_value = risk_model
+
+    mock = replace('gs_quant.api.gs.reports.GsReportApi.get_report', Mock())
+    mock.return_value = factor_risk_report
+
+    # mock getting report factor data
+    mock = replace('gs_quant.api.gs.reports.GsReportApi.get_risk_factor_data_results', Mock())
+    mock.return_value = aggregate_factor_data
+
+    # mock getting risk model factor entity
+    mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model_factor_data', Mock())
+    mock.return_value = [{
+        'identifier': 'factor_id',
+        'type': 'Factor',
+        'name': "Factor Name"
+    }]
+
+    with DataContext(datetime.date(2020, 11, 23), datetime.date(2020, 11, 25)):
+        actual = mr.factor_proportion_of_risk('report_id', 'Factor')
+        assert all(actual.values == [1, 2, 3])
 
 
 if __name__ == '__main__':

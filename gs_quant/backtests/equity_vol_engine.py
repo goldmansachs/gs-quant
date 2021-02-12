@@ -19,7 +19,7 @@ from gs_quant.backtests import triggers as t
 from gs_quant.backtests import actions as a
 from gs_quant.instrument import EqOption, EqVarianceSwap
 from gs_quant.risk import EqDelta
-from gs_quant.target.backtests import FlowVolBacktestMeasure
+from gs_quant.target.backtests import FlowVolBacktestMeasure, BacktestSignalSeriesItem
 import pandas as pd
 from functools import reduce
 
@@ -41,14 +41,32 @@ class EquityVolEngine(object):
         if len(strategy.initial_portfolio) > 0:
             return False
 
-        if len(strategy.triggers) > 2:
+        # Validate Triggers
+
+        if len(strategy.triggers) > 3:
             return False
 
-        if not all((isinstance(x, t.PeriodicTrigger)) for x in strategy.triggers):
+        if not all(isinstance(x, (t.AggregateTrigger, t.PeriodicTrigger)) for x in strategy.triggers):
             return False
 
-        all_actions = reduce(lambda x, y: x + y, (map(lambda x: x.actions, strategy.triggers)))
-        if not all((isinstance(x, a.AddTradesQuantityScaledAction) | isinstance(x, a.HedgeAction))
+        # aggregate triggers composed of a dated and portfolio trigger define a signal
+        aggregate_triggers = [x for x in strategy.triggers if isinstance(x, t.AggregateTrigger)]
+        for at in aggregate_triggers:
+            if not len(at.triggers) == 2:
+                return False
+            if not len([x for x in at.triggers if isinstance(x, t.DateTrigger)]) == 1:
+                return False
+            portfolio_triggers = [x for x in at.triggers if isinstance(x, t.PortfolioTrigger)]
+            if not len(portfolio_triggers) == 1:
+                return False
+            if not (portfolio_triggers[0].trigger_requirements.data_source == 'len' and
+                    portfolio_triggers[0].trigger_requirements.trigger_level == 0):
+                return False
+
+        # Validate Actions
+
+        all_actions = reduce(lambda acc, x: acc + x, (map(lambda x: x.actions, strategy.triggers)), [])
+        if not all(isinstance(x, (a.EnterPositionQuantityScaledAction, a.HedgeAction, a.ExitPositionAction))
                    for x in all_actions):
             return False
 
@@ -56,26 +74,37 @@ class EquityVolEngine(object):
         if not len(set(map(lambda x: type(x), all_actions))) == len(all_actions):
             return False
 
-        for trigger in strategy.triggers:
-            # could be the equity options or the hedge
+        all_child_triggers = reduce(lambda acc, x: acc + x,
+                                    map(lambda x: x.triggers if isinstance(x, t.AggregateTrigger) else [x],
+                                        strategy.triggers), [])
+
+        for trigger in all_child_triggers:
+            if isinstance(trigger, t.PortfolioTrigger):
+                continue
+
+            # action one of enter position, exit position, hedge
             if len(trigger.actions) != 1:
                 return False
 
             action = trigger.actions[0]
-            if not trigger.trigger_requirements.frequency == action.trade_duration:
-                return False
-
-            if isinstance(action, a.AddTradesQuantityScaledAction):
+            if isinstance(action, a.EnterPositionQuantityScaledAction):
+                if isinstance(trigger, t.PeriodicTrigger) and \
+                        not trigger.trigger_requirements.frequency == action.trade_duration:
+                    return False
                 if not all((isinstance(p, EqOption) | isinstance(p, EqVarianceSwap))
                            for p in action.priceables):
                     return False
                 if action.trade_quantity is None or action.trade_quantity_type is None:
                     return False
             elif isinstance(action, a.HedgeAction):
+                if not trigger.trigger_requirements.frequency == action.trade_duration:
+                    return False
                 if not action.risk == EqDelta:
                     return False
                 if not trigger.trigger_requirements.frequency == 'B':
                     return False
+            elif isinstance(action, a.ExitPositionAction):
+                continue
             else:
                 return False
 
@@ -89,10 +118,32 @@ class EquityVolEngine(object):
         roll_frequency = None
         trade_quantity = None
         trade_quantity_type = None
+        trade_in_signals = None
+        trade_out_signals = None
         hedge = None
         for trigger in strategy.triggers:
+            if isinstance(trigger, t.AggregateTrigger):
+                child_triggers = trigger.triggers
+
+                date_trigger = [x for x in child_triggers if isinstance(x, t.DateTrigger)][0]
+                date_signal = list(map(lambda x: BacktestSignalSeriesItem(x, 1),
+                                       date_trigger.trigger_requirements.dates))
+
+                portfolio_trigger = [x for x in child_triggers if isinstance(x, t.PortfolioTrigger)][0]
+                trigger_requirements = portfolio_trigger.trigger_requirements
+                if trigger_requirements.direction == t.TriggerDirection.EQUAL and \
+                        trigger_requirements.trigger_level == 0:
+                    is_trade_in = True
+                else:
+                    is_trade_in = False
+
+                if is_trade_in:
+                    trade_in_signals = date_signal
+                else:
+                    trade_out_signals = date_signal
+
             action = trigger.actions[0]
-            if isinstance(action, a.AddTradesQuantityScaledAction):
+            if isinstance(action, a.EnterPositionQuantityScaledAction):
                 underlier_list = action.priceables
                 roll_frequency = action.trade_duration
                 trade_quantity = action.trade_quantity
@@ -111,8 +162,8 @@ class EquityVolEngine(object):
                                       quantity_type=trade_quantity_type,
                                       trade_in_method=TradeInMethod.FixedRoll,
                                       roll_frequency=roll_frequency,
-                                      # entry_signal= Mapping of Date->0/1,
-                                      # exit_signal= Mapping of Date->0/1
+                                      trade_in_signals=trade_in_signals,
+                                      trade_out_signals=trade_out_signals
                                       )
 
         result = strategy.backtest(start, end)

@@ -76,6 +76,27 @@ class AggregateTriggerRequirements(TriggerRequirements):
         self.triggers = triggers
 
 
+class DateTriggerRequirements(TriggerRequirements):
+    def __init__(self, dates: Iterable[datetime.date]):
+        """
+        :param dates: the list of dates on which to trigger
+        """
+        self.dates = dates
+
+
+class PortfolioTriggerRequirements(TriggerRequirements):
+    def __init__(self, data_source: str, trigger_level: float, direction: TriggerDirection):
+        """
+        :param data_source: the portfolio property to check
+        :param trigger_level: the threshold level on which to trigger
+        :param direction: a direction for the trigger_level comparison
+        """
+        super().__init__()
+        self.data_source = data_source
+        self.trigger_level = trigger_level
+        self.direction = direction
+
+
 class Trigger(object):
 
     def __init__(self, trigger_requirements: Optional[TriggerRequirements], actions: Union[Action, Iterable[Action]]):
@@ -203,9 +224,42 @@ class AggregateTrigger(Trigger):
         for t in triggers:
             actions += [action for action in t.actions]
         super().__init__(AggregateTriggerRequirements(triggers), actions)
+        self._triggers = triggers
 
     def has_triggered(self, state: datetime.date, backtest: BackTest = None) -> bool:
         for trigger in self._trigger_requirements.triggers:
             if not trigger.has_triggered(state, backtest):
                 return False
         return True
+
+    @property
+    def triggers(self) -> Iterable[Trigger]:
+        return self._triggers
+
+
+class DateTrigger(Trigger):
+    def __init__(self, trigger_requirements: DateTriggerRequirements, actions: Iterable[Action]):
+        super().__init__(trigger_requirements, actions)
+
+    def has_triggered(self, state: datetime.date, backtest: BackTest = None) -> bool:
+        return state in self._trigger_requirements.dates
+
+
+class PortfolioTrigger(Trigger):
+    def __init__(self, trigger_requirements: PortfolioTriggerRequirements, actions: Iterable[Action] = None):
+        super().__init__(trigger_requirements, actions)
+
+    def has_triggered(self, state: datetime.date, backtest: BackTest = None) -> bool:
+        if self._trigger_requirements.data_source == 'len':
+            value = len(backtest.portfolio_dict)
+            if self._trigger_requirements.direction == TriggerDirection.ABOVE:
+                if value > self._trigger_requirements.trigger_level:
+                    return True
+            elif self._trigger_requirements.direction == TriggerDirection.BELOW:
+                if value < self._trigger_requirements.trigger_level:
+                    return True
+            else:
+                if value == self._trigger_requirements.trigger_level:
+                    return True
+
+        return False

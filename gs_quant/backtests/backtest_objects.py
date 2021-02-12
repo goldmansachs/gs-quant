@@ -25,12 +25,12 @@ from typing import Optional
 
 class BackTest(object):
     def __init__(self, strategy, states, risks):
-        self._portfolio_dict = defaultdict(Portfolio)
+        self._portfolio_dict = defaultdict(Portfolio)  # portfolio by state
         self._scaling_portfolios = defaultdict(list)  # list of ScalingPortfolio
-        self._strategy = deepcopy(strategy)
-        self._states = states
+        self._strategy = deepcopy(strategy)  # the strategy definition
+        self._states = states  # list of states
         self._results = defaultdict()
-        self._risks = tuple(risks)
+        self._risks = tuple(risks)  # list of risks to calculate
         self._calc_calls = 0
         self._calculations = 0
 

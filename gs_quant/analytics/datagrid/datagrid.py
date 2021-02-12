@@ -13,30 +13,30 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import json
 import logging
 from collections import defaultdict
 from dataclasses import asdict
 from datetime import datetime
+from numbers import Number
 from typing import List, Dict, Optional
 
 import numpy as np
-from pandas import Series, DataFrame
+from pandas import DataFrame
 
 from gs_quant.analytics.common import DATAGRID_HELP_MSG
-from gs_quant.analytics.common.helpers import resolve_entities
-from gs_quant.analytics.core import BaseProcessor
+from gs_quant.analytics.common.helpers import resolve_entities, get_rdate_cache_key
 from gs_quant.analytics.core.processor import DataQueryInfo
 from gs_quant.analytics.core.processor_result import ProcessorResult
+from gs_quant.analytics.core.query_helpers import aggregate_queries, fetch_query, build_query_string
 from gs_quant.analytics.datagrid.data_cell import DataCell
-from gs_quant.analytics.datagrid.data_column import DataColumn
+from gs_quant.analytics.datagrid.data_column import DataColumn, ColumnFormat
 from gs_quant.analytics.datagrid.data_row import DataRow, DimensionsOverride, ProcessorOverride, Override
 from gs_quant.analytics.datagrid.utils import DataGridSort, SortOrder, SortType, DataGridFilter, FilterOperation, \
     FilterCondition
 from gs_quant.analytics.processors import CoordinateProcessor
 from gs_quant.analytics.processors.entity_processor import EntityProcessor
-from gs_quant.data import DataCoordinate
-from gs_quant.data.query import DataQuery
 from gs_quant.datetime.relative_date import RelativeDate
 from gs_quant.entities.entity import Entity
 from gs_quant.errors import MqValueError
@@ -156,8 +156,8 @@ class DataGrid:
                                           column_processor,
                                           entity,
                                           data_overrides,
-                                          row_index,
-                                          column_index)
+                                          column_index,
+                                          row_index)
 
                 # treat data cells different to entity
                 if isinstance(column_processor, EntityProcessor):
@@ -190,32 +190,7 @@ class DataGrid:
         self._resolve_queries()
         self._process_special_cells()
         self.__send_activity()
-
-        # Fetch data cells
-        for query_info in self._data_queries:
-            attr: str = query_info.attr
-            processor: BaseProcessor = query_info.processor
-            query: DataQuery = query_info.query
-            coordinate: DataCoordinate = query.coordinate
-            try:
-                if coordinate.dataset_id is None:
-                    series: ProcessorResult = ProcessorResult(False,
-                                                              f'No dataset resolved for '
-                                                              f'measure={coordinate.measure} with '
-                                                              f'dimensions={coordinate.dimensions}')
-                    processor.calculate(attr, series)
-                    continue
-                result: Series = query.get_series()
-                if result is not None:
-                    series: ProcessorResult = ProcessorResult(True, result)
-                    processor.calculate(attr, series)
-                else:
-                    series: ProcessorResult = ProcessorResult(False,
-                                                              f'No data found for Coordinate {coordinate}')
-                    processor.calculate(attr, series)
-            except Exception as e:
-                processor.calculate(attr, ProcessorResult(False, f'Error getting series for '
-                                                                 f'{coordinate} due to {e}'))
+        self._fetch_queries()
 
     def save(self) -> str:
         """
@@ -281,6 +256,9 @@ class DataGrid:
         """ Resolves the dataset_id for each data query
             This is used to query data thereafter
         """
+        local_rule_cache = {}
+        local_availablility_cache = {}
+
         for query in self._data_queries:
             entity = query.entity
             query = query.query
@@ -295,10 +273,20 @@ class DataGrid:
             exchanges = [exchange] if exchange else None
 
             if isinstance(query_start, RelativeDate):
-                query.start = query_start.apply_rule(currencies=currencies, exchanges=exchanges)
+                cache_key = get_rdate_cache_key(query_start.rule, currencies, exchanges)
+                if cache_key in local_rule_cache:
+                    query.start = local_rule_cache[cache_key]
+                else:
+                    query.start = query_start.apply_rule(currencies=currencies, exchanges=exchanges)
+                    local_rule_cache[cache_key] = query.start
 
             if isinstance(query_end, RelativeDate):
-                query.end = query_end.apply_rule(currencies=currencies, exchanges=exchanges)
+                cache_key = get_rdate_cache_key(query_start.rule, currencies, exchanges)
+                if cache_key in local_rule_cache:
+                    query.end = local_rule_cache[cache_key]
+                else:
+                    query.end = query_end.apply_rule(currencies=currencies, exchanges=exchanges)
+                    local_rule_cache[cache_key] = query.end
 
             if entity_dimension not in coord.dimensions:
                 if coord.dataset_id:
@@ -307,23 +295,74 @@ class DataGrid:
                     query.coordinate = coord
                 else:
                     # Need to resolve the dataset from availability
+                    entity_id = entity.get_marquee_id()
                     try:
-                        coord = entity.get_data_coordinate(measure=coord.measure,
-                                                           dimensions=coord.dimensions,
-                                                           frequency=coord.frequency)
-                        query.coordinate = coord
+                        raw_availability = local_availablility_cache.get(entity_id)
+                        if raw_availability is None:
+                            raw_availability: Dict = GsSession.current._get(f'/data/measures/{entity_id}/availability')
+                            local_availablility_cache[entity.get_marquee_id()] = raw_availability
+                        query.coordinate = entity.get_data_coordinate(measure=coord.measure,
+                                                                      dimensions=coord.dimensions,
+                                                                      frequency=coord.frequency,
+                                                                      availability=raw_availability)
                     except Exception as e:
                         _logger.info(
-                            f'Could not get DataCoordinate with {coord} '
-                            f'for entity {entity.get_marquee_id()} due to {e}')
+                            f'Could not get DataCoordinate with {coord} for entity {entity_id} due to {e}')
+
+    def _fetch_queries(self):
+        query_aggregations = aggregate_queries(self._data_queries)
+
+        for dataset_id, query_map in query_aggregations.items():
+            for query in query_map.values():
+                df = fetch_query(query)
+                for query_dimensions, query_infos in query['queries'].items():
+                    query_string = build_query_string(query_dimensions)
+                    queried_df = df.query(query_string)
+                    for query_info in query_infos:
+                        series = queried_df[query_info.query.coordinate.measure]
+                        query_info.data = series
+
+        for query_info in self._data_queries:
+            if query_info.data is None or len(query_info.data) == 0:
+                query_info.processor.calculate(query_info.attr,
+                                               ProcessorResult(False,
+                                                               f'No data found for '
+                                                               f'Coordinate {query_info.query.coordinate}'))
+            else:
+                query_info.processor.calculate(query_info.attr, ProcessorResult(True, query_info.data))
+
+    @staticmethod
+    def aggregate_queries(query_infos):
+        mappings = defaultdict(dict)
+        for query_info in query_infos:
+            query = query_info.query
+            coordinate = query.coordinate
+            dataset_mappings = mappings[coordinate.dataset_id]
+            query_key = query.get_range_string()
+            dataset_mappings.setdefault(query_key, {
+                'parameters': {},
+                'queries': {}
+            })
+            queries = dataset_mappings[query_key]['queries']
+            queries[coordinate.get_dimensions()] = query_info
+            parameters = dataset_mappings[query_key]['parameters']
+            for dimension, value in coordinate.dimensions.items():
+                parameters.setdefault(dimension, set())
+                parameters[dimension].add(value)
 
     def _post_process(self) -> DataFrame:
+        columns = self.columns
         results = defaultdict(list)
         for row in self.results:
             for column in row:
                 column_value = column.value
                 if column_value.success is True:
-                    results[column.name].append(column.value.data)
+                    column_data = column_value.data
+                    if isinstance(column_data, Number):
+                        format_: ColumnFormat = columns[column.column_index].format_
+                        results[column.name].append(round(column_data, format_.precision))
+                    else:
+                        results[column.name].append(column_data)
                 else:
                     results[column.name].append(np.NaN)
 

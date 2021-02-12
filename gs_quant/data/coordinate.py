@@ -126,6 +126,9 @@ class DataCoordinate(BaseDataCoordinate):
         other_measure = other.measure if isinstance(other.measure, str) else other.measure.value
         return (self.dataset_id, measure, self.dimensions) == (other.dataset_id, other_measure, other.dimensions)
 
+    def get_dimensions(self) -> Tuple:
+        return tuple(self.dimensions.items())
+
     def __hash__(self):
         return hash((self.dataset_id, self.measure, tuple(self.dimensions)))
 

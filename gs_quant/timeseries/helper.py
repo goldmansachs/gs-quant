@@ -168,17 +168,20 @@ def check_forward_looking(pricing_date, source, name="function"):
 
 
 def plot_measure(asset_class: Optional[tuple] = None, asset_type: Optional[tuple] = None,
-                 dependencies: Optional[List[QueryType]] = tuple()):
+                 dependencies: Optional[List[QueryType]] = tuple(), asset_type_excluded: Optional[tuple] = None):
     # Indicates that fn should be exported to plottool as a member function / pseudo-measure.
     # Set category to None for no restrictions, else provide a tuple of allowed values.
     def decorator(fn):
         assert asset_class is None or isinstance(asset_class, tuple)
         assert asset_type is None or isinstance(asset_type, tuple)
+        assert asset_type_excluded is None or isinstance(asset_type_excluded, tuple)
+        assert asset_type is None or asset_type_excluded is None
 
         fn.plot_measure = True
         fn.entity_type = EntityType.ASSET
         fn.asset_class = asset_class
         fn.asset_type = asset_type
+        fn.asset_type_excluded = asset_type_excluded
         fn.dependencies = dependencies
 
         return fn

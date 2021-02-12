@@ -14,14 +14,9 @@ specific language governing permissions and limitations
 under the License.
 """
 
-import datetime
-
 from gs_quant.backtests.backtest_utils import *
-from gs_quant.backtests.backtest_objects import BackTest, ScalingPortfolio
 from gs_quant.base import Priceable
 from gs_quant.datetime.date import *
-from gs_quant.markets import HistoricalPricingContext
-from gs_quant.markets.portfolio import Portfolio
 from gs_quant.markets.securities import *
 from gs_quant.target.backtests import BacktestTradingQuantityType
 
@@ -53,24 +48,6 @@ class Action(object):
             action_count += 1
         else:
             self._name = name
-
-    def apply_action(self, state: Union[datetime.date, Iterable[datetime.date]], backtest: BackTest):
-        """
-        Used by the Generic Engine
-        :param backtest:
-        :param state:
-        :return:
-        """
-        raise RuntimeError('apply_action must be implemented by subclass')
-
-    def raise_order(self, state: datetime.date, backtest: BackTest = None):
-        """
-        Get new trade orders
-        :param backtest:
-        :param state:
-        :return:
-        """
-        raise RuntimeError('raise_order must be implemented by subclass')
 
     @property
     def calc_type(self):
@@ -112,37 +89,18 @@ class AddTradeAction(Action):
     def set_dated_priceables(self, state, priceables):
         self._dated_priceables[state] = make_list(priceables)
 
-    def raise_order(self, state: Union[datetime.date, Iterable[datetime.date]], backtest: BackTest = None):
-        with PricingContext(is_batch=True):
-            orders = {}
-            for s in state:
-                active_portfolio = self._dated_priceables.get(s) or self._priceables
-                with PricingContext(pricing_date=s):
-                    orders[s] = Portfolio(active_portfolio).resolve(in_place=False)
-        return orders
-
-    def apply_action(self, state: Union[datetime.date, Iterable[datetime.date]], backtest: BackTest):
-
-        orders = self.raise_order(state, backtest)
-
-        for s in backtest.states:
-            pos = []
-            for create_date, portfolio in orders.items():
-                pos += [inst for inst in portfolio.result().instruments
-                        if get_final_date(inst, create_date, self.trade_duration) >= s >= create_date]
-            if len(pos) > 0:
-                backtest.portfolio_dict[s].append(pos)
-
-        return backtest
+    @property
+    def dated_priceables(self):
+        return self._dated_priceables
 
 
-class AddTradesQuantityScaledAction(Action):
+class EnterPositionQuantityScaledAction(Action):
     def __init__(self, priceables: Union[Priceable, Iterable[Priceable]], trade_duration: str = None, name: str = None,
                  trade_quantity: float = 1,
                  trade_quantity_type: Union[BacktestTradingQuantityType, str] = BacktestTradingQuantityType.quantity):
         """
-        create an action which adds trades when triggered.  The trades are executed on the trigger date and
-        last until the trade_duration if specified or for all future dates if not.
+        create an action which enters trades when triggered.  The trades are executed with specified quantity and
+        last until the trade_duration if specified, or for all future dates if not.
         :param priceables: a priceable or a list of pricables.
         :param trade_duration: an instrument attribute eg. 'expiration_date' or a date or a tenor if left as None the
                                trade will be added for all future dates
@@ -179,6 +137,15 @@ class AddTradesQuantityScaledAction(Action):
         return self._trade_quantity_type
 
 
+class ExitPositionAction(Action):
+    def __init__(self, name: str = None):
+        """
+        Fully exit all held positions
+        :param name: optional name of the action
+        """
+        super().__init__(name)
+
+
 class HedgeAction(Action):
     def __init__(self, risk, priceables: Priceable = None, trade_duration: str = None, risks_on_final_day: bool = False,
                  name: str = None):
@@ -198,17 +165,10 @@ class HedgeAction(Action):
     def trade_duration(self):
         return self._trade_duration
 
-    def apply_action(self, state: Union[datetime.date, Iterable[datetime.date]], backtest: BackTest):
-        with HistoricalPricingContext(dates=make_list(state)):
-            backtest.calc_calls += 1
-            backtest.calculations += len(make_list(state))
-            f = Portfolio(make_list(self._priceable)).resolve(in_place=False)
+    @property
+    def priceable(self):
+        return self._priceable
 
-        for create_date, portfolio in f.result().items():
-            active_dates = [s for s in backtest.states if get_final_date(portfolio.instruments[0], create_date,
-                                                                         self.trade_duration) >= s >= create_date]
-            if len(active_dates):
-                backtest.scaling_portfolios[create_date].append(
-                    ScalingPortfolio(trade=portfolio.instruments[0], dates=active_dates, risk=self.risk))
-
-        return backtest
+    @property
+    def risk(self):
+        return self._risk

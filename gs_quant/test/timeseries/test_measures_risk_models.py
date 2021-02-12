@@ -112,11 +112,11 @@ def test_factor_exposure():
     mock.return_value = risk_model_data
 
     with DataContext(datetime.date(2020, 1, 1), datetime.date(2020, 1, 3)):
-        actual = mrm.factor_exposure(Stock(id_='id', name='Fake Asset'), 'model_id', 'Factor Name')
+        actual = mrm.factor_zscore(Stock(id_='id', name='Fake Asset'), 'model_id', 'Factor Name')
         assert all(actual.values == [1.01, 1.02, 1.03])
 
     with pytest.raises(MqValueError):
-        mrm.factor_exposure(Stock(id_='id', name='Fake Asset'), 'model_id', 'Wrong Factor Name')
+        mrm.factor_zscore(Stock(id_='id', name='Fake Asset'), 'model_id', 'Wrong Factor Name')
     replace.restore()
 
 
