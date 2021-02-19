@@ -729,6 +729,7 @@ class Chart(Base):
         chart_type: Union[ChartType, str] = None,
         chart_properties: Tuple[ChartProperties, ...] = None,
         regression_properties: Tuple[ChartRegression, ...] = None,
+        real_time: bool = None,
         interval: str = None,
         relative_start_date: str = None,
         relative_end_date: str = None,
@@ -763,6 +764,7 @@ class Chart(Base):
         self.chart_type = chart_type
         self.chart_properties = chart_properties
         self.regression_properties = regression_properties
+        self.real_time = real_time
         self.interval = interval
         self.relative_start_date = relative_start_date
         self.relative_end_date = relative_end_date
@@ -938,6 +940,16 @@ class Chart(Base):
     def regression_properties(self, value: Tuple[ChartRegression, ...]):
         self._property_changed('regression_properties')
         self.__regression_properties = value        
+
+    @property
+    def real_time(self) -> bool:
+        """Intraday or end-of-day chart"""
+        return self.__real_time
+
+    @real_time.setter
+    def real_time(self, value: bool):
+        self._property_changed('real_time')
+        self.__real_time = value        
 
     @property
     def interval(self) -> str:

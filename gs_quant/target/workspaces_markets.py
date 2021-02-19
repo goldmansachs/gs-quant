@@ -259,29 +259,19 @@ class RelatedLink(Base):
     ):        
         super().__init__()
         self.__type = type_
-        self.name = name
         self.description = description
         self.link = link
+        self.name = name
 
     @property
     def type(self) -> str:
-        """Type of related link eg. internal or external."""
+        """Type of related link."""
         return self.__type
 
     @type.setter
     def type(self, value: str):
         self._property_changed('type')
         self.__type = value        
-
-    @property
-    def name(self) -> str:
-        """Name to be displayed."""
-        return self.__name
-
-    @name.setter
-    def name(self, value: str):
-        self._property_changed('name')
-        self.__name = value        
 
     @property
     def description(self) -> str:
@@ -302,6 +292,16 @@ class RelatedLink(Base):
     def link(self, value: str):
         self._property_changed('link')
         self.__link = value        
+
+    @property
+    def name(self) -> str:
+        """Name to be displayed."""
+        return self.__name
+
+    @name.setter
+    def name(self, value: str):
+        self._property_changed('name')
+        self.__name = value        
 
 
 class SeparatorComponentParameters(Base):
@@ -702,12 +702,14 @@ class BarChartComponentParameters(Base):
         height: float,
         tooltip: str = None,
         hide_legend: bool = None,
+        chart_name: str = None,
         name: str = None
     ):        
         super().__init__()
         self.height = height
         self.tooltip = tooltip
         self.hide_legend = hide_legend
+        self.chart_name = chart_name
         self.name = name
 
     @property
@@ -740,6 +742,16 @@ class BarChartComponentParameters(Base):
         self._property_changed('hide_legend')
         self.__hide_legend = value        
 
+    @property
+    def chart_name(self) -> str:
+        """Name of the chart."""
+        return self.__chart_name
+
+    @chart_name.setter
+    def chart_name(self, value: str):
+        self._property_changed('chart_name')
+        self.__chart_name = value        
+
 
 class ChartComponentParameters(Base):
         
@@ -749,6 +761,7 @@ class ChartComponentParameters(Base):
     def __init__(
         self,
         height: float,
+        ids: Tuple[str, ...],
         tooltip: str = None,
         hide_legend: bool = None,
         chart_name: str = None,
@@ -756,6 +769,7 @@ class ChartComponentParameters(Base):
     ):        
         super().__init__()
         self.height = height
+        self.ids = ids
         self.tooltip = tooltip
         self.hide_legend = hide_legend
         self.chart_name = chart_name
@@ -770,6 +784,16 @@ class ChartComponentParameters(Base):
     def height(self, value: float):
         self._property_changed('height')
         self.__height = value        
+
+    @property
+    def ids(self) -> Tuple[str, ...]:
+        """List of monitor ids. One for each series."""
+        return self.__ids
+
+    @ids.setter
+    def ids(self, value: Tuple[str, ...]):
+        self._property_changed('ids')
+        self.__ids = value        
 
     @property
     def tooltip(self) -> str:
@@ -1474,6 +1498,43 @@ class WebinarComponentParameters(Base):
         self.__title = value        
 
 
+class WorkspaceCallToAction(Base):
+        
+    """Call to action displayed on the top right of the page."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        actions: Tuple[RelatedLink, ...],
+        text: str,
+        name: str = None
+    ):        
+        super().__init__()
+        self.actions = actions
+        self.text = text
+        self.name = name
+
+    @property
+    def actions(self) -> Tuple[RelatedLink, ...]:
+        """Call to action in the call to actions list."""
+        return self.__actions
+
+    @actions.setter
+    def actions(self, value: Tuple[RelatedLink, ...]):
+        self._property_changed('actions')
+        self.__actions = value        
+
+    @property
+    def text(self) -> str:
+        """Text to go on the call to action button."""
+        return self.__text
+
+    @text.setter
+    def text(self, value: str):
+        self._property_changed('text')
+        self.__text = value        
+
+
 class SelectorComponentParameters(Base):
         
     """Parameters provided for a selector component."""
@@ -1581,7 +1642,7 @@ class WorkspaceComponent(Base):
     @camel_case_translate
     def __init__(
         self,
-        id_: dict,
+        id_: str,
         type_: Union[ComponentType, str],
         hide: bool = None,
         tags: Tuple[str, ...] = None,
@@ -1597,11 +1658,13 @@ class WorkspaceComponent(Base):
         self.name = name
 
     @property
-    def id(self) -> dict:
+    def id(self) -> str:
+        """Workspace unique identifier that starts with CB followed by 16 alphanumeric
+           characters."""
         return self.__id
 
     @id.setter
-    def id(self, value: dict):
+    def id(self, value: str):
         self._property_changed('id')
         self.__id = value        
 
@@ -1655,6 +1718,7 @@ class WorkspaceParameters(Base):
         self,
         layout: str,
         components: Tuple[WorkspaceComponent, ...],
+        call_to_action: WorkspaceCallToAction = None,
         can_share: bool = None,
         date: WorkspaceDate = None,
         disclaimer: str = None,
@@ -1663,6 +1727,7 @@ class WorkspaceParameters(Base):
         name: str = None
     ):        
         super().__init__()
+        self.call_to_action = call_to_action
         self.can_share = can_share
         self.components = components
         self.date = date
@@ -1671,6 +1736,16 @@ class WorkspaceParameters(Base):
         self.maintainers = maintainers
         self.tabs = tabs
         self.name = name
+
+    @property
+    def call_to_action(self) -> WorkspaceCallToAction:
+        """Call to action displayed on the top right of the page."""
+        return self.__call_to_action
+
+    @call_to_action.setter
+    def call_to_action(self, value: WorkspaceCallToAction):
+        self._property_changed('call_to_action')
+        self.__call_to_action = value        
 
     @property
     def can_share(self) -> bool:
@@ -1751,10 +1826,10 @@ class Workspace(Base):
     def __init__(
         self,
         parameters: WorkspaceParameters,
-        type_: Union[WorkspaceType, str],
         id_: str = None,
         alias: str = None,
         name: str = None,
+        type_: Union[WorkspaceType, str] = None,
         tags: Tuple[str, ...] = None,
         created_time: datetime.datetime = None,
         last_updated_time: datetime.datetime = None,

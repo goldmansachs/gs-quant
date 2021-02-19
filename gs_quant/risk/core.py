@@ -97,7 +97,7 @@ class ResultInfo(metaclass=ABCMeta):
 class ErrorValue(ResultInfo):
 
     def _get_raw_df(self):
-        pass
+        return pd.DataFrame(self, index=[0], columns=['value'])
 
     def __init__(self, risk_key: RiskKey, error: Union[str, dict]):
         super().__init__(risk_key, error=error)
@@ -108,6 +108,22 @@ class ErrorValue(ResultInfo):
     @property
     def raw_value(self):
         return None
+
+
+class UnsupportedValue(ResultInfo):
+
+    def _get_raw_df(self):
+        pass
+
+    def __init__(self, risk_key: RiskKey):
+        super().__init__(risk_key)
+
+    def __repr__(self):
+        return 'Unsupported Value'
+
+    @property
+    def raw_value(self):
+        return 'Unsupported Value'
 
 
 class ScalarWithInfo(ResultInfo, metaclass=ABCMeta):

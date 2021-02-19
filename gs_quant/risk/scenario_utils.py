@@ -20,7 +20,7 @@ from gs_quant.data import Dataset
 from datetime import datetime, timedelta, date
 
 
-def build_eq_vol_scenario_intraday(asset_name: str, source_dataset: str, ref_spot: float,
+def build_eq_vol_scenario_intraday(asset_name: str, source_dataset: str, ref_spot: float = None,
                                    asset_name_type: AssetIdentifier = AssetIdentifier.REUTERS_ID,
                                    start_time: datetime = datetime.now() - timedelta(hours=1),
                                    end_time: datetime = datetime.now()) -> MarketDataVolShockScenario:
@@ -37,7 +37,7 @@ def build_eq_vol_scenario_intraday(asset_name: str, source_dataset: str, ref_spo
     return MarketDataVolShockScenario.from_dataframe(asset_ric, vol_data, ref_spot)
 
 
-def build_eq_vol_scenario_eod(asset_name: str, source_dataset: str, ref_spot: float,
+def build_eq_vol_scenario_eod(asset_name: str, source_dataset: str, ref_spot: float = None,
                               asset_name_type: AssetIdentifier = AssetIdentifier.REUTERS_ID,
                               vol_date: date = date.today()) -> MarketDataVolShockScenario:
 

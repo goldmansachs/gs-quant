@@ -670,6 +670,7 @@ class MqexsTradeExt(Base):
         created_time: datetime.datetime,
         last_updated_time: datetime.datetime,
         last_updated_by_id: str,
+        inquiry_id: str = None,
         name: str = None
     ):        
         super().__init__()
@@ -682,6 +683,7 @@ class MqexsTradeExt(Base):
         self.created_time = created_time
         self.last_updated_time = last_updated_time
         self.last_updated_by_id = last_updated_by_id
+        self.inquiry_id = inquiry_id
         self.name = name
 
     @property
@@ -775,6 +777,16 @@ class MqexsTradeExt(Base):
     def last_updated_by_id(self, value: str):
         self._property_changed('last_updated_by_id')
         self.__last_updated_by_id = value        
+
+    @property
+    def inquiry_id(self) -> str:
+        """trade unique identifier"""
+        return self.__inquiry_id
+
+    @inquiry_id.setter
+    def inquiry_id(self, value: str):
+        self._property_changed('inquiry_id')
+        self.__inquiry_id = value        
 
 
 class MqexsTradesWErrorExt(Base):

@@ -14,13 +14,9 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from .append_processor import AppendProcessor
-from .arthimetic_processors import AdditionProcessor, SubtractionProcessor, MultiplicationProcessor, DivisionProcessor
-from .change_processor import ChangeProcessor
-from .coordinate_processor import CoordinateProcessor
-from .correlation_processor import CorrelationProcessor
-from .entity_processor import EntityProcessor
-from .last_processor import LastProcessor
-from .percentiles_processor import PercentilesProcessor
-from .sharpe_ratio_processor import SharpeRatioProcessor
-from .volatility_processor import VolatilityProcessor
+from .econometrics_processors import SharpeRatioProcessor, VolatilityProcessor, CorrelationProcessor, ChangeProcessor, \
+    ReturnsProcessor
+from .special_processors import EntityProcessor, CoordinateProcessor
+from .statistics_processors import PercentilesProcessor
+from .utility_processors import LastProcessor, AppendProcessor, AdditionProcessor, SubtractionProcessor, \
+    MultiplicationProcessor, DivisionProcessor

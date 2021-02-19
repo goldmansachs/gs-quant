@@ -304,12 +304,20 @@ class MultipleRiskMeasureResult(dict):
 
     def _get_raw_df(self):
         list_df = []
+        cols = []
         for rm in list(self):
             curr_raw_df = self[rm]._get_raw_df()
             if curr_raw_df is not None:
                 curr_raw_df.insert(0, 'risk_measure', rm)
+                if 'mkt_type' in curr_raw_df.columns.values:
+                    cols = list(curr_raw_df.columns.values)
                 list_df.append(curr_raw_df)
-        return pd.concat(list_df, ignore_index=True)
+        concat_df = pd.concat(list_df, ignore_index=True, sort=False)
+
+        # if calc scalar before bucketed risk. eg: port.calc((Price, IRDelta))
+        if concat_df.columns.values[-1] != 'value':
+            return concat_df[cols]
+        return concat_df
 
 
 class MultipleRiskMeasureFuture(CompositeResultFuture):
@@ -588,18 +596,20 @@ class PortfolioRiskResult(CompositeResultFuture):
                             {f'portfolio_name_{len(port_info)}': f'Portfolio_{p_idx}' if p.name is None else p.name})
                     list_sub_dfs.append(get_df(p, curr_port_info, p_idx))
                 list_sub_dfs = list(filter(lambda x: x is not None, list_sub_dfs))
-                final_df = pd.concat(list_sub_dfs, ignore_index=True)
-                return final_df.reindex(columns=max([x.columns.values for x in list_sub_dfs], key=len))
+                if len(list_sub_dfs) > 0:
+                    final_df = pd.concat(list_sub_dfs, ignore_index=True)
+                    return final_df.reindex(columns=max([x.columns.values for x in list_sub_dfs], key=len))
             else:
                 port_info.update({
                     'instrument_name': f'{priceable.type.name}_{inst_idx}' if priceable.name is None else priceable.name
                 })
                 sub_df = self[priceable]._get_raw_df()
-                for port_idx, (key, value) in enumerate(port_info.items()):
-                    sub_df.insert(port_idx, key, value)
-                if 'risk_measure' not in sub_df.columns.values:
-                    sub_df.insert(len(port_info), 'risk_measure', self.risk_measures[0])
-                return sub_df
+                if sub_df is not None:
+                    for port_idx, (key, value) in enumerate(port_info.items()):
+                        sub_df.insert(port_idx, key, value)
+                    if 'risk_measure' not in sub_df.columns.values:
+                        sub_df.insert(len(port_info), 'risk_measure', self.risk_measures[0])
+                    return sub_df
 
         def get_default_pivots(ori_cols, has_dates: bool, multi_measures: bool, simple_port: bool) -> tuple:
             portfolio_names = list(filter(lambda x: 'portfolio_name_' in x, ori_cols))
@@ -629,7 +639,11 @@ class PortfolioRiskResult(CompositeResultFuture):
                     return rule_output
             return None, None, None
 
-        ori_df = get_df(self.portfolio).fillna('N/A')  # fill n/a values for different sub-portfolio depths
+        ori_df = get_df(self.portfolio)
+        if ori_df is None:
+            return
+        else:
+            ori_df = ori_df.fillna('N/A')  # fill n/a values for different sub-portfolio depths
         if values is None and index is None and columns is None:  # to_frame(None, None, None)
             return ori_df
         elif values == 'default' and index == 'default' and columns == 'default':  # to_frame()
@@ -664,11 +678,19 @@ class PortfolioRiskResult(CompositeResultFuture):
             paths = self.__portfolio.paths(items)
             if not paths and isinstance(items, InstrumentBase) and items.unresolved:
                 paths = self.__portfolio.paths(items.unresolved)
-                key = items.resolution_key.ex_measure
-                paths = tuple(p for p in paths if self.__result(p, self.risk_measures[0]).risk_key.ex_measure == key)
-
                 if not paths:
                     raise KeyError(f'{items} not in portfolio')
+                item_key = items.resolution_key.ex_measure
+                portfolio_key = tuple(self.__portfolio[p].resolution_key for p in paths)
+                result_key = tuple(self.__result(p, self.risk_measures[0]).risk_key for p in paths)
+
+                # if port has not been resolved use result (which has been resolved during price) to extract key
+                # if port has been resolved, use portfolio to extract key
+                check_key = result_key if all([p is None for p in portfolio_key]) else portfolio_key
+                paths = tuple(p for p_idx, p in enumerate(paths) if check_key[p_idx].ex_measure == item_key)
+
+                if not paths:
+                    raise KeyError(f'Cannot slice {items} which is resolved in a different pricing context')
 
             return paths
 

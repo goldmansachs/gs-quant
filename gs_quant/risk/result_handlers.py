@@ -18,7 +18,7 @@ import logging
 import pandas as pd
 from typing import Iterable, Union
 
-from .core import DataFrameWithInfo, ErrorValue, FloatWithInfo, StringWithInfo, sort_risk
+from .core import DataFrameWithInfo, ErrorValue, UnsupportedValue, FloatWithInfo, StringWithInfo, sort_risk
 from .measures import EqDelta, EqGamma, EqVega
 from gs_quant.base import InstrumentBase, RiskKey
 
@@ -139,8 +139,8 @@ def risk_vector_handler(result: dict, risk_key: RiskKey, _instrument: Instrument
     return __dataframe_handler(result['points'], mappings, risk_key)
 
 
-def unsupported_handler(_result: dict, risk_key: RiskKey, instrument: InstrumentBase) -> ErrorValue:
-    return ErrorValue(risk_key, f'{risk_key.risk_measure} not supported for {type(instrument).__name__}')
+def unsupported_handler(_result: dict, risk_key: RiskKey, _instrument: InstrumentBase) -> UnsupportedValue:
+    return UnsupportedValue(risk_key)
 
 
 result_handlers = {

@@ -20,8 +20,8 @@ import pandas as pd
 
 import gs_quant.risk as risk
 from gs_quant.datetime import business_day_offset
-from gs_quant.instrument import IRSwap, IRSwaption
-from gs_quant.markets import HistoricalPricingContext, PricingContext, BackToTheFuturePricingContext,\
+from gs_quant.instrument import IRSwap, IRSwaption, CurveScenario
+from gs_quant.markets import HistoricalPricingContext, PricingContext, BackToTheFuturePricingContext, \
     historical_risk_key
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk.results import PortfolioPath, PortfolioRiskResult
@@ -88,7 +88,7 @@ def test_historical_pricing(mocker):
         swap3 = IRSwap('Pay', '10y', 'USD', fixed_rate='ATM+3', name='10y@a+3')
 
         portfolio = Portfolio((swap1, swap2, swap3))
-        dates = (dt.date(2019, 10, 7), dt.date(2019, 10, 8), dt.date(2019, 10, 9))
+        dates = (dt.date(2021, 2, 9), dt.date(2021, 2, 10), dt.date(2021, 2, 11))
 
         with HistoricalPricingContext(dates=dates) as hpc:
             risk_key = hpc._PricingContext__risk_key(risk.DollarPrice, swap1.provider)
@@ -96,8 +96,8 @@ def test_historical_pricing(mocker):
 
         expected = risk.SeriesWithInfo(
             pd.Series(
-                data=[-564854.3640043903, -565604.2636791412, -564751.5121349357],
-                index=[dt.date(2019, 10, 7), dt.date(2019, 10, 8), dt.date(2019, 10, 9)]
+                data=[-580316.7895084377, -580373.4091600645, -580811.1441974249],
+                index=[dt.date(2021, 2, 9), dt.date(2021, 2, 10), dt.date(2021, 2, 11)]
             ),
             risk_key=historical_risk_key(risk_key), )
 
@@ -105,16 +105,16 @@ def test_historical_pricing(mocker):
         actual = results[risk.DollarPrice].aggregate()
         assert actual.equals(expected)
 
-        assert (results[dt.date(2019, 10, 9)][risk.DollarPrice]['10y@a+1'] ==
-                results[risk.DollarPrice][dt.date(2019, 10, 9)]['10y@a+1'])
-        assert (results[dt.date(2019, 10, 9)][risk.DollarPrice]['10y@a+1'] ==
-                results[risk.DollarPrice]['10y@a+1'][dt.date(2019, 10, 9)])
-        assert (results[dt.date(2019, 10, 9)][risk.DollarPrice]['10y@a+1'] ==
-                results['10y@a+1'][risk.DollarPrice][dt.date(2019, 10, 9)])
-        assert (results[dt.date(2019, 10, 9)][risk.DollarPrice]['10y@a+1'] ==
-                results['10y@a+1'][dt.date(2019, 10, 9)][risk.DollarPrice])
-        assert (results[dt.date(2019, 10, 9)][risk.DollarPrice]['10y@a+1'] ==
-                results[dt.date(2019, 10, 9)]['10y@a+1'][risk.DollarPrice])
+        assert (results[dt.date(2021, 2, 9)][risk.DollarPrice]['10y@a+1'] ==
+                results[risk.DollarPrice][dt.date(2021, 2, 9)]['10y@a+1'])
+        assert (results[dt.date(2021, 2, 9)][risk.DollarPrice]['10y@a+1'] ==
+                results[risk.DollarPrice]['10y@a+1'][dt.date(2021, 2, 9)])
+        assert (results[dt.date(2021, 2, 9)][risk.DollarPrice]['10y@a+1'] ==
+                results['10y@a+1'][risk.DollarPrice][dt.date(2021, 2, 9)])
+        assert (results[dt.date(2021, 2, 9)][risk.DollarPrice]['10y@a+1'] ==
+                results['10y@a+1'][dt.date(2021, 2, 9)][risk.DollarPrice])
+        assert (results[dt.date(2021, 2, 9)][risk.DollarPrice]['10y@a+1'] ==
+                results[dt.date(2021, 2, 9)]['10y@a+1'][risk.DollarPrice])
 
 
 def test_backtothefuture_pricing(mocker):
@@ -124,7 +124,7 @@ def test_backtothefuture_pricing(mocker):
         swap3 = IRSwap('Pay', '10y', 'USD', fixed_rate=0.03, name='swap3')
 
         portfolio = Portfolio((swap1, swap2, swap3))
-        pricing_date = dt.date(2020, 10, 7)
+        pricing_date = dt.date(2021, 2, 10)
         with PricingContext(pricing_date=pricing_date):
             with BackToTheFuturePricingContext(dates=business_day_offset(pricing_date, [-1, 0, 1],
                                                                          roll='forward')) as hpc:
@@ -133,7 +133,7 @@ def test_backtothefuture_pricing(mocker):
 
     expected = risk.SeriesWithInfo(
         pd.Series(
-            data=[-35280379.86540368, -35348910.76427929, -23671267.111283153],
+            data=[-22711963.80864744, -22655907.930484552, -21582551.58922608],
             index=business_day_offset(pricing_date, [-1, 0, 1], roll='forward')
         ),
         risk_key=historical_risk_key(risk_key), )
@@ -237,7 +237,7 @@ def test_results_with_resolution(mocker):
         assert portfolio.instruments[0].termination_date == dt.date(2030, 10, 16)
         assert portfolio.instruments[1].termination_date == dt.date(2030, 10, 14)
         assert round(swap1.fixed_rate, 4) == 0.0075
-        assert round(swap2.fixed_rate, 4) == 0.004
+        assert round(swap2.fixed_rate, 4) == 0.0016
         assert round(swap3.fixed_rate, 4) == -0.0027
 
         # Assert that after resolution under a different context, we cannot retrieve the result
@@ -248,6 +248,14 @@ def test_results_with_resolution(mocker):
         except KeyError:
             assert True
 
+        # Assert that if we resolve first in one context before pricing under a different context
+        # we can slice the riskresult with the origin
+        with CurveScenario(parallel_shift=5):
+            result2 = portfolio.calc((risk.DollarPrice, risk.IRDelta))
+
+        assert result2[swap1][risk.DollarPrice] is not None
+        assert result2[orig_swap1][risk.DollarPrice] is not None
+
         # Resolve again and check we get the same values
 
         with PricingContext(dt.date(2020, 10, 14)):
@@ -257,7 +265,7 @@ def test_results_with_resolution(mocker):
         assert portfolio.instruments[0].termination_date == dt.date(2030, 10, 16)
         assert portfolio.instruments[1].termination_date == dt.date(2030, 10, 14)
         assert round(swap1.fixed_rate, 4) == 0.0075
-        assert round(swap2.fixed_rate, 4) == 0.004
+        assert round(swap2.fixed_rate, 4) == 0.0016
         assert round(swap3.fixed_rate, 4) == -0.0027
 
 

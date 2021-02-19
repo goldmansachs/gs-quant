@@ -400,23 +400,35 @@ class Report(Base):
         self.__percentage_complete = value        
 
 
-class ReportGenerateParameters(Base):
+class ReportGenerateRequest(Base):
         
-    """Parameters for generating a report file."""
+    """Request body to synchronously generate a report file."""
 
     @camel_case_translate
     def __init__(
         self,
+        end_date: datetime.date = None,
         report_id: str = None,
         start_date: datetime.date = None,
-        end_date: datetime.date = None,
+        template_id: Union[ReportGenerateTemplateId, str] = None,
         name: str = None
     ):        
         super().__init__()
+        self.end_date = end_date
         self.report_id = report_id
         self.start_date = start_date
-        self.end_date = end_date
+        self.template_id = template_id
         self.name = name
+
+    @property
+    def end_date(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__end_date
+
+    @end_date.setter
+    def end_date(self, value: datetime.date):
+        self._property_changed('end_date')
+        self.__end_date = value        
 
     @property
     def report_id(self) -> str:
@@ -439,33 +451,6 @@ class ReportGenerateParameters(Base):
         self.__start_date = value        
 
     @property
-    def end_date(self) -> datetime.date:
-        """ISO 8601-formatted date"""
-        return self.__end_date
-
-    @end_date.setter
-    def end_date(self, value: datetime.date):
-        self._property_changed('end_date')
-        self.__end_date = value        
-
-
-class ReportGenerateRequest(Base):
-        
-    """Request body to synchronously generate a report file."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        template_id: Union[ReportGenerateTemplateId, str] = None,
-        parameters: ReportGenerateParameters = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.template_id = template_id
-        self.parameters = parameters
-        self.name = name
-
-    @property
     def template_id(self) -> Union[ReportGenerateTemplateId, str]:
         """The Report Template ID to generate the report from."""
         return self.__template_id
@@ -474,16 +459,6 @@ class ReportGenerateRequest(Base):
     def template_id(self, value: Union[ReportGenerateTemplateId, str]):
         self._property_changed('template_id')
         self.__template_id = get_enum_value(ReportGenerateTemplateId, value)        
-
-    @property
-    def parameters(self) -> ReportGenerateParameters:
-        """Parameters for generating a report file."""
-        return self.__parameters
-
-    @parameters.setter
-    def parameters(self, value: ReportGenerateParameters):
-        self._property_changed('parameters')
-        self.__parameters = value        
 
 
 class ReportRescheduleRequest(Base):
