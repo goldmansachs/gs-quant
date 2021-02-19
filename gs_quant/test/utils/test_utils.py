@@ -14,6 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 
+import hashlib
 import json
 import pathlib
 from unittest import mock
@@ -94,7 +95,7 @@ def get_risk_request_id(requests):
         identifier += 'today' if date == today else date
         identifier += '+'.join(sorted(str(k) + "=" + str(v) for k, v in request.scenario.scenario.as_dict().items())) \
             if request.scenario is not None else ''
-    return identifier[:232]  # cut down to less than max number of char for filename
+    return hashlib.md5(identifier.encode('utf-8')).hexdigest()
 
 
 def mock_calc_create_files(*args, **kwargs):

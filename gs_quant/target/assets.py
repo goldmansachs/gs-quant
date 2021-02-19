@@ -161,21 +161,6 @@ class CommoditySubFamily(EnumBase, Enum):
         return self.value
 
 
-class NetExposureClassification(EnumBase, Enum):    
-    
-    """Classification for net exposure of fund."""
-
-    Short_Only__OVER__Short_Bias = 'Short Only / Short Bias'
-    Market_Neutral = 'Market Neutral'
-    Low_Net = 'Low Net'
-    Variable_Net = 'Variable Net'
-    Long_Biased = 'Long Biased'
-    Long_Only = 'Long Only'
-    
-    def __repr__(self):
-        return self.value
-
-
 class ProductType(EnumBase, Enum):    
     
     """Product type of basket"""
@@ -256,28 +241,6 @@ class Strategy(EnumBase, Enum):
     Volatility_Target_12 = 'Volatility Target 12'
     Volatility_Target_15 = 'Volatility Target 15'
     Yield_Alternative = 'Yield Alternative'
-    
-    def __repr__(self):
-        return self.value
-
-
-class SupraStrategy(EnumBase, Enum):    
-    
-    """Broad descriptor of a fund's investment approach. Same view permissions as the
-       asset"""
-
-    Composite = 'Composite'
-    Credit = 'Credit'
-    Equity = 'Equity'
-    Equity_Hedge = 'Equity Hedge'
-    Event_Driven = 'Event Driven'
-    Fund_of_Funds = 'Fund of Funds'
-    Macro = 'Macro'
-    Multi_Strategy = 'Multi-Strategy'
-    Other = 'Other'
-    Quant = 'Quant'
-    Relative_Value = 'Relative Value'
-    Risk_Parity = 'Risk Parity'
     
     def __repr__(self):
         return self.value
@@ -1383,7 +1346,6 @@ class AssetParameters(Base):
         hedge_id: str = None,
         ultimate_ticker: str = None,
         strategy: Union[Strategy, str] = None,
-        supra_strategy: Union[SupraStrategy, str] = None,
         exchange_currency: Union[Currency, str] = None,
         region: str = None,
         delivery_point: str = None,
@@ -1482,7 +1444,6 @@ class AssetParameters(Base):
         self.hedge_id = hedge_id
         self.ultimate_ticker = ultimate_ticker
         self.strategy = strategy
-        self.supra_strategy = supra_strategy
         self.exchange_currency = exchange_currency
         self.region = region
         self.delivery_point = delivery_point
@@ -2004,17 +1965,6 @@ class AssetParameters(Base):
     def strategy(self, value: Union[Strategy, str]):
         self._property_changed('strategy')
         self.__strategy = get_enum_value(Strategy, value)        
-
-    @property
-    def supra_strategy(self) -> Union[SupraStrategy, str]:
-        """Broad descriptor of a fund's investment approach. Same view permissions as the
-           asset"""
-        return self.__supra_strategy
-
-    @supra_strategy.setter
-    def supra_strategy(self, value: Union[SupraStrategy, str]):
-        self._property_changed('supra_strategy')
-        self.__supra_strategy = get_enum_value(SupraStrategy, value)        
 
     @property
     def exchange_currency(self) -> Union[Currency, str]:
@@ -2633,7 +2583,6 @@ class HedgeFundParameters(Base):
         regional_focus: Tuple[str, ...] = None,
         risk_taking_model: str = None,
         strategy: Union[Strategy, str] = None,
-        supra_strategy: Union[SupraStrategy, str] = None,
         strategy_description: str = None,
         targeted_gross_exposure: NumberRange = None,
         targeted_net_exposure: NumberRange = None,
@@ -2641,7 +2590,6 @@ class HedgeFundParameters(Base):
         targeted_num_of_positions_long: NumberRange = None,
         turnover: str = None,
         vehicle_type: str = None,
-        net_exposure_classification: Union[NetExposureClassification, str] = None,
         last_returns_date: datetime.date = None,
         name: str = None
     ):        
@@ -2657,7 +2605,6 @@ class HedgeFundParameters(Base):
         self.regional_focus = regional_focus
         self.risk_taking_model = risk_taking_model
         self.strategy = strategy
-        self.supra_strategy = supra_strategy
         self.strategy_description = strategy_description
         self.targeted_gross_exposure = targeted_gross_exposure
         self.targeted_net_exposure = targeted_net_exposure
@@ -2665,7 +2612,6 @@ class HedgeFundParameters(Base):
         self.targeted_num_of_positions_long = targeted_num_of_positions_long
         self.turnover = turnover
         self.vehicle_type = vehicle_type
-        self.net_exposure_classification = net_exposure_classification
         self.last_returns_date = last_returns_date
         self.name = name
 
@@ -2788,17 +2734,6 @@ class HedgeFundParameters(Base):
         self.__strategy = get_enum_value(Strategy, value)        
 
     @property
-    def supra_strategy(self) -> Union[SupraStrategy, str]:
-        """Broad descriptor of a fund's investment approach. Same view permissions as the
-           asset"""
-        return self.__supra_strategy
-
-    @supra_strategy.setter
-    def supra_strategy(self, value: Union[SupraStrategy, str]):
-        self._property_changed('supra_strategy')
-        self.__supra_strategy = get_enum_value(SupraStrategy, value)        
-
-    @property
     def strategy_description(self) -> str:
         """Statement explaining a fund's investment approach. Only viewable after having
            been granted additional access to asset information."""
@@ -2878,16 +2813,6 @@ class HedgeFundParameters(Base):
     def vehicle_type(self, value: str):
         self._property_changed('vehicle_type')
         self.__vehicle_type = value        
-
-    @property
-    def net_exposure_classification(self) -> Union[NetExposureClassification, str]:
-        """Classification for net exposure of fund."""
-        return self.__net_exposure_classification
-
-    @net_exposure_classification.setter
-    def net_exposure_classification(self, value: Union[NetExposureClassification, str]):
-        self._property_changed('net_exposure_classification')
-        self.__net_exposure_classification = get_enum_value(NetExposureClassification, value)        
 
     @property
     def last_returns_date(self) -> datetime.date:
@@ -3788,6 +3713,7 @@ class FieldFilterMap(Base):
         self.data_set_ids = kwargs.get('data_set_ids')
         self.call_first_date = kwargs.get('call_first_date')
         self.pb_client_id = kwargs.get('pb_client_id')
+        self.asset_parameters_start = kwargs.get('asset_parameters_start')
         self.owner_id = kwargs.get('owner_id')
         self.economic_terms_hash = kwargs.get('economic_terms_hash')
         self.sec_db = kwargs.get('sec_db')
@@ -3812,6 +3738,7 @@ class FieldFilterMap(Base):
         self.asset_classifications_is_primary = kwargs.get('asset_classifications_is_primary')
         self.styles = kwargs.get('styles')
         self.short_name = kwargs.get('short_name')
+        self.calculation_region = kwargs.get('calculation_region')
         self.eid = kwargs.get('eid')
         self.jsn = kwargs.get('jsn')
         self.mkt_quoting_style = kwargs.get('mkt_quoting_style')
@@ -3915,8 +3842,8 @@ class FieldFilterMap(Base):
         self.rating_linear = kwargs.get('rating_linear')
         self.asset_class = kwargs.get('asset_class')
         self.cm_id = kwargs.get('cm_id')
-        self.gsideid = kwargs.get('gsideid')
         self.__type = kwargs.get('type_')
+        self.gsideid = kwargs.get('gsideid')
         self.mdapi = kwargs.get('mdapi')
         self.ric = kwargs.get('ric')
         self.issuer = kwargs.get('issuer')
@@ -3978,6 +3905,7 @@ class FieldFilterMap(Base):
         self.asset_parameters_settlement = kwargs.get('asset_parameters_settlement')
         self.primary_country_ric = kwargs.get('primary_country_ric')
         self.is_pair_basket = kwargs.get('is_pair_basket')
+        self.asset_parameters_commodity_reference_price = kwargs.get('asset_parameters_commodity_reference_price')
         self.default_backcast = kwargs.get('default_backcast')
         self.use_machine_learning = kwargs.get('use_machine_learning')
         self.performance_fee = kwargs.get('performance_fee')
@@ -4132,6 +4060,15 @@ class FieldFilterMap(Base):
     def pb_client_id(self, value: dict):
         self._property_changed('pb_client_id')
         self.__pb_client_id = value        
+
+    @property
+    def asset_parameters_start(self) -> dict:
+        return self.__asset_parameters_start
+
+    @asset_parameters_start.setter
+    def asset_parameters_start(self, value: dict):
+        self._property_changed('asset_parameters_start')
+        self.__asset_parameters_start = value        
 
     @property
     def owner_id(self) -> dict:
@@ -4348,6 +4285,15 @@ class FieldFilterMap(Base):
     def short_name(self, value: dict):
         self._property_changed('short_name')
         self.__short_name = value        
+
+    @property
+    def calculation_region(self) -> dict:
+        return self.__calculation_region
+
+    @calculation_region.setter
+    def calculation_region(self, value: dict):
+        self._property_changed('calculation_region')
+        self.__calculation_region = value        
 
     @property
     def eid(self) -> dict:
@@ -5259,15 +5205,6 @@ class FieldFilterMap(Base):
         self.__cm_id = value        
 
     @property
-    def gsideid(self) -> dict:
-        return self.__gsideid
-
-    @gsideid.setter
-    def gsideid(self, value: dict):
-        self._property_changed('gsideid')
-        self.__gsideid = value        
-
-    @property
     def type(self) -> dict:
         return self.__type
 
@@ -5275,6 +5212,15 @@ class FieldFilterMap(Base):
     def type(self, value: dict):
         self._property_changed('type')
         self.__type = value        
+
+    @property
+    def gsideid(self) -> dict:
+        return self.__gsideid
+
+    @gsideid.setter
+    def gsideid(self, value: dict):
+        self._property_changed('gsideid')
+        self.__gsideid = value        
 
     @property
     def mdapi(self) -> dict:
@@ -5815,6 +5761,15 @@ class FieldFilterMap(Base):
     def is_pair_basket(self, value: dict):
         self._property_changed('is_pair_basket')
         self.__is_pair_basket = value        
+
+    @property
+    def asset_parameters_commodity_reference_price(self) -> dict:
+        return self.__asset_parameters_commodity_reference_price
+
+    @asset_parameters_commodity_reference_price.setter
+    def asset_parameters_commodity_reference_price(self, value: dict):
+        self._property_changed('asset_parameters_commodity_reference_price')
+        self.__asset_parameters_commodity_reference_price = value        
 
     @property
     def default_backcast(self) -> dict:

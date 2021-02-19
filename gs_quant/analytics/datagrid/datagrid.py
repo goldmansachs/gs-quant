@@ -35,8 +35,7 @@ from gs_quant.analytics.datagrid.data_column import DataColumn, ColumnFormat
 from gs_quant.analytics.datagrid.data_row import DataRow, DimensionsOverride, ProcessorOverride, Override
 from gs_quant.analytics.datagrid.utils import DataGridSort, SortOrder, SortType, DataGridFilter, FilterOperation, \
     FilterCondition
-from gs_quant.analytics.processors import CoordinateProcessor
-from gs_quant.analytics.processors.entity_processor import EntityProcessor
+from gs_quant.analytics.processors import CoordinateProcessor, EntityProcessor
 from gs_quant.datetime.relative_date import RelativeDate
 from gs_quant.entities.entity import Entity
 from gs_quant.errors import MqValueError
@@ -267,10 +266,14 @@ class DataGrid:
             query_start = query.start
             query_end = query.end
             entity_dict = entity.get_entity()
-            currency = entity_dict.get("currency")
-            exchange = entity_dict.get("exchange")
-            currencies = [currency] if currency else None
-            exchanges = [exchange] if exchange else None
+            if entity_dict is None:
+                currencies = None
+                exchanges = None
+            else:
+                currency = entity_dict.get("currency")
+                exchange = entity_dict.get("exchange")
+                currencies = [currency] if currency else None
+                exchanges = [exchange] if exchange else None
 
             if isinstance(query_start, RelativeDate):
                 cache_key = get_rdate_cache_key(query_start.rule, currencies, exchanges)

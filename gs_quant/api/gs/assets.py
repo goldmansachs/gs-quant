@@ -185,10 +185,10 @@ class GsAssetApi:
             position_type: PositionType = None,
     ) -> Tuple[PositionSet, ...]:
         position_date_str = position_date.isoformat()
-        url = '/assets/{id}/positions/{date}'.format(id=asset_id, date=position_date_str)
+        url = f'/assets/{asset_id}/positions/{position_date_str}'
 
         if position_type is not None:
-            url += '?type=' + position_type.value
+            url += f'?type={position_type}' if isinstance(position_type, str) else f'?type={position_type.value}'
 
         results = GsSession.current._get(url)['results']
         return tuple(PositionSet.from_dict(r) for r in results)

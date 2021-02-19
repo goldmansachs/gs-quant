@@ -408,9 +408,6 @@ class Portfolio(PriceableImpl):
         with pricing_context:
             futures = [p.resolve(in_place) for p in self.__priceables]
 
-        # ensure that priceables_lookup is updated when portfolio is resolved
-        self.priceables = self.__priceables
-
         if not in_place:
             ret = {} if isinstance(PricingContext.current, HistoricalPricingContext) else Portfolio(name=self.name)
             result_future = PricingFuture() if not isinstance(
@@ -491,6 +488,9 @@ class Portfolio(PriceableImpl):
 
     def calc(self, risk_measure: Union[RiskMeasure, Iterable[RiskMeasure]], fn=None) -> PortfolioRiskResult:
         with self.__pricing_context:
-            return PortfolioRiskResult(self,
+            # PortfolioRiskResult should hold a copy of the portfolio instead of a reference to the portfolio
+            # this is to prevent the portfolio object within portfolioriskresult to hold a reference to the portfolio
+            # object should it later be modified in place (eg: resolution)
+            return PortfolioRiskResult(copy.deepcopy(self),
                                        (risk_measure,) if isinstance(risk_measure, RiskMeasure) else risk_measure,
                                        [p.calc(risk_measure, fn=fn) for p in self.__priceables])

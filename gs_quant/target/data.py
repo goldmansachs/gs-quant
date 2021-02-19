@@ -397,6 +397,7 @@ class MarketDataFilteredField(Base):
         default_boolean_value: bool = None,
         numerical_values: Tuple[float, ...] = None,
         values: Tuple[str, ...] = None,
+        multi_measure: bool = None,
         name: str = None
     ):        
         super().__init__()
@@ -406,6 +407,7 @@ class MarketDataFilteredField(Base):
         self.default_boolean_value = default_boolean_value
         self.numerical_values = numerical_values
         self.values = values
+        self.multi_measure = multi_measure
         self.name = name
 
     @property
@@ -467,6 +469,17 @@ class MarketDataFilteredField(Base):
     def values(self, value: Tuple[str, ...]):
         self._property_changed('values')
         self.__values = value        
+
+    @property
+    def multi_measure(self) -> bool:
+        """Allow you to pivot the mapping selection based on the available measures being
+           used as parameters."""
+        return self.__multi_measure
+
+    @multi_measure.setter
+    def multi_measure(self, value: bool):
+        self._property_changed('multi_measure')
+        self.__multi_measure = value        
 
 
 class MeasureBacktest(Base):
@@ -838,7 +851,6 @@ class DataSetParameters(Base):
         use_created_time_for_upload: bool = None,
         apply_entity_entitlements: bool = None,
         development_status: Union[DevelopmentStatus, str] = None,
-        restrict_secondary_identifier: bool = None,
         name: str = None
     ):        
         super().__init__()
@@ -865,7 +877,6 @@ class DataSetParameters(Base):
         self.use_created_time_for_upload = use_created_time_for_upload
         self.apply_entity_entitlements = apply_entity_entitlements
         self.development_status = development_status
-        self.restrict_secondary_identifier = restrict_secondary_identifier
         self.name = name
 
     @property
@@ -1102,17 +1113,6 @@ class DataSetParameters(Base):
         self._property_changed('development_status')
         self.__development_status = get_enum_value(DevelopmentStatus, value)        
 
-    @property
-    def restrict_secondary_identifier(self) -> bool:
-        """When 'TRUE', will truncate data based on secondary identifier's continuously
-           active time period till now. Otherwise will not truncate data."""
-        return self.__restrict_secondary_identifier
-
-    @restrict_secondary_identifier.setter
-    def restrict_secondary_identifier(self, value: bool):
-        self._property_changed('restrict_secondary_identifier')
-        self.__restrict_secondary_identifier = value        
-
 
 class DataSetTransforms(Base):
         
@@ -1255,6 +1255,7 @@ class MarketDataMapping(Base):
         entity_type: Union[MeasureEntityType, str] = None,
         backtest_entity: MeasureBacktest = None,
         kpi_entity: MeasureKpi = None,
+        multi_measure: bool = None,
         name: str = None
     ):        
         super().__init__()
@@ -1273,6 +1274,7 @@ class MarketDataMapping(Base):
         self.entity_type = entity_type
         self.backtest_entity = backtest_entity
         self.kpi_entity = kpi_entity
+        self.multi_measure = multi_measure
         self.name = name
 
     @property
@@ -1418,6 +1420,15 @@ class MarketDataMapping(Base):
     def kpi_entity(self, value: MeasureKpi):
         self._property_changed('kpi_entity')
         self.__kpi_entity = value        
+
+    @property
+    def multi_measure(self) -> bool:
+        return self.__multi_measure
+
+    @multi_measure.setter
+    def multi_measure(self, value: bool):
+        self._property_changed('multi_measure')
+        self.__multi_measure = value        
 
 
 class ProcessorEntity(Base):
@@ -1612,6 +1623,7 @@ class DataQuery(Base):
         as_of_time: datetime.datetime = None,
         id_as_of_date: datetime.date = None,
         use_temporal_x_ref: bool = False,
+        restrict_secondary_identifier: bool = False,
         since: datetime.datetime = None,
         dates: Tuple[datetime.date, ...] = None,
         times: Tuple[datetime.datetime, ...] = None,
@@ -1650,6 +1662,7 @@ class DataQuery(Base):
         self.as_of_time = as_of_time
         self.id_as_of_date = id_as_of_date
         self.use_temporal_x_ref = use_temporal_x_ref
+        self.restrict_secondary_identifier = restrict_secondary_identifier
         self.since = since
         self.dates = dates
         self.times = times
@@ -1814,7 +1827,8 @@ class DataQuery(Base):
 
     @property
     def id_as_of_date(self) -> datetime.date:
-        """ISO 8601-formatted date"""
+        """If secondary identifiers are specified, find corresponding assets as of this
+           date"""
         return self.__id_as_of_date
 
     @id_as_of_date.setter
@@ -1833,6 +1847,19 @@ class DataQuery(Base):
     def use_temporal_x_ref(self, value: bool):
         self._property_changed('use_temporal_x_ref')
         self.__use_temporal_x_ref = value        
+
+    @property
+    def restrict_secondary_identifier(self) -> bool:
+        """A secondary identifier is an identifier that maps to the primary symbol on the
+           dataset. When 'TRUE', a data query filters the time series to the
+           queried symbol's secondary identifier continuous history till now.
+           Otherwise it returns full time series."""
+        return self.__restrict_secondary_identifier
+
+    @restrict_secondary_identifier.setter
+    def restrict_secondary_identifier(self, value: bool):
+        self._property_changed('restrict_secondary_identifier')
+        self.__restrict_secondary_identifier = value        
 
     @property
     def since(self) -> datetime.datetime:
