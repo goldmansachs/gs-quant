@@ -256,7 +256,8 @@ class RiskApi(metaclass=ABCMeta):
                     )
 
                     try:
-                        result = handler(date_result, risk_key, position.instrument) if handler else date_result
+                        result = handler(date_result, risk_key, position.instrument,
+                                         request_id=getattr(request, '_id', None)) if handler else date_result
                     except Exception as e:
                         result = ErrorValue(risk_key, str(e))
                         _logger.error(result)

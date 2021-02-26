@@ -212,6 +212,11 @@ class _RatingMetric(Enum):
     CONVICTION_LIST = 'convictionList'
 
 
+class EUNatGasDataReference(Enum):
+    TTF_CommodityReferencePrice = 'ICE Data: FUTURES REPORT: ICE Endex Dutch TTF Gas Base Load Futures'
+    NBP_CommodityReferencePrice = 'UK Monthly-Ice'
+
+
 ESG_METRIC_TO_QUERY_TYPE = {
     "esNumericScore": QueryType.ES_NUMERIC_SCORE,
     "esNumericPercentile": QueryType.ES_NUMERIC_PERCENTILE,
@@ -2016,6 +2021,13 @@ def _get_start_and_end_dates(contract_range: str) -> (int, int):
     return (start_contract_range, end_contract_range)
 
 
+def get_weights_for_contracts(contract_range: str) -> dict:
+    (start_contract_range, end_contract_range) = _get_start_and_end_dates(contract_range=contract_range)
+    dates_contract_range = get_contract_range(start_contract_range, end_contract_range, None)
+    weights = dates_contract_range.groupby('contract_month').size()
+    return weights
+
+
 def _forward_price_natgas(asset: Asset, price_method: str = 'GDD',
                           contract_range: str = None, *, source: str = None, real_time: bool = False) -> pd.Series:
     """'
@@ -2028,18 +2040,12 @@ def _forward_price_natgas(asset: Asset, price_method: str = 'GDD',
     :param real_time: whether to retrieve intraday data instead of EOD: default value = False
     :return: Forward Price
     """
-    (start_contract_range, end_contract_range) = _get_start_and_end_dates(contract_range=contract_range)
-
-    dates_contract_range = get_contract_range(start_contract_range, end_contract_range, None)
-
-    weights = dates_contract_range.groupby('contract_month').size()
+    weights = get_weights_for_contracts(contract_range)
     weights = pd.DataFrame({'contract': weights.index, 'weight': weights.values})
+    contracts_to_query = weights['contract'].unique().tolist()
 
     start, end = DataContext.current.start_date, DataContext.current.end_date
-
-    contracts_to_query = weights['contract'].unique().tolist()
     where = dict(contract=contracts_to_query, priceMethod=price_method.upper())
-
     with DataContext(start, end):
         q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.FORWARD_PRICE,
                                               where=where,
@@ -2101,7 +2107,8 @@ def _forward_price_elec(asset: Asset, price_method: str = 'LMP', bucket: str = '
     return result
 
 
-@plot_measure((AssetClass.Commod,), None, [QueryType.FORWARD_PRICE])
+@plot_measure((AssetClass.Commod,), (AssetType.Index, AssetType.CommodityPowerAggregatedNodes,
+                                     AssetType.CommodityPowerNode,), [QueryType.FORWARD_PRICE])
 def forward_price(asset: Asset, price_method: str = 'LMP', bucket: str = 'PEAK',
                   contract_range: str = 'F20', *, source: str = None, real_time: bool = False) -> pd.Series:
     """
@@ -2122,7 +2129,24 @@ def forward_price(asset: Asset, price_method: str = 'LMP', bucket: str = 'PEAK',
     return _forward_price_elec(asset, price_method, bucket, contract_range)
 
 
-@plot_measure((AssetClass.Commod,), (AssetType.CommodityNaturalGasHub,), [QueryType.FORWARD_PRICE])
+def eu_ng_hub_to_swap(asset_spec: ASSET_SPEC) -> str:
+    asset = _asset_from_spec(asset_spec)
+    asset_ref_price = EUNatGasDataReference[asset.name + "_CommodityReferencePrice"].value
+    result_id = ''
+    try:
+        # Search for atleast one instrument for the given asset using asset parameter
+        if asset.asset_class is AssetClass.Commod and asset.get_type() == SecAssetType.COMMODITY_EU_NATURAL_GAS_HUB:
+            kwargs = dict(asset_parameters_commodity_reference_price=asset_ref_price)
+            instruments = GsAssetApi.get_many_assets(**kwargs)
+            result_id = instruments[0].id
+    except IndexError:
+        result_id = asset.get_marquee_id()
+
+    return result_id
+
+
+@plot_measure((AssetClass.Commod,), (AssetType.CommodityNaturalGasHub, AssetType.CommodityEUNaturalGasHub),
+              [MeasureDependency(id_provider=eu_ng_hub_to_swap, query_type=QueryType.FORWARD_PRICE)])
 def forward_price_ng(asset: Asset, contract_range: str = 'F20', price_method: str = 'GDD', *, source: str = None,
                      real_time: bool = False) -> pd.Series:
     """
@@ -2140,6 +2164,8 @@ def forward_price_ng(asset: Asset, contract_range: str = 'F20', price_method: st
 
     if (asset.get_type() == SecAssetType.COMMODITY_NATURAL_GAS_HUB):
         return _forward_price_natgas(asset, price_method, contract_range, source=source)
+    if (asset.get_type() == SecAssetType.COMMODITY_EU_NATURAL_GAS_HUB):
+        return _forward_price_eu_natgas(asset, contract_range)
     else:
         raise MqTypeError('The forward_price_ng is not supported for this asset')
 
@@ -3123,7 +3149,8 @@ def commodity_forecast(asset: Asset, forecastPeriod: str = "3m", forecastType: _
     return series
 
 
-@plot_measure((AssetClass.Commod,), None, [QueryType.FORWARD_PRICE])
+@plot_measure((AssetClass.Commod,), (AssetType.Index, AssetType.CommodityPowerAggregatedNodes,
+                                     AssetType.CommodityPowerNode,), [QueryType.FORWARD_PRICE])
 def forward_curve(asset: Asset, bucket: str = 'PEAK', market_date: str = "",
                   *, source: str = None, real_time: bool = False) -> pd.Series:
     """
@@ -3223,6 +3250,58 @@ def forward_curve(asset: Asset, bucket: str = 'PEAK', market_date: str = "",
     # Create Extended Series for return
     result = ExtendedSeries(df['forwardPrice'], index=df.index)
     result = result.rename_axis(None, axis='index')
+    result.dataset_ids = dataset_ids
+
+    return result
+
+
+def _forward_price_eu_natgas(asset: Asset, contract_range: str = None, *, source: str = None,
+                             real_time: bool = False) -> pd.Series:
+    """'
+    EU NG Forward Price - function to map the assets to right instruments and fetch the forward
+    prices for given hub for required contracts
+
+    :param asset: asset object loaded from security master
+    :param contract_range: e.g. inputs - Default Value = F20
+    :param source: name of function caller: default source = None
+    :param real_time: whether to retrieve intraday data instead of EOD: default value = False
+    :return: Forward Price
+    """
+    # Get weights for each contract month within range
+    weights = get_weights_for_contracts(contract_range)
+    weights = pd.DataFrame({'contract': weights.index, 'weight': weights.values})
+    contracts_to_query = weights['contract'].unique().tolist()
+    assets_to_query = []
+    asset_commod_ref_price = EUNatGasDataReference[asset.name + "_CommodityReferencePrice"].value
+
+    # Find all assets to query fo each of these contract months
+    for contract in contracts_to_query:
+        kwargs = dict(asset_parameters_commodity_reference_price=asset_commod_ref_price,
+                      asset_parameters_start=contract)
+        try:
+            instruments = GsAssetApi.get_many_assets(**kwargs)
+            if len(instruments) == 1:
+                assets_to_query.append(instruments[0].id)
+            else:
+                raise ValueError
+        except ValueError:
+            _logger.debug('Cannot find asset or found multiple assets for: %s', contract)
+
+    # Get data for each asset for the specified duration
+    q = GsDataApi.build_market_data_query(assets_to_query, QueryType.FORWARD_PRICE,
+                                          source=source,
+                                          real_time=False)
+    _logger.debug('q %s', q)
+    df = _market_data_timed(q)
+    dataset_ids = getattr(df, 'dataset_ids', ())
+
+    # Get weighted average of each contract month
+    if df.empty:
+        result = ExtendedSeries(dtype='float64')
+    else:
+        df['dates'] = df.index.date
+        result = _merge_curves_by_weighted_average(df, weights, ['contract', 'dates'], "forwardPrice")
+
     result.dataset_ids = dataset_ids
 
     return result

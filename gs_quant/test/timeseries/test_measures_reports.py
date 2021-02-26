@@ -81,7 +81,9 @@ aggregate_factor_data = [
         'factorCategory': 'CNT',
         'pnl': 11.23,
         'exposure': -11.23,
-        'proportionOfRisk': 1
+        'proportionOfRisk': 1,
+        'dailyRisk': 1,
+        'annualRisk': 1
     },
     {
         'date': '2020-11-24',
@@ -90,7 +92,9 @@ aggregate_factor_data = [
         'factorCategory': 'CNT',
         'pnl': 11.24,
         'exposure': -11.24,
-        'proportionOfRisk': 2
+        'proportionOfRisk': 2,
+        'dailyRisk': 2,
+        'annualRisk': 2
     },
     {
         'date': '2020-11-25',
@@ -99,7 +103,9 @@ aggregate_factor_data = [
         'factorCategory': 'CNT',
         'pnl': 11.25,
         'exposure': -11.25,
-        'proportionOfRisk': 3
+        'proportionOfRisk': 3,
+        'dailyRisk': 3,
+        'annualRisk': 3
     }
 ]
 
@@ -134,12 +140,27 @@ def test_factor_exposure():
     mock = replace('gs_quant.api.gs.reports.GsReportApi.get_risk_factor_data_results', Mock())
     mock.return_value = factor_data
 
+    # mock getting risk model dates
+    mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model_dates', Mock())
+    mock.return_value = ['2010-01-01']
+
+    # mock getting risk model factor category
+    mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model_data', Mock())
+    mock.return_value = {
+        'results': [{
+            'factorData': [{
+                'factorId': 'factor_id',
+                'factorCategory': 'Factor Name'
+            }]}
+        ]}
+
     # mock getting risk model factor entity
     mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model_factor_data', Mock())
     mock.return_value = [{
         'identifier': 'factor_id',
         'type': 'Factor',
-        'name': "Factor Name"
+        'name': 'Factor Name',
+        'factorCategory': 'Factor Name'
     }]
 
     with DataContext(datetime.date(2020, 11, 23), datetime.date(2020, 11, 25)):
@@ -165,12 +186,27 @@ def test_factor_pnl():
     mock = replace('gs_quant.api.gs.reports.GsReportApi.get_risk_factor_data_results', Mock())
     mock.return_value = factor_data
 
+    # mock getting risk model dates
+    mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model_dates', Mock())
+    mock.return_value = ['2010-01-01']
+
+    # mock getting risk model factor category
+    mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model_data', Mock())
+    mock.return_value = {
+        'results': [{
+            'factorData': [{
+                'factorId': 'factor_id',
+                'factorCategory': 'Factor Name'
+            }]}
+        ]}
+
     # mock getting risk model factor entity
     mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model_factor_data', Mock())
     mock.return_value = [{
         'identifier': 'factor_id',
         'type': 'Factor',
-        'name': "Factor Name"
+        'name': 'Factor Name',
+        'factorCategory': 'Factor Name'
     }]
 
     with DataContext(datetime.date(2020, 11, 23), datetime.date(2020, 11, 25)):
@@ -196,12 +232,27 @@ def test_factor_proportion_of_risk():
     mock = replace('gs_quant.api.gs.reports.GsReportApi.get_risk_factor_data_results', Mock())
     mock.return_value = factor_data
 
+    # mock getting risk model dates
+    mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model_dates', Mock())
+    mock.return_value = ['2010-01-01']
+
+    # mock getting risk model factor category
+    mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model_data', Mock())
+    mock.return_value = {
+        'results': [{
+            'factorData': [{
+                'factorId': 'factor_id',
+                'factorCategory': 'Factor Name'
+            }]}
+        ]}
+
     # mock getting risk model factor entity
     mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model_factor_data', Mock())
     mock.return_value = [{
         'identifier': 'factor_id',
         'type': 'Factor',
-        'name': "Factor Name"
+        'name': 'Factor Name',
+        'factorCategory': 'Factor Name'
     }]
 
     with DataContext(datetime.date(2020, 11, 23), datetime.date(2020, 11, 25)):
@@ -238,17 +289,46 @@ def test_aggregate_factor_support():
     mock = replace('gs_quant.api.gs.reports.GsReportApi.get_risk_factor_data_results', Mock())
     mock.return_value = aggregate_factor_data
 
+    # mock getting risk model dates
+    mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model_dates', Mock())
+    mock.return_value = ['2010-01-01']
+
+    # mock getting risk model factor category
+    mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model_data', Mock())
+    mock.return_value = {
+        'results': [{
+            'factorData': [{
+                'factorId': 'factor_id',
+                'factorCategory': 'Factor Name'
+            }]}
+        ]}
+
     # mock getting risk model factor entity
     mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model_factor_data', Mock())
     mock.return_value = [{
         'identifier': 'factor_id',
         'type': 'Factor',
-        'name': "Factor Name"
+        'name': 'Factor Name',
+        'factorCategory': 'Factor Name'
     }]
 
     with DataContext(datetime.date(2020, 11, 23), datetime.date(2020, 11, 25)):
         actual = mr.factor_proportion_of_risk('report_id', 'Factor')
         assert all(actual.values == [1, 2, 3])
+
+    with DataContext(datetime.date(2020, 11, 23), datetime.date(2020, 11, 25)):
+        actual = mr.daily_risk('report_id', 'Factor')
+        assert all(actual.values == [1, 2, 3])
+
+    with DataContext(datetime.date(2020, 11, 23), datetime.date(2020, 11, 25)):
+        actual = mr.annual_risk('report_id', 'Factor')
+        assert all(actual.values == [1, 2, 3])
+
+    with pytest.raises(MqValueError):
+        mr.daily_risk('report_id', 'Factor Name')
+
+    with pytest.raises(MqValueError):
+        mr.annual_risk('report_id', 'Factor Name')
 
 
 if __name__ == '__main__':

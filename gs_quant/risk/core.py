@@ -38,11 +38,13 @@ class ResultInfo(metaclass=ABCMeta):
             self,
             risk_key: RiskKey,
             unit: Optional[dict] = None,
-            error: Optional[Union[str, dict]] = None
+            error: Optional[Union[str, dict]] = None,
+            request_id: Optional[str] = None
     ):
         self.__risk_key = risk_key
         self.__unit = unit
         self.__error = error
+        self.__request_id = request_id
 
     @property
     @abstractmethod
@@ -62,6 +64,11 @@ class ResultInfo(metaclass=ABCMeta):
     def error(self) -> Union[str, dict]:
         """Any error associated with this result"""
         return self.__error
+
+    @property
+    def request_id(self) -> Optional[str]:
+        """The request Id associated with this result"""
+        return self.__request_id
 
     @staticmethod
     def composition_info(components: Iterable):
@@ -96,14 +103,14 @@ class ResultInfo(metaclass=ABCMeta):
 
 class ErrorValue(ResultInfo):
 
-    def _get_raw_df(self):
-        return pd.DataFrame(self, index=[0], columns=['value'])
-
-    def __init__(self, risk_key: RiskKey, error: Union[str, dict]):
-        super().__init__(risk_key, error=error)
+    def __init__(self, risk_key: RiskKey, error: Union[str, dict], request_id: Optional[str] = None):
+        super().__init__(risk_key, error=error, request_id=request_id)
 
     def __repr__(self):
         return self.error
+
+    def _get_raw_df(self):
+        return pd.DataFrame(self, index=[0], columns=['value'])
 
     @property
     def raw_value(self):
@@ -112,14 +119,14 @@ class ErrorValue(ResultInfo):
 
 class UnsupportedValue(ResultInfo):
 
-    def _get_raw_df(self):
-        pass
-
-    def __init__(self, risk_key: RiskKey):
-        super().__init__(risk_key)
+    def __init__(self, risk_key: RiskKey, request_id: Optional[str] = None):
+        super().__init__(risk_key, request_id=request_id)
 
     def __repr__(self):
         return 'Unsupported Value'
+
+    def _get_raw_df(self):
+        pass
 
     @property
     def raw_value(self):
@@ -128,14 +135,14 @@ class UnsupportedValue(ResultInfo):
 
 class ScalarWithInfo(ResultInfo, metaclass=ABCMeta):
 
-    def __init__(
-            self,
-            risk_key: RiskKey,
-            value: Union[float, str],
-            unit: Optional[dict] = None,
-            error: Optional[Union[str, dict]] = None):
+    def __init__(self,
+                 risk_key: RiskKey,
+                 value: Union[float, str],
+                 unit: Optional[dict] = None,
+                 error: Optional[Union[str, dict]] = None,
+                 request_id: Optional[str] = None):
         float.__init__(value)
-        ResultInfo.__init__(self, risk_key, unit=unit, error=error)
+        ResultInfo.__init__(self, risk_key, unit=unit, error=error, request_id=request_id)
 
     @property
     @abstractmethod
@@ -160,7 +167,8 @@ class FloatWithInfo(ScalarWithInfo, float):
                 risk_key: RiskKey,
                 value: Union[float, str],
                 unit: Optional[str] = None,
-                error: Optional[str] = None):
+                error: Optional[str] = None,
+                request_id: Optional[str] = None):
         return float.__new__(cls, value)
 
     @property
@@ -180,6 +188,13 @@ class FloatWithInfo(ScalarWithInfo, float):
                 raise ValueError('FloatWithInfo unit mismatch')
         return super(FloatWithInfo, self).__add__(other)
 
+    def __mul__(self, other):
+        if isinstance(other, FloatWithInfo):
+            return FloatWithInfo(combine_risk_key(self.risk_key, other.risk_key), self.raw_value * other.raw_value,
+                                 self.unit)
+        else:
+            return FloatWithInfo(self.risk_key, self.raw_value * other, self.unit)
+
     def to_frame(self):
         return self
 
@@ -190,7 +205,8 @@ class StringWithInfo(ScalarWithInfo, str):
                 risk_key: RiskKey,
                 value: Union[float, str],
                 unit: Optional[dict] = None,
-                error: Optional[str] = None):
+                error: Optional[str] = None,
+                request_id: Optional[str] = None):
         return str.__new__(cls, value)
 
     @property
@@ -212,10 +228,11 @@ class SeriesWithInfo(pd.Series, ResultInfo):
             risk_key: Optional[RiskKey] = None,
             unit: Optional[dict] = None,
             error: Optional[Union[str, dict]] = None,
+            request_id: Optional[str] = None,
             **kwargs
     ):
         pd.Series.__init__(self, *args, **kwargs)
-        ResultInfo.__init__(self, risk_key, unit=unit, error=error)
+        ResultInfo.__init__(self, risk_key, unit=unit, error=error, request_id=request_id)
 
     def __repr__(self):
         if self.error:
@@ -251,10 +268,11 @@ class DataFrameWithInfo(pd.DataFrame, ResultInfo):
             risk_key: Optional[RiskKey] = None,
             unit: Optional[dict] = None,
             error: Optional[Union[str, dict]] = None,
+            request_id: Optional[str] = None,
             **kwargs
     ):
         pd.DataFrame.__init__(self, *args, **kwargs)
-        ResultInfo.__init__(self, risk_key, unit=unit, error=error)
+        ResultInfo.__init__(self, risk_key, unit=unit, error=error, request_id=request_id)
 
     def __repr__(self):
         if self.error:

@@ -153,9 +153,10 @@ class GsSession(ContextBase):
             payload: Optional[Union[dict, str, Base, pd.DataFrame]] = None,
             request_headers: Optional[dict] = None,
             cls: Optional[type] = None,
-            try_auth=True,
-            include_version: bool = True,
-            timeout: int = DEFAULT_TIMEOUT
+            try_auth: Optional[bool] = True,
+            include_version: Optional[bool] = True,
+            timeout: Optional[int] = DEFAULT_TIMEOUT,
+            return_request_id: Optional[bool] = False
     ) -> Union[Base, tuple, dict]:
         is_dataframe = isinstance(payload, pd.DataFrame)
         if not is_dataframe:
@@ -187,6 +188,8 @@ class GsSession(ContextBase):
             raise MqError('not implemented')
 
         response = self._session.request(method, url, **kwargs)
+        request_id = response.headers.get('x-dash-requestid')
+
         if response.status_code == 401:
             # Expired token or other authorization issue
             if not try_auth:
@@ -194,7 +197,8 @@ class GsSession(ContextBase):
             self._authenticate()
             return self.__request(method, path, payload=payload, cls=cls, try_auth=False)
         elif not 199 < response.status_code < 300:
-            raise MqRequestError(response.status_code, response.text, context='{} {}'.format(method, url))
+            raise MqRequestError(response.status_code, response.text,
+                                 context=f'{response.headers.get("")}: {method} {url}')
         elif 'Content-Type' in response.headers:
             if 'application/x-msgpack' in response.headers['Content-Type']:
                 res = msgpack.unpackb(response.content, raw=False)
@@ -205,7 +209,7 @@ class GsSession(ContextBase):
                     else:
                         res = self.__unpack(res, cls)
 
-                return res
+                return (res, request_id) if return_request_id else res
             elif 'application/json' in response.headers['Content-Type']:
                 res = json.loads(response.text)
 
@@ -215,33 +219,45 @@ class GsSession(ContextBase):
                     else:
                         res = self.__unpack(res, cls)
 
-                return res
+                return (res, request_id) if return_request_id else res
         else:
-            return {'raw': response}
+            ret = {'raw': response}
+            if return_request_id:
+                ret['request_id'] = request_id
+
+            return ret
 
     def _get(self, path: str, payload: Optional[Union[dict, Base]] = None, request_headers: Optional[dict] = None,
-             cls: Optional[type] = None, include_version: bool = True,
-             timeout: int = DEFAULT_TIMEOUT) -> Union[Base, tuple, dict]:
+             cls: Optional[type] = None, include_version: Optional[bool] = True,
+             timeout: Optional[int] = DEFAULT_TIMEOUT, return_request_id: Optional[bool] = False)\
+            -> Union[Base, tuple, dict]:
         return self.__request('GET', path, payload=payload, request_headers=request_headers,
-                              cls=cls, include_version=include_version, timeout=timeout)
+                              cls=cls, include_version=include_version, timeout=timeout,
+                              return_request_id=return_request_id)
 
     def _post(self, path: str, payload: Optional[Union[dict, Base, pd.DataFrame]] = None,
               request_headers: Optional[dict] = None, cls: Optional[type] = None,
-              include_version: bool = True, timeout: int = DEFAULT_TIMEOUT) -> Union[Base, tuple, dict]:
+              include_version: Optional[bool] = True, timeout: Optional[int] = DEFAULT_TIMEOUT,
+              return_request_id: Optional[bool] = False) -> Union[Base, tuple, dict]:
         return self.__request('POST', path, payload=payload, request_headers=request_headers,
-                              cls=cls, include_version=include_version, timeout=timeout)
+                              cls=cls, include_version=include_version, timeout=timeout,
+                              return_request_id=return_request_id)
 
-    def _delete(self, path: str, payload: Optional[Union[dict, Base]] = None, request_headers: Optional[dict]
-                = None, cls: Optional[type] = None, include_version: bool = True,
-                timeout: int = DEFAULT_TIMEOUT) -> Union[Base, tuple, dict]:
+    def _delete(self, path: str, payload: Optional[Union[dict, Base]] = None,
+                request_headers: Optional[dict] = None, cls: Optional[type] = None,
+                include_version: Optional[bool] = True, timeout: Optional[int] = DEFAULT_TIMEOUT,
+                return_request_id: Optional[bool] = False) -> Union[Base, tuple, dict]:
         return self.__request('DELETE', path, payload=payload, request_headers=request_headers,
-                              cls=cls, include_version=include_version, timeout=timeout)
+                              cls=cls, include_version=include_version, timeout=timeout,
+                              return_request_id=return_request_id)
 
-    def _put(self, path: str, payload: Optional[Union[dict, Base]] = None, request_headers: Optional[dict]
-             = None, cls: Optional[type] = None, include_version: bool = True,
-             timeout: int = DEFAULT_TIMEOUT) -> Union[Base, tuple, dict]:
+    def _put(self, path: str, payload: Optional[Union[dict, Base]] = None,
+             request_headers: Optional[dict] = None, cls: Optional[type] = None, include_version: Optional[bool] = True,
+             timeout: Optional[int] = DEFAULT_TIMEOUT, return_request_id: Optional[bool] = False)\
+            -> Union[Base, tuple, dict]:
         return self.__request('PUT', path, payload=payload, request_headers=request_headers,
-                              cls=cls, include_version=include_version, timeout=timeout)
+                              cls=cls, include_version=include_version, timeout=timeout,
+                              return_request_id=return_request_id)
 
     def _connect_websocket(self, path: str, headers: Optional[dict] = None):
         import websockets

@@ -3970,6 +3970,8 @@ class FieldFilterMap(Base):
         self.strategy = kwargs.get('strategy')
         self.methodology = kwargs.get('methodology')
         self.isin = kwargs.get('isin')
+        self.asset_parameters_commodity_reference_price = kwargs.get('asset_parameters_commodity_reference_price')
+        self.asset_parameters_start = kwargs.get('asset_parameters_start')
 
     @property
     def internal_index_calc_region(self) -> dict:
@@ -6336,7 +6338,25 @@ class FieldFilterMap(Base):
     @isin.setter
     def isin(self, value: dict):
         self._property_changed('isin')
-        self.__isin = value        
+        self.__isin = value
+
+    @property
+    def asset_parameters_commodity_reference_price(self) -> dict:
+        return self.__asset_parameters_commodity_reference_price
+
+    @asset_parameters_commodity_reference_price.setter
+    def asset_parameters_commodity_reference_price(self, value: dict):
+        self._property_changed('asset_parameters_commodity_reference_price')
+        self.__asset_parameters_commodity_reference_price = value
+
+    @property
+    def asset_parameters_start(self) -> dict:
+        return self.__asset_parameters_start
+
+    @asset_parameters_start.setter
+    def asset_parameters_start(self, value: dict):
+        self._property_changed('asset_parameters_start')
+        self.__asset_parameters_start = value
 
 
 class EntityQuery(Base):

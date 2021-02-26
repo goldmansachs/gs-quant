@@ -16,6 +16,7 @@ under the License.
 from typing import Optional
 
 import pandas as pd
+from pydash import decapitalize
 
 from gs_quant.api.gs.data import QueryType
 from gs_quant.data.core import DataContext
@@ -24,15 +25,8 @@ from gs_quant.errors import MqValueError
 from gs_quant.markets.factor import Factor
 from gs_quant.markets.report import RiskReport
 from gs_quant.target.reports import ReportType
-from gs_quant.target.risk_models import FactorType, RiskModelFactor
 from gs_quant.timeseries import plot_measure_entity
 from gs_quant.timeseries.measures import _extract_series_from_df
-
-QUERY_TO_FIELD_MAP = {
-    QueryType.FACTOR_EXPOSURE: 'exposure',
-    QueryType.FACTOR_PNL: 'pnl',
-    QueryType.FACTOR_PROPORTION_OF_RISK: 'proportionOfRisk'
-}
 
 
 @plot_measure_entity(EntityType.REPORT, [QueryType.FACTOR_EXPOSURE])
@@ -83,27 +77,59 @@ def factor_proportion_of_risk(report_id: str, factor_name: str, *, source: str =
     return _get_factor_data(report_id, factor_name, QueryType.FACTOR_PROPORTION_OF_RISK)
 
 
+@plot_measure_entity(EntityType.REPORT, [QueryType.DAILY_RISK])
+def daily_risk(report_id: str, factor_name: str = 'Total', *, source: str = None,
+               real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+    """
+    Daily risk data associated with a factor in a factor risk report
+
+    :param report_id: factor risk report id
+    :param factor_name: factor name (must be "Factor", "Specific", or "Total")
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: Timeseries of daily risk for requested factor
+    """
+    return _get_factor_data(report_id, factor_name, QueryType.DAILY_RISK)
+
+
+@plot_measure_entity(EntityType.REPORT, [QueryType.ANNUAL_RISK])
+def annual_risk(report_id: str, factor_name: str = 'Total', *, source: str = None,
+                real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+    """
+    Annual risk data associated with a factor in a factor risk report
+
+    :param report_id: factor risk report id
+    :param factor_name: factor name (must be "Factor", "Specific", or "Total")
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: Timeseries of daily risk for requested factor
+    """
+    return _get_factor_data(report_id, factor_name, QueryType.ANNUAL_RISK)
+
+
 def _get_factor_data(report_id: str, factor_name: str, query_type: QueryType) -> pd.Series:
     # Check params
     report = RiskReport(report_id)
     if report.get_type() not in [ReportType.Portfolio_Factor_Risk, ReportType.Asset_Factor_Risk]:
         raise MqValueError('This report is not a factor risk report')
     risk_model_id = report.get_risk_model_id()
-    factor = Factor(risk_model_id, factor_name)
-    if factor.factor is None:
-        if factor_name not in ['Factor', 'Specific', 'Total']:
+    if factor_name not in ['Factor', 'Specific', 'Total']:
+        if query_type in [QueryType.DAILY_RISK, QueryType.ANNUAL_RISK]:
+            raise MqValueError('Please pick a factor name from the following: ["Total", "Factor", "Specific"]')
+        factor = Factor(risk_model_id, factor_name)
+        if factor.factor is None:
             raise MqValueError('Factor name requested is not available in the risk model associated with this report')
-        factor.factor = RiskModelFactor(identifier=factor_name,
-                                        type=FactorType.Factor,
-                                        name=factor_name)
+        factor_name = factor.get_name()
 
     # Extract relevant data for each date
     col_name = query_type.value.replace(' ', '')
-    col_name = col_name[0].lower() + col_name[1:]
-    data_type = QUERY_TO_FIELD_MAP[query_type]
+    col_name = decapitalize(col_name)
+    data_type = decapitalize(col_name[6:]) if col_name.startswith('factor') else col_name
 
     factor_data = report.get_factor_data(
-        factor=factor.get_name(),
+        factor=factor_name,
         start_date=DataContext.current.start_time,
         end_date=DataContext.current.end_time
     )

@@ -269,6 +269,47 @@ def test_results_with_resolution(mocker):
         assert round(swap3.fixed_rate, 4) == -0.0027
 
 
+def test_portfolio_overrides(mocker):
+    swap_1 = IRSwap("Pay", "5y", "EUR", fixed_rate=-0.005, name="5y")
+    swap_2 = IRSwap("Pay", "10y", "EUR", fixed_rate=-0.005, name="10y")
+    swap_3 = IRSwap("Pay", "5y", "GBP", fixed_rate=-0.005, name="5y")
+    swap_4 = IRSwap("Pay", "10y", "GBP", fixed_rate=-0.005, name="10y")
+    eur_port = Portfolio([swap_1, swap_2], name="EUR")
+    gbp_port = Portfolio([swap_3, swap_4], name="GBP")
+
+    # override instruments after portfolio construction
+    for idx in range(len(eur_port)):
+        eur_port[idx].fixed_rate = eur_port[idx].fixed_rate - 0.0005
+
+    assert eur_port[swap_1] is not None
+
+    with MockCalc(mocker):
+        # override instruments after portfolio construction and resolution
+        gbp_port.resolve()
+        for idx in range(len(gbp_port)):
+            gbp_port[idx].notional_amount = gbp_port[idx].notional_amount - 1
+
+        with PricingContext(dt.date(2020, 1, 14)):
+            r1 = eur_port.calc(risk.Price)
+            r2 = eur_port.calc((risk.Price, risk.DollarPrice))
+            r3 = gbp_port.calc(risk.Price)
+            r4 = gbp_port.calc((risk.DollarPrice, risk.Price))
+
+    assert gbp_port[swap_3] is not None
+
+    assert r1[eur_port[0]] is not None
+    assert r1['5y'] is not None
+    assert r1.to_frame() is not None
+    assert r2[eur_port[0]] is not None
+    assert r2[risk.Price][0] is not None
+    assert r2[0][risk.Price] is not None
+    assert r3[gbp_port[0]] is not None
+    assert r3.to_frame() is not None
+    assert r4[gbp_port[0]] is not None
+    assert r4[risk.DollarPrice][0] is not None
+    assert r4[0][risk.DollarPrice] is not None
+
+
 def test_from_frame():
     swap = IRSwap('Receive', '3m', 'USD', fixed_rate=0, notional_amount=1)
     swaption = IRSwaption(notional_currency='GBP', expiration_date='10y', effective_date='0b')

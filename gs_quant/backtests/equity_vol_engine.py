@@ -19,7 +19,7 @@ from gs_quant.backtests import triggers as t
 from gs_quant.backtests import actions as a
 from gs_quant.instrument import EqOption, EqVarianceSwap
 from gs_quant.risk import EqDelta
-from gs_quant.target.backtests import FlowVolBacktestMeasure, BacktestSignalSeriesItem
+from gs_quant.target.backtests import FlowVolBacktestMeasure, BacktestSignalSeriesItem, BacktestTradingQuantityType
 import pandas as pd
 from functools import reduce
 
@@ -29,9 +29,29 @@ class BacktestResult(object):
         self._results = results
 
     def get_measure_series(self, measure: FlowVolBacktestMeasure):
-        df = pd.DataFrame(self._results[measure.value])
+        df = pd.DataFrame(self._results.risks[measure.value])
         df['date'] = pd.to_datetime(df['date'])
         return df.set_index('date').value
+
+    def get_portfolio_history(self):
+        data = []
+        for item in self._results.portfolio:
+            positions = list(map(lambda x: dict({'date': item['date'], 'quantity': x['quantity']}, **x['instrument']),
+                                 item['positions']))
+            data = data + positions
+
+        return pd.DataFrame(data)
+
+    def get_trade_history(self):
+        data = []
+        for item in self._results.portfolio:
+            for transaction in item['transactions']:
+                trades = list(map(lambda x: dict(
+                    {'date': item['date'], 'quantity': x['quantity'], 'transactionType': transaction['type']},
+                    **x['instrument']), transaction['trades']))
+                data = data + trades
+
+        return pd.DataFrame(data)
 
 
 class EquityVolEngine(object):
@@ -121,12 +141,13 @@ class EquityVolEngine(object):
         trade_in_signals = None
         trade_out_signals = None
         hedge = None
+        index_initial_value = 0
         for trigger in strategy.triggers:
             if isinstance(trigger, t.AggregateTrigger):
                 child_triggers = trigger.triggers
 
                 date_trigger = [x for x in child_triggers if isinstance(x, t.DateTrigger)][0]
-                date_signal = list(map(lambda x: BacktestSignalSeriesItem(x, 1),
+                date_signal = list(map(lambda x: BacktestSignalSeriesItem(x, True),
                                        date_trigger.trigger_requirements.dates))
 
                 portfolio_trigger = [x for x in child_triggers if isinstance(x, t.PortfolioTrigger)][0]
@@ -148,6 +169,8 @@ class EquityVolEngine(object):
                 roll_frequency = action.trade_duration
                 trade_quantity = action.trade_quantity
                 trade_quantity_type = action.trade_quantity_type
+                if trade_quantity_type is BacktestTradingQuantityType.NAV:
+                    index_initial_value = trade_quantity
             elif isinstance(action, a.HedgeAction):
                 if trigger.trigger_requirements.frequency == 'B':
                     frequency = 'Daily'
@@ -157,6 +180,7 @@ class EquityVolEngine(object):
 
         strategy = StrategySystematic(name="Flow Vol Backtest",
                                       underliers=underlier_list,
+                                      index_initial_value=index_initial_value,
                                       delta_hedge=hedge,
                                       quantity=trade_quantity,
                                       quantity_type=trade_quantity_type,
@@ -167,4 +191,4 @@ class EquityVolEngine(object):
                                       )
 
         result = strategy.backtest(start, end)
-        return BacktestResult(result.risks)
+        return BacktestResult(result)

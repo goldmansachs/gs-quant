@@ -74,6 +74,8 @@ class HedgeActionImpl(ActionHandler):
                             if get_final_date(portfolio.instruments[0], create_date,
                                               self.action.trade_duration) >= s >= create_date]
             if len(active_dates):
+                for t in portfolio:
+                    t.name = f'{t.name}_{create_date.strftime("%Y-%m-%d")}'
                 backtest.scaling_portfolios[create_date].append(
                     ScalingPortfolio(trade=portfolio.instruments[0], dates=active_dates, risk=self.action.risk))
 
@@ -115,9 +117,12 @@ class GenericEngine(BacktestBaseEngine):
 
         backtest = BackTest(strategy, dates, risks)
 
-        if strategy.initial_portfolio is not None:
+        if len(strategy.initial_portfolio) > 0:
+            with PricingContext(pricing_date=dates[0]):
+                init_port = Portfolio(strategy.initial_portfolio)
+                init_port.resolve()
             for d in dates:
-                backtest.portfolio_dict[d].append(strategy.initial_portfolio)
+                backtest.portfolio_dict[d].append(init_port.instruments)
 
         for trigger in strategy.triggers:
             if trigger.calc_type != CalcType.path_dependent:
@@ -144,11 +149,15 @@ class GenericEngine(BacktestBaseEngine):
         for d in dates:
             # semi path dependent scaling
             if d in backtest.scaling_portfolios:
+                initial_portfolio = backtest.scaling_portfolios[d][0]
+                scale_date = initial_portfolio.dates[0]
+                current_risk = backtest.results[scale_date][initial_portfolio.risk].aggregate()
+                hedge_risk = initial_portfolio.results[scale_date][initial_portfolio.risk][0]
+                scaling_factor = current_risk / hedge_risk
                 for p in backtest.scaling_portfolios[d]:
-                    scale_date = p.dates[0]
-                    scaling_factor = backtest.results[scale_date][p.risk][0] / p.results[scale_date][p.risk][0]
+                    new_notional = p.trade.notional_amount * -scaling_factor
                     scaled_trade = p.trade.as_dict()
-                    scaled_trade['notional_amount'] *= -scaling_factor
+                    scaled_trade['notional_amount'] = new_notional
                     scaled_trade = Instrument.from_dict(scaled_trade)
                     for day in p.dates:
                         backtest.add_results(day, p.results[day] * -scaling_factor)

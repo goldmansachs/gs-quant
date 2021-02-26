@@ -59,10 +59,17 @@ class GsRiskApi(RiskApi):
     @classmethod
     def _exec(cls, request: Union[RiskRequest, Iterable[RiskRequest]]) -> Union[Iterable, dict]:
         use_msgpack = cls.USE_MSGPACK and not isinstance(request, RiskRequest)
-        return GsSession.current._post(cls.__url(request),
-                                       request,
-                                       timeout=181,
-                                       request_headers={'Content-Type': 'application/x-msgpack'} if use_msgpack else {})
+        headers = {'Content-Type': 'application/x-msgpack'} if use_msgpack else {}
+        result, request_id = GsSession.current._post(cls.__url(request),
+                                                     request,
+                                                     request_headers=headers,
+                                                     timeout=181,
+                                                     return_request_id=True)
+
+        for sub_request in request:
+            sub_request._id = request_id
+
+        return result
 
     @classmethod
     def __url(cls, request: Union[RiskRequest, Iterable[RiskRequest]]):
