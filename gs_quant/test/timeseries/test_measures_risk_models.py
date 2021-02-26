@@ -14,6 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime
+from math import sqrt
 
 import pytest
 from testfixtures import Replacer
@@ -167,6 +168,103 @@ def test_covariance():
 
     with pytest.raises(MqValueError):
         mrm.covariance(mock_risk_model(), 'Wrong Factor Name', 'Factor Name')
+    replace.restore()
+
+
+def test_factor_volatility():
+    risk_model = RiskModel(coverage=CoverageType.Country, id_='model_id', name='Fake Risk Model',
+                           term=Term.Long, universe_identifier=UniverseIdentifier.gsid, vendor='GS',
+                           version=1.0)
+
+    covariances = [
+        {
+            'date': '2020-01-01',
+            'covariance': 1.01
+        },
+        {
+            'date': '2020-01-02',
+            'covariance': 1.02
+        },
+        {
+            'date': '2020-01-03',
+            'covariance': 1.03
+        },
+    ]
+    replace = Replacer()
+
+    # mock getting risk model factor entity
+    mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model_factor_data', Mock())
+    mock.return_value = [{
+        'identifier': 'factor_id',
+        'type': 'Factor',
+        'name': "Factor Name"
+    }]
+
+    # mock getting risk model entity()
+    mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model', Mock())
+    mock.return_value = risk_model
+
+    # mock getting risk model dates
+    mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model_dates', Mock())
+    mock.return_value = ['2020-01-01', '2020-01-02', '2020-01-03']
+
+    # mock getting covariances
+    mock = replace('gs_quant.markets.factor.Factor.get_covariance', Mock())
+    mock.return_value = covariances
+
+    with DataContext(datetime.date(2020, 1, 1), datetime.date(2020, 1, 3)):
+        actual = mrm.factor_volatility(mock_risk_model(), 'Factor Name')
+        assert all(actual.values == [sqrt(1.01), sqrt(1.02), sqrt(1.03)])
+
+    with pytest.raises(MqValueError):
+        mrm.covariance(mock_risk_model(), 'Wrong Factor Name', 'Factor Name')
+    replace.restore()
+
+
+def test_factor_correlation():
+    risk_model = RiskModel(coverage=CoverageType.Country, id_='model_id', name='Fake Risk Model',
+                           term=Term.Long, universe_identifier=UniverseIdentifier.gsid, vendor='GS',
+                           version=1.0)
+
+    covariances = [
+        {
+            'date': '2020-01-01',
+            'covariance': 1.01
+        },
+        {
+            'date': '2020-01-02',
+            'covariance': 1.02
+        },
+        {
+            'date': '2020-01-03',
+            'covariance': 1.03
+        },
+    ]
+    replace = Replacer()
+
+    # mock getting risk model factor entity
+    mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model_factor_data', Mock())
+    mock.return_value = [{
+        'identifier': 'factor_id',
+        'type': 'Factor',
+        'name': "Factor Name"
+    }]
+
+    # mock getting risk model entity()
+    mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model', Mock())
+    mock.return_value = risk_model
+
+    # mock getting risk model dates
+    mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model_dates', Mock())
+    mock.return_value = ['2020-01-01', '2020-01-02', '2020-01-03']
+
+    # mock getting covariances
+    mock = replace('gs_quant.markets.factor.Factor.get_covariance', Mock())
+    mock.return_value = covariances
+
+    with DataContext(datetime.date(2020, 1, 1), datetime.date(2020, 1, 3)):
+        actual = mrm.factor_correlation(mock_risk_model(), 'Factor Name', 'Factor Name')
+        assert all(actual.values == [1.0000000000000002, 1, 1])
     replace.restore()
 
 

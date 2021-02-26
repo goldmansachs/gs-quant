@@ -95,18 +95,6 @@ class Format(EnumBase, Enum):
         return self.value
 
 
-class AssetUniverseIdentifier(EnumBase, Enum):
-    """Identifier by which risk model is queried"""
-
-    gsid = 'gsid'
-    sedol = 'sedol'
-    bcid = 'bcid'
-    cusip = 'cusip'
-
-    def __repr__(self):
-        return self.value
-
-
 class AssetData(Base):
 
     @camel_case_translate
@@ -361,22 +349,22 @@ class DataAssetsRequest(Base):
     @camel_case_translate
     def __init__(
             self,
-            identifier: Union[AssetUniverseIdentifier, str],
+            identifier: Union[UniverseIdentifier, str],
             universe: List[str]
     ):
         super().__init__()
-        self.identifier = get_enum_value(AssetUniverseIdentifier, identifier)
+        self.identifier = get_enum_value(UniverseIdentifier, identifier)
         self.universe = universe
 
     @property
-    def identifier(self) -> Union[AssetUniverseIdentifier, str]:
+    def identifier(self) -> Union[UniverseIdentifier, str]:
         """The identifier by which the risk model is queried"""
         return self.__identifier
 
     @identifier.setter
-    def identifier(self, value: Union[AssetUniverseIdentifier, str]):
+    def identifier(self, value: Union[UniverseIdentifier, str]):
         self._property_changed('identifier')
-        self.__identifier = get_enum_value(AssetUniverseIdentifier, value)
+        self.__identifier = get_enum_value(UniverseIdentifier, value)
 
     @property
     def universe(self) -> List[str]:

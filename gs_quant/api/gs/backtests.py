@@ -95,10 +95,10 @@ class GsBacktestApi:
         response = GsSession.current._post('/backtests/calculate', backtest, request_headers=request_headers)
 
         # map the response to backtest result
-        if "Data" not in response:
+        if "Data" not in response and "RiskData" not in response:
             raise MqValueError('No Data in Response Message.')
 
-        data = response['Data']
+        data = response['Data'] if 'Data' in response else None
         risks = response['RiskData'] if 'RiskData' in response else None
         portfolio = response['Portfolio'] if 'Portfolio' in response else None
 

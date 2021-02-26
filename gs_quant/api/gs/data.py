@@ -123,6 +123,8 @@ class QueryType(Enum):
     FACTOR_RETURN = "Factor Return"
     FACTOR_PNL = "Factor Pnl"
     FACTOR_PROPORTION_OF_RISK = "Factor Proportion Of Risk"
+    DAILY_RISK = "Daily Risk"
+    ANNUAL_RISK = "Annual Risk"
 
 
 class GsDataApi(DataApi):

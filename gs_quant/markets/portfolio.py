@@ -77,7 +77,7 @@ class Portfolio(PriceableImpl):
 
     def __contains__(self, item):
         if isinstance(item, PriceableImpl):
-            return any(item in p.__priceables_lookup for p in self.all_portfolios + (self,))
+            return any(item in p.__priceables for p in self.all_portfolios + (self,))
         elif isinstance(item, str):
             return any(item in p.__priceables_by_name for p in self.all_portfolios + (self,))
         else:
@@ -104,7 +104,9 @@ class Portfolio(PriceableImpl):
             try:
                 if path(self) != path(other):
                     return False
-            except IndexError:
+            except (IndexError, TypeError):
+                # indexerror occurs when two portfolios are of different lengths
+                # typeerror: instrument is not subscriptable occurs when two portfolios are of different depths
                 return False
 
         return True
@@ -138,18 +140,15 @@ class Portfolio(PriceableImpl):
     @priceables.setter
     def priceables(self, priceables: Union[PriceableImpl, Iterable[PriceableImpl]]):
         self.__priceables = (priceables,) if isinstance(priceables, PriceableImpl) else tuple(priceables)
-        self.__priceables_lookup = {}
         self.__priceables_by_name = {}
 
         for idx, i in enumerate(self.__priceables):
-            self.__priceables_lookup.setdefault(copy.copy(i), []).append(idx)
             if i and i.name:
                 self.__priceables_by_name.setdefault(i.name, []).append(idx)
 
     @priceables.deleter
     def priceables(self):
         self.__priceables = None
-        self.__priceables_lookup = None
         self.__priceables_by_name = None
 
     @property
@@ -394,7 +393,14 @@ class Portfolio(PriceableImpl):
         if not isinstance(key, (str, Instrument, Portfolio)):
             raise ValueError('key must be a name or Instrument or Portfolio')
 
-        idx = self.__priceables_by_name.get(key) if isinstance(key, str) else self.__priceables_lookup.get(key)
+        if isinstance(key, str):
+            idx = self.__priceables_by_name.get(key)
+        else:
+            idx = []
+            for p_idx, p in enumerate(self.__priceables):
+                if p == key or getattr(p, "unresolved", None) == key:
+                    idx.append(p_idx)
+
         paths = tuple(PortfolioPath(i) for i in idx) if idx else ()
 
         for path, porfolio in ((PortfolioPath(i), p)

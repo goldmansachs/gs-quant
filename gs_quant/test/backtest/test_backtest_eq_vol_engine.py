@@ -290,6 +290,67 @@ def test_engine_mapping_with_signals(mocker):
     mocker.assert_called_with(backtest, None)
 
 
+@mock.patch.object(GsBacktestApi, 'run_backtest')
+def test_engine_mapping_trade_quantity_nav(mocker):
+    # 1. setup strategy
+
+    start_date = dt.date(2019, 2, 18)
+    end_date = dt.date(2019, 2, 20)
+
+    option = EqOption('.STOXX50E', expirationDate='3m', strikePrice='ATM', optionType=OptionType.Call,
+                      optionStyle=OptionStyle.European)
+
+    action = EnterPositionQuantityScaledAction(priceables=option, trade_duration='1m', trade_quantity=12345,
+                                               trade_quantity_type=BacktestTradingQuantityType.NAV)
+    trigger = PeriodicTrigger(
+        trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1m'),
+        actions=action)
+    hedgetrigger = PeriodicTrigger(
+        trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='B'),
+        actions=HedgeAction(EqDelta, priceables=option, trade_duration='B'))
+    strategy = Strategy(initial_portfolio=None, triggers=[trigger, hedgetrigger])
+
+    # 2. setup mock api response
+
+    mock_api_response(mocker, api_mock_data())
+
+    # 3. when run backtest
+
+    set_session()
+    EquityVolEngine.run_backtest(strategy, start_date, end_date)
+
+    # 4. assert API call
+
+    backtest_parameter_args = {
+        'trading_parameters': BacktestTradingParameters(
+            quantity=12345,
+            quantity_type=BacktestTradingQuantityType.NAV.value,
+            trade_in_method=TradeInMethod.FixedRoll.value,
+            roll_frequency='1m'),
+        'underliers': [BacktestStrategyUnderlier(
+            instrument=option,
+            notional_percentage=100,
+            hedge=BacktestStrategyUnderlierHedge(risk_details=DeltaHedgeParameters(frequency='Daily')),
+            market_model='SFK')
+        ],
+        'index_initial_value': 12345,
+        "measures": [FlowVolBacktestMeasure.ALL_MEASURES]
+    }
+    backtest_parameters = VolatilityFlowBacktestParameters.from_dict(backtest_parameter_args)
+
+    backtest = Backtest(name="Flow Vol Backtest",
+                        mq_symbol="Flow Vol Backtest",
+                        parameters=backtest_parameters,
+                        start_date=start_date,
+                        end_date=end_date,
+                        type='Volatility Flow',
+                        asset_class=AssetClass.Equity,
+                        currency=Currency.USD,
+                        cost_netting=False)
+
+    mocker.assert_called_with(backtest, None)
+
+
 def test_supports_strategy():
     # 1. Valid strategy
 

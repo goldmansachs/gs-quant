@@ -284,7 +284,7 @@ class DataGrid:
                     local_rule_cache[cache_key] = query.start
 
             if isinstance(query_end, RelativeDate):
-                cache_key = get_rdate_cache_key(query_start.rule, currencies, exchanges)
+                cache_key = get_rdate_cache_key(query_end.rule, currencies, exchanges)
                 if cache_key in local_rule_cache:
                     query.end = local_rule_cache[cache_key]
                 else:

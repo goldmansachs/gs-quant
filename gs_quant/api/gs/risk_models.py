@@ -183,12 +183,13 @@ class GsRiskModelApi:
         return GsSession.current._post(url, model_data)
 
     @classmethod
-    def get_risk_model_data(cls, model_id: str, start_date: dt.date, end_date: dt.date,
+    def get_risk_model_data(cls, model_id: str, start_date: dt.date, end_date: dt.date = None,
                             assets: DataAssetsRequest = None, measures: List[Measure] = None,
                             limit_factors: bool = None, data_format: Format = None) -> Dict:
+        end_date = cls.get_risk_model_dates(model_id)[-1] if not end_date else end_date.strftime('%Y-%m-%d')
         query = {
             'startDate': start_date.strftime('%Y-%m-%d'),
-            'endDate': end_date.strftime('%Y-%m-%d')
+            'endDate': end_date
         }
         if assets is not None:
             query['assets'] = assets

@@ -24,7 +24,7 @@ import pandas as pd
 import pytest
 import pytz
 from gs_quant.target.common import XRef, PricingLocation, Currency as CurrEnum
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_equal
 from pandas.testing import assert_series_equal
 from pandas.tseries.offsets import CustomBusinessDay
 from pytz import timezone
@@ -41,7 +41,7 @@ from gs_quant.data.dataset import Dataset
 from gs_quant.data.fields import Fields
 from gs_quant.errors import MqError, MqValueError, MqTypeError
 from gs_quant.markets.securities import AssetClass, Cross, Index, Currency, SecurityMaster, Stock, \
-    Swap, CommodityNaturalGasHub
+    Swap, CommodityNaturalGasHub, CommodityEUNaturalGasHub
 from gs_quant.session import GsSession, Environment
 from gs_quant.test.timeseries.utils import mock_request
 from gs_quant.timeseries import Returns
@@ -599,6 +599,13 @@ def mock_fair_price(_cls, _q):
         ]
     }
     df = MarketDataResponseFrame(data=d, index=pd.to_datetime([datetime.date(2019, 1, 2)] * 3))
+    df.dataset_ids = _test_datasets
+    return df
+
+
+def mock_eu_natgas_forward_price(_cls, _q):
+    d = {'forwardPrice': [15.65], 'contract': ["H21"]}
+    df = MarketDataResponseFrame(data=d, index=pd.to_datetime([datetime.date(2021, 1, 1)]))
     df.dataset_ids = _test_datasets
     return df
 
@@ -2915,7 +2922,7 @@ def test_forward_price():
 
 
 def test_forward_price_ng():
-
+    # Tests for US NG assets
     replace = Replacer()
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_natgas_forward_price)
     mock = CommodityNaturalGasHub('MA001', 'AGT')
@@ -2964,6 +2971,37 @@ def test_forward_price_ng():
         assert_series_equal(pd.Series(dtype='float64'),
                             pd.Series(actual)
                             )
+    replace.restore()
+
+    # Tests for EU NG assets
+    mock_EU_asset = CommodityEUNaturalGasHub('MA001', 'TTF')
+    mock_EU_swap_asset = Swap('MA002', AssetClass.Commod, 'Swap NatGas TTF')
+    mock_EU_swap_asset.id = "Mock_Id"
+    assets = replace('gs_quant.timeseries.measures.GsAssetApi.get_many_assets', Mock())
+    assets.return_value = [mock_EU_swap_asset]
+
+    # Test for forward price fetch using instrument id
+    with DataContext(datetime.date(2021, 1, 1), datetime.date(2021, 1, 1)):
+        market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_eu_natgas_forward_price)
+        expected = pd.Series([15.65], name='price', index=[datetime.date(2021, 1, 1)])
+        actual = tm.forward_price_ng(mock_EU_asset, contract_range='H21')
+        assert_series_equal(expected, pd.Series(actual))
+
+    # Test for empty market response
+    with DataContext(datetime.date(2021, 1, 1), datetime.date(2021, 1, 1)):
+        market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+        market_mock.return_value = mock_empty_market_data_response()
+        actual = tm.forward_price_ng(mock_EU_asset, contract_range='H21')
+        assert actual.empty
+
+    # Test for no instruments found
+    with DataContext(datetime.date(2021, 1, 1), datetime.date(2021, 1, 1)):
+        assets.return_value = []
+        market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+        market_mock.return_value = mock_empty_market_data_response()
+        actual = tm.forward_price_ng(mock_EU_asset, contract_range='H21')
+        assert actual.empty
+
     replace.restore()
 
 
@@ -3716,6 +3754,25 @@ def test_forward_curve():
                             pd.Series(actual))
 
     replace.restore()
+
+
+def test_eu_ng_hub_to_swap():
+    # Test for Id provider to return an instrument
+    replace = Replacer()
+    mock_EU_asset = CommodityEUNaturalGasHub('MA001', 'TTF')
+    mock_EU_swap_asset = Swap('MA002', AssetClass.Commod, 'Swap NatGas TTF')
+    mock_EU_swap_asset.id = 'MA002'
+    assets = replace('gs_quant.timeseries.measures.GsAssetApi.get_many_assets', Mock())
+    assets.return_value = [mock_EU_swap_asset]
+    actual = tm.eu_ng_hub_to_swap(mock_EU_asset)
+    assert_equal(actual, 'MA002')
+
+    # Test for Id provider when no instrument found, returns original asset id
+    mock_EU_asset = CommodityEUNaturalGasHub('MA001', 'TTF')
+    assets = replace('gs_quant.timeseries.measures.GsAssetApi.get_many_assets', Mock())
+    assets.return_value = []
+    actual = tm.eu_ng_hub_to_swap(mock_EU_asset)
+    assert_equal(actual, 'MA001')
 
 
 if __name__ == '__main__':

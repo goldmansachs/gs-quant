@@ -17,10 +17,7 @@ under the License.
 import pandas as pd
 from copy import deepcopy
 from collections import defaultdict
-from gs_quant.errors import MqValueError
 from gs_quant.markets.portfolio import Portfolio
-from gs_quant.risk import RiskMeasure, Price
-from typing import Optional
 
 
 class BackTest(object):
@@ -84,10 +81,10 @@ class BackTest(object):
     def calculations(self, calculations):
         self._calculations = calculations
 
-    def get_aggregated_result(self, risk: Optional[RiskMeasure] = Price):
-        if risk not in self.risks:
-            raise MqValueError('{} not in calculated risks for this backtest'.format(risk))
-        return pd.Series({d: i[risk].aggregate() for d, i in self._results.items()})
+    @property
+    def result_summary(self):
+        return pd.DataFrame({date: {risk: results[risk].aggregate() for risk in results.risk_measures}
+                             for date, results in self._results.items()}).T
 
 
 class ScalingPortfolio(object):

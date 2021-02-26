@@ -676,18 +676,13 @@ class PortfolioRiskResult(CompositeResultFuture):
             return tuple(PortfolioPath(i) for i in range(len(self.__portfolio))[items])
         elif isinstance(items, (str, Priceable)):
             paths = self.__portfolio.paths(items)
+            # will enter in here only if trying to slice an unresolved portfolio with a resolved instrument
             if not paths and isinstance(items, InstrumentBase) and items.unresolved:
                 paths = self.__portfolio.paths(items.unresolved)
                 if not paths:
                     raise KeyError(f'{items} not in portfolio')
-                item_key = items.resolution_key.ex_measure
-                portfolio_key = tuple(self.__portfolio[p].resolution_key for p in paths)
-                result_key = tuple(self.__result(p, self.risk_measures[0]).risk_key for p in paths)
-
-                # if port has not been resolved use result (which has been resolved during price) to extract key
-                # if port has been resolved, use portfolio to extract key
-                check_key = result_key if all([p is None for p in portfolio_key]) else portfolio_key
-                paths = tuple(p for p_idx, p in enumerate(paths) if check_key[p_idx].ex_measure == item_key)
+                key = items.resolution_key.ex_measure
+                paths = tuple(p for p in paths if self.__result(p, self.risk_measures[0]).risk_key.ex_measure == key)
 
                 if not paths:
                     raise KeyError(f'Cannot slice {items} which is resolved in a different pricing context')
