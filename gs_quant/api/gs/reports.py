@@ -15,6 +15,7 @@ under the License.
 """
 import datetime as dt
 import logging
+import urllib.parse
 from typing import Tuple, List
 
 from gs_quant.session import GsSession
@@ -36,8 +37,8 @@ class GsReportApi:
 
     @classmethod
     def get_reports(cls, limit: int = 100, offset: int = None, position_source_type: str = None,
-                    position_source_id: str = None, status: str = None, report_type: str = None) \
-            -> Tuple[Report, ...]:
+                    position_source_id: str = None, status: str = None, report_type: str = None,
+                    order_by: str = None) -> Tuple[Report, ...]:
         url = '/reports?limit={limit}'.format(limit=limit)
         if offset is not None:
             url += '&offset={offset}'.format(offset=offset)
@@ -48,7 +49,9 @@ class GsReportApi:
         if status is not None:
             url += '&status={status}'.format(status=status)
         if report_type is not None:
-            url += '&type={report_type}'.format(report_type=report_type)
+            url += '&reportType={report_type}'.format(report_type=report_type)
+        if order_by is not None:
+            url += '&orderBy={order_by}'.format(order_by=order_by)
         return GsSession.current._get(url, cls=Report)['results']
 
     @classmethod
@@ -98,6 +101,7 @@ class GsReportApi:
                                      end_date: dt.date = None) -> dict:
         url = ''
         if factors is not None:
+            factors = map(urllib.parse.quote, factors)  # to support factors like "Automobiles & Components"
             url += '&factors={factors}'.format(factors='&factors='.join(factors))
         if factor_categories is not None:
             url += '&factorCategories={categories}'.format(categories='&factorCategories='.join(factors))

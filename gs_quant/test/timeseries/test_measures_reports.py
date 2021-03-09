@@ -22,7 +22,7 @@ from testfixtures.mock import Mock
 import gs_quant.timeseries.measures_reports as mr
 from gs_quant.data.core import DataContext
 from gs_quant.errors import MqValueError
-from gs_quant.markets.risk_model import RiskModel as Risk_Model
+from gs_quant.models.risk_model import FactorRiskModel as Factor_Risk_Model
 from gs_quant.target.common import ReportParameters
 from gs_quant.target.reports import Report, PositionSourceType, ReportType
 from gs_quant.target.risk_models import RiskModel, CoverageType, Term, UniverseIdentifier
@@ -121,7 +121,7 @@ def mock_risk_model():
     mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model', Mock())
     mock.return_value = risk_model
 
-    actual = Risk_Model(model_id='model_id')
+    actual = Factor_Risk_Model(model_id='model_id')
     replace.restore()
     return actual
 
@@ -145,7 +145,7 @@ def test_factor_exposure():
     mock.return_value = ['2010-01-01']
 
     # mock getting risk model factor category
-    mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model_data', Mock())
+    mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_data', Mock())
     mock.return_value = {
         'results': [{
             'factorData': [{
@@ -155,7 +155,7 @@ def test_factor_exposure():
         ]}
 
     # mock getting risk model factor entity
-    mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model_factor_data', Mock())
+    mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_factor_data', Mock())
     mock.return_value = [{
         'identifier': 'factor_id',
         'type': 'Factor',
@@ -191,7 +191,7 @@ def test_factor_pnl():
     mock.return_value = ['2010-01-01']
 
     # mock getting risk model factor category
-    mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model_data', Mock())
+    mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_data', Mock())
     mock.return_value = {
         'results': [{
             'factorData': [{
@@ -201,7 +201,7 @@ def test_factor_pnl():
         ]}
 
     # mock getting risk model factor entity
-    mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model_factor_data', Mock())
+    mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_factor_data', Mock())
     mock.return_value = [{
         'identifier': 'factor_id',
         'type': 'Factor',
@@ -237,7 +237,7 @@ def test_factor_proportion_of_risk():
     mock.return_value = ['2010-01-01']
 
     # mock getting risk model factor category
-    mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model_data', Mock())
+    mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_data', Mock())
     mock.return_value = {
         'results': [{
             'factorData': [{
@@ -247,7 +247,7 @@ def test_factor_proportion_of_risk():
         ]}
 
     # mock getting risk model factor entity
-    mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model_factor_data', Mock())
+    mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_factor_data', Mock())
     mock.return_value = [{
         'identifier': 'factor_id',
         'type': 'Factor',
@@ -294,7 +294,7 @@ def test_aggregate_factor_support():
     mock.return_value = ['2010-01-01']
 
     # mock getting risk model factor category
-    mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model_data', Mock())
+    mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_data', Mock())
     mock.return_value = {
         'results': [{
             'factorData': [{
@@ -304,7 +304,7 @@ def test_aggregate_factor_support():
         ]}
 
     # mock getting risk model factor entity
-    mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model_factor_data', Mock())
+    mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_factor_data', Mock())
     mock.return_value = [{
         'identifier': 'factor_id',
         'type': 'Factor',

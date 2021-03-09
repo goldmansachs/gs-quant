@@ -15,7 +15,7 @@ under the License.
 """
 import datetime as dt
 from enum import Enum
-from typing import Iterable, Optional, Union, List
+from typing import Iterable, Optional, Union, List, Dict
 
 import pandas as pd
 
@@ -258,3 +258,30 @@ class Dataset:
         )
 
         return pd.DataFrame(coverage)
+
+    def upload_data(self, data: Union[pd.DataFrame, list, tuple]) -> Dict:
+        """
+        Upload data to this DataSet
+
+        :param data: data to be uploaded to the dataset
+
+        **Examples**
+
+        >>> from gs_quant.data import Dataset
+        >>>
+        >>> weather = Dataset('WEATHER')
+        >>> data = [{
+        >>>    "date": "2016-12-31",
+        >>>    "city": "Chicago",
+        >>>    "maxTemperature": 40.0,
+        >>>    "minTemperature": 23.0,
+        >>>    "dewPoint": 21.0,
+        >>>    "windSpeed": 11.4,
+        >>>    "precipitation": 0.0,
+        >>>    "snowfall": 0.0,
+        >>>    "pressure": 29.03,
+        >>>    "updateTime": "2017-03-06T16:49:39.493Z"
+        >>> }]
+        >>> upload_response = weather.upload_data(data)
+        """
+        return self.provider.upload_data(self.id, data)

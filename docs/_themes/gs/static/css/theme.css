@@ -68,6 +68,7 @@ html {
   font-size: 100%;
   -webkit-text-size-adjust: 100%;
   -ms-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
 }
 body {
   margin: 0;
@@ -2402,18 +2403,16 @@ p {
   margin-bottom: 24px;
 }
 h1 {
-  font-family: "Roboto Mono", monospace;
+  font-family: "Roboto-Medium", sans-serif;
   font-size: 34px;
   line-height: 54px;
   margin-bottom: 16px;
-  font-weight: 700;
 }
 
 h2 {
-  font-family: "Roboto Mono", monospace;
+  font-family: "Roboto-Medium", sans-serif;
   font-size: 24px;
   line-height: 36px;
-  font-weight: 700;
 }
 
 .rst-content .toctree-wrapper p.caption {
@@ -2617,10 +2616,6 @@ article ol li ul li {
   .wy-breadcrumbs li.wy-breadcrumbs-aside {
     display: none;
   }
-}
-html {
-  font: 112.5%/1.45em "Roboto-Regular";
-  -webkit-font-smoothing: antialiased;
 }
 .wy-affix {
   position: fixed;

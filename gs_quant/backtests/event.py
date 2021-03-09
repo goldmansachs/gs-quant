@@ -15,7 +15,7 @@ under the License.
 """
 
 
-import datetime as dt
+from gs_quant.backtests.order import OrderBase
 
 
 class Event(object):
@@ -34,21 +34,17 @@ class ValuationEvent(Event):
 
 class OrderEvent(Event):
     def __init__(self,
-                 instrument: str,
-                 units: float,
-                 execution_time: dt.datetime,
-                 execution_window: int):
+                 order: OrderBase):
         self.type = 'Order'
-        self.instrument = instrument
-        self.units = units
-        self.execution_time = execution_time
-        self.execution_window = execution_window
+        self.order = order
 
 
 class FillEvent(Event):
-    def __init__(self, instrument: str, requested_units: float, filled_units: float, filled_price: float):
+    def __init__(self,
+                 order: OrderBase,
+                 filled_units: float,
+                 filled_price: float):
         self.type = 'Fill'
-        self.instrument = instrument
-        self.requested_units = requested_units
+        self.order = order
         self.filled_units = filled_units
         self.filled_price = filled_price

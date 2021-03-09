@@ -20,5 +20,5 @@ from gs_quant.backtests.actions import Action
 class BacktestBaseEngine(object):
 
     @classmethod
-    def get_action_handler(self) -> Action:
+    def get_action_handler(self, action) -> Action:
         raise RuntimeError('get_action_handler must be implemented by subclass')

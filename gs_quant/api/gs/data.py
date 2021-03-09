@@ -125,6 +125,8 @@ class QueryType(Enum):
     FACTOR_PROPORTION_OF_RISK = "Factor Proportion Of Risk"
     DAILY_RISK = "Daily Risk"
     ANNUAL_RISK = "Annual Risk"
+    VOLATILITY = "Volatility"
+    CORRELATION = "Correlation"
 
 
 class GsDataApi(DataApi):

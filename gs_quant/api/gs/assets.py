@@ -18,6 +18,7 @@ import cachetools.keys
 import datetime as dt
 import logging
 import os
+import pandas as pd
 import threading
 from enum import auto, Enum
 from functools import wraps
@@ -29,6 +30,7 @@ from gs_quant.errors import MqValueError
 from gs_quant.instrument import Instrument, Security
 from gs_quant.session import GsSession
 from gs_quant.common import PositionType
+from requests.exceptions import HTTPError
 
 _logger = logging.getLogger(__name__)
 IdList = Union[Tuple[str, ...], List]
@@ -151,6 +153,19 @@ class GsAssetApi:
 
     @classmethod
     @_cached
+    def resolve_assets(
+            cls,
+            identifier: [str],
+            fields: IdList = [],
+            limit: int = 100,
+            **kwargs
+    ) -> Tuple[dict, ...]:
+        where = dict(identifier=identifier, **kwargs)
+        query = dict(where=where, limit=limit, fields=fields)
+        return GsSession.current._post('/assets/resolver', payload=query)
+
+    @classmethod
+    @_cached
     def get_asset_xrefs(
             cls,
             asset_id: str
@@ -193,9 +208,43 @@ class GsAssetApi:
         results = GsSession.current._get(url)['results']
         return tuple(PositionSet.from_dict(r) for r in results)
 
-    @classmethod
-    def get_latest_positions(cls, asset_id: str, position_type: str = 'close') -> Union[PositionSet, dict]:
-        url = '/assets/{id}/positions/last?type={ptype}'.format(id=asset_id, ptype=position_type)
+    @staticmethod
+    def get_asset_positions_for_dates(
+            asset_id: str,
+            start_date: dt.date,
+            end_date: dt.date,
+            position_type: PositionType = PositionType.CLOSE,
+    ) -> Tuple[PositionSet, ...]:
+        position_type = position_type if isinstance(position_type, str) else position_type.value
+        position_sets = []
+        periods = (end_date - start_date).days // 30
+        start_date_str = start_date.isoformat()
+
+        if periods > 0:
+            end_dates = pd.date_range(start=start_date, end=end_date, periods=periods, closed='right')
+            for date in end_dates:
+                end_date_str = date.date().isoformat()
+                url = f'/assets/{asset_id}/positions?startDate={start_date_str}&endDate={end_date_str}&type={position_type}'
+                try:
+                    position_sets += GsSession.current._get(url)['positionSets']
+                    start_date_str = (date.date() + dt.timedelta(days=1)).isoformat()
+                except HTTPError as err:
+                   raise ValueError(f'Unable to fetch position data at {url} with {err}')
+        else:
+            end_date_str = end_date.isoformat()
+            url = f'/assets/{asset_id}/positions?startDate={start_date_str}&endDate={end_date_str}&type={position_type}'
+            try:
+                position_sets += GsSession.current._get(url)['positionSets']
+            except HTTPError as err:
+                raise ValueError(f'Unable to fetch position data at {url} with {err}')
+        return tuple(PositionSet.from_dict(r) for r in position_sets)
+
+    @staticmethod
+    def get_latest_positions(asset_id: str, position_type: PositionType = None) -> Union[PositionSet, dict]:
+        url = '/assets/{id}/positions/last'.format(id=asset_id)
+        if position_type is not None:
+            url += '?type={ptype}'.format(ptype=position_type if isinstance(position_type, str) else position_type.value)
+        
         results = GsSession.current._get(url)['results']
 
         # Annoyingly, different types are returned depending on position_type

@@ -1056,6 +1056,7 @@ class AssetClassifications(Base):
         """Risk Country code (ISO 3166)."""
         return self.__risk_country_code
 
+
     @risk_country_code.setter
     def risk_country_code(self, value: str):
         self._property_changed('risk_country_code')
@@ -1304,6 +1305,11 @@ class AssetParameters(Base):
         index_calculation_type: str = None,
         index_return_type: str = None,
         index_divisor: float = None,
+        index_create_source: str = None,
+        internal_index_calc_agent: bool = None,
+        internal_index_calc_region: str = None,
+        flagship: bool = None,
+        calculation_region: str = None,
         currency: Union[Currency, str] = None,
         quote_currency: Union[Currency, str] = None,
         index_initial_price: float = None,
@@ -1402,6 +1408,11 @@ class AssetParameters(Base):
         self.index_calculation_type = index_calculation_type
         self.index_return_type = index_return_type
         self.index_divisor = index_divisor
+        self.index_create_source = index_create_source
+        self.internal_index_calc_agent = internal_index_calc_agent
+        self.internal_index_calc_region = internal_index_calc_region
+        self.flagship = flagship
+        self.calculation_region = calculation_region
         self.currency = currency
         self.quote_currency = quote_currency
         self.index_initial_price = index_initial_price
@@ -1549,7 +1560,54 @@ class AssetParameters(Base):
     @index_divisor.setter
     def index_divisor(self, value: float):
         self._property_changed('index_divisor')
-        self.__index_divisor = value        
+        self.__index_divisor = value
+
+    @property
+    def index_create_source(self) -> str:
+        """Determines the index calculation methodology with respect to dividend
+           reinvestment"""
+        return self.__index_create_source
+
+    @index_create_source.setter
+    def index_create_source(self, value: str):
+        self._property_changed('index_create_source')
+        self.__index_create_source = value
+
+    @property
+    def internal_index_calc_agent(self) -> bool:
+        return self.__internal_index_calc_agent
+
+    @internal_index_calc_agent.setter
+    def internal_index_calc_agent(self, value: bool):
+        self._property_changed('internal_index_calc_agent')
+        self.__internal_index_calc_agent = value
+
+    @property
+    def internal_index_calc_region(self) -> str:
+        return self.__internal_index_calc_region
+
+    @internal_index_calc_region.setter
+    def internal_index_calc_region(self, value: str):
+        self._property_changed('internal_index_calc_region')
+        self.__internal_index_calc_region = value
+
+    @property
+    def calculation_region(self) -> str:
+        return self.__calculation_region
+
+    @calculation_region.setter
+    def calculation_region(self, value: str):
+        self._property_changed('calculation_region')
+        self.__calculation_region = value
+
+    @property
+    def flagship(self) -> bool:
+        return self.__flagship
+
+    @flagship.setter
+    def flagship(self, value: bool):
+        self._property_changed('flagship')
+        self.__flagship = value     
 
     @property
     def currency(self) -> Union[Currency, str]:

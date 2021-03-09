@@ -17,10 +17,11 @@ under the License.
 import datetime
 from enum import Enum
 from typing import Union, Iterable
-
+import datetime as dt
 from gs_quant.data import Dataset
 import pandas as pd
 import numpy as np
+from gs_quant.data import DataFrequency
 
 
 class MissingDataStrategy(Enum):
@@ -50,14 +51,10 @@ class GenericDataSource:
     def __init__(self, data_set: pd.Series, missing_data_strategy: MissingDataStrategy = MissingDataStrategy.fail):
         self._data_set = data_set
         self._missing_data_strategy = missing_data_strategy
-        self._timer = datetime.datetime(1900, 1, 1, 0, 0, 0)
         if self._missing_data_strategy == MissingDataStrategy.interpolate:
             self._data_set.interpolate()
         elif self._missing_data_strategy == MissingDataStrategy.fill_forward:
             self._data_set.ffill()
-
-    def update(self, state: datetime.datetime):
-        self._timer = state
 
     def get_data(self, state: Union[datetime.date, datetime.datetime, Iterable]):
         """
@@ -65,12 +62,8 @@ class GenericDataSource:
         :param state: a date, datetime or a list of dates or datetimes
         :return: float value
         """
-
         if isinstance(state, Iterable):
-            return np.mean([self.get_data(i) for i in state])
-        if state > self._timer:
-            raise RuntimeError(f'accessing data at {state} current time is {self._timer}, accessing future data '
-                               f'forbidden')
+            return [self.get_data(i) for i in state]
 
         if state in self._data_set or self._missing_data_strategy == MissingDataStrategy.fail:
             return self._data_set[state]
@@ -84,3 +77,30 @@ class GenericDataSource:
             else:
                 raise RuntimeError(f'unrecognised missing data strategy: {str(self._missing_data_strategy)}')
             return self._data_set[state]
+
+    def get_data_range(self, start: Union[datetime.date, datetime.datetime],
+                       end: Union[datetime.date, datetime.datetime]):
+        return self._data_set.loc[(start <= self._data_set.index) & (self._data_set.index <= end)]
+
+
+class DataManager:
+    def __init__(self):
+        self._data_sources = {DataFrequency.DAILY: {}, DataFrequency.REAL_TIME: {}}
+
+    def add_data_source(self, series: pd.Series, data_freq: DataFrequency, *key):
+        if not len(series):
+            return
+        self._data_sources[data_freq][key] = GenericDataSource(series)
+
+    def get_data(self, state: Union[dt.date, dt.datetime], *key):
+        if isinstance(state, dt.datetime):
+            return self._data_sources[DataFrequency.REAL_TIME][key].get_data(state)
+        else:
+            return self._data_sources[DataFrequency.DAILY][key].get_data(state)
+
+    def get_data_range(self, start: Union[dt.date, dt.datetime],
+                       end: Union[dt.date, dt.datetime], *key):
+        if isinstance(start, dt.datetime):
+            return self._data_sources[DataFrequency.REAL_TIME][key].get_data_range(start, end)
+        else:
+            return self._data_sources[DataFrequency.DAILY][key].get_data_range(start, end)
