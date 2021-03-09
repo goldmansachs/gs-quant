@@ -128,7 +128,8 @@ class PricingContext(ContextBaseWithDefault):
         """
         super().__init__()
 
-        if market and market_data_location and market.location.value is not market_data_location:
+        if market and market_data_location and market.location is not \
+                get_enum_value(PricingLocation, market_data_location):
             raise ValueError('market.location and market_data_location cannot be different')
 
         if not market_data_location:
@@ -225,7 +226,7 @@ class PricingContext(ContextBaseWithDefault):
                             requests.append(RiskRequest(
                                 tuple(RiskPosition(instrument=i, quantity=i.instrument_quantity) for i in insts_chunk),
                                 risk_measures,
-                                parameters=self._parameters,
+                                parameters=params,
                                 wait_for_results=not self.__is_batch,
                                 scenario=scenario,
                                 pricing_and_market_data_as_of=tuple(

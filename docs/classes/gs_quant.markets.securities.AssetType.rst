@@ -17,7 +17,6 @@
 
    .. autosummary::
    
-      ~AssetType.BASKET
       ~AssetType.BOND
       ~AssetType.CASH
       ~AssetType.COMMODITY
@@ -29,6 +28,7 @@
       ~AssetType.CROSS
       ~AssetType.CRYPTO_CURRENCY
       ~AssetType.CURRENCY
+      ~AssetType.CUSTOM_BASKET
       ~AssetType.ETF
       ~AssetType.FUTURE
       ~AssetType.FUTURE_CONTRACT
@@ -36,6 +36,7 @@
       ~AssetType.INDEX
       ~AssetType.OPTION
       ~AssetType.RATE
+      ~AssetType.RESEARCH_BASKET
       ~AssetType.STOCK
       ~AssetType.SWAP
       ~AssetType.WEATHER_INDEX

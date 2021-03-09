@@ -83,20 +83,24 @@ class HedgeActionImpl(ActionHandler):
 
 
 class GenericEngineActionFactory(ActionHandlerBaseFactory):
-    def get_action_handler(self, action: Action) -> Action:
-        if isinstance(action, AddTradeAction):
-            return AddTradeActionImpl(action)
-        elif isinstance(action, HedgeAction):
-            return HedgeActionImpl(action)
+    def __init__(self, action_impl_map={}):
+        self.action_impl_map = action_impl_map
+        self.action_impl_map[AddTradeAction] = AddTradeActionImpl
+        self.action_impl_map[HedgeAction] = HedgeActionImpl
 
+    def get_action_handler(self, action: Action) -> Action:
+        if type(action) in self.action_impl_map:
+            return self.action_impl_map[type(action)](action)
         raise RuntimeError(f'Action {type(action)} not supported by engine')
 
 
 class GenericEngine(BacktestBaseEngine):
 
-    @classmethod
+    def __init__(self, action_impl_map={}):
+        self.action_impl_map = action_impl_map
+
     def get_action_handler(self, action: Action) -> Action:
-        handler_factory = GenericEngineActionFactory()
+        handler_factory = GenericEngineActionFactory(self.action_impl_map)
         return handler_factory.get_action_handler(action)
 
     @classmethod
@@ -109,27 +113,26 @@ class GenericEngine(BacktestBaseEngine):
             return False
         return True
 
-    @classmethod
-    def run_backtest(cls, strategy, start=None, end=None, frequency='BM', window=None, states=None, risks=Price,
+    def run_backtest(self, strategy, start=None, end=None, frequency='BM', window=None, states=None, risks=Price,
                      show_progress=True):
         dates = pd.date_range(start=start, end=end, freq=frequency).date.tolist()
         risks = make_list(risks) + strategy.risks
 
         backtest = BackTest(strategy, dates, risks)
 
-        if len(strategy.initial_portfolio) > 0:
+        if len(strategy.initial_portfolio):
+            init_port = Portfolio(strategy.initial_portfolio)
             with PricingContext(pricing_date=dates[0]):
-                init_port = Portfolio(strategy.initial_portfolio)
                 init_port.resolve()
             for d in dates:
                 backtest.portfolio_dict[d].append(init_port.instruments)
 
         for trigger in strategy.triggers:
             if trigger.calc_type != CalcType.path_dependent:
-                triggered_dates = [date for date in dates if trigger.has_triggered(date, backtest)]
+                triggered_dates = [d for d in dates if trigger.has_triggered(d, backtest)]
                 for action in trigger.actions:
                     if action.calc_type != CalcType.path_dependent:
-                        cls.get_action_handler(action).apply_action(triggered_dates, backtest)
+                        self.get_action_handler(action).apply_action(triggered_dates, backtest)
 
         with PricingContext(is_batch=True, show_progress=show_progress):
             for day, portfolio in backtest.portfolio_dict.items():
@@ -168,10 +171,10 @@ class GenericEngine(BacktestBaseEngine):
                 if trigger.calc_type == CalcType.path_dependent:
                     if trigger.has_triggered(d, backtest):
                         for action in trigger.actions:
-                            cls.get_action_handler(action).apply_action(d, backtest)
+                            self.get_action_handler(action).apply_action(d, backtest)
                 else:
                     for action in trigger.actions:
                         if action.calc_type == CalcType.path_dependent:
                             if trigger.has_triggered(d, backtest):
-                                cls.get_action_handler(action).apply_action(d, backtest)
+                                self.get_action_handler(action).apply_action(d, backtest)
         return backtest

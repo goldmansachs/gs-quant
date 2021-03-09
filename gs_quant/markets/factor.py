@@ -13,49 +13,121 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from typing import List
+from math import sqrt
+from typing import Dict
 
 from gs_quant.api.gs.data import GsDataApi
+from gs_quant.data.core import DataContext
 from gs_quant.datetime import date
-from gs_quant.markets.risk_model import RiskModel
+from gs_quant.models.risk_model import FactorRiskModel, ReturnFormat
+from gs_quant.errors import MqValueError
 from gs_quant.target.data import DataQuery
-from gs_quant.target.risk_models import RiskModelFactor
 
 
 class Factor:
 
     def __init__(self, risk_model_id: str, factor_name: str):
-        self.risk_model_id = risk_model_id
-        factors = RiskModel(risk_model_id).get_factor_data()
-        factors = [factor for factor in factors if factor['name'] == factor_name]
-        self.factor = RiskModelFactor(identifier=factors[0]['identifier'],
-                                      type_=factors[0]['type'],
-                                      name=factors[0]['name']) if factors else None
+        risk_model = FactorRiskModel(risk_model_id)
+        factor_data = risk_model.get_factor_data(format=ReturnFormat.JSON)
+        name_matches = [factor for factor in factor_data if factor['name'] == factor_name]
 
-    def get_name(self):
-        return self.factor.name
+        if not name_matches:
+            raise MqValueError(f'Factor with name {factor_name} does not in exist in risk model {risk_model_id}')
 
-    def get_id(self):
-        return self.factor.identifier
+        factor = name_matches.pop()
+        self.__risk_model_id: str = risk_model_id
+        self.__id = factor['identifier']
+        self.__name: str = factor['name']
+        self.__type: str = factor['type']
+        self.__category: str = factor.get('factorCategory')
 
-    def get_covariance(self, factor, start_date: date, end_date: date) -> List:
-        """ Retrieve a list of covariances between this factor and another for a range of dates """
-        covariance_data = []
+    @property
+    def id(self):
+        return self.__id
 
-        # Collect matrix order for requested factor on all available dates
-        query = DataQuery(where={"riskModel": self.risk_model_id, "factorId": factor.factor.identifier},
-                          start_date=start_date,
-                          end_date=end_date)
-        factor_covariances = GsDataApi.execute_query('RISK_MODEL_COVARIANCE_MATRIX', query).get('data', [])
-        matrix_order_map = {data['date']: data['matrixOrder'] for data in factor_covariances}
+    @property
+    def name(self):
+        return self.__name
 
-        # Collect covariances at relevant matrix order on all available dates
-        query = DataQuery(where={"riskModel": self.risk_model_id, "factorId": self.factor.identifier},
-                          start_date=start_date,
-                          end_date=end_date)
-        factor_covariances = GsDataApi.execute_query('RISK_MODEL_COVARIANCE_MATRIX', query).get('data', [])
-        for data in factor_covariances:
+    @property
+    def type(self):
+        return self.__type
+
+    @property
+    def category(self):
+        return self.__category
+
+    @property
+    def risk_model_id(self):
+        return self.__risk_model_id
+
+    def covariance(self,
+                   factor,
+                   start_date: date = DataContext.current.start_date,
+                   end_date: date = DataContext.current.end_date) -> Dict:
+        """ Retrieve a Dictionary of date->covariance values between this factor and another for a date range """
+
+        covariance_data_raw = GsDataApi.execute_query(
+            'RISK_MODEL_COVARIANCE_MATRIX',
+            DataQuery(
+                where={"riskModel": self.risk_model_id, "factorId": self.id},
+                start_date=start_date,
+                end_date=end_date
+            )
+        ).get('data', [])
+
+        date_to_matrix_order = factor.__matrix_order(start_date, end_date)
+
+        covariance_data = {}
+        for data in covariance_data_raw:
             date = data['date']
-            if matrix_order_map.get(date):
-                covariance_data.append({'date': date, 'covariance': data[str(matrix_order_map[date])]})
+            if date_to_matrix_order.get(date):
+                matrix_order_on_date = date_to_matrix_order[date]
+                covariance_data[date] = data[matrix_order_on_date]
+
         return covariance_data
+
+    def variance(self,
+                 start_date: date = DataContext.current.start_date,
+                 end_date: date = DataContext.current.end_date) -> Dict:
+        """ Retrieve a Dictionary of date->variance values for a factor over a date range """
+        return self.covariance(self, start_date, end_date)
+
+    def volatility(self,
+                   start_date: date = DataContext.current.start_date,
+                   end_date: date = DataContext.current.end_date) -> Dict:
+        """ Retrieve a Dictionary of date->volatility values for a factor over a date range """
+        variance = self.variance(start_date, end_date)
+        return {k: sqrt(v) for k, v in variance.items()}
+
+    def correlation(self,
+                    other_factor,
+                    start_date: date = DataContext.current.start_date,
+                    end_date: date = DataContext.current.end_date) -> Dict:
+        """ Retrieve a Dictionary of date->correlation values between this factor and another for a date range """
+
+        factor_vol = self.volatility(start_date, end_date)
+        other_factor_vol = other_factor.volatility(start_date, end_date)
+        covariance = self.covariance(other_factor, start_date, end_date)
+
+        correlation = {}
+        for _date, covar in covariance.items():
+            if _date in factor_vol and _date in other_factor_vol:
+                denominator = factor_vol[_date] * other_factor_vol[_date]
+                if denominator != 0:
+                    correlation[_date] = covar / denominator
+
+        return correlation
+
+    def __matrix_order(self, start_date: date, end_date: date) -> Dict:
+        """ Retrieve Dictionary of date->matrix_order for the factor in the covariance matrix """
+        query_results = GsDataApi.execute_query(
+            'RISK_MODEL_COVARIANCE_MATRIX',
+            DataQuery(
+                where={"riskModel": self.risk_model_id, "factorId": self.id},
+                fields=['matrixOrder'],
+                start_date=start_date,
+                end_date=end_date
+            )
+        ).get('data', [])
+        return {data['date']: str(data['matrixOrder']) for data in query_results}

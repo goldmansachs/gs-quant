@@ -16,6 +16,7 @@
       ~Stock.__init__
       ~Stock.entity_type
       ~Stock.get
+      ~Stock.get_close_price_for_date
       ~Stock.get_close_prices
       ~Stock.get_currency
       ~Stock.get_data_coordinate
@@ -23,6 +24,7 @@
       ~Stock.get_entity
       ~Stock.get_identifier
       ~Stock.get_identifiers
+      ~Stock.get_latest_close_price
       ~Stock.get_marquee_id
       ~Stock.get_type
       ~Stock.get_unique_entity_key

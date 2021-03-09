@@ -18,6 +18,16 @@ import pandas as pd
 from copy import deepcopy
 from collections import defaultdict
 from gs_quant.markets.portfolio import Portfolio
+from typing import Iterable
+from gs_quant.target.instrument import Cash
+from gs_quant.datetime import prev_business_date
+from gs_quant.backtests.core import ValuationMethod
+from gs_quant.backtests.order import OrderBase
+from gs_quant.backtests.event import FillEvent
+from gs_quant.backtests.data_handler import DataHandler
+from gs_quant.data import DataFrequency
+import numpy as np
+import datetime as dt
 
 
 class BackTest(object):
@@ -93,3 +103,66 @@ class ScalingPortfolio(object):
         self.dates = dates
         self.risk = risk
         self.results = None
+
+
+class PriceBacktest(object):
+    def __init__(self, data_handler: DataHandler):
+        self.data_handler = data_handler
+        self.performance = pd.Series()
+        self.cash_asset = Cash('USD')
+        self.holdings = {}
+        self.holdings_projected = {}
+        self.orders = []
+
+    def set_start_date(self, start: dt.date):
+        self.performance[prev_business_date(start)] = 100
+        self.holdings[self.cash_asset] = 100
+        self.holdings_projected[self.cash_asset] = 100
+
+    def record_orders(self, orders: Iterable[OrderBase]):
+        for order in orders:
+            # projected holdings (i.e. the order may not started yet)
+            inst = order.instrument
+            if inst not in self.holdings_projected:
+                self.holdings_projected[inst] = 0
+            self.holdings_projected[inst] += order.quantity
+
+        self.orders.extend(orders)
+
+    def update_fill(self, fill: FillEvent):
+        inst = fill.order.instrument
+        self.holdings[self.cash_asset] -= fill.filled_price * fill.filled_units
+        if inst not in self.holdings:
+            self.holdings[inst] = 0
+        self.holdings[inst] += fill.filled_units
+
+        # update projected holdings as well
+        if inst not in self.holdings_projected:
+            self.holdings_projected[inst] = 0
+        self.holdings_projected[inst] -= fill.order.quantity
+        self.holdings_projected[inst] += fill.filled_units
+
+    def units_held(self, projected: bool = False):
+        holdings = self.holdings_projected if projected else self.holdings
+        return holdings
+
+    def mark_to_market(self, state: dt.datetime, valuation_method: ValuationMethod):
+        mtm = 0
+        for instrument, units in self.holdings.items():
+            if abs(units) > 1e-12:
+                if isinstance(instrument, Cash):
+                    fixing = 1
+                else:
+                    tag, window = valuation_method.data_tag, valuation_method.window
+                    if window:
+                        fixings = self.data_handler.get_data_range(window.start, window.end, instrument,
+                                                                   DataFrequency.REAL_TIME, tag)
+                        fixing = np.mean(fixings) if len(fixings) else np.nan
+                    else:  # no time window specified, use daily fixing
+                        fixing = self.data_handler.get_data(state.date(), instrument, DataFrequency.DAILY, tag)
+                mtm += fixing * units
+        self.performance[state.date()] = mtm
+        print(state, mtm)
+
+    def get_level(self, date: dt.date):
+        return self.performance[date]

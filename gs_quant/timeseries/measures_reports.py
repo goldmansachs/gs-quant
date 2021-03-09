@@ -119,9 +119,7 @@ def _get_factor_data(report_id: str, factor_name: str, query_type: QueryType) ->
         if query_type in [QueryType.DAILY_RISK, QueryType.ANNUAL_RISK]:
             raise MqValueError('Please pick a factor name from the following: ["Total", "Factor", "Specific"]')
         factor = Factor(risk_model_id, factor_name)
-        if factor.factor is None:
-            raise MqValueError('Factor name requested is not available in the risk model associated with this report')
-        factor_name = factor.get_name()
+        factor_name = factor.name
 
     # Extract relevant data for each date
     col_name = query_type.value.replace(' ', '')

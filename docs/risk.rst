@@ -31,6 +31,8 @@ Measures
 .. autodata:: FXGamma
 .. autodata:: FXVega
 .. autodata:: FXSpot
+.. autodata:: FXAnnualImpliedVol
+.. autodata:: FXAnnualATMImpliedVol
 .. autodata:: InflationDelta
 .. autodata:: InflationDeltaParallel
 .. autodata:: InflationDeltaParallelLocalCcy

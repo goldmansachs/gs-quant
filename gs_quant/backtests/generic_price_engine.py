@@ -16,115 +16,87 @@ under the License.
 
 
 from gs_quant.backtests.event import *
-from gs_quant.datetime import date_range, prev_business_date
-from typing import Iterable
+from gs_quant.backtests.action_handler import ActionHandlerBaseFactory
+from gs_quant.backtests.actions import Action
+from gs_quant.backtests.backtest_engine import BacktestBaseEngine
+from gs_quant.backtests.backtest_objects import PriceBacktest
+from gs_quant.backtests.execution_engine import SimulatedExecutionEngine
+from gs_quant.backtests.core import ValuationMethod
+from gs_quant.backtests.data_sources import DataManager
+from gs_quant.backtests.data_handler import DataHandler
+from gs_quant.datetime import date_range
 from collections import deque
-import pytz
-import time
-import pandas as pd
+from pytz import timezone
+from functools import reduce
 import datetime as dt
+from typing import Union, Tuple
 
 
-class ExecutionEngine(object):
-    pass
+# Action Implementations
 
 
-class PriceBacktest(object):
-    def __init__(self, data_sources):
-        self.data_sources = data_sources
-        self.performance = pd.Series()
-        self.holdings = {}
-        self.holdings_projected = {}
-        self.cash = 100
-        self.trades = []
+class GenericPriceEngineActionFactory(ActionHandlerBaseFactory):
+    def __init__(self, action_impl_map={}):
+        self.action_impl_map = action_impl_map
 
-    def set_start_date(self, start: dt.date):
-        self.performance[prev_business_date(start)] = 100
-
-    def record_orders(self, orders: Iterable[OrderEvent]):
-        for order in orders:
-            # projected holdings (i.e. the order may not started yet)
-            inst = order.instrument
-            if inst not in self.holdings_projected:
-                self.holdings_projected[inst] = 0
-            self.holdings_projected[inst] += order.units
-
-    def update_fill(self, fill: FillEvent):
-        inst = fill.instrument
-        self.cash -= fill.filled_price * fill.filled_units
-        if inst not in self.holdings:
-            self.holdings[inst] = 0
-        self.holdings[inst] += fill.filled_units
-
-        # update projected holdings as well
-        if inst not in self.holdings_projected:
-            self.holdings_projected[inst] = 0
-        self.holdings_projected[inst] -= fill.requested_units
-        self.holdings_projected[inst] += fill.filled_units
-
-    def units_held(self, projected: bool = False):
-        holdings = self.holdings_projected if projected else self.holdings
-        return holdings
-
-    def mark_to_market(self, date: dt.date):
-        mtm = self.cash
-        for instrument, units in self.holdings.items():
-            if abs(units) > 1e-12:
-                fixing = self.data_sources[instrument + ' Daily'].gs_data(date)
-                mtm += fixing * units
-        self.performance[date] = mtm
-
-    def get_level(self, date: dt.date):
-        return self.performance[date]
+    def get_action_handler(self, action: Action) -> Action:
+        if type(action) in self.action_impl_map:
+            return self.action_impl_map[type(action)](action)
+        raise RuntimeError(f'Action {type(action)} not supported by engine')
 
 
-class GenericPriceEngine(object):
+class GenericPriceEngine(BacktestBaseEngine):
+
+    def get_action_handler(self, action: Action) -> Action:
+        handler_factory = GenericPriceEngineActionFactory(self.action_impl_map)
+        return handler_factory.get_action_handler(action)
 
     @classmethod
     def supports_strategy(cls, strategy):
-        return False
+        all_actions = reduce(lambda x, y: x + y, (map(lambda x: x.actions, strategy.triggers)))
+        try:
+            for x in all_actions:
+                cls.get_action_handler(x)
+        except RuntimeError:
+            return False
+        return True
 
-    def __init__(self, data_sources, eod_valuation_time: dt.datetime = dt.time(23, 0, 0)):
-        self.eod_valuation_time = eod_valuation_time
-        self.data_sources = data_sources
+    def __init__(self,
+                 data_mgr: DataManager,
+                 calendars: Union[str, Tuple[str, ...]],
+                 tz: timezone,
+                 valuation_method: ValuationMethod,
+                 action_impl_map={}):
+        self.action_impl_map = action_impl_map
+        self.calendars = calendars
+        self.tz = tz
+        self.data_handler = DataHandler(data_mgr, tz=tz)
+        self.valuation_method = valuation_method
         self.execution_engine = None
 
+    def _eod_valuation_time(self):
+        if self.valuation_method.window:
+            return self.valuation_method.window.end
+        else:
+            return dt.time(23)
+
     def _timer(self, strategy, start, end):
-        dates = date_range(start, end)
-        times = strategy.triggers[0].get_trigger_times()
-        times.append(self.eod_valuation_time)
+        dates = date_range(start, end, calendars=self.calendars)
+        times = list(strategy.triggers[0].get_trigger_times())
+        times.append(self._eod_valuation_time())
+        times = list(dict.fromkeys(times))
 
         for d in dates:
             for t in times:
                 yield dt.datetime.combine(d, t)
 
-    def _timer_live(self, strategy):
-        date = dt.date.today()
-        timer = self._timer(strategy, date, date)
-        for t in timer:
-            while t >= dt.datetime.now(pytz.timezone('US/Eastern')):
-                time.sleep(60)
-            yield t
-
-    def run_live(self, strategy):
-        # initialize backtest object
-        backtest = PriceBacktest(self.data_sources)
-        backtest.set_start_date(dt.date.today())
-
-        # initialize execution engine
-        self.execution_engine = ExecutionEngine()
-
-        # create timer
-        timer = self._timer_live(strategy)
-        self._run(strategy, timer, backtest)
-
     def run_backtest(self, strategy, start, end):
         # initialize backtest object
-        backtest = PriceBacktest(self.data_sources)
+        backtest = PriceBacktest(self.data_handler)
         backtest.set_start_date(start)
 
         # initialize execution engine
-        self.execution_engine = SimulatedExecutionEngine(self.data_sources)
+        self.execution_engine = SimulatedExecutionEngine(self.data_handler)
 
         # create timer
         timer = self._timer(strategy, start, end)
@@ -141,8 +113,7 @@ class GenericPriceEngine(object):
                 break
 
             # update to latest data
-            for ds in backtest.data_sources.values():
-                ds.update(state)
+            self.data_handler.update(state)
 
             # see if any submitted orders have been executed
             fills = self.execution_engine.ping(state)
@@ -152,7 +123,7 @@ class GenericPriceEngine(object):
             events.append(MarketEvent())
 
             # create valuation event when it's due for daily valuation
-            if state.time() == self.eod_valuation_time:
+            if state.time() == self._eod_valuation_time():
                 events.append(ValuationEvent())
 
             while events:
@@ -162,51 +133,14 @@ class GenericPriceEngine(object):
                     for trigger in strategy.triggers:
                         if trigger.has_triggered(state, backtest):
                             for action in trigger.actions:
-                                orders = action.apply_action(state, backtest)
+                                orders = self.get_action_handler(action).apply_action(state, backtest)
                                 backtest.record_orders(orders)
-                                events.extend(orders)
+                                events.extend([OrderEvent(o) for o in orders])
                 elif event.type == 'Order':  # order event (submit the order to execution engine)
                     self.execution_engine.submit_order(event)
                 elif event.type == 'Fill':  # fill event (update backtest with the fill results)
                     backtest.update_fill(event)
                 elif event.type == 'Valuation':  # valuation event (calculate daily level)
-                    backtest.mark_to_market(state.date())
+                    backtest.mark_to_market(state, self.valuation_method)
 
         return backtest
-
-
-class SimulatedExecutionEngine(ExecutionEngine):
-    def __init__(self, data_sources, slippage=0, absolute_slippage=True):
-        self.data_sources = data_sources
-        self.slippage = slippage
-        self.absolute_slippage = absolute_slippage
-        self.orders = []
-
-    def submit_order(self, order: OrderEvent):
-        self.orders.append(order)
-
-    def _calculate_fill(self, order: OrderEvent):
-        times = order.execution_time if order.execution_window is None else [
-            order.execution_time + dt.timedelta(minutes=i * 5) for i in range(1, int(order.execution_window / 5) + 1)]
-        price = self.data_sources[order.instrument + ' Intraday'].get_data(times)
-        slip = self.slippage if self.absolute_slippage else price * self.slippage
-        fill = price + slip if order.units > 0 else price - slip
-        fill = FillEvent(order.instrument, order.units, order.units, fill)
-        return fill
-
-    def ping(self, state: dt.datetime):
-        fill_events = []
-        while self.orders:
-            order: OrderEvent = self.orders[0]
-            end_time = order.execution_time + dt.timedelta(minutes=order.execution_window)
-            if end_time > state:
-                break
-            else:
-                fill = self._calculate_fill(order)
-                fill_events.append(fill)
-                self.orders.pop(0)
-        return fill_events
-
-
-class ExecutionEngine(object):
-    pass

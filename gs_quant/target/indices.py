@@ -20,6 +20,477 @@ from typing import Mapping, Tuple, Union
 from gs_quant.base import Base, InstrumentBase, camel_case_translate, get_enum_value
 
 
+class PricingParameters(Base):
+    @camel_case_translate
+    def __init__(
+        self,
+        asset_data_set_id: str = None,
+        asset_overwrite_data_set_id: str = None,
+        currency: Currency = None,
+        divisor: float = None,
+        fallback_date: str = None,
+        fx_data_set_id: str = None,
+        initial_price: float = None,
+        pricing_date: str = None,
+        reweight: bool = False,
+        target_notional: float = False,
+        vendor: str = None,
+        weighting_strategy: str = None
+    ):
+        super().__init__()
+        self.asset_data_set_id = asset_data_set_id
+        self.asset_overwrite_data_set_id = asset_overwrite_data_set_id
+        self.currency = currency
+        self.divisor = divisor
+        self.fallback_date = fallback_date
+        self.fx_data_set_id = fx_data_set_id
+        self.initial_price = initial_price
+        self.pricing_date = pricing_date
+        self.reweight = reweight
+        self.target_notional = target_notional
+        self.vendor = vendor
+        self.weighting_strategy = weighting_strategy
+
+    @property
+    def asset_data_set_id(self) -> str:
+        return self.__asset_data_set_id
+
+    @asset_data_set_id.setter
+    def asset_data_set_id(self, value: str):
+        self._property_changed('asset_data_set_id')
+        self.__asset_data_set_id = value
+
+    @property
+    def asset_overwrite_data_set_id(self) -> str:
+        return self.__asset_overwrite_data_set_id
+
+    @asset_overwrite_data_set_id.setter
+    def asset_overwrite_data_set_id(self, value: str):
+        self._property_changed('asset_overwrite_data_set_id')
+        self.__asset_overwrite_data_set_id = value
+
+    @property
+    def currency(self) -> Currency:
+        return self.__currency
+
+    @currency.setter
+    def currency(self, value: Currency):
+        self._property_changed('currency')
+        self.__currency = value
+
+    @property
+    def divisor(self) -> float:
+        return self.__divisor
+
+    @divisor.setter
+    def divisor(self, value: float):
+        self._property_changed('divisor')
+        self.__divisor = value
+
+    @property
+    def fallback_date(self) -> str:
+        return self.__fallback_date
+
+    @fallback_date.setter
+    def fallback_date(self, value: str):
+        self._property_changed('fallback_date')
+        self.__fallback_date = value
+
+    @property
+    def fx_data_set_id(self) -> str:
+        return self.__fx_data_set_id
+
+    @fx_data_set_id.setter
+    def fx_data_set_id(self, value: str):
+        self._property_changed('fx_data_set_id')
+        self.__fx_data_set_id = value
+
+    @property
+    def initial_price(self) -> float:
+        return self.__initial_price
+
+    @initial_price.setter
+    def initial_price(self, value: float):
+        self._property_changed('initial_price')
+        self.__initial_price = value
+
+    @property
+    def pricing_date(self) -> str:
+        return self.__pricing_date
+
+    @pricing_date.setter
+    def pricing_date(self, value: str):
+        self._property_changed('pricing_date')
+        self.__pricing_date = value
+
+    @property
+    def reweight(self) -> bool:
+        return self.__reweight
+
+    @reweight.setter
+    def reweight(self, value: bool):
+        self._property_changed('reweight')
+        self.__reweight = value
+
+    @property
+    def target_notional(self) -> float:
+        return self.__target_notional
+
+    @target_notional.setter
+    def target_notional(self, value: float):
+        self._property_changed('target_notional')
+        self.__target_notional = value
+
+    @property
+    def vendor(self) -> str:
+        return self.__vendor
+
+    @vendor.setter
+    def vendor(self, value: str):
+        self._property_changed('vendor')
+        self.__vendor = value
+
+    @property
+    def weighting_strategy(self) -> str:
+        return self.__weighting_strategy
+
+    @weighting_strategy.setter
+    def weighting_strategy(self, value: str):
+        self._property_changed('weighting_strategy')
+        self.__weighting_strategy = value
+
+class PublishParameters(Base):
+        
+    """Publishing parameters to determine where and how to publish baskets, default all
+       to false. If not provided when rebalance/edit, selections during create
+       will be continued."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        publish_to_reuters: bool = False,
+        publish_to_bloomberg: bool = False,
+        include_price_history: bool = False,
+        publish_to_factset: bool = False
+    ):        
+        super().__init__()
+        self.include_price_history = include_price_history
+        self.publish_to_bloomberg = publish_to_bloomberg
+        self.publish_to_reuters = publish_to_reuters
+        self.publish_to_factset = publish_to_factset
+
+    @property
+    def include_price_history(self) -> bool:
+        """Include full price history when publishing to Bloomberg, default to false. Can
+           only be set to true when publishing to Bloomberg"""
+        return self.__include_price_history
+
+    @include_price_history.setter
+    def include_price_history(self, value: bool):
+        self._property_changed('include_price_history')
+        self.__include_price_history = value        
+
+    @property
+    def publish_to_bloomberg(self) -> bool:
+        """Publish Basket to Bloomberg, default to false"""
+        return self.__publish_to_bloomberg
+
+    @publish_to_bloomberg.setter
+    def publish_to_bloomberg(self, value: bool):
+        self._property_changed('publish_to_bloomberg')
+        self.__publish_to_bloomberg = value        
+
+    @property
+    def publish_to_reuters(self) -> bool:
+        """Publish Basket to Reuters, default to false"""
+        return self.__publish_to_reuters
+
+    @publish_to_reuters.setter
+    def publish_to_reuters(self, value: bool):
+        self._property_changed('publish_to_reuters')
+        self.__publish_to_reuters = value        
+
+    @property
+    def publish_to_factset(self) -> bool:
+        """Publish Basket to Factset, default to false"""
+        return self.__publish_to_factset
+
+    @publish_to_factset.setter
+    def publish_to_factset(self, value: bool):
+        self._property_changed('publish_to_factset')
+        self.__publish_to_factset = value
+
+class CustomBasketsCreateInputs(Base):
+    """Parameters used to create a basket"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        name: str,
+        position_set: PositionSet,
+        pricing_parameters: PricingParameters,
+        return_type: str,
+        ticker: str,
+        allow_ca_restricted_assets: bool = False,
+        allow_limited_access_assets: bool = False,
+        clone_parent_id: str = None,
+        default_backcast: bool = None,
+        description: str = None,
+        flagship: bool = None,
+        hedge_id: str = None,
+        index_notes: str = None,       
+        on_behalf_of: str = None,              
+        publish_parameters: PublishParameters = None,
+        related_content: GIRDomain = None,        
+        styles: Tuple[str, ...] = None,
+        vendor: str = None
+    ):        
+        super().__init__()
+        self.allow_ca_restricted_assets = allow_ca_restricted_assets
+        self.allow_limited_access_assets = allow_limited_access_assets
+        self.clone_parent_id = clone_parent_id
+        self.default_backcast = default_backcast
+        self.description = description
+        self.flagship = flagship
+        self.hedge_id = hedge_id
+        self.index_notes = index_notes
+        self.name = name
+        self.on_behalf_of = on_behalf_of
+        self.position_set = position_set
+        self.pricing_parameters = pricing_parameters
+        self.publish_parameters = publish_parameters
+        self.related_content = related_content
+        self.return_type = return_type
+        self.styles = styles
+        self.ticker = ticker
+        self.vendor = vendor
+
+    @property
+    def allow_ca_restricted_assets(self) -> bool:
+        return self.__allow_ca_restricted_assets
+
+    @allow_ca_restricted_assets.setter
+    def allow_ca_restricted_assets(self, value: bool):
+        self._property_changed('allow_ca_restricted_assets')
+        self.__allow_ca_restricted_assets = value
+
+    @property
+    def allow_limited_access_assets(self) -> bool:
+        return self.__allow_limited_access_assets
+
+    @allow_limited_access_assets.setter
+    def allow_limited_access_assets(self, value: bool):
+        self._property_changed('allow_limited_access_assets')
+        self.__allow_limited_access_assets = value
+
+    @property
+    def clone_parent_id(self) -> str:
+	    return self.__clone_parent_id
+
+    @clone_parent_id.setter
+    def clone_parent_id(self, value: str):
+        self._property_changed('clone_parent_id')
+        self.__clone_parent_id = value
+
+    @property
+    def default_backcast(self) -> bool:
+        return self.__default_backcast
+
+    @default_backcast.setter
+    def default_backcast(self, value: bool):
+        self._property_changed('default_backcast')
+        self.__default_backcast = value
+
+    @property
+    def description(self) -> str:
+        return self.__description
+
+    @description.setter
+    def description(self, value: str):
+        self._property_changed('description')
+        self.__description = value
+
+    @property
+    def flagship(self) -> bool:
+	    return self.__flagship
+
+    @flagship.setter
+    def flagship(self, value: bool):
+        self._property_changed('flagship')
+        self.__flagship = value
+
+    @property
+    def hedge_id(self) -> str:
+	    return self.__hedge_id
+
+    @hedge_id.setter
+    def hedge_id(self, value: str):
+        self._property_changed('hedge_id')
+        self.__hedge_id = value
+
+    @property
+    def index_notes(self) -> str:
+	    return self.__index_notes
+
+    @index_notes.setter
+    def index_notes(self, value: str):
+        self._property_changed('index_notes')
+        self.__index_notes = value
+
+    @property
+    def name(self) -> str:
+	    return self.__name
+
+    @name.setter
+    def name(self, value: str):
+        self._property_changed('name')
+        self.__name = value
+
+    @property
+    def on_behalf_of(self) -> str:
+	    return self.__on_behalf_of
+
+    @on_behalf_of.setter
+    def on_behalf_of(self, value: str):
+        self._property_changed('on_behalf_of')
+        self.__on_behalf_of = value
+
+    @property
+    def position_set(self) -> PositionSet:
+	    return self.__position_set
+
+    @position_set.setter
+    def position_set(self, value: PositionSet):
+        self._property_changed('position_set')
+        self.__position_set = value
+
+    @property
+    def pricing_parameters(self) -> PricingParameters:
+	    return self.__pricing_parameters
+
+    @pricing_parameters.setter
+    def pricing_parameters(self, value: PricingParameters):
+        self._property_changed('pricing_parameters')
+        self.__pricing_parameters = value
+
+    @property
+    def publish_parameters(self) -> PublishParameters:
+	    return self.__publish_parameters
+
+    @publish_parameters.setter
+    def publish_parameters(self, value: PublishParameters):
+        self._property_changed('publish_parameters')
+        self.__publish_parameters = value
+
+    @property
+    def related_content(self) -> GIRDomain:
+	    return self.__related_content
+
+    @related_content.setter
+    def related_content(self, value: GIRDomain):
+        self._property_changed('related_content')
+        self.__related_content = value
+
+    @property
+    def return_type(self) -> str:
+	    return self.__return_type
+
+    @return_type.setter
+    def return_type(self, value: str):
+        self._property_changed('return_type')
+        self.__return_type = value
+
+    @property
+    def styles(self) -> Tuple[str, ...]:
+	    return self.__styles
+
+    @styles.setter
+    def styles(self, value: Tuple[str, ...]):
+        self._property_changed('styles')
+        self.__styles = value
+
+    @property
+    def ticker(self) -> str:
+	    return self.__ticker
+
+    @ticker.setter
+    def ticker(self, value: str):
+        self._property_changed('ticker')
+        self.__ticker = value
+
+    @property
+    def vendor(self) -> str:
+	    return self.__vendor
+
+    @vendor.setter
+    def vendor(self, value: str):
+        self._property_changed('vendor')
+        self.__vendor = value
+
+class CustomBasketsRebalanceInputs(Base):
+    """Parameters used to rebalance a basket"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        position_set: PositionSet,
+        pricing_parameters: PricingParameters,
+        allow_ca_restricted_assets: bool = False,
+        allow_limited_access_assets: bool = False,
+        publish_parameters: PublishParameters = None
+    ):        
+        super().__init__()
+        self.allow_ca_restricted_assets = allow_ca_restricted_assets
+        self.allow_limited_access_assets = allow_limited_access_assets
+        self.position_set = position_set
+        self.pricing_parameters = pricing_parameters
+        self.publish_parameters = publish_parameters
+
+    @property
+    def allow_ca_restricted_assets(self) -> bool:
+        return self.__allow_ca_restricted_assets
+
+    @allow_ca_restricted_assets.setter
+    def allow_ca_restricted_assets(self, value: bool):
+        self._property_changed('allow_ca_restricted_assets')
+        self.__allow_ca_restricted_assets = value
+
+    @property
+    def allow_limited_access_assets(self) -> bool:
+        return self.__allow_limited_access_assets
+
+    @allow_limited_access_assets.setter
+    def allow_limited_access_assets(self, value: bool):
+        self._property_changed('allow_limited_access_assets')
+        self.__allow_limited_access_assets = value
+    
+    @property
+    def position_set(self) -> PositionSet:
+	    return self.__position_set
+
+    @position_set.setter
+    def position_set(self, value: PositionSet):
+        self._property_changed('position_set')
+        self.__position_set = value
+
+    @property
+    def pricing_parameters(self) -> PricingParameters:
+	    return self.__pricing_parameters
+
+    @pricing_parameters.setter
+    def pricing_parameters(self, value: PricingParameters):
+        self._property_changed('pricing_parameters')
+        self.__pricing_parameters = value
+
+    @property
+    def publish_parameters(self) -> PublishParameters:
+	    return self.__publish_parameters
+
+    @publish_parameters.setter
+    def publish_parameters(self, value: PublishParameters):
+        self._property_changed('publish_parameters')
+        self.__publish_parameters = value
+
 class CustomBasketsResponse(Base):
         
     """Response object for basket creation/edit/rebalance indicating the status of the
@@ -28,27 +499,14 @@ class CustomBasketsResponse(Base):
     @camel_case_translate
     def __init__(
         self,
-        status: str = None,
         report_id: str = None,
         asset_id: str = None,
-        name: str = None
+        status: str = None,
     ):        
         super().__init__()
-        self.status = status
         self.report_id = report_id
         self.asset_id = asset_id
-        self.name = name
-
-    @property
-    def status(self) -> str:
-        """Basket action request status. Status is done if basket is successfully
-           created/updated and report is triggered for downstream updates"""
-        return self.__status
-
-    @status.setter
-    def status(self, value: str):
-        self._property_changed('status')
-        self.__status = value        
+        self.status = status        
 
     @property
     def report_id(self) -> str:
@@ -70,6 +528,16 @@ class CustomBasketsResponse(Base):
         self._property_changed('asset_id')
         self.__asset_id = value        
 
+    @property
+    def status(self) -> str:
+        """Basket action request status. Status is done if basket is successfully
+           created/updated and report is triggered for downstream updates"""
+        return self.__status
+
+    @status.setter
+    def status(self, value: str):
+        self._property_changed('status')
+        self.__status = value
 
 class ISelectSeries(Base):
         
@@ -121,72 +589,7 @@ class ISelectSeries(Base):
     @name.setter
     def name(self, value: str):
         self._property_changed('name')
-        self.__name = value        
-
-
-class PublishParameters(Base):
-        
-    """Publishing parameters to determine where and how to publish baskets, default all
-       to false. If not provided when rebalance/edit, selections during create
-       will be continued."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        publish_to_reuters: bool,
-        publish_to_bloomberg: bool,
-        include_price_history: bool,
-        publish_to_factset: bool = False,
-        name: str = None
-    ):        
-        super().__init__()
-        self.include_price_history = include_price_history
-        self.publish_to_bloomberg = publish_to_bloomberg
-        self.publish_to_reuters = publish_to_reuters
-        self.publish_to_factset = publish_to_factset
-        self.name = name
-
-    @property
-    def include_price_history(self) -> bool:
-        """Include full price history when publishing to Bloomberg, default to false. Can
-           only be set to true when publishing to Bloomberg"""
-        return self.__include_price_history
-
-    @include_price_history.setter
-    def include_price_history(self, value: bool):
-        self._property_changed('include_price_history')
-        self.__include_price_history = value        
-
-    @property
-    def publish_to_bloomberg(self) -> bool:
-        """Publish Basket to Bloomberg, default to false"""
-        return self.__publish_to_bloomberg
-
-    @publish_to_bloomberg.setter
-    def publish_to_bloomberg(self, value: bool):
-        self._property_changed('publish_to_bloomberg')
-        self.__publish_to_bloomberg = value        
-
-    @property
-    def publish_to_reuters(self) -> bool:
-        """Publish Basket to Reuters, default to false"""
-        return self.__publish_to_reuters
-
-    @publish_to_reuters.setter
-    def publish_to_reuters(self, value: bool):
-        self._property_changed('publish_to_reuters')
-        self.__publish_to_reuters = value        
-
-    @property
-    def publish_to_factset(self) -> bool:
-        """Publish Basket to Factset, default to false"""
-        return self.__publish_to_factset
-
-    @publish_to_factset.setter
-    def publish_to_factset(self, value: bool):
-        self._property_changed('publish_to_factset')
-        self.__publish_to_factset = value        
-
+        self.__name = value                     
 
 class ISelectConstituentColumn(Base):
         
@@ -815,11 +1218,9 @@ class IndicesEditInputs(Base):
     def __init__(
         self,
         parameters: CustomBasketsEditInputs,
-        name: str = None
     ):        
         super().__init__()
         self.parameters = parameters
-        self.name = name
 
     @property
     def parameters(self) -> CustomBasketsEditInputs:
@@ -830,3 +1231,68 @@ class IndicesEditInputs(Base):
     def parameters(self, value: CustomBasketsEditInputs):
         self._property_changed('parameters')
         self.__parameters = value        
+
+class IndicesRebalanceInputs(Base):
+        
+    @camel_case_translate
+    def __init__(
+        self,
+        parameters: CustomBasketsRebalanceInputs
+    ):        
+        super().__init__()
+        self.parameters = parameters
+
+    @property
+    def parameters(self) -> CustomBasketsRebalanceInputs:
+        """parameters used to rebalance a basket"""
+        return self.__parameters
+
+    @parameters.setter
+    def parameters(self, value: CustomBasketsRebalanceInputs):
+        self._property_changed('parameters')
+        self.__parameters = value
+
+class CustomBasketsRebalanceAction(Base):
+    @camel_case_translate
+    def __init__(
+        self,
+        action_type: str = None,
+        comment: str = None,
+    ):        
+        super().__init__()
+        self.action_type = action_type
+        self.comment = comment
+
+    @property
+    def action_type(self) -> str:
+        return self.__action_type
+
+    @action_type.setter
+    def action_type(self, value: str):
+        self._property_changed('action_type')
+        self.__action_type = value
+
+    @property
+    def comment(self) -> str:
+        return self.__comment
+
+    @comment.setter
+    def comment(self, value: str):
+        self._property_changed('comment')
+        self.__comment = value
+
+class ISelectActionRequest(Base):
+    # TODO: Write this class once STS implements GSQ functionality
+    @camel_case_translate
+    def __init__(
+        self,
+    ):        
+        super().__init__()
+
+class IndicesDynamicConstructInputs(Base):
+    # TODO: Write this class once STS implements GSQ functionality
+    @camel_case_translate
+    def __init__(
+        self,
+    ):        
+        super().__init__()

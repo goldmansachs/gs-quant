@@ -27,13 +27,13 @@ import pytz
 from pydash import get
 
 from gs_quant.api.gs.assets import GsAssetApi, GsAsset, AssetClass, AssetParameters, \
-    AssetType as GsAssetType, PositionSet, Currency
+    AssetType as GsAssetType, Currency
 from gs_quant.base import get_enum_value
-from gs_quant.common import PositionType
+from gs_quant.common import DateLimit
 from gs_quant.data import DataMeasure, DataFrequency
 from gs_quant.data.coordinate import DataDimensions
 from gs_quant.data.coordinate import DateOrDatetime
-from gs_quant.entities.entity import Entity, EntityIdentifier, EntityType
+from gs_quant.entities.entity import Entity, EntityIdentifier, EntityType, PositionedEntity
 from gs_quant.errors import MqValueError
 from gs_quant.json_encoder import JSONEncoder
 from gs_quant.markets import PricingContext
@@ -66,7 +66,11 @@ class AssetType(Enum):
 
     #: Bespoke basket which provides exposure to a customized collection of assets with levels published daily; can be
     #: traded on swap and rebalanced programmatically
-    BASKET = "Custom Basket"
+    CUSTOM_BASKET = "Custom Basket"
+
+    #: Bespoke basket which provides exposure to a customized collection of assets with levels published daily;
+    #: basket composition maintained by Goldman Sachs Investment Research
+    RESEARCH_BASKET = "Research Basket"
 
     #: Listed equities which provide access to equity holding in a company and participation in dividends and other
     #: distributions in common, preferred or other variants which provide different investor rights
@@ -319,9 +323,19 @@ class Asset(Entity, metaclass=ABCMeta):
             raise MqValueError(f"No data co-ordinate found for these parameters: {measure, dimensions, frequency}")
         return coordinate.get_series(start=start, end=end)
 
+    def get_latest_close_price(self) -> float:
+        coordinate = self.get_data_coordinate(DataMeasure.CLOSE_PRICE, None, DataFrequency.DAILY)
+        if coordinate is None:
+            raise MqValueError(f"No data co-ordinate found for these parameters: \
+                {DataMeasure.CLOSE_PRICE, None, DataFrequency.DAILY}")
+        return coordinate.last_value()
+
+    def get_close_price_for_date(self, date: dt.date) -> pd.Series:
+        return self.get_data_series(DataMeasure.CLOSE_PRICE, None, DataFrequency.DAILY, date, date)
+
     def get_close_prices(self,
-                         start: Optional[dt.date] = None,
-                         end: Optional[dt.date] = None) -> pd.Series:
+                         start: dt.date = DateLimit.LOW_LIMIT.value,
+                         end: dt.date = dt.date.today()) -> pd.Series:
         """
         Get close price series
 
@@ -344,22 +358,20 @@ class Asset(Entity, metaclass=ABCMeta):
 
         :class:`DataMeasure`
         :func:`get_data_series`
-
         """
-
         return self.get_data_series(DataMeasure.CLOSE_PRICE, None, DataFrequency.DAILY, start, end)
 
     @abstractmethod
     def get_type(self) -> AssetType:
         """Overridden by sub-classes to return security type"""
 
-    @property
-    def data_dimension(self) -> str:
-        return 'assetId'
-
     @classmethod
     def entity_type(cls) -> EntityType:
         return EntityType.ASSET
+
+    @property
+    def data_dimension(self) -> str:
+        return 'assetId'
 
     @classmethod
     def get(cls,
@@ -732,58 +744,7 @@ class Option(Asset):
         return AssetType.OPTION
 
 
-class IndexConstituentProvider(metaclass=ABCMeta):
-    def __init__(self, id_: str):
-        self.__id = id_
-
-    def get_constituents(self, as_of: dt.date = None, position_type: PositionType = PositionType.CLOSE) -> Tuple[
-            PositionSet, ...]:
-        """
-        Get asset constituents
-
-        :param as_of: As of date for query
-        :param position_type:
-        :return: dict of identifiers
-
-        **Usage**
-
-        Get index constituents as of a given date. If no date is provided as a parameter, will use the current
-        PricingContext.
-
-        **Examples**
-
-        Get current index constituents (defaults to close):
-
-        >>> import datetime as dt
-        >>>
-        >>> gs = SecurityMaster.get_asset('GSTHHVIP', AssetIdentifier.TICKER)
-        >>> gs.get_constituents()
-
-        Get constituents as of market open on 3Jan18:
-
-        >>> gs.get_constituents(dt.date(2018,1,3), PositionType.OPEN)
-
-        Use PricingContext to determine as of date:
-
-        >>> with PricingContext(dt.date(2018,1,1)) as ctx:
-        >>>     gs.get_constituents()
-
-        **See also**
-
-        :class:`AssetIdentifier`
-        :func:`get_asset`
-
-        """
-        if not as_of:
-            as_of = PricingContext.current.pricing_date
-
-            if isinstance(as_of, dt.datetime):
-                as_of = as_of.date()
-
-        return GsAssetApi.get_asset_positions_for_date(self.__id, as_of, position_type.value)
-
-
-class Index(Asset, IndexConstituentProvider):
+class Index(Asset, PositionedEntity):
     """Index Asset
 
     Index which tracks an evolving portfolio of securities, and can be traded through cash or derivatives markets
@@ -797,7 +758,7 @@ class Index(Asset, IndexConstituentProvider):
                  currency: Optional[Currency] = None,
                  entity: Optional[Dict] = None):
         Asset.__init__(self, id_, asset_class, name, exchange, currency, entity=entity)
-        IndexConstituentProvider.__init__(self, id_)
+        PositionedEntity.__init__(self, id_, EntityType.ASSET)
 
     def get_type(self) -> AssetType:
         return AssetType.INDEX
@@ -812,7 +773,7 @@ class Index(Asset, IndexConstituentProvider):
         return ReturnType(self.parameters.index_return_type)
 
 
-class ETF(Asset, IndexConstituentProvider):
+class ETF(Asset, PositionedEntity):
     """ETF Asset
 
     ETF which tracks an evolving portfolio of securities, and can be traded on exchange
@@ -826,32 +787,10 @@ class ETF(Asset, IndexConstituentProvider):
                  currency: Optional[Currency] = None,
                  entity: Optional[Dict] = None):
         Asset.__init__(self, id_, asset_class, name, exchange, currency, entity=entity)
-        IndexConstituentProvider.__init__(self, id_)
+        PositionedEntity.__init__(self, id_, EntityType.ASSET)
 
     def get_type(self) -> AssetType:
         return AssetType.ETF
-
-    def get_currency(self) -> Optional[Currency]:
-        return self.currency
-
-
-class Basket(Asset, IndexConstituentProvider):
-    """Basket Asset
-
-    Basket which tracks an evolving portfolio of securities, and can be traded through cash or derivatives markets
-    """
-
-    def __init__(self,
-                 id_: str,
-                 asset_class: AssetClass,
-                 name: str,
-                 currency: Optional[Currency] = None,
-                 entity: Optional[Dict] = None):
-        Asset.__init__(self, id_, asset_class, name, currency=currency, entity=entity)
-        IndexConstituentProvider.__init__(self, id_)
-
-    def get_type(self) -> AssetType:
-        return AssetType.BASKET
 
     def get_currency(self) -> Optional[Currency]:
         return self.currency
@@ -895,7 +834,8 @@ class SecurityMaster:
         if asset_type in (
                 GsAssetType.Custom_Basket.value,
                 GsAssetType.Research_Basket.value):
-            return Basket(gs_asset.id, gs_asset.assetClass, gs_asset.name, gs_asset.currency, entity=asset_entity)
+            from gs_quant.markets.baskets import Basket
+            return Basket(gs_asset=gs_asset)
 
         if asset_type in (GsAssetType.Future.value,):
             return Future(gs_asset.id, gs_asset.assetClass, gs_asset.name, gs_asset.currency, entity=asset_entity)
@@ -961,7 +901,8 @@ class SecurityMaster:
             AssetType.INDEX: (
                 GsAssetType.Index, GsAssetType.Multi_Asset_Allocation, GsAssetType.Risk_Premia, GsAssetType.Access),
             AssetType.ETF: (GsAssetType.ETF, GsAssetType.ETN),
-            AssetType.BASKET: (GsAssetType.Custom_Basket, GsAssetType.Research_Basket),
+            AssetType.CUSTOM_BASKET: (GsAssetType.Custom_Basket,),
+            AssetType.RESEARCH_BASKET: (GsAssetType.Research_Basket,),
             AssetType.FUTURE: (GsAssetType.Future,),
             AssetType.RATE: (GsAssetType.Rate,),
         }

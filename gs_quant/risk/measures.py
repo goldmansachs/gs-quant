@@ -323,3 +323,8 @@ MarketData = __risk_measure_with_doc_string(
     'Market Data map of coordinates and values',
     RiskMeasureType.Market_Data
 )
+ParSpread = __risk_measure_with_doc_string(
+    'ParSpread',
+    'Par Spread',
+    RiskMeasureType.Spread,
+    asset_class=AssetClass.Rates)

@@ -371,7 +371,7 @@ def aggregate_results(results: Iterable[ResultType]) -> ResultType:
             raise ValueError('Cannot aggregate results in error')
 
         if not isinstance(result, type(results[0])):
-            raise ValueError('Cannot aggregate heterogeneous types')
+            raise ValueError(f'Cannot aggregate heterogeneous types: {type(result)} vs {type(results[0])}')
 
         if result.unit:
             if unit and unit != result.unit:

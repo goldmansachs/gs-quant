@@ -16,7 +16,7 @@ under the License.
 
 import datetime as dt
 
-from gs_quant.api.gs.risk_models import GsRiskModelApi
+from gs_quant.api.gs.risk_models import GsRiskModelApi, GsFactorRiskModelApi
 from gs_quant.session import *
 from gs_quant.target.risk_models import RiskModel, RiskModelFactor, RiskModelCalendar
 
@@ -253,7 +253,7 @@ def test_get_risk_model_factors(mocker):
     mocker.patch.object(GsSession.current, '_get', return_value=factors)
 
     # run test
-    response = GsRiskModelApi.get_risk_model_factors(model_id='id')
+    response = GsFactorRiskModelApi.get_risk_model_factors(model_id='id')
     GsSession.current._get.assert_called_with('/risk/models/id/factors', cls=RiskModelFactor)
     assert response == expected_response
 
@@ -277,7 +277,7 @@ def test_create_risk_model_factor(mocker):
     mocker.patch.object(GsSession.current, '_post', return_value=factor)
 
     # run test
-    response = GsRiskModelApi.create_risk_model_factor(model_id='id', factor=factor)
+    response = GsFactorRiskModelApi.create_risk_model_factor(model_id='id', factor=factor)
     GsSession.current._post.assert_called_with('/risk/models/id/factors', factor, cls=RiskModelFactor)
     assert response == expected_response
 
@@ -299,7 +299,7 @@ def test_update_risk_model_factor(mocker):
     mocker.patch.object(GsSession.current, '_put', return_value=factor)
 
     # run test
-    response = GsRiskModelApi.update_risk_model_factor(model_id='id', factor_id='factor', factor=factor)
+    response = GsFactorRiskModelApi.update_risk_model_factor(model_id='id', factor_id='factor', factor=factor)
     GsSession.current._put.assert_called_with('/risk/models/{id}/factors/{identifier}'
                                               .format(id='id', identifier='factor'), factor, cls=RiskModelFactor)
     assert response == factor
@@ -330,7 +330,7 @@ def test_get_risk_model_coverage(mocker):
     mocker.patch.object(GsSession.current, '_post', return_value=results)
 
     # run test
-    response = GsRiskModelApi.get_risk_model_coverage()
+    response = GsFactorRiskModelApi.get_risk_model_coverage()
     GsSession.current._post.assert_called_with('/risk/models/coverage', {})
     assert response == results['results']
 
@@ -373,7 +373,7 @@ def test_upload_risk_model_data(mocker):
     mocker.patch.object(GsSession.current, '_post', return_value='Successfully uploaded')
 
     # run test
-    response = GsRiskModelApi.upload_risk_model_data(model_id='id', model_data=risk_model_data)
+    response = GsFactorRiskModelApi.upload_risk_model_data(model_id='id', model_data=risk_model_data)
     GsSession.current._post.assert_called_with('/risk/models/data/{id}'.format(id='id'), risk_model_data)
     assert response == 'Successfully uploaded'
 
@@ -407,7 +407,7 @@ def test_get_risk_model_data(mocker):
             },
             'factorPortfolios': {
                 'universe': ['2407966', '2046251'],
-                'portfolio':[{'factorId': 2, 'weights': [0.25, 0.75]}]
+                'portfolio': [{'factorId': 2, 'weights': [0.25, 0.75]}]
             }
         }],
         'totalResults': 1,
@@ -425,7 +425,7 @@ def test_get_risk_model_data(mocker):
     mocker.patch.object(GsSession.current, '_post', return_value=results)
 
     # run test
-    response = GsRiskModelApi.get_risk_model_data(model_id='id', start_date=dt.date(2020, 1, 1),
-                                                  end_date=dt.date(2020, 3, 3))
+    response = GsFactorRiskModelApi.get_risk_model_data(model_id='id', start_date=dt.date(2020, 1, 1),
+                                                        end_date=dt.date(2020, 3, 3))
     GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query)
     assert response == results

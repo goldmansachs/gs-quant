@@ -15,10 +15,11 @@ under the License.
 """
 
 from enum import Enum
-from typing import Tuple
-
+from typing import Tuple, NamedTuple, Union
+import datetime
 from gs_quant.base import EnumBase
 from gs_quant.target.backtests import Backtest as __Backtest, BacktestResult
+from typing import Optional
 
 
 # TODO add these in Studio as a standalone JSON, so they will be generated
@@ -58,3 +59,17 @@ class Backtest(__Backtest):
 class MarketModel(EnumBase, Enum):
     STICKY_FIXED_STRIKE = "SFK"
     STICKY_DELTA = "SD"
+
+
+class TimeWindow(NamedTuple):
+    start: Union[datetime.time, datetime.datetime] = None
+    end: Union[datetime.time, datetime.datetime] = None
+
+
+class ValuationFixingType(EnumBase, Enum):
+    PRICE = 'price'
+
+
+class ValuationMethod(NamedTuple):
+    data_tag: ValuationFixingType = ValuationFixingType.PRICE
+    window: Optional[TimeWindow] = None

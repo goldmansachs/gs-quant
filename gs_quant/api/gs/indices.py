@@ -13,89 +13,81 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from typing import Union
 
-from gs_quant.api.gs.assets import GsAssetApi
-from gs_quant.session import *
-from gs_quant.target.indices import *
+import logging
+import datetime as dt
+from typing import Union, Dict
+
+from gs_quant.api.gs.assets import AssetType
+from gs_quant.errors import MqValueError
+from gs_quant.session import GsSession
+from gs_quant.target.indices import CustomBasketsCreateInputs, CustomBasketsResponse, \
+    CustomBasketsRebalanceAction, IndicesDynamicConstructInputs, IndicesEditInputs, \
+    IndicesRebalanceInputs, ISelectActionRequest, ISelectResponse
+from requests.exceptions import HTTPError
+
+_logger = logging.getLogger(__name__)
 
 
 class GsIndexApi:
+    """GS Index API client implementation"""
 
-    marquee_id = None
-
-    def __init__(self, marquee_id: str = None):
-        self.marquee_id = marquee_id
-
-    def create(
-            self,
-            inputs: Union[CustomBasketsCreateInputs, IndicesDynamicConstructInputs]
-    ) -> CustomBasketsResponse:
-        """
-        Create a custom basket of equity stocks or ETFs
-
-        :param inputs: parameters used to create the index
-        :return: a response object containing status of create process, reportId and assetId
-        """
-
-        response = GsSession.current._post('/indices', payload=inputs, cls=CustomBasketsResponse)
-        self.marquee_id = response.assetId
+    @classmethod
+    def create(cls,
+               inputs: Union[CustomBasketsCreateInputs, IndicesDynamicConstructInputs]
+               ) -> CustomBasketsResponse:
+        try:
+            response = GsSession.current._post('/indices', payload=inputs, cls=CustomBasketsResponse)
+        except HTTPError as err:
+            raise MqValueError(f'Unable to create index with {err}')
         return response
 
-    def rebalance(
-            self,
-            inputs: IndicesRebalanceInputs,
-    ) -> Union[CustomBasketsResponse, ISelectResponse]:
-        """
-        Rebalance of indices: including iSelect and Custom Baskets
-
-        :param inputs: parameters used to rebalance the index
-        :return: a response object containing status of rebalance, reportId, approvalId and assetId
-        """
-
-        if self.marquee_id is None:
-            raise ValueError('Missing Asset Id of target index at initialization')
-
-        asset = GsAssetApi.get_asset(self.marquee_id)
-        if asset.type == AssetType.Custom_Basket or asset.type == AssetType.Research_Basket:
-            cls = CustomBasketsResponse
-        else:
-            cls = ISelectResponse
-
-        url = "/indices/{id}/rebalance".format(id=self.marquee_id)
-        response = GsSession.current._post(url, payload=inputs, cls=cls)
+    @classmethod
+    def edit(cls, id_: str, inputs: IndicesEditInputs) -> CustomBasketsResponse:
+        url = f'/indices/{id_}/edit'
+        try:
+            response = GsSession.current._post(url, payload=inputs, cls=CustomBasketsResponse)
+        except HTTPError as err:
+            raise MqValueError(f'Unable to edit index with {err}')
         return response
 
-    def cancel_rebalance(
-            self,
-            inputs: Union[CustomBasketsRebalanceAction, ISelectActionRequest],
-    ):
-        """
-        Cancel current pending rebalance of an index
+    @classmethod
+    def rebalance(cls,
+                  id_: str,
+                  asset_type: AssetType,
+                  inputs: IndicesRebalanceInputs) -> Union[CustomBasketsResponse, ISelectResponse]:
+        cls = CustomBasketsResponse if asset_type == AssetType.Custom_Basket or \
+            asset_type == AssetType.Research_Basket else ISelectResponse
+        url = f'/indices/{id_}/rebalance'
+        try:
+            response = GsSession.current._post(url, payload=inputs, cls=cls)
+        except HTTPError as err:
+            raise MqValueError(f'Unable to rebalance index with {err}')
+        return response
 
-        :param inputs: Comments for the approval action
-        """
+    @classmethod
+    def cancel_rebalance(cls, id_: str, inputs: Union[CustomBasketsRebalanceAction, ISelectActionRequest]):
+        url = f'/indices/{id_}/rebalance/cancel'
+        try:
+            GsSession.current._post(url, payload=inputs)
+        except HTTPError as err:
+            raise MqValueError(f'Unable to cancel rebalance with {err}')
+        return f'Rebalance submission for {id_} has been cancelled'
 
-        if self.marquee_id is None:
-            raise ValueError('Missing Asset Id of target index at initialization')
+    @classmethod
+    def last_rebalance_data(cls, id_: str) -> Dict:
+        url = f'/indices/{id_}/rebalance/data/last'
+        try:
+            response = GsSession.current._get(url)
+        except HTTPError as err:
+            raise MqValueError(f'Unable to retrieve latest rebalance data with {err}')
+        return response
 
-        url = "/indices/{id}/rebalance/cancel".format(id=self.marquee_id)
-        GsSession.current._post(url, payload=inputs)
-
-    def edit(
-            self,
-            inputs: IndicesEditInputs,
-    ) -> CustomBasketsResponse:
-        """
-        Edit indices
-
-        :param inputs: parameters used to edit the index
-        :return: a response object containing status of edit, reportId and assetId
-        """
-
-        if self.marquee_id is None:
-            raise ValueError('Missing Asset Id of target index at initialization')
-
-        url = "/indices/{id}/edit".format(id=self.marquee_id)
-        response = GsSession.current._post(url, payload=inputs, cls=CustomBasketsResponse)
+    @classmethod
+    def initial_price(cls, id_: str, date: dt.date) -> Dict:
+        url = f'/indices/{id_}/rebalance/initialprice/{date.isoformat()}'
+        try:
+            response = GsSession.current._get(url)
+        except HTTPError as err:
+            raise MqValueError(f'Unable to retrieve initial price with {err}')
         return response
