@@ -65,7 +65,7 @@ def test_get_risk_models(mocker):
 
     # run test
     response = GsRiskModelApi.get_risk_models()
-    GsSession.current._get.assert_called_with('/risk/models', cls=RiskModel)
+    GsSession.current._get.assert_called_with('/risk/models?', cls=RiskModel)
     assert response == expected_response
 
 

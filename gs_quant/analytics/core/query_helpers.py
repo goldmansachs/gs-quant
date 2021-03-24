@@ -13,16 +13,18 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-
+import logging
 from collections import defaultdict
 from datetime import date, datetime
-from typing import Dict
+from typing import Dict, Tuple, Union
 
 from pandas import DataFrame, to_datetime
 
 from gs_quant.analytics.core.processor_result import ProcessorResult
 from gs_quant.data import DataFrequency
 from gs_quant.session import GsSession
+
+_logger = logging.getLogger(__name__)
 
 
 def aggregate_queries(query_infos):
@@ -77,16 +79,20 @@ def fetch_query(query_info: Dict):
         'where': where,
         **query_info['range']
     }
-
-    if query_info['realTime'] and not query_info['range']:
-        response = GsSession.current._post(f'/data/{query_info["datasetId"]}/last/query', payload=query)
-    else:
-        response = GsSession.current._post(f'/data/{query_info["datasetId"]}/query', payload=query)
+    try:
+        if query_info['realTime'] and not query_info['range']:
+            response = GsSession.current._post(f'/data/{query_info["datasetId"]}/last/query', payload=query)
+        else:
+            response = GsSession.current._post(f'/data/{query_info["datasetId"]}/query', payload=query)
+    except Exception as e:
+        _logger.error(f'Error fetching query due to {e}')
+        return DataFrame()
 
     df = DataFrame(response.get('data', {}))
+    if df.empty:
+        return df
     df.set_index('date' if 'date' in df.columns else 'time', inplace=True)
     df.index = to_datetime(df.index)
-
     return df
 
 
@@ -101,3 +107,12 @@ def build_query_string(dimensions):
         else:
             output += f' & {dimension[0]} == {value}'
     return output
+
+
+def valid_dimensions(query_dimensions: Tuple[str, Union[str, float, bool]], df: DataFrame) -> bool:
+    columns = df.columns
+    for query_dimension in query_dimensions:
+        dimension = query_dimension[0]
+        if dimension not in columns:
+            return False
+    return True

@@ -19,7 +19,7 @@ import json
 import threading
 from abc import ABCMeta, abstractmethod
 from enum import Enum
-from typing import Optional, Tuple, Union, Dict
+from typing import Dict, List, Optional, Tuple, Union
 
 import cachetools
 import pandas as pd
@@ -37,6 +37,7 @@ from gs_quant.entities.entity import Entity, EntityIdentifier, EntityType, Posit
 from gs_quant.errors import MqValueError
 from gs_quant.json_encoder import JSONEncoder
 from gs_quant.markets import PricingContext
+from gs_quant.target.common import Entitlements
 
 
 class ExchangeCode(Enum):
@@ -131,6 +132,9 @@ class AssetType(Enum):
     #: Crypto
     CRYPTOCURRENCY = "Cryptocurrency"
 
+    #: Forward
+    FORWARD = "Forward"
+
 
 class AssetIdentifier(EntityIdentifier):
     """Asset type enumeration
@@ -170,7 +174,8 @@ class Asset(Entity, metaclass=ABCMeta):
                  exchange: Optional[str] = None,
                  currency: Optional[str] = None,
                  parameters: AssetParameters = None,
-                 entity: Optional[Dict] = None):
+                 entity: Optional[Dict] = None,
+                 entitlements: Entitlements = None):
         super().__init__(id_, EntityType.ASSET, entity=entity)
         self.__id = id_
         self.asset_class = asset_class
@@ -178,6 +183,7 @@ class Asset(Entity, metaclass=ABCMeta):
         self.exchange = exchange
         self.currency = currency
         self.parameters = parameters
+        self.entitlements = entitlements
 
     def get_marquee_id(self):
         return self.__id
@@ -383,6 +389,38 @@ class Asset(Entity, metaclass=ABCMeta):
             sort_by_rank: bool = False) -> Optional['Asset']:
         asset = SecurityMaster.get_asset(id_value, id_type, as_of, exchange_code, asset_type, sort_by_rank)
         return asset
+
+    def get_admins(self) -> Optional[Tuple[str]]:
+        return get(self.entitlements, 'admin')
+
+    def get_viewers(self) -> Optional[Tuple[str]]:
+        return get(self.entitlements, 'view')
+
+    def add_admin_permissions(self, user_tokens: List[str]) -> Dict:
+        self.entitlements.admin = self.__get_updated_tokens(self.entitlements.admin, tokens_to_add=user_tokens)
+        return GsAssetApi.update_asset_entitlements(self.__id, self.entitlements)
+
+    def add_view_permissions(self, user_tokens: List[str]) -> Dict:
+        self.entitlements.view = self.__get_updated_tokens(self.entitlements.view, tokens_to_add=user_tokens)
+        return GsAssetApi.update_asset_entitlements(self.__id, self.entitlements)
+
+    def remove_admin_permissions(self, user_tokens: List[str]) -> Dict:
+        self.entitlements.admin = self.__get_updated_tokens(self.entitlements.admin, tokens_to_remove=user_tokens)
+        return GsAssetApi.update_asset_entitlements(self.__id, self.entitlements)
+
+    def remove_view_permissions(self, user_tokens: List[str]) -> Dict:
+        self.entitlements.view = self.__get_updated_tokens(self.entitlements.view, tokens_to_remove=user_tokens)
+        return GsAssetApi.update_asset_entitlements(self.__id, self.entitlements)
+
+    def __get_updated_tokens(self, current_tokens: Tuple[str], tokens_to_add: List[str] = None,
+                             tokens_to_remove: List[str] = None) -> Tuple[str]:
+        if self.entitlements is None:
+            raise MqValueError(f'Cannot modify null entitlements object for asset {self.__id}')
+        if tokens_to_add:
+            return tuple(set(current_tokens).union(set(tokens_to_add)))
+        else:
+            tokens_to_remove = set(t for t in tokens_to_remove if not t[:4] == 'role')
+            return tuple(t for t in current_tokens if t not in tokens_to_remove)
 
 
 class Stock(Asset):
@@ -744,6 +782,22 @@ class Option(Asset):
         return AssetType.OPTION
 
 
+class Forward(Asset):
+
+    def __init__(self,
+                 id_: str,
+                 asset_class: Union[AssetClass, str],
+                 name: str,
+                 entity: Optional[Dict] = None):
+        if isinstance(asset_class, str):
+            asset_class = get_enum_value(AssetClass, asset_class)
+
+        Asset.__init__(self, id_, asset_class, name, entity=entity)
+
+    def get_type(self) -> AssetType:
+        return AssetType.FORWARD
+
+
 class Index(Asset, PositionedEntity):
     """Index Asset
 
@@ -891,6 +945,9 @@ class SecurityMaster:
         # workaround as casing is being migrated
         if asset_type == GsAssetType.Cryptocurrency.value:
             return Cryptocurrency(gs_asset.id, gs_asset.assetClass, gs_asset.name, entity=asset_entity)
+
+        if asset_type == GsAssetType.Forward.value:
+            return Forward(gs_asset.id, gs_asset.assetClass, gs_asset.name, entity=asset_entity)
 
         raise TypeError(f'unsupported asset type {asset_type}')
 

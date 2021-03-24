@@ -267,10 +267,12 @@ def test_coordinate_last(mocker):
 
 
 def test_get_coverage_api(mocker):
-    test_coverage_data = {'results': [{'gsid': 'gsid1'}]}
+    test_coverage_data_1 = {'results': [{'gsid': 'gsid1'}], 'scrollId': 'fake-scroll-id-1', 'totalResults': 1}
+    test_coverage_data_2 = {'results': [], 'scrollId': 'fake-scroll-id-2', 'totalResults': 1}
 
     mocker.patch.object(ContextMeta, 'current', return_value=GsSession(Environment.QA))
-    mocker.patch.object(ContextMeta.current, '_get', return_value=test_coverage_data)
+    mock = mocker.patch.object(ContextMeta.current, '_get')
+    mock.side_effect = [test_coverage_data_1, test_coverage_data_2]
     data = GsDataApi.get_coverage('MA_RANK')
 
     assert [{'gsid': 'gsid1'}] == data

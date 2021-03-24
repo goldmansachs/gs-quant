@@ -19,6 +19,7 @@ from typing import List
 from pydash import get
 
 from gs_quant.session import GsSession
+from requests.exceptions import HTTPError
 
 
 class GsUsersApi:
@@ -52,3 +53,17 @@ class GsUsersApi:
         :return: list of guids (user ids appended with "guid:")
         """
         return [f'guid:{user_id}' for user_id in user_ids]
+
+    @classmethod
+    def get_user_emails_by_guid(cls, user_guids: List[str]) -> List[str]:
+        """
+        Gets the emails for users with the provided user guids.
+        :param user_guids: list of user guids
+        :return: list of emails
+        """
+        user_guid_query = '&id='.join([guid[5:] for guid in user_guids])
+        try:
+            raw_users = GsSession.current._get(f'/users?{user_guid_query}&limit={len(user_guids)}')
+        except HTTPError as err:
+            raise ValueError(f'Unable to fetch user emails with {err}')
+        return [user['email'] for user in get(raw_users, 'results', [])]

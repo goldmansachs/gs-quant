@@ -23,6 +23,7 @@ from typing import Any, Iterable, Mapping, Optional, Tuple, Union
 
 import pandas as pd
 from gs_quant.base import Priceable, RiskKey, Sentinel, InstrumentBase
+from gs_quant.config import DisplayOptions
 from gs_quant.risk import DataFrameWithInfo, ErrorValue, FloatWithInfo, RiskMeasure, SeriesWithInfo, ResultInfo, \
     ScalarWithInfo, aggregate_results
 
@@ -279,8 +280,9 @@ class MultipleRiskMeasureResult(dict):
 
         return tuple(sorted(dates))
 
-    def to_frame(self, values='default', index='default', columns='default', aggfunc=pd.unique):
-        df = self._get_raw_df()
+    def to_frame(self, values='default', index='default', columns='default', aggfunc=pd.unique,
+                 display_options: DisplayOptions = None):
+        df = self._get_raw_df(display_options)
         if values is None and index is None and columns is None:
             return df
         elif values == 'default' and index == 'default' and columns == 'default':
@@ -302,11 +304,11 @@ class MultipleRiskMeasureResult(dict):
             pivot_df = pivot_df.reindex(columns=cols)
         return pivot_df
 
-    def _get_raw_df(self):
+    def _get_raw_df(self, display_options: DisplayOptions = None):
         list_df = []
         cols = []
         for rm in list(self):
-            curr_raw_df = self[rm]._get_raw_df()
+            curr_raw_df = self[rm]._get_raw_df(display_options)
             if curr_raw_df is not None:
                 curr_raw_df.insert(0, 'risk_measure', rm)
                 if 'mkt_type' in curr_raw_df.columns.values:
@@ -577,13 +579,15 @@ class PortfolioRiskResult(CompositeResultFuture):
         sub_portfolio = self.__portfolio.subset(paths, name=name)
         return PortfolioRiskResult(sub_portfolio, self.risk_measures, [p(self.futures) for p in paths])
 
-    def aggregate(self) -> Union[float, pd.DataFrame, pd.Series, MultipleRiskMeasureResult]:
+    def aggregate(self, allow_mismatch_risk_keys=False) -> Union[float, pd.DataFrame, pd.Series,
+                                                                 MultipleRiskMeasureResult]:
         if len(self.__risk_measures) > 1:
             return MultipleRiskMeasureResult(self.portfolio, ((r, self[r].aggregate()) for r in self.__risk_measures))
         else:
-            return aggregate_results(self.__results())
+            return aggregate_results(self.__results(), allow_mismatch_risk_keys=allow_mismatch_risk_keys)
 
-    def to_frame(self, values='default', index='default', columns='default', aggfunc=pd.unique):
+    def to_frame(self, values='default', index='default', columns='default', aggfunc=pd.unique,
+                 display_options: DisplayOptions = None):
         def get_df(priceable, port_info=None, inst_idx=0):
             if port_info is None:
                 port_info = {}
@@ -603,7 +607,7 @@ class PortfolioRiskResult(CompositeResultFuture):
                 port_info.update({
                     'instrument_name': f'{priceable.type.name}_{inst_idx}' if priceable.name is None else priceable.name
                 })
-                sub_df = self[priceable]._get_raw_df()
+                sub_df = self[priceable]._get_raw_df(display_options)
                 if sub_df is not None:
                     for port_idx, (key, value) in enumerate(port_info.items()):
                         sub_df.insert(port_idx, key, value)

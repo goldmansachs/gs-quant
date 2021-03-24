@@ -64,7 +64,7 @@ class HedgeActionImpl(ActionHandler):
         super().__init__(action)
 
     def apply_action(self, state: Union[date, Iterable[date]], backtest: BackTest):
-        with HistoricalPricingContext(dates=make_list(state)):
+        with HistoricalPricingContext(dates=make_list(state), csa_term=self.action.csa_term):
             backtest.calc_calls += 1
             backtest.calculations += len(make_list(state))
             f = Portfolio(make_list(self.action.priceable)).resolve(in_place=False)
@@ -77,7 +77,8 @@ class HedgeActionImpl(ActionHandler):
                 for t in portfolio:
                     t.name = f'{t.name}_{create_date.strftime("%Y-%m-%d")}'
                 backtest.scaling_portfolios[create_date].append(
-                    ScalingPortfolio(trade=portfolio.instruments[0], dates=active_dates, risk=self.action.risk))
+                    ScalingPortfolio(trade=portfolio.instruments[0], dates=active_dates, risk=self.action.risk,
+                                     csa_term=self.action.csa_term))
 
         return backtest
 
@@ -103,18 +104,17 @@ class GenericEngine(BacktestBaseEngine):
         handler_factory = GenericEngineActionFactory(self.action_impl_map)
         return handler_factory.get_action_handler(action)
 
-    @classmethod
-    def supports_strategy(cls, strategy):
+    def supports_strategy(self, strategy):
         all_actions = reduce(lambda x, y: x + y, (map(lambda x: x.actions, strategy.triggers)))
         try:
             for x in all_actions:
-                cls.get_action_handler(x)
+                self.get_action_handler(x)
         except RuntimeError:
             return False
         return True
 
     def run_backtest(self, strategy, start=None, end=None, frequency='BM', window=None, states=None, risks=Price,
-                     show_progress=True):
+                     show_progress=True, csa_term=None):
         dates = pd.date_range(start=start, end=end, freq=frequency).date.tolist()
         risks = make_list(risks) + strategy.risks
 
@@ -122,7 +122,7 @@ class GenericEngine(BacktestBaseEngine):
 
         if len(strategy.initial_portfolio):
             init_port = Portfolio(strategy.initial_portfolio)
-            with PricingContext(pricing_date=dates[0]):
+            with PricingContext(pricing_date=dates[0], csa_term=csa_term):
                 init_port.resolve()
             for d in dates:
                 backtest.portfolio_dict[d].append(init_port.instruments)
@@ -136,7 +136,7 @@ class GenericEngine(BacktestBaseEngine):
 
         with PricingContext(is_batch=True, show_progress=show_progress):
             for day, portfolio in backtest.portfolio_dict.items():
-                with PricingContext(day):
+                with PricingContext(day, csa_term=csa_term):
                     backtest.calc_calls += 1
                     backtest.calculations += len(portfolio) * len(risks)
                     backtest.add_results(day, portfolio.calc(tuple(risks)))
@@ -144,7 +144,7 @@ class GenericEngine(BacktestBaseEngine):
             # semi path dependent initial calc
             for _, scaling_list in backtest.scaling_portfolios.items():
                 for p in scaling_list:
-                    with HistoricalPricingContext(dates=p.dates):
+                    with HistoricalPricingContext(dates=p.dates, csa_term=p.csa_term or csa_term):
                         backtest.calc_calls += 1
                         backtest.calculations += len(p.dates) * len(risks)
                         p.results = Portfolio([p.trade]).calc(tuple(risks))
@@ -152,12 +152,10 @@ class GenericEngine(BacktestBaseEngine):
         for d in dates:
             # semi path dependent scaling
             if d in backtest.scaling_portfolios:
-                initial_portfolio = backtest.scaling_portfolios[d][0]
-                scale_date = initial_portfolio.dates[0]
-                current_risk = backtest.results[scale_date][initial_portfolio.risk].aggregate()
-                hedge_risk = initial_portfolio.results[scale_date][initial_portfolio.risk][0]
-                scaling_factor = current_risk / hedge_risk
                 for p in backtest.scaling_portfolios[d]:
+                    current_risk = backtest.results[d][p.risk].aggregate(allow_mismatch_risk_keys=True)
+                    hedge_risk = p.results[d][p.risk].aggregate()
+                    scaling_factor = current_risk / hedge_risk
                     new_notional = p.trade.notional_amount * -scaling_factor
                     scaled_trade = p.trade.as_dict()
                     scaled_trade['notional_amount'] = new_notional

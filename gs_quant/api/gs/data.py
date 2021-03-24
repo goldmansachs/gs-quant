@@ -29,6 +29,7 @@ from cachetools import TTLCache
 from gs_quant.api.data import DataApi
 from gs_quant.base import Base
 from gs_quant.data.core import DataContext, DataFrequency
+from gs_quant.data.log import log_debug
 from gs_quant.errors import MqValueError
 from gs_quant.markets import MarketDataCoordinate
 from gs_quant.session import GsSession
@@ -36,7 +37,6 @@ from gs_quant.target.common import MarketDataVendor, PricingLocation
 from gs_quant.target.coordinates import MDAPIDataBatchResponse, MDAPIDataQuery, MDAPIDataQueryResponse, MDAPIQueryField
 from gs_quant.target.data import DataQuery, DataQueryResponse
 from gs_quant.target.data import DataSetEntity
-from gs_quant.data.log import log_debug
 from .assets import GsIdType
 from ...target.assets import EntityQuery, FieldFilterMap
 
@@ -106,6 +106,7 @@ class QueryType(Enum):
     INTEGRATED_SCORE = "Integrated Score"
     COMMODITY_FORECAST = "Commodity Forecast"
     FORECAST_VALUE = "Forecast Value"
+    FORWARD_POINT = "Forward Point"
     FCI = "Fci"
     LONG_RATES_CONTRIBUTION = "Long Rates Contribution"
     SHORT_RATES_CONTRIBUTION = "Short Rates Contribution"
@@ -207,33 +208,30 @@ class GsDataApi(DataApi):
             fields: List[str] = None,
             include_history: bool = False
     ) -> List[dict]:
-        params = {}
-        if scroll:
-            params['scroll'] = scroll
+        params = {
+            'limit': limit or 4000,
+            'scroll': scroll
+        }
 
         if scroll_id:
             params['scrollId'] = scroll_id
-
-        if not limit:
-            limit = 4000
-        params['limit'] = limit
-
         if offset:
             params['offset'] = offset
-
         if fields:
             params['fields'] = fields
-
         if include_history:
             params['includeHistory'] = 'true'
 
-        body = GsSession.current._get('/data/{}/coverage'.format(dataset_id), payload=params)
-        results = body['results']
-        if len(results) > 0 and 'scrollId' in body:
-            return results + cls.get_coverage(dataset_id, scroll_id=body['scrollId'], scroll=GsDataApi.DEFAULT_SCROLL,
-                                              limit=limit)
-        else:
-            return results
+        body = GsSession.current._get(f'/data/{dataset_id}/coverage', payload=params)
+        results = scroll_results = body['results']
+        total_results = body['totalResults']
+        while len(scroll_results) and len(results) < total_results:
+            params['scrollId'] = body['scrollId']
+            body = GsSession.current._get(f'/data/{dataset_id}/coverage', payload=params)
+            scroll_results = body['results']
+            results += scroll_results
+
+        return results
 
     @classmethod
     def create(cls, definition: Union[DataSetEntity, dict]) -> DataSetEntity:

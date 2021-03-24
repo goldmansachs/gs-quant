@@ -17,7 +17,6 @@ from typing import List
 import pandas as pd
 import datetime as dt
 from gs_quant.api.gs.risk_models import GsFactorRiskModelApi
-from gs_quant.target.risk_models import RiskModelData
 
 
 def build_asset_data_map(results: List, universe: List, measure: str) -> dict:
@@ -130,17 +129,15 @@ def to_datetime(date: str):
     return dt.date(int(date[0:4]), int(date[5:7]), int(date[8:10]))
 
 
-def batch_and_upload_partial_data(model_id: str, data: dict) -> list:
+def batch_and_upload_partial_data(model_id: str, data: dict):
     """ Takes in total risk model data for one day and batches requests according to
     asset data size, returns a list of messages from resulting post calls"""
-    posting_result_messages = []
     target_universe_size = len(data.get('assetData').get('universe'))
-    factor_data = RiskModelData(
-        data.get('date'),
-        factor_data=data.get('factorData'),
-        covariance_matrix=data.get('covarianceMatrix')
-    )
-    posting_result_messages.append(GsFactorRiskModelApi.upload_risk_model_data(
+    factor_data = {
+        'date': data.get('date'),
+        'factorData': data.get('factorData'),
+        'covarianceMatrix': data.get('covarianceMatrix')}
+    print(GsFactorRiskModelApi.upload_risk_model_data(
         model_id,
         factor_data,
         partial_upload=True)
@@ -157,26 +154,24 @@ def batch_and_upload_partial_data(model_id: str, data: dict) -> list:
             if data.get('assetData').get(optional_input):
                 asset_data_subset[optional_input] = data.get('assetData').get(optional_input)[i * split_idx:end_idx]
 
-        asset_data_request = RiskModelData(data.get('date'), asset_data=asset_data_subset)
-        posting_result_messages.append(
-            GsFactorRiskModelApi.upload_risk_model_data(
-                model_id,
-                asset_data_request,
-                partial_upload=True,
-                target_universe_size=target_universe_size)
+        asset_data_request = {'date': data.get('date'), 'assetData': asset_data_subset}
+        print(GsFactorRiskModelApi.upload_risk_model_data(
+            model_id,
+            asset_data_request,
+            partial_upload=True,
+            target_universe_size=target_universe_size)
         )
     optional_inputs = ['issuerSpecificCovariance', 'factorPortfolios']
     optional_data = {'date': data.get('date')}
     for optional_input in optional_inputs:
         if data.get(optional_input):
             optional_data[optional_input] = data.get(optional_input)
-    posting_result_messages.append(GsFactorRiskModelApi.upload_risk_model_data(
+    print(GsFactorRiskModelApi.upload_risk_model_data(
         model_id,
         optional_data,
         partial_upload=True,
         target_universe_size=target_universe_size)
     )
-    return posting_result_messages
 
 
 def get_most_recent_date_from_calendar(risk_model_id: str):

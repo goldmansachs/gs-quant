@@ -25,7 +25,6 @@ from gs_quant.backtests.core import ValuationMethod
 from gs_quant.backtests.order import OrderBase
 from gs_quant.backtests.event import FillEvent
 from gs_quant.backtests.data_handler import DataHandler
-from gs_quant.data import DataFrequency
 import numpy as np
 import datetime as dt
 
@@ -33,6 +32,7 @@ import datetime as dt
 class BackTest(object):
     def __init__(self, strategy, states, risks):
         self._portfolio_dict = defaultdict(Portfolio)  # portfolio by state
+        self._cash_dict = defaultdict(float)  # cash by state
         self._scaling_portfolios = defaultdict(list)  # list of ScalingPortfolio
         self._strategy = deepcopy(strategy)  # the strategy definition
         self._states = states  # list of states
@@ -40,6 +40,10 @@ class BackTest(object):
         self._risks = tuple(risks)  # list of risks to calculate
         self._calc_calls = 0
         self._calculations = 0
+
+    @property
+    def cash_dict(self):
+        return self._cash_dict
 
     @property
     def portfolio_dict(self):
@@ -92,41 +96,36 @@ class BackTest(object):
         self._calculations = calculations
 
     @property
-    def result_summary(self):
-        return pd.DataFrame({date: {risk: results[risk].aggregate() for risk in results.risk_measures}
-                             for date, results in self._results.items()}).T
+    def result_summary(self, allow_mismatch_risk_keys=True):
+        summary = pd.DataFrame({date: {risk: results[risk].aggregate(allow_mismatch_risk_keys)
+                                       for risk in results.risk_measures} for date, results in self._results.items()}).T
+        # summary['Cash'] = self._cash_dict
+        return summary
 
 
 class ScalingPortfolio(object):
-    def __init__(self, trade, dates, risk):
+    def __init__(self, trade, dates, risk, csa_term=None):
         self.trade = trade
         self.dates = dates
         self.risk = risk
+        self.csa_term = csa_term
         self.results = None
 
 
-class PriceBacktest(object):
+class PredefinedAssetBacktest(object):
     def __init__(self, data_handler: DataHandler):
         self.data_handler = data_handler
         self.performance = pd.Series()
         self.cash_asset = Cash('USD')
         self.holdings = {}
-        self.holdings_projected = {}
         self.orders = []
+        self.initial_value = 100
 
     def set_start_date(self, start: dt.date):
-        self.performance[prev_business_date(start)] = 100
-        self.holdings[self.cash_asset] = 100
-        self.holdings_projected[self.cash_asset] = 100
+        self.performance[prev_business_date(start)] = self.initial_value
+        self.holdings[self.cash_asset] = self.initial_value
 
     def record_orders(self, orders: Iterable[OrderBase]):
-        for order in orders:
-            # projected holdings (i.e. the order may not started yet)
-            inst = order.instrument
-            if inst not in self.holdings_projected:
-                self.holdings_projected[inst] = 0
-            self.holdings_projected[inst] += order.quantity
-
         self.orders.extend(orders)
 
     def update_fill(self, fill: FillEvent):
@@ -135,16 +134,6 @@ class PriceBacktest(object):
         if inst not in self.holdings:
             self.holdings[inst] = 0
         self.holdings[inst] += fill.filled_units
-
-        # update projected holdings as well
-        if inst not in self.holdings_projected:
-            self.holdings_projected[inst] = 0
-        self.holdings_projected[inst] -= fill.order.quantity
-        self.holdings_projected[inst] += fill.filled_units
-
-    def units_held(self, projected: bool = False):
-        holdings = self.holdings_projected if projected else self.holdings
-        return holdings
 
     def mark_to_market(self, state: dt.datetime, valuation_method: ValuationMethod):
         mtm = 0
@@ -155,14 +144,14 @@ class PriceBacktest(object):
                 else:
                     tag, window = valuation_method.data_tag, valuation_method.window
                     if window:
-                        fixings = self.data_handler.get_data_range(window.start, window.end, instrument,
-                                                                   DataFrequency.REAL_TIME, tag)
+                        start = dt.datetime.combine(state.date(), window.start)
+                        end = dt.datetime.combine(state.date(), window.end)
+                        fixings = self.data_handler.get_data_range(start, end, instrument, tag)
                         fixing = np.mean(fixings) if len(fixings) else np.nan
                     else:  # no time window specified, use daily fixing
-                        fixing = self.data_handler.get_data(state.date(), instrument, DataFrequency.DAILY, tag)
+                        fixing = self.data_handler.get_data(state.date(), instrument, tag)
                 mtm += fixing * units
         self.performance[state.date()] = mtm
-        print(state, mtm)
 
     def get_level(self, date: dt.date):
         return self.performance[date]

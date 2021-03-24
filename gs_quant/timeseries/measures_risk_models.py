@@ -22,8 +22,8 @@ from gs_quant.api.gs.data import QueryType
 from gs_quant.data.core import DataContext
 from gs_quant.entities.entity import EntityType
 from gs_quant.markets.factor import Factor
-from gs_quant.models.risk_model import FactorRiskModel
 from gs_quant.markets.securities import Asset
+from gs_quant.models.risk_model import FactorRiskModel, ReturnFormat
 from gs_quant.target.common import AssetClass, AssetType
 from gs_quant.target.risk_models import Measure, DataAssetsRequest, UniverseIdentifier
 from gs_quant.timeseries import plot_measure_entity, plot_measure
@@ -83,7 +83,10 @@ def covariance(risk_model_id: str, factor_name_1: str, factor_name_2: str, *, so
 
     factor_1 = Factor(risk_model_id, factor_name_1)
     factor_2 = Factor(risk_model_id, factor_name_2)
-    covariance_curve = factor_1.covariance(factor_2, DataContext.current.start_date, DataContext.current.end_date)
+    covariance_curve = factor_1.covariance(factor_2,
+                                           DataContext.current.start_date,
+                                           DataContext.current.end_date,
+                                           ReturnFormat.JSON)
     return __format_plot_measure_results(covariance_curve, QueryType.COVARIANCE)
 
 
@@ -101,7 +104,9 @@ def factor_volatility(risk_model_id: str, factor_name: str, *, source: str = Non
     :return: Time-series of a factor's volatility across available risk model dates
     """
     factor = Factor(risk_model_id, factor_name)
-    volatility = factor.volatility(DataContext.current.start_date, DataContext.current.end_date)
+    volatility = factor.volatility(DataContext.current.start_date,
+                                   DataContext.current.end_date,
+                                   ReturnFormat.JSON)
     return __format_plot_measure_results(volatility, QueryType.VOLATILITY, multiplier=100)
 
 
@@ -121,7 +126,10 @@ def factor_correlation(risk_model_id: str, factor_name_1: str, factor_name_2: st
     """
     factor_1 = Factor(risk_model_id, factor_name_1)
     factor_2 = Factor(risk_model_id, factor_name_2)
-    correlation = factor_1.correlation(factor_2, DataContext.current.start_date, DataContext.current.end_date)
+    correlation = factor_1.correlation(factor_2,
+                                       DataContext.current.start_date,
+                                       DataContext.current.end_date,
+                                       ReturnFormat.JSON)
     return __format_plot_measure_results(correlation, QueryType.CORRELATION)
 
 

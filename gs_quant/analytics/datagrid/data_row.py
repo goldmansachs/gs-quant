@@ -25,8 +25,13 @@ from gs_quant.entities.entity import Entity
 
 DataDimensions = Dict[Union[DataDimension, str], Union[str, float]]
 
+# Override Types
 DIMENSIONS_OVERRIDE = 'dimensionsOverride'
 PROCESSOR_OVERRIDE = 'processorOverride'
+
+# Row Types
+DATA_ROW = 'dataRow'
+ROW_SEPARATOR = 'rowSeparator'
 
 
 class Override(ABC):
@@ -112,6 +117,25 @@ class ProcessorOverride(Override):
                                  processor=BaseProcessor.from_dict(obj.get('processor', {}), reference_list))
 
 
+class RowSeparator:
+    def __init__(self, name: str):
+        """ Row Separator
+
+        :param name: name of the row separator
+        """
+        self.name = name
+
+    def as_dict(self):
+        return {
+            'type': ROW_SEPARATOR,
+            'name': self.name
+        }
+
+    @classmethod
+    def from_dict(cls, obj):
+        return RowSeparator(obj['name'])
+
+
 class DataRow:
     """Row object for DataGrid"""
 
@@ -128,6 +152,7 @@ class DataRow:
 
     def as_dict(self):
         data_row = {
+            'type': DATA_ROW,
             'entityId': self.entity.get_marquee_id(),
             'entityType': self.entity.entity_type().value,
         }

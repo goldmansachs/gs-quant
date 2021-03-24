@@ -118,7 +118,7 @@ def test_measures(ts_map):
             continue
         params = inspect.signature(v).parameters.copy()
         param = params.popitem(last=False)
-        assert param[1].name == 'asset'
+        assert param[1].name in ['asset', 'asset_1']
         assert param[1].annotation == Asset
         assert param[1].kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
         _check_measure_args(params, False, v.__name__)

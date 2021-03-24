@@ -93,50 +93,60 @@ def get_risk_request_id(requests):
         date = request.pricing_and_market_data_as_of[0].pricing_date.strftime('%Y%b%d')
         today = PricingContext().pricing_date.strftime('%Y%b%d')
         identifier += 'today' if date == today else date
-        identifier += '+'.join(sorted(str(k) + "=" + str(v) for k, v in request.scenario.scenario.as_dict().items())) \
-            if request.scenario is not None else ''
+        if request.scenario is not None:
+            scenario_identifier = []
+            for k, v in request.scenario.scenario.as_dict().items():
+                if k != 'shocks':
+                    scenario_identifier.append(str(k) + "=" + str(v))
+                else:
+                    shock_value = 'shock_value' + "=" + str(v[0].shock.value)
+                    pattern = v[0].pattern
+                    shock_pattern = 'shock_pattern' + "=" + '-'.join(
+                        [str(m) for m in [pattern.mkt_type, pattern.mkt_asset, pattern.mkt_class]])
+                    scenario_identifier.append(shock_value + "+" + shock_pattern)
+            identifier += '+'.join(sorted(scenario_identifier))
     return hashlib.md5(identifier.encode('utf-8')).hexdigest()
 
 
-def mock_calc_create_files(*args, **kwargs):
-    # never leave a side_effect calling this function.  Call it once to create the files, check them in and switch to
-    # mock_calc
-    def get_json(*i_args, **i_kwargs):
-        this_json = gs_risk_api_exec(*i_args, **i_kwargs)
-        return this_json
-
-    result_json = get_json(*args, **kwargs)
-    request = kwargs.get('request') or args[0]
-
-    with open(pathlib.Path(__file__).parents[1] / f'calc_cache/request{get_risk_request_id(request)}.json',
-              'w') as json_data:
-        json.dump(result_json, json_data)
-
-    return result_json
-
-
-def mock_calc(*args, **kwargs):
-    request = kwargs.get('request') or args[0]
-    with open(pathlib.Path(__file__).parents[1] / f'calc_cache/request{get_risk_request_id(request)}.json') \
-            as json_data:
-        return json.load(json_data)
-
-
 class MockCalc:
-    def __init__(self, mocker, save_files=False):
+    def __init__(self, mocker, save_files=False, paths=pathlib.Path(__file__).parents[1], application='gs-quant'):
         # do not save tests with save_files = True
         self.save_files = save_files
         self.mocker = mocker
+        self.paths = paths
+        self.application = application
 
     def __enter__(self):
         if self.save_files:
-            GsSession.use(Environment.PROD, None, None)
-            self.mocker.patch.object(GsRiskApi, '_exec', side_effect=mock_calc_create_files)
+            GsSession.use(Environment.PROD, None, None, application=self.application)
+            self.mocker.patch.object(GsRiskApi, '_exec', side_effect=self.mock_calc_create_files)
         else:
             from gs_quant.session import OAuth2Session
             OAuth2Session.init = mock.MagicMock(return_value=None)
-            GsSession.use(Environment.PROD, 'fake_client_id', 'fake_secret')
-            self.mocker.patch.object(GsRiskApi, '_exec', side_effect=mock_calc)
+            GsSession.use(Environment.PROD, 'fake_client_id', 'fake_secret', application=self.application)
+            self.mocker.patch.object(GsRiskApi, '_exec', side_effect=self.mock_calc)
+
+    def mock_calc(self, *args, **kwargs):
+        request = kwargs.get('request') or args[0]
+        with open(self.paths / f'calc_cache/request{get_risk_request_id(request)}.json') \
+                as json_data:
+            return json.load(json_data)
+
+    def mock_calc_create_files(self, *args, **kwargs):
+        # never leave a side_effect calling this function.  Call it once to create the files, check them in
+        # and switch to mock_calc
+        def get_json(*i_args, **i_kwargs):
+            this_json = gs_risk_api_exec(*i_args, **i_kwargs)
+            return this_json
+
+        result_json = get_json(*args, **kwargs)
+        request = kwargs.get('request') or args[0]
+
+        with open(self.paths / f'calc_cache/request{get_risk_request_id(request)}.json',
+                  'w') as json_data:
+            json.dump(result_json, json_data)
+
+        return result_json
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass

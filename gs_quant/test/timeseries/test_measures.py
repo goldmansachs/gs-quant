@@ -23,7 +23,6 @@ import numpy as np
 import pandas as pd
 import pytest
 import pytz
-from gs_quant.target.common import XRef, PricingLocation, Currency as CurrEnum
 from numpy.testing import assert_allclose, assert_equal
 from pandas.testing import assert_series_equal
 from pandas.tseries.offsets import CustomBusinessDay
@@ -41,8 +40,9 @@ from gs_quant.data.dataset import Dataset
 from gs_quant.data.fields import Fields
 from gs_quant.errors import MqError, MqValueError, MqTypeError
 from gs_quant.markets.securities import AssetClass, Cross, Index, Currency, SecurityMaster, Stock, \
-    Swap, CommodityNaturalGasHub, CommodityEUNaturalGasHub
+    Swap, CommodityNaturalGasHub, CommodityEUNaturalGasHub, AssetIdentifier
 from gs_quant.session import GsSession, Environment
+from gs_quant.target.common import XRef, PricingLocation, Currency as CurrEnum
 from gs_quant.test.timeseries.utils import mock_request
 from gs_quant.timeseries import Returns
 from gs_quant.timeseries.measures import BenchmarkType
@@ -725,6 +725,51 @@ def mock_fx_vol(_cls, q):
     return df
 
 
+def mock_fx_spot_fwd_3m(q):
+    d = pd.DataFrame({
+        'spot': [1.18250, 1.18566, 1.18511],
+        'forwardPoint': [0.00234, 0.00234, 0.00235],
+        'tenor': ['3m', '3m', '3m'],
+        'date': [pd.Timestamp(2020, 9, 2), pd.Timestamp(2020, 9, 3), pd.Timestamp(2020, 9, 4)]
+    })
+    d = d.set_index('date')
+    df = MarketDataResponseFrame(d)
+    df.dataset_ids = _test_datasets
+    return df
+
+
+def mock_fx_spot_fwd_2y(q):
+    d = pd.DataFrame({
+        'spot': [1.18250, 1.18566, 1.18511],
+        'forwardPoint': [0.02009, 0.02015, 0.02064],
+        'tenor': ['2y', '2y', '2y'],
+        'date': [pd.Timestamp(2020, 9, 2), pd.Timestamp(2020, 9, 3), pd.Timestamp(2020, 9, 4)]
+    })
+    d = d.set_index('date')
+    df = MarketDataResponseFrame(d)
+    df.dataset_ids = _test_datasets
+    return df
+
+
+def mock_fx_correlation(q):
+    d = pd.DataFrame({
+        'impliedVolatility': [7.943208, 8.042599, 7.875325, 8.304180, 8.353483, 8.268724, 8.267971, 8.395843, 8.355239],
+        'bbid': ['EURUSD', 'EURUSD', 'EURUSD', 'EURJPY', 'EURJPY', 'EURJPY', 'USDJPY', 'USDJPY', 'USDJPY'],
+        'assetId': ['MAA0NE9QX2ABETG6', 'MAA0NE9QX2ABETG6', 'MAA0NE9QX2ABETG6', 'MAYPHS80JRWDJ8RC', 'MAYPHS80JRWDJ8RC',
+                    'MAYPHS80JRWDJ8RC', 'MATGYV0J9MPX534Z', 'MATGYV0J9MPX534Z', 'MATGYV0J9MPX534Z'],
+        'relativeStrike': [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        'strikeReference': ['delta', 'delta', 'delta', 'delta', 'delta', 'delta', 'delta', 'delta', 'delta'],
+        'tenor': ['3m', '3m', '3m', '3m', '3m', '3m', '3m', '3m', '3m'],
+        'date': [pd.Timestamp(2020, 9, 2), pd.Timestamp(2020, 9, 3), pd.Timestamp(2020, 9, 4),
+                 pd.Timestamp(2020, 9, 2), pd.Timestamp(2020, 9, 3), pd.Timestamp(2020, 9, 4),
+                 pd.Timestamp(2020, 9, 2), pd.Timestamp(2020, 9, 3), pd.Timestamp(2020, 9, 4)]
+    })
+    d = d.set_index('date')
+    df = MarketDataResponseFrame(d)
+    df.dataset_ids = _test_datasets
+    return df
+
+
 def mock_fx_forecast(_cls, _q):
     d = {
         'fxForecast': [1.1, 1.1, 1.1]
@@ -738,7 +783,8 @@ def mock_fx_delta(_cls, _q):
     d = {
         'relativeStrike': [25, -25, 0],
         'impliedVolatility': [1, 5, 2],
-        'forecast': [1.1, 1.1, 1.1]
+        'forecast': [1.1, 1.1, 1.1],
+        'forwardPoint': [1, 1.1, 1.2]
     }
     df = MarketDataResponseFrame(data=d, index=_index * 3)
     df.dataset_ids = _test_datasets
@@ -1124,6 +1170,12 @@ def test_implied_vol():
     with pytest.raises(MqError):
         tm.implied_volatility(mock_spx, '1m', tm.VolReference.DELTA_CALL)
     replace.restore()
+
+
+def test_tenor_month_to_year():
+    assert tm._tenor_month_to_year('1y') == '1y'
+    assert tm._tenor_month_to_year('11m') == '11m'
+    assert tm._tenor_month_to_year('24m') == '2y'
 
 
 def test_implied_vol_no_last():
@@ -3006,7 +3058,6 @@ def test_forward_price_ng():
 
 
 def test_implied_volatility_ng():
-
     replace = Replacer()
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_natgas_implied_volatility)
     mock = CommodityNaturalGasHub('MA001', 'AGT')
@@ -3633,6 +3684,117 @@ def test_commodity_forecast():
     with pytest.raises(NotImplementedError):
         tm.commodity_forecast(mock_spgcsb, '3m',
                               tm._CommodityForecastType.SPOT_RETURN, real_time=True)
+    replace.restore()
+
+
+def test_spot_carry():
+    replace = Replacer()
+    mock = Cross('MAA0NE9QX2ABETG6', 'USD/EUR')
+    assets = replace('gs_quant.timeseries.measures.cross_stored_direction_for_fx_vol', Mock())
+    assets.return_value = mock.get_marquee_id()
+
+    df = pd.DataFrame({
+        '3m': [0.001978858350951374, 0.0019735843327766817, 0.00198293829264794],
+        '2y': [0.016989429175475686, 0.016994753976688093, 0.017416104834150414],
+        '3m_ann': [0.007915433403805495, 0.007894337331106727, 0.00793175317059176],
+        'date': [pd.Timestamp('2020-09-02'), pd.Timestamp('2020-09-03'), pd.Timestamp('2020-09-04')]
+    })
+    df = df.set_index('date')
+
+    with DataContext(dt.date(2020, 9, 2), dt.date(2020, 9, 4)):
+        # tenors in terms of months
+        replace('gs_quant.timeseries.measures._market_data_timed', mock_fx_spot_fwd_3m)
+        actual_3m = tm.spot_carry(mock, '3m')
+        assert_series_equal(df['3m'], pd.Series(actual_3m, name='3m'))
+
+        # annualized
+        actual_3m_ann = tm.spot_carry(mock, '3m', annualize=True)
+        assert_series_equal(df['3m_ann'], pd.Series(actual_3m_ann, name='3m_ann'))
+
+        # not supported
+        with pytest.raises(NotImplementedError):
+            tm.spot_carry(mock, '1m', real_time=True)
+
+        with pytest.raises(MqError):
+            tm.spot_carry(mock, '13m')
+
+        # tenors in terms of years
+        replace('gs_quant.timeseries.measures._market_data_timed', mock_fx_spot_fwd_2y)
+        actual_2y = tm.spot_carry(mock, '2y')
+        assert_series_equal(df['2y'], pd.Series(actual_2y, name='2y'))
+        replace.restore()
+
+
+def test_fx_implied_correlation():
+    replace = Replacer()
+
+    EURUSD = Cross('MAA0NE9QX2ABETG6', 'USD/EUR')
+    USDEUR = Cross('MAQB05GD31BA5HWV', 'EUR/USD')
+    USDJPY = Cross('MATGYV0J9MPX534Z', 'JPY/USD')
+    JPYUSD = Cross('MAYJPCVVF2RWXCES', 'USD/JPY')
+    EURGBP = Cross('MA3AMDKY4YJ83G1E', 'GBP/EUR')
+    EURJPY = Cross('MAYPHS80JRWDJ8RC', 'JPY/EUR')
+    JPYEUR = Cross('MAWVKC8Q6405ZWNE', 'EUR/JPY')
+    bbid_to_asset_dict = {'EURUSD': EURUSD, 'USDEUR': USDEUR, 'USDJPY': USDJPY, 'JPYUSD': JPYUSD,
+                          'EURJPY': EURJPY, 'JPYEUR': JPYEUR, 'EURGBP': EURGBP}
+    mqid_to_asset_dict = {'MAA0NE9QX2ABETG6': EURUSD, 'MAQB05GD31BA5HWV': USDEUR, 'MATGYV0J9MPX534Z': USDJPY,
+                          'MAYJPCVVF2RWXCES': JPYUSD, 'MAYPHS80JRWDJ8RC': EURJPY, 'MAWVKC8Q6405ZWNE': JPYEUR,
+                          'MA3AMDKY4YJ83G1E': EURGBP}
+    df = pd.DataFrame({
+        'EURUSD USDJPY': [-0.47579170795443204, -0.4842168280011238, -0.48220935681227195],
+        'USDEUR USDJPY': [0.47579175, 0.48421678, 0.48220939],
+        'EURUSD JPYUSD': [0.47579175, 0.48421678, 0.48220939],
+        'USDEUR JPYUSD': [-0.47579175, -0.48421678, -0.48220939],
+        'USDJPY EURUSD': [-0.47579175, -0.48421678, -0.48220939],
+        'date': [pd.Timestamp('2020-09-02'), pd.Timestamp('2020-09-03'), pd.Timestamp('2020-09-04')]
+    })
+    df = df.set_index('date')
+
+    def mock_get_asset(cls, asset_id, id_type: dict) -> Cross:
+        if id_type == AssetIdentifier.BLOOMBERG_ID:
+            return bbid_to_asset_dict[asset_id]
+        else:
+            return mqid_to_asset_dict[asset_id]
+
+    def cross_to_bbid(asset, id_type) -> str:
+        if asset == EURUSD:
+            return 'EURUSD'
+        elif asset == USDEUR:
+            return 'USDEUR'
+        elif asset == USDJPY:
+            return 'USDJPY'
+        elif asset == JPYUSD:
+            return 'JPYUSD'
+        elif asset == EURJPY:
+            return 'EURJPY'
+        elif asset == JPYEUR:
+            return 'JPYEUR'
+        elif asset == EURGBP:
+            return 'EURGBP'
+
+    replace('gs_quant.markets.securities.SecurityMaster.get_asset', mock_get_asset)
+    replace('gs_quant.markets.securities.Asset.get_identifier', cross_to_bbid)
+    replace('gs_quant.timeseries.measures._market_data_timed', mock_fx_correlation)
+
+    with DataContext(dt.date(2020, 9, 2), dt.date(2020, 9, 4)):
+        # supported
+        q_1 = tm.fx_implied_correlation(EURUSD, USDJPY, '3m')
+        q_2 = tm.fx_implied_correlation(USDEUR, USDJPY, '3m')
+        q_3 = tm.fx_implied_correlation(EURUSD, JPYUSD, '3m')
+        q_4 = tm.fx_implied_correlation(USDEUR, JPYUSD, '3m')
+        q_5 = tm.fx_implied_correlation(USDJPY, EURUSD, '3m')
+        assert_series_equal(df['EURUSD USDJPY'], pd.Series(q_1, name='EURUSD USDJPY'))
+        assert_series_equal(df['USDEUR USDJPY'], pd.Series(q_2, name='USDEUR USDJPY'))
+        assert_series_equal(df['EURUSD JPYUSD'], pd.Series(q_3, name='EURUSD JPYUSD'))
+        assert_series_equal(df['USDEUR JPYUSD'], pd.Series(q_4, name='USDEUR JPYUSD'))
+        assert_series_equal(df['USDJPY EURUSD'], pd.Series(q_5, name='USDJPY EURUSD'))
+
+        # not supported
+        with pytest.raises(NotImplementedError):
+            tm.fx_implied_correlation(EURUSD, EURGBP, '3m', real_time=True)
+        with pytest.raises(MqError):
+            tm.fx_implied_correlation(USDJPY, EURGBP, '3m', real_time=False)
+
     replace.restore()
 
 

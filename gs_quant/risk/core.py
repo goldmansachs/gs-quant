@@ -20,8 +20,10 @@ from concurrent.futures import Future
 from copy import copy
 from typing import Iterable, Optional, Tuple, Union
 
+import gs_quant
 import pandas as pd
 from gs_quant.base import RiskKey
+from gs_quant.config import DisplayOptions
 from gs_quant.datetime import point_sort_order
 
 __column_sort_fns = {
@@ -97,7 +99,7 @@ class ResultInfo(metaclass=ABCMeta):
         return dates, values, errors, risk_key, unit
 
     @abstractmethod
-    def _get_raw_df(self):
+    def _get_raw_df(self, display_options: DisplayOptions = None):
         ...
 
 
@@ -109,7 +111,7 @@ class ErrorValue(ResultInfo):
     def __repr__(self):
         return self.error
 
-    def _get_raw_df(self):
+    def _get_raw_df(self, display_options: DisplayOptions = None):
         return pd.DataFrame(self, index=[0], columns=['value'])
 
     @property
@@ -125,8 +127,14 @@ class UnsupportedValue(ResultInfo):
     def __repr__(self):
         return 'Unsupported Value'
 
-    def _get_raw_df(self):
-        pass
+    def _get_raw_df(self, display_options: DisplayOptions = None):
+        options = display_options if display_options is not None else gs_quant.config.display_options
+        show_na = options.show_na
+
+        if show_na:
+            return pd.DataFrame(None, index=[0], columns=['value'])
+        else:
+            return None
 
     @property
     def raw_value(self):
@@ -157,7 +165,7 @@ class ScalarWithInfo(ResultInfo, metaclass=ABCMeta):
                               unit=unit,
                               error=errors)
 
-    def _get_raw_df(self):
+    def _get_raw_df(self, display_options: DisplayOptions = None):
         return pd.DataFrame(self, index=[0], columns=['value'])
 
 
@@ -251,7 +259,7 @@ class SeriesWithInfo(pd.Series, ResultInfo):
     def raw_value(self) -> pd.Series:
         return pd.Series(self)
 
-    def _get_raw_df(self):
+    def _get_raw_df(self, display_options: DisplayOptions = None):
         df = pd.DataFrame(self).reset_index()
         df.columns = ['dates', 'value']
         return df
@@ -307,9 +315,15 @@ class DataFrameWithInfo(pd.DataFrame, ResultInfo):
     def to_frame(self):
         return self
 
-    def _get_raw_df(self):
+    def _get_raw_df(self, display_options: DisplayOptions = None):
         if self.empty:
-            return None
+            options = display_options if display_options is not None else gs_quant.config.display_options
+            show_na = options.show_na
+
+            if show_na:
+                return pd.DataFrame(None, index=[0], columns=['value'])
+            else:
+                return None
         return self.raw_value
 
 
@@ -355,7 +369,7 @@ def aggregate_risk(results: Iterable[Union[DataFrameWithInfo, Future]], threshol
 ResultType = Union[None, dict, tuple, DataFrameWithInfo, FloatWithInfo, SeriesWithInfo]
 
 
-def aggregate_results(results: Iterable[ResultType]) -> ResultType:
+def aggregate_results(results: Iterable[ResultType], allow_mismatch_risk_keys=False) -> ResultType:
     unit = None
     risk_key = None
     results = tuple(results)
@@ -379,7 +393,7 @@ def aggregate_results(results: Iterable[ResultType]) -> ResultType:
 
             unit = unit or result.unit
 
-        if risk_key and risk_key != result.risk_key:
+        if not allow_mismatch_risk_keys and risk_key and risk_key != result.risk_key:
             raise ValueError('Cannot aggregate results with different pricing keys')
 
         risk_key = risk_key or result.risk_key

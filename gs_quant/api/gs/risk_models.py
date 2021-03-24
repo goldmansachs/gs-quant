@@ -50,7 +50,7 @@ class GsRiskModelApi:
                         names: List[str] = None,
                         descriptions: List[str] = None,
                         coverages: List[str] = None) -> Tuple[RiskModel, ...]:
-        url = '/risk/models'
+        url = '/risk/models?'
         if limit is not None:
             url += f'&limit={limit}'
         if ids is not None:
