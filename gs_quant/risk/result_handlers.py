@@ -91,16 +91,32 @@ def required_assets_handler(result: dict, risk_key: RiskKey, _instrument: Instru
     return __dataframe_handler(result['requiredAssets'], mappings, risk_key, request_id=request_id)
 
 
-def risk_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None)\
-        -> FloatWithInfo:
-    return FloatWithInfo(risk_key, result.get('val', float('nan')), unit=result.get('unit'), request_id=request_id)
+def risk_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None) \
+        -> Union[DataFrameWithInfo, FloatWithInfo]:
+    if result.get('children'):
+        # result with leg valuations
+        classes = []
+        if result.get('val'):
+            classes.append({'path': 'parent', 'value': result.get('val')})
+
+        for key, val in result.get('children').items():
+            classes.append({'path': key, 'value': val})
+        mappings = (
+            ('path', 'path'),
+            ('value', 'value')
+        )
+        return __dataframe_handler(classes, mappings, risk_key, request_id=request_id)
+    else:
+        return FloatWithInfo(risk_key, result.get('val', float('nan')), unit=result.get('unit'), request_id=request_id)
 
 
 def risk_by_class_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
                           request_id: Optional[str] = None) -> Union[DataFrameWithInfo, FloatWithInfo]:
     # TODO Remove this once we migrate parallel USD IRDelta measures
     types = [c['type'] for c in result['classes']]
-    if len(types) <= 2 and len(set(types)) == 1:
+    # list of risk by class measures exposed in gs-quant
+    external_risk_by_class_val = ['IRBasisParallel', 'IRDeltaParallel', 'IRVegaParallel', 'PnlExplain']
+    if str(risk_key.risk_measure) in external_risk_by_class_val and len(types) <= 2 and len(set(types)) == 1:
         return FloatWithInfo(risk_key, sum(result.get('values', (float('nan'),))), unit=result.get('unit'),
                              request_id=request_id)
     else:

@@ -116,3 +116,23 @@ class OrderCost(OrderBase):
 
     def execution_quantity(self, data_handler: DataHandler) -> float:
         return self.quantity
+
+
+class OrderAtMarket(OrderBase):
+    def __init__(self,
+                 instrument: Instrument,
+                 quantity: float,
+                 generation_time: dt.datetime,
+                 execution_datetime: dt.datetime,
+                 source: str):
+        super().__init__(instrument, quantity, generation_time, source)
+        self.execution_datetime = execution_datetime
+
+    def execution_end_time(self) -> dt.datetime:
+        return self.execution_datetime
+
+    def execution_price(self, data_handler: DataHandler) -> float:
+        return data_handler.get_data(self.execution_datetime, self.instrument, ValuationFixingType.PRICE)
+
+    def execution_quantity(self, data_handler: DataHandler) -> float:
+        return self.quantity

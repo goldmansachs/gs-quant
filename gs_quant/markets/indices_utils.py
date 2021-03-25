@@ -75,3 +75,22 @@ class BasketTypes(EnumBase, Enum):
     @classmethod
     def to_list(cls):
         return [basket_type.value for basket_type in cls]
+
+
+class CorporateActionType(EnumBase, Enum):
+    ACQUISITION = 'Acquisition'
+    CASH_DIVIDEND = 'Cash Dividend'
+    IDENTIFIER_CHANGE = 'Identifier Change'
+    RIGHTS_ISSUE = 'Rights Issue'
+    SHARE_CHANGE = 'Share Change'
+    SPECIAL_DIVIDEND = 'Special Dividend'
+    SPIN_OFF = 'Spin Off'
+    STOCK_DIVIDEND = 'Stock Dividend'
+    STOCK_SPLIT = 'Stock Split'
+
+    def __repr__(self):
+        return self.value
+
+    @classmethod
+    def to_list(cls):
+        return [ca_type.value for ca_type in cls]

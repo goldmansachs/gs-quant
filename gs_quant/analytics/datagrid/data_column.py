@@ -24,6 +24,7 @@ DEFAULT_WIDTH = 100
 class RenderType:
     DEFAULT = 'default'
     HEATMAP = 'heatmap'
+    BOXPLOT = 'boxplot'
 
 
 @dataclass
@@ -32,6 +33,7 @@ class ColumnFormat:
     precision: int = 2
     humanReadable: bool = True
     tooltip: str = None
+    displayValues: bool = True
 
     @classmethod
     def from_dict(cls, dict_):

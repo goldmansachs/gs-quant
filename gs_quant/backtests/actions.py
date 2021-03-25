@@ -23,20 +23,6 @@ from gs_quant.target.backtests import BacktestTradingQuantityType
 action_count = 1
 
 
-class ActionRequirements(object):
-    def __init__(self):
-        pass
-
-
-class HedgeActionRequirements(ActionRequirements):
-    def __init__(self, start_date=None, end_date=None, frequency=None, calendar=None):
-        super().__init__()
-        self.start_date = start_date
-        self.end_date = end_date
-        self.frequency = frequency
-        self.calendar = calendar
-
-
 class Action(object):
     def __init__(self, name: str = None):
         self._needs_scaling = False
@@ -59,12 +45,16 @@ class Action(object):
 
 
 class AddTradeAction(Action):
-    def __init__(self, priceables: Union[Priceable, Iterable[Priceable]], trade_duration: str = None, name: str = None):
+    def __init__(self,
+                 priceables: Union[Priceable, Iterable[Priceable]],
+                 trade_duration: Union[str, dt.date, dt.timedelta] = None,
+                 name: str = None):
         """
         create an action which adds a trade when triggered.  The trades are resolved on the trigger date (state) and
         last until the trade_duration if specified or for all future dates if not.
         :param priceables: a priceable or a list of pricables.
-        :param trade_duration: an instrument attribute eg. 'expiration_date' or a date or a tenor if left as None the
+        :param trade_duration: an instrument attribute eg. 'expiration_date' or a date or a tenor or timedelta
+                               if left as None the
                                trade will be added for all future dates
         :param name: optional additional name to the priceable name
         """
@@ -148,13 +138,14 @@ class ExitPositionAction(Action):
 
 class HedgeAction(Action):
     def __init__(self, risk, priceables: Priceable = None, trade_duration: str = None, risks_on_final_day: bool = False,
-                 name: str = None):
+                 name: str = None, csa_term: str = None):
         super().__init__(name)
         self._calc_type = CalcType.semi_path_dependent
         self._priceable = priceables
         self._risk = risk
         self._trade_duration = trade_duration
         self._risks_on_final_day = risks_on_final_day
+        self._csa_term = csa_term
         if priceables is not None:
             if self._priceable.name is None:
                 self._priceable.name = '{}_Pricable{}'.format(self._name, 0)
@@ -172,3 +163,7 @@ class HedgeAction(Action):
     @property
     def risk(self):
         return self._risk
+
+    @property
+    def csa_term(self):
+        return self._csa_term

@@ -80,7 +80,7 @@ class GenericDataSource:
 
     def get_data_range(self, start: Union[datetime.date, datetime.datetime],
                        end: Union[datetime.date, datetime.datetime]):
-        return self._data_set.loc[(start <= self._data_set.index) & (self._data_set.index <= end)]
+        return self._data_set.loc[(start < self._data_set.index) & (self._data_set.index <= end)]
 
 
 class DataManager:

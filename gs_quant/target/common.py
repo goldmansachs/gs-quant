@@ -8943,6 +8943,7 @@ class Position(Base):
         self,
         asset_id: str = None,
         quantity: float = None,
+        weight: float = None,
         notional: float = None,
         party_to: SimpleParty = None,
         party_from: SimpleParty = None,
@@ -8955,6 +8956,7 @@ class Position(Base):
         super().__init__()
         self.asset_id = asset_id
         self.quantity = quantity
+        self.weight = weight
         self.notional = notional
         self.party_to = party_to
         self.party_from = party_from
@@ -8983,6 +8985,16 @@ class Position(Base):
     def quantity(self, value: float):
         self._property_changed('quantity')
         self.__quantity = value        
+
+    @property
+    def weight(self) -> float:
+        """Weight of position"""
+        return self.__weight
+
+    @weight.setter
+    def weight(self, value: float):
+        self._property_changed('weight')
+        self.__weight = value 
 
     @property
     def notional(self) -> float:

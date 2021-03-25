@@ -15,24 +15,27 @@ under the License.
 """
 
 import datetime as dt
-import json
-import pandas as pd
+import logging
+import time
 
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
-from enum import auto, Enum
-from typing import Dict, Optional, Union, Tuple, List
-
+from enum import Enum
 from pydash import get
+from typing import Dict, Optional, Tuple, Union, List
 
-from gs_quant.api.gs.assets import GsAssetApi, PositionSet
+from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.data import GsDataApi
-from gs_quant.common import PositionType, DateLimit
+from gs_quant.api.gs.reports import GsReportApi
+from gs_quant.common import DateLimit, PositionType
 from gs_quant.data import DataCoordinate, DataFrequency, DataMeasure
 from gs_quant.data.coordinate import DataDimensions
-from gs_quant.errors import MqTypeError
-from gs_quant.json_encoder import JSONEncoder
+from gs_quant.errors import MqError
+from gs_quant.markets.position_set import PositionSet
 from gs_quant.session import GsSession
+from gs_quant.target.reports import ReportStatus
+
+_logger = logging.getLogger(__name__)
 
 
 class EntityType(Enum):
@@ -150,6 +153,24 @@ class Entity(metaclass=ABCMeta):
             rt_dataset_id = available.get(DataFrequency.REAL_TIME)
             return DataCoordinate(dataset_id=rt_dataset_id, measure=measure, dimensions=dimensions, frequency=frequency)
 
+    def get_admins(self) -> Optional[Tuple[str]]:
+        raise NotImplementedError
+
+    def get_viewers(self) -> Optional[Tuple[str]]:
+        raise NotImplementedError
+
+    def add_admin_permissions(self, user_tokens: [str]) -> Dict:
+        raise NotImplementedError
+
+    def add_view_permissions(self, user_tokens: [str]) -> Dict:
+        raise NotImplementedError
+
+    def remove_admin_permissions(self, user_tokens: [str]) -> Dict:
+        raise NotImplementedError
+
+    def remove_view_permissions(self, user_tokens: [str]) -> Dict:
+        raise NotImplementedError
+
 
 class Country(Entity):
     class Identifier(EntityIdentifier):
@@ -265,15 +286,7 @@ class KPI(Entity):
         return get(self.get_entity(), 'subCategory')
 
 
-class ReturnFormat(Enum):
-    DICT = auto()
-    DATA_FRAME = auto()
-    POSITION_SET = auto()
-
-
 class PositionedEntity(metaclass=ABCMeta):
-    __invalid_entity_message = 'Unable to fetch positions, as function does not currently support entity type'
-
     def __init__(self, id_: str, entity_type: EntityType):
         self.__id: str = id_
         self.__entity_type: EntityType = entity_type
@@ -286,79 +299,61 @@ class PositionedEntity(metaclass=ABCMeta):
     def positioned_entity_type(self) -> EntityType:
         return self.__entity_type
 
-    def get_latest_positions(self,
-                             position_type: PositionType = PositionType.CLOSE,
-                             format: ReturnFormat = ReturnFormat.DICT) -> Union[PositionSet, Dict, pd.DataFrame]:
+    def get_latest_position_set(self,
+                                position_type: PositionType = PositionType.CLOSE) -> PositionSet:
         if self.positioned_entity_type == EntityType.ASSET:
             response = GsAssetApi.get_latest_positions(self.id, position_type)
-            position_set = response if type(response) == PositionSet else PositionSet.from_dict(response)
-            return self.__convert_position_set(position_set, format)
+            return PositionSet.from_target(response)
+        raise NotImplementedError
 
-        raise MqTypeError(f'{self.__invalid_entity_message} {self.positioned_entity_type}')
-
-    def get_positions_for_date(self,
-                               position_date: dt.date,
-                               position_type: PositionType = PositionType.CLOSE,
-                               format: ReturnFormat = ReturnFormat.DICT) -> Union[PositionSet, Dict, pd.DataFrame]:
+    def get_position_set_for_date(self,
+                                  date: dt.date,
+                                  position_type: PositionType = PositionType.CLOSE) -> PositionSet:
         if self.positioned_entity_type == EntityType.ASSET:
-            position_set = GsAssetApi.get_asset_positions_for_date(self.id, position_date, position_type)[0]
-            return self.__convert_position_set(position_set, format)
+            response = GsAssetApi.get_asset_positions_for_date(self.id, date, position_type)[0]
+            return PositionSet.from_target(response)
+        raise NotImplementedError
 
-        raise MqTypeError(f'{self.__invalid_entity_message} {self.positioned_entity_type}')
-
-    def get_positions(self,
-                      start_date: dt.date = DateLimit.LOW_LIMIT.value,
-                      end_date: dt.date = DateLimit.TODAY.value,
-                      position_type: PositionType = PositionType.CLOSE,
-                      format: ReturnFormat = ReturnFormat.DICT) -> Union[Tuple[PositionSet], Dict, pd.DataFrame]:
+    def get_position_sets(self,
+                          start: dt.date = DateLimit.LOW_LIMIT.value,
+                          end: dt.date = DateLimit.TODAY.value,
+                          position_type: PositionType = PositionType.CLOSE) -> List[PositionSet]:
         if self.positioned_entity_type == EntityType.ASSET:
-            position_sets = GsAssetApi.get_asset_positions_for_dates(self.id, start_date, end_date, position_type)
-            return self.__convert_position_sets(position_sets, format)
-
-        raise MqTypeError(f'{self.__invalid_entity_message} {self.positioned_entity_type}')
+            response = GsAssetApi.get_asset_positions_for_dates(self.id, start, end, position_type)
+            return [PositionSet.from_target(position_set) for position_set in response]
+        raise NotImplementedError
 
     def get_positions_data(self,
-                           start_date: dt.date = DateLimit.LOW_LIMIT.value,
-                           end_date: dt.date = DateLimit.TODAY.value,
+                           start: dt.date = DateLimit.LOW_LIMIT.value,
+                           end: dt.date = DateLimit.TODAY.value,
                            fields: [str] = None,
                            position_type: PositionType = PositionType.CLOSE) -> List[Dict]:
         if self.positioned_entity_type == EntityType.ASSET:
-            return GsAssetApi.get_asset_positions_data(self.id, start_date, end_date, fields, position_type)
+            return GsAssetApi.get_asset_positions_data(self.id, start, end, fields, position_type)
+        raise NotImplementedError
 
-        raise MqTypeError(f'{self.__invalid_entity_message} {self.positioned_entity_type}')
+    def poll_report(self, report_id: str, timeout: int = 600, step: int = 30):
+        poll = True
+        end = dt.datetime.now() + dt.timedelta(seconds=timeout)
 
-    def __convert_position_set(self,
-                               position_set: PositionSet,
-                               format: ReturnFormat) -> Union[PositionSet, Dict, pd.DataFrame]:
-        format = ReturnFormat[format.upper()] if isinstance(format, str) else format
-        if format == ReturnFormat.POSITION_SET:
-            return position_set
-        elif format == ReturnFormat.DICT:
-            pset_dict: Dict = json.loads(json.dumps(position_set.as_dict(), cls=JSONEncoder))
-            return {'positionDate': position_set.position_date.isoformat(),
-                    'divisor': position_set.divisor,
-                    'positions': pset_dict['positions']}
-        else:
-            position_dict = [{'positionDate': position_set.position_date.isoformat(),
-                              'divisor': position_set.divisor,
-                              'assetId': position.asset_id,
-                              'quantity': position.quantity} for position in position_set.positions]
-            return pd.DataFrame(position_dict)
+        while poll and dt.datetime.now() <= end:
+            try:
+                status = GsReportApi.get_report(report_id).status
+                if status not in set(ReportStatus.error, ReportStatus.cancelled, ReportStatus.done):
+                    _logger.info(f'Report is {status} as of {dt.datetime.now().isoformat()}')
+                    time.sleep(step)
+                else:
+                    poll = False
+                    if status == ReportStatus.error:
+                        raise MqError(f'Report {report_id} has failed for {self.id}. \
+                                        Please reach out to the Marquee team for assistance.')
+                    elif status == ReportStatus.cancelled:
+                        _logger.info(f'Report {report_id} has been cancelled. Please reach out to the \
+                                       Marquee team if you believe this is a mistake.')
+                    else:
+                        _logger.info(f'Report {report_id} is now complete')
+            except Exception as err:
+                raise MqError(f'Could not fetch report status with error {err}')
 
-    def __convert_position_sets(self,
-                                position_sets: Tuple[PositionSet],
-                                format: ReturnFormat) -> Union[Tuple[PositionSet], Dict, pd.DataFrame]:
-        format = ReturnFormat[format.upper()] if isinstance(format, str) else format
-        if format == ReturnFormat.POSITION_SET:
-            return position_sets
-        elif format == ReturnFormat.DICT:
-            position_set_dict = {}
-            for position_set in position_sets:
-                position_set_dict[position_set.position_date.isoformat()] = \
-                    self.__convert_position_set(position_set, format)
-            return position_set_dict
-        else:
-            position_set_df = []
-            for position_set in position_sets:
-                position_set_df.append(self.__convert_position_set(position_set, format))
-            return pd.concat(position_set_df)
+        raise MqError('The report is taking longer than expected to complete. \
+                       Please check again later or reach out to the Marquee team for assistance.')

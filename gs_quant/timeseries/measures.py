@@ -35,6 +35,7 @@ from gs_quant.api.gs.data import QueryType
 from gs_quant.data import Dataset
 from gs_quant.data.core import DataContext
 from gs_quant.data.fields import Fields
+from gs_quant.data.log import log_debug, log_warning
 from gs_quant.datetime.gscalendar import GsCalendar
 from gs_quant.datetime.point import relative_date_add
 from gs_quant.errors import MqTypeError
@@ -43,7 +44,6 @@ from gs_quant.markets.securities import Asset, AssetIdentifier, SecurityMaster, 
 from gs_quant.target.common import AssetClass, AssetType
 from gs_quant.timeseries import volatility, Window, Returns, sqrt
 from gs_quant.timeseries.helper import log_return, plot_measure, _to_offset, check_forward_looking, get_df_with_retries
-from gs_quant.data.log import log_debug, log_warning
 
 GENERIC_DATE = Union[datetime.date, str]
 ASSET_SPEC = Union[Asset, str]
@@ -593,6 +593,7 @@ def implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference 
 
     log_debug(request_id, _logger, 'where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, ref_string,
               relative_strike)
+    tenor = _tenor_month_to_year(tenor)
     where = dict(tenor=tenor, strikeReference=ref_string, relativeStrike=relative_strike)
     q = GsDataApi.build_market_data_query([asset_id], QueryType.IMPLIED_VOLATILITY, where=where, source=source,
                                           real_time=real_time)
@@ -625,6 +626,15 @@ def implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference 
 
     out.dataset_ids = tuple(ids)
     return out
+
+
+def _tenor_month_to_year(tenor: str):
+    matched = re.fullmatch('(\\d+)m', tenor)
+    if matched:
+        month = int(matched[1])
+        if month % 12 == 0:
+            return str(int(month / 12)) + 'y'
+    return tenor
 
 
 @plot_measure((AssetClass.Commod,), (AssetType.CommodityNaturalGasHub,), [QueryType.IMPLIED_VOLATILITY])
@@ -3116,9 +3126,9 @@ def factor_profile(asset: Asset, metric: _FactorProfileMetric = _FactorProfileMe
 
 
 @plot_measure((AssetClass.Commod,), (AssetType.Commodity, AssetType.Index,), [QueryType.COMMODITY_FORECAST])
-def commodity_forecast(asset: Asset, forecastPeriod: str = "3m", forecastType: _CommodityForecastType =
-                       _CommodityForecastType.SPOT_RETURN, *, source: str = None, real_time:
-                       bool = False) -> Series:
+def commodity_forecast(asset: Asset, forecastPeriod: str = "3m",
+                       forecastType: _CommodityForecastType = _CommodityForecastType.SPOT_RETURN, *,
+                       source: str = None, real_time: bool = False) -> Series:
     """
     Short and long-term commodities forecast.
     :param asset: asset object loaded from security master
@@ -3305,3 +3315,113 @@ def _forward_price_eu_natgas(asset: Asset, contract_range: str = None, *, source
     result.dataset_ids = dataset_ids
 
     return result
+
+
+@plot_measure((AssetClass.FX,), None, [QueryType.FORWARD_POINT])
+def spot_carry(asset: Asset, tenor: str, annualize: bool = False, *,
+               source: str = None, real_time: bool = False) -> Series:
+    """
+    FX spot carry. Uses most recent date available if pricing_date is not provided.
+
+    :param asset: asset object loaded from security master
+    :param tenor: relative date representation of expiration date e.g. 1m
+    :param annualize: whether to annualize carry
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: FX spot carry curve
+    """
+    if real_time:
+        raise NotImplementedError('realtime fx spot carry not implemented')
+
+    if tenor not in ['1m', '2m', '3m', '4m', '5m', '6m', '7m', '8m', '9m', '10m', '11m', '1y', '15m', '18m', '21m',
+                     '2y']:
+        raise MqValueError('tenor not included in dataset')
+    asset_id = cross_stored_direction_for_fx_vol(asset)
+    where = dict(tenor=tenor)
+    q_1 = GsDataApi.build_market_data_query([asset_id], QueryType.FORWARD_POINT, where=where, source=source,
+                                            real_time=real_time)
+    _logger.debug('q_1 %s', q_1)
+    df_fwd = _market_data_timed(q_1)
+
+    q_2 = GsDataApi.build_market_data_query([asset_id], QueryType.SPOT, source=source, real_time=real_time)
+    _logger.debug('q %s', q_2)
+    df_spot = _market_data_timed(q_2)
+
+    if 'm' in tenor:
+        ann_factor = 12 / int(tenor.replace('m', ''))
+    else:
+        ann_factor = 1 / int(tenor.replace('y', ''))
+
+    df_carry = df_fwd['forwardPoint'] / df_spot['spot']
+    if annualize:
+        df_carry = df_carry * ann_factor
+    series = ExtendedSeries(df_carry, name='spotCarry')
+    series.dataset_ids = getattr(df_fwd, 'dataset_ids', ())
+    return series
+
+
+@plot_measure((AssetClass.FX,), None, [QueryType.IMPLIED_VOLATILITY])
+def fx_implied_correlation(asset_1: Asset, asset_2: Asset, tenor: str, *,
+                           source: str = None, real_time: bool = False) -> Series:
+    """
+    FX implied correlation. Uses most recent date available if pricing_date is not provided.
+
+    :param asset_1: asset object loaded from security master
+    :param asset_2: asset object loaded from security master
+    :param tenor: relative date representation of expiration date e.g. 1m
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: FX implied correlation curve
+    """
+    if real_time:
+        raise NotImplementedError('realtime fx_implied_correlation not implemented')
+
+    cross_1 = asset_1.get_identifier(AssetIdentifier.BLOOMBERG_ID)
+    cross_2 = asset_2.get_identifier(AssetIdentifier.BLOOMBERG_ID)
+    invert_factor = 1
+
+    # checks
+    ccys = [cross_1[:3], cross_1[3:], cross_2[:3], cross_2[3:]]
+    if len(ccys) <= len(set(ccys)):
+        raise MqValueError('crosses must have common currency')
+
+    # corr cross
+    cross_3 = ''
+    base_ccy = ''
+    for ccy in ccys:
+        if ccys.count(ccy) == 1:
+            cross_3 += ccy
+        if ccys.count(ccy) == 2:
+            base_ccy = ccy
+
+    # marquee ids
+    id_1 = cross_stored_direction_for_fx_vol(SecurityMaster.get_asset(cross_1, AssetIdentifier.BLOOMBERG_ID))
+    id_2 = cross_stored_direction_for_fx_vol(SecurityMaster.get_asset(cross_2, AssetIdentifier.BLOOMBERG_ID))
+    id_3 = cross_stored_direction_for_fx_vol(SecurityMaster.get_asset(cross_3, AssetIdentifier.BLOOMBERG_ID))
+
+    # normal crosses
+    c_1 = SecurityMaster.get_asset(id_1, AssetIdentifier.MARQUEE_ID).get_identifier(AssetIdentifier.BLOOMBERG_ID)
+    c_2 = SecurityMaster.get_asset(id_2, AssetIdentifier.MARQUEE_ID).get_identifier(AssetIdentifier.BLOOMBERG_ID)
+
+    if asset_1.get_marquee_id() != id_1:
+        invert_factor *= -1
+    if asset_2.get_marquee_id() != id_2:
+        invert_factor *= -1
+    if c_1[:3] == base_ccy and c_2[:3] != base_ccy:
+        invert_factor *= -1
+    if c_1[3:] == base_ccy and c_2[3:] != base_ccy:
+        invert_factor *= -1
+
+    where = dict(tenor=tenor, strikeReference='delta', relativeStrike=0)
+    q = GsDataApi.build_market_data_query([id_1, id_2, id_3], QueryType.IMPLIED_VOLATILITY, where=where, source=source,
+                                          real_time=real_time)
+    _logger.debug('q %s', q)
+    df = _market_data_timed(q)
+
+    df1 = df.loc[df['assetId'] == id_1]
+    df2 = df.loc[df['assetId'] == id_2]
+    df3 = df.loc[df['assetId'] == id_3]
+    col = 'impliedVolatility'
+    corr = invert_factor * (df1[col] * df1[col] + df2[col] * df2[col] - df3[col] * df3[col]) / (2 * df1[col] * df2[col])
+    series = ExtendedSeries(corr, name='impCorr')
+    return series

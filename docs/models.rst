@@ -15,5 +15,17 @@ Epidemiology
    EpidemicModel
 
 
+RiskModel
+------------
+
+.. currentmodule:: gs_quant.models.risk_model
+
+.. autosummary::
+   :toctree: classes
+
+   RiskModel
+   FactorRiskModel
+
+
 
 

@@ -40,7 +40,8 @@ class DataCell:
                  entity: Entity,
                  dimension_overrides: List[Override],
                  column_index: int,
-                 row_index: int):
+                 row_index: int,
+                 row_group: str = None):
         # Cell starts with root processor
         # Deep copies so the processor and children are unique objects
         self.processor: BaseProcessor = copy.deepcopy(processor)
@@ -49,6 +50,7 @@ class DataCell:
         self.dimension_overrides = dimension_overrides
         self.column_index = column_index
         self.row_index = row_index
+        self.row_group = row_group
 
         self.updated_time: Optional[str] = None
 

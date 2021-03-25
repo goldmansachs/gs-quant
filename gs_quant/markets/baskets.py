@@ -25,8 +25,8 @@ from gs_quant.common import DateLimit
 from gs_quant.entities.entity import EntityType, PositionedEntity
 from gs_quant.errors import MqUninitialisedError, MqValueError
 from gs_quant.json_encoder import JSONEncoder
-from gs_quant.markets.indices_utils import BasketTypes, IndicesDatasets, FundamentalsMetrics, \
-    FundamentalMetricPeriod, FundamentalMetricPeriodDirection
+from gs_quant.markets.indices_utils import BasketTypes, CorporateActionType, IndicesDatasets, \
+    FundamentalsMetrics, FundamentalMetricPeriod, FundamentalMetricPeriodDirection
 from gs_quant.markets.securities import Asset, AssetType as SecAssetType
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.api.gs.indices import GsIndexApi
@@ -50,8 +50,9 @@ class Basket(Asset, PositionedEntity):
             self.__id = gs_asset.id
             asset_entity: Dict = json.loads(json.dumps(gs_asset.as_dict(), cls=JSONEncoder))
             asset_parameters = get(asset_entity, 'parameters', {})
-            Asset.__init__(self, gs_asset.id, gs_asset.asset_class, gs_asset.name, currency=gs_asset.currency,
-                           entity=asset_entity, parameters=AssetParameters(**asset_parameters))
+            Asset.__init__(self, gs_asset.id, gs_asset.asset_class, gs_asset.name, exchange=gs_asset.exchange,
+                           currency=gs_asset.currency, parameters=AssetParameters(**asset_parameters),
+                           entity=asset_entity, entitlements=gs_asset.entitlements)
             PositionedEntity.__init__(self, gs_asset.id, EntityType.ASSET)
             self.__populate_current_attributes_for_existing_basket(gs_asset)
 
@@ -72,12 +73,14 @@ class Basket(Asset, PositionedEntity):
         return dt.datetime.strptime(last_rebalance['date'], '%Y-%m-%d').date()
 
     def get_corporate_actions(self,
+                              ca_type: [CorporateActionType] = CorporateActionType.to_list(),
                               start_date: dt.date = DateLimit.LOW_LIMIT.value,
                               end_date: dt.date = DateLimit.HIGH_LIMIT.value) -> DataQueryResponse:
         if not self.id:
             self.__raise_initialization_error('retrieve corporate actions data')
 
-        query = DataQuery(where=dict(assetId=self.id), start_date=start_date, end_date=end_date)
+        where = dict(assetId=self.id, corporateActionType=ca_type)
+        query = DataQuery(where=where, start_date=start_date, end_date=end_date)
         return GsDataApi.query_data(query=query, dataset_id=IndicesDatasets.CORPORATE_ACTIONS.value)
 
     def get_fundamentals(self,

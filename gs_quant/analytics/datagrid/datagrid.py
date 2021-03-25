@@ -20,19 +20,20 @@ from collections import defaultdict
 from dataclasses import asdict
 from datetime import datetime
 from numbers import Number
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Union
 
 import numpy as np
-from pandas import DataFrame
+from pandas import DataFrame, Series, concat
 
 from gs_quant.analytics.common import DATAGRID_HELP_MSG
 from gs_quant.analytics.common.helpers import resolve_entities, get_rdate_cache_key
 from gs_quant.analytics.core.processor import DataQueryInfo
 from gs_quant.analytics.core.processor_result import ProcessorResult
-from gs_quant.analytics.core.query_helpers import aggregate_queries, fetch_query, build_query_string
+from gs_quant.analytics.core.query_helpers import aggregate_queries, fetch_query, build_query_string, valid_dimensions
 from gs_quant.analytics.datagrid.data_cell import DataCell
 from gs_quant.analytics.datagrid.data_column import DataColumn, ColumnFormat
-from gs_quant.analytics.datagrid.data_row import DataRow, DimensionsOverride, ProcessorOverride, Override
+from gs_quant.analytics.datagrid.data_row import DataRow, DimensionsOverride, ProcessorOverride, Override, RowSeparator
+from gs_quant.analytics.datagrid.serializers import row_from_dict
 from gs_quant.analytics.datagrid.utils import DataGridSort, SortOrder, SortType, DataGridFilter, FilterOperation, \
     FilterCondition
 from gs_quant.analytics.processors import CoordinateProcessor, EntityProcessor
@@ -94,7 +95,7 @@ class DataGrid:
 
     def __init__(self,
                  name: str,
-                 rows: List[DataRow],
+                 rows: List[Union[DataRow, RowSeparator]],
                  columns: List[DataColumn],
                  *,
                  id_: str = None,
@@ -137,8 +138,13 @@ class DataGrid:
         all_queries: List[DataQueryInfo] = []
         entity_cells: List[DataCell] = []
 
+        current_row_group = None
+
         # Loop over rows, columns
         for row_index, row in enumerate(self.rows):
+            if isinstance(row, RowSeparator):
+                current_row_group = row.name
+                continue
             entity: Entity = row.entity
             cells: List[DataCell] = []
             row_overrides = row.overrides
@@ -156,7 +162,8 @@ class DataGrid:
                                           entity,
                                           data_overrides,
                                           column_index,
-                                          row_index)
+                                          row_index,
+                                          current_row_group)
 
                 # treat data cells different to entity
                 if isinstance(column_processor, EntityProcessor):
@@ -319,11 +326,13 @@ class DataGrid:
             for query in query_map.values():
                 df = fetch_query(query)
                 for query_dimensions, query_infos in query['queries'].items():
-                    query_string = build_query_string(query_dimensions)
-                    queried_df = df.query(query_string)
-                    for query_info in query_infos:
-                        series = queried_df[query_info.query.coordinate.measure]
-                        query_info.data = series
+                    if valid_dimensions(query_dimensions, df):
+                        queried_df = df.query(build_query_string(query_dimensions))
+                        for query_info in query_infos:
+                            query_info.data = queried_df[query_info.query.coordinate.measure]
+                    else:
+                        for query_info in query_infos:
+                            query_info.data = Series()
 
         for query_info in self._data_queries:
             if query_info.data is None or len(query_info.data) == 0:
@@ -357,6 +366,8 @@ class DataGrid:
         columns = self.columns
         results = defaultdict(list)
         for row in self.results:
+            if len(row):
+                results['rowGroup'].append(row[0].row_group or '')
             for column in row:
                 column_value = column.value
                 if column_value.success is True:
@@ -370,8 +381,15 @@ class DataGrid:
                     results[column.name].append(np.NaN)
 
         df = DataFrame.from_dict(results)
-        df = self.__handle_filters(df)
-        df = self.__handle_sorts(df)
+        row_groups = list(df['rowGroup'].unique())
+        sub_dfs = []
+        for row_group in row_groups:
+            sub_df = self.__handle_filters(df[df['rowGroup'] == row_group])
+            sub_df = self.__handle_sorts(sub_df)
+            sub_dfs.append(sub_df)
+        df = concat(sub_dfs)
+        df.set_index(['rowGroup', df.index], inplace=True)
+        df.rename_axis(index=['', ''], inplace=True)
         return df
 
     def __handle_sorts(self, df):
@@ -481,7 +499,7 @@ class DataGrid:
             should_resolve_entities = True
             reference_list = []
 
-        rows = [DataRow.from_dict(row, reference_list) for row in parameters.get('rows', [])]
+        rows = [row_from_dict(row, reference_list) for row in parameters.get('rows', [])]
         columns = [DataColumn.from_dict(column, reference_list) for column in parameters.get('columns', [])]
         sorts = [DataGridSort.from_dict(sort) for sort in parameters.get('sorts', [])]
         filters = [DataGridFilter.from_dict(filter_) for filter_ in parameters.get('filters', [])]

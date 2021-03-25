@@ -63,6 +63,43 @@ class WorkspaceType(EnumBase, Enum):
         return self.value
 
 
+class ComponentSelection(Base):
+        
+    """Available selections for a particular component."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        selector_id: str,
+        tag: str,
+        name: str = None
+    ):        
+        super().__init__()
+        self.selector_id = selector_id
+        self.tag = tag
+        self.name = name
+
+    @property
+    def selector_id(self) -> str:
+        """Selector ID to use."""
+        return self.__selector_id
+
+    @selector_id.setter
+    def selector_id(self, value: str):
+        self._property_changed('selector_id')
+        self.__selector_id = value        
+
+    @property
+    def tag(self) -> str:
+        """Tag id to match in selector."""
+        return self.__tag
+
+    @tag.setter
+    def tag(self, value: str):
+        self._property_changed('tag')
+        self.__tag = value        
+
+
 class ContainerComponentParameters(Base):
         
     """Parameters provided for a container component."""
@@ -172,6 +209,17 @@ class MarketComponentParameters(Base):
         self.__height = value        
 
 
+class NotificationTokenBody(Base):
+        
+    @camel_case_translate
+    def __init__(
+        self,
+        name: str = None
+    ):        
+        super().__init__()
+        self.name = name
+
+
 class PromoComponentParameters(Base):
         
     """Parameters provided for a promo component."""
@@ -243,65 +291,6 @@ class PromoComponentParameters(Base):
     def hide_border(self, value: bool):
         self._property_changed('hide_border')
         self.__hide_border = value        
-
-
-class RelatedLink(Base):
-        
-    """Parameters provided for a related link."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        type_: str,
-        name: str,
-        link: str,
-        description: str = None
-    ):        
-        super().__init__()
-        self.__type = type_
-        self.description = description
-        self.link = link
-        self.name = name
-
-    @property
-    def type(self) -> str:
-        """Type of related link."""
-        return self.__type
-
-    @type.setter
-    def type(self, value: str):
-        self._property_changed('type')
-        self.__type = value        
-
-    @property
-    def description(self) -> str:
-        """Description of related link."""
-        return self.__description
-
-    @description.setter
-    def description(self, value: str):
-        self._property_changed('description')
-        self.__description = value        
-
-    @property
-    def link(self) -> str:
-        """URL of related link."""
-        return self.__link
-
-    @link.setter
-    def link(self, value: str):
-        self._property_changed('link')
-        self.__link = value        
-
-    @property
-    def name(self) -> str:
-        """Name to be displayed."""
-        return self.__name
-
-    @name.setter
-    def name(self, value: str):
-        self._property_changed('name')
-        self.__name = value        
 
 
 class SeparatorComponentParameters(Base):
@@ -997,6 +986,57 @@ class DataGridComponentParameters(Base):
         self.__tooltip = value        
 
 
+class Entitlements(Base):
+        
+    """Defines the entitlements of a given resource."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        view: Tuple[str, ...],
+        edit: Tuple[str, ...],
+        admin: Tuple[str, ...],
+        name: str = None
+    ):        
+        super().__init__()
+        self.view = view
+        self.edit = edit
+        self.admin = admin
+        self.name = name
+
+    @property
+    def view(self) -> Tuple[str, ...]:
+        """Permission to view the resource and its contents."""
+        return self.__view
+
+    @view.setter
+    def view(self, value: Tuple[str, ...]):
+        self._property_changed('view')
+        self.__view = value        
+
+    @property
+    def edit(self) -> Tuple[str, ...]:
+        """Permission to edit details about the resource content, excluding entitlements.
+           Can also delete the resource."""
+        return self.__edit
+
+    @edit.setter
+    def edit(self, value: Tuple[str, ...]):
+        self._property_changed('edit')
+        self.__edit = value        
+
+    @property
+    def admin(self) -> Tuple[str, ...]:
+        """Permission to edit all details of the resource, including entitlements. Can also
+           delete the resource."""
+        return self.__admin
+
+    @admin.setter
+    def admin(self, value: Tuple[str, ...]):
+        self._property_changed('admin')
+        self.__admin = value        
+
+
 class LegendComponentParameters(Base):
         
     """Parameters provided for the legend component."""
@@ -1095,6 +1135,30 @@ class MonitorComponentParameters(Base):
         self.__tooltip = value        
 
 
+class NotificationTokens(Base):
+        
+    """The required tokens to render the template to be sent."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        tokens: NotificationTokenBody,
+        name: str = None
+    ):        
+        super().__init__()
+        self.tokens = tokens
+        self.name = name
+
+    @property
+    def tokens(self) -> NotificationTokenBody:
+        return self.__tokens
+
+    @tokens.setter
+    def tokens(self, value: NotificationTokenBody):
+        self._property_changed('tokens')
+        self.__tokens = value        
+
+
 class PlotComponentParameters(Base):
         
     """Parameters provided for a plot component."""
@@ -1154,55 +1218,6 @@ class PlotComponentParameters(Base):
     def plot_frequency_mode(self, value: str):
         self._property_changed('plot_frequency_mode')
         self.__plot_frequency_mode = value        
-
-
-class RelatedLinksComponentParameters(Base):
-        
-    """Parameters provided for a related link components."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        height: float,
-        links: Tuple[RelatedLink, ...],
-        title: str,
-        name: str = None
-    ):        
-        super().__init__()
-        self.height = height
-        self.links = links
-        self.title = title
-        self.name = name
-
-    @property
-    def height(self) -> float:
-        """Used for restricting the height in pixels of the component."""
-        return self.__height
-
-    @height.setter
-    def height(self, value: float):
-        self._property_changed('height')
-        self.__height = value        
-
-    @property
-    def links(self) -> Tuple[RelatedLink, ...]:
-        """Description associated with link."""
-        return self.__links
-
-    @links.setter
-    def links(self, value: Tuple[RelatedLink, ...]):
-        self._property_changed('links')
-        self.__links = value        
-
-    @property
-    def title(self) -> str:
-        """Title of the related link component."""
-        return self.__title
-
-    @title.setter
-    def title(self, value: str):
-        self._property_changed('title')
-        self.__title = value        
 
 
 class ResearchComponentParameters(Base):
@@ -1275,7 +1290,7 @@ class SelectorComponentOption(Base):
         self,
         id_: str,
         name: str,
-        tags: Tuple[str, ...]
+        tags: Tuple[str, ...] = None
     ):        
         super().__init__()
         self.__id = id_
@@ -1498,41 +1513,75 @@ class WebinarComponentParameters(Base):
         self.__title = value        
 
 
-class WorkspaceCallToAction(Base):
+class RelatedLink(Base):
         
-    """Call to action displayed on the top right of the page."""
+    """Parameters provided for a related link."""
 
     @camel_case_translate
     def __init__(
         self,
-        actions: Tuple[RelatedLink, ...],
-        text: str,
-        name: str = None
+        type_: str,
+        name: str,
+        link: str,
+        description: str = None,
+        notification_properties: NotificationTokens = None
     ):        
         super().__init__()
-        self.actions = actions
-        self.text = text
+        self.__type = type_
+        self.description = description
+        self.link = link
         self.name = name
+        self.notification_properties = notification_properties
 
     @property
-    def actions(self) -> Tuple[RelatedLink, ...]:
-        """Call to action in the call to actions list."""
-        return self.__actions
+    def type(self) -> str:
+        """Type of related link."""
+        return self.__type
 
-    @actions.setter
-    def actions(self, value: Tuple[RelatedLink, ...]):
-        self._property_changed('actions')
-        self.__actions = value        
+    @type.setter
+    def type(self, value: str):
+        self._property_changed('type')
+        self.__type = value        
 
     @property
-    def text(self) -> str:
-        """Text to go on the call to action button."""
-        return self.__text
+    def description(self) -> str:
+        """Description of related link."""
+        return self.__description
 
-    @text.setter
-    def text(self, value: str):
-        self._property_changed('text')
-        self.__text = value        
+    @description.setter
+    def description(self, value: str):
+        self._property_changed('description')
+        self.__description = value        
+
+    @property
+    def link(self) -> str:
+        """URL of related link."""
+        return self.__link
+
+    @link.setter
+    def link(self, value: str):
+        self._property_changed('link')
+        self.__link = value        
+
+    @property
+    def name(self) -> str:
+        """Name to be displayed."""
+        return self.__name
+
+    @name.setter
+    def name(self, value: str):
+        self._property_changed('name')
+        self.__name = value        
+
+    @property
+    def notification_properties(self) -> NotificationTokens:
+        """The required tokens to render the template to be sent."""
+        return self.__notification_properties
+
+    @notification_properties.setter
+    def notification_properties(self, value: NotificationTokens):
+        self._property_changed('notification_properties')
+        self.__notification_properties = value        
 
 
 class SelectorComponentParameters(Base):
@@ -1544,11 +1593,12 @@ class SelectorComponentParameters(Base):
         self,
         container_ids: Tuple[str, ...],
         height: float,
-        options: Tuple[SelectorComponentOption, ...],
         default_option_index: float = None,
+        options: Tuple[SelectorComponentOption, ...] = None,
         title: str = None,
         tooltip: str = None,
         width: float = None,
+        parent_selector_id: str = None,
         name: str = None
     ):        
         super().__init__()
@@ -1559,6 +1609,7 @@ class SelectorComponentParameters(Base):
         self.title = title
         self.tooltip = tooltip
         self.width = width
+        self.parent_selector_id = parent_selector_id
         self.name = name
 
     @property
@@ -1634,6 +1685,102 @@ class SelectorComponentParameters(Base):
         self._property_changed('width')
         self.__width = value        
 
+    @property
+    def parent_selector_id(self) -> str:
+        """Id of the parent selector. Used for multi-selectors ony."""
+        return self.__parent_selector_id
+
+    @parent_selector_id.setter
+    def parent_selector_id(self, value: str):
+        self._property_changed('parent_selector_id')
+        self.__parent_selector_id = value        
+
+
+class RelatedLinksComponentParameters(Base):
+        
+    """Parameters provided for a related link components."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        height: float,
+        links: Tuple[RelatedLink, ...],
+        title: str,
+        name: str = None
+    ):        
+        super().__init__()
+        self.height = height
+        self.links = links
+        self.title = title
+        self.name = name
+
+    @property
+    def height(self) -> float:
+        """Used for restricting the height in pixels of the component."""
+        return self.__height
+
+    @height.setter
+    def height(self, value: float):
+        self._property_changed('height')
+        self.__height = value        
+
+    @property
+    def links(self) -> Tuple[RelatedLink, ...]:
+        """Description associated with link."""
+        return self.__links
+
+    @links.setter
+    def links(self, value: Tuple[RelatedLink, ...]):
+        self._property_changed('links')
+        self.__links = value        
+
+    @property
+    def title(self) -> str:
+        """Title of the related link component."""
+        return self.__title
+
+    @title.setter
+    def title(self, value: str):
+        self._property_changed('title')
+        self.__title = value        
+
+
+class WorkspaceCallToAction(Base):
+        
+    """Call to action displayed on the top right of the page."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        actions: Tuple[RelatedLink, ...],
+        text: str,
+        name: str = None
+    ):        
+        super().__init__()
+        self.actions = actions
+        self.text = text
+        self.name = name
+
+    @property
+    def actions(self) -> Tuple[RelatedLink, ...]:
+        """Call to action in the call to actions list."""
+        return self.__actions
+
+    @actions.setter
+    def actions(self, value: Tuple[RelatedLink, ...]):
+        self._property_changed('actions')
+        self.__actions = value        
+
+    @property
+    def text(self) -> str:
+        """Text to go on the call to action button."""
+        return self.__text
+
+    @text.setter
+    def text(self, value: str):
+        self._property_changed('text')
+        self.__text = value        
+
 
 class WorkspaceComponent(Base):
         
@@ -1646,6 +1793,7 @@ class WorkspaceComponent(Base):
         type_: Union[ComponentType, str],
         hide: bool = None,
         tags: Tuple[str, ...] = None,
+        selections: Tuple[ComponentSelection, ...] = None,
         parameters: dict = None,
         name: str = None
     ):        
@@ -1654,6 +1802,7 @@ class WorkspaceComponent(Base):
         self.hide = hide
         self.tags = tags
         self.__type = get_enum_value(ComponentType, type_)
+        self.selections = selections
         self.parameters = parameters
         self.name = name
 
@@ -1698,6 +1847,16 @@ class WorkspaceComponent(Base):
     def type(self, value: Union[ComponentType, str]):
         self._property_changed('type')
         self.__type = get_enum_value(ComponentType, value)        
+
+    @property
+    def selections(self) -> Tuple[ComponentSelection, ...]:
+        """List of available selections for a particular component."""
+        return self.__selections
+
+    @selections.setter
+    def selections(self, value: Tuple[ComponentSelection, ...]):
+        self._property_changed('selections')
+        self.__selections = value        
 
     @property
     def parameters(self) -> dict:

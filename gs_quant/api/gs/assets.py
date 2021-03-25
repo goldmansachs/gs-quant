@@ -26,6 +26,7 @@ from typing import Iterable, List, Tuple, Optional, Union
 from gs_quant.target.assets import Asset as __Asset, AssetClass, AssetType, AssetToInstrumentResponse, TemporalXRef,\
     Position, EntityQuery, PositionSet, Currency, AssetParameters
 from gs_quant.target.assets import FieldFilterMap
+from gs_quant.target.common import Entitlements
 from gs_quant.errors import MqValueError
 from gs_quant.instrument import Instrument, Security
 from gs_quant.session import GsSession
@@ -240,19 +241,14 @@ class GsAssetApi:
         return tuple(PositionSet.from_dict(r) for r in position_sets)
 
     @staticmethod
-    def get_latest_positions(asset_id: str, position_type: PositionType = None) -> Union[PositionSet, dict]:
+    def get_latest_positions(asset_id: str, position_type: PositionType = None) -> PositionSet:
         url = '/assets/{id}/positions/last'.format(id=asset_id)
         if position_type is not None:
             url += '?type={ptype}'.format(ptype=position_type if isinstance(position_type, str) else position_type.value)
         
         results = GsSession.current._get(url)['results']
 
-        # Annoyingly, different types are returned depending on position_type
-
-        if isinstance(results, dict) and 'positions' in results:
-            results['positions'] = tuple(Position.from_dict(p) for p in results['positions'])
-
-        return results
+        return PositionSet.from_dict(results)
 
     @staticmethod
     def get_or_create_asset_from_instrument(instrument: Instrument) -> str:
@@ -321,6 +317,15 @@ class GsAssetApi:
             url += '&type=' + position_type.value
 
         results = GsSession.current._get(url)['results']
+        return results
+
+    @staticmethod
+    def update_asset_entitlements(asset_id: str, entitlements: Entitlements) -> dict:
+        url = f'/assets/{asset_id}/entitlements'
+        try:
+            results = GsSession.current._put(url, payload=entitlements)
+        except HTTPError as err:
+            raise ValueError(f'Unable to update asset entitlements with {err}')
         return results
 
     @classmethod

@@ -4009,6 +4009,8 @@ class FieldFilterMap(Base):
         self.asset_classifications_risk_country_name = kwargs.get('asset_classifications_risk_country_name')
         self.asset_parameters_vendor = kwargs.get('asset_parameters_vendor')
         self.mkt_type = kwargs.get('mkt_type')
+        self.is_public = kwargs.get('is_public')
+        self.non_owner_id = kwargs.get('non_owner_id')
         self.ext_mkt_point1 = kwargs.get('ext_mkt_point1')
         self.product_type = kwargs.get('product_type')
         self.sub_region_code = kwargs.get('sub_region_code')
@@ -6352,6 +6354,24 @@ class FieldFilterMap(Base):
     def listed(self, value: dict):
         self._property_changed('listed')
         self.__listed = value        
+
+    @property
+    def non_owner_id(self) -> dict:
+        return self.__non_owner_id
+
+    @non_owner_id.setter
+    def non_owner_id(self, value: dict):
+        self._property_changed('non_owner_id')
+        self.__non_owner_id = value
+
+    @property
+    def is_public(self) -> dict:
+        return self.__is_public
+
+    @is_public.setter
+    def is_public(self, value: dict):
+        self._property_changed('is_public')
+        self.__is_public = value
 
     @property
     def shock_style(self) -> dict:
