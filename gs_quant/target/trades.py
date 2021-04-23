@@ -411,6 +411,8 @@ class MqexsOtcSettlementType(EnumBase, Enum):
     Bullet = 'Bullet'
     Calendar_Month_Average = 'Calendar Month Average'
     Trade_Month_Average = 'Trade Month Average'
+    Physical = 'Physical'
+    CalMonth_Avg_No_Roll_Adjust = 'CalMonth Avg No Roll Adjust'
     
     def __repr__(self):
         return self.value

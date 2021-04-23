@@ -19,9 +19,10 @@ from enum import Enum
 import pandas as pd
 from typing import Union, Iterable, Optional
 
-from gs_quant.backtests.actions import Action
+from gs_quant.backtests.actions import Action, AddTradeAction, AddTradeActionInfo
 from gs_quant.backtests.backtest_objects import BackTest
 from gs_quant.backtests.backtest_utils import make_list, CalcType
+from gs_quant.backtests.data_sources import *
 
 
 class TriggerDirection(Enum):
@@ -94,6 +95,27 @@ class PortfolioTriggerRequirements(TriggerRequirements):
         self.data_source = data_source
         self.trigger_level = trigger_level
         self.direction = direction
+
+
+class MeanReversionTriggerRequirements(TriggerRequirements):
+    def __init__(self, data_source: DataSource,
+                 z_score_bound: float,
+                 rolling_mean_window: int,
+                 rolling_std_window: int):
+        """
+        This trigger will sell when the value hits the z score threshold on the up side, will close out a position
+        when the value crosses the rolling_mean and buy when the value hits the z score threshold on the down side.
+
+        :param data_source: the asset values
+        :param z_score_bound: the threshold level on which to trigger
+        :param rolling_mean_window: the number of values to consider when calculating the rolling mean
+        :param rolling_std_window: the number of values to consider when calculating the standard deviation
+        """
+        super().__init__()
+        self.data_source = data_source
+        self.z_score_bound = z_score_bound
+        self.rolling_mean_window = rolling_mean_window
+        self.rolling_std_window = rolling_std_window
 
 
 class TriggerInfo(object):
@@ -236,11 +258,11 @@ class AggregateTrigger(Trigger):
         super().__init__(AggregateTriggerRequirements(triggers), actions)
         self._triggers = triggers
 
-    def has_triggered(self, state: dt.date, backtest: BackTest = None) -> bool:
+    def has_triggered(self, state: dt.date, backtest: BackTest = None) -> TriggerInfo:
         for trigger in self._trigger_requirements.triggers:
             if not trigger.has_triggered(state, backtest):
-                return False
-        return True
+                return TriggerInfo(False)
+        return TriggerInfo(True)
 
     @property
     def triggers(self) -> Iterable[Trigger]:
@@ -259,17 +281,49 @@ class PortfolioTrigger(Trigger):
     def __init__(self, trigger_requirements: PortfolioTriggerRequirements, actions: Iterable[Action] = None):
         super().__init__(trigger_requirements, actions)
 
-    def has_triggered(self, state: dt.date, backtest: BackTest = None) -> bool:
+    def has_triggered(self, state: dt.date, backtest: BackTest = None) -> TriggerInfo:
         if self._trigger_requirements.data_source == 'len':
             value = len(backtest.portfolio_dict)
             if self._trigger_requirements.direction == TriggerDirection.ABOVE:
                 if value > self._trigger_requirements.trigger_level:
-                    return True
+                    return TriggerInfo(True)
             elif self._trigger_requirements.direction == TriggerDirection.BELOW:
                 if value < self._trigger_requirements.trigger_level:
-                    return True
+                    return TriggerInfo(True)
             else:
                 if value == self._trigger_requirements.trigger_level:
-                    return True
+                    return TriggerInfo(True)
 
-        return False
+        return TriggerInfo(False)
+
+
+class MeanReversionTrigger(Trigger):
+    def __init__(self,
+                 trigger_requirements: MeanReversionTriggerRequirements,
+                 actions: Union[Action, Iterable[Action]]):
+        super().__init__(trigger_requirements, actions)
+        self._current_position = 0
+
+    def has_triggered(self, state: dt.date, backtest: BackTest = None) -> TriggerInfo:
+        trigger_req = self._trigger_requirements
+        rolling_mean = trigger_req.data_source.get_data_range(state, trigger_req.rolling_mean_window).mean()
+        rolling_std = trigger_req.data_source.get_data_range(state, trigger_req.rolling_std_window).std()
+        current_price = trigger_req.data_source.get_data(state)
+        if self._current_position == 0:
+            if abs((current_price - rolling_mean) / rolling_std) > self.trigger_requirements.z_score_bound:
+                if current_price > rolling_mean:
+                    self._current_position = -1
+                    return TriggerInfo(True, {AddTradeAction: AddTradeActionInfo(scaling=-1)})
+                else:
+                    self._current_position = 1
+                    return TriggerInfo(True, {AddTradeAction: AddTradeActionInfo(scaling=1)})
+        elif self._current_position == 1:
+            if current_price > rolling_mean:
+                self._current_position = 0
+                return TriggerInfo(True, {AddTradeAction: AddTradeActionInfo(scaling=-1)})
+        elif self._current_position == -1:
+            if current_price > rolling_mean:
+                self._current_position = 0
+                return TriggerInfo(True, {AddTradeAction: AddTradeActionInfo(scaling=1)})
+        else:
+            raise RuntimeWarning(f'unexpected current position: {self._current_position}')

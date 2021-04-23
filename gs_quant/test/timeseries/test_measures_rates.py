@@ -33,6 +33,7 @@ from gs_quant.timeseries import TdapiRatesDefaultsProvider, SWAPTION_DEFAULTS, C
     ExtendedSeries
 from gs_quant.timeseries.measures_rates import _swaption_build_asset_query, _currency_to_tdapi_swaption_rate_asset, \
     _check_strike_reference
+from gs_quant.markets.securities import Cross
 
 _index = [pd.Timestamp('2019-01-01')]
 _test_datasets = ('TEST_DATASET',)
@@ -511,6 +512,81 @@ def test_midcurve_vol_return_data():
     actual = tm_rates.midcurve_vol(Currency("GBP", name="GBP"), "1y", "1y", "1y", 0)
     assert_series_equal(tm._extract_series_from_df(df, QueryType.MIDCURVE_VOL), actual)
     replace.restore()
+
+
+def test_cross_to_fxfwd_xcswp_asset(mocker):
+    replace = Replacer()
+    mocker.patch.object(GsSession.__class__, 'current',
+                        return_value=GsSession.get(Environment.DEV, 'client_id', 'secret'))
+    mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
+    mocker.patch.object(SecurityMaster, 'get_asset', side_effect=mock_request)
+    bbid_mock = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+    correct_mapping = {
+        'EURUSD': {"id": 'MA1VJC1E3SZW8E4S', "crossID": "MAA9MVX15AJNQCVG"},
+        'GBPUSD': {"id": 'MA3JTR4HSC63H4V6', "crossID": "MA58R87SPRMKKE7Z"},
+        'AUDUSD': {"id": 'MAD4VBRWYXFSY1N4', "crossID": "MAJTN2XJVF97SYJK"},
+        'NZDUSD': {"id": 'MA1YHQMZVTM3VBWT', "crossID": "MANQ8REB1VJ4JFTR"},
+        'USDSEK': {"id": 'MA2APZREBGDMME83', "crossID": "MA4ZD5CZGC3Y6JZD"},
+        'USDNOK': {"id": 'MA0K3W6FKH6K1KJE', "crossID": "MAZ0P16RPG5P0MVF"},
+        'USDDKK': {"id": 'MA328HZB86DYSWSJ', "crossID": "MABCHYGJ1TCBCQE4"},
+        'USDCAD': {"id": 'MAT8JNEE2GN5NES6', "crossID": "MAP8G81B2KHTYR07"},
+        'USDCHF': {"id": 'MABNGGTNB9A0TKCG', "crossID": "MAMPQHNP1A26RS1C"},
+        'USDJPY': {"id": 'MAMZ9YG8AF3HQ18C', "crossID": "MAYJPCVVF2RWXCES"},
+    }
+
+    with tm.PricingContext(dt.date.today()):
+        for cross in correct_mapping:
+            asset = Cross(correct_mapping[cross]["crossID"], cross)
+            bbid_mock.return_value = cross
+            correct_id = tm_rates._cross_to_fxfwd_xcswp_asset(asset)
+            assert correct_mapping[cross]["id"] == correct_id
+    replace.restore()
+
+
+def test_ois_fxfwd_xcswap_measures(mocker):
+    replace = Replacer()
+    dict_fns = {
+        "oisXccy": {"fn": tm_rates.ois_xccy, "queryType": QueryType.OIS_XCCY},
+        "oisXccyExSpike": {"fn": tm_rates.ois_xccy_ex_spike, "queryType": QueryType.OIS_XCCY_EX_SPIKE},
+        "usdOis": {"fn": tm_rates.usd_ois, "queryType": QueryType.USD_OIS},
+        "nonUsdOis": {"fn": tm_rates.non_usd_ois, "queryType": QueryType.NON_USD_OIS},
+    }
+    args = dict(tenor='3y', real_time=False)
+    for key in dict_fns:
+        fn = dict_fns[key]["fn"]
+        mock_jpy = Cross('MAYJPCVVF2RWXCES', 'USD/JPY')
+        xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+        xrefs.return_value = 'JPYUSD'
+        args['asset'] = mock_jpy
+        with pytest.raises(NotImplementedError):
+            fn(**args)
+
+        mock_eur = Cross('MAA0NE9QX2ABETG6', 'EUR/USD')
+        args['asset'] = mock_eur
+        xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+        xrefs.return_value = 'EURUSD'
+        with pytest.raises(NotImplementedError):
+            fn(..., real_time=True)
+
+        args['tenor'] = '5yr'
+        with pytest.raises(MqValueError):
+            fn(**args)
+        args['tenor'] = '3y'
+
+        test_data = {key: [1, 2, 3]}
+        df = MarketDataResponseFrame(data=test_data, index=[dt.date(2019, 1, 1), dt.date(2019, 1, 2),
+                                                            dt.date(2019, 1, 3)])
+        identifiers = replace('gs_quant.timeseries.measures_rates._get_tdapi_rates_assets', Mock())
+        identifiers.return_value = {'MAA9MVX15AJNQCVG'}  # Test on EURUSD only
+        replace('gs_quant.timeseries.measures_rates._range_from_pricing_date', Mock(), Mock()).return_value = [
+            dt.date(2019, 1, 2), dt.date(2019, 1, 5)]
+        replace('gs_quant.timeseries.measures_rates._market_data_timed', Mock()).return_value = df
+
+        expected = tm_rates._extract_series_from_df(df, dict_fns[key]["queryType"])
+        actual = fn(**args)
+        assert_series_equal(expected, actual)
+
+        replace.restore()
 
 
 if __name__ == '__main__':

@@ -16,11 +16,11 @@ under the License.
 
 import json
 import logging
+import webbrowser
 from collections import defaultdict
 from dataclasses import asdict
-from datetime import datetime
 from numbers import Number
-from typing import List, Dict, Optional, Union
+from typing import List, Dict, Optional, Tuple, Union
 
 import numpy as np
 from pandas import DataFrame, Series, concat
@@ -32,10 +32,11 @@ from gs_quant.analytics.core.processor_result import ProcessorResult
 from gs_quant.analytics.core.query_helpers import aggregate_queries, fetch_query, build_query_string, valid_dimensions
 from gs_quant.analytics.datagrid.data_cell import DataCell
 from gs_quant.analytics.datagrid.data_column import DataColumn, ColumnFormat
-from gs_quant.analytics.datagrid.data_row import DataRow, DimensionsOverride, ProcessorOverride, Override, RowSeparator
+from gs_quant.analytics.datagrid.data_row import DataRow, DimensionsOverride, ProcessorOverride, Override, \
+    ValueOverride, RowSeparator
 from gs_quant.analytics.datagrid.serializers import row_from_dict
 from gs_quant.analytics.datagrid.utils import DataGridSort, SortOrder, SortType, DataGridFilter, FilterOperation, \
-    FilterCondition
+    FilterCondition, get_utc_now
 from gs_quant.analytics.processors import CoordinateProcessor, EntityProcessor
 from gs_quant.datetime.relative_date import RelativeDate
 from gs_quant.entities.entity import Entity
@@ -117,6 +118,7 @@ class DataGrid:
         self._data_queries: List[DataQueryInfo] = []
         self._entity_cells: List[DataCell] = []
         self._coord_processor_cells: List[DataCell] = []
+        self._value_cells: List[DataCell] = []
 
         self.results: List[List[DataCell]] = []
         self.is_initialized: bool = False
@@ -154,7 +156,7 @@ class DataGrid:
                 column_processor = column.processor
 
                 # Get all the data coordinate overrides and apply the processor override if it exists
-                data_overrides = _get_overrides(row_overrides, column_name, column)
+                data_overrides, value_override, processor_override = _get_overrides(row_overrides, column_name)
 
                 # Create the cell
                 cell: DataCell = DataCell(column_name,
@@ -165,11 +167,16 @@ class DataGrid:
                                           row_index,
                                           current_row_group)
 
-                # treat data cells different to entity
-                if isinstance(column_processor, EntityProcessor):
+                if processor_override:
+                    # Check if there is a processor override and apply if so
+                    cell.processor = processor_override
+                if value_override:
+                    cell.value = ProcessorResult(True, value_override.value)
+                    cell.updated_time = get_utc_now()
+                elif isinstance(column_processor, EntityProcessor):
                     # store these cells to fetch entity data during poll
                     entity_cells.append(cell)
-                if isinstance(column_processor, CoordinateProcessor):
+                elif isinstance(column_processor, CoordinateProcessor):
                     # store these cells to fetch entity data during poll
                     if len(data_overrides):
                         # Get the last in the list if more than 1 override is given
@@ -233,6 +240,15 @@ class DataGrid:
         else:
             raise MqValueError('DataGrid has not been persisted.')
 
+    def open(self):
+        """
+        Opens the DataGrid in the default browser.
+        :return: None
+        """
+        if self.id_ is None:
+            raise MqValueError('DataGrid must be created or saved before opening.')
+        webbrowser.open(f'{GsSession.current.domain.replace(".web", "")}/s/markets/grids/{self.id_}')
+
     def _process_special_cells(self) -> None:
         """
         Processes Coordinate and Entity cells
@@ -247,7 +263,7 @@ class DataGrid:
                 cell.value = f'Error Calculating processor {cell.processor.__class__.__name__} ' \
                              f'for entity: {cell.entity.get_marquee_id()} due to {e}'
 
-            cell.updated_time = f'{datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]}Z'
+            cell.updated_time = get_utc_now()
 
         for cell in self._coord_processor_cells:
             try:
@@ -256,17 +272,19 @@ class DataGrid:
                 cell.value = f'Error Calculating processor {cell.processor.__class__.__name__} ' \
                              f'for entity: {cell.entity.get_marquee_id()} due to {e}'
 
-            cell.updated_time = f'{datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]}Z'
+            cell.updated_time = get_utc_now()
 
-    def _resolve_queries(self) -> None:
+    def _resolve_queries(self, rule_cache: Dict = None, availability_cache: Dict = None) -> None:
         """ Resolves the dataset_id for each data query
             This is used to query data thereafter
         """
-        local_rule_cache = {}
-        local_availablility_cache = {}
+        rule_cache = rule_cache or {}
+        availability_cache = availability_cache or {}
 
         for query in self._data_queries:
             entity = query.entity
+            if isinstance(entity, str):  # If we were unable to fetch entity (404/403)
+                continue
             query = query.query
             coord = query.coordinate
             entity_dimension = entity.data_dimension
@@ -284,19 +302,19 @@ class DataGrid:
 
             if isinstance(query_start, RelativeDate):
                 cache_key = get_rdate_cache_key(query_start.rule, currencies, exchanges)
-                if cache_key in local_rule_cache:
-                    query.start = local_rule_cache[cache_key]
+                if cache_key in rule_cache:
+                    query.start = rule_cache[cache_key]
                 else:
                     query.start = query_start.apply_rule(currencies=currencies, exchanges=exchanges)
-                    local_rule_cache[cache_key] = query.start
+                    rule_cache[cache_key] = query.start
 
             if isinstance(query_end, RelativeDate):
                 cache_key = get_rdate_cache_key(query_end.rule, currencies, exchanges)
-                if cache_key in local_rule_cache:
-                    query.end = local_rule_cache[cache_key]
+                if cache_key in rule_cache:
+                    query.end = rule_cache[cache_key]
                 else:
                     query.end = query_end.apply_rule(currencies=currencies, exchanges=exchanges)
-                    local_rule_cache[cache_key] = query.end
+                    rule_cache[cache_key] = query.end
 
             if entity_dimension not in coord.dimensions:
                 if coord.dataset_id:
@@ -307,10 +325,10 @@ class DataGrid:
                     # Need to resolve the dataset from availability
                     entity_id = entity.get_marquee_id()
                     try:
-                        raw_availability = local_availablility_cache.get(entity_id)
+                        raw_availability = availability_cache.get(entity_id)
                         if raw_availability is None:
                             raw_availability: Dict = GsSession.current._get(f'/data/measures/{entity_id}/availability')
-                            local_availablility_cache[entity.get_marquee_id()] = raw_availability
+                            availability_cache[entity.get_marquee_id()] = raw_availability
                         query.coordinate = entity.get_data_coordinate(measure=coord.measure,
                                                                       dimensions=coord.dimensions,
                                                                       frequency=coord.frequency,
@@ -329,7 +347,8 @@ class DataGrid:
                     if valid_dimensions(query_dimensions, df):
                         queried_df = df.query(build_query_string(query_dimensions))
                         for query_info in query_infos:
-                            query_info.data = queried_df[query_info.query.coordinate.measure]
+                            measure = query_info.query.coordinate.measure
+                            query_info.data = queried_df[measure if isinstance(measure, str) else measure.value]
                     else:
                         for query_info in query_infos:
                             query_info.data = Series()
@@ -604,21 +623,19 @@ class DataGrid:
 
 
 def _get_overrides(row_overrides: List[Override],
-                   column_name: str,
-                   column: DataColumn) -> List[DimensionsOverride]:
+                   column_name: str) -> \
+        Tuple[List[DimensionsOverride], Optional[ValueOverride], Optional[ProcessorOverride]]:
     if not row_overrides:
-        return []
+        return [], None, None
 
-    data_overrides: List[DimensionsOverride] = [row_override for row_override in row_overrides if
-                                                isinstance(row_override, DimensionsOverride) and
-                                                column_name in row_override.column_names]
+    dimensions_overrides, value_override, processor_override = [], None, None
+    for override in row_overrides:
+        if column_name in override.column_names:
+            if isinstance(override, DimensionsOverride):
+                dimensions_overrides.append(override)
+            elif isinstance(override, ValueOverride):
+                value_override = override
+            elif isinstance(override, ProcessorOverride):
+                processor_override = override.processor
 
-    # Get the first processor override if it exists and set on the column
-    processor_overrides: List[ProcessorOverride] = [row_override for row_override in row_overrides if
-                                                    isinstance(row_override, ProcessorOverride) and
-                                                    column_name in row_override.column_names]
-    if len(processor_overrides):
-        # Apply the processor override if it exists
-        column.processor = processor_overrides[0].processor
-
-    return data_overrides
+    return dimensions_overrides, value_override, processor_override

@@ -22,8 +22,7 @@ from gs_quant.api.gs.data import GsDataApi
 from gs_quant.api.gs.risk_models import GsFactorRiskModelApi, GsRiskModelApi
 from gs_quant.models.factor_risk_model_utils import build_asset_data_map, build_factor_data_map, \
     build_factor_data_dataframe, build_pfp_data_dataframe, get_isc_dataframe, get_covariance_matrix_dataframe, \
-    get_closest_date_index, divide_request, to_datetime, get_most_recent_date_from_calendar, \
-    batch_and_upload_partial_data
+    get_closest_date_index, divide_request, batch_and_upload_partial_data
 from gs_quant.target.common import Enum
 from gs_quant.target.risk_models import RiskModel as RiskModelBuilder
 from gs_quant.target.risk_models import RiskModelData, RiskModelCalendar, RiskModelFactor, \
@@ -185,17 +184,19 @@ class RiskModel:
 
             If no end_date is provided, end_date defaults to the most recent business date according
                 to the risk model calendar """
-        posted_results = GsFactorRiskModelApi.get_risk_model_dates(self.id)
+        posted_results = self.get_dates()
         if not end_date:
             end_date = dt.date.today() - dt.timedelta(days=1)
         calendar = self.get_calendar(
-            start_date=to_datetime(posted_results[0]),
+            start_date=dt.datetime.strptime((posted_results[0]), '%Y-%m-%d').date(),
             end_date=end_date).business_dates
         return [date for date in calendar if date not in posted_results]
 
     def get_most_recent_date_from_calendar(self) -> dt.date:
         """Returns most recent date in calendar from and including yesterday"""
-        return get_most_recent_date_from_calendar(self.id)
+        yesterday = dt.date.today() - dt.timedelta(1)
+        calendar = self.get_calendar(end_date=yesterday).business_dates
+        return dt.datetime.strptime(calendar[len(calendar) - 1], '%Y-%m-%d').date()
 
 
 class FactorRiskModel(RiskModel):
@@ -264,7 +265,8 @@ class FactorRiskModel(RiskModel):
                universe_identifier: Union[UniverseIdentifier, str],
                vendor: str,
                version: float,
-               entitlements: Union[Entitlements, Dict] = None):
+               entitlements: Union[Entitlements, Dict] = None,
+               description: str = None):
         """ Creates new factor risk model and uploads factor risk model object to Marquee
             :param coverage: coverage of risk model asset universe
             :param id_: risk model id (cannot be changed)
@@ -274,9 +276,10 @@ class FactorRiskModel(RiskModel):
             :param vendor: risk model vendor
             :param version: version of model
             :param entitlements: entitlements associated with risk model
+            :param description: risk model description
             :return: Factor Risk Model object  """
         new_model = RiskModelBuilder(coverage, id_, name, term, universe_identifier, vendor, version,
-                                     entitlements=entitlements)
+                                     entitlements=entitlements, description=description)
         GsRiskModelApi.create_risk_model(new_model)
         return FactorRiskModel(id_)
 
@@ -338,7 +341,7 @@ class FactorRiskModel(RiskModel):
     def get_asset_universe(self,
                            start_date: dt.date,
                            end_date: dt.date = None,
-                           assets: DataAssetsRequest = None,
+                           assets: DataAssetsRequest = DataAssetsRequest(UniverseIdentifier.gsid, []),
                            format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
         """ Retrieve asset universe data for existing risk model
             :param start_date: start date for data request
@@ -357,7 +360,7 @@ class FactorRiskModel(RiskModel):
             measures=[Measure.Asset_Universe],
             limit_factors=False
         ).get('results')
-        dates = [to_datetime(data.get('date')) for data in results]
+        dates = [dt.datetime.strptime((data.get('date')), '%Y-%m-%d').date() for data in results]
         universe = [data.get('assetData').get('universe') for data in results]
         dates_to_universe = dict(zip(dates, universe))
         if format == ReturnFormat.DATA_FRAME:
@@ -367,7 +370,7 @@ class FactorRiskModel(RiskModel):
     def get_historical_beta(self,
                             start_date: dt.date,
                             end_date: dt.date = None,
-                            assets: DataAssetsRequest = None,
+                            assets: DataAssetsRequest = DataAssetsRequest(UniverseIdentifier.gsid, []),
                             format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
         """ Retrieve historical beta data for existing risk model
             :param start_date: start date for data request
@@ -392,7 +395,7 @@ class FactorRiskModel(RiskModel):
     def get_total_risk(self,
                        start_date: dt.date,
                        end_date: dt.date = None,
-                       assets: DataAssetsRequest = None,
+                       assets: DataAssetsRequest = DataAssetsRequest(UniverseIdentifier.gsid, []),
                        format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
         """ Retrieve total risk data for existing risk model
             :param start_date: start date for data request
@@ -417,7 +420,7 @@ class FactorRiskModel(RiskModel):
     def get_specific_risk(self,
                           start_date: dt.date,
                           end_date: dt.date = None,
-                          assets: DataAssetsRequest = None,
+                          assets: DataAssetsRequest = DataAssetsRequest(UniverseIdentifier.gsid, []),
                           format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
         """ Retrieve specific risk data for existing risk model
             :param start_date: start date for data request
@@ -442,7 +445,7 @@ class FactorRiskModel(RiskModel):
     def get_residual_variance(self,
                               start_date: dt.date,
                               end_date: dt.date = None,
-                              assets: DataAssetsRequest = None,
+                              assets: DataAssetsRequest = DataAssetsRequest(UniverseIdentifier.gsid, []),
                               format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
         """ Retrieve residual variance data for existing risk model
             :param start_date: start date for data request
@@ -467,7 +470,7 @@ class FactorRiskModel(RiskModel):
     def get_universe_factor_exposure(self,
                                      start_date: dt.date,
                                      end_date: dt.date = None,
-                                     assets: DataAssetsRequest = None,
+                                     assets: DataAssetsRequest = DataAssetsRequest(UniverseIdentifier.gsid, []),
                                      format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
         """ Retrieve universe factor exposure data for existing risk model
             :param start_date: start date for data request
@@ -559,7 +562,7 @@ class FactorRiskModel(RiskModel):
     def get_issuer_specific_covariance(self,
                                        start_date: dt.date,
                                        end_date: dt.date = None,
-                                       assets: DataAssetsRequest = None,
+                                       assets: DataAssetsRequest = DataAssetsRequest(UniverseIdentifier.gsid, []),
                                        format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
         """ Retrieve issuer specific covariance data for existing risk model
             :param start_date: start date for data request
@@ -575,13 +578,13 @@ class FactorRiskModel(RiskModel):
             measures=[Measure.Issuer_Specific_Covariance],
             limit_factors=False
         ).get('results')
-        isc_data = isc if format == ReturnFormat.DATA_FRAME else get_isc_dataframe(isc)
+        isc_data = isc if format == ReturnFormat.JSON else get_isc_dataframe(isc)
         return isc_data
 
     def get_factor_portfolios(self,
                               start_date: dt.date,
                               end_date: dt.date = None,
-                              assets: DataAssetsRequest = None,
+                              assets: DataAssetsRequest = DataAssetsRequest(UniverseIdentifier.gsid, []),
                               format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
         """ Retrieve factor portfolios data for existing risk model
             :param start_date: start date for data request
@@ -604,7 +607,7 @@ class FactorRiskModel(RiskModel):
                  measures: List[Measure],
                  start_date: dt.date,
                  end_date: dt.date = None,
-                 assets: DataAssetsRequest = None,
+                 assets: DataAssetsRequest = DataAssetsRequest(UniverseIdentifier.gsid, []),
                  limit_factors: bool = True) -> Dict:
         """ Retrieve data for multiple measures for existing risk model
             :param measures: list of measures for general risk model data request
@@ -629,11 +632,12 @@ class FactorRiskModel(RiskModel):
                 includes: date, factorData, assetData, covarianceMatrix with optional inputs:
                 issuerSpecificCovariance and factorPortfolios
 
-            If upload universe is over 15000 assets, will batch and upload data in chunks of 15000 assets """
+            If upload universe is over 20000 assets, will batch and upload data in chunks of 20000 assets """
 
         data = data.to_json() if type(data) == RiskModelData else data
         target_universe_size = len(data.get('assetData').get('universe'))
-        if target_universe_size > 15000:
+        if target_universe_size > 20000:
+            print('Batching uploads due to universe size')
             batch_and_upload_partial_data(self.id, data)
         else:
             print(GsFactorRiskModelApi.upload_risk_model_data(self.id, data))

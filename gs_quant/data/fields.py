@@ -44,6 +44,12 @@ class DataMeasure(Enum):
     ADJUSTED_VOLUME = 'adjustedVolume'
     IMPLIED_VOLATILITY = 'impliedVolatility'
     VAR_SWAP = 'varSwap'
+    PRICE = 'price'
+    NAV_PRICE = 'navPrice'
+    SPREAD = 'spread'
+    NAV_SPREAD = 'navSpread'
+    IMPLIED_VOLATILITY_BY_DELTA_STRIKE = 'impliedVolatilityByDeltaStrike'
+    FORWARD_POINT = 'forwardPoint'
 
 
 class DataDimension(Enum):

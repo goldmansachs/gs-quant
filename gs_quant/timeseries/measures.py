@@ -42,7 +42,7 @@ from gs_quant.errors import MqTypeError
 from gs_quant.markets.securities import *
 from gs_quant.markets.securities import Asset, AssetIdentifier, SecurityMaster, AssetType as SecAssetType
 from gs_quant.target.common import AssetClass, AssetType
-from gs_quant.timeseries import volatility, Window, Returns, sqrt
+from gs_quant.timeseries import volatility, Window, Returns, sqrt, Basket
 from gs_quant.timeseries.helper import log_return, plot_measure, _to_offset, check_forward_looking, get_df_with_retries
 
 GENERIC_DATE = Union[datetime.date, str]
@@ -217,6 +217,11 @@ class EUNatGasDataReference(Enum):
     NBP_CommodityReferencePrice = 'UK Monthly-Ice'
 
 
+class FXSpotCarry(Enum):
+    ANNUALIZED = 'annualized'
+    DAILY = 'daily'
+
+
 ESG_METRIC_TO_QUERY_TYPE = {
     "esNumericScore": QueryType.ES_NUMERIC_SCORE,
     "esNumericPercentile": QueryType.ES_NUMERIC_PERCENTILE,
@@ -291,27 +296,30 @@ def _asset_from_spec(asset_spec: ASSET_SPEC) -> Asset:
                                                                                      AssetIdentifier.MARQUEE_ID)
 
 
-def cross_stored_direction_for_fx_vol(asset_spec: ASSET_SPEC) -> str:
+def _cross_stored_direction_helper(bbid):
+    if not re.fullmatch('[A-Z]{6}', bbid):
+        raise TypeError('not a cross that can be reversed')
+    legit_usd_cross = str.startswith(bbid, "USD") and not str.endswith(bbid, ("EUR", "GBP", "NZD", "AUD"))
+    legit_eur_cross = str.startswith(bbid, "EUR")
+    legit_jpy_cross = str.endswith(bbid, "JPY") and not str.startswith(bbid, ("KRW", "IDR", "CLP", "COP"))
+    odd_cross = bbid in ("EURUSD", "GBPUSD", "NZDUSD", "AUDUSD", "JPYKRW", "JPYIDR", "JPYCLP", "JPYCOP")
+    return bbid if any([legit_usd_cross, legit_eur_cross, legit_jpy_cross, odd_cross]) else bbid[3:] + bbid[:3]
+
+
+def cross_stored_direction_for_fx_vol(asset_spec: ASSET_SPEC, *, return_asset=False) -> Union[str, Asset]:
     asset = _asset_from_spec(asset_spec)
-    asset_id = asset.get_marquee_id()
-    result_id = asset_id
+    result = asset
     try:
         if asset.asset_class is AssetClass.FX:
             bbid = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
             if bbid is not None:
-                if not re.fullmatch('[A-Z]{6}', bbid):
-                    raise TypeError('not a cross that can be reversed')
-                legit_usd_cross = str.startswith(bbid, "USD") and not str.endswith(bbid, ("EUR", "GBP", "NZD", "AUD"))
-                legit_eur_cross = str.startswith(bbid, "EUR")
-                legit_jpy_cross = str.endswith(bbid, "JPY") and not str.startswith(bbid, ("KRW", "IDR", "CLP", "COP"))
-                odd_cross = bbid in ("EURUSD", "GBPUSD", "NZDUSD", "AUDUSD", "JPYKRW", "JPYIDR", "JPYCLP", "JPYCOP")
-                if not legit_usd_cross and not legit_eur_cross and not legit_jpy_cross and not odd_cross:
-                    cross = bbid[3:] + bbid[:3]
+                cross = _cross_stored_direction_helper(bbid)
+                if cross != bbid:
                     cross_asset = SecurityMaster.get_asset(cross, AssetIdentifier.BLOOMBERG_ID)
-                    result_id = cross_asset.get_marquee_id()
+                    result = cross_asset
     except TypeError:
-        result_id = asset_id
-    return result_id
+        result = asset
+    return result if return_asset else result.get_marquee_id()
 
 
 def cross_to_usd_based_cross(asset_spec: ASSET_SPEC) -> str:
@@ -794,10 +802,16 @@ def implied_correlation(asset: Asset, tenor: str, strike_reference: EdrDataRefer
     df = _market_data_timed(query, request_id)
     dataset_ids = getattr(df, 'dataset_ids', ())
     df = df[['assetId', 'impliedVolatility']]
-    full_index = pd.date_range(start=df.index.min(), end=df.index.max(), freq='D')
+    series = _calculate_implied_correlation(mqid, df, constituents.to_dict()['netWeight'], request_id)
+    series.dataset_ids = dataset_ids
+    return series
+
+
+def _calculate_implied_correlation(index_mqid, vol_df, constituent_to_weight: dict, request_id):
+    full_index = pd.date_range(start=vol_df.index.min(), end=vol_df.index.max(), freq='D')
 
     all_groups = []
-    for name, group in df.groupby('assetId'):
+    for name, group in vol_df.groupby('assetId'):
         before = group.shape[0]
         group = group[~group.index.duplicated(keep='first')]
         after = group.shape[0]
@@ -810,13 +824,13 @@ def implied_correlation(asset: Asset, tenor: str, strike_reference: EdrDataRefer
     df = pd.concat(all_groups)
 
     df['impliedVolatility'] /= 100
-    match = df['assetId'] == mqid
+    match = df['assetId'] == index_mqid
     df_asset = df.loc[match]
     df_rest = df.loc[~match]
 
     def calculate_vol(group):
         vols = group.set_index('assetId')['impliedVolatility']
-        weights = constituents.reindex(vols.index.to_list())['netWeight']
+        weights = [constituent_to_weight[asset_id] for asset_id in vols.index]
         total_weight = sum(weights)
         parts = [vol * weight / total_weight for vol, weight in zip(vols, weights)]
         return pd.Series([sum(parts), sum(map(lambda x: pow(x, 2), parts))], index=['first', 'second'])
@@ -824,6 +838,56 @@ def implied_correlation(asset: Asset, tenor: str, strike_reference: EdrDataRefer
     inter = df_rest.groupby(df_rest.index).apply(calculate_vol)
     values = (pow(df_asset['impliedVolatility'], 2) - inter['second']) / (pow(inter['first'], 2) - inter['second'])
     series = ExtendedSeries(values * 100)
+    return series
+
+
+@plot_measure((AssetClass.Equity,), (AssetType.Index, AssetType.ETF,), [QueryType.IMPLIED_CORRELATION])
+def implied_correlation_with_basket(asset: Asset, tenor: str, strike_reference: EdrDataReference, relative_strike: Real,
+                                    basket: Basket, *, source: str = None, real_time: bool = False,
+                                    request_id: Optional[str] = None) -> Series:
+    """
+    Implied correlation between index and stock basket.
+
+    :param asset: asset object loaded from security master
+    :param tenor: relative date representation of expiration date e.g. 1m
+    :param strike_reference: reference for strike level
+    :param relative_strike: strike relative to reference
+    :param basket: a basket of stocks. Basket rebalancing does not apply to the calculation
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
+    :return: implied correlation curve
+    """
+    if real_time:
+        raise NotImplementedError('realtime implied_correlation not implemented')
+
+    if strike_reference == EdrDataReference.DELTA_PUT:
+        relative_strike = abs(100 - relative_strike)
+
+    relative_strike = relative_strike / 100
+
+    delta_types = (EdrDataReference.DELTA_CALL, EdrDataReference.DELTA_PUT)
+    strike_ref = "delta" if strike_reference in delta_types else strike_reference.value
+
+    log_debug(request_id, _logger, 'where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, strike_ref,
+              relative_strike)
+
+    index_mqid = asset.get_marquee_id()
+    where = dict(tenor=tenor, strikeReference=strike_ref, relativeStrike=relative_strike)
+
+    query = GsDataApi.build_market_data_query(
+        basket.get_marquee_ids() + [index_mqid],
+        QueryType.IMPLIED_VOLATILITY,
+        where=where,
+        source=source,
+        real_time=real_time
+    )
+    df = _market_data_timed(query, request_id)
+    dataset_ids = getattr(df, 'dataset_ids', ())
+    df = df[['assetId', 'impliedVolatility']]
+
+    stock_to_weight = dict(zip(basket.get_marquee_ids(), basket.weights))
+    series = _calculate_implied_correlation(index_mqid, df, stock_to_weight, request_id)
     series.dataset_ids = dataset_ids
     return series
 
@@ -958,8 +1022,9 @@ def average_realized_volatility(asset: Asset, tenor: str, returns_type: Returns 
 
     :param asset: asset object loaded from security master
     :param tenor: relative date representation of expiration date e.g. 1m
-    :param returns_type: returns type: simple or logarithmic
-    :param top_n_of_index: the number of top constituents to take into account
+    :param returns_type: returns type
+    :param top_n_of_index: the number of top constituents to take into account (must be specified when returns_type
+        is not simple)
     :param composition_date: YYYY-MM-DD or relative days before today e.g. 1d, 1m, 1y; defaults to the most recent date
         available
     :param source: name of function caller
@@ -973,7 +1038,7 @@ def average_realized_volatility(asset: Asset, tenor: str, returns_type: Returns 
         raise MqValueError('Specify top_n_of_index to get the average realized volatility of top constituents')
 
     if top_n_of_index is None and returns_type is not Returns.SIMPLE:
-        raise NotImplementedError('returns type {} not supported for average realized volatility of all constituents'
+        raise NotImplementedError('top_n_of_index argument must be specified when using returns type {}'
                                   .format(returns_type))
 
     _check_top_n(top_n_of_index)
@@ -3318,14 +3383,14 @@ def _forward_price_eu_natgas(asset: Asset, contract_range: str = None, *, source
 
 
 @plot_measure((AssetClass.FX,), None, [QueryType.FORWARD_POINT])
-def spot_carry(asset: Asset, tenor: str, annualize: bool = False, *,
+def spot_carry(asset: Asset, tenor: str, annualized: FXSpotCarry = FXSpotCarry.DAILY, *,
                source: str = None, real_time: bool = False) -> Series:
     """
     FX spot carry. Uses most recent date available if pricing_date is not provided.
 
     :param asset: asset object loaded from security master
     :param tenor: relative date representation of expiration date e.g. 1m
-    :param annualize: whether to annualize carry
+    :param annualized: whether to annualize carry, one of annualized or daily
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: FX spot carry curve
@@ -3353,7 +3418,7 @@ def spot_carry(asset: Asset, tenor: str, annualize: bool = False, *,
         ann_factor = 1 / int(tenor.replace('y', ''))
 
     df_carry = df_fwd['forwardPoint'] / df_spot['spot']
-    if annualize:
+    if annualized == FXSpotCarry.ANNUALIZED:
         df_carry = df_carry * ann_factor
     series = ExtendedSeries(df_carry, name='spotCarry')
     series.dataset_ids = getattr(df_fwd, 'dataset_ids', ())
@@ -3361,23 +3426,34 @@ def spot_carry(asset: Asset, tenor: str, annualize: bool = False, *,
 
 
 @plot_measure((AssetClass.FX,), None, [QueryType.IMPLIED_VOLATILITY])
-def fx_implied_correlation(asset_1: Asset, asset_2: Asset, tenor: str, *,
-                           source: str = None, real_time: bool = False) -> Series:
+def fx_implied_correlation(asset: Asset, asset_2: Asset, tenor: str, *, source: str = None,
+                           real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
     FX implied correlation. Uses most recent date available if pricing_date is not provided.
 
-    :param asset_1: asset object loaded from security master
-    :param asset_2: asset object loaded from security master
+    :param asset: asset object loaded from security master
+    :param asset_2: FX cross used to calculate implied correlation eg. EURUSD.fx_implied_correlation(USDJPY, 3m)
     :param tenor: relative date representation of expiration date e.g. 1m
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: FX implied correlation curve
     """
     if real_time:
         raise NotImplementedError('realtime fx_implied_correlation not implemented')
 
-    cross_1 = asset_1.get_identifier(AssetIdentifier.BLOOMBERG_ID)
-    cross_2 = asset_2.get_identifier(AssetIdentifier.BLOOMBERG_ID)
+    if asset_2.asset_class != AssetClass.FX:
+        raise MqValueError('Only FX crosses supported for fx_implied_correlation')
+
+    def get_bbid(asset):
+        try:
+            return next(o for o in asset._Entity__entity['identifiers'] if o['type'] == 'BID')['value']
+        except Exception as e:
+            log_debug(request_id, _logger, 'could not get BBID from asset', exc_info=e)
+        return asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
+
+    cross_1 = get_bbid(asset)
+    cross_2 = get_bbid(asset_2)
     invert_factor = 1
 
     # checks
@@ -3386,8 +3462,7 @@ def fx_implied_correlation(asset_1: Asset, asset_2: Asset, tenor: str, *,
         raise MqValueError('crosses must have common currency')
 
     # corr cross
-    cross_3 = ''
-    base_ccy = ''
+    cross_3, base_ccy = '', ''
     for ccy in ccys:
         if ccys.count(ccy) == 1:
             cross_3 += ccy
@@ -3395,17 +3470,19 @@ def fx_implied_correlation(asset_1: Asset, asset_2: Asset, tenor: str, *,
             base_ccy = ccy
 
     # marquee ids
-    id_1 = cross_stored_direction_for_fx_vol(SecurityMaster.get_asset(cross_1, AssetIdentifier.BLOOMBERG_ID))
-    id_2 = cross_stored_direction_for_fx_vol(SecurityMaster.get_asset(cross_2, AssetIdentifier.BLOOMBERG_ID))
-    id_3 = cross_stored_direction_for_fx_vol(SecurityMaster.get_asset(cross_3, AssetIdentifier.BLOOMBERG_ID))
+    new_asset_1 = cross_stored_direction_for_fx_vol(asset, return_asset=True)
+    new_asset_2 = cross_stored_direction_for_fx_vol(asset_2, return_asset=True)
+    id_1 = new_asset_1.get_marquee_id()
+    id_2 = new_asset_2.get_marquee_id()
+    id_3 = SecurityMaster.get_asset(_cross_stored_direction_helper(cross_3),
+                                    AssetIdentifier.BLOOMBERG_ID).get_marquee_id()
 
     # normal crosses
-    c_1 = SecurityMaster.get_asset(id_1, AssetIdentifier.MARQUEE_ID).get_identifier(AssetIdentifier.BLOOMBERG_ID)
-    c_2 = SecurityMaster.get_asset(id_2, AssetIdentifier.MARQUEE_ID).get_identifier(AssetIdentifier.BLOOMBERG_ID)
-
-    if asset_1.get_marquee_id() != id_1:
+    c_1 = get_bbid(new_asset_1)
+    if c_1 != cross_1:
         invert_factor *= -1
-    if asset_2.get_marquee_id() != id_2:
+    c_2 = get_bbid(new_asset_2)
+    if c_2 != cross_2:
         invert_factor *= -1
     if c_1[:3] == base_ccy and c_2[:3] != base_ccy:
         invert_factor *= -1
@@ -3415,8 +3492,10 @@ def fx_implied_correlation(asset_1: Asset, asset_2: Asset, tenor: str, *,
     where = dict(tenor=tenor, strikeReference='delta', relativeStrike=0)
     q = GsDataApi.build_market_data_query([id_1, id_2, id_3], QueryType.IMPLIED_VOLATILITY, where=where, source=source,
                                           real_time=real_time)
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
+    log_debug(request_id, _logger, 'q %s', q)
+    df = _market_data_timed(q, request_id=request_id)
+    if df.empty:
+        return pd.Series()
 
     df1 = df.loc[df['assetId'] == id_1]
     df2 = df.loc[df['assetId'] == id_2]
@@ -3424,4 +3503,5 @@ def fx_implied_correlation(asset_1: Asset, asset_2: Asset, tenor: str, *,
     col = 'impliedVolatility'
     corr = invert_factor * (df1[col] * df1[col] + df2[col] * df2[col] - df3[col] * df3[col]) / (2 * df1[col] * df2[col])
     series = ExtendedSeries(corr, name='impCorr')
+    series.dataset_ids = getattr(df, 'dataset_ids', ())
     return series

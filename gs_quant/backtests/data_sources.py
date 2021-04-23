@@ -30,7 +30,12 @@ class MissingDataStrategy(Enum):
     fail = 'fail'
 
 
-class GsDataSource:
+class DataSource:
+    def get_data(self, state):
+        raise RuntimeError("Implemented by subclass")
+
+
+class GsDataSource(DataSource):
     def __init__(self, data_set: str, asset_id: str, min_date: datetime.date = None, max_date: datetime.date = None,
                  value_header: str = 'rate'):
         self._data_set = data_set
@@ -47,8 +52,15 @@ class GsDataSource:
         return self._loaded_data[self._value_header]
 
 
-class GenericDataSource:
+class GenericDataSource(DataSource):
     def __init__(self, data_set: pd.Series, missing_data_strategy: MissingDataStrategy = MissingDataStrategy.fail):
+        """
+        A data source which holds a pandas series indexed by date or datetime
+        :param data_set: a pandas dataframe indexed by date or datetime
+        :param missing_data_strategy: MissingDataStrategy which defines behaviour if data is missing, will only take
+                                      effect if using get_data, gat_data_range has no expectations of the number of
+                                      expected data points.
+        """
         self._data_set = data_set
         self._missing_data_strategy = missing_data_strategy
         if self._missing_data_strategy == MissingDataStrategy.interpolate:
@@ -68,7 +80,11 @@ class GenericDataSource:
         if state in self._data_set or self._missing_data_strategy == MissingDataStrategy.fail:
             return self._data_set[state]
         else:
-            self._data_set.at[state] = np.nan
+            if isinstance(self._data_set.index, pd.DatetimeIndex):
+                self._data_set.at[pd.to_datetime(state)] = np.nan
+                self._data_set.sort_index(inplace=True)
+            else:
+                self._data_set.at[state] = np.nan
             self._data_set.sort_index()
             if self._missing_data_strategy == MissingDataStrategy.interpolate:
                 self._data_set = self._data_set.interpolate()
@@ -79,7 +95,16 @@ class GenericDataSource:
             return self._data_set[state]
 
     def get_data_range(self, start: Union[datetime.date, datetime.datetime],
-                       end: Union[datetime.date, datetime.datetime]):
+                       end: Union[datetime.date, datetime.datetime, int]):
+        """
+        get a range of values from the dataset.
+        :param start: a date or datetime
+        :param end: a date, datetime or an int.  If an int is provided we return that many data points back from the
+                    start date
+        :return: pd.Series
+        """
+        if isinstance(end, int):
+            return self._data_set.loc[:start].tail(end)
         return self._data_set.loc[(start < self._data_set.index) & (self._data_set.index <= end)]
 
 

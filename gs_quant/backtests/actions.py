@@ -19,6 +19,7 @@ from gs_quant.base import Priceable
 from gs_quant.datetime.date import *
 from gs_quant.markets.securities import *
 from gs_quant.target.backtests import BacktestTradingQuantityType
+from collections import namedtuple
 
 action_count = 1
 
@@ -82,6 +83,10 @@ class AddTradeAction(Action):
     @property
     def dated_priceables(self):
         return self._dated_priceables
+
+
+AddTradeActionInfo = namedtuple('AddTradeActionInfo', 'scaling')
+HedgeActionInfo = namedtuple('HedgeActionInfo', 'not_applicable')
 
 
 class EnterPositionQuantityScaledAction(Action):
@@ -148,7 +153,7 @@ class HedgeAction(Action):
         self._csa_term = csa_term
         if priceables is not None:
             if self._priceable.name is None:
-                self._priceable.name = '{}_Pricable{}'.format(self._name, 0)
+                self._priceable.name = '{}_Priceable{}'.format(self._name, 0)
             else:
                 self._priceable.name = '{}_{}'.format(self._name, self._priceable.name)
 
@@ -167,3 +172,7 @@ class HedgeAction(Action):
     @property
     def csa_term(self):
         return self._csa_term
+
+    @property
+    def risks_on_final_day(self):
+        return self._risks_on_final_day

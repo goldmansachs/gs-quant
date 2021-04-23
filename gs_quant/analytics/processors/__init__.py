@@ -14,9 +14,12 @@ specific language governing permissions and limitations
 under the License.
 """
 
+from .analysis_processors import DiffProcessor
 from .econometrics_processors import SharpeRatioProcessor, VolatilityProcessor, CorrelationProcessor, ChangeProcessor, \
-    ReturnsProcessor
+    ReturnsProcessor, BetaProcessor
 from .special_processors import EntityProcessor, CoordinateProcessor
-from .statistics_processors import PercentilesProcessor
+from .statistics_processors import PercentilesProcessor, PercentileProcessor, \
+    CovarianceProcessor, ZscoresProcessor, MeanProcessor, VarianceProcessor, SumProcessor, StdDevProcessor
 from .utility_processors import LastProcessor, AppendProcessor, AdditionProcessor, SubtractionProcessor, \
-    MultiplicationProcessor, DivisionProcessor
+    MultiplicationProcessor, DivisionProcessor, MinProcessor, MaxProcessor
+from .scale_processors import ScaleProcessor, BarMarkerProcessor, SpotMarkerProcessor, ScaleShape

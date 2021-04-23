@@ -19,6 +19,8 @@ from functools import reduce
 
 from gs_quant.timeseries.helper import _create_enum
 from .statistics import *
+from ..api.gs.assets import GsAssetApi
+from ..api.gs.data import GsDataApi
 
 RebalFreq = _create_enum('RebalFreq', ['Daily', 'Monthly'])
 ReturnType = _create_enum('ReturnType', ['excess_return'])
@@ -98,7 +100,7 @@ def basket_series(
 
     # Create Units dataframe
     units = pd.DataFrame(index=cal, columns=series.columns)
-    output = pd.Series(index=cal)
+    output = pd.Series(dtype='float64', index=cal)
 
     # Initialize backtest
     output.values[0] = 100
@@ -140,24 +142,49 @@ def basket_series(
     return output
 
 
-@plot_function
-def basket(
-    series: list,
-    weights: list,
-    costs: list = None,
-    rebal_freq: RebalFreq = RebalFreq.DAILY,
-    return_type: ReturnType = ReturnType.EXCESS_RETURN,
-) -> pd.Series:
+class Basket:
     """
-    Deprecated. Please use basket_series instead.
+    Construct a basket of stocks
 
-    :param series: list of time series of instrument prices
+    :param stocks: list of stock bloomberg ids
     :param weights: list of weights
-    :param costs: list of execution costs in decimal; defaults to costs of 0
     :param rebal_freq: rebalancing frequency - Daily or Monthly
-    :param return_type: return type of underlying instruments - only excess return is supported
-    :return: time series of the resulting basket
 
-    :func:`basket_series`
     """
-    return basket_series(series, weights, costs, rebal_freq, return_type)
+    def __init__(self, stocks: list, weights: list, rebal_freq: RebalFreq = RebalFreq.DAILY):
+        if len(stocks) != len(weights):
+            raise MqValueError("stocks and weights must have the same length")
+
+        self.bbids = stocks
+        self.rebal_freq = rebal_freq
+        self.weights = weights
+        self.__marquee_ids = None
+
+    def get_marquee_ids(self):
+        if self.__marquee_ids is None:
+            assets = GsAssetApi.get_many_assets_data(bbid=self.bbids, fields=('id', ))
+            self.__marquee_ids = [a['id'] for a in assets]
+
+            if len(self.__marquee_ids) != len(self.bbids):
+                raise MqValueError('Unable to find all stocks')
+
+        return self.__marquee_ids
+
+    @requires_session
+    @plot_method
+    def price(self, *, real_time: bool = False) -> pd.Series:
+        """
+        Weighted average price
+
+        :param real_time: whether to retrieve intraday data instead of EOD
+        :return: time series of the average price
+        """
+        if real_time:
+            raise NotImplementedError('real-time basket price not implemented')
+
+        q = GsDataApi.build_market_data_query(self.get_marquee_ids(), QueryType.SPOT)
+        df = GsDataApi.get_market_data(q)
+
+        grouped = df.groupby('assetId')
+        spot_series = [grouped.get_group(mqid)['spot'] for mqid in self.get_marquee_ids()]
+        return basket_series(spot_series, self.weights, rebal_freq=self.rebal_freq)

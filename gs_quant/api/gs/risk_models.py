@@ -144,7 +144,7 @@ class GsFactorRiskModelApi(GsRiskModelApi):
         if identifiers is not None:
             url += '&identifier={ids}'.format(ids='&identifier='.join(identifiers))
         if include_performance_curve:
-            url += f'&includePerformanceCurve={include_performance_curve}'
+            url += '&includePerformanceCurve=true'
         return GsSession.current._get(url)['results']
 
     @classmethod

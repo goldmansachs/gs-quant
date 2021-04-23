@@ -41,9 +41,11 @@
       ~Portfolio.resolve
       ~Portfolio.save
       ~Portfolio.save_as_quote
+      ~Portfolio.scale
       ~Portfolio.subset
       ~Portfolio.to_csv
       ~Portfolio.to_frame
+      ~Portfolio.to_json
    
    
 

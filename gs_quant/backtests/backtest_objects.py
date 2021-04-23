@@ -99,17 +99,18 @@ class BackTest(object):
     def result_summary(self, allow_mismatch_risk_keys=True):
         summary = pd.DataFrame({date: {risk: results[risk].aggregate(allow_mismatch_risk_keys)
                                        for risk in results.risk_measures} for date, results in self._results.items()}).T
-        # summary['Cash'] = self._cash_dict
-        return summary
+        summary['Cash'] = pd.Series(self._cash_dict)
+        return summary.fillna(0)
 
 
 class ScalingPortfolio(object):
-    def __init__(self, trade, dates, risk, csa_term=None):
+    def __init__(self, trade, dates, risk, csa_term=None, unwind=False):
         self.trade = trade
         self.dates = dates
         self.risk = risk
         self.csa_term = csa_term
         self.results = None
+        self.unwind = unwind
 
 
 class PredefinedAssetBacktest(object):

@@ -1,4 +1,4 @@
-﻿AssetType
+﻿gs\_quant.markets.securities.AssetType
 ======================================
 
 .. currentmodule:: gs_quant.markets.securities
@@ -26,10 +26,11 @@
       ~AssetType.COMMODITY_POWER_NODE
       ~AssetType.COMMODITY_REFERENCE_PRICE
       ~AssetType.CROSS
-      ~AssetType.CRYPTO_CURRENCY
+      ~AssetType.CRYPTOCURRENCY
       ~AssetType.CURRENCY
       ~AssetType.CUSTOM_BASKET
       ~AssetType.ETF
+      ~AssetType.FORWARD
       ~AssetType.FUTURE
       ~AssetType.FUTURE_CONTRACT
       ~AssetType.FUTURE_MARKET

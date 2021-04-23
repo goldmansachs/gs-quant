@@ -857,10 +857,10 @@ class ContentParameters(Base):
     @camel_case_translate
     def __init__(
         self,
-        namespace: str,
         author_ids: Tuple[str, ...],
         language,
         status=None,
+        source=None,
         tags: Tuple[str, ...] = None,
         slug: str = None,
         attachments: Tuple[Content, ...] = None,
@@ -876,7 +876,7 @@ class ContentParameters(Base):
     ):        
         super().__init__()
         self.status = status
-        self.namespace = namespace
+        self.source = source
         self.tags = tags
         self.slug = slug
         self.author_ids = author_ids
@@ -903,14 +903,13 @@ class ContentParameters(Base):
         self.__status = value        
 
     @property
-    def namespace(self) -> str:
-        """Namespace for which the content piece is associated"""
-        return self.__namespace
+    def source(self):
+        return self.__source
 
-    @namespace.setter
-    def namespace(self, value: str):
-        self._property_changed('namespace')
-        self.__namespace = value        
+    @source.setter
+    def source(self, value):
+        self._property_changed('source')
+        self.__source = value        
 
     @property
     def tags(self) -> Tuple[str, ...]:

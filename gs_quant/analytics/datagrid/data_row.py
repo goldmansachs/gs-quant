@@ -28,6 +28,7 @@ DataDimensions = Dict[Union[DataDimension, str], Union[str, float]]
 # Override Types
 DIMENSIONS_OVERRIDE = 'dimensionsOverride'
 PROCESSOR_OVERRIDE = 'processorOverride'
+VALUE_OVERRIDE = 'valueOverride'
 
 # Row Types
 DATA_ROW = 'dataRow'
@@ -54,6 +55,28 @@ class Override(ABC):
     @classmethod
     def from_dict(cls, obj, reference_list):
         pass
+
+
+class ValueOverride(Override):
+    def __init__(self, column_names: List[str], value: Union[float, str, bool]):
+        """
+        Allows the ability to set a cell to a specific value.
+
+        :param column_names: Name of columns to apply the value override.
+        :param value: Value to set to the row and column intersections.
+        """
+        super().__init__(column_names)
+        self.value = value
+
+    def as_dict(self):
+        override = super().as_dict()
+        override['type'] = VALUE_OVERRIDE
+        override['value'] = self.value
+        return override
+
+    @classmethod
+    def from_dict(cls, obj, ref):
+        return ValueOverride(column_names=obj.get('columnNames', []), value=obj['value'])
 
 
 class DimensionsOverride(Override):
@@ -107,8 +130,12 @@ class ProcessorOverride(Override):
     def as_dict(self):
         override = super().as_dict()
         override['type'] = PROCESSOR_OVERRIDE
-        override['processor'] = self.processor.as_dict()
-        override['processor']['processorName'] = self.processor.__class__.__name__
+        if self.processor:
+            override['processor'] = self.processor.as_dict()
+            override['processor']['processorName'] = self.processor.__class__.__name__
+        else:
+            override['processor'] = None
+            override['processor']['processorName'] = None
         return override
 
     @classmethod
@@ -153,8 +180,8 @@ class DataRow:
     def as_dict(self):
         data_row = {
             'type': DATA_ROW,
-            'entityId': self.entity.get_marquee_id(),
-            'entityType': self.entity.entity_type().value,
+            'entityId': self.entity.get_marquee_id() if isinstance(self.entity, Entity) else self.entity,
+            'entityType': self.entity.entity_type().value if isinstance(self.entity, Entity) else ''
         }
         if len(self.overrides):
             data_row['overrides'] = [override.as_dict() for override in self.overrides]
@@ -167,14 +194,16 @@ class DataRow:
             override_type = override_dict.get('type')
             if override_type == PROCESSOR_OVERRIDE:
                 override = ProcessorOverride.from_dict(override_dict, reference_list)
-            else:
+            elif override_type == DIMENSIONS_OVERRIDE:
                 override = DimensionsOverride.from_dict(override_dict, reference_list)
+            else:
+                override = ValueOverride.from_dict(override_dict, reference_list)
             overrides.append(override)
 
         data_row = DataRow(entity=None, overrides=overrides)  # Entity gets resolved later
 
         reference_list.append({
-            'type': 'dataRow',
+            'type': DATA_ROW,
             'entityId': obj.get('entityId', ''),
             'entityType': obj.get('entityType', ''),
             'reference': data_row

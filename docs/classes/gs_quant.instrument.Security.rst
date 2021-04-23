@@ -12,6 +12,9 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    
+   .. autoattribute:: bbgid
+   
+   
    .. autoattribute:: bbid
    
    
@@ -24,6 +27,9 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: cid
    
    
+   .. autoattribute:: cins
+   
+   
    .. autoattribute:: cm_id
    
    
@@ -34,6 +40,9 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    .. autoattribute:: delisted
+   
+   
+   .. autoattribute:: display_id
    
    
    .. autoattribute:: dollar_cross

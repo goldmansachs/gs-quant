@@ -128,6 +128,9 @@ class UnsupportedValue(ResultInfo):
         return 'Unsupported Value'
 
     def _get_raw_df(self, display_options: DisplayOptions = None):
+        if display_options is not None and not isinstance(display_options, DisplayOptions):
+            raise TypeError("display_options must be of type DisplayOptions")
+
         options = display_options if display_options is not None else gs_quant.config.display_options
         show_na = options.show_na
 
@@ -317,6 +320,9 @@ class DataFrameWithInfo(pd.DataFrame, ResultInfo):
 
     def _get_raw_df(self, display_options: DisplayOptions = None):
         if self.empty:
+            if display_options is not None and not isinstance(display_options, DisplayOptions):
+                raise TypeError("display_options must be of type DisplayOptions")
+
             options = display_options if display_options is not None else gs_quant.config.display_options
             show_na = options.show_na
 

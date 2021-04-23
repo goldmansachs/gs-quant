@@ -15,6 +15,7 @@ under the License.
 """
 
 import datetime as dt
+from gs_quant.datetime.date import business_day_offset
 from gs_quant.target.common import BusinessDayConvention, BuySell, Currency, DayCountFraction, AssetClass, AssetType,\
     OptionStyle, OptionSettlementMethod, OptionType, PayReceive, PricingLocation, SwapClearingHouse, SwapSettlement, \
     XRef
@@ -31,12 +32,14 @@ class PositionType(Enum):
 
     OPEN = "open"  #: Open positions (corporate action adjusted)
     CLOSE = "close"  #: Close positions (reflect trading activity on the close)
+    ANY = 'any'
 
 
 class DateLimit(Enum):
     
     """ Low limit and high limit date objects """
 
-    LOW_LIMIT = dt.date(1952, 1, 1)
-    TODAY = dt.date.today()
     HIGH_LIMIT = dt.date.today() + dt.timedelta(days=10)
+    LOW_LIMIT = dt.date(1952, 1, 1)
+    PREVIOUS_BUSINESS_DATE = business_day_offset(dt.date.today(), -1)
+    TODAY = dt.date.today()

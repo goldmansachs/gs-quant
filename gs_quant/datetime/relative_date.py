@@ -62,11 +62,9 @@ class RelativeDate:
         if base_date:
             self.base_date = base_date
             self.base_date_passed_in = True
-        elif PricingContext.current.pricing_date:
-            d = PricingContext.current.pricing_date.date() \
-                if isinstance(PricingContext.current.pricing_date, datetime) \
-                else PricingContext.current.pricing_date
-            self.base_date = d
+        elif PricingContext.current.is_entered:
+            pricing_date = PricingContext.current.pricing_date
+            self.base_date = pricing_date.date() if isinstance(pricing_date, datetime) else pricing_date
         else:
             self.base_date = date.today()
 

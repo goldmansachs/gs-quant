@@ -1087,6 +1087,8 @@ class VolatilityWeightedWeightingModifier(Base):
         
     """Volatility Weighted backtest weighting modifier."""
 
+    _name_mappings = {'em_aalpha': 'EMAalpha'}
+
     @camel_case_translate
     def __init__(
         self,
@@ -1140,6 +1142,8 @@ class VolatilityWeightedWeightingModifier(Base):
 class VolatilityWeightedWeightingModifierRefData(Base):
         
     """Volatility Weighted Weighting Modifier reference data object."""
+
+    _name_mappings = {'em_aalpha': 'EMAalpha'}
 
     @camel_case_translate
     def __init__(
@@ -1900,6 +1904,7 @@ class BacktestStrategyUnderlier(Base):
         instrument: dict,
         market_model: str,
         notional_percentage: float = None,
+        expiry_date_mode: str = None,
         name: str = None,
         hedge: BacktestStrategyUnderlierHedge = None
     ):        
@@ -1907,6 +1912,7 @@ class BacktestStrategyUnderlier(Base):
         self.instrument = instrument
         self.notional_percentage = notional_percentage
         self.market_model = market_model
+        self.expiry_date_mode = expiry_date_mode
         self.name = name
         self.hedge = hedge
 
@@ -1939,6 +1945,16 @@ class BacktestStrategyUnderlier(Base):
     def market_model(self, value: str):
         self._property_changed('market_model')
         self.__market_model = value        
+
+    @property
+    def expiry_date_mode(self) -> str:
+        """Expiry date mode to be used in the instrument e.g. listed."""
+        return self.__expiry_date_mode
+
+    @expiry_date_mode.setter
+    def expiry_date_mode(self, value: str):
+        self._property_changed('expiry_date_mode')
+        self.__expiry_date_mode = value        
 
     @property
     def name(self) -> str:
@@ -2934,6 +2950,8 @@ class Backtest(Base):
 class BacktestRefData(Base):
         
     """Backtest reference data"""
+
+    _name_mappings = {'enhanced_beta': 'enhanced_beta'}
 
     @camel_case_translate
     def __init__(

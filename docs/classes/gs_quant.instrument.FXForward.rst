@@ -13,6 +13,9 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    
+   .. autoattribute:: buy_sell
+   
+   
    .. autoattribute:: forward_rate
    
    
@@ -20,6 +23,12 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    .. autoattribute:: notional_amount
+   
+   
+   .. autoattribute:: notional_amount_in_other_currency
+   
+   
+   .. autoattribute:: notional_currency
    
    
    .. autoattribute:: pair

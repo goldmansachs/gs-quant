@@ -33,10 +33,11 @@ class GsMonitorsApi:
                      owner_id: str = None,
                      name: str = None,
                      folder_name: str = None,
-                     monitor_type: str = None) -> Tuple[Monitor, ...]:
+                     monitor_type: str = None,
+                     tags: str = None) -> Tuple[Monitor, ...]:
         query_string = urlencode(dict(filter(lambda item: item[1] is not None,
                                              dict(id=monitor_id, ownerId=owner_id, name=name, folderName=folder_name,
-                                                  type=monitor_type, limit=limit).items())))
+                                                  type=monitor_type, tags=tags, limit=limit).items())))
         return GsSession.current._get('/monitors?{query}'.format(query=query_string), cls=Monitor)['results']
 
     @classmethod

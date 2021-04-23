@@ -107,9 +107,15 @@ def _check_measure_args(params, request_required, fn_name):
     param = params.popitem()
     assert param[1].name == 'source'
     assert param[1].kind == inspect.Parameter.KEYWORD_ONLY
+
+    counter = 0
     while len(params) > 0:
         param = params.popitem()
         assert param[1].kind == inspect.Parameter.POSITIONAL_OR_KEYWORD, f'wrong parameter type on {fn_name}'
+        if param[1].annotation == Asset:
+            counter += 1
+
+    assert counter < 2, 'no more than 1 extra asset parameter allowed'
 
 
 def test_measures(ts_map):
@@ -118,7 +124,7 @@ def test_measures(ts_map):
             continue
         params = inspect.signature(v).parameters.copy()
         param = params.popitem(last=False)
-        assert param[1].name in ['asset', 'asset_1']
+        assert param[1].name == 'asset'
         assert param[1].annotation == Asset
         assert param[1].kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
         _check_measure_args(params, False, v.__name__)

@@ -321,6 +321,13 @@ class Portfolio(PriceableImpl):
         data = pd.read_csv(csv_file, skip_blank_lines=True).replace({np.nan: None})
         return cls.from_frame(data, mappings)
 
+    def scale(self, scaling: int, in_place: bool = True):
+        if in_place:
+            for inst in self.all_instruments:
+                inst.scale(scaling, in_place)
+        else:
+            return Portfolio([inst.scale(scaling, in_place) for inst in self.all_instruments])
+
     def append(self, priceables: Union[PriceableImpl, Iterable[PriceableImpl]]):
         self.priceables += ((priceables,) if isinstance(priceables, PriceableImpl) else tuple(priceables))
 

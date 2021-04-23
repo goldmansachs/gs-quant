@@ -26,7 +26,7 @@ from gs_quant.markets import MarketDataCoordinate
 from gs_quant.session import GsSession, Environment
 from gs_quant.target.assets import FieldFilterMap
 from gs_quant.target.coordinates import MDAPIDataQuery
-from gs_quant.target.data import MarketDataVendor, DataSetEntity, DataQuery
+from gs_quant.target.data import MarketDataVendor, DataSetEntity, DataQuery, DataSetFieldEntity
 
 test_coordinates = (
     MarketDataCoordinate(mkt_type='Prime', mkt_quoting_style='price', mkt_asset='335320934'),
@@ -354,6 +354,92 @@ def test_auto_scroll_on_pages(mocker):
     )
     response = GsDataApi.get_results("test", response, query)
     assert len(response) == 5
+
+
+def test_get_dataset_fields(mocker):
+    mock_response = {
+        "totalResults": 2,
+        "results": [
+            {
+                "id": "FIVCFB4GAWBT61GT",
+                "name": "strikeReference",
+                "description": "Reference for strike level (enum: spot, forward).",
+                "type": "string",
+                "unique": False,
+                "fieldJavaType": "StringField",
+                "parameters": {
+                    "enum": [
+                        "spot",
+                        "forward",
+                        "normalized",
+                        "delta"
+                    ]
+                },
+                "entitlements": {
+                    "view": [
+                        "internal",
+                        "role:DataServiceAdmin",
+                        "external",
+                        "guid:8b4e2021fd12429885b30f6074037087"
+                    ],
+                    "edit": [
+                        "role:DataServiceAdmin",
+                        "guid:8b4e2021fd12429885b30f6074037087"
+                    ],
+                    "admin": [
+                        "role:DataServiceAdmin"
+                    ]
+                },
+                "metadata": {
+                    "createdById": "8b4e2021fd12429885b30f6074037087",
+                    "createdTime": "2021-04-16T21:52:33.563Z",
+                    "lastUpdatedById": "8b4e2021fd12429885b30f6074037087",
+                    "lastUpdatedTime": "2021-04-16T21:52:33.563Z"
+                }
+            },
+            {
+                "id": "FI4YBC6DS3PRE7W9",
+                "name": "price",
+                "description": "Price of instrument.",
+                "type": "number",
+                "unique": False,
+                "fieldJavaType": "DoubleField",
+                "parameters": {},
+                "entitlements": {
+                    "view": [
+                        "internal",
+                        "role:DataServiceAdmin",
+                        "external"
+                    ],
+                    "edit": [
+                        "role:DataServiceAdmin"
+                    ],
+                    "admin": [
+                        "role:DataServiceAdmin"
+                    ]
+                },
+                "metadata": {
+                    "createdById": "8b4e2021fd12429885b30f6074037087",
+                    "createdTime": "2021-04-16T21:36:11.269Z",
+                    "lastUpdatedById": "8b4e2021fd12429885b30f6074037087",
+                    "lastUpdatedTime": "2021-04-16T22:09:03.697Z"
+                }
+            }
+        ]
+    }
+
+    mocker.patch.object(GsSession.__class__, 'default_value',
+                        return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(GsSession.current, '_post', return_value=mock_response)
+
+    response = GsDataApi.get_dataset_fields(ids=['FIVCFB4GAWBT61GT', 'FI4YBC6DS3PRE7W9'])
+    assert len(response) == 2
+    assert response == mock_response['results']
+
+    GsSession.current._post.assert_called_once_with('/data/fields/query',
+                                                    payload={'where': {'id': ['FIVCFB4GAWBT61GT', 'FI4YBC6DS3PRE7W9']},
+                                                             'limit': 10},
+                                                    cls=DataSetFieldEntity)
 
 
 if __name__ == "__main__":

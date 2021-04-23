@@ -66,15 +66,16 @@ class DataCell:
             This can be modified to return the data queries rather than store on the cell
         """
         # Set the root processor node parent to data cell
-        self.processor.parent = self
-        cell_queries: List[DataQueryInfo] = []
-        self.processor.build_graph(self.entity,
-                                   self,
-                                   cell_queries,
-                                   self.dimension_overrides)
+        if self.processor:
+            self.processor.parent = self
+            cell_queries: List[DataQueryInfo] = []
+            self.processor.build_graph(self.entity,
+                                       self,
+                                       cell_queries,
+                                       self.dimension_overrides)
 
-        self.data_queries = cell_queries
-        all_queries.extend(cell_queries)  # Add this cell's queries to the entire datagrid's list of queries
+            self.data_queries = cell_queries
+            all_queries.extend(cell_queries)  # Add this cell's queries to the entire datagrid's list of queries
 
     def update(self, result: ProcessorResult) -> None:
         """ Sets the value of the cell"""

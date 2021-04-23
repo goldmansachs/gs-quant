@@ -108,7 +108,10 @@ class ReportType(EnumBase, Enum):
     Analytics = 'Analytics'
     Risk_Calculation = 'Risk Calculation'
     PCO_Generate_Orders = 'PCO Generate Orders'
-    PCO_Program_Change = 'PCO Program Change'
+    PCO_Update_Parameters = 'PCO Update Parameters'
+    PCO_Update_Client_Data = 'PCO Update Client Data'
+    PCO_Update_Open_Hedge_Notional = 'PCO Update Open Hedge Notional'
+    PCO_Add_Order = 'PCO Add Order'
     
     def __repr__(self):
         return self.value
@@ -525,6 +528,8 @@ class ReportWithParametersOverrides(Base):
 
 class User(Base):
         
+    _name_mappings = {'root_oe_id': 'rootOEId', 'root_oe_name': 'rootOEName', 'internal_id': 'internalID', 'mi_fidii_trade_idea_declined': 'miFIDIITradeIdeaDeclined'}
+
     @camel_case_translate
     def __init__(
         self,

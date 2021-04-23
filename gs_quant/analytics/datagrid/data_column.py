@@ -25,6 +25,7 @@ class RenderType:
     DEFAULT = 'default'
     HEATMAP = 'heatmap'
     BOXPLOT = 'boxplot'
+    SCALE = 'scale'
 
 
 @dataclass
@@ -46,7 +47,7 @@ class DataColumn:
 
     def __init__(self,
                  name: str,
-                 processor: BaseProcessor,
+                 processor: BaseProcessor = None,
                  *,
                  format_: ColumnFormat = ColumnFormat(),
                  width: int = DEFAULT_WIDTH):
@@ -67,13 +68,18 @@ class DataColumn:
         if format_['tooltip'] is None:
             del format_['tooltip']
 
-        return {
+        column = {
             'name': self.name,
-            'processorName': self.processor.__class__.__name__,
-            **self.processor.as_dict(),
             'format': format_,
             'width': self.width
         }
+
+        processor = self.processor
+        if processor:
+            column['processorName'] = processor.__class__.__name__
+            column.update(**processor.as_dict())
+
+        return column
 
     @classmethod
     def from_dict(cls, obj: Dict, reference_list: List):

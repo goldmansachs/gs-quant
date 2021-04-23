@@ -21,7 +21,6 @@ import datetime as dt
 from gs_quant.api.gs.assets import AssetType
 from gs_quant.api.gs.indices import GsIndexApi
 from gs_quant.session import GsSession, Environment
-from gs_quant.target.common import Currency
 from gs_quant.target.indices import *
 
 # values used to build api payloads
@@ -29,7 +28,7 @@ basket_id = 'MQID_BASKET'
 name = 'Test Basket'
 position_set = [{'assetId': 'MQID_1', 'quantity': 100}, {'assetId': 'MQID_2', 'quantity': 200}]
 publish_parameters = PublishParameters(False, False, False, False)
-pricing_parameters = PricingParameters(currency=Currency.USD, initial_price=100)
+pricing_parameters = CustomBasketsPricingParameters(currency=IndicesCurrency.USD, initial_price=100)
 return_type = 'Price Return'
 ticker = 'BASKETTKR'
 report_id = 'REPORT_ID'
@@ -60,7 +59,7 @@ def test_basket_create(mocker):
 @mock.patch.object(GsIndexApi, 'edit')
 def test_basket_edit(mocker):
     # construct inputs and mock response
-    inputs = IndicesEditInputs(CustomBasketsEditInputs(name=name, flagship=True))
+    inputs = CustomBasketsEditInputs(name=name, flagship=True)
     mock_response = CustomBasketsResponse(report_id, basket_id, 'done')
 
     # setup mock session and api response
@@ -75,7 +74,7 @@ def test_basket_edit(mocker):
 @mock.patch.object(GsIndexApi, 'rebalance')
 def test_basket_rebalance(mocker):
     # construct inputs and mock response
-    inputs = IndicesRebalanceInputs(CustomBasketsRebalanceInputs(position_set, pricing_parameters))
+    inputs = CustomBasketsRebalanceInputs(position_set, pricing_parameters)
     mock_response = CustomBasketsResponse(report_id, basket_id, 'done')
 
     # setup mock session and api response

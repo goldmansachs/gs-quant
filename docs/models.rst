@@ -22,6 +22,7 @@ RiskModel
 
 .. autosummary::
    :toctree: classes
+   :template: processors.rst
 
    RiskModel
    FactorRiskModel

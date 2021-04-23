@@ -20,6 +20,7 @@ from .analysis import *
 from .statistics import *
 from .econometrics import *
 from .technicals import *
+from .backtesting import *
 from .measures import *
 from .measures_countries import *
 from .measures_reports import *
@@ -27,6 +28,5 @@ from .measures_risk_models import *
 from .measures_portfolios import *
 from .measures_rates import *
 from .helper import *
-from .backtesting import *
 
 __name__ = 'timeseries'
