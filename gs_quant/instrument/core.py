@@ -25,6 +25,7 @@ from gs_quant.risk.results import ErrorValue, MultipleRiskMeasureFuture, Pricing
 from gs_quant.session import GsSession
 
 from abc import ABCMeta
+from copy import deepcopy
 import datetime as dt
 import logging
 from typing import Iterable, Optional, Tuple, Union
@@ -64,12 +65,6 @@ class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
                     ret = object.__getattribute__(resolved_inst, name)
 
         return ret
-
-    def _property_changed(self, prop: str):
-        if self._hash_is_calced:
-            PricingCache.drop(self)
-
-        super()._property_changed(prop)
 
     @classmethod
     def __asset_class_and_type_to_instrument(cls):
@@ -293,6 +288,21 @@ class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
     @staticmethod
     def compose(components: Iterable):
         return {c.risk_key.date if isinstance(c, ErrorValue) else c.resolution_key.date: c for c in components}
+
+    def flip(self, in_place: bool = True):
+        return self.scale(-1, in_place)
+
+    def scale(self, scaling: float, in_place: bool = True):
+        if scaling is None:
+            return self
+        if not hasattr(self, 'scale_in_place'):
+            raise NotImplementedError(f'scale_in_place not implemented on {type(self).__name__}')
+        if in_place:
+            self.scale_in_place(scaling)
+            return
+        new_inst = deepcopy(self)
+        new_inst.scale(scaling)
+        return new_inst
 
 
 class Security(XRef, Instrument):

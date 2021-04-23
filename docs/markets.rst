@@ -24,6 +24,24 @@ HistoricalPricingContext
    HistoricalPricingContext
 
 
+Basket
+----------
+
+.. currentmodule:: gs_quant.markets.baskets
+
+.. autosummary::
+   :toctree: classes
+   
+   Basket
+
+.. currentmodule:: gs_quant.markets
+
+.. autosummary::
+   :toctree: modules
+
+   indices_utils
+
+
 Portfolio
 ---------
 
@@ -50,7 +68,3 @@ Securities
    Index
    Stock
    SecurityMaster
-
-
-
-

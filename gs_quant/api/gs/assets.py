@@ -22,7 +22,8 @@ import pandas as pd
 import threading
 from enum import auto, Enum
 from functools import wraps
-from typing import Iterable, List, Tuple, Optional, Union
+from pydash import get, has
+from typing import Iterable, List, Optional, Tuple, Union
 from gs_quant.target.assets import Asset as __Asset, AssetClass, AssetType, AssetToInstrumentResponse, TemporalXRef,\
     Position, EntityQuery, PositionSet, Currency, AssetParameters
 from gs_quant.target.assets import FieldFilterMap
@@ -105,6 +106,8 @@ class GsAssetApi:
             fields: Union[List, Tuple] = None,
             as_of: dt.datetime = None,
             limit: int = None,
+            scroll: str = None,
+            scroll_id: str = None,
             order_by: List[str] = None,
             **kwargs
     ) -> EntityQuery:
@@ -121,6 +124,8 @@ class GsAssetApi:
             fields=fields,
             asOfTime=as_of or dt.datetime.utcnow(),
             limit=limit,
+            scroll=scroll,
+            scroll_id=scroll_id,
             order_by=order_by
         )
 
@@ -151,6 +156,25 @@ class GsAssetApi:
         query = cls.__create_query(fields, as_of, limit, **kwargs)
         response = GsSession.current._post('/assets/data/query', payload=query)
         return response['results']
+
+    @classmethod
+    @_cached
+    def get_many_assets_data_scroll(
+            cls,
+            scroll: str = '1m',
+            fields: IdList = None,
+            as_of: dt.datetime = None,
+            limit: int = None,
+            **kwargs
+    ) -> dict:
+        query = cls.__create_query(fields, as_of, limit, scroll, **kwargs)
+        response = GsSession.current._post('/assets/data/query', payload=query)
+        results = get(response, 'results')
+        while(has(response, 'scrollId') and len(get(response, 'results'))):
+            query = cls.__create_query(fields, as_of, limit, scroll, get(response, 'scrollId'), **kwargs)
+            response = GsSession.current._post('/assets/data/query', payload=query)
+            results += get(response, 'results')
+        return results
 
     @classmethod
     @_cached
@@ -193,6 +217,10 @@ class GsAssetApi:
             raise ValueError('More than one asset named {} found'.format(name))
         else:
             return GsAsset.from_dict(ret['results'][0])
+
+    @classmethod
+    def create_asset(cls, asset: GsAsset) -> GsAsset:
+        return GsSession.current._post('/assets', payload=asset, cls=GsAsset)
 
     @staticmethod
     def get_asset_positions_for_date(
@@ -243,9 +271,9 @@ class GsAssetApi:
     @staticmethod
     def get_latest_positions(asset_id: str, position_type: PositionType = None) -> PositionSet:
         url = '/assets/{id}/positions/last'.format(id=asset_id)
-        if position_type is not None:
+        if position_type is not None and position_type is not PositionType.ANY:
             url += '?type={ptype}'.format(ptype=position_type if isinstance(position_type, str) else position_type.value)
-        
+
         results = GsSession.current._get(url)['results']
 
         return PositionSet.from_dict(results)

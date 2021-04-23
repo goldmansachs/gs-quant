@@ -15,10 +15,10 @@ under the License.
 """
 
 import pytest
-from pandas.util.testing import assert_series_equal
+from pandas.testing import assert_series_equal
 from gs_quant.timeseries import *
 from testfixtures import Replacer
-from testfixtures.mock import Mock, call
+from testfixtures.mock import Mock
 
 
 def test_basket():
@@ -64,11 +64,46 @@ def test_basket():
         index=dates)
     assert_series_equal(mreb, basket_series([mreb], [1], rebal_freq=RebalFreq.MONTHLY))
 
+
+def test_basket_constructor():
+    with pytest.raises(MqValueError):
+        Basket(['AAPL UW'], [0.1, 0.9], RebalFreq.MONTHLY)
+
     replace = Replacer()
-    mock = replace('gs_quant.timeseries.backtesting.basket_series', Mock())
-    args = ([mreb], [1], None, RebalFreq.MONTHLY, ReturnType.EXCESS_RETURN)
-    basket(*args)
-    assert mock.call_args == call(*args)  # basket passes args through to basket_series
+
+    dates = [
+        datetime.datetime(2021, 1, 1),
+        datetime.datetime(2021, 1, 2),
+        datetime.datetime(2021, 1, 3),
+        datetime.datetime(2021, 1, 4),
+        datetime.datetime(2021, 1, 5),
+        datetime.datetime(2021, 1, 6),
+    ]
+
+    x = pd.DataFrame({'spot': [100.0, 101, 103.02, 100.9596, 100.9596, 102.978792]}, index=dates)
+    x['assetId'] = 'MA4B66MW5E27U9VBB94'
+    y = pd.DataFrame({'spot': [100.0, 100, 100, 100, 100, 100]}, index=dates)
+    y['assetId'] = 'MA4B66MW5E27UAL9SUX'
+    spot = x.append(y)
+    mock_data = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    mock_data.return_value = spot
+
+    mock_asset = replace('gs_quant.timeseries.backtesting.GsAssetApi.get_many_assets_data', Mock())
+    mock_asset.return_value = [{'id': 'MA4B66MW5E27U9VBB94'}, {'id': 'MA4B66MW5E27UAL9SUX'}]
+
+    a_basket = Basket(['AAPL UW', 'MSFT UW'], [0.1, 0.9], RebalFreq.MONTHLY)
+    expected = pd.Series([100.0, 100.1, 100.302, 100.09596, 100.09596, 100.297879], index=dates)
+    actual = a_basket.price()
+    assert_series_equal(actual, expected)
+
+    mock_asset = replace('gs_quant.timeseries.backtesting.GsAssetApi.get_many_assets_data', Mock())
+    mock_asset.return_value = [{'id': 'MA4B66MW5E27U9VBB94'}]
+    with pytest.raises(MqValueError):
+        Basket(['AAPL UW', 'ABC'], [0.1, 0.9], RebalFreq.MONTHLY).price()
+
+    with pytest.raises(NotImplementedError):
+        a_basket.price(real_time=True)
+
     replace.restore()
 
 

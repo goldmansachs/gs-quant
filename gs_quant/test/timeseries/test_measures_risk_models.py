@@ -166,7 +166,7 @@ def test_factor_zscore():
     replace.restore()
 
 
-def test_covariance():
+def test_factor_covariance():
 
     replace = Replacer()
 
@@ -191,11 +191,11 @@ def test_covariance():
     mock.return_value = mock_covariance_curve
 
     with DataContext(datetime.date(2020, 1, 1), datetime.date(2020, 1, 3)):
-        actual = mrm.covariance(mock_risk_model(), 'Factor Name', 'Factor Name')
+        actual = mrm.factor_covariance(mock_risk_model(), 'Factor Name', 'Factor Name')
         assert all(actual.values == [1.01, 1.02, 1.03])
 
     with pytest.raises(MqValueError):
-        mrm.covariance(mock_risk_model(), 'Wrong Factor Name', 'Factor Name')
+        mrm.factor_covariance(mock_risk_model(), 'Wrong Factor Name', 'Factor Name')
     replace.restore()
 
 
@@ -228,7 +228,7 @@ def test_factor_volatility():
         assert all(actual.values == [sqrt(1.01) * 100, sqrt(1.02) * 100, sqrt(1.03) * 100])
 
     with pytest.raises(MqValueError):
-        mrm.covariance(mock_risk_model(), 'Wrong Factor Name', 'Factor Name')
+        mrm.factor_covariance(mock_risk_model(), 'Wrong Factor Name', 'Factor Name')
     replace.restore()
 
 

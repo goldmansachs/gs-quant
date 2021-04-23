@@ -25,7 +25,7 @@ from pandas import Series
 from pydash import decapitalize
 
 from gs_quant.analytics.common import TYPE, PROCESSOR, PARAMETERS, DATA_COORDINATE, \
-    ENTITY, VALUE, DATE, DATETIME, PROCESSOR_NAME, ENTITY_ID, ENTITY_TYPE, PARAMETER, REFERENCE, RELATIVE_DATE
+    ENTITY, VALUE, DATE, DATETIME, PROCESSOR_NAME, ENTITY_ID, ENTITY_TYPE, PARAMETER, REFERENCE, RELATIVE_DATE, LIST
 from gs_quant.analytics.common.helpers import is_of_builtin_type
 from gs_quant.analytics.core.processor_result import ProcessorResult
 from gs_quant.data import DataCoordinate, DataFrequency
@@ -33,11 +33,13 @@ from gs_quant.data.query import DataQuery, DataQueryType
 from gs_quant.entities.entity import Entity
 from gs_quant.target.common import Currency
 from gs_quant.timeseries import Window, Returns, RelativeDate, DateOrDatetime
+from gs_quant.analytics.common.enumerators import ScaleShape
 
 PARSABLE_OBJECT_MAP = {
     'window': Window,
     'returns': Returns,
-    'currency': Currency
+    'currency': Currency,
+    'scaleShape': ScaleShape
 }
 
 _logger = logging.getLogger(__name__)
@@ -172,10 +174,15 @@ class BaseProcessor(metaclass=ABCMeta):
             PARAMETERS: {}
         }
 
+        if isinstance(self, BaseProcessor):
+            processor[PROCESSOR_NAME] = self.__class__.__name__
+
         parameters = processor[PARAMETERS]
 
         for parameter, alias in get_type_hints(self.__init__).items():
-            if alias in (DataCoordinateOrProcessor, DataCoordinate, Union[DataCoordinateOrProcessor, None]):
+            if alias in (DataCoordinateOrProcessor, DataCoordinate,
+                         Union[DataCoordinateOrProcessor, None],
+                         BaseProcessor):
                 # If the parameter is a DataCoordinate or processor, recursively call as_dict()
                 attribute = self.children[parameter]
                 if attribute is None:
@@ -198,7 +205,9 @@ class BaseProcessor(metaclass=ABCMeta):
                 attribute = getattr(self, parameter)
                 if attribute is not None:
                     parameters[parameter] = {}
-                    if is_of_builtin_type(attribute):
+                    if isinstance(attribute, list):
+                        value = [item.as_dict() for item in attribute]
+                    elif is_of_builtin_type(attribute):
                         value = attribute
                     elif isinstance(attribute, Enum):
                         value = attribute.value
@@ -225,7 +234,7 @@ class BaseProcessor(metaclass=ABCMeta):
 
     @classmethod
     def from_dict(cls, obj: Dict, reference_list: List):
-        processor_name: str = obj.get(PROCESSOR_NAME)
+        processor_name: str = obj.get(PROCESSOR_NAME, 'None')
         # Dynamically import the processor to for instantiation.
         processor = getattr(__import__('gs_quant.analytics.processors', fromlist=['']), processor_name, None)
 
@@ -238,6 +247,7 @@ class BaseProcessor(metaclass=ABCMeta):
             # Loop through all the parameters and turned them into objects based off their dictionary values.
             # Will recursively handle the more complex objects such as DataCoordinate and Processors.
             parameter_type: str = parameters_dict.get(TYPE)
+
             if parameter_type == DATA_COORDINATE:
                 # Handle the DataCoordinate parameters
                 arguments[parameter] = DataCoordinate.from_dict(parameters_dict)
@@ -271,11 +281,15 @@ class BaseProcessor(metaclass=ABCMeta):
                         arguments[parameter] = parameter_obj(parameters_dict.get(VALUE, {}))
                     else:
                         arguments[parameter] = parameter_obj.from_dict(parameters_dict.get(VALUE, {}))
+                elif parameter_type == LIST:
+                    arguments[parameter] = [BaseProcessor.from_dict(item, reference_list)
+                                            if isinstance(item, dict) else item
+                                            for item in parameters_dict['value']]
                 else:
                     # Handles built in types that are stored natively
                     arguments[parameter] = parameters_dict.get(VALUE)
 
-        processor = processor(**arguments)  # Instantiate the processor with all arguments
+        processor = processor(**arguments) if processor else None  # Instantiate the processor with all arguments
 
         # Add all the references to entities to the list which will be resolved later
         for reference in local_reference_list:

@@ -12,4 +12,6 @@
    
       ~RelativeDate.apply_rule
    
+      ~RelativeDate.as_dict
+   
    

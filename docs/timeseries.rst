@@ -59,6 +59,11 @@ Backtesting
    basket
    basket_series
 
+.. autosummary::
+   :toctree: classes
+   :template: timeseries_class.rst
+
+   Basket
 
 Date / Time
 -----------

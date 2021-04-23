@@ -13,7 +13,6 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-
 from enum import Enum
 from typing import Union
 
@@ -37,6 +36,8 @@ class EntityProcessor(BaseProcessor):
 
     def process(self, entity: Entity) -> ProcessorResult:
         """ Fetch the entity and resolve the field """
+        if isinstance(entity, str):  # If we were unable to fetch entity (404/403)
+            return ProcessorResult(False, f"Unable to resolve Entity {entity}")
         try:
             # First try to get the value off the entity
             entity_dict = entity.get_entity()

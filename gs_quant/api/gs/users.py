@@ -67,3 +67,15 @@ class GsUsersApi:
         except HTTPError as err:
             raise ValueError(f'Unable to fetch user emails with {err}')
         return [user['email'] for user in get(raw_users, 'results', [])]
+
+    @classmethod
+    def get_current_user_info(cls) -> List[str]:
+        """
+        Gets user
+        :return: user
+        """
+        try:
+            user = GsSession.current._get('/users/self')
+        except HTTPError as err:
+            raise ValueError(f'Unable to fetch user with {err}')['results']
+        return user

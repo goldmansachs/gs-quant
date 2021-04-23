@@ -67,8 +67,8 @@ def factor_zscore(asset: Asset, risk_model_id: str, factor_name: str, *,
 
 
 @plot_measure_entity(EntityType.RISK_MODEL, [QueryType.FACTOR_RETURN])
-def covariance(risk_model_id: str, factor_name_1: str, factor_name_2: str, *, source: str = None,
-               real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def factor_covariance(risk_model_id: str, factor_name_1: str, factor_name_2: str, *, source: str = None,
+                      real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Covariance time-series between two factors in a risk model
 

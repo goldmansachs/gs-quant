@@ -1329,6 +1329,8 @@ class RatesResponseData(Base):
         
     """Rates calculated response data."""
 
+    _name_mappings = {'libor_id': 'libor_id'}
+
     @camel_case_translate
     def __init__(
         self,

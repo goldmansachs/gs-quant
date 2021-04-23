@@ -54,6 +54,76 @@ class LastProcessor(BaseProcessor):
         pass
 
 
+class MinProcessor(BaseProcessor):
+
+    def __init__(self,
+                 a: DataCoordinateOrProcessor,
+                 start: Optional[DateOrDatetimeOrRDate] = None,
+                 end: Optional[DateOrDatetimeOrRDate] = None):
+        """ MinProcessor returns the minimum value of the series
+
+        :param a: DataCoordinate or BaseProcessor for the coordinate
+        :param start: start date or time used in the underlying data query
+        :param end: end date or time used in the underlying data query
+        """
+        super().__init__()
+        # coordinates
+        self.children['a'] = a
+
+        # datetime
+        self.start = start
+        self.end = end
+
+    def process(self) -> None:
+        """ Calculate the result and store it as the processor value """
+        a = self.children_data.get('a')
+        if isinstance(a, ProcessorResult):
+            if a.success and isinstance(a.data, Series):
+                self.value = ProcessorResult(True, pd.Series(min(a.data)))
+            else:
+                self.value = ProcessorResult(False, "Processor does not data series yet")
+        else:
+            self.value = ProcessorResult(False, "Processor does not have series yet")
+
+    def get_plot_expression(self):
+        pass
+
+
+class MaxProcessor(BaseProcessor):
+
+    def __init__(self,
+                 a: DataCoordinateOrProcessor,
+                 start: Optional[DateOrDatetimeOrRDate] = None,
+                 end: Optional[DateOrDatetimeOrRDate] = None):
+        """ MaxProcessor returns the maximum value of the series
+
+        :param a: DataCoordinate or BaseProcessor for the coordinate
+        :param start: start date or time used in the underlying data query
+        :param end: end date or time used in the underlying data query
+        """
+        super().__init__()
+        # coordinates
+        self.children['a'] = a
+
+        # datetime
+        self.start = start
+        self.end = end
+
+    def process(self) -> None:
+        """ Calculate the result and store it as the processor value """
+        a = self.children_data.get('a')
+        if isinstance(a, ProcessorResult):
+            if a.success and isinstance(a.data, Series):
+                self.value = ProcessorResult(True, pd.Series(max(a.data)))
+            else:
+                self.value = ProcessorResult(False, "Processor does not have data series yet")
+        else:
+            self.value = ProcessorResult(False, "Processor does not have series yet")
+
+    def get_plot_expression(self):
+        pass
+
+
 class AppendProcessor(BaseProcessor):
     def __init__(self,
                  a: DataCoordinateOrProcessor,

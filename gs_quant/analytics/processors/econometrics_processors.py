@@ -29,7 +29,7 @@ from gs_quant.target.common import Currency
 from gs_quant.timeseries import correlation, Window, SeriesType, DataMeasure, DataFrequency
 from gs_quant.timeseries import excess_returns_pure
 from gs_quant.timeseries.econometrics import get_ratio_pure, SharpeAssets, change, returns
-from gs_quant.timeseries.econometrics import volatility, Returns
+from gs_quant.timeseries.econometrics import volatility, Returns, beta
 from gs_quant.timeseries.helper import CurveType
 
 
@@ -96,7 +96,6 @@ class SharpeRatioProcessor(BaseProcessor):
         :param curve_type: whether input series is of prices or excess returns, defaults to prices
         :param start: start date or time used in the underlying data query
         :param end: end date or time used in the underlying data query
-        :param type_:
         """
         super().__init__()
         # coordinates
@@ -274,6 +273,61 @@ class ReturnsProcessor(BaseProcessor):
                 else:
                     value = returns(a_data.data, self.observations, self.type_)
                     self.value = ProcessorResult(True, value)
+
+    def get_plot_expression(self):
+        pass
+
+
+class BetaProcessor(BaseProcessor):
+    def __init__(self,
+                 a: DataCoordinateOrProcessor,
+                 b: DataCoordinateOrProcessor,
+                 *,
+                 start: Optional[DateOrDatetimeOrRDate] = None,
+                 end: Optional[DateOrDatetimeOrRDate] = None,
+                 w: Union[Window, int] = Window(None, 0)):
+        """ BetaProcessor
+
+        :param a: DataCoordinate or BaseProcessor for the first series
+        :param b: DataCoordinate or BaseProcessor for the second series
+        :param start: start date or time used in the underlying data query
+        :param end: end date or time used in the underlying data query
+        :param w:  Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+              and 10 the ramp up value.  If w is a string, it should be a relative date like '1m', '1d', etc.
+              Window size defaults to length of series.
+
+         **Usage**
+
+        Calculate rolling `beta <https://en.wikipedia.org/wiki/Beta_(finance)>`_
+        If window is not provided, computes beta over the full series
+
+        """
+        super().__init__()
+        self.children['a'] = a
+        self.children['b'] = b
+
+        self.start = start
+        self.end = end
+        self.w = w
+
+    def process(self):
+        a_data = self.children_data.get('a')
+        if isinstance(a_data, ProcessorResult):
+            if a_data.success:
+                b_data = self.children_data.get('b')
+                # Need to check if the child node b was set in the first place.
+                if self.children.get('b') and isinstance(b_data, ProcessorResult):
+                    if b_data.success:
+                        result = beta(a_data.data, b_data.data, w=self.w)
+                        self.value = ProcessorResult(True, result)
+                    else:
+                        self.value = ProcessorResult(True, "BetaProcessor does not have 'b' series values yet.")
+                else:
+                    self.value = ProcessorResult(True, 'BetaProcessor: b is not a valid series.')
+            else:
+                self.value = ProcessorResult(False, "BetaProcessor does not have 'a' series values yet")
+        else:
+            self.value = ProcessorResult(False, "BetaProcessor does not have 'a' series yet")
 
     def get_plot_expression(self):
         pass

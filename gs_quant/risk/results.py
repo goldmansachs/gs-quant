@@ -586,7 +586,7 @@ class PortfolioRiskResult(CompositeResultFuture):
         else:
             return aggregate_results(self.__results(), allow_mismatch_risk_keys=allow_mismatch_risk_keys)
 
-    def to_frame(self, values='default', index='default', columns='default', aggfunc=pd.unique,
+    def to_frame(self, values='default', index='default', columns='default', aggfunc=sum,
                  display_options: DisplayOptions = None):
         def get_df(priceable, port_info=None, inst_idx=0):
             if port_info is None:
@@ -647,11 +647,14 @@ class PortfolioRiskResult(CompositeResultFuture):
         if ori_df is None:
             return
         else:
-            ori_df = ori_df.fillna('N/A')  # fill n/a values for different sub-portfolio depths
+            # fill n/a values for different sub-portfolio depths
+            df_cols = list(ori_df.columns.values)
+            cols_except_value = [c for c in df_cols if c != 'value']
+            ori_df[cols_except_value] = ori_df[cols_except_value].fillna("N/A")
+
         if values is None and index is None and columns is None:  # to_frame(None, None, None)
             return ori_df
         elif values == 'default' and index == 'default' and columns == 'default':  # to_frame()
-            df_cols = list(ori_df.columns.values)
             has_bucketed = True if 'mkt_type' in df_cols else False
             has_dt = True if 'dates' in df_cols else False
             has_cashflows = True if 'payment_amount' in df_cols else False
@@ -666,7 +669,10 @@ class PortfolioRiskResult(CompositeResultFuture):
         else:  # user defined pivoting
             values = 'value' if values == 'default' or values is ['value'] else values
 
-        pivot_df = ori_df.pivot_table(values=values, index=index, columns=columns, aggfunc=aggfunc)
+        try:
+            pivot_df = ori_df.pivot_table(values=values, index=index, columns=columns, aggfunc=aggfunc)
+        except ValueError:
+            raise RuntimeError('Unable to successfully pivot data')
         try:  # attempt to correct order of index
             ori_index = ori_df.set_index(list(pivot_df.index.names)).index.unique()
             ori_columns = ori_df.set_index(list(pivot_df.columns.names)).index.unique()

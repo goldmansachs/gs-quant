@@ -15,6 +15,7 @@ under the License.
 """
 
 from typing import Tuple
+
 from gs_quant.backtests.triggers import *
 from gs_quant.backtests.generic_engine import GenericEngine
 from gs_quant.backtests.predefined_asset_engine import PredefinedAssetEngine
@@ -22,7 +23,7 @@ from gs_quant.backtests.equity_vol_engine import EquityVolEngine
 from gs_quant.base import Priceable
 
 
-backtest_engines = [GenericEngine, PredefinedAssetEngine, EquityVolEngine]
+backtest_engines = [GenericEngine(), PredefinedAssetEngine(), EquityVolEngine()]
 
 
 class Strategy(object):

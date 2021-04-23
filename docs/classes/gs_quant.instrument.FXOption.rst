@@ -31,7 +31,7 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: notional_amount
    
    
-   .. autoattribute:: notional_amount_other_currency
+   .. autoattribute:: notional_amount_in_other_currency
    
    
    .. autoattribute:: notional_currency

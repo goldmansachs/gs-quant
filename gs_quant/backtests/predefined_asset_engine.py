@@ -78,22 +78,21 @@ class PredefinedAssetEngine(BacktestBaseEngine):
         handler_factory = PredefinedAssetEngineActionFactory(self.action_impl_map)
         return handler_factory.get_action_handler(action)
 
-    @classmethod
-    def supports_strategy(cls, strategy):
+    def supports_strategy(self, strategy):
         all_actions = reduce(lambda x, y: x + y, (map(lambda x: x.actions, strategy.triggers)))
         try:
             for x in all_actions:
-                cls.get_action_handler(x)
+                self.get_action_handler(x)
         except RuntimeError:
             return False
         return True
 
     def __init__(self,
-                 data_mgr: DataManager,
-                 calendars: Union[str, Tuple[str, ...]],
-                 tz: timezone,
-                 valuation_method: ValuationMethod,
-                 action_impl_map={}):
+                 data_mgr: DataManager = DataManager(),
+                 calendars: Union[str, Tuple[str, ...]] = 'CME',
+                 tz: timezone = timezone('America/New_York'),
+                 valuation_method: ValuationMethod = ValuationMethod(),
+                 action_impl_map: dict = {}):
         self.action_impl_map = action_impl_map
         self.calendars = calendars
         self.tz = tz

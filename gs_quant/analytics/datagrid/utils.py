@@ -15,8 +15,13 @@ under the License.
 """
 
 from dataclasses import dataclass, fields
+from datetime import datetime
 from enum import Enum
 from typing import Union, List
+
+
+def get_utc_now() -> str:
+    return f'{datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]}Z'
 
 
 class SortType(str, Enum):

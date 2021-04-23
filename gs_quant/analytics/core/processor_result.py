@@ -15,7 +15,7 @@ under the License.
 """
 
 from dataclasses import dataclass
-from typing import Union
+from typing import Union, Dict
 
 import pandas as pd
 
@@ -23,4 +23,4 @@ import pandas as pd
 @dataclass
 class ProcessorResult:
     success: bool
-    data: Union[str, pd.Series]
+    data: Union[str, pd.Series, Dict]

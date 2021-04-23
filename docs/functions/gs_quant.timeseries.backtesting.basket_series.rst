@@ -1,5 +1,5 @@
-﻿gs\_quant.timeseries.backtesting.basket_series
-=======================================
+﻿gs\_quant.timeseries.backtesting.basket\_series
+===============================================
 
 .. currentmodule:: gs_quant.timeseries.backtesting
 

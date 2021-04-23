@@ -196,6 +196,28 @@ CURRENCY_TO_DUMMY_SWAP_BBID = {
     'SGD': 'MA5CQFHYBPH9E5BS'
 }
 
+# FXFwd XCCYSwap rates Defaults
+CROSS_BBID_TO_DUMMY_OISXCCY_ASSET = {
+    'EURUSD': 'MA1VJC1E3SZW8E4S',
+    'GBPUSD': 'MA3JTR4HSC63H4V6',
+    'AUDUSD': 'MAD4VBRWYXFSY1N4',
+    'NZDUSD': 'MA1YHQMZVTM3VBWT',
+    'USDSEK': 'MA2APZREBGDMME83',
+    'USDNOK': 'MA0K3W6FKH6K1KJE',
+    'USDDKK': 'MA328HZB86DYSWSJ',
+    'USDCAD': 'MAT8JNEE2GN5NES6',
+    'USDCHF': 'MABNGGTNB9A0TKCG',
+    'USDJPY': 'MAMZ9YG8AF3HQ18C',
+}
+
+
+def _cross_to_fxfwd_xcswp_asset(asset_spec: ASSET_SPEC) -> str:
+    asset = _asset_from_spec(asset_spec)
+    bbid = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
+    # for each currency, get a dummy asset for checking availability
+    result = CROSS_BBID_TO_DUMMY_OISXCCY_ASSET.get(bbid, asset.get_marquee_id())
+    return result
+
 
 def _currency_to_tdapi_swap_rate_asset(asset_spec: ASSET_SPEC) -> str:
     asset = _asset_from_spec(asset_spec)
@@ -489,7 +511,7 @@ def swap_annuity(asset: Asset, swap_tenor: str, benchmark_type: str = None, floa
 
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
-              [MeasureDependency(id_provider=_currency_to_tdapi_swap_rate_asset,
+              [MeasureDependency(id_provider=_currency_to_tdapi_swaption_rate_asset,
                                  query_type=QueryType.SWAPTION_PREMIUM)])
 def swaption_premium(asset: Asset, expiration_tenor: str = None, termination_tenor: str = None,
                      relative_strike: str = None, benchmark_type: str = None,
@@ -1248,5 +1270,114 @@ def basis_swap_term_structure(asset: Asset, spread_benchmark_type: str = None, s
             df.sort_index(inplace=True)
             df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
             series = ExtendedSeries() if df.empty else ExtendedSeries(df['basisSwapRate'])
+    series.dataset_ids = getattr(df, 'dataset_ids', ())
+    return series
+
+
+def _get_fxfwd_xccy_swp_rates_data(asset: Asset, tenor: str, real_time: bool = False, source: str = None,
+                                   query_type: QueryType = None) -> pd.DataFrame:
+    if real_time:
+        raise NotImplementedError('realtime not implemented')
+    pair = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
+
+    if pair not in CROSS_BBID_TO_DUMMY_OISXCCY_ASSET.keys():
+        raise NotImplementedError('Data not available for pair: ' + str(pair))
+
+    if not (re.fullmatch('(\\d+)([wfmy])', tenor)):
+        raise MqValueError('invalid tenor: ' + tenor)
+
+    remap_tenor = tenor.replace('m', 'f')
+    currency = pair.replace('USD', '')
+    price_location_defaults = CURRENCY_TO_PRICING_LOCATION.get(currency, PricingLocation.LDN)
+    kwargs = dict(type='Forward', asset_parameters_settlement_date=remap_tenor, asset_parameters_pair=pair)
+
+    rate_mqid = _get_tdapi_rates_assets(**kwargs)
+
+    _logger.debug('where asset= %s (%s), ois_xccy_tenor=%s, pricing_location=%s',
+                  rate_mqid, pair, tenor, price_location_defaults)
+
+    q = GsDataApi.build_market_data_query([rate_mqid], query_type, source=source, real_time=real_time)
+    _logger.debug('q %s', q)
+    df = _market_data_timed(q)
+    return df
+
+
+@plot_measure((AssetClass.FX,), (AssetType.Forward,),
+              [MeasureDependency(id_provider=_cross_to_fxfwd_xcswp_asset, query_type=QueryType.OIS_XCCY)])
+def ois_xccy(asset: Asset, tenor: str = None, *, source: str = None, real_time: bool = False) -> Series:
+    """
+    GS end-of-day OIS Xccy spreads curves across G10 cross currencies.
+
+    :param asset: asset object loaded from security master
+    :param tenor: relative date representation of expiration date e.g. 1w
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: ois xccy spread curve
+    """
+    df = _get_fxfwd_xccy_swp_rates_data(asset=asset, tenor=tenor, query_type=QueryType.OIS_XCCY, source=source,
+                                        real_time=real_time)
+
+    series = ExtendedSeries() if df.empty else ExtendedSeries(df['oisXccy'])
+    series.dataset_ids = getattr(df, 'dataset_ids', ())
+    return series
+
+
+@plot_measure((AssetClass.FX,), (AssetType.Forward,),
+              [MeasureDependency(id_provider=_cross_to_fxfwd_xcswp_asset,
+                                 query_type=QueryType.OIS_XCCY_EX_SPIKE)])
+def ois_xccy_ex_spike(asset: Asset, tenor: str = None, *, source: str = None, real_time: bool = False) -> Series:
+    """
+    GS end-of-day OIS Xccy spreads curves excluding spikes across G10 cross currencies.
+
+    :param asset: asset object loaded from security master
+    :param tenor: relative date representation of expiration date e.g. 1w
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: ois xccy spread curve excluding spikes
+    """
+    df = _get_fxfwd_xccy_swp_rates_data(asset=asset, tenor=tenor, query_type=QueryType.OIS_XCCY_EX_SPIKE, source=source,
+                                        real_time=real_time)
+
+    series = ExtendedSeries() if df.empty else ExtendedSeries(df['oisXccyExSpike'])
+    series.dataset_ids = getattr(df, 'dataset_ids', ())
+    return series
+
+
+@plot_measure((AssetClass.FX,), (AssetType.Forward,),
+              [MeasureDependency(id_provider=_cross_to_fxfwd_xcswp_asset, query_type=QueryType.NON_USD_OIS)])
+def non_usd_ois(asset: Asset, tenor: str = None, *, source: str = None, real_time: bool = False) -> Series:
+    """
+    GS end-of-day non domestic USD ois rate curve for G10 cross currencies.
+
+    :param asset: asset object loaded from security master
+    :param tenor: relative date representation of expiration date e.g. 1w
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: non usd ois domestic rate curve (from cross)
+    """
+    df = _get_fxfwd_xccy_swp_rates_data(asset=asset, tenor=tenor, query_type=QueryType.NON_USD_OIS, source=source,
+                                        real_time=real_time)
+
+    series = ExtendedSeries() if df.empty else ExtendedSeries(df['nonUsdOis'])
+    series.dataset_ids = getattr(df, 'dataset_ids', ())
+    return series
+
+
+@plot_measure((AssetClass.FX,), (AssetType.Forward,),
+              [MeasureDependency(id_provider=_cross_to_fxfwd_xcswp_asset, query_type=QueryType.USD_OIS)])
+def usd_ois(asset: Asset, tenor: str = None, *, source: str = None, real_time: bool = False) -> Series:
+    """
+    GS end-of-day USD domestic ois rates curves across G10 cross currencies.
+
+    :param asset: asset object loaded from security master
+    :param tenor: relative date representation of expiration date e.g. 1w
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: usd ois domestic rate curve (from cross)
+    """
+    df = _get_fxfwd_xccy_swp_rates_data(asset=asset, tenor=tenor, query_type=QueryType.USD_OIS, source=source,
+                                        real_time=real_time)
+
+    series = ExtendedSeries() if df.empty else ExtendedSeries(df['usdOis'])
     series.dataset_ids = getattr(df, 'dataset_ids', ())
     return series

@@ -22,7 +22,7 @@ from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 from pydash import get
-from typing import Dict, Optional, Tuple, Union, List
+from typing import Dict, List, Optional, Union
 
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.data import GsDataApi
@@ -152,24 +152,6 @@ class Entity(metaclass=ABCMeta):
         if frequency == DataFrequency.REAL_TIME:
             rt_dataset_id = available.get(DataFrequency.REAL_TIME)
             return DataCoordinate(dataset_id=rt_dataset_id, measure=measure, dimensions=dimensions, frequency=frequency)
-
-    def get_admins(self) -> Optional[Tuple[str]]:
-        raise NotImplementedError
-
-    def get_viewers(self) -> Optional[Tuple[str]]:
-        raise NotImplementedError
-
-    def add_admin_permissions(self, user_tokens: [str]) -> Dict:
-        raise NotImplementedError
-
-    def add_view_permissions(self, user_tokens: [str]) -> Dict:
-        raise NotImplementedError
-
-    def remove_admin_permissions(self, user_tokens: [str]) -> Dict:
-        raise NotImplementedError
-
-    def remove_view_permissions(self, user_tokens: [str]) -> Dict:
-        raise NotImplementedError
 
 
 class Country(Entity):
@@ -332,14 +314,16 @@ class PositionedEntity(metaclass=ABCMeta):
             return GsAssetApi.get_asset_positions_data(self.id, start, end, fields, position_type)
         raise NotImplementedError
 
-    def poll_report(self, report_id: str, timeout: int = 600, step: int = 30):
+    def poll_report(self, report_id: str, timeout: int = 600, step: int = 30) -> ReportStatus:
         poll = True
+        timeout = 1800 if timeout > 1800 else timeout
+        step = 15 if step < 15 else step
         end = dt.datetime.now() + dt.timedelta(seconds=timeout)
 
         while poll and dt.datetime.now() <= end:
             try:
                 status = GsReportApi.get_report(report_id).status
-                if status not in set(ReportStatus.error, ReportStatus.cancelled, ReportStatus.done):
+                if status not in set([ReportStatus.error, ReportStatus.cancelled, ReportStatus.done]):
                     _logger.info(f'Report is {status} as of {dt.datetime.now().isoformat()}')
                     time.sleep(step)
                 else:
@@ -350,8 +334,10 @@ class PositionedEntity(metaclass=ABCMeta):
                     elif status == ReportStatus.cancelled:
                         _logger.info(f'Report {report_id} has been cancelled. Please reach out to the \
                                        Marquee team if you believe this is a mistake.')
+                        return status
                     else:
                         _logger.info(f'Report {report_id} is now complete')
+                        return status
             except Exception as err:
                 raise MqError(f'Could not fetch report status with error {err}')
 

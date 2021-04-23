@@ -879,6 +879,7 @@ class FactorHedgerResultPositions(Base):
         correlation: float = None,
         exposure_overlap_with_target: float = None,
         total_pnl: float = None,
+        turnover_percentage: float = None,
         name: str = None
     ):        
         super().__init__()
@@ -903,6 +904,7 @@ class FactorHedgerResultPositions(Base):
         self.correlation = correlation
         self.exposure_overlap_with_target = exposure_overlap_with_target
         self.total_pnl = total_pnl
+        self.turnover_percentage = turnover_percentage
         self.name = name
 
     @property
@@ -1116,6 +1118,16 @@ class FactorHedgerResultPositions(Base):
     def total_pnl(self, value: float):
         self._property_changed('total_pnl')
         self.__total_pnl = value        
+
+    @property
+    def turnover_percentage(self) -> float:
+        """Turnover value of the hedge with the turnover portfolio."""
+        return self.__turnover_percentage
+
+    @turnover_percentage.setter
+    def turnover_percentage(self, value: float):
+        self._property_changed('turnover_percentage')
+        self.__turnover_percentage = value        
 
 
 class HedgeBenchmark(Base):
@@ -1397,6 +1409,8 @@ class FactorHedgeParameters(Base):
         classification_constraints: Tuple[ClassificationConstraint, ...] = None,
         constraint_priority_settings: FactorHedgerConstraintPrioritySettings = None,
         comparisons: Tuple[HedgerComparison, ...] = None,
+        turnover_portfolio_id: str = None,
+        max_turnover_percentage: float = None,
         name: str = None
     ):        
         super().__init__()
@@ -1428,6 +1442,8 @@ class FactorHedgeParameters(Base):
         self.classification_constraints = classification_constraints
         self.constraint_priority_settings = constraint_priority_settings
         self.comparisons = comparisons
+        self.turnover_portfolio_id = turnover_portfolio_id
+        self.max_turnover_percentage = max_turnover_percentage
         self.name = name
 
     @property
@@ -1717,6 +1733,28 @@ class FactorHedgeParameters(Base):
     def comparisons(self, value: Tuple[HedgerComparison, ...]):
         self._property_changed('comparisons')
         self.__comparisons = value        
+
+    @property
+    def turnover_portfolio_id(self) -> str:
+        """Specifies the hedge, basket or a portfolio which is used to restrict the of the
+           optimized hedge with max turnover percentage."""
+        return self.__turnover_portfolio_id
+
+    @turnover_portfolio_id.setter
+    def turnover_portfolio_id(self, value: str):
+        self._property_changed('turnover_portfolio_id')
+        self.__turnover_portfolio_id = value        
+
+    @property
+    def max_turnover_percentage(self) -> float:
+        """Maximum value of turnover allowed for the hedge, relative to the turnover
+           portfolio."""
+        return self.__max_turnover_percentage
+
+    @max_turnover_percentage.setter
+    def max_turnover_percentage(self, value: float):
+        self._property_changed('max_turnover_percentage')
+        self.__max_turnover_percentage = value        
 
 
 class PerformanceHedgeParameters(Base):

@@ -41,6 +41,7 @@ class ChartLineDrawType(EnumBase, Enum):
     Bars = 'Bars'
     Candlesticks = 'Candlesticks'
     Lines = 'Lines'
+    _None = 'None'
     StepAfter = 'StepAfter'
     StepBefore = 'StepBefore'
     StepLinear = 'StepLinear'
@@ -54,6 +55,7 @@ class ChartLineType(EnumBase, Enum):
     
     """Line Type"""
 
+    Bubble = 'Bubble'
     Solid = 'Solid'
     Knotted = 'Knotted'
     Dashed = 'Dashed'
@@ -94,6 +96,56 @@ class ChartType(EnumBase, Enum):
     
     def __repr__(self):
         return self.value
+
+
+class ChartDisplaySettings(Base):
+        
+    """An object with the chart display settings."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        scatter_fill: bool = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.scatter_fill = scatter_fill
+        self.name = name
+
+    @property
+    def scatter_fill(self) -> bool:
+        """Scatter plot Fill Type."""
+        return self.__scatter_fill
+
+    @scatter_fill.setter
+    def scatter_fill(self, value: bool):
+        self._property_changed('scatter_fill')
+        self.__scatter_fill = value        
+
+
+class ChartLabelSettings(Base):
+        
+    """An object with the chart label settings."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        hide_last_value_labels: bool = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.hide_last_value_labels = hide_last_value_labels
+        self.name = name
+
+    @property
+    def hide_last_value_labels(self) -> bool:
+        """Whether to hide the last value label for all series on a chart."""
+        return self.__hide_last_value_labels
+
+    @hide_last_value_labels.setter
+    def hide_last_value_labels(self, value: bool):
+        self._property_changed('hide_last_value_labels')
+        self.__hide_last_value_labels = value        
 
 
 class ChartProperties(Base):
@@ -743,8 +795,10 @@ class Chart(Base):
         copy_from_id: str = None,
         version: int = None,
         draft_view_id: str = None,
+        label_settings: ChartLabelSettings = None,
         time_settings: ChartTime = None,
         x_axis_settings: XAxisSettings = None,
+        display_settings: ChartDisplaySettings = None,
         y_axes_settings: Tuple[YAxisSettings, ...] = None
     ):        
         super().__init__()
@@ -778,8 +832,10 @@ class Chart(Base):
         self.copy_from_id = copy_from_id
         self.version = version
         self.draft_view_id = draft_view_id
+        self.label_settings = label_settings
         self.time_settings = time_settings
         self.x_axis_settings = x_axis_settings
+        self.display_settings = display_settings
         self.y_axes_settings = y_axes_settings
 
     @property
@@ -1078,6 +1134,16 @@ class Chart(Base):
         self.__draft_view_id = value        
 
     @property
+    def label_settings(self) -> ChartLabelSettings:
+        """Common label settings for a chart."""
+        return self.__label_settings
+
+    @label_settings.setter
+    def label_settings(self, value: ChartLabelSettings):
+        self._property_changed('label_settings')
+        self.__label_settings = value        
+
+    @property
     def time_settings(self) -> ChartTime:
         """Start / end time settings with timezone"""
         return self.__time_settings
@@ -1096,6 +1162,16 @@ class Chart(Base):
     def x_axis_settings(self, value: XAxisSettings):
         self._property_changed('x_axis_settings')
         self.__x_axis_settings = value        
+
+    @property
+    def display_settings(self) -> ChartDisplaySettings:
+        """Display settings associated with the chart"""
+        return self.__display_settings
+
+    @display_settings.setter
+    def display_settings(self, value: ChartDisplaySettings):
+        self._property_changed('display_settings')
+        self.__display_settings = value        
 
     @property
     def y_axes_settings(self) -> Tuple[YAxisSettings, ...]:

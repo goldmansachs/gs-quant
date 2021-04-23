@@ -1,4 +1,4 @@
-﻿Priceable
+﻿gs\_quant.base.Priceable
 ========================
 
 .. currentmodule:: gs_quant.base
@@ -26,6 +26,7 @@
       ~Priceable.prop_type
       ~Priceable.properties
       ~Priceable.resolve
+      ~Priceable.to_json
    
    
 

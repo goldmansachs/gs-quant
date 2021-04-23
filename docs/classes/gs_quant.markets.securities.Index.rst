@@ -25,14 +25,15 @@
       ~Index.get_identifier
       ~Index.get_identifiers
       ~Index.get_latest_close_price
-      ~Index.get_latest_positions
+      ~Index.get_latest_position_set
       ~Index.get_marquee_id
-      ~Index.get_positions
+      ~Index.get_position_set_for_date
+      ~Index.get_position_sets
       ~Index.get_positions_data
-      ~Index.get_positions_for_date
       ~Index.get_return_type
       ~Index.get_type
       ~Index.get_unique_entity_key
+      ~Index.poll_report
    
    
 
@@ -43,5 +44,7 @@
    .. autosummary::
    
       ~Index.data_dimension
+      ~Index.id
+      ~Index.positioned_entity_type
    
    

@@ -205,6 +205,11 @@ def plot_measure_entity(entity_type: EntityType, dependencies: Optional[Iterable
     return decorator
 
 
+def requires_session(fn):
+    fn.requires_session = True
+    return fn
+
+
 def plot_method(fn):
     # Indicates that fn should be exported to plottool as a method.
     fn.plot_method = True

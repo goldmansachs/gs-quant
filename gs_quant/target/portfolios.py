@@ -21,6 +21,18 @@ from enum import Enum
 from gs_quant.base import Base, EnumBase, InstrumentBase, camel_case_translate, get_enum_value
 
 
+class ClientPositionFilter(EnumBase, Enum):    
+    
+    """Filter used to select client positions from GRDB"""
+
+    oeId = 'oeId'
+    clientAccounts = 'clientAccounts'
+    oeIdAndClientAccounts = 'oeIdAndClientAccounts'
+    
+    def __repr__(self):
+        return self.value
+
+
 class PortfolioType(EnumBase, Enum):    
     
     """Portfolio type differentiates the portfolio categorization"""
@@ -33,31 +45,6 @@ class PortfolioType(EnumBase, Enum):
     
     def __repr__(self):
         return self.value
-
-
-class GRDBPortfolioParameters(Base):
-        
-    """Parameters required for a GRDB portfolio."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        oe_id: str,
-        name: str = None
-    ):        
-        super().__init__()
-        self.oe_id = oe_id
-        self.name = name
-
-    @property
-    def oe_id(self) -> str:
-        """Marquee unique identifier"""
-        return self.__oe_id
-
-    @oe_id.setter
-    def oe_id(self, value: str):
-        self._property_changed('oe_id')
-        self.__oe_id = value        
 
 
 class SecDbBookDetail(Base):
@@ -94,6 +81,116 @@ class SecDbBookDetail(Base):
     def book_type(self, value: str):
         self._property_changed('book_type')
         self.__book_type = value        
+
+
+class GRDBPortfolioParameters(Base):
+        
+    """Parameters required for a GRDB portfolio."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        oe_id: str,
+        client_name: str,
+        increment: str,
+        risk_packages: Tuple[str, ...],
+        enabled: str,
+        is_live: str,
+        client_account_names: Tuple[str, ...] = None,
+        client_position_filter: Union[ClientPositionFilter, str] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.oe_id = oe_id
+        self.client_name = client_name
+        self.client_account_names = client_account_names
+        self.client_position_filter = client_position_filter
+        self.increment = increment
+        self.risk_packages = risk_packages
+        self.enabled = enabled
+        self.is_live = is_live
+        self.name = name
+
+    @property
+    def oe_id(self) -> str:
+        """Marquee unique identifier"""
+        return self.__oe_id
+
+    @oe_id.setter
+    def oe_id(self, value: str):
+        self._property_changed('oe_id')
+        self.__oe_id = value        
+
+    @property
+    def client_name(self) -> str:
+        """Client's name or user-friendly identifier"""
+        return self.__client_name
+
+    @client_name.setter
+    def client_name(self, value: str):
+        self._property_changed('client_name')
+        self.__client_name = value        
+
+    @property
+    def client_account_names(self) -> Tuple[str, ...]:
+        """List of SecDB Customer Book Names"""
+        return self.__client_account_names
+
+    @client_account_names.setter
+    def client_account_names(self, value: Tuple[str, ...]):
+        self._property_changed('client_account_names')
+        self.__client_account_names = value        
+
+    @property
+    def client_position_filter(self) -> Union[ClientPositionFilter, str]:
+        """Filter used to select client positions from GRDB"""
+        return self.__client_position_filter
+
+    @client_position_filter.setter
+    def client_position_filter(self, value: Union[ClientPositionFilter, str]):
+        self._property_changed('client_position_filter')
+        self.__client_position_filter = get_enum_value(ClientPositionFilter, value)        
+
+    @property
+    def increment(self) -> str:
+        """Generated Unique three character string"""
+        return self.__increment
+
+    @increment.setter
+    def increment(self, value: str):
+        self._property_changed('increment')
+        self.__increment = value        
+
+    @property
+    def risk_packages(self) -> Tuple[str, ...]:
+        """Metadata associated with the object. Provide an array of strings which will be
+           indexed for search and locating related objects"""
+        return self.__risk_packages
+
+    @risk_packages.setter
+    def risk_packages(self, value: Tuple[str, ...]):
+        self._property_changed('risk_packages')
+        self.__risk_packages = value        
+
+    @property
+    def enabled(self) -> str:
+        """Gives information on whether risks are run for the portfolio"""
+        return self.__enabled
+
+    @enabled.setter
+    def enabled(self, value: str):
+        self._property_changed('enabled')
+        self.__enabled = value        
+
+    @property
+    def is_live(self) -> str:
+        """Gives information on whether alerts are enabled for the portfolio"""
+        return self.__is_live
+
+    @is_live.setter
+    def is_live(self, value: str):
+        self._property_changed('is_live')
+        self.__is_live = value        
 
 
 class Portfolio(Base):

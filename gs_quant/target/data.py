@@ -42,6 +42,27 @@ class DevelopmentStatus(EnumBase, Enum):
         return self.value
 
 
+class FieldFormat(EnumBase, Enum):    
+    
+    """Format to apply on field validation. Currently supports a subset of built-in
+       formats (from JSON schema specification)."""
+
+    date = 'date'
+    date_time = 'date-time'
+    
+    def __repr__(self):
+        return self.value
+
+
+class MarketDataFrequency(EnumBase, Enum):    
+    
+    Real_Time = 'Real Time'
+    End_Of_Day = 'End Of Day'
+    
+    def __repr__(self):
+        return self.value
+
+
 class MarketDataMeasure(EnumBase, Enum):    
     
     Last = 'Last'
@@ -207,6 +228,43 @@ class DataSetCondition(Base):
         self.__operator = value        
 
 
+class DataSetCoverageProperties(Base):
+        
+    """Dataset coverage properties."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        prefixes: Tuple[str, ...] = None,
+        prefix_type: str = 'SYMBOL',
+        name: str = None
+    ):        
+        super().__init__()
+        self.prefixes = prefixes
+        self.prefix_type = prefix_type
+        self.name = name
+
+    @property
+    def prefixes(self) -> Tuple[str, ...]:
+        """Prefixes of the dataset coverage"""
+        return self.__prefixes
+
+    @prefixes.setter
+    def prefixes(self, value: Tuple[str, ...]):
+        self._property_changed('prefixes')
+        self.__prefixes = value        
+
+    @property
+    def prefix_type(self) -> str:
+        """The type of the coverage prefixes."""
+        return self.__prefix_type
+
+    @prefix_type.setter
+    def prefix_type(self, value: str):
+        self._property_changed('prefix_type')
+        self.__prefix_type = value        
+
+
 class DataSetDefaults(Base):
         
     """Default settings."""
@@ -254,6 +312,202 @@ class DataSetDefaults(Base):
     def delay_seconds(self, value: float):
         self._property_changed('delay_seconds')
         self.__delay_seconds = value        
+
+
+class DataSetFieldEntityClassifications(Base):
+        
+    """Classifications for a Field Entity."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        groups: Tuple[str, ...] = None,
+        data_set_id: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.groups = groups
+        self.data_set_id = data_set_id
+        self.name = name
+
+    @property
+    def groups(self) -> Tuple[str, ...]:
+        """Logical group(s) for the field."""
+        return self.__groups
+
+    @groups.setter
+    def groups(self, value: Tuple[str, ...]):
+        self._property_changed('groups')
+        self.__groups = value        
+
+    @property
+    def data_set_id(self) -> str:
+        """Unique id of dataset."""
+        return self.__data_set_id
+
+    @data_set_id.setter
+    def data_set_id(self, value: str):
+        self._property_changed('data_set_id')
+        self.__data_set_id = value        
+
+
+class DataSetFieldEntityNumberParameters(Base):
+        
+    """Parameters for field 'type' of 'number'."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        maximum: float = 1000000000,
+        minimum: float = -1000000000,
+        name: str = None
+    ):        
+        super().__init__()
+        self.maximum = maximum
+        self.minimum = minimum
+        self.name = name
+
+    @property
+    def maximum(self) -> float:
+        """Maximum value of the field."""
+        return self.__maximum
+
+    @maximum.setter
+    def maximum(self, value: float):
+        self._property_changed('maximum')
+        self.__maximum = value        
+
+    @property
+    def minimum(self) -> float:
+        """Minimum value of the field."""
+        return self.__minimum
+
+    @minimum.setter
+    def minimum(self, value: float):
+        self._property_changed('minimum')
+        self.__minimum = value        
+
+
+class EntityMetadata(Base):
+        
+    """Contains read-only metadata for internal users to view."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        created_by_id: str = None,
+        created_time: datetime.datetime = None,
+        last_updated_by_id: str = None,
+        last_updated_time: datetime.datetime = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.created_by_id = created_by_id
+        self.created_time = created_time
+        self.last_updated_by_id = last_updated_by_id
+        self.last_updated_time = last_updated_time
+        self.name = name
+
+    @property
+    def created_by_id(self) -> str:
+        """Unique identifier of user who created the object."""
+        return self.__created_by_id
+
+    @created_by_id.setter
+    def created_by_id(self, value: str):
+        self._property_changed('created_by_id')
+        self.__created_by_id = value        
+
+    @property
+    def created_time(self) -> datetime.datetime:
+        """Time created. ISO 8601 formatted string."""
+        return self.__created_time
+
+    @created_time.setter
+    def created_time(self, value: datetime.datetime):
+        self._property_changed('created_time')
+        self.__created_time = value        
+
+    @property
+    def last_updated_by_id(self) -> str:
+        """Unique identifier of user who last updated the object."""
+        return self.__last_updated_by_id
+
+    @last_updated_by_id.setter
+    def last_updated_by_id(self, value: str):
+        self._property_changed('last_updated_by_id')
+        self.__last_updated_by_id = value        
+
+    @property
+    def last_updated_time(self) -> datetime.datetime:
+        """Timestamp of when the object was last updated."""
+        return self.__last_updated_time
+
+    @last_updated_time.setter
+    def last_updated_time(self, value: datetime.datetime):
+        self._property_changed('last_updated_time')
+        self.__last_updated_time = value        
+
+
+class ErrorInfo(Base):
+        
+    """A standard JSON-formatted error response."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        status_code: int,
+        reason_phrase: str,
+        title: str = None,
+        messages: Tuple[str, ...] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.status_code = status_code
+        self.reason_phrase = reason_phrase
+        self.title = title
+        self.messages = messages
+        self.name = name
+
+    @property
+    def status_code(self) -> int:
+        """HTTP response status code."""
+        return self.__status_code
+
+    @status_code.setter
+    def status_code(self, value: int):
+        self._property_changed('status_code')
+        self.__status_code = value        
+
+    @property
+    def reason_phrase(self) -> str:
+        """Reason for the error."""
+        return self.__reason_phrase
+
+    @reason_phrase.setter
+    def reason_phrase(self, value: str):
+        self._property_changed('reason_phrase')
+        self.__reason_phrase = value        
+
+    @property
+    def title(self) -> str:
+        """Title of the error response."""
+        return self.__title
+
+    @title.setter
+    def title(self, value: str):
+        self._property_changed('title')
+        self.__title = value        
+
+    @property
+    def messages(self) -> Tuple[str, ...]:
+        """Accompanying array of messages."""
+        return self.__messages
+
+    @messages.setter
+    def messages(self, value: Tuple[str, ...]):
+        self._property_changed('messages')
+        self.__messages = value        
 
 
 class FieldLinkSelector(Base):
@@ -819,6 +1073,56 @@ class DataSetDelay(Base):
     def history_up_to_months(self, value: float):
         self._property_changed('history_up_to_months')
         self.__history_up_to_months = value        
+
+
+class DataSetFieldEntityStringParameters(Base):
+        
+    """Parameters for field 'type' of 'string'."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        pattern: str = '^[\w ]{1,256}$',
+        enum: Tuple[str, ...] = None,
+        format_: Union[FieldFormat, str] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.pattern = pattern
+        self.enum = enum
+        self.__format = get_enum_value(FieldFormat, format_)
+        self.name = name
+
+    @property
+    def pattern(self) -> str:
+        """Regular Expression pattern to validate the field value."""
+        return self.__pattern
+
+    @pattern.setter
+    def pattern(self, value: str):
+        self._property_changed('pattern')
+        self.__pattern = value        
+
+    @property
+    def enum(self) -> Tuple[str, ...]:
+        """List of possible values the field can take on."""
+        return self.__enum
+
+    @enum.setter
+    def enum(self, value: Tuple[str, ...]):
+        self._property_changed('enum')
+        self.__enum = value        
+
+    @property
+    def format(self) -> Union[FieldFormat, str]:
+        """Format to apply on field validation. Currently supports a subset of built-in
+           formats (from JSON schema specification)."""
+        return self.__format
+
+    @format.setter
+    def format(self, value: Union[FieldFormat, str]):
+        self._property_changed('format')
+        self.__format = get_enum_value(FieldFormat, value)        
 
 
 class DataSetParameters(Base):
@@ -2059,6 +2363,140 @@ class DataQuery(Base):
         self.__use_project_processor = value        
 
 
+class DataSetFieldEntity(Base):
+        
+    """Decorator object on com.gs.marquee.api.the field to allow fields to be written
+       to Elastic."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        type_: str,
+        id_: str = None,
+        classifications: DataSetFieldEntityClassifications = None,
+        unique: bool = False,
+        field_java_type: str = None,
+        parameters: dict = None,
+        entitlements: Entitlements = None,
+        metadata: EntityMetadata = None
+    ):        
+        super().__init__()
+        self.__id = id_
+        self.name = name
+        self.description = description
+        self.__type = type_
+        self.classifications = classifications
+        self.unique = unique
+        self.field_java_type = field_java_type
+        self.parameters = parameters
+        self.entitlements = entitlements
+        self.metadata = metadata
+
+    @property
+    def id(self) -> str:
+        """Marquee unique identifier"""
+        return self.__id
+
+    @id.setter
+    def id(self, value: str):
+        self._property_changed('id')
+        self.__id = value        
+
+    @property
+    def name(self) -> str:
+        """Name of the field in camelCase."""
+        return self.__name
+
+    @name.setter
+    def name(self, value: str):
+        self._property_changed('name')
+        self.__name = value        
+
+    @property
+    def description(self) -> str:
+        """Description of the field."""
+        return self.__description
+
+    @description.setter
+    def description(self, value: str):
+        self._property_changed('description')
+        self.__description = value        
+
+    @property
+    def type(self) -> str:
+        """Type of the field."""
+        return self.__type
+
+    @type.setter
+    def type(self, value: str):
+        self._property_changed('type')
+        self.__type = value        
+
+    @property
+    def classifications(self) -> DataSetFieldEntityClassifications:
+        """Classifications for a Field Entity."""
+        return self.__classifications
+
+    @classifications.setter
+    def classifications(self, value: DataSetFieldEntityClassifications):
+        self._property_changed('classifications')
+        self.__classifications = value        
+
+    @property
+    def unique(self) -> bool:
+        """If 'TRUE', only one field with this name exists."""
+        return self.__unique
+
+    @unique.setter
+    def unique(self, value: bool):
+        self._property_changed('unique')
+        self.__unique = value        
+
+    @property
+    def field_java_type(self) -> str:
+        """For advanced users to specify the Java Class of the field as the service reads
+           it. Otherwise, the service assumes some default based on the field
+           'type'."""
+        return self.__field_java_type
+
+    @field_java_type.setter
+    def field_java_type(self, value: str):
+        self._property_changed('field_java_type')
+        self.__field_java_type = value        
+
+    @property
+    def parameters(self) -> dict:
+        """Parameters for the field."""
+        return self.__parameters
+
+    @parameters.setter
+    def parameters(self, value: dict):
+        self._property_changed('parameters')
+        self.__parameters = value        
+
+    @property
+    def entitlements(self) -> Entitlements:
+        """Defines the entitlements of a given resource."""
+        return self.__entitlements
+
+    @entitlements.setter
+    def entitlements(self, value: Entitlements):
+        self._property_changed('entitlements')
+        self.__entitlements = value        
+
+    @property
+    def metadata(self) -> EntityMetadata:
+        """Contains read-only metadata for internal users to view."""
+        return self.__metadata
+
+    @metadata.setter
+    def metadata(self, value: EntityMetadata):
+        self._property_changed('metadata')
+        self.__metadata = value        
+
+
 class DataSetTransformation(Base):
         
     """Transform the Dataset output. Can be used with or without certain conditions."""
@@ -2550,6 +2988,32 @@ class DataSetDimensions(Base):
         self.__entity_dimension = value        
 
 
+class DataSetFieldEntityBulkRequest(Base):
+        
+    """Bulk Request object for DataSetFieldEntity"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        fields: Tuple[DataSetFieldEntity, ...],
+        name: str = None
+    ):        
+        super().__init__()
+        self.fields = fields
+        self.name = name
+
+    @property
+    def fields(self) -> Tuple[DataSetFieldEntity, ...]:
+        """Decorator object on com.gs.marquee.api.the field to allow fields to be written
+           to Elastic."""
+        return self.__fields
+
+    @fields.setter
+    def fields(self, value: Tuple[DataSetFieldEntity, ...]):
+        self._property_changed('fields')
+        self.__fields = value        
+
+
 class EntityFilter(Base):
         
     """Filter on entities."""
@@ -2691,6 +3155,7 @@ class DataSetEntity(Base):
         query_processors: ProcessorEntity = None,
         parameters: DataSetParameters = None,
         dimensions: DataSetDimensions = None,
+        coverage_properties: DataSetCoverageProperties = None,
         defaults: DataSetDefaults = None,
         filters: DataSetFilters = None,
         transformations: Tuple[DataSetTransformation, ...] = None,
@@ -2716,6 +3181,7 @@ class DataSetEntity(Base):
         self.query_processors = query_processors
         self.parameters = parameters
         self.dimensions = dimensions
+        self.coverage_properties = coverage_properties
         self.defaults = defaults
         self.filters = filters
         self.transformations = transformations
@@ -2873,6 +3339,16 @@ class DataSetEntity(Base):
     def dimensions(self, value: DataSetDimensions):
         self._property_changed('dimensions')
         self.__dimensions = value        
+
+    @property
+    def coverage_properties(self) -> DataSetCoverageProperties:
+        """Dataset coverage properties."""
+        return self.__coverage_properties
+
+    @coverage_properties.setter
+    def coverage_properties(self, value: DataSetCoverageProperties):
+        self._property_changed('coverage_properties')
+        self.__coverage_properties = value        
 
     @property
     def defaults(self) -> DataSetDefaults:

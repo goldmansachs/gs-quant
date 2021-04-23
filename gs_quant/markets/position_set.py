@@ -16,15 +16,16 @@ under the License.
 import datetime
 import logging
 import pandas as pd
-from typing import Dict, List
+from typing import Dict, List, Union
 
 from pydash import get
 
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.common import DateLimit
 from gs_quant.errors import MqValueError
-from gs_quant.target.common import Position as TargetPosition
-from gs_quant.target.common import PositionSet as TargetPositionSet
+from gs_quant.target.common import Position as CommonPosition
+from gs_quant.target.common import PositionSet as CommonPositionSet
+from gs_quant.target.indices import PositionPriceInput
 
 
 _logger = logging.getLogger(__name__)
@@ -37,13 +38,26 @@ class Position:
                  quantity: float = None,
                  name: str = None,
                  asset_id: str = None):
-        self.identifier = identifier
-        self.weight = weight
-        self.quantity = quantity
-        self.name = name
-        self.asset_id = asset_id
+        self.__identifier = identifier
+        self.__weight = weight
+        self.__quantity = quantity
+        self.__name = name
+        self.__asset_id = asset_id
         if asset_id is None:
             self.__resolve_identifier(identifier)
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, Position):
+            return False
+        for prop in ['asset_id', 'weight', 'quantity']:
+            slf = get(self, prop)
+            oth = get(other, prop)
+            if not (slf is None and oth is None) or slf == oth:
+                return False
+        return True
+
+    def __hash__(self):
+        return hash(self.asset_id) ^ hash(self.identifier)
 
     @property
     def identifier(self) -> str:
@@ -90,16 +104,18 @@ class Position:
                              quantity=self.quantity, name=self.name, asset_id=self.asset_id)
         return {k: v for k, v in position_dict.items() if v is not None}
 
-    def to_target(self) -> TargetPosition:
+    def to_target(self, common: bool = True) -> Union[CommonPosition, PositionPriceInput]:
         """ Returns Postion type defined in target file for API payloads """
-        return TargetPosition(self.asset_id, quantity=self.quantity, weight=self.weight)
+        if common:
+            return CommonPosition(self.asset_id, quantity=self.quantity, weight=self.weight)
+        return PositionPriceInput(self.asset_id, quantity=self.quantity, weight=self.weight)
 
     def __resolve_identifier(self, identifier: str) -> Dict:
         response = GsAssetApi.resolve_assets(identifier=[identifier], fields=['id', 'name'], limit=1)[identifier]
         if len(response) == 0:
             raise MqValueError(f'Asset could not be found using identifier {identifier}')
-        self.name = get(response, '0.name')
-        self.asset_id = get(response, '0.id')
+        self.__name = get(response, '0.name')
+        self.__asset_id = get(response, '0.id')
 
 
 class PositionSet:
@@ -142,22 +158,34 @@ class PositionSet:
         positions = [p.as_dict() for p in self.positions]
         return pd.DataFrame(positions)
 
+    def equalize_position_weights(self):
+        """ Assigns equal weight to each position in position set """
+        weight = 1 / len(self.positions)
+        equally_weighted_positions = []
+        for p in self.positions:
+            p.weight = weight
+            p.quantity = None
+            equally_weighted_positions.append(p)
+        self.positions = equally_weighted_positions
+
     def to_frame(self) -> pd.DataFrame:
         """ Retrieve formatted position set """
         positions = []
         for p in self.positions:
-            position = dict(date=self.date.isoformat(), divisor=self.divisor)
+            position = dict(date=self.date.isoformat())
+            if self.divisor is not None:
+                position.update(dict(divisor=self.divisor))
             position.update(p.as_dict())
             positions.append(position)
         return pd.DataFrame(positions)
 
-    def to_target(self) -> TargetPositionSet:
+    def to_target(self, common: bool = True) -> Union[CommonPositionSet, List[PositionPriceInput]]:
         """ Returns PostionSet type defined in target file for API payloads """
-        positions = tuple(p.to_target() for p in self.positions)
-        return TargetPositionSet(positions, self.date)
+        positions = tuple(p.to_target(common) for p in self.positions)
+        return CommonPositionSet(positions, self.date) if common else list(positions)
 
     @classmethod
-    def from_target(cls, position_set: TargetPositionSet):
+    def from_target(cls, position_set: CommonPositionSet):
         """ Create PostionSet instance from PostionSet type defined in target file """
         positions = position_set.positions
         mqids = [position.asset_id for position in positions]
@@ -172,15 +200,16 @@ class PositionSet:
 
     @classmethod
     def from_list(cls, positions: List[str], date: datetime.date = DateLimit.TODAY.value):
-        """ Create PostionSet instance from a list of identifiers """
+        """ Create equally-weighted PostionSet instance from a list of identifiers """
         id_map = cls.__resolve_identifiers(positions)
         converted_positions = []
+        weight = 1 / len(positions)
 
         for p in positions:
             identifier = get(p, 'identifier')
             asset = get(id_map, identifier)
             position = Position(identifier=identifier, asset_id=get(asset, 'id'),
-                                name=get(asset, 'name'))
+                                name=get(asset, 'name'), weight=weight)
             converted_positions.append(position)
         return cls(converted_positions, date)
 
@@ -188,7 +217,7 @@ class PositionSet:
     def from_dicts(cls, positions: List[Dict], date: datetime.date = DateLimit.TODAY.value):
         """ Create PostionSet instance from a list of position-object-like dictionaries """
         positions_df = pd.DataFrame(positions)
-        return cls.from_frame(positions_df)
+        return cls.from_frame(positions_df, date)
 
     @classmethod
     def from_frame(cls, positions: pd.DataFrame, date: datetime.date = DateLimit.TODAY.value):
@@ -196,13 +225,17 @@ class PositionSet:
         positions.columns = positions.columns.str.lower()
         positions = positions[~positions['identifier'].isnull()]
         id_map = cls.__resolve_identifiers(identifiers=positions['identifier'].to_list())
+        equalize = not ('quantity' in positions.columns or 'weight' in positions.columns)
+        equal_weight = 1 / len(positions)
         converted_positions = []
 
         for i, row in positions.iterrows():
             identifier = get(row, 'identifier')
             asset = get(id_map, identifier)
+            weight = get(row, 'weight') if not equalize else equal_weight
+            quantity = get(row, 'quantity') if not equalize else None
             position = Position(identifier=identifier, asset_id=get(asset, 'id'), name=get(asset, 'name'),
-                                weight=get(row, 'weight'), quantity=get(row, 'quantity'))
+                                weight=weight, quantity=quantity)
             converted_positions.append(position)
         return cls(converted_positions, date)
 

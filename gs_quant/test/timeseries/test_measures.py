@@ -751,7 +751,7 @@ def mock_fx_spot_fwd_2y(q):
     return df
 
 
-def mock_fx_correlation(q):
+def mock_fx_correlation(*args, **kwargs):
     d = pd.DataFrame({
         'impliedVolatility': [7.943208, 8.042599, 7.875325, 8.304180, 8.353483, 8.268724, 8.267971, 8.395843, 8.355239],
         'bbid': ['EURUSD', 'EURUSD', 'EURUSD', 'EURJPY', 'EURJPY', 'EURJPY', 'USDJPY', 'USDJPY', 'USDJPY'],
@@ -1334,6 +1334,43 @@ def test_impl_corr_n():
     actual = tm.implied_correlation(spx, '1m', tm.EdrDataReference.DELTA_CALL, 0.5, 50, datetime.date(2020, 8, 31),
                                     source='PlotTool')
     pd.testing.assert_series_equal(actual, expected, check_names=False)
+    replace.restore()
+
+
+def test_implied_corr_basket():
+    replace = Replacer()
+
+    dates = [
+        datetime.datetime(2021, 1, 1),
+        datetime.datetime(2021, 1, 2),
+        datetime.datetime(2021, 1, 3),
+        datetime.datetime(2021, 1, 4),
+        datetime.datetime(2021, 1, 5),
+        datetime.datetime(2021, 1, 6),
+    ]
+
+    x = pd.DataFrame({'impliedVolatility': [0.1, 0.11, 0.12, 0.13, 0.14, 0.15]}, index=dates)
+    x['assetId'] = 'MA4B66MW5E27U9VBB94'
+    y = pd.DataFrame({'impliedVolatility': [0.2, 0.21, 0.22, 0.23, 0.24, 0.25]}, index=dates)
+    y['assetId'] = 'MA4B66MW5E27UAL9SUX'
+    z = pd.DataFrame({'impliedVolatility': [0.13, 0.21, 0.3, 0.31, 0.23, 0.24]}, index=dates)
+    z['assetId'] = 'MA4B66MW5E27U8P32SB'
+    implied_vol = x.append(y).append(z)
+    mock_data = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    mock_data.return_value = implied_vol
+
+    mock_asset = replace('gs_quant.timeseries.backtesting.GsAssetApi.get_many_assets_data', Mock())
+    mock_asset.return_value = [{'id': 'MA4B66MW5E27U9VBB94'}, {'id': 'MA4B66MW5E27UAL9SUX'}]
+
+    spx = Index('MA4B66MW5E27U8P32SB', AssetClass.Equity, 'SPX')
+    a_basket = tm.Basket(['AAPL UW', 'MSFT UW'], [0.1, 0.9])
+    actual = tm.implied_correlation_with_basket(spx, '1y', tm.EdrDataReference.DELTA_PUT, 25, a_basket)
+    expected = pd.Series([-433.33333, 198.60510, 1065.90909, 986.28763, 100.0, 100.0], index=dates)
+    assert_series_equal(actual, expected)
+
+    with pytest.raises(NotImplementedError):
+        tm.implied_correlation_with_basket(spx, '1y', tm.EdrDataReference.DELTA_PUT, 25, a_basket, real_time=True)
+
     replace.restore()
 
 
@@ -3708,7 +3745,7 @@ def test_spot_carry():
         assert_series_equal(df['3m'], pd.Series(actual_3m, name='3m'))
 
         # annualized
-        actual_3m_ann = tm.spot_carry(mock, '3m', annualize=True)
+        actual_3m_ann = tm.spot_carry(mock, '3m', tm.FXSpotCarry.ANNUALIZED)
         assert_series_equal(df['3m_ann'], pd.Series(actual_3m_ann, name='3m_ann'))
 
         # not supported
@@ -3728,8 +3765,33 @@ def test_spot_carry():
 def test_fx_implied_correlation():
     replace = Replacer()
 
-    EURUSD = Cross('MAA0NE9QX2ABETG6', 'USD/EUR')
-    USDEUR = Cross('MAQB05GD31BA5HWV', 'EUR/USD')
+    e1 = {'last_updated_time': '2021-02-03T15:11:06.409Z', 'owner_id': 'qwerty',
+          'classifications': {}, 'description': 'Europe Euro to United States Dollar',
+          'last_updated_by_id': 'qwerty', 'id': 'MAA0NE9QX2ABETG6', 'listed': True,
+          'created_time': '2017-06-16T13:59:23.617Z', 'exchange': '', 'parameters': {}, 'type': 'Cross',
+          'entitlements': {'edit': ['guid:qwerty'],
+                           'view': ['internal', 'guid:qwerty', 'external'],
+                           'admin': ['guid:qwerty']}, 'name': 'EURUSD',
+          'region': 'Global', 'styles': [], 'short_name': 'EURUSD',
+          'identifiers': [{'type': 'SECNAME', 'value': 'USD/EUR'}, {'type': 'BID', 'value': 'EURUSD'},
+                          {'type': 'MDAPI', 'value': 'USD/EUR'}, {'type': 'CROSS', 'value': 'USD/EUR'}],
+          'rank': 1.0, 'asset_class': 'FX',
+          'xref': {'bbid': 'EURUSD', 'cross': 'USD/EUR', 'secName': 'USD/EUR', 'mdapi': 'USD/EUR'},
+          'currency': 'USD', 'tags': ['USDEUR', 'EURUSD', 'Execution'],
+          'created_by_id': 'qwerty'}
+    e2 = {'last_updated_time': '2021-02-03T15:05:20.993Z', 'owner_id': 'azerty',
+          'classifications': {}, 'description': 'United States Dollar to Europe Euro',
+          'last_updated_by_id': 'azerty', 'id': 'MAQB05GD31BA5HWV', 'listed': True,
+          'created_time': '2017-06-16T13:52:21.396Z', 'exchange': '', 'parameters': {}, 'type': 'Cross',
+          'entitlements': {'edit': ['guid:azerty'],
+                           'view': ['internal', 'guid:azerty', 'external'],
+                           'admin': ['guid:azerty']}, 'name': 'USDEUR', 'region': 'Global',
+          'styles': [], 'short_name': 'USDEUR', 'rank': 1.0,
+          'asset_class': 'FX', 'xref': {'bbid': 'USDEUR', 'cross': 'EUR/USD', 'secName': 'EUR/USD', 'mdapi': 'EUR/USD'},
+          'currency': 'EUR', 'tags': ['EURUSD', 'USDEUR'], 'created_by_id': 'azerty'}
+
+    EURUSD = Cross('MAA0NE9QX2ABETG6', 'USD/EUR', entity=e1)
+    USDEUR = Cross('MAQB05GD31BA5HWV', 'EUR/USD', entity=e2)
     USDJPY = Cross('MATGYV0J9MPX534Z', 'JPY/USD')
     JPYUSD = Cross('MAYJPCVVF2RWXCES', 'USD/JPY')
     EURGBP = Cross('MA3AMDKY4YJ83G1E', 'GBP/EUR')
@@ -3789,11 +3851,17 @@ def test_fx_implied_correlation():
         assert_series_equal(df['USDEUR JPYUSD'], pd.Series(q_4, name='USDEUR JPYUSD'))
         assert_series_equal(df['USDJPY EURUSD'], pd.Series(q_5, name='USDJPY EURUSD'))
 
+        replace('gs_quant.timeseries.measures._market_data_timed', lambda q, request_id=None: pd.DataFrame())
+        assert tm.fx_implied_correlation(USDJPY, EURUSD, '3m').empty
+
         # not supported
         with pytest.raises(NotImplementedError):
             tm.fx_implied_correlation(EURUSD, EURGBP, '3m', real_time=True)
         with pytest.raises(MqError):
             tm.fx_implied_correlation(USDJPY, EURGBP, '3m', real_time=False)
+        with pytest.raises(MqError):
+            mock_spx = Index('MA890', AssetClass.Equity, 'SPX')
+            tm.fx_implied_correlation(USDJPY, mock_spx, '3m', real_time=False)
 
     replace.restore()
 

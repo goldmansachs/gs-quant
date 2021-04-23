@@ -14,32 +14,40 @@ specific language governing permissions and limitations
 under the License.
 """
 
+import logging
 from typing import List, Dict
 
 from gs_quant.analytics.common import TYPE, DATA_ROW, PROCESSOR, REFERENCE, PARAMETER, ENTITY_ID, ENTITY_TYPE
 from gs_quant.entities.entity import Entity
-from gs_quant.errors import MqValueError
+from gs_quant.errors import MqValueError, MqRequestError
+
+_logger = logging.getLogger(__name__)
 
 
 def is_of_builtin_type(obj):
     return type(obj).__module__ in ('builtins', '__builtin__')
 
 
-def resolve_entities(reference_list: List[Dict]):
+def resolve_entities(reference_list: List[Dict], entity_cache: Dict = None):
     """
     Utility function to fetch entities (assets, countries, etc.). Allows us to split functionality that requires data
     fetching.
     :param reference_list: A list of entity references (entityId and entityType dictionaries)
+    :param entity_cache: Map of entity id to the entity for external cache management
     :return: None
     """
-    entity_cache = {}
+    entity_cache = entity_cache or {}
     for reference in reference_list:
-        # Create a hash key of the entity data so we don't fetch the same entity multiple times.
-        key = hash((reference.get(ENTITY_ID), reference.get(ENTITY_TYPE)))
-        if key in entity_cache:
-            entity = entity_cache[key]
+        # Check if the entity is in the cache
+        entity_id = reference.get(ENTITY_ID)
+        if entity_id in entity_cache:
+            entity = entity_cache[entity_id]
         else:
-            entity = Entity.get(reference.get(ENTITY_ID), 'MQID', reference.get(ENTITY_TYPE))
+            try:
+                entity = Entity.get(entity_id, 'MQID', reference.get(ENTITY_TYPE))
+            except MqRequestError as e:
+                _logger.warning(e)
+                entity = entity_id
 
         if reference[TYPE] == DATA_ROW:
             # If the reference is for a data row, simply set the entity of the row.

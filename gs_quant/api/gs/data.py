@@ -36,7 +36,7 @@ from gs_quant.session import GsSession
 from gs_quant.target.common import MarketDataVendor, PricingLocation
 from gs_quant.target.coordinates import MDAPIDataBatchResponse, MDAPIDataQuery, MDAPIDataQueryResponse, MDAPIQueryField
 from gs_quant.target.data import DataQuery, DataQueryResponse
-from gs_quant.target.data import DataSetEntity
+from gs_quant.target.data import DataSetEntity, DataSetFieldEntity
 from .assets import GsIdType
 from ...target.assets import EntityQuery, FieldFilterMap
 
@@ -55,6 +55,7 @@ class QueryType(Enum):
     SWAPTION_PREMIUM = "Swaption Premium"
     SWAPTION_ANNUITY = "Swaption Annuity"
     BASIS_SWAP_RATE = "Basis Swap Rate"
+    XCCY_SWAP_SPREAD = "Xccy Swap Spread"
     SWAPTION_VOL = "Swaption Vol"
     MIDCURVE_VOL = "Midcurve Vol"
     CAP_FLOOR_VOL = "Cap Floor Vol"
@@ -128,6 +129,10 @@ class QueryType(Enum):
     ANNUAL_RISK = "Annual Risk"
     VOLATILITY = "Volatility"
     CORRELATION = "Correlation"
+    OIS_XCCY = "Ois Xccy"
+    OIS_XCCY_EX_SPIKE = "Ois Xccy Ex Spike"
+    USD_OIS = "Usd Ois"
+    NON_USD_OIS = "Non Usd Ois"
 
 
 class GsDataApi(DataApi):
@@ -669,6 +674,87 @@ class GsDataApi(DataApi):
             return df
         else:
             return pd.DataFrame({})
+
+    @classmethod
+    def get_dataset_fields(
+            cls,
+            ids: Union[str, List[str]] = None,
+            names: Union[str, List[str]] = None,
+            limit: int = 10,
+    ) -> Union[Tuple[DataSetFieldEntity, ...], Tuple[dict, ...]]:
+        """
+        Get many dataset fields
+
+        :param ids: ID(s) of the field(s)
+        :param names: Name(s) of the field(s)
+        :param limit: Limit on the number of results returned. Default: 10
+        :return: Tuple of DataSetFieldEntity
+
+        **Examples**
+
+        >>> from gs_quant.api.gs.data import GsDataApi
+        >>> fields = GsDataApi.get_dataset_fields(names = ['adjustedClosePrice', 'adjustedOpenPrice'])
+        """
+
+        where = dict(filter(lambda item: item[1] is not None, dict(id=ids, name=names).items()))
+        response = GsSession.current._post('/data/fields/query',
+                                           payload={'where': where, 'limit': limit},
+                                           cls=DataSetFieldEntity)
+        return response['results']
+
+    @classmethod
+    def create_dataset_fields(
+            cls,
+            fields: List[DataSetFieldEntity]
+    ) -> Union[Tuple[DataSetFieldEntity, ...], Tuple[dict, ...]]:
+        """
+        Create many dataset fields
+
+        :param fields: Fields to be created
+        :return: Tuple of DataSetFieldEntity
+
+        **Examples**
+
+        >>> from gs_quant.api.gs.data import GsDataApi
+        >>> from gs_quant.target.data import DataSetFieldEntity
+        >>> fields = [
+        >>>     DataSetFieldEntity(name='price', type_='number', description='Price of the instrument.'),
+        >>>     DataSetFieldEntity(name='strikeReference', type_='string', description='Reference for strike level.',
+        >>>                        parameters={'enum': ['delta', 'spot', 'forward', 'normalized']})
+        >>> ]
+        >>> GsDataApi.create_dataset_fields(fields)
+        """
+        params = {'fields': fields}
+        response = GsSession.current._post('/data/fields/bulk', payload=params, cls=DataSetFieldEntity)
+        return response['results']
+
+    @classmethod
+    def update_dataset_fields(
+            cls,
+            fields: List[DataSetFieldEntity]
+    ) -> Union[Tuple[DataSetFieldEntity, ...], Tuple[dict, ...]]:
+        """
+        Update many dataset fields
+
+        :param fields: Fields to be created
+        :return: Tuple of DataSetFieldEntity
+
+        **Examples**
+
+        >>> from gs_quant.api.gs.data import GsDataApi
+        >>> from gs_quant.target.data import DataSetFieldEntity
+        >>> fields = [
+        >>>     DataSetFieldEntity(id='FIMFMQ0P19AZ2XK9', name='price', type_='number',
+        >>>                        description='Price of the instrument.'),
+        >>>     DataSetFieldEntity(id='FI7EFDC3SQQBMDX8', name='strikeReference', type_='string',
+        >>>                        description='Reference for strike level.',
+        >>>                        parameters={'enum': ['delta', 'spot', 'forward', 'normalized']})
+        >>> ]
+        >>> GsDataApi.update_dataset_fields(fields)
+        """
+        params = {'fields': fields}
+        response = GsSession.current._put('/data/fields/bulk', payload=params, cls=DataSetFieldEntity)
+        return response['results']
 
 
 class MarketDataResponseFrame(pd.DataFrame):
