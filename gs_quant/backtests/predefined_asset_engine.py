@@ -24,7 +24,7 @@ from gs_quant.backtests.execution_engine import SimulatedExecutionEngine
 from gs_quant.backtests.core import ValuationMethod
 from gs_quant.backtests.data_sources import DataManager
 from gs_quant.backtests.order import *
-from gs_quant.datetime import date_range
+from gs_quant.datetime import date_range, is_business_day, prev_business_date, business_day_offset
 from collections import deque
 from pytz import timezone
 from functools import reduce
@@ -89,9 +89,9 @@ class PredefinedAssetEngine(BacktestBaseEngine):
 
     def __init__(self,
                  data_mgr: DataManager = DataManager(),
-                 calendars: Union[str, Tuple[str, ...]] = 'CME',
+                 calendars: Union[str, Tuple[str, ...]] = 'Weekend',
                  tz: timezone = timezone('America/New_York'),
-                 valuation_method: ValuationMethod = ValuationMethod(),
+                 valuation_method: ValuationMethod = ValuationMethod(ValuationFixingType.PRICE),
                  action_impl_map: dict = {}):
         self.action_impl_map = action_impl_map
         self.calendars = calendars
@@ -120,16 +120,27 @@ class PredefinedAssetEngine(BacktestBaseEngine):
                 all_times.append(dt.datetime.combine(d, t))
         return all_times
 
+    def _adjust_date(self, date):
+        if is_business_day(date, self.calendars):
+            return date
+        else:
+            return prev_business_date(date, self.calendars)
+
     def run_backtest(self, strategy, start, end):
         # initialize backtest object
         backtest = PredefinedAssetBacktest(self.data_handler)
-        backtest.set_start_date(start)
+
+        # if start is a holiday, go back to the previous day on the backtest calendar
+        adjusted_start = self._adjust_date(start)
+        backtest.set_start_date(adjusted_start)
 
         # initialize execution engine
         self.execution_engine = SimulatedExecutionEngine(self.data_handler)
 
         # create timer
-        timer = self._timer(strategy, start, end)
+        timer_start = business_day_offset(adjusted_start, 1, roll='forward', calendars=self.calendars)
+        timer_end = self._adjust_date(end)
+        timer = self._timer(strategy, timer_start, timer_end)
         self._run(strategy, timer, backtest)
         return backtest
 

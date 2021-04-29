@@ -605,7 +605,9 @@ class InstrumentBase(Base):
         self.__resolution_key = instance.__resolution_key
 
     def resolved(self, values: dict, resolution_key: RiskKey):
-        new_instrument = self.from_dict(values)
+        all_values = self.as_dict(True)
+        all_values.update(values)
+        new_instrument = self.from_dict(all_values)
         new_instrument.name = self.name
         new_instrument.__unresolved = copy.copy(self)
         new_instrument.__resolution_key = resolution_key

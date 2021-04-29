@@ -46,7 +46,7 @@ from gs_quant.target.reports import Report, ReportStatus
 _logger = logging.getLogger(__name__)
 
 
-class ErrorType(Enum):
+class ErrorMessage(Enum):
     NON_ADMIN = 'You are not permitted to perform this action on this basket. Please make sure \
         the basket owner has entitled your application properly if you believe this is a mistake'
     NON_INTERNAL = 'You are not permitted to access this basket setting.'
@@ -55,12 +55,14 @@ class ErrorType(Enum):
     UNMODIFIABLE = 'This property can not be modified since the basket has already been created'
 
 
-def _error(error_type: ErrorType):
+def _error(*error_msgs):
     def _outer(fn):
         @wraps(fn)
         def _inner(self, *args, **kwargs):
-            if has(self, '_Basket__error_types') and error_type in self._Basket__error_types:
-                raise MqError(error_type.value)
+            if has(self, '_Basket__error_messages'):
+                for error_msg in error_msgs:
+                    if error_msg in self._Basket__error_messages:
+                        raise MqError(error_msg.value)
             return fn(self, *args, **kwargs)
         return _inner
     return _outer
@@ -85,10 +87,12 @@ class Basket(Asset, PositionedEntity):
             PositionedEntity.__init__(self, gs_asset.id, EntityType.ASSET)
             user_is_admin = any(token in user_tokens for token in get(gs_asset.entitlements, 'admin', []))
             self.__populate_current_attributes_for_existing_basket(gs_asset)
-            self.__set_error_types(user_is_admin, user_is_internal, True)
+            self.__set_error_messages(user_is_admin, user_is_internal, True)
+            self.__populate_api_attrs = True
         else:
-            self.__set_error_types(True, user_is_internal, False)
+            self.__set_error_messages(True, user_is_internal, False)
             self.__populate_default_attributes_for_new_basket(**kwargs)
+            self.__populate_api_attrs = False
 
     def get_details(self) -> pd.DataFrame:
         """
@@ -148,7 +152,7 @@ class Basket(Asset, PositionedEntity):
         self.__init__(gs_asset=gs_asset)
         return response.as_dict()
 
-    @_error(ErrorType.UNINITIALIZED)
+    @_error(ErrorMessage.UNINITIALIZED)
     def clone(self):
         """
         Retrieve a clone of an existing basket
@@ -172,11 +176,11 @@ class Basket(Asset, PositionedEntity):
 
         :func:`create`
         """
+        self.__finish_populating_attributes_for_existing_basket()
         position_set = deepcopy(self.position_set)
         return Basket(position_set=position_set, clone_parent_id=self.id, parent_basket=self.ticker)
 
-    @_error(ErrorType.UNINITIALIZED)
-    @_error(ErrorType.NON_ADMIN)
+    @_error(ErrorMessage.UNINITIALIZED, ErrorMessage.NON_ADMIN)
     def update(self) -> Dict:
         """
         Update your custom basket
@@ -192,6 +196,7 @@ class Basket(Asset, PositionedEntity):
         :func:`get_details` :func:`poll_status` :func:`create`
 
         """
+        self.__finish_populating_attributes_for_existing_basket()
         edit_inputs, rebal_inputs = self.__get_updates()
         if edit_inputs is None and rebal_inputs is None:
             raise MqValueError('Update failed: Nothing on the basket was changed')
@@ -203,12 +208,11 @@ class Basket(Asset, PositionedEntity):
             response = self.__edit_and_rebalance(edit_inputs, rebal_inputs)
         gs_asset = GsAssetApi.get_asset(self.id)
         self.__latest_create_report = GsReportApi.get_report(response.report_id)
-        self.__error_types.remove(ErrorType.UNMODIFIABLE)
+        self.__error_messages.remove(ErrorMessage.UNMODIFIABLE)
         self.__init__(gs_asset=gs_asset)
         return response.as_dict()
 
-    @_error(ErrorType.UNINITIALIZED)
-    @_error(ErrorType.NON_ADMIN)
+    @_error(ErrorMessage.UNINITIALIZED, ErrorMessage.NON_ADMIN)
     def upload_position_history(self, position_sets: List[PositionSet]) -> Dict:
         """
         Upload basket composition history
@@ -247,7 +251,7 @@ class Basket(Asset, PositionedEntity):
         response = GsIndexApi.backcast(CustomBasketsBackcastInputs(tuple(historical_position_sets)))
         return response.as_dict()
 
-    @_error(ErrorType.UNINITIALIZED)
+    @_error(ErrorMessage.UNINITIALIZED)
     def poll_status(self, timeout: int = 600, step: int = 30) -> ReportStatus:
         """
         Polls the status of the basket's most recent create/edit/rebalance report
@@ -277,7 +281,7 @@ class Basket(Asset, PositionedEntity):
         report_id = get(report, 'id')
         return self.poll_report(report_id, timeout, step)
 
-    @_error(ErrorType.UNINITIALIZED)
+    @_error(ErrorMessage.UNINITIALIZED)
     def get_latest_rebalance_data(self) -> Dict:
         """
         Retrieve the most recent rebalance data for a basket
@@ -301,7 +305,7 @@ class Basket(Asset, PositionedEntity):
         """
         return GsIndexApi.last_rebalance_data(self.id)
 
-    @_error(ErrorType.UNINITIALIZED)
+    @_error(ErrorMessage.UNINITIALIZED)
     def get_latest_rebalance_date(self) -> dt.date:
         """
         Retrieve the most recent rebalance date for a basket
@@ -328,7 +332,7 @@ class Basket(Asset, PositionedEntity):
         last_rebalance = GsIndexApi.last_rebalance_data(self.id)
         return dt.datetime.strptime(last_rebalance['date'], '%Y-%m-%d').date()
 
-    @_error(ErrorType.UNINITIALIZED)
+    @_error(ErrorMessage.UNINITIALIZED)
     def get_rebalance_approval_status(self) -> str:
         """
         Retrieve the most recent rebalance submission's approval status
@@ -355,7 +359,7 @@ class Basket(Asset, PositionedEntity):
         last_approval = GsIndexApi.last_rebalance_approval(self.id)
         return get(last_approval, 'status')
 
-    @_error(ErrorType.NON_ADMIN)
+    @_error(ErrorMessage.NON_ADMIN)
     def cancel_rebalance(self) -> Dict:
         """
         Cancel the most recent rebalance submission
@@ -379,10 +383,10 @@ class Basket(Asset, PositionedEntity):
         """
         return GsIndexApi.cancel_rebalance(self.id)
 
-    @_error(ErrorType.UNINITIALIZED)
+    @_error(ErrorMessage.UNINITIALIZED)
     def get_corporate_actions(self,
                               start: dt.date = DateLimit.LOW_LIMIT.value,
-                              end: dt.date = DateLimit.HIGH_LIMIT.value,
+                              end: dt.date = dt.date.today() + dt.timedelta(days=10),
                               ca_type: [CorporateActionType] = CorporateActionType.to_list()) -> pd.DataFrame:
         """
         Retrieve corporate actions for a basket across a date range
@@ -415,10 +419,10 @@ class Basket(Asset, PositionedEntity):
         response = GsDataApi.query_data(query=query, dataset_id=IndicesDatasets.CORPORATE_ACTIONS.value)
         return pd.DataFrame(response)
 
-    @_error(ErrorType.UNINITIALIZED)
+    @_error(ErrorMessage.UNINITIALIZED)
     def get_fundamentals(self,
                          start: dt.date = DateLimit.LOW_LIMIT.value,
-                         end: dt.date = DateLimit.TODAY.value,
+                         end: dt.date = dt.date.today(),
                          period: FundamentalMetricPeriod = FundamentalMetricPeriod.ONE_YEAR.value,
                          direction: FundamentalMetricPeriodDirection = FundamentalMetricPeriodDirection.FORWARD.value,
                          metrics: [FundamentalsMetrics] = FundamentalsMetrics.to_list()) -> pd.DataFrame:
@@ -455,7 +459,7 @@ class Basket(Asset, PositionedEntity):
         response = GsDataApi.query_data(query=query, dataset_id=IndicesDatasets.BASKET_FUNDAMENTALS.value)
         return pd.DataFrame(response)
 
-    @_error(ErrorType.UNINITIALIZED)
+    @_error(ErrorMessage.UNINITIALIZED)
     def get_live_date(self) -> Optional[dt.date]:
         """
         Retrieve basket's live date
@@ -473,7 +477,7 @@ class Basket(Asset, PositionedEntity):
         """
         return self.__live_date
 
-    @_error(ErrorType.UNINITIALIZED)
+    @_error(ErrorMessage.UNINITIALIZED)
     def get_type(self) -> Optional[SecAssetType]:
         """
         Retrieve basket type
@@ -491,7 +495,7 @@ class Basket(Asset, PositionedEntity):
         """
         return SecAssetType[self.__gs_asset_type.name.upper()]
 
-    @_error(ErrorType.UNINITIALIZED)
+    @_error(ErrorMessage.UNINITIALIZED)
     def get_url(self) -> str:
         """
         Retrieve url to basket's product page in Marquee
@@ -517,7 +521,7 @@ class Basket(Asset, PositionedEntity):
         return self.__allow_ca_restricted_assets
 
     @allow_ca_restricted_assets.setter
-    @_error(ErrorType.NON_ADMIN)
+    @_error(ErrorMessage.NON_ADMIN)
     def allow_ca_restricted_assets(self, value: bool):
         self.__allow_ca_restricted_assets = value
 
@@ -527,7 +531,7 @@ class Basket(Asset, PositionedEntity):
         return self.__allow_limited_access_assets
 
     @allow_limited_access_assets.setter
-    @_error(ErrorType.NON_ADMIN)
+    @_error(ErrorMessage.NON_ADMIN)
     def allow_limited_access_assets(self, value: bool):
         self.__allow_limited_access_assets = value
 
@@ -542,7 +546,7 @@ class Basket(Asset, PositionedEntity):
         return self.__currency
 
     @currency.setter
-    @_error(ErrorType.UNMODIFIABLE)
+    @_error(ErrorMessage.UNMODIFIABLE)
     def currency(self, value: IndicesCurrency):
         self.__currency = value
 
@@ -552,7 +556,7 @@ class Basket(Asset, PositionedEntity):
         return self.__default_backcast
 
     @default_backcast.setter
-    @_error(ErrorType.UNMODIFIABLE)
+    @_error(ErrorMessage.UNMODIFIABLE)
     def default_backcast(self, value: bool):
         self.__default_backcast = value
 
@@ -562,29 +566,31 @@ class Basket(Asset, PositionedEntity):
         return self.__description
 
     @description.setter
-    @_error(ErrorType.NON_ADMIN)
+    @_error(ErrorMessage.NON_ADMIN)
     def description(self, value: str):
         self.__description = value
 
     @property
     def divisor(self) -> Optional[float]:
         """ Divisor to be applied to the overall position set """
+        self.__finish_populating_attributes_for_existing_basket()
         return self.__divisor
 
     @divisor.setter
-    @_error(ErrorType.NON_ADMIN)
+    @_error(ErrorMessage.NON_ADMIN)
     def divisor(self, value: float):
+        self.__finish_populating_attributes_for_existing_basket()
         self.__initial_price = None
         self.__divisor = value
 
     @property
-    @_error(ErrorType.NON_INTERNAL)
+    @_error(ErrorMessage.NON_INTERNAL)
     def flagship(self) -> Optional[bool]:
         """ If the basket is flagship (internal only) """
         return self.__flagship
 
     @flagship.setter
-    @_error(ErrorType.NON_INTERNAL)
+    @_error(ErrorMessage.NON_INTERNAL)
     def flagship(self, value: bool):
         self.__flagship = value
 
@@ -599,18 +605,20 @@ class Basket(Asset, PositionedEntity):
         return self.__include_price_history
 
     @include_price_history.setter
-    @_error(ErrorType.NON_ADMIN)
+    @_error(ErrorMessage.NON_ADMIN)
     def include_price_history(self, value: bool):
         self.__include_price_history = value
 
     @property
     def initial_price(self) -> Optional[float]:
         """ Initial price the basket it should start ticking at """
+        self.__finish_populating_attributes_for_existing_basket()
         return self.__initial_price
 
     @initial_price.setter
-    @_error(ErrorType.NON_ADMIN)
+    @_error(ErrorMessage.NON_ADMIN)
     def initial_price(self, value: float):
+        self.__finish_populating_attributes_for_existing_basket()
         self.__divisor = None
         self.__initial_price = value
 
@@ -620,59 +628,69 @@ class Basket(Asset, PositionedEntity):
         return self.__name
 
     @name.setter
-    @_error(ErrorType.NON_ADMIN)
+    @_error(ErrorMessage.NON_ADMIN)
     def name(self, value: str):
         self.__name = value
 
     @property
     def parent_basket(self) -> Optional[str]:
         """ Ticker of the source basket, in case current basket composition is sourced from another marquee basket """
+        self.__finish_populating_attributes_for_existing_basket()
         return self.__parent_basket
 
     @parent_basket.setter
-    @_error(ErrorType.UNMODIFIABLE)
+    @_error(ErrorMessage.UNMODIFIABLE)
     def parent_basket(self, value: str):
+        self.__finish_populating_attributes_for_existing_basket()
         self.__clone_parent_id = get(self.__get_gs_asset(value), 'id')
         self.__parent_basket = value
 
     @property
     def position_set(self) -> Optional[PositionSet]:
         """ Information of constituents associated with the basket """
+        self.__finish_populating_attributes_for_existing_basket()
         return self.__position_set
 
     @position_set.setter
-    @_error(ErrorType.NON_ADMIN)
+    @_error(ErrorMessage.NON_ADMIN)
     def position_set(self, value: PositionSet):
+        self.__finish_populating_attributes_for_existing_basket()
         self.__position_set = value
 
     @property
     def publish_to_bloomberg(self) -> Optional[bool]:
         """ If the basket should be published to Bloomberg """
+        self.__finish_populating_attributes_for_existing_basket()
         return self.__publish_to_bloomberg
 
     @publish_to_bloomberg.setter
-    @_error(ErrorType.NON_ADMIN)
+    @_error(ErrorMessage.NON_ADMIN)
     def publish_to_bloomberg(self, value: bool):
+        self.__finish_populating_attributes_for_existing_basket()
         self.__publish_to_bloomberg = value
 
     @property
     def publish_to_factset(self) -> Optional[bool]:
         """ If the basket should be published to Factset """
+        self.__finish_populating_attributes_for_existing_basket()
         return self.__publish_to_factset
 
     @publish_to_factset.setter
-    @_error(ErrorType.NON_ADMIN)
+    @_error(ErrorMessage.NON_ADMIN)
     def publish_to_factset(self, value: bool):
+        self.__finish_populating_attributes_for_existing_basket()
         self.__publish_to_factset = value
 
     @property
     def publish_to_reuters(self) -> Optional[bool]:
         """ If the basket should be published to Reuters """
+        self.__finish_populating_attributes_for_existing_basket()
         return self.__publish_to_reuters
 
     @publish_to_reuters.setter
-    @_error(ErrorType.NON_ADMIN)
+    @_error(ErrorMessage.NON_ADMIN)
     def publish_to_reuters(self, value: bool):
+        self.__finish_populating_attributes_for_existing_basket()
         self.__publish_to_reuters = value
 
     @property
@@ -681,7 +699,7 @@ class Basket(Asset, PositionedEntity):
         return self.__return_type
 
     @return_type.setter
-    @_error(ErrorType.NON_ADMIN)
+    @_error(ErrorMessage.NON_ADMIN)
     def return_type(self, value: ReturnType):
         self.__return_type = value
 
@@ -691,7 +709,7 @@ class Basket(Asset, PositionedEntity):
         return self.__reweight
 
     @reweight.setter
-    @_error(ErrorType.NON_ADMIN)
+    @_error(ErrorMessage.NON_ADMIN)
     def reweight(self, value: bool):
         self.__reweight = value
 
@@ -701,7 +719,7 @@ class Basket(Asset, PositionedEntity):
         return self.__target_notional
 
     @target_notional.setter
-    @_error(ErrorType.NON_ADMIN)
+    @_error(ErrorMessage.NON_ADMIN)
     def target_notional(self, value: float):
         self.__target_notional = value
 
@@ -711,7 +729,7 @@ class Basket(Asset, PositionedEntity):
         return self.__ticker
 
     @ticker.setter
-    @_error(ErrorType.UNMODIFIABLE)
+    @_error(ErrorMessage.UNMODIFIABLE)
     def ticker(self, value: str):
         self.__validate_ticker(value)
         self.__ticker = value
@@ -722,7 +740,7 @@ class Basket(Asset, PositionedEntity):
         return self.__weighting_strategy
 
     @weighting_strategy.setter
-    @_error(ErrorType.NON_ADMIN)
+    @_error(ErrorMessage.NON_ADMIN)
     def weighting_strategy(self, value: WeightingStrategy):
         self.__weighting_strategy = value
 
@@ -741,6 +759,28 @@ class Basket(Asset, PositionedEntity):
         _logger.info('Your basket edits have completed successfuly. Submitting rebalance request now...')
         response = GsIndexApi.rebalance(self.id, rebal_inputs)
         return response
+
+    def __finish_populating_attributes_for_existing_basket(self):
+        """ Populates all values not originally fetched during initialization due to required API calls """
+        if self.__populate_api_attrs:
+            position_set = GsAssetApi.get_latest_positions(self.id, PositionType.ANY)
+            report = get(self, '__latest_create_report', self.__get_latest_create_report())
+            self.__divisor = get(position_set, 'divisor')
+            self.__initial_price = get(GsIndexApi.initial_price(self.id, dt.date.today()), 'price')
+            self.__parent_basket = None if self.__clone_parent_id is None else \
+                get(GsAssetApi.get_asset(self.__clone_parent_id), 'id')
+            self.__position_set = PositionSet.from_target(position_set)
+            self.__publish_to_bloomberg = get(report, 'parameters.publish_to_bloomberg')
+            self.__publish_to_factset = get(report, 'parameters.publish_to_factset')
+            self.__publish_to_reuters = get(report, 'parameters.publish_to_reuters')
+            set_(self.__initial_state, 'divisor', self.__divisor)
+            set_(self.__initial_state, 'initial_price', self.__initial_price)
+            set_(self.__initial_state, 'position_set', self.__position_set)
+            set_(self.__initial_state, 'publish_to_bloomberg', self.__publish_to_bloomberg)
+            set_(self.__initial_state, 'publish_to_factset', self.__publish_to_factset)
+            set_(self.__initial_state, 'publish_to_reuters', self.__publish_to_reuters)
+            self.__initial_positions = set(deepcopy(self.__position_set.positions))
+            self.__populate_api_attrs = False
 
     def __get_gs_asset(self, identifier: str) -> GsAsset:
         """ Resolves basket identifier during initialization """
@@ -793,29 +833,18 @@ class Basket(Asset, PositionedEntity):
 
     def __populate_current_attributes_for_existing_basket(self, gs_asset: GsAsset):
         """ Current basket settings for existing basket """
-        position_set = GsAssetApi.get_latest_positions(self.id, PositionType.ANY)
-        report = get(self, '__latest_create_report', self.__get_latest_create_report())
         self.__clone_parent_id = get(gs_asset, 'parameters.cloneParentId')
         self.__default_backcast = get(gs_asset, 'parameters.defaultBackcast')
         self.__description = get(gs_asset, 'description')
-        self.__divisor = get(position_set, 'divisor')
         self.__flagship = get(gs_asset, 'parameters.flagship')
         self.__gs_asset_type = get(gs_asset, 'type')
         self.__hedge_id = get(gs_asset, 'parameters.hedgeId')
         self.__include_price_history = False
-        self.__initial_price = get(GsIndexApi.initial_price(self.id, DateLimit.TODAY.value), 'price')
         self.__live_date = get(gs_asset, 'liveDate')
-        self.__parent_basket = None if self.__clone_parent_id is None else \
-            get(GsAssetApi.get_asset(self.__clone_parent_id), 'id')
-        self.__position_set = PositionSet.from_target(position_set)
-        self.__publish_to_bloomberg = get(report, 'parameters.publish_to_bloomberg')
-        self.__publish_to_factset = get(report, 'parameters.publish_to_factset')
-        self.__publish_to_reuters = get(report, 'parameters.publish_to_reuters')
         self.__return_type = get(gs_asset, 'parameters.indexCalculationType')
         self.__ticker = get(gs_asset, 'xref.ticker')
 
         self.__initial_state = {}
-        self.__initial_positions = set(deepcopy(self.__position_set.positions))
         for prop in CustomBasketsEditInputs.properties().union(CustomBasketsRebalanceInputs.properties(),
                                                                CustomBasketsPricingParameters.properties(),
                                                                PublishParameters.properties()):
@@ -845,18 +874,18 @@ class Basket(Asset, PositionedEntity):
         self.__target_notional = get(kwargs, 'target_notional', 10000000)
         self.__ticker = get(kwargs, 'ticker')
 
-    def __set_error_types(self, user_is_admin: bool, user_is_internal: bool, existing_basket_initialized: bool):
+    def __set_error_messages(self, user_is_admin: bool, user_is_internal: bool, existing_basket_initialized: bool):
         """ Errors to check for based on current user/basket state """
         errors = []
         if not user_is_admin:
-            errors.append(ErrorType.NON_ADMIN)
+            errors.append(ErrorMessage.NON_ADMIN)
         if not user_is_internal:
-            errors.append(ErrorType.NON_INTERNAL)
+            errors.append(ErrorMessage.NON_INTERNAL)
         if not existing_basket_initialized:
-            errors.append(ErrorType.UNINITIALIZED)
+            errors.append(ErrorMessage.UNINITIALIZED)
         else:
-            errors.append(ErrorType.UNMODIFIABLE)
-        self.__error_types = set(errors)
+            errors.append(ErrorMessage.UNMODIFIABLE)
+        self.__error_messages = set(errors)
 
     def __validate_ticker(self, ticker: str):
         """ Blocks ticker setter if entry is invalid """

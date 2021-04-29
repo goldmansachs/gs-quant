@@ -16,57 +16,33 @@ under the License.
 
 from typing import List
 
-from pydash import get
-
 from gs_quant.session import GsSession
-from requests.exceptions import HTTPError
+from gs_quant.target.reports import User
 
 
 class GsUsersApi:
     @classmethod
-    def get_my_user_id(cls) -> str:
-        return GsSession.current._get('/users/self')['id']
+    def get_users(cls,
+                  user_ids: List[str] = None,
+                  user_emails: List[str] = None,
+                  user_names: List[str] = None,
+                  user_companies: List[str] = None,
+                  limit: int = 100,
+                  offset: int = 0) -> List:
+        url = '/users?'
+        if user_ids:
+            url += f'&id={"&id=".join(user_ids)}'
+        if user_emails:
+            url += f'&email={"&email=".join(user_emails)}'
+        if user_names:
+            url += f'&name={"&name=".join(user_names)}'
+        if user_companies:
+            url += f'&company={"&company=".join(user_companies)}'
+        return GsSession.current._get(f'{url}&limit={limit}&offset={offset}', cls=User)['results']
 
     @classmethod
     def get_my_guid(cls) -> str:
         return f"guid:{GsSession.current._get('/users/self')['id']}"
-
-    @classmethod
-    def get_user_ids_by_email(cls, emails: List[str]) -> List[str]:
-        """
-        Gets the user ids for users with the provided emails.
-        :param emails: list of emails
-        :return: list of user ids
-        """
-        if not len(emails):
-            return []
-        email_query = '&email='.join(emails)
-        raw_users = GsSession.current._get(f'/users?limit=100&email={email_query}')
-
-        return [user['id'] for user in get(raw_users, 'results', [])]
-
-    @classmethod
-    def get_guids_from_ids(cls, user_ids: List[str]) -> List[str]:
-        """
-        Creates a list of guid strings used throughout Marquee APIs.
-        :param user_ids: list of user ids
-        :return: list of guids (user ids appended with "guid:")
-        """
-        return [f'guid:{user_id}' for user_id in user_ids]
-
-    @classmethod
-    def get_user_emails_by_guid(cls, user_guids: List[str]) -> List[str]:
-        """
-        Gets the emails for users with the provided user guids.
-        :param user_guids: list of user guids
-        :return: list of emails
-        """
-        user_guid_query = '&id='.join([guid[5:] for guid in user_guids])
-        try:
-            raw_users = GsSession.current._get(f'/users?{user_guid_query}&limit={len(user_guids)}')
-        except HTTPError as err:
-            raise ValueError(f'Unable to fetch user emails with {err}')
-        return [user['email'] for user in get(raw_users, 'results', [])]
 
     @classmethod
     def get_current_user_info(cls) -> List[str]:
@@ -74,8 +50,4 @@ class GsUsersApi:
         Gets user
         :return: user
         """
-        try:
-            user = GsSession.current._get('/users/self')
-        except HTTPError as err:
-            raise ValueError(f'Unable to fetch user with {err}')['results']
-        return user
+        return GsSession.current._get('/users/self')

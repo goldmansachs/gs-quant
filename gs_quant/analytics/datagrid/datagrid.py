@@ -31,7 +31,7 @@ from gs_quant.analytics.core.processor import DataQueryInfo
 from gs_quant.analytics.core.processor_result import ProcessorResult
 from gs_quant.analytics.core.query_helpers import aggregate_queries, fetch_query, build_query_string, valid_dimensions
 from gs_quant.analytics.datagrid.data_cell import DataCell
-from gs_quant.analytics.datagrid.data_column import DataColumn, ColumnFormat
+from gs_quant.analytics.datagrid.data_column import DataColumn, ColumnFormat, MultiColumnGroup
 from gs_quant.analytics.datagrid.data_row import DataRow, DimensionsOverride, ProcessorOverride, Override, \
     ValueOverride, RowSeparator
 from gs_quant.analytics.datagrid.serializers import row_from_dict
@@ -59,7 +59,9 @@ class DataGrid:
     :param columns: List of DataGrid columns for the grid
     :param id_: Unique identifier of the grid
     :param entitlements: Marquee entitlements of the grid for the Marquee Market's platform
-
+    :param sorts: Optional list of DataGridSort. Use this if you want to sort your columns.
+    :param filters: Optional list of DataGridFilter. Use this to filter column's data.
+    :param multiColumnGroups: Optional list of MultiColumnGroup. Useful to group columns for heatmaps.
     **Usage**
 
     To create a DataGrid, we define two components, rows and columns:
@@ -103,6 +105,7 @@ class DataGrid:
                  entitlements: Optional[Dict[str, List[str]]] = None,
                  sorts: Optional[List[DataGridSort]] = None,
                  filters: Optional[List[DataGridFilter]] = None,
+                 multiColumnGroups: Optional[List[MultiColumnGroup]] = None,
                  **kwargs):
         self.id_ = id_
         self.entitlements = entitlements
@@ -111,6 +114,7 @@ class DataGrid:
         self.columns = columns
         self.sorts = sorts or []
         self.filters = filters or []
+        self.multiColumnGroups = multiColumnGroups
 
         # store the graph, data queries to leaf processors and results
         self._primary_column_index: int = kwargs.get('primary_column_index', 0)
@@ -522,6 +526,7 @@ class DataGrid:
         columns = [DataColumn.from_dict(column, reference_list) for column in parameters.get('columns', [])]
         sorts = [DataGridSort.from_dict(sort) for sort in parameters.get('sorts', [])]
         filters = [DataGridFilter.from_dict(filter_) for filter_ in parameters.get('filters', [])]
+        multi_column_groups = [MultiColumnGroup.from_dict(group) for group in parameters.get('multiColumnGroups', [])]
 
         if should_resolve_entities:
             resolve_entities(reference_list)
@@ -532,6 +537,7 @@ class DataGrid:
                         id_=id_,
                         entitlements=entitlements,
                         primary_column_index=parameters.get('primaryColumnIndex', 0),
+                        multiColumnGroups=multi_column_groups,
                         sorts=sorts,
                         filters=filters)
 
@@ -550,6 +556,9 @@ class DataGrid:
             datagrid['parameters']['sorts'] = [asdict(sort) for sort in self.sorts]
         if len(self.filters):
             datagrid['parameters']['filters'] = [asdict(filter_) for filter_ in self.filters]
+        if self.multiColumnGroups:
+            datagrid['parameters']['multiColumnGroups'] = [group.asdict()
+                                                           for group in self.multiColumnGroups]
         return datagrid
 
     def set_primary_column_index(self, index: int):

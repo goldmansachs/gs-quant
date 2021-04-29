@@ -44,7 +44,7 @@ from gs_quant.markets.securities import AssetClass, Cross, Index, Currency, Secu
 from gs_quant.session import GsSession, Environment
 from gs_quant.target.common import XRef, PricingLocation, Currency as CurrEnum
 from gs_quant.test.timeseries.utils import mock_request
-from gs_quant.timeseries import Returns
+from gs_quant.timeseries import Returns, ExtendedSeries
 from gs_quant.timeseries.measures import BenchmarkType
 
 _index = [pd.Timestamp('2019-01-01')]
@@ -1158,6 +1158,7 @@ def test_implied_vol():
     mock_spx = Index('MA890', AssetClass.Equity, 'SPX')
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_eq_vol)
     idx = pd.date_range(end=datetime.datetime.now(pytz.UTC).date(), periods=4, freq='D')
+    idx.freq = None
 
     actual = tm.implied_volatility(mock_spx, '1m', tm.VolReference.DELTA_CALL, 25)
     assert_series_equal(pd.Series([5, 1, 2, 3], index=idx, name='impliedVolatility'), pd.Series(actual))
@@ -1209,6 +1210,7 @@ def test_implied_vol_fx():
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_fx_vol)
     actual = tm.implied_volatility(mock, '1m', tm.VolReference.DELTA_CALL, 25)
     expected = pd.Series([5, 1, 2, 3], index=pd.date_range('2019-01-01', periods=4, freq='D'), name='impliedVolatility')
+    expected.index.freq = None
     assert_series_equal(expected, pd.Series(actual))
     assert actual.dataset_ids == _test_datasets
     actual = tm.implied_volatility(mock, '1m', tm.VolReference.DELTA_PUT, 25)
@@ -1333,7 +1335,8 @@ def test_impl_corr_n():
     expected = expected['value']
     actual = tm.implied_correlation(spx, '1m', tm.EdrDataReference.DELTA_CALL, 0.5, 50, datetime.date(2020, 8, 31),
                                     source='PlotTool')
-    pd.testing.assert_series_equal(actual, expected, check_names=False)
+    expected = ExtendedSeries(expected)
+    assert_series_equal(actual, expected, check_names=False)
     replace.restore()
 
 
@@ -1366,6 +1369,7 @@ def test_implied_corr_basket():
     a_basket = tm.Basket(['AAPL UW', 'MSFT UW'], [0.1, 0.9])
     actual = tm.implied_correlation_with_basket(spx, '1y', tm.EdrDataReference.DELTA_PUT, 25, a_basket)
     expected = pd.Series([-433.33333, 198.60510, 1065.90909, 986.28763, 100.0, 100.0], index=dates)
+    expected = ExtendedSeries(expected)
     assert_series_equal(actual, expected)
 
     with pytest.raises(NotImplementedError):
@@ -1430,9 +1434,9 @@ def test_real_corr_n():
 
     expected = pd.read_csv(os.path.join(resources, 'SPX_50_rcorr_out.csv'))
     expected.index = pd.to_datetime(expected['date'])
-    expected = expected['value']
+    expected = ExtendedSeries(expected['value'])
     actual = tm.realized_correlation(spx, '1m', 50, datetime.date(2020, 8, 31), source='PlotTool')
-    pd.testing.assert_series_equal(actual, expected, check_names=False)
+    assert_series_equal(actual, expected, check_names=False)
     replace.restore()
 
 
@@ -1482,9 +1486,9 @@ def test_avg_impl_vol():
     market_data_mock.return_value = mock_implied_vol
 
     actual = tm.average_implied_volatility(mock_spx, '1m', tm.EdrDataReference.DELTA_CALL, 25, 3, '1d')
-    assert_series_equal(pd.Series([1.4, 2.6, 3.33333],
-                                  index=pd.date_range(start='2020-01-01', periods=3), name='averageImpliedVolatility'),
-                        pd.Series(actual))
+    expected = pd.Series([1.4, 2.6, 3.33333], index=pd.date_range(start='2020-01-01', periods=3))
+    expected.index.freq = None
+    assert_series_equal(expected, pd.Series(actual), check_names=False)
     assert actual.dataset_ids == _test_datasets
 
     with pytest.raises(NotImplementedError):
@@ -1526,9 +1530,10 @@ def test_avg_realized_vol():
     market_data_mock.return_value = mock_spot
 
     actual = tm.average_realized_volatility(mock_spx, '2d', Returns.SIMPLE, 3, '1d')
-    assert_series_equal(pd.Series([392.874026], index=pd.date_range(start='2020-01-03', periods=1),
-                                  name='averageRealizedVolatility'),
-                        pd.Series(actual))
+    expected = pd.Series([392.874026], index=pd.date_range(start='2020-01-03', periods=1),
+                         name='averageRealizedVolatility')
+    expected.index.freq = None
+    assert_series_equal(expected, pd.Series(actual))
     assert actual.dataset_ids == _test_datasets
 
     with pytest.raises(NotImplementedError):
@@ -2270,6 +2275,7 @@ def test_var_swap():
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', _mock_var_swap_data)
 
     expected = pd.Series([1, 2, 3, 4], name='varSwap', index=pd.date_range("2019-01-01", periods=4, freq="D"))
+    expected.index.freq = None
     actual = tm.var_swap(Index('MA123', AssetClass.Equity, '123'), '1m')
     assert_series_equal(expected, pd.Series(actual))
     assert actual.dataset_ids == _test_datasets
@@ -2333,6 +2339,7 @@ def test_var_swap_fwd():
 
     expected = pd.Series([4.1533, 5.7663, 7.1589, 8.4410], name='varSwap',
                          index=pd.date_range(start="2019-01-01", periods=4, freq="D"))
+    expected.index.freq = None
     actual = tm.var_swap(Index('MA123', AssetClass.Equity, '123'), '1m', '1y')
     assert_series_equal(expected, pd.Series(actual))
     assert actual.dataset_ids == _test_datasets
@@ -3073,14 +3080,14 @@ def test_forward_price_ng():
     with DataContext(datetime.date(2021, 1, 1), datetime.date(2021, 1, 1)):
         market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_eu_natgas_forward_price)
         expected = pd.Series([15.65], name='price', index=[datetime.date(2021, 1, 1)])
-        actual = tm.forward_price_ng(mock_EU_asset, contract_range='H21')
+        actual = tm.forward_price_ng(mock_EU_asset, contract_range='H21', price_method='ICE')
         assert_series_equal(expected, pd.Series(actual))
 
     # Test for empty market response
     with DataContext(datetime.date(2021, 1, 1), datetime.date(2021, 1, 1)):
         market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
         market_mock.return_value = mock_empty_market_data_response()
-        actual = tm.forward_price_ng(mock_EU_asset, contract_range='H21')
+        actual = tm.forward_price_ng(mock_EU_asset, contract_range='H21', price_method='ICE')
         assert actual.empty
 
     # Test for no instruments found
@@ -3088,7 +3095,7 @@ def test_forward_price_ng():
         assets.return_value = []
         market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
         market_mock.return_value = mock_empty_market_data_response()
-        actual = tm.forward_price_ng(mock_EU_asset, contract_range='H21')
+        actual = tm.forward_price_ng(mock_EU_asset, contract_range='H21', price_method='ICE')
         assert actual.empty
 
     replace.restore()

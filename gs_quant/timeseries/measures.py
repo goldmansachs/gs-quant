@@ -213,8 +213,11 @@ class _RatingMetric(Enum):
 
 
 class EUNatGasDataReference(Enum):
-    TTF_CommodityReferencePrice = 'ICE Data: FUTURES REPORT: ICE Endex Dutch TTF Gas Base Load Futures'
-    NBP_CommodityReferencePrice = 'UK Monthly-Ice'
+    # Reference data as on the asset parameters, will distinguish Heren and ICE Swaps
+    TTF_ICE_CommodityReferencePrice = 'ICE Data: FUTURES REPORT: ICE Endex Dutch TTF Gas Base Load Futures'
+    NBP_ICE_CommodityReferencePrice = 'UK Monthly-Ice'
+    TTF_Heren_CommodityReferencePrice = 'TTF-Day Ahead and Weekend Unweighted Average Price-Heren'
+    NBP_Heren_CommodityReferencePrice = 'NBP-Day Ahead and Weekend Unweighted Average Price-Heren'
 
 
 class FXSpotCarry(Enum):
@@ -449,7 +452,7 @@ def _extract_series_from_df(df: pd.DataFrame, query_type: QueryType, handle_miss
     if df.empty or (handle_missing_column and col_name not in df.columns):
         series = ExtendedSeries()
     else:
-        series = ExtendedSeries(df[col_name])
+        series = ExtendedSeries(df[col_name], index=df.index)
     series.dataset_ids = getattr(df, 'dataset_ids', ())
     return series
 
@@ -2206,7 +2209,7 @@ def forward_price(asset: Asset, price_method: str = 'LMP', bucket: str = 'PEAK',
 
 def eu_ng_hub_to_swap(asset_spec: ASSET_SPEC) -> str:
     asset = _asset_from_spec(asset_spec)
-    asset_ref_price = EUNatGasDataReference[asset.name + "_CommodityReferencePrice"].value
+    asset_ref_price = EUNatGasDataReference[asset.name + "_ICE_CommodityReferencePrice"].value
     result_id = ''
     try:
         # Search for atleast one instrument for the given asset using asset parameter
@@ -2240,7 +2243,7 @@ def forward_price_ng(asset: Asset, contract_range: str = 'F20', price_method: st
     if (asset.get_type() == SecAssetType.COMMODITY_NATURAL_GAS_HUB):
         return _forward_price_natgas(asset, price_method, contract_range, source=source)
     if (asset.get_type() == SecAssetType.COMMODITY_EU_NATURAL_GAS_HUB):
-        return _forward_price_eu_natgas(asset, contract_range)
+        return _forward_price_eu_natgas(asset, contract_range, price_method)
     else:
         raise MqTypeError('The forward_price_ng is not supported for this asset')
 
@@ -3330,14 +3333,15 @@ def forward_curve(asset: Asset, bucket: str = 'PEAK', market_date: str = "",
     return result
 
 
-def _forward_price_eu_natgas(asset: Asset, contract_range: str = None, *, source: str = None,
-                             real_time: bool = False) -> pd.Series:
+def _forward_price_eu_natgas(asset: Asset, contract_range: str = 'F20', price_method: str = 'ICE', *,
+                             source: str = None, real_time: bool = False) -> pd.Series:
     """'
     EU NG Forward Price - function to map the assets to right instruments and fetch the forward
     prices for given hub for required contracts
 
     :param asset: asset object loaded from security master
     :param contract_range: e.g. inputs - Default Value = F20
+    :param price_method: Fixing source for the prices - ICE/ Heren
     :param source: name of function caller: default source = None
     :param real_time: whether to retrieve intraday data instead of EOD: default value = False
     :return: Forward Price
@@ -3347,9 +3351,10 @@ def _forward_price_eu_natgas(asset: Asset, contract_range: str = None, *, source
     weights = pd.DataFrame({'contract': weights.index, 'weight': weights.values})
     contracts_to_query = weights['contract'].unique().tolist()
     assets_to_query = []
-    asset_commod_ref_price = EUNatGasDataReference[asset.name + "_CommodityReferencePrice"].value
+    ref_price_key = '_'.join([asset.name, price_method, "CommodityReferencePrice"])
+    asset_commod_ref_price = EUNatGasDataReference[ref_price_key].value
 
-    # Find all assets to query fo each of these contract months
+    # Find all assets to query for each of these contract months
     for contract in contracts_to_query:
         kwargs = dict(asset_parameters_commodity_reference_price=asset_commod_ref_price,
                       asset_parameters_start=contract)

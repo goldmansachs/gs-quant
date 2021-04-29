@@ -85,6 +85,7 @@ Date / Time
    date_range
    prepend
    union
+   bucketize
 
 .. autosummary::
    :toctree: classes

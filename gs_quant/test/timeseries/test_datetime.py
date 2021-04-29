@@ -15,13 +15,12 @@ under the License.
 """
 
 import pytest
-from pandas.util.testing import assert_series_equal
+from pandas.testing import assert_series_equal
 
 from gs_quant.timeseries.datetime import *
 
 
 def test_align():
-
     dates1 = [
         date(2019, 1, 1),
         date(2019, 1, 2),
@@ -134,7 +133,6 @@ def test_align():
 
 
 def test_interpolate():
-
     dates = [
         date(2019, 1, 2),
         date(2019, 1, 3),
@@ -218,7 +216,6 @@ def test_interpolate():
 
 
 def test_value():
-
     dates = [
         date(2019, 1, 2),
         date(2019, 1, 3),
@@ -251,7 +248,6 @@ def test_value():
 
 
 def test_day():
-
     dates = [
         date(2019, 1, 1),
         date(2019, 1, 2),
@@ -267,7 +263,6 @@ def test_day():
 
 
 def test_weekday():
-
     dates = [
         date(2019, 1, 7),
         date(2019, 1, 8),
@@ -286,7 +281,6 @@ def test_weekday():
 
 
 def test_month():
-
     dates = [
         date(2019, 1, 1),
         date(2019, 2, 1),
@@ -302,7 +296,6 @@ def test_month():
 
 
 def test_year():
-
     dates = [
         date(2019, 1, 1),
         date(2020, 1, 2),
@@ -318,7 +311,6 @@ def test_year():
 
 
 def test_quarter():
-
     dates = [
         date(2019, 1, 1),
         date(2019, 4, 1),
@@ -334,7 +326,6 @@ def test_quarter():
 
 
 def test_day_count_fractions():
-
     dates = [
         date(2019, 1, 1),
         date(2019, 1, 2),
@@ -363,7 +354,6 @@ def test_day_count_fractions():
 
 
 def test_date_range():
-
     dates = [
         date(2019, 1, 1),
         date(2019, 1, 2),
@@ -422,6 +412,7 @@ def test_union():
 
     assert_series_equal(union([]), pd.Series(dtype='float64'), obj='union empty')
 
+    x.index.freq = None
     assert_series_equal(union([x]), x, obj='union of one series')
 
     actual = union([x, y, z])
@@ -434,6 +425,17 @@ def test_union():
     actual = union([x, y])
     expected = pd.Series([1.0, np.nan, 3.1, 4.1, 5.0, 6.0], index=pd.date_range('2019-01-01', periods=6, freq='H'))
     assert_series_equal(actual, expected, obj='union of two real-time series')
+
+
+def test_bucketize():
+    dates = pd.bdate_range(start='1/1/2021', end='4/23/2021')
+    series = pd.Series(range(len(dates)), index=dates)
+
+    actual = bucketize(series, AggregateFunction.MAX, AggregatePeriod.MONTH)
+    expected_index = pd.DatetimeIndex([date(2021, 1, 31), date(2021, 2, 28), date(2021, 3, 31), date(2021, 4, 30)])
+    expected = pd.Series([20, 40, 63, 80], index=expected_index)
+    actual.index.freq = None  # Ignore the index freq
+    assert_series_equal(actual, expected, check_index_type=False)
 
 
 if __name__ == "__main__":

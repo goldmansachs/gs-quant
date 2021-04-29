@@ -17,12 +17,12 @@ under the License.
 import datetime as dt
 import logging
 import time
-
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-from pydash import get
 from typing import Dict, List, Optional, Union
+
+from pydash import get
 
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.data import GsDataApi
@@ -30,6 +30,7 @@ from gs_quant.api.gs.reports import GsReportApi
 from gs_quant.common import DateLimit, PositionType
 from gs_quant.data import DataCoordinate, DataFrequency, DataMeasure
 from gs_quant.data.coordinate import DataDimensions
+from gs_quant.entities.entitlements import Entitlements
 from gs_quant.errors import MqError
 from gs_quant.markets.position_set import PositionSet
 from gs_quant.session import GsSession
@@ -152,6 +153,12 @@ class Entity(metaclass=ABCMeta):
         if frequency == DataFrequency.REAL_TIME:
             rt_dataset_id = available.get(DataFrequency.REAL_TIME)
             return DataCoordinate(dataset_id=rt_dataset_id, measure=measure, dimensions=dimensions, frequency=frequency)
+
+    def get_entitlements(self):
+        entitlements_dict = self.get_entity().get('entitlements')
+        if entitlements_dict is None:
+            raise ValueError('This entity does not have entitlements.')
+        return Entitlements.from_dict(entitlements_dict)
 
 
 class Country(Entity):
@@ -298,7 +305,7 @@ class PositionedEntity(metaclass=ABCMeta):
 
     def get_position_sets(self,
                           start: dt.date = DateLimit.LOW_LIMIT.value,
-                          end: dt.date = DateLimit.TODAY.value,
+                          end: dt.date = dt.date.today(),
                           position_type: PositionType = PositionType.CLOSE) -> List[PositionSet]:
         if self.positioned_entity_type == EntityType.ASSET:
             response = GsAssetApi.get_asset_positions_for_dates(self.id, start, end, position_type)
@@ -307,7 +314,7 @@ class PositionedEntity(metaclass=ABCMeta):
 
     def get_positions_data(self,
                            start: dt.date = DateLimit.LOW_LIMIT.value,
-                           end: dt.date = DateLimit.TODAY.value,
+                           end: dt.date = dt.date.today(),
                            fields: [str] = None,
                            position_type: PositionType = PositionType.CLOSE) -> List[Dict]:
         if self.positioned_entity_type == EntityType.ASSET:

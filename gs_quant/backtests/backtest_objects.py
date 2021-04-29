@@ -20,7 +20,6 @@ from collections import defaultdict
 from gs_quant.markets.portfolio import Portfolio
 from typing import Iterable
 from gs_quant.target.instrument import Cash
-from gs_quant.datetime import prev_business_date
 from gs_quant.backtests.core import ValuationMethod
 from gs_quant.backtests.order import OrderBase
 from gs_quant.backtests.event import FillEvent
@@ -114,16 +113,28 @@ class ScalingPortfolio(object):
 
 
 class PredefinedAssetBacktest(object):
+    """
+    :param data_handler: holds all the data required to run the backtest
+    :param performance: backtest values
+    :param cash_asset: currently restricted to USD non-accrual
+    :param holdings: a dictionary keyed by instruments with quantity values
+    :param historical_holdings: holdings for each backtest date
+    :param orders: a list of all the orders generated
+    :param initial_value: the initial value of the index
+    :param results: a dictionary which can be used to store intermediate results
+    """
     def __init__(self, data_handler: DataHandler):
         self.data_handler = data_handler
         self.performance = pd.Series()
         self.cash_asset = Cash('USD')
         self.holdings = {}
+        self.historical_holdings = pd.Series()
         self.orders = []
         self.initial_value = 100
+        self.results = {}
 
     def set_start_date(self, start: dt.date):
-        self.performance[prev_business_date(start)] = self.initial_value
+        self.performance[start] = self.initial_value
         self.holdings[self.cash_asset] = self.initial_value
 
     def record_orders(self, orders: Iterable[OrderBase]):
@@ -153,6 +164,7 @@ class PredefinedAssetBacktest(object):
                         fixing = self.data_handler.get_data(state.date(), instrument, tag)
                 mtm += fixing * units
         self.performance[state.date()] = mtm
+        self.historical_holdings[state.date()] = self.holdings
 
     def get_level(self, date: dt.date):
         return self.performance[date]

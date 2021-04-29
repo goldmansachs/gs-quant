@@ -21,7 +21,6 @@ from typing import Dict, List, Union
 from pydash import get
 
 from gs_quant.api.gs.assets import GsAssetApi
-from gs_quant.common import DateLimit
 from gs_quant.errors import MqValueError
 from gs_quant.target.common import Position as CommonPosition
 from gs_quant.target.common import PositionSet as CommonPositionSet
@@ -127,7 +126,7 @@ class PositionSet:
 
     def __init__(self,
                  positions: List[Position],
-                 date: datetime.date = DateLimit.TODAY.value,
+                 date: datetime.date = datetime.date.today(),
                  divisor: float = None):
         self.__positions = positions
         self.__date = date
@@ -199,7 +198,7 @@ class PositionSet:
         return cls(converted_positions, position_set.position_date, position_set.divisor)
 
     @classmethod
-    def from_list(cls, positions: List[str], date: datetime.date = DateLimit.TODAY.value):
+    def from_list(cls, positions: List[str], date: datetime.date = datetime.date.today()):
         """ Create equally-weighted PostionSet instance from a list of identifiers """
         id_map = cls.__resolve_identifiers(positions)
         converted_positions = []
@@ -214,13 +213,13 @@ class PositionSet:
         return cls(converted_positions, date)
 
     @classmethod
-    def from_dicts(cls, positions: List[Dict], date: datetime.date = DateLimit.TODAY.value):
+    def from_dicts(cls, positions: List[Dict], date: datetime.date = datetime.date.today()):
         """ Create PostionSet instance from a list of position-object-like dictionaries """
         positions_df = pd.DataFrame(positions)
         return cls.from_frame(positions_df, date)
 
     @classmethod
-    def from_frame(cls, positions: pd.DataFrame, date: datetime.date = DateLimit.TODAY.value):
+    def from_frame(cls, positions: pd.DataFrame, date: datetime.date = datetime.date.today()):
         """ Create PostionSet instance from a list of position-object-like dataframes """
         positions.columns = positions.columns.str.lower()
         positions = positions[~positions['identifier'].isnull()]
