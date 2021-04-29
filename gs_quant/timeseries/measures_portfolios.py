@@ -52,5 +52,6 @@ def portfolio_pnl(portfolio_id: str, start_date: dt.date = None, end_date: dt.da
             performance_report_id = report.id
     data = PerformanceReport.get_pnl(performance_report_id, start_date, end_date)
     df = pd.DataFrame.from_records(data)
-    df.set_index('date', inplace=True)
+    df.set_index(pd.DatetimeIndex(df['date']), inplace=True)
+    df.drop(columns=['date'])
     return _extract_series_from_df(df, QueryType.PNL, True)

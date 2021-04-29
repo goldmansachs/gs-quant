@@ -14,8 +14,6 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from datetime import date
-
 import pytest
 from pandas.util.testing import assert_series_equal
 
@@ -23,7 +21,6 @@ from gs_quant.timeseries import *
 
 
 def test_first():
-
     dates = [
         date(2019, 1, 1),
         date(2019, 1, 2),
@@ -39,7 +36,6 @@ def test_first():
 
 
 def test_last():
-
     dates = [
         date(2019, 1, 1),
         date(2019, 1, 2),
@@ -66,7 +62,6 @@ def test_last_value():
 
 
 def test_count():
-
     dates = [
         date(2019, 1, 1),
         date(2019, 1, 2),
@@ -82,7 +77,6 @@ def test_count():
 
 
 def test_diff():
-
     dates = [
         date(2019, 1, 1),
         date(2019, 1, 2),
@@ -102,7 +96,7 @@ def test_diff():
 
     empty = pd.Series([], index=[])
     result = diff(empty)
-    assert(len(result) == 0)
+    assert (len(result) == 0)
 
 
 def test_lag():
@@ -111,18 +105,22 @@ def test_lag():
 
     result = lag(x, '1m')
     expected = pd.Series([1.0, 2.0, 3.0, 4.0], index=pd.date_range("2019-01-31", periods=4, freq="D"))
+    expected.index.freq = None
     assert_series_equal(result, expected, obj="Lag 1m")
 
     result = lag(x, '2d', LagMode.TRUNCATE)
     expected = pd.Series([1.0, 2.0], index=pd.date_range("2019-01-03", periods=2, freq="D"))
+    expected.index.freq = None
     assert_series_equal(result, expected, obj="Lag 2d truncate")
 
     result = lag(x, mode=LagMode.TRUNCATE)
     expected = pd.Series([np.nan, 1.0, 2.0, 3.0], index=dates)
+    expected.index.freq = None
     assert_series_equal(result, expected, obj="Lag")
 
     result = lag(x, 2, LagMode.TRUNCATE)
     expected = pd.Series([np.nan, np.nan, 1.0, 2.0], index=dates)
+    expected.index.freq = None
     assert_series_equal(result, expected, obj="Lag 2")
 
     result = lag(x, 2, LagMode.EXTEND)
@@ -144,4 +142,5 @@ def test_lag():
     z = pd.Series([10, 11, 12], index=pd.date_range('2020-02-28', periods=3, freq='D'))
     result = lag(z, '2y')
     expected = pd.Series([10, 12], index=pd.date_range('2022-02-28', periods=2, freq='D'))
+    expected.index.freq = None
     assert_series_equal(result, expected, obj="Lag RDate 2y")

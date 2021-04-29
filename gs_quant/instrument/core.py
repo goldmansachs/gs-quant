@@ -111,7 +111,7 @@ class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
             ret = None if in_place else result
             if isinstance(result, ErrorValue):
                 _logger.error('Failed to resolve instrument fields: ' + result.error)
-                ret = {result.risk_key.date: self} if is_historical else self
+                ret = {result.risk_key.date: None} if is_historical else None
             elif result is None:
                 _logger.error('Unknown error resolving instrument fields')
                 ret = {dt.date.today(): self} if is_historical else self

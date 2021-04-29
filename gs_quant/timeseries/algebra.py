@@ -17,11 +17,11 @@
 
 
 import math
+from functools import reduce
 
+from gs_quant.errors import MqTypeError
 from .datetime import *
 from .helper import plot_function
-from functools import reduce
-from gs_quant.errors import MqTypeError
 
 """
 Algebra library contains basic numerical and algebraic operations, including addition, division, multiplication,

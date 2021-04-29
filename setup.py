@@ -65,7 +65,7 @@ setuptools.setup(
         "msgpack",
         "more_itertools",
         "nest-asyncio",
-        "pandas<1.1",
+        "pandas<=1.2.4",
         "python-dateutil>=2.7.0",
         "requests",
         "scipy>=1.2.0",

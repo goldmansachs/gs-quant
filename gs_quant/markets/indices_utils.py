@@ -25,7 +25,7 @@ from gs_quant.api.gs.assets import AssetClass, GsAssetApi
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.api.gs.monitors import GsMonitorsApi
 from gs_quant.base import EnumBase
-from gs_quant.common import DateLimit
+from gs_quant.datetime.date import prev_business_date
 from gs_quant.session import GsSession
 from gs_quant.target.data import DataQuery
 
@@ -351,24 +351,24 @@ def get_flagships_with_assets(identifiers: List[str],
     return pd.DataFrame(response)
 
 
-def get_flagships_performance(start: dt.date = DateLimit.PREVIOUS_BUSINESS_DATE.value,
-                              end: dt.date = DateLimit.PREVIOUS_BUSINESS_DATE.value,
-                              fields: [str] = [],
+def get_flagships_performance(fields: [str] = [],
                               basket_type: List[BasketType] = BasketType.to_list(),
                               asset_class: List[AssetClass] = [AssetClass.Equity],
                               region: List[Region] = None,
-                              styles: List[Union[CustomBasketStyles, ResearchBasketStyles]] = None) -> pd.DataFrame:
+                              styles: List[Union[CustomBasketStyles, ResearchBasketStyles]] = None,
+                              start: dt.date = None,
+                              end: dt.date = None,) -> pd.DataFrame:
     """
     Retrieve performance data for flagship baskets
 
-    :param start: Date for which to retrieve pricing (defaults to previous business day)
-    :param end: Date for which to retrieve pricing (defaults to previous business day)
     :param fields: Fields to retrieve in addition to bbid, mqid, name, region, basket type, \
         styles, live date, and asset class
     :param basket_type: Basket type(s)
     :param asset_class: Asset class (defaults to Equity)
     :param region: Basket region(s)
     :param styles: Basket style(s)
+    :param start: Date for which to retrieve pricing (defaults to previous business day)
+    :param end: Date for which to retrieve pricing (defaults to previous business day)
     :return: pricing data for flagship baskets
 
     **Usage**
@@ -387,6 +387,8 @@ def get_flagships_performance(start: dt.date = DateLimit.PREVIOUS_BUSINESS_DATE.
 
     :func:`get_flagships_with_assets` :func:`get_flagship_baskets` :func:`get_flagships_constituents`
     """
+    start = start or prev_business_date()
+    end = end or prev_business_date()
     fields = list(set(fields).union(set(['name', 'region', 'type', 'flagship', 'isPairBasket',
                                          'styles', 'liveDate', 'assetClass'])))
     coverage = GsDataApi.get_coverage(dataset_id=IndicesDatasets.GSCB_FLAGSHIP.value, fields=fields)
@@ -413,24 +415,24 @@ def get_flagships_performance(start: dt.date = DateLimit.PREVIOUS_BUSINESS_DATE.
     return pd.DataFrame(performance)
 
 
-def get_flagships_constituents(start: dt.date = DateLimit.PREVIOUS_BUSINESS_DATE.value,
-                               end: dt.date = DateLimit.PREVIOUS_BUSINESS_DATE.value,
-                               fields: [str] = [],
+def get_flagships_constituents(fields: [str] = [],
                                basket_type: List[BasketType] = BasketType.to_list(),
                                asset_class: List[AssetClass] = [AssetClass.Equity],
                                region: List[Region] = None,
-                               styles: List[Union[CustomBasketStyles, ResearchBasketStyles]] = None) -> pd.DataFrame:
+                               styles: List[Union[CustomBasketStyles, ResearchBasketStyles]] = None,
+                               start: dt.date = None,
+                               end: dt.date = None,) -> pd.DataFrame:
     """
     Retrieve flagship baskets constituents
 
-    :param start: Start date for which to retrieve constituents (defaults to previous business day)
-    :param end: End date for which to retrieve constituents (defaults to previous business day)
     :param fields: Fields to retrieve in addition to mqid, name, ticker, region, basket type, \
         styles, live date, and asset class
     :param basket_type: Basket type(s)
     :param asset_class: Asset class (defaults to Equity)
     :param region: Basket region(s)
     :param styles: Basket style(s)
+    :param start: Start date for which to retrieve constituents (defaults to previous business day)
+    :param end: End date for which to retrieve constituents (defaults to previous business day)
     :return: flagship baskets constituents
 
     **Usage**
@@ -449,6 +451,8 @@ def get_flagships_constituents(start: dt.date = DateLimit.PREVIOUS_BUSINESS_DATE
 
     :func:`get_flagships_with_assets` :func:`get_flagships_performance` :func:`get_flagship_baskets`
     """
+    start = start or prev_business_date()
+    end = end or prev_business_date()
     fields = list(set(fields).union(set(['id', 'name', 'ticker', 'region', 'type',
                                          'styles', 'liveDate', 'assetClass'])))
     query = dict(fields=fields, type=basket_type, asset_class=asset_class, is_pair_basket=[False], flagship=[True])

@@ -16,14 +16,9 @@ under the License.
 
 import pytest
 
-from gs_quant.api.gs.assets import GsAssetApi
-from gs_quant.api.gs.indices import GsIndexApi
-from gs_quant.api.gs.reports import GsReportApi
 from gs_quant.base import EnumBase
 from gs_quant.markets.securities import *
 from gs_quant.session import *
-from gs_quant.target.common import ReportParameters, Position, PositionSet
-from gs_quant.target.reports import Report
 
 
 def test_get_asset(mocker):
@@ -80,16 +75,6 @@ def test_get_asset(mocker):
     assert asset.get_type() == AssetType.ETF
 
     mock_response = GsAsset(AssetClass.Equity, GsAssetType.Custom_Basket, 'Test Asset', id_=marquee_id)
-    mock_positions = PositionSet(positions=tuple([Position(asset_id='asset_1', quantity=100)]),
-                                 position_date=dt.date(2021, 1, 1),
-                                 divisor=100)
-    mock_price = {'price': 100}
-    mock_position_data = {'asset_1': [{'id': 'asset_1', 'name': 'Asset 1', 'bbid': 'A1 BBID'}]}
-    mock_report = Report(marquee_id, 'Asset', 'Basket Create', ReportParameters())
-    mocker.patch.object(GsAssetApi, 'get_latest_positions', return_value=mock_positions)
-    mocker.patch.object(GsReportApi, 'get_reports', return_value=mock_report)
-    mocker.patch.object(GsIndexApi, 'initial_price', return_value=mock_price)
-    mocker.patch.object(GsAssetApi, 'get_many_assets_data', return_value=mock_position_data)
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
     asset = SecurityMaster.get_asset(marquee_id, AssetIdentifier.MARQUEE_ID)
@@ -130,16 +115,6 @@ def test_asset_identifiers(mocker):
             'client_id',
             'secret'))
     mock_response = GsAsset(AssetClass.Equity, GsAssetType.Custom_Basket, 'Test Asset', id_=marquee_id)
-    mock_positions = PositionSet(positions=tuple([Position(asset_id='asset_1', quantity=100)]),
-                                 position_date=dt.date(2021, 1, 1),
-                                 divisor=100)
-    mock_price = {'price': 100}
-    mock_position_data = {'asset_1': [{'id': 'asset_1', 'name': 'Asset 1', 'bbid': 'A1 BBID'}]}
-    mock_report = Report(marquee_id, 'Asset', 'Basket Create', ReportParameters())
-    mocker.patch.object(GsAssetApi, 'get_latest_positions', return_value=mock_positions)
-    mocker.patch.object(GsReportApi, 'get_reports', return_value=mock_report)
-    mocker.patch.object(GsIndexApi, 'initial_price', return_value=mock_price)
-    mocker.patch.object(GsAssetApi, 'get_many_assets_data', return_value=mock_position_data)
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
     asset = SecurityMaster.get_asset(marquee_id, AssetIdentifier.MARQUEE_ID)

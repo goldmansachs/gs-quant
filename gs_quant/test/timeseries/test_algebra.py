@@ -556,7 +556,8 @@ def test_weighted_average():
     a = pd.Series([1, 2, 3, 4], index=pd.date_range('2020-01-01', periods=4, freq='D'))
     b = pd.Series([24, 27, 30], index=(pd.date_range('2020-01-01', periods=3, freq='D')))
     actual = weighted_sum([a, b], [.3, .6])
-    expected = pd.Series([16.333333, 18.666666, 21], index=pd.date_range('2020-01-01', periods=3, freq='D'))
+    expected = pd.Series([16.333333, 18.666666, 21], index=pd.date_range('2020-01-01', periods=3))
+    expected.index.freq = None
     assert_series_equal(actual, expected)
 
 

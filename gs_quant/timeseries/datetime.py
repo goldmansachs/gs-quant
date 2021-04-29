@@ -16,16 +16,22 @@
 # description. Type annotations should be provided for parameters.
 from datetime import date, time, timedelta
 from numbers import Real
+
 import numpy as np
+
 from .helper import *
-from ..errors import MqValueError
+from .helper import _create_enum
 from ..datetime.date import DayCountConvention, PaymentFrequency, day_count_fraction
 from ..datetime.date import date_range as _date_range
+from ..errors import MqValueError
 
 """
 Date and time manipulation for timeseries, including date or time shifting, calendar operations, curve alignment and
 interpolation operations. Includes sampling operations based on daif dates[0]te or time manipulation
 """
+
+AggregateFunction = _create_enum('AggregateFunction', ['max', 'min', 'mean', 'sum'])
+AggregatePeriod = _create_enum('AggregatePeriod', ['week', 'month', 'year'])
 
 
 def __interpolate_step(x: pd.Series, dates: pd.Series = None) -> pd.Series:
@@ -39,7 +45,7 @@ def __interpolate_step(x: pd.Series, dates: pd.Series = None) -> pd.Series:
 
     current = x[prev]
 
-    curve = x.align(dates, 'right', )[0]                  # only need values from dates
+    curve = x.align(dates, 'right', )[0]  # only need values from dates
 
     for knot in curve.iteritems():
         if np.isnan(knot[1]):
@@ -398,9 +404,9 @@ def weekday(x: pd.Series) -> pd.Series:
 
 @plot_function
 def day_count_fractions(
-    dates: Union[List[date], pd.Series],
-    convention: DayCountConvention = DayCountConvention.ACTUAL_360,
-    frequency: PaymentFrequency = PaymentFrequency.MONTHLY
+        dates: Union[List[date], pd.Series],
+        convention: DayCountConvention = DayCountConvention.ACTUAL_360,
+        frequency: PaymentFrequency = PaymentFrequency.MONTHLY
 ) -> pd.Series:
     """
     Day count fractions between dates in series
@@ -570,7 +576,42 @@ def union(x: List[pd.Series]) -> pd.Series:
     :func:`prepend`
 
     """
-    res = pd.Series(dtype='float64')
-    for series in x:
-        res = res.combine_first(series)
+    if len(x):
+        res = pd.Series(dtype='float64', index=x[0].index)
+        for series in x:
+            res = res.combine_first(series)
+    else:
+        res = pd.Series(dtype='float64')
     return res
+
+
+@plot_function
+def bucketize(series: pd.Series, aggregate_function: AggregateFunction, period: AggregatePeriod) -> pd.Series:
+    """
+    Bucketize a series and apply aggregate function to each bucket
+
+    :param series: input series
+    :param aggregate_function: function to use for aggregating data in each bucket
+    :param period: size of each bucket
+    :return: output series
+
+    **Usage**
+
+    Bucketize a series and apply aggregate function to each bucket. The result will be indexed by the end date of each
+    bucket.
+
+    **Examples**
+
+    Monthly mean of a series:
+
+    >>> x = generate_series(100)
+    >>> bucketize(x, AggregateFunction.MEAN, AggregatePeriod.MONTH)
+
+    **See also**
+
+    :func:`moving_average`
+    """
+    series.index = pd.to_datetime(series.index)
+    frequency = period.value[0].upper()
+    agg = aggregate_function.value
+    return series.resample(frequency).apply(agg)
