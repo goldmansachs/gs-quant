@@ -132,6 +132,16 @@ class PricingContext(ContextBaseWithDefault):
                 get_enum_value(PricingLocation, market_data_location):
             raise ValueError('market.location and market_data_location cannot be different')
 
+        if pricing_date:
+            if pricing_date > dt.date.today():
+                raise ValueError("The PricingContext does not support a pricing_date in the future. Please use the RollFwd Scenario to roll the pricing_date to a future date")
+
+        if market:
+            market_date = getattr(market, 'date', None) or getattr(market.base_market, 'date', None)
+            if market_date:
+                if market_date > dt.date.today():
+                    raise ValueError("The PricingContext does not support a market dated in the future. Please use the RollFwd Scenario to roll the pricing_date to a future date")
+
         if not market_data_location:
             if not market:
                 # use parent context's market_data_location
@@ -157,6 +167,7 @@ class PricingContext(ContextBaseWithDefault):
             location=self.__market_data_location if market_data_location else None)
         self.__pending = {}
         self.__show_progress = show_progress
+        self._max_concurrent = 1000
 
     def _on_exit(self, exc_type, exc_val, exc_tb):
         if exc_val:
@@ -174,7 +185,7 @@ class PricingContext(ContextBaseWithDefault):
 
             try:
                 with session:
-                    provider_.run(requests_, results, 1000, progress_bar, timeout=self.__timeout)
+                    provider_.run(requests_, results, self._max_concurrent, progress_bar, timeout=self.__timeout)
             except Exception as e:
                 provider_.enqueue(results, ((k, e) for k in self.__pending.keys()))
 
@@ -236,7 +247,7 @@ class PricingContext(ContextBaseWithDefault):
                             ))
 
                 requests_for_provider[provider] = requests
-            
+
             show_status = self.__show_progress and\
                 (len(requests_for_provider) > 1 or len(next(iter(requests_for_provider.values()))) > 1)
             request_pool = ThreadPoolExecutor(len(requests_for_provider))\
@@ -342,7 +353,7 @@ class PricingContext(ContextBaseWithDefault):
             self.__calc()
 
         return future
-    
+
     def calc(self, instrument: InstrumentBase, risk_measure: RiskMeasure) -> PricingFuture:
         """
         Calculate the risk measure for the instrument. Do not use directly, use via instruments

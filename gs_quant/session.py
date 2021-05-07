@@ -28,7 +28,7 @@ import requests
 import requests.adapters
 import requests.cookies
 import ssl
-from typing import List, Optional, Tuple, Union
+from typing import Optional, Union, Iterable
 from gs_quant.base import Base
 from gs_quant.context_base import ContextBase
 from gs_quant.errors import MqError, MqRequestError, MqAuthenticationError, MqUninitialisedError
@@ -110,6 +110,7 @@ class GsSession(ContextBase):
                 self._session.mount('https://', self.http_adapter)
             self._session.verify = self.verify
             self._session.headers.update({'X-Application': self.application})
+            self._session.headers.update({'X-Version': self.application_version})
             self._authenticate()
 
     def close(self):
@@ -286,7 +287,7 @@ class GsSession(ContextBase):
             environment_or_domain: Union[Environment, str] = Environment.PROD,
             client_id: Optional[str] = None,
             client_secret: Optional[str] = None,
-            scopes: Optional[Union[Tuple, List, str]] = (),
+            scopes: Optional[Union[Iterable[Union[Scopes, str]], str]] = (),
             api_version: str = API_VERSION,
             application: str = DEFAULT_APPLICATION,
             http_adapter: requests.adapters.HTTPAdapter = None
@@ -312,7 +313,7 @@ class GsSession(ContextBase):
             environment_or_domain: Union[Environment, str] = Environment.PROD,
             client_id: Optional[str] = None,
             client_secret: Optional[str] = None,
-            scopes: Optional[Union[Tuple, List, str]] = (),
+            scopes: Optional[Union[Iterable[Union[Scopes, str]], str]] = (),
             token: str = '',
             is_gssso: bool = False,
             api_version: str = API_VERSION,
@@ -329,6 +330,7 @@ class GsSession(ContextBase):
             if isinstance(scopes, str):
                 scopes = (scopes,)
 
+            scopes = (scope if isinstance(scope, str) else scope.value for scope in scopes)
             scopes = tuple(set(itertools.chain(scopes, cls.Scopes.get_default())))
 
             return OAuth2Session(environment_or_domain, client_id, client_secret, scopes, api_version=api_version,
@@ -346,7 +348,7 @@ class GsSession(ContextBase):
         else:
             try:
                 return KerberosSession(environment_or_domain, api_version=api_version, http_adapter=http_adapter,
-                                       application_version=application_version)
+                                       application_version=application_version, application=application)
             except NameError:
                 raise MqUninitialisedError('Must specify client_id and client_secret')
 

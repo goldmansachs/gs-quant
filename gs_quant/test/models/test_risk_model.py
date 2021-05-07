@@ -18,7 +18,8 @@ from unittest import mock
 
 from gs_quant.models.risk_model import FactorRiskModel
 from gs_quant.session import *
-from gs_quant.target.risk_models import RiskModel as Risk_Model, CoverageType, Term, UniverseIdentifier, Entitlements
+from gs_quant.target.risk_models import RiskModel as Risk_Model, CoverageType, Term, UniverseIdentifier
+
 
 empty_entitlements = {
     "execute": [],
@@ -29,16 +30,16 @@ empty_entitlements = {
     "upload": []
 }
 
-mock_risk_model_obj = Risk_Model(
-    id_='model_id',
-    name='Fake Risk Model',
-    coverage=CoverageType.Country,
-    term=Term.Long,
-    universe_identifier=UniverseIdentifier.gsid,
-    vendor='GS',
-    version=1.0,
-    entitlements=empty_entitlements
-)
+mock_risk_model_obj = Risk_Model(CoverageType.Country,
+                                 'model_id',
+                                 'Fake Risk Model',
+                                 Term.Long,
+                                 UniverseIdentifier.gsid,
+                                 'GS',
+                                 1.0,
+                                 entitlements=empty_entitlements,
+                                 description='Test'
+                                 )
 
 
 def mock_risk_model(mocker):
@@ -55,28 +56,33 @@ def mock_risk_model(mocker):
     mocker.patch.object(GsSession.current, '_post', return_value=mock_risk_model_obj)
     mocker.patch.object(GsSession.current, '_get', return_value=mock_risk_model_obj)
     mocker.patch.object(GsSession.current, '_put', return_value=mock_risk_model_obj)
-    return FactorRiskModel('model_id')
+    return FactorRiskModel.get('model_id')
 
 
 def test_create_risk_model(mocker):
     mock_risk_model(mocker)
     risk_model_id = 'model_id'
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_risk_model_obj)
-    new_model = FactorRiskModel.create(
-        coverage=CoverageType.Country,
-        id_=risk_model_id,
-        name='Fake Risk Model',
-        term=Term.Long,
-        universe_identifier=UniverseIdentifier.gsid,
-        vendor='GS',
-        version=1.0
-    )
-    assert new_model.id == risk_model_id
+    mocker.patch.object(GsSession.current, '_post', return_value=mock_risk_model_obj)
+    new_model = FactorRiskModel(risk_model_id,
+                                'Fake Risk Model',
+                                'Country',
+                                'Long',
+                                'gsid',
+                                'GS',
+                                0.1,
+                                entitlements={},
+                                description='Test')
+    new_model.upload()
+    assert new_model.id == mock_risk_model_obj.id
+    assert new_model.name == mock_risk_model_obj.name
+    assert new_model.description == mock_risk_model_obj.description
+    assert new_model.term == mock_risk_model_obj.term
+    assert new_model.coverage == mock_risk_model_obj.coverage
+    assert new_model.universe_identifier == mock_risk_model_obj.universe_identifier
 
 
 def test_update_risk_model_entitlements(mocker):
     new_model = mock_risk_model(mocker)
-
     new_entitlements = {
         "execute": ['guid:X'],
         "edit": [],
@@ -86,22 +92,12 @@ def test_update_risk_model_entitlements(mocker):
         "upload": []
     }
 
-    new_model.add_entitlements(new_entitlements)
+    new_model.entitlements = new_entitlements
     new_model.update()
-    assert 'guid:X' in new_model.entitlements.execute
+    assert 'guid:X' in new_model.entitlements.get('execute')
     mocker.patch.object(GsSession.current, '_get', return_value=new_model)
-    new_model.remove_entitlements(new_entitlements)
+    new_model.entitlements = empty_entitlements
     new_model.update()
-    assert 'guid:X' not in new_model.entitlements.execute
-    mocker.patch.object(GsSession.current, '_get', return_value=new_model)
-    new_model.add_entitlements(Entitlements.from_dict(new_entitlements))
-    new_model.update()
-    assert 'guid:X' in new_model.entitlements.execute
-    mocker.patch.object(GsSession.current, '_get', return_value=new_model)
-    new_model.remove_entitlements(Entitlements.from_dict(new_entitlements))
-    new_model.update()
-    assert 'guid:X' not in new_model.entitlements.execute
-
     new_entitlements = {
         "execute": ['guid:X'],
         "edit": [],
@@ -110,12 +106,12 @@ def test_update_risk_model_entitlements(mocker):
         "query": [],
         "upload": ['guid:XXX']
     }
-    new_model.entitlements = Entitlements.from_dict(new_entitlements)
+    new_model.entitlements = new_entitlements
     new_model.update()
     mocker.patch.object(GsSession.current, '_get', return_value=new_model)
-    assert 'guid:X' in new_model.entitlements.execute
-    assert 'guid:XX' in new_model.entitlements.admin
-    assert 'guid:XXX' in new_model.entitlements.upload
+    assert 'guid:X' in new_model.entitlements.get('execute')
+    assert 'guid:XX' in new_model.entitlements.get('admin')
+    assert 'guid:XXX' in new_model.entitlements.get('upload')
 
 
 def test_update_risk_model(mocker):

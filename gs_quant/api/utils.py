@@ -14,10 +14,16 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.session import GsSession
-from gs_quant.errors import MqUninitialisedError
+import concurrent
 import socket
+from concurrent.futures.thread import ThreadPoolExecutor
+from typing import List, Callable
+
 import requests
+
+from gs_quant.data import DataContext
+from gs_quant.errors import MqUninitialisedError
+from gs_quant.session import GsSession
 
 
 def handle_proxy(url, params):
@@ -35,3 +41,32 @@ def handle_proxy(url, params):
     else:
         response = requests.get(url, params=params)
     return response
+
+
+class ThreadPoolManager:
+    __executor: ThreadPoolExecutor = None
+
+    @classmethod
+    def initialize(cls, max_workers: int):
+        cls.__executor = ThreadPoolExecutor(max_workers=max_workers)
+
+    @classmethod
+    def run_async(cls, tasks: List[Callable]) -> List:
+        if not cls.__executor:
+            cls.__executor = ThreadPoolExecutor()
+
+        tasks_to_idx = {}
+        for i, task in enumerate(tasks):
+            tasks_to_idx[cls.__executor.submit(cls.__run, GsSession.current, DataContext.current, task)] = i
+        results = [None] * len(tasks_to_idx)
+        for task in concurrent.futures.as_completed(tasks_to_idx):
+            idx = tasks_to_idx[task]
+            results[idx] = task.result()
+
+        return results
+
+    @staticmethod
+    def __run(session, data_context, func):
+        with session:
+            with data_context:
+                return func()

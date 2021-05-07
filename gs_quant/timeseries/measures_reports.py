@@ -23,8 +23,8 @@ from gs_quant.data.core import DataContext
 from gs_quant.entities.entity import EntityType
 from gs_quant.errors import MqValueError
 from gs_quant.markets.factor import Factor
-from gs_quant.markets.report import RiskReport
-from gs_quant.target.reports import ReportType
+from gs_quant.markets.report import FactorRiskReport
+from gs_quant.models.risk_model import ReturnFormat
 from gs_quant.timeseries import plot_measure_entity
 from gs_quant.timeseries.measures import _extract_series_from_df
 
@@ -111,14 +111,12 @@ def annual_risk(report_id: str, factor_name: str = 'Total', *, source: str = Non
 
 def _get_factor_data(report_id: str, factor_name: str, query_type: QueryType) -> pd.Series:
     # Check params
-    report = RiskReport(report_id)
-    if report.get_type() not in [ReportType.Portfolio_Factor_Risk, ReportType.Asset_Factor_Risk]:
-        raise MqValueError('This report is not a factor risk report')
+    report = FactorRiskReport.get(report_id)
     risk_model_id = report.get_risk_model_id()
     if factor_name not in ['Factor', 'Specific', 'Total']:
         if query_type in [QueryType.DAILY_RISK, QueryType.ANNUAL_RISK]:
             raise MqValueError('Please pick a factor name from the following: ["Total", "Factor", "Specific"]')
-        factor = Factor(risk_model_id, factor_name)
+        factor = Factor.get(risk_model_id, factor_name)
         factor_name = factor.name
 
     # Extract relevant data for each date
@@ -126,10 +124,11 @@ def _get_factor_data(report_id: str, factor_name: str, query_type: QueryType) ->
     col_name = decapitalize(col_name)
     data_type = decapitalize(col_name[6:]) if col_name.startswith('factor') else col_name
 
-    factor_data = report.get_factor_data(
-        factor=factor_name,
+    factor_data = report.get_results(
+        factors=[factor_name],
         start_date=DataContext.current.start_time,
-        end_date=DataContext.current.end_time
+        end_date=DataContext.current.end_time,
+        return_format=ReturnFormat.JSON
     )
     factor_exposures = [{'date': data['date'], col_name: data[data_type]} for data in factor_data
                         if data.get(data_type)]

@@ -49,6 +49,7 @@ from gs_quant.timeseries.measures import BenchmarkType
 
 _index = [pd.Timestamp('2019-01-01')]
 _test_datasets = ('TEST_DATASET',)
+_test_datasets_rt = ('TEST_DATASET_RT',)
 
 
 def mock_empty_market_data_response():
@@ -585,6 +586,49 @@ def mock_forward_price(_cls, _q):
     return df
 
 
+def mock_implied_volatility_elec(_cls, _q):
+    d = {
+        'impliedVolatility': [
+            0.3424,
+            0.3624,
+            0.4424,
+            0.4424,
+            0.4224,
+            0.5324,
+            0.3224,
+            0.3324,
+            0.3924,
+        ],
+        'quantityBucket': [
+            "PEAK",
+            "PEAK",
+            "PEAK",
+            "7X8",
+            "7X8",
+            "7X8",
+            "2X16H",
+            "2X16H",
+            "2X16H",
+
+        ],
+        'contract': [
+            "J20",
+            "K20",
+            "M20",
+            "J20",
+            "K20",
+            "M20",
+            "J20",
+            "K20",
+            "M20",
+        ]
+
+    }
+    df = MarketDataResponseFrame(data=d, index=pd.to_datetime([datetime.date(2019, 1, 2)] * 9))
+    df.dataset_ids = _test_datasets
+    return df
+
+
 def mock_fair_price(_cls, _q):
     d = {
         'fairPrice': [
@@ -682,6 +726,44 @@ def mock_missing_bucket_forward_price(_cls, _q):
             18.9234,
             21.3654,
             21.3654,
+        ],
+        'quantityBucket': [
+            "PEAK",
+            "PEAK",
+            "PEAK",
+            "7X8",
+            "7X8",
+            "2X16H",
+            "2X16H",
+            "2X16H",
+
+        ],
+        'contract': [
+            "J20",
+            "K20",
+            "M20",
+            "J20",
+            "K20",
+            "J20",
+            "K20",
+            "M20",
+        ]
+
+    }
+    return pd.DataFrame(data=d, index=pd.to_datetime([datetime.date(2019, 1, 2)] * 8))
+
+
+def mock_missing_bucket_implied_volatility(_cls, _q):
+    d = {
+        'impliedVolatility': [
+            0.3424,
+            0.3624,
+            0.4424,
+            0.4424,
+            0.4224,
+            0.3224,
+            0.3324,
+            0.3924,
         ],
         'quantityBucket': [
             "PEAK",
@@ -1520,8 +1602,8 @@ def test_avg_realized_vol():
                        index=pd.date_range(start='2020-01-01', periods=3))
     df2 = pd.DataFrame(data={'spot': [2, 3, 4], 'assetId': ['MA2', 'MA2', 'MA2']},
                        index=pd.date_range(start='2020-01-01', periods=3))
-    df3 = pd.DataFrame(data={'spot': [2, 5], 'assetId': ['MA3', 'MA3']},
-                       index=pd.date_range(start='2020-01-01', periods=2))
+    df3 = pd.DataFrame(data={'spot': [2, 2, 2], 'assetId': ['MA3', 'MA3', 'MA3']},
+                       index=pd.date_range(start='2020-01-01', periods=3))
     mock_spot = MarketDataResponseFrame(pd.concat([df1, df2, df3], join='inner'))
     mock_spot.dataset_ids = _test_datasets
 
@@ -1535,6 +1617,13 @@ def test_avg_realized_vol():
     expected.index.freq = None
     assert_series_equal(expected, pd.Series(actual))
     assert actual.dataset_ids == _test_datasets
+
+    df4 = pd.DataFrame(data={'spot': [2, 2], 'assetId': ['MA3', 'MA3']},
+                       index=pd.date_range(start='2020-01-01', periods=2))
+    mock_spot_2 = MarketDataResponseFrame(pd.concat([df1, df2, df4], join='inner'))
+    market_data_mock.return_value = mock_spot_2
+    actual = tm.average_realized_volatility(mock_spx, '2d', Returns.SIMPLE, 3, '1d')
+    assert actual.dropna().empty
 
     with pytest.raises(NotImplementedError):
         tm.average_realized_volatility(mock_spx, '1w', real_time=True)
@@ -2460,6 +2549,49 @@ def test_var_term():
         tm.var_term(..., pricing_date=300)
 
 
+def _mock_forward_helper():
+    idx = pd.DatetimeIndex([datetime.date(2020, 5, 1), datetime.date(2020, 5, 2)] * 4)
+    data = {
+        'impliedVolatility': [2.1, 2, 3.1, 3, 4.1, 4, 5.1, 5],
+        'tenor': ['1m', '1m', '2m', '2m', '3m', '3m', '4m', '4m']
+    }
+    out = MarketDataResponseFrame(data=data, index=idx)
+    out.dataset_ids = _test_datasets
+    return out
+
+
+def _mock_forward_vol_data(_cls, q):
+    queries = q.get('queries', [])
+    if len(queries) > 0 and 'Last' in queries[0]['measures']:
+        return MarketDataResponseFrame()
+
+    return _mock_forward_helper()
+
+
+def _mock_forward_vol_data_with_last(_cls, q):
+    queries = q.get('queries', [])
+    if len(queries) > 0 and 'Last' in queries[0]['measures']:
+        idx = [pd.Timestamp('2020-05-03T12:00:00Z')] * 4
+        data = {
+            'impliedVolatility': [2, 3, 4, 5],
+            'tenor': ['1m', '2m', '3m', '4m']
+        }
+        ids = _test_datasets_rt
+        out = MarketDataResponseFrame(data=data, index=idx)
+        out.dataset_ids = ids
+        return out
+
+    return _mock_forward_helper()
+
+
+def _mock_forward_vol_data_error(_cls, q):
+    queries = q.get('queries', [])
+    if len(queries) > 0 and 'Last' in queries[0]['measures']:
+        raise MqValueError('something happened')
+
+    return _mock_forward_helper()
+
+
 def test_forward_vol():
     idx = pd.DatetimeIndex([datetime.date(2020, 5, 1), datetime.date(2020, 5, 2)] * 4)
     data = {
@@ -2471,7 +2603,7 @@ def test_forward_vol():
 
     replace = Replacer()
     market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
-    market_mock.return_value = out
+    market_mock.side_effect = _mock_forward_vol_data
 
     # Equity
     expected = pd.Series([5.58659, 5.47723], name='forwardVol',
@@ -2491,8 +2623,28 @@ def test_forward_vol():
     assert_series_equal(expected, pd.Series(actual_fx))
     assert actual_fx.dataset_ids == _test_datasets
 
-    # no data
+    # EQ with last
     market_mock.reset_mock()
+    market_mock.side_effect = _mock_forward_vol_data_with_last
+    expected = pd.Series([5.58659, 5.47723, 5.47723], name='forwardVol',
+                         index=pd.to_datetime(['2020-05-01', '2020-05-02', '2020-05-03']))
+    actual = tm.forward_vol(Index('MA123', AssetClass.Equity, '123'), '1m', '2m', tm.VolReference.SPOT, 100)
+    assert_series_equal(expected, pd.Series(actual))
+    for t in _test_datasets + _test_datasets_rt:
+        assert t in actual.dataset_ids
+    assert market_mock.call_count == 2
+
+    # EQ with exception on last
+    market_mock.reset_mock()
+    market_mock.side_effect = _mock_forward_vol_data_error
+    expected = pd.Series([5.58659, 5.47723], name='forwardVol',
+                         index=pd.to_datetime(['2020-05-01', '2020-05-02']))
+    actual = tm.forward_vol(Index('MA123', AssetClass.Equity, '123'), '1m', '2m', tm.VolReference.SPOT, 100)
+    assert_series_equal(expected, pd.Series(actual))
+    assert market_mock.call_count == 2
+
+    # no data
+    market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
     market_mock.return_value = mock_empty_market_data_response()
     actual = tm.forward_vol(Index('MA123', AssetClass.Equity, '123'), '1m', '2m', tm.VolReference.SPOT, 100)
     assert actual.empty
@@ -2502,7 +2654,8 @@ def test_forward_vol():
     market_mock.return_value = MarketDataResponseFrame(data={'impliedVolatility': [2.1, 3.1, 5.1],
                                                              'tenor': ['1m', '2m', '4m']},
                                                        index=[datetime.date(2020, 5, 1)] * 3)
-    actual = tm.forward_vol(Index('MA123', AssetClass.Equity, '123'), '1m', '2m', tm.VolReference.SPOT, 100)
+    with DataContext('2020-01-01', '2020-09-01'):
+        actual = tm.forward_vol(Index('MA123', AssetClass.Equity, '123'), '1m', '2m', tm.VolReference.SPOT, 100)
     assert actual.empty
 
     # real-time
@@ -2571,7 +2724,7 @@ def _vol_term_typical(reference, value):
 
     replace = Replacer()
     market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
-    market_mock.return_value = out
+    market_mock.side_effect = [pd.DataFrame(), out]
 
     actual = tm.vol_term(Index('MA123', AssetClass.Equity, '123'), reference, value)
     idx = pd.DatetimeIndex(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
@@ -2583,7 +2736,6 @@ def _vol_term_typical(reference, value):
     else:
         assert_series_equal(expected, pd.Series(actual))
         assert actual.dataset_ids == _test_datasets
-    market_mock.assert_called_once()
 
     replace.restore()
     return actual
@@ -2601,12 +2753,42 @@ def _vol_term_empty():
     replace.restore()
 
 
+def _vol_term_intraday():
+    assert DataContext.current_is_set
+    data = {
+        'tenor': ['1w', '2w', '1y', '2y', '1w', '2w', '1y', '2y'],
+        'impliedVolatility': [10, 20, 30, 40, 1, 2, 3, 4]
+    }
+    out = MarketDataResponseFrame(data=data, index=pd.date_range("2018-01-01", periods=8, freq="H"))
+    out.dataset_ids = _test_datasets
+
+    replace = Replacer()
+    market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    market_mock.return_value = out
+
+    actual = tm.vol_term(Index('MA123', AssetClass.Equity, '123'), tm.VolReference.SPOT, 100)
+    idx = pd.DatetimeIndex(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
+    expected = pd.Series([1, 2, 3, 4], name='impliedVolatility', index=idx)
+    expected = expected.loc[DataContext.current.start_date: DataContext.current.end_date]
+
+    if expected.empty:
+        assert actual.empty
+    else:
+        assert_series_equal(expected, pd.Series(actual))
+        assert actual.dataset_ids == _test_datasets
+    market_mock.assert_called_once()
+
+    replace.restore()
+    return actual
+
+
 def test_vol_term():
     with DataContext('2018-01-01', '2019-01-01'):
         _vol_term_typical(tm.VolReference.SPOT, 100)
         _vol_term_typical(tm.VolReference.NORMALIZED, 4)
         _vol_term_typical(tm.VolReference.DELTA_PUT, 50)
         _vol_term_empty()
+        _vol_term_intraday()
     with DataContext('2018-01-16', '2018-12-31'):
         out = _vol_term_typical(tm.VolReference.SPOT, 100)
         assert out.empty
@@ -2928,7 +3110,8 @@ def test_forward_price():
         assert_series_equal(pd.Series(target['7x24'],
                                       index=[datetime.date(2019, 1, 2)],
                                       name='price'),
-                            pd.Series(actual))
+                            pd.Series(actual)
+                            )
 
         with pytest.raises(ValueError):
             tm.forward_price(mock_spp,
@@ -3013,6 +3196,191 @@ def test_forward_price():
                                       contract_range='2Q20',
                                       bucket='7x24'
                                       )
+            assert_series_equal(pd.Series(dtype='float64'), pd.Series(actual))
+        replace.restore()
+
+
+def test_implied_volatility_elec():
+    # US Power
+    target = {
+        '7x24': [0.403352],
+        'peak': [0.383025],
+        'J20 7x24': [0.372178],
+        'J20-K20 7x24': [0.3737661202185792],
+        'J20-K20 offpeak': [0.3922989898989899],
+        'J20-K20 7x8': [0.4322360655737705],
+    }
+    replace = Replacer()
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_implied_volatility_elec)
+    mock_spp = Index('MA001', AssetClass.Commod, 'SPP')
+
+    with DataContext(datetime.date(2019, 1, 2), datetime.date(2019, 1, 2)):
+        bbid_mock = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+        bbid_mock.return_value = 'SPP'
+
+        # Should return empty series as mark for '7x8' bucket is missing
+        actual = tm.implied_volatility_elec(mock_spp,
+                                            price_method='LMP',
+                                            contract_range='2Q20',
+                                            bucket='7x24'
+                                            )
+        assert_series_equal(pd.Series(target['7x24'],
+                                      index=[datetime.date(2019, 1, 2)],
+                                      name='price'),
+                            pd.Series(actual)
+                            )
+
+        actual = tm.implied_volatility_elec(mock_spp,
+                                            price_method='LMP',
+                                            contract_range='J20',
+                                            bucket='7x24'
+                                            )
+        assert_series_equal(pd.Series(target['J20 7x24'],
+                                      index=[datetime.date(2019, 1, 2)],
+                                      name='price'),
+                            pd.Series(actual)
+                            )
+
+        actual = tm.implied_volatility_elec(mock_spp,
+                                            price_method='LMP',
+                                            contract_range='2Q20',
+                                            bucket='PEAK'
+                                            )
+        assert_series_equal(pd.Series(target['peak'],
+                                      index=[datetime.date(2019, 1, 2)],
+                                      name='price'),
+                            pd.Series(actual)
+                            )
+
+        actual = tm.implied_volatility_elec(mock_spp,
+                                            price_method='LMP',
+                                            contract_range='J20-K20',
+                                            bucket='7x24'
+                                            )
+        assert_series_equal(pd.Series(target['J20-K20 7x24'],
+                                      index=[datetime.date(2019, 1, 2)],
+                                      name='price'),
+                            pd.Series(actual)
+                            )
+
+        actual = tm.implied_volatility_elec(mock_spp,
+                                            price_method='LMP',
+                                            contract_range='J20-K20',
+                                            bucket='offpeak'
+                                            )
+        assert_series_equal(pd.Series(target['J20-K20 offpeak'],
+                                      index=[datetime.date(2019, 1, 2)],
+                                      name='price'),
+                            pd.Series(actual)
+                            )
+
+        actual = tm.implied_volatility_elec(mock_spp,
+                                            price_method='LMP',
+                                            contract_range='J20-K20',
+                                            bucket='7x8'
+                                            )
+        assert_series_equal(pd.Series(target['J20-K20 7x8'],
+                                      index=[datetime.date(2019, 1, 2)],
+                                      name='price'),
+                            pd.Series(actual)
+                            )
+
+        actual = tm.implied_volatility_elec(mock_spp,
+                                            price_method='lmp',
+                                            contract_range='2Q20',
+                                            bucket='7x24'
+                                            )
+        assert_series_equal(pd.Series(target['7x24'],
+                                      index=[datetime.date(2019, 1, 2)],
+                                      name='price'),
+                            pd.Series(actual)
+                            )
+
+        with pytest.raises(ValueError):
+            tm.implied_volatility_elec(mock_spp,
+                                       price_method='LMP',
+                                       contract_range='5Q20',
+                                       bucket='PEAK'
+                                       )
+
+        with pytest.raises(ValueError):
+            tm.implied_volatility_elec(mock_spp,
+                                       price_method='LMP',
+                                       contract_range='Invalid',
+                                       bucket='PEAK'
+                                       )
+
+        with pytest.raises(ValueError):
+            tm.implied_volatility_elec(mock_spp,
+                                       price_method='LMP',
+                                       contract_range='3H20',
+                                       bucket='7x24'
+                                       )
+
+        with pytest.raises(ValueError):
+            tm.implied_volatility_elec(mock_spp,
+                                       price_method='LMP',
+                                       contract_range='F20-I20',
+                                       bucket='7x24'
+                                       )
+
+        with pytest.raises(ValueError):
+            tm.implied_volatility_elec(mock_spp,
+                                       price_method='LMP',
+                                       contract_range='2H20',
+                                       bucket='7x24',
+                                       real_time=True
+                                       )
+
+        replace.restore()
+
+        replace = Replacer()
+        replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_missing_bucket_implied_volatility)
+        bbid_mock = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+        bbid_mock.return_value = 'SPP'
+
+        actual = tm.implied_volatility_elec(mock_spp,
+                                            price_method='LMP',
+                                            contract_range='2Q20',
+                                            bucket='7x24'
+                                            )
+
+        assert_series_equal(pd.Series(), pd.Series(actual), check_names=False)
+
+        actual = tm.implied_volatility_elec(mock_spp,
+                                            price_method='LMP',
+                                            contract_range='2Q20',
+                                            bucket='PEAK'
+                                            )
+        assert_series_equal(pd.Series(target['peak'],
+                                      index=[datetime.date(2019, 1, 2)],
+                                      name='price'),
+                            pd.Series(actual)
+                            )
+
+        actual = tm.implied_volatility_elec(mock_spp,
+                                            price_method='LMP',
+                                            contract_range='J20-K20',
+                                            bucket='7x24'
+                                            )
+        assert_series_equal(pd.Series(target['J20-K20 7x24'],
+                                      index=[datetime.date(2019, 1, 2)],
+                                      name='price'),
+                            pd.Series(actual)
+                            )
+        replace.restore()
+
+        # No market data
+        market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+        market_mock.return_value = mock_empty_market_data_response()
+        bbid_mock = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+        bbid_mock.return_value = 'SPP'
+        with DataContext(datetime.date(2019, 1, 2), datetime.date(2019, 1, 2)):
+            actual = tm.implied_volatility_elec(mock_spp,
+                                                price_method='LMP',
+                                                contract_range='2Q20',
+                                                bucket='7x24'
+                                                )
             assert_series_equal(pd.Series(dtype='float64'), pd.Series(actual))
         replace.restore()
 

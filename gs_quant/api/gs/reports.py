@@ -19,6 +19,7 @@ import urllib.parse
 from typing import Tuple, List
 
 from gs_quant.session import GsSession
+from gs_quant.target.common import Currency
 from gs_quant.target.reports import Report, ReportScheduleRequest, ReportJob
 
 _logger = logging.getLogger(__name__)
@@ -97,6 +98,7 @@ class GsReportApi:
                                      risk_report_id: str,
                                      factors: List[str] = None,
                                      factor_categories: List[str] = None,
+                                     currency: Currency = None,
                                      start_date: dt.date = None,
                                      end_date: dt.date = None) -> dict:
         url = ''
@@ -105,6 +107,8 @@ class GsReportApi:
             url += '&factors={factors}'.format(factors='&factors='.join(factors))
         if factor_categories is not None:
             url += '&factorCategories={categories}'.format(categories='&factorCategories='.join(factors))
+        if currency is not None:
+            url += f'&currency={currency.value}'
         if start_date is not None:
             url += '&startDate={date}'.format(date=start_date.strftime('%Y-%m-%d'))
         if end_date is not None:

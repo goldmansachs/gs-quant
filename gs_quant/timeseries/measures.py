@@ -18,6 +18,7 @@ import logging
 import re
 from collections import namedtuple
 from enum import auto
+from functools import partial
 from numbers import Real
 
 import cachetools.func
@@ -28,10 +29,12 @@ from dateutil.relativedelta import relativedelta
 from pandas import Series
 from pandas.tseries.holiday import Holiday, AbstractHolidayCalendar, USMemorialDay, USLaborDay, USThanksgivingDay, \
     sunday_to_monday
+from pydash import chunk
 
 from gs_quant.api.gs.assets import GsIdType
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.api.gs.data import QueryType
+from gs_quant.api.utils import ThreadPoolManager
 from gs_quant.data import Dataset
 from gs_quant.data.core import DataContext
 from gs_quant.data.fields import Fields
@@ -795,14 +798,21 @@ def implied_correlation(asset: Asset, tenor: str, strike_reference: EdrDataRefer
 
     # results for top n
     constituents = _get_index_constituent_weights(asset, top_n_of_index, composition_date)
-    query = GsDataApi.build_market_data_query(
-        constituents.index.to_list() + [mqid],
-        QueryType.IMPLIED_VOLATILITY,
-        where=where,
-        source=source,
-        real_time=real_time
-    )
-    df = _market_data_timed(query, request_id)
+
+    tasks = []
+    for i, constituent_chunk in enumerate(chunk(constituents.index.to_list(), 5)):
+        query = GsDataApi.build_market_data_query(
+            constituent_chunk + [mqid] if i == 0 else constituent_chunk,
+            QueryType.IMPLIED_VOLATILITY,
+            where=where,
+            source=source,
+            real_time=real_time)
+
+        tasks.append(partial(_market_data_timed, query, request_id))
+
+    results = ThreadPoolManager.run_async(tasks)
+    df = pd.concat(results)
+
     dataset_ids = getattr(df, 'dataset_ids', ())
     df = df[['assetId', 'impliedVolatility']]
     series = _calculate_implied_correlation(mqid, df, constituents.to_dict()['netWeight'], request_id)
@@ -1070,7 +1080,7 @@ def average_realized_volatility(asset: Asset, tenor: str, returns_type: Returns 
                                                                                     Window(tenor, tenor), returns_type))
             weighted_vols.append(vol * weight)
 
-        series = ExtendedSeries(pd.concat(weighted_vols, axis=1).sum(1, min_count=1),
+        series = ExtendedSeries(pd.concat(weighted_vols, axis=1).sum(1, min_count=top_n_of_index),
                                 name='averageRealizedVolatility') if len(weighted_vols) else ExtendedSeries()
         series.dataset_ids = getattr(df, 'dataset_ids', ())
         return series
@@ -1350,7 +1360,8 @@ def fx_forecast(asset: Asset, relativePeriod: FxForecastHorizon = FxForecastHori
 
 @plot_measure((AssetClass.Equity, AssetClass.FX), None, [QueryType.IMPLIED_VOLATILITY])
 def forward_vol(asset: Asset, tenor: str, forward_start_date: str, strike_reference: VolReference,
-                relative_strike: Real, *, source: str = None, real_time: bool = False) -> pd.Series:
+                relative_strike: Real, *, source: str = None, real_time: bool = False,
+                request_id: Optional[str] = None) -> pd.Series:
     """
     Forward volatility.
 
@@ -1361,6 +1372,7 @@ def forward_vol(asset: Asset, tenor: str, forward_start_date: str, strike_refere
     :param relative_strike: strike relative to reference
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id service request id, if any
     :return: forward volatility curve
     """
     if real_time:
@@ -1378,13 +1390,40 @@ def forward_vol(asset: Asset, tenor: str, forward_start_date: str, strike_refere
     t1 = _month_to_tenor(t1_month)
     t2 = _month_to_tenor(t2_month)
 
-    _logger.debug('where strikeReference=%s, relativeStrike=%s, tenor=%s', sr_string, relative_strike, f'{t1},{t2}')
-    where = dict(tenor=[t1, t2], strikeReference=sr_string, relativeStrike=relative_strike)
+    log_debug(request_id, _logger, 'where strikeReference=%s, relativeStrike=%s, tenor=%s',
+              sr_string, relative_strike, f'{t1},{t2}')
+    where = dict(tenor=[t1, t2], strikeReference=[sr_string], relativeStrike=[relative_strike])
     q = GsDataApi.build_market_data_query([asset_id], QueryType.IMPLIED_VOLATILITY, where=where,
                                           source=source, real_time=real_time)
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
-    dataset_ids = getattr(df, 'dataset_ids', ())
+    dataset_ids = []
+    log_debug(request_id, _logger, 'q %s', q)
+    df = _market_data_timed(q, request_id)
+    dataset_ids.extend(getattr(df, 'dataset_ids', ()))
+
+    now = datetime.date.today()
+    if not real_time and DataContext.current.end_date >= now:
+        where_list = _split_conditions(where)
+        delta = datetime.timedelta(days=1)
+        with DataContext(now - delta, now + delta):
+            net = {"queries": []}
+            for wl in where_list:
+                last_q = GsDataApi.build_market_data_query([asset_id], QueryType.IMPLIED_VOLATILITY,
+                                                           where=wl, source=source, real_time=True, measure='Last')
+                net["queries"].extend(last_q["queries"])
+
+        log_debug(request_id, _logger, 'last q %s', net)
+        try:
+            df_l = _market_data_timed(net, request_id)
+            dataset_ids.extend(getattr(df_l, 'dataset_ids', ()))
+        except Exception as e:
+            _logger.warning('error loading Last of implied vol', exc_info=e)
+        else:
+            if df_l.empty:
+                _logger.warning('no data for Last of implied vol')
+            else:
+                df_l.index = df_l.index.tz_convert(None).normalize()
+                if df_l.index.max() > df.index.max():
+                    df = pd.concat([df, df_l])
 
     if df.empty:
         series = ExtendedSeries(name='forwardVol')
@@ -1394,12 +1433,12 @@ def forward_vol(asset: Asset, tenor: str, forward_start_date: str, strike_refere
             sg = grouped.get_group(t1)['impliedVolatility']
             lg = grouped.get_group(t2)['impliedVolatility']
         except KeyError:
-            _logger.debug('no data for one or more tenors')
+            log_debug(request_id, _logger, 'no data for one or more tenors')
             series = ExtendedSeries(name='forwardVol')
         else:
             series = ExtendedSeries(sqrt((t2_month * lg ** 2 - t1_month * sg ** 2) / _tenor_to_month(tenor)),
                                     name='forwardVol')
-    series.dataset_ids = dataset_ids
+    series.dataset_ids = tuple(dataset_ids)
     return series
 
 
@@ -1498,17 +1537,40 @@ def vol_term(asset: Asset, strike_reference: VolReference, relative_strike: Real
     _logger.debug('where strikeReference=%s, relativeStrike=%s', sr_string, relative_strike)
     where = dict(strikeReference=sr_string, relativeStrike=relative_strike)
 
-    def fetcher():
-        q = GsDataApi.build_market_data_query([asset_id], QueryType.IMPLIED_VOLATILITY, where=where,
-                                              source=source,
-                                              real_time=real_time)
-        _logger.debug('q %s', q)
-        return _market_data_timed(q)
+    df = pd.DataFrame()
+    dataset_ids = set()
+    today = datetime.date.today()
+    if asset.asset_class == AssetClass.Equity and (pricing_date is None or end >= today):  # use intraday data
+        with DataContext(today, today + datetime.timedelta(days=1)):
+            q_l = GsDataApi.build_market_data_query([asset_id], QueryType.IMPLIED_VOLATILITY, where=where,
+                                                    source=source, real_time=True)
+        _logger.debug('q_l %s', q_l)
 
-    df = get_df_with_retries(fetcher, start, end, asset.exchange)
-    dataset_ids = getattr(df, 'dataset_ids', ())
+        try:
+            df = _market_data_timed(q_l)
+        except Exception as e:
+            _logger.warning('unable to get last of implied_vol', exc_info=e)
+        else:
+            dataset_ids.update(getattr(df, 'dataset_ids', ()))
+            if df.empty:
+                _logger.warning('no data for last of implied_vol')
+            else:
+                df['date'] = df.index.date
+                df = df.groupby('tenor', as_index=False).last()
+                df = df.set_index('date')
     if df.empty:
-        series = ExtendedSeries()
+        def fetcher():
+            q = GsDataApi.build_market_data_query([asset_id], QueryType.IMPLIED_VOLATILITY, where=where,
+                                                  source=source,
+                                                  real_time=real_time)
+            _logger.debug('q %s', q)
+            return _market_data_timed(q)
+
+        df = get_df_with_retries(fetcher, start, end, asset.exchange)
+        dataset_ids.update(getattr(df, 'dataset_ids', ()))
+
+    if df.empty:
+        series = ExtendedSeries(dtype='float64')
     else:
         latest = df.index.max()
         _logger.info('selected pricing date %s', latest)
@@ -1518,8 +1580,8 @@ def vol_term(asset: Asset, strike_reference: VolReference, relative_strike: Real
         df = df.set_index('expirationDate')
         df.sort_index(inplace=True)
         df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
-        series = ExtendedSeries() if df.empty else ExtendedSeries(df['impliedVolatility'])
-    series.dataset_ids = dataset_ids
+        series = ExtendedSeries(dtype='float64') if df.empty else ExtendedSeries(df['impliedVolatility'])
+    series.dataset_ids = tuple(dataset_ids)
     return series
 
 
@@ -2205,6 +2267,53 @@ def forward_price(asset: Asset, price_method: str = 'LMP', bucket: str = 'PEAK',
         raise MqValueError('Use daily frequency instead of intraday')
 
     return _forward_price_elec(asset, price_method, bucket, contract_range)
+
+
+@plot_measure((AssetClass.Commod,), (AssetType.Index, AssetType.CommodityPowerAggregatedNodes,
+                                     AssetType.CommodityPowerNode,), [QueryType.IMPLIED_VOLATILITY])
+def implied_volatility_elec(asset: Asset, price_method: str = 'LMP', bucket: str = 'PEAK',
+                            contract_range: str = 'F20', *, source: str = None, real_time: bool = False) -> pd.Series:
+    """
+    Implied Volatility
+
+    :param asset: asset object loaded from security master
+    :param price_method: price method between LMP, MCP, SPP for US Power assets
+    :param bucket: bucket type among '7x24', 'peak', 'offpeak', '2x16h', '7x16' and '7x8': Default value = 7x24
+    :param contract_range: e.g. inputs - 'Cal20', 'F20-G20', '2Q20', '2H20', 'Cal20-Cal21': Default Value = F20
+    :param source: name of function caller: default source = None
+    :param real_time: whether to retrieve intraday data instead of EOD: default value = False
+    :return: Forward Prices
+    """
+    if real_time:
+        raise MqValueError('Use daily frequency instead of intraday')
+
+    (start_contract_range, end_contract_range) = _get_start_and_end_dates(contract_range=contract_range)
+
+    weights = _get_weight_for_bucket(asset, start_contract_range, end_contract_range, bucket)
+    start, end = DataContext.current.start_date, DataContext.current.end_date
+
+    contracts_to_query = weights['contract'].unique().tolist()
+    quantitybuckets_to_query = weights['quantityBucket'].unique().tolist()
+
+    where = dict(priceMethod=price_method.upper(), quantityBucket=quantitybuckets_to_query, contract=contracts_to_query)
+
+    with DataContext(start, end):
+        q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.IMPLIED_VOLATILITY,
+                                              where=where, source=None,
+                                              real_time=False)
+        _logger.debug('q %s', q)
+        implied_vols_data = _market_data_timed(q)
+        dataset_ids = getattr(implied_vols_data, 'dataset_ids', ())
+
+    if implied_vols_data.empty:
+        result = ExtendedSeries(dtype='float64')
+    else:
+        implied_vols_data['dates'] = implied_vols_data.index.date
+        keys = ['quantityBucket', 'contract', 'dates']
+        measure_column = 'impliedVolatility'
+        result = _merge_curves_by_weighted_average(implied_vols_data, weights, keys, measure_column)
+    result.dataset_ids = dataset_ids
+    return result
 
 
 def eu_ng_hub_to_swap(asset_spec: ASSET_SPEC) -> str:

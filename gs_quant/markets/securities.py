@@ -134,6 +134,9 @@ class AssetType(Enum):
     #: Forward
     FORWARD = "Forward"
 
+    #: Fund
+    FUND = "Fund"
+
 
 class AssetIdentifier(EntityIdentifier):
     """Asset type enumeration
@@ -422,8 +425,11 @@ class Cross(Asset):
     def __init__(self,
                  id_: str,
                  name: str,
-                 entity: Optional[Dict] = None):
-        Asset.__init__(self, id_, AssetClass.FX, name, entity=entity)
+                 entity: Optional[Dict] = None,
+                 asset_class: Optional[Union[AssetClass, str]] = AssetClass.FX):
+        if isinstance(asset_class, str):
+            asset_class = get_enum_value(AssetClass, asset_class)
+        Asset.__init__(self, id_, asset_class, name, entity=entity)
 
     def get_type(self) -> AssetType:
         return AssetType.CROSS
@@ -665,6 +671,22 @@ class Bond(Asset):
         return AssetType.BOND
 
 
+class Fund(Asset):
+    """Fund
+    Represents a fund.
+    """
+
+    def __init__(self,
+                 id_: str,
+                 name: str,
+                 asset_class: AssetClass,
+                 entity: Optional[Dict] = None):
+        Asset.__init__(self, id_, asset_class, name, entity=entity)
+
+    def get_type(self) -> AssetType:
+        return AssetType.FUND
+
+
 class FutureMarket(Asset):
     """Future Market
 
@@ -860,7 +882,7 @@ class SecurityMaster:
             return Future(gs_asset.id, gs_asset.assetClass, gs_asset.name, gs_asset.currency, entity=asset_entity)
 
         if asset_type in (GsAssetType.Cross.value,):
-            return Cross(gs_asset.id, gs_asset.name, entity=asset_entity)
+            return Cross(gs_asset.id, gs_asset.name, entity=asset_entity, asset_class=gs_asset.assetClass)
 
         if asset_type in (GsAssetType.Currency.value,):
             return Currency(gs_asset.id, gs_asset.name, entity=asset_entity)
@@ -914,6 +936,9 @@ class SecurityMaster:
         if asset_type == GsAssetType.Forward.value:
             return Forward(gs_asset.id, gs_asset.assetClass, gs_asset.name, entity=asset_entity)
 
+        if asset_type == GsAssetType.Fund.value:
+            return Fund(gs_asset.id, gs_asset.name, gs_asset.assetClass, entity=asset_entity)
+
         raise TypeError(f'unsupported asset type {asset_type}')
 
     @classmethod
@@ -938,8 +963,7 @@ class SecurityMaster:
                   as_of: Union[dt.date, dt.datetime] = None,
                   exchange_code: ExchangeCode = None,
                   asset_type: AssetType = None,
-                  sort_by_rank: bool = False
-                  ) -> Asset:
+                  sort_by_rank: bool = False) -> Asset:
         """
         Get an asset by identifier and identifier type
 

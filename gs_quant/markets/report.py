@@ -6,7 +6,7 @@ You may obtain a copy of the License at
 
   http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicablNe law or agreed to in writing,
+Unless required by applicable law or agreed to in writing,
 software distributed under the License is distributed on an
 "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 KIND, either express or implied.  See the License for the
@@ -14,140 +14,414 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime as dt
-from typing import Tuple
+from enum import Enum
+from typing import Tuple, Union, List, Dict
+
+import pandas as pd
 
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.api.gs.reports import GsReportApi
-from gs_quant.target.common import FieldValueMap
-from gs_quant.target.data import DataQuery
-from gs_quant.target.reports import Report
+from gs_quant.errors import MqValueError
+from gs_quant.models.risk_model import ReturnFormat
+from gs_quant.target.common import ReportParameters, Currency
+from gs_quant.target.coordinates import MDAPIDataBatchResponse
+from gs_quant.target.data import DataQuery, DataQueryResponse
+from gs_quant.target.reports import Report as TargetReport
+from gs_quant.target.reports import ReportType, PositionSourceType, ReportStatus
 
-PPA_DATASET = "PPA"
-PFR_DATASET = "PFR"
-AFR_DATASET = "AFR"
+
+class ReportDataset(Enum):
+    PPA_DATASET = "PPA"
+    PFR_DATASET = "PFR"
+    AFR_DATASET = "AFR"
 
 
-class BaseReport:
+class Report:
     """"Private variables"""
-    def __init__(self, report_id: str):
-        self.report = GsReportApi.get_report(report_id=report_id)
 
-    def get_id(self):
-        return self.report.id
+    def __init__(self,
+                 report_id: str = None,
+                 name: str = None,
+                 position_source_id: str = None,
+                 position_source_type: Union[str, PositionSourceType] = None,
+                 report_type: Union[str, ReportType] = None,
+                 parameters: ReportParameters = None,
+                 latest_end_date: dt.date = None,
+                 latest_execution_time: dt.datetime = None,
+                 status: Union[str, ReportStatus] = ReportStatus.new,
+                 percentage_complete: float = None):
+        self.__id = report_id
+        self.__name = name
+        self.__position_source_id = position_source_id
+        self.__position_source_type = position_source_type \
+            if isinstance(position_source_type, PositionSourceType) or position_source_type is None \
+            else PositionSourceType(position_source_type)
+        self.__type = report_type if isinstance(report_type, ReportType) or report_type is None \
+            else ReportType(report_type)
+        self.__parameters = parameters
+        self.__latest_end_date = latest_end_date
+        self.__latest_execution_time = latest_execution_time
+        self.__status = status if isinstance(status, ReportStatus) else ReportStatus(status)
+        self.__percentage_complete = percentage_complete
 
-    def get_position_source_type(self):
-        return self.report.position_source_type
+    @property
+    def id(self) -> str:
+        return self.__id
 
-    def get_parameters(self):
-        return self.report.parameters
+    @property
+    def name(self) -> str:
+        return self.__name
 
-    def get_type(self):
-        return self.report.type
+    @property
+    def position_source_id(self) -> str:
+        return self.__position_source_id
 
-    @staticmethod
-    def get_report_by_id(report_id: str) -> Report:
-        """ Hits GsReportsApi to retrieve a report from id """
-        return GsReportApi.get_report(report_id)
+    @position_source_id.setter
+    def position_source_id(self, value: str):
+        self.__position_source_id = value
 
-    @staticmethod
-    def create_report(report: Report):
-        """ Creates a report using GsReportApi """
-        GsReportApi.create_report(report)
+    @property
+    def position_source_type(self) -> PositionSourceType:
+        return self.__position_source_type
 
-    @staticmethod
-    def update_report(report: Report):
-        """ Update report using GsReportApi """
-        GsReportApi.update_report(report)
+    @position_source_type.setter
+    def position_source_type(self, value: Union[str, PositionSourceType]):
+        self.__position_source_type = value if isinstance(value, PositionSourceType) else PositionSourceType(value)
 
-    @staticmethod
-    def delete_report_by_id(report_id: str):
+    @property
+    def type(self) -> ReportType:
+        return self.__type
+
+    @type.setter
+    def type(self, value: Union[str, ReportType]):
+        self.__type = value if isinstance(value, ReportType) else ReportType(value)
+
+    @property
+    def parameters(self) -> ReportParameters:
+        return self.__parameters
+
+    @parameters.setter
+    def parameters(self, value: ReportParameters):
+        self.__parameters = value
+
+    @property
+    def latest_end_date(self) -> dt.date:
+        return self.__latest_end_date
+
+    @property
+    def latest_execution_time(self) -> dt.datetime:
+        return self.__latest_execution_time
+
+    @property
+    def status(self) -> ReportStatus:
+        return self.__status
+
+    @property
+    def percentage_complete(self) -> float:
+        return self.__percentage_complete
+
+    @classmethod
+    def get(cls,
+            report_id: str,
+            acceptable_types: List[ReportType] = None):
+        # This map cant be instantiated / stored at the top of this file, bc the Factor/RiskReport classes aren't
+        # defined there. Don't know the best place to put this
+        report_type_to_class_type = {
+            ReportType.Portfolio_Factor_Risk: type(FactorRiskReport()),
+            ReportType.Asset_Factor_Risk: type(FactorRiskReport()),
+            ReportType.Portfolio_Performance_Analytics: type(PerformanceReport())
+        }
+
+        report = GsReportApi.get_report(report_id=report_id)
+        if acceptable_types is not None and report.type not in acceptable_types:
+            raise MqValueError('Unexpected report type found.')
+        if report.type in report_type_to_class_type:
+            return report_type_to_class_type[report.type].from_target(report)
+        return Report.from_target(report)
+
+    @classmethod
+    def from_target(cls,
+                    report: TargetReport):
+        return Report(report_id=report.id,
+                      name=report.name,
+                      position_source_id=report.position_source_id,
+                      position_source_type=report.position_source_type,
+                      report_type=report.type,
+                      parameters=report.parameters,
+                      latest_end_date=report.latest_end_date,
+                      latest_execution_time=report.latest_execution_time,
+                      status=report.status,
+                      percentage_complete=report.percentage_complete)
+
+    def save(self):
+        """ Create a report using GsReportApi if it doesn't exist. Update the report if it does. """
+        target_report = TargetReport(name=self.name,
+                                     position_source_id=self.position_source_id,
+                                     position_source_type=self.position_source_type,
+                                     type_=self.type,
+                                     parameters=self.parameters if self.parameters else ReportParameters())
+        if self.id:
+            target_report.id = self.id
+            GsReportApi.update_report(target_report)
+        else:
+            GsReportApi.create_report(target_report)
+
+    def delete(self):
         """ Hits GsReportsApi to delete a report """
-        GsReportApi.delete_report(report_id)
+        GsReportApi.delete_report(self.id)
+
+    def set_position_target(self, entity_id: str):
+        is_portfolio = entity_id.startswith('MP')
+        self.position_source_type = 'Portfolio' if is_portfolio else 'Asset'
+        self.position_source_id = entity_id
+        if isinstance(self, FactorRiskReport):
+            self.type = ReportType.Portfolio_Factor_Risk if is_portfolio else ReportType.Asset_Factor_Risk
 
 
-class PerformanceReport(BaseReport):
-    @classmethod
-    def get_pnl(cls, report_id: str, start_date: dt.date = None, end_date: dt.date = None):
-        return cls.get_measure(report_id, "pnl", start_date, end_date)
+class PerformanceReport(Report):
 
-    @classmethod
-    def get_long_exposure(cls, report_id: str, start_date: dt.date = None, end_date: dt.date = None):
-        return cls.get_measure(report_id, "longExposure", start_date, end_date)
-
-    @classmethod
-    def get_short_exposure(cls, report_id: str, start_date: dt.date = None, end_date: dt.date = None):
-        return cls.get_measure(report_id, "shortExposure", start_date, end_date)
-
-    @classmethod
-    def get_asset_count(cls, report_id: str, start_date: dt.date = None, end_date: dt.date = None):
-        return cls.get_measure(report_id, "assetCount", start_date, end_date)
-
-    @classmethod
-    def get_turnover(cls, report_id: str, start_date: dt.date = None, end_date: dt.date = None):
-        return cls.get_measure(report_id, "turnover", start_date, end_date)
-
-    @classmethod
-    def get_asset_count_long(cls, report_id: str, start_date: dt.date = None, end_date: dt.date = None):
-        return cls.get_measure(report_id, "assetCountLong", start_date, end_date)
-
-    @classmethod
-    def get_asset_count_short(cls, report_id: str, start_date: dt.date = None, end_date: dt.date = None):
-        return cls.get_measure(report_id, "assetCountShort", start_date, end_date)
+    def __init__(self,
+                 report_id: str = None,
+                 name: str = None,
+                 position_source_id: str = None,
+                 position_source_type: Union[str, PositionSourceType] = None,
+                 parameters: ReportParameters = None,
+                 latest_end_date: dt.date = None,
+                 latest_execution_time: dt.datetime = None,
+                 status: Union[str, ReportStatus] = ReportStatus.new,
+                 percentage_complete: float = None,
+                 **kwargs):
+        super().__init__(report_id, name, position_source_id, position_source_type,
+                         ReportType.Portfolio_Performance_Analytics, parameters, latest_end_date, latest_execution_time,
+                         status, percentage_complete)
 
     @classmethod
-    def get_net_exposure(cls, report_id: str, start_date: dt.date = None, end_date: dt.date = None):
-        return cls.get_measure(report_id, "netExposure", start_date, end_date)
+    def get(cls,
+            report_id: str,
+            **kwargs):
+        return super(PerformanceReport, cls).get(report_id=report_id,
+                                                 acceptable_types=[ReportType.Portfolio_Performance_Analytics])
 
     @classmethod
-    def get_gross_exposure(cls, report_id: str, start_date: dt.date = None, end_date: dt.date = None):
-        return cls.get_measure(report_id, "grossExposure", start_date, end_date)
+    def from_target(cls,
+                    report: TargetReport):
+        if report.type != ReportType.Portfolio_Performance_Analytics:
+            raise MqValueError('This report is not a performance report.')
+        return PerformanceReport(report_id=report.id,
+                                 name=report.name,
+                                 position_source_id=report.position_source_id,
+                                 position_source_type=report.position_source_type,
+                                 report_type=report.type,
+                                 parameters=report.parameters,
+                                 latest_end_date=report.latest_end_date,
+                                 latest_execution_time=report.latest_execution_time,
+                                 status=report.status,
+                                 percentage_complete=report.percentage_complete)
 
-    @classmethod
-    def get_trading_pnl(cls, report_id: str, start_date: dt.date = None, end_date: dt.date = None):
-        return cls.get_measure(report_id, "tradingPnl", start_date, end_date)
+    def get_pnl(self,
+                start_date: dt.date = None,
+                end_date: dt.date = None) -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
+        return self.get_measure("pnl", start_date, end_date)
 
-    @classmethod
-    def get_trading_cost_pnl(cls, report_id: str, start_date: dt.date = None, end_date: dt.date = None):
-        return cls.get_measure(report_id, "tradingCostPnl", start_date, end_date)
+    def get_long_exposure(self,
+                          start_date: dt.date = None,
+                          end_date: dt.date = None) -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
+        return self.get_measure("longExposure", start_date, end_date)
 
-    @classmethod
-    def get_servicing_cost_long_pnl(cls, report_id: str, start_date: dt.date = None, end_date: dt.date = None):
-        return cls.get_measure(report_id, "servicingCostLongPnl", start_date, end_date)
+    def get_short_exposure(self,
+                           start_date: dt.date = None,
+                           end_date: dt.date = None) -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
+        return self.get_measure("shortExposure", start_date, end_date)
 
-    @classmethod
-    def get_servicing_cost_short_pnl(cls, report_id: str, start_date: dt.date = None, end_date: dt.date = None):
-        return cls.get_measure(report_id, "servicingCostShortPnl", start_date, end_date)
+    def get_asset_count(self,
+                        start_date: dt.date = None,
+                        end_date: dt.date = None) -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
+        return self.get_measure("assetCount", start_date, end_date)
 
-    @classmethod
-    def get_asset_count_priced(cls, report_id: str, start_date: dt.date = None, end_date: dt.date = None):
-        return cls.get_measure(report_id, "assetCountPriced", start_date, end_date)
+    def get_turnover(self,
+                     start_date: dt.date = None,
+                     end_date: dt.date = None) -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
+        return self.get_measure("turnover", start_date, end_date)
 
-    @classmethod
-    def get_measure(cls, report_id: str, field: str, start_date: dt.date = None, end_date: dt.date = None):
-        fields = [field]
-        where = FieldValueMap(report_id=report_id)
+    def get_asset_count_long(self,
+                             start_date: dt.date = None,
+                             end_date: dt.date = None) -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
+        return self.get_measure("assetCountLong", start_date, end_date)
+
+    def get_asset_count_short(self,
+                              start_date: dt.date = None,
+                              end_date: dt.date = None) \
+            -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
+        return self.get_measure("assetCountShort", start_date, end_date)
+
+    def get_net_exposure(self,
+                         start_date: dt.date = None,
+                         end_date: dt.date = None) -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
+        return self.get_measure("netExposure", start_date, end_date)
+
+    def get_gross_exposure(self,
+                           start_date: dt.date = None,
+                           end_date: dt.date = None) -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
+        return self.get_measure("grossExposure", start_date, end_date)
+
+    def get_trading_pnl(self,
+                        start_date: dt.date = None,
+                        end_date: dt.date = None) -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
+        return self.get_measure("tradingPnl", start_date, end_date)
+
+    def get_trading_cost_pnl(self,
+                             start_date: dt.date = None,
+                             end_date: dt.date = None) -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
+        return self.get_measure("tradingCostPnl", start_date, end_date)
+
+    def get_servicing_cost_long_pnl(self,
+                                    start_date: dt.date = None,
+                                    end_date: dt.date = None) \
+            -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
+        return self.get_measure("servicingCostLongPnl", start_date, end_date)
+
+    def get_servicing_cost_short_pnl(self,
+                                     start_date: dt.date = None,
+                                     end_date: dt.date = None) \
+            -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
+        return self.get_measure("servicingCostShortPnl", start_date, end_date)
+
+    def get_asset_count_priced(self,
+                               start_date: dt.date = None,
+                               end_date: dt.date = None) \
+            -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
+        return self.get_measure("assetCountPriced", start_date, end_date)
+
+    def get_measure(self,
+                    field: str,
+                    start_date: dt.date = None,
+                    end_date: dt.date = None) -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
+        fields = (field,)
+        where = {'reportId': self.id}
         query = DataQuery(where=where, fields=fields, start_date=start_date, end_date=end_date)
-        return GsDataApi.query_data(query=query, dataset_id=PPA_DATASET)
+        return GsDataApi.query_data(query=query, dataset_id=ReportDataset.PPA_DATASET.value)
+
+    def get_many_measures(self,
+                          measures: Tuple[str, ...],
+                          start_date: dt.date = None,
+                          end_date: dt.date = None) -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
+        fields = tuple(measure for measure in measures)
+        where = {'reportId': self.id}
+        query = DataQuery(where=where, fields=fields, start_date=start_date, end_date=end_date)
+        return GsDataApi.query_data(query=query, dataset_id=ReportDataset.PPA_DATASET.value)
+
+
+class FactorRiskReport(Report):
+
+    def __init__(self,
+                 risk_model_id: str = None,
+                 fx_hedged: bool = True,
+                 report_id: str = None,
+                 name: str = None,
+                 position_source_id: str = None,
+                 position_source_type: Union[str, PositionSourceType] = None,
+                 report_type: Union[str, ReportType] = None,
+                 latest_end_date: dt.date = None,
+                 latest_execution_time: dt.datetime = None,
+                 status: Union[str, ReportStatus] = ReportStatus.new,
+                 percentage_complete: float = None,
+                 **kwargs):
+        super().__init__(report_id, name, position_source_id, position_source_type,
+                         report_type, ReportParameters(risk_model=risk_model_id,
+                                                       fx_hedged=fx_hedged),
+                         latest_end_date, latest_execution_time, status, percentage_complete)
 
     @classmethod
-    def get_many_measures(cls, report_id: str, measures: Tuple[str, ...], start_date: dt.date = None,
-                          end_date: dt.date = None):
-        fields = []
-        for measure in measures:
-            fields.append(measure)
-        where = FieldValueMap(report_id=report_id)
-        query = DataQuery(where=where, fields=fields, start_date=start_date, end_date=end_date)
-        return GsDataApi.query_data(query=query, dataset_id=PPA_DATASET)
+    def get(cls,
+            report_id: str,
+            **kwargs):
+        return super().get(report_id=report_id,
+                           acceptable_types=[ReportType.Portfolio_Factor_Risk, ReportType.Asset_Factor_Risk])
 
+    @classmethod
+    def from_target(cls,
+                    report: TargetReport):
+        if report.type not in [ReportType.Portfolio_Factor_Risk, ReportType.Asset_Factor_Risk]:
+            raise MqValueError('This report is not a factor risk report.')
+        return FactorRiskReport(risk_model_id=report.parameters.risk_model,
+                                fx_hedged=report.parameters.fx_hedged,
+                                report_id=report.id,
+                                position_source_id=report.position_source_id,
+                                position_source_type=report.position_source_type,
+                                report_type=report.type,
+                                latest_end_date=report.latest_end_date,
+                                status=report.status,
+                                percentage_complete=report.percentage_complete)
 
-class RiskReport(BaseReport):
+    def get_risk_model_id(self) -> str:
+        return self.parameters.risk_model
 
-    def get_factor_data(self, factor: str, start_date: dt.date = None, end_date: dt.date = None):
-        return GsReportApi.get_risk_factor_data_results(risk_report_id=self.get_id(),
-                                                        factors=[factor],
-                                                        factor_categories=None,
-                                                        start_date=start_date,
-                                                        end_date=end_date)
+    def get_results(self,
+                    factors: List[str] = None,
+                    factor_categories: List[str] = None,
+                    start_date: dt.date = None,
+                    end_date: dt.date = None,
+                    currency: Currency = None,
+                    return_format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
+        results = GsReportApi.get_risk_factor_data_results(risk_report_id=self.id,
+                                                           factors=factors,
+                                                           factor_categories=factor_categories,
+                                                           currency=currency,
+                                                           start_date=start_date,
+                                                           end_date=end_date)
+        return pd.DataFrame(results) if return_format == ReturnFormat.DATA_FRAME else results
 
-    def get_risk_model_id(self):
-        return self.get_parameters().risk_model
+    def get_factor_pnl(self,
+                       factor_name: str,
+                       start_date: dt.date = None,
+                       end_date: dt.date = None,
+                       currency: Currency = None) -> pd.DataFrame:
+        factor_data = self.get_results(factors=[factor_name],
+                                       start_date=start_date,
+                                       end_date=end_date,
+                                       currency=currency)
+        return factor_data.filter(items=['date', 'pnl'])
+
+    def get_factor_exposure(self,
+                            factor_name: str,
+                            start_date: dt.date = None,
+                            end_date: dt.date = None,
+                            currency: Currency = None) -> pd.DataFrame:
+        factor_data = self.get_results(factors=[factor_name],
+                                       start_date=start_date,
+                                       end_date=end_date,
+                                       currency=currency)
+        return factor_data.filter(items=['date', 'exposure'])
+
+    def get_factor_proportion_of_risk(self,
+                                      factor_name: str,
+                                      start_date: dt.date = None,
+                                      end_date: dt.date = None,
+                                      currency: Currency = None) -> pd.DataFrame:
+        factor_data = self.get_results(factors=[factor_name],
+                                       start_date=start_date,
+                                       end_date=end_date,
+                                       currency=currency)
+        return factor_data.filter(items=['date', 'proportionOfRisk'])
+
+    def get_annual_risk(self,
+                        factor_name: str,
+                        start_date: dt.date = None,
+                        end_date: dt.date = None,
+                        currency: Currency = None) -> pd.DataFrame:
+        factor_data = self.get_results(factors=[factor_name],
+                                       start_date=start_date,
+                                       end_date=end_date,
+                                       currency=currency)
+        return factor_data.filter(items=['date', 'annualRisk'])
+
+    def get_daily_risk(self,
+                       factor_name: str,
+                       start_date: dt.date = None,
+                       end_date: dt.date = None,
+                       currency: Currency = None) -> pd.DataFrame:
+        factor_data = self.get_results(factors=[factor_name],
+                                       start_date=start_date,
+                                       end_date=end_date,
+                                       currency=currency)
+        return factor_data.filter(items=['date', 'dailyRisk'])

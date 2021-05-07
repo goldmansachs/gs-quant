@@ -52,6 +52,16 @@ class OrderBase(metaclass=ABCMeta):
     def execution_notional(self, data_hander: DataHandler) -> float:
         return self.execution_price(data_hander) * self.execution_quantity(data_hander)
 
+    def _short_name(self) -> str:
+        raise RuntimeError('The method _short_name is not implemented on OrderBase')
+
+    def to_dict(self, data_hander: DataHandler) -> dict:
+        return {'Instrument': self.instrument.ric,
+                'Type': self._short_name(),
+                'Price': self.execution_price(data_hander),
+                'Quantity': self.execution_quantity(data_hander)
+                }
+
 
 class OrderTWAP(OrderBase):
     def __init__(self,
@@ -78,6 +88,9 @@ class OrderTWAP(OrderBase):
     def execution_quantity(self, data_handler: DataHandler) -> float:
         return self.quantity
 
+    def _short_name(self) -> str:
+        return 'TWAP {0}:{1}'.format(self.window.start, self.window.end)
+
 
 class OrderMarketOnClose(OrderBase):
     def __init__(self,
@@ -98,6 +111,9 @@ class OrderMarketOnClose(OrderBase):
     def execution_quantity(self, data_handler: DataHandler) -> float:
         return self.quantity
 
+    def _short_name(self) -> str:
+        return 'MOC'
+
 
 class OrderCost(OrderBase):
     def __init__(self, currency: str, quantity: float, source: str, execution_time: dt.datetime):
@@ -116,6 +132,16 @@ class OrderCost(OrderBase):
 
     def execution_quantity(self, data_handler: DataHandler) -> float:
         return self.quantity
+
+    def _short_name(self) -> str:
+        return 'Cost'
+
+    def to_dict(self, data_hander: DataHandler) -> dict:
+        return {'Instrument': self.instrument.currency,
+                'Type': self._short_name(),
+                'Price': self.execution_price(data_hander),
+                'Quantity': self.execution_quantity(data_hander)
+                }
 
 
 class OrderAtMarket(OrderBase):
@@ -136,3 +162,33 @@ class OrderAtMarket(OrderBase):
 
     def execution_quantity(self, data_handler: DataHandler) -> float:
         return self.quantity
+
+    def _short_name(self) -> str:
+        return 'Market'
+
+
+class OrderTwapBTIC(OrderTWAP):
+    def __init__(self,
+                 instrument: Instrument,
+                 quantity: float,
+                 generation_time: dt.datetime,
+                 source: str,
+                 window: TimeWindow,
+                 btic_instrument: Instrument):
+        super().__init__(instrument, quantity, generation_time, source, window)
+        """
+        Create a TWAP order
+        :param window: TWAP window
+        """
+        self.btic_instrument = btic_instrument
+
+    def execution_price(self, data_handler: DataHandler) -> float:
+        btic_fixings = data_handler.get_data_range(self.window.start, self.window.end,
+                                                   self.btic_instrument, ValuationFixingType.PRICE)
+        btic_twap = np.mean(btic_fixings)
+        close = data_handler.get_data(self.window.end.date(), self.instrument, ValuationFixingType.PRICE)
+
+        return close + btic_twap
+
+    def _short_name(self) -> str:
+        return 'TwapBTIC'
