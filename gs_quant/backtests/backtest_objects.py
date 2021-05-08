@@ -21,7 +21,7 @@ from gs_quant.markets.portfolio import Portfolio
 from typing import Iterable
 from gs_quant.target.instrument import Cash
 from gs_quant.backtests.core import ValuationMethod
-from gs_quant.backtests.order import OrderBase
+from gs_quant.backtests.order import OrderBase, OrderCost
 from gs_quant.backtests.event import FillEvent
 from gs_quant.backtests.data_handler import DataHandler
 import numpy as np
@@ -127,8 +127,9 @@ class PredefinedAssetBacktest(object):
         self.data_handler = data_handler
         self.performance = pd.Series()
         self.cash_asset = Cash('USD')
-        self.holdings = {}
+        self.holdings = defaultdict(float)
         self.historical_holdings = pd.Series()
+        self.historical_weights = pd.Series()
         self.orders = []
         self.initial_value = 100
         self.results = {}
@@ -143,14 +144,18 @@ class PredefinedAssetBacktest(object):
     def update_fill(self, fill: FillEvent):
         inst = fill.order.instrument
         self.holdings[self.cash_asset] -= fill.filled_price * fill.filled_units
-        if inst not in self.holdings:
-            self.holdings[inst] = 0
         self.holdings[inst] += fill.filled_units
 
     def mark_to_market(self, state: dt.datetime, valuation_method: ValuationMethod):
+        epsilon = 1e-12
+        date = state.date()
         mtm = 0
+        self.historical_holdings[date] = {}
+        self.historical_weights[date] = {}
         for instrument, units in self.holdings.items():
-            if abs(units) > 1e-12:
+            if abs(units) > epsilon:
+                self.historical_holdings[date][instrument] = units
+
                 if isinstance(instrument, Cash):
                     fixing = 1
                 else:
@@ -162,9 +167,27 @@ class PredefinedAssetBacktest(object):
                         fixing = np.mean(fixings) if len(fixings) else np.nan
                     else:  # no time window specified, use daily fixing
                         fixing = self.data_handler.get_data(state.date(), instrument, tag)
-                mtm += fixing * units
-        self.performance[state.date()] = mtm
-        self.historical_holdings[state.date()] = self.holdings
 
-    def get_level(self, date: dt.date):
+                notional = fixing * units
+                self.historical_weights[date][instrument] = notional
+                mtm += notional
+
+        self.performance[date] = mtm
+
+        for instrument, notional in self.historical_weights[date].items():
+            self.historical_weights[date][instrument] = notional / mtm
+
+    def get_level(self, date: dt.date) -> float:
         return self.performance[date]
+
+    def get_costs(self) -> pd.Series():
+        costs = defaultdict(float)
+        for order in self.orders:
+            if isinstance(order, OrderCost):
+                costs[order.execution_end_time().date()] += order.execution_quantity(self.data_handler)
+
+        return pd.Series(costs)
+
+    def get_orders_for_date(self, date: dt.date) -> pd.DataFrame():
+        return pd.DataFrame([order.to_dict(self.data_handler) for order in self.orders
+                             if order.execution_end_time().date() == date])

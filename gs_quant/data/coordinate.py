@@ -192,6 +192,10 @@ class DataCoordinate(BaseDataCoordinate):
             'measure': self.measure.value if isinstance(self.measure, Enum) else self.measure,
             'frequency': self.frequency.value,
         }
+
+        if self.dataset_id:
+            coordinate['datasetId'] = self.dataset_id
+
         if dimensions:
             coordinate['dimensions'] = dimensions
         return coordinate
@@ -201,6 +205,7 @@ class DataCoordinate(BaseDataCoordinate):
         measure = obj.get('measure')
         dimensions = obj.get('dimensions', {})
         frequency = obj.get('frequency')
+        dataset_id = obj.get('datasetId')
 
         measure = DataMeasure(measure) if measure in DataMeasure._value2member_map_ else measure
 
@@ -211,5 +216,10 @@ class DataCoordinate(BaseDataCoordinate):
                 parsed_dimensions[DataDimension(key)] = value
             else:
                 parsed_dimensions[key] = value
-
-        return DataCoordinate(measure=measure, dimensions=parsed_dimensions, frequency=DataFrequency(frequency))
+        if dataset_id:
+            return DataCoordinate(dataset_id=dataset_id,
+                                  measure=measure,
+                                  dimensions=parsed_dimensions,
+                                  frequency=DataFrequency(frequency))
+        else:
+            return DataCoordinate(measure=measure, dimensions=parsed_dimensions, frequency=DataFrequency(frequency))

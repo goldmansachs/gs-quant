@@ -14,13 +14,10 @@ specific language governing permissions and limitations
 under the License.
 """
 
-import datetime as dt
-from enum import Enum
-import pandas as pd
-from typing import Union, Iterable, Optional
 
+from typing import Optional
 from gs_quant.backtests.actions import Action, AddTradeAction, AddTradeActionInfo
-from gs_quant.backtests.backtest_objects import BackTest
+from gs_quant.backtests.backtest_objects import BackTest, PredefinedAssetBacktest
 from gs_quant.backtests.backtest_utils import make_list, CalcType
 from gs_quant.backtests.data_sources import *
 
@@ -327,3 +324,38 @@ class MeanReversionTrigger(Trigger):
                 return TriggerInfo(True, {AddTradeAction: AddTradeActionInfo(scaling=1)})
         else:
             raise RuntimeWarning(f'unexpected current position: {self._current_position}')
+
+
+class OrdersGeneratorTrigger(Trigger):
+    """Base class for triggers used with the PredefinedAssetEngine."""
+    def __init__(self):
+        super().__init__(None, Action())
+
+    def get_trigger_times(self) -> list:
+        """
+        Returns the set of times when orders can be generated e.g. every 30 min
+        :return: list
+        """
+        raise RuntimeError('get_trigger_times must be implemented by subclass')
+
+    def generate_orders(self, state: dt.datetime, backtest: PredefinedAssetBacktest = None) -> list:
+        """
+        Returns the orders generated at state
+        :param state: the time when orders are generated
+        :param backtest: the backtest, used to access the holdings and orders generated so far
+        :return: list
+        """
+        raise RuntimeError('generate_orders must be implemented by subclass')
+
+    def has_triggered(self, state: dt.datetime, backtest: PredefinedAssetBacktest = None) -> TriggerInfo:
+        """
+        Calls generate_orders if state is among the trigger times
+        :param state: the time of the trigger
+        :param backtest: the backtest, used to access the holdings and orders generated so far
+        :return: list
+        """
+        if state.time() not in self.get_trigger_times():
+            return TriggerInfo(False)
+        else:
+            orders = self.generate_orders(state, backtest)
+            return TriggerInfo(True, {type(a): orders for a in self.actions}) if len(orders) else TriggerInfo(False)

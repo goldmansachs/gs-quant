@@ -88,7 +88,7 @@ def mock_risk_model():
     mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model', Mock())
     mock.return_value = mock_risk_model_obj
 
-    actual = Factor_Risk_Model(model_id='model_id')
+    actual = Factor_Risk_Model.get(model_id='model_id')
     replace.restore()
     return actual
 

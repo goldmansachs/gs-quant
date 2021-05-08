@@ -13,6 +13,9 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+from unittest import mock
+
+import pytest
 
 from gs_quant.api.gs.users import GsUsersApi
 from gs_quant.session import *
@@ -75,6 +78,9 @@ def test_get_users(mocker):
     }
 
     # mock GsSession
+    from gs_quant.session import OAuth2Session
+    OAuth2Session.init = mock.MagicMock(return_value=None)
+    GsSession.use(Environment.QA, 'client_id', 'secret')
     mocker.patch.object(
         GsSession.__class__,
         'default_value',
@@ -142,6 +148,9 @@ def test_get_current_user_info(mocker):
     }
 
     # mock GsSession
+    from gs_quant.session import OAuth2Session
+    OAuth2Session.init = mock.MagicMock(return_value=None)
+    GsSession.use(Environment.QA, 'client_id', 'secret')
     mocker.patch.object(
         GsSession.__class__,
         'default_value',
@@ -155,3 +164,7 @@ def test_get_current_user_info(mocker):
     response = GsUsersApi.get_current_user_info()
     GsSession.current._get.assert_called_with('/users/self')
     assert response == mock_response
+
+
+if __name__ == '__main__':
+    pytest.main(args=[__file__])

@@ -28,20 +28,12 @@ from gs_quant.target.data import DataQuery
 
 class Factor:
 
-    def __init__(self, risk_model_id: str, factor_name: str):
-        risk_model = FactorRiskModel(risk_model_id)
-        factor_data = risk_model.get_factor_data(format=ReturnFormat.JSON)
-        name_matches = [factor for factor in factor_data if factor['name'] == factor_name]
-
-        if not name_matches:
-            raise MqValueError(f'Factor with name {factor_name} does not in exist in risk model {risk_model_id}')
-
-        factor = name_matches.pop()
-        self.__risk_model_id: str = risk_model_id
-        self.__id = factor['identifier']
-        self.__name: str = factor['name']
-        self.__type: str = factor['type']
-        self.__category: str = factor.get('factorCategory')
+    def __init__(self, risk_model_id: str, id_: str, name: str, type: str, category: str):
+        self.__risk_model_id = risk_model_id
+        self.__id = id_
+        self.__name = name
+        self.__type = type
+        self.__category = category
 
     @property
     def id(self):
@@ -62,6 +54,18 @@ class Factor:
     @property
     def risk_model_id(self):
         return self.__risk_model_id
+
+    @classmethod
+    def get(cls, risk_model_id: str, factor_name: str):
+        risk_model = FactorRiskModel.get(risk_model_id)
+        factor_data = risk_model.get_factor_data(format=ReturnFormat.JSON)
+        name_matches = [factor for factor in factor_data if factor['name'] == factor_name]
+
+        if not name_matches:
+            raise MqValueError(f'Factor with name {factor_name} does not in exist in risk model {risk_model_id}')
+
+        factor = name_matches.pop()
+        return Factor(risk_model_id, factor['identifier'], factor['name'], factor['type'], factor.get('factorCategory'))
 
     def covariance(self,
                    factor,

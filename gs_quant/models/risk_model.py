@@ -38,130 +38,64 @@ class ReturnFormat(Enum):
 class RiskModel:
     """ Risk Model Class """
 
-    def __init__(self, model_id: str):
-        model = GsRiskModelApi.get_risk_model(model_id)
-        self.__id: str = model.id
-        self.__name: str = model.name
-        self.__description: str = model.description
-        self.__entitlements: Entitlements = model.entitlements if type(model.entitlements) == Entitlements or not \
-            model.entitlements else Entitlements.from_dict(model.entitlements)
+    def __init__(self,
+                 model_id: str,
+                 name: str,
+                 entitlements: Union[Dict, Entitlements] = None,
+                 description: str = None):
+        self.__id: str = model_id
+        self.__name: str = name
+        self.__description: str = description
+        self.__entitlements: Entitlements = entitlements if isinstance(entitlements, Entitlements) else\
+            Entitlements.from_dict(entitlements) if isinstance(entitlements, Dict) else None
 
     @property
     def id(self) -> str:
-        """ Retrieve risk model id for existing risk model """
+        """ Get risk model id """
         return self.__id
 
     @property
     def name(self) -> str:
-        """ Retrieve risk model name for existing risk model """
+        """ Get risk model name """
         return self.__name
 
     @name.setter
     def name(self, name: str):
-        """ Set risk model name for existing risk model """
+        """ Set risk model name """
         self.__name = name
 
     @property
     def description(self) -> str:
-        """ Retrieve risk model description for existing risk model """
+        """ Get risk model description """
         return self.__description
 
     @description.setter
     def description(self, description: str):
-        """ Sets description for existing risk model """
+        """ Set risk model description """
         self.__description = description
 
     @property
     def entitlements(self) -> Entitlements:
-        """ Gets entitlements for existing risk model """
+        """ Get risk model entitlements """
         return self.__entitlements
 
     @entitlements.setter
     def entitlements(self, entitlements: Union[Entitlements, Dict]):
-        """ Sets entitlements for existing risk model """
+        """ Set risk model entitlements """
         self.__entitlements = entitlements
 
-    def add_entitlements(self, entitlements: Union[Entitlements, Dict]):
-        """ Adds entitlements for existing risk model """
-        entitlements = Entitlements.from_dict(entitlements) if type(entitlements) == dict else entitlements
-        edit = self.__entitlements.edit
-        for user in entitlements.edit:
-            if user not in edit:
-                edit += user,
-        admin = self.__entitlements.admin
-        for user in entitlements.admin:
-            if user not in edit:
-                admin += user,
-        query = self.__entitlements.query
-        for user in entitlements.query:
-            if user not in query:
-                query += user,
-        upload = self.__entitlements.upload
-        for user in entitlements.upload:
-            if user not in upload:
-                upload += user,
-        view = self.__entitlements.view
-        for user in entitlements.view:
-            if user not in view:
-                view += user,
-        execute = self.__entitlements.execute
-        for user in entitlements.execute:
-            if user not in execute:
-                execute += user,
-        combined_entitlements = Entitlements(
-            edit=edit,
-            admin=admin,
-            query=query,
-            upload=upload,
-            view=view,
-            execute=execute
-        )
-        self.entitlements = combined_entitlements
-
-    def remove_entitlements(self, entitlements: Union[Entitlements, Dict]):
-        """ Removes entitlements for existing risk model """
-        entitlements = Entitlements.from_dict(entitlements) if type(entitlements) == dict else entitlements
-        model = GsRiskModelApi.get_risk_model(self.__id)
-        edit_ls = list(model.entitlements.edit)
-        for edit in entitlements.edit:
-            edit_ls.remove(edit)
-        admin_ls = list(model.entitlements.admin)
-        for admin in entitlements.admin:
-            admin_ls.remove(admin)
-        query_ls = list(model.entitlements.query)
-        for query in entitlements.query:
-            query_ls.remove(query)
-        upload_ls = list(model.entitlements.upload)
-        for upload in entitlements.upload:
-            upload_ls.remove(upload)
-        view_ls = list(model.entitlements.view)
-        for view in entitlements.view:
-            view_ls.remove(view)
-        execute_ls = list(model.entitlements.execute)
-        for execute in entitlements.execute:
-            execute_ls.remove(execute)
-        removed_entitlements = Entitlements(
-            edit=tuple(edit_ls),
-            admin=tuple(admin_ls),
-            query=tuple(query_ls),
-            upload=tuple(upload_ls),
-            view=tuple(view_ls),
-            execute=tuple(execute_ls)
-        )
-        self.entitlements = removed_entitlements
-
     def delete(self):
-        """ Delete existing risk model """
+        """ Delete existing risk model object from Marquee """
         return GsRiskModelApi.delete_risk_model(self.id)
 
     def get_dates(self, start_date: dt.date = None, end_date: dt.date = None) -> List:
-        """ Retrieve risk model dates for existing risk model
+        """ Get risk model dates for existing risk model
             :param start_date: list returned including and after start_date
             :param end_date: list returned up to and including end_date """
         return GsRiskModelApi.get_risk_model_dates(self.id, start_date, end_date)
 
     def get_calendar(self, start_date: dt.date = None, end_date: dt.date = None) -> RiskModelCalendar:
-        """ Retrieve risk model calendar for existing risk model between start and end date
+        """ Get risk model calendar for existing risk model between start and end date
             :param start_date: list returned including and after start_date
             :param end_date: list returned up to and including end_date """
         calendar = GsRiskModelApi.get_risk_model_calendar(self.id)
@@ -178,11 +112,10 @@ class RiskModel:
         return GsRiskModelApi.upload_risk_model_calendar(self.id, calendar)
 
     def get_missing_dates(self, end_date: dt.date = None):
-        """ Takes in a risk model id and returns any dates where data is not published according to expected days
-                returned from the risk model calendar
+        """ Get any dates where data is not published according to expected days returned from the risk model calendar
             :param end_date: date to truncate missing dates at
 
-            If no end_date is provided, end_date defaults to the most recent business date according
+            If no end_date is provided, end_date defaults to T-1 date according
                 to the risk model calendar """
         posted_results = self.get_dates()
         if not end_date:
@@ -193,7 +126,7 @@ class RiskModel:
         return [date for date in calendar if date not in posted_results]
 
     def get_most_recent_date_from_calendar(self) -> dt.date:
-        """Returns most recent date in calendar from and including yesterday"""
+        """ Get T-1 date according to risk model calendar """
         yesterday = dt.date.today() - dt.timedelta(1)
         calendar = self.get_calendar(end_date=yesterday).business_dates
         return dt.datetime.strptime(calendar[len(calendar) - 1], '%Y-%m-%d').date()
@@ -202,96 +135,118 @@ class RiskModel:
 class FactorRiskModel(RiskModel):
     """ Factor Risk Model used for calculating asset level factor risk"""
 
-    def __init__(self, model_id: str):
-        super().__init__(model_id)
-        model = GsRiskModelApi.get_risk_model(model_id)
-        self.__coverage: Union[CoverageType, str] = model.coverage
-        self.__term: Union[Term, str] = model.term
-        self.__universe_identifier: Union[UniverseIdentifier, str] = model.universe_identifier
-        self.__vendor: str = model.vendor
-        self.__version: float = model.version
+    def __init__(self,
+                 model_id: str,
+                 name: str,
+                 coverage: Union[CoverageType, str],
+                 term: Union[Term, str],
+                 universe_identifier: Union[UniverseIdentifier, str],
+                 vendor: str,
+                 version: float,
+                 entitlements: Union[Dict, Entitlements] = None,
+                 description: str = None):
+        """ Create new factor risk model object
+                   :param model_id: risk model id (cannot be changed)
+                   :param name: risk model name
+                   :param coverage: coverage of risk model asset universe
+                   :param term: horizon term
+                   :param universe_identifier: identifier used in asset universe upload (cannot be changed)
+                   :param vendor: risk model vendor
+                   :param version: version of model
+                   :param entitlements: entitlements associated with risk model
+                   :param description: risk model description
+                   :return: Factor Risk Model object  """
+        super().__init__(model_id, name, entitlements=entitlements, description=description)
+        self.__coverage = coverage if isinstance(coverage, CoverageType) else CoverageType(coverage)
+        self.__term = term if isinstance(term, Term) else Term(term)
+        self.__universe_identifier = universe_identifier if isinstance(universe_identifier, UniverseIdentifier) \
+            else UniverseIdentifier(universe_identifier)
+        self.__vendor = vendor
+        self.__version = version
 
     @property
     def vendor(self) -> str:
-        """ Retrieve risk model vendor for existing risk model """
+        """ Get risk model vendor """
         return self.__vendor
 
     @vendor.setter
     def vendor(self, vendor):
-        """ Sets risk model vendor for existing risk model """
+        """ Set risk model vendor """
         self.__vendor = vendor
 
     @property
     def universe_identifier(self) -> str:
-        """ Retrieve risk model universe identifier for existing risk model """
+        """ Get risk model universe identifier """
         return self.__universe_identifier
 
     @property
     def term(self) -> str:
-        """ Retrieve risk model term for existing risk model """
+        """ Get risk model term """
         return self.__term
 
     @term.setter
     def term(self, term: Union[Term, str]):
-        """ Set term for existing risk model """
+        """ Set risk model term """
         self.__term = term
 
     @property
     def version(self) -> float:
-        """ Retrieve risk model version for existing risk model """
+        """ Get risk model version """
         return self.__version
 
     @version.setter
     def version(self, version: float):
-        """ Set version for existing risk model """
+        """ Set risk model version """
         self.__version = version
 
     @property
     def coverage(self) -> str:
-        """ Retrieve risk model coverage for existing risk model """
+        """ Get risk model coverage """
         return self.__coverage
 
     @coverage.setter
     def coverage(self, coverage: Union[CoverageType, str]):
-        """ Sets risk model coverage for existing risk model """
+        """ Set risk model coverage """
         self.__coverage = coverage
 
     @classmethod
-    def create(cls,
-               coverage: Union[CoverageType, str],
-               id_: str,
-               name: str,
-               term: Union[Term, str],
-               universe_identifier: Union[UniverseIdentifier, str],
-               vendor: str,
-               version: float,
-               entitlements: Union[Entitlements, Dict] = None,
-               description: str = None):
-        """ Creates new factor risk model and uploads factor risk model object to Marquee
-            :param coverage: coverage of risk model asset universe
-            :param id_: risk model id (cannot be changed)
-            :param name: risk model name
-            :param term: horizon term
-            :param universe_identifier: identifier used in asset universe upload (cannot be changed)
-            :param vendor: risk model vendor
-            :param version: version of model
-            :param entitlements: entitlements associated with risk model
-            :param description: risk model description
+    def get(cls, model_id: str):
+        """ Get a factor risk model from Marquee
+            :param model_id: risk model id corresponding to Marquee Factor Risk Model
             :return: Factor Risk Model object  """
-        new_model = RiskModelBuilder(coverage, id_, name, term, universe_identifier, vendor, version,
-                                     entitlements=entitlements, description=description)
+        model = GsRiskModelApi.get_risk_model(model_id)
+        return FactorRiskModel(model_id,
+                               model.name,
+                               model.coverage,
+                               model.term,
+                               model.universe_identifier,
+                               model.vendor,
+                               model.version,
+                               entitlements=model.entitlements,
+                               description=model.description)
+
+    def upload(self):
+        """ Upload current Factor Risk Model object to Marquee """
+        new_model = RiskModelBuilder(self.coverage,
+                                     self.id,
+                                     self.name,
+                                     self.term,
+                                     self.universe_identifier,
+                                     self.vendor,
+                                     self.version,
+                                     entitlements=self.entitlements,
+                                     description=self.description)
         GsRiskModelApi.create_risk_model(new_model)
-        return FactorRiskModel(id_)
 
     def update(self):
-        """ Updates factor risk model object on Marquee """
+        """ Update factor risk model object on Marquee """
         updated_model = RiskModelBuilder(self.coverage, self.id, self.name, self.term, self.universe_identifier,
                                          self.vendor, self.version, description=self.description,
                                          entitlements=self.entitlements)
         GsRiskModelApi.update_risk_model(updated_model)
 
     def get_factor(self, factor_id: str) -> RiskModelFactor:
-        """ Retrieve risk model factor from model and factor ids
+        """ Get risk model factor from model and factor ids
             :param factor_id: factor identifier associated with risk model
             :return: Risk Model Factor object """
         return GsFactorRiskModelApi.get_risk_model_factor(self.id, factor_id)
@@ -320,7 +275,7 @@ class FactorRiskModel(RiskModel):
                         identifiers: List[str] = None,
                         include_performance_curve: bool = False,
                         format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
-        """ Retrieve factor data for existing risk model
+        """ Get factor data for existing risk model
             :param start_date: start date for data request
             :param end_date: end date for data request
             :param identifiers: list of factor ids associated with risk model
@@ -343,7 +298,7 @@ class FactorRiskModel(RiskModel):
                            end_date: dt.date = None,
                            assets: DataAssetsRequest = DataAssetsRequest(UniverseIdentifier.gsid, []),
                            format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
-        """ Retrieve asset universe data for existing risk model
+        """ Get asset universe data for existing risk model
             :param start_date: start date for data request
             :param end_date: end date for data request
             :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
@@ -372,7 +327,7 @@ class FactorRiskModel(RiskModel):
                             end_date: dt.date = None,
                             assets: DataAssetsRequest = DataAssetsRequest(UniverseIdentifier.gsid, []),
                             format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
-        """ Retrieve historical beta data for existing risk model
+        """ Get historical beta data for existing risk model
             :param start_date: start date for data request
             :param end_date: end date for data request
             :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
@@ -397,7 +352,7 @@ class FactorRiskModel(RiskModel):
                        end_date: dt.date = None,
                        assets: DataAssetsRequest = DataAssetsRequest(UniverseIdentifier.gsid, []),
                        format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
-        """ Retrieve total risk data for existing risk model
+        """ Get total risk data for existing risk model
             :param start_date: start date for data request
             :param end_date: end date for data request
             :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
@@ -422,7 +377,7 @@ class FactorRiskModel(RiskModel):
                           end_date: dt.date = None,
                           assets: DataAssetsRequest = DataAssetsRequest(UniverseIdentifier.gsid, []),
                           format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
-        """ Retrieve specific risk data for existing risk model
+        """ Get specific risk data for existing risk model
             :param start_date: start date for data request
             :param end_date: end date for data request
             :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
@@ -447,7 +402,7 @@ class FactorRiskModel(RiskModel):
                               end_date: dt.date = None,
                               assets: DataAssetsRequest = DataAssetsRequest(UniverseIdentifier.gsid, []),
                               format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
-        """ Retrieve residual variance data for existing risk model
+        """ Get residual variance data for existing risk model
             :param start_date: start date for data request
             :param end_date: end date for data request
             :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
@@ -472,7 +427,7 @@ class FactorRiskModel(RiskModel):
                                      end_date: dt.date = None,
                                      assets: DataAssetsRequest = DataAssetsRequest(UniverseIdentifier.gsid, []),
                                      format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
-        """ Retrieve universe factor exposure data for existing risk model
+        """ Get universe factor exposure data for existing risk model
             :param start_date: start date for data request
             :param end_date: end date for data request
             :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
@@ -501,7 +456,7 @@ class FactorRiskModel(RiskModel):
                                    start_date: dt.date,
                                    end_date: dt.date = None,
                                    format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
-        """ Retrieve factor return data for existing risk model keyed by name
+        """ Get factor return data for existing risk model keyed by name
             :param start_date: start date for data request
             :param end_date: end date for data request
             :param format: which format to return the results in
@@ -522,7 +477,7 @@ class FactorRiskModel(RiskModel):
                                  start_date: dt.date,
                                  end_date: dt.date = None,
                                  format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
-        """ Retrieve factor return data for existing risk model keyed by factor id
+        """ Get factor return data for existing risk model keyed by factor id
             :param start_date: start date for data request
             :param end_date: end date for data request
             :param format: which format to return the results in
@@ -543,7 +498,7 @@ class FactorRiskModel(RiskModel):
                               start_date: dt.date,
                               end_date: dt.date = None,
                               format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
-        """ Retrieve covariance matrix data for existing risk model
+        """ Get covariance matrix data for existing risk model
             :param start_date: start date for data request
             :param end_date: end date for data request
             :param format: which format to return the results in
@@ -564,7 +519,7 @@ class FactorRiskModel(RiskModel):
                                        end_date: dt.date = None,
                                        assets: DataAssetsRequest = DataAssetsRequest(UniverseIdentifier.gsid, []),
                                        format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
-        """ Retrieve issuer specific covariance data for existing risk model
+        """ Get issuer specific covariance data for existing risk model
             :param start_date: start date for data request
             :param end_date: end date for data request
             :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
@@ -586,7 +541,7 @@ class FactorRiskModel(RiskModel):
                               end_date: dt.date = None,
                               assets: DataAssetsRequest = DataAssetsRequest(UniverseIdentifier.gsid, []),
                               format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
-        """ Retrieve factor portfolios data for existing risk model
+        """ Get factor portfolios data for existing risk model
             :param start_date: start date for data request
             :param end_date: end date for data request
             :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
@@ -609,7 +564,7 @@ class FactorRiskModel(RiskModel):
                  end_date: dt.date = None,
                  assets: DataAssetsRequest = DataAssetsRequest(UniverseIdentifier.gsid, []),
                  limit_factors: bool = True) -> Dict:
-        """ Retrieve data for multiple measures for existing risk model
+        """ Get data for multiple measures for existing risk model
             :param measures: list of measures for general risk model data request
             :param start_date: start date for data request
             :param end_date: end date for data request
@@ -627,7 +582,7 @@ class FactorRiskModel(RiskModel):
         )
 
     def upload_data(self, data: Union[RiskModelData, Dict]):
-        """ Upload risk model data to existing risk model
+        """ Upload risk model data to existing risk model in Marquee
             :param data: complete risk model data for uploading on given date
                 includes: date, factorData, assetData, covarianceMatrix with optional inputs:
                 issuerSpecificCovariance and factorPortfolios
@@ -643,7 +598,7 @@ class FactorRiskModel(RiskModel):
             print(GsFactorRiskModelApi.upload_risk_model_data(self.id, data))
 
     def upload_partial_data(self, data: RiskModelData, target_universe_size: float = None):
-        """ Upload partial risk model data to existing risk model
+        """ Upload partial risk model data to existing risk model in Marquee
             :param data: partial risk model data for uploading on given date
             :param target_universe_size: the size of the complete universe on date
 

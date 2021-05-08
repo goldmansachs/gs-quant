@@ -35,13 +35,15 @@ factor_risk_report = Report(position_source_id='position source id',
                             position_source_type=PositionSourceType.Portfolio,
                             type_=ReportType.Portfolio_Factor_Risk,
                             id_='report_id',
-                            parameters=ReportParameters(risk_model='risk_model_id'))
+                            parameters=ReportParameters(risk_model='risk_model_id'),
+                            status='new')
 
 ppa_report = Report(position_source_id='position source id',
                     position_source_type=PositionSourceType.Portfolio,
                     type_=ReportType.Portfolio_Performance_Analytics,
                     id_='report_id',
-                    parameters=ReportParameters(risk_model='risk_model_id'))
+                    parameters=ReportParameters(risk_model='risk_model_id'),
+                    status='new')
 
 factor_data = [
     {
@@ -121,7 +123,7 @@ def mock_risk_model():
     mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model', Mock())
     mock.return_value = risk_model
 
-    actual = Factor_Risk_Model(model_id='model_id')
+    actual = Factor_Risk_Model.get(model_id='model_id')
     replace.restore()
     return actual
 
@@ -329,6 +331,7 @@ def test_aggregate_factor_support():
 
     with pytest.raises(MqValueError):
         mr.annual_risk('report_id', 'Factor Name')
+    replace.restore()
 
 
 if __name__ == '__main__':

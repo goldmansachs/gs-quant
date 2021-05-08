@@ -15,7 +15,6 @@ under the License.
 """
 
 import copy
-from datetime import datetime
 from typing import List, Optional
 
 from pandas import Series
@@ -25,12 +24,12 @@ from gs_quant.analytics.core import BaseProcessor
 from gs_quant.analytics.core.processor import DataQueryInfo
 from gs_quant.analytics.core.processor_result import ProcessorResult
 from gs_quant.analytics.datagrid import Override
+from gs_quant.analytics.datagrid.utils import get_utc_now
 from gs_quant.entities.entity import Entity
 
 
 class DataCell:
     """ Entity data cell
-
         Computes value and manages formatting of a data cell
     """
 
@@ -79,6 +78,11 @@ class DataCell:
 
     def update(self, result: ProcessorResult) -> None:
         """ Sets the value of the cell"""
-        value = result.data.iloc[-1] if isinstance(result.data, Series) else result.data
-        self.value = ProcessorResult(True, value)
-        self.updated_time = f'{datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]}Z'
+        if isinstance(result.data, Series):
+            if result.data.empty:
+                self.value = ProcessorResult(False, 'Empty series as a result of processing.')
+            else:
+                self.value = ProcessorResult(True, result.data.iloc[-1])
+        else:
+            self.value = ProcessorResult(True, result.data)
+        self.updated_time = get_utc_now()

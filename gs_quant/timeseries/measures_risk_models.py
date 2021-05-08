@@ -44,8 +44,8 @@ def factor_zscore(asset: Asset, risk_model_id: str, factor_name: str, *,
     :param request_id: service request id, if any
     :return: Time-series of asset factor exposure across available risk model dates
     """
-    risk_model = FactorRiskModel(risk_model_id)
-    factor = Factor(risk_model_id, factor_name)
+    risk_model = FactorRiskModel.get(risk_model_id)
+    factor = Factor.get(risk_model_id, factor_name)
     gsid = asset.get_identifier('GSID')
 
     # Query risk model data
@@ -81,8 +81,8 @@ def factor_covariance(risk_model_id: str, factor_name_1: str, factor_name_2: str
     :return: Time-series of covariances between the two factors across available risk model dates
     """
 
-    factor_1 = Factor(risk_model_id, factor_name_1)
-    factor_2 = Factor(risk_model_id, factor_name_2)
+    factor_1 = Factor.get(risk_model_id, factor_name_1)
+    factor_2 = Factor.get(risk_model_id, factor_name_2)
     covariance_curve = factor_1.covariance(factor_2,
                                            DataContext.current.start_date,
                                            DataContext.current.end_date,
@@ -103,7 +103,7 @@ def factor_volatility(risk_model_id: str, factor_name: str, *, source: str = Non
     :param request_id: server request id
     :return: Time-series of a factor's volatility across available risk model dates
     """
-    factor = Factor(risk_model_id, factor_name)
+    factor = Factor.get(risk_model_id, factor_name)
     volatility = factor.volatility(DataContext.current.start_date,
                                    DataContext.current.end_date,
                                    ReturnFormat.JSON)
@@ -124,8 +124,8 @@ def factor_correlation(risk_model_id: str, factor_name_1: str, factor_name_2: st
     :param request_id: server request id
     :return: Time-series of correlations between the two factors across available risk model dates
     """
-    factor_1 = Factor(risk_model_id, factor_name_1)
-    factor_2 = Factor(risk_model_id, factor_name_2)
+    factor_1 = Factor.get(risk_model_id, factor_name_1)
+    factor_2 = Factor.get(risk_model_id, factor_name_2)
     correlation = factor_1.correlation(factor_2,
                                        DataContext.current.start_date,
                                        DataContext.current.end_date,

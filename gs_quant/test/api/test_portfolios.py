@@ -49,7 +49,7 @@ def test_get_many_portfolios(mocker):
 
     # run test
     response = GsPortfolioApi.get_portfolios()
-    GsSession.current._get.assert_called_with('/portfolios?limit=100', cls=Portfolio)
+    GsSession.current._get.assert_called_with('/portfolios?&limit=100', cls=Portfolio)
     assert response == expected_response
 
 
@@ -251,15 +251,16 @@ def test_get_latest_portfolio_positions(mocker):
     id_1 = 'MP1'
     date = dt.date(2019, 2, 18)
 
-    mock_response = {'results': PositionSet.from_dict({
-        'id': 'mock1',
-        'positionDate': '2019-02-18',
-        'lastUpdateTime': '2019-02-19T12:10:32.401Z',
-        'positions': [
-            {'assetId': 'MQA123', 'quantity': 0.3},
-            {'assetId': 'MQA456', 'quantity': 0.7}
-        ]
-    }),
+    mock_response = {
+        'results': {
+            'id': 'mock1',
+            'positionDate': '2019-02-18',
+            'lastUpdateTime': '2019-02-19T12:10:32.401Z',
+            'positions': [
+                {'assetId': 'MQA123', 'quantity': 0.3},
+                {'assetId': 'MQA456', 'quantity': 0.7}
+            ]
+        }
     }
 
     expected_response = PositionSet(
@@ -311,5 +312,101 @@ def test_get_portfolio_position_dates(mocker):
     response = GsPortfolioApi.get_position_dates(id_1)
 
     GsSession.current._get.assert_called_with('/portfolios/{id}/positions/dates'.format(id=id_1))
+
+    assert response == expected_response
+
+
+def test_portfolio_positions_data(mocker):
+    mock_response = {'results': [
+        {
+            'underlyingAssetId': 'MA4B66MW5E27UAFU2CD',
+            'divisor': 8305900333.262549,
+            'quantity': 0.016836826158,
+            'positionType': 'close',
+            'bbid': 'EXPE UW',
+            'assetId': 'MA4B66MW5E27U8P32SB',
+            'positionDate': '2019-11-07',
+            'assetClassificationsGicsSector': 'Consumer Discretionary',
+            'closePrice': 98.29,
+            'ric': 'EXPE.OQ'
+        },
+    ]}
+
+    expected_response = [
+        {
+            'underlyingAssetId': 'MA4B66MW5E27UAFU2CD',
+            'divisor': 8305900333.262549,
+            'quantity': 0.016836826158,
+            'positionType': 'close',
+            'bbid': 'EXPE UW',
+            'assetId': 'MA4B66MW5E27U8P32SB',
+            'positionDate': '2019-11-07',
+            'assetClassificationsGicsSector': 'Consumer Discretionary',
+            'closePrice': 98.29,
+            'ric': 'EXPE.OQ'
+        },
+    ]
+
+    # mock GsSession
+    mocker.patch.object(
+        GsSession.__class__,
+        'default_value',
+        return_value=GsSession.get(
+            Environment.QA,
+            'client_id',
+            'secret'))
+    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+
+    # run test
+    response = GsPortfolioApi.get_positions_data('portfolio_id', dt.date(2020, 1, 1), dt.date(2021, 1, 1))
+
+    GsSession.current._get.assert_called_with(
+        '/portfolios/portfolio_id/positions/data?startDate=2020-01-01&endDate=2021-01-01')
+
+    assert response == expected_response
+
+
+def test_get_risk_models_by_coverage(mocker):
+    mock_response = {'results': [
+        {
+            'model': "AXUS4S",
+            'businessDate': "2021-03-18",
+            'percentInModel': 0.9984356667970278
+        },
+        {
+            'model': "AXUS4M",
+            'businessDate': "2021-03-18",
+            'percentInModel': 0.9984356667970278
+        }
+    ]
+    }
+
+    expected_response = [
+        {
+            'model': "AXUS4S",
+            'businessDate': "2021-03-18",
+            'percentInModel': 0.9984356667970278
+        },
+        {
+            'model': "AXUS4M",
+            'businessDate': "2021-03-18",
+            'percentInModel': 0.9984356667970278
+        }
+    ]
+
+    # mock GsSession
+    mocker.patch.object(
+        GsSession.__class__,
+        'default_value',
+        return_value=GsSession.get(
+            Environment.QA,
+            'client_id',
+            'secret'))
+    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+
+    # run test
+    response = GsPortfolioApi.get_risk_models_by_coverage('portfolio_id')
+
+    GsSession.current._get.assert_called_with('/portfolios/portfolio_id/models?sortByTerm=Medium')
 
     assert response == expected_response
