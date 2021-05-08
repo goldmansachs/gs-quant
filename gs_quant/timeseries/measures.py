@@ -1525,6 +1525,15 @@ def vol_term(asset: Asset, strike_reference: VolReference, relative_strike: Real
 
     check_forward_looking(pricing_date, source, 'vol_term')
     if asset.asset_class == AssetClass.FX:
+        if strike_reference in (VolReference.FORWARD, VolReference.SPOT) and relative_strike != 100:
+            raise MqValueError('relative strike must be 100 for Spot or Forward strike reference')
+        if strike_reference == VolReference.NORMALIZED:
+            raise MqValueError(f'strike reference {strike_reference} not supported for FX')
+        if strike_reference == VolReference.DELTA_NEUTRAL and relative_strike != 0:
+            raise MqValueError('relative_strike must be 0 for delta_neutral')
+
+        if strike_reference == VolReference.DELTA_PUT:
+            relative_strike *= -1
         sr_string, relative_strike = _preprocess_implied_vol_strikes_fx(strike_reference, relative_strike)
         asset_id = cross_stored_direction_for_fx_vol(asset)
         buffer = 1  # FX vol data is loaded later
