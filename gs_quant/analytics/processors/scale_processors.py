@@ -14,6 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 
+import math
 from typing import Union, List, Tuple
 
 from gs_quant.analytics.common.enumerators import ScaleShape
@@ -104,6 +105,11 @@ SpotOrBarMarker = Union[SpotMarkerProcessor, BarMarkerProcessor]
 
 
 def validate_markers_data(min_val: float, max_val: float, marker_data: dict) -> Tuple[bool, str]:
+    if not min_val or math.isnan(min_val):
+        return False, 'Min Value needs to exist for Scale to render'
+    if not max_val or math.isnan(max_val):
+        return False, 'Max Value needs to exist for Scale to render'
+
     marker_name = marker_data["name"]
     if ScaleShape(marker_data['shape']) == ScaleShape.BAR:
         starting_val = marker_data['start']

@@ -41,17 +41,12 @@ class Report:
 
     def __init__(self,
                  report_id: str = None,
-                 name: str = None,
                  position_source_id: str = None,
                  position_source_type: Union[str, PositionSourceType] = None,
                  report_type: Union[str, ReportType] = None,
                  parameters: ReportParameters = None,
-                 latest_end_date: dt.date = None,
-                 latest_execution_time: dt.datetime = None,
-                 status: Union[str, ReportStatus] = ReportStatus.new,
-                 percentage_complete: float = None):
+                 status: Union[str, ReportStatus] = ReportStatus.new):
         self.__id = report_id
-        self.__name = name
         self.__position_source_id = position_source_id
         self.__position_source_type = position_source_type \
             if isinstance(position_source_type, PositionSourceType) or position_source_type is None \
@@ -59,18 +54,11 @@ class Report:
         self.__type = report_type if isinstance(report_type, ReportType) or report_type is None \
             else ReportType(report_type)
         self.__parameters = parameters
-        self.__latest_end_date = latest_end_date
-        self.__latest_execution_time = latest_execution_time
         self.__status = status if isinstance(status, ReportStatus) else ReportStatus(status)
-        self.__percentage_complete = percentage_complete
 
     @property
     def id(self) -> str:
         return self.__id
-
-    @property
-    def name(self) -> str:
-        return self.__name
 
     @property
     def position_source_id(self) -> str:
@@ -105,20 +93,8 @@ class Report:
         self.__parameters = value
 
     @property
-    def latest_end_date(self) -> dt.date:
-        return self.__latest_end_date
-
-    @property
-    def latest_execution_time(self) -> dt.datetime:
-        return self.__latest_execution_time
-
-    @property
     def status(self) -> ReportStatus:
         return self.__status
-
-    @property
-    def percentage_complete(self) -> float:
-        return self.__percentage_complete
 
     @classmethod
     def get(cls,
@@ -136,30 +112,25 @@ class Report:
         if acceptable_types is not None and report.type not in acceptable_types:
             raise MqValueError('Unexpected report type found.')
         if report.type in report_type_to_class_type:
-            return report_type_to_class_type[report.type].from_target(report)
-        return Report.from_target(report)
-
-    @classmethod
-    def from_target(cls,
-                    report: TargetReport):
+            return report_type_to_class_type[report.type](report_id=report.id,
+                                                          position_source_id=report.position_source_id,
+                                                          position_source_type=report.position_source_type,
+                                                          report_type=report.type,
+                                                          parameters=report.parameters,
+                                                          status=report.status)
         return Report(report_id=report.id,
-                      name=report.name,
                       position_source_id=report.position_source_id,
                       position_source_type=report.position_source_type,
                       report_type=report.type,
                       parameters=report.parameters,
-                      latest_end_date=report.latest_end_date,
-                      latest_execution_time=report.latest_execution_time,
-                      status=report.status,
-                      percentage_complete=report.percentage_complete)
+                      status=report.status)
 
     def save(self):
         """ Create a report using GsReportApi if it doesn't exist. Update the report if it does. """
-        target_report = TargetReport(name=self.name,
-                                     position_source_id=self.position_source_id,
+        target_report = TargetReport(position_source_id=self.position_source_id,
                                      position_source_type=self.position_source_type,
                                      type_=self.type,
-                                     parameters=self.parameters if self.parameters else ReportParameters())
+                                     parameters=self.parameters)
         if self.id:
             target_report.id = self.id
             GsReportApi.update_report(target_report)
@@ -170,30 +141,18 @@ class Report:
         """ Hits GsReportsApi to delete a report """
         GsReportApi.delete_report(self.id)
 
-    def set_position_target(self, entity_id: str):
-        is_portfolio = entity_id.startswith('MP')
-        self.position_source_type = 'Portfolio' if is_portfolio else 'Asset'
-        self.position_source_id = entity_id
-        if isinstance(self, FactorRiskReport):
-            self.type = ReportType.Portfolio_Factor_Risk if is_portfolio else ReportType.Asset_Factor_Risk
-
 
 class PerformanceReport(Report):
 
     def __init__(self,
                  report_id: str = None,
-                 name: str = None,
                  position_source_id: str = None,
                  position_source_type: Union[str, PositionSourceType] = None,
+                 report_type: Union[str, ReportType] = None,
                  parameters: ReportParameters = None,
-                 latest_end_date: dt.date = None,
-                 latest_execution_time: dt.datetime = None,
                  status: Union[str, ReportStatus] = ReportStatus.new,
-                 percentage_complete: float = None,
                  **kwargs):
-        super().__init__(report_id, name, position_source_id, position_source_type,
-                         ReportType.Portfolio_Performance_Analytics, parameters, latest_end_date, latest_execution_time,
-                         status, percentage_complete)
+        super().__init__(report_id, position_source_id, position_source_type, report_type, parameters, status)
 
     @classmethod
     def get(cls,
@@ -201,22 +160,6 @@ class PerformanceReport(Report):
             **kwargs):
         return super(PerformanceReport, cls).get(report_id=report_id,
                                                  acceptable_types=[ReportType.Portfolio_Performance_Analytics])
-
-    @classmethod
-    def from_target(cls,
-                    report: TargetReport):
-        if report.type != ReportType.Portfolio_Performance_Analytics:
-            raise MqValueError('This report is not a performance report.')
-        return PerformanceReport(report_id=report.id,
-                                 name=report.name,
-                                 position_source_id=report.position_source_id,
-                                 position_source_type=report.position_source_type,
-                                 report_type=report.type,
-                                 parameters=report.parameters,
-                                 latest_end_date=report.latest_end_date,
-                                 latest_execution_time=report.latest_execution_time,
-                                 status=report.status,
-                                 percentage_complete=report.percentage_complete)
 
     def get_pnl(self,
                 start_date: dt.date = None,
@@ -314,22 +257,14 @@ class PerformanceReport(Report):
 class FactorRiskReport(Report):
 
     def __init__(self,
-                 risk_model_id: str = None,
-                 fx_hedged: bool = True,
                  report_id: str = None,
-                 name: str = None,
                  position_source_id: str = None,
                  position_source_type: Union[str, PositionSourceType] = None,
                  report_type: Union[str, ReportType] = None,
-                 latest_end_date: dt.date = None,
-                 latest_execution_time: dt.datetime = None,
+                 parameters: ReportParameters = None,
                  status: Union[str, ReportStatus] = ReportStatus.new,
-                 percentage_complete: float = None,
                  **kwargs):
-        super().__init__(report_id, name, position_source_id, position_source_type,
-                         report_type, ReportParameters(risk_model=risk_model_id,
-                                                       fx_hedged=fx_hedged),
-                         latest_end_date, latest_execution_time, status, percentage_complete)
+        super().__init__(report_id, position_source_id, position_source_type, report_type, parameters, status)
 
     @classmethod
     def get(cls,
@@ -338,23 +273,14 @@ class FactorRiskReport(Report):
         return super().get(report_id=report_id,
                            acceptable_types=[ReportType.Portfolio_Factor_Risk, ReportType.Asset_Factor_Risk])
 
-    @classmethod
-    def from_target(cls,
-                    report: TargetReport):
-        if report.type not in [ReportType.Portfolio_Factor_Risk, ReportType.Asset_Factor_Risk]:
-            raise MqValueError('This report is not a factor risk report.')
-        return FactorRiskReport(risk_model_id=report.parameters.risk_model,
-                                fx_hedged=report.parameters.fx_hedged,
-                                report_id=report.id,
-                                position_source_id=report.position_source_id,
-                                position_source_type=report.position_source_type,
-                                report_type=report.type,
-                                latest_end_date=report.latest_end_date,
-                                status=report.status,
-                                percentage_complete=report.percentage_complete)
-
     def get_risk_model_id(self) -> str:
         return self.parameters.risk_model
+
+    def set_position_target(self, entity_id: str):
+        is_portfolio = entity_id.startswith('MP')
+        self.position_source_type = 'Portfolio' if is_portfolio else 'Asset'
+        self.position_source_id = entity_id
+        self.type = ReportType.Portfolio_Factor_Risk if is_portfolio else ReportType.Asset_Factor_Risk
 
     def get_results(self,
                     factors: List[str] = None,

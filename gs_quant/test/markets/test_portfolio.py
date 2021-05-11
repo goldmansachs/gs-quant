@@ -13,25 +13,19 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-import datetime
 import datetime as dt
 from unittest import mock
 
 import pandas as pd
-import pytest
 
 import gs_quant.risk as risk
 from gs_quant.datetime import business_day_offset
-from gs_quant.entities.entitlements import User
 from gs_quant.instrument import IRSwap, IRSwaption, CurveScenario
 from gs_quant.markets import HistoricalPricingContext, PricingContext, BackToTheFuturePricingContext, \
     historical_risk_key
 from gs_quant.markets.portfolio import Portfolio
-from gs_quant.markets.position_set import PositionSet
 from gs_quant.risk.results import PortfolioPath, PortfolioRiskResult
 from gs_quant.session import Environment, GsSession
-from gs_quant.target.common import Position, Entitlements
-from gs_quant.target.portfolios import Portfolio as MQPortfolio
 from gs_quant.test.utils.test_utils import MockCalc
 
 
@@ -42,6 +36,7 @@ def set_session():
 
 
 def test_portfolio(mocker):
+
     with MockCalc(mocker):
         with PricingContext(pricing_date=dt.date(2020, 10, 15)):
             swap1 = IRSwap('Pay', '10y', 'USD', fixed_rate=0.001, name='swap_10y@10bp')
@@ -150,6 +145,7 @@ def test_backtothefuture_pricing(mocker):
 
 def test_duplicate_instrument(mocker):
     with MockCalc(mocker):
+
         swap1 = IRSwap('Pay', '1y', 'EUR', name='EUR1y')
         swap2 = IRSwap('Pay', '2y', 'EUR', name='EUR2y')
         swap3 = IRSwap('Pay', '3y', 'EUR', name='EUR3y')
@@ -185,6 +181,7 @@ def test_nested_portfolios(mocker):
 
 def test_single_instrument(mocker):
     with MockCalc(mocker):
+
         swap1 = IRSwap('Pay', '10y', 'USD', fixed_rate=0.0, name='10y@0')
 
         portfolio = Portfolio(swap1)
@@ -325,6 +322,7 @@ def test_from_frame():
 
 
 def test_single_instrument_new_mock(mocker):
+
     with MockCalc(mocker):
         with PricingContext(pricing_date=dt.date(2020, 10, 15)):
             swap1 = IRSwap('Pay', '10y', 'USD', name='swap1')
@@ -336,94 +334,3 @@ def test_single_instrument_new_mock(mocker):
         assert tuple(map(lambda x: round(x, 6), fwd)) == (0.007512,)
         assert round(fwd.aggregate(), 2) == 0.01
         assert round(fwd[swap1], 6) == 0.007512
-
-
-def test_pull_from_marquee(mocker):
-    portfolio_search_results = {
-        'results': [
-            MQPortfolio(id='portfolio_id',
-                        name='Test Portfolio',
-                        currency='USD',
-                        entitlements=Entitlements(admin=('guid:12345',)))
-        ]
-    }
-
-    mocker.patch.object(GsSession.current, '_get', return_value=portfolio_search_results)
-    mocker.patch.object(User, 'get_many', return_value=([User(user_id='12345',
-                                                              name='Fake User',
-                                                              email='fake.user@gs.com',
-                                                              company='Goldman Sachs')]))
-    portfolio = Portfolio.get(name='Test Portfolio')
-    assert portfolio.id == 'portfolio_id'
-    return portfolio
-
-
-def test_create(mocker):
-    portfolio = Portfolio(position_sets=(PositionSet(positions=(Position(asset_id='MA4B66MW5E27UAHKG34', quantity=50),),
-                                                     date=datetime.date(2020, 1, 1)),),
-                          name='Test Portfolio',
-                          currency='EUR')
-    mq_portfolio = MQPortfolio(name='Test Portfolio',
-                               currency='EUR',
-                               id='portfolio_id',
-                               entitlements=Entitlements(admin=('guid:12345',)))
-    mocker.patch.object(GsSession.current, '_post', return_value=mq_portfolio)
-    mocker.patch.object(GsSession.current, '_put', return_value=())
-    mocker.patch.object(Portfolio, 'update_positions', return_value=())
-    mocker.patch.object(Portfolio, '_schedule_first_reports', return_value=())
-    mocker.patch.object(User, 'get_many', return_value=([User(user_id='12345',
-                                                              name='Fake User',
-                                                              email='fake.user@gs.com',
-                                                              company='Goldman Sachs')]))
-    portfolio._create()
-    assert portfolio.currency.value == 'EUR'
-
-
-def test_update_portfolio(mocker):
-    old_portfolio = test_pull_from_marquee(mocker)
-    assert old_portfolio.name == 'Test Portfolio'
-    old_portfolio.name = 'Changed Portfolio'
-    new_mq_portfolio = MQPortfolio(name='Changed Portfolio',
-                                   currency='EUR',
-                                   id='portfolio_id',
-                                   entitlements=Entitlements(view=['guid:XX'],
-                                                             edit=['guid:XX'],
-                                                             admin=['guid:XX']))
-    mocker.patch.object(GsSession.current, '_put', return_value=new_mq_portfolio)
-    old_portfolio._update()
-    assert old_portfolio.name == 'Changed Portfolio'
-
-
-def test_get_positions(mocker):
-    positions = {
-        'positionSets': [
-            {
-                'positionDate': '2020-01-01',
-                'positions': [
-                    {
-                        'asset_id': 'asset_id_1',
-                        'quantity': 100
-                    },
-                    {
-                        'asset_id': 'asset_id_2',
-                        'quantity': 150
-                    }
-                ]
-            }
-        ]
-    }
-    position_set = PositionSet(positions=[Position(asset_id='asset_id_1',
-                                                   quantity=100),
-                                          Position(asset_id='asset_id_2',
-                                                   quantity=150)
-                                          ],
-                               date=datetime.date(2020, 1, 1))
-    portfolio = test_pull_from_marquee(mocker)
-    mocker.patch.object(GsSession.current, '_get', return_value=positions)
-    mocker.patch.object(PositionSet, 'from_target', return_value=position_set)
-    returned_positions = portfolio.get_position_sets()
-    assert returned_positions[0].date == datetime.date(2020, 1, 1)
-
-
-if __name__ == "__main__":
-    pytest.main([__file__])

@@ -22,12 +22,10 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, List, Optional, Union
 
-import pandas as pd
 from pydash import get
 
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.data import GsDataApi
-from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.api.gs.reports import GsReportApi
 from gs_quant.common import DateLimit, PositionType
 from gs_quant.data import DataCoordinate, DataFrequency, DataMeasure
@@ -35,9 +33,8 @@ from gs_quant.data.coordinate import DataDimensions
 from gs_quant.entities.entitlements import Entitlements
 from gs_quant.errors import MqError
 from gs_quant.markets.position_set import PositionSet
-from gs_quant.markets.report import PerformanceReport, FactorRiskReport, Report
 from gs_quant.session import GsSession
-from gs_quant.target.reports import ReportStatus, ReportType
+from gs_quant.target.reports import ReportStatus
 
 _logger = logging.getLogger(__name__)
 
@@ -70,8 +67,7 @@ class Entity(metaclass=ABCMeta):
         EntityType.ASSET: 'assets',
         EntityType.COUNTRY: 'countries',
         EntityType.SUBDIVISION: 'countries/subdivisions',
-        EntityType.KPI: 'kpis',
-        EntityType.PORTFOLIO: 'portfolios'
+        EntityType.KPI: 'kpis'
     }
 
     def __init__(self,
@@ -96,7 +92,7 @@ class Entity(metaclass=ABCMeta):
     def get(cls,
             id_value: str,
             id_type: Union[EntityIdentifier, str],
-            entity_type: Optional[Union[EntityType, str]] = None):
+            entity_type: Optional[Union[EntityType, str]] = None) -> Optional['Entity']:
         id_type = id_type.value if isinstance(id_type, Enum) else id_type
 
         if entity_type is None:
@@ -297,10 +293,6 @@ class PositionedEntity(metaclass=ABCMeta):
         if self.positioned_entity_type == EntityType.ASSET:
             response = GsAssetApi.get_latest_positions(self.id, position_type)
             return PositionSet.from_target(response)
-        if self.positioned_entity_type == EntityType.PORTFOLIO:
-            response = GsPortfolioApi.get_latest_positions(portfolio_id=self.id,
-                                                           position_type=position_type.value)
-            return PositionSet.from_target(response)
         raise NotImplementedError
 
     def get_position_set_for_date(self,
@@ -309,11 +301,6 @@ class PositionedEntity(metaclass=ABCMeta):
         if self.positioned_entity_type == EntityType.ASSET:
             response = GsAssetApi.get_asset_positions_for_date(self.id, date, position_type)[0]
             return PositionSet.from_target(response)
-        if self.positioned_entity_type == EntityType.PORTFOLIO:
-            response = GsPortfolioApi.get_positions_for_date(portfolio_id=self.id,
-                                                             position_date=date,
-                                                             position_type=position_type.value)
-            return PositionSet.from_target(response) if response else None
         raise NotImplementedError
 
     def get_position_sets(self,
@@ -323,34 +310,7 @@ class PositionedEntity(metaclass=ABCMeta):
         if self.positioned_entity_type == EntityType.ASSET:
             response = GsAssetApi.get_asset_positions_for_dates(self.id, start, end, position_type)
             return [PositionSet.from_target(position_set) for position_set in response]
-        if self.positioned_entity_type == EntityType.PORTFOLIO:
-            response = GsPortfolioApi.get_positions(portfolio_id=self.id,
-                                                    start_date=start,
-                                                    end_date=end)
-            return [PositionSet.from_target(position_set) for position_set in response]
         raise NotImplementedError
-
-    def update_positions(self,
-                         position_sets: List[PositionSet],
-                         schedule_reports: bool = True):
-        if self.positioned_entity_type == EntityType.PORTFOLIO:
-            if not position_sets:
-                return
-            existing_positions_dates = self.get_position_dates()
-            new_position_dates = [p.date for p in position_sets] if position_sets else []
-            reports = [r.latest_end_date for r in self.get_reports() if r.latest_end_date]
-            latest_date_covered_by_reports = min(reports) if reports else None
-            latest_position_date_in_reports = max([d for d in existing_positions_dates
-                                                   if d <= latest_date_covered_by_reports]) \
-                if latest_date_covered_by_reports else min(new_position_dates)
-            start_date = min(latest_position_date_in_reports, min(new_position_dates))
-            end_date = max(new_position_dates)
-            GsPortfolioApi.update_positions(portfolio_id=self.id, position_sets=[p.to_target() for p in position_sets])
-            if schedule_reports:
-                self._schedule_reports(start_date=start_date,
-                                       end_date=end_date)
-        else:
-            raise NotImplementedError
 
     def get_positions_data(self,
                            start: dt.date = DateLimit.LOW_LIMIT.value,
@@ -359,68 +319,6 @@ class PositionedEntity(metaclass=ABCMeta):
                            position_type: PositionType = PositionType.CLOSE) -> List[Dict]:
         if self.positioned_entity_type == EntityType.ASSET:
             return GsAssetApi.get_asset_positions_data(self.id, start, end, fields, position_type)
-        if self.positioned_entity_type == EntityType.PORTFOLIO:
-            return GsPortfolioApi.get_positions_data(self.id, start, end, fields, position_type)
-        raise NotImplementedError
-
-    def get_position_dates(self):
-        if self.positioned_entity_type == EntityType.PORTFOLIO:
-            return GsPortfolioApi.get_position_dates(portfolio_id=self.id)
-        raise NotImplementedError
-
-    def get_reports(self) -> List[Report]:
-        if self.positioned_entity_type == EntityType.PORTFOLIO:
-            reports_as_target = GsPortfolioApi.get_reports(portfolio_id=self.id)
-            report_objects = []
-            for report in reports_as_target:
-                if report.type == ReportType.Portfolio_Performance_Analytics:
-                    report_objects.append(PerformanceReport.from_target(report))
-                elif report.type in [ReportType.Portfolio_Factor_Risk, ReportType.Asset_Factor_Risk]:
-                    report_objects.append(FactorRiskReport.from_target(report))
-                else:
-                    report_objects.append(Report.from_target(report))
-            return report_objects
-        raise NotImplementedError
-
-    def get_status_of_reports(self) -> pd.DataFrame:
-        reports = self.get_reports()
-        reports_dict = {
-            'Name': [r.name for r in reports],
-            'ID': [r.id for r in reports],
-            'Latest Execution Time': [r.latest_execution_time for r in reports],
-            'Latest End Date': [r.latest_end_date for r in reports],
-            "Status": [r.status for r in reports],
-            'Percentage Complete': [r.percentage_complete for r in reports]
-        }
-
-        return pd.DataFrame.from_dict(reports_dict)
-
-    def get_factor_risk_report(self,
-                               risk_model_id: str = None,
-                               fx_hedged: bool = None) -> FactorRiskReport:
-        if self.positioned_entity_type == EntityType.PORTFOLIO:
-            reports = GsReportApi.get_reports(limit=100,
-                                              position_source_type='Portfolio',
-                                              position_source_id=self.id,
-                                              report_type='Portfolio Factor Risk')
-            if fx_hedged:
-                reports = [report for report in reports if report.parameters.fx_hedged == fx_hedged]
-            if risk_model_id:
-                reports = [report for report in reports if report.parameters.risk_model == risk_model_id]
-            if len(reports) > 1:
-                raise MqError('This portfolio has more than one factor risk report that matches your parameters.'
-                              ' Please specify the risk model ID and fxHedged value in the function parameters.')
-            if len(reports) == 0:
-                raise MqError('This portfolio has no factor risk reports that match your parameters.')
-            return FactorRiskReport.from_target(reports[0])
-        raise NotImplementedError
-
-    def create_report(self, report: Report):
-        if self.positioned_entity_type == EntityType.PORTFOLIO:
-            report.set_position_target(self.id)
-            report.save()
-            self._schedule_first_reports([pos_set.date for pos_set in self.get_position_sets()])
-            return report
         raise NotImplementedError
 
     def poll_report(self, report_id: str, timeout: int = 600, step: int = 30) -> ReportStatus:
@@ -431,8 +329,8 @@ class PositionedEntity(metaclass=ABCMeta):
 
         while poll and dt.datetime.now() <= end:
             try:
-                status = Report.get(report_id).status
-                if status not in {ReportStatus.error, ReportStatus.cancelled, ReportStatus.done}:
+                status = GsReportApi.get_report(report_id).status
+                if status not in set([ReportStatus.error, ReportStatus.cancelled, ReportStatus.done]):
                     _logger.info(f'Report is {status} as of {dt.datetime.now().isoformat()}')
                     time.sleep(step)
                 else:

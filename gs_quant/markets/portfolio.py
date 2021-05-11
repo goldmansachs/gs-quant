@@ -16,54 +16,27 @@ under the License.
 import copy
 import datetime as dt
 import logging
-import sys
-from functools import wraps
-from itertools import chain
-from time import sleep
-from typing import Iterable, Optional, Tuple, Union, List
+from typing import Iterable, Optional, Tuple, Union
 
-import deprecation
 import numpy as np
 import pandas as pd
-from more_itertools import unique_everseen
-from pydash import has
-from tqdm import tqdm
-
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.portfolios import GsPortfolioApi
-from gs_quant.api.gs.reports import GsReportApi
-from gs_quant.base import get_enum_value
 from gs_quant.context_base import nullcontext
-from gs_quant.datetime import prev_business_date
-from gs_quant.entities.entitlements import Entitlements
-from gs_quant.entities.entity import PositionedEntity, EntityType, Entity
-from gs_quant.errors import MqValueError
 from gs_quant.instrument import Instrument
 from gs_quant.markets import HistoricalPricingContext, OverlayMarket, PricingContext
-from gs_quant.markets.position_set import PositionSet
-from gs_quant.markets.report import PerformanceReport
 from gs_quant.priceable import PriceableImpl
 from gs_quant.risk import RiskMeasure, ResolvedInstrumentValues
 from gs_quant.risk.results import CompositeResultFuture, PortfolioRiskResult, PortfolioPath, PricingFuture
-from gs_quant.target.common import RiskPosition, Currency
-from gs_quant.target.portfolios import Portfolio as MQPortfolio
-from gs_quant.target.portfolios import RiskRequest, PricingDateAndMarketDataAsOf
+from gs_quant.target.common import RiskPosition
+from gs_quant.target.portfolios import Position, PositionSet, RiskRequest, PricingDateAndMarketDataAsOf
+from more_itertools import unique_everseen
+from itertools import chain
 
 _logger = logging.getLogger(__name__)
 
 
-def _validate_portfolio():
-    def _outer(fn):
-        @wraps(fn)
-        def _inner(self, *args, **kwargs):
-            if has(self, '_Portfolio__id') and self._Portfolio__id is None:
-                raise NotImplementedError
-            return fn(self, *args, **kwargs)
-        return _inner
-    return _outer
-
-
-class Portfolio(PriceableImpl, PositionedEntity, Entity):
+class Portfolio(PriceableImpl):
     """A collection of instruments
 
     Portfolio holds a collection of instruments in order to run pricing and risk scenarios
@@ -72,39 +45,14 @@ class Portfolio(PriceableImpl, PositionedEntity, Entity):
 
     def __init__(self,
                  priceables: Optional[Union[PriceableImpl, Iterable[PriceableImpl], dict]] = (),
-                 name: Optional[str] = 'Portfolio ' + dt.datetime.today().strftime("%d %b, %Y"),
-                 position_sets: Optional[List] = None,
-                 currency: Optional[Currency] = Currency.USD,
-                 entitlements: Entitlements = None,
-                 *, portfolio_id: str = None):
+                 name: Optional[str] = None):
         """
         Creates a portfolio object which can be used to hold instruments
 
         :param priceables: constructed with an instrument, portfolio, iterable of either, or a dictionary where
             key is name and value is a priceable
         """
-        PriceableImpl.__init__(self)
-        Entity.__init__(self, portfolio_id, EntityType.PORTFOLIO)
-        self.__name = name
-        self.__id = portfolio_id
-        self.__currency = currency
-        self.__need_to_schedule_reports = False
-        self.__entitlements = entitlements if entitlements else Entitlements()
-        self.__position_sets = position_sets
-
-        # Can't initialize a portfolio with both priceables or position sets
-        if priceables and position_sets:
-            raise ValueError('Cannot initialize a portfolio with both position sets and priceables. Please pick one.')
-
-        if portfolio_id:
-            # Can't add positions to an existing portfolio within the constructor
-            if position_sets:
-                raise ValueError(
-                    'Cannot add positions to an existing portfolio at construction.'
-                    'Please initialize the portfolio without the position sets and then update positions using the '
-                    'update_positions(position_sets) function.')
-            PositionedEntity.__init__(self, portfolio_id, EntityType.PORTFOLIO)
-
+        super().__init__()
         if isinstance(priceables, dict):
             priceables_list = []
             for name, priceable in priceables.items():
@@ -113,6 +61,9 @@ class Portfolio(PriceableImpl, PositionedEntity, Entity):
             self.priceables = priceables_list
         else:
             self.priceables = priceables
+
+        self.__name = name
+        self.__id = None
 
     def __getitem__(self, item):
         if isinstance(item, (int, slice)):
@@ -183,39 +134,11 @@ class Portfolio(PriceableImpl, PositionedEntity, Entity):
         self.__name = name
 
     @property
-    def currency(self) -> Union[Currency, str]:
-        return self.__currency
-
-    @currency.setter
-    def currency(self, value: Union[Currency, str]):
-        self.__currency = get_enum_value(Currency, value)
-        self.__need_to_schedule_reports = True
-
-    @property
-    def entitlements(self) -> Entitlements:
-        return self.__entitlements
-
-    @entitlements.setter
-    def entitlements(self, value: Entitlements):
-        self.__entitlements = value
-
-    @property
-    def position_sets(self) -> List[PositionSet]:
-        return self.__position_sets
-
-    @position_sets.setter
-    def position_sets(self, value: List[PositionSet]):
-        self.__position_sets = value
-
-    @property
     def priceables(self) -> Tuple[PriceableImpl, ...]:
         return self.__priceables
 
     @priceables.setter
     def priceables(self, priceables: Union[PriceableImpl, Iterable[PriceableImpl]]):
-        # Cannot add priceables to a Marquee / position set portfolio
-        if (self.id or self.position_sets) and priceables:
-            raise ValueError('Cannot add priceables to a portfolio with position sets.')
         self.__priceables = (priceables,) if isinstance(priceables, PriceableImpl) else tuple(priceables)
         self.__priceables_by_name = {}
 
@@ -257,13 +180,6 @@ class Portfolio(PriceableImpl, PositionedEntity, Entity):
 
         return tuple(unique_everseen(portfolios))
 
-    def data_dimension(self) -> str:
-        pass
-
-    @classmethod
-    def entity_type(cls) -> EntityType:
-        return EntityType.PORTFOLIO
-
     def subset(self, paths: Iterable[PortfolioPath], name=None):
         return Portfolio(tuple(self[p] for p in paths), name=name)
 
@@ -298,32 +214,54 @@ class Portfolio(PriceableImpl, PositionedEntity, Entity):
         return Portfolio.load_from_portfolio_id(asset.id)
 
     @staticmethod
-    @deprecation.deprecated(deprecated_in='0.8.285',
-                            details='from_portfolio_id is now deprecated, please use '
-                                    'Portfolio.get(portfolio_id=portfolio_id) instead.')
-    def from_portfolio_id(portfolio_id: str):
-        return Portfolio.get(portfolio_id=portfolio_id)
+    def from_portfolio_id(portfolio_id: str, date=None):
+        portfolio = GsPortfolioApi.get_portfolio(portfolio_id)
+        response = GsPortfolioApi.get_positions_for_date(portfolio_id, date) if date else \
+            GsPortfolioApi.get_latest_positions(portfolio_id)
+        response = response[0] if isinstance(response, tuple) else response
+        positions = response.positions if isinstance(response, PositionSet) else response['positions']
+        instruments = GsAssetApi.get_instruments_for_positions(positions)
+        ret = Portfolio(instruments, name=portfolio.name)
+        ret.__id = portfolio_id
+        return ret
 
     @staticmethod
-    @deprecation.deprecated(deprecated_in='0.8.285',
-                            details='from_portfolio_id is now deprecated, please use '
-                                    'Portfolio.get(name=name) instead.')
     def from_portfolio_name(name: str):
-        return Portfolio.get(name=name)
+        portfolio = GsPortfolioApi.get_portfolio_by_name(name)
+        return Portfolio.load_from_portfolio_id(portfolio.id)
 
     @staticmethod
     def from_quote(quote_id: str):
         instruments = GsPortfolioApi.get_instruments_by_workflow_id(quote_id)
         return Portfolio(instruments, name=quote_id)
 
-    def save(self):
+    def save(self, overwrite: Optional[bool] = False):
         if self.portfolios:
             raise ValueError('Cannot save portfolios with nested portfolios')
 
         if self.__id:
-            self._update()
+            if not overwrite:
+                raise ValueError(f'Portfolio with id {id} already exists. Use overwrite=True to overwrite')
         else:
-            self._create()
+            if not self.__name:
+                raise ValueError('name not set')
+
+            try:
+                self.__id = GsPortfolioApi.get_portfolio_by_name(self.__name).id
+                if not overwrite:
+                    raise RuntimeError(
+                        f'Portfolio {self.__name} with id {self.__id} already exists. Use overwrite=True to overwrite')
+            except ValueError:
+                from gs_quant.target.portfolios import Portfolio as MarqueePortfolio
+                self.__id = GsPortfolioApi.create_portfolio(MarqueePortfolio('USD', self.__name)).id
+                _logger.info(f'Created Marquee portfolio {self.__name} with id {self.__id}')
+
+        position_set = PositionSet(
+            position_date=dt.date.today(),
+            positions=tuple(Position(asset_id=GsAssetApi.get_or_create_asset_from_instrument(i))
+                            for i in self.instruments))
+
+        GsPortfolioApi.update_positions(self.__id, (position_set,))
 
     def save_as_quote(self, overwrite: Optional[bool] = False):
         if self.portfolios:
@@ -435,30 +373,6 @@ class Portfolio(PriceableImpl, PositionedEntity, Entity):
 
         return df
 
-    @classmethod
-    def get(cls, portfolio_id: str = None, name: str = None, **kwargs):
-        if portfolio_id is None and name is None:
-            raise MqValueError('Please specify a portfolio ID and/or portfolio name.')
-
-        portfolios = GsPortfolioApi.get_portfolios(portfolio_ids=[portfolio_id] if portfolio_id else None,
-                                                   portfolio_names=[name] if name else None)
-        if len(portfolios) == 0:
-            raise ValueError('No portfolios in Marquee match the requested name and/or ID.')
-        if len(portfolios) > 1:
-            portfolios = {
-                'Name': [p.name for p in portfolios],
-                'ID': [p.id for p in portfolios],
-                'Created Time': [p.created_time for p in portfolios]
-            }
-            cls._print_dict(portfolios)
-            raise ValueError('More than one portfolio matches the requested name and/or ID. To resolve,'
-                             ' please find the correct portfolio ID below and set it as your portfolio_id.')
-        port = portfolios[0]
-        return Portfolio(name=port.name,
-                         portfolio_id=port.id,
-                         currency=port.currency,
-                         entitlements=Entitlements.from_target(port.entitlements))
-
     def to_csv(self, csv_file: str, mappings: Optional[dict] = None, ignored_cols: Optional[list] = None):
         port_df = self.to_frame(mappings or {})
         port_df = port_df[np.setdiff1d(port_df.columns, ignored_cols or [])]
@@ -505,12 +419,7 @@ class Portfolio(PriceableImpl, PositionedEntity, Entity):
     def resolve(self, in_place: bool = True) -> Optional[Union[PricingFuture, PriceableImpl, dict]]:
         pricing_context = self.__pricing_context
         with pricing_context:
-            if self.id or self.position_sets:
-                futures = [p.resolve(in_place)
-                           for p in self._get_priceables_from_map(priceables_map=self.convert_positions_to_priceables(),
-                                                                  date=pricing_context.pricing_date)]
-            else:
-                futures = [p.resolve(in_place) for p in self.__priceables]
+            futures = [p.resolve(in_place) for p in self.__priceables]
 
         if not in_place:
             ret = {} if isinstance(PricingContext.current, HistoricalPricingContext) else Portfolio(name=self.name)
@@ -552,12 +461,7 @@ class Portfolio(PriceableImpl, PositionedEntity, Entity):
         """
         pricing_context = self.__pricing_context
         with pricing_context:
-            if self.id or self.position_sets:
-                futures = [i.market()
-                           for i in self._get_priceables_from_map(priceables_map=self.convert_positions_to_priceables(),
-                                                                  date=pricing_context.pricing_date)]
-            else:
-                futures = [i.market() for i in self.all_instruments]
+            futures = [i.market() for i in self.all_instruments]
 
         result_future = PricingFuture()
         return_future = not isinstance(pricing_context,
@@ -596,187 +500,10 @@ class Portfolio(PriceableImpl, PositionedEntity, Entity):
         return result_future if return_future else result_future.result()
 
     def calc(self, risk_measure: Union[RiskMeasure, Iterable[RiskMeasure]], fn=None) -> PortfolioRiskResult:
-        # PortfolioRiskResult should hold a copy of the portfolio instead of a reference to the portfolio
-        # this is to prevent the portfolio object within portfolioriskresult to hold a reference to the portfolio
-        # object should it later be modified in place (eg: resolution)
-
-        # If a position set portfolio, resolve positions held on each date in pricing context
-        if self.priceables:
-            with self.__pricing_context:
-                return PortfolioRiskResult(copy.deepcopy(self),
-                                           (risk_measure,) if isinstance(risk_measure, RiskMeasure) else risk_measure,
-                                           [p.calc(risk_measure, fn=fn) for p in self.__priceables])
-        if self.id or self.position_sets:
-            priceables_map = self.convert_positions_to_priceables()
-            list_of_risk_measures = (risk_measure,) if isinstance(risk_measure, RiskMeasure) else risk_measure
-            risk_pricing_context = list_of_risk_measures[0].pricing_context
-
-            # If the pricing context is historical, calc based on position sets held on each date
-            if isinstance(risk_pricing_context, HistoricalPricingContext):
-                date_range = risk_pricing_context._HistoricalPricingContext__date_range
-                start_date = min(date_range)
-                end_date = max(date_range)
-                position_dates = priceables_map.keys()
-                futures = []
-                while start_date <= end_date:
-                    position_dates_after_start = sorted(list(filter(lambda date: start_date < date, position_dates)))
-                    context_end = min(position_dates_after_start[0], end_date) \
-                        if position_dates_after_start else end_date
-                    if context_end != end_date:
-                        context_end = context_end - dt.timedelta(days=1)
-
-                    historical_pricing_context = HistoricalPricingContext(
-                        start=start_date,
-                        end=prev_business_date(context_end) if context_end != end_date else end_date)
-                    with historical_pricing_context:
-                        futures = futures + [p.calc(risk_measure, fn=fn)
-                                             for p in self._get_priceables_from_map(priceables_map, start_date)]
-                    start_date = context_end + dt.timedelta(days=1)
-                with self.__pricing_context:
-                    return PortfolioRiskResult(copy.deepcopy(self),
-                                               (risk_measure,) if isinstance(risk_measure,
-                                                                             RiskMeasure) else risk_measure,
-                                               futures)
-
-            # If the pricing context exists, calc based on the position set held on the pricing date
-            elif isinstance(risk_pricing_context, PricingContext):
-                futures = [p.calc(risk_measure, fn=fn)
-                           for p in self._get_priceables_from_map(priceables_map, risk_pricing_context.pricing_date)]
-                with self.__pricing_context:
-                    return PortfolioRiskResult(copy.deepcopy(self),
-                                               (risk_measure,) if isinstance(risk_measure,
-                                                                             RiskMeasure) else risk_measure,
-                                               futures)
-            return None
-
-    def _create(self):
-        # If a priceables portfolio, try resolving to MQ portfolio
-        if self.__priceables:
-            self.save()
-            self.priceables = None
-            return
-
-        # If a positions portfolio, create using MQ API
-        port = GsPortfolioApi.create_portfolio(portfolio=MQPortfolio(name=self.name,
-                                                                     currency=self.currency,
-                                                                     entitlements=self.entitlements.to_target()))
-        PositionedEntity.__init__(self, port.id, EntityType.PORTFOLIO)
-        Entity.__init__(self, port.id, EntityType.PORTFOLIO)
-        self.__id = port.id
-        self._PositionedEntity__entity_type = EntityType.PORTFOLIO
-        self.entitlements = Entitlements.from_target(port.entitlements)
-        self.currency = Currency(port.currency)
-
-        # If the portfolio contains positions, upload them to the MQ portfolio and schedule reports
-        if self.position_sets:
-            position_sets = self.position_sets
-            self.position_sets = None
-            self.update_positions(position_sets, False)
-            self._schedule_first_reports([pos_set.date for pos_set in position_sets])
-            self.position_sets = None
-
-    @_validate_portfolio()
-    def delete(self):
-        GsPortfolioApi.delete_portfolio(portfolio_id=self.id)
-        self.__id = None
-        self.name = None
-        self.priceables = ()
-        self.position_sets = None
-        self.currency = None
-        self.entitlements = None
-
-    @_validate_portfolio()
-    def _update(self):
-        GsPortfolioApi.update_portfolio(portfolio=MQPortfolio(name=self.name,
-                                                              id_=self.id,
-                                                              currency=self.currency,
-                                                              entitlements=self.entitlements.to_target()))
-        if self.__need_to_schedule_reports:
-            self._schedule_first_reports(self.get_position_dates())
-            self.__need_to_schedule_reports = False
-
-    @_validate_portfolio()
-    def get_performance_report(self) -> PerformanceReport:
-        reports = GsReportApi.get_reports(limit=1,
-                                          position_source_type='Portfolio',
-                                          position_source_id=self.id,
-                                          report_type='Portfolio Performance Analytics')
-        return PerformanceReport.from_target(reports[0]) if reports else None
-
-    @_validate_portfolio()
-    def backcast_reports(self, start_date: dt.date):
-        position_dates = self.get_position_dates()
-        if len(position_dates) == 0:
-            raise MqValueError('Cannot backcast reports on a portfolio with no positions')
-        earliest_position_date = min(position_dates)
-        if start_date >= earliest_position_date:
-            raise MqValueError(f'Backcasting start date must be before {earliest_position_date.strftime("%d %b, %Y")}')
-        self._schedule_reports(start_date=start_date,
-                               end_date=earliest_position_date,
-                               backcast=True)
-
-    def convert_positions_to_priceables(self) -> dict:
-        position_sets = self.get_position_sets() if self.id else self.position_sets
-        date_to_priceables_map = {}
-        for pos_set in position_sets:
-            date = pos_set.date
-            priceables = GsAssetApi.get_instruments_for_positions([pos.to_target() for pos in pos_set.positions])
-            if None in priceables:
-                raise MqValueError('All positions on {} could not be successfully resolved into instruments')
-            date_to_priceables_map[date] = priceables
-        return date_to_priceables_map
-
-    def _schedule_first_reports(self,
-                                position_dates: List[dt.date],
-                                show_progress: bool = True):
-        dates_before_today = list(filter(lambda x: x < dt.date.today(), position_dates))
-        latest_date_before_today = max(dates_before_today)
-        self._schedule_reports(start_date=min(position_dates),
-                               end_date=max(latest_date_before_today, prev_business_date()))
-        if dt.date.today() in position_dates:
-            self._schedule_reports(start_date=latest_date_before_today,
-                                   end_date=dt.date.today())
-        if show_progress:
-            self._show_report_progress()
-
-    def _schedule_reports(self,
-                          start_date,
-                          end_date,
-                          backcast: bool = False,
-                          show_progress: bool = True):
-        GsPortfolioApi.schedule_reports(portfolio_id=self.id,
-                                        start_date=start_date,
-                                        end_date=end_date,
-                                        backcast=backcast)
-        if show_progress:
-            self._show_report_progress()
-
-    @staticmethod
-    def _get_priceables_from_map(priceables_map: dict,
-                                 date) -> List:
-        dates_before = list(filter(lambda d: d <= date, priceables_map.keys()))
-        # Convert latest positions to priceables if latest date exists, else return an empty list
-        return priceables_map[max(dates_before)] if dates_before else []
-
-    @classmethod
-    def _print_dict(cls,
-                    dictionary: dict):
-        pd.set_option('display.max_rows', None)
-        pd.set_option('display.max_columns', None)
-        pd.set_option('display.width', None)
-        pd.set_option('display.max_colwidth', -1)
-        print(pd.DataFrame.from_dict(dictionary))
-
-    def _show_report_progress(self):
-        with tqdm(total=100,
-                  position=0,
-                  maxinterval=1,
-                  file=sys.stdout,
-                  desc=f'Scheduling Reports for Portfolio "{self.name}"') as progress_bar:
-            reports = self.get_reports()
-            total_percent_complete = 0
-            for report in reports:
-                total_percent_complete = total_percent_complete + report.percentage_complete \
-                    if report.percentage_complete else total_percent_complete
-            progress_bar.n = total_percent_complete / len(reports)
-            sleep(5)
+        with self.__pricing_context:
+            # PortfolioRiskResult should hold a copy of the portfolio instead of a reference to the portfolio
+            # this is to prevent the portfolio object within portfolioriskresult to hold a reference to the portfolio
+            # object should it later be modified in place (eg: resolution)
+            return PortfolioRiskResult(copy.deepcopy(self),
+                                       (risk_measure,) if isinstance(risk_measure, RiskMeasure) else risk_measure,
+                                       [p.calc(risk_measure, fn=fn) for p in self.__priceables])
