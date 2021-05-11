@@ -46,8 +46,8 @@ class RiskModel:
         self.__id: str = model_id
         self.__name: str = name
         self.__description: str = description
-        self.__entitlements: Entitlements = entitlements if isinstance(entitlements, Entitlements) else\
-            Entitlements.from_dict(entitlements) if isinstance(entitlements, Dict) else None
+        self.__entitlements: Entitlements = entitlements if entitlements and isinstance(entitlements, Entitlements) \
+            else Entitlements.from_dict(entitlements) if entitlements and isinstance(entitlements, Dict) else None
 
     @property
     def id(self) -> str:
@@ -159,8 +159,9 @@ class FactorRiskModel(RiskModel):
         super().__init__(model_id, name, entitlements=entitlements, description=description)
         self.__coverage = coverage if isinstance(coverage, CoverageType) else CoverageType(coverage)
         self.__term = term if isinstance(term, Term) else Term(term)
-        self.__universe_identifier = universe_identifier if isinstance(universe_identifier, UniverseIdentifier) \
-            else UniverseIdentifier(universe_identifier)
+        self.__universe_identifier = universe_identifier if universe_identifier and \
+            isinstance(universe_identifier, UniverseIdentifier) else UniverseIdentifier(universe_identifier) if\
+            universe_identifier else None
         self.__vendor = vendor
         self.__version = version
 
