@@ -26,7 +26,7 @@ import sys
 from tqdm import tqdm
 from typing import Optional, Union
 
-from .markets import CloseMarket, LiveMarket, Market, close_market_date
+from .markets import CloseMarket, LiveMarket, Market, close_market_date, OverlayMarket, RelativeMarket
 from gs_quant.base import InstrumentBase, RiskKey, Scenario, get_enum_value
 from gs_quant.common import PricingLocation
 from gs_quant.context_base import ContextBaseWithDefault
@@ -137,7 +137,14 @@ class PricingContext(ContextBaseWithDefault):
                 raise ValueError("The PricingContext does not support a pricing_date in the future. Please use the RollFwd Scenario to roll the pricing_date to a future date")
 
         if market:
-            market_date = getattr(market, 'date', None) or getattr(market.base_market, 'date', None)
+            market_date = None
+            if isinstance(market, OverlayMarket) or isinstance(market, CloseMarket):
+                market_date = getattr(market, 'date', None) or getattr(market.base_market, 'date', None)
+
+            if isinstance(market, RelativeMarket):
+                market_date = market.from_market.date if market.from_market.date > dt.date.today() \
+                    else market.to_market.date
+
             if market_date:
                 if market_date > dt.date.today():
                     raise ValueError("The PricingContext does not support a market dated in the future. Please use the RollFwd Scenario to roll the pricing_date to a future date")

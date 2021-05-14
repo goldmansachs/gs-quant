@@ -14,23 +14,24 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.target.common import *
+from gs_quant.common import *
 import datetime
-from typing import Mapping, Tuple, Union
+from typing import Mapping, Tuple, Union, Optional
 from enum import Enum
 from gs_quant.base import Base, EnumBase, InstrumentBase, camel_case_translate, get_enum_value
 
 
 class ClientPositionFilter(EnumBase, Enum):    
     
-    """Filter used to select client positions from GRDB"""
+    """Filter used to select client positions from GRDB. 'oeId' selects all positions
+       associated with the provided oeId. 'oeIdOrClientAccounts' selects
+       positions associated with their the provided oeId or ClientAccounts.
+       'clientAccounts' selects positions only associated with those provided
+       accounts."""
 
     oeId = 'oeId'
     clientAccounts = 'clientAccounts'
-    oeIdAndClientAccounts = 'oeIdAndClientAccounts'
-    
-    def __repr__(self):
-        return self.value
+    oeIdOrClientAccounts = 'oeIdOrClientAccounts'    
 
 
 class PortfolioType(EnumBase, Enum):    
@@ -41,10 +42,7 @@ class PortfolioType(EnumBase, Enum):
     Draft_Portfolio = 'Draft Portfolio'
     Draft_Bond = 'Draft Bond'
     PCO_Portfolio = 'PCO Portfolio'
-    PCO_Share_Class = 'PCO Share Class'
-    
-    def __repr__(self):
-        return self.value
+    PCO_Share_Class = 'PCO Share Class'    
 
 
 class SecDbBookDetail(Base):
@@ -87,6 +85,8 @@ class GRDBPortfolioParameters(Base):
         
     """Parameters required for a GRDB portfolio."""
 
+    _name_mappings = {'oasis_account_names': 'OasisAccountNames'}
+
     @camel_case_translate
     def __init__(
         self,
@@ -97,6 +97,7 @@ class GRDBPortfolioParameters(Base):
         enabled: str,
         is_live: str,
         client_account_names: Tuple[str, ...] = None,
+        oasis_account_names: Tuple[str, ...] = None,
         client_position_filter: Union[ClientPositionFilter, str] = None,
         name: str = None
     ):        
@@ -104,6 +105,7 @@ class GRDBPortfolioParameters(Base):
         self.oe_id = oe_id
         self.client_name = client_name
         self.client_account_names = client_account_names
+        self.oasis_account_names = oasis_account_names
         self.client_position_filter = client_position_filter
         self.increment = increment
         self.risk_packages = risk_packages
@@ -142,8 +144,22 @@ class GRDBPortfolioParameters(Base):
         self.__client_account_names = value        
 
     @property
+    def oasis_account_names(self) -> Tuple[str, ...]:
+        """List of OASIS Accounts"""
+        return self.__oasis_account_names
+
+    @oasis_account_names.setter
+    def oasis_account_names(self, value: Tuple[str, ...]):
+        self._property_changed('oasis_account_names')
+        self.__oasis_account_names = value        
+
+    @property
     def client_position_filter(self) -> Union[ClientPositionFilter, str]:
-        """Filter used to select client positions from GRDB"""
+        """Filter used to select client positions from GRDB. 'oeId' selects all positions
+           associated with the provided oeId. 'oeIdOrClientAccounts' selects
+           positions associated with their the provided oeId or ClientAccounts.
+           'clientAccounts' selects positions only associated with those
+           provided accounts."""
         return self.__client_position_filter
 
     @client_position_filter.setter

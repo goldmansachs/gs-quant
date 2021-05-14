@@ -14,9 +14,9 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.target.common import *
+from gs_quant.common import *
 import datetime
-from typing import Mapping, Tuple, Union
+from typing import Mapping, Tuple, Union, Optional
 from enum import Enum
 from gs_quant.base import Base, EnumBase, InstrumentBase, camel_case_translate, get_enum_value
 
@@ -25,10 +25,7 @@ class DelayExclusionType(EnumBase, Enum):
     
     """Type of the delay exclusion"""
 
-    LAST_DAY_OF_THE_MONTH = 'LAST_DAY_OF_THE_MONTH'
-    
-    def __repr__(self):
-        return self.value
+    LAST_DAY_OF_THE_MONTH = 'LAST_DAY_OF_THE_MONTH'    
 
 
 class DevelopmentStatus(EnumBase, Enum):    
@@ -36,10 +33,7 @@ class DevelopmentStatus(EnumBase, Enum):
     """The status of development of this dataset. Controls rate limit on query/upload."""
 
     Development = 'Development'
-    Production = 'Production'
-    
-    def __repr__(self):
-        return self.value
+    Production = 'Production'    
 
 
 class FieldFormat(EnumBase, Enum):    
@@ -48,19 +42,13 @@ class FieldFormat(EnumBase, Enum):
        formats (from JSON schema specification)."""
 
     date = 'date'
-    date_time = 'date-time'
-    
-    def __repr__(self):
-        return self.value
+    date_time = 'date-time'    
 
 
 class MarketDataFrequency(EnumBase, Enum):    
     
     Real_Time = 'Real Time'
-    End_Of_Day = 'End Of Day'
-    
-    def __repr__(self):
-        return self.value
+    End_Of_Day = 'End Of Day'    
 
 
 class MarketDataMeasure(EnumBase, Enum):    
@@ -68,10 +56,7 @@ class MarketDataMeasure(EnumBase, Enum):
     Last = 'Last'
     Curve = 'Curve'
     Close_Change = 'Close Change'
-    Previous_Close = 'Previous Close'
-    
-    def __repr__(self):
-        return self.value
+    Previous_Close = 'Previous Close'    
 
 
 class MeasureEntityType(EnumBase, Enum):    
@@ -86,10 +71,7 @@ class MeasureEntityType(EnumBase, Enum):
     REPORT = 'REPORT'
     HEDGE = 'HEDGE'
     PORTFOLIO = 'PORTFOLIO'
-    RISK_MODEL = 'RISK_MODEL'
-    
-    def __repr__(self):
-        return self.value
+    RISK_MODEL = 'RISK_MODEL'    
 
 
 class AdvancedFilter(Base):
@@ -267,7 +249,8 @@ class DataSetCoverageProperties(Base):
 
 class DataSetDefaults(Base):
         
-    """Default settings."""
+    """Default start/end dates/times applied when data is queried, if not specified by
+       user."""
 
     @camel_case_translate
     def __init__(
@@ -285,7 +268,8 @@ class DataSetDefaults(Base):
 
     @property
     def start_seconds(self) -> float:
-        """Default start date/time, in seconds before current time."""
+        """Default start date/time, in seconds before current time. Recommend 86400 (1 day)
+           for time-based datasets and 2592000 (30 days) for date-base datasets."""
         return self.__start_seconds
 
     @start_seconds.setter
@@ -295,7 +279,7 @@ class DataSetDefaults(Base):
 
     @property
     def end_seconds(self) -> float:
-        """Default end date/time, in seconds before current time."""
+        """Default end date/time, in seconds before current time. Typically 0."""
         return self.__end_seconds
 
     @end_seconds.setter
@@ -305,13 +289,50 @@ class DataSetDefaults(Base):
 
     @property
     def delay_seconds(self) -> float:
-        """Default market delay to apply, in seconds."""
+        """Default market delay to apply, in seconds. Typically 0."""
         return self.__delay_seconds
 
     @delay_seconds.setter
     def delay_seconds(self, value: float):
         self._property_changed('delay_seconds')
         self.__delay_seconds = value        
+
+
+class DataSetFieldEntityAttributes(Base):
+        
+    """Read-only attributes of the field. Useful for searching."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        in_code: bool = None,
+        is_entity: bool = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.in_code = in_code
+        self.is_entity = is_entity
+        self.name = name
+
+    @property
+    def in_code(self) -> bool:
+        """If 'TRUE', this field is defined in code."""
+        return self.__in_code
+
+    @in_code.setter
+    def in_code(self, value: bool):
+        self._property_changed('in_code')
+        self.__in_code = value        
+
+    @property
+    def is_entity(self) -> bool:
+        """If 'TRUE', this field is an entity field."""
+        return self.__is_entity
+
+    @is_entity.setter
+    def is_entity(self, value: bool):
+        self._property_changed('is_entity')
+        self.__is_entity = value        
 
 
 class DataSetFieldEntityClassifications(Base):
@@ -358,8 +379,8 @@ class DataSetFieldEntityNumberParameters(Base):
     @camel_case_translate
     def __init__(
         self,
-        maximum: float = 1000000000,
-        minimum: float = -1000000000,
+        maximum: int = None,
+        minimum: int = None,
         name: str = None
     ):        
         super().__init__()
@@ -368,22 +389,22 @@ class DataSetFieldEntityNumberParameters(Base):
         self.name = name
 
     @property
-    def maximum(self) -> float:
-        """Maximum value of the field."""
+    def maximum(self) -> int:
+        """Maximum value of the field. Default on create: 1,000,000,000"""
         return self.__maximum
 
     @maximum.setter
-    def maximum(self, value: float):
+    def maximum(self, value: int):
         self._property_changed('maximum')
         self.__maximum = value        
 
     @property
-    def minimum(self) -> float:
-        """Minimum value of the field."""
+    def minimum(self) -> int:
+        """Minimum value of the field. Default on create: -1,000,000,000"""
         return self.__minimum
 
     @minimum.setter
-    def minimum(self, value: float):
+    def minimum(self, value: int):
         self._property_changed('minimum')
         self.__minimum = value        
 
@@ -897,6 +918,43 @@ class RemapFieldPair(Base):
         self.__remap_to = value        
 
 
+class ResponseInfo(Base):
+        
+    """A standard JSON-formatted response."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        request_id: str = None,
+        messages: Tuple[str, ...] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.request_id = request_id
+        self.messages = messages
+        self.name = name
+
+    @property
+    def request_id(self) -> str:
+        """Marquee unique identifier"""
+        return self.__request_id
+
+    @request_id.setter
+    def request_id(self, value: str):
+        self._property_changed('request_id')
+        self.__request_id = value        
+
+    @property
+    def messages(self) -> Tuple[str, ...]:
+        """Accompanying array of messages."""
+        return self.__messages
+
+    @messages.setter
+    def messages(self, value: Tuple[str, ...]):
+        self._property_changed('messages')
+        self.__messages = value        
+
+
 class SymbolFilterLink(Base):
         
     """The entity type and field used to filter symbols."""
@@ -1082,26 +1140,20 @@ class DataSetFieldEntityStringParameters(Base):
     @camel_case_translate
     def __init__(
         self,
-        pattern: str = '^[\w ]{1,256}$',
         enum: Tuple[str, ...] = None,
         format_: Union[FieldFormat, str] = None,
+        pattern: str = '^[\w ]{1,256}$',
+        max_length: int = None,
+        min_length: int = None,
         name: str = None
     ):        
         super().__init__()
-        self.pattern = pattern
         self.enum = enum
         self.__format = get_enum_value(FieldFormat, format_)
+        self.pattern = pattern
+        self.max_length = max_length
+        self.min_length = min_length
         self.name = name
-
-    @property
-    def pattern(self) -> str:
-        """Regular Expression pattern to validate the field value."""
-        return self.__pattern
-
-    @pattern.setter
-    def pattern(self, value: str):
-        self._property_changed('pattern')
-        self.__pattern = value        
 
     @property
     def enum(self) -> Tuple[str, ...]:
@@ -1123,6 +1175,36 @@ class DataSetFieldEntityStringParameters(Base):
     def format(self, value: Union[FieldFormat, str]):
         self._property_changed('format')
         self.__format = get_enum_value(FieldFormat, value)        
+
+    @property
+    def pattern(self) -> str:
+        """Regular Expression pattern to validate the field value."""
+        return self.__pattern
+
+    @pattern.setter
+    def pattern(self, value: str):
+        self._property_changed('pattern')
+        self.__pattern = value        
+
+    @property
+    def max_length(self) -> int:
+        """Max length of the string. To be used with 'pattern'."""
+        return self.__max_length
+
+    @max_length.setter
+    def max_length(self, value: int):
+        self._property_changed('max_length')
+        self.__max_length = value        
+
+    @property
+    def min_length(self) -> int:
+        """Min length of the string. To be used with 'pattern'."""
+        return self.__min_length
+
+    @min_length.setter
+    def min_length(self, value: int):
+        self._property_changed('min_length')
+        self.__min_length = value        
 
 
 class DataSetParameters(Base):
@@ -1146,11 +1228,15 @@ class DataSetParameters(Base):
         history_date: datetime.datetime = None,
         asset_class: Union[AssetClass, str] = None,
         owner_ids: Tuple[str, ...] = None,
-        approver_ids: Tuple[str, ...] = None,
         support_ids: Tuple[str, ...] = None,
         support_distribution_list: Tuple[str, ...] = None,
+        apply_market_data_entitlements: bool = None,
+        upload_data_policy: str = None,
+        logical_db: str = None,
+        symbol_strategy: str = None,
+        underlying_data_set_id: str = None,
+        immutable: bool = None,
         include_in_catalog: bool = False,
-        plot: bool = None,
         coverage_enabled: bool = True,
         use_created_time_for_upload: bool = None,
         apply_entity_entitlements: bool = None,
@@ -1172,11 +1258,15 @@ class DataSetParameters(Base):
         self.frequency = frequency
         self.asset_class = asset_class
         self.owner_ids = owner_ids
-        self.approver_ids = approver_ids
         self.support_ids = support_ids
         self.support_distribution_list = support_distribution_list
+        self.apply_market_data_entitlements = apply_market_data_entitlements
+        self.upload_data_policy = upload_data_policy
+        self.logical_db = logical_db
+        self.symbol_strategy = symbol_strategy
+        self.underlying_data_set_id = underlying_data_set_id
+        self.immutable = immutable
         self.include_in_catalog = include_in_catalog
-        self.plot = plot
         self.coverage_enabled = coverage_enabled
         self.use_created_time_for_upload = use_created_time_for_upload
         self.apply_entity_entitlements = apply_entity_entitlements
@@ -1235,7 +1325,8 @@ class DataSetParameters(Base):
 
     @property
     def notes(self) -> str:
-        """Notes of dataset."""
+        """Notes of dataset. Corresponds to the 'Frequently Asked Questions' card on the
+           Dataset Documentation Page."""
         return self.__notes
 
     @notes.setter
@@ -1245,7 +1336,7 @@ class DataSetParameters(Base):
 
     @property
     def history(self) -> str:
-        """Period of time covered by dataset."""
+        """Deprecated: Used 'historyDate' instead. Period of time covered by dataset."""
         return self.__history
 
     @history.setter
@@ -1255,7 +1346,7 @@ class DataSetParameters(Base):
 
     @property
     def sample_start(self) -> datetime.datetime:
-        """ISO 8601-formatted timestamp"""
+        """Used to determine the query start date when loading a sample of the data."""
         return self.__sample_start
 
     @sample_start.setter
@@ -1265,7 +1356,7 @@ class DataSetParameters(Base):
 
     @property
     def sample_end(self) -> datetime.datetime:
-        """ISO 8601-formatted timestamp"""
+        """Used to determine the query end date when loading a sample of the data."""
         return self.__sample_end
 
     @sample_end.setter
@@ -1326,16 +1417,6 @@ class DataSetParameters(Base):
         self.__owner_ids = value        
 
     @property
-    def approver_ids(self) -> Tuple[str, ...]:
-        """Users who can grant access to dataset."""
-        return self.__approver_ids
-
-    @approver_ids.setter
-    def approver_ids(self, value: Tuple[str, ...]):
-        self._property_changed('approver_ids')
-        self.__approver_ids = value        
-
-    @property
     def support_ids(self) -> Tuple[str, ...]:
         """Users who support dataset."""
         return self.__support_ids
@@ -1356,6 +1437,66 @@ class DataSetParameters(Base):
         self.__support_distribution_list = value        
 
     @property
+    def apply_market_data_entitlements(self) -> bool:
+        """Whether market data entitlements are checked."""
+        return self.__apply_market_data_entitlements
+
+    @apply_market_data_entitlements.setter
+    def apply_market_data_entitlements(self, value: bool):
+        self._property_changed('apply_market_data_entitlements')
+        self.__apply_market_data_entitlements = value        
+
+    @property
+    def upload_data_policy(self) -> str:
+        """Policy governing uploads."""
+        return self.__upload_data_policy
+
+    @upload_data_policy.setter
+    def upload_data_policy(self, value: str):
+        self._property_changed('upload_data_policy')
+        self.__upload_data_policy = value        
+
+    @property
+    def logical_db(self) -> str:
+        """Database where contents are (to be) stored."""
+        return self.__logical_db
+
+    @logical_db.setter
+    def logical_db(self, value: str):
+        self._property_changed('logical_db')
+        self.__logical_db = value        
+
+    @property
+    def symbol_strategy(self) -> str:
+        """Method for looking up database table name."""
+        return self.__symbol_strategy
+
+    @symbol_strategy.setter
+    def symbol_strategy(self, value: str):
+        self._property_changed('symbol_strategy')
+        self.__symbol_strategy = value        
+
+    @property
+    def underlying_data_set_id(self) -> str:
+        """Dataset on which this (virtual) dataset is based."""
+        return self.__underlying_data_set_id
+
+    @underlying_data_set_id.setter
+    def underlying_data_set_id(self, value: str):
+        self._property_changed('underlying_data_set_id')
+        self.__underlying_data_set_id = value        
+
+    @property
+    def immutable(self) -> bool:
+        """Whether dataset is immutable (i.e. not writable through data service)."""
+        return self.__immutable
+
+    @immutable.setter
+    def immutable(self, value: bool):
+        self._property_changed('immutable')
+        self.__immutable = value        
+
+    @property
     def include_in_catalog(self) -> bool:
         """Whether dataset should be in the catalog."""
         return self.__include_in_catalog
@@ -1364,16 +1505,6 @@ class DataSetParameters(Base):
     def include_in_catalog(self, value: bool):
         self._property_changed('include_in_catalog')
         self.__include_in_catalog = value        
-
-    @property
-    def plot(self) -> bool:
-        """Whether dataset is intended for use in Plottool."""
-        return self.__plot
-
-    @plot.setter
-    def plot(self, value: bool):
-        self._property_changed('plot')
-        self.__plot = value        
 
     @property
     def coverage_enabled(self) -> bool:
@@ -2380,7 +2511,8 @@ class DataSetFieldEntity(Base):
         field_java_type: str = None,
         parameters: dict = None,
         entitlements: Entitlements = None,
-        metadata: EntityMetadata = None
+        metadata: EntityMetadata = None,
+        attributes: DataSetFieldEntityAttributes = None
     ):        
         super().__init__()
         self.__id = id_
@@ -2393,6 +2525,7 @@ class DataSetFieldEntity(Base):
         self.parameters = parameters
         self.entitlements = entitlements
         self.metadata = metadata
+        self.attributes = attributes
 
     @property
     def id(self) -> str:
@@ -2495,6 +2628,16 @@ class DataSetFieldEntity(Base):
     def metadata(self, value: EntityMetadata):
         self._property_changed('metadata')
         self.__metadata = value        
+
+    @property
+    def attributes(self) -> DataSetFieldEntityAttributes:
+        """Read-only attributes of the field. Useful for searching."""
+        return self.__attributes
+
+    @attributes.setter
+    def attributes(self, value: DataSetFieldEntityAttributes):
+        self._property_changed('attributes')
+        self.__attributes = value        
 
 
 class DataSetTransformation(Base):
@@ -2979,7 +3122,8 @@ class DataSetDimensions(Base):
 
     @property
     def entity_dimension(self) -> str:
-        """Symbol dimension corresponding to an entity e.g. asset or report."""
+        """Symbol dimension that corresponds to a known Marquee Entity. Examples: assetId,
+           countryId, portfolioId, reportId."""
         return self.__entity_dimension
 
     @entity_dimension.setter
@@ -3016,7 +3160,8 @@ class DataSetFieldEntityBulkRequest(Base):
 
 class EntityFilter(Base):
         
-    """Filter on entities."""
+    """Filter on known Marquee Entities. Examples: assetId, countryId, portfolioId,
+       reportId."""
 
     @camel_case_translate
     def __init__(
@@ -3064,7 +3209,7 @@ class EntityFilter(Base):
 
 class DataSetFilters(Base):
         
-    """Filters to restrict the set of data returned."""
+    """Filters can be applied to restrict data that is returned."""
 
     @camel_case_translate
     def __init__(
@@ -3086,7 +3231,8 @@ class DataSetFilters(Base):
 
     @property
     def entity_filter(self) -> EntityFilter:
-        """Filter on entities."""
+        """Filter on known Marquee Entities. Examples: assetId, countryId, portfolioId,
+           reportId."""
         return self.__entity_filter
 
     @entity_filter.setter
@@ -3142,16 +3288,13 @@ class DataSetEntity(Base):
         self,
         id_: str,
         name: str,
-        owner_id: str = None,
         description: str = None,
         short_description: str = None,
         mappings: Tuple[MarketDataMapping, ...] = None,
         vendor: Union[MarketDataVendor, str] = None,
-        start_date: datetime.date = None,
         mdapi: MDAPI = None,
         data_product: str = None,
         entitlements: Entitlements = None,
-        entitlement_exclusions: EntitlementExclusions = None,
         query_processors: ProcessorEntity = None,
         parameters: DataSetParameters = None,
         dimensions: DataSetDimensions = None,
@@ -3166,18 +3309,15 @@ class DataSetEntity(Base):
         tags: Tuple[str, ...] = None
     ):        
         super().__init__()
-        self.owner_id = owner_id
         self.__id = id_
         self.name = name
         self.description = description
         self.short_description = short_description
         self.mappings = mappings
         self.vendor = vendor
-        self.start_date = start_date
         self.mdapi = mdapi
         self.data_product = data_product
         self.entitlements = entitlements
-        self.entitlement_exclusions = entitlement_exclusions
         self.query_processors = query_processors
         self.parameters = parameters
         self.dimensions = dimensions
@@ -3190,16 +3330,6 @@ class DataSetEntity(Base):
         self.last_updated_by_id = last_updated_by_id
         self.last_updated_time = last_updated_time
         self.tags = tags
-
-    @property
-    def owner_id(self) -> str:
-        """Marquee unique identifier for user who owns the object."""
-        return self.__owner_id
-
-    @owner_id.setter
-    def owner_id(self, value: str):
-        self._property_changed('owner_id')
-        self.__owner_id = value        
 
     @property
     def id(self) -> str:
@@ -3261,16 +3391,6 @@ class DataSetEntity(Base):
         self.__vendor = get_enum_value(MarketDataVendor, value)        
 
     @property
-    def start_date(self) -> datetime.date:
-        """The start of this data set"""
-        return self.__start_date
-
-    @start_date.setter
-    def start_date(self, value: datetime.date):
-        self._property_changed('start_date')
-        self.__start_date = value        
-
-    @property
     def mdapi(self) -> MDAPI:
         """Defines MDAPI fields."""
         return self.__mdapi
@@ -3299,16 +3419,6 @@ class DataSetEntity(Base):
     def entitlements(self, value: Entitlements):
         self._property_changed('entitlements')
         self.__entitlements = value        
-
-    @property
-    def entitlement_exclusions(self) -> EntitlementExclusions:
-        """Defines the exclusion entitlements of a given resource."""
-        return self.__entitlement_exclusions
-
-    @entitlement_exclusions.setter
-    def entitlement_exclusions(self, value: EntitlementExclusions):
-        self._property_changed('entitlement_exclusions')
-        self.__entitlement_exclusions = value        
 
     @property
     def query_processors(self) -> ProcessorEntity:
@@ -3352,7 +3462,8 @@ class DataSetEntity(Base):
 
     @property
     def defaults(self) -> DataSetDefaults:
-        """Default settings."""
+        """Default start/end dates/times applied when data is queried, if not specified by
+           user."""
         return self.__defaults
 
     @defaults.setter
@@ -3362,7 +3473,7 @@ class DataSetEntity(Base):
 
     @property
     def filters(self) -> DataSetFilters:
-        """Filters to restrict the set of data returned."""
+        """Filters can be applied to restrict data that is returned."""
         return self.__filters
 
     @filters.setter
@@ -3372,6 +3483,7 @@ class DataSetEntity(Base):
 
     @property
     def transformations(self) -> Tuple[DataSetTransformation, ...]:
+        """Transformations that can be applied on the output data."""
         return self.__transformations
 
     @transformations.setter

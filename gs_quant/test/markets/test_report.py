@@ -20,12 +20,12 @@ from gs_quant.markets.report import FactorRiskReport, PerformanceReport
 from gs_quant.session import *
 from gs_quant.target.reports import ReportStatus, PositionSourceType, ReportType, ReportParameters, Report
 
-fake_pfr = FactorRiskReport(report_id='PFRID',
+fake_pfr = FactorRiskReport(risk_model_id='AXUS4M',
+                            fx_hedged=True,
+                            report_id='PFRID',
                             position_source_type=PositionSourceType.Portfolio,
                             position_source_id='PORTFOLIOID',
                             report_type=ReportType.Portfolio_Factor_Risk,
-                            parameters=ReportParameters(fx_hedged=True,
-                                                        risk_model='AXUS4M'),
                             status=ReportStatus.done
                             )
 
@@ -120,7 +120,8 @@ def test_get_factor_risk_report(mocker):
                         return_value=Report(id='PFRID',
                                             position_source_type=PositionSourceType.Portfolio,
                                             position_source_id='PORTFOLIOID',
-                                            parameters=None,
+                                            parameters=ReportParameters(risk_model='AXUS4M',
+                                                                        fx_hedged=True),
                                             type=ReportType.Portfolio_Factor_Risk,
                                             status=ReportStatus.done))
     # run test

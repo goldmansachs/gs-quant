@@ -27,6 +27,8 @@ from .measures_reports import *
 from .measures_risk_models import *
 from .measures_portfolios import *
 from .measures_rates import *
+from .measures_inflation import *
+from .measures_xccy import *
 from .helper import *
 
 __name__ = 'timeseries'

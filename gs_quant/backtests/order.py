@@ -43,8 +43,15 @@ class OrderBase(metaclass=ABCMeta):
     def execution_end_time(self) -> dt.datetime:
         raise RuntimeError('The method execution_end_time is not implemented on OrderBase')
 
-    def execution_price(self, data_handler: DataHandler) -> float:
+    def _execution_price(self, data_handler: DataHandler) -> float:
         raise RuntimeError('The method execution_price is not implemented on OrderBase')
+
+    def execution_price(self, data_handler: DataHandler) -> float:
+        price = self._execution_price(data_handler)
+        if np.isnan(price):
+            raise RuntimeError('can not compute the execution price')
+        else:
+            return price
 
     def execution_quantity(self, data_handler: DataHandler) -> float:
         raise RuntimeError('The method execution_price is not implemented on OrderBase')
@@ -80,7 +87,7 @@ class OrderTWAP(OrderBase):
     def execution_end_time(self) -> dt.datetime:
         return self.window.end
 
-    def execution_price(self, data_handler: DataHandler) -> float:
+    def _execution_price(self, data_handler: DataHandler) -> float:
         fixings = data_handler.get_data_range(self.window.start, self.window.end,
                                               self.instrument, ValuationFixingType.PRICE)
         return np.mean(fixings)
@@ -105,7 +112,7 @@ class OrderMarketOnClose(OrderBase):
     def execution_end_time(self) -> dt.datetime:
         return dt.datetime.combine(self.execution_date, dt.time(23, 0, 0))
 
-    def execution_price(self, data_handler: DataHandler) -> float:
+    def _execution_price(self, data_handler: DataHandler) -> float:
         return data_handler.get_data(self.execution_date, self.instrument, ValuationFixingType.PRICE)
 
     def execution_quantity(self, data_handler: DataHandler) -> float:
@@ -127,7 +134,7 @@ class OrderCost(OrderBase):
     def execution_end_time(self) -> dt.datetime:
         return self.execution_time
 
-    def execution_price(self, data_handler: DataHandler) -> float:
+    def _execution_price(self, data_handler: DataHandler) -> float:
         return 0
 
     def execution_quantity(self, data_handler: DataHandler) -> float:
@@ -157,7 +164,7 @@ class OrderAtMarket(OrderBase):
     def execution_end_time(self) -> dt.datetime:
         return self.execution_datetime
 
-    def execution_price(self, data_handler: DataHandler) -> float:
+    def _execution_price(self, data_handler: DataHandler) -> float:
         return data_handler.get_data(self.execution_datetime, self.instrument, ValuationFixingType.PRICE)
 
     def execution_quantity(self, data_handler: DataHandler) -> float:
@@ -182,7 +189,7 @@ class OrderTwapBTIC(OrderTWAP):
         """
         self.btic_instrument = btic_instrument
 
-    def execution_price(self, data_handler: DataHandler) -> float:
+    def _execution_price(self, data_handler: DataHandler) -> float:
         btic_fixings = data_handler.get_data_range(self.window.start, self.window.end,
                                                    self.btic_instrument, ValuationFixingType.PRICE)
         btic_twap = np.mean(btic_fixings)

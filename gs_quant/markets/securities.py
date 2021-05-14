@@ -137,6 +137,9 @@ class AssetType(Enum):
     #: Fund
     FUND = "Fund"
 
+    #: Default Swap
+    DEFAULT_SWAP = "Default Swap"
+
 
 class AssetIdentifier(EntityIdentifier):
     """Asset type enumeration
@@ -837,6 +840,23 @@ class ETF(Asset, PositionedEntity):
         return self.currency
 
 
+class DefaultSwap(Asset):
+    """DefaultSwap
+
+    Represents a default swap.
+
+    """
+
+    def __init__(self,
+                 id_: str,
+                 name: str,
+                 entity: Optional[Dict] = None):
+        Asset.__init__(self, id_, AssetClass.Credit, name, entity=entity)
+
+    def get_type(self) -> AssetType:
+        return AssetType.DEFAULT_SWAP
+
+
 class SecurityMaster:
     """Security Master
 
@@ -938,6 +958,9 @@ class SecurityMaster:
 
         if asset_type == GsAssetType.Fund.value:
             return Fund(gs_asset.id, gs_asset.name, gs_asset.assetClass, entity=asset_entity)
+
+        if asset_type == GsAssetType.Default_Swap.value:
+            return DefaultSwap(gs_asset.id, gs_asset.name, entity=asset_entity)
 
         raise TypeError(f'unsupported asset type {asset_type}')
 

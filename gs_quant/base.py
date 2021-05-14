@@ -100,6 +100,9 @@ class EnumBase:
     def __lt__(self: EnumMeta, other):
         return self.value < other.value
 
+    def __repr__(self):
+        return self.value
+
 
 class Base(metaclass=ABCMeta):
     """The base class for all generated classes"""

@@ -1539,7 +1539,7 @@ def test_cds_implied_vol():
     replace.restore()
 
 
-def test_avg_impl_vol():
+def test_avg_impl_vol(mocker):
     replace = Replacer()
     mock_spx = Index('MA890', AssetClass.Equity, 'SPX')
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_eq)
@@ -1566,6 +1566,9 @@ def test_avg_impl_vol():
     mock_implied_vol = MarketDataResponseFrame(pd.concat([df1, df2, df3], join='inner'))
     mock_implied_vol.dataset_ids = _test_datasets
     market_data_mock.return_value = mock_implied_vol
+
+    mocker.patch.object(GsSession.__class__, 'default_value',
+                        return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
 
     actual = tm.average_implied_volatility(mock_spx, '1m', tm.EdrDataReference.DELTA_CALL, 25, 3, '1d')
     expected = pd.Series([1.4, 2.6, 3.33333], index=pd.date_range(start='2020-01-01', periods=3))

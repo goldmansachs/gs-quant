@@ -30,9 +30,10 @@ from pandas import Series
 from pandas.tseries.holiday import Holiday, AbstractHolidayCalendar, USMemorialDay, USLaborDay, USThanksgivingDay, \
     sunday_to_monday
 from pydash import chunk
+from typing import List
 
 from gs_quant.api.gs.assets import GsIdType
-from gs_quant.api.gs.data import GsDataApi
+from gs_quant.api.gs.data import GsDataApi, MarketDataResponseFrame
 from gs_quant.api.gs.data import QueryType
 from gs_quant.api.utils import ThreadPoolManager
 from gs_quant.data import Dataset
@@ -47,6 +48,7 @@ from gs_quant.markets.securities import Asset, AssetIdentifier, SecurityMaster, 
 from gs_quant.target.common import AssetClass, AssetType
 from gs_quant.timeseries import volatility, Window, Returns, sqrt, Basket
 from gs_quant.timeseries.helper import log_return, plot_measure, _to_offset, check_forward_looking, get_df_with_retries
+from gs_quant.timeseries.measures_helper import EdrDataReference, VolReference, preprocess_implied_vol_strikes_eq
 
 GENERIC_DATE = Union[datetime.date, str]
 ASSET_SPEC = Union[Asset, str]
@@ -92,24 +94,9 @@ class CdsVolReference(Enum):
     FORWARD = 'forward'
 
 
-class VolReference(Enum):
-    DELTA_CALL = 'delta_call'
-    DELTA_PUT = 'delta_put'
-    DELTA_NEUTRAL = 'delta_neutral'
-    NORMALIZED = 'normalized'
-    SPOT = 'spot'
-    FORWARD = 'forward'
-
-
 class VolSmileReference(Enum):
     SPOT = 'spot'
     FORWARD = 'forward'
-
-
-class EdrDataReference(Enum):
-    DELTA_CALL = 'delta_call'
-    DELTA_PUT = 'delta_put'
-    SPOT = 'spot'
 
 
 class FxForecastHorizon(Enum):
@@ -460,6 +447,15 @@ def _extract_series_from_df(df: pd.DataFrame, query_type: QueryType, handle_miss
     return series
 
 
+def _merge_market_data_responses(frames: List[MarketDataResponseFrame]):
+    df = pd.concat(frames)
+    dataset_ids = []
+    for frame in frames:
+        dataset_ids.extend(frame.dataset_ids)
+    df.dataset_ids = tuple(set(dataset_ids))
+    return df
+
+
 @plot_measure((AssetClass.FX, AssetClass.Equity, AssetClass.Commod), None, [MeasureDependency(
     id_provider=cross_stored_direction_for_fx_vol, query_type=QueryType.IMPLIED_VOLATILITY)])
 def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Real, *,
@@ -603,7 +599,7 @@ def implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference 
 
     else:
         asset_id = asset.get_marquee_id()
-        ref_string, relative_strike = _preprocess_implied_vol_strikes_eq(strike_reference, relative_strike)
+        ref_string, relative_strike = preprocess_implied_vol_strikes_eq(strike_reference, relative_strike)
 
     log_debug(request_id, _logger, 'where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, ref_string,
               relative_strike)
@@ -717,23 +713,6 @@ def _preprocess_implied_vol_strikes_fx(strike_reference: VolReference = None, re
 
     ref_string = "delta" if strike_reference in (VolReference.DELTA_CALL, VolReference.DELTA_PUT,
                                                  VolReference.DELTA_NEUTRAL) else strike_reference.value
-    return ref_string, relative_strike
-
-
-def _preprocess_implied_vol_strikes_eq(strike_reference: VolReference = None, relative_strike: Real = None):
-    if relative_strike is None and strike_reference != VolReference.DELTA_NEUTRAL:
-        raise MqValueError('Relative strike must be provided if your strike reference is not delta_neutral')
-
-    if strike_reference == VolReference.DELTA_NEUTRAL:
-        raise MqValueError('delta_neutral strike reference is not supported for equities.')
-
-    if strike_reference == VolReference.DELTA_PUT:
-        relative_strike = abs(100 - relative_strike)
-    relative_strike = relative_strike if strike_reference == VolReference.NORMALIZED else relative_strike / 100
-
-    ref_string = "delta" if strike_reference in (VolReference.DELTA_CALL, VolReference.DELTA_PUT,
-                                                 VolReference.DELTA_NEUTRAL) else strike_reference.value
-
     return ref_string, relative_strike
 
 
@@ -941,19 +920,25 @@ def average_implied_volatility(asset: Asset, tenor: str, strike_reference: EdrDa
     if top_n_of_index is not None:
         constituents = _get_index_constituent_weights(asset, top_n_of_index, composition_date)
 
-        ref_string, relative_strike = _preprocess_implied_vol_strikes_eq(VolReference(strike_reference.value),
-                                                                         relative_strike)
+        ref_string, relative_strike = preprocess_implied_vol_strikes_eq(VolReference(strike_reference.value),
+                                                                        relative_strike)
 
         _logger.debug('where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, ref_string, relative_strike)
         where = dict(tenor=tenor, strikeReference=ref_string, relativeStrike=relative_strike)
-        query = GsDataApi.build_market_data_query(
-            constituents.index.to_list(),
-            QueryType.IMPLIED_VOLATILITY,
-            where=where,
-            source=source,
-            real_time=real_time
-        )
-        df = _market_data_timed(query)
+
+        tasks = []
+        for constituent_chunk in chunk(constituents.index.to_list(), 5):
+            query = GsDataApi.build_market_data_query(
+                constituent_chunk,
+                QueryType.IMPLIED_VOLATILITY,
+                where=where,
+                source=source,
+                real_time=real_time)
+
+            tasks.append(partial(_market_data_timed, query))
+
+        results = ThreadPoolManager.run_async(tasks)
+        df = _merge_market_data_responses(results)
 
         def calculate_avg_vol(group):
             vols = group.set_index('assetId')['impliedVolatility']
@@ -1382,7 +1367,7 @@ def forward_vol(asset: Asset, tenor: str, forward_start_date: str, strike_refere
         sr_string, relative_strike = _preprocess_implied_vol_strikes_fx(strike_reference, relative_strike)
         asset_id = cross_stored_direction_for_fx_vol(asset)
     else:
-        sr_string, relative_strike = _preprocess_implied_vol_strikes_eq(strike_reference, relative_strike)
+        sr_string, relative_strike = preprocess_implied_vol_strikes_eq(strike_reference, relative_strike)
         asset_id = asset.get_marquee_id()
 
     t1_month = _tenor_to_month(forward_start_date)
@@ -1487,7 +1472,7 @@ def forward_vol_term(asset: Asset, strike_reference: VolReference, relative_stri
         asset_id = cross_stored_direction_for_fx_vol(asset)
         buffer = 1  # FX vol data is loaded later
     else:
-        sr_string, relative_strike = _preprocess_implied_vol_strikes_eq(strike_reference, relative_strike)
+        sr_string, relative_strike = preprocess_implied_vol_strikes_eq(strike_reference, relative_strike)
         asset_id = asset.get_marquee_id()
         buffer = 0
 
@@ -1529,7 +1514,7 @@ def vol_term(asset: Asset, strike_reference: VolReference, relative_strike: Real
         asset_id = cross_stored_direction_for_fx_vol(asset)
         buffer = 1  # FX vol data is loaded later
     else:
-        sr_string, relative_strike = _preprocess_implied_vol_strikes_eq(strike_reference, relative_strike)
+        sr_string, relative_strike = preprocess_implied_vol_strikes_eq(strike_reference, relative_strike)
         asset_id = asset.get_marquee_id()
         buffer = 0
 

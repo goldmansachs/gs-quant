@@ -23,7 +23,7 @@ from gs_quant.session import *
 
 def test_get_asset(mocker):
     marquee_id = 'MA1234567890'
-    mock_response = GsAsset(AssetClass.Equity, GsAssetType.Single_Stock, 'Test Asset')
+    mock_response = GsAsset(asset_class=AssetClass.Equity, type_=GsAssetType.Single_Stock, name='Test Asset')
 
     # mock GsSession
     mocker.patch.object(
@@ -50,7 +50,7 @@ def test_get_asset(mocker):
     assert asset.name == "Test Asset"
     assert asset.get_type() == AssetType.STOCK
 
-    mock_response = GsAsset(AssetClass.Equity, GsAssetType.Index, 'Test Asset')
+    mock_response = GsAsset(asset_class=AssetClass.Equity, type_=GsAssetType.Index, name='Test Asset')
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
     asset = SecurityMaster.get_asset(marquee_id, AssetIdentifier.MARQUEE_ID)
@@ -58,7 +58,7 @@ def test_get_asset(mocker):
     assert asset.name == "Test Asset"
     assert asset.get_type() == AssetType.INDEX
 
-    mock_response = GsAsset(AssetClass.Equity, GsAssetType.Future, 'Test Asset')
+    mock_response = GsAsset(asset_class=AssetClass.Equity, type_=GsAssetType.Future, name='Test Asset')
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
     asset = SecurityMaster.get_asset(marquee_id, AssetIdentifier.MARQUEE_ID)
@@ -66,7 +66,7 @@ def test_get_asset(mocker):
     assert asset.name == "Test Asset"
     assert asset.get_type() == AssetType.FUTURE
 
-    mock_response = GsAsset(AssetClass.Equity, GsAssetType.ETF, 'Test Asset')
+    mock_response = GsAsset(asset_class=AssetClass.Equity, type_=GsAssetType.ETF, name='Test Asset')
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
     asset = SecurityMaster.get_asset(marquee_id, AssetIdentifier.MARQUEE_ID)
@@ -74,7 +74,8 @@ def test_get_asset(mocker):
     assert asset.name == "Test Asset"
     assert asset.get_type() == AssetType.ETF
 
-    mock_response = GsAsset(AssetClass.Equity, GsAssetType.Custom_Basket, 'Test Asset', id_=marquee_id)
+    mock_response = GsAsset(asset_class=AssetClass.Equity, type_=GsAssetType.Custom_Basket, name='Test Asset',
+                            id_=marquee_id)
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
     asset = SecurityMaster.get_asset(marquee_id, AssetIdentifier.MARQUEE_ID)
@@ -114,7 +115,8 @@ def test_asset_identifiers(mocker):
             Environment.QA,
             'client_id',
             'secret'))
-    mock_response = GsAsset(AssetClass.Equity, GsAssetType.Custom_Basket, 'Test Asset', id_=marquee_id)
+    mock_response = GsAsset(asset_class=AssetClass.Equity, type_=GsAssetType.Custom_Basket, name='Test Asset',
+                            id_=marquee_id)
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
     asset = SecurityMaster.get_asset(marquee_id, AssetIdentifier.MARQUEE_ID)
