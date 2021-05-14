@@ -14,9 +14,9 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.target.common import *
+from gs_quant.common import *
 import datetime
-from typing import Mapping, Tuple, Union
+from typing import Mapping, Tuple, Union, Optional
 from enum import Enum
 from gs_quant.base import Base, EnumBase, InstrumentBase, camel_case_translate, get_enum_value
 
@@ -33,10 +33,7 @@ class MqexsAssetClass(EnumBase, Enum):
     Earon = 'Earon'
     FICC = 'FICC'
     Prime = 'Prime'
-    IOI = 'IOI'
-    
-    def __repr__(self):
-        return self.value
+    IOI = 'IOI'    
 
 
 class MqexsAssetClassExt(EnumBase, Enum):    
@@ -47,10 +44,7 @@ class MqexsAssetClassExt(EnumBase, Enum):
 
     Commod = 'Commod'
     FX = 'FX'
-    Equity = 'Equity'
-    
-    def __repr__(self):
-        return self.value
+    Equity = 'Equity'    
 
 
 class MqexsClearer(EnumBase, Enum):    
@@ -62,10 +56,7 @@ class MqexsClearer(EnumBase, Enum):
     NFX = 'NFX'
     OTC = 'OTC'
     LME = 'LME'
-    CME_ICE = 'CME-ICE'
-    
-    def __repr__(self):
-        return self.value
+    CME_ICE = 'CME-ICE'    
 
 
 class MqexsCurrencyExt(EnumBase, Enum):    
@@ -385,10 +376,7 @@ class MqexsCurrencyExt(EnumBase, Enum):
     SGd = 'SGd'
     SZl = 'SZl'
     USd = 'USd'
-    ZAr = 'ZAr'
-    
-    def __repr__(self):
-        return self.value
+    ZAr = 'ZAr'    
 
 
 class MqexsErrorSeverity(EnumBase, Enum):    
@@ -398,10 +386,7 @@ class MqexsErrorSeverity(EnumBase, Enum):
     Pass = 'Pass'
     Warning = 'Warning'
     Fatal = 'Fatal'
-    FatalException = 'FatalException'
-    
-    def __repr__(self):
-        return self.value
+    FatalException = 'FatalException'    
 
 
 class MqexsOtcSettlementType(EnumBase, Enum):    
@@ -412,10 +397,7 @@ class MqexsOtcSettlementType(EnumBase, Enum):
     Calendar_Month_Average = 'Calendar Month Average'
     Trade_Month_Average = 'Trade Month Average'
     Physical = 'Physical'
-    CalMonth_Avg_No_Roll_Adjust = 'CalMonth Avg No Roll Adjust'
-    
-    def __repr__(self):
-        return self.value
+    CalMonth_Avg_No_Roll_Adjust = 'CalMonth Avg No Roll Adjust'    
 
 
 class MqexsSide(EnumBase, Enum):    
@@ -428,10 +410,7 @@ class MqexsSide(EnumBase, Enum):
     SellBuy = 'SellBuy'
     Above = 'Above'
     Below = 'Below'
-    _ = ''
-    
-    def __repr__(self):
-        return self.value
+    _ = ''    
 
 
 class MqexsErrorInfo(Base):

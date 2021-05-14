@@ -14,9 +14,9 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.target.common import *
+from gs_quant.common import *
 import datetime
-from typing import Mapping, Tuple, Union
+from typing import Mapping, Tuple, Union, Optional
 from enum import Enum
 from gs_quant.base import Base, EnumBase, InstrumentBase, camel_case_translate, get_enum_value
 
@@ -31,10 +31,7 @@ class CorporateActionsTypes(EnumBase, Enum):
     Spinoffs = 'Spinoffs'
     Cash_dividends = 'Cash dividends'
     Stock_splits = 'Stock splits'
-    Reorganization = 'Reorganization'
-    
-    def __repr__(self):
-        return self.value
+    Reorganization = 'Reorganization'    
 
 
 class HedgeObjective(EnumBase, Enum):    
@@ -42,10 +39,7 @@ class HedgeObjective(EnumBase, Enum):
     """The objective of the hedge."""
 
     Minimize_Factor_Risk = 'Minimize Factor Risk'
-    Replicate_Performance = 'Replicate Performance'
-    
-    def __repr__(self):
-        return self.value
+    Replicate_Performance = 'Replicate Performance'    
 
 
 class HedgeUniverseAssetType(EnumBase, Enum):    
@@ -55,20 +49,14 @@ class HedgeUniverseAssetType(EnumBase, Enum):
     Custom_Basket = 'Custom Basket'
     ETF = 'ETF'
     Research_Basket = 'Research Basket'
-    Single_Stock = 'Single Stock'
-    
-    def __repr__(self):
-        return self.value
+    Single_Stock = 'Single Stock'    
 
 
 class HedgerComparisonType(EnumBase, Enum):    
     
     Asset = 'Asset'
     Portfolio = 'Portfolio'
-    Hedge = 'Hedge'
-    
-    def __repr__(self):
-        return self.value
+    Hedge = 'Hedge'    
 
 
 class HedgerConstraintPrioritySetting(EnumBase, Enum):    
@@ -84,10 +72,7 @@ class HedgerConstraintPrioritySetting(EnumBase, Enum):
     _2 = '2'
     _3 = '3'
     _4 = '4'
-    _5 = '5'
-    
-    def __repr__(self):
-        return self.value
+    _5 = '5'    
 
 
 class AssetConstraint(Base):

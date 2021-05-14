@@ -14,9 +14,9 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.target.common import *
+from gs_quant.common import *
 import datetime
-from typing import Mapping, Tuple, Union
+from typing import Mapping, Tuple, Union, Optional
 from enum import Enum
 from gs_quant.base import Base, EnumBase, InstrumentBase, camel_case_translate, get_enum_value
 
@@ -27,10 +27,7 @@ class ChartFill(EnumBase, Enum):
 
     _None = 'None'
     Solid = 'Solid'
-    Gradient = 'Gradient'
-    
-    def __repr__(self):
-        return self.value
+    Gradient = 'Gradient'    
 
 
 class ChartLineDrawType(EnumBase, Enum):    
@@ -45,10 +42,7 @@ class ChartLineDrawType(EnumBase, Enum):
     StepAfter = 'StepAfter'
     StepBefore = 'StepBefore'
     StepLinear = 'StepLinear'
-    Volumes = 'Volumes'
-    
-    def __repr__(self):
-        return self.value
+    Volumes = 'Volumes'    
 
 
 class ChartLineType(EnumBase, Enum):    
@@ -58,10 +52,7 @@ class ChartLineType(EnumBase, Enum):
     Bubble = 'Bubble'
     Solid = 'Solid'
     Knotted = 'Knotted'
-    Dashed = 'Dashed'
-    
-    def __repr__(self):
-        return self.value
+    Dashed = 'Dashed'    
 
 
 class ChartRegressionStrokeType(EnumBase, Enum):    
@@ -69,10 +60,7 @@ class ChartRegressionStrokeType(EnumBase, Enum):
     """Chart Regression Stroke Type"""
 
     Line = 'Line'
-    Dash = 'Dash'
-    
-    def __repr__(self):
-        return self.value
+    Dash = 'Dash'    
 
 
 class ChartRegressionType(EnumBase, Enum):    
@@ -81,10 +69,7 @@ class ChartRegressionType(EnumBase, Enum):
 
     Linear = 'Linear'
     Exponential = 'Exponential'
-    PlotData = 'PlotData'
-    
-    def __repr__(self):
-        return self.value
+    PlotData = 'PlotData'    
 
 
 class ChartType(EnumBase, Enum):    
@@ -92,10 +77,7 @@ class ChartType(EnumBase, Enum):
     """Chart Type"""
 
     line = 'line'
-    scatter = 'scatter'
-    
-    def __repr__(self):
-        return self.value
+    scatter = 'scatter'    
 
 
 class ChartDisplaySettings(Base):

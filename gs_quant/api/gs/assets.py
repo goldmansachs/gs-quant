@@ -222,6 +222,10 @@ class GsAssetApi:
     def create_asset(cls, asset: GsAsset) -> GsAsset:
         return GsSession.current._post('/assets', payload=asset, cls=GsAsset)
 
+    @classmethod
+    def delete_asset(cls, asset_id: str):
+        return GsSession.current._delete(f'/assets/{asset_id}')
+
     @staticmethod
     def get_asset_positions_for_date(
             asset_id: str,

@@ -661,7 +661,8 @@ class PortfolioRiskResult(CompositeResultFuture):
             multi_rm = True if len(self.risk_measures) > 1 else False
             port_depth_one = True if len(max(self.portfolio.all_paths, key=len)) == 1 else False
             if has_bucketed or has_cashflows:
-                res_df_cols = max([i._get_raw_df().columns.values for i in list(self)], key=len)
+                res_list = list(filter(None.__ne__, [i._get_raw_df() for i in list(self)]))
+                res_df_cols = max([i.columns.values for i in res_list], key=len)
                 res_df_cols = list(filter(lambda x: x not in ['dates', 'risk_measure'], res_df_cols))
                 return ori_df.set_index([p for p in df_cols if p not in res_df_cols])
             else:

@@ -15,9 +15,9 @@ under the License.
 """
 import datetime
 import logging
-import pandas as pd
 from typing import Dict, List, Union
 
+import pandas as pd
 from pydash import get
 
 from gs_quant.api.gs.assets import GsAssetApi
@@ -25,7 +25,6 @@ from gs_quant.errors import MqValueError
 from gs_quant.target.common import Position as CommonPosition
 from gs_quant.target.common import PositionSet as CommonPositionSet
 from gs_quant.target.indices import PositionPriceInput
-
 
 _logger = logging.getLogger(__name__)
 
@@ -106,7 +105,7 @@ class Position:
     def to_target(self, common: bool = True) -> Union[CommonPosition, PositionPriceInput]:
         """ Returns Postion type defined in target file for API payloads """
         if common:
-            return CommonPosition(self.asset_id, quantity=self.quantity, weight=self.weight)
+            return CommonPosition(self.asset_id, quantity=self.quantity)
         return PositionPriceInput(self.asset_id, quantity=self.quantity, weight=self.weight)
 
     def __resolve_identifier(self, identifier: str) -> Dict:

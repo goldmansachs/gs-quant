@@ -15,9 +15,7 @@ under the License.
 """
 
 import datetime as dt
-from gs_quant.target.common import BusinessDayConvention, BuySell, Currency, DayCountFraction, AssetClass, AssetType,\
-    OptionStyle, OptionSettlementMethod, OptionType, PayReceive, PricingLocation, SwapClearingHouse, SwapSettlement, \
-    XRef
+from gs_quant.target.common import *
 from gs_quant.target.risk import CountryCode
 from enum import Enum
 
@@ -39,3 +37,16 @@ class DateLimit(Enum):
     """ Datetime date constants """
 
     LOW_LIMIT = dt.date(1952, 1, 1)
+
+
+class PayReceive(EnumBase, Enum):
+
+    """Pay or receive fixed"""
+
+    Pay = 'Pay'
+    Receive = 'Rec'
+    Straddle = 'Straddle'
+
+    @classmethod
+    def _missing_(cls, key):
+        return cls.Receive if key.lower() == 'receive' else super()._missing_(key)

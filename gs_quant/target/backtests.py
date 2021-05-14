@@ -14,9 +14,9 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.target.common import *
+from gs_quant.common import *
 import datetime
-from typing import Mapping, Tuple, Union
+from typing import Mapping, Tuple, Union, Optional
 from enum import Enum
 from gs_quant.base import Base, EnumBase, InstrumentBase, camel_case_translate, get_enum_value
 
@@ -32,10 +32,7 @@ class BacktestRiskMeasureType(EnumBase, Enum):
     Forward = 'Forward'
     Implied_Volatility = 'Implied Volatility'
     Fair_Variance = 'Fair Variance'
-    Strike_Level = 'Strike Level'
-    
-    def __repr__(self):
-        return self.value
+    Strike_Level = 'Strike Level'    
 
 
 class BacktestTradingQuantityType(EnumBase, Enum):    
@@ -46,10 +43,7 @@ class BacktestTradingQuantityType(EnumBase, Enum):
     quantity = 'quantity'
     vega = 'vega'
     gamma = 'gamma'
-    NAV = 'NAV'
-    
-    def __repr__(self):
-        return self.value
+    NAV = 'NAV'    
 
 
 class BacktestType(EnumBase, Enum):    
@@ -60,10 +54,7 @@ class BacktestType(EnumBase, Enum):
     Volatility = 'Volatility'
     Volatility_Flow = 'Volatility Flow'
     Enhanced_Beta = 'Enhanced Beta'
-    ISelect = 'ISelect'
-    
-    def __repr__(self):
-        return self.value
+    ISelect = 'ISelect'    
 
 
 class EquityMarketModel(EnumBase, Enum):    
@@ -71,10 +62,7 @@ class EquityMarketModel(EnumBase, Enum):
     """Market model for pricing"""
 
     SFK = 'SFK'
-    SD = 'SD'
-    
-    def __repr__(self):
-        return self.value
+    SD = 'SD'    
 
 
 class FlowVolBacktestMeasure(EnumBase, Enum):    
@@ -99,10 +87,7 @@ class FlowVolBacktestMeasure(EnumBase, Enum):
     gamma = 'gamma'
     vega = 'vega'
     portfolio = 'portfolio'
-    NAV = 'NAV'
-    
-    def __repr__(self):
-        return self.value
+    NAV = 'NAV'    
 
 
 class BacktestComparison(Base):
@@ -1227,6 +1212,7 @@ class BacktestTradingParameters(Base):
         quantity: float = None,
         trade_in_method: str = None,
         roll_frequency: str = None,
+        roll_date_mode: str = None,
         scaling_method: str = None,
         trade_in_signals: Tuple[BacktestSignalSeriesItem, ...] = None,
         trade_out_signals: Tuple[BacktestSignalSeriesItem, ...] = None,
@@ -1237,6 +1223,7 @@ class BacktestTradingParameters(Base):
         self.quantity = quantity
         self.trade_in_method = trade_in_method
         self.roll_frequency = roll_frequency
+        self.roll_date_mode = roll_date_mode
         self.scaling_method = scaling_method
         self.trade_in_signals = trade_in_signals
         self.trade_out_signals = trade_out_signals
@@ -1281,6 +1268,16 @@ class BacktestTradingParameters(Base):
     def roll_frequency(self, value: str):
         self._property_changed('roll_frequency')
         self.__roll_frequency = value        
+
+    @property
+    def roll_date_mode(self) -> str:
+        """Roll date mode to be used in the backtest strategy e.g. listed."""
+        return self.__roll_date_mode
+
+    @roll_date_mode.setter
+    def roll_date_mode(self, value: str):
+        self._property_changed('roll_date_mode')
+        self.__roll_date_mode = value        
 
     @property
     def scaling_method(self) -> str:

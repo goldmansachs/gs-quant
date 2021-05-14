@@ -14,9 +14,9 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.target.common import *
+from gs_quant.common import *
 import datetime
-from typing import Mapping, Tuple, Union
+from typing import Mapping, Tuple, Union, Optional
 from enum import Enum
 from gs_quant.base import Base, EnumBase, InstrumentBase, camel_case_translate, get_enum_value
 
@@ -29,10 +29,7 @@ class AvailableUnitTypes(EnumBase, Enum):
     percentageWithSymbol = 'percentageWithSymbol'
     bps = 'bps'
     bp = 'bp'
-    x = 'x'
-    
-    def __repr__(self):
-        return self.value
+    x = 'x'    
 
 
 class EntitiesSupported(EnumBase, Enum):    
@@ -40,10 +37,7 @@ class EntitiesSupported(EnumBase, Enum):
     """Enum listing supported entities"""
 
     assets = 'assets'
-    tds = 'tds'
-    
-    def __repr__(self):
-        return self.value
+    tds = 'tds'    
 
 
 class ParameterPeriod(EnumBase, Enum):    
@@ -61,10 +55,7 @@ class ParameterPeriod(EnumBase, Enum):
     _10y = '10y'
     _30y = '30y'
     mtd = 'mtd'
-    ytd = 'ytd'
-    
-    def __repr__(self):
-        return self.value
+    ytd = 'ytd'    
 
 
 class ParameterRender(EnumBase, Enum):    
@@ -88,10 +79,7 @@ class ParameterRender(EnumBase, Enum):
     stackedBarChart = 'stackedBarChart'
     text = 'text'
     treemap = 'treemap'
-    triColor = 'triColor'
-    
-    def __repr__(self):
-        return self.value
+    triColor = 'triColor'    
 
 
 class RateIds(EnumBase, Enum):    
@@ -103,10 +91,7 @@ class RateIds(EnumBase, Enum):
     JPY = 'JPY'
     GBP = 'GBP'
     CAD = 'CAD'
-    AUD = 'AUD'
-    
-    def __repr__(self):
-        return self.value
+    AUD = 'AUD'    
 
 
 class SortDirection(EnumBase, Enum):    
@@ -115,10 +100,7 @@ class SortDirection(EnumBase, Enum):
 
     asc = 'asc'
     desc = 'desc'
-    default = 'default'
-    
-    def __repr__(self):
-        return self.value
+    default = 'default'    
 
 
 class SortType(EnumBase, Enum):    
@@ -126,10 +108,7 @@ class SortType(EnumBase, Enum):
     """Enum listing supported sort types"""
 
     value = 'value'
-    abs = 'abs'
-    
-    def __repr__(self):
-        return self.value
+    abs = 'abs'    
 
 
 class WipiFilterOperation(EnumBase, Enum):    
@@ -142,10 +121,7 @@ class WipiFilterOperation(EnumBase, Enum):
     lt = 'lt'
     gte = 'gte'
     lte = 'lte'
-    last = 'last'
-    
-    def __repr__(self):
-        return self.value
+    last = 'last'    
 
 
 class WipiFilterType(EnumBase, Enum):    
@@ -153,10 +129,7 @@ class WipiFilterType(EnumBase, Enum):
     """Enum listing supported wipi filter types."""
 
     AND = 'AND'
-    OR = 'OR'
-    
-    def __repr__(self):
-        return self.value
+    OR = 'OR'    
 
 
 class ColumnProperty(Base):

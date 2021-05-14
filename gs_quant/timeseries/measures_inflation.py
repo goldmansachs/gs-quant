@@ -258,7 +258,7 @@ def _get_inflation_swap_data(asset: Asset, swap_tenor: str, index_type: str = No
               [MeasureDependency(id_provider=_currency_to_tdapi_inflation_swap_rate_asset,
                                  query_type=QueryType.SWAP_RATE)])
 def inflation_swap_rate(asset: Asset, swap_tenor: str, index_type: str = None,
-                        forward_tenor: Optional[GENERIC_DATE] = None, clearing_house: tm_rates._ClearingHouse = None,
+                        forward_tenor: Optional[GENERIC_DATE] = None, clearing_house: tm_rates._ClearingHouse = None, *,
                         source: str = None, real_time: bool = False) -> Series:
     """
     GS end-of-day Zero Coupon Inflation Swap curves across major currencies.

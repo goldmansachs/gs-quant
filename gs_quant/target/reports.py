@@ -14,9 +14,9 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.target.common import *
+from gs_quant.common import *
 import datetime
-from typing import Mapping, Tuple, Union
+from typing import Mapping, Tuple, Union, Optional
 from enum import Enum
 from gs_quant.base import Base, EnumBase, InstrumentBase, camel_case_translate, get_enum_value
 
@@ -29,10 +29,7 @@ class PositionSourceType(EnumBase, Enum):
     Asset = 'Asset'
     Backtest = 'Backtest'
     RiskRequest = 'RiskRequest'
-    Hedge = 'Hedge'
-    
-    def __repr__(self):
-        return self.value
+    Hedge = 'Hedge'    
 
 
 class ReportGenerateTemplateId(EnumBase, Enum):    
@@ -40,10 +37,7 @@ class ReportGenerateTemplateId(EnumBase, Enum):
     """The Report Template ID to generate the report from."""
 
     analytics_factor_attribution_pdf = 'analytics-factor-attribution-pdf'
-    analytics_factor_risk_pdf = 'analytics-factor-risk-pdf'
-    
-    def __repr__(self):
-        return self.value
+    analytics_factor_risk_pdf = 'analytics-factor-risk-pdf'    
 
 
 class ReportMeasures(EnumBase, Enum):    
@@ -68,10 +62,7 @@ class ReportMeasures(EnumBase, Enum):
     sensitivity = 'sensitivity'
     mctr = 'mctr'
     price = 'price'
-    basePrice = 'basePrice'
-    
-    def __repr__(self):
-        return self.value
+    basePrice = 'basePrice'    
 
 
 class ReportStatus(EnumBase, Enum):    
@@ -85,10 +76,7 @@ class ReportStatus(EnumBase, Enum):
     done = 'done'
     error = 'error'
     cancelled = 'cancelled'
-    waiting = 'waiting'
-    
-    def __repr__(self):
-        return self.value
+    waiting = 'waiting'    
 
 
 class ReportType(EnumBase, Enum):    
@@ -111,10 +99,7 @@ class ReportType(EnumBase, Enum):
     PCO_Update_Parameters = 'PCO Update Parameters'
     PCO_Update_Client_Data = 'PCO Update Client Data'
     PCO_Update_Open_Hedge_Notional = 'PCO Update Open Hedge Notional'
-    PCO_Add_Order = 'PCO Add Order'
-    
-    def __repr__(self):
-        return self.value
+    PCO_Add_Order = 'PCO Add Order'    
 
 
 class ParametersOverrides(Base):
@@ -524,476 +509,6 @@ class ReportWithParametersOverrides(Base):
     def parameters(self, value: ParametersOverrides):
         self._property_changed('parameters')
         self.__parameters = value        
-
-
-class User(Base):
-        
-    _name_mappings = {'root_oe_id': 'rootOEId', 'root_oe_name': 'rootOEName', 'internal_id': 'internalID', 'mi_fidii_trade_idea_declined': 'miFIDIITradeIdeaDeclined'}
-
-    @camel_case_translate
-    def __init__(
-        self,
-        company: str,
-        id_: str,
-        country: str,
-        city: str,
-        region: str,
-        email: str,
-        name: str,
-        internal: bool = None,
-        system_user: bool = None,
-        app_user: bool = None,
-        analytics_id: str = None,
-        eaa_company: str = None,
-        root_oe_id: str = None,
-        oe_id: str = None,
-        root_oe_name: str = None,
-        oe_name: str = None,
-        oe_alias: int = None,
-        coverage: Tuple[dict, ...] = None,
-        internal_email: str = None,
-        kerberos: str = None,
-        first_name: str = None,
-        last_name: str = None,
-        internal_id: str = None,
-        mi_fidii_trade_idea_declined: str = None,
-        department_code: str = None,
-        department_name: str = None,
-        division_name: str = None,
-        business_unit: str = None,
-        title: str = None,
-        pmd: bool = None,
-        login: str = None,
-        tokens: Tuple[str, ...] = None,
-        roles: Tuple[str, ...] = None,
-        groups: Tuple[str, ...] = None,
-        created_by_id: str = None,
-        created_time: datetime.datetime = None,
-        last_updated_by_id: str = None,
-        last_updated_time: datetime.datetime = None,
-        entitlements: Entitlements = None,
-        app_managers: Tuple[str, ...] = None
-    ):        
-        super().__init__()
-        self.internal = internal
-        self.system_user = system_user
-        self.app_user = app_user
-        self.analytics_id = analytics_id
-        self.city = city
-        self.company = company
-        self.eaa_company = eaa_company
-        self.root_oe_id = root_oe_id
-        self.oe_id = oe_id
-        self.root_oe_name = root_oe_name
-        self.oe_name = oe_name
-        self.oe_alias = oe_alias
-        self.country = country
-        self.coverage = coverage
-        self.email = email
-        self.internal_email = internal_email
-        self.kerberos = kerberos
-        self.__id = id_
-        self.name = name
-        self.first_name = first_name
-        self.last_name = last_name
-        self.internal_id = internal_id
-        self.region = region
-        self.mi_fidii_trade_idea_declined = mi_fidii_trade_idea_declined
-        self.department_code = department_code
-        self.department_name = department_name
-        self.division_name = division_name
-        self.business_unit = business_unit
-        self.title = title
-        self.pmd = pmd
-        self.login = login
-        self.tokens = tokens
-        self.roles = roles
-        self.groups = groups
-        self.created_by_id = created_by_id
-        self.created_time = created_time
-        self.last_updated_by_id = last_updated_by_id
-        self.last_updated_time = last_updated_time
-        self.entitlements = entitlements
-        self.app_managers = app_managers
-
-    @property
-    def internal(self) -> bool:
-        """Is internal"""
-        return self.__internal
-
-    @internal.setter
-    def internal(self, value: bool):
-        self._property_changed('internal')
-        self.__internal = value        
-
-    @property
-    def system_user(self) -> bool:
-        """Is system user"""
-        return self.__system_user
-
-    @system_user.setter
-    def system_user(self, value: bool):
-        self._property_changed('system_user')
-        self.__system_user = value        
-
-    @property
-    def app_user(self) -> bool:
-        """Is app user"""
-        return self.__app_user
-
-    @app_user.setter
-    def app_user(self, value: bool):
-        self._property_changed('app_user')
-        self.__app_user = value        
-
-    @property
-    def analytics_id(self) -> str:
-        """Marquee unique identifier"""
-        return self.__analytics_id
-
-    @analytics_id.setter
-    def analytics_id(self, value: str):
-        self._property_changed('analytics_id')
-        self.__analytics_id = value        
-
-    @property
-    def city(self) -> str:
-        return self.__city
-
-    @city.setter
-    def city(self, value: str):
-        self._property_changed('city')
-        self.__city = value        
-
-    @property
-    def company(self) -> str:
-        return self.__company
-
-    @company.setter
-    def company(self, value: str):
-        self._property_changed('company')
-        self.__company = value        
-
-    @property
-    def eaa_company(self) -> str:
-        return self.__eaa_company
-
-    @eaa_company.setter
-    def eaa_company(self, value: str):
-        self._property_changed('eaa_company')
-        self.__eaa_company = value        
-
-    @property
-    def root_oe_id(self) -> str:
-        """Goldman Sachs unique identifier for user's root organization"""
-        return self.__root_oe_id
-
-    @root_oe_id.setter
-    def root_oe_id(self, value: str):
-        self._property_changed('root_oe_id')
-        self.__root_oe_id = value        
-
-    @property
-    def oe_id(self) -> str:
-        """Goldman Sachs unique identifier for user's organization"""
-        return self.__oe_id
-
-    @oe_id.setter
-    def oe_id(self, value: str):
-        self._property_changed('oe_id')
-        self.__oe_id = value        
-
-    @property
-    def root_oe_name(self) -> str:
-        """The name of the company."""
-        return self.__root_oe_name
-
-    @root_oe_name.setter
-    def root_oe_name(self, value: str):
-        self._property_changed('root_oe_name')
-        self.__root_oe_name = value        
-
-    @property
-    def oe_name(self) -> str:
-        """The name of the company."""
-        return self.__oe_name
-
-    @oe_name.setter
-    def oe_name(self, value: str):
-        self._property_changed('oe_name')
-        self.__oe_name = value        
-
-    @property
-    def oe_alias(self) -> int:
-        """Goldman Sachs alias for user's organization"""
-        return self.__oe_alias
-
-    @oe_alias.setter
-    def oe_alias(self, value: int):
-        self._property_changed('oe_alias')
-        self.__oe_alias = value        
-
-    @property
-    def country(self) -> str:
-        return self.__country
-
-    @country.setter
-    def country(self, value: str):
-        self._property_changed('country')
-        self.__country = value        
-
-    @property
-    def coverage(self) -> Tuple[dict, ...]:
-        return self.__coverage
-
-    @coverage.setter
-    def coverage(self, value: Tuple[dict, ...]):
-        self._property_changed('coverage')
-        self.__coverage = value        
-
-    @property
-    def email(self) -> str:
-        return self.__email
-
-    @email.setter
-    def email(self, value: str):
-        self._property_changed('email')
-        self.__email = value        
-
-    @property
-    def internal_email(self) -> str:
-        return self.__internal_email
-
-    @internal_email.setter
-    def internal_email(self, value: str):
-        self._property_changed('internal_email')
-        self.__internal_email = value        
-
-    @property
-    def kerberos(self) -> str:
-        return self.__kerberos
-
-    @kerberos.setter
-    def kerberos(self, value: str):
-        self._property_changed('kerberos')
-        self.__kerberos = value        
-
-    @property
-    def id(self) -> str:
-        """Marquee unique identifier"""
-        return self.__id
-
-    @id.setter
-    def id(self, value: str):
-        self._property_changed('id')
-        self.__id = value        
-
-    @property
-    def name(self) -> str:
-        return self.__name
-
-    @name.setter
-    def name(self, value: str):
-        self._property_changed('name')
-        self.__name = value        
-
-    @property
-    def first_name(self) -> str:
-        return self.__first_name
-
-    @first_name.setter
-    def first_name(self, value: str):
-        self._property_changed('first_name')
-        self.__first_name = value        
-
-    @property
-    def last_name(self) -> str:
-        return self.__last_name
-
-    @last_name.setter
-    def last_name(self, value: str):
-        self._property_changed('last_name')
-        self.__last_name = value        
-
-    @property
-    def internal_id(self) -> str:
-        return self.__internal_id
-
-    @internal_id.setter
-    def internal_id(self, value: str):
-        self._property_changed('internal_id')
-        self.__internal_id = value        
-
-    @property
-    def region(self) -> str:
-        return self.__region
-
-    @region.setter
-    def region(self, value: str):
-        self._property_changed('region')
-        self.__region = value        
-
-    @property
-    def mi_fidii_trade_idea_declined(self) -> str:
-        return self.__mi_fidii_trade_idea_declined
-
-    @mi_fidii_trade_idea_declined.setter
-    def mi_fidii_trade_idea_declined(self, value: str):
-        self._property_changed('mi_fidii_trade_idea_declined')
-        self.__mi_fidii_trade_idea_declined = value        
-
-    @property
-    def department_code(self) -> str:
-        return self.__department_code
-
-    @department_code.setter
-    def department_code(self, value: str):
-        self._property_changed('department_code')
-        self.__department_code = value        
-
-    @property
-    def department_name(self) -> str:
-        return self.__department_name
-
-    @department_name.setter
-    def department_name(self, value: str):
-        self._property_changed('department_name')
-        self.__department_name = value        
-
-    @property
-    def division_name(self) -> str:
-        return self.__division_name
-
-    @division_name.setter
-    def division_name(self, value: str):
-        self._property_changed('division_name')
-        self.__division_name = value        
-
-    @property
-    def business_unit(self) -> str:
-        return self.__business_unit
-
-    @business_unit.setter
-    def business_unit(self, value: str):
-        self._property_changed('business_unit')
-        self.__business_unit = value        
-
-    @property
-    def title(self) -> str:
-        return self.__title
-
-    @title.setter
-    def title(self, value: str):
-        self._property_changed('title')
-        self.__title = value        
-
-    @property
-    def pmd(self) -> bool:
-        """Is a PMD."""
-        return self.__pmd
-
-    @pmd.setter
-    def pmd(self, value: bool):
-        self._property_changed('pmd')
-        self.__pmd = value        
-
-    @property
-    def login(self) -> str:
-        return self.__login
-
-    @login.setter
-    def login(self, value: str):
-        self._property_changed('login')
-        self.__login = value        
-
-    @property
-    def tokens(self) -> Tuple[str, ...]:
-        return self.__tokens
-
-    @tokens.setter
-    def tokens(self, value: Tuple[str, ...]):
-        self._property_changed('tokens')
-        self.__tokens = value        
-
-    @property
-    def roles(self) -> Tuple[str, ...]:
-        """Role set used for entitlements"""
-        return self.__roles
-
-    @roles.setter
-    def roles(self, value: Tuple[str, ...]):
-        self._property_changed('roles')
-        self.__roles = value        
-
-    @property
-    def groups(self) -> Tuple[str, ...]:
-        """Group set used for data level entitlements"""
-        return self.__groups
-
-    @groups.setter
-    def groups(self, value: Tuple[str, ...]):
-        self._property_changed('groups')
-        self.__groups = value        
-
-    @property
-    def created_by_id(self) -> str:
-        """Marquee unique identifier"""
-        return self.__created_by_id
-
-    @created_by_id.setter
-    def created_by_id(self, value: str):
-        self._property_changed('created_by_id')
-        self.__created_by_id = value        
-
-    @property
-    def created_time(self) -> datetime.datetime:
-        """Timestamp of when the user was created"""
-        return self.__created_time
-
-    @created_time.setter
-    def created_time(self, value: datetime.datetime):
-        self._property_changed('created_time')
-        self.__created_time = value        
-
-    @property
-    def last_updated_by_id(self) -> str:
-        """Marquee unique identifier"""
-        return self.__last_updated_by_id
-
-    @last_updated_by_id.setter
-    def last_updated_by_id(self, value: str):
-        self._property_changed('last_updated_by_id')
-        self.__last_updated_by_id = value        
-
-    @property
-    def last_updated_time(self) -> datetime.datetime:
-        """Timestamp of when the object was last updated"""
-        return self.__last_updated_time
-
-    @last_updated_time.setter
-    def last_updated_time(self, value: datetime.datetime):
-        self._property_changed('last_updated_time')
-        self.__last_updated_time = value        
-
-    @property
-    def entitlements(self) -> Entitlements:
-        """Defines the entitlements of a given resource."""
-        return self.__entitlements
-
-    @entitlements.setter
-    def entitlements(self, value: Entitlements):
-        self._property_changed('entitlements')
-        self.__entitlements = value        
-
-    @property
-    def app_managers(self) -> Tuple[str, ...]:
-        """Application managers associated with the app user"""
-        return self.__app_managers
-
-    @app_managers.setter
-    def app_managers(self, value: Tuple[str, ...]):
-        self._property_changed('app_managers')
-        self.__app_managers = value        
 
 
 class ReportToggleEntityRequest(Base):

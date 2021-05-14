@@ -350,7 +350,7 @@ def _get_crosscurrency_swap_data(asset1: Asset, asset2: Asset, swap_tenor: str, 
                                  query_type=QueryType.SWAP_RATE)])
 def crosscurrency_swap_rate(asset: Asset, swap_tenor: str, rateoption_type: str = None,
                             forward_tenor: Optional[GENERIC_DATE] = None,
-                            clearing_house: tm_rates._ClearingHouse = None,
+                            clearing_house: tm_rates._ClearingHouse = None, *,
                             source: str = None, real_time: bool = False) -> Series:
     """
     GS end-of-day Zero Coupon CrossCurrency Swap curves across major currencies.

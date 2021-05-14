@@ -14,9 +14,9 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.target.common import *
+from gs_quant.common import *
 import datetime
-from typing import Mapping, Tuple, Union
+from typing import Mapping, Tuple, Union, Optional
 from enum import Enum
 from gs_quant.base import Base, EnumBase, InstrumentBase, camel_case_translate, get_enum_value
 
@@ -46,10 +46,7 @@ class ComponentType(EnumBase, Enum):
     stackedBarChart = 'stackedBarChart'
     treemap = 'treemap'
     video = 'video'
-    webinar = 'webinar'
-    
-    def __repr__(self):
-        return self.value
+    webinar = 'webinar'    
 
 
 class WorkspaceType(EnumBase, Enum):    
@@ -57,10 +54,7 @@ class WorkspaceType(EnumBase, Enum):
     """Enum listing support workspace types."""
 
     cashboard = 'cashboard'
-    multiplot = 'multiplot'
-    
-    def __repr__(self):
-        return self.value
+    multiplot = 'multiplot'    
 
 
 class ComponentSelection(Base):
