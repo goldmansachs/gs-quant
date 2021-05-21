@@ -16,6 +16,8 @@ under the License.
 
 from typing import List
 
+from pydash import get
+
 from gs_quant.session import GsSession
 from gs_quant.target.reports import User
 
@@ -51,3 +53,7 @@ class GsUsersApi:
         :return: user
         """
         return GsSession.current._get('/users/self')
+
+    @classmethod
+    def get_current_app_managers(cls) -> List[str]:
+        return [f"guid:{manager}" for manager in get(GsSession.current._get('/users/self'), 'appManagers', [])]

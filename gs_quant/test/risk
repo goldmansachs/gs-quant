@@ -25,17 +25,17 @@ from gs_quant.risk import Price, RollFwd, CurveScenario, ErrorValue, DataFrameWi
 from gs_quant.test.utils.test_utils import MockCalc
 
 
-def get_attributes(p, risks, ctx='PricingCtx1', resolve=False):
+def get_attributes(p, risks, ctx='PricingCtx1', resolve=False, no_frame=False):
     if resolve:
         p.resolve()
     if ctx == 'Multiple':
-        with HistoricalPricingContext(date(2020, 1, 14), date(2020, 1, 15)):
+        with HistoricalPricingContext(date(2020, 1, 14), date(2020, 1, 15), market_data_location='LDN'):
             res = p.calc(risks)
     elif ctx == 'PricingCtx1':
-        with PricingContext(date(2020, 1, 14)):
+        with PricingContext(date(2020, 1, 14), market_data_location='LDN'):
             res = p.calc(risks)
     elif ctx == 'Multiple2':
-        with HistoricalPricingContext(date(2020, 1, 16), date(2020, 1, 17)):
+        with HistoricalPricingContext(date(2020, 1, 16), date(2020, 1, 17), market_data_location='LDN'):
             res = p.calc(risks)
     elif ctx == 'PricingCtx2':
         with PricingContext(date(2020, 1, 16), market_data_location='NYC'):
@@ -52,10 +52,14 @@ def get_attributes(p, risks, ctx='PricingCtx1', resolve=False):
     elif ctx == 'CurveScen2':
         with CurveScenario(curve_shift=1, tenor_start=5, tenor_end=30):
             res = p.calc(risks)
-    frame = res.to_frame(None, None, None)
 
-    cols = [col for col in frame.columns]
-    return cols, res, frame
+    if not no_frame:
+        frame = res.to_frame(None, None, None)
+
+        cols = [col for col in frame.columns]
+        return cols, res, frame
+    else:
+        return res
 
 
 swap_1 = IRSwap("Pay", "5y", "EUR", fixed_rate=-0.005, name="5y")
@@ -383,25 +387,25 @@ def test_empty_calc_request(mocker):
 
 def test_adding_risk_results(mocker):
     with MockCalc(mocker):
-        _, result1, _ = get_attributes(eur_port, risk.Price)
-        _, result2, _ = get_attributes(eur_port, (risk.IRDeltaParallelLocalCcy, risk.Price))
-        _, result3, _ = get_attributes(swaption_port, (risk.IRDeltaParallelLocalCcy, risk.Price))
-        _, result4, _ = get_attributes(port1, risk.Price)
-        _, result5, _ = get_attributes(swaption_port, risk.IRVegaParallel)
-        _, result6, _ = get_attributes(jpy_port, (risk.Price,), 'RollFwd')
-        _, result7, _ = get_attributes(jpy_port, risk.Price, 'CurveScen1')
-        _, result8, _ = get_attributes(jpy_port, (risk.DollarPrice, risk.Price), 'CurveScen2')
+        result1 = get_attributes(eur_port, risk.Price, no_frame=True)
+        result2 = get_attributes(eur_port, (risk.IRDeltaParallelLocalCcy, risk.Price), no_frame=True)
+        result3 = get_attributes(swaption_port, (risk.IRDeltaParallelLocalCcy, risk.Price), no_frame=True)
+        result4 = get_attributes(port1, risk.Price, no_frame=True)
+        result5 = get_attributes(swaption_port, risk.IRVegaParallel, no_frame=True)
+        result6 = get_attributes(jpy_port, (risk.Price,), 'RollFwd', no_frame=True)
+        result7 = get_attributes(jpy_port, risk.Price, 'CurveScen1', no_frame=True)
+        result8 = get_attributes(jpy_port, (risk.DollarPrice, risk.Price), 'CurveScen2', no_frame=True)
 
         # (2020, 1, 14) to (2020, 1, 15)
-        _, result9, _ = get_attributes(port1, risk.Price, 'Multiple')
+        result9 = get_attributes(port1, risk.Price, 'Multiple', no_frame=True)
         # (2020, 1, 16) to (2020, 1, 17)
-        _, result10, _ = get_attributes(port1, risk.Price, 'Multiple2')
+        result10 = get_attributes(port1, risk.Price, 'Multiple2', no_frame=True)
         # (2020, 1, 14)
-        _, result11, _ = get_attributes(port1, risk.Price)
+        result11 = get_attributes(port1, risk.Price, no_frame=True)
         # (2020, 1, 16), market_data_location='NYC'
-        _, result12, _ = get_attributes(port1, risk.Price, 'PricingCtx2')
+        result12 = get_attributes(port1, risk.Price, 'PricingCtx2', no_frame=True)
         # (2020, 1, 16), market_data_location='LDN'
-        _, result13, _ = get_attributes(port1, risk.Price, 'PricingCtx3')
+        result13 = get_attributes(port1, risk.Price, 'PricingCtx3', no_frame=True)
 
     # adding results with same portfolio but different risk measures
     add_1 = result3 + result5
@@ -411,45 +415,59 @@ def test_adding_risk_results(mocker):
     add_3 = result1 + result3
     # adding results with different portfolios and different risk measures
     add_4 = result1 + result5
+    add_5 = result3 + result4
 
     # adding dates
-    add_5 = result9 + result10
+
     add_6 = result9 + result13
     add_7 = result11 + result13
     add_8 = result10 + result11
-    add_9 = result10 + result13
+    add_9 = result9 + result10
 
     default_pivot_table_test(add_1)
     default_pivot_table_test(add_2)
     default_pivot_table_test(add_3)
     default_pivot_table_test(add_4)
-    default_pivot_table_test(add_5, 'dated')
+    default_pivot_table_test(add_5)
     default_pivot_table_test(add_6, 'dated')
     default_pivot_table_test(add_7, 'dated')
     default_pivot_table_test(add_8, 'dated')
     default_pivot_table_test(add_9, 'dated')
 
-    # adding results where at least one particular value is being calculated twice
+    # throw value error when adding results where at least one particular value is being calculated twice
+
+    # adding results with same portfolio but overlapping risk measures
     with pytest.raises(ValueError):
-        # adding results with same portfolio but overlapping risk measures
         _ = result1 + result2
-        # adding results with overlapping portfolios and different risk measures
+
+    # adding results with overlapping portfolios and different risk measures
+    with pytest.raises(ValueError):
         _ = result2 + result4
-        _ = result3 + result4
-        # adding results with overlapping portfolios and same risk measures
+
+    # adding results with overlapping portfolios and same risk measures
+    with pytest.raises(ValueError):
         _ = result1 + result4
 
-        # adding results with different scenarios
+    # adding results with different scenarios
+    with pytest.raises(ValueError):
         _ = result6 + result7
+    with pytest.raises(ValueError):
         _ = result7 + result8
 
-        # overlapping dates
+    # overlapping dates
+    with pytest.raises(ValueError):
         _ = result9 + result11
-        _ = result10 + result12
+    with pytest.raises(ValueError):
+        _ = result10 + result13
 
-        # adding results with different market locations
+    # adding results with different market locations
+    with pytest.raises(ValueError):
+        _ = result10 + result12
+    with pytest.raises(ValueError):
         _ = result9 + result12
+    with pytest.raises(ValueError):
         _ = result12 + result13
+    with pytest.raises(ValueError):
         _ = result11 + result12
 
 
@@ -475,6 +493,18 @@ def test_resolve_to_frame(mocker):
         _, r2, f2 = get_attributes(port1, risk.Price, resolve=True)
         _, r3, f3 = get_attributes(jpy_port, risk.Price, 'RollFwd', resolve=True)
         _, r4, f4 = get_attributes(port1, risk.Price, 'CurveScen1', resolve=True)
+
+
+def test_unnamed_portfolio(mocker):
+    unnamed_1 = Portfolio((swap_1, swap_2))
+    unnamed_2 = Portfolio((swap_3, swap_4))
+    unnamed = Portfolio((unnamed_1, unnamed_2))
+    with MockCalc(mocker):
+        res = unnamed.calc(risk.IRFwdRate)
+        df = res.to_frame()
+        assert len(df) == 2
+        assert list(df.index) == ['Portfolio_0', 'Portfolio_1']
+        assert list(df.columns) == ['5y', '10y']
 
 
 def test_leg_valuations(mocker):

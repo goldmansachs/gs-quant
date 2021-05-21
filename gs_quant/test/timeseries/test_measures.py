@@ -41,7 +41,7 @@ from gs_quant.data.fields import Fields
 from gs_quant.errors import MqError, MqValueError, MqTypeError
 from gs_quant.markets.securities import AssetClass, Cross, Index, Currency, SecurityMaster, Stock, \
     Swap, CommodityNaturalGasHub, CommodityEUNaturalGasHub, AssetIdentifier
-from gs_quant.session import GsSession, Environment
+from gs_quant.session import GsSession, Environment, OAuth2Session
 from gs_quant.target.common import XRef, PricingLocation, Currency as CurrEnum
 from gs_quant.test.timeseries.utils import mock_request
 from gs_quant.timeseries import Returns, ExtendedSeries
@@ -586,7 +586,7 @@ def mock_forward_price(_cls, _q):
     return df
 
 
-def mock_implied_volatility_elec(_cls, _q):
+def mock_implied_volatility_elec():
     d = {
         'impliedVolatility': [
             0.3424,
@@ -753,7 +753,7 @@ def mock_missing_bucket_forward_price(_cls, _q):
     return pd.DataFrame(data=d, index=pd.to_datetime([datetime.date(2019, 1, 2)] * 8))
 
 
-def mock_missing_bucket_implied_volatility(_cls, _q):
+def mock_missing_bucket_implied_volatility():
     d = {
         'impliedVolatility': [
             0.3424,
@@ -1392,7 +1392,7 @@ def test_impl_corr():
     replace.restore()
 
 
-def test_impl_corr_n():
+def test_impl_corr_n(mocker):
     spx = Index('MA4B66MW5E27U8P32SB', AssetClass.Equity, 'SPX')
     with pytest.raises(MqValueError):
         tm.implied_correlation(spx, '1m', tm.EdrDataReference.DELTA_CALL, 0.5,
@@ -1411,6 +1411,12 @@ def test_impl_corr_n():
     market_data.return_value = i_vol
     constituents = replace('gs_quant.timeseries.measures._get_index_constituent_weights', Mock())
     constituents.return_value = weights
+    last_mock = replace('gs_quant.timeseries.measures.get_last_for_measure', Mock())
+    last_mock.return_value = None
+
+    mocker.patch.object(GsSession.__class__, 'default_value',
+                        return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(OAuth2Session, '_authenticate', return_value=None)
 
     expected = pd.read_csv(os.path.join(resources, 'SPX_50_icorr_out.csv'))
     expected.index = pd.to_datetime(expected['date'])
@@ -1419,21 +1425,28 @@ def test_impl_corr_n():
                                     source='PlotTool')
     expected = ExtendedSeries(expected)
     assert_series_equal(actual, expected, check_names=False)
+
+    mask = i_vol.index < '2020-08-31'
+    assert not all(mask)
+    market_data.return_value = i_vol[mask]
+    last_mock.return_value = i_vol[~mask]
+    actual = tm.implied_correlation(spx, '1m', tm.EdrDataReference.DELTA_CALL, 0.5, 50, datetime.date(2020, 8, 31),
+                                    source='PlotTool')
+    assert_series_equal(actual, expected, check_names=False)
+
+    market_data.return_value = pd.DataFrame()
+    actual = tm.implied_correlation(spx, '1m', tm.EdrDataReference.DELTA_CALL, 0.5, 50, datetime.date(2020, 8, 31),
+                                    source='PlotTool')
+    assert actual.empty
+
     replace.restore()
 
 
 def test_implied_corr_basket():
     replace = Replacer()
 
-    dates = [
-        datetime.datetime(2021, 1, 1),
-        datetime.datetime(2021, 1, 2),
-        datetime.datetime(2021, 1, 3),
-        datetime.datetime(2021, 1, 4),
-        datetime.datetime(2021, 1, 5),
-        datetime.datetime(2021, 1, 6),
-    ]
-
+    dates = pd.DatetimeIndex([dt.date(2021, 1, 1), dt.date(2021, 1, 2), dt.date(2021, 1, 3), dt.date(2021, 1, 4),
+                              dt.date(2021, 1, 5), dt.date(2021, 1, 6)])
     x = pd.DataFrame({'impliedVolatility': [0.1, 0.11, 0.12, 0.13, 0.14, 0.15]}, index=dates)
     x['assetId'] = 'MA4B66MW5E27U9VBB94'
     y = pd.DataFrame({'impliedVolatility': [0.2, 0.21, 0.22, 0.23, 0.24, 0.25]}, index=dates)
@@ -1441,8 +1454,15 @@ def test_implied_corr_basket():
     z = pd.DataFrame({'impliedVolatility': [0.13, 0.21, 0.3, 0.31, 0.23, 0.24]}, index=dates)
     z['assetId'] = 'MA4B66MW5E27U8P32SB'
     implied_vol = x.append(y).append(z)
+
+    x = pd.DataFrame({'spot': [100.0, 101, 103.02, 100.9596, 100.9596, 102.978792]}, index=dates)
+    x['assetId'] = 'MA4B66MW5E27U9VBB94'
+    y = pd.DataFrame({'spot': [100.0, 100, 100, 100, 100, 100]}, index=dates)
+    y['assetId'] = 'MA4B66MW5E27UAL9SUX'
+    spot_data = x.append(y)
+
     mock_data = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
-    mock_data.return_value = implied_vol
+    mock_data.side_effect = [implied_vol, spot_data]
 
     mock_asset = replace('gs_quant.timeseries.backtesting.GsAssetApi.get_many_assets_data', Mock())
     mock_asset.return_value = [{'id': 'MA4B66MW5E27U9VBB94'}, {'id': 'MA4B66MW5E27UAL9SUX'}]
@@ -1456,6 +1476,39 @@ def test_implied_corr_basket():
 
     with pytest.raises(NotImplementedError):
         tm.implied_correlation_with_basket(spx, '1y', tm.EdrDataReference.DELTA_PUT, 25, a_basket, real_time=True)
+
+    replace.restore()
+
+
+def test_realized_corr_basket():
+    replace = Replacer()
+
+    dates = pd.DatetimeIndex([dt.date(2021, 1, 1), dt.date(2021, 1, 2), dt.date(2021, 1, 3), dt.date(2021, 1, 4),
+                              dt.date(2021, 1, 5), dt.date(2021, 1, 6)])
+    x = pd.DataFrame({'spot': [100.0, 101, 103.02, 100.9596, 100.9596, 102.978792]}, index=dates)
+    x['assetId'] = 'MA4B66MW5E27U9VBB94'
+    y = pd.DataFrame({'spot': [100.0, 99.5, 100.1, 101, 100.7, 100.6]}, index=dates)
+    y['assetId'] = 'MA4B66MW5E27UAL9SUX'
+    constituents_spot = x.append(y)
+
+    index_spot = pd.DataFrame({'spot': [100.0, 101, 102, 103, 103.3, 104]}, index=dates)
+    index_spot['assetId'] = 'MA4B66MW5E27U8P32SB'
+
+    mock_data = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    mock_data.side_effect = [index_spot, constituents_spot]
+
+    mock_asset = replace('gs_quant.timeseries.backtesting.GsAssetApi.get_many_assets_data', Mock())
+    mock_asset.return_value = [{'id': 'MA4B66MW5E27U9VBB94'}, {'id': 'MA4B66MW5E27UAL9SUX'}]
+
+    spx = Index('MA4B66MW5E27U8P32SB', AssetClass.Equity, 'SPX')
+    a_basket = tm.Basket(['AAPL UW', 'MSFT UW'], [0.1, 0.9])
+    actual = tm.realized_correlation_with_basket(spx, '2d', a_basket)
+    expected = pd.Series([np.nan, np.nan, -501.344109, -108.318770, -168.132382, 109.044958], index=dates)
+    expected = ExtendedSeries(expected)
+    assert_series_equal(actual, expected)
+
+    with pytest.raises(NotImplementedError):
+        tm.realized_correlation_with_basket(spx, '2d', a_basket, real_time=True)
 
     replace.restore()
 
@@ -1489,6 +1542,8 @@ def test_real_corr_missing():
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', lambda *args, **kwargs: df)
     constituents = replace('gs_quant.timeseries.measures._get_index_constituent_weights', Mock())
     constituents.return_value = weights
+    last_mock = replace('gs_quant.timeseries.measures.get_last_for_measure', Mock())
+    last_mock.return_value = None
 
     with pytest.raises(MqValueError):
         tm.realized_correlation(spx, '1m', 50)
@@ -1513,12 +1568,22 @@ def test_real_corr_n():
     market_data.return_value = r_vol
     constituents = replace('gs_quant.timeseries.measures._get_index_constituent_weights', Mock())
     constituents.return_value = weights
+    last_mock = replace('gs_quant.timeseries.measures.get_last_for_measure', Mock())
+    last_mock.return_value = None
 
     expected = pd.read_csv(os.path.join(resources, 'SPX_50_rcorr_out.csv'))
     expected.index = pd.to_datetime(expected['date'])
     expected = ExtendedSeries(expected['value'])
     actual = tm.realized_correlation(spx, '1m', 50, datetime.date(2020, 8, 31), source='PlotTool')
     assert_series_equal(actual, expected, check_names=False)
+
+    mask = r_vol.index < '2020-08-31'
+    assert not all(mask)
+    market_data.return_value = r_vol[mask]
+    last_mock.return_value = r_vol[~mask]
+    actual = tm.realized_correlation(spx, '1m', 50, datetime.date(2020, 8, 31), source='PlotTool')
+    assert_series_equal(actual, expected, check_names=False)
+
     replace.restore()
 
 
@@ -1543,6 +1608,8 @@ def test_avg_impl_vol(mocker):
     replace = Replacer()
     mock_spx = Index('MA890', AssetClass.Equity, 'SPX')
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_eq)
+    last_mock = replace('gs_quant.timeseries.measures.get_last_for_measure', Mock())
+    last_mock.return_value = None
 
     actual = tm.average_implied_volatility(mock_spx, '1m', tm.EdrDataReference.DELTA_CALL, 25)
     assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='averageImpliedVolatility'), pd.Series(actual))
@@ -1566,15 +1633,25 @@ def test_avg_impl_vol(mocker):
     mock_implied_vol = MarketDataResponseFrame(pd.concat([df1, df2, df3], join='inner'))
     mock_implied_vol.dataset_ids = _test_datasets
     market_data_mock.return_value = mock_implied_vol
+    last_mock = replace('gs_quant.timeseries.measures.get_last_for_measure', Mock())
+    last_mock.return_value = None
 
     mocker.patch.object(GsSession.__class__, 'default_value',
                         return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(OAuth2Session, '_authenticate', return_value=None)
 
     actual = tm.average_implied_volatility(mock_spx, '1m', tm.EdrDataReference.DELTA_CALL, 25, 3, '1d')
     expected = pd.Series([1.4, 2.6, 3.33333], index=pd.date_range(start='2020-01-01', periods=3))
     expected.index.freq = None
     assert_series_equal(expected, pd.Series(actual), check_names=False)
     assert actual.dataset_ids == _test_datasets
+
+    last_mock.return_value = pd.DataFrame(data={'impliedVolatility': [2], 'assetId': ['MA3']},
+                                          index=pd.date_range(start='2020-01-03', periods=1))
+    actual = tm.average_implied_volatility(mock_spx, '1m', tm.EdrDataReference.DELTA_CALL, 25, 3, '1d')
+    expected = pd.Series([1.4, 2.6, 3.2], index=pd.date_range(start='2020-01-01', periods=3))
+    expected.index.freq = None
+    assert_series_equal(expected, pd.Series(actual), check_names=False)
 
     with pytest.raises(NotImplementedError):
         tm.average_implied_volatility(..., '1m', tm.EdrDataReference.DELTA_PUT, 75, real_time=True)
@@ -1611,6 +1688,8 @@ def test_avg_realized_vol():
     mock_spot.dataset_ids = _test_datasets
 
     replace('gs_quant.api.gs.assets.GsAssetApi.get_asset_positions_data', mock_index_positions_data)
+    last_mock = replace('gs_quant.timeseries.measures.get_last_for_measure', Mock())
+    last_mock.return_value = None
     market_data_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
     market_data_mock.return_value = mock_spot
 
@@ -1621,6 +1700,15 @@ def test_avg_realized_vol():
     assert_series_equal(expected, pd.Series(actual))
     assert actual.dataset_ids == _test_datasets
 
+    dfl = pd.DataFrame(data={'spot': [5, 5, 5], 'assetId': ['MA1', 'MA2', 'MA3']},
+                       index=[pd.to_datetime('2020-01-04')] * 3)
+    last_mock.return_value = dfl
+    actual = tm.average_realized_volatility(mock_spx, '2d', Returns.SIMPLE, 3, '1d')
+    expected = pd.Series([392.874026, 308.686734], index=pd.to_datetime(['2020-01-03', '2020-01-04']),
+                         name='averageRealizedVolatility')
+    assert_series_equal(expected, pd.Series(actual))
+
+    last_mock.return_value = None
     df4 = pd.DataFrame(data={'spot': [2, 2], 'assetId': ['MA3', 'MA3']},
                        index=pd.date_range(start='2020-01-01', periods=2))
     mock_spot_2 = MarketDataResponseFrame(pd.concat([df1, df2, df4], join='inner'))
@@ -3214,7 +3302,8 @@ def test_implied_volatility_elec():
         'J20-K20 7x8': [0.4322360655737705],
     }
     replace = Replacer()
-    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_implied_volatility_elec)
+    mock_get_data = replace('gs_quant.data.dataset.Dataset.get_data', Mock())
+    mock_get_data.return_value = mock_implied_volatility_elec()
     mock_spp = Index('MA001', AssetClass.Commod, 'SPP')
 
     with DataContext(datetime.date(2019, 1, 2), datetime.date(2019, 1, 2)):
@@ -3338,7 +3427,8 @@ def test_implied_volatility_elec():
         replace.restore()
 
         replace = Replacer()
-        replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_missing_bucket_implied_volatility)
+        mock_get_data = replace('gs_quant.data.dataset.Dataset.get_data', Mock())
+        mock_get_data.return_value = mock_missing_bucket_implied_volatility()
         bbid_mock = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
         bbid_mock.return_value = 'SPP'
 
@@ -3374,8 +3464,8 @@ def test_implied_volatility_elec():
         replace.restore()
 
         # No market data
-        market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
-        market_mock.return_value = mock_empty_market_data_response()
+        mock_get_data = replace('gs_quant.data.dataset.Dataset.get_data', Mock())
+        mock_get_data.return_value = mock_empty_market_data_response()
         bbid_mock = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
         bbid_mock.return_value = 'SPP'
         with DataContext(datetime.date(2019, 1, 2), datetime.date(2019, 1, 2)):

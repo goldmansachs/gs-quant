@@ -33,9 +33,10 @@ class BackTest(object):
         self._portfolio_dict = defaultdict(Portfolio)  # portfolio by state
         self._cash_dict = defaultdict(float)  # cash by state
         self._scaling_portfolios = defaultdict(list)  # list of ScalingPortfolio
+        self._cash_payments = defaultdict(list)  # list of cash payments (entry, unwind)
         self._strategy = deepcopy(strategy)  # the strategy definition
         self._states = states  # list of states
-        self._results = defaultdict()
+        self._results = defaultdict(list)
         self._risks = tuple(risks)  # list of risks to calculate
         self._calc_calls = 0
         self._calculations = 0
@@ -61,12 +62,23 @@ class BackTest(object):
         self._scaling_portfolios = scaling_portfolios
 
     @property
+    def cash_payments(self):
+        return self._cash_payments
+
+    @cash_payments.setter
+    def cash_payments(self, cash_payments):
+        self._cash_payments = cash_payments
+
+    @property
     def states(self):
         return self._states
 
     @property
     def results(self):
         return self._results
+
+    def set_results(self, date, results):
+        self._results[date] = results
 
     @property
     def risks(self):
@@ -103,13 +115,20 @@ class BackTest(object):
 
 
 class ScalingPortfolio(object):
-    def __init__(self, trade, dates, risk, csa_term=None, unwind=False):
+    def __init__(self, trade, dates, risk, csa_term=None):
         self.trade = trade
         self.dates = dates
         self.risk = risk
         self.csa_term = csa_term
         self.results = None
-        self.unwind = unwind
+
+
+class CashPayment(object):
+    def __init__(self, trade, effective_date=None, scale_date=None, direction=1):
+        self.trade = trade
+        self.effective_date = effective_date
+        self.scale_date = scale_date
+        self.direction = direction
 
 
 class PredefinedAssetBacktest(object):

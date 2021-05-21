@@ -13,28 +13,29 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from abc import abstractmethod
-from configparser import ConfigParser
-import backoff
-import certifi
-from enum import Enum, auto, unique
 import inspect
 import itertools
 import json
-import msgpack
 import os
+import ssl
+from abc import abstractmethod
+from configparser import ConfigParser
+from enum import Enum, auto, unique
+from typing import Optional, Union, Iterable
+
+import backoff
+import certifi
+import msgpack
 import pandas as pd
 import requests
 import requests.adapters
 import requests.cookies
-import ssl
-from typing import Optional, Union, Iterable
+
+from gs_quant import version as APP_VERSION
 from gs_quant.base import Base
 from gs_quant.context_base import ContextBase
 from gs_quant.errors import MqError, MqRequestError, MqAuthenticationError, MqUninitialisedError
 from gs_quant.json_encoder import JSONEncoder, default
-from gs_quant import version as APP_VERSION
-
 
 API_VERSION = 'v1'
 DEFAULT_APPLICATION = 'gs-quant'
@@ -49,7 +50,6 @@ class Environment(Enum):
 
 
 class GsSession(ContextBase):
-
     __config = None
     __ssl_ctx = None
 
@@ -70,7 +70,8 @@ class GsSession(ContextBase):
             return (
                 cls.READ_CONTENT.value,
                 cls.READ_PRODUCT_DATA.value,
-                cls.READ_FINANCIAL_DATA.value
+                cls.READ_FINANCIAL_DATA.value,
+                cls.READ_USER_PROFILE.value
             )
 
     def __init__(self, domain: str, api_version: str = API_VERSION, application: str = DEFAULT_APPLICATION, verify=True,
@@ -183,7 +184,7 @@ class GsSession(ContextBase):
             kwargs['headers'] = headers
 
             if is_dataframe or payload:
-                kwargs['data'] = payload if isinstance(payload, str) else\
+                kwargs['data'] = payload if isinstance(payload, str) else \
                     msgpack.dumps(payload, default=default) if use_msgpack else json.dumps(payload, cls=JSONEncoder)
         else:
             raise MqError('not implemented')
@@ -230,7 +231,7 @@ class GsSession(ContextBase):
 
     def _get(self, path: str, payload: Optional[Union[dict, Base]] = None, request_headers: Optional[dict] = None,
              cls: Optional[type] = None, include_version: Optional[bool] = True,
-             timeout: Optional[int] = DEFAULT_TIMEOUT, return_request_id: Optional[bool] = False)\
+             timeout: Optional[int] = DEFAULT_TIMEOUT, return_request_id: Optional[bool] = False) \
             -> Union[Base, tuple, dict]:
         return self.__request('GET', path, payload=payload, request_headers=request_headers,
                               cls=cls, include_version=include_version, timeout=timeout,
@@ -254,7 +255,7 @@ class GsSession(ContextBase):
 
     def _put(self, path: str, payload: Optional[Union[dict, Base]] = None,
              request_headers: Optional[dict] = None, cls: Optional[type] = None, include_version: Optional[bool] = True,
-             timeout: Optional[int] = DEFAULT_TIMEOUT, return_request_id: Optional[bool] = False)\
+             timeout: Optional[int] = DEFAULT_TIMEOUT, return_request_id: Optional[bool] = False) \
             -> Union[Base, tuple, dict]:
         return self.__request('PUT', path, payload=payload, request_headers=request_headers,
                               cls=cls, include_version=include_version, timeout=timeout,
@@ -266,8 +267,8 @@ class GsSession(ContextBase):
         extra_headers = self._headers() + list((headers or {}).items())
         return websockets.connect(url,
                                   extra_headers=extra_headers,
-                                  max_size=2**64,
-                                  read_limit=2**64,
+                                  max_size=2 ** 64,
+                                  read_limit=2 ** 64,
                                   ssl=self.__ssl_context() if url.startswith('wss') else None)
 
     def _headers(self):

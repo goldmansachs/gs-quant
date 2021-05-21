@@ -228,8 +228,11 @@ class MultipleRiskMeasureResult(dict):
 
             instruments_equal = self.__instrument == other.__instrument
 
-            if not set(self.keys()).isdisjoint(other.keys()) and instruments_equal and not \
-                    set(self.dates).isdisjoint(other.dates):
+            self_dt = [list(self.values())[0].risk_key.date] if len(self.dates) == 0 else self.dates
+            other_dt = [list(other.values())[0].risk_key.date] if len(other.dates) == 0 else other.dates
+            dates_overlap = not set(self_dt).isdisjoint(other_dt)
+
+            if not set(self.keys()).isdisjoint(other.keys()) and instruments_equal and dates_overlap:
                 raise ValueError('Results overlap on risk measures, instruments or dates')
 
             all_keys = set(chain(self.keys(), other.keys()))
@@ -495,10 +498,14 @@ class PortfolioRiskResult(CompositeResultFuture):
         def as_multiple_result_futures(portfolio_result):
             if len(portfolio_result.__risk_measures) > 1:
                 return portfolio_result
-
-            mr_futures = [as_multiple_result_futures(f) if isinstance(f, PortfolioRiskResult) else
-                          MultipleRiskMeasureFuture(p, {portfolio_result.__risk_measures[0]: f})
-                          for p, f in zip(portfolio_result.__portfolio, portfolio_result.futures)]
+            mr_futures = []
+            for p, f in zip(portfolio_result.__portfolio, portfolio_result.futures):
+                if isinstance(f, PortfolioRiskResult):
+                    mr_futures.append(as_multiple_result_futures(f))
+                elif isinstance(f, MultipleRiskMeasureFuture):
+                    mr_futures.append(f)
+                else:
+                    mr_futures.append(MultipleRiskMeasureFuture(p, {portfolio_result.__risk_measures[0]: f}))
             return PortfolioRiskResult(portfolio_result.__portfolio, portfolio_result.__risk_measures, mr_futures)
 
         def set_value(dest_result, src_result, src_risk_measure):
@@ -514,16 +521,23 @@ class PortfolioRiskResult(CompositeResultFuture):
                         pass
 
         def first_value(portfolio_result):
-            return portfolio_result[next(iter(self.__portfolio.all_instruments))]
+            if len(portfolio_result.__risk_measures) > 1:
+                return next(iter(portfolio_result[next(iter(portfolio_result.portfolio.all_instruments))].values()))
+            else:
+                return portfolio_result[next(iter(portfolio_result.__portfolio.all_instruments))]
 
         if isinstance(other, (int, float)):
             return PortfolioRiskResult(self.__portfolio, self.__risk_measures, [f + other for f in self.futures])
         elif isinstance(other, PortfolioRiskResult):
-            if not _risk_keys_compatible(first_value(self), first_value(self)):
-                return ValueError('Results must have matching scenario and location')
+            if not _risk_keys_compatible(first_value(self), first_value(other)) and not \
+                    set(self.__portfolio.all_instruments).isdisjoint(other.__portfolio.all_instruments):
+                raise ValueError('Results must have matching scenario and location')
 
-            if not set(self.__risk_measures).isdisjoint(other.__risk_measures) and not \
-                    set(self.dates).isdisjoint(other.dates) and not \
+            self_dt = (first_value(self).risk_key.date,) if len(self.dates) == 0 else self.dates
+            other_dt = (first_value(other).risk_key.date,) if len(other.dates) == 0 else other.dates
+            dates_overlap = not set(self_dt).isdisjoint(other_dt)
+
+            if not set(self.__risk_measures).isdisjoint(other.__risk_measures) and dates_overlap and not \
                     set(self.__portfolio.all_instruments).isdisjoint(other.__portfolio.all_instruments):
                 raise ValueError('Results overlap on risk measures, instruments or dates')
 

@@ -28,6 +28,7 @@ from gs_quant.target.assets import Asset as __Asset, AssetClass, AssetType, Asse
     Position, EntityQuery, PositionSet, Currency, AssetParameters
 from gs_quant.target.assets import FieldFilterMap
 from gs_quant.target.common import Entitlements
+from gs_quant.target.reports import Report
 from gs_quant.errors import MqValueError
 from gs_quant.instrument import Instrument, Security
 from gs_quant.session import GsSession
@@ -227,6 +228,11 @@ class GsAssetApi:
         return GsSession.current._delete(f'/assets/{asset_id}')
 
     @staticmethod
+    def get_position_dates(asset_id: str) -> Tuple[dt.date, ...]:
+        position_dates = GsSession.current._get(f'/assets/{asset_id}/positions/dates')['results']
+        return tuple(dt.datetime.strptime(d, '%Y-%m-%d').date() for d in position_dates)
+
+    @staticmethod
     def get_asset_positions_for_date(
             asset_id: str,
             position_date: dt.date,
@@ -359,6 +365,10 @@ class GsAssetApi:
         except HTTPError as err:
             raise ValueError(f'Unable to update asset entitlements with {err}')
         return results
+
+    @classmethod
+    def get_reports(cls, asset_id: str) -> Tuple[Report, ...]:
+        return GsSession.current._get(f'/assets/{asset_id}/reports', cls=Report)['results']
 
     @classmethod
     @_cached

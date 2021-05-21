@@ -615,3 +615,17 @@ def bucketize(series: pd.Series, aggregate_function: AggregateFunction, period: 
     frequency = period.value[0].upper()
     agg = aggregate_function.value
     return series.resample(frequency).apply(agg)
+
+
+@plot_function
+def day_count(first: datetime.date, second: datetime.date) -> int:
+    """
+    Counts the number of business days between two dates. Monday through Friday are considered to be business days.
+
+    :param first: first date
+    :param second: second date
+    :return: number of business days between first and second
+    """
+    if not (isinstance(first, datetime.date) and isinstance(second, datetime.date)):
+        raise MqValueError('inputs must be dates')
+    return np.busday_count(first, second)

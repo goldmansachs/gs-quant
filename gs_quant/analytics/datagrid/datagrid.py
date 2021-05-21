@@ -39,9 +39,11 @@ from gs_quant.analytics.datagrid.utils import DataGridSort, SortOrder, SortType,
     FilterCondition, get_utc_now
 from gs_quant.analytics.processors import CoordinateProcessor, EntityProcessor
 from gs_quant.datetime.relative_date import RelativeDate
+from gs_quant.entities.entitlements import Entitlements
 from gs_quant.entities.entity import Entity
 from gs_quant.errors import MqValueError
 from gs_quant.session import GsSession
+from gs_quant.target.common import Entitlements as Entitlements_
 
 _logger = logging.getLogger(__name__)
 
@@ -102,7 +104,7 @@ class DataGrid:
                  columns: List[DataColumn],
                  *,
                  id_: str = None,
-                 entitlements: Optional[Dict[str, List[str]]] = None,
+                 entitlements: Union[Entitlements, Entitlements_] = None,
                  sorts: Optional[List[DataGridSort]] = None,
                  filters: Optional[List[DataGridFilter]] = None,
                  multiColumnGroups: Optional[List[MultiColumnGroup]] = None,
@@ -513,7 +515,7 @@ class DataGrid:
         id_ = obj.get('id', None)
         name = obj.get('name', '')
         parameters = obj.get('parameters', {})
-        entitlements = obj.get('entitlements', {})
+        entitlements = Entitlements_.from_dict(obj.get('entitlements', {}))
 
         # If a reference list is given, then the entities will be resolved by the caller
         if reference_list is not None:
@@ -551,7 +553,10 @@ class DataGrid:
             }
         }
         if self.entitlements:
-            datagrid['entitlements'] = self.entitlements
+            if isinstance(self.entitlements, Entitlements_):
+                datagrid['entitlements'] = self.entitlements.as_dict()
+            else:
+                datagrid['entitlements'] = self.entitlements.to_dict()
         if len(self.sorts):
             datagrid['parameters']['sorts'] = [asdict(sort) for sort in self.sorts]
         if len(self.filters):

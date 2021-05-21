@@ -26,6 +26,7 @@ from pydash import decapitalize
 
 from gs_quant.analytics.common import TYPE, PROCESSOR, PARAMETERS, DATA_COORDINATE, \
     ENTITY, VALUE, DATE, DATETIME, PROCESSOR_NAME, ENTITY_ID, ENTITY_TYPE, PARAMETER, REFERENCE, RELATIVE_DATE, LIST
+from gs_quant.analytics.common.enumerators import ScaleShape
 from gs_quant.analytics.common.helpers import is_of_builtin_type
 from gs_quant.analytics.core.processor_result import ProcessorResult
 from gs_quant.data import DataCoordinate, DataFrequency
@@ -33,7 +34,6 @@ from gs_quant.data.query import DataQuery, DataQueryType
 from gs_quant.entities.entity import Entity
 from gs_quant.target.common import Currency
 from gs_quant.timeseries import Window, Returns, RelativeDate, DateOrDatetime
-from gs_quant.analytics.common.enumerators import ScaleShape
 
 PARSABLE_OBJECT_MAP = {
     'window': Window,
@@ -58,7 +58,7 @@ DateOrDatetimeOrRDate = Union[DateOrDatetime, RelativeDate]
 
 
 class BaseProcessor(metaclass=ABCMeta):
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.id = f'{self.__class__.__name__}-{str(uuid.uuid4())}'
         self.value: ProcessorResult = ProcessorResult(False, 'Value not set')
         self.parent: Optional[BaseProcessor] = None
@@ -66,11 +66,18 @@ class BaseProcessor(metaclass=ABCMeta):
         self.children: Dict[str, Union[DataCoordinateOrProcessor, DataQueryInfo]] = {}
         self.children_data: Dict[str, ProcessorResult] = {}
         self.data_cell = None
+        self.last_value = kwargs.get('last_value', False)
 
     @abstractmethod
     def process(self, *args):
         """ Handle the calculation of the data with given coordinate data series """
         pass
+
+    def post_process(self):
+        if self.last_value:
+            if isinstance(self.value, ProcessorResult) and self.value.success \
+                    and isinstance(self.value.data, Series) and not self.value.data.empty:
+                self.value.data = self.value.data.iloc[-1:]
 
     def update(self,
                attribute: str,
@@ -85,6 +92,7 @@ class BaseProcessor(metaclass=ABCMeta):
             if result.success:
                 try:
                     self.process()
+                    self.post_process()
                 except Exception as e:
                     self.value = ProcessorResult(False,
                                                  f'Error Calculating processor {self.__class__.__name__}  due to {e}')
@@ -171,7 +179,7 @@ class BaseProcessor(metaclass=ABCMeta):
         """
         processor = {
             TYPE: PROCESSOR,
-            PARAMETERS: {}
+            PARAMETERS: self.get_default_params()
         }
 
         if isinstance(self, BaseProcessor):
@@ -231,6 +239,13 @@ class BaseProcessor(metaclass=ABCMeta):
                     })
 
         return processor
+
+    def get_default_params(self):
+        # Handle all the kwarg based parameters that all processors take
+        default_params = {}
+        if self.last_value:
+            default_params['last_value'] = dict(type='bool', value=True)
+        return default_params
 
     @classmethod
     def from_dict(cls, obj: Dict, reference_list: List):

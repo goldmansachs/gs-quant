@@ -41,7 +41,7 @@
       ~ResearchBasketStyles.THEMATIC
       ~ResearchBasketStyles.US
       ~ResearchBasketStyles.WAVEFRONTS
-      ~ResearchBasketStyles.WAVEFRONT_COMPONENETS
+      ~ResearchBasketStyles.WAVEFRONT_COMPONENTS
       ~ResearchBasketStyles.WAVEFRONT_PAIRS
    
    

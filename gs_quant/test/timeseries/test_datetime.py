@@ -438,5 +438,14 @@ def test_bucketize():
     assert_series_equal(actual, expected, check_index_type=False)
 
 
+def test_day_count():
+    assert day_count(datetime.date(2021, 5, 7), datetime.date(2021, 5, 10)) == 1
+    assert day_count(datetime.date(2021, 5, 10), datetime.date(2021, 5, 14)) == 4
+    assert day_count(datetime.date(2021, 5, 10), datetime.date(2021, 5, 17)) == 5
+
+    with pytest.raises(MqValueError):
+        day_count(datetime.date(2021, 5, 7), '2021-05-10')
+
+
 if __name__ == "__main__":
     pytest.main(args=["test_datetime.py"])
