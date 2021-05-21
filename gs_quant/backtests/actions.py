@@ -142,14 +142,13 @@ class ExitPositionAction(Action):
 
 
 class HedgeAction(Action):
-    def __init__(self, risk, priceables: Priceable = None, trade_duration: str = None, risks_on_final_day: bool = False,
-                 name: str = None, csa_term: str = None):
+    def __init__(self, risk, priceables: Priceable = None, trade_duration: str = None, name: str = None,
+                 csa_term: str = None):
         super().__init__(name)
         self._calc_type = CalcType.semi_path_dependent
         self._priceable = priceables
         self._risk = risk
         self._trade_duration = trade_duration
-        self._risks_on_final_day = risks_on_final_day
         self._csa_term = csa_term
         if priceables is not None:
             if self._priceable.name is None:
@@ -172,7 +171,3 @@ class HedgeAction(Action):
     @property
     def csa_term(self):
         return self._csa_term
-
-    @property
-    def risks_on_final_day(self):
-        return self._risks_on_final_day

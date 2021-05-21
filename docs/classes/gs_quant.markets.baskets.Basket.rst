@@ -14,9 +14,11 @@
    .. autosummary::
    
       ~Basket.__init__
+      ~Basket.add_factor_risk_report
       ~Basket.cancel_rebalance
       ~Basket.clone
       ~Basket.create
+      ~Basket.delete_factor_risk_report
       ~Basket.entity_type
       ~Basket.get
       ~Basket.get_close_price_for_date
@@ -26,6 +28,7 @@
       ~Basket.get_data_series
       ~Basket.get_details
       ~Basket.get_entity
+      ~Basket.get_factor_risk_report
       ~Basket.get_fundamentals
       ~Basket.get_identifier
       ~Basket.get_identifiers
@@ -37,8 +40,10 @@
       ~Basket.get_marquee_id
       ~Basket.get_position_set_for_date
       ~Basket.get_position_sets
+      ~Basket.get_position_dates
       ~Basket.get_positions_data
       ~Basket.get_rebalance_approval_status
+      ~Basket.get_reports
       ~Basket.get_type
       ~Basket.get_unique_entity_key
       ~Basket.get_url

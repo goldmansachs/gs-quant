@@ -17,6 +17,7 @@ import datetime as dt
 from unittest import mock
 
 import pandas as pd
+import numpy as np
 
 import gs_quant.risk as risk
 from gs_quant.datetime import business_day_offset
@@ -36,7 +37,6 @@ def set_session():
 
 
 def test_portfolio(mocker):
-
     with MockCalc(mocker):
         with PricingContext(pricing_date=dt.date(2020, 10, 15)):
             swap1 = IRSwap('Pay', '10y', 'USD', fixed_rate=0.001, name='swap_10y@10bp')
@@ -79,6 +79,24 @@ def test_portfolio(mocker):
 
         portfolio = Portfolio(swap_dict)
         assert len(portfolio) == 3
+
+
+def test_construction():
+    swap1 = IRSwap('Pay', '10y', 'USD')
+    swap2 = IRSwap('Pay', '5y', 'USD')
+    my_list = [swap1, swap2]
+    my_tuple = (swap1, swap2)
+    my_np_arr = np.array((swap1, swap2))
+
+    p1 = Portfolio(my_list)
+    p2 = Portfolio(my_tuple)
+    p3 = Portfolio(my_np_arr)
+
+    assert len(p1) == 2
+    assert len(p2) == 2
+    assert len(p3) == 2
+    assert p1 == p2
+    assert p2 == p3
 
 
 def test_historical_pricing(mocker):
@@ -145,7 +163,6 @@ def test_backtothefuture_pricing(mocker):
 
 def test_duplicate_instrument(mocker):
     with MockCalc(mocker):
-
         swap1 = IRSwap('Pay', '1y', 'EUR', name='EUR1y')
         swap2 = IRSwap('Pay', '2y', 'EUR', name='EUR2y')
         swap3 = IRSwap('Pay', '3y', 'EUR', name='EUR3y')
@@ -181,7 +198,6 @@ def test_nested_portfolios(mocker):
 
 def test_single_instrument(mocker):
     with MockCalc(mocker):
-
         swap1 = IRSwap('Pay', '10y', 'USD', fixed_rate=0.0, name='10y@0')
 
         portfolio = Portfolio(swap1)
@@ -322,7 +338,6 @@ def test_from_frame():
 
 
 def test_single_instrument_new_mock(mocker):
-
     with MockCalc(mocker):
         with PricingContext(pricing_date=dt.date(2020, 10, 15)):
             swap1 = IRSwap('Pay', '10y', 'USD', name='swap1')

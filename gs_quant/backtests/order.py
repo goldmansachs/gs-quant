@@ -181,19 +181,20 @@ class OrderTwapBTIC(OrderTWAP):
                  generation_time: dt.datetime,
                  source: str,
                  window: TimeWindow,
-                 btic_instrument: Instrument):
+                 btic_instrument: Instrument,
+                 future_underlying):
         super().__init__(instrument, quantity, generation_time, source, window)
         """
-        Create a TWAP order
-        :param window: TWAP window
+        Create a BTIC TWAP order: an order for a future executed at underlying spot + BTIC TWAP
         """
         self.btic_instrument = btic_instrument
+        self.future_underlying = future_underlying
 
     def _execution_price(self, data_handler: DataHandler) -> float:
         btic_fixings = data_handler.get_data_range(self.window.start, self.window.end,
                                                    self.btic_instrument, ValuationFixingType.PRICE)
         btic_twap = np.mean(btic_fixings)
-        close = data_handler.get_data(self.window.end.date(), self.instrument, ValuationFixingType.PRICE)
+        close = data_handler.get_data(self.window.end.date(), self.future_underlying)
 
         return close + btic_twap
 

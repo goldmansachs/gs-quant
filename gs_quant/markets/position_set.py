@@ -50,7 +50,7 @@ class Position:
         for prop in ['asset_id', 'weight', 'quantity']:
             slf = get(self, prop)
             oth = get(other, prop)
-            if not (slf is None and oth is None) or slf == oth:
+            if not (slf is None and oth is None) and not slf == oth:
                 return False
         return True
 

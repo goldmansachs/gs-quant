@@ -74,23 +74,41 @@ def _mock_spot_data():
     return x.append(y)
 
 
+def _mock_spot_data_feb():
+    dates_feb = pd.date_range(start='2021-02-01', periods=6)
+    x = pd.DataFrame({'spot': [100.0, 101.5, 106.02, 100.1, 105.3, 102.9]}, index=dates_feb)
+    x['assetId'] = 'MA4B66MW5E27U9VBB94'
+    y = pd.DataFrame({'spot': [100.0, 101.5, 100.02, 98.1, 95.3, 93.9]}, index=dates_feb)
+    y['assetId'] = 'MA4B66MW5E27UAL9SUX'
+    return x.append(y)
+
+
 def test_basket_price():
     with pytest.raises(MqValueError):
         Basket(['AAPL UW'], [0.1, 0.9], RebalFreq.MONTHLY)
 
+    dates = pd.DatetimeIndex([date(2021, 1, 1), date(2021, 1, 2), date(2021, 1, 3), date(2021, 1, 4), date(2021, 1, 5),
+                              date(2021, 1, 6)])
+    dates_feb = pd.DatetimeIndex([date(2021, 2, 1), date(2021, 2, 2), date(2021, 2, 3), date(2021, 2, 4),
+                                  date(2021, 2, 5), date(2021, 2, 6)])
+
     replace = Replacer()
 
-    spot_data = _mock_spot_data()
     mock_data = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
-    mock_data.return_value = spot_data
+    mock_data.side_effect = [_mock_spot_data(), _mock_spot_data_feb()]
 
     mock_asset = replace('gs_quant.timeseries.backtesting.GsAssetApi.get_many_assets_data', Mock())
     mock_asset.return_value = [{'id': 'MA4B66MW5E27U9VBB94'}, {'id': 'MA4B66MW5E27UAL9SUX'}]
 
     a_basket = Basket(['AAPL UW', 'MSFT UW'], [0.1, 0.9], RebalFreq.MONTHLY)
-    expected = pd.Series([100.0, 100.1, 100.302, 100.09596, 100.09596, 100.297879],
-                         index=pd.date_range(start='2021-01-01', periods=6))
-    actual = a_basket.price()
+    expected = pd.Series([100.0, 100.1, 100.302, 100.09596, 100.09596, 100.297879], index=dates)
+    with DataContext('2021-01-01', '2021-01-06'):
+        actual = a_basket.price()
+    assert_series_equal(actual, expected)
+
+    expected = pd.Series([100.00, 101.50, 100.62, 98.30, 96.30, 94.80], index=dates_feb)
+    with DataContext('2021-02-01', '2021-02-06'):
+        actual = a_basket.price()
     assert_series_equal(actual, expected)
 
     mock_asset = replace('gs_quant.timeseries.backtesting.GsAssetApi.get_many_assets_data', Mock())
@@ -107,7 +125,8 @@ def test_basket_price():
 def test_basket_average_implied_vol():
     replace = Replacer()
 
-    dates = pd.date_range(start='2021-01-01', periods=6)
+    dates = pd.DatetimeIndex([date(2021, 1, 1), date(2021, 1, 2), date(2021, 1, 3), date(2021, 1, 4), date(2021, 1, 5),
+                              date(2021, 1, 6)])
 
     x = pd.DataFrame({'impliedVolatility': [30.0, 30.2, 29.8, 30.6, 30.1, 30.0]}, index=dates)
     x['assetId'] = 'MA4B66MW5E27U9VBB94'
@@ -136,17 +155,33 @@ def test_basket_average_implied_vol():
 def test_basket_average_realized_vol():
     replace = Replacer()
 
-    dates = pd.date_range(start='2021-01-01', periods=6)
+    dates = pd.DatetimeIndex([date(2021, 1, 1), date(2021, 1, 2), date(2021, 1, 3), date(2021, 1, 4), date(2021, 1, 5),
+                              date(2021, 1, 6)])
+    dates_feb = pd.DatetimeIndex([date(2021, 2, 1), date(2021, 2, 2), date(2021, 2, 3), date(2021, 2, 4),
+                                 date(2021, 2, 5), date(2021, 2, 6)])
 
     mock_data = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
-    mock_data.return_value = _mock_spot_data()
+    mock_data.side_effect = [_mock_spot_data(), _mock_spot_data_feb()]
 
     mock_asset = replace('gs_quant.timeseries.backtesting.GsAssetApi.get_many_assets_data', Mock())
     mock_asset.return_value = [{'id': 'MA4B66MW5E27U9VBB94'}, {'id': 'MA4B66MW5E27UAL9SUX'}]
 
     a_basket = Basket(['AAPL UW', 'MSFT UW'], [0.1, 0.9], RebalFreq.DAILY)
-    expected = pd.Series([np.nan, np.nan, 1.122497, 4.489989, 2.244994, 2.244994], index=dates)
-    actual = a_basket.average_realized_volatility('2d')
+
+    expected = pd.Series([np.nan, np.nan, 1.1225, 4.49, 2.245, 2.245], index=dates)
+    with DataContext('2021-01-01', '2021-01-06'):
+        actual = a_basket.average_realized_volatility('2d')
+    assert_series_equal(actual, expected)
+
+    expected = pd.Series([np.nan, np.nan, np.nan, 3.304542, 3.174902, 3.174902], index=dates)
+    with DataContext('2021-01-01', '2021-01-06'):
+        actual = a_basket.average_realized_volatility('3d')
+    assert_series_equal(actual, expected)
+    mock_data.assert_called_once()
+
+    expected = pd.Series([np.nan, np.nan, np.nan, 34.698082, 19.719302, 18.860533], index=dates_feb)
+    with DataContext('2021-02-01', '2021-02-06'):
+        actual = a_basket.average_realized_volatility('3d')
     assert_series_equal(actual, expected)
 
     with pytest.raises(NotImplementedError):

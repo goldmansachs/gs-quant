@@ -15,6 +15,7 @@ under the License.
 """
 
 import logging
+import pandas as pd
 from typing import List, Dict
 
 from gs_quant.api.gs.groups import GsGroupsApi
@@ -354,10 +355,20 @@ class EntitlementBlock:
     def is_empty(self):
         return len(self.users + self.groups + self.roles) == 0
 
-    def to_list(self):
-        return [f'guid:{user.id}' for user in self.users] + \
-               [f'group:{group.id}' for group in self.groups] + \
-               [f'role:{role}' for role in self.roles]
+    def to_list(self, as_dicts: bool = False, action: str = None):
+        if as_dicts:
+            all_entitled = []
+            for user in self.users:
+                all_entitled.append(dict(action=action, type='user', name=user.name, id=user.id))
+            for group in self.groups:
+                all_entitled.append(dict(action=action, type='group', name=group.name, id=group.id))
+            for role in self.roles:
+                all_entitled.append(dict(action=action, type='role', name=role, id=role))
+            return all_entitled
+        else:
+            return [f'guid:{user.id}' for user in self.users] + \
+                   [f'group:{group.id}' for group in self.groups] + \
+                   [f'role:{role}' for role in self.roles]
 
 
 class Entitlements:
@@ -468,18 +479,28 @@ class Entitlements:
         Return Entitlement object as a target object
         :return: Entitlements as a target object
         """
-        return TargetEntitlements(
-            admin=self.admin.to_list() if not self.admin.is_empty() else None,
-            delete=self.delete.to_list() if not self.delete.is_empty() else None,
-            display=self.display.to_list() if not self.display.is_empty() else None,
-            edit=self.edit.to_list() if not self.edit.is_empty() else None,
-            execute=self.execute.to_list() if not self.execute.is_empty() else None,
-            plot=self.plot.to_list() if not self.plot.is_empty() else None,
-            query=self.query.to_list() if not self.query.is_empty() else None,
-            rebalance=self.rebalance.to_list() if not self.rebalance.is_empty() else None,
-            trade=self.trade.to_list() if not self.trade.is_empty() else None,
-            view=self.view.to_list() if not self.view.is_empty() else None
-        )
+        target_entitlements = TargetEntitlements.default_instance()
+        if not self.admin.is_empty():
+            target_entitlements.admin = self.admin.to_list()
+        if not self.delete.is_empty():
+            target_entitlements.delete = self.delete.to_list()
+        if not self.display.is_empty():
+            target_entitlements.display = self.display.to_list()
+        if not self.edit.is_empty():
+            target_entitlements.edit = self.edit.to_list()
+        if not self.execute.is_empty():
+            target_entitlements.execute = self.execute.to_list()
+        if not self.plot.is_empty():
+            target_entitlements.plot = self.plot.to_list()
+        if not self.query.is_empty():
+            target_entitlements.query = self.query.to_list()
+        if not self.rebalance.is_empty():
+            target_entitlements.rebalance = self.rebalance.to_list()
+        if not self.trade.is_empty():
+            target_entitlements.trade = self.trade.to_list()
+        if not self.view.is_empty():
+            target_entitlements.view = self.view.to_list()
+        return target_entitlements
 
     def to_dict(self) -> Dict:
         """
@@ -487,6 +508,20 @@ class Entitlements:
         :return: Entitlements as a dictionary
         """
         return self.to_target().as_dict()
+
+    def to_frame(self) -> pd.DataFrame:
+        all_entitled = []
+        all_entitled += self.admin.to_list(True, 'admin')
+        all_entitled += self.delete.to_list(True, 'delete')
+        all_entitled += self.display.to_list(True, 'display')
+        all_entitled += self.edit.to_list(True, 'edit')
+        all_entitled += self.execute.to_list(True, 'execute')
+        all_entitled += self.plot.to_list(True, 'plot')
+        all_entitled += self.query.to_list(True, 'query')
+        all_entitled += self.rebalance.to_list(True, 'rebalance')
+        all_entitled += self.trade.to_list(True, 'trade')
+        all_entitled += self.view.to_list(True, 'view')
+        return pd.DataFrame(all_entitled)
 
     @classmethod
     def from_target(cls, entitlements: TargetEntitlements):

@@ -50,7 +50,9 @@ class StrategySystematic:
                  currency: Union[Currency, str] = Currency.USD,
                  trade_in_signals: Tuple[BacktestSignalSeriesItem, ...] = None,
                  trade_out_signals: Tuple[BacktestSignalSeriesItem, ...] = None,
-                 market_model: Union[MarketModel, str] = MarketModel.STICKY_FIXED_STRIKE):
+                 market_model: Union[MarketModel, str] = MarketModel.STICKY_FIXED_STRIKE,
+                 roll_date_mode: str = None,
+                 expiry_date_mode: str = None):
         self.__cost_netting = cost_netting
         self.__currency = get_enum_value(Currency, currency)
         self.__name = name
@@ -65,7 +67,9 @@ class StrategySystematic:
             trade_in_method=trade_in_method,
             roll_frequency=roll_frequency,
             trade_in_signals=trade_in_signals,
-            trade_out_signals=trade_out_signals)
+            trade_out_signals=trade_out_signals,
+            roll_date_mode=roll_date_mode
+        )
 
         self.__underliers = []
 
@@ -77,7 +81,8 @@ class StrategySystematic:
                 instrument=instrument,
                 notional_percentage=notional_percentage,
                 hedge=BacktestStrategyUnderlierHedge(risk_details=delta_hedge),
-                market_model=market_model))
+                market_model=market_model,
+                expiry_date_mode=expiry_date_mode))
         else:
             for underlier in underliers:
                 if isinstance(underlier, tuple):
@@ -88,14 +93,15 @@ class StrategySystematic:
                     notional_percentage = 100
 
                 if not isinstance(instrument, (EqOption, EqVarianceSwap)):
-                    raise MqValueError('The format of the backtest asset is inscorrect.')
+                    raise MqValueError('The format of the backtest asset is incorrect.')
 
                 instrument = self.check_underlier_fields(instrument)
                 self.__underliers.append(BacktestStrategyUnderlier(
                     instrument=instrument,
                     notional_percentage=notional_percentage,
                     hedge=BacktestStrategyUnderlierHedge(risk_details=delta_hedge),
-                    market_model=market_model))
+                    market_model=market_model,
+                    expiry_date_mode=expiry_date_mode))
 
         backtest_parameters_class: Base = getattr(backtests, self.__backtest_type + 'BacktestParameters')
         backtest_parameter_args = {

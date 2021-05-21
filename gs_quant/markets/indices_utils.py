@@ -194,7 +194,7 @@ class ResearchBasketStyles(EnumBase, Enum):
     TACTICAL_RESEARCH = 'Tactical Research'
     THEMATIC = 'Thematic'
     US = 'US'
-    WAVEFRONT_COMPONENETS = 'Wavefront Components'
+    WAVEFRONT_COMPONENTS = 'Wavefront Components'
     WAVEFRONT_PAIRS = 'Wavefront Pairs'
     WAVEFRONTS = 'Wavefronts'
 

@@ -30,7 +30,8 @@ class PercentilesProcessor(BaseProcessor):
                  b: Optional[DataCoordinateOrProcessor] = None,
                  start: Optional[DateOrDatetimeOrRDate] = None,
                  end: Optional[DateOrDatetimeOrRDate] = None,
-                 w: Union[Window, int] = Window(None, 0)):
+                 w: Union[Window, int] = Window(None, 0),
+                 **kwargs):
         """ PercentilesProcessor
 
         :param a: DataCoordinate or BaseProcessor for the first series
@@ -41,7 +42,7 @@ class PercentilesProcessor(BaseProcessor):
               and 10 the ramp up value.  If w is a string, it should be a relative date like '1m', '1d', etc.
               Window size defaults to length of series.
         """
-        super().__init__()
+        super().__init__(**kwargs)
         self.children['a'] = a
         self.children['b'] = b
 
@@ -79,7 +80,8 @@ class PercentileProcessor(BaseProcessor):
                  n: float,
                  start: Optional[DateOrDatetimeOrRDate] = None,
                  end: Optional[DateOrDatetimeOrRDate] = None,
-                 w: Union[Window, int] = None):
+                 w: Union[Window, int] = None,
+                 **kwargs):
         """ PercentileProcessor
 
         :param a: DataCoordinate or BaseProcessor for the series
@@ -90,7 +92,7 @@ class PercentileProcessor(BaseProcessor):
               and 10 the ramp up value.  If w is a string, it should be a relative date like '1m', '1d', etc.
               Window size defaults to length of series.
         """
-        super().__init__()
+        super().__init__(**kwargs)
         self.children['a'] = a
         self.n = n
         self.start = start
@@ -124,7 +126,8 @@ class MeanProcessor(BaseProcessor):
                  *,
                  start: Optional[DateOrDatetimeOrRDate] = None,
                  end: Optional[DateOrDatetimeOrRDate] = None,
-                 w: Union[Window, int] = None):
+                 w: Union[Window, int] = None,
+                 **kwargs):
         """ MeanProcessor
 
         :param a: DataCoordinate or BaseProcessor for the series
@@ -143,8 +146,7 @@ class MeanProcessor(BaseProcessor):
         available data, will return mean of available values.
 
         """
-
-        super().__init__()
+        super().__init__(**kwargs)
         self.children['a'] = a
         self.start = start
         self.end = end
@@ -175,7 +177,8 @@ class SumProcessor(BaseProcessor):
                  *,
                  start: Optional[DateOrDatetimeOrRDate] = None,
                  end: Optional[DateOrDatetimeOrRDate] = None,
-                 w: Union[Window, int] = None):
+                 w: Union[Window, int] = None,
+                 **kwargs):
         """ SumProcessor
 
         :param a: DataCoordinate or BaseProcessor for the series
@@ -194,7 +197,7 @@ class SumProcessor(BaseProcessor):
 
         """
 
-        super().__init__()
+        super().__init__(**kwargs)
         self.children['a'] = a
         self.start = start
         self.end = end
@@ -225,7 +228,8 @@ class StdDevProcessor(BaseProcessor):
                  *,
                  start: Optional[DateOrDatetimeOrRDate] = None,
                  end: Optional[DateOrDatetimeOrRDate] = None,
-                 w: Union[Window, int] = Window(None, 0)):
+                 w: Union[Window, int] = Window(None, 0),
+                 **kwargs):
         """ StdDevProcessor
 
         :param a: DataCoordinate or BaseProcessor for the first series
@@ -242,7 +246,7 @@ class StdDevProcessor(BaseProcessor):
 
         If window is not provided, computes standard deviation over the full series
         """
-        super().__init__()
+        super().__init__(**kwargs)
         self.children['a'] = a
 
         self.start = start
@@ -274,7 +278,8 @@ class VarianceProcessor(BaseProcessor):
                  *,
                  start: Optional[DateOrDatetimeOrRDate] = None,
                  end: Optional[DateOrDatetimeOrRDate] = None,
-                 w: Union[Window, int] = Window(None, 0)):
+                 w: Union[Window, int] = Window(None, 0),
+                 **kwargs):
         """ VarianceProcessor
 
         :param a: DataCoordinate or BaseProcessor for the first series
@@ -290,7 +295,7 @@ class VarianceProcessor(BaseProcessor):
         sample variance <https://en.wikipedia.org/wiki/Variance>`_ over a rolling window
         If window is not provided, computes variance over the full series
         """
-        super().__init__()
+        super().__init__(**kwargs)
         self.children['a'] = a
 
         self.start = start
@@ -323,7 +328,8 @@ class CovarianceProcessor(BaseProcessor):
                  *,
                  start: Optional[DateOrDatetimeOrRDate] = None,
                  end: Optional[DateOrDatetimeOrRDate] = None,
-                 w: Union[Window, int] = Window(None, 0)):
+                 w: Union[Window, int] = Window(None, 0),
+                 **kwargs):
         """ CovarianceProcessor
 
         :param a: DataCoordinate or BaseProcessor for the first series
@@ -340,7 +346,7 @@ class CovarianceProcessor(BaseProcessor):
 
         If window is not provided, computes variance over the full series
         """
-        super().__init__()
+        super().__init__(**kwargs)
         self.children['a'] = a
         self.children['b'] = b
 
@@ -377,7 +383,8 @@ class ZscoresProcessor(BaseProcessor):
                  *,
                  start: Optional[DateOrDatetimeOrRDate] = None,
                  end: Optional[DateOrDatetimeOrRDate] = None,
-                 w: Union[Window, int] = None):
+                 w: Union[Window, int] = None,
+                 **kwargs):
         """ ZscoresProcessor
 
         :param a: DataCoordinate or BaseProcessor for the series
@@ -398,7 +405,7 @@ class ZscoresProcessor(BaseProcessor):
 
         """
 
-        super().__init__()
+        super().__init__(**kwargs)
         self.children['a'] = a
         self.start = start
         self.end = end

@@ -22,7 +22,7 @@ from gs_quant.timeseries.measures_helper import EdrDataReference, VolReference, 
 from gs_quant.timeseries.econometrics import volatility
 from .statistics import *
 from ..api.gs.assets import GsAssetApi
-from ..api.gs.data import GsDataApi
+from ..api.gs.data import GsDataApi, MarketDataResponseFrame
 from ..data.log import log_debug
 
 _logger = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ RebalFreq = _create_enum('RebalFreq', ['Daily', 'Monthly'])
 ReturnType = _create_enum('ReturnType', ['excess_return'])
 
 
-def _calculate_basket(
+def backtest_basket(
         series: list,
         weights: list,
         costs: list = None,
@@ -158,7 +158,7 @@ def basket_series(
     :func:`prices`
     """
 
-    return _calculate_basket(series, weights, costs, rebal_freq)[0]
+    return backtest_basket(series, weights, costs, rebal_freq)[0]
 
 
 class Basket:
@@ -177,36 +177,88 @@ class Basket:
         self.bbids = stocks
         self.rebal_freq = rebal_freq
         self.weights = weights
-        self.__marquee_ids = None
+        self._marquee_ids = None
+
+        self.start = DataContext.current.start_date
+        self.end = DataContext.current.end_date
+
+        self._spot_data = None
+        self._returns = None
+        self._actual_weights = None
+
+    def _reset(self):
+        self.start = DataContext.current.start_date
+        self.end = DataContext.current.end_date
+        self._spot_data = None
+        self._returns = None
+        self._actual_weights = None
 
     def get_marquee_ids(self):
-        if self.__marquee_ids is None:
+        if self._marquee_ids is None:
             assets = GsAssetApi.get_many_assets_data(bbid=self.bbids, fields=('id', ))
-            self.__marquee_ids = [a['id'] for a in assets]
+            self._marquee_ids = [a['id'] for a in assets]
 
-            if len(self.__marquee_ids) != len(self.bbids):
+            if len(self._marquee_ids) != len(self.bbids):
                 raise MqValueError('Unable to find all stocks')
 
-        return self.__marquee_ids
+        return self._marquee_ids
+
+    def _ensure_spot_data(self, request_id: Optional[str] = None):
+        if self.start != DataContext.current.start_date or self.end != DataContext.current.end_date:
+            self._reset()
+
+        if self._spot_data is None:
+            q = GsDataApi.build_market_data_query(self.get_marquee_ids(), QueryType.SPOT)
+            log_debug(request_id, _logger, 'q %s', q)
+            spot_data = GsDataApi.get_market_data(q, request_id=request_id)
+            dataset_ids = getattr(spot_data, 'dataset_ids', ())
+
+            df = spot_data.set_index([spot_data.index, 'assetId'])
+            df = df[~df.index.duplicated(keep='last')].spot.unstack()
+            self._spot_data = MarketDataResponseFrame(df)
+            self._spot_data.dataset_ids = dataset_ids
+
+    def _ensure_backtest(self, request_id: Optional[str] = None):
+        if self.start != DataContext.current.start_date or self.end != DataContext.current.end_date:
+            self._reset()
+
+        if self._returns is None or self._actual_weights is None:
+            spot_df = self.get_spot_data(request_id=request_id)
+            spot_df.dropna(inplace=True)
+            spot_series = [spot_df[asset_id] for asset_id in spot_df]
+            results = backtest_basket(spot_series, self.weights, rebal_freq=self.rebal_freq)
+
+            self._returns = results[0]
+            actual_weights = results[1]
+            actual_weights.columns = self.get_marquee_ids()
+            self._actual_weights = actual_weights
+
+    def get_returns(self, request_id: Optional[str] = None):
+        self._ensure_backtest(request_id=request_id)
+        return self._returns
+
+    def get_actual_weights(self, request_id: Optional[str] = None):
+        self._ensure_backtest(request_id=request_id)
+        return self._actual_weights
+
+    def get_spot_data(self, request_id: Optional[str] = None):
+        self._ensure_spot_data(request_id=request_id)
+        return self._spot_data
 
     @requires_session
     @plot_method
-    def price(self, *, real_time: bool = False) -> pd.Series:
+    def price(self, *, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
         """
         Weighted average price
 
         :param real_time: whether to retrieve intraday data instead of EOD
+        :param request_id: service request id, if any
         :return: time series of the average price
         """
         if real_time:
             raise NotImplementedError('real-time basket price not implemented')
 
-        q = GsDataApi.build_market_data_query(self.get_marquee_ids(), QueryType.SPOT)
-        df = GsDataApi.get_market_data(q)
-
-        grouped = df.groupby('assetId')
-        spot_series = [grouped.get_group(mqid)['spot'] for mqid in self.get_marquee_ids()]
-        return basket_series(spot_series, self.weights, rebal_freq=self.rebal_freq)
+        return self.get_returns(request_id=request_id)
 
     @requires_session
     @plot_method
@@ -244,16 +296,7 @@ class Basket:
         vols = vol_data.pivot_table('impliedVolatility', ['date'], 'assetId')
         vols.reindex(self.get_marquee_ids(), axis=1)
 
-        q = GsDataApi.build_market_data_query(self.get_marquee_ids(), QueryType.SPOT)
-        log_debug(request_id, _logger, 'q %s', q)
-        spot_data = GsDataApi.get_market_data(q, request_id=request_id)
-
-        grouped = spot_data.groupby('assetId')
-        spot_series = [grouped.get_group(mqid)['spot'] for mqid in self.get_marquee_ids()]
-
-        actual_weights = _calculate_basket(spot_series, self.weights, rebal_freq=self.rebal_freq)[1]
-        actual_weights.columns = self.get_marquee_ids()
-
+        actual_weights = self.get_actual_weights(request_id)
         return actual_weights.mul(vols).sum(axis=1, skipna=False)
 
     @requires_session
@@ -273,17 +316,10 @@ class Basket:
         if real_time:
             raise NotImplementedError('real-time basket realized vol not implemented')
 
-        q = GsDataApi.build_market_data_query(self.get_marquee_ids(), QueryType.SPOT)
-        log_debug(request_id, _logger, 'q %s', q)
-        spot_data = GsDataApi.get_market_data(q, request_id=request_id)
+        spot_df = self.get_spot_data(request_id=request_id)
+        actual_weights = self.get_actual_weights(request_id=request_id)
 
-        grouped = spot_data.groupby('assetId')
-        spot_series = [grouped.get_group(mqid)['spot'] for mqid in self.get_marquee_ids()]
-
-        actual_weights = _calculate_basket(spot_series, self.weights, rebal_freq=self.rebal_freq)[1]
-        actual_weights.columns = self.get_marquee_ids()
-
-        vols = [volatility(s, Window(tenor, tenor), returns_type) for s in spot_series]
+        vols = [volatility(spot_df[asset_id], Window(tenor, tenor), returns_type) for asset_id in spot_df]
         vols = pd.concat(vols, axis=1)
         vols.columns = self.get_marquee_ids()
 

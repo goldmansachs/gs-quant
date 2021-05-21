@@ -41,7 +41,8 @@ class VolatilityProcessor(BaseProcessor):
                  start: Optional[DateOrDatetimeOrRDate] = None,
                  end: Optional[DateOrDatetimeOrRDate] = None,
                  w: Union[Window, int] = Window(None, 0),
-                 returns_type: Returns = Returns.SIMPLE):
+                 returns_type: Returns = Returns.SIMPLE,
+                 **kwargs):
         """ VolatilityProcessor
 
         :param a: DataCoordinate or BaseProcessor for the series to apply the volatility timeseries function
@@ -52,7 +53,7 @@ class VolatilityProcessor(BaseProcessor):
               Window size defaults to length of series.
         :param returns_type: returns type: simple, logarithmic or absolute
         """
-        super().__init__()
+        super().__init__(**kwargs)
         # coordinate
         self.children['a'] = a
 
@@ -86,7 +87,8 @@ class SharpeRatioProcessor(BaseProcessor):
                  end: Optional[DateOrDatetimeOrRDate] = None,
                  currency: Currency,
                  w: Union[Window, int] = None,
-                 curve_type: CurveType = CurveType.PRICES):
+                 curve_type: CurveType = CurveType.PRICES,
+                 **kwargs):
         """ SharpeRatioProcessor
 
         :param a: DataCoordinate or BaseProcessor for the series of prices or excess returns
@@ -97,7 +99,7 @@ class SharpeRatioProcessor(BaseProcessor):
         :param start: start date or time used in the underlying data query
         :param end: end date or time used in the underlying data query
         """
-        super().__init__()
+        super().__init__(**kwargs)
         # coordinates
         self.children['a'] = a
         # datetime
@@ -148,7 +150,8 @@ class CorrelationProcessor(BaseProcessor):
                  start: Optional[DateOrDatetimeOrRDate] = None,
                  end: Optional[DateOrDatetimeOrRDate] = None,
                  w: Union[Window, int] = Window(None, 0),
-                 type_: SeriesType = SeriesType.PRICES):
+                 type_: SeriesType = SeriesType.PRICES,
+                 **kwargs):
         """ CorrelationProcessor
 
         :param a: DataCoordinate or BaseProcessor for the series
@@ -160,7 +163,7 @@ class CorrelationProcessor(BaseProcessor):
                 Window size defaults to length of series.
         :param type_: type of both input series: prices or returns
         """
-        super().__init__()
+        super().__init__(**kwargs)
         # coordinate
         self.children['a'] = a
 
@@ -204,7 +207,8 @@ class ChangeProcessor(BaseProcessor):
                  a: DataCoordinateOrProcessor,
                  *,
                  start: Optional[DateOrDatetimeOrRDate] = None,
-                 end: Optional[DateOrDatetimeOrRDate] = None):
+                 end: Optional[DateOrDatetimeOrRDate] = None,
+                 **kwargs):
 
         """ ChangeProcessor computes the change of a series
 
@@ -212,7 +216,7 @@ class ChangeProcessor(BaseProcessor):
         :param start: start date or time used in the underlying data query
         :param end: end date or time used in the underlying data query
         """
-        super().__init__()
+        super().__init__(**kwargs)
         # coordinate
         self.children['a'] = a
 
@@ -239,7 +243,8 @@ class ReturnsProcessor(BaseProcessor):
                  start: Optional[DateOrDatetimeOrRDate] = None,
                  end: Optional[DateOrDatetimeOrRDate] = None,
                  observations: Optional[int] = None,
-                 type_: Returns = Returns.SIMPLE):
+                 type_: Returns = Returns.SIMPLE,
+                 **kwargs):
 
         """ ReturnsProcessor computes the returns of a series
 
@@ -249,7 +254,7 @@ class ReturnsProcessor(BaseProcessor):
         :param observations: number of observations, defaults to the return of the entire series as a single value
         :param type_: simple, logarithmic or absolute
         """
-        super().__init__()
+        super().__init__(**kwargs)
         # coordinate
         self.children['a'] = a
 
@@ -285,7 +290,8 @@ class BetaProcessor(BaseProcessor):
                  *,
                  start: Optional[DateOrDatetimeOrRDate] = None,
                  end: Optional[DateOrDatetimeOrRDate] = None,
-                 w: Union[Window, int] = Window(None, 0)):
+                 w: Union[Window, int] = Window(None, 0),
+                 **kwargs):
         """ BetaProcessor
 
         :param a: DataCoordinate or BaseProcessor for the first series
@@ -302,7 +308,7 @@ class BetaProcessor(BaseProcessor):
         If window is not provided, computes beta over the full series
 
         """
-        super().__init__()
+        super().__init__(**kwargs)
         self.children['a'] = a
         self.children['b'] = b
 

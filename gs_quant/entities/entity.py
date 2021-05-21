@@ -20,7 +20,7 @@ import time
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 from pydash import get
@@ -363,24 +363,29 @@ class PositionedEntity(metaclass=ABCMeta):
             return GsPortfolioApi.get_positions_data(self.id, start, end, fields, position_type)
         raise NotImplementedError
 
-    def get_position_dates(self):
+    def get_position_dates(self) -> Tuple[dt.date, ...]:
         if self.positioned_entity_type == EntityType.PORTFOLIO:
             return GsPortfolioApi.get_position_dates(portfolio_id=self.id)
+        if self.positioned_entity_type == EntityType.ASSET:
+            return GsAssetApi.get_position_dates(asset_id=self.id)
         raise NotImplementedError
 
     def get_reports(self) -> List[Report]:
         if self.positioned_entity_type == EntityType.PORTFOLIO:
             reports_as_target = GsPortfolioApi.get_reports(portfolio_id=self.id)
-            report_objects = []
-            for report in reports_as_target:
-                if report.type == ReportType.Portfolio_Performance_Analytics:
-                    report_objects.append(PerformanceReport.from_target(report))
-                elif report.type in [ReportType.Portfolio_Factor_Risk, ReportType.Asset_Factor_Risk]:
-                    report_objects.append(FactorRiskReport.from_target(report))
-                else:
-                    report_objects.append(Report.from_target(report))
-            return report_objects
-        raise NotImplementedError
+        elif self.positioned_entity_type == EntityType.ASSET:
+            reports_as_target = GsAssetApi.get_reports(asset_id=self.id)
+        else:
+            raise NotImplementedError
+        report_objects = []
+        for report in reports_as_target:
+            if report.type == ReportType.Portfolio_Performance_Analytics:
+                report_objects.append(PerformanceReport.from_target(report))
+            elif report.type in [ReportType.Portfolio_Factor_Risk, ReportType.Asset_Factor_Risk]:
+                report_objects.append(FactorRiskReport.from_target(report))
+            else:
+                report_objects.append(Report.from_target(report))
+        return report_objects
 
     def get_status_of_reports(self) -> pd.DataFrame:
         reports = self.get_reports()
@@ -398,20 +403,22 @@ class PositionedEntity(metaclass=ABCMeta):
     def get_factor_risk_report(self,
                                risk_model_id: str = None,
                                fx_hedged: bool = None) -> FactorRiskReport:
-        if self.positioned_entity_type == EntityType.PORTFOLIO:
+        if self.positioned_entity_type in [EntityType.PORTFOLIO, EntityType.ASSET]:
+            position_source_type = self.positioned_entity_type.value.capitalize()
             reports = GsReportApi.get_reports(limit=100,
-                                              position_source_type='Portfolio',
+                                              position_source_type=position_source_type,
                                               position_source_id=self.id,
-                                              report_type='Portfolio Factor Risk')
+                                              report_type=f'{position_source_type} Factor Risk')
             if fx_hedged:
                 reports = [report for report in reports if report.parameters.fx_hedged == fx_hedged]
             if risk_model_id:
                 reports = [report for report in reports if report.parameters.risk_model == risk_model_id]
             if len(reports) > 1:
-                raise MqError('This portfolio has more than one factor risk report that matches your parameters.'
-                              ' Please specify the risk model ID and fxHedged value in the function parameters.')
+                raise MqError(f'This {position_source_type} has more than one factor risk report that matches '
+                              'your parameters. Please specify the risk model ID and fxHedged value in the '
+                              'function parameters.')
             if len(reports) == 0:
-                raise MqError('This portfolio has no factor risk reports that match your parameters.')
+                raise MqError(f'This {position_source_type} has no factor risk reports that match your parameters.')
             return FactorRiskReport.from_target(reports[0])
         raise NotImplementedError
 

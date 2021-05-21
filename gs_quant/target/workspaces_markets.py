@@ -14,9 +14,9 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.common import *
+from gs_quant.target.common import *
 import datetime
-from typing import Mapping, Tuple, Union, Optional
+from typing import Mapping, Tuple, Union
 from enum import Enum
 from gs_quant.base import Base, EnumBase, InstrumentBase, camel_case_translate, get_enum_value
 
@@ -46,7 +46,10 @@ class ComponentType(EnumBase, Enum):
     stackedBarChart = 'stackedBarChart'
     treemap = 'treemap'
     video = 'video'
-    webinar = 'webinar'    
+    webinar = 'webinar'
+    
+    def __repr__(self):
+        return self.value
 
 
 class WorkspaceType(EnumBase, Enum):    
@@ -54,7 +57,10 @@ class WorkspaceType(EnumBase, Enum):
     """Enum listing support workspace types."""
 
     cashboard = 'cashboard'
-    multiplot = 'multiplot'    
+    multiplot = 'multiplot'
+    
+    def __repr__(self):
+        return self.value
 
 
 class ComponentSelection(Base):
@@ -980,6 +986,57 @@ class DataGridComponentParameters(Base):
         self.__tooltip = value        
 
 
+class Entitlements(Base):
+        
+    """Defines the entitlements of a given resource."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        view: Tuple[str, ...],
+        edit: Tuple[str, ...],
+        admin: Tuple[str, ...],
+        name: str = None
+    ):        
+        super().__init__()
+        self.view = view
+        self.edit = edit
+        self.admin = admin
+        self.name = name
+
+    @property
+    def view(self) -> Tuple[str, ...]:
+        """Permission to view the resource and its contents."""
+        return self.__view
+
+    @view.setter
+    def view(self, value: Tuple[str, ...]):
+        self._property_changed('view')
+        self.__view = value        
+
+    @property
+    def edit(self) -> Tuple[str, ...]:
+        """Permission to edit details about the resource content, excluding entitlements.
+           Can also delete the resource."""
+        return self.__edit
+
+    @edit.setter
+    def edit(self, value: Tuple[str, ...]):
+        self._property_changed('edit')
+        self.__edit = value        
+
+    @property
+    def admin(self) -> Tuple[str, ...]:
+        """Permission to edit all details of the resource, including entitlements. Can also
+           delete the resource."""
+        return self.__admin
+
+    @admin.setter
+    def admin(self, value: Tuple[str, ...]):
+        self._property_changed('admin')
+        self.__admin = value        
+
+
 class LegendComponentParameters(Base):
         
     """Parameters provided for the legend component."""
@@ -1534,8 +1591,8 @@ class SelectorComponentParameters(Base):
     @camel_case_translate
     def __init__(
         self,
-        container_ids: Tuple[str, ...],
         height: float,
+        container_ids: Tuple[str, ...] = None,
         default_option_index: float = None,
         options: Tuple[SelectorComponentOption, ...] = None,
         title: str = None,
@@ -1737,6 +1794,7 @@ class WorkspaceComponent(Base):
         hide: bool = None,
         tags: Tuple[str, ...] = None,
         selections: Tuple[ComponentSelection, ...] = None,
+        container_ids: Tuple[str, ...] = None,
         parameters: dict = None,
         name: str = None
     ):        
@@ -1746,6 +1804,7 @@ class WorkspaceComponent(Base):
         self.tags = tags
         self.__type = get_enum_value(ComponentType, type_)
         self.selections = selections
+        self.container_ids = container_ids
         self.parameters = parameters
         self.name = name
 
@@ -1800,6 +1859,16 @@ class WorkspaceComponent(Base):
     def selections(self, value: Tuple[ComponentSelection, ...]):
         self._property_changed('selections')
         self.__selections = value        
+
+    @property
+    def container_ids(self) -> Tuple[str, ...]:
+        """The component ids of the containers the selector will fill using it's options."""
+        return self.__container_ids
+
+    @container_ids.setter
+    def container_ids(self, value: Tuple[str, ...]):
+        self._property_changed('container_ids')
+        self.__container_ids = value        
 
     @property
     def parameters(self) -> dict:

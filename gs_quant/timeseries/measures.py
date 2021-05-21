@@ -449,6 +449,7 @@ def _extract_series_from_df(df: pd.DataFrame, query_type: QueryType, handle_miss
 
 def _merge_market_data_responses(frames: List[MarketDataResponseFrame]):
     df = pd.concat(frames)
+    df.sort_index(inplace=True)
     dataset_ids = []
     for frame in frames:
         dataset_ids.extend(frame.dataset_ids)
@@ -609,33 +610,12 @@ def implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference 
                                           real_time=real_time)
     log_debug(request_id, _logger, 'q %s', q)
     df = _market_data_timed(q, request_id)
-    out = _extract_series_from_df(df, QueryType.IMPLIED_VOLATILITY)
-    ids = set(out.dataset_ids)
+    if not real_time and DataContext.current.end_date >= datetime.date.today():
+        df = append_last_for_measure(df, [asset_id], QueryType.IMPLIED_VOLATILITY, where, source=source,
+                                     request_id=request_id)
 
-    now = datetime.date.today()
-    if not real_time and DataContext.current.end_date >= now:
-        delta = datetime.timedelta(days=1)
-        with DataContext(now - delta, now + delta):
-            q_l = GsDataApi.build_market_data_query([asset_id], QueryType.IMPLIED_VOLATILITY, where=where,
-                                                    source=source, real_time=True, measure='Last')
-        log_debug(request_id, _logger, 'q_l %s', q_l)
-
-        try:
-            df_l = _market_data_timed(q_l, request_id)
-        except Exception as e:
-            log_warning(request_id, _logger, 'unable to get last of implied_vol', exc_info=e)
-        else:
-            if df_l.empty:
-                log_warning(request_id, _logger, 'no data for last of implied_vol')
-            else:
-                ids.union(getattr(df_l, 'dataset_ids', ()))
-                s_l = _extract_series_from_df(df_l, QueryType.IMPLIED_VOLATILITY)
-                s_l.index = s_l.index.tz_convert(None).normalize()
-                out = pd.concat([out, s_l])
-                out = out[~out.index.duplicated(keep='first')]
-
-    out.dataset_ids = tuple(ids)
-    return out
+    s = _extract_series_from_df(df, QueryType.IMPLIED_VOLATILITY)
+    return s
 
 
 def _tenor_month_to_year(tenor: str):
@@ -779,7 +759,8 @@ def implied_correlation(asset: Asset, tenor: str, strike_reference: EdrDataRefer
     constituents = _get_index_constituent_weights(asset, top_n_of_index, composition_date)
 
     tasks = []
-    for i, constituent_chunk in enumerate(chunk(constituents.index.to_list(), 5)):
+    asset_ids = constituents.index.to_list()
+    for i, constituent_chunk in enumerate(chunk(asset_ids, 5)):
         query = GsDataApi.build_market_data_query(
             constituent_chunk + [mqid] if i == 0 else constituent_chunk,
             QueryType.IMPLIED_VOLATILITY,
@@ -791,16 +772,27 @@ def implied_correlation(asset: Asset, tenor: str, strike_reference: EdrDataRefer
 
     results = ThreadPoolManager.run_async(tasks)
     df = pd.concat(results)
+    if df.empty:
+        return pd.Series()
+
+    # TODO: parallelize
+    if not real_time and DataContext.current.end_date >= datetime.date.today():
+        df = append_last_for_measure(df, asset_ids, QueryType.IMPLIED_VOLATILITY, where, source=source,
+                                     request_id=request_id)
+    df.sort_index(inplace=True)
 
     dataset_ids = getattr(df, 'dataset_ids', ())
     df = df[['assetId', 'impliedVolatility']]
-    series = _calculate_implied_correlation(mqid, df, constituents.to_dict()['netWeight'], request_id)
+    constituents_weights = pd.DataFrame(constituents.to_dict()['netWeight'], index=df.index.unique())
+    series = _calculate_implied_correlation(mqid, df, constituents_weights, request_id)
     series.dataset_ids = dataset_ids
     return series
 
 
-def _calculate_implied_correlation(index_mqid, vol_df, constituent_to_weight: dict, request_id):
+def _calculate_implied_correlation(index_mqid, vol_df, constituents_weights, request_id):
     full_index = pd.date_range(start=vol_df.index.min(), end=vol_df.index.max(), freq='D')
+
+    w = constituents_weights.reindex(full_index, method='ffill')
 
     all_groups = []
     for name, group in vol_df.groupby('assetId'):
@@ -822,7 +814,8 @@ def _calculate_implied_correlation(index_mqid, vol_df, constituent_to_weight: di
 
     def calculate_vol(group):
         vols = group.set_index('assetId')['impliedVolatility']
-        weights = [constituent_to_weight[asset_id] for asset_id in vols.index]
+        weights_on_date = w.loc[group.name].to_dict()
+        weights = [weights_on_date[asset_id] for asset_id in vols.index]
         total_weight = sum(weights)
         parts = [vol * weight / total_weight for vol, weight in zip(vols, weights)]
         return pd.Series([sum(parts), sum(map(lambda x: pow(x, 2), parts))], index=['first', 'second'])
@@ -874,12 +867,54 @@ def implied_correlation_with_basket(asset: Asset, tenor: str, strike_reference: 
         source=source,
         real_time=real_time
     )
+    log_debug(request_id, _logger, 'q %s', query)
+
     df = _market_data_timed(query, request_id)
     dataset_ids = getattr(df, 'dataset_ids', ())
     df = df[['assetId', 'impliedVolatility']]
 
-    stock_to_weight = dict(zip(basket.get_marquee_ids(), basket.weights))
-    series = _calculate_implied_correlation(index_mqid, df, stock_to_weight, request_id)
+    actual_weights = basket.get_actual_weights(request_id=request_id)
+    series = _calculate_implied_correlation(index_mqid, df, actual_weights, request_id)
+    series.dataset_ids = dataset_ids
+    return series
+
+
+@plot_measure((AssetClass.Equity,), (AssetType.Index, AssetType.ETF,), [QueryType.IMPLIED_CORRELATION])
+def realized_correlation_with_basket(asset: Asset, tenor: str, basket: Basket, *, source: str = None,
+                                     real_time: bool = False, request_id: Optional[str] = None) -> Series:
+    """
+    Realized correlation between index and stock basket.
+
+    :param asset: asset object loaded from security master
+    :param tenor: relative date representation of expiration date e.g. 1m
+    :param basket: a basket of stocks. Basket rebalancing does not apply to the calculation
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
+    :return: realized correlation curve
+    """
+    if real_time:
+        raise NotImplementedError('realtime implied_correlation not implemented')
+
+    dataset_ids = set()
+
+    index_mqid = asset.get_marquee_id()
+    query = GsDataApi.build_market_data_query([index_mqid], QueryType.SPOT, source=source, real_time=real_time)
+    log_debug(request_id, _logger, 'q %s', query)
+    index_spot = _market_data_timed(query, request_id)
+    dataset_ids.update(getattr(index_spot, 'dataset_ids', ()))
+
+    actual_weights = basket.get_actual_weights(request_id=request_id)
+    constituents_spot = basket.get_spot_data(request_id=request_id)
+    dataset_ids.update(getattr(constituents_spot, 'dataset_ids', ()))
+
+    vols = constituents_spot.apply(lambda col: volatility(constituents_spot[col.name], Window(tenor, tenor)) / 100)
+    weighted_vols = actual_weights.mul(vols)
+    idx_vol = volatility(index_spot['spot'], Window(tenor, tenor)) / 100
+    s1 = weighted_vols.sum(1, skipna=False)
+    s2 = weighted_vols.apply(lambda x: x * x).sum(1, skipna=False)
+    values = (idx_vol * idx_vol - s2) / (s1 * s1 - s2) * 100
+    series = ExtendedSeries(values)
     series.dataset_ids = dataset_ids
     return series
 
@@ -888,7 +923,7 @@ def implied_correlation_with_basket(asset: Asset, tenor: str, strike_reference: 
                                                                         QueryType.IMPLIED_VOLATILITY])
 def average_implied_volatility(asset: Asset, tenor: str, strike_reference: EdrDataReference, relative_strike: Real,
                                top_n_of_index: Optional[int] = None, composition_date: Optional[GENERIC_DATE] = None, *,
-                               source: str = None, real_time: bool = False) -> Series:
+                               source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
     Historical weighted average implied volatility of the top constituents of an equity index. If top_n_of_index and
     composition_date are not provided, the average is of all constituents based on the weights at each evaluation date.
@@ -904,6 +939,7 @@ def average_implied_volatility(asset: Asset, tenor: str, strike_reference: EdrDa
         available
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: average implied volatility curve
     """
     if real_time:
@@ -927,7 +963,8 @@ def average_implied_volatility(asset: Asset, tenor: str, strike_reference: EdrDa
         where = dict(tenor=tenor, strikeReference=ref_string, relativeStrike=relative_strike)
 
         tasks = []
-        for constituent_chunk in chunk(constituents.index.to_list(), 5):
+        assets = constituents.index.to_list()
+        for constituent_chunk in chunk(assets, 5):
             query = GsDataApi.build_market_data_query(
                 constituent_chunk,
                 QueryType.IMPLIED_VOLATILITY,
@@ -935,10 +972,15 @@ def average_implied_volatility(asset: Asset, tenor: str, strike_reference: EdrDa
                 source=source,
                 real_time=real_time)
 
-            tasks.append(partial(_market_data_timed, query))
+            tasks.append(partial(_market_data_timed, query, request_id))
 
         results = ThreadPoolManager.run_async(tasks)
         df = _merge_market_data_responses(results)
+
+        # TODO: parallelize
+        if not real_time and DataContext.current.end_date >= datetime.date.today():
+            df = append_last_for_measure(df, assets, QueryType.IMPLIED_VOLATILITY, where, source=source,
+                                         request_id=request_id)
 
         def calculate_avg_vol(group):
             vols = group.set_index('assetId')['impliedVolatility']
@@ -964,11 +1006,12 @@ def average_implied_volatility(asset: Asset, tenor: str, strike_reference: EdrDa
 
     mqid = asset.get_marquee_id()
     where = dict(tenor=tenor, strikeReference=strike_ref, relativeStrike=relative_strike)
+    # no append last here, since there is no real-time avg implied vol dataset
     q = GsDataApi.build_market_data_query([mqid], QueryType.AVERAGE_IMPLIED_VOLATILITY,
                                           where=where, source=source, real_time=real_time)
 
     _logger.debug('q %s', q)
-    df = _market_data_timed(q)
+    df = _market_data_timed(q, request_id)
     return _extract_series_from_df(df, QueryType.AVERAGE_IMPLIED_VOLATILITY)
 
 
@@ -1013,7 +1056,8 @@ def average_implied_variance(asset: Asset, tenor: str, strike_reference: EdrData
                                                                         QueryType.SPOT])
 def average_realized_volatility(asset: Asset, tenor: str, returns_type: Returns = Returns.SIMPLE,
                                 top_n_of_index: int = None, composition_date: Optional[GENERIC_DATE] = None,
-                                *, source: str = None, real_time: bool = False) -> Series:
+                                *, source: str = None, real_time: bool = False,
+                                request_id: Optional[str] = None) -> Series:
     """
     Historical weighted average realized volatility for the underlying assets of an equity index. If top_n_of_index and
     composition_date are not provided, the average is of all constituents based on the weights at each evaluation date
@@ -1027,6 +1071,7 @@ def average_realized_volatility(asset: Asset, tenor: str, returns_type: Returns 
         available
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: average realized volatility curve
     """
     if real_time:
@@ -1046,15 +1091,17 @@ def average_realized_volatility(asset: Asset, tenor: str, returns_type: Returns 
 
     if top_n_of_index is not None:
         constituents = _get_index_constituent_weights(asset, top_n_of_index, composition_date)
-
+        assets = constituents.index.to_list()
         q = GsDataApi.build_market_data_query(
-            constituents.index.to_list(),
+            assets,
             QueryType.SPOT,
             source=source,
             real_time=real_time
         )
         _logger.debug('q %s', q)
-        df = _market_data_timed(q)
+        df = _market_data_timed(q, request_id)
+        if not real_time and DataContext.current.end_date >= datetime.date.today():
+            df = append_last_for_measure(df, assets, QueryType.SPOT, None, source=source, request_id=request_id)
 
         grouped = df.groupby('assetId')
         weighted_vols = []
@@ -1078,7 +1125,7 @@ def average_realized_volatility(asset: Asset, tenor: str, returns_type: Returns 
         real_time=real_time
     )
     _logger.debug('q %s', q)
-    df = _market_data_timed(q)
+    df = _market_data_timed(q, request_id)
     return _extract_series_from_df(df, QueryType.AVERAGE_REALIZED_VOLATILITY)
 
 
@@ -2281,14 +2328,9 @@ def implied_volatility_elec(asset: Asset, price_method: str = 'LMP', bucket: str
     quantitybuckets_to_query = weights['quantityBucket'].unique().tolist()
 
     where = dict(priceMethod=price_method.upper(), quantityBucket=quantitybuckets_to_query, contract=contracts_to_query)
-
-    with DataContext(start, end):
-        q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.IMPLIED_VOLATILITY,
-                                              where=where, source=None,
-                                              real_time=False)
-        _logger.debug('q %s', q)
-        implied_vols_data = _market_data_timed(q)
-        dataset_ids = getattr(implied_vols_data, 'dataset_ids', ())
+    ds = Dataset('COMMOD_US_ELEC_ENERGY_IMPLIED_VOLATILITY')
+    implied_vols_data = ds.get_data(assetId=[asset.get_marquee_id()], where=where, start=start, end=end)
+    _logger.debug('query for %s', where)
 
     if implied_vols_data.empty:
         result = ExtendedSeries(dtype='float64')
@@ -2297,7 +2339,8 @@ def implied_volatility_elec(asset: Asset, price_method: str = 'LMP', bucket: str
         keys = ['quantityBucket', 'contract', 'dates']
         measure_column = 'impliedVolatility'
         result = _merge_curves_by_weighted_average(implied_vols_data, weights, keys, measure_column)
-    result.dataset_ids = dataset_ids
+
+    result.dataset_ids = ds.id
     return result
 
 
@@ -3049,8 +3092,8 @@ def sales_per_share(asset: Asset, period: str, period_direction: FundamentalMetr
 
 @plot_measure((AssetClass.Equity,), (AssetType.Index, AssetType.ETF,), [QueryType.REALIZED_CORRELATION])
 def realized_correlation(asset: Asset, tenor: str, top_n_of_index: Optional[int] = None,
-                         composition_date: Optional[GENERIC_DATE] = None, *,
-                         source: str = None, real_time: bool = False) -> Series:
+                         composition_date: Optional[GENERIC_DATE] = None, *, source: str = None,
+                         real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
     Realized correlation of an asset.
 
@@ -3061,6 +3104,7 @@ def realized_correlation(asset: Asset, tenor: str, top_n_of_index: Optional[int]
         available
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: realized correlation curve
     """
     if real_time:
@@ -3078,6 +3122,7 @@ def realized_correlation(asset: Asset, tenor: str, top_n_of_index: Optional[int]
     where = dict(tenor=tenor)
 
     if top_n_of_index is None:
+        # no append last b/c there is no real-time Realized Correlation dataset
         q = GsDataApi.build_market_data_query([mqid], QueryType.REALIZED_CORRELATION, where=where,
                                               source=source, real_time=real_time)
         _logger.debug('q %s', q)
@@ -3088,14 +3133,19 @@ def realized_correlation(asset: Asset, tenor: str, top_n_of_index: Optional[int]
     constituents = _get_index_constituent_weights(asset, top_n_of_index, composition_date)
     head_start = DataContext.current.start_date - datetime.timedelta(days=relative_date_add(tenor, True) + 1)
     with DataContext(head_start, DataContext.current.end_date):
+        asset_ids = constituents.index.to_list() + [mqid]
         q = GsDataApi.build_market_data_query(
-            constituents.index.to_list() + [mqid],
+            asset_ids,
             QueryType.SPOT,
             source=source,
             real_time=real_time
         )
         _logger.debug('q %s', q)
-        df = _market_data_timed(q)
+        df = _market_data_timed(q, request_id)
+
+    if not real_time and DataContext.current.end_date >= datetime.date.today():
+        df = append_last_for_measure(df, asset_ids, QueryType.SPOT, None, source=source, request_id=request_id)
+
     match = df['assetId'] == mqid
     df_asset = df.loc[match]
     df_rest = df.loc[~match]
@@ -3604,3 +3654,39 @@ def fx_implied_correlation(asset: Asset, asset_2: Asset, tenor: str, *, source: 
     series = ExtendedSeries(corr, name='impCorr')
     series.dataset_ids = getattr(df, 'dataset_ids', ())
     return series
+
+
+def get_last_for_measure(asset_ids: List[str], query_type, where, *, source: str = None,
+                         request_id: Optional[str] = None):
+    now = datetime.date.today()
+    delta = datetime.timedelta(days=1)
+    with DataContext(now - delta, now + delta):
+        q_l = GsDataApi.build_market_data_query(asset_ids, query_type, where=where,
+                                                source=source, real_time=True, measure='Last')
+    log_debug(request_id, _logger, 'q_l %s', q_l)
+
+    try:
+        df_l = _market_data_timed(q_l, request_id)
+    except Exception as e:
+        log_warning(request_id, _logger, f'unable to get last of {query_type}', exc_info=e)
+    else:
+        if df_l.empty:
+            log_warning(request_id, _logger, f'no data for last of {query_type}')
+        else:
+            df_l.index = df_l.index.tz_convert(None).normalize()
+            return df_l
+
+    return None
+
+
+def append_last_for_measure(df: pd.DataFrame, asset_ids: List[str], query_type, where, *, source: str = None,
+                            request_id: Optional[str] = None):
+    df_l = get_last_for_measure(asset_ids, query_type, where, source=source, request_id=request_id)
+    if df_l is None:
+        return df
+
+    result = pd.concat([df, df_l])
+    result["dummy"] = result.index  # drop_duplicates ignores indexes, so we need to include it as a column first
+    result = result.drop_duplicates().drop(columns=["dummy"])
+    result.dataset_ids = tuple(set(getattr(df, 'dataset_ids', ())).union(getattr(df_l, 'dataset_ids', ())))
+    return result

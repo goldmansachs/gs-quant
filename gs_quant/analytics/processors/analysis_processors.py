@@ -27,7 +27,8 @@ class DiffProcessor(BaseProcessor):
                  *,
                  obs: int = 1,
                  start: Optional[DateOrDatetimeOrRDate] = None,
-                 end: Optional[DateOrDatetimeOrRDate] = None):
+                 end: Optional[DateOrDatetimeOrRDate] = None,
+                 **kwargs):
         """ DiffProcessor
 
         :param a: DataCoordinate or BaseProcessor for the series
@@ -43,7 +44,7 @@ class DiffProcessor(BaseProcessor):
         where :math:`obs` is the number of observations to lag series in diff function
 
         """
-        super().__init__()
+        super().__init__(**kwargs)
         self.children['a'] = a
         self.obs = obs
         self.start = start
