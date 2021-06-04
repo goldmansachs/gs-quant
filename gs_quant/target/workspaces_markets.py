@@ -14,9 +14,9 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.target.common import *
+from gs_quant.common import *
 import datetime
-from typing import Mapping, Tuple, Union
+from typing import Mapping, Tuple, Union, Optional
 from enum import Enum
 from gs_quant.base import Base, EnumBase, InstrumentBase, camel_case_translate, get_enum_value
 
@@ -46,10 +46,7 @@ class ComponentType(EnumBase, Enum):
     stackedBarChart = 'stackedBarChart'
     treemap = 'treemap'
     video = 'video'
-    webinar = 'webinar'
-    
-    def __repr__(self):
-        return self.value
+    webinar = 'webinar'    
 
 
 class WorkspaceType(EnumBase, Enum):    
@@ -57,10 +54,7 @@ class WorkspaceType(EnumBase, Enum):
     """Enum listing support workspace types."""
 
     cashboard = 'cashboard'
-    multiplot = 'multiplot'
-    
-    def __repr__(self):
-        return self.value
+    multiplot = 'multiplot'    
 
 
 class ComponentSelection(Base):
@@ -984,57 +978,6 @@ class DataGridComponentParameters(Base):
     def tooltip(self, value: str):
         self._property_changed('tooltip')
         self.__tooltip = value        
-
-
-class Entitlements(Base):
-        
-    """Defines the entitlements of a given resource."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        view: Tuple[str, ...],
-        edit: Tuple[str, ...],
-        admin: Tuple[str, ...],
-        name: str = None
-    ):        
-        super().__init__()
-        self.view = view
-        self.edit = edit
-        self.admin = admin
-        self.name = name
-
-    @property
-    def view(self) -> Tuple[str, ...]:
-        """Permission to view the resource and its contents."""
-        return self.__view
-
-    @view.setter
-    def view(self, value: Tuple[str, ...]):
-        self._property_changed('view')
-        self.__view = value        
-
-    @property
-    def edit(self) -> Tuple[str, ...]:
-        """Permission to edit details about the resource content, excluding entitlements.
-           Can also delete the resource."""
-        return self.__edit
-
-    @edit.setter
-    def edit(self, value: Tuple[str, ...]):
-        self._property_changed('edit')
-        self.__edit = value        
-
-    @property
-    def admin(self) -> Tuple[str, ...]:
-        """Permission to edit all details of the resource, including entitlements. Can also
-           delete the resource."""
-        return self.__admin
-
-    @admin.setter
-    def admin(self, value: Tuple[str, ...]):
-        self._property_changed('admin')
-        self.__admin = value        
 
 
 class LegendComponentParameters(Base):

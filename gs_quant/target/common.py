@@ -108,6 +108,7 @@ class AssetType(EnumBase, Enum):
     Economic = 'Economic'
     Endowment = 'Endowment'
     Equity_Basket = 'Equity Basket'
+    EuropeanKnockout = 'European Knockout'
     ETF = 'ETF'
     ETN = 'ETN'
     Event = 'Event'
@@ -537,6 +538,7 @@ class Currency(EnumBase, Enum):
     AUD = 'AUD'
     AUZ = 'AUZ'
     AZM = 'AZM'
+    AZN = 'AZN'
     B03 = 'B03'
     BAD = 'BAD'
     BAK = 'BAK'
@@ -551,6 +553,7 @@ class Currency(EnumBase, Enum):
     BIF = 'BIF'
     BMD = 'BMD'
     BND = 'BND'
+    BOB = 'BOB'
     BR6 = 'BR6'
     BRE = 'BRE'
     BRF = 'BRF'
@@ -620,6 +623,7 @@ class Currency(EnumBase, Enum):
     GBP = 'GBP'
     GBZ = 'GBZ'
     GEK = 'GEK'
+    GEL = 'GEL'
     GHC = 'GHC'
     GHS = 'GHS'
     GHY = 'GHY'
@@ -800,6 +804,7 @@ class Currency(EnumBase, Enum):
     UVR = 'UVR'
     UYP = 'UYP'
     UYU = 'UYU'
+    UZS = 'UZS'
     VAC = 'VAC'
     VEB = 'VEB'
     VEF = 'VEF'
@@ -1623,6 +1628,7 @@ class Field(EnumBase, Enum):
     duration = 'duration'
     load = 'load'
     alpha = 'alpha'
+    datasetId = 'datasetId'
     company = 'company'
     settlementFrequency = 'settlementFrequency'
     distAvg7Day = 'distAvg7Day'
@@ -2445,7 +2451,6 @@ class Field(EnumBase, Enum):
     issueStatusDate = 'issueStatusDate'
     lenderIncome = 'lenderIncome'
     settlementCcy = 'settlementCcy'
-    assetParametersSeries = 'assetParametersSeries'
     pbClientId = 'pbClientId'
     istatRegionCode = 'istatRegionCode'
     sell9bps = 'sell9bps'
@@ -3189,6 +3194,7 @@ class Field(EnumBase, Enum):
     _172 = '172'
     bidYield = 'bidYield'
     _173 = '173'
+    assetParametersStrikePrice = 'assetParametersStrikePrice'
     _174 = '174'
     expectedResidual = 'expectedResidual'
     _175 = '175'
@@ -3277,6 +3283,7 @@ class Field(EnumBase, Enum):
     leg2FloatingIndex = 'leg2FloatingIndex'
     sourceTicker = 'sourceTicker'
     primaryVwapUnrealizedBps = 'primaryVwapUnrealizedBps'
+    assetParametersCreditIndexSeries = 'assetParametersCreditIndexSeries'
     gsid = 'gsid'
     lendingFund = 'lendingFund'
     sensitivity = 'sensitivity'
@@ -3448,6 +3455,12 @@ class Format(EnumBase, Enum):
     Pdf = 'Pdf'    
 
 
+class InOut(EnumBase, Enum):    
+    
+    In = 'In'
+    Out = 'Out'    
+
+
 class IndexNotTradingReasons(EnumBase, Enum):    
     
     """Reasons the index was not traded"""
@@ -3605,7 +3618,9 @@ class PayReceive(EnumBase, Enum):
     """Pay or receive fixed"""
 
     Pay = 'Pay'
+    Payer = 'Payer'
     Receive = 'Receive'
+    Receiver = 'Receiver'
     Straddle = 'Straddle'
     Rec = 'Rec'    
 
@@ -3991,6 +4006,12 @@ class UnderlierType(EnumBase, Enum):
     SEDOL = 'SEDOL'
     RIC = 'RIC'
     Ticker = 'Ticker'    
+
+
+class UpDown(EnumBase, Enum):    
+    
+    Up = 'Up'
+    Down = 'Down'    
 
 
 class ValuationTime(EnumBase, Enum):    
@@ -6404,7 +6425,7 @@ class AssetParameters(Base):
         default_backcast: bool = None,
         index_precision: float = None,
         official_side: Union[Side, str] = None,
-        series: float = None,
+        credit_index_series: str = None,
         name: str = None
     ):        
         super().__init__()
@@ -6509,7 +6530,7 @@ class AssetParameters(Base):
         self.default_backcast = default_backcast
         self.index_precision = index_precision
         self.official_side = official_side
-        self.series = series
+        self.credit_index_series = credit_index_series
         self.name = name
 
     @property
@@ -7525,14 +7546,14 @@ class AssetParameters(Base):
         self.__official_side = get_enum_value(Side, value)        
 
     @property
-    def series(self) -> float:
-        """Series of the Index"""
-        return self.__series
+    def credit_index_series(self) -> str:
+        """Series of the credit index."""
+        return self.__credit_index_series
 
-    @series.setter
-    def series(self, value: float):
-        self._property_changed('series')
-        self.__series = value        
+    @credit_index_series.setter
+    def credit_index_series(self, value: str):
+        self._property_changed('credit_index_series')
+        self.__credit_index_series = value        
 
 
 class CSLCurrency(Base):
@@ -10230,7 +10251,6 @@ class FieldFilterMap(Base):
         self.last_returns_start_date = kwargs.get('last_returns_start_date')
         self.amount_outstanding = kwargs.get('amount_outstanding')
         self.asset_classifications_gics_sub_industry = kwargs.get('asset_classifications_gics_sub_industry')
-        self.asset_parameters_series = kwargs.get('asset_parameters_series')
         self.mdapi_class = kwargs.get('mdapi_class')
         self.data_set_ids = kwargs.get('data_set_ids')
         self.call_first_date = kwargs.get('call_first_date')
@@ -10350,6 +10370,7 @@ class FieldFilterMap(Base):
         self.asset_classifications_is_country_primary = kwargs.get('asset_classifications_is_country_primary')
         self.title = kwargs.get('title')
         self.net_exposure_classification = kwargs.get('net_exposure_classification')
+        self.asset_parameters_strike_price = kwargs.get('asset_parameters_strike_price')
         self.coupon_type = kwargs.get('coupon_type')
         self.last_updated_by_id = kwargs.get('last_updated_by_id')
         self.clone_parent_id = kwargs.get('clone_parent_id')
@@ -10400,6 +10421,7 @@ class FieldFilterMap(Base):
         self.rating_standard_and_poors = kwargs.get('rating_standard_and_poors')
         self.asset_types = kwargs.get('asset_types')
         self.bcid = kwargs.get('bcid')
+        self.asset_parameters_credit_index_series = kwargs.get('asset_parameters_credit_index_series')
         self.gsid = kwargs.get('gsid')
         self.tdapi = kwargs.get('tdapi')
         self.last_updated_message = kwargs.get('last_updated_message')
@@ -10572,15 +10594,6 @@ class FieldFilterMap(Base):
     def asset_classifications_gics_sub_industry(self, value: dict):
         self._property_changed('asset_classifications_gics_sub_industry')
         self.__asset_classifications_gics_sub_industry = value        
-
-    @property
-    def asset_parameters_series(self) -> dict:
-        return self.__asset_parameters_series
-
-    @asset_parameters_series.setter
-    def asset_parameters_series(self, value: dict):
-        self._property_changed('asset_parameters_series')
-        self.__asset_parameters_series = value        
 
     @property
     def mdapi_class(self) -> dict:
@@ -11636,6 +11649,15 @@ class FieldFilterMap(Base):
         self.__net_exposure_classification = value        
 
     @property
+    def asset_parameters_strike_price(self) -> dict:
+        return self.__asset_parameters_strike_price
+
+    @asset_parameters_strike_price.setter
+    def asset_parameters_strike_price(self, value: dict):
+        self._property_changed('asset_parameters_strike_price')
+        self.__asset_parameters_strike_price = value        
+
+    @property
     def coupon_type(self) -> dict:
         return self.__coupon_type
 
@@ -12066,6 +12088,15 @@ class FieldFilterMap(Base):
     def bcid(self, value: dict):
         self._property_changed('bcid')
         self.__bcid = value        
+
+    @property
+    def asset_parameters_credit_index_series(self) -> dict:
+        return self.__asset_parameters_credit_index_series
+
+    @asset_parameters_credit_index_series.setter
+    def asset_parameters_credit_index_series(self, value: dict):
+        self._property_changed('asset_parameters_credit_index_series')
+        self.__asset_parameters_credit_index_series = value        
 
     @property
     def gsid(self) -> dict:

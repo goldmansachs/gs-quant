@@ -203,11 +203,14 @@ class _RatingMetric(Enum):
 
 
 class EUNatGasDataReference(Enum):
-    # Reference data as on the asset parameters, will distinguish Heren and ICE Swaps
+    # Reference data as on the asset parameters, will distinguish Heren(USD) and ICE(EUR/ GBP) Swaps
     TTF_ICE_CommodityReferencePrice = 'ICE Data: FUTURES REPORT: ICE Endex Dutch TTF Gas Base Load Futures'
     NBP_ICE_CommodityReferencePrice = 'UK Monthly-Ice'
     TTF_Heren_CommodityReferencePrice = 'TTF-Day Ahead and Weekend Unweighted Average Price-Heren'
     NBP_Heren_CommodityReferencePrice = 'NBP-Day Ahead and Weekend Unweighted Average Price-Heren'
+    # Add map for currency to priceMethod
+    USD = "Heren"
+    ICE = "ICE"
 
 
 class FXSpotCarry(Enum):
@@ -513,7 +516,7 @@ def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Re
     q = GsDataApi.build_market_data_query([asset_id], QueryType.IMPLIED_VOLATILITY, where=where, source=source,
                                           real_time=real_time)
     log_debug(request_id, _logger, 'q %s', q)
-    df = _market_data_timed(q)
+    df = _market_data_timed(q, request_id)
     dataset_ids = getattr(df, 'dataset_ids', ())
 
     if df.empty:
@@ -530,7 +533,8 @@ def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Re
 
 @plot_measure((AssetClass.Credit,), (AssetType.Index,), [QueryType.IMPLIED_VOLATILITY_BY_DELTA_STRIKE])
 def cds_implied_volatility(asset: Asset, expiry: str, tenor: str, strike_reference: CdsVolReference,
-                           relative_strike: Real, *, source: str = None, real_time: bool = False) -> Series:
+                           relative_strike: Real, *, source: str = None, real_time: bool = False,
+                           request_id: Optional[str] = None) -> Series:
     """
     Volatility of a cds index implied by observations of market prices.
 
@@ -541,6 +545,7 @@ def cds_implied_volatility(asset: Asset, expiry: str, tenor: str, strike_referen
     :param relative_strike: strike relative to reference
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: implied volatility curve
     """
     if real_time:
@@ -565,8 +570,8 @@ def cds_implied_volatility(asset: Asset, expiry: str, tenor: str, strike_referen
         source=source,
         real_time=real_time
     )
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
+    log_debug(request_id, _logger, 'q %s', q)
+    df = _market_data_timed(q, request_id)
     return _extract_series_from_df(df, QueryType.IMPLIED_VOLATILITY_BY_DELTA_STRIKE)
 
 
@@ -629,7 +634,7 @@ def _tenor_month_to_year(tenor: str):
 
 @plot_measure((AssetClass.Commod,), (AssetType.CommodityNaturalGasHub,), [QueryType.IMPLIED_VOLATILITY])
 def implied_volatility_ng(asset: Asset, contract_range: str = 'F20', price_method: str = 'GDD', *, source: str = None,
-                          real_time: bool = False) -> Series:
+                          real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
     Volatility of an asset implied by observations of market prices.
 
@@ -638,6 +643,7 @@ def implied_volatility_ng(asset: Asset, contract_range: str = 'F20', price_metho
     :param contract_range: e.g. inputs - 'Cal20', 'F20-G20', '2Q20', '2H20', 'Cal20-Cal21': Default Value = F20
     :param source: name of function caller: default source = None
     :param real_time: whether to retrieve intraday data instead of EOD: default value = False
+    :param request_id: service request id, if any
     :return: implied volatility curve
     """
     if real_time:
@@ -660,7 +666,7 @@ def implied_volatility_ng(asset: Asset, contract_range: str = 'F20', price_metho
                                               where=where,
                                               source=source,
                                               real_time=False)
-        data = _market_data_timed(q)
+        data = _market_data_timed(q, request_id)
         dataset_ids = getattr(data, 'dataset_ids', ())
 
     if data.empty:
@@ -752,7 +758,7 @@ def implied_correlation(asset: Asset, tenor: str, strike_reference: EdrDataRefer
         q = GsDataApi.build_market_data_query([mqid], QueryType.IMPLIED_CORRELATION, where=where,
                                               source=source, real_time=real_time)
         log_debug(request_id, _logger, 'q %s', q)
-        df = _market_data_timed(q)
+        df = _market_data_timed(q, request_id)
         return _extract_series_from_df(df, QueryType.IMPLIED_CORRELATION)
 
     # results for top n
@@ -959,7 +965,8 @@ def average_implied_volatility(asset: Asset, tenor: str, strike_reference: EdrDa
         ref_string, relative_strike = preprocess_implied_vol_strikes_eq(VolReference(strike_reference.value),
                                                                         relative_strike)
 
-        _logger.debug('where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, ref_string, relative_strike)
+        log_debug(request_id, _logger, 'where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, ref_string,
+                  relative_strike)
         where = dict(tenor=tenor, strikeReference=ref_string, relativeStrike=relative_strike)
 
         tasks = []
@@ -1017,7 +1024,7 @@ def average_implied_volatility(asset: Asset, tenor: str, strike_reference: EdrDa
 
 @plot_measure((AssetClass.Equity,), (AssetType.Index, AssetType.ETF,), [QueryType.AVERAGE_IMPLIED_VARIANCE])
 def average_implied_variance(asset: Asset, tenor: str, strike_reference: EdrDataReference, relative_strike: Real, *,
-                             source: str = None, real_time: bool = False) -> Series:
+                             source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
     Historical weighted average implied variance for the underlying assets of an equity index.
 
@@ -1027,6 +1034,7 @@ def average_implied_variance(asset: Asset, tenor: str, strike_reference: EdrData
     :param relative_strike: strike relative to reference
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: average implied variance curve
     """
     if real_time:
@@ -1040,15 +1048,16 @@ def average_implied_variance(asset: Asset, tenor: str, strike_reference: EdrData
     delta_types = (EdrDataReference.DELTA_CALL, EdrDataReference.DELTA_PUT)
     strike_ref = "delta" if strike_reference in delta_types else strike_reference.value
 
-    _logger.debug('where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, strike_ref, relative_strike)
+    log_debug(request_id, _logger, 'where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, strike_ref,
+              relative_strike)
 
     mqid = asset.get_marquee_id()
     where = dict(tenor=tenor, strikeReference=strike_ref, relativeStrike=relative_strike)
     q = GsDataApi.build_market_data_query([mqid], QueryType.AVERAGE_IMPLIED_VARIANCE, where=where, source=source,
                                           real_time=real_time)
 
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
+    log_debug(request_id, _logger, 'q %s', q)
+    df = _market_data_timed(q, request_id)
     return _extract_series_from_df(df, QueryType.AVERAGE_IMPLIED_VARIANCE)
 
 
@@ -1098,7 +1107,7 @@ def average_realized_volatility(asset: Asset, tenor: str, returns_type: Returns 
             source=source,
             real_time=real_time
         )
-        _logger.debug('q %s', q)
+        log_debug(request_id, _logger, 'q %s', q)
         df = _market_data_timed(q, request_id)
         if not real_time and DataContext.current.end_date >= datetime.date.today():
             df = append_last_for_measure(df, assets, QueryType.SPOT, None, source=source, request_id=request_id)
@@ -1124,7 +1133,7 @@ def average_realized_volatility(asset: Asset, tenor: str, returns_type: Returns 
         source=source,
         real_time=real_time
     )
-    _logger.debug('q %s', q)
+    log_debug(request_id, _logger, 'q %s', q)
     df = _market_data_timed(q, request_id)
     return _extract_series_from_df(df, QueryType.AVERAGE_REALIZED_VOLATILITY)
 
@@ -1154,7 +1163,7 @@ def _get_index_constituent_weights(asset: Asset, top_n_of_index: Optional[int] =
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
               [MeasureDependency(id_provider=currency_to_default_benchmark_rate, query_type=QueryType.CAP_FLOOR_VOL)])
 def cap_floor_vol(asset: Asset, expiration_tenor: str, relative_strike: float, *, source: str = None,
-                  real_time: bool = False) -> Series:
+                  real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
     GS end-of-day implied normal volatility for cap and floor vol matrices.
 
@@ -1163,6 +1172,7 @@ def cap_floor_vol(asset: Asset, expiration_tenor: str, relative_strike: float, *
     :param relative_strike: strike level relative to at the money e.g. 10
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: cap and floor implied normal volatility curve
     """
     if real_time:
@@ -1180,8 +1190,8 @@ def cap_floor_vol(asset: Asset, expiration_tenor: str, relative_strike: float, *
         real_time=real_time
     )
 
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
+    log_debug(request_id, _logger, 'q %s', q)
+    df = _market_data_timed(q, request_id)
     return _extract_series_from_df(df, QueryType.CAP_FLOOR_VOL)
 
 
@@ -1189,7 +1199,7 @@ def cap_floor_vol(asset: Asset, expiration_tenor: str, relative_strike: float, *
               [MeasureDependency(id_provider=currency_to_default_benchmark_rate,
                                  query_type=QueryType.CAP_FLOOR_ATM_FWD_RATE)])
 def cap_floor_atm_fwd_rate(asset: Asset, expiration_tenor: str, *, source: str = None,
-                           real_time: bool = False) -> Series:
+                           real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
     GS end-of-day at-the-money forward rate for cap and floor matrices.
 
@@ -1197,6 +1207,7 @@ def cap_floor_atm_fwd_rate(asset: Asset, expiration_tenor: str, *, source: str =
     :param expiration_tenor: relative date representation of expiration date on the option e.g. 3m
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: cap and floor atm forward rate curve
     """
     if real_time:
@@ -1210,8 +1221,8 @@ def cap_floor_atm_fwd_rate(asset: Asset, expiration_tenor: str, *, source: str =
         real_time=real_time
     )
 
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
+    log_debug(request_id, _logger, 'q %s', q)
+    df = _market_data_timed(q, request_id)
     return _extract_series_from_df(df, QueryType.CAP_FLOOR_ATM_FWD_RATE)
 
 
@@ -1219,7 +1230,7 @@ def cap_floor_atm_fwd_rate(asset: Asset, expiration_tenor: str, *, source: str =
               [MeasureDependency(id_provider=currency_to_default_benchmark_rate,
                                  query_type=QueryType.SPREAD_OPTION_VOL)])
 def spread_option_vol(asset: Asset, expiration_tenor: str, long_tenor: str, short_tenor: str, relative_strike: float,
-                      *, source: str = None, real_time: bool = False) -> Series:
+                      *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
     GS end-of-day implied normal volatility for spread option vol matrices.
 
@@ -1230,6 +1241,7 @@ def spread_option_vol(asset: Asset, expiration_tenor: str, long_tenor: str, shor
     :param relative_strike: strike level relative to at the money e.g. 10
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: spread option implied normal volatility curve
     """
     if real_time:
@@ -1249,8 +1261,8 @@ def spread_option_vol(asset: Asset, expiration_tenor: str, long_tenor: str, shor
         real_time=real_time
     )
 
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
+    log_debug(request_id, _logger, 'q %s', q)
+    df = _market_data_timed(q, request_id)
     return _extract_series_from_df(df, QueryType.SPREAD_OPTION_VOL)
 
 
@@ -1258,7 +1270,8 @@ def spread_option_vol(asset: Asset, expiration_tenor: str, long_tenor: str, shor
               [MeasureDependency(id_provider=currency_to_default_benchmark_rate,
                                  query_type=QueryType.SPREAD_OPTION_ATM_FWD_RATE)])
 def spread_option_atm_fwd_rate(asset: Asset, expiration_tenor: str, long_tenor: str, short_tenor: str,
-                               *, source: str = None, real_time: bool = False) -> Series:
+                               *, source: str = None, real_time: bool = False,
+                               request_id: Optional[str] = None) -> Series:
     """
     GS end-of-day At-the-money forward rate for spread option vol matrices.
 
@@ -1268,6 +1281,7 @@ def spread_option_atm_fwd_rate(asset: Asset, expiration_tenor: str, long_tenor: 
     :param short_tenor: relative date representation of the instrument's tenor date e.g. 1y
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: spread option at-the-money forward rate curve
     """
     if real_time:
@@ -1281,8 +1295,8 @@ def spread_option_atm_fwd_rate(asset: Asset, expiration_tenor: str, long_tenor: 
         real_time=real_time
     )
 
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
+    log_debug(request_id, _logger, 'q %s', q)
+    df = _market_data_timed(q, request_id)
     return _extract_series_from_df(df, QueryType.SPREAD_OPTION_ATM_FWD_RATE)
 
 
@@ -1290,7 +1304,7 @@ def spread_option_atm_fwd_rate(asset: Asset, expiration_tenor: str, long_tenor: 
               [MeasureDependency(id_provider=currency_to_inflation_benchmark_rate,
                                  query_type=QueryType.INFLATION_SWAP_RATE)])
 def zc_inflation_swap_rate(asset: Asset, termination_tenor: str, *, source: str = None,
-                           real_time: bool = False) -> Series:
+                           real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
     GS end-of-day zero coupon inflation swap break-even rate.
 
@@ -1298,6 +1312,7 @@ def zc_inflation_swap_rate(asset: Asset, termination_tenor: str, *, source: str 
     :param termination_tenor: relative date representation of the instrument's expiration date e.g. 1y
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: zero coupon inflation swap break-even rate curve
     """
     if real_time:
@@ -1315,14 +1330,15 @@ def zc_inflation_swap_rate(asset: Asset, termination_tenor: str, *, source: str 
         real_time=real_time
     )
 
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
+    log_debug(request_id, _logger, 'q %s', q)
+    df = _market_data_timed(q, request_id)
     return _extract_series_from_df(df, QueryType.INFLATION_SWAP_RATE)
 
 
 @plot_measure((AssetClass.FX,), (AssetType.Cross,),
               [MeasureDependency(id_provider=cross_to_basis, query_type=QueryType.BASIS)])
-def basis(asset: Asset, termination_tenor: str, *, source: str = None, real_time: bool = False) -> Series:
+def basis(asset: Asset, termination_tenor: str, *, source: str = None, real_time: bool = False,
+          request_id: Optional[str] = None) -> Series:
     """
     GS end-of-day cross-currency basis swap spread.
 
@@ -1330,6 +1346,7 @@ def basis(asset: Asset, termination_tenor: str, *, source: str = None, real_time
     :param termination_tenor: relative date representation of the instrument's expiration date e.g. 1y
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: cross-currency basis swap spread curve
     """
     if real_time:
@@ -1347,15 +1364,15 @@ def basis(asset: Asset, termination_tenor: str, *, source: str = None, real_time
         real_time=real_time
     )
 
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
+    log_debug(request_id, _logger, 'q %s', q)
+    df = _market_data_timed(q, request_id)
     return _extract_series_from_df(df, QueryType.BASIS)
 
 
 @plot_measure((AssetClass.FX,), (AssetType.Cross,), [MeasureDependency(
     id_provider=cross_to_usd_based_cross, query_type=QueryType.FX_FORECAST)])
 def fx_forecast(asset: Asset, relativePeriod: FxForecastHorizon = FxForecastHorizon.THREE_MONTH, *,
-                source: str = None, real_time: bool = False) -> Series:
+                source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
     FX forecasts made by Global Investment Research (GIR) macro analysts.
 
@@ -1363,6 +1380,7 @@ def fx_forecast(asset: Asset, relativePeriod: FxForecastHorizon = FxForecastHori
     :param relativePeriod: Forecast horizon. One of: 3m, 6m, 12m, EOY1, EOY2, EOY3, EOY4
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: FX forecast curve
     """
     if real_time:
@@ -1379,8 +1397,8 @@ def fx_forecast(asset: Asset, relativePeriod: FxForecastHorizon = FxForecastHori
         source=source,
         real_time=real_time
     )
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
+    log_debug(request_id, _logger, 'q %s', q)
+    df = _market_data_timed(q, request_id)
     series = _extract_series_from_df(df, query_type)
 
     if cross_mqid != usd_based_cross_mqid:
@@ -1404,7 +1422,7 @@ def forward_vol(asset: Asset, tenor: str, forward_start_date: str, strike_refere
     :param relative_strike: strike relative to reference
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
-    :param request_id service request id, if any
+    :param request_id: service request id, if any
     :return: forward volatility curve
     """
     if real_time:
@@ -1497,8 +1515,8 @@ def _process_forward_vol_term(asset: Asset, df: pd.DataFrame, name: str) -> pd.S
 
 @plot_measure((AssetClass.Equity, AssetClass.FX), None, [QueryType.IMPLIED_VOLATILITY])
 def forward_vol_term(asset: Asset, strike_reference: VolReference, relative_strike: Real,
-                     pricing_date: Optional[GENERIC_DATE] = None, *, source: str = None, real_time: bool = False) \
-        -> pd.Series:
+                     pricing_date: Optional[GENERIC_DATE] = None, *, source: str = None, real_time: bool = False,
+                     request_id: Optional[str] = None) -> pd.Series:
     """
     Forward volatility term structure.
 
@@ -1508,6 +1526,7 @@ def forward_vol_term(asset: Asset, strike_reference: VolReference, relative_stri
     :param pricing_date: YYYY-MM-DD or relative days before today e.g. 1d, 1m, 1y
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: forward volatility term structure
     """
     if real_time:
@@ -1529,8 +1548,8 @@ def forward_vol_term(asset: Asset, strike_reference: VolReference, relative_stri
         where = dict(strikeReference=sr_string, relativeStrike=relative_strike)
         q = GsDataApi.build_market_data_query([asset_id], QueryType.IMPLIED_VOLATILITY, where=where, source=source,
                                               real_time=real_time)
-        _logger.debug('q %s', q)
-        df = _market_data_timed(q)
+        log_debug(request_id, _logger, 'q %s', q)
+        df = _market_data_timed(q, request_id)
 
     series = _process_forward_vol_term(asset, df, "impliedVolatility")
     series = ExtendedSeries(series, name='forwardVolTerm')
@@ -1540,7 +1559,8 @@ def forward_vol_term(asset: Asset, strike_reference: VolReference, relative_stri
 
 @plot_measure((AssetClass.Equity, AssetClass.Commod, AssetClass.FX), None, [QueryType.IMPLIED_VOLATILITY])
 def vol_term(asset: Asset, strike_reference: VolReference, relative_strike: Real,
-             pricing_date: Optional[GENERIC_DATE] = None, *, source: str = None, real_time: bool = False) -> pd.Series:
+             pricing_date: Optional[GENERIC_DATE] = None, *, source: str = None, real_time: bool = False,
+             request_id: Optional[str] = None) -> pd.Series:
     """
     Volatility term structure. Uses most recent date available if pricing_date is not provided.
 
@@ -1550,6 +1570,7 @@ def vol_term(asset: Asset, strike_reference: VolReference, relative_strike: Real
     :param pricing_date: YYYY-MM-DD or relative days before today e.g. 1d, 1m, 1y
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: volatility term structure
     """
     if real_time:
@@ -1573,30 +1594,16 @@ def vol_term(asset: Asset, strike_reference: VolReference, relative_strike: Real
     dataset_ids = set()
     today = datetime.date.today()
     if asset.asset_class == AssetClass.Equity and (pricing_date is None or end >= today):  # use intraday data
-        with DataContext(today, today + datetime.timedelta(days=1)):
-            q_l = GsDataApi.build_market_data_query([asset_id], QueryType.IMPLIED_VOLATILITY, where=where,
-                                                    source=source, real_time=True)
-        _logger.debug('q_l %s', q_l)
+        df = _get_latest_term_structure_data(asset_id, QueryType.IMPLIED_VOLATILITY, where, source, request_id)
+        dataset_ids.update(getattr(df, 'dataset_ids', ()))
 
-        try:
-            df = _market_data_timed(q_l)
-        except Exception as e:
-            _logger.warning('unable to get last of implied_vol', exc_info=e)
-        else:
-            dataset_ids.update(getattr(df, 'dataset_ids', ()))
-            if df.empty:
-                _logger.warning('no data for last of implied_vol')
-            else:
-                df['date'] = df.index.date
-                df = df.groupby('tenor', as_index=False).last()
-                df = df.set_index('date')
     if df.empty:
         def fetcher():
             q = GsDataApi.build_market_data_query([asset_id], QueryType.IMPLIED_VOLATILITY, where=where,
                                                   source=source,
                                                   real_time=real_time)
-            _logger.debug('q %s', q)
-            return _market_data_timed(q)
+            log_debug(request_id, _logger, 'q %s', q)
+            return _market_data_timed(q, request_id)
 
         df = get_df_with_retries(fetcher, start, end, asset.exchange)
         dataset_ids.update(getattr(df, 'dataset_ids', ()))
@@ -1620,7 +1627,7 @@ def vol_term(asset: Asset, strike_reference: VolReference, relative_strike: Real
 @plot_measure((AssetClass.Equity,), None, [QueryType.IMPLIED_VOLATILITY])
 def vol_smile(asset: Asset, tenor: str, strike_reference: VolSmileReference,
               pricing_date: Optional[GENERIC_DATE] = None,
-              *, source: str = None, real_time: bool = False) -> Series:
+              *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
     Volatility smile of an asset implied by observations of market prices.
 
@@ -1630,6 +1637,7 @@ def vol_smile(asset: Asset, tenor: str, strike_reference: VolSmileReference,
     :param pricing_date: YYYY-MM-DD or relative days before today e.g. 1d, 1m, 1y
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: implied volatility smile
     """
     if real_time:
@@ -1646,8 +1654,8 @@ def vol_smile(asset: Asset, tenor: str, strike_reference: VolSmileReference,
             source=source,
             real_time=real_time
         )
-        _logger.debug('q %s', q)
-        return _market_data_timed(q)
+        log_debug(request_id, _logger, 'q %s', q)
+        return _market_data_timed(q, request_id)
 
     df = get_df_with_retries(fetcher, start, end, asset.exchange)
     dataset_ids = getattr(df, 'dataset_ids', ())
@@ -1667,7 +1675,7 @@ def vol_smile(asset: Asset, tenor: str, strike_reference: VolSmileReference,
 
 @plot_measure((AssetClass.Equity, AssetClass.Commod), None, [QueryType.FORWARD])
 def fwd_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None, *, source: str = None,
-             real_time: bool = False) -> pd.Series:
+             real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Forward term structure. Uses most recent date available if pricing_date is not provided.
 
@@ -1675,6 +1683,7 @@ def fwd_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None, *, sourc
     :param pricing_date: YYYY-MM-DD or relative days before today e.g. 1d, 1m, 1y
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: forward term structure
     """
     if real_time:
@@ -1686,8 +1695,8 @@ def fwd_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None, *, sourc
         where = dict(strikeReference='forward', relativeStrike=1)
         q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.FORWARD, where=where, source=source,
                                               real_time=real_time)
-        _logger.debug('q %s', q)
-        df = _market_data_timed(q)
+        log_debug(request_id, _logger, 'q %s', q)
+        df = _market_data_timed(q, request_id)
 
     dataset_ids = getattr(df, 'dataset_ids', ())
     if df.empty:
@@ -1707,11 +1716,12 @@ def fwd_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None, *, sourc
 
 
 @cachetools.func.ttl_cache()  # fine as long as availability is not different between users
-def _var_swap_tenors(asset: Asset):
+def _var_swap_tenors(asset: Asset, request_id=None):
     from gs_quant.session import GsSession
 
     aid = asset.get_marquee_id()
     body = GsSession.current._get(f"/data/markets/{aid}/availability")
+    log_debug(request_id, _logger, 'Queried market availability (%s) for %s', body.get('requestId'), aid)
     for r in body['data']:
         if r['dataField'] == Fields.VAR_SWAP.value:
             for f in r['filteredFields']:
@@ -1734,7 +1744,7 @@ def _month_to_tenor(months: int) -> str:
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.VAR_SWAP])
 def forward_var_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None, *, source: str = None,
-                     real_time: bool = False) -> pd.Series:
+                     real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Forward variance swap term structure.
 
@@ -1742,6 +1752,7 @@ def forward_var_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None, 
     :param pricing_date: YYYY-MM-DD or relative days before today e.g. 1d, 1m, 1y
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: forward variance swap term structure
     """
     if real_time:
@@ -1752,8 +1763,8 @@ def forward_var_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None, 
     with DataContext(start, end):
         q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.VAR_SWAP, source=source,
                                               real_time=real_time)
-        _logger.debug('q %s', q)
-        df = _market_data_timed(q)
+        log_debug(request_id, _logger, 'q %s', q)
+        df = _market_data_timed(q, request_id)
 
     series = _process_forward_vol_term(asset, df, Fields.VAR_SWAP.value)
     series = ExtendedSeries(series, name='forwardVarTerm')
@@ -1761,9 +1772,37 @@ def forward_var_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None, 
     return series
 
 
+def _get_latest_term_structure_data(asset_id, query_type, where, source, request_id):
+    today = datetime.date.today()
+    query_end = today + datetime.timedelta(days=1)
+    with DataContext(today, query_end):
+        q_l = GsDataApi.build_market_data_query([asset_id], query_type, where=where, source=source, real_time=True,
+                                                measure='Last')
+
+    log_debug(request_id, _logger, 'q_l %s', q_l)
+    df_l = _market_data_timed(q_l, request_id)
+
+    if df_l.empty:
+        _logger.warning('no data for last of %s', query_type.value)
+        return df_l
+
+    with DataContext(df_l.index[-1] - datetime.timedelta(hours=1), query_end):
+        q_r = GsDataApi.build_market_data_query([asset_id], query_type, where=where, source=source, real_time=True)
+
+    log_debug(request_id, _logger, 'q_r %s', q_r)
+    df_r = _market_data_timed(q_r, request_id)
+
+    dataset_ids = getattr(df_r, 'dataset_ids', ())
+    df_r['date'] = df_r.index.date
+    df_r = df_r.groupby('tenor', as_index=False).last()
+    df_r = df_r.set_index('date')
+    df_r.dataset_ids = dataset_ids
+    return df_r
+
+
 @plot_measure((AssetClass.Equity, AssetClass.Commod), None, [QueryType.VAR_SWAP])
 def var_term(asset: Asset, pricing_date: Optional[str] = None, forward_start_date: Optional[str] = None,
-             *, source: str = None, real_time: bool = False) -> pd.Series:
+             *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Variance swap term structure. Uses most recent date available if pricing_date is not provided.
 
@@ -1772,18 +1811,23 @@ def var_term(asset: Asset, pricing_date: Optional[str] = None, forward_start_dat
     :param forward_start_date: forward start date e.g. 2m, 1y; defaults to none
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: variance swap term structure
     """
+    if real_time:
+        raise NotImplementedError('real-time var term not implemented')
+
     if not (pricing_date is None or isinstance(pricing_date, str)):
         raise MqTypeError('pricing_date should be a relative date')
 
     check_forward_looking(pricing_date, source, 'var_term')
     start, end = _range_from_pricing_date(asset.exchange, pricing_date)
-    with DataContext(start, end):
-        if forward_start_date:
-            tenors = _var_swap_tenors(asset)
+    dataset_ids = set()
+
+    if forward_start_date:
+        with DataContext(start, end):
+            tenors = _var_swap_tenors(asset, request_id)
             sub_frames = []
-            dataset_ids = set()
             for t in tenors:
                 diff = _tenor_to_month(t) - _tenor_to_month(forward_start_date)
                 if diff < 1:
@@ -1796,13 +1840,22 @@ def var_term(asset: Asset, pricing_date: Optional[str] = None, forward_start_dat
                     c['tenor'] = t1
                     sub_frames.append(c)
             df = pd.concat(sub_frames)
-            dataset_ids = tuple(dataset_ids)
-        else:
-            q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.VAR_SWAP,
-                                                  source=source, real_time=real_time)
-            _logger.debug('q %s', q)
-            df = _market_data_timed(q)
-            dataset_ids = getattr(df, 'dataset_ids', ())
+    else:
+        asset_id = asset.get_marquee_id()
+        today = datetime.date.today()
+        df = pd.DataFrame()
+
+        if asset.asset_class == AssetClass.Equity and (pricing_date is None or end >= today):  # try intraday data
+            df = _get_latest_term_structure_data(asset_id, QueryType.VAR_SWAP, None, source, request_id)
+            dataset_ids.update(getattr(df, 'dataset_ids', ()))
+
+        if df.empty:
+            with DataContext(start, end):
+                q = GsDataApi.build_market_data_query([asset_id], QueryType.VAR_SWAP, source=source,
+                                                      real_time=False)
+            log_debug(request_id, _logger, 'q %s', q)
+            df = _market_data_timed(q, request_id)
+            dataset_ids.update(getattr(df, 'dataset_ids', ()))
 
     if df.empty:
         series = ExtendedSeries()
@@ -1817,7 +1870,7 @@ def var_term(asset: Asset, pricing_date: Optional[str] = None, forward_start_dat
         df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
         series = ExtendedSeries() if df.empty else ExtendedSeries(df[Fields.VAR_SWAP.value])
 
-    series.dataset_ids = dataset_ids
+    series.dataset_ids = tuple(dataset_ids)
     return series
 
 
@@ -1961,7 +2014,11 @@ def _get_qbt_mapping(bucket, region):
 def _get_weight_for_bucket(asset, start_contract_range, end_contract_range, bucket):
     # Find contracts and holidays in the date range
     bbid = Asset.get_identifier(asset, AssetIdentifier.BLOOMBERG_ID)
-    region = bbid.split(" ")[0]
+    if bbid is None:
+        # Get ISO from parameters
+        region = asset.get_entity()['parameters']['ISO']
+    else:
+        region = bbid.split(" ")[0]
     timezone = _get_iso_data(region)[0]
     dates_contract_range = get_contract_range(start_contract_range, end_contract_range, timezone)
     holidays = NercCalendar().holidays(start=start_contract_range, end=end_contract_range).date
@@ -2153,7 +2210,7 @@ def _weighted_average_valuation_curve_for_calendar_strip(asset, contract_range, 
 
 @plot_measure((AssetClass.Commod,), None, [QueryType.FAIR_PRICE])
 def fair_price(asset: Asset, tenor: str = None, *,
-               source: str = None, real_time: bool = False) -> pd.Series:
+               source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """'
     Fair Price for Swap Instrument
 
@@ -2161,6 +2218,7 @@ def fair_price(asset: Asset, tenor: str = None, *,
     :param tenor: e.g. inputs - 'Cal20', 'F20-G20', '2Q20', '2H20', 'Cal20-Cal21': Default Value = F20
     :param source: name of function caller: default source = None
     :param real_time: whether to retrieve intraday data instead of EOD: default value = False
+    :param request_id: service request id, if any
     :return: Fair Price
     """
 
@@ -2174,7 +2232,8 @@ def fair_price(asset: Asset, tenor: str = None, *,
     asset_id = asset.get_marquee_id()
     q = GsDataApi.build_market_data_query([asset_id], QueryType.FAIR_PRICE, source=source,
                                           real_time=real_time)
-    df = _market_data_timed(q)
+    log_debug(request_id, _logger, 'q %s', q)
+    df = _market_data_timed(q, request_id)
     return _extract_series_from_df(df, QueryType.FAIR_PRICE)
 
 
@@ -2380,6 +2439,9 @@ def forward_price_ng(asset: Asset, contract_range: str = 'F20', price_method: st
     if (asset.get_type() == SecAssetType.COMMODITY_NATURAL_GAS_HUB):
         return _forward_price_natgas(asset, price_method, contract_range, source=source)
     if (asset.get_type() == SecAssetType.COMMODITY_EU_NATURAL_GAS_HUB):
+        # If no currency mentioned, defaults to GDD from parent method
+        if price_method == 'GDD':
+            price_method = 'ICE'
         return _forward_price_eu_natgas(asset, contract_range, price_method)
     else:
         raise MqTypeError('The forward_price_ng is not supported for this asset')
@@ -2410,7 +2472,8 @@ def get_contract_range(start_contract_range, end_contract_range, timezone):
 @plot_measure((AssetClass.Commod,), (AssetType.Index, AssetType.CommodityPowerAggregatedNodes,
                                      AssetType.CommodityPowerNode,), [QueryType.PRICE])
 def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
-                    granularity: str = 'daily', *, source: str = None, real_time: bool = False) -> pd.Series:
+                    granularity: str = 'daily', *, source: str = None, real_time: bool = False,
+                    request_id: Optional[str] = None) -> pd.Series:
     """'
     Bucketized COMMOD_US_ELEC_ENERGY_PRICES
 
@@ -2420,6 +2483,7 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
     :param granularity: daily or monthly: default value = daily
     :param source: name of function caller: default source = None
     :param real_time: whether to retrieve intraday data instead of EOD: default value = False
+    :param request_id: service request id, if any
     :return: Bucketized elec energy prices
     """
     if real_time:
@@ -2455,8 +2519,8 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
     with DataContext(start_time, end_time):
         q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.PRICE, where=where, source=source,
                                               real_time=True)
-        df = _market_data_timed(q)
-        _logger.debug('q %s', q)
+        log_debug(request_id, _logger, 'q %s', q)
+        df = _market_data_timed(q, request_id)
 
     dataset_ids = getattr(df, 'dataset_ids', ())
 
@@ -2482,12 +2546,12 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
                                        freq=str(freq) + "S", tz=timezone, closed='left')
         missing_hours = ref_hour_range[~ref_hour_range.isin(df.index)]
         missing_dates = np.unique(missing_hours.date)
-        missing_months = np.unique(np.array(missing_dates, dtype='M8[D]').astype('M8[M]'))
+        missing_months = np.unique(np.array(missing_dates, dtype='M8[D]').astype('M8[M]')).astype('str')
 
         # drop dates and months which have missing data
         df = df.loc[(~df['date'].isin(missing_dates))]
         if granularity == 'M':
-            df = df.loc[(~df['month'].isin(missing_months))]
+            df = df.loc[(~df['month'].astype('str').isin(missing_months))]
 
         df = _filter_by_bucket(df, bucket, holidays, region)
         df = df['price'].resample(granularity).mean()
@@ -2633,7 +2697,7 @@ def policy_rate_expectation(asset: Asset, rate_type: MeetingType = MeetingType.M
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
 def dividend_yield(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
-                   *, source: str = None, real_time: bool = False) -> Series:
+                   *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
     Dividend Yield of the single stock or the asset-weighted average of dividend yields of a composite's underliers.
 
@@ -2648,6 +2712,7 @@ def dividend_yield(asset: Asset, period: str, period_direction: FundamentalMetri
     :param period_direction: whether the period is forward-looking or backward-looking e.g. forward
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: dividend yield
     """
     if real_time:
@@ -2667,16 +2732,14 @@ def dividend_yield(asset: Asset, period: str, period_direction: FundamentalMetri
     )
 
     q['queries'][0]['vendor'] = 'Goldman Sachs'
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
+    log_debug(request_id, _logger, 'q %s', q)
+    df = _market_data_timed(q, request_id)
     return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
-def earnings_per_share(asset: Asset,
-                       period: str,
-                       period_direction: FundamentalMetricPeriodDirection,
-                       *, source: str = None, real_time: bool = False) -> Series:
+def earnings_per_share(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection, *,
+                       source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
     Earnings Per Share (EPS) of the single stock or the asset-weighted average EPS  of a composite's underliers.
 
@@ -2691,6 +2754,7 @@ def earnings_per_share(asset: Asset,
     :param period_direction: whether the period is forward-looking or backward-looking e.g. forward
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: earnings per share
     """
     if real_time:
@@ -2710,16 +2774,15 @@ def earnings_per_share(asset: Asset,
     )
 
     q['queries'][0]['vendor'] = 'Goldman Sachs'
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
+    log_debug(request_id, _logger, 'q %s', q)
+    df = _market_data_timed(q, request_id)
     return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
-def earnings_per_share_positive(asset: Asset,
-                                period: str,
-                                period_direction: FundamentalMetricPeriodDirection,
-                                *, source: str = None, real_time: bool = False) -> Series:
+def earnings_per_share_positive(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection, *,
+                                source: str = None, real_time: bool = False,
+                                request_id: Optional[str] = None) -> Series:
     """
     Earnings Per Share Positive of the single stock or the asset-weighted average EPSP of a composite's underliers.
 
@@ -2734,6 +2797,7 @@ def earnings_per_share_positive(asset: Asset,
     :param period_direction: whether the period is forward-looking or backward-looking e.g. forward
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: earnings per share positive
     """
     if real_time:
@@ -2753,8 +2817,8 @@ def earnings_per_share_positive(asset: Asset,
     )
 
     q['queries'][0]['vendor'] = 'Goldman Sachs'
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
+    log_debug(request_id, _logger, 'q %s', q)
+    df = _market_data_timed(q, request_id)
     return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
@@ -2762,7 +2826,7 @@ def earnings_per_share_positive(asset: Asset,
 def net_debt_to_ebitda(asset: Asset,
                        period: str,
                        period_direction: FundamentalMetricPeriodDirection,
-                       *, source: str = None, real_time: bool = False) -> Series:
+                       *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
     Net Debt to EBITDA of the single stock or the asset-weighted average value of a composite's underliers.
 
@@ -2777,6 +2841,7 @@ def net_debt_to_ebitda(asset: Asset,
     :param period_direction: whether the period is forward-looking or backward-looking e.g. forward
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: Net Debt to EBITDA
     """
     if real_time:
@@ -2796,14 +2861,14 @@ def net_debt_to_ebitda(asset: Asset,
     )
 
     q['queries'][0]['vendor'] = 'Goldman Sachs'
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
+    log_debug(request_id, _logger, 'q %s', q)
+    df = _market_data_timed(q, request_id)
     return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
 def price_to_book(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
-                  *, source: str = None, real_time: bool = False) -> Series:
+                  *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
     Price to Book of the single stock or the asset-weighted average value of a composite's underliers.
 
@@ -2818,6 +2883,7 @@ def price_to_book(asset: Asset, period: str, period_direction: FundamentalMetric
     :param period_direction: whether the period is forward-looking or backward-looking e.g. forward
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: Price to Book
     """
     if real_time:
@@ -2837,14 +2903,14 @@ def price_to_book(asset: Asset, period: str, period_direction: FundamentalMetric
     )
 
     q['queries'][0]['vendor'] = 'Goldman Sachs'
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
+    log_debug(request_id, _logger, 'q %s', q)
+    df = _market_data_timed(q, request_id)
     return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
 def price_to_cash(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
-                  *, source: str = None, real_time: bool = False) -> Series:
+                  *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
     Price to Cash of the single stock or the asset-weighted average value of a composite's underliers.
 
@@ -2859,6 +2925,7 @@ def price_to_cash(asset: Asset, period: str, period_direction: FundamentalMetric
     :param period_direction: whether the period is forward-looking or backward-looking e.g. forward
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: Price to Cash
     """
     if real_time:
@@ -2878,14 +2945,14 @@ def price_to_cash(asset: Asset, period: str, period_direction: FundamentalMetric
     )
 
     q['queries'][0]['vendor'] = 'Goldman Sachs'
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
+    log_debug(request_id, _logger, 'q %s', q)
+    df = _market_data_timed(q, request_id)
     return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
 def price_to_earnings(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
-                      *, source: str = None, real_time: bool = False) -> Series:
+                      *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
     Price to Earnings of the single stock or the asset-weighted average value of a composite's underliers.
 
@@ -2900,6 +2967,7 @@ def price_to_earnings(asset: Asset, period: str, period_direction: FundamentalMe
     :param period_direction: whether the period is forward-looking or backward-looking e.g. forward
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: Price to Earnings
     """
     if real_time:
@@ -2919,8 +2987,8 @@ def price_to_earnings(asset: Asset, period: str, period_direction: FundamentalMe
     )
 
     q['queries'][0]['vendor'] = 'Goldman Sachs'
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
+    log_debug(request_id, _logger, 'q %s', q)
+    df = _market_data_timed(q, request_id)
     return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
@@ -2928,7 +2996,8 @@ def price_to_earnings(asset: Asset, period: str, period_direction: FundamentalMe
 def price_to_earnings_positive(asset: Asset,
                                period: str,
                                period_direction: FundamentalMetricPeriodDirection,
-                               *, source: str = None, real_time: bool = False) -> Series:
+                               *, source: str = None, real_time: bool = False,
+                               request_id: Optional[str] = None) -> Series:
     """
     Price to Earnings Positive of the single stock or the asset-weighted average value of a composite's underliers.
 
@@ -2943,6 +3012,7 @@ def price_to_earnings_positive(asset: Asset,
     :param period_direction: whether the period is forward-looking or backward-looking e.g. forward
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: Price to Earnings Positive
     """
     if real_time:
@@ -2962,14 +3032,14 @@ def price_to_earnings_positive(asset: Asset,
     )
 
     q['queries'][0]['vendor'] = 'Goldman Sachs'
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
+    log_debug(request_id, _logger, 'q %s', q)
+    df = _market_data_timed(q, request_id)
     return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
 def price_to_sales(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
-                   *, source: str = None, real_time: bool = False) -> Series:
+                   *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
     Price to Sales of the single stock or the asset-weighted average value of a composite's underliers.
 
@@ -2984,6 +3054,7 @@ def price_to_sales(asset: Asset, period: str, period_direction: FundamentalMetri
     :param period_direction: whether the period is forward-looking or backward-looking e.g. forward
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: Price to Sales
     """
     if real_time:
@@ -3003,14 +3074,14 @@ def price_to_sales(asset: Asset, period: str, period_direction: FundamentalMetri
     )
 
     q['queries'][0]['vendor'] = 'Goldman Sachs'
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
+    log_debug(request_id, _logger, 'q %s', q)
+    df = _market_data_timed(q, request_id)
     return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
 def return_on_equity(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
-                     *, source: str = None, real_time: bool = False) -> Series:
+                     *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
     Return on Equity of the single stock or the asset-weighted average value of a composite's underliers.
 
@@ -3025,6 +3096,7 @@ def return_on_equity(asset: Asset, period: str, period_direction: FundamentalMet
     :param period_direction: whether the period is forward-looking or backward-looking e.g. forward
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: Return on Equity
     """
     if real_time:
@@ -3044,14 +3116,14 @@ def return_on_equity(asset: Asset, period: str, period_direction: FundamentalMet
     )
 
     q['queries'][0]['vendor'] = 'Goldman Sachs'
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
+    log_debug(request_id, _logger, 'q %s', q)
+    df = _market_data_timed(q, request_id)
     return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
 def sales_per_share(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
-                    *, source: str = None, real_time: bool = False) -> Series:
+                    *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
     Sales per Share of the single stock or the asset-weighted average value of a composite's underliers.
 
@@ -3066,6 +3138,7 @@ def sales_per_share(asset: Asset, period: str, period_direction: FundamentalMetr
     :param period_direction: whether the period is forward-looking or backward-looking e.g. forward
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: Sales per Share
     """
     if real_time:
@@ -3085,8 +3158,8 @@ def sales_per_share(asset: Asset, period: str, period_direction: FundamentalMetr
     )
 
     q['queries'][0]['vendor'] = 'Goldman Sachs'
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
+    log_debug(request_id, _logger, 'q %s', q)
+    df = _market_data_timed(q, request_id)
     return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
@@ -3125,8 +3198,8 @@ def realized_correlation(asset: Asset, tenor: str, top_n_of_index: Optional[int]
         # no append last b/c there is no real-time Realized Correlation dataset
         q = GsDataApi.build_market_data_query([mqid], QueryType.REALIZED_CORRELATION, where=where,
                                               source=source, real_time=real_time)
-        _logger.debug('q %s', q)
-        df = _market_data_timed(q)
+        log_debug(request_id, _logger, 'q %s', q)
+        df = _market_data_timed(q, request_id)
         return _extract_series_from_df(df, QueryType.REALIZED_CORRELATION)
 
     # results for top n
@@ -3140,7 +3213,7 @@ def realized_correlation(asset: Asset, tenor: str, top_n_of_index: Optional[int]
             source=source,
             real_time=real_time
         )
-        _logger.debug('q %s', q)
+        log_debug(request_id, _logger, 'q %s', q)
         df = _market_data_timed(q, request_id)
 
     if not real_time and DataContext.current.end_date >= datetime.date.today():
@@ -3175,8 +3248,8 @@ def realized_correlation(asset: Asset, tenor: str, top_n_of_index: Optional[int]
 @plot_measure((AssetClass.Commod, AssetClass.Equity, AssetClass.FX), None, [QueryType.SPOT],
               asset_type_excluded=(AssetType.CommodityEUNaturalGasHub,))
 def realized_volatility(asset: Asset, w: Union[Window, int, str] = Window(None, 0),
-                        returns_type: Returns = Returns.SIMPLE, *, source: str = None, real_time: bool = False) \
-        -> Series:
+                        returns_type: Returns = Returns.SIMPLE, *, source: str = None, real_time: bool = False,
+                        request_id: Optional[str] = None) -> Series:
     """
     Realized volatility for an asset.
 
@@ -3186,6 +3259,7 @@ def realized_volatility(asset: Asset, w: Union[Window, int, str] = Window(None, 
     :param returns_type: returns type: simple or logarithmic
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: realized volatility curve
     """
     q = GsDataApi.build_market_data_query(
@@ -3194,7 +3268,8 @@ def realized_volatility(asset: Asset, w: Union[Window, int, str] = Window(None, 
         source=source,
         real_time=real_time
     )
-    df = _market_data_timed(q)
+    log_debug(request_id, _logger, 'q %s', q)
+    df = _market_data_timed(q, request_id)
     series = ExtendedSeries() if df.empty else ExtendedSeries(volatility(df['spot'], w, returns_type))
     series.dataset_ids = getattr(df, 'dataset_ids', ())
     return series
@@ -3202,7 +3277,7 @@ def realized_volatility(asset: Asset, w: Union[Window, int, str] = Window(None, 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.ES_SCORE])
 def esg_headline_metric(asset: Asset, metricName: EsgMetric = EsgMetric.ENVIRONMENTAL_SOCIAL_AGGREGATE_SCORE, *,
-                        source: str = None, real_time: bool = False) -> Series:
+                        source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
     Environmental, Social, and Governance (ESG) scores and percentiles for a broad set of companies across the globe,
     including, but not limited to, companies covered by Global Investment Research (GIR) analysts.
@@ -3210,6 +3285,7 @@ def esg_headline_metric(asset: Asset, metricName: EsgMetric = EsgMetric.ENVIRONM
     :param metricName: Name of the metric
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: esg data of the asset for the field requested
     """
     if real_time:
@@ -3219,16 +3295,16 @@ def esg_headline_metric(asset: Asset, metricName: EsgMetric = EsgMetric.ENVIRONM
     query_type = ESG_METRIC_TO_QUERY_TYPE.get(query_metric)
     _logger.debug('where assetId=%s, metric=%s, query_type=%s', mqid, query_metric, query_type.value)
     q = GsDataApi.build_market_data_query([mqid], query_type, source=source, real_time=real_time)
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
+    log_debug(request_id, _logger, 'q %s', q)
+    df = _market_data_timed(q, request_id)
     series = ExtendedSeries() if df.empty else ExtendedSeries(df[query_metric])
     series.dataset_ids = getattr(df, 'dataset_ids', ())
     return series
 
 
 @plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,), [QueryType.RATING])
-def rating(asset: Asset, metric: _RatingMetric = _RatingMetric.RATING, *, source: str = None,
-           real_time: bool = False) -> Series:
+def rating(asset: Asset, metric: _RatingMetric = _RatingMetric.RATING, *, source: str = None, real_time: bool = False,
+           request_id: Optional[str] = None) -> Series:
     """
     Analyst Rating, which may take on the following values
     {'Sell': -1, 'Neutral': 0, 'Buy': 1}
@@ -3247,6 +3323,7 @@ def rating(asset: Asset, metric: _RatingMetric = _RatingMetric.RATING, *, source
     :param metric: Name of metric. Either rating or conviction list
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: ratings in numeric form ( 'Buy' : 1, 'Neutral' : 0, 'Sell' : -1 )
     """
     if real_time:
@@ -3255,8 +3332,8 @@ def rating(asset: Asset, metric: _RatingMetric = _RatingMetric.RATING, *, source
     query_type = _RATING_METRIC_TO_QUERY_TYPE[metric.value]
     _logger.debug('where assetId=%s, metric=%s, query_type=%s', mqid, metric.value, query_type.value)
     q = GsDataApi.build_market_data_query([mqid], query_type, source=source, real_time=real_time)
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
+    log_debug(request_id, _logger, 'q %s', q)
+    df = _market_data_timed(q, request_id)
     series = _extract_series_from_df(df, query_type)
     if query_type == QueryType.RATING:
         series.replace(['Buy', 'Sell', 'Neutral'], [1, -1, 0], inplace=True)
@@ -3266,7 +3343,7 @@ def rating(asset: Asset, metric: _RatingMetric = _RatingMetric.RATING, *, source
 @plot_measure((AssetClass.FX,), (AssetType.Cross,), [MeasureDependency(
     id_provider=cross_to_usd_based_cross, query_type=QueryType.FAIR_VALUE)])
 def fair_value(asset: Asset, metric: EquilibriumExchangeRateMetric = EquilibriumExchangeRateMetric.GSDEER, *,
-               source: str = None, real_time: bool = False) -> Series:
+               source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
     GSDEER and GSFEER quarterly estimates for currency fair values made by Global Investment Research (GIR)
     macro analysts.
@@ -3274,6 +3351,7 @@ def fair_value(asset: Asset, metric: EquilibriumExchangeRateMetric = Equilibrium
     :param metric: Name of metric. One of gsdeer, gsfeer
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: gsdeer/gsfeer data of the asset for the field requested
     """
     if real_time:
@@ -3296,7 +3374,7 @@ def fair_value(asset: Asset, metric: EquilibriumExchangeRateMetric = Equilibrium
 @plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,),
               [QueryType.GROWTH_SCORE])
 def factor_profile(asset: Asset, metric: _FactorProfileMetric = _FactorProfileMetric.GROWTH_SCORE,
-                   *, source: str = None, real_time: bool = False) -> Series:
+                   *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
     This dataset consists of Goldman Sachs Investment Profile ("IP") percentiles for US and Canadian securities
     covered by Goldman Sachs GIR analysts. Beginning in mid-2017, IP was renamed GS Factor Profile;
@@ -3320,6 +3398,7 @@ def factor_profile(asset: Asset, metric: _FactorProfileMetric = _FactorProfileMe
                    (a higher score means more attractive)
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: Factor Profile data of the asset for the field requested
     """
     if real_time:
@@ -3330,8 +3409,8 @@ def factor_profile(asset: Asset, metric: _FactorProfileMetric = _FactorProfileMe
     query_type = _FACTOR_PROFILE_METRIC_TO_QUERY_TYPE.get(metric.value)
     _logger.debug('where assetId=%s, metric=%s, query=%s', mqid, metric.value, query_type.value)
     q = GsDataApi.build_market_data_query([mqid], query_type, source=source, real_time=real_time)
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
+    log_debug(request_id, _logger, 'q %s', q)
+    df = _market_data_timed(q, request_id)
     series = _extract_series_from_df(df, query_type)
 
     return series
@@ -3340,7 +3419,7 @@ def factor_profile(asset: Asset, metric: _FactorProfileMetric = _FactorProfileMe
 @plot_measure((AssetClass.Commod,), (AssetType.Commodity, AssetType.Index,), [QueryType.COMMODITY_FORECAST])
 def commodity_forecast(asset: Asset, forecastPeriod: str = "3m",
                        forecastType: _CommodityForecastType = _CommodityForecastType.SPOT_RETURN, *,
-                       source: str = None, real_time: bool = False) -> Series:
+                       source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
     Short and long-term commodities forecast.
     :param asset: asset object loaded from security master
@@ -3350,6 +3429,7 @@ def commodity_forecast(asset: Asset, forecastPeriod: str = "3m",
                           One of spotReturn/totalReturn/rollReturn/spot
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: Forecast Value of the commodity or index as requested
     """
     if real_time:
@@ -3365,8 +3445,8 @@ def commodity_forecast(asset: Asset, forecastPeriod: str = "3m",
         source=source,
         real_time=real_time
     )
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
+    log_debug(request_id, _logger, 'q %s', q)
+    df = _market_data_timed(q, request_id)
     series = _extract_series_from_df(df, query_type)
     return series
 
@@ -3486,6 +3566,7 @@ def _forward_price_eu_natgas(asset: Asset, contract_range: str = 'F20', price_me
     :param asset: asset object loaded from security master
     :param contract_range: e.g. inputs - Default Value = F20
     :param price_method: Fixing source for the prices - ICE/ Heren
+        User to enter USD for the Heren prices. Whereas ICE prices are in EUR /GBP for diff assets so will be default
     :param source: name of function caller: default source = None
     :param real_time: whether to retrieve intraday data instead of EOD: default value = False
     :return: Forward Price
@@ -3495,6 +3576,7 @@ def _forward_price_eu_natgas(asset: Asset, contract_range: str = 'F20', price_me
     weights = pd.DataFrame({'contract': weights.index, 'weight': weights.values})
     contracts_to_query = weights['contract'].unique().tolist()
     assets_to_query = []
+    price_method = EUNatGasDataReference[price_method].value
     ref_price_key = '_'.join([asset.name, price_method, "CommodityReferencePrice"])
     asset_commod_ref_price = EUNatGasDataReference[ref_price_key].value
 
@@ -3533,7 +3615,7 @@ def _forward_price_eu_natgas(asset: Asset, contract_range: str = 'F20', price_me
 
 @plot_measure((AssetClass.FX,), None, [QueryType.FORWARD_POINT])
 def spot_carry(asset: Asset, tenor: str, annualized: FXSpotCarry = FXSpotCarry.DAILY, *,
-               source: str = None, real_time: bool = False) -> Series:
+               source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
     FX spot carry. Uses most recent date available if pricing_date is not provided.
 
@@ -3542,6 +3624,7 @@ def spot_carry(asset: Asset, tenor: str, annualized: FXSpotCarry = FXSpotCarry.D
     :param annualized: whether to annualize carry, one of annualized or daily
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
     :return: FX spot carry curve
     """
     if real_time:
@@ -3554,12 +3637,12 @@ def spot_carry(asset: Asset, tenor: str, annualized: FXSpotCarry = FXSpotCarry.D
     where = dict(tenor=tenor)
     q_1 = GsDataApi.build_market_data_query([asset_id], QueryType.FORWARD_POINT, where=where, source=source,
                                             real_time=real_time)
-    _logger.debug('q_1 %s', q_1)
-    df_fwd = _market_data_timed(q_1)
+    log_debug(request_id, _logger, 'q_1 %s', q_1)
+    df_fwd = _market_data_timed(q_1, request_id)
 
     q_2 = GsDataApi.build_market_data_query([asset_id], QueryType.SPOT, source=source, real_time=real_time)
-    _logger.debug('q %s', q_2)
-    df_spot = _market_data_timed(q_2)
+    log_debug(request_id, _logger, 'q %s', q_2)
+    df_spot = _market_data_timed(q_2, request_id)
 
     if 'm' in tenor:
         ann_factor = 12 / int(tenor.replace('m', ''))

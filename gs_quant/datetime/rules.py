@@ -51,6 +51,7 @@ class RDateRule(ABC):
         self.currencies = params.get('currencies')
         self.exchanges = params.get('exchanges')
         self.holiday_calendar = params.get('holiday_calendar')
+        self.usd_calendar = params.get('usd_calendar')
         super().__init__()
 
     @abstractmethod
@@ -62,8 +63,11 @@ class RDateRule(ABC):
         pass
 
     def _get_holidays(self, use_usd: bool = True) -> List[date]:
-        if self.holiday_calendar:
-            return self.holiday_calendar
+        holidays = Series()
+        if self.holiday_calendar is not None:
+            if self.usd_calendar is None:
+                return self.holiday_calendar
+            return holidays.append(Series(self.usd_calendar))
         try:
             currencies = self.currencies or []
             if use_usd:
@@ -72,7 +76,6 @@ class RDateRule(ABC):
                 cached_data = _cache.get(hashkey(use_usd, str(currencies), str(self.exchanges)))
                 if cached_data:
                     return cached_data
-            holidays = Series()
             if self.exchanges:
                 self.exchanges = [x.value if isinstance(x, ExchangeCode) else x.upper() for x in self.exchanges]
                 exchange_query = GsDataApi.build_query(start=DATE_LOW_LIMIT, end=DATE_HIGH_LIMIT,
@@ -129,7 +132,8 @@ class ARule(RDateRule):
 class bRule(RDateRule):
     def handle(self) -> date:
         holidays = self._get_holidays()
-        return self._apply_business_days_logic(holidays)
+        roll = 'forward' if self.number <= 0 else 'preceding'
+        return self._apply_business_days_logic(holidays, offset=self.number, roll=roll)
 
 
 class dRule(RDateRule):
@@ -184,6 +188,12 @@ class kRule(RDateRule):
         return self._apply_business_days_logic(holidays, offset=0)
 
 
+class mRule(RDateRule):
+    def handle(self) -> date:
+        self.result = self.result + relativedelta(months=self.number)
+        return self._apply_business_days_logic(self._get_holidays(), offset=0, roll='forward')
+
+
 class MRule(RDateRule):
     def handle(self) -> date:
         return self._get_nth_day_of_month(calendar.MONDAY)
@@ -217,7 +227,8 @@ class TRule(RDateRule):
 class uRule(RDateRule):
     def handle(self) -> date:
         holidays = self._get_holidays(use_usd=False)
-        return self._apply_business_days_logic(holidays)
+        roll = 'forward' if self.number <= 0 else 'preceding'
+        return self._apply_business_days_logic(holidays, offset=self.number, roll=roll)
 
 
 class URule(RDateRule):

@@ -86,6 +86,7 @@ class ReportType(EnumBase, Enum):
     Portfolio_Performance_Analytics = 'Portfolio Performance Analytics'
     Portfolio_Factor_Risk = 'Portfolio Factor Risk'
     Portfolio_Aging = 'Portfolio Aging'
+    Portfolio_Thematic_Analytics = 'Portfolio Thematic Analytics'
     Asset_Factor_Risk = 'Asset Factor Risk'
     Basket_Create = 'Basket Create'
     Basket_Backcast = 'Basket Backcast'

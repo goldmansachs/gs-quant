@@ -168,6 +168,24 @@ def risk_vector_handler(result: dict, risk_key: RiskKey, _instrument: Instrument
     return __dataframe_handler(result['points'], mappings, risk_key, request_id=request_id)
 
 
+def mdapi_table_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None)\
+        -> DataFrameWithInfo:
+    coordinates = []
+    for r in result['rows']:
+        point = ';'.join(r['coordinate']['point']) if isinstance(r['coordinate']['point'], list) else ""
+        r['coordinate'].update({'point': point})
+        r['coordinate'].update({'value': r['value']})
+        coordinates.append(r['coordinate'])
+
+    mappings = (('mkt_type', 'type'),
+                ('mkt_asset', 'asset'),
+                ('mkt_class', 'assetClass'),
+                ('mkt_point', 'point'),
+                ('value', 'value'))
+
+    return __dataframe_handler(coordinates, mappings, risk_key, request_id=request_id)
+
+
 def unsupported_handler(_result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
                         request_id: Optional[str] = None) -> UnsupportedValue:
     return UnsupportedValue(risk_key, request_id=request_id)
@@ -178,6 +196,7 @@ result_handlers = {
     'IRPCashflowTable': cashflows_handler,
     'LegDefinition': leg_definition_handler,
     'Message': message_handler,
+    'MDAPITable': mdapi_table_handler,
     'NumberAndUnit': number_and_unit_handler,
     'RequireAssets': required_assets_handler,
     'Risk': risk_handler,

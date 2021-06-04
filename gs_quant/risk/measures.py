@@ -294,6 +294,26 @@ IRFwdRate = __risk_measure_with_doc_string(
     RiskMeasureType.Forward_Rate,
     asset_class=AssetClass.Rates,
     unit=RiskMeasureUnit.Percent)
+CDDelta = __risk_measure_with_doc_string(
+    'CDDelta',
+    'Credit Delta',
+    RiskMeasureType.Delta,
+    asset_class=AssetClass.Credit)
+CDVega = __risk_measure_with_doc_string(
+    'CDVega',
+    'Credit Vega',
+    RiskMeasureType.Vega,
+    asset_class=AssetClass.Credit)
+CDGamma = __risk_measure_with_doc_string(
+    'CDGamma',
+    'Credit Gamma',
+    RiskMeasureType.Gamma,
+    asset_class=AssetClass.Credit)
+CDTheta = __risk_measure_with_doc_string(
+    'CDTheta',
+    'Credit Theta',
+    RiskMeasureType.Theta,
+    asset_class=AssetClass.Credit)
 CRIFIRCurve = __risk_measure_with_doc_string(
     'CRIFIRCurve',
     'CRIF IR Curve',

@@ -18,6 +18,7 @@ import logging
 from typing import List, Dict
 
 from gs_quant.analytics.common import TYPE, DATA_ROW, PROCESSOR, REFERENCE, PARAMETER, ENTITY_ID, ENTITY_TYPE
+from gs_quant.datetime.relative_date import RelativeDate
 from gs_quant.entities.entity import Entity
 from gs_quant.errors import MqValueError, MqRequestError
 
@@ -63,5 +64,14 @@ def resolve_entities(reference_list: List[Dict], entity_cache: Dict = None):
             data_query_info.entity = entity
 
 
-def get_rdate_cache_key(rule: str, currencies: List[str], exchanges: List[str]) -> str:
-    return f'{rule}{currencies}{exchanges}'
+def get_rdate_cache_key(rule: str, base_date: str, currencies: List[str], exchanges: List[str]) -> str:
+    return f'{rule}::{base_date}::{currencies}::{exchanges}'
+
+
+def get_entity_rdate_key(entity_id: str, rule: str, base_date):
+    return f'{entity_id}::{rule}::{base_date}'
+
+
+def get_entity_rdate_key_from_rdate(entity_id: str, rdate: RelativeDate):
+    base_date = str(rdate.base_date) if rdate.base_date_passed_in else None
+    return f'{entity_id}::{rdate.rule}::{base_date}'

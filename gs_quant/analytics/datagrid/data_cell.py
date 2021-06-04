@@ -15,7 +15,7 @@ under the License.
 """
 
 import copy
-from typing import List, Optional
+from typing import List, Optional, Dict, Set, Tuple
 
 from pandas import Series
 
@@ -59,7 +59,7 @@ class DataCell:
         # Store the cell data queries
         self.data_queries: List[DataQueryInfo] = []
 
-    def build_cell_graph(self, all_queries: List[DataQueryInfo]) -> None:
+    def build_cell_graph(self, all_queries: List[DataQueryInfo], rdate_entity_map: Dict[str, Set[Tuple]]) -> None:
         """ Generate and store the cell graph and data queries
 
             This can be modified to return the data queries rather than store on the cell
@@ -71,6 +71,7 @@ class DataCell:
             self.processor.build_graph(self.entity,
                                        self,
                                        cell_queries,
+                                       rdate_entity_map,
                                        self.dimension_overrides)
 
             self.data_queries = cell_queries

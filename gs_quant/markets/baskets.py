@@ -710,12 +710,14 @@ class Basket(Asset, PositionedEntity):
 
     @property
     def name(self) -> Optional[str]:
-        """ Display name of the basket """
+        """ Display name of the basket (must be <= 24 characters)"""
         return self.__name
 
     @name.setter
     @_validate(ErrorMessage.NON_ADMIN)
     def name(self, value: str):
+        if len(value) > 24:
+            raise MqValueError(f'Basket name of {len(value)} characters is too long (must be <= 24 characters).')
         self.__name = value
 
     @property

@@ -40,7 +40,7 @@ from gs_quant.data.dataset import Dataset
 from gs_quant.data.fields import Fields
 from gs_quant.errors import MqError, MqValueError, MqTypeError
 from gs_quant.markets.securities import AssetClass, Cross, Index, Currency, SecurityMaster, Stock, \
-    Swap, CommodityNaturalGasHub, CommodityEUNaturalGasHub, AssetIdentifier
+    Swap, CommodityNaturalGasHub, CommodityEUNaturalGasHub, AssetIdentifier, CommodityPowerAggregatedNodes
 from gs_quant.session import GsSession, Environment, OAuth2Session
 from gs_quant.target.common import XRef, PricingLocation, Currency as CurrEnum
 from gs_quant.test.timeseries.utils import mock_request
@@ -807,7 +807,7 @@ def mock_fx_vol(_cls, q):
     return df
 
 
-def mock_fx_spot_fwd_3m(q):
+def mock_fx_spot_fwd_3m(*args, **kwargs):
     d = pd.DataFrame({
         'spot': [1.18250, 1.18566, 1.18511],
         'forwardPoint': [0.00234, 0.00234, 0.00235],
@@ -820,7 +820,7 @@ def mock_fx_spot_fwd_3m(q):
     return df
 
 
-def mock_fx_spot_fwd_2y(q):
+def mock_fx_spot_fwd_2y(*args, **kwargs):
     d = pd.DataFrame({
         'spot': [1.18250, 1.18566, 1.18511],
         'forwardPoint': [0.02009, 0.02015, 0.02064],
@@ -2558,7 +2558,7 @@ def _var_term_typical():
 
     replace = Replacer()
     market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
-    market_mock.return_value = out
+    market_mock.side_effect = [pd.DataFrame(), out]
 
     actual = tm.var_term(Index('MA123', AssetClass.Equity, '123'))
     idx = pd.DatetimeIndex(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='varSwap')
@@ -2570,9 +2570,9 @@ def _var_term_typical():
     else:
         assert_series_equal(expected, pd.Series(actual), check_names=False)
         assert actual.dataset_ids == _test_datasets
-    market_mock.assert_called_once()
 
     replace.restore()
+
     return actual
 
 
@@ -2584,7 +2584,6 @@ def _var_term_empty():
     actual = tm.var_term(Index('MAXYZ', AssetClass.Equity, 'XYZ'))
     assert actual.empty
     assert actual.dataset_ids == ()
-    market_mock.assert_called_once()
     replace.restore()
 
 
@@ -2625,11 +2624,39 @@ def _var_term_fwd():
     return actual
 
 
+def _var_term_latest():
+    assert DataContext.current_is_set
+    data = {
+        'tenor': ['1w', '2w', '1y', '2y', '1w', '2w', '1y', '2y'],
+        'varSwap': [10, 20, 30, 40, 1, 2, 3, 4]
+    }
+    out = MarketDataResponseFrame(data=data, index=pd.date_range("2018-01-01", periods=8, freq="min"))
+    out.dataset_ids = _test_datasets
+
+    replace = Replacer()
+    market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    market_mock.side_effect = [out.iloc[-1:], out]
+
+    actual = tm.var_term(Index('MA123', AssetClass.Equity, '123'))
+    idx = pd.DatetimeIndex(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
+    expected = pd.Series([1, 2, 3, 4], name='varSwap', index=idx)
+    expected = expected.loc[DataContext.current.start_date: DataContext.current.end_date]
+
+    if expected.empty:
+        assert actual.empty
+    else:
+        assert_series_equal(expected, pd.Series(actual))
+        assert actual.dataset_ids == _test_datasets
+
+    replace.restore()
+
+
 def test_var_term():
     with DataContext('2018-01-01', '2019-01-01'):
         _var_term_typical()
         _var_term_empty()
         _var_term_fwd()
+        _var_term_latest()
     with DataContext('2019-01-01', '2019-07-04'):
         _var_term_fwd()
     with DataContext('2018-01-16', '2018-12-31'):
@@ -2638,6 +2665,8 @@ def test_var_term():
         assert out.dataset_ids == _test_datasets
     with pytest.raises(MqError):
         tm.var_term(..., pricing_date=300)
+    with pytest.raises(NotImplementedError):
+        tm.var_term(..., real_time=True)
 
 
 def _mock_forward_helper():
@@ -2834,28 +2863,32 @@ def _vol_term_typical(reference, value):
 
 def _vol_term_empty():
     replace = Replacer()
-    market_mock = replace('gs_quant.timeseries.measures.get_df_with_retries', Mock())
-    market_mock.return_value = MarketDataResponseFrame()
+    market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    market_mock.return_value = pd.DataFrame()
+
+    mock = replace('gs_quant.timeseries.measures.get_df_with_retries', Mock())
+    mock.return_value = MarketDataResponseFrame()
 
     actual = tm.vol_term(Index('MAXYZ', AssetClass.Equity, 'XYZ'), tm.VolReference.DELTA_CALL, 777)
     assert actual.empty
     assert actual.dataset_ids == ()
     market_mock.assert_called_once()
+    mock.assert_called_once()
     replace.restore()
 
 
-def _vol_term_intraday():
+def _vol_term_latest():
     assert DataContext.current_is_set
     data = {
         'tenor': ['1w', '2w', '1y', '2y', '1w', '2w', '1y', '2y'],
         'impliedVolatility': [10, 20, 30, 40, 1, 2, 3, 4]
     }
-    out = MarketDataResponseFrame(data=data, index=pd.date_range("2018-01-01", periods=8, freq="H"))
+    out = MarketDataResponseFrame(data=data, index=pd.date_range("2018-01-01", periods=8, freq="min"))
     out.dataset_ids = _test_datasets
 
     replace = Replacer()
     market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
-    market_mock.return_value = out
+    market_mock.side_effect = [out.iloc[-1:], out]
 
     actual = tm.vol_term(Index('MA123', AssetClass.Equity, '123'), tm.VolReference.SPOT, 100)
     idx = pd.DatetimeIndex(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
@@ -2867,7 +2900,6 @@ def _vol_term_intraday():
     else:
         assert_series_equal(expected, pd.Series(actual))
         assert actual.dataset_ids == _test_datasets
-    market_mock.assert_called_once()
 
     replace.restore()
     return actual
@@ -2879,7 +2911,7 @@ def test_vol_term():
         _vol_term_typical(tm.VolReference.NORMALIZED, 4)
         _vol_term_typical(tm.VolReference.DELTA_PUT, 50)
         _vol_term_empty()
-        _vol_term_intraday()
+        _vol_term_latest()
     with DataContext('2018-01-16', '2018-12-31'):
         out = _vol_term_typical(tm.VolReference.SPOT, 100)
         assert out.empty
@@ -3290,6 +3322,29 @@ def test_forward_price():
             assert_series_equal(pd.Series(dtype='float64'), pd.Series(actual))
         replace.restore()
 
+        # Query for asset with no bbid
+        replace = Replacer()
+        replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_forward_price)
+        mock_ice = CommodityPowerAggregatedNodes('MA001', 'ICE Mid C')
+
+        with DataContext(datetime.date(2019, 1, 2), datetime.date(2019, 1, 2)):
+            bbId_mock = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+            bbId_mock.return_value = None
+            ISO_mock = replace('gs_quant.timeseries.measures.Asset.get_entity', Mock())
+            ISO_mock.return_value = {'parameters': {'ISO': 'PJM'}}
+
+            # Should work as other usecases where assetId has bbid
+            actual = tm.forward_price(mock_ice,
+                                      price_method='LMP',
+                                      contract_range='2Q20',
+                                      bucket='7x24'
+                                      )
+            assert_series_equal(pd.Series(target['7x24'],
+                                          index=[datetime.date(2019, 1, 2)],
+                                          name='price'),
+                                pd.Series(actual))
+        replace.restore()
+
 
 def test_implied_volatility_elec():
     # US Power
@@ -3541,14 +3596,14 @@ def test_forward_price_ng():
     with DataContext(datetime.date(2021, 1, 1), datetime.date(2021, 1, 1)):
         market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_eu_natgas_forward_price)
         expected = pd.Series([15.65], name='price', index=[datetime.date(2021, 1, 1)])
-        actual = tm.forward_price_ng(mock_EU_asset, contract_range='H21', price_method='ICE')
+        actual = tm.forward_price_ng(mock_EU_asset, contract_range='H21')
         assert_series_equal(expected, pd.Series(actual))
 
     # Test for empty market response
     with DataContext(datetime.date(2021, 1, 1), datetime.date(2021, 1, 1)):
         market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
         market_mock.return_value = mock_empty_market_data_response()
-        actual = tm.forward_price_ng(mock_EU_asset, contract_range='H21', price_method='ICE')
+        actual = tm.forward_price_ng(mock_EU_asset, contract_range='H21', price_method='USD')
         assert actual.empty
 
     # Test for no instruments found
@@ -3556,7 +3611,7 @@ def test_forward_price_ng():
         assets.return_value = []
         market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
         market_mock.return_value = mock_empty_market_data_response()
-        actual = tm.forward_price_ng(mock_EU_asset, contract_range='H21', price_method='ICE')
+        actual = tm.forward_price_ng(mock_EU_asset, contract_range='H21')
         assert actual.empty
 
     replace.restore()
