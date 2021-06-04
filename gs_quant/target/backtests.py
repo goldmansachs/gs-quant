@@ -1853,12 +1853,14 @@ class BacktestRiskPosition(Base):
         instrument: dict,
         quantity: float = None,
         market_model: Union[EquityMarketModel, str] = None,
+        expiry_date_mode: str = None,
         name: str = None
     ):        
         super().__init__()
         self.instrument = instrument
         self.quantity = quantity
         self.market_model = market_model
+        self.expiry_date_mode = expiry_date_mode
         self.name = name
 
     @property
@@ -1889,6 +1891,16 @@ class BacktestRiskPosition(Base):
     def market_model(self, value: Union[EquityMarketModel, str]):
         self._property_changed('market_model')
         self.__market_model = get_enum_value(EquityMarketModel, value)        
+
+    @property
+    def expiry_date_mode(self) -> str:
+        """Expiry date mode to be used in the instrument e.g. listed."""
+        return self.__expiry_date_mode
+
+    @expiry_date_mode.setter
+    def expiry_date_mode(self, value: str):
+        self._property_changed('expiry_date_mode')
+        self.__expiry_date_mode = value        
 
 
 class BacktestStrategyUnderlier(Base):

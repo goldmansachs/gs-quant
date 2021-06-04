@@ -210,43 +210,6 @@ class DataSetCondition(Base):
         self.__operator = value        
 
 
-class DataSetCoverageProperties(Base):
-        
-    """Dataset coverage properties."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        prefixes: Tuple[str, ...] = None,
-        prefix_type: str = 'SYMBOL',
-        name: str = None
-    ):        
-        super().__init__()
-        self.prefixes = prefixes
-        self.prefix_type = prefix_type
-        self.name = name
-
-    @property
-    def prefixes(self) -> Tuple[str, ...]:
-        """Prefixes of the dataset coverage"""
-        return self.__prefixes
-
-    @prefixes.setter
-    def prefixes(self, value: Tuple[str, ...]):
-        self._property_changed('prefixes')
-        self.__prefixes = value        
-
-    @property
-    def prefix_type(self) -> str:
-        """The type of the coverage prefixes."""
-        return self.__prefix_type
-
-    @prefix_type.setter
-    def prefix_type(self, value: str):
-        self._property_changed('prefix_type')
-        self.__prefix_type = value        
-
-
 class DataSetDefaults(Base):
         
     """Default start/end dates/times applied when data is queried, if not specified by
@@ -1044,6 +1007,81 @@ class DataFilter(Base):
     def where(self, value: DataSetCondition):
         self._property_changed('where')
         self.__where = value        
+
+
+class DataSetCoverageProperties(Base):
+        
+    """Dataset coverage properties."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        prefixes: Tuple[str, ...] = None,
+        prefix_type: str = 'SYMBOL',
+        asset_classes: Tuple[Union[AssetClass, str], ...] = None,
+        asset_types: Tuple[Union[AssetType, str], ...] = None,
+        entity_types: Tuple[Union[MeasureEntityType, str], ...] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.prefixes = prefixes
+        self.prefix_type = prefix_type
+        self.asset_classes = asset_classes
+        self.asset_types = asset_types
+        self.entity_types = entity_types
+        self.name = name
+
+    @property
+    def prefixes(self) -> Tuple[str, ...]:
+        """Prefixes of the dataset coverage"""
+        return self.__prefixes
+
+    @prefixes.setter
+    def prefixes(self, value: Tuple[str, ...]):
+        self._property_changed('prefixes')
+        self.__prefixes = value        
+
+    @property
+    def prefix_type(self) -> str:
+        """The type of the coverage prefixes."""
+        return self.__prefix_type
+
+    @prefix_type.setter
+    def prefix_type(self, value: str):
+        self._property_changed('prefix_type')
+        self.__prefix_type = value        
+
+    @property
+    def asset_classes(self) -> Tuple[Union[AssetClass, str], ...]:
+        """Asset classification of security. Assets are classified into broad groups which
+           exhibit similar characteristics and behave in a consistent way under
+           different market conditions"""
+        return self.__asset_classes
+
+    @asset_classes.setter
+    def asset_classes(self, value: Tuple[Union[AssetClass, str], ...]):
+        self._property_changed('asset_classes')
+        self.__asset_classes = value        
+
+    @property
+    def asset_types(self) -> Tuple[Union[AssetType, str], ...]:
+        """Asset type differentiates the product categorization or contract type"""
+        return self.__asset_types
+
+    @asset_types.setter
+    def asset_types(self, value: Tuple[Union[AssetType, str], ...]):
+        self._property_changed('asset_types')
+        self.__asset_types = value        
+
+    @property
+    def entity_types(self) -> Tuple[Union[MeasureEntityType, str], ...]:
+        """Entity type associated with a measure."""
+        return self.__entity_types
+
+    @entity_types.setter
+    def entity_types(self, value: Tuple[Union[MeasureEntityType, str], ...]):
+        self._property_changed('entity_types')
+        self.__entity_types = value        
 
 
 class DataSetDelay(Base):
@@ -2723,6 +2761,7 @@ class FieldColumnPair(Base):
         field_description: str = None,
         link: FieldLink = None,
         aliases: Tuple[str, ...] = None,
+        resolvable: bool = None,
         name: str = None
     ):        
         super().__init__()
@@ -2731,6 +2770,7 @@ class FieldColumnPair(Base):
         self.field_description = field_description
         self.link = link
         self.aliases = aliases
+        self.resolvable = resolvable
         self.name = name
 
     @property
@@ -2783,6 +2823,16 @@ class FieldColumnPair(Base):
     def aliases(self, value: Tuple[str, ...]):
         self._property_changed('aliases')
         self.__aliases = value        
+
+    @property
+    def resolvable(self) -> bool:
+        """Whether this field is resolvable in the measure service."""
+        return self.__resolvable
+
+    @resolvable.setter
+    def resolvable(self, value: bool):
+        self._property_changed('resolvable')
+        self.__resolvable = value        
 
 
 class HistoryFilter(Base):

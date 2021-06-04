@@ -18,7 +18,7 @@ from datetime import date
 import gs_quant.risk as risk
 import numpy as np
 import pytest
-from gs_quant.instrument import IRSwap, IRBasisSwap, IRSwaption, FXMultiCrossBinary
+from gs_quant.instrument import IRSwap, IRBasisSwap, IRSwaption, FXMultiCrossBinary, FXMultiCrossBinaryLeg
 from gs_quant.markets import HistoricalPricingContext, PricingContext
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk import Price, RollFwd, CurveScenario, ErrorValue, DataFrameWithInfo
@@ -95,7 +95,7 @@ swap_port2 = Portfolio([swaption_port2, usd_port])
 # Portfolio of swaption with an unmarked correlation
 swaption_port3 = Portfolio(IRSwaption('Pay', termination_date='6m', effective_date='2y', expiration_date='3y'))
 
-mcb = Portfolio(FXMultiCrossBinary(name='mcb'), name='mcb_port')
+mcb = Portfolio(FXMultiCrossBinary(name='mcb', legs=(FXMultiCrossBinaryLeg(), )), name='mcb_port')
 
 
 def default_pivot_table_test(res, with_dates=''):

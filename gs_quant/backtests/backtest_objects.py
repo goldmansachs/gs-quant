@@ -85,7 +85,7 @@ class BackTest(object):
         return self._risks
 
     def add_results(self, date, results):
-        if date in self._results:
+        if date in self._results and len(self._results[date]):
             self._results[date] += results
         else:
             self._results[date] = results

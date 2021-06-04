@@ -16,17 +16,17 @@ under the License.
 import asyncio
 import datetime as dt
 import logging
+import queue
+import sys
 import weakref
 from abc import ABCMeta
 from concurrent.futures import ThreadPoolExecutor
 from inspect import signature
 from itertools import zip_longest
-import queue
-import sys
-from tqdm import tqdm
 from typing import Optional, Union
 
-from .markets import CloseMarket, LiveMarket, Market, close_market_date, OverlayMarket, RelativeMarket
+from tqdm import tqdm
+
 from gs_quant.base import InstrumentBase, RiskKey, Scenario, get_enum_value
 from gs_quant.common import PricingLocation
 from gs_quant.context_base import ContextBaseWithDefault
@@ -37,7 +37,7 @@ from gs_quant.risk.results import PricingFuture
 from gs_quant.session import GsSession
 from gs_quant.target.common import PricingDateAndMarketDataAsOf
 from gs_quant.target.risk import RiskPosition, RiskRequest, RiskRequestParameters
-
+from .markets import CloseMarket, LiveMarket, Market, close_market_date, OverlayMarket, RelativeMarket
 
 _logger = logging.getLogger(__name__)
 
@@ -70,7 +70,6 @@ class PricingCache(metaclass=ABCMeta):
 
 
 class PricingContext(ContextBaseWithDefault):
-
     """
     A context for controlling pricing and market data behaviour
     """
@@ -134,7 +133,8 @@ class PricingContext(ContextBaseWithDefault):
 
         if pricing_date:
             if pricing_date > dt.date.today():
-                raise ValueError("The PricingContext does not support a pricing_date in the future. Please use the RollFwd Scenario to roll the pricing_date to a future date")
+                raise ValueError(
+                    "The PricingContext does not support a pricing_date in the future. Please use the RollFwd Scenario to roll the pricing_date to a future date")
 
         if market:
             market_date = None
@@ -147,7 +147,8 @@ class PricingContext(ContextBaseWithDefault):
 
             if market_date:
                 if market_date > dt.date.today():
-                    raise ValueError("The PricingContext does not support a market dated in the future. Please use the RollFwd Scenario to roll the pricing_date to a future date")
+                    raise ValueError(
+                        "The PricingContext does not support a market dated in the future. Please use the RollFwd Scenario to roll the pricing_date to a future date")
 
         if not market_data_location:
             if not market:
@@ -214,8 +215,8 @@ class PricingContext(ContextBaseWithDefault):
         # Group requests optimally
         requests_by_provider = {}
         for (key, instrument) in self.__pending.keys():
-            dates_markets, measures = requests_by_provider.setdefault(key.provider, {})\
-                .setdefault((key.params, key.scenario), {})\
+            dates_markets, measures = requests_by_provider.setdefault(key.provider, {}) \
+                .setdefault((key.params, key.scenario), {}) \
                 .setdefault(instrument, (set(), set()))
             dates_markets.add((key.date, key.market))
             measures.add(key.risk_measure)
@@ -239,8 +240,10 @@ class PricingContext(ContextBaseWithDefault):
                 # Restrict to 1,000 instruments and 1 date in a batch, until server side changes are made
 
                 for (params, scenario, dates_markets, risk_measures), instruments in grouped_requests.items():
-                    for insts_chunk in [tuple(filter(None, i)) for i in zip_longest(*[iter(instruments)] * 1000)]:
-                        for dates_chunk in [tuple(filter(None, i)) for i in zip_longest(*[iter(dates_markets)] * 1)]:
+                    for insts_chunk in [tuple(filter(None, i)) for i in
+                                        zip_longest(*[iter(instruments)] * self._max_concurrent)]:
+                        for dates_chunk in [tuple(filter(None, i)) for i in zip_longest(*[iter(dates_markets)] * (
+                        1 if self._max_concurrent == 1000 else self._max_concurrent))]:
                             requests.append(RiskRequest(
                                 tuple(RiskPosition(instrument=i, quantity=i.instrument_quantity) for i in insts_chunk),
                                 risk_measures,
@@ -255,11 +258,12 @@ class PricingContext(ContextBaseWithDefault):
 
                 requests_for_provider[provider] = requests
 
-            show_status = self.__show_progress and\
-                (len(requests_for_provider) > 1 or len(next(iter(requests_for_provider.values()))) > 1)
-            request_pool = ThreadPoolExecutor(len(requests_for_provider))\
+            show_status = self.__show_progress and \
+                          (len(requests_for_provider) > 1 or len(next(iter(requests_for_provider.values()))) > 1)
+            request_pool = ThreadPoolExecutor(len(requests_for_provider)) \
                 if len(requests_for_provider) > 1 or self.__is_async else None
-            progress_bar = tqdm(total=len(self.__pending), position=0, maxinterval=1, file=sys.stdout) if show_status else None
+            progress_bar = tqdm(total=len(self.__pending), position=0, maxinterval=1,
+                                file=sys.stdout) if show_status else None
             completion_futures = []
 
             for provider, requests in requests_for_provider.items():
@@ -289,7 +293,7 @@ class PricingContext(ContextBaseWithDefault):
             return None
 
         return MarketDataScenario(scenario=scenarios[0] if len(scenarios) == 1 else
-                                  CompositeScenario(scenarios=tuple(reversed(scenarios))))
+        CompositeScenario(scenarios=tuple(reversed(scenarios))))
 
     @property
     def active_context(self):
@@ -378,3 +382,65 @@ class PricingContext(ContextBaseWithDefault):
         >>> delta = swap.calc(IRDelta)
         """
         return self._calc(instrument, self.__risk_key(risk_measure, instrument.provider))
+
+
+class PositionContext(ContextBaseWithDefault):
+    """
+    A context for controlling portfolio position behaviour
+    """
+
+    def __init__(self,
+                 position_date: Optional[dt.date] = None):
+        """
+        The methods on this class should not be called directly. Instead, use the methods on the portfolios,
+        as per the examples
+
+        :param position_date: the date for pricing calculations. Default is today
+        
+        **Examples**
+
+        To change the position date of the default context:
+
+        >>> from gs_quant.markets import PositionContext
+        >>> import datetime as dt
+        >>>
+        >>> PricingContext.current = PositionContext(dt.date(2021, 1, 2))
+
+        For a pricing a portfolio with positions held on a specific date:
+
+        >>> from gs_quant.markets.portfolio import Portfolio
+        >>> portfolio.get('MQPORTFOLIOID')
+        >>>
+        >>> with PositionContext():
+        >>>     portfolio.price()
+        >>>
+
+        For an asynchronous request:
+
+        >>> with PositionContext(), PricingContext(is_async=True):
+        >>>     portfolio.price()
+        >>>
+        >>> while not price_f.done:
+        >>> ...
+        """
+        super().__init__()
+
+        if position_date:
+            if position_date > dt.date.today():
+                raise ValueError("The PositionContext does not support a position_date in the future")
+
+        self.__position_date = position_date if position_date \
+            else business_day_offset(dt.date.today(), 0, roll='preceding')
+
+    @property
+    def position_date(self):
+        return self.__position_date
+
+    @classmethod
+    def default_value(cls) -> object:
+        return PositionContext()
+
+    def clone(self, **kwargs):
+        clone_kwargs = {k: getattr(self, k, None) for k in signature(self.__init__).parameters.keys()}
+        clone_kwargs.update(kwargs)
+        return self.__class__(**clone_kwargs)

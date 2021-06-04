@@ -54,6 +54,7 @@ class RelativeDate:
     https://developer.gs.com/docs/gsquant/tutorials/Markets/dates/
 
     """
+
     def __init__(self,
                  rule: str,
                  base_date: Optional[date] = None):
@@ -72,7 +73,8 @@ class RelativeDate:
                    currencies: List[Union[Currency, str]] = None,
                    exchanges: List[Union[ExchangeCode, str]] = None,
                    holiday_calendar: List[date] = None,
-                   week_mask: str = '1111100') -> date:
+                   week_mask: str = '1111100',
+                   **kwargs) -> date:
         """
         Applies business date logic on the rule using the given holiday calendars for rules that use business
         day logic. week_mask is based off
@@ -90,7 +92,8 @@ class RelativeDate:
 
         for rule in self._get_rules():
             result = self.__handle_rule(rule, result, week_mask,
-                                        currencies=currencies, exchanges=exchanges, holiday_calendar=holiday_calendar)
+                                        currencies=currencies, exchanges=exchanges, holiday_calendar=holiday_calendar,
+                                        **kwargs)
 
         return result
 
@@ -124,7 +127,8 @@ class RelativeDate:
                       week_mask: str,
                       currencies: List[Union[Currency, str]] = None,
                       exchanges: List[Union[ExchangeCode, str]] = None,
-                      holiday_calendar: List[date] = None) -> date:
+                      holiday_calendar: List[date] = None,
+                      **kwargs) -> date:
         if rule.startswith('-'):
             number_match = search('\d+', rule[1:])
             number = int(number_match.group(0)) * -1 if number_match else 0
@@ -149,7 +153,8 @@ class RelativeDate:
                               week_mask=week_mask,
                               currencies=currencies,
                               exchanges=exchanges,
-                              holiday_calendar=holiday_calendar).handle()
+                              holiday_calendar=holiday_calendar,
+                              usd_calendar=kwargs.get('usd_calendar')).handle()
         except AttributeError:
             raise NotImplementedError(f'Rule {rule} not implemented')
 

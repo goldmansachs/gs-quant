@@ -20,11 +20,12 @@ from typing import Iterable, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
+import deprecation
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.context_base import nullcontext
 from gs_quant.instrument import Instrument
-from gs_quant.markets import HistoricalPricingContext, OverlayMarket, PricingContext
+from gs_quant.markets import HistoricalPricingContext, OverlayMarket, PricingContext, PositionContext
 from gs_quant.priceable import PriceableImpl
 from gs_quant.risk import RiskMeasure, ResolvedInstrumentValues
 from gs_quant.risk.results import CompositeResultFuture, PortfolioRiskResult, PortfolioPath, PricingFuture
@@ -122,6 +123,10 @@ class Portfolio(PriceableImpl):
         return PricingContext.current if not PricingContext.current.is_entered else nullcontext()
 
     @property
+    def __position_context(self) -> PositionContext:
+        return PositionContext.current if PositionContext.current.is_entered else PositionContext.default_value()
+
+    @property
     def id(self) -> str:
         return self.__id
 
@@ -213,22 +218,33 @@ class Portfolio(PriceableImpl):
         asset = GsAssetApi.get_asset_by_name(name)
         return Portfolio.load_from_portfolio_id(asset.id)
 
-    @staticmethod
-    def from_portfolio_id(portfolio_id: str, date=None):
+    @classmethod
+    def get(cls,
+            portfolio_id: str = None,
+            portfolio_name: str = None):
+        if portfolio_name:
+            portfolio = GsPortfolioApi.get_portfolio_by_name(portfolio_name)
+            portfolio_id = portfolio.id
+        position_date = PositionContext.current.position_date if PositionContext.is_entered else dt.date.today()
         portfolio = GsPortfolioApi.get_portfolio(portfolio_id)
-        response = GsPortfolioApi.get_positions_for_date(portfolio_id, date) if date else \
-            GsPortfolioApi.get_latest_positions(portfolio_id)
-        response = response[0] if isinstance(response, tuple) else response
-        positions = response.positions if isinstance(response, PositionSet) else response['positions']
-        instruments = GsAssetApi.get_instruments_for_positions(positions)
-        ret = Portfolio(instruments, name=portfolio.name)
+        ret = Portfolio(name=portfolio.name)
         ret.__id = portfolio_id
+        ret._get_instruments(position_date, True)
         return ret
 
-    @staticmethod
-    def from_portfolio_name(name: str):
-        portfolio = GsPortfolioApi.get_portfolio_by_name(name)
-        return Portfolio.load_from_portfolio_id(portfolio.id)
+    @classmethod
+    @deprecation.deprecated(deprecated_in='0.8.293',
+                            details='from_portfolio_id is now deprecated, please use '
+                                    'Portfolio.get(portfolio_id=portfolio_id) instead.')
+    def from_portfolio_id(cls, portfolio_id: str):
+        return cls.get(portfolio_id=portfolio_id)
+
+    @classmethod
+    @deprecation.deprecated(deprecated_in='0.8.293',
+                            details='from_portfolio_name is now deprecated, please use '
+                                    'Portfolio.get(portfolio_name=portfolio_name) instead.')
+    def from_portfolio_name(cls, name: str):
+        return cls.get(portfolio_name=name)
 
     @staticmethod
     def from_quote(quote_id: str):
@@ -257,11 +273,11 @@ class Portfolio(PriceableImpl):
                 _logger.info(f'Created Marquee portfolio {self.__name} with id {self.__id}')
 
         position_set = PositionSet(
-            position_date=dt.date.today(),
+            position_date=self.__position_context.position_date,
             positions=tuple(Position(asset_id=GsAssetApi.get_or_create_asset_from_instrument(i))
                             for i in self.instruments))
 
-        GsPortfolioApi.update_positions(self.__id, (position_set,))
+        GsPortfolioApi.update_positions(self.__id, [position_set])
 
     def save_as_quote(self, overwrite: Optional[bool] = False):
         if self.portfolios:
@@ -322,11 +338,12 @@ class Portfolio(PriceableImpl):
         return cls.from_frame(data, mappings)
 
     def scale(self, scaling: int, in_place: bool = True):
+        instruments = self._get_instruments(self.__position_context.position_date, in_place, False)
         if in_place:
             for inst in self.all_instruments:
                 inst.scale(scaling, in_place)
         else:
-            return Portfolio([inst.scale(scaling, in_place) for inst in self.all_instruments])
+            return Portfolio([inst.scale(scaling, in_place) for inst in instruments])
 
     def append(self, priceables: Union[PriceableImpl, Iterable[PriceableImpl]]):
         self.priceables += ((priceables,) if isinstance(priceables, PriceableImpl) else tuple(priceables))
@@ -417,9 +434,10 @@ class Portfolio(PriceableImpl):
         return paths
 
     def resolve(self, in_place: bool = True) -> Optional[Union[PricingFuture, PriceableImpl, dict]]:
+        priceables = self._get_instruments(self.__position_context.position_date, in_place, True)
         pricing_context = self.__pricing_context
         with pricing_context:
-            futures = [p.resolve(in_place) for p in self.__priceables]
+            futures = [p.resolve(in_place) for p in priceables]
 
         if not in_place:
             ret = {} if isinstance(PricingContext.current, HistoricalPricingContext) else Portfolio(name=self.name)
@@ -460,8 +478,9 @@ class Portfolio(PriceableImpl):
 
         """
         pricing_context = self.__pricing_context
+        instruments = self._get_instruments(self.__position_context.position_date, False, False)
         with pricing_context:
-            futures = [i.market() for i in self.all_instruments]
+            futures = [i.market() for i in instruments]
 
         result_future = PricingFuture()
         return_future = not isinstance(pricing_context,
@@ -500,10 +519,26 @@ class Portfolio(PriceableImpl):
         return result_future if return_future else result_future.result()
 
     def calc(self, risk_measure: Union[RiskMeasure, Iterable[RiskMeasure]], fn=None) -> PortfolioRiskResult:
+        priceables = self._get_instruments(self.__position_context.position_date, False, True)
         with self.__pricing_context:
             # PortfolioRiskResult should hold a copy of the portfolio instead of a reference to the portfolio
             # this is to prevent the portfolio object within portfolioriskresult to hold a reference to the portfolio
             # object should it later be modified in place (eg: resolution)
             return PortfolioRiskResult(copy.deepcopy(self),
                                        (risk_measure,) if isinstance(risk_measure, RiskMeasure) else risk_measure,
-                                       [p.calc(risk_measure, fn=fn) for p in self.__priceables])
+                                       [p.calc(risk_measure, fn=fn) for p in priceables])
+
+    def _get_instruments(self, position_date: dt.date, in_place: bool, return_priceables: bool = True):
+        if self.id:
+            dates_prior = list(filter(lambda date: date < position_date,
+                                      GsPortfolioApi.get_position_dates(self.id)))
+            if len(dates_prior) == 0:
+                raise ValueError('Your portfolio has no positions on the PositionContext date')
+            date = max(dates_prior)
+            response = GsPortfolioApi.get_positions_for_date(self.id, date)
+            positions = response.positions
+            instruments = GsAssetApi.get_instruments_for_positions(positions)
+            if in_place:
+                self.__priceables = instruments
+            return instruments
+        return self.__priceables if return_priceables else self.all_instruments

@@ -84,7 +84,7 @@ CROSSCURRENCY_RATES_DEFAULTS = {
              "designatedMaturity": "3m",
              "pricingLocation": ["NYC"]},
             {"BenchmarkType": "OIS",
-             "rateOption": "USD-Federal Funds-H.15-OIS-COMP",
+             "rateOption": "USD-FEDERAL FUNDS-H.15-OIS-COMP",
              "designatedMaturity": "3m",
              "pricingLocation": ["NYC"]}
         ],
@@ -167,7 +167,7 @@ CURRENCY_TO_XCCY_SWAP_RATE_BENCHMARK = {
     'GBP': OrderedDict([('LIBOR', 'GBP-LIBOR-BBA'), ('OIS', 'GBP-SONIA-COMPOUND')]),
     'JPY': OrderedDict([('LIBOR', 'JPY-LIBOR-BBA'), ('OIS', 'JPY-TONA-OIS-COMPOUND')]),
     'USD': OrderedDict(
-        [('LIBOR', 'USD-LIBOR-BBA'), ('OIS', 'USD-Federal Funds-H.15-OIS-COMP'), ('SOFR', 'USD-SOFR-COMPOUND')]),
+        [('LIBOR', 'USD-LIBOR-BBA'), ('OIS', 'USD-FEDERAL FUNDS-H.15-OIS-COMP'), ('SOFR', 'USD-SOFR-COMPOUND')]),
     'SEK': {'LIBOR': 'SEK-STIBOR-SIDE'},
     'NOK': {'LIBOR': 'NOK-NIBOR-BBA'},
     'DKK': {'LIBOR': 'DKK-CIBOR2-DKNA13'},
@@ -180,6 +180,13 @@ CURRENCY_TO_DUMMY_CROSSCURRENCY_SWAP_BBID = {
     'EUR': 'MAW8SAXPSKYA94E2',
     'GBP': 'MATDD783JM1C2GGD',
     'JPY': 'MAFMW4HJC5TDE51H',
+    'CHF': 'MA5YSMR2VN8A5T0N',
+    'NOK': 'MA44T4N363CWAQWN',
+    'DKK': 'MAF8ZEM0Q7R2D0R3',
+    'SEK': 'MADQDFZH81GX4NDP',
+    'AUD': 'MAHN46BVXFAZ354E',
+    'NZD': 'MAW1MNKPQWYJPX3A',
+    'CAD': 'MAPRDGWMZSQJ8CZ0',
 }
 
 
@@ -347,7 +354,7 @@ def _get_crosscurrency_swap_data(asset1: Asset, asset2: Asset, swap_tenor: str, 
 
 @plot_measure((AssetClass.Cash, AssetClass.FX,), (AssetType.Currency, AssetType.Cross,),
               [MeasureDependency(id_provider=_currency_to_tdapi_crosscurrency_swap_rate_asset,
-                                 query_type=QueryType.SWAP_RATE)])
+                                 query_type=QueryType.XCCY_SWAP_SPREAD)])
 def crosscurrency_swap_rate(asset: Asset, swap_tenor: str, rateoption_type: str = None,
                             forward_tenor: Optional[GENERIC_DATE] = None,
                             clearing_house: tm_rates._ClearingHouse = None, *,

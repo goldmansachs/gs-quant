@@ -173,8 +173,8 @@ class AppendProcessor(BaseProcessor):
 class AdditionProcessor(BaseProcessor):
     def __init__(self,
                  a: DataCoordinateOrProcessor,
-                 *,
                  b: Optional[DataCoordinateOrProcessor] = None,
+                 *,
                  start: Optional[DateOrDatetimeOrRDate] = None,
                  end: Optional[DateOrDatetimeOrRDate] = None,
                  addend: Optional[float] = None,
@@ -223,8 +223,8 @@ class AdditionProcessor(BaseProcessor):
 class SubtractionProcessor(BaseProcessor):
     def __init__(self,
                  a: DataCoordinateOrProcessor,
-                 *,
                  b: Optional[DataCoordinateOrProcessor] = None,
+                 *,
                  start: Optional[DateOrDatetimeOrRDate] = None,
                  end: Optional[DateOrDatetimeOrRDate] = None,
                  subtrahend: Optional[float] = None,
@@ -275,8 +275,8 @@ class MultiplicationProcessor(BaseProcessor):
 
     def __init__(self,
                  a: DataCoordinateOrProcessor,
-                 *,
                  b: Optional[DataCoordinateOrProcessor] = None,
+                 *,
                  start: Optional[DateOrDatetimeOrRDate] = None,
                  end: Optional[DateOrDatetimeOrRDate] = None,
                  factor: Optional[float] = None,
@@ -325,8 +325,8 @@ class MultiplicationProcessor(BaseProcessor):
 class DivisionProcessor(BaseProcessor):
     def __init__(self,
                  a: DataCoordinateOrProcessor,
-                 *,
                  b: Optional[DataCoordinateOrProcessor] = None,
+                 *,
                  start: Optional[DateOrDatetimeOrRDate] = None,
                  end: Optional[DateOrDatetimeOrRDate] = None,
                  dividend: Optional[float] = None,

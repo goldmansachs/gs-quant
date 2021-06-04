@@ -49,4 +49,4 @@ class PayReceive(EnumBase, Enum):
 
     @classmethod
     def _missing_(cls, key):
-        return cls.Receive if key.lower() == 'receive' else super()._missing_(key)
+        return cls.Receive if key.lower() == 'receive' or key.lower() == 'receiver' else super()._missing_(key)

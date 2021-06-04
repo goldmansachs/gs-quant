@@ -14,19 +14,21 @@ specific language governing permissions and limitations
 under the License.
 """
 
+import datetime as dt
 import json
 import logging
 import webbrowser
 from collections import defaultdict
 from dataclasses import asdict
 from numbers import Number
-from typing import List, Dict, Optional, Tuple, Union
+from typing import List, Dict, Optional, Tuple, Union, Set
 
 import numpy as np
 from pandas import DataFrame, Series, concat
 
 from gs_quant.analytics.common import DATAGRID_HELP_MSG
-from gs_quant.analytics.common.helpers import resolve_entities, get_rdate_cache_key
+from gs_quant.analytics.common.helpers import resolve_entities, get_entity_rdate_key, get_entity_rdate_key_from_rdate, \
+    get_rdate_cache_key
 from gs_quant.analytics.core.processor import DataQueryInfo
 from gs_quant.analytics.core.processor_result import ProcessorResult
 from gs_quant.analytics.core.query_helpers import aggregate_queries, fetch_query, build_query_string, valid_dimensions
@@ -42,7 +44,7 @@ from gs_quant.datetime.relative_date import RelativeDate
 from gs_quant.entities.entitlements import Entitlements
 from gs_quant.entities.entity import Entity
 from gs_quant.errors import MqValueError
-from gs_quant.session import GsSession
+from gs_quant.session import GsSession, OAuth2Session
 from gs_quant.target.common import Entitlements as Entitlements_
 
 _logger = logging.getLogger(__name__)
@@ -105,6 +107,7 @@ class DataGrid:
                  *,
                  id_: str = None,
                  entitlements: Union[Entitlements, Entitlements_] = None,
+                 polling_time: int = None,
                  sorts: Optional[List[DataGridSort]] = None,
                  filters: Optional[List[DataGridFilter]] = None,
                  multiColumnGroups: Optional[List[MultiColumnGroup]] = None,
@@ -117,6 +120,7 @@ class DataGrid:
         self.sorts = sorts or []
         self.filters = filters or []
         self.multiColumnGroups = multiColumnGroups
+        self.polling_time = polling_time or 0
 
         # store the graph, data queries to leaf processors and results
         self._primary_column_index: int = kwargs.get('primary_column_index', 0)
@@ -125,6 +129,11 @@ class DataGrid:
         self._entity_cells: List[DataCell] = []
         self._coord_processor_cells: List[DataCell] = []
         self._value_cells: List[DataCell] = []
+        self.entity_map: Dict[str, Entity] = {}
+
+        # RDate Mappings
+        self.rdate_entity_map: Dict[str, Set[Tuple]] = defaultdict(set)
+        self.rule_cache: Dict[str, dt.date] = {}
 
         self.results: List[List[DataCell]] = []
         self.is_initialized: bool = False
@@ -145,7 +154,6 @@ class DataGrid:
         """
         all_queries: List[DataQueryInfo] = []
         entity_cells: List[DataCell] = []
-
         current_row_group = None
 
         # Loop over rows, columns
@@ -154,6 +162,10 @@ class DataGrid:
                 current_row_group = row.name
                 continue
             entity: Entity = row.entity
+            if isinstance(entity, Entity):
+                self.entity_map[entity.get_marquee_id()] = entity
+            else:
+                self.entity_map[''] = entity
             cells: List[DataCell] = []
             row_overrides = row.overrides
 
@@ -191,7 +203,7 @@ class DataGrid:
                     self._coord_processor_cells.append(cell)
                 else:
                     # append the required queries to the map
-                    cell.build_cell_graph(all_queries)
+                    cell.build_cell_graph(all_queries, self.rdate_entity_map)
 
                 cells.append(cell)
 
@@ -206,9 +218,9 @@ class DataGrid:
         """ Poll the data queries required to process this grid.
             Set the results at the leaf processors
         """
+        self._resolve_rdates()
         self._resolve_queries()
         self._process_special_cells()
-        self.__send_activity()
         self._fetch_queries()
 
     def save(self) -> str:
@@ -255,6 +267,18 @@ class DataGrid:
             raise MqValueError('DataGrid must be created or saved before opening.')
         webbrowser.open(f'{GsSession.current.domain.replace(".web", "")}/s/markets/grids/{self.id_}')
 
+    @property
+    def polling_time(self):
+        return self.__polling_time
+
+    @polling_time.setter
+    def polling_time(self, value):
+        if value is None:
+            self.__polling_time = 0
+        elif value != 0 and value < 10000:
+            raise MqValueError('polling_time must be >= than 10000ms.')
+        self.__polling_time = value
+
     def _process_special_cells(self) -> None:
         """
         Processes Coordinate and Entity cells
@@ -280,11 +304,40 @@ class DataGrid:
 
             cell.updated_time = get_utc_now()
 
-    def _resolve_queries(self, rule_cache: Dict = None, availability_cache: Dict = None) -> None:
+    def _resolve_rdates(self, rule_cache: Dict = None):
+        # TODO: Thread this...
+        rule_cache = rule_cache or {}
+        # Default to no calendar for rdate for external and oauth
+        calendar = [] if not GsSession.current.is_internal() and isinstance(GsSession.current, OAuth2Session) else None
+
+        for entity_id, rules in self.rdate_entity_map.items():
+            entity = self.entity_map.get(entity_id)
+            currencies = None
+            exchanges = None
+            if isinstance(entity, Entity):
+                entity_dict = entity.get_entity()
+                currency = entity_dict.get("currency")
+                exchange = entity_dict.get("exchange")
+                currencies = [currency] if currency else None
+                exchanges = [exchange] if exchange else None
+            for rule_base_date_tuple in rules:
+                rule, base_date = rule_base_date_tuple[0], rule_base_date_tuple[1]
+                cache_key = get_rdate_cache_key(rule_base_date_tuple[0], rule_base_date_tuple[1], currencies,
+                                                exchanges)
+                date_value = rule_cache.get(cache_key)
+                if date_value is None:
+                    if base_date:
+                        base_date = dt.datetime.strptime(base_date, "%Y-%m-%d").date()
+                    date_value = RelativeDate(rule, base_date).apply_rule(currencies=currencies,
+                                                                          exchanges=exchanges,
+                                                                          holiday_calendar=calendar)
+                    rule_cache[cache_key] = date_value
+                self.rule_cache[get_entity_rdate_key(entity_id, rule, base_date)] = date_value
+
+    def _resolve_queries(self, availability_cache: Dict = None) -> None:
         """ Resolves the dataset_id for each data query
             This is used to query data thereafter
         """
-        rule_cache = rule_cache or {}
         availability_cache = availability_cache or {}
 
         for query in self._data_queries:
@@ -294,33 +347,17 @@ class DataGrid:
             query = query.query
             coord = query.coordinate
             entity_dimension = entity.data_dimension
+            entity_id = entity.get_marquee_id()
+
             query_start = query.start
             query_end = query.end
-            entity_dict = entity.get_entity()
-            if entity_dict is None:
-                currencies = None
-                exchanges = None
-            else:
-                currency = entity_dict.get("currency")
-                exchange = entity_dict.get("exchange")
-                currencies = [currency] if currency else None
-                exchanges = [exchange] if exchange else None
-
             if isinstance(query_start, RelativeDate):
-                cache_key = get_rdate_cache_key(query_start.rule, currencies, exchanges)
-                if cache_key in rule_cache:
-                    query.start = rule_cache[cache_key]
-                else:
-                    query.start = query_start.apply_rule(currencies=currencies, exchanges=exchanges)
-                    rule_cache[cache_key] = query.start
+                key = get_entity_rdate_key_from_rdate(entity_id, query_start)
+                query.start = self.rule_cache[key]
 
             if isinstance(query_end, RelativeDate):
-                cache_key = get_rdate_cache_key(query_end.rule, currencies, exchanges)
-                if cache_key in rule_cache:
-                    query.end = rule_cache[cache_key]
-                else:
-                    query.end = query_end.apply_rule(currencies=currencies, exchanges=exchanges)
-                    rule_cache[cache_key] = query.end
+                key = get_entity_rdate_key_from_rdate(entity_id, query_end)
+                query.end = self.rule_cache[key]
 
             if entity_dimension not in coord.dimensions:
                 if coord.dataset_id:
@@ -364,9 +401,12 @@ class DataGrid:
                 query_info.processor.calculate(query_info.attr,
                                                ProcessorResult(False,
                                                                f'No data found for '
-                                                               f'Coordinate {query_info.query.coordinate}'))
+                                                               f'Coordinate {query_info.query.coordinate}'),
+                                               self.rule_cache)
             else:
-                query_info.processor.calculate(query_info.attr, ProcessorResult(True, query_info.data))
+                query_info.processor.calculate(query_info.attr,
+                                               ProcessorResult(True, query_info.data),
+                                               self.rule_cache)
 
     @staticmethod
     def aggregate_queries(query_infos):
@@ -539,6 +579,7 @@ class DataGrid:
                         id_=id_,
                         entitlements=entitlements,
                         primary_column_index=parameters.get('primaryColumnIndex', 0),
+                        polling_time=parameters.get('pollingTime', 0),
                         multiColumnGroups=multi_column_groups,
                         sorts=sorts,
                         filters=filters)
@@ -549,14 +590,17 @@ class DataGrid:
             'parameters': {
                 'rows': [row.as_dict() for row in self.rows],
                 'columns': [column.as_dict() for column in self.columns],
-                'primaryColumnIndex': self._primary_column_index
+                'primaryColumnIndex': self._primary_column_index,
+                'pollingTime': self.polling_time or 0
             }
         }
         if self.entitlements:
             if isinstance(self.entitlements, Entitlements_):
                 datagrid['entitlements'] = self.entitlements.as_dict()
-            else:
+            elif isinstance(self.entitlements, Entitlements):
                 datagrid['entitlements'] = self.entitlements.to_dict()
+            else:
+                datagrid['entitlements'] = self.entitlements
         if len(self.sorts):
             datagrid['parameters']['sorts'] = [asdict(sort) for sort in self.sorts]
         if len(self.filters):
@@ -616,24 +660,6 @@ class DataGrid:
 
     def __as_json(self) -> str:
         return json.dumps(self.as_dict())
-
-    def __send_activity(self):
-        try:
-            body = {
-                'resource': 'DataGrid',
-                'action': 'Calculated',
-                'parameters': {
-                    'dataGridId': self.id_ or "NotPersisted"
-                },
-                'kpis': [{'id': 'DataGrid_Calculated', 'value': 1}],
-                'context': {
-                    'apiDomain': True,
-                    'userAgent': "gs_quant"
-                }
-            }
-            GsSession.current._post('/activities', payload=body)
-        except Exception as e:
-            _logger.warning(f"Unable to track DataGrid_Calculated activity. Details: {e}")
 
 
 def _get_overrides(row_overrides: List[Override],

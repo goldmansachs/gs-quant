@@ -40,7 +40,7 @@ def aggregate_queries(query_infos):
                                                       f'No dataset resolved for '
                                                       f'measure={coordinate.measure} with '
                                                       f'dimensions={coordinate.dimensions}')
-            query_info.processor.calculate(query_info.attr, series)
+            query_info.processor.calculate(query_info.attr, series, None)
             continue
         dataset_mappings.setdefault(query_key, {
             'datasetId': dataset_id,
@@ -92,7 +92,7 @@ def fetch_query(query_info: Dict):
     if df.empty:
         return df
     df.set_index('date' if 'date' in df.columns else 'time', inplace=True)
-    df.index = to_datetime(df.index)
+    df.index = to_datetime(df.index).tz_localize(None)
     return df
 
 

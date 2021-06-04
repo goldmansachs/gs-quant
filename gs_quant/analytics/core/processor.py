@@ -19,16 +19,18 @@ from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
 from datetime import date, datetime
 from enum import Enum, EnumMeta
-from typing import List, Optional, Union, Dict, get_type_hints
+from typing import List, Optional, Union, Dict, get_type_hints, Set, Tuple
 
+import numpy as np
 from pandas import Series
-from pydash import decapitalize
+from pydash import decapitalize, get
 
 from gs_quant.analytics.common import TYPE, PROCESSOR, PARAMETERS, DATA_COORDINATE, \
     ENTITY, VALUE, DATE, DATETIME, PROCESSOR_NAME, ENTITY_ID, ENTITY_TYPE, PARAMETER, REFERENCE, RELATIVE_DATE, LIST
 from gs_quant.analytics.common.enumerators import ScaleShape
-from gs_quant.analytics.common.helpers import is_of_builtin_type
+from gs_quant.analytics.common.helpers import is_of_builtin_type, get_entity_rdate_key_from_rdate
 from gs_quant.analytics.core.processor_result import ProcessorResult
+from gs_quant.analytics.datagrid.utils import get_utc_now
 from gs_quant.data import DataCoordinate, DataFrequency
 from gs_quant.data.query import DataQuery, DataQueryType
 from gs_quant.entities.entity import Entity
@@ -61,7 +63,7 @@ class BaseProcessor(metaclass=ABCMeta):
     def __init__(self, **kwargs):
         self.id = f'{self.__class__.__name__}-{str(uuid.uuid4())}'
         self.value: ProcessorResult = ProcessorResult(False, 'Value not set')
-        self.parent: Optional[BaseProcessor] = None
+        self.parent: Optional[Union[BaseProcessor]] = None
         self.parent_attr: Optional[str] = None
         self.children: Dict[str, Union[DataCoordinateOrProcessor, DataQueryInfo]] = {}
         self.children_data: Dict[str, ProcessorResult] = {}
@@ -79,14 +81,53 @@ class BaseProcessor(metaclass=ABCMeta):
                     and isinstance(self.value.data, Series) and not self.value.data.empty:
                 self.value.data = self.value.data.iloc[-1:]
 
+    def __handle_date_range(self,
+                            result,
+                            rdate_entity_map: Dict[str, date]):
+        """
+        Applies a date/datetime mask on the result using the start/end parameters on a processoor
+        :param result:
+        :param rdate_entity_map: map of entity, rule, base_date to date value
+        :return: None
+        """
+        if not isinstance(result, ProcessorResult) or not result.success:
+            return
+        start = get(self, 'start')
+        end = get(self, 'end')
+
+        if not (start or end):
+            return
+        if start and end:
+            if isinstance(start, RelativeDate):
+                key = get_entity_rdate_key_from_rdate(self.data_cell.entity.get_marquee_id(), start)
+                start = rdate_entity_map[key]
+            if isinstance(end, RelativeDate):
+                key = get_entity_rdate_key_from_rdate(self.data_cell.entity.get_marquee_id(), end)
+                end = rdate_entity_map[key]
+            mask = (result.data.index >= np.datetime64(start)) & (result.data.index <= np.datetime64(end))
+        elif start:
+            if isinstance(start, RelativeDate):
+                key = get_entity_rdate_key_from_rdate(self.data_cell.entity.get_marquee_id(), start)
+                start = rdate_entity_map[key]
+            mask = (result.data.index >= np.datetime64(start))
+        else:
+            if isinstance(end, RelativeDate):
+                key = get_entity_rdate_key_from_rdate(self.data_cell.entity.get_marquee_id(), end)
+                end = rdate_entity_map[key]
+            mask = (result.data.index >= np.datetime64(end))
+
+        result.data = result.data[mask]
+
     def update(self,
                attribute: str,
-               result: ProcessorResult):
+               result: ProcessorResult,
+               rdate_entity_map: Dict[str, date]):
         """ Handle the update of a single coordinate and recalculate the value
 
         :param attribute: Attribute alinging to data coordinate in the processor
         :param result: Processor result including success and series from data query
         """
+        self.__handle_date_range(result, rdate_entity_map)
         self.children_data[attribute] = result
         if isinstance(result, ProcessorResult):
             if result.success:
@@ -104,13 +145,26 @@ class BaseProcessor(metaclass=ABCMeta):
         """ Returns a plot expression used to go from grid to plottool """
         pass
 
+    def __add_required_rdates(self, entity: Entity, rdate_entity_map: Dict[str, Set[Tuple]]):
+        start, end = get(self, 'start'), get(self, 'end')
+        entity_id = entity.get_marquee_id() if isinstance(entity, Entity) else ''
+
+        if isinstance(start, RelativeDate):
+            base_date = str(start.base_date) if start.base_date_passed_in else None
+            rdate_entity_map[entity_id].add((start.rule, base_date))
+        if isinstance(end, RelativeDate):
+            base_date = str(end.base_date) if end.base_date_passed_in else None
+            rdate_entity_map[entity_id].add((end.rule, base_date))
+
     def build_graph(self,
                     entity: Entity,
                     cell,
                     queries: List[DataQueryInfo],
+                    rdate_entity_map: Dict[str, Set[Tuple]],
                     overrides: Optional[List]):
         """ Generates the nested cell graph and keeps a map of leaf data queries to processors"""
         self.data_cell = cell
+        self.__add_required_rdates(entity, rdate_entity_map)
 
         attributes = self.__dict__
 
@@ -137,7 +191,7 @@ class BaseProcessor(metaclass=ABCMeta):
                 # Set the children's parent fields
                 child.parent = self
                 child.parent_attr = attr_name
-                child.build_graph(entity, cell, queries, overrides)
+                child.build_graph(entity, cell, queries, rdate_entity_map, overrides)
 
             elif isinstance(child, DataQueryInfo):
                 child.parent = self
@@ -147,14 +201,15 @@ class BaseProcessor(metaclass=ABCMeta):
 
     def calculate(self,
                   attribute: str,
-                  result: ProcessorResult):
+                  result: ProcessorResult,
+                  rdate_entity_map: Dict[str, date]):
         """ Sets the result on the processor and recursively calls parent to set and calculate value
 
             :param attribute: Attribute alinging to data coordinate in the processor
             :param result: Processor result including success and series from data query
         """
         # update the result
-        self.update(attribute, result)
+        self.update(attribute, result, rdate_entity_map)
 
         # if there is a parent, traverse up and recompute
         if self.parent:
@@ -163,13 +218,13 @@ class BaseProcessor(metaclass=ABCMeta):
                 # only traverse if processor successful calculates
                 if value.success:
                     if isinstance(self.parent, BaseProcessor):
-                        self.parent.calculate(self.parent_attr, value)
+                        self.parent.calculate(self.parent_attr, value, rdate_entity_map)
                     else:
                         # Must be the data cell
                         self.parent.update(value)
                 else:
                     self.data_cell.value = value  # Put the error on the data cell
-                    self.data_cell.updated_time = f'{datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]}Z'
+                    self.data_cell.updated_time = get_utc_now()
 
     def as_dict(self) -> Dict:
         """

@@ -123,6 +123,9 @@ class TriggerInfo(object):
     def __eq__(self, other):
         return self.triggered is other
 
+    def __bool__(self):
+        return self.triggered
+
 
 class Trigger(object):
 
@@ -270,8 +273,8 @@ class DateTrigger(Trigger):
     def __init__(self, trigger_requirements: DateTriggerRequirements, actions: Iterable[Action]):
         super().__init__(trigger_requirements, actions)
 
-    def has_triggered(self, state: dt.date, backtest: BackTest = None) -> bool:
-        return state in self._trigger_requirements.dates
+    def has_triggered(self, state: dt.date, backtest: BackTest = None) -> TriggerInfo:
+        return TriggerInfo(state in self._trigger_requirements.dates)
 
 
 class PortfolioTrigger(Trigger):

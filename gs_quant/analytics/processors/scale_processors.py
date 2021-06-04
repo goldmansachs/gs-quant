@@ -15,7 +15,7 @@ under the License.
 """
 
 import math
-from typing import Union, List, Tuple
+from typing import Union, List, Tuple, Dict
 
 from gs_quant.analytics.common.enumerators import ScaleShape
 from gs_quant.analytics.core import BaseProcessor
@@ -104,10 +104,14 @@ class BarMarkerProcessor(BaseProcessor):
 SpotOrBarMarker = Union[SpotMarkerProcessor, BarMarkerProcessor]
 
 
-def validate_markers_data(min_val: float, max_val: float, marker_data: dict) -> Tuple[bool, str]:
+def validate_markers_data(result: Dict, marker_data: Dict) -> Tuple[bool, str]:
+    min_val = result['min']
+    max_val = result['max']
     if not min_val or math.isnan(min_val):
+        result['min'] = None
         return False, 'Min Value needs to exist for Scale to render'
     if not max_val or math.isnan(max_val):
+        result['max'] = None
         return False, 'Max Value needs to exist for Scale to render'
 
     marker_name = marker_data["name"]
@@ -164,7 +168,7 @@ class ScaleProcessor(BaseProcessor):
                 }
                 for marker_data in markers_data:
                     if marker_data and marker_data.success and marker_data.data:
-                        valid, reason = validate_markers_data(result['min'], result['max'], marker_data.data)
+                        valid, reason = validate_markers_data(result, marker_data.data)
                         if valid:
                             result['markers'].append(marker_data.data)
                         else:

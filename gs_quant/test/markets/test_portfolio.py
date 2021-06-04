@@ -16,10 +16,12 @@ under the License.
 import datetime as dt
 from unittest import mock
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 import gs_quant.risk as risk
+from gs_quant.api.gs.assets import GsAssetApi
+from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.datetime import business_day_offset
 from gs_quant.instrument import IRSwap, IRSwaption, CurveScenario
 from gs_quant.markets import HistoricalPricingContext, PricingContext, BackToTheFuturePricingContext, \
@@ -27,6 +29,8 @@ from gs_quant.markets import HistoricalPricingContext, PricingContext, BackToThe
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk.results import PortfolioPath, PortfolioRiskResult
 from gs_quant.session import Environment, GsSession
+from gs_quant.target.common import PositionSet
+from gs_quant.target.portfolios import Portfolio as MarqueePortfolio
 from gs_quant.test.utils.test_utils import MockCalc
 
 
@@ -349,3 +353,20 @@ def test_single_instrument_new_mock(mocker):
         assert tuple(map(lambda x: round(x, 6), fwd)) == (0.007512,)
         assert round(fwd.aggregate(), 2) == 0.01
         assert round(fwd[swap1], 6) == 0.007512
+
+
+def test_get_instruments(mocker):
+    mocker.patch.object(GsPortfolioApi, 'get_position_dates', return_value=([dt.date(2021, 1, 2),
+                                                                             dt.date(2021, 5, 6),
+                                                                             dt.date(2021, 6, 1)]))
+    mocker.patch.object(GsPortfolioApi, 'get_positions_for_date', return_value=(PositionSet(
+        position_date=dt.date(2021, 6, 1),
+        positions=[])))
+    mocker.patch.object(GsPortfolioApi, 'get_portfolio', return_value=(MarqueePortfolio(id_='id',
+                                                                                        name='name',
+                                                                                        currency='USD')))
+    mocker.patch.object(GsAssetApi, 'get_instruments_for_positions', return_value=([]))
+
+    port = Portfolio.get(portfolio_id='id')
+    port._get_instruments(dt.date(2021, 5, 14), False)
+    GsPortfolioApi.get_positions_for_date.assert_called_with('id', dt.date(2021, 5, 6))
