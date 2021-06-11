@@ -57,6 +57,8 @@ class SpotMarkerProcessor(BaseProcessor):
         else:
             self.value = ProcessorResult(False, 'Processor does not have data')
 
+        return self.value
+
     def get_plot_expression(self):
         pass
 
@@ -96,6 +98,8 @@ class BarMarkerProcessor(BaseProcessor):
                 self.value = ProcessorResult(False, "Processor does not have start and end values yet")
         else:
             self.value = ProcessorResult(False, "Processor does not have start and end data yet")
+
+        return self.value
 
     def get_plot_expression(self):
         pass
@@ -178,6 +182,8 @@ class ScaleProcessor(BaseProcessor):
                 self.value = ProcessorResult(False, "Processor does not have min, max values yet")
         else:
             self.value = ProcessorResult(False, "Processor does not have min, max data yet")
+
+        return self.value
 
     def get_plot_expression(self):
         pass

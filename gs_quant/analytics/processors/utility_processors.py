@@ -45,12 +45,14 @@ class LastProcessor(BaseProcessor):
         self.start = start
         self.end = end
 
-    def process(self) -> None:
+    def process(self):
         """ Calculate the result and store it as the processor value """
         a_data = self.children_data.get('a')
         if isinstance(a_data, ProcessorResult):
             if a_data.success and isinstance(a_data.data, Series):
                 self.value = ProcessorResult(True, pd.Series(a_data.data[-1:]))
+
+        return self.value
 
     def get_plot_expression(self):
         pass
@@ -78,7 +80,7 @@ class MinProcessor(BaseProcessor):
         self.start = start
         self.end = end
 
-    def process(self) -> None:
+    def process(self):
         """ Calculate the result and store it as the processor value """
         a = self.children_data.get('a')
         if isinstance(a, ProcessorResult):
@@ -88,6 +90,8 @@ class MinProcessor(BaseProcessor):
                 self.value = ProcessorResult(False, "Processor does not data series yet")
         else:
             self.value = ProcessorResult(False, "Processor does not have series yet")
+
+        return self.value
 
     def get_plot_expression(self):
         pass
@@ -115,7 +119,7 @@ class MaxProcessor(BaseProcessor):
         self.start = start
         self.end = end
 
-    def process(self) -> None:
+    def process(self):
         """ Calculate the result and store it as the processor value """
         a = self.children_data.get('a')
         if isinstance(a, ProcessorResult):
@@ -125,6 +129,8 @@ class MaxProcessor(BaseProcessor):
                 self.value = ProcessorResult(False, "Processor does not have data series yet")
         else:
             self.value = ProcessorResult(False, "Processor does not have series yet")
+
+        return self.value
 
     def get_plot_expression(self):
         pass
@@ -154,7 +160,7 @@ class AppendProcessor(BaseProcessor):
         self.start = start
         self.end = end
 
-    def process(self) -> None:
+    def process(self):
         a_data = self.children_data.get('a')
         b_data = self.children_data.get('b')
         if isinstance(a_data, ProcessorResult) and isinstance(b_data, ProcessorResult):
@@ -165,6 +171,8 @@ class AppendProcessor(BaseProcessor):
                 self.value = ProcessorResult(False, "Processor does not have A and B data yet")
         else:
             self.value = ProcessorResult(False, "Processor does not have A and B data yet")
+
+        return self.value
 
     def get_plot_expression(self):
         pass
@@ -203,11 +211,11 @@ class AdditionProcessor(BaseProcessor):
         if isinstance(a_data, ProcessorResult):
             if not a_data.success:
                 self.value = a_data
-                return
+                return self.value
             if self.addend:
                 value = a_data.data.add(self.addend)
                 self.value = ProcessorResult(True, value)
-                return
+                return self.value
             b_data = self.children_data.get('b')
             if isinstance(b_data, ProcessorResult):
                 if b_data.success:
@@ -215,6 +223,8 @@ class AdditionProcessor(BaseProcessor):
                     self.value = ProcessorResult(True, value)
                 else:
                     self.value = ProcessorResult(True, b_data.data)
+
+        return self.value
 
     def get_plot_expression(self):
         pass
@@ -253,11 +263,11 @@ class SubtractionProcessor(BaseProcessor):
         if isinstance(a_data, ProcessorResult):
             if not a_data.success:
                 self.value = a_data
-                return
+                return self.value
             if self.subtrahend:
                 value = a_data.data.sub(self.subtrahend)
                 self.value = ProcessorResult(True, value)
-                return
+                return self.value
             b_data = self.children_data.get('b')
             if isinstance(b_data, ProcessorResult):
                 if b_data.success:
@@ -265,6 +275,8 @@ class SubtractionProcessor(BaseProcessor):
                     self.value = ProcessorResult(True, value)
                 else:
                     self.value = b_data
+
+        return self.value
 
     def get_plot_expression(self):
         pass
@@ -305,11 +317,11 @@ class MultiplicationProcessor(BaseProcessor):
         if isinstance(a_data, ProcessorResult):
             if not a_data.success:
                 self.value = a_data
-                return
+                return a_data
             if self.factor:
                 value = a_data.data.mul(self.factor)
                 self.value = ProcessorResult(True, value)
-                return
+                return self.value
             b_data = self.children_data.get('b')
             if isinstance(b_data, ProcessorResult):
                 if b_data.success:
@@ -317,6 +329,8 @@ class MultiplicationProcessor(BaseProcessor):
                     self.value = ProcessorResult(True, value)
                 else:
                     self.value = b_data
+
+        return self.value
 
     def get_plot_expression(self):
         pass
@@ -355,11 +369,11 @@ class DivisionProcessor(BaseProcessor):
         if isinstance(a_data, ProcessorResult):
             if not a_data.success:
                 self.value = a_data
-                return
+                return self.value
             if self.dividend:
                 value = a_data.data.div(self.dividend)
                 self.value = ProcessorResult(True, value)
-                return
+                return self.value
             b_data = self.children_data.get('b')
             if isinstance(b_data, ProcessorResult):
                 if b_data.success:
@@ -367,6 +381,8 @@ class DivisionProcessor(BaseProcessor):
                     self.value = ProcessorResult(True, value)
                 else:
                     self.value = b_data
+
+        return self.value
 
     def get_plot_expression(self):
         pass

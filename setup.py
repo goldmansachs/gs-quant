@@ -68,7 +68,8 @@ setuptools.setup(
         "pandas<=1.2.4",
         "python-dateutil>=2.7.0",
         "requests",
-        "scipy>=1.2.0",
+        "scipy>=1.2.0,<=1.6.0;python_version<'3.7'",
+        "scipy>=1.2.0;python_version>'3.6'",
         "six",
         "statsmodels>=0.11.1",
         "typing;python_version<'3.7'",
@@ -79,7 +80,7 @@ setuptools.setup(
         "deprecation"
     ],
     extras_require={
-        "internal": ["gs_quant_internal>=0.7.4", "requests_kerberos"],
+        "internal": ["gs_quant_internal>=1.1.30", "requests_kerberos"],
         "notebook": ["jupyter", "matplotlib~=3.1.0", "seaborn"],
         "test": ["pytest", "pytest-cov", "pytest-mock", "testfixtures", "nbconvert", "nbformat", "jupyter_client"],
         "develop": ["wheel", "sphinx", "sphinx_rtd_theme", "sphinx_autodoc_typehints", "pytest", "pytest-cov",

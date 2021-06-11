@@ -15,6 +15,7 @@ under the License.
 """
 
 import datetime as dt
+from gs_quant.target.common import PayReceive as _PayReceive
 from gs_quant.target.common import *
 from gs_quant.target.risk import CountryCode
 from enum import Enum
@@ -49,4 +50,7 @@ class PayReceive(EnumBase, Enum):
 
     @classmethod
     def _missing_(cls, key):
-        return cls.Receive if key.lower() == 'receive' or key.lower() == 'receiver' else super()._missing_(key)
+        if isinstance(key, _PayReceive):
+            key = key.value
+
+        return cls.Receive if key.lower() in ('receive', 'receiver') else super()._missing_(key)

@@ -91,12 +91,20 @@ class RiskApi(metaclass=ABCMeta):
     def enqueue(cls,
                 q: Union[queue.Queue, asyncio.Queue],
                 items: Iterable,
-                loop: Optional[asyncio.AbstractEventLoop] = None):
+                loop: Optional[asyncio.AbstractEventLoop] = None,
+                wait: Optional[bool] = False):
+        try:
+            iter(items)
+        except TypeError:
+            items = (items,)
+
+        put = q.put if wait else q.put_nowait
+
         for item in items:
             if loop:
-                loop.call_soon_threadsafe(q.put_nowait, item)
+                loop.call_soon_threadsafe(put, item)
             else:
-                q.put_nowait(item)
+                put(item)
 
     @classmethod
     def shutdown_queue_listener(cls,
@@ -114,6 +122,18 @@ class RiskApi(metaclass=ABCMeta):
             max_concurrent: int,
             progress_bar: Optional[tqdm] = None,
             timeout: Optional[int] = None):
+        def _process_results(completed: list):
+            chunk_results = tuple(itertools.chain.from_iterable(cls._handle_results(request, result).items()
+                                                                for request, result in completed))
+            cls.enqueue(results, chunk_results, wait=True)
+
+        def process_results(unprocessed_results: queue.Queue):
+            shutdown = False
+
+            while not shutdown:
+                shutdown, completed = cls.drain_queue(unprocessed_results)
+                _process_results(completed)
+
         def execute_requests(outstanding_requests: queue.Queue,
                              responses: asyncio.Queue,
                              raw_results: asyncio.Queue,
@@ -147,6 +167,7 @@ class RiskApi(metaclass=ABCMeta):
             raw_results = asyncio.Queue()
             responses = asyncio.Queue() if is_async else raw_results
             outstanding_requests = queue.Queue()
+            unprocessed_results = None
             results_handler = None
 
             # The requests library (which we use for dispatching) is not async, so we need a thread for concurrency
@@ -161,6 +182,13 @@ class RiskApi(metaclass=ABCMeta):
             expected = sum(num_risk_keys(r) for r in requests)
             received = 0
             chunk_size = min(max_concurrent, expected)
+            result_thread = None
+
+            if expected > chunk_size:
+                # Result handling can occur while we're blocked on I/O
+                unprocessed_results = queue.Queue()
+                result_thread = Thread(daemon=True, target=process_results, args=(unprocessed_results,))
+                result_thread.start()
 
             while received < expected:
                 if requests:
@@ -174,36 +202,45 @@ class RiskApi(metaclass=ABCMeta):
 
                     cls.enqueue(outstanding_requests, dispatch_requests, loop=loop)
 
-                    if not requests:
-                        # No more requests - shutdown the listener queue, the thread will exit
-                        cls.shutdown_queue_listener(outstanding_requests, loop=loop)
-
                 # Wait for results
                 shutdown, completed = await cls.drain_queue_async(raw_results)
                 if shutdown:
                     # Only happens on error
                     break
 
-                # Handle the results
-                chunk_results = tuple(itertools.chain.from_iterable(cls._handle_results(request, result).items()
-                                                                    for request, result in completed))
-                chunk_received = len(chunk_results)
-
                 # Enable as many new requests as we've received results, to keep the outstanding number constant
+                chunk_received = sum(num_risk_keys(request) for request, _ in completed)
                 chunk_size = min(chunk_received, expected - received)
 
                 if progress_bar:
                     progress_bar.update(chunk_received)
                     progress_bar.refresh()
 
-                cls.enqueue(results, chunk_results)
                 received += chunk_received
+
+                # Handle the results
+                if unprocessed_results is not None:
+                    cls.enqueue(unprocessed_results, completed)
+                else:
+                    _process_results(completed)
+
+            cls.shutdown_queue_listener(outstanding_requests)
 
             if results_handler:
                 await results_handler
 
             if progress_bar:
                 progress_bar.close()
+
+            if result_thread is not None:
+                cls.shutdown_queue_listener(unprocessed_results)
+                result_thread.join()
+
+            cls.shutdown_queue_listener(results)
+
+            if result_thread is not None:
+                cls.shutdown_queue_listener(unprocessed_results)
+                result_thread.join()
 
             cls.shutdown_queue_listener(results)
 

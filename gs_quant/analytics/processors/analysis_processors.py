@@ -61,5 +61,7 @@ class DiffProcessor(BaseProcessor):
         else:
             self.value = ProcessorResult(False, "DiffProcessor does not have 'a' series yet")
 
+        return self.value
+
     def get_plot_expression(self):
         pass

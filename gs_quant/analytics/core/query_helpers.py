@@ -47,7 +47,8 @@ def aggregate_queries(query_infos):
             'parameters': {},
             'queries': defaultdict(list),
             'range': {},
-            'realTime': True if coordinate.frequency == DataFrequency.REAL_TIME else False
+            'realTime': True if coordinate.frequency == DataFrequency.REAL_TIME else False,
+            'measures': set()
         })
         query_map = dataset_mappings[query_key]
         if not query_map['range']:
@@ -64,6 +65,7 @@ def aggregate_queries(query_infos):
         queries = query_map['queries']
         queries[coordinate.get_dimensions()].append(query_info)
         parameters = query_map['parameters']
+        query_map['measures'].add(coordinate.measure)
         for dimension, value in coordinate.dimensions.items():
             parameters.setdefault(dimension, set())
             parameters[dimension].add(value)

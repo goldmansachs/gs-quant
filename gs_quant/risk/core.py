@@ -448,6 +448,18 @@ def subtract_risk(left: DataFrameWithInfo, right: DataFrameWithInfo) -> pd.DataF
     return aggregate_risk((left, right_negated))
 
 
+def sort_values(data: Iterable, columns: Tuple[str, ...], by: Tuple[str, ...]) -> Iterable:
+    indices = tuple(columns.index(c) for c in by if c in columns)
+    fns = [None] * len(columns)
+    for idx in indices:
+        fns[idx] = __column_sort_fns.get(columns[idx])
+
+    def cmp(row) -> tuple:
+        return tuple((fns[i](row[i]) or 0) if fns[i] else row[i] for i in indices)
+
+    return sorted(data, key=cmp)
+
+
 def sort_risk(df: pd.DataFrame, by: Tuple[str, ...] = __risk_columns) -> pd.DataFrame:
     """
     Sort bucketed risk
@@ -457,14 +469,7 @@ def sort_risk(df: pd.DataFrame, by: Tuple[str, ...] = __risk_columns) -> pd.Data
     :return: A sorted Dataframe
     """
     columns = tuple(df.columns)
-    indices = [columns.index(c) if c in columns else -1 for c in by]
-    fns = [__column_sort_fns.get(c) for c in columns]
-
-    def cmp(row) -> tuple:
-        return tuple(
-            (fns[i](row[i]) or 0) if fns[i] else row[i] for i in indices if i != -1)
-
-    data = sorted((row for _, row in df.iterrows()), key=cmp)
+    data = sort_values((row for _, row in df.iterrows()), columns, by)
     fields = [f for f in by if f in columns]
     fields.extend(f for f in columns if f not in fields)
 
