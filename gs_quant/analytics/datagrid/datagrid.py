@@ -13,7 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-
+import asyncio
 import datetime as dt
 import json
 import logging
@@ -398,15 +398,18 @@ class DataGrid:
 
         for query_info in self._data_queries:
             if query_info.data is None or len(query_info.data) == 0:
-                query_info.processor.calculate(query_info.attr,
-                                               ProcessorResult(False,
-                                                               f'No data found for '
-                                                               f'Coordinate {query_info.query.coordinate}'),
-                                               self.rule_cache)
+                asyncio.get_event_loop().run_until_complete(
+                    query_info.processor.calculate(query_info.attr,
+                                                   ProcessorResult(False,
+                                                                   f'No data found for '
+                                                                   f'Coordinate {query_info.query.coordinate}'),
+                                                   self.rule_cache))
             else:
-                query_info.processor.calculate(query_info.attr,
-                                               ProcessorResult(True, query_info.data),
-                                               self.rule_cache)
+                asyncio.get_event_loop().run_until_complete(
+                    query_info.processor.calculate(query_info.attr,
+                                                   ProcessorResult(True,
+                                                                   query_info.data),
+                                                   self.rule_cache))
 
     @staticmethod
     def aggregate_queries(query_infos):

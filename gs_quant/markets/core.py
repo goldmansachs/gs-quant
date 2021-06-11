@@ -103,7 +103,6 @@ class PricingContext(ContextBaseWithDefault):
         To change the market data location of the default context:
 
         >>> from gs_quant.markets import PricingContext
-        >>> import datetime as dt
         >>>
         >>> PricingContext.current = PricingContext(market_data_location='LDN')
 
@@ -134,7 +133,8 @@ class PricingContext(ContextBaseWithDefault):
         if pricing_date:
             if pricing_date > dt.date.today():
                 raise ValueError(
-                    "The PricingContext does not support a pricing_date in the future. Please use the RollFwd Scenario to roll the pricing_date to a future date")
+                    'The PricingContext does not support a pricing_date in the future. Please use the RollFwd Scenario '
+                    'to roll the pricing_date to a future date')
 
         if market:
             market_date = None
@@ -148,7 +148,8 @@ class PricingContext(ContextBaseWithDefault):
             if market_date:
                 if market_date > dt.date.today():
                     raise ValueError(
-                        "The PricingContext does not support a market dated in the future. Please use the RollFwd Scenario to roll the pricing_date to a future date")
+                        'The PricingContext does not support a market dated in the future. Please use the RollFwd '
+                        'Scenario to roll the pricing_date to a future date')
 
         if not market_data_location:
             if not market:
@@ -197,16 +198,15 @@ class PricingContext(ContextBaseWithDefault):
             except Exception as e:
                 provider_.enqueue(results, ((k, e) for k in self.__pending.keys()))
 
-            while not done:
+            while self.__pending and not done:
                 done, chunk_results = provider_.drain_queue(results)
                 for (risk_key_, priceable_), result in chunk_results:
-                    if (risk_key_, priceable_) in self.__pending:
-                        future = self.__pending.pop((risk_key_, priceable_))
+                    future = self.__pending.pop((risk_key_, priceable_), None)
+                    if future is not None:
+                        future.set_result(result)
 
                         if self.__use_cache:
                             PricingCache.put(risk_key_, priceable_, result)
-
-                        future.set_result(result)
 
             while self.__pending:
                 (risk_key_, _), future = self.__pending.popitem()
@@ -242,8 +242,9 @@ class PricingContext(ContextBaseWithDefault):
                 for (params, scenario, dates_markets, risk_measures), instruments in grouped_requests.items():
                     for insts_chunk in [tuple(filter(None, i)) for i in
                                         zip_longest(*[iter(instruments)] * self._max_concurrent)]:
-                        for dates_chunk in [tuple(filter(None, i)) for i in zip_longest(*[iter(dates_markets)] * (
-                        1 if self._max_concurrent == 1000 else self._max_concurrent))]:
+                        for dates_chunk in [tuple(filter(None, i)) for i in
+                                            zip_longest(*[iter(dates_markets)] * (
+                                                    1 if self._max_concurrent == 1000 else self._max_concurrent))]:
                             requests.append(RiskRequest(
                                 tuple(RiskPosition(instrument=i, quantity=i.instrument_quantity) for i in insts_chunk),
                                 risk_measures,
@@ -259,7 +260,7 @@ class PricingContext(ContextBaseWithDefault):
                 requests_for_provider[provider] = requests
 
             show_status = self.__show_progress and \
-                          (len(requests_for_provider) > 1 or len(next(iter(requests_for_provider.values()))) > 1)
+                (len(requests_for_provider) > 1 or len(next(iter(requests_for_provider.values()))) > 1)
             request_pool = ThreadPoolExecutor(len(requests_for_provider)) \
                 if len(requests_for_provider) > 1 or self.__is_async else None
             progress_bar = tqdm(total=len(self.__pending), position=0, maxinterval=1,
@@ -293,7 +294,7 @@ class PricingContext(ContextBaseWithDefault):
             return None
 
         return MarketDataScenario(scenario=scenarios[0] if len(scenarios) == 1 else
-        CompositeScenario(scenarios=tuple(reversed(scenarios))))
+                                  CompositeScenario(scenarios=tuple(reversed(scenarios))))
 
     @property
     def active_context(self):
@@ -402,14 +403,14 @@ class PositionContext(ContextBaseWithDefault):
         To change the position date of the default context:
 
         >>> from gs_quant.markets import PositionContext
-        >>> import datetime as dt
+        >>> import datetime
         >>>
-        >>> PricingContext.current = PositionContext(dt.date(2021, 1, 2))
+        >>> PricingContext.current = PositionContext(datetime.date(2021, 1, 2))
 
         For a pricing a portfolio with positions held on a specific date:
 
         >>> from gs_quant.markets.portfolio import Portfolio
-        >>> portfolio.get('MQPORTFOLIOID')
+        >>> portfolio = Portfolio.get(portfolio_id='MQPORTFOLIOID')
         >>>
         >>> with PositionContext():
         >>>     portfolio.price()
@@ -418,7 +419,7 @@ class PositionContext(ContextBaseWithDefault):
         For an asynchronous request:
 
         >>> with PositionContext(), PricingContext(is_async=True):
-        >>>     portfolio.price()
+        >>>     price_f = portfolio.price()
         >>>
         >>> while not price_f.done:
         >>> ...

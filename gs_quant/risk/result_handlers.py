@@ -15,10 +15,9 @@ under the License.
 """
 import datetime as dt
 import logging
-import pandas as pd
 from typing import Iterable, Optional, Union
 
-from .core import DataFrameWithInfo, ErrorValue, UnsupportedValue, FloatWithInfo, StringWithInfo, sort_risk
+from .core import DataFrameWithInfo, ErrorValue, UnsupportedValue, FloatWithInfo, StringWithInfo, sort_values
 from .measures import EqDelta, EqGamma, EqVega
 from gs_quant.base import InstrumentBase, RiskKey
 
@@ -28,9 +27,27 @@ __scalar_risk_measures = (EqDelta, EqGamma, EqVega)
 
 def __dataframe_handler(result: Iterable, mappings: tuple, risk_key: RiskKey, request_id: Optional[str] = None)\
         -> DataFrameWithInfo:
-    records = [{k: datum.get(v, (None if v == 'value' else '')) for k, v in mappings} for datum in result]
-    df = pd.DataFrame.from_records(records)
-    return DataFrameWithInfo(sort_risk(df, tuple(k for k, _ in mappings)), risk_key=risk_key, request_id=request_id)
+    first_row = next(iter(result), None)
+    if first_row is None:
+        return DataFrameWithInfo(risk_key=risk_key, request_id=request_id)
+
+    columns = ()
+    indices = [False] * len(first_row.keys())
+    mappings_lookup = {v: k for k, v in mappings}
+
+    for idx, src in enumerate(first_row.keys()):
+        if src in mappings_lookup:
+            indices[idx] = True
+            columns += ((mappings_lookup[src]),)
+
+    records = tuple(
+        sort_values((tuple(v for i, v in enumerate(r.values()) if indices[i]) for r in result), columns, columns)
+    )
+
+    df = DataFrameWithInfo(records, risk_key=risk_key, request_id=request_id)
+    df.columns = columns
+
+    return df
 
 
 def cashflows_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None)\

@@ -69,6 +69,8 @@ class PercentilesProcessor(BaseProcessor):
         else:
             self.value = ProcessorResult(False, "PercentilesProcessor does not have 'a' series yet")
 
+        return self.value
+
     def get_plot_expression(self):
         pass
 
@@ -115,6 +117,8 @@ class PercentileProcessor(BaseProcessor):
                 self.value = ProcessorResult(False, "PercentileProcessor does not have 'a' series values yet")
         else:
             self.value = ProcessorResult(False, "PercentileProcessor does not have 'a' series yet")
+
+        return self.value
 
     def get_plot_expression(self):
         pass
@@ -167,6 +171,8 @@ class MeanProcessor(BaseProcessor):
         else:
             self.value = ProcessorResult(False, "MeanProcessor does not have 'a' series yet")
 
+        return self.value
+
     def get_plot_expression(self):
         pass
 
@@ -218,6 +224,8 @@ class SumProcessor(BaseProcessor):
         else:
             self.value = ProcessorResult(False, "SumProcessor does not have 'a' series yet")
 
+        return self.value
+
     def get_plot_expression(self):
         pass
 
@@ -268,6 +276,8 @@ class StdDevProcessor(BaseProcessor):
         else:
             self.value = ProcessorResult(False, "StdDevProcessor does not have 'a' series yet")
 
+        return self.value
+
     def get_plot_expression(self):
         pass
 
@@ -316,6 +326,8 @@ class VarianceProcessor(BaseProcessor):
                 self.value = ProcessorResult(False, "VarianceProcessor does not have 'a' series values yet")
         else:
             self.value = ProcessorResult(False, "VarianceProcessor does not have 'a' series yet")
+
+        return self.value
 
     def get_plot_expression(self):
         pass
@@ -373,6 +385,8 @@ class CovarianceProcessor(BaseProcessor):
         else:
             self.value = ProcessorResult(False, "CovarianceProcessor does not have 'a' series yet")
 
+        return self.value
+
     def get_plot_expression(self):
         pass
 
@@ -425,6 +439,8 @@ class ZscoresProcessor(BaseProcessor):
                 self.value = ProcessorResult(False, "ZscoresProcessor does not have 'a' series values yet")
         else:
             self.value = ProcessorResult(False, "ZscoresProcessor does not have 'a' series yet")
+
+        return self.value
 
     def get_plot_expression(self):
         pass

@@ -15,6 +15,7 @@ under the License.
 """
 
 import copy
+import uuid
 from typing import List, Optional, Dict, Set, Tuple
 
 from pandas import Series
@@ -43,6 +44,7 @@ class DataCell:
                  row_group: str = None):
         # Cell starts with root processor
         # Deep copies so the processor and children are unique objects
+        self.cell_id = str(uuid.uuid4())
         self.processor: BaseProcessor = copy.deepcopy(processor)
         self.entity: Entity = entity
         self.name: str = name

@@ -58,7 +58,7 @@ def _compose(lhs: ResultInfo, rhs: ResultInfo) -> ResultInfo:
 
 
 def _value_for_date(result: Union[DataFrameWithInfo, SeriesWithInfo], date: Union[Iterable, dt.date]) -> \
-        Union[DataFrameWithInfo, ErrorValue, FloatWithInfo]:
+        Union[DataFrameWithInfo, ErrorValue, FloatWithInfo, SeriesWithInfo]:
     from gs_quant.markets import CloseMarket
 
     raw_value = result.loc[date]

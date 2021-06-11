@@ -14,6 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime as dt
+import functools
 import re
 import string
 
@@ -116,6 +117,7 @@ def relative_date_add(date_rule: str, strict: bool = False) -> float:
     return 0
 
 
+@functools.lru_cache(maxsize=None)
 def point_sort_order(point: str, ref_date: dt.date = dt.date.today()) -> float:
     """
     Calculates a number that can be used to sort Mkt Points by it.

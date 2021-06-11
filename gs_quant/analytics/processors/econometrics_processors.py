@@ -74,6 +74,8 @@ class VolatilityProcessor(BaseProcessor):
         else:
             self.value = ProcessorResult(False, 'Processor does not have data')
 
+        return self.value
+
     def get_plot_expression(self):
         pass
 
@@ -137,6 +139,8 @@ class SharpeRatioProcessor(BaseProcessor):
                 ratio = get_ratio_pure(excess_returns, self.w)
                 self.value = ProcessorResult(True, ratio)
 
+        return self.value
+
     def get_plot_expression(self):
         pass
 
@@ -197,6 +201,8 @@ class CorrelationProcessor(BaseProcessor):
         else:
             self.value = ProcessorResult(False, "Processor does not have A and Benchmark data yet")
 
+        return self.value
+
     def get_plot_expression(self):
         pass
 
@@ -224,12 +230,14 @@ class ChangeProcessor(BaseProcessor):
         self.start = start
         self.end = end
 
-    def process(self) -> None:
+    def process(self):
         a_data = self.children_data.get('a')
         if isinstance(a_data, ProcessorResult):
             if a_data.success:
                 value = change(a_data.data)
                 self.value = ProcessorResult(True, value)
+
+        return self.value
 
     def get_plot_expression(self):
         pass
@@ -265,7 +273,7 @@ class ReturnsProcessor(BaseProcessor):
         self.observations = observations
         self.type_ = type_
 
-    def process(self) -> None:
+    def process(self):
         a_data = self.children_data.get('a')
         if isinstance(a_data, ProcessorResult):
             if a_data.success:
@@ -278,6 +286,8 @@ class ReturnsProcessor(BaseProcessor):
                 else:
                     value = returns(a_data.data, self.observations, self.type_)
                     self.value = ProcessorResult(True, value)
+
+        return self.value
 
     def get_plot_expression(self):
         pass
@@ -334,6 +344,8 @@ class BetaProcessor(BaseProcessor):
                 self.value = ProcessorResult(False, "BetaProcessor does not have 'a' series values yet")
         else:
             self.value = ProcessorResult(False, "BetaProcessor does not have 'a' series yet")
+
+        return self.value
 
     def get_plot_expression(self):
         pass

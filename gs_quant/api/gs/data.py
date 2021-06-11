@@ -182,12 +182,16 @@ class GsDataApi(DataApi):
         return results
 
     @classmethod
-    def last_data(cls, query: Union[DataQuery, MDAPIDataQuery], dataset_id: str = None) -> Union[list, tuple]:
+    def last_data(cls, query: Union[DataQuery, MDAPIDataQuery], dataset_id: str = None, timeout: int = None) \
+            -> Union[list, tuple]:
+        kwargs = {}
+        if timeout is not None:
+            kwargs['timeout'] = timeout
         if getattr(query, 'marketDataCoordinates', None):
-            result = GsSession.current._post('/data/coordinates/query/last', payload=query)
+            result = GsSession.current._post('/data/coordinates/query/last', payload=query, **kwargs)
             return result.get('responses', ())
         else:
-            result = GsSession.current._post('/data/{}/last/query'.format(dataset_id), payload=query)
+            result = GsSession.current._post('/data/{}/last/query'.format(dataset_id), payload=query, **kwargs)
             return result.get('data', ())
 
     @classmethod
@@ -496,7 +500,8 @@ class GsDataApi(DataApi):
             as_of: Union[dt.datetime, dt.date] = None,
             vendor: MarketDataVendor = MarketDataVendor.Goldman_Sachs,
             as_dataframe: bool = False,
-            pricing_location: Optional[PricingLocation] = None
+            pricing_location: Optional[PricingLocation] = None,
+            timeout: int = None
     ) -> Union[Dict, pd.DataFrame]:
         """
         Get last value of coordinates data
@@ -506,6 +511,7 @@ class GsDataApi(DataApi):
         :param vendor: data vendor
         :param as_dataframe: whether to return the result as Dataframe
         :param pricing_location: the location where close data has been recorded (not used for real-time query)
+        :param timeout: data query timeout; if timeout is not set then the default timeout is used
         :return: Dataframe or dictionary of the returned data
 
         **Examples**
@@ -522,7 +528,11 @@ class GsDataApi(DataApi):
             pricing_location=pricing_location
         )
 
-        data = cls.last_data(query)
+        kwargs = {}
+        if timeout is not None:
+            kwargs['timeout'] = timeout
+
+        data = cls.last_data(query, **kwargs)
 
         if not as_dataframe:
             ret = {coordinate: None for coordinate in market_data_coordinates}

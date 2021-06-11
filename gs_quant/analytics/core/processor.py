@@ -13,9 +13,11 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import asyncio
 import logging
 import uuid
 from abc import ABCMeta, abstractmethod
+from concurrent.futures.process import ProcessPoolExecutor
 from dataclasses import dataclass
 from datetime import date, datetime
 from enum import Enum, EnumMeta
@@ -30,7 +32,6 @@ from gs_quant.analytics.common import TYPE, PROCESSOR, PARAMETERS, DATA_COORDINA
 from gs_quant.analytics.common.enumerators import ScaleShape
 from gs_quant.analytics.common.helpers import is_of_builtin_type, get_entity_rdate_key_from_rdate
 from gs_quant.analytics.core.processor_result import ProcessorResult
-from gs_quant.analytics.datagrid.utils import get_utc_now
 from gs_quant.data import DataCoordinate, DataFrequency
 from gs_quant.data.query import DataQuery, DataQueryType
 from gs_quant.entities.entity import Entity
@@ -118,10 +119,11 @@ class BaseProcessor(metaclass=ABCMeta):
 
         result.data = result.data[mask]
 
-    def update(self,
-               attribute: str,
-               result: ProcessorResult,
-               rdate_entity_map: Dict[str, date]):
+    async def update(self,
+                     attribute: str,
+                     result: ProcessorResult,
+                     rdate_entity_map: Dict[str, date],
+                     pool: ProcessPoolExecutor = None):
         """ Handle the update of a single coordinate and recalculate the value
 
         :param attribute: Attribute alinging to data coordinate in the processor
@@ -129,10 +131,15 @@ class BaseProcessor(metaclass=ABCMeta):
         """
         self.__handle_date_range(result, rdate_entity_map)
         self.children_data[attribute] = result
+
         if isinstance(result, ProcessorResult):
             if result.success:
                 try:
-                    self.process()
+                    if pool:
+                        value = await asyncio.get_running_loop().run_in_executor(pool, self.process)
+                        self.value = value
+                    else:
+                        self.process()
                     self.post_process()
                 except Exception as e:
                     self.value = ProcessorResult(False,
@@ -199,17 +206,18 @@ class BaseProcessor(metaclass=ABCMeta):
                 child.processor = self
                 queries.append(child)
 
-    def calculate(self,
-                  attribute: str,
-                  result: ProcessorResult,
-                  rdate_entity_map: Dict[str, date]):
+    async def calculate(self,
+                        attribute: str,
+                        result: ProcessorResult,
+                        rdate_entity_map: Dict[str, date],
+                        pool: ProcessPoolExecutor = None):
         """ Sets the result on the processor and recursively calls parent to set and calculate value
 
             :param attribute: Attribute alinging to data coordinate in the processor
             :param result: Processor result including success and series from data query
         """
         # update the result
-        self.update(attribute, result, rdate_entity_map)
+        await self.update(attribute, result, rdate_entity_map, pool)
 
         # if there is a parent, traverse up and recompute
         if self.parent:
@@ -218,13 +226,13 @@ class BaseProcessor(metaclass=ABCMeta):
                 # only traverse if processor successful calculates
                 if value.success:
                     if isinstance(self.parent, BaseProcessor):
-                        self.parent.calculate(self.parent_attr, value, rdate_entity_map)
+                        await self.parent.calculate(self.parent_attr, value, rdate_entity_map, pool)
                     else:
                         # Must be the data cell
                         self.parent.update(value)
                 else:
                     self.data_cell.value = value  # Put the error on the data cell
-                    self.data_cell.updated_time = get_utc_now()
+                    self.data_cell.updated_time = f'{datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]}Z'
 
     def as_dict(self) -> Dict:
         """
