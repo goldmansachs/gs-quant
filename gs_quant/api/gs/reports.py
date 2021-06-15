@@ -20,7 +20,7 @@ from typing import Tuple, List
 
 from gs_quant.session import GsSession
 from gs_quant.target.common import Currency
-from gs_quant.target.reports import Report, ReportScheduleRequest, ReportJob
+from gs_quant.target.reports import Report
 
 _logger = logging.getLogger(__name__)
 
@@ -65,16 +65,18 @@ class GsReportApi:
 
     @classmethod
     def schedule_report(cls, report_id: str, start_date: dt.date, end_date: dt.date) -> dict:
-        report_schedule_request = ReportScheduleRequest(startDate=start_date, endDate=end_date)
-        return GsSession.current._post('/reports/{id}/schedule'.format(id=report_id), report_schedule_request,
-                                       cls=ReportScheduleRequest)
+        report_schedule_request = {
+            'startDate': start_date.strftime('%Y-%m-%d'),
+            'endDate': end_date.strftime('%Y-%m-%d')
+        }
+        return GsSession.current._post('/reports/{id}/schedule'.format(id=report_id), report_schedule_request)
 
     @classmethod
     def get_report_status(cls, report_id: str) -> Tuple[dict, ...]:
         return GsSession.current._get('/reports/{id}/status'.format(id=report_id))
 
     @classmethod
-    def get_report_jobs(cls, report_id: str) -> Tuple[ReportJob, ...]:
+    def get_report_jobs(cls, report_id: str) -> Tuple[dict]:
         return GsSession.current._get('/reports/{id}/jobs'.format(id=report_id))['results']
 
     @classmethod

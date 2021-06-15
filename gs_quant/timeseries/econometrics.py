@@ -657,7 +657,7 @@ def beta(x: pd.Series, b: pd.Series, w: Union[Window, int, str] = Window(None, 0
 
     :math:`R_t = X_t` and :math:`S_t = b_t`
 
-    :math:`Cov(R_t, S_t)` and :math:`Var(S_t)` are the mean and variance of  series
+    :math:`Cov(R_t, S_t)` and :math:`Var(S_t)` are the covariance and variance of the series
     :math:`R_t` and :math:`S_t` over the same window
 
     If window is not provided, computes beta over the full series

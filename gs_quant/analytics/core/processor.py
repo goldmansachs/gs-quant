@@ -93,27 +93,29 @@ class BaseProcessor(metaclass=ABCMeta):
         """
         if not isinstance(result, ProcessorResult) or not result.success:
             return
-        start = get(self, 'start')
-        end = get(self, 'end')
-
+        start, end = get(self, 'start'), get(self, 'end')
         if not (start or end):
             return
+
+        entity = self.data_cell.entity
+        # If the entity wasn't found default to base rule (no entity)
+        entity_id = '' if isinstance(entity, str) else entity.get_marquee_id()
         if start and end:
             if isinstance(start, RelativeDate):
-                key = get_entity_rdate_key_from_rdate(self.data_cell.entity.get_marquee_id(), start)
+                key = get_entity_rdate_key_from_rdate(entity_id, start)
                 start = rdate_entity_map[key]
             if isinstance(end, RelativeDate):
-                key = get_entity_rdate_key_from_rdate(self.data_cell.entity.get_marquee_id(), end)
+                key = get_entity_rdate_key_from_rdate(entity_id, end)
                 end = rdate_entity_map[key]
             mask = (result.data.index >= np.datetime64(start)) & (result.data.index <= np.datetime64(end))
         elif start:
             if isinstance(start, RelativeDate):
-                key = get_entity_rdate_key_from_rdate(self.data_cell.entity.get_marquee_id(), start)
+                key = get_entity_rdate_key_from_rdate(entity_id, start)
                 start = rdate_entity_map[key]
             mask = (result.data.index >= np.datetime64(start))
         else:
             if isinstance(end, RelativeDate):
-                key = get_entity_rdate_key_from_rdate(self.data_cell.entity.get_marquee_id(), end)
+                key = get_entity_rdate_key_from_rdate(entity_id, end)
                 end = rdate_entity_map[key]
             mask = (result.data.index >= np.datetime64(end))
 
