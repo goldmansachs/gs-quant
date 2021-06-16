@@ -15,11 +15,13 @@ under the License.
 """
 import datetime as dt
 from enum import Enum
+from time import sleep
 from typing import Tuple, Union, List, Dict
 
 import pandas as pd
 
 from gs_quant.api.gs.data import GsDataApi
+from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.api.gs.reports import GsReportApi
 from gs_quant.errors import MqValueError
 from gs_quant.models.risk_model import ReturnFormat
@@ -34,6 +36,48 @@ class ReportDataset(Enum):
     PPA_DATASET = "PPA"
     PFR_DATASET = "PFR"
     AFR_DATASET = "AFR"
+
+
+class ReportJobFuture:
+    def __init__(self,
+                 report_id: str,
+                 job_id: str,
+                 report_type: ReportType,
+                 start_date: dt.date,
+                 end_date: dt.date):
+        self.__report_id = report_id
+        self.__job_id = job_id
+        self.__report_type = report_type
+        self.__start_date = start_date
+        self.__end_date = end_date
+
+    def status(self) -> ReportStatus:
+        job = GsReportApi.get_report_job(self.__job_id)
+        return ReportStatus(job.get('status'))
+
+    def done(self) -> bool:
+        return self.status() in [ReportStatus.done, ReportStatus.error, ReportStatus.cancelled]
+
+    def result(self):
+        status = self.status()
+        if status == ReportStatus.cancelled:
+            raise MqValueError('This report job in status "cancelled". Cannot retrieve results.')
+        if status == ReportStatus.error:
+            raise MqValueError('This report job is in status "error". Cannot retrieve results.')
+        if status != ReportStatus.done:
+            raise MqValueError('This report job is not done. Cannot retrieve results.')
+        if self.__report_type in [ReportType.Portfolio_Factor_Risk, ReportType.Asset_Factor_Risk]:
+            results = GsReportApi.get_risk_factor_data_results(risk_report_id=self.__report_id,
+                                                               start_date=self.__start_date,
+                                                               end_date=self.__end_date)
+            return pd.DataFrame(results)
+        if self.__report_type == ReportType.Portfolio_Performance_Analytics:
+            query = DataQuery(where={'reportId': self.__report_id},
+                              start_date=self.__start_date,
+                              end_date=self.__end_date)
+            results = GsDataApi.query_data(query=query, dataset_id=ReportDataset.PPA_DATASET.value)
+            return pd.DataFrame(results)
+        return None
 
 
 class Report:
@@ -170,12 +214,58 @@ class Report:
         """ Hits GsReportsApi to delete a report """
         GsReportApi.delete_report(self.id)
 
-    def set_position_target(self, entity_id: str):
+    def set_position_source(self, entity_id: str):
         is_portfolio = entity_id.startswith('MP')
         self.position_source_type = 'Portfolio' if is_portfolio else 'Asset'
         self.position_source_id = entity_id
         if isinstance(self, FactorRiskReport):
             self.type = ReportType.Portfolio_Factor_Risk if is_portfolio else ReportType.Asset_Factor_Risk
+
+    def get_most_recent_job(self):
+        jobs = GsReportApi.get_report_jobs(self.id)
+        most_current_job = sorted(jobs, key=lambda i: i['createdTime'], reverse=True)[0]
+        return ReportJobFuture(report_id=self.id,
+                               job_id=most_current_job.get('id'),
+                               report_type=ReportType(most_current_job.get('reportType')),
+                               start_date=dt.datetime.strptime(most_current_job.get('startDate'),
+                                                               "%Y-%m-%d").date(),
+                               end_date=dt.datetime.strptime(most_current_job.get('endDate'),
+                                                             "%Y-%m-%d").date())
+
+    def schedule(self,
+                 start_date: dt.date = None,
+                 end_date: dt.date = None):
+        if None in [self.id, self.__position_source_id]:
+            raise MqValueError('Can only schedule reports with valid IDs and Position Source IDs.')
+        if self.position_source_type != PositionSourceType.Portfolio and None in [start_date, end_date]:
+            raise MqValueError('Must specify schedule start and end dates for report.')
+        if None in [start_date, end_date]:
+            position_dates = GsPortfolioApi.get_position_dates(self.position_source_id)
+            if len(position_dates) == 0:
+                raise MqValueError('Cannot schedule reports for a portfolio with no positions.')
+            if start_date is None:
+                start_date = dt.datetime.strptime(min(position_dates), "%Y-%m-%d").date()
+            if end_date is None:
+                end_date = dt.datetime.strptime(max(position_dates), "%Y-%m-%d").date()
+        GsReportApi.schedule_report(report_id=self.id,
+                                    start_date=start_date,
+                                    end_date=end_date)
+
+    def run(self,
+            start_date: dt.date,
+            end_date: dt.date,
+            is_async: bool = True):
+        self.schedule(start_date, end_date)
+        job_future = self.get_most_recent_job()
+        if is_async:
+            return job_future
+        counter = 100
+        while counter > 0:
+            if job_future.done():
+                return job_future.result()
+            sleep(6)
+        raise MqValueError(f'Your report {self.id} is taking longer than expected to finish. Please contact the '
+                           'Marquee Analytics team at gs-marquee-analytics-support@gs.com')
 
 
 class PerformanceReport(Report):

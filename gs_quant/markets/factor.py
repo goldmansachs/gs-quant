@@ -23,6 +23,7 @@ from gs_quant.data.core import DataContext
 from gs_quant.datetime import date
 from gs_quant.errors import MqValueError
 from gs_quant.models.risk_model import FactorRiskModel, ReturnFormat
+from gs_quant.session import GsSession
 from gs_quant.target.data import DataQuery
 
 
@@ -74,9 +75,9 @@ class Factor:
                    format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
         """ Retrieve a Dataframe or Dictionary of date->covariance values between this factor and another for a date
         range """
-
+        appendage = self.__get_dataset_trial_appendage()
         covariance_data_raw = GsDataApi.execute_query(
-            'RISK_MODEL_COVARIANCE_MATRIX',
+            f'RISK_MODEL_COVARIANCE_MATRIX{appendage}',
             DataQuery(
                 where={"riskModel": self.risk_model_id, "factorId": self.id},
                 start_date=start_date,
@@ -84,7 +85,7 @@ class Factor:
             )
         ).get('data', [])
 
-        date_to_matrix_order = factor.__matrix_order(start_date, end_date)
+        date_to_matrix_order = factor.__matrix_order(start_date, end_date, appendage)
 
         covariance_data = {}
         for data in covariance_data_raw:
@@ -143,10 +144,10 @@ class Factor:
             return pd.DataFrame.from_dict(correlation_data, orient='index', columns=['correlation'])
         return correlation_data
 
-    def __matrix_order(self, start_date: date, end_date: date) -> Dict:
+    def __matrix_order(self, start_date: date, end_date: date, appendage: str) -> Dict:
         """ Retrieve Dictionary of date->matrix_order for the factor in the covariance matrix """
         query_results = GsDataApi.execute_query(
-            'RISK_MODEL_COVARIANCE_MATRIX',
+            f'RISK_MODEL_COVARIANCE_MATRIX{appendage}',
             DataQuery(
                 where={"riskModel": self.risk_model_id, "factorId": self.id},
                 fields=['matrixOrder'],
@@ -155,3 +156,16 @@ class Factor:
             )
         ).get('data', [])
         return {data['date']: str(data['matrixOrder']) for data in query_results}
+
+    def __get_dataset_trial_appendage(self):
+        availability_response = [model_dataset for model_dataset in
+                                 GsSession.current._get(f'/data/measures/{self.risk_model_id}/availability?entityType'
+                                                        f'=RISK_MODEL').get('data')
+                                 if model_dataset.get('type') == 'Factor Return']
+        availability_response = sorted(availability_response, key=lambda k: k['rank'], reverse=True)
+        for availability in availability_response:
+            dataset_id = availability.get('datasetId')
+            models_covered = GsDataApi.get_coverage(dataset_id, limit=1000)
+            for model in models_covered:
+                if model.get('riskModel') == self.risk_model_id:
+                    return dataset_id.replace('RISK_MODEL_FACTOR', '')

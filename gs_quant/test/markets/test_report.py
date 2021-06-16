@@ -102,7 +102,7 @@ def test_set_position_target():
                                                                  risk_model='AXUS4M'),
                                      status=ReportStatus.done
                                      )
-    factor_report.set_position_target('MA3FMSN9VNMD')
+    factor_report.set_position_source('MA3FMSN9VNMD')
     assert factor_report.position_source_type == PositionSourceType.Asset
     assert factor_report.type == ReportType.Asset_Factor_Risk
 

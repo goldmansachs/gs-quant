@@ -71,7 +71,8 @@ class Entity(metaclass=ABCMeta):
         EntityType.COUNTRY: 'countries',
         EntityType.SUBDIVISION: 'countries/subdivisions',
         EntityType.KPI: 'kpis',
-        EntityType.PORTFOLIO: 'portfolios'
+        EntityType.PORTFOLIO: 'portfolios',
+        EntityType.RISK_MODEL: 'risk/models'
     }
 
     def __init__(self,
@@ -129,6 +130,8 @@ class Entity(metaclass=ABCMeta):
             return KPI(id_, entity=entity)
         if entity_type == EntityType.SUBDIVISION:
             return Subdivision(id_, entity=entity)
+        if entity_type == EntityType.RISK_MODEL:
+            return RiskModelEntity(id_, entity=entity)
 
     def get_marquee_id(self) -> str:
         return self.__id
@@ -279,6 +282,43 @@ class KPI(Entity):
         return get(self.get_entity(), 'subCategory')
 
 
+class RiskModelEntity(Entity):
+    class Identifier(EntityIdentifier):
+        MARQUEE_ID = "MQID"
+        name = 'name'
+
+    def __init__(self,
+                 id_: str,
+                 entity: Optional[Dict] = None):
+        super().__init__(id_, EntityType.RISK_MODEL, entity)
+
+    @property
+    def data_dimension(self) -> str:
+        return 'riskModel'
+
+    @classmethod
+    def entity_type(cls) -> EntityType:
+        return EntityType.RISK_MODEL
+
+    @classmethod
+    def get_by_identifier(cls,
+                          id_value: str,
+                          id_type: Identifier) -> Optional['Entity']:
+        super().get(id_value, id_type)
+
+    def get_name(self) -> Optional[str]:
+        return get(self.get_entity(), 'name')
+
+    def get_coverage(self) -> Optional[str]:
+        return get(self.get_entity(), 'coverage')
+
+    def get_term(self) -> Optional[str]:
+        return get(self.get_entity(), 'term')
+
+    def get_vendor(self) -> Optional[str]:
+        return get(self.get_entity(), 'vendor')
+
+
 class PositionedEntity(metaclass=ABCMeta):
     def __init__(self, id_: str, entity_type: EntityType):
         self.__id: str = id_
@@ -424,7 +464,7 @@ class PositionedEntity(metaclass=ABCMeta):
 
     def create_report(self, report: Report):
         if self.positioned_entity_type == EntityType.PORTFOLIO:
-            report.set_position_target(self.id)
+            report.set_position_source(self.id)
             report.save()
             self._schedule_first_reports([pos_set.date for pos_set in self.get_position_sets()])
             return report

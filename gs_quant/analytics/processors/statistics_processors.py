@@ -429,11 +429,7 @@ class ZscoresProcessor(BaseProcessor):
         a_data = self.children_data.get('a')
         if isinstance(a_data, ProcessorResult):
             if a_data.success:
-                series_length = len(a_data.data)
-                window = None
-                if self.w:
-                    window = self.w if self.w <= series_length else series_length
-                result = zscores(a_data.data, w=window)
+                result = zscores(a_data.data, w=Window(None, 0) if self.w is None else self.w)
                 self.value = ProcessorResult(True, result)
             else:
                 self.value = ProcessorResult(False, "ZscoresProcessor does not have 'a' series values yet")

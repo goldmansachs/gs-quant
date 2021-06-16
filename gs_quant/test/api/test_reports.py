@@ -17,8 +17,8 @@ under the License.
 import datetime as dt
 
 from gs_quant.api.gs.reports import GsReportApi
-from gs_quant.target.reports import Report, ReportScheduleRequest, ReportJob, ReportParameters
 from gs_quant.session import *
+from gs_quant.target.reports import Report, ReportJob, ReportParameters
 
 
 def test_get_reports(mocker):
@@ -164,9 +164,8 @@ def test_schedule_report(mocker):
     # run test
     response = GsReportApi.schedule_report(id_1, start_date, end_date)
 
-    report_schedule_request = ReportScheduleRequest(startDate=start_date, endDate=end_date)
     GsSession.current._post.assert_called_with(
-        '/reports/{id}/schedule'.format(id=id_1), report_schedule_request, cls=ReportScheduleRequest)
+        '/reports/{id}/schedule'.format(id=id_1), {'endDate': '2019-02-19', 'startDate': '2019-02-18'})
 
     assert response == mock_response
 

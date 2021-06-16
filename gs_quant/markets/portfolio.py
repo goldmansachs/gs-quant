@@ -16,11 +16,14 @@ under the License.
 import copy
 import datetime as dt
 import logging
+from itertools import chain
 from typing import Iterable, Optional, Tuple, Union
 
+import deprecation
 import numpy as np
 import pandas as pd
-import deprecation
+from more_itertools import unique_everseen
+
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.context_base import nullcontext
@@ -31,8 +34,6 @@ from gs_quant.risk import RiskMeasure, ResolvedInstrumentValues
 from gs_quant.risk.results import CompositeResultFuture, PortfolioRiskResult, PortfolioPath, PricingFuture
 from gs_quant.target.common import RiskPosition
 from gs_quant.target.portfolios import Position, PositionSet, RiskRequest, PricingDateAndMarketDataAsOf
-from more_itertools import unique_everseen
-from itertools import chain
 
 _logger = logging.getLogger(__name__)
 
@@ -536,7 +537,7 @@ class Portfolio(PriceableImpl):
                 raise ValueError('Your portfolio has no positions on the PositionContext date')
             date = max(dates_prior)
             response = GsPortfolioApi.get_positions_for_date(self.id, date)
-            positions = response.positions
+            positions = response.positions if response else []
             instruments = GsAssetApi.get_instruments_for_positions(positions)
             if in_place:
                 self.__priceables = instruments
