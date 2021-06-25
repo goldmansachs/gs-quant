@@ -45,6 +45,7 @@ _logger = logging.getLogger(__name__)
 
 class QueryType(Enum):
     IMPLIED_VOLATILITY = "Implied Volatility"
+    IMPLIED_VOLATILITY_BY_EXPIRATION = "Implied Volatility By Expiration"
     IMPLIED_CORRELATION = "Implied Correlation"
     REALIZED_CORRELATION = "Realized Correlation"
     AVERAGE_IMPLIED_VOLATILITY = "Average Implied Volatility"

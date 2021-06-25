@@ -674,6 +674,9 @@ def beta(x: pd.Series, b: pd.Series, w: Union[Window, int, str] = Window(None, 0
 
     :func:`var` :func:`cov` :func:`correlation` :func:`returns`
     """
+    if not isinstance(prices, bool):
+        raise MqTypeError('expected a boolean value for "prices"')
+
     w = normalize_window(x, w)
 
     ret_series = returns(x) if prices else x

@@ -317,6 +317,8 @@ def test_std():
     expected = pd.Series([np.nan, 0.707106, 0.577350, 0.957427, 0.894427, 1.870828], index=dates)
     assert_series_equal(result, expected, obj="std window 1w", check_less_precise=True)
 
+    assert std(pd.Series()).empty
+
 
 def test_exponential_std():
     def exp_std_calc(ts, alpha=0.75):
@@ -568,6 +570,9 @@ def test_regression():
     x2 = pd.Series([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0], index=pd.date_range('2019-1-1', periods=8))
     y = pd.Series([10.0, 14.0, 20.0, 28.0, 38.0, 50.0, 60.0], index=pd.date_range('2019-1-1', periods=7))
 
+    with pytest.raises(MqTypeError):
+        LinearRegression([x1, x2], y, 1)
+
     regression = LinearRegression([x1, x2], y, True)
 
     np.testing.assert_almost_equal(regression.coefficient(0), 10.0)
@@ -595,6 +600,9 @@ def test_rolling_linear_regression():
 
     with pytest.raises(MqValueError):
         RollingLinearRegression([x1, x2], y, 3, True)
+
+    with pytest.raises(MqTypeError):
+        RollingLinearRegression([x1, x2], y, 4, 1)
 
     regression = RollingLinearRegression([x1, x2], y, 4, True)
 
@@ -666,6 +674,9 @@ def test_sir_model():
     assert i_predict.size == d
     assert r_predict.size == d
 
+    with pytest.raises(MqTypeError):
+        SIRModel(beta, gamma, s, i, r, n, fit=0)
+
     sir = SIRModel(beta, gamma, s, i, r, n, fit=False)
 
     assert sir.beta() == beta
@@ -732,6 +743,9 @@ def test_seir_model():
     assert e_predict.size == d
     assert i_predict.size == d
     assert r_predict.size == d
+
+    with pytest.raises(MqTypeError):
+        SEIRModel(beta, gamma, sigma, s, e, i, r, n, fit=0)
 
     seir = SEIRModel(beta, gamma, sigma, s, e, i, r, n, fit=False)
 

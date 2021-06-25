@@ -384,6 +384,9 @@ def test_date_range():
     with pytest.raises(MqValueError):
         date_range(pd.Series([1]), 0, 0)
 
+    with pytest.raises(MqTypeError):
+        date_range(pd.Series([1]), 0, 0, 'string')
+
 
 def test_prepend():
     x = pd.Series([1.0, 2.0, 3.0, 4.0, 5.0, 7.0], index=pd.date_range('2019-01-01', "2019-01-06"))

@@ -76,10 +76,18 @@ def aggregate_queries(query_infos):
 def fetch_query(query_info: Dict):
     where = {}
     for key, value in query_info['parameters'].items():
+        value_list = list(value)
+        if isinstance(value_list[0], bool):
+            if len(value_list) == 1:
+                # If only 1 bool value is given (True/False) set the where to the value. Else skip.
+                where[key] = value_list[0]
+            continue  # Skip adding as both True/False must be there
         where[key] = list(value)
     query = {
         'where': where,
-        **query_info['range']
+        **query_info['range'],
+        'useFieldAlias': True,
+        'remapSchemaToAlias': True
     }
     try:
         if query_info['realTime'] and not query_info['range']:

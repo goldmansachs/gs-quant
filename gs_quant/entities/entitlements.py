@@ -530,6 +530,7 @@ class Entitlements:
         :param entitlements: Entitlements as a target object
         :return: A new Entitlements object with all specified entitlements
         """
+        entitlements = TargetEntitlements.default_instance() if entitlements is None else entitlements
         return cls.from_dict(entitlements.to_json())
 
     @classmethod

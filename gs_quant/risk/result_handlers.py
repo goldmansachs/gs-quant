@@ -25,7 +25,7 @@ _logger = logging.getLogger(__name__)
 __scalar_risk_measures = (EqDelta, EqGamma, EqVega)
 
 
-def __dataframe_handler(result: Iterable, mappings: tuple, risk_key: RiskKey, request_id: Optional[str] = None)\
+def __dataframe_handler(result: Iterable, mappings: tuple, risk_key: RiskKey, request_id: Optional[str] = None) \
         -> DataFrameWithInfo:
     first_row = next(iter(result), None)
     if first_row is None:
@@ -50,7 +50,7 @@ def __dataframe_handler(result: Iterable, mappings: tuple, risk_key: RiskKey, re
     return df
 
 
-def cashflows_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None)\
+def cashflows_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None) \
         -> DataFrameWithInfo:
     mappings = (
         ('payment_date', 'payDate'),
@@ -77,7 +77,7 @@ def cashflows_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBa
     return __dataframe_handler(result['cashflows'], mappings, risk_key, request_id=request_id)
 
 
-def error_handler(result: dict, risk_key: RiskKey, instrument: InstrumentBase, request_id: Optional[str] = None)\
+def error_handler(result: dict, risk_key: RiskKey, instrument: InstrumentBase, request_id: Optional[str] = None) \
         -> ErrorValue:
     error = result.get('errorString', 'Unknown error')
     if request_id:
@@ -92,7 +92,7 @@ def leg_definition_handler(result: dict, risk_key: RiskKey, instrument: Instrume
     return instrument.resolved(result, risk_key)
 
 
-def message_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None)\
+def message_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None) \
         -> StringWithInfo:
     return StringWithInfo(risk_key, result.get('message'), request_id=request_id)
 
@@ -164,8 +164,8 @@ def risk_by_class_handler(result: dict, risk_key: RiskKey, _instrument: Instrume
         return __dataframe_handler(classes, mappings, risk_key, request_id=request_id)
 
 
-def risk_vector_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None)\
-        -> DataFrameWithInfo:
+def risk_vector_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
+                        request_id: Optional[str] = None) -> DataFrameWithInfo:
     assets = result['asset']
     # Handle equity risk measures which are really scalars
     if len(assets) == 1 and risk_key.risk_measure in __scalar_risk_measures:
@@ -179,14 +179,15 @@ def risk_vector_handler(result: dict, risk_key: RiskKey, _instrument: Instrument
         ('mkt_asset', 'asset'),
         ('mkt_class', 'class_'),
         ('mkt_point', 'point'),
+        ('mkt_quoting_style', 'quoteStyle'),
         ('value', 'value')
     )
 
     return __dataframe_handler(result['points'], mappings, risk_key, request_id=request_id)
 
 
-def mdapi_table_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None)\
-        -> DataFrameWithInfo:
+def mdapi_table_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
+                        request_id: Optional[str] = None) -> DataFrameWithInfo:
     coordinates = []
     for r in result['rows']:
         point = ';'.join(r['coordinate']['point']) if isinstance(r['coordinate']['point'], list) else ""

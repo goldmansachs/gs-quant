@@ -208,7 +208,8 @@ class Report:
             target_report.id = self.id
             GsReportApi.update_report(target_report)
         else:
-            GsReportApi.create_report(target_report)
+            report = GsReportApi.create_report(target_report)
+            self.__id = report.id
 
     def delete(self):
         """ Hits GsReportsApi to delete a report """
@@ -244,9 +245,9 @@ class Report:
             if len(position_dates) == 0:
                 raise MqValueError('Cannot schedule reports for a portfolio with no positions.')
             if start_date is None:
-                start_date = dt.datetime.strptime(min(position_dates), "%Y-%m-%d").date()
+                start_date = min(position_dates)
             if end_date is None:
-                end_date = dt.datetime.strptime(max(position_dates), "%Y-%m-%d").date()
+                end_date = max(position_dates)
         GsReportApi.schedule_report(report_id=self.id,
                                     start_date=start_date,
                                     end_date=end_date)
@@ -310,32 +311,32 @@ class PerformanceReport(Report):
 
     def get_pnl(self,
                 start_date: dt.date = None,
-                end_date: dt.date = None) -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
+                end_date: dt.date = None) -> pd.DataFrame:
         return self.get_measure("pnl", start_date, end_date)
 
     def get_long_exposure(self,
                           start_date: dt.date = None,
-                          end_date: dt.date = None) -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
+                          end_date: dt.date = None) -> pd.DataFrame:
         return self.get_measure("longExposure", start_date, end_date)
 
     def get_short_exposure(self,
                            start_date: dt.date = None,
-                           end_date: dt.date = None) -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
+                           end_date: dt.date = None) -> pd.DataFrame:
         return self.get_measure("shortExposure", start_date, end_date)
 
     def get_asset_count(self,
                         start_date: dt.date = None,
-                        end_date: dt.date = None) -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
+                        end_date: dt.date = None) -> pd.DataFrame:
         return self.get_measure("assetCount", start_date, end_date)
 
     def get_turnover(self,
                      start_date: dt.date = None,
-                     end_date: dt.date = None) -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
+                     end_date: dt.date = None) -> pd.DataFrame:
         return self.get_measure("turnover", start_date, end_date)
 
     def get_asset_count_long(self,
                              start_date: dt.date = None,
-                             end_date: dt.date = None) -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
+                             end_date: dt.date = None) -> pd.DataFrame:
         return self.get_measure("assetCountLong", start_date, end_date)
 
     def get_asset_count_short(self,
@@ -346,59 +347,60 @@ class PerformanceReport(Report):
 
     def get_net_exposure(self,
                          start_date: dt.date = None,
-                         end_date: dt.date = None) -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
+                         end_date: dt.date = None) -> pd.DataFrame:
         return self.get_measure("netExposure", start_date, end_date)
 
     def get_gross_exposure(self,
                            start_date: dt.date = None,
-                           end_date: dt.date = None) -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
+                           end_date: dt.date = None) -> pd.DataFrame:
         return self.get_measure("grossExposure", start_date, end_date)
 
     def get_trading_pnl(self,
                         start_date: dt.date = None,
-                        end_date: dt.date = None) -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
+                        end_date: dt.date = None) -> pd.DataFrame:
         return self.get_measure("tradingPnl", start_date, end_date)
 
     def get_trading_cost_pnl(self,
                              start_date: dt.date = None,
-                             end_date: dt.date = None) -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
+                             end_date: dt.date = None) -> pd.DataFrame:
         return self.get_measure("tradingCostPnl", start_date, end_date)
 
     def get_servicing_cost_long_pnl(self,
                                     start_date: dt.date = None,
-                                    end_date: dt.date = None) \
-            -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
+                                    end_date: dt.date = None) -> pd.DataFrame:
         return self.get_measure("servicingCostLongPnl", start_date, end_date)
 
     def get_servicing_cost_short_pnl(self,
                                      start_date: dt.date = None,
-                                     end_date: dt.date = None) \
-            -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
+                                     end_date: dt.date = None) -> pd.DataFrame:
         return self.get_measure("servicingCostShortPnl", start_date, end_date)
 
     def get_asset_count_priced(self,
                                start_date: dt.date = None,
-                               end_date: dt.date = None) \
-            -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
+                               end_date: dt.date = None) -> pd.DataFrame:
         return self.get_measure("assetCountPriced", start_date, end_date)
 
     def get_measure(self,
                     field: str,
                     start_date: dt.date = None,
-                    end_date: dt.date = None) -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
+                    end_date: dt.date = None,
+                    return_format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
         fields = (field,)
         where = {'reportId': self.id}
         query = DataQuery(where=where, fields=fields, start_date=start_date, end_date=end_date)
-        return GsDataApi.query_data(query=query, dataset_id=ReportDataset.PPA_DATASET.value)
+        results = GsDataApi.query_data(query=query, dataset_id=ReportDataset.PPA_DATASET.value)
+        return pd.DataFrame(results) if return_format == ReturnFormat.DATA_FRAME else results
 
     def get_many_measures(self,
                           measures: Tuple[str, ...],
                           start_date: dt.date = None,
-                          end_date: dt.date = None) -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
+                          end_date: dt.date = None,
+                          return_format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
         fields = tuple(measure for measure in measures)
         where = {'reportId': self.id}
         query = DataQuery(where=where, fields=fields, start_date=start_date, end_date=end_date)
-        return GsDataApi.query_data(query=query, dataset_id=ReportDataset.PPA_DATASET.value)
+        results = GsDataApi.query_data(query=query, dataset_id=ReportDataset.PPA_DATASET.value)
+        return pd.DataFrame(results) if return_format == ReturnFormat.DATA_FRAME else results
 
 
 class FactorRiskReport(Report):
