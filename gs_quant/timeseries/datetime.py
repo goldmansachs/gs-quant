@@ -23,7 +23,7 @@ from .helper import *
 from .helper import _create_enum
 from ..datetime.date import DayCountConvention, PaymentFrequency, day_count_fraction
 from ..datetime.date import date_range as _date_range
-from ..errors import MqValueError
+from ..errors import MqValueError, MqTypeError
 
 """
 Date and time manipulation for timeseries, including date or time shifting, calendar operations, curve alignment and
@@ -488,6 +488,8 @@ def date_range(x: pd.Series, start_date: Union[date, int], end_date: Union[date,
     :func:`day` :func: `lag`
 
     """
+    if not isinstance(weekdays_only, bool):
+        raise MqTypeError('expected a boolean value for "weekdays_only"')
     if not (x.index.is_all_dates or all(map(lambda a: isinstance(a, date), x.index.values))):
         raise MqValueError('input is not a time series')
 

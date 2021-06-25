@@ -15,17 +15,16 @@ under the License.
 """
 import datetime as dt
 import logging
-import pandas as pd
 from time import sleep
-
-from dateutil.relativedelta import relativedelta
 from typing import List, Union
+
+import pandas as pd
+from dateutil.relativedelta import relativedelta
 
 from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.datetime import business_day_offset
 from gs_quant.entities.entitlements import Entitlements
 from gs_quant.errors import MqValueError
-from gs_quant.markets.portfolio import Portfolio
 from gs_quant.markets.report import FactorRiskReport, PerformanceReport, ReportJobFuture, Report
 from gs_quant.target.reports import ReportType
 
@@ -40,26 +39,20 @@ class PortfolioManager:
     """
 
     def __init__(self,
-                 portfolio: Portfolio):
+                 portfolio_id: str):
         """
         Initialize a Portfolio Manager
-        :param portfolio: Portfolio object
+        :param portfolio_id: Portfolio ID
         """
-        if not portfolio.id:
-            raise MqValueError('This portfolio has not been saved to Marquee. Please save first to leverage '
-                               'PortfolioManager')
-        self.__portfolio = portfolio
+        self.__portfolio_id = portfolio_id
 
     @property
-    def portfolio(self) -> Portfolio:
-        return self.__portfolio
+    def portfolio_id(self) -> str:
+        return self.__portfolio_id
 
-    @portfolio.setter
-    def portfolio(self, value: Portfolio):
-        if not value.id:
-            raise MqValueError('This portfolio has not been saved to Marquee. Please save first to leverage '
-                               'PortfolioManager')
-        self.__portfolio = value
+    @portfolio_id.setter
+    def portfolio_id(self, value: str):
+        self.__portfolio_id = value
 
     def get_reports(self) -> List[Report]:
         """
@@ -67,7 +60,7 @@ class PortfolioManager:
         :return: list of Report objects
         """
         reports = []
-        reports_as_targets = GsPortfolioApi.get_reports(self.__portfolio.id)
+        reports_as_targets = GsPortfolioApi.get_reports(self.__portfolio_id)
         for report_target in reports_as_targets:
             if report_target.type in [ReportType.Portfolio_Factor_Risk, ReportType.Asset_Factor_Risk]:
                 reports.append(FactorRiskReport.from_target(report_target))
@@ -83,7 +76,7 @@ class PortfolioManager:
             suggested_schedule_dates = self.get_schedule_dates(backcast)
             start_date = start_date if start_date else suggested_schedule_dates[0]
             end_date = end_date if end_date else suggested_schedule_dates[1]
-        GsPortfolioApi.schedule_reports(self.__portfolio.id, start_date, end_date, backcast=backcast)
+        GsPortfolioApi.schedule_reports(self.__portfolio_id, start_date, end_date, backcast=backcast)
 
     def run_reports(self,
                     start_date: dt.date = None,
@@ -110,7 +103,7 @@ class PortfolioManager:
             if False not in is_done:
                 return [job_future.result() for job_future in report_futures]
             sleep(6)
-        raise MqValueError(f'Your reports for Portfolio {self.__portfolio.id} are taking longer than expected '
+        raise MqValueError(f'Your reports for Portfolio {self.__portfolio_id} are taking longer than expected '
                            f'to finish. Please contact the Marquee Analytics team at '
                            f'gs-marquee-analytics-support@gs.com')
 
@@ -121,7 +114,7 @@ class PortfolioManager:
         :param entitlements: Entitlements object
         """
         entitlements_as_target = entitlements.to_target()
-        portfolio_as_target = GsPortfolioApi.get_portfolio(self.__portfolio.id)
+        portfolio_as_target = GsPortfolioApi.get_portfolio(self.__portfolio_id)
         portfolio_as_target.entitlements = entitlements_as_target
         GsPortfolioApi.update_portfolio(portfolio_as_target)
 
@@ -132,7 +125,7 @@ class PortfolioManager:
         :param backcast: true if reports should be backcasted
         :return: a list of two dates, the first is the suggested start date and the second is the suggested end date
         """
-        position_dates = GsPortfolioApi.get_position_dates(self.portfolio.id)
+        position_dates = GsPortfolioApi.get_position_dates(self.__portfolio_id)
         if len(position_dates) == 0:
             raise MqValueError('Cannot schedule reports for a portfolio with no positions.')
         if backcast:

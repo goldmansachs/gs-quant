@@ -461,11 +461,24 @@ def std(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Series
     :func:`sum` :func:`mean` :func:`var`
 
     """
+    if x.empty:
+        return x
+
     w = normalize_window(x, w)
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
     if isinstance(w.w, pd.DateOffset):
-        values = [x.loc[(x.index > idx - w.w) & (x.index <= idx)].std() for idx in x.index]
-        return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
+        results = np.empty(len(x), dtype=np.double)
+        results[0] = np.nan
+        values = np.array(x.values, dtype=np.double)  # slicing (see below) of numpy arrays is faster
+
+        start = 0
+        for i in range(1, len(x)):
+            for j in range(start, i + 1):
+                if x.index[j] > x.index[i] - w.w:
+                    start = j
+                    break
+            results[i] = np.std(values[start:i + 1], ddof=1)
+        return apply_ramp(pd.Series(results, index=x.index, dtype=np.double), w)
     else:
         return apply_ramp(x.rolling(w.w, 0).std(), w)
 
@@ -918,6 +931,9 @@ class LinearRegression:
     """
 
     def __init__(self, X: Union[pd.Series, List[pd.Series]], y: pd.Series, fit_intercept: bool = True):
+        if not isinstance(fit_intercept, bool):
+            raise MqTypeError('expected a boolean value for "fit_intercept"')
+
         df = pd.concat(X, axis=1) if isinstance(X, list) else X.to_frame()
         df = sm.add_constant(df) if fit_intercept else df
         df.columns = range(len(df.columns)) if fit_intercept else range(1, len(df.columns) + 1)
@@ -1008,6 +1024,9 @@ class RollingLinearRegression:
     """
 
     def __init__(self, X: Union[pd.Series, List[pd.Series]], y: pd.Series, w: int, fit_intercept: bool = True):
+        if not isinstance(fit_intercept, bool):
+            raise MqTypeError('expected a boolean value for "fit_intercept"')
+
         df = pd.concat(X, axis=1) if isinstance(X, list) else X.to_frame()
         df = sm.add_constant(df) if fit_intercept else df
         df.columns = range(len(df.columns)) if fit_intercept else range(1, len(df.columns) + 1)
@@ -1102,6 +1121,9 @@ class SIRModel:
                  i: Union[pd.Series, float] = None, r: Union[pd.Series, float] = None,
                  n: Union[pd.Series, float] = None, fit: bool = True,
                  fit_period: int = None):
+        if not isinstance(fit, bool):
+            raise MqTypeError('expected a boolean value for "fit"')
+
         n = n.dropna()[0] if isinstance(n, pd.Series) else n
         n = 100 if n is None else n
         fit = False if s is None and i is None and r is None else fit
@@ -1281,6 +1303,9 @@ class SEIRModel(SIRModel):
                  e: Union[pd.Series, float] = None, i: Union[pd.Series, float] = None,
                  r: Union[pd.Series, float] = None, n: Union[pd.Series, float] = None,
                  fit: bool = True, fit_period: int = None):
+        if not isinstance(fit, bool):
+            raise MqTypeError('expected a boolean value for "fit"')
+
         n = n.dropna()[0] if isinstance(n, pd.Series) else n
         n = 100 if n is None else n
         fit = False if all(state is None for state in (s, e, i, r)) else fit

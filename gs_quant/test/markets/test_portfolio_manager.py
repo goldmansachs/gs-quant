@@ -21,7 +21,6 @@ import pytest
 from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.api.gs.reports import GsReportApi
 from gs_quant.entities.entitlements import Entitlements, User, EntitlementBlock
-from gs_quant.markets.portfolio import Portfolio
 from gs_quant.markets.portfolio_manager import PortfolioManager
 from gs_quant.markets.report import FactorRiskReport, PerformanceReport
 from gs_quant.target.portfolios import Portfolio as TargetPortfolio
@@ -49,7 +48,7 @@ def test_get_reports(mocker):
                         return_value=mock_reports)
 
     # run test
-    pm = PortfolioManager(Portfolio.get(portfolio_id='MP'))
+    pm = PortfolioManager('MP')
     reports = pm.get_reports()
     assert len(reports) == 2
     assert isinstance(reports[0], PerformanceReport)
@@ -67,7 +66,7 @@ def test_get_schedule_dates(mocker):
                         return_value=None)
 
     # run test
-    pm = PortfolioManager(Portfolio.get(portfolio_id='MP'))
+    pm = PortfolioManager('MP')
     dates = pm.get_schedule_dates(backcast=True)
     assert dates == [dt.date(2019, 1, 1), dt.date(2020, 1, 2)]
     dates = pm.get_schedule_dates(backcast=False)
@@ -91,7 +90,7 @@ def test_set_entitlements(mocker):
                         return_value='')
 
     # run test
-    pm = PortfolioManager(Portfolio.get(portfolio_id='MP'))
+    pm = PortfolioManager('MP')
     pm.set_entitlements(entitlements)
 
 
@@ -149,7 +148,7 @@ def test_run_reports(mocker):
                         return_value=mock_results)
 
     # run test
-    pm = PortfolioManager(Portfolio.get(portfolio_id='MP'))
+    pm = PortfolioManager('MP')
     pm.run_reports(is_async=False)
 
 

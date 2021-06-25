@@ -320,9 +320,8 @@ def test_correlation():
     assert_series_equal(result, expected, check_less_precise=True)
 
     result = correlation(x, y, Window(2, 0))
-    expected = pd.Series([np.nan, np.nan, -
-                          1.0000000000000435, 1.0, 0.9999999999999994, -
-                          1.0000000000000007], index=daily_dates)
+    expected = pd.Series([np.nan, np.nan, -1.0000000000000435, 1.0, 0.9999999999999994, -1.0000000000000007],
+                         index=daily_dates)
 
     assert_series_equal(result, expected, check_less_precise=True)
 
@@ -330,9 +329,15 @@ def test_correlation():
     ret_y = returns(y)
 
     result = correlation(ret_x, ret_y, Window(2, 0), False)
-    expected = pd.Series([np.nan, np.nan, -
-                          1.0000000000000435, 1.0, 0.9999999999999994, -
-                          1.0000000000000007], index=daily_dates)
+    values = [
+        np.nan,
+        np.nan,
+        -1.0000000000000435,
+        1.0,
+        0.9999999999999994,
+        -1.0000000000000007
+    ]
+    expected = pd.Series(values, index=daily_dates)
 
     assert_series_equal(result, expected, check_less_precise=True)
 
@@ -397,6 +402,9 @@ def test_beta():
     result = beta(x, y, '2d')
     expected = pd.Series([np.nan, 0.8255252918287954, np.nan, -2.24327163719368], index=daily_dates[2:])
     assert_series_equal(result, expected, obj="beta with strdate window")
+
+    with pytest.raises(MqTypeError):
+        beta(x, y, '2d', 1)
 
 
 def test_max_drawdown():

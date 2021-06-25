@@ -20,6 +20,7 @@ from collections import namedtuple
 from enum import auto
 from functools import partial
 from numbers import Real
+from typing import List
 
 import cachetools.func
 import inflection
@@ -30,7 +31,6 @@ from pandas import Series
 from pandas.tseries.holiday import Holiday, AbstractHolidayCalendar, USMemorialDay, USLaborDay, USThanksgivingDay, \
     sunday_to_monday
 from pydash import chunk
-from typing import List
 
 from gs_quant.api.gs.assets import GsIdType
 from gs_quant.api.gs.data import GsDataApi, MarketDataResponseFrame
@@ -461,7 +461,8 @@ def _merge_market_data_responses(frames: List[MarketDataResponseFrame]):
 
 
 @plot_measure((AssetClass.FX, AssetClass.Equity, AssetClass.Commod), None, [MeasureDependency(
-    id_provider=cross_stored_direction_for_fx_vol, query_type=QueryType.IMPLIED_VOLATILITY)])
+    id_provider=cross_stored_direction_for_fx_vol, query_type=QueryType.IMPLIED_VOLATILITY)],
+    asset_type_excluded=(AssetType.CommodityNaturalGasHub,))
 def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Real, *,
          source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
@@ -577,7 +578,8 @@ def cds_implied_volatility(asset: Asset, expiry: str, tenor: str, strike_referen
 
 @plot_measure((AssetClass.Equity, AssetClass.Commod, AssetClass.FX,), None,
               [MeasureDependency(id_provider=cross_stored_direction_for_fx_vol,
-                                 query_type=QueryType.IMPLIED_VOLATILITY)])
+                                 query_type=QueryType.IMPLIED_VOLATILITY)],
+              asset_type_excluded=(AssetType.CommodityNaturalGasHub,))
 def implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference = None,
                        relative_strike: Real = None, *, source: str = None, real_time: bool = False,
                        request_id: Optional[str] = None) -> Series:
@@ -764,28 +766,13 @@ def implied_correlation(asset: Asset, tenor: str, strike_reference: EdrDataRefer
     # results for top n
     constituents = _get_index_constituent_weights(asset, top_n_of_index, composition_date)
 
-    tasks = []
-    asset_ids = constituents.index.to_list()
-    for i, constituent_chunk in enumerate(chunk(asset_ids, 5)):
-        query = GsDataApi.build_market_data_query(
-            constituent_chunk + [mqid] if i == 0 else constituent_chunk,
-            QueryType.IMPLIED_VOLATILITY,
-            where=where,
-            source=source,
-            real_time=real_time)
+    asset_ids = constituents.index.to_list() + [mqid]
 
-        tasks.append(partial(_market_data_timed, query, request_id))
+    df = get_historical_and_last_for_measure(asset_ids=asset_ids, query_type=QueryType.IMPLIED_VOLATILITY,
+                                             where=where, source=source, real_time=real_time, request_id=request_id)
 
-    results = ThreadPoolManager.run_async(tasks)
-    df = pd.concat(results)
     if df.empty:
         return pd.Series()
-
-    # TODO: parallelize
-    if not real_time and DataContext.current.end_date >= datetime.date.today():
-        df = append_last_for_measure(df, asset_ids, QueryType.IMPLIED_VOLATILITY, where, source=source,
-                                     request_id=request_id)
-    df.sort_index(inplace=True)
 
     dataset_ids = getattr(df, 'dataset_ids', ())
     df = df[['assetId', 'impliedVolatility']]
@@ -819,12 +806,14 @@ def _calculate_implied_correlation(index_mqid, vol_df, constituents_weights, req
     df_rest = df.loc[~match]
 
     def calculate_vol(group):
-        vols = group.set_index('assetId')['impliedVolatility']
+        assets, vols = group['assetId'], group['impliedVolatility']
         weights_on_date = w.loc[group.name].to_dict()
-        weights = [weights_on_date[asset_id] for asset_id in vols.index]
-        total_weight = sum(weights)
-        parts = [vol * weight / total_weight for vol, weight in zip(vols, weights)]
-        return pd.Series([sum(parts), sum(map(lambda x: pow(x, 2), parts))], index=['first', 'second'])
+        weights = np.empty(len(vols.index))
+        for i, asset_id in enumerate(assets):
+            weights[i] = weights_on_date[asset_id]
+        total_weight = weights.sum()
+        parts = np.array([vol * weight / total_weight for vol, weight in zip(vols, weights)])
+        return pd.Series([parts.sum(), np.power(parts, 2).sum()], index=['first', 'second'])
 
     inter = df_rest.groupby(df_rest.index).apply(calculate_vol)
     values = (pow(df_asset['impliedVolatility'], 2) - inter['second']) / (pow(inter['first'], 2) - inter['second'])
@@ -1557,7 +1546,8 @@ def forward_vol_term(asset: Asset, strike_reference: VolReference, relative_stri
     return series
 
 
-@plot_measure((AssetClass.Equity, AssetClass.Commod, AssetClass.FX), None, [QueryType.IMPLIED_VOLATILITY])
+@plot_measure((AssetClass.Equity, AssetClass.Commod, AssetClass.FX), None, [QueryType.IMPLIED_VOLATILITY],
+              asset_type_excluded=(AssetType.CommodityNaturalGasHub,))
 def vol_term(asset: Asset, strike_reference: VolReference, relative_strike: Real,
              pricing_date: Optional[GENERIC_DATE] = None, *, source: str = None, real_time: bool = False,
              request_id: Optional[str] = None) -> pd.Series:
@@ -1590,36 +1580,56 @@ def vol_term(asset: Asset, strike_reference: VolReference, relative_strike: Real
     _logger.debug('where strikeReference=%s, relativeStrike=%s', sr_string, relative_strike)
     where = dict(strikeReference=sr_string, relativeStrike=relative_strike)
 
-    df = pd.DataFrame()
+    df = df_expiry = pd.DataFrame()
     dataset_ids = set()
     today = datetime.date.today()
     if asset.asset_class == AssetClass.Equity and (pricing_date is None or end >= today):  # use intraday data
-        df = _get_latest_term_structure_data(asset_id, QueryType.IMPLIED_VOLATILITY, where, source, request_id)
+        df = _get_latest_term_structure_data(asset_id, QueryType.IMPLIED_VOLATILITY, where, 'tenor', source, request_id)
+        df_expiry = _get_latest_term_structure_data(asset_id, QueryType.IMPLIED_VOLATILITY_BY_EXPIRATION, where,
+                                                    'expirationDate', source, request_id)
         dataset_ids.update(getattr(df, 'dataset_ids', ()))
+        dataset_ids.update(getattr(df_expiry, 'dataset_ids', ()))
 
-    if df.empty:
-        def fetcher():
-            q = GsDataApi.build_market_data_query([asset_id], QueryType.IMPLIED_VOLATILITY, where=where,
-                                                  source=source,
+    if df.empty and df_expiry.empty:
+        def fetcher(query_type):
+            q = GsDataApi.build_market_data_query([asset_id], query_type, where=where, source=source,
                                                   real_time=real_time)
             log_debug(request_id, _logger, 'q %s', q)
             return _market_data_timed(q, request_id)
 
-        df = get_df_with_retries(fetcher, start, end, asset.exchange)
+        df = get_df_with_retries(partial(fetcher, QueryType.IMPLIED_VOLATILITY), start_date=start, end_date=end,
+                                 exchange=asset.exchange)
+        df_expiry = get_df_with_retries(partial(fetcher, QueryType.IMPLIED_VOLATILITY_BY_EXPIRATION), start_date=start,
+                                        end_date=end, exchange=asset.exchange)
         dataset_ids.update(getattr(df, 'dataset_ids', ()))
+        dataset_ids.update(getattr(df_expiry, 'dataset_ids', ()))
+
+    latest = df.index.union(df_expiry.index).max()
+    _logger.info('selected pricing date %s', latest)
 
     if df.empty:
         series = ExtendedSeries(dtype='float64')
     else:
-        latest = df.index.max()
-        _logger.info('selected pricing date %s', latest)
         df = df.loc[latest]
         cbd = _get_custom_bd(asset.exchange)
         df = df.assign(expirationDate=df.index + df['tenor'].map(_to_offset) + cbd - cbd)
-        df = df.set_index('expirationDate')
-        df.sort_index(inplace=True)
-        df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
-        series = ExtendedSeries(dtype='float64') if df.empty else ExtendedSeries(df['impliedVolatility'])
+        series = df.set_index('expirationDate')['impliedVolatility']
+
+    if df_expiry.empty:
+        series_expiry = pd.Series(dtype='float64')
+    else:
+        df_expiry = df_expiry.loc[latest]
+        series_expiry = df_expiry.set_index('expirationDate')['impliedVolatilityByExpiration']
+        series_expiry.index = pd.to_datetime(series_expiry.index)
+
+    extra = series_expiry[~series_expiry.index.isin(series.index)]
+    if not extra.empty:
+        series = pd.concat([series, extra])
+
+    series.name = "impliedVolatility"
+    series.sort_index(inplace=True)
+    series = series.loc[DataContext.current.start_date: DataContext.current.end_date]
+    series = ExtendedSeries(series)
     series.dataset_ids = tuple(dataset_ids)
     return series
 
@@ -1657,7 +1667,7 @@ def vol_smile(asset: Asset, tenor: str, strike_reference: VolSmileReference,
         log_debug(request_id, _logger, 'q %s', q)
         return _market_data_timed(q, request_id)
 
-    df = get_df_with_retries(fetcher, start, end, asset.exchange)
+    df = get_df_with_retries(fetcher, start_date=start, end_date=end, exchange=asset.exchange)
     dataset_ids = getattr(df, 'dataset_ids', ())
     if df.empty:
         series = ExtendedSeries()
@@ -1772,7 +1782,7 @@ def forward_var_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None, 
     return series
 
 
-def _get_latest_term_structure_data(asset_id, query_type, where, source, request_id):
+def _get_latest_term_structure_data(asset_id, query_type, where, groupby, source, request_id):
     today = datetime.date.today()
     query_end = today + datetime.timedelta(days=1)
     with DataContext(today, query_end):
@@ -1794,7 +1804,7 @@ def _get_latest_term_structure_data(asset_id, query_type, where, source, request
 
     dataset_ids = getattr(df_r, 'dataset_ids', ())
     df_r['date'] = df_r.index.date
-    df_r = df_r.groupby('tenor', as_index=False).last()
+    df_r = df_r.groupby(groupby, as_index=False).last()
     df_r = df_r.set_index('date')
     df_r.dataset_ids = dataset_ids
     return df_r
@@ -1846,7 +1856,7 @@ def var_term(asset: Asset, pricing_date: Optional[str] = None, forward_start_dat
         df = pd.DataFrame()
 
         if asset.asset_class == AssetClass.Equity and (pricing_date is None or end >= today):  # try intraday data
-            df = _get_latest_term_structure_data(asset_id, QueryType.VAR_SWAP, None, source, request_id)
+            df = _get_latest_term_structure_data(asset_id, QueryType.VAR_SWAP, None, 'tenor', source, request_id)
             dataset_ids.update(getattr(df, 'dataset_ids', ()))
 
         if df.empty:
@@ -2339,7 +2349,7 @@ def _forward_price_elec(asset: Asset, price_method: str = 'LMP', bucket: str = '
 
 
 @plot_measure((AssetClass.Commod,), (AssetType.Index, AssetType.CommodityPowerAggregatedNodes,
-                                     AssetType.CommodityPowerNode,), [QueryType.FORWARD_PRICE])
+                                     AssetType.CommodityPowerNode,), [QueryType.FORWARD_PRICE],)
 def forward_price(asset: Asset, price_method: str = 'LMP', bucket: str = 'PEAK',
                   contract_range: str = 'F20', *, source: str = None, real_time: bool = False) -> pd.Series:
     """
@@ -2427,7 +2437,8 @@ def forward_price_ng(asset: Asset, contract_range: str = 'F20', price_method: st
     Forward Prices
 
     :param asset: asset object loaded from security master
-    :param price_method: price method - GDD/FERC/Exchange for US NG assets: Default value = GDD
+    :param price_method: For US NG assets: GDD/FERC/EXCHANGE. Default value = GDD.
+    For EU NG assets: USD/ None. Ignore this parameters for values in native currency.
     :param contract_range: e.g. inputs - 'Cal20', 'F20-G20', '2Q20', '2H20', 'Cal20-Cal21': Default Value = F20
     :param source: name of function caller: default source = None
     :param real_time: whether to retrieve intraday data instead of EOD: default value = False
@@ -3246,7 +3257,7 @@ def realized_correlation(asset: Asset, tenor: str, top_n_of_index: Optional[int]
 
 
 @plot_measure((AssetClass.Commod, AssetClass.Equity, AssetClass.FX), None, [QueryType.SPOT],
-              asset_type_excluded=(AssetType.CommodityEUNaturalGasHub,))
+              asset_type_excluded=(AssetType.CommodityEUNaturalGasHub, AssetType.CommodityNaturalGasHub,))
 def realized_volatility(asset: Asset, w: Union[Window, int, str] = Window(None, 0),
                         returns_type: Returns = Returns.SIMPLE, *, source: str = None, real_time: bool = False,
                         request_id: Optional[str] = None) -> Series:
@@ -3772,4 +3783,40 @@ def append_last_for_measure(df: pd.DataFrame, asset_ids: List[str], query_type, 
     result["dummy"] = result.index  # drop_duplicates ignores indexes, so we need to include it as a column first
     result = result.drop_duplicates().drop(columns=["dummy"])
     result.dataset_ids = tuple(set(getattr(df, 'dataset_ids', ())).union(getattr(df_l, 'dataset_ids', ())))
+    return result
+
+
+def get_historical_and_last_for_measure(asset_ids: List[str],
+                                        query_type,
+                                        where,
+                                        *,
+                                        source: str = None,
+                                        real_time: bool = False,
+                                        request_id: Optional[str] = None,
+                                        chunk_size: int = 5):
+    tasks = []
+    for i, chunked_assets in enumerate(chunk(asset_ids, chunk_size)):
+        query = GsDataApi.build_market_data_query(
+            chunked_assets,
+            query_type,
+            where=where,
+            source=source,
+            real_time=real_time)
+
+        tasks.append(partial(_market_data_timed, query, request_id))
+
+    if not real_time and DataContext.current.end_date >= datetime.date.today():
+        tasks.append(
+            partial(get_last_for_measure, asset_ids=asset_ids, query_type=query_type, where=where, source=source,
+                    request_id=request_id))
+
+    results = ThreadPoolManager.run_async(tasks)
+    df = pd.concat(results)
+    if df.empty:
+        return df
+
+    df["dummy"] = df.index  # drop_duplicates ignores indexes, so we need to include it as a column first
+    result = df.drop_duplicates().drop(columns=["dummy"])
+    result.dataset_ids = tuple(set(get(result, 'dataset_ids', ()) for result in results))
+    result = result.sort_index(kind="mergesort")  # mergesort for its "stable" sort functionality
     return result

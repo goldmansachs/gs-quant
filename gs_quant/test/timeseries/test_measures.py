@@ -49,6 +49,7 @@ from gs_quant.timeseries.measures import BenchmarkType
 
 _index = [pd.Timestamp('2019-01-01')]
 _test_datasets = ('TEST_DATASET',)
+_test_datasets2 = ('TEST_DATASET2',)
 _test_datasets_rt = ('TEST_DATASET_RT',)
 
 
@@ -1435,6 +1436,7 @@ def test_impl_corr_n(mocker):
     assert_series_equal(actual, expected, check_names=False)
 
     market_data.return_value = pd.DataFrame()
+    last_mock.return_value = pd.DataFrame()
     actual = tm.implied_correlation(spx, '1m', tm.EdrDataReference.DELTA_CALL, 0.5, 50, datetime.date(2020, 8, 31),
                                     source='PlotTool')
     assert actual.empty
@@ -2842,20 +2844,28 @@ def _vol_term_typical(reference, value):
     out = MarketDataResponseFrame(data=data, index=pd.DatetimeIndex(['2018-01-01'] * 4))
     out.dataset_ids = _test_datasets
 
+    data_expiry = {
+        'expirationDate': ['2018-01-06', '2018-01-08'],
+        'impliedVolatilityByExpiration': [1.2, 1.1]
+    }
+    out_expiry = MarketDataResponseFrame(data=data_expiry, index=pd.DatetimeIndex(['2018-01-01'] * 2))
+    out_expiry.dataset_ids = _test_datasets2
+
     replace = Replacer()
     market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
-    market_mock.side_effect = [pd.DataFrame(), out]
+    market_mock.side_effect = [pd.DataFrame(), pd.DataFrame(), out, out_expiry]
 
     actual = tm.vol_term(Index('MA123', AssetClass.Equity, '123'), reference, value)
-    idx = pd.DatetimeIndex(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
-    expected = pd.Series([1, 2, 3, 4], name='impliedVolatility', index=idx)
+    idx = pd.DatetimeIndex(['2018-01-06', '2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'],
+                           name='expirationDate')
+    expected = pd.Series([1.2, 1, 2, 3, 4], name='impliedVolatility', index=idx)
     expected = expected.loc[DataContext.current.start_date: DataContext.current.end_date]
 
     if expected.empty:
         assert actual.empty
     else:
         assert_series_equal(expected, pd.Series(actual))
-        assert actual.dataset_ids == _test_datasets
+        assert set(actual.dataset_ids) == set(_test_datasets + _test_datasets2)
 
     replace.restore()
     return actual
@@ -2872,8 +2882,6 @@ def _vol_term_empty():
     actual = tm.vol_term(Index('MAXYZ', AssetClass.Equity, 'XYZ'), tm.VolReference.DELTA_CALL, 777)
     assert actual.empty
     assert actual.dataset_ids == ()
-    market_mock.assert_called_once()
-    mock.assert_called_once()
     replace.restore()
 
 
@@ -2888,7 +2896,7 @@ def _vol_term_latest():
 
     replace = Replacer()
     market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
-    market_mock.side_effect = [out.iloc[-1:], out]
+    market_mock.side_effect = [out.iloc[-1:], out, pd.DataFrame(), pd.DataFrame()]
 
     actual = tm.vol_term(Index('MA123', AssetClass.Equity, '123'), tm.VolReference.SPOT, 100)
     idx = pd.DatetimeIndex(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
@@ -2915,7 +2923,7 @@ def test_vol_term():
     with DataContext('2018-01-16', '2018-12-31'):
         out = _vol_term_typical(tm.VolReference.SPOT, 100)
         assert out.empty
-        assert out.dataset_ids == _test_datasets
+        assert set(out.dataset_ids) == set(_test_datasets + _test_datasets2)
     with pytest.raises(NotImplementedError):
         tm.vol_term(..., tm.VolReference.SPOT, 100, real_time=True)
     with pytest.raises(MqError):
@@ -2937,23 +2945,30 @@ def _vol_term_fx(reference, value):
     out = MarketDataResponseFrame(data=data, index=pd.DatetimeIndex(['2018-01-01'] * 4))
     out.dataset_ids = _test_datasets
 
+    data_expiry = {
+        'expirationDate': ['2018-01-06', '2018-01-08'],
+        'impliedVolatilityByExpiration': [1.2, 1.1]
+    }
+    out_expiry = MarketDataResponseFrame(data=data_expiry, index=pd.DatetimeIndex(['2018-01-01'] * 2))
+    out_expiry.dataset_ids = _test_datasets2
+
     replace = Replacer()
     market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
-    market_mock.return_value = out
+    market_mock.side_effect = [out, out_expiry]
     cross_mock = replace('gs_quant.timeseries.measures.cross_stored_direction_for_fx_vol', Mock())
     cross_mock.return_value = 'EURUSD'
 
     actual = tm.vol_term(Cross('ABCDE', 'EURUSD'), reference, value)
-    idx = pd.DatetimeIndex(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
-    expected = pd.Series([1, 2, 3, 4], name='impliedVolatility', index=idx)
+    idx = pd.DatetimeIndex(['2018-01-06', '2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'],
+                           name='expirationDate')
+    expected = pd.Series([1.2, 1, 2, 3, 4], name='impliedVolatility', index=idx)
     expected = expected.loc[DataContext.current.start_date: DataContext.current.end_date]
 
     if expected.empty:
         assert actual.empty
     else:
         assert_series_equal(expected, pd.Series(actual))
-        assert actual.dataset_ids == _test_datasets
-    market_mock.assert_called_once()
+        assert set(actual.dataset_ids) == set(_test_datasets + _test_datasets2)
 
     replace.restore()
     return actual
