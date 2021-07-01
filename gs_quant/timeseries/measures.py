@@ -30,10 +30,10 @@ from dateutil.relativedelta import relativedelta
 from pandas import Series
 from pandas.tseries.holiday import Holiday, AbstractHolidayCalendar, USMemorialDay, USLaborDay, USThanksgivingDay, \
     sunday_to_monday
-from pydash import chunk
+from pydash import chunk, flatten
 
 from gs_quant.api.gs.assets import GsIdType
-from gs_quant.api.gs.data import GsDataApi, MarketDataResponseFrame
+from gs_quant.api.gs.data import GsDataApi
 from gs_quant.api.gs.data import QueryType
 from gs_quant.api.utils import ThreadPoolManager
 from gs_quant.data import Dataset
@@ -448,16 +448,6 @@ def _extract_series_from_df(df: pd.DataFrame, query_type: QueryType, handle_miss
         series = ExtendedSeries(df[col_name], index=df.index)
     series.dataset_ids = getattr(df, 'dataset_ids', ())
     return series
-
-
-def _merge_market_data_responses(frames: List[MarketDataResponseFrame]):
-    df = pd.concat(frames)
-    df.sort_index(inplace=True)
-    dataset_ids = []
-    for frame in frames:
-        dataset_ids.extend(frame.dataset_ids)
-    df.dataset_ids = tuple(set(dataset_ids))
-    return df
 
 
 @plot_measure((AssetClass.FX, AssetClass.Equity, AssetClass.Commod), None, [MeasureDependency(
@@ -958,33 +948,18 @@ def average_implied_volatility(asset: Asset, tenor: str, strike_reference: EdrDa
                   relative_strike)
         where = dict(tenor=tenor, strikeReference=ref_string, relativeStrike=relative_strike)
 
-        tasks = []
-        assets = constituents.index.to_list()
-        for constituent_chunk in chunk(assets, 5):
-            query = GsDataApi.build_market_data_query(
-                constituent_chunk,
-                QueryType.IMPLIED_VOLATILITY,
-                where=where,
-                source=source,
-                real_time=real_time)
+        asset_ids = constituents.index.to_list()
+        df = get_historical_and_last_for_measure(asset_ids=asset_ids, query_type=QueryType.IMPLIED_VOLATILITY,
+                                                 where=where, source=source, real_time=real_time, request_id=request_id)
 
-            tasks.append(partial(_market_data_timed, query, request_id))
+        def calculate_avg_vol(group, weights):
+            assets, vols = group['assetId'], group['impliedVolatility']
+            asset_weights = [weights[asset_id] for asset_id in assets]
+            total_weight = sum(asset_weights)
+            return sum([vol * weight / total_weight for vol, weight in zip(vols, asset_weights)])
 
-        results = ThreadPoolManager.run_async(tasks)
-        df = _merge_market_data_responses(results)
-
-        # TODO: parallelize
-        if not real_time and DataContext.current.end_date >= datetime.date.today():
-            df = append_last_for_measure(df, assets, QueryType.IMPLIED_VOLATILITY, where, source=source,
-                                         request_id=request_id)
-
-        def calculate_avg_vol(group):
-            vols = group.set_index('assetId')['impliedVolatility']
-            weights = constituents.reindex(vols.index.to_list())['netWeight']
-            total_weight = sum(weights)
-            return sum([vol * weight / total_weight for vol, weight in zip(vols, weights)])
-
-        average_vol = df.groupby(df.index).apply(calculate_avg_vol)
+        weights = constituents.to_dict()['netWeight']
+        average_vol = df.groupby(df.index).apply(calculate_avg_vol, weights)
 
         series = ExtendedSeries(average_vol, name='averageImpliedVolatility')
         series.dataset_ids = getattr(df, 'dataset_ids', ())
@@ -1110,7 +1085,8 @@ def average_realized_volatility(asset: Asset, tenor: str, returns_type: Returns 
                                                                                     Window(tenor, tenor), returns_type))
             weighted_vols.append(vol * weight)
 
-        series = ExtendedSeries(pd.concat(weighted_vols, axis=1).sum(1, min_count=top_n_of_index),
+        vol_df = pd.concat(weighted_vols, axis=1).ffill()
+        series = ExtendedSeries(vol_df.sum(1, min_count=top_n_of_index),
                                 name='averageRealizedVolatility') if len(weighted_vols) else ExtendedSeries()
         series.dataset_ids = getattr(df, 'dataset_ids', ())
         return series
@@ -2437,8 +2413,7 @@ def forward_price_ng(asset: Asset, contract_range: str = 'F20', price_method: st
     Forward Prices
 
     :param asset: asset object loaded from security master
-    :param price_method: For US NG assets: GDD/FERC/EXCHANGE. Default value = GDD.
-    For EU NG assets: USD/ None. Ignore this parameters for values in native currency.
+    :param price_method: For US NG assets:GDD/FERC/EXCHANGE. For EU NG assets:USD/None. Ignore for native currency.
     :param contract_range: e.g. inputs - 'Cal20', 'F20-G20', '2Q20', '2H20', 'Cal20-Cal21': Default Value = F20
     :param source: name of function caller: default source = None
     :param real_time: whether to retrieve intraday data instead of EOD: default value = False
@@ -3817,6 +3792,6 @@ def get_historical_and_last_for_measure(asset_ids: List[str],
 
     df["dummy"] = df.index  # drop_duplicates ignores indexes, so we need to include it as a column first
     result = df.drop_duplicates().drop(columns=["dummy"])
-    result.dataset_ids = tuple(set(get(result, 'dataset_ids', ()) for result in results))
     result = result.sort_index(kind="mergesort")  # mergesort for its "stable" sort functionality
+    setattr(result, 'dataset_ids', tuple(set(flatten(get(result, 'dataset_ids', ()) for result in results))))
     return result
