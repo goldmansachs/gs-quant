@@ -82,6 +82,7 @@ setuptools.setup(
     ],
     extras_require={
         "internal": ["gs_quant_internal>=1.1.30", "requests_kerberos"],
+        "turbo": ["quant-extensions"],
         "notebook": ["jupyter", "matplotlib~=3.1.0", "seaborn"],
         "test": ["pytest", "pytest-cov", "pytest-mock", "testfixtures", "nbconvert", "nbformat", "jupyter_client"],
         "develop": ["wheel", "sphinx", "sphinx_rtd_theme", "sphinx_autodoc_typehints", "pytest", "pytest-cov",

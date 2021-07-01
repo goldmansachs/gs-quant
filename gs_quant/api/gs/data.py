@@ -545,13 +545,14 @@ class GsDataApi(DataApi):
             return ret
 
         ret = []
+        datetime_field = 'time' if isinstance(as_of, dt.datetime) else 'date'
         for idx, row in enumerate(cls.__normalise_coordinate_data(data)):
             coordinate_as_dict = market_data_coordinates[idx].as_dict(as_camel_case=True)
             try:
                 ret.append(dict(chain(coordinate_as_dict.items(),
-                                      (('value', row[0]['value']), ('time', row[0]['time'])))))
+                                      (('value', row[0]['value']), (datetime_field, row[0][datetime_field])))))
             except IndexError:
-                ret.append(dict(chain(coordinate_as_dict.items(), (('value', None), ('time', None)))))
+                ret.append(dict(chain(coordinate_as_dict.items(), (('value', None), (datetime_field, None)))))
         return cls.__df_from_coordinate_data(ret, use_datetime_index=False)
 
     @classmethod

@@ -17,37 +17,28 @@
 
    .. autosummary::
    
-      ~CustomBasketStyles.ASIA
-      ~CustomBasketStyles.BESPOKE
+      ~CustomBasketStyles.AD_HOC_DESK_WORK
+      ~CustomBasketStyles.CLIENT_CONSTRUCTED_WRAPPER
       ~CustomBasketStyles.CONSUMER
-      ~CustomBasketStyles.EM
       ~CustomBasketStyles.ENERGY
+      ~CustomBasketStyles.ENHANCED_INDEX_SOLUTIONS
       ~CustomBasketStyles.ESG
-      ~CustomBasketStyles.ETF_REPLICATION
-      ~CustomBasketStyles.EU
       ~CustomBasketStyles.FACTORS
       ~CustomBasketStyles.FINANCIALS
-      ~CustomBasketStyles.FUNDAMENTAL
+      ~CustomBasketStyles.FLAGSHIP
       ~CustomBasketStyles.GEOGRAPHIC
-      ~CustomBasketStyles.GLOBAL
       ~CustomBasketStyles.GROWTH
       ~CustomBasketStyles.HEALTHCARE
+      ~CustomBasketStyles.HEDGING
       ~CustomBasketStyles.INDUSTRIALS
-      ~CustomBasketStyles.INDUSTRY
-      ~CustomBasketStyles.MACRO
-      ~CustomBasketStyles.MACRO_SECTORS
       ~CustomBasketStyles.MATERIALS
-      ~CustomBasketStyles.MICRO_SECTORS
       ~CustomBasketStyles.MOMENTUM
       ~CustomBasketStyles.PIPG
-      ~CustomBasketStyles.POSITIONING
-      ~CustomBasketStyles.SINGLE_STOCKS
+      ~CustomBasketStyles.SECTORS_INDUSTRIES
       ~CustomBasketStyles.SIZE
-      ~CustomBasketStyles.STRUCTURED_1_DELTA
+      ~CustomBasketStyles.STRUCTURED_ONE_DELTA
       ~CustomBasketStyles.THEMATIC
       ~CustomBasketStyles.TMT
-      ~CustomBasketStyles.TOPICAL
-      ~CustomBasketStyles.US
       ~CustomBasketStyles.UTILITIES
       ~CustomBasketStyles.VALUE
       ~CustomBasketStyles.VOLATILITY

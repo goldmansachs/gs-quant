@@ -31,6 +31,28 @@ These include basic algebraic operations, probability and distribution analysis.
 Generally not finance-specific routines.
 """
 
+_logger = logging.getLogger(__name__)
+try:
+    from quant_extensions.timeseries.statistics import rolling_std
+except ImportError as e:
+    _logger.warning('unable to import extensions, using pure Python implementation', exc_info=e)
+
+    def rolling_std(x: pd.Series, offset: pd.DateOffset) -> pd.Series:
+        size = len(x)
+        index = x.index
+        results = np.empty(size, dtype=np.double)
+        results[0] = np.nan
+        values = np.array(x.values, dtype=np.double)  # put data into np arrays to save time on slicing later
+
+        start = 0
+        for i in range(1, size):
+            for j in range(start, i + 1):
+                if index[j] > index[i] - offset:
+                    start = j
+                    break
+            results[i] = np.std(values[start:i + 1], ddof=1)
+        return pd.Series(results, index=index, dtype=np.double)
+
 
 def _concat_series(series: List[pd.Series]):
     curves = []
@@ -467,18 +489,7 @@ def std(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Series
     w = normalize_window(x, w)
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
     if isinstance(w.w, pd.DateOffset):
-        results = np.empty(len(x), dtype=np.double)
-        results[0] = np.nan
-        values = np.array(x.values, dtype=np.double)  # slicing (see below) of numpy arrays is faster
-
-        start = 0
-        for i in range(1, len(x)):
-            for j in range(start, i + 1):
-                if x.index[j] > x.index[i] - w.w:
-                    start = j
-                    break
-            results[i] = np.std(values[start:i + 1], ddof=1)
-        return apply_ramp(pd.Series(results, index=x.index, dtype=np.double), w)
+        return apply_ramp(rolling_std(x, w.w), w)
     else:
         return apply_ramp(x.rolling(w.w, 0).std(), w)
 
