@@ -87,7 +87,8 @@ class PriceableImpl(Priceable, metaclass=ABCMeta):
         >>> market = swap.market()
 
         """
-        def handle_result(result: Optional[Union[DataFrameWithInfo, ErrorValue, PricingFuture]]) ->\
+
+        def handle_result(result: Optional[Union[DataFrameWithInfo, ErrorValue, PricingFuture]]) -> \
                 [OverlayMarket, dict]:
             properties = MarketDataCoordinate.properties()
             is_historical = isinstance(PricingContext.current, HistoricalPricingContext)
@@ -100,7 +101,10 @@ class PriceableImpl(Priceable, metaclass=ABCMeta):
                     coordinate_values = {p: row.get(p) for p in properties}
                     if 'mkt_point' in coordinate_values:
                         coordinate_values['mkt_point'] = tuple(coordinate_values['mkt_point'].split(';'))
-                    market_data[MarketDataCoordinate.from_dict(coordinate_values)] = row['value']
+
+                    # return 'redacted' as coordinate value if its a redacted coordinate
+                    market_data[MarketDataCoordinate.from_dict(coordinate_values)] = row['value'] if \
+                        row['permissions'] == 'Granted' else 'redacted'
 
                 return market_data
 

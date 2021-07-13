@@ -683,18 +683,37 @@ def beta(x: pd.Series, b: pd.Series, w: Union[Window, int, str] = Window(None, 0
     ret_benchmark = returns(b) if prices else b
 
     if isinstance(w.w, pd.DateOffset):
-        result = pd.Series([ret_series.loc[(ret_series.index > idx - w.w) & (ret_series.index <= idx)].cov(
-            ret_benchmark.loc[(ret_benchmark.index > idx - w.w) & (ret_benchmark.index <= idx)]
-        ) / ret_benchmark.loc[(ret_benchmark.index > idx - w.w) & (ret_benchmark.index <= idx)].var()
-            for idx in ret_series.index], index=ret_series.index)
+        series_index = ret_series.index.intersection(ret_benchmark.index)
+        size = len(series_index)
+        ret_series = ret_series.loc[series_index]
+        benchmark_series = ret_benchmark.loc[series_index]
+
+        ret_values = np.array(ret_series.values, dtype=np.double)
+        benchmark_values = np.array(benchmark_series.values, dtype=np.double)
+
+        cov_results = np.empty(size, dtype=np.double)
+        var_results = np.empty(size, dtype=np.double)
+
+        offset = w.w
+        start = 0
+        for i in range(1, size):
+            min_index_value = series_index[i] - offset
+            for idx in range(start, i + 1):
+                if series_index[idx] > min_index_value:
+                    start = idx
+                    break
+
+            sub_benchmark_values = benchmark_values[start:i + 1]
+            var_results[i] = np.var(sub_benchmark_values, ddof=1)
+            cov_results[i] = np.cov(ret_values[start:i + 1], sub_benchmark_values, ddof=1)[0][1]
+
+        result = pd.Series(cov_results / var_results, index=series_index, dtype=np.double)
     else:
         cov = ret_series.rolling(w.w, 0).cov(ret_benchmark.rolling(w.w, 0))
         result = cov / ret_benchmark.rolling(w.w, 0).var()
 
     # do not compute initial values as they may be extreme when sample size is small
-
     result[0:3] = np.nan
-
     return apply_ramp(interpolate(result, x, Interpolate.NAN), w)
 
 

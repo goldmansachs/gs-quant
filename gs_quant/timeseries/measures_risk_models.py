@@ -26,7 +26,7 @@ from gs_quant.markets.securities import Asset
 from gs_quant.models.risk_model import FactorRiskModel, ReturnFormat
 from gs_quant.target.common import AssetClass, AssetType
 from gs_quant.target.risk_models import Measure, DataAssetsRequest, UniverseIdentifier
-from gs_quant.timeseries import plot_measure_entity, plot_measure
+from gs_quant.timeseries import plot_measure_entity, plot_measure, prices
 from gs_quant.timeseries.measures import _extract_series_from_df
 
 
@@ -131,6 +131,28 @@ def factor_correlation(risk_model_id: str, factor_name_1: str, factor_name_2: st
                                        DataContext.current.end_date,
                                        ReturnFormat.JSON)
     return __format_plot_measure_results(correlation, QueryType.CORRELATION)
+
+
+@plot_measure_entity(EntityType.RISK_MODEL, [QueryType.FACTOR_RETURN])
+def factor_performance(risk_model_id: str, factor_name: str, *, source: str = None,
+                       real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+    """
+    Factor returns as a price time-series for a factor in a risk model
+
+    :param risk_model_id: risk model entity
+    :param factor_name: factor name
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: Time-series of factor returns as a price series across available risk model dates
+    """
+
+    factor = Factor.get(risk_model_id, factor_name)
+    factor_returns = factor.returns(DataContext.current.start_date,
+                                    DataContext.current.end_date,
+                                    ReturnFormat.JSON)
+    factor_return_timeseries = pd.Series(factor_returns)
+    return prices(factor_return_timeseries, 100)
 
 
 def __format_plot_measure_results(time_series: Dict, query_type: QueryType, multiplier=1, handle_missing_column=False):

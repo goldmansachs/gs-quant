@@ -19,7 +19,7 @@ import pytest
 from gs_quant import risk
 from gs_quant.datetime import business_day_offset
 from gs_quant.instrument import IRSwap
-from gs_quant.markets import PricingContext, CloseMarket, OverlayMarket
+from gs_quant.markets import PricingContext, CloseMarket, OverlayMarket, MarketDataCoordinate
 from gs_quant.risk import RollFwd
 from gs_quant.test.utils.test_utils import MockCalc
 
@@ -43,3 +43,19 @@ def test_pricing_context(mocker):
         with PricingContext(market=OverlayMarket(base_market=CloseMarket(date=future_date, location='NYC'),
                                                  market_data=market.result())):
             _ = swap1.calc(risk.Price)
+
+
+def test_market_data_object():
+    coord_val_pair = [
+        {'coordinate': {
+            'mkt_type': 'IR', 'mkt_asset': 'USD', 'mkt_class': 'Swap', 'mkt_point': ('5y',),
+            'mkt_quoting_style': 'ATMRate'}, 'value': 0.9973194889},
+        {'coordinate': {
+            'mkt_type': 'IR', 'mkt_asset': 'USD', 'mkt_class': 'Swap', 'mkt_point': ('40y',),
+            'mkt_quoting_style': 'ATMRate'}, 'value': 'redacted'},
+    ]
+    coordinates = {MarketDataCoordinate.from_dict(dic['coordinate']): dic['value'] for dic in coord_val_pair}
+    overlay_market = OverlayMarket(market_data=coordinates)
+
+    assert overlay_market.market_data[0].coordinate == MarketDataCoordinate.from_dict(coord_val_pair[0]['coordinate'])
+    assert overlay_market.redacted_coordinates[0] == MarketDataCoordinate.from_dict(coord_val_pair[1]['coordinate'])

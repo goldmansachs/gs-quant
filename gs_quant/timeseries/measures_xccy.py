@@ -76,6 +76,10 @@ CROSSCURRENCY_RATES_DEFAULTS = {
             {"BenchmarkType": "OIS",
              "rateOption": "EUR-EONIA-OIS-COMPOUND",
              "designatedMaturity": "3m",
+             "pricingLocation": ["LDN"]},
+            {"BenchmarkType": "SOFR",
+             "rateOption": "EUR-EUROSTR-COMPOUND",
+             "designatedMaturity": "3m",
              "pricingLocation": ["LDN"]}
         ],
         "USD": [
@@ -86,6 +90,10 @@ CROSSCURRENCY_RATES_DEFAULTS = {
             {"BenchmarkType": "OIS",
              "rateOption": "USD-FEDERAL FUNDS-H.15-OIS-COMP",
              "designatedMaturity": "3m",
+             "pricingLocation": ["NYC"]},
+            {"BenchmarkType": "SOFR",
+             "rateOption": "USD-SOFR-COMPOUND",
+             "designatedMaturity": "3m",
              "pricingLocation": ["NYC"]}
         ],
         "GBP": [
@@ -94,6 +102,10 @@ CROSSCURRENCY_RATES_DEFAULTS = {
              "designatedMaturity": "3m",
              "pricingLocation": ["LDN"]},
             {"BenchmarkType": "OIS",
+             "rateOption": "GBP-SONIA-COMPOUND",
+             "designatedMaturity": "3m",
+             "pricingLocation": ["LDN"]},
+            {"BenchmarkType": "SOFR",
              "rateOption": "GBP-SONIA-COMPOUND",
              "designatedMaturity": "3m",
              "pricingLocation": ["LDN"]}
@@ -107,6 +119,10 @@ CROSSCURRENCY_RATES_DEFAULTS = {
              "rateOption": "JPY-TONA-OIS-COMPOUND",
              "designatedMaturity": "3m",
              "pricingLocation": ["TKO"]},
+            {"BenchmarkType": "SOFR",
+             "rateOption": "JPY-TONA-OIS-COMPOUND",
+             "designatedMaturity": "3m",
+             "pricingLocation": ["TKO"]}
         ],
         "CHF": [
             {"BenchmarkType": "LIBOR",
@@ -163,9 +179,10 @@ crossCurrencyRates_defaults_provider = TdapiCrossCurrencyRatesDefaultsProvider(C
 CURRENCY_TO_XCCY_SWAP_RATE_BENCHMARK = {
     'CHF': OrderedDict([('LIBOR', 'CHF-LIBOR-BBA'), ('OIS', 'CHF-SARON-OIS-COMPOUND')]),
     'EUR': OrderedDict([('LIBOR', 'EUR-EURIBOR-TELERATE'), ('OIS', 'EUR-EONIA-OIS-COMPOUND'),
-                        ('EUROSTR', 'EUR-EUROSTR-COMPOUND')]),
-    'GBP': OrderedDict([('LIBOR', 'GBP-LIBOR-BBA'), ('OIS', 'GBP-SONIA-COMPOUND')]),
-    'JPY': OrderedDict([('LIBOR', 'JPY-LIBOR-BBA'), ('OIS', 'JPY-TONA-OIS-COMPOUND')]),
+                        ('SOFR', 'EUR-EUROSTR-COMPOUND')]),
+    'GBP': OrderedDict([('LIBOR', 'GBP-LIBOR-BBA'), ('OIS', 'GBP-SONIA-COMPOUND'), ('SOFR', 'GBP-SONIA-COMPOUND')]),
+    'JPY': OrderedDict([('LIBOR', 'JPY-LIBOR-BBA'), ('OIS', 'JPY-TONA-OIS-COMPOUND'),
+                        ('SOFR', 'JPY-TONA-OIS-COMPOUND')]),
     'USD': OrderedDict(
         [('LIBOR', 'USD-LIBOR-BBA'), ('OIS', 'USD-FEDERAL FUNDS-H.15-OIS-COMP'), ('SOFR', 'USD-SOFR-COMPOUND')]),
     'SEK': {'LIBOR': 'SEK-STIBOR-SIDE'},

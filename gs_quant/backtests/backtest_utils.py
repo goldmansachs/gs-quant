@@ -51,11 +51,11 @@ def get_final_date(inst, create_date, duration):
     if duration[-1].lower() in ['d', 'b']:
         return business_day_offset(create_date, int(duration[:-1]))
     if duration[-1].lower() == 'w':
-        return create_date + relativedelta(weeks=int(duration[:-1]))
+        return business_day_offset(create_date + relativedelta(weeks=int(duration[:-1])), 0, roll='forward')
     if duration[-1].lower() == 'm':
-        return create_date + relativedelta(months=int(duration[:-1]))
+        return business_day_offset(create_date + relativedelta(months=int(duration[:-1])), 0, roll='forward')
     if duration[-1].lower() == 'y':
-        return create_date + relativedelta(years=int(duration[:-1]))
+        return business_day_offset(create_date + relativedelta(years=int(duration[:-1])), 0, roll='forward')
     raise RuntimeError(f'Unable to get final date for {duration}')
 
 

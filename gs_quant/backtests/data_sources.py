@@ -48,8 +48,11 @@ class GsDataSource(DataSource):
     def get_data(self, state: Union[datetime.date, datetime.datetime] = None):
         if self._loaded_data is None:
             ds = Dataset(self._data_set)
-            self._loaded_data = ds.get_data(self._min_date or state, self._max_date or state, assetId=(self._asset_id,))
-        return self._loaded_data[self._value_header]
+            if self._min_date:
+                self._loaded_data = ds.get_data(self._min_date, self._max_date, assetId=(self._asset_id,))
+            else:
+                return ds.get_data(state, state, assetId=(self._asset_id,))[self._value_header]
+        return self._loaded_data[self._value_header].at[pd.to_datetime(state)]
 
 
 class GenericDataSource(DataSource):
@@ -77,7 +80,9 @@ class GenericDataSource(DataSource):
         if isinstance(state, Iterable):
             return [self.get_data(i) for i in state]
 
-        if state in self._data_set or self._missing_data_strategy == MissingDataStrategy.fail:
+        if pd.Timestamp(state) in self._data_set:
+            return self._data_set[pd.Timestamp(state)]
+        elif state in self._data_set or self._missing_data_strategy == MissingDataStrategy.fail:
             return self._data_set[state]
         else:
             if isinstance(self._data_set.index, pd.DatetimeIndex):

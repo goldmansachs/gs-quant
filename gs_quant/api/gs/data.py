@@ -134,6 +134,7 @@ class QueryType(Enum):
     OIS_XCCY_EX_SPIKE = "Ois Xccy Ex Spike"
     USD_OIS = "Usd Ois"
     NON_USD_OIS = "Non Usd Ois"
+    SETTLEMENT_PRICE = "Settlement Price"
 
 
 class GsDataApi(DataApi):

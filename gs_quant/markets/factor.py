@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import math
 from math import sqrt
 from typing import Dict, Union
 
@@ -92,7 +93,7 @@ class Factor:
             date = data['date']
             if date_to_matrix_order.get(date):
                 matrix_order_on_date = date_to_matrix_order[date]
-                covariance_data[date] = data[matrix_order_on_date]
+                covariance_data[date] = data[matrix_order_on_date] * math.sqrt(252)
 
         if format == ReturnFormat.DATA_FRAME:
             return pd.DataFrame.from_dict(covariance_data, orient='index', columns=['covariance'])
@@ -143,6 +144,29 @@ class Factor:
         if format == ReturnFormat.DATA_FRAME:
             return pd.DataFrame.from_dict(correlation_data, orient='index', columns=['correlation'])
         return correlation_data
+
+    def returns(self,
+                start_date: date = DataContext.current.start_date,
+                end_date: date = DataContext.current.end_date,
+                format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
+        """ Retrieve a Dataframe or Dictionary of date->factor return values for a date range """
+        appendage = self.__get_dataset_trial_appendage()
+        data_query_results = GsDataApi.execute_query(
+            f'RISK_MODEL_FACTOR{appendage}',
+            DataQuery(
+                where={"riskModel": self.risk_model_id, "factorId": self.id},
+                fields=['return'],
+                start_date=start_date,
+                end_date=end_date
+            )
+        ).get('data', [])
+
+        return_data = {factor_data['date']: factor_data['return'] for factor_data in data_query_results
+                       if factor_data.get('return')}
+
+        if format == ReturnFormat.DATA_FRAME:
+            return pd.DataFrame.from_dict(return_data, orient='index', columns=['return'])
+        return return_data
 
     def __matrix_order(self, start_date: date, end_date: date, appendage: str) -> Dict:
         """ Retrieve Dictionary of date->matrix_order for the factor in the covariance matrix """
