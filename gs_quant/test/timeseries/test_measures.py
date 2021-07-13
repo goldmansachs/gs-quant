@@ -40,7 +40,7 @@ from gs_quant.data.dataset import Dataset
 from gs_quant.data.fields import Fields
 from gs_quant.errors import MqError, MqValueError, MqTypeError
 from gs_quant.markets.securities import AssetClass, Cross, Index, Currency, SecurityMaster, Stock, \
-    Swap, CommodityNaturalGasHub, CommodityEUNaturalGasHub, AssetIdentifier, CommodityPowerAggregatedNodes
+    Swap, CommodityNaturalGasHub, CommodityEUNaturalGasHub, AssetIdentifier, CommodityPowerAggregatedNodes, FutureMarket
 from gs_quant.session import GsSession, Environment, OAuth2Session
 from gs_quant.target.common import XRef, PricingLocation, Currency as CurrEnum
 from gs_quant.test.timeseries.utils import mock_request
@@ -4541,6 +4541,92 @@ def test_eu_ng_hub_to_swap():
     assets.return_value = []
     actual = tm.eu_ng_hub_to_swap(mock_EU_asset)
     assert_equal(actual, 'MA001')
+
+
+def test_settlement_price():
+    # Tests for settlement price function
+    replace = Replacer()
+
+    with DataContext(datetime.date(2021, 6, 2), datetime.date(2021, 6, 2)):
+        # Test for EEX Asset
+        Asset_Mock = FutureMarket('MA001', AssetClass.Commod, 'DEBM')
+        EEX_mock = replace('gs_quant.timeseries.measures.Asset.get_entity', Mock())
+        EEX_mock.return_value = {'parameters': {'exchange': 'EEX', 'productGroup': 'PowerFutures'}}
+        EEX_ds = replace('gs_quant.data.dataset.Dataset.get_data', Mock())
+        EEX_ds.return_value = pd.DataFrame(data=dict(settlementPrice=20.20, contract='K21'),
+                                           index=[datetime.date(2021, 6, 2)])
+        actual = pd.Series(tm.settlement_price(Asset_Mock, contract='K21'))
+        expected = pd.Series([20.20], index=[datetime.date(2021, 6, 2)], name='settlementPrice')
+        assert_series_equal(expected, actual)
+
+        # Test for CarbonCredit Asset
+        Asset_Mock = FutureMarket('MA001', AssetClass.Commod, 'RGGI V19')
+        CC_mock = replace('gs_quant.timeseries.measures.Asset.get_entity', Mock())
+        CC_mock.return_value = {'parameters': {'exchange': 'ICE', 'productGroup': 'Physical Environment'}}
+        CC_ds = replace('gs_quant.data.dataset.Dataset.get_data', Mock())
+        CC_ds.return_value = pd.DataFrame(data=dict(settlementPrice=21.21, contract='K21'),
+                                          index=[datetime.date(2021, 6, 2)])
+        actual = pd.Series(tm.settlement_price(Asset_Mock, contract='K21'))
+        expected = pd.Series([21.21], index=[datetime.date(2021, 6, 2)], name='settlementPrice')
+        assert_series_equal(expected, actual)
+
+        # Test for ICE Power Asset
+        Asset_Mock = FutureMarket('MA001', AssetClass.Commod, 'GAB')
+        CC_mock = replace('gs_quant.timeseries.measures.Asset.get_entity', Mock())
+        CC_mock.return_value = {'parameters': {'exchange': 'ICE', 'productGroup': 'PowerFutures'}}
+        CC_ds = replace('gs_quant.data.dataset.Dataset.get_data', Mock())
+        CC_ds.return_value = pd.DataFrame(data=dict(settlementPrice=22.22, contract='K21'),
+                                          index=[datetime.date(2021, 6, 2)])
+        actual = pd.Series(tm.settlement_price(Asset_Mock, contract='K21'))
+        expected = pd.Series([22.22], index=[datetime.date(2021, 6, 2)], name='settlementPrice')
+        assert_series_equal(expected, actual)
+
+        # Test for NASDAQ Power Asset
+        Asset_Mock = FutureMarket('MA001', AssetClass.Commod, 'ENOFUTBL')
+        CC_mock = replace('gs_quant.timeseries.measures.Asset.get_entity', Mock())
+        CC_mock.return_value = {'parameters': {'exchange': 'NASDAQ', 'productGroup': 'PowerFutures'}}
+        CC_ds = replace('gs_quant.data.dataset.Dataset.get_data', Mock())
+        CC_ds.return_value = pd.DataFrame(data=dict(settlementPrice=23.23, contract='K21'),
+                                          index=[datetime.date(2021, 6, 2)])
+        actual = pd.Series(tm.settlement_price(Asset_Mock, contract='K21'))
+        expected = pd.Series([23.23], index=[datetime.date(2021, 6, 2)], name='settlementPrice')
+        assert_series_equal(expected, actual)
+
+        # Test for empty  result
+        CC_ds.return_value = pd.DataFrame()
+        actual = pd.Series(tm.settlement_price(Asset_Mock, contract='K21'))
+        expected = pd.Series()
+        assert_series_equal(expected, actual)
+
+        # Test for asset with no exchange info
+        Asset_Mock = FutureMarket('MA001', AssetClass.Commod, 'XYZ')
+        empty_mock = replace('gs_quant.timeseries.measures.Asset.get_entity', Mock())
+        empty_mock.return_value = {'parameters': {}}
+
+        with pytest.raises(MqTypeError):
+            tm.settlement_price(Asset_Mock, contract='F21')
+
+        # Test for asset with any only some asset params filled
+        Asset_Mock = FutureMarket('MA001', AssetClass.Commod, 'XYZ')
+        empty_mock = replace('gs_quant.timeseries.measures.Asset.get_entity', Mock())
+        empty_mock.return_value = {'parameters': {'exchange': 'OTHER_EXCHANGE'}}
+
+        with pytest.raises(MqTypeError):
+            tm.settlement_price(Asset_Mock, contract='F21')
+
+        # Test for asset with any other exchange, currently not covered
+        Asset_Mock = FutureMarket('MA001', AssetClass.Commod, 'XYZ')
+        empty_mock = replace('gs_quant.timeseries.measures.Asset.get_entity', Mock())
+        empty_mock.return_value = {'parameters': {'exchange': 'OTHER_EXCHANGE', 'productGroup': 'OTHER_PRODUCT'}}
+
+        with pytest.raises(MqTypeError):
+            tm.settlement_price(Asset_Mock, contract='F21')
+
+        # Test for real time data setting on query
+        with pytest.raises(MqValueError):
+            tm.settlement_price(Asset_Mock, contract='F21', real_time=True)
+
+    replace.restore()
 
 
 if __name__ == '__main__':

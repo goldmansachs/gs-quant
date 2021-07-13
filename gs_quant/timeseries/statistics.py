@@ -31,12 +31,9 @@ These include basic algebraic operations, probability and distribution analysis.
 Generally not finance-specific routines.
 """
 
-_logger = logging.getLogger(__name__)
 try:
     from quant_extensions.timeseries.statistics import rolling_std
-except ImportError as e:
-    _logger.warning('unable to import extensions, using pure Python implementation', exc_info=e)
-
+except ImportError:
     def rolling_std(x: pd.Series, offset: pd.DateOffset) -> pd.Series:
         size = len(x)
         index = x.index

@@ -213,6 +213,16 @@ class EUNatGasDataReference(Enum):
     ICE = "ICE"
 
 
+class EUPowerDataReference(Enum):
+    ICE_EXCHANGE = 'ICE'
+    EEX_EXCHANGE = 'EEX'
+    NASDAQ_EXCHANGE = 'NASDAQ'
+    CARBON_CREDIT_DATASET = 'COMMOD_US_ELEC_CARBON_CREDITS_FUTURES'
+    CARBON_CREDIT_PRODUCT = 'Physical Environment'
+    EU_POWER_EXCHANGE_DATASET = 'COMMOD_EU_POWER_EXCHANGE_PRICES'
+    EU_POWER_PRODUCT = 'PowerFutures'
+
+
 class FXSpotCarry(Enum):
     ANNUALIZED = 'annualized'
     DAILY = 'daily'
@@ -3794,4 +3804,56 @@ def get_historical_and_last_for_measure(asset_ids: List[str],
     result = df.drop_duplicates().drop(columns=["dummy"])
     result = result.sort_index(kind="mergesort")  # mergesort for its "stable" sort functionality
     setattr(result, 'dataset_ids', tuple(set(flatten(get(result, 'dataset_ids', ()) for result in results))))
+    return result
+
+
+@plot_measure((AssetClass.Commod,), (AssetType.FutureMarket,), [QueryType.SETTLEMENT_PRICE],)
+def settlement_price(asset: Asset, contract: str = 'F22', *, source: str = None, real_time: bool = False) -> pd.Series:
+    """
+    Settlement price from exchanges for Commod FutureMarket
+
+    :param asset: asset object loaded from security master
+    :param contract: contract month for price. Ex: F22
+    :param source: name of function caller: default source = None
+    :param real_time: whether to retrieve intraday data instead of EOD: default value = False
+    :return: Settlement_Price from Dataset
+    """
+    if real_time:
+        raise MqValueError('Use daily frequency instead of intraday')
+
+    # Find the right dataset based on the asset
+    try:
+        asset_parameters = asset.get_entity()['parameters']
+        if len(asset_parameters):
+            asset_exchange = asset_parameters['exchange']
+            asset_product = asset_parameters['productGroup']
+
+            if asset_exchange == EUPowerDataReference.ICE_EXCHANGE.value and \
+                    asset_product == EUPowerDataReference.CARBON_CREDIT_PRODUCT.value:
+                ds = Dataset(EUPowerDataReference.CARBON_CREDIT_DATASET.value)
+            elif (asset_exchange == EUPowerDataReference.EEX_EXCHANGE.value or
+                    asset_exchange == EUPowerDataReference.ICE_EXCHANGE.value or
+                    asset_exchange == EUPowerDataReference.NASDAQ_EXCHANGE.value) and \
+                    asset_product == EUPowerDataReference.EU_POWER_PRODUCT.value:
+                ds = Dataset(EUPowerDataReference.EU_POWER_EXCHANGE_DATASET.value)
+            else:
+                raise MqTypeError('Assets of exchange %s and group %s not handled currently', asset_exchange,
+                                  asset_product)
+        else:
+            raise MqTypeError("No required parameter information on asset schema")
+    except (TypeError, ValueError, KeyError) as e:
+        _logger.warning('Error while fetching asset information to choose dataset', exc_info=e)
+        raise MqTypeError('Error: %s', str(e))
+
+    where = dict(assetId=asset.get_marquee_id(), contract=contract)
+    start, end = DataContext.current.start_date, DataContext.current.end_date
+    result = ds.get_data(where=where, start=start, end=end)
+    _logger.debug('q - Data queried from %s', ds.id)
+
+    if result.empty:
+        result = ExtendedSeries(dtype='float64')
+    else:
+        result = ExtendedSeries(result['settlementPrice'])
+
+    result.dataset_ids = ds.id
     return result

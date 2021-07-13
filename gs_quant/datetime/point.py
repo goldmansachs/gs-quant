@@ -139,7 +139,7 @@ def point_sort_order(point: str, ref_date: dt.date = dt.date.today()) -> float:
     if const_value is not None:
         return const_value
 
-    parts = point.split(';')
+    parts = [p.strip() for p in point.split(';')]
     if len(parts) > 1:
         first = point_sort_order(parts[0])
         if not first:

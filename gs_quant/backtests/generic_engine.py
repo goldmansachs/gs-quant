@@ -64,6 +64,7 @@ class AddTradeActionImpl(ActionHandler):
         # record entry and unwind cashflows
         for create_date, portfolio in orders.items():
             for inst in portfolio.all_instruments:
+                inst.name = f'{inst.name}_{create_date}'
                 backtest.cash_payments[create_date].append(CashPayment(inst, effective_date=create_date, direction=-1))
                 final_date = get_final_date(inst, create_date, self.action.trade_duration)
                 backtest.cash_payments[final_date].append(CashPayment(inst, effective_date=final_date))
@@ -102,7 +103,7 @@ class HedgeActionImpl(ActionHandler):
                     t.name = f'{t.name}_{create_date.strftime("%Y-%m-%d")}'
                 backtest.scaling_portfolios[create_date].append(
                     ScalingPortfolio(trade=hedge, dates=active_dates, risk=self.action.risk,
-                                     csa_term=self.action.csa_term))
+                                     csa_term=self.action.csa_term, scaling_parameter=self.action.scaling_parameter))
 
                 # add cashflows on trade entry and unwind
                 backtest.cash_payments[create_date].append(
@@ -145,19 +146,19 @@ class GenericEngine(BacktestBaseEngine):
         return True
 
     def run_backtest(self, strategy, start=None, end=None, frequency='BM', states=None, risks=Price,
-                     show_progress=True, csa_term=None):
+                     show_progress=True, csa_term=None, visible_to_gs=False):
         """
         run the backtest following the triggers and actions defined in the strategy.  If states are entered run on
         those dates otherwise build a schedule from the start, end, frequency using pd.date_range
         :param strategy: the strategy object
         :param start: a datetime
         :param end: a datetime
-        :param frequency: str or DateOffset, default 'D'. Frequency strings can have multiples, e.g. '5H'.
-        :param window: not used yet - intended for running a strategy over a series of potentially overlapping dates
+        :param frequency: str or DateOffset, default 'BM'. Frequency strings can have multiples, e.g. '5H'.
         :param states: a list of dates will override the start, end, freq if provided
         :param risks: risks to run
         :param show_progress: boolean default true
         :param csa_term: the csa term to use
+        :param visible_to_gs: are the contents of risk requests visible to GS (defaults to False)
         :return: a backtest object containing the portfolios on each day and results which show all risks on all days
 
         """
@@ -166,6 +167,9 @@ class GenericEngine(BacktestBaseEngine):
         risks = make_list(risks) + strategy.risks
 
         backtest = BackTest(strategy, dates, risks)
+
+        stored_pc = PricingContext.current if PricingContext.current_is_set else None
+        PricingContext.current = PricingContext(visible_to_gs=visible_to_gs)
 
         if len(strategy.initial_portfolio):
             init_port = Portfolio(strategy.initial_portfolio)
@@ -215,9 +219,9 @@ class GenericEngine(BacktestBaseEngine):
                     current_risk = backtest.results[d][p.risk].aggregate(allow_mismatch_risk_keys=True)
                     hedge_risk = p.results[d][p.risk].aggregate()
                     scaling_factor = current_risk / hedge_risk
-                    new_notional = p.trade.notional_amount * -scaling_factor
+                    new_notional = getattr(p.trade, p.scaling_parameter) * -scaling_factor
                     scaled_trade = p.trade.as_dict()
-                    scaled_trade['notional_amount'] = new_notional
+                    scaled_trade[p.scaling_parameter] = new_notional
                     scaled_trade = Instrument.from_dict(scaled_trade)
                     scaled_trade.name = p.trade.name
                     for day in p.dates:
@@ -265,5 +269,8 @@ class GenericEngine(BacktestBaseEngine):
                             backtest.results[cp.effective_date][Price][cp.trade] * scale_date_adj * cp.direction
                     else:
                         backtest.cash_dict[day] += backtest.results[day][Price][cp.trade] * cp.direction
+
+        if stored_pc:
+            PricingContext.current = stored_pc
 
         return backtest

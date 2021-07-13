@@ -20,7 +20,8 @@ from gs_quant.common import PricingLocation
 from gs_quant.context_base import do_not_serialise
 from gs_quant.datetime.date import prev_business_date
 from gs_quant.target.common import CloseMarket as _CloseMarket, LiveMarket as _LiveMarket, \
-    OverlayMarket as _OverlayMarket, RelativeMarket as _RelativeMarket, TimestampedMarket as _TimestampedMarket
+    OverlayMarket as _OverlayMarket, RelativeMarket as _RelativeMarket, TimestampedMarket as _TimestampedMarket, \
+    RefMarket as _RefMarket
 from gs_quant.target.data import MarketDataCoordinate as __MarketDataCoordinate, \
     MarketDataCoordinateValue as __MarketDataCoordinateValue
 from typing import Mapping, Optional, Tuple, Union
@@ -160,6 +161,7 @@ class LiveMarket(_LiveMarket, Market):
     """Market Object which captures market data based on location
     and time at runtime
     """
+
     def __init__(self, location: Optional[Union[str, PricingLocation]] = None):
         super().__init__(location=location)
 
@@ -178,7 +180,10 @@ class OverlayMarket(_OverlayMarket, Market):
 
     def __init__(self, market_data: MarketDataMap, base_market: Optional[Market] = None):
         super().__init__(base_market=base_market or CloseMarket(), market_data=())
-        self.__market_data = market_data
+        # filter market_data map input to separate permissioned and redacted coordinates. redacted coordinates have
+        # 'redacted' as their coordinate value
+        self.__market_data = dict(filter(lambda elem: elem[1] != 'redacted', market_data.items()))
+        self.__redacted_coordinates = tuple(key for (key, value) in market_data.items() if value == 'redacted')
 
     def __getitem__(self, item):
         return self.__market_data[item]
@@ -203,6 +208,27 @@ class OverlayMarket(_OverlayMarket, Market):
     @do_not_serialise
     def coordinates(self) -> Tuple[MarketDataCoordinate, ...]:
         return tuple(self.__market_data.keys())
+
+    @property
+    @do_not_serialise
+    def redacted_coordinates(self) -> str:
+        return self.__redacted_coordinates
+
+
+class RefMarket(_RefMarket, Market):
+    """Market Object which represents a Reference to a Market
+    """
+
+    def __init__(self, market_ref: str):
+        super().__init__(market_ref='')
+        self.__market_ref = market_ref
+
+    def __repr__(self):
+        return f'Market Ref ({id(self)})'
+
+    @Market.location.getter
+    def location(self) -> PricingLocation:
+        return market_location(super().location)
 
 
 class RelativeMarket(_RelativeMarket, Market):

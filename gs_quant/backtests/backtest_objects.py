@@ -28,7 +28,7 @@ import numpy as np
 import datetime as dt
 
 
-class BackTest(object):
+class BackTest:
     def __init__(self, strategy, states, risks):
         self._portfolio_dict = defaultdict(Portfolio)  # portfolio by state
         self._cash_dict = defaultdict(float)  # cash by state
@@ -114,16 +114,17 @@ class BackTest(object):
         return summary.fillna(0)
 
 
-class ScalingPortfolio(object):
-    def __init__(self, trade, dates, risk, csa_term=None):
+class ScalingPortfolio:
+    def __init__(self, trade, dates, risk, csa_term=None, scaling_parameter='notional_amount'):
         self.trade = trade
         self.dates = dates
         self.risk = risk
         self.csa_term = csa_term
+        self.scaling_parameter = scaling_parameter
         self.results = None
 
 
-class CashPayment(object):
+class CashPayment:
     def __init__(self, trade, effective_date=None, scale_date=None, direction=1):
         self.trade = trade
         self.effective_date = effective_date
@@ -131,7 +132,7 @@ class CashPayment(object):
         self.direction = direction
 
 
-class PredefinedAssetBacktest(object):
+class PredefinedAssetBacktest:
     """
     :param data_handler: holds all the data required to run the backtest
     :param performance: backtest values

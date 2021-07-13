@@ -186,6 +186,11 @@ def risk_vector_handler(result: dict, risk_key: RiskKey, _instrument: Instrument
     return __dataframe_handler(result['points'], mappings, risk_key, request_id=request_id)
 
 
+def risk_theta_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
+                       request_id: Optional[str] = None) -> FloatWithInfo:
+    return FloatWithInfo(risk_key, result['values'][0], request_id=request_id)
+
+
 def mdapi_table_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
                         request_id: Optional[str] = None) -> DataFrameWithInfo:
     coordinates = []
@@ -193,15 +198,23 @@ def mdapi_table_handler(result: dict, risk_key: RiskKey, _instrument: Instrument
         point = ';'.join(r['coordinate']['point']) if isinstance(r['coordinate']['point'], list) else ""
         r['coordinate'].update({'point': point})
         r['coordinate'].update({'value': r['value']})
+        r['coordinate'].update({'permissions': r['permissions']})
         coordinates.append(r['coordinate'])
 
     mappings = (('mkt_type', 'type'),
                 ('mkt_asset', 'asset'),
                 ('mkt_class', 'assetClass'),
                 ('mkt_point', 'point'),
-                ('value', 'value'))
+                ('mkt_quoting_style', 'quotingStyle'),
+                ('value', 'value'),
+                ('permissions', 'permissions'))
 
     return __dataframe_handler(coordinates, mappings, risk_key, request_id=request_id)
+
+
+def market_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
+                   request_id: Optional[str] = None) -> StringWithInfo:
+    return StringWithInfo(risk_key, result.get('marketRef'), request_id=request_id)
 
 
 def unsupported_handler(_result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
@@ -220,5 +233,7 @@ result_handlers = {
     'Risk': risk_handler,
     'RiskByClass': risk_by_class_handler,
     'RiskVector': risk_vector_handler,
+    'RiskTheta': risk_theta_handler,
+    'Market': market_handler,
     'Unsupported': unsupported_handler
 }

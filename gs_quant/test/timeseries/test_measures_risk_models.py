@@ -262,5 +262,35 @@ def test_factor_correlation():
     replace.restore()
 
 
+def test_factor_performance():
+
+    replace = Replacer()
+
+    # mock getting risk model factor entity
+    mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_data', Mock())
+    mock.return_value = mock_risk_model_data
+
+    # mock getting risk model factor entity
+    mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_factor_data', Mock())
+    mock.return_value = mock_risk_model_factor_data
+
+    # mock getting risk model entity()
+    mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model', Mock())
+    mock.return_value = mock_risk_model_obj
+
+    # mock getting risk model dates
+    mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model_dates', Mock())
+    mock.return_value = ['2020-01-01', '2020-01-02', '2020-01-03']
+
+    # mock getting factor returns
+    mock = replace('gs_quant.markets.factor.Factor.returns', Mock())
+    mock.return_value = mock_covariance_curve
+
+    with DataContext(datetime.date(2020, 1, 1), datetime.date(2020, 1, 3)):
+        actual = mrm.factor_performance(mock_risk_model(), 'Factor Name')
+        assert len(actual.values) == 3
+    replace.restore()
+
+
 if __name__ == '__main__':
     pytest.main(args=[__file__])
