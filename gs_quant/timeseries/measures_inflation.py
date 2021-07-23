@@ -216,7 +216,8 @@ def _get_inflation_swap_data(asset: Asset, swap_tenor: str, index_type: str = No
                              forward_tenor: Optional[GENERIC_DATE] = None,
                              clearing_house: tm_rates._ClearingHouse = None,
                              source: str = None, real_time: bool = False,
-                             query_type: QueryType = QueryType.SWAP_RATE) -> pd.DataFrame:
+                             query_type: QueryType = QueryType.SWAP_RATE,
+                             location: PricingLocation = None) -> pd.DataFrame:
     if real_time:
         raise NotImplementedError('realtime inflation swap data not implemented')
     currency = CurrencyEnum(asset.get_identifier(AssetIdentifier.BLOOMBERG_ID))
@@ -244,10 +245,17 @@ def _get_inflation_swap_data(asset: Asset, swap_tenor: str, index_type: str = No
 
     rate_mqid = _get_tdapi_inflation_rates_assets(**kwargs)
 
+    if location is None:
+        pricing_location = tm_rates._default_pricing_location(currency)
+    else:
+        pricing_location = PricingLocation(location)
+    pricing_location = tm_rates._pricing_location_normalized(pricing_location, currency)
+    where = dict(pricingLocation=pricing_location.value)
+
     _logger.debug(f'where asset= {rate_mqid}, swap_tenor={swap_tenor}, index={defaults["index_type"]}, '
-                  f'forward_tenor={forward_tenor}, pricing_location={defaults["pricing_location"].value}, '
+                  f'forward_tenor={forward_tenor}, pricing_location={pricing_location.value}, '
                   f'clearing_house={clearing_house.value}, notional_currency={currency.name}')
-    q = GsDataApi.build_market_data_query([rate_mqid], query_type, source=source,
+    q = GsDataApi.build_market_data_query([rate_mqid], query_type, where=where, source=source,
                                           real_time=real_time)
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
@@ -258,7 +266,8 @@ def _get_inflation_swap_data(asset: Asset, swap_tenor: str, index_type: str = No
               [MeasureDependency(id_provider=_currency_to_tdapi_inflation_swap_rate_asset,
                                  query_type=QueryType.SWAP_RATE)])
 def inflation_swap_rate(asset: Asset, swap_tenor: str, index_type: str = None,
-                        forward_tenor: Optional[GENERIC_DATE] = None, clearing_house: tm_rates._ClearingHouse = None, *,
+                        forward_tenor: Optional[GENERIC_DATE] = None, clearing_house: tm_rates._ClearingHouse = None,
+                        location: PricingLocation = None, *,
                         source: str = None, real_time: bool = False) -> Series:
     """
     GS end-of-day Zero Coupon Inflation Swap curves across major currencies.
@@ -269,6 +278,7 @@ def inflation_swap_rate(asset: Asset, swap_tenor: str, index_type: str = None,
     :param forward_tenor: absolute / relative date representation of forward starting point eg: '1y' or 'Spot' for
             spot starting swaps, 'imm1' or 'frb1'
     :param clearing_house: Example - "LCH", "EUREX", "JSCC", "CME"
+    :param location: Example - "TKO", "LDN", "NYC"
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: swap rate curve
@@ -276,7 +286,7 @@ def inflation_swap_rate(asset: Asset, swap_tenor: str, index_type: str = None,
     df = _get_inflation_swap_data(asset=asset, swap_tenor=swap_tenor, index_type=index_type,
                                   forward_tenor=forward_tenor,
                                   clearing_house=clearing_house, source=source,
-                                  real_time=real_time, query_type=QueryType.SWAP_RATE)
+                                  real_time=real_time, query_type=QueryType.SWAP_RATE, location=location)
 
     series = ExtendedSeries() if df.empty else ExtendedSeries(df['swapRate'])
     series.dataset_ids = getattr(df, 'dataset_ids', ())

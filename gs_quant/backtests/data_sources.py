@@ -20,6 +20,7 @@ from typing import Union, Iterable
 import datetime as dt
 from gs_quant.data import Dataset
 import pandas as pd
+import pytz
 import numpy as np
 from gs_quant.data import DataFrequency
 
@@ -66,6 +67,8 @@ class GenericDataSource(DataSource):
         """
         self._data_set = data_set
         self._missing_data_strategy = missing_data_strategy
+        self._tz_aware = isinstance(self._data_set.index[0],
+                                    datetime.datetime) and self._data_set.index[0].tzinfo is not None
         if self._missing_data_strategy == MissingDataStrategy.interpolate:
             self._data_set.interpolate()
         elif self._missing_data_strategy == MissingDataStrategy.fill_forward:
@@ -80,6 +83,8 @@ class GenericDataSource(DataSource):
         if isinstance(state, Iterable):
             return [self.get_data(i) for i in state]
 
+        if self._tz_aware:
+            state = pytz.utc.localize(state)
         if pd.Timestamp(state) in self._data_set:
             return self._data_set[pd.Timestamp(state)]
         elif state in self._data_set or self._missing_data_strategy == MissingDataStrategy.fail:

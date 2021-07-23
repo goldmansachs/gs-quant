@@ -306,7 +306,8 @@ def _get_crosscurrency_swap_data(asset1: Asset, asset2: Asset, swap_tenor: str, 
                                  forward_tenor: Optional[GENERIC_DATE] = None,
                                  clearing_house: tm_rates._ClearingHouse = None,
                                  source: str = None, real_time: bool = False,
-                                 query_type: QueryType = QueryType.SWAP_RATE) -> pd.DataFrame:
+                                 query_type: QueryType = QueryType.SWAP_RATE,
+                                 location: PricingLocation = None) -> pd.DataFrame:
     if real_time:
         raise NotImplementedError('realtime swap_rate not implemented for anything but rates')
 
@@ -334,9 +335,18 @@ def _get_crosscurrency_swap_data(asset1: Asset, asset2: Asset, swap_tenor: str, 
         raise MqValueError('invalid swap tenor ' + swap_tenor)
 
     if defaults1["pricing_location"] == PricingLocation.NYC:
-        location = defaults2["pricing_location"]
+        default_location = defaults2["pricing_location"]
+        currency = currency2
     else:
-        location = defaults1["pricing_location"]
+        default_location = defaults1["pricing_location"]
+        currency = currency1
+
+    if location is None:
+        pricing_location = PricingLocation(default_location)
+    else:
+        pricing_location = PricingLocation(location)
+    pricing_location = tm_rates._pricing_location_normalized(pricing_location, currency)
+    where = dict(pricingLocation=pricing_location.value)
 
     forward_tenor = tm_rates._check_forward_tenor(forward_tenor)
     fixed_rate = 'ATM'
@@ -351,7 +361,7 @@ def _get_crosscurrency_swap_data(asset1: Asset, asset2: Asset, swap_tenor: str, 
                   asset_parameters_receiver_rate_option=defaults2['rateOption'],
                   # asset_parameters_receiver_designated_maturity=defaults2['designatedMaturity'],
                   asset_parameters_clearing_house=clearing_house.value,
-                  pricing_location=location
+                  pricing_location=pricing_location
                   )
 
     rate_mqid = _get_tdapi_crosscurrency_rates_assets(**kwargs)
@@ -361,8 +371,8 @@ def _get_crosscurrency_swap_data(asset1: Asset, asset2: Asset, swap_tenor: str, 
                   f'payer_designated_maturity={defaults1["designatedMaturity"]}, '
                   f'receiver_currency={defaults2["currency"].value}, receiver_rate_option={defaults2["rateOption"]}, '
                   f'receiver_designated_maturity={defaults2["designatedMaturity"]}, '
-                  f'clearing_house={clearing_house.value}, pricing_location={location.value}')
-    q = GsDataApi.build_market_data_query([rate_mqid], query_type, source=source,
+                  f'clearing_house={clearing_house.value}, pricing_location={pricing_location.value}')
+    q = GsDataApi.build_market_data_query([rate_mqid], query_type, where=where, source=source,
                                           real_time=real_time)
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
@@ -374,7 +384,8 @@ def _get_crosscurrency_swap_data(asset1: Asset, asset2: Asset, swap_tenor: str, 
                                  query_type=QueryType.XCCY_SWAP_SPREAD)])
 def crosscurrency_swap_rate(asset: Asset, swap_tenor: str, rateoption_type: str = None,
                             forward_tenor: Optional[GENERIC_DATE] = None,
-                            clearing_house: tm_rates._ClearingHouse = None, *,
+                            clearing_house: tm_rates._ClearingHouse = None,
+                            location: PricingLocation = None, *,
                             source: str = None, real_time: bool = False) -> Series:
     """
     GS end-of-day Zero Coupon CrossCurrency Swap curves across major currencies.
@@ -385,6 +396,7 @@ def crosscurrency_swap_rate(asset: Asset, swap_tenor: str, rateoption_type: str 
     :param forward_tenor: absolute / relative date representation of forward starting point eg: '1y' or 'Spot' for
             spot starting swaps, 'imm1' or 'frb1'
     :param clearing_house: Example - "LCH", "EUREX", "JSCC", "CME"
+    :param location: Example - "TKO", "LDN", "NYC"
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: swap rate curve
@@ -405,7 +417,8 @@ def crosscurrency_swap_rate(asset: Asset, swap_tenor: str, rateoption_type: str 
                                       rateoption_type=rateoption_type,
                                       forward_tenor=forward_tenor,
                                       clearing_house=clearing_house, source=source,
-                                      real_time=real_time, query_type=QueryType.XCCY_SWAP_SPREAD)
+                                      real_time=real_time, query_type=QueryType.XCCY_SWAP_SPREAD,
+                                      location=location)
 
     series = ExtendedSeries() if df.empty else ExtendedSeries(df['xccySwapSpread'])
     series.dataset_ids = getattr(df, 'dataset_ids', ())

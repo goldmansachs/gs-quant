@@ -386,3 +386,31 @@ class DivisionProcessor(BaseProcessor):
 
     def get_plot_expression(self):
         pass
+
+
+class OneDayProcessor(BaseProcessor):
+    def __init__(self,
+                 a: DataCoordinateOrProcessor,
+                 **kwargs):
+        super().__init__(**kwargs)
+        self.children['a'] = a
+
+    def process(self):
+        a_data = self.children_data.get('a')
+        if isinstance(a_data, ProcessorResult):
+            if not a_data.success:
+                self.value = a_data
+                return self.value
+
+            data = a_data.data
+            if len(data) >= 2:
+                value = data.drop(data.index[-1].date(), errors='ignore')
+                if len(value) >= 2:
+                    self.value = ProcessorResult(True, value[-2:])
+                    return self.value
+
+        self.value = ProcessorResult(False, 'Not enough values given to OneDayProcessor.')
+        return self.value
+
+    def get_plot_expression(self):
+        pass

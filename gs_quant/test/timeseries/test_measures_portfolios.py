@@ -53,7 +53,7 @@ def test_financial_conditions_index():
     # mock GsPortfolioApi.get_reports()
     mock = replace('gs_quant.api.gs.portfolios.GsPortfolioApi.get_reports', Mock())
     mock.return_value = [Report.from_dict({'id': 'RP1', 'positionSourceType': 'Portfolio', 'positionSourceId': 'MP1',
-                                          'type': 'Portfolio Performance Analytics',
+                                           'type': 'Portfolio Performance Analytics',
                                            'parameters': {'transactionCostModel': 'FIXED'}})]
 
     # mock PerformanceReport.get()

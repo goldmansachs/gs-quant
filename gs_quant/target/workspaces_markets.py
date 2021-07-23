@@ -33,6 +33,7 @@ class ComponentType(EnumBase, Enum):
     commentaryPromo = 'commentaryPromo'
     container = 'container'
     datagrid = 'datagrid'
+    dataviz = 'dataviz'
     legend = 'legend'
     market = 'market'
     monitor = 'monitor'
@@ -54,7 +55,8 @@ class WorkspaceType(EnumBase, Enum):
     """Enum listing support workspace types."""
 
     cashboard = 'cashboard'
-    multiplot = 'multiplot'    
+    multiplot = 'multiplot'
+    study = 'study'    
 
 
 class ComponentSelection(Base):

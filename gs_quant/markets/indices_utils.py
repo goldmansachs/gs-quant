@@ -143,9 +143,24 @@ class IndicesDatasets(EnumBase, Enum):
     GIRBASKETCONSTITUENTS = 'GIRBASKETCONSTITUENTS'
     GSBASKETCONSTITUENTS = 'GSBASKETCONSTITUENTS'
     GSCB_FLAGSHIP = 'GSCB_FLAGSHIP'
+    STS_FUNDAMENTALS = 'STS_FUNDAMENTALS'
+    STS_INDICATIVE_LEVELS = 'STS_INDICATIVE_LEVELS'
 
     def __repr__(self):
         return self.value
+
+
+class PriceType(EnumBase, Enum):
+    """ Index Price Types """
+    INDICATIVE_CLOSE_PRICE = 'indicativeClosePrice'
+    OFFICIAL_CLOSE_PRICE = 'officialClosePrice'
+
+    def __repr__(self):
+        return self.value
+
+    @classmethod
+    def to_list(cls):
+        return [price_type for price_type in cls]
 
 
 class Region(EnumBase, Enum):
@@ -201,6 +216,22 @@ class ReturnType(EnumBase, Enum):
 
     def __repr__(self):
         return self.value
+
+
+class STSIndexType(EnumBase, Enum):
+    """ STS Types """
+
+    ACCESS = 'Access'
+    MULTI_ASSET_ALLOCATION = 'Multi-Asset Allocation'
+    RISK_PREMIA = 'Risk Premia'
+    SYSTEMATIC_HEDGING = 'Systematic Hedging'
+
+    def __repr__(self):
+        return self.value
+
+    @classmethod
+    def to_list(cls):
+        return [sts_type.value for sts_type in cls]
 
 
 class WeightingStrategy(EnumBase, Enum):

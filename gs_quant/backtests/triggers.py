@@ -172,10 +172,11 @@ class PeriodicTrigger(Trigger):
 
     def get_trigger_dates(self) -> [dt.date]:
         if not self._trigger_dates:
-            self._trigger_dates = pd.date_range(start=self._trigger_requirements.start_date,
-                                                end=self._trigger_requirements.end_date,
-                                                freq=self._trigger_requirements.frequency).to_pydatetime().tolist()
-            self._trigger_dates = [my_date.date() for my_date in self._trigger_dates]
+            self._trigger_dates = self._trigger_requirements.dates if \
+                hasattr(self._trigger_requirements, 'dates') else \
+                pd.date_range(start=self._trigger_requirements.start_date,
+                              end=self._trigger_requirements.end_date,
+                              freq=self._trigger_requirements.frequency).date.tolist()
         return self._trigger_dates
 
     def has_triggered(self, state: dt.date, backtest: BackTest = None) -> TriggerInfo:

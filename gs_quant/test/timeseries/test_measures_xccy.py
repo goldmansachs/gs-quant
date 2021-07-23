@@ -272,6 +272,7 @@ def test_crosscurrency_swap_rate(mocker):
     assert actual.dataset_ids == _test_datasets
 
     args['asset'] = Cross('MA667', 'USDCAD')
+    args['location'] = PricingLocation.LDN
     xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
     xrefs.return_value = 'CAD'
     identifiers = replace('gs_quant.timeseries.measures_xccy._get_tdapi_crosscurrency_rates_assets', Mock())

@@ -61,6 +61,9 @@ class ReportMeasures(EnumBase, Enum):
     exposure = 'exposure'
     sensitivity = 'sensitivity'
     mctr = 'mctr'
+    mctRisk = 'mctRisk'
+    rmctRisk = 'rmctRisk'
+    poRisk = 'poRisk'
     price = 'price'
     basePrice = 'basePrice'    
 
@@ -96,11 +99,7 @@ class ReportType(EnumBase, Enum):
     Backtest_Run = 'Backtest Run'
     Analytics = 'Analytics'
     Risk_Calculation = 'Risk Calculation'
-    PCO_Generate_Orders = 'PCO Generate Orders'
-    PCO_Update_Parameters = 'PCO Update Parameters'
-    PCO_Update_Client_Data = 'PCO Update Client Data'
-    PCO_Update_Open_Hedge_Notional = 'PCO Update Open Hedge Notional'
-    PCO_Add_Order = 'PCO Add Order'    
+    PCO = 'PCO'    
 
 
 class ParametersOverrides(Base):

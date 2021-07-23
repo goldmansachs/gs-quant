@@ -776,6 +776,7 @@ class AssetClassifications(Base):
         rating_second_highest: str = None,
         rating_linear: float = None,
         commod_template: str = None,
+        security_subtype: str = None,
         region: Union[Region, str] = None,
         name: str = None
     ):        
@@ -801,6 +802,7 @@ class AssetClassifications(Base):
         self.rating_second_highest = rating_second_highest
         self.rating_linear = rating_linear
         self.commod_template = commod_template
+        self.security_subtype = security_subtype
         self.region = region
         self.name = name
 
@@ -1013,6 +1015,16 @@ class AssetClassifications(Base):
     def commod_template(self, value: str):
         self._property_changed('commod_template')
         self.__commod_template = value        
+
+    @property
+    def security_subtype(self) -> str:
+        """Subtype of security."""
+        return self.__security_subtype
+
+    @security_subtype.setter
+    def security_subtype(self, value: str):
+        self._property_changed('security_subtype')
+        self.__security_subtype = value        
 
     @property
     def region(self) -> Union[Region, str]:

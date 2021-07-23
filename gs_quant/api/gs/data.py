@@ -19,7 +19,6 @@ import time
 from enum import Enum
 from itertools import chain
 from typing import Iterable, List, Optional, Tuple, Union, Dict
-from urllib.parse import urlencode
 
 import cachetools
 import numpy
@@ -35,7 +34,7 @@ from gs_quant.markets import MarketDataCoordinate
 from gs_quant.session import GsSession
 from gs_quant.target.common import MarketDataVendor, PricingLocation
 from gs_quant.target.coordinates import MDAPIDataBatchResponse, MDAPIDataQuery, MDAPIDataQueryResponse, MDAPIQueryField
-from gs_quant.target.data import DataQuery, DataQueryResponse
+from gs_quant.target.data import DataQuery, DataQueryResponse, DataSetCatalogEntry
 from gs_quant.target.data import DataSetEntity, DataSetFieldEntity
 from .assets import GsIdType
 from ...target.assets import EntityQuery, FieldFilterMap
@@ -81,6 +80,7 @@ class QueryType(Enum):
     FAIR_PRICE = "Fair Price"
     PNL = "Pnl"
     SPOT = "Spot"
+    AUM = "Aum"
     ES_NUMERIC_SCORE = "Es Numeric Score"
     ES_NUMERIC_PERCENTILE = "Es Numeric Percentile"
     ES_POLICY_SCORE = "Es Policy Score"
@@ -278,17 +278,55 @@ class GsDataApi(DataApi):
     @classmethod
     def get_many_definitions(cls,
                              limit: int = 100,
-                             dataset_id: str = None,
-                             owner_id: str = None,
-                             name: str = None,
-                             mq_symbol: str = None) -> Tuple[DataSetEntity, ...]:
+                             offset: int = None,
+                             scroll: str = DEFAULT_SCROLL,
+                             scroll_id: Optional[str] = None,
+                             ) -> Tuple[DataSetEntity, ...]:
 
-        query_string = urlencode(dict(filter(lambda item: item[1] is not None,
-                                             dict(id=dataset_id, ownerId=owner_id, name=name,
-                                                  mqSymbol=mq_symbol, limit=limit).items())))
+        params = dict(filter(lambda item: item[1] is not None,
+                             dict(limit=limit, offset=offset, scroll=scroll, scrollId=scroll_id,
+                                  enablePagination='true').items()))
 
-        res = GsSession.current._get('/data/datasets?{query}'.format(query=query_string), cls=DataSetEntity)['results']
-        return res
+        body = GsSession.current._get('/data/datasets', payload=params, cls=DataSetEntity)
+        results = scroll_results = body['results']
+        total_results = body['totalResults']
+
+        while len(scroll_results) and len(results) < total_results:
+            params['scrollId'] = body['scrollId']
+            body = GsSession.current._get('/data/datasets', payload=params, cls=DataSetEntity)
+            scroll_results = body['results']
+            results = results + scroll_results
+
+        return results
+
+    @classmethod
+    def get_catalog(cls,
+                    dataset_ids: List[str] = None,
+                    limit: int = 100,
+                    offset: int = None,
+                    scroll: str = DEFAULT_SCROLL,
+                    scroll_id: Optional[str] = None,
+                    ) -> Tuple[DataSetCatalogEntry]:
+
+        query = f'dataSetId={"&dataSetId=".join(dataset_ids)}' if dataset_ids else ''
+        if len(query):
+            return GsSession.current._get(f'/data/catalog?{query}', cls=DataSetCatalogEntry)['results']
+        else:
+            params = dict(filter(lambda item: item[1] is not None,
+                                 dict(limit=limit, offset=offset, scroll=scroll, scrollId=scroll_id,
+                                      enablePagination='true').items()))
+
+            body = GsSession.current._get('/data/catalog', payload=params, cls=DataSetEntity)
+            results = scroll_results = body['results']
+            total_results = body['totalResults']
+
+            while len(scroll_results) and len(results) < total_results:
+                params['scrollId'] = body['scrollId']
+                body = GsSession.current._get('/data/catalog', payload=params, cls=DataSetEntity)
+                scroll_results = body['results']
+                results = results + scroll_results
+
+            return results
 
     @classmethod
     @cachetools.cached(__asset_coordinates_cache)

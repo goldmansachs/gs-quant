@@ -20,6 +20,31 @@ from typing import Mapping, Tuple, Union, Optional
 from gs_quant.base import Base, InstrumentBase, camel_case_translate, get_enum_value
 
 
+class GroupWithMembersCount(Base):
+        
+    """Marquee Group with Members Count"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        members_count: int = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.members_count = members_count
+        self.name = name
+
+    @property
+    def members_count(self) -> int:
+        """Total number of members in the group"""
+        return self.__members_count
+
+    @members_count.setter
+    def members_count(self, value: int):
+        self._property_changed('members_count')
+        self.__members_count = value        
+
+
 class UpdateGroupMembershipRequest(Base):
         
     @camel_case_translate
@@ -41,6 +66,53 @@ class UpdateGroupMembershipRequest(Base):
     def user_ids(self, value: Tuple[str, ...]):
         self._property_changed('user_ids')
         self.__user_ids = value        
+
+
+class GroupResponse(Base):
+        
+    @camel_case_translate
+    def __init__(
+        self,
+        results: Tuple[GroupWithMembersCount, ...],
+        total_results: int,
+        scroll_id: Tuple[str, ...] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.total_results = total_results
+        self.results = results
+        self.scroll_id = scroll_id
+        self.name = name
+
+    @property
+    def total_results(self) -> int:
+        """Total number of groups that match the query."""
+        return self.__total_results
+
+    @total_results.setter
+    def total_results(self, value: int):
+        self._property_changed('total_results')
+        self.__total_results = value        
+
+    @property
+    def results(self) -> Tuple[GroupWithMembersCount, ...]:
+        """Array of group objects"""
+        return self.__results
+
+    @results.setter
+    def results(self, value: Tuple[GroupWithMembersCount, ...]):
+        self._property_changed('results')
+        self.__results = value        
+
+    @property
+    def scroll_id(self) -> Tuple[str, ...]:
+        """Scroll identifier to be used to retrieve the next batch of results"""
+        return self.__scroll_id
+
+    @scroll_id.setter
+    def scroll_id(self, value: Tuple[str, ...]):
+        self._property_changed('scroll_id')
+        self.__scroll_id = value        
 
 
 class CreateGroupRequest(Base):
@@ -341,50 +413,3 @@ class Group(Base):
     def tags(self, value: Tuple[str, ...]):
         self._property_changed('tags')
         self.__tags = value        
-
-
-class GroupResponse(Base):
-        
-    @camel_case_translate
-    def __init__(
-        self,
-        results: Tuple[Group, ...],
-        total_results: int,
-        scroll_id: Tuple[str, ...] = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.total_results = total_results
-        self.results = results
-        self.scroll_id = scroll_id
-        self.name = name
-
-    @property
-    def total_results(self) -> int:
-        """Total number of groups that match the query."""
-        return self.__total_results
-
-    @total_results.setter
-    def total_results(self, value: int):
-        self._property_changed('total_results')
-        self.__total_results = value        
-
-    @property
-    def results(self) -> Tuple[Group, ...]:
-        """Array of group objects"""
-        return self.__results
-
-    @results.setter
-    def results(self, value: Tuple[Group, ...]):
-        self._property_changed('results')
-        self.__results = value        
-
-    @property
-    def scroll_id(self) -> Tuple[str, ...]:
-        """Scroll identifier to be used to retrieve the next batch of results"""
-        return self.__scroll_id
-
-    @scroll_id.setter
-    def scroll_id(self, value: Tuple[str, ...]):
-        self._property_changed('scroll_id')
-        self.__scroll_id = value        

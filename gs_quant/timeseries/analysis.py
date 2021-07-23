@@ -85,7 +85,7 @@ def last(x: pd.Series) -> pd.Series:
     :func:`first`
 
     """
-    return pd.Series(x[-1], x.index)
+    return pd.Series(x.dropna()[-1], x.index)
 
 
 @plot_function
@@ -114,7 +114,7 @@ def last_value(x: pd.Series) -> Union[int, float]:
     """
     if x.empty:
         raise MqValueError("cannot get last value of an empty series")
-    return x.iloc[-1]
+    return x.dropna().iloc[-1]
 
 
 @plot_function

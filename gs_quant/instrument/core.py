@@ -13,6 +13,8 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import warnings
+
 from gs_quant.api.gs.parser import GsParserApi
 from gs_quant.api.gs.risk import GsRiskApi
 from gs_quant.base import get_enum_value, InstrumentBase, QuotableBuilder
@@ -20,7 +22,8 @@ from gs_quant.common import AssetClass, AssetType, XRef
 from gs_quant.context_base import do_not_serialise
 from gs_quant.markets import HistoricalPricingContext, MarketDataCoordinate, PricingCache, PricingContext
 from gs_quant.priceable import PriceableImpl
-from gs_quant.risk import FloatWithInfo, DataFrameWithInfo, SeriesWithInfo, ResolvedInstrumentValues, RiskMeasure
+from gs_quant.risk import FloatWithInfo, DataFrameWithInfo, SeriesWithInfo, ResolvedInstrumentValues, RiskMeasure, \
+    DEPRECATED_MEASURES
 from gs_quant.risk.results import ErrorValue, MultipleRiskMeasureFuture, PricingFuture
 from gs_quant.session import GsSession
 
@@ -172,6 +175,20 @@ class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
                    for r in ((risk_measure,) if isinstance(risk_measure, RiskMeasure) else risk_measure)}
         future = MultipleRiskMeasureFuture(self, futures) if len(futures) > 1 else futures[
             risk_measure if isinstance(risk_measure, RiskMeasure) else risk_measure[0]]
+
+
+        # throw warning upon usage of deprecated measures
+        def warning_on_one_line(message, category, filename, lineno, file=None, line=None):
+            return '%s:%s' % (category.__name__, message)
+
+        for measure in futures.keys():
+            if measure.name in DEPRECATED_MEASURES.keys():
+                message = '{0} risk measure is deprecated. Please use {1} instead and pass in arguments to describe ' \
+                          'risk measure specifics.\n'.format(measure.name, DEPRECATED_MEASURES[measure.name])
+                warnings.simplefilter('once')
+                warnings.formatwarning = warning_on_one_line
+                warnings.warn(message, DeprecationWarning)
+                warnings.simplefilter('ignore')
 
         if fn is not None:
             ret = PricingFuture()

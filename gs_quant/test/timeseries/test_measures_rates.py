@@ -25,6 +25,7 @@ from testfixtures.mock import Mock
 import gs_quant.timeseries.measures as tm
 import gs_quant.timeseries.measures_rates as tm_rates
 from gs_quant.api.gs.data import MarketDataResponseFrame, QueryType
+from gs_quant.target.common import PricingLocation
 from gs_quant.data.core import DataContext
 from gs_quant.errors import MqValueError
 from gs_quant.session import GsSession, Environment
@@ -32,7 +33,7 @@ from gs_quant.test.timeseries.utils import mock_request
 from gs_quant.timeseries import TdapiRatesDefaultsProvider, SWAPTION_DEFAULTS, Currency, CurrencyEnum, SecurityMaster, \
     ExtendedSeries
 from gs_quant.timeseries.measures_rates import _swaption_build_asset_query, _currency_to_tdapi_swaption_rate_asset, \
-    _check_strike_reference
+    _check_strike_reference, _pricing_location_normalized, _default_pricing_location
 from gs_quant.markets.securities import Cross
 
 _index = [pd.Timestamp('2019-01-01')]
@@ -139,6 +140,19 @@ def test_check_strike_reference_invalid_list():
     data_input = ["ATM+20", "MTM-20"]
     with pytest.raises(MqValueError):
         _check_strike_reference(data_input)
+
+
+def test_pricing_location_normalized():
+    assert _pricing_location_normalized(PricingLocation.LDN, CurrencyEnum.USD) == PricingLocation.LDN
+    assert _pricing_location_normalized(PricingLocation.TKO, CurrencyEnum.USD) == PricingLocation.TKO
+    assert _pricing_location_normalized(PricingLocation.LDN, CurrencyEnum.HKD) == PricingLocation.LDN
+    assert _pricing_location_normalized(PricingLocation.TKO, CurrencyEnum.HKD) == PricingLocation.HKG
+
+
+def test_default_pricing_location():
+    assert _default_pricing_location(CurrencyEnum.USD) == PricingLocation.NYC
+    with pytest.raises(MqValueError):
+        _default_pricing_location(CurrencyEnum.EGP)
 
 
 def test_currency_to_tdapi_swaption_rate_asset_retuns_throws():

@@ -133,7 +133,7 @@ def risk_by_class_handler(result: dict, risk_key: RiskKey, _instrument: Instrume
     types = [c['type'] for c in result['classes']]
     # list of risk by class measures exposed in gs-quant
     external_risk_by_class_val = ['IRBasisParallel', 'IRDeltaParallel', 'IRVegaParallel', 'PnlExplain']
-    if str(risk_key.risk_measure) in external_risk_by_class_val and len(types) <= 2 and len(set(types)) == 1:
+    if str(risk_key.risk_measure.name) in external_risk_by_class_val and len(types) <= 2 and len(set(types)) == 1:
         return FloatWithInfo(risk_key, sum(result.get('values', (float('nan'),))), unit=result.get('unit'),
                              request_id=request_id)
     else:
