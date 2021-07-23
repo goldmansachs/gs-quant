@@ -20,13 +20,12 @@ import datetime as dt
 import pandas as pd
 
 from gs_quant.markets.report import PerformanceReport
-from gs_quant.target.reports import ReportType
-from gs_quant.api.gs.data import QueryType
 from gs_quant.api.gs.portfolios import GsPortfolioApi
+from gs_quant.api.gs.data import QueryType
 from gs_quant.entities.entity import EntityType
+from gs_quant.target.reports import ReportType
 from gs_quant.timeseries import plot_measure_entity
 from gs_quant.timeseries.measures import _extract_series_from_df
-
 
 LOGGER = logging.getLogger(__name__)
 

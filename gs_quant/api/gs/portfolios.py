@@ -179,6 +179,10 @@ class GsPortfolioApi:
         return GsSession.current._post('/risk-internal/quote/save', request)['results']
 
     @classmethod
+    def save_to_shadowbook(cls, request: RiskRequest, name: str) -> str:
+        return GsSession.current._put(f'/risk-internal/shadowbook/save/{name}', request)['results']
+
+    @classmethod
     def get_risk_models_by_coverage(cls, portfolio_id: str, term: Term = Term.Medium):
         return GsSession.current._get(f'/portfolios/{portfolio_id}/models?sortByTerm={term.value}')['results']
 
@@ -199,3 +203,15 @@ class GsPortfolioApi:
         if backcast:
             payload['parameters'] = {'backcast': True}
         return GsSession.current._post('/portfolios/{id}/schedule'.format(id=portfolio_id), payload)
+
+    @classmethod
+    def get_custom_aum(cls,
+                       portfolio_id: str,
+                       start_date: dt.date = None,
+                       end_date: dt.date = None) -> dict:
+        url = f'/portfolios/{portfolio_id}/aum?'
+        if start_date:
+            url += f'&startDate={start_date}'
+        if end_date:
+            url += f'&endDate={end_date}'
+        return GsSession.current._get(url)['data']

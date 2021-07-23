@@ -16,8 +16,7 @@ under the License.
 
 from gs_quant.backtests.event import *
 from gs_quant.backtests.action_handler import ActionHandlerBaseFactory, ActionHandler
-from gs_quant.backtests.actions import Action, AddTradeAction
-from gs_quant.backtests.triggers import OrdersGeneratorTrigger
+from gs_quant.backtests.actions import Action, AddTradeAction, AddTradeActionInfo
 from gs_quant.backtests.backtest_engine import BacktestBaseEngine
 from gs_quant.backtests.backtest_objects import PredefinedAssetBacktest
 from gs_quant.backtests.execution_engine import SimulatedExecutionEngine
@@ -40,26 +39,27 @@ class AddTradeActionImpl(ActionHandler):
     def __init__(self, action: AddTradeAction):
         super().__init__(action)
 
-    def generate_orders(self, state: dt.datetime, backtest: PredefinedAssetBacktest):
+    def generate_orders(self, state: dt.datetime, backtest: PredefinedAssetBacktest, info: AddTradeActionInfo):
 
         orders = []
         for pricable in self.action.priceables:
+            quantity = pricable.instrument_quantity * 1 if info is None else info.scaling
             orders.append(OrderAtMarket(instrument=pricable,
-                                        quantity=pricable.instrument_quantity,
+                                        quantity=quantity,
                                         generation_time=state,
                                         execution_datetime=state,
                                         source=self.action._name))
             if isinstance(self.action.trade_duration, dt.timedelta):
                 # create close order
                 orders.append(OrderAtMarket(instrument=pricable,
-                                            quantity=pricable.instrument_quantity * -1,
+                                            quantity=quantity * -1,
                                             generation_time=state,
                                             execution_datetime=state + self.action.trade_duration,
                                             source=self.action._name))
         return orders
 
     def apply_action(self, state: dt.datetime, backtest: PredefinedAssetBacktest, info=None):
-        orders = self.generate_orders(state, backtest)
+        orders = self.generate_orders(state, backtest, info)
         return orders
 
 
@@ -77,6 +77,7 @@ class SubmitOrderActionImpl(ActionHandler):
 class PredefinedAssetEngineActionFactory(ActionHandlerBaseFactory):
     def __init__(self, action_impl_map={}):
         self.action_impl_map = action_impl_map
+        self.action_impl_map[AddTradeAction] = AddTradeActionImpl
 
     def get_action_handler(self, action: Action) -> Action:
         if type(action) in self.action_impl_map:
@@ -124,15 +125,16 @@ class PredefinedAssetEngine(BacktestBaseEngine):
         dates = bdate_range(start=start, end=end, freq=frequency)
         times = list()
         for trigger in strategy.triggers:
-            if isinstance(trigger, OrdersGeneratorTrigger):
+            if hasattr(trigger, 'get_trigger_times'):
                 times.extend(trigger.get_trigger_times())
         times.append(self._eod_valuation_time())
         times = list(dict.fromkeys(times))
 
         all_times = []
         for d in dates:
-            for t in times:
-                all_times.append(dt.datetime.combine(d, t))
+            if is_business_day(d.date(), self.calendars):
+                for t in times:
+                    all_times.append(dt.datetime.combine(d, t))
         return all_times
 
     def _adjust_date(self, date):

@@ -60,7 +60,7 @@ class PriceableImpl(Priceable, metaclass=ABCMeta):
         """
         return self.calc(DollarPrice)
 
-    def price(self) -> Union[FloatWithInfo, PortfolioRiskResult, PricingFuture, SeriesWithInfo]:
+    def price(self, currency=None) -> Union[FloatWithInfo, PortfolioRiskResult, PricingFuture, SeriesWithInfo]:
         """
         Present value in local currency. Note that this is not yet supported on all instruments
 
@@ -73,7 +73,7 @@ class PriceableImpl(Priceable, metaclass=ABCMeta):
 
         price is the present value in EUR (a float)
         """
-        return self.calc(Price)
+        return self.calc(Price(currency=currency)) if currency else self.calc(Price)
 
     def market(self) -> Union[OverlayMarket, PricingFuture]:
         """

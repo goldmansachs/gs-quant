@@ -1017,7 +1017,7 @@ class DataSetCoverageProperties(Base):
     def __init__(
         self,
         prefixes: Tuple[str, ...] = None,
-        prefix_type: str = 'SYMBOL',
+        prefix_type: str = None,
         asset_classes: Tuple[Union[AssetClass, str], ...] = None,
         asset_types: Tuple[Union[AssetType, str], ...] = None,
         entity_types: Tuple[Union[MeasureEntityType, str], ...] = None,
@@ -2116,6 +2116,7 @@ class DataQuery(Base):
         remap_schema_to_alias: bool = False,
         show_linked_dimensions: bool = True,
         use_project_processor: bool = False,
+        snapshot: bool = False,
         name: str = None
     ):        
         super().__init__()
@@ -2155,6 +2156,7 @@ class DataQuery(Base):
         self.remap_schema_to_alias = remap_schema_to_alias
         self.show_linked_dimensions = show_linked_dimensions
         self.use_project_processor = use_project_processor
+        self.snapshot = snapshot
         self.name = name
 
     @property
@@ -2531,6 +2533,69 @@ class DataQuery(Base):
         self._property_changed('use_project_processor')
         self.__use_project_processor = value        
 
+    @property
+    def snapshot(self) -> bool:
+        """Return a snapshot of the last surface"""
+        return self.__snapshot
+
+    @snapshot.setter
+    def snapshot(self, value: bool):
+        self._property_changed('snapshot')
+        self.__snapshot = value
+
+
+class DataSetCatalogEntry(Base):
+    """Information about a data set that is available in the catalog"""
+
+    @camel_case_translate
+    def __init__(
+            self,
+            id_: str,
+            name: str,
+            vendor: str,
+            fields: dict,
+            description: str = None,
+            short_description: str = None,
+            data_product: str = None,
+            terms: str = None,
+            internal_only: bool = None,
+            actions: Tuple[str, ...] = None,
+            default_start_seconds: float = None,
+            identifier_mapper_name: str = None,
+            identifier_updater_name: str = None,
+            default_delay_minutes: float = None,
+            apply_market_data_entitlements: bool = None,
+            sample: Tuple[FieldValueMap, ...] = None,
+            parameters: DataSetParameters = None,
+            tags: Tuple[str, ...] = None,
+            created_time: str = None,
+            last_updated_time: str = None,
+            start_date: datetime.date = None,
+            mdapi: MDAPI = None
+    ):
+        super().__init__()
+        self.__id = id_
+        self.name = name
+        self.description = description
+        self.short_description = short_description
+        self.vendor = vendor
+        self.data_product = data_product
+        self.terms = terms
+        self.fields = fields
+        self.internal_only = internal_only
+        self.actions = actions
+        self.default_start_seconds = default_start_seconds
+        self.identifier_mapper_name = identifier_mapper_name
+        self.identifier_updater_name = identifier_updater_name
+        self.default_delay_minutes = default_delay_minutes
+        self.apply_market_data_entitlements = apply_market_data_entitlements
+        self.sample = sample
+        self.parameters = parameters
+        self.tags = tags
+        self.created_time = created_time
+        self.last_updated_time = last_updated_time
+        self.start_date = start_date
+        self.mdapi = mdapi
 
 class DataSetFieldEntity(Base):
         

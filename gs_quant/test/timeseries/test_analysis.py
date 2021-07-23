@@ -49,6 +49,11 @@ def test_last():
     expected = pd.Series([4.0, 4.0, 4.0, 4.0], index=dates)
     assert_series_equal(result, expected, obj="First")
 
+    y = pd.Series([1.0, 2.0, 3.0, np.nan], index=dates)
+    result = last(y)
+    expected = pd.Series([3.0, 3.0, 3.0, 3.0], index=dates)
+    assert_series_equal(result, expected, obj="Last non-NA")
+
 
 def test_last_value():
     with pytest.raises(MqValueError):
@@ -59,6 +64,9 @@ def test_last_value():
 
     y = pd.Series([5])
     assert last_value(y) == 5
+
+    y = pd.Series([1.0, 2.0, 3.0, np.nan], index=(pd.date_range("2020-01-01", periods=4, freq="D")))
+    assert last_value(y) == 3.0
 
 
 def test_count():

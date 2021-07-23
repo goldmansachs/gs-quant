@@ -34,3 +34,15 @@ Processors
    PercentilesProcessor
    SharpeRatioProcessor
    VolatilityProcessor
+
+Workspaces
+-----------
+
+.. currentmodule:: gs_quant.analytics.workspaces
+
+.. autosummary::
+   :toctree: classes
+   :template: processors.rst
+
+    Components
+    Workspaces

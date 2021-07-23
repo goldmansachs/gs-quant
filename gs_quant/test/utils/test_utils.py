@@ -89,7 +89,7 @@ def get_risk_request_id(requests):
     for request in requests:
         identifier += '_'
         identifier += '-'.join([pos.instrument.name for pos in request.positions])
-        identifier += '-'.join([str(risk) for risk in request.measures])
+        identifier += '-'.join([r.__repr__() for r in request.measures])
         date = request.pricing_and_market_data_as_of[0].pricing_date.strftime('%Y%b%d')
         today = PricingContext().pricing_date.strftime('%Y%b%d')
         identifier += 'today' if date == today else date

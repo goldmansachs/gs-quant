@@ -14,18 +14,21 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime
-
+import pandas as pd
 import pytest
 from testfixtures import Replacer
 from testfixtures.mock import Mock
 
 import gs_quant.timeseries.measures_reports as mr
+from gs_quant.api.gs.data import MarketDataResponseFrame
 from gs_quant.data.core import DataContext
-from gs_quant.errors import MqValueError
+from gs_quant.errors import MqValueError, MqError
 from gs_quant.models.risk_model import FactorRiskModel as Factor_Risk_Model
 from gs_quant.target.common import ReportParameters
 from gs_quant.target.reports import Report, PositionSourceType, ReportType
 from gs_quant.target.risk_models import RiskModel, CoverageType, Term, UniverseIdentifier
+from gs_quant.markets.report import PerformanceReport
+from gs_quant.target.portfolios import RiskAumSource, Portfolio
 
 risk_model = RiskModel(coverage=CoverageType.Country, id_='model_id', name='Fake Risk Model',
                        term=Term.Long, universe_identifier=UniverseIdentifier.gsid, vendor='GS',
@@ -110,6 +113,41 @@ aggregate_factor_data = [
         'annualRisk': 3
     }
 ]
+
+ppa_data = {
+    'netExposure': [
+        -1,
+        -0.8,
+        -0.6
+    ],
+    'grossExposure': [
+        1,
+        1.2,
+        1.4
+    ],
+    'longExposure': [
+        1,
+        1.2,
+        1.4
+    ],
+    'shortExposure': [
+        1,
+        0.8,
+        0.6
+    ],
+    'pnl': [
+        0.1,
+        0.2,
+        0.2
+    ],
+    'date': [
+        '2020-01-02',
+        '2020-01-03',
+        '2020-01-04'
+    ]
+}
+
+aum = [{'date': '2020-01-02', 'aum': 2}, {'date': '2020-01-03', 'aum': 2.2}, {'date': '2020-01-04', 'aum': 2.4}]
 
 
 def mock_risk_model():
@@ -332,6 +370,125 @@ def test_aggregate_factor_support():
     with pytest.raises(MqValueError):
         mr.annual_risk('report_id', 'Factor Name')
     replace.restore()
+
+
+def test_normalized_performance():
+    idx = pd.date_range('2020-01-02', freq='D', periods=3)
+    expected = {RiskAumSource.Net: pd.Series(data=[1, 1 / 0.8, 1 / 0.6], index=idx,
+                                             name='normalizedPerformance', dtype='float64'),
+                RiskAumSource.Gross: pd.Series(data=[1, 1.2, 1.4], index=idx,
+                                               name='normalizedPerformance', dtype='float64'),
+                RiskAumSource.Long: pd.Series(data=[1, 1.2, 1.4], index=idx,
+                                              name='normalizedPerformance', dtype='float64'),
+                RiskAumSource.Short: pd.Series(data=[1, 1 / 0.8, 1 / 0.6], index=idx,
+                                               name='normalizedPerformance', dtype='float64'),
+                RiskAumSource.Custom_AUM: pd.Series(data=[1, 1.1, 1.2], index=idx,
+                                                    name='normalizedPerformance', dtype='float64')}
+
+    with DataContext(datetime.date(2020, 1, 1), datetime.date(2019, 1, 3)):
+        for k, v in expected.items():
+            df = MarketDataResponseFrame(data=ppa_data, dtype="float64")
+            replace = Replacer()
+
+            # mock GsPortfolioApi.get_reports()
+            mock = replace('gs_quant.api.gs.portfolios.GsPortfolioApi.get_reports', Mock())
+            mock.return_value = [
+                Report.from_dict({'id': 'RP1', 'positionSourceType': 'Portfolio', 'positionSourceId': 'MP1',
+                                  'type': 'Portfolio Performance Analytics',
+                                  'parameters': {'transactionCostModel': 'FIXED'}})]
+
+            # mock PerformanceReport.get_many_measures()
+            mock = replace('gs_quant.markets.report.PerformanceReport.get_many_measures', Mock())
+            mock.return_value = df
+
+            # mock PerformanceReport.get_custom_aum()
+            mock = replace('gs_quant.api.gs.portfolios.GsPortfolioApi.get_custom_aum', Mock())
+            mock.return_value = aum
+
+            # mock PerformanceReport.get()
+            mock = replace('gs_quant.markets.report.PerformanceReport.get', Mock())
+            mock.return_value = PerformanceReport(report_id='RP1',
+                                                  position_source_type='Portfolio',
+                                                  position_source_id='MP1',
+                                                  report_type='Portfolio Performance Analytics',
+                                                  parameters=ReportParameters(transaction_cost_model='FIXED'))
+
+            actual = mr.normalized_performance('MP1', k.value)
+            assert all(actual.values == v.values)
+            replace.restore()
+
+
+def test_normalized_performance_default_aum():
+    idx = pd.date_range('2020-01-02', freq='D', periods=3)
+    expected = pd.Series(data=[1, 1 / 0.8, 1 / 0.6], index=idx, name='normalizedPerformance', dtype='float64')
+
+    with DataContext(datetime.date(2020, 1, 1), datetime.date(2019, 1, 3)):
+
+        df = MarketDataResponseFrame(data=ppa_data, dtype="float64")
+        replace = Replacer()
+
+        # mock GsPortfolioApi.get_reports()
+        mock = replace('gs_quant.api.gs.portfolios.GsPortfolioApi.get_reports', Mock())
+        mock.return_value = [
+            Report.from_dict({'id': 'RP1', 'positionSourceType': 'Portfolio', 'positionSourceId': 'MP1',
+                              'type': 'Portfolio Performance Analytics',
+                              'parameters': {'transactionCostModel': 'FIXED'}})]
+
+        # mock PerformanceReport.get_many_measures()
+        mock = replace('gs_quant.markets.report.PerformanceReport.get_many_measures', Mock())
+        mock.return_value = df
+
+        # mock PerformanceReport.get_custom_aum()
+        mock = replace('gs_quant.api.gs.portfolios.GsPortfolioApi.get_custom_aum', Mock())
+        mock.return_value = aum
+
+        # mock PerformanceReport.get()
+        mock = replace('gs_quant.markets.report.PerformanceReport.get', Mock())
+        mock.return_value = PerformanceReport(report_id='RP1',
+                                              position_source_type='Portfolio',
+                                              position_source_id='MP1',
+                                              report_type='Portfolio Performance Analytics',
+                                              parameters=ReportParameters(transaction_cost_model='FIXED'))
+
+        mock = replace('gs_quant.api.gs.portfolios.GsPortfolioApi.get_portfolio', Mock())
+        mock.return_value = Portfolio('USD', 'P1', id_='MP1')
+
+        actual = mr.normalized_performance('MP1', None)
+        assert all(actual.values == expected.values)
+        replace.restore()
+
+
+def test_normalized_performance_no_custom_aum():
+    with DataContext(datetime.date(2020, 1, 1), datetime.date(2019, 1, 3)):
+        df = MarketDataResponseFrame(data=ppa_data, dtype="float64")
+        replace = Replacer()
+
+        # mock GsPortfolioApi.get_reports()
+        mock = replace('gs_quant.api.gs.portfolios.GsPortfolioApi.get_reports', Mock())
+        mock.return_value = [
+            Report.from_dict({'id': 'RP1', 'positionSourceType': 'Portfolio', 'positionSourceId': 'MP1',
+                              'type': 'Portfolio Performance Analytics',
+                              'parameters': {'transactionCostModel': 'FIXED'}})]
+
+        # mock PerformanceReport.get_many_measures()
+        mock = replace('gs_quant.markets.report.PerformanceReport.get_many_measures', Mock())
+        mock.return_value = df
+
+        # mock PerformanceReport.get_custom_aum()
+        mock = replace('gs_quant.api.gs.portfolios.GsPortfolioApi.get_custom_aum', Mock())
+        mock.return_value = pd.DataFrame({})
+
+        # mock PerformanceReport.get()
+        mock = replace('gs_quant.markets.report.PerformanceReport.get', Mock())
+        mock.return_value = PerformanceReport(report_id='RP1',
+                                              position_source_type='Portfolio',
+                                              position_source_id='MP1',
+                                              report_type='Portfolio Performance Analytics',
+                                              parameters=ReportParameters(transaction_cost_model='FIXED'))
+
+        with pytest.raises(MqError):
+            mr.normalized_performance('MP1', 'Custom AUM')
+        replace.restore()
 
 
 if __name__ == '__main__':

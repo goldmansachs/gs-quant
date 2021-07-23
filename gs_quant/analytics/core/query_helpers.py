@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import asyncio
 import logging
 from collections import defaultdict
 from datetime import date, datetime
@@ -40,7 +41,7 @@ def aggregate_queries(query_infos):
                                                       f'No dataset resolved for '
                                                       f'measure={coordinate.measure} with '
                                                       f'dimensions={coordinate.dimensions}')
-            query_info.processor.calculate(query_info.attr, series, None)
+            asyncio.get_event_loop().run_until_complete(query_info.processor.calculate(query_info.attr, series, None))
             continue
         dataset_mappings.setdefault(query_key, {
             'datasetId': dataset_id,

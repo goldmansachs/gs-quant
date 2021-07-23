@@ -219,7 +219,7 @@ class EUPowerDataReference(Enum):
     NASDAQ_EXCHANGE = 'NASDAQ'
     CARBON_CREDIT_DATASET = 'COMMOD_US_ELEC_CARBON_CREDITS_FUTURES'
     CARBON_CREDIT_PRODUCT = 'Physical Environment'
-    EU_POWER_EXCHANGE_DATASET = 'COMMOD_EU_POWER_EXCHANGE_PRICES'
+    EU_POWER_EXCHANGE_DATASET = 'COMMOD_EU_POWER_EXCHANGE_DATA'
     EU_POWER_PRODUCT = 'PowerFutures'
 
 
@@ -1585,12 +1585,19 @@ def vol_term(asset: Asset, strike_reference: VolReference, relative_strike: Real
 
         df = get_df_with_retries(partial(fetcher, QueryType.IMPLIED_VOLATILITY), start_date=start, end_date=end,
                                  exchange=asset.exchange)
-        df_expiry = get_df_with_retries(partial(fetcher, QueryType.IMPLIED_VOLATILITY_BY_EXPIRATION), start_date=start,
-                                        end_date=end, exchange=asset.exchange)
-        dataset_ids.update(getattr(df, 'dataset_ids', ()))
-        dataset_ids.update(getattr(df_expiry, 'dataset_ids', ()))
+        try:
+            df_expiry = get_df_with_retries(partial(fetcher, QueryType.IMPLIED_VOLATILITY_BY_EXPIRATION),
+                                            start_date=start, end_date=end, exchange=asset.exchange)
+        except MqValueError:
+            log_warning(request_id, _logger, "Ignoring expiry data fetching since there's no data for the given asset")
+            pass  # Allow to fail since it's not required to compute end result
 
-    latest = df.index.union(df_expiry.index).max()
+        dataset_ids.update(getattr(df, 'dataset_ids', ()))
+        # only if df_expiry not empty
+        if not df_expiry.empty:
+            dataset_ids.update(getattr(df_expiry, 'dataset_ids', ()))
+
+    latest = df.index.union(df_expiry.index).max() if not df_expiry.empty else df.index.max()
     _logger.info('selected pricing date %s', latest)
 
     if df.empty:

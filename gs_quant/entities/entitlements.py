@@ -376,6 +376,7 @@ class Entitlements:
                  admin: EntitlementBlock = None,
                  delete: EntitlementBlock = None,
                  display: EntitlementBlock = None,
+                 upload: EntitlementBlock = None,
                  edit: EntitlementBlock = None,
                  execute: EntitlementBlock = None,
                  plot: EntitlementBlock = None,
@@ -386,6 +387,7 @@ class Entitlements:
         self.__admin = admin if admin else EntitlementBlock()
         self.__delete = delete if delete else EntitlementBlock()
         self.__display = display if display else EntitlementBlock()
+        self.__upload = upload if upload else EntitlementBlock()
         self.__edit = edit if edit else EntitlementBlock()
         self.__execute = execute if execute else EntitlementBlock()
         self.__plot = plot if plot else EntitlementBlock()
@@ -417,6 +419,14 @@ class Entitlements:
     @display.setter
     def display(self, value: EntitlementBlock):
         self.__display = value
+
+    @property
+    def upload(self):
+        return self.__upload
+
+    @upload.setter
+    def upload(self, value: EntitlementBlock):
+        self.__upload = value
 
     @property
     def edit(self):
@@ -486,6 +496,8 @@ class Entitlements:
             target_entitlements.delete = self.delete.to_list()
         if not self.display.is_empty():
             target_entitlements.display = self.display.to_list()
+        if not self.upload.is_empty():
+            target_entitlements.upload = self.upload.to_list()
         if not self.edit.is_empty():
             target_entitlements.edit = self.edit.to_list()
         if not self.execute.is_empty():
@@ -514,6 +526,7 @@ class Entitlements:
         all_entitled += self.admin.to_list(True, 'admin')
         all_entitled += self.delete.to_list(True, 'delete')
         all_entitled += self.display.to_list(True, 'display')
+        all_entitled += self.upload.to_list(True, 'upload')
         all_entitled += self.edit.to_list(True, 'edit')
         all_entitled += self.execute.to_list(True, 'execute')
         all_entitled += self.plot.to_list(True, 'plot')

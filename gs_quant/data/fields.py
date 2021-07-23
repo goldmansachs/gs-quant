@@ -51,6 +51,27 @@ class DataMeasure(Enum):
     NAV_SPREAD = 'navSpread'
     IMPLIED_VOLATILITY_BY_DELTA_STRIKE = 'impliedVolatilityByDeltaStrike'
     FORWARD_POINT = 'forwardPoint'
+    DIVIDEND_YIELD = 'Dividend Yield'
+    EARNINGS_PER_SHARE = 'Earnings per Share'
+    EARNINGS_PER_SHARE_POSITIVE = 'Earnings per Share Positive'
+    NET_DEBT_TO_EBITDA = 'Net Debt to EBITDA'
+    PRICE_TO_BOOK = 'Price to Book'
+    PRICE_TO_CASH = 'Price to Cash'
+    PRICE_TO_EARNINGS = 'Price to Earnings'
+    PRICE_TO_EARNINGS_POSITIVE = 'Price to Earnings Positive'
+    PRICE_TO_SALES = 'Price to Sales'
+    RETURN_ON_EQUITY = 'Return on Equity'
+    SALES_PER_SHARE = 'Sales per Share'
+
+    def __repr__(self):
+        return self.value
+
+    @classmethod
+    def list_fundamentals(cls):
+        return [metric.value for metric in [cls.DIVIDEND_YIELD, cls.EARNINGS_PER_SHARE, cls.EARNINGS_PER_SHARE_POSITIVE,
+                                            cls.NET_DEBT_TO_EBITDA, cls.PRICE_TO_BOOK, cls.PRICE_TO_CASH,
+                                            cls.PRICE_TO_EARNINGS, cls.PRICE_TO_EARNINGS_POSITIVE,
+                                            cls.PRICE_TO_SALES, cls.RETURN_ON_EQUITY, cls.SALES_PER_SHARE]]
 
 
 class DataDimension(Enum):

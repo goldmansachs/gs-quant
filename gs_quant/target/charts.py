@@ -21,6 +21,58 @@ from enum import Enum
 from gs_quant.base import Base, EnumBase, InstrumentBase, camel_case_translate, get_enum_value
 
 
+class ChartAnnotationFontStyle(EnumBase, Enum):    
+    
+    """Style of the font."""
+
+    italic = 'italic'
+    normal = 'normal'    
+
+
+class ChartAnnotationFontWeight(EnumBase, Enum):    
+    
+    """Weight of the font."""
+
+    bold = 'bold'
+    normal = 'normal'    
+
+
+class ChartAnnotationLineType(EnumBase, Enum):    
+    
+    """Type of the line."""
+
+    dashed = 'dashed'
+    solid = 'solid'    
+
+
+class ChartAnnotationTextAlign(EnumBase, Enum):    
+    
+    """Alignment of the text."""
+
+    center = 'center'
+    left = 'left'
+    right = 'right'    
+
+
+class ChartAnnotationTextDecoration(EnumBase, Enum):    
+    
+    """Decoration of the text."""
+
+    none = 'none'
+    underline = 'underline'
+    strike_through = 'strike-through'    
+
+
+class ChartAnnotationType(EnumBase, Enum):    
+    
+    """Type of the annotation."""
+
+    arrow = 'arrow'
+    circle = 'circle'
+    line = 'line'
+    text = 'text'    
+
+
 class ChartFill(EnumBase, Enum):    
     
     """Chart Fill Type"""
@@ -438,6 +490,223 @@ class YAxisSettings(Base):
         self.__show_grid_lines = value        
 
 
+class ChartAnnotation(Base):
+        
+    """An object that represents an annotation on a chart."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        id_: str,
+        type_: Union[ChartAnnotationType, str] = None,
+        start_time: datetime.datetime = None,
+        end_time: datetime.datetime = None,
+        start_value: str = None,
+        end_value: str = None,
+        color: str = None,
+        fill_color: str = None,
+        font_size: float = None,
+        font_style: Union[ChartAnnotationFontStyle, str] = None,
+        font_weight: Union[ChartAnnotationFontWeight, str] = None,
+        line_height: float = None,
+        line_type: Union[ChartAnnotationLineType, str] = None,
+        line_width: float = None,
+        radius: float = None,
+        text_align: Union[ChartAnnotationTextAlign, str] = None,
+        text_decoration: Union[ChartAnnotationTextDecoration, str] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.__id = id_
+        self.__type = get_enum_value(ChartAnnotationType, type_)
+        self.start_time = start_time
+        self.end_time = end_time
+        self.start_value = start_value
+        self.end_value = end_value
+        self.color = color
+        self.fill_color = fill_color
+        self.font_size = font_size
+        self.font_style = font_style
+        self.font_weight = font_weight
+        self.line_height = line_height
+        self.line_type = line_type
+        self.line_width = line_width
+        self.radius = radius
+        self.text_align = text_align
+        self.text_decoration = text_decoration
+        self.name = name
+
+    @property
+    def id(self) -> str:
+        """Marquee unique identifier"""
+        return self.__id
+
+    @id.setter
+    def id(self, value: str):
+        self._property_changed('id')
+        self.__id = value        
+
+    @property
+    def type(self) -> Union[ChartAnnotationType, str]:
+        """Type of the annotation."""
+        return self.__type
+
+    @type.setter
+    def type(self, value: Union[ChartAnnotationType, str]):
+        self._property_changed('type')
+        self.__type = get_enum_value(ChartAnnotationType, value)        
+
+    @property
+    def start_time(self) -> datetime.datetime:
+        """Start time of the annotation."""
+        return self.__start_time
+
+    @start_time.setter
+    def start_time(self, value: datetime.datetime):
+        self._property_changed('start_time')
+        self.__start_time = value        
+
+    @property
+    def end_time(self) -> datetime.datetime:
+        """End time of the annotation."""
+        return self.__end_time
+
+    @end_time.setter
+    def end_time(self, value: datetime.datetime):
+        self._property_changed('end_time')
+        self.__end_time = value        
+
+    @property
+    def start_value(self) -> str:
+        """Starting value of the annotation."""
+        return self.__start_value
+
+    @start_value.setter
+    def start_value(self, value: str):
+        self._property_changed('start_value')
+        self.__start_value = value        
+
+    @property
+    def end_value(self) -> str:
+        """Ending value of the annotation."""
+        return self.__end_value
+
+    @end_value.setter
+    def end_value(self, value: str):
+        self._property_changed('end_value')
+        self.__end_value = value        
+
+    @property
+    def color(self) -> str:
+        """Color of the shape."""
+        return self.__color
+
+    @color.setter
+    def color(self, value: str):
+        self._property_changed('color')
+        self.__color = value        
+
+    @property
+    def fill_color(self) -> str:
+        """Fill color of the shape."""
+        return self.__fill_color
+
+    @fill_color.setter
+    def fill_color(self, value: str):
+        self._property_changed('fill_color')
+        self.__fill_color = value        
+
+    @property
+    def font_size(self) -> float:
+        """Size of the font."""
+        return self.__font_size
+
+    @font_size.setter
+    def font_size(self, value: float):
+        self._property_changed('font_size')
+        self.__font_size = value        
+
+    @property
+    def font_style(self) -> Union[ChartAnnotationFontStyle, str]:
+        """Style of the font."""
+        return self.__font_style
+
+    @font_style.setter
+    def font_style(self, value: Union[ChartAnnotationFontStyle, str]):
+        self._property_changed('font_style')
+        self.__font_style = get_enum_value(ChartAnnotationFontStyle, value)        
+
+    @property
+    def font_weight(self) -> Union[ChartAnnotationFontWeight, str]:
+        """Weight of the font."""
+        return self.__font_weight
+
+    @font_weight.setter
+    def font_weight(self, value: Union[ChartAnnotationFontWeight, str]):
+        self._property_changed('font_weight')
+        self.__font_weight = get_enum_value(ChartAnnotationFontWeight, value)        
+
+    @property
+    def line_height(self) -> float:
+        """Height of the line."""
+        return self.__line_height
+
+    @line_height.setter
+    def line_height(self, value: float):
+        self._property_changed('line_height')
+        self.__line_height = value        
+
+    @property
+    def line_type(self) -> Union[ChartAnnotationLineType, str]:
+        """Type of the line."""
+        return self.__line_type
+
+    @line_type.setter
+    def line_type(self, value: Union[ChartAnnotationLineType, str]):
+        self._property_changed('line_type')
+        self.__line_type = get_enum_value(ChartAnnotationLineType, value)        
+
+    @property
+    def line_width(self) -> float:
+        """Width of the line."""
+        return self.__line_width
+
+    @line_width.setter
+    def line_width(self, value: float):
+        self._property_changed('line_width')
+        self.__line_width = value        
+
+    @property
+    def radius(self) -> float:
+        """Radius of the circle annotation."""
+        return self.__radius
+
+    @radius.setter
+    def radius(self, value: float):
+        self._property_changed('radius')
+        self.__radius = value        
+
+    @property
+    def text_align(self) -> Union[ChartAnnotationTextAlign, str]:
+        """Alignment of the text."""
+        return self.__text_align
+
+    @text_align.setter
+    def text_align(self, value: Union[ChartAnnotationTextAlign, str]):
+        self._property_changed('text_align')
+        self.__text_align = get_enum_value(ChartAnnotationTextAlign, value)        
+
+    @property
+    def text_decoration(self) -> Union[ChartAnnotationTextDecoration, str]:
+        """Decoration of the text."""
+        return self.__text_decoration
+
+    @text_decoration.setter
+    def text_decoration(self, value: Union[ChartAnnotationTextDecoration, str]):
+        self._property_changed('text_decoration')
+        self.__text_decoration = get_enum_value(ChartAnnotationTextDecoration, value)        
+
+
 class ChartExpression(Base):
         
     """An object which represent the single chart expression row"""
@@ -781,7 +1050,8 @@ class Chart(Base):
         time_settings: ChartTime = None,
         x_axis_settings: XAxisSettings = None,
         display_settings: ChartDisplaySettings = None,
-        y_axes_settings: Tuple[YAxisSettings, ...] = None
+        y_axes_settings: Tuple[YAxisSettings, ...] = None,
+        annotations: Tuple[ChartAnnotation, ...] = None
     ):        
         super().__init__()
         self.__id = id_
@@ -819,6 +1089,7 @@ class Chart(Base):
         self.x_axis_settings = x_axis_settings
         self.display_settings = display_settings
         self.y_axes_settings = y_axes_settings
+        self.annotations = annotations
 
     @property
     def id(self) -> str:
@@ -1164,3 +1435,13 @@ class Chart(Base):
     def y_axes_settings(self, value: Tuple[YAxisSettings, ...]):
         self._property_changed('y_axes_settings')
         self.__y_axes_settings = value        
+
+    @property
+    def annotations(self) -> Tuple[ChartAnnotation, ...]:
+        """List of annotation objects for the chart."""
+        return self.__annotations
+
+    @annotations.setter
+    def annotations(self, value: Tuple[ChartAnnotation, ...]):
+        self._property_changed('annotations')
+        self.__annotations = value        

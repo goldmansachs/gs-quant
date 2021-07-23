@@ -283,6 +283,7 @@ def test_get_many_defns_api(mocker):
     mock_response = {'results': (test_defn,), 'totalResults': 1}
 
     expected_response = (test_defn,)
+    expected_payload = {'limit': 100, 'enablePagination': 'true', 'scroll': '30s'}
 
     # mock GsSession
     mocker.patch.object(GsSession.__class__, 'default_value',
@@ -291,7 +292,7 @@ def test_get_many_defns_api(mocker):
 
     # run test
     response = GsDataApi.get_many_definitions()
-    GsSession.current._get.assert_called_with('/data/datasets?limit=100', cls=DataSetEntity)
+    GsSession.current._get.assert_called_with('/data/datasets', payload=expected_payload, cls=DataSetEntity)
     assert response == expected_response
 
 

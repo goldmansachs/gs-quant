@@ -303,6 +303,21 @@ class Portfolio(PriceableImpl):
             self.__id = GsPortfolioApi.save_quote(request)
             _logger.info(f'Created Structuring with id {self.__id}')
 
+    def save_to_shadowbook(self, name: str):
+        if self.portfolios:
+            raise ValueError('Cannot save portfolios with nested portfolios')
+
+        pricing_context = self.__pricing_context
+
+        request = RiskRequest(
+            tuple(RiskPosition(instrument=i, quantity=i.instrument_quantity) for i in self.instruments),
+            (ResolvedInstrumentValues,),
+            pricing_and_market_data_as_of=(PricingDateAndMarketDataAsOf(pricing_date=pricing_context.pricing_date,
+                                                                        market=pricing_context.market),)
+        )
+        status = GsPortfolioApi.save_to_shadowbook(request, name)
+        print(f'Save to shadowbook status - {status}')
+
     @classmethod
     def from_frame(cls, data: pd.DataFrame, mappings: dict = None):
         def get_value(this_row: pd.Series, attribute: str):

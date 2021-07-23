@@ -37,6 +37,7 @@ from gs_quant.entities.entity import Entity, EntityIdentifier, EntityType, Posit
 from gs_quant.errors import MqValueError
 from gs_quant.json_encoder import JSONEncoder
 from gs_quant.markets import PricingContext
+from gs_quant.markets.indices_utils import *
 
 
 class ExchangeCode(Enum):
@@ -140,6 +141,18 @@ class AssetType(Enum):
     #: Default Swap
     DEFAULT_SWAP = "Default Swap"
 
+    #: Systematic Hedging
+    SYSTEMATIC_HEDGING = 'Systematic Hedging'
+
+    #: Access
+    ACCESS = 'Access'
+
+    #: Risk Premia
+    RISK_PREMIA = 'Risk Premia'
+
+    #: Multi Asset Allocation
+    MULTI_ASSET_ALLOCATION = 'Multi-Asset Allocation'
+
 
 class AssetIdentifier(EntityIdentifier):
     """Asset type enumeration
@@ -187,9 +200,18 @@ class Asset(Entity, metaclass=ABCMeta):
         self.exchange = exchange
         self.currency = currency
         self.parameters = parameters
+        self.entity = entity
 
     def get_marquee_id(self):
         return self.__id
+
+    def get_url(self) -> str:
+        """
+        Retrieve url to asset's product page on Marquee
+        """
+        env = '-dev-ext.web' if 'dev' in get(GsSession, 'current.domain', '') else ''
+        env = '-qa' if 'qa' in get(GsSession, 'current.domain', '') else env
+        return f'https://marquee{env}.gs.com/s/products/{self.__id}/summary'
 
     def get_identifiers(self, as_of: dt.date = None) -> dict:
         """
@@ -788,35 +810,6 @@ class Forward(Asset):
         return AssetType.FORWARD
 
 
-class Index(Asset, PositionedEntity):
-    """Index Asset
-
-    Index which tracks an evolving portfolio of securities, and can be traded through cash or derivatives markets
-    """
-
-    def __init__(self,
-                 id_: str,
-                 asset_class: AssetClass,
-                 name: str,
-                 exchange: Optional[str] = None,
-                 currency: Optional[Currency] = None,
-                 entity: Optional[Dict] = None):
-        Asset.__init__(self, id_, asset_class, name, exchange, currency, entity=entity)
-        PositionedEntity.__init__(self, id_, EntityType.ASSET)
-
-    def get_type(self) -> AssetType:
-        return AssetType.INDEX
-
-    def get_currency(self) -> Optional[Currency]:
-        return self.currency
-
-    def get_return_type(self) -> ReturnType:
-        if self.parameters is None or self.parameters.index_return_type is None:
-            return ReturnType.TOTAL_RETURN
-
-        return ReturnType(self.parameters.index_return_type)
-
-
 class ETF(Asset, PositionedEntity):
     """ETF Asset
 
@@ -886,9 +879,11 @@ class SecurityMaster:
 
         if asset_type in (
                 GsAssetType.Index.value,
-                GsAssetType.Risk_Premia.value,
                 GsAssetType.Access.value,
-                GsAssetType.Multi_Asset_Allocation.value):
+                GsAssetType.Multi_Asset_Allocation.value,
+                GsAssetType.Risk_Premia.value,
+                GsAssetType.Systematic_Hedging.value):
+            from gs_quant.markets.index import Index
             return Index(gs_asset.id, gs_asset.assetClass, gs_asset.name, gs_asset.exchange, gs_asset.currency,
                          entity=asset_entity)
 

@@ -185,6 +185,53 @@ class ClassificationConstraint(Base):
         self.__min = value        
 
 
+class ESGConstraint(Base):
+        
+    """Constraint on ESG metric values of assets to be included in a hedge."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        name: str,
+        max_: float,
+        min_: float
+    ):        
+        super().__init__()
+        self.name = name
+        self.__max = max_
+        self.__min = min_
+
+    @property
+    def name(self) -> str:
+        """Name of ESG Metric by which to filter asset universe."""
+        return self.__name
+
+    @name.setter
+    def name(self, value: str):
+        self._property_changed('name')
+        self.__name = value        
+
+    @property
+    def max(self) -> float:
+        """Maximum score of chosen ESG metric for any universe assets in the hedge result."""
+        return self.__max
+
+    @max.setter
+    def max(self, value: float):
+        self._property_changed('max')
+        self.__max = value        
+
+    @property
+    def min(self) -> float:
+        """Minimum score of chosen ESG metric for any universe assets in the hedge result."""
+        return self.__min
+
+    @min.setter
+    def min(self, value: float):
+        self._property_changed('min')
+        self.__min = value        
+
+
 class FactorConstraint(Base):
         
     """Constraint on a specific risk model factor."""
@@ -1392,6 +1439,7 @@ class FactorHedgeParameters(Base):
         asset_constraints: Tuple[AssetConstraint, ...] = None,
         factor_constraints: Tuple[FactorConstraint, ...] = None,
         classification_constraints: Tuple[ClassificationConstraint, ...] = None,
+        esg_constraints: Tuple[ESGConstraint, ...] = None,
         constraint_priority_settings: FactorHedgerConstraintPrioritySettings = None,
         comparisons: Tuple[HedgerComparison, ...] = None,
         turnover_portfolio_id: str = None,
@@ -1425,6 +1473,7 @@ class FactorHedgeParameters(Base):
         self.asset_constraints = asset_constraints
         self.factor_constraints = factor_constraints
         self.classification_constraints = classification_constraints
+        self.esg_constraints = esg_constraints
         self.constraint_priority_settings = constraint_priority_settings
         self.comparisons = comparisons
         self.turnover_portfolio_id = turnover_portfolio_id
@@ -1699,6 +1748,17 @@ class FactorHedgeParameters(Base):
         self.__classification_constraints = value        
 
     @property
+    def esg_constraints(self) -> Tuple[ESGConstraint, ...]:
+        """Constraints to be applied to assets in the universe based off of their ESG
+           metric values in the ESG_HEADLINE_METRICS dataset."""
+        return self.__esg_constraints
+
+    @esg_constraints.setter
+    def esg_constraints(self, value: Tuple[ESGConstraint, ...]):
+        self._property_changed('esg_constraints')
+        self.__esg_constraints = value        
+
+    @property
     def constraint_priority_settings(self) -> FactorHedgerConstraintPrioritySettings:
         """Specify the priority of constraints"""
         return self.__constraint_priority_settings
@@ -1773,6 +1833,7 @@ class PerformanceHedgeParameters(Base):
         market_participation_rate: float = 10,
         asset_constraints: Tuple[AssetConstraint, ...] = None,
         classification_constraints: Tuple[ClassificationConstraint, ...] = None,
+        esg_constraints: Tuple[ESGConstraint, ...] = None,
         benchmarks: Tuple[str, ...] = None,
         use_machine_learning: bool = False,
         lasso_weight: float = None,
@@ -1804,6 +1865,7 @@ class PerformanceHedgeParameters(Base):
         self.market_participation_rate = market_participation_rate
         self.asset_constraints = asset_constraints
         self.classification_constraints = classification_constraints
+        self.esg_constraints = esg_constraints
         self.benchmarks = benchmarks
         self.use_machine_learning = use_machine_learning
         self.lasso_weight = lasso_weight
@@ -2057,6 +2119,17 @@ class PerformanceHedgeParameters(Base):
     def classification_constraints(self, value: Tuple[ClassificationConstraint, ...]):
         self._property_changed('classification_constraints')
         self.__classification_constraints = value        
+
+    @property
+    def esg_constraints(self) -> Tuple[ESGConstraint, ...]:
+        """Constraints to be applied to assets in the universe based off of their ESG
+           metric values in the ESG_HEADLINE_METRICS dataset."""
+        return self.__esg_constraints
+
+    @esg_constraints.setter
+    def esg_constraints(self, value: Tuple[ESGConstraint, ...]):
+        self._property_changed('esg_constraints')
+        self.__esg_constraints = value        
 
     @property
     def benchmarks(self) -> Tuple[str, ...]:

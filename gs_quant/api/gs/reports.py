@@ -108,7 +108,7 @@ class GsReportApi:
             factors = map(urllib.parse.quote, factors)  # to support factors like "Automobiles & Components"
             url += '&factors={factors}'.format(factors='&factors='.join(factors))
         if factor_categories is not None:
-            url += '&factorCategories={categories}'.format(categories='&factorCategories='.join(factors))
+            url += '&factorCategories={categories}'.format(categories='&factorCategories='.join(factor_categories))
         if currency is not None:
             url += f'&currency={currency.value}'
         if start_date is not None:

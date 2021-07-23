@@ -238,6 +238,7 @@ def test_inflation_swap_rate(mocker):
     mocker.patch.object(GsDataApi, 'get_market_data', return_value=mock_curr(None, None))
     args['asset'] = Currency('MAZBW57ZPS54ET7K', 'EUR')
     args['index_type'] = 'FRCPXTOB'
+    args['location'] = PricingLocation.LDN
     actual = tm.inflation_swap_rate(**args)
     expected = tm.ExtendedSeries([1, 2, 3], index=_index * 3, name='swapRate')
     expected.dataset_ids = _test_datasets

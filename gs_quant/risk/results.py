@@ -279,7 +279,8 @@ class MultipleRiskMeasureResult(dict):
         dates = set()
         for value in self.values():
             if isinstance(value, (DataFrameWithInfo, SeriesWithInfo)):
-                dates.update(value.index)
+                if all([isinstance(i, dt.date) for i in value.index]):
+                    dates.update(value.index)
 
         return tuple(sorted(dates))
 
@@ -576,9 +577,11 @@ class PortfolioRiskResult(CompositeResultFuture):
         dates = set()
         for result in self.__results():
             if isinstance(result, (MultipleRiskMeasureResult, PortfolioRiskResult)):
-                dates.update(result.dates)
+                if all([isinstance(i, dt.date) for i in result.dates]):
+                    dates.update(result.dates)
             elif isinstance(result, (pd.DataFrame, pd.Series)):
-                dates.update(result.index)
+                if all([isinstance(i, dt.date) for i in result.index]):
+                    dates.update(result.index)
         try:
             return tuple(sorted(dates))
         except TypeError:

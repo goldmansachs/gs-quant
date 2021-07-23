@@ -17,7 +17,6 @@ import datetime as dt
 from enum import Enum
 from time import sleep
 from typing import Tuple, Union, List, Dict
-
 import pandas as pd
 
 from gs_quant.api.gs.data import GsDataApi
@@ -25,6 +24,8 @@ from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.api.gs.reports import GsReportApi
 from gs_quant.errors import MqValueError
 from gs_quant.models.risk_model import ReturnFormat
+from gs_quant.markets.report_utils import _get_ppaa_batches
+
 from gs_quant.target.common import ReportParameters, Currency
 from gs_quant.target.coordinates import MDAPIDataBatchResponse
 from gs_quant.target.data import DataQuery, DataQueryResponse
@@ -36,6 +37,7 @@ class ReportDataset(Enum):
     PPA_DATASET = "PPA"
     PFR_DATASET = "PFR"
     AFR_DATASET = "AFR"
+    PORTFOLIO_CONSTITUENTS = "PORTFOLIO_CONSTITUENTS"
 
 
 class ReportJobFuture:
@@ -400,6 +402,20 @@ class PerformanceReport(Report):
         where = {'reportId': self.id}
         query = DataQuery(where=where, fields=fields, start_date=start_date, end_date=end_date)
         results = GsDataApi.query_data(query=query, dataset_id=ReportDataset.PPA_DATASET.value)
+        return pd.DataFrame(results) if return_format == ReturnFormat.DATA_FRAME else results
+
+    def get_portfolio_constituents(self,
+                                   fields: List[str] = None,
+                                   start_date: dt.date = None,
+                                   end_date: dt.date = None,
+                                   return_format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
+        where = {'reportId': self.id}
+        date_batches = _get_ppaa_batches(self.get_asset_count(start_date, end_date), 3000000)
+        queries = [DataQuery(where=where, fields=fields, start_date=dates_batch[0], end_date=dates_batch[1]) for
+                   dates_batch in date_batches]
+        results = [GsDataApi.query_data(query=query, dataset_id=ReportDataset.PORTFOLIO_CONSTITUENTS.value)
+                   for query in queries]
+        results = sum(results, [])
         return pd.DataFrame(results) if return_format == ReturnFormat.DATA_FRAME else results
 
 

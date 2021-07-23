@@ -53,7 +53,7 @@ class _SwapTenorType(Enum):
     SWAP_TENOR = 'swap_tenor'
 
 
-class TdapiRatesDefaultsProvider():
+class TdapiRatesDefaultsProvider:
     # flag to indicate that a given property should not  be included in asset query
     EMPTY_PROPERTY = "null"
 
@@ -124,12 +124,12 @@ CURRENCY_TO_SWAP_RATE_BENCHMARK = {
     'JPY': OrderedDict([('LIBOR', 'JPY-LIBOR-BBA'), ('TONA', 'JPY-TONA-OIS-COMPOUND')]),
     'USD': OrderedDict(
         [('LIBOR', 'USD-LIBOR-BBA'), ('Fed_Funds', 'USD-Federal Funds-H.15-OIS-COMP'), ('SOFR', 'USD-SOFR-COMPOUND')]),
-    'SEK': {'STIBOR': 'SEK-STIBOR-SIDE'},
-    'NOK': {'NIBOR': 'NOK-NIBOR-BBA'},
-    'DKK': {'CIBOR': 'DKK-CIBOR2-DKNA13'},
-    'AUD': {'BBR': 'AUD-BBR-BBSW'},
-    'CAD': {'CDOR': 'CAD-BA-CDOR'},
-    'NZD': {'BBR': 'NZD-BBR-FRA'},
+    'SEK': OrderedDict([('STIBOR', 'SEK-STIBOR-SIDE'), ('SIOR', 'SEK-SIOR-OIS-COMPOUND')]),
+    'NOK': OrderedDict([('NIBOR', 'NOK-NIBOR-BBA'), ('NOWA', 'NOK-NOWA-OIS-COMPOUND')]),
+    'DKK': OrderedDict([('CIBOR', 'DKK-CIBOR2-DKNA13'), ('OIS', 'DKK-DKKOIS-OIS-COMPOUND')]),
+    'AUD': OrderedDict([('BBR', 'AUD-BBR-BBSW'), ('AONIA', 'AUD-AONIA-OIS-COMPOUND')]),
+    'CAD': OrderedDict([('CDOR', 'CAD-BA-CDOR')]),
+    'NZD': OrderedDict([('BBR', 'NZD-BBR-FRA'), ('NZIONA', 'NZD-NZIONA-OIS-COMPOUND')]),
     'KRW': {'KSDA': 'KRW-CD-KSDA-BLOOMBERG'},
     'CNY': {'REPO': 'CNY-REPO RATE'},
     'SGD': {'SOR': 'SGD-SOR-VWAP'},
@@ -148,14 +148,19 @@ BENCHMARK_TO_DEFAULT_FLOATING_RATE_TENORS = {
     'JPY-LIBOR-BBA': '6m',
     'JPY-TONA-OIS-COMPOUND': '1y',
     'SEK-STIBOR-SIDE': '6m',
+    'SEK-SIOR-OIS-COMPOUND': '1y',
     'USD-LIBOR-BBA': '3m',
     'USD-Federal Funds-H.15-OIS-COMP': '1y',
     'USD-SOFR-COMPOUND': '1y',
     'NOK-NIBOR-BBA': '6m',
+    'NOK-NOWA-OIS-COMPOUND': '1y',
     'DKK-CIBOR2-DKNA13': '6m',
+    'DKK-DKKOIS-OIS-COMPOUND': '1y',
     'AUD-BBR-BBSW': '6m',
+    'AUD-AONIA-OIS-COMPOUND': '1y',
     'CAD-BA-CDOR': '3m',
     'NZD-BBR-FRA': '3m',
+    'NZD-NZIONA-OIS-COMPOUND': '1y',
     'KRW-CD-KSDA-BLOOMBERG': '3m',
     'CNY-REPO RATE': '1w',
     'SGD-SOR-VWAP': '6m',
@@ -173,8 +178,12 @@ CURRENCY_TO_PRICING_LOCATION = {
     CurrencyEnum.HKD: PricingLocation.HKG,
     CurrencyEnum.SGD: PricingLocation.HKG,
     CurrencyEnum.CAD: PricingLocation.NYC,
-    CurrencyEnum.CNY: PricingLocation.HKG,
-
+    CurrencyEnum.EUR: PricingLocation.LDN,
+    CurrencyEnum.GBP: PricingLocation.LDN,
+    CurrencyEnum.CHF: PricingLocation.LDN,
+    CurrencyEnum.DKK: PricingLocation.LDN,
+    CurrencyEnum.NOK: PricingLocation.LDN,
+    CurrencyEnum.SEK: PricingLocation.LDN,
 }
 
 CURRENCY_TO_DUMMY_SWAP_BBID = {
@@ -209,6 +218,24 @@ CROSS_BBID_TO_DUMMY_OISXCCY_ASSET = {
     'USDCHF': 'MABNGGTNB9A0TKCG',
     'USDJPY': 'MAMZ9YG8AF3HQ18C',
 }
+
+
+def _pricing_location_normalized(location: PricingLocation, ccy: CurrencyEnum) -> PricingLocation:
+    if location == PricingLocation.HKG or location == PricingLocation.TKO:
+        if ccy in CURRENCY_TO_PRICING_LOCATION.keys() and\
+                PricingLocation.HKG == CURRENCY_TO_PRICING_LOCATION.get(ccy, PricingLocation.LDN):
+            return PricingLocation.HKG
+        else:
+            return PricingLocation.TKO
+    else:
+        return location
+
+
+def _default_pricing_location(ccy: CurrencyEnum) -> PricingLocation:
+    if ccy in CURRENCY_TO_PRICING_LOCATION.keys():
+        return CURRENCY_TO_PRICING_LOCATION.get(ccy, PricingLocation.LDN)
+    else:
+        raise MqValueError('No default location set for currency ' + ccy.value + ', please provide one.')
 
 
 def _cross_to_fxfwd_xcswp_asset(asset_spec: ASSET_SPEC) -> str:
@@ -252,6 +279,20 @@ def _currency_to_tdapi_basis_swap_rate_asset(asset_spec: ASSET_SPEC) -> str:
         result = 'MAXVRBEZCJVH0C4V'
     elif bbid == 'USD':
         result = 'MAQB1PGEJFCET3GG'
+    elif bbid == 'CAD':
+        result = 'MARVD2E65AWEXXBA'
+    elif bbid == 'AUD':
+        result = 'MAY8H7HCNZ85FJKM'
+    elif bbid == 'NZD':
+        result = 'MAWK15C0P3SM6C7Q'
+    elif bbid == 'SEK':
+        result = 'MAS2NJCYHDHP8P0X'
+    elif bbid == 'NOK':
+        result = 'MAPXC5YBPZJZXYMZ'
+    elif bbid == 'DKK':
+        result = 'MA2164KK5DMYA561'
+    elif bbid == 'CHF':
+        result = 'MA7ZHB9T0PF1SB96'
     else:
         return asset.get_marquee_id()
     return result
@@ -265,9 +306,13 @@ def _match_floating_tenors(swap_args) -> dict:
         if 'SOFR' in payer_index:
             swap_args['asset_parameters_payer_designated_maturity'] = swap_args[
                 'asset_parameters_receiver_designated_maturity']
+            if swap_args['asset_parameters_payer_designated_maturity'] == "12m":
+                swap_args['asset_parameters_payer_designated_maturity'] = "1y"
         elif 'SOFR' in receiver_index:
             swap_args['asset_parameters_receiver_designated_maturity'] = swap_args[
                 'asset_parameters_payer_designated_maturity']
+            if swap_args['asset_parameters_receiver_designated_maturity'] == "12m":
+                swap_args['asset_parameters_receiver_designated_maturity'] = "1y"
         elif 'LIBOR' in payer_index or 'EURIBOR' in payer_index or 'STIBOR' in payer_index:
             swap_args['asset_parameters_receiver_designated_maturity'] = swap_args[
                 'asset_parameters_payer_designated_maturity']
@@ -279,7 +324,7 @@ def _match_floating_tenors(swap_args) -> dict:
 
 def _get_tdapi_rates_assets(allow_many=False, **kwargs) -> Union[str, list]:
     # sanitize input for asset query.
-    if("pricing_location" in kwargs):
+    if "pricing_location" in kwargs:
         del kwargs["pricing_location"]
     assets = GsAssetApi.get_many_assets(**kwargs)
     # change order of basis swap legs and check if swap in dataset
@@ -424,7 +469,7 @@ def _get_basis_swap_csa_terms(curr: str, payer_benchmark: str, receiver_benchmar
 
 def _get_swap_data(asset: Asset, swap_tenor: str, benchmark_type: str = None, floating_rate_tenor: str = None,
                    forward_tenor: Optional[GENERIC_DATE] = None, clearing_house: _ClearingHouse = None,
-                   source: str = None, real_time: bool = False,
+                   source: str = None, real_time: bool = False, location: PricingLocation = None,
                    query_type: QueryType = QueryType.SWAP_RATE) -> pd.DataFrame:
     if real_time and not (query_type == QueryType.SWAP_RATE):
         raise NotImplementedError('realtime swap_rate not implemented for anything but rates')
@@ -447,6 +492,12 @@ def _get_swap_data(asset: Asset, swap_tenor: str, benchmark_type: str = None, fl
 
     forward_tenor = _check_forward_tenor(forward_tenor)
     fixed_rate = 'ATM'
+
+    if location is None:
+        pricing_location = _default_pricing_location(currency)
+    else:
+        pricing_location = PricingLocation(location)
+
     kwargs = dict(type='Swap', asset_parameters_termination_date=swap_tenor,
                   asset_parameters_floating_rate_option=defaults['benchmark_type'],
                   asset_parameters_fixed_rate=fixed_rate, asset_parameters_clearing_house=clearing_house.value,
@@ -458,8 +509,11 @@ def _get_swap_data(asset: Asset, swap_tenor: str, benchmark_type: str = None, fl
 
     _logger.debug('where asset= %s, swap_tenor=%s, benchmark_type=%s, floating_rate_tenor=%s, forward_tenor=%s, '
                   'pricing_location=%s', rate_mqid, swap_tenor, defaults['benchmark_type'],
-                  defaults['floating_rate_tenor'], forward_tenor, defaults['pricing_location'].value)
-    q = GsDataApi.build_market_data_query([rate_mqid], query_type, source=source,
+                  defaults['floating_rate_tenor'], forward_tenor, pricing_location.value)
+
+    pricing_location = _pricing_location_normalized(pricing_location, currency)
+    where = dict(pricingLocation=pricing_location.value)
+    q = GsDataApi.build_market_data_query([rate_mqid], query_type, where=where, source=source,
                                           real_time=real_time)
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
@@ -483,7 +537,8 @@ def _get_term_struct_date(tenor: Union[str, datetime.datetime], index: datetime.
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
               [MeasureDependency(id_provider=_currency_to_tdapi_swap_rate_asset, query_type=QueryType.SWAP_ANNUITY)])
 def swap_annuity(asset: Asset, swap_tenor: str, benchmark_type: str = None, floating_rate_tenor: str = None,
-                 forward_tenor: Optional[GENERIC_DATE] = None, clearing_house: _ClearingHouse = None, *,
+                 forward_tenor: Optional[GENERIC_DATE] = None, clearing_house: _ClearingHouse = None,
+                 location: PricingLocation = None, *,
                  source: str = None, real_time: bool = False) -> Series:
     """
     GS end-of-day Fixed-Floating interest rate swap(IRS) annuity values in years for paying leg across major currencies.
@@ -496,6 +551,7 @@ def swap_annuity(asset: Asset, swap_tenor: str, benchmark_type: str = None, floa
     :param forward_tenor: absolute / relative date representation of forward starting point eg: '1y' or 'Spot' for
             spot starting swaps, 'imm1' or 'frb1'
     :param clearing_house: Example - "LCH", "EUREX", "JSCC", "CME"
+    :param location: Example - "TKO", "LDN", "NYC"
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: annuity of swap
@@ -503,7 +559,7 @@ def swap_annuity(asset: Asset, swap_tenor: str, benchmark_type: str = None, floa
     df = _get_swap_data(asset=asset, swap_tenor=swap_tenor, benchmark_type=benchmark_type,
                         floating_rate_tenor=floating_rate_tenor, forward_tenor=forward_tenor,
                         clearing_house=clearing_house, source=source,
-                        real_time=real_time, query_type=QueryType.SWAP_ANNUITY)
+                        real_time=real_time, query_type=QueryType.SWAP_ANNUITY, location=location)
 
     series = ExtendedSeries() if df.empty else ExtendedSeries(abs(df['swapAnnuity'] * 1e4 / 1e8))
     series.dataset_ids = getattr(df, 'dataset_ids', ())
@@ -516,7 +572,8 @@ def swap_annuity(asset: Asset, swap_tenor: str, benchmark_type: str = None, floa
 def swaption_premium(asset: Asset, expiration_tenor: str = None, termination_tenor: str = None,
                      relative_strike: str = None, benchmark_type: str = None,
                      floating_rate_tenor: str = None,
-                     clearing_house: str = None, *, source: str = None,
+                     clearing_house: str = None, location: PricingLocation = None, *,
+                     source: str = None,
                      real_time: bool = False) -> Series:
     """
     GS end-of-day premium for swaption.
@@ -528,6 +585,7 @@ def swaption_premium(asset: Asset, expiration_tenor: str = None, termination_ten
     :param benchmark_type: benchmark type e.g. LIBOR
     :param floating_rate_tenor: floating index rate
     :param clearing_house: Example - "LCH", "EUREX", "JSCC", "CME"
+    :param location: Example - "TKO", "LDN", "NYC"
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: swaption implied normal volatility curve
@@ -535,7 +593,7 @@ def swaption_premium(asset: Asset, expiration_tenor: str = None, termination_ten
     df = _get_swaption_measure(asset, benchmark_type, floating_rate_tenor, "0b", expiration_tenor,
                                termination_tenor, relative_strike, clearing_house, source=source, real_time=real_time,
                                start=DataContext.current.start_date, end=DataContext.current.end_date,
-                               query_type=QueryType.SWAPTION_PREMIUM)
+                               query_type=QueryType.SWAPTION_PREMIUM, location=location)
 
     return _extract_series_from_df(df, QueryType.SWAPTION_PREMIUM)
 
@@ -546,7 +604,8 @@ def swaption_premium(asset: Asset, expiration_tenor: str = None, termination_ten
 def swaption_annuity(asset: Asset, expiration_tenor: str = None, termination_tenor: str = None,
                      relative_strike: float = None, benchmark_type: str = None,
                      floating_rate_tenor: str = None,
-                     clearing_house: str = None, *, source: str = None,
+                     clearing_house: str = None, location: PricingLocation = None, *,
+                     source: str = None,
                      real_time: bool = False) -> Series:
     """
     GS end-of-day annuity for swaption.
@@ -558,6 +617,7 @@ def swaption_annuity(asset: Asset, expiration_tenor: str = None, termination_ten
     :param benchmark_type: benchmark type e.g. LIBOR
     :param floating_rate_tenor: floating index rate
     :param clearing_house: Example - "LCH", "EUREX", "JSCC", "CME"
+    :param location: Example - "TKO", "LDN", "NYC"
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: swaption implied normal volatility curve
@@ -566,7 +626,7 @@ def swaption_annuity(asset: Asset, expiration_tenor: str = None, termination_ten
     df = _get_swaption_measure(asset, benchmark_type, floating_rate_tenor, "0b", expiration_tenor,
                                termination_tenor, relative_strike, clearing_house, source=source, real_time=real_time,
                                start=DataContext.current.start_date, end=DataContext.current.end_date,
-                               query_type=QueryType.SWAPTION_ANNUITY)
+                               query_type=QueryType.SWAPTION_ANNUITY, location=location)
     return _extract_series_from_df(df, QueryType.SWAPTION_ANNUITY)
 
 
@@ -576,7 +636,8 @@ def swaption_annuity(asset: Asset, expiration_tenor: str = None, termination_ten
 def midcurve_premium(asset: Asset, expiration_tenor: str, forward_tenor: str, termination_tenor: str,
                      relative_strike: float = None, benchmark_type: str = None,
                      floating_rate_tenor: str = None,
-                     clearing_house: str = None, *, source: str = None,
+                     clearing_house: str = None, location: PricingLocation = None, *,
+                     source: str = None,
                      real_time: bool = False) -> Series:
     """
     GS end-of-day premium for midcurve
@@ -589,6 +650,7 @@ def midcurve_premium(asset: Asset, expiration_tenor: str, forward_tenor: str, te
     :param benchmark_type: benchmark type e.g. LIBOR
     :param floating_rate_tenor: floating index rate
     :param clearing_house: Example - "LCH", "EUREX", "JSCC", "CME"
+    :param location: Example - "TKO", "LDN", "NYC"
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: swaption implied normal volatility curve
@@ -597,7 +659,7 @@ def midcurve_premium(asset: Asset, expiration_tenor: str, forward_tenor: str, te
     df = _get_swaption_measure(asset, benchmark_type, floating_rate_tenor, forward_tenor, expiration_tenor,
                                termination_tenor, relative_strike, clearing_house, source=source, real_time=real_time,
                                start=DataContext.current.start_date, end=DataContext.current.end_date,
-                               query_type=QueryType.MIDCURVE_PREMIUM)
+                               query_type=QueryType.MIDCURVE_PREMIUM, location=location)
     return _extract_series_from_df(df, QueryType.MIDCURVE_PREMIUM)
 
 
@@ -607,7 +669,8 @@ def midcurve_premium(asset: Asset, expiration_tenor: str, forward_tenor: str, te
 def midcurve_annuity(asset: Asset, expiration_tenor: str, forward_tenor: str, termination_tenor: str,
                      relative_strike: float = None, benchmark_type: str = None,
                      floating_rate_tenor: str = None,
-                     clearing_house: str = None, *, source: str = None,
+                     clearing_house: str = None, location: PricingLocation = None,
+                     *, source: str = None,
                      real_time: bool = False) -> Series:
     """
     GS end-of-day annuity for midcurve.
@@ -620,6 +683,7 @@ def midcurve_annuity(asset: Asset, expiration_tenor: str, forward_tenor: str, te
     :param benchmark_type: benchmark type e.g. LIBOR
     :param floating_rate_tenor: floating index rate
     :param clearing_house: Example - "LCH", "EUREX", "JSCC", "CME"
+    :param location: Example - "TKO", "LDN", "NYC"
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: swaption implied normal volatility curve
@@ -628,7 +692,7 @@ def midcurve_annuity(asset: Asset, expiration_tenor: str, forward_tenor: str, te
     df = _get_swaption_measure(asset, benchmark_type, floating_rate_tenor, forward_tenor, expiration_tenor,
                                termination_tenor, relative_strike, clearing_house, source=source, real_time=real_time,
                                start=DataContext.current.start_date, end=DataContext.current.end_date,
-                               query_type=QueryType.MIDCURVE_ANNUITY)
+                               query_type=QueryType.MIDCURVE_ANNUITY, location=location)
     return _extract_series_from_df(df, QueryType.MIDCURVE_ANNUITY)
 
 
@@ -638,7 +702,8 @@ def midcurve_annuity(asset: Asset, expiration_tenor: str, forward_tenor: str, te
 def swaption_atm_fwd_rate(asset: Asset, expiration_tenor: str = None, termination_tenor: str = None,
                           benchmark_type: str = None,
                           floating_rate_tenor: str = None,
-                          clearing_house: str = None, *, source: str = None,
+                          clearing_house: str = None, location: PricingLocation = None,
+                          *, source: str = None,
                           real_time: bool = False) -> Series:
     """
     GS end-of-day atm forward rate for swaption vol matrices.
@@ -649,6 +714,7 @@ def swaption_atm_fwd_rate(asset: Asset, expiration_tenor: str = None, terminatio
     :param benchmark_type: benchmark type e.g. LIBOR
     :param floating_rate_tenor: floating index rate
     :param clearing_house: Example - "LCH", "EUREX", "JSCC", "CME"
+    :param location: Example - "TKO", "LDN", "NYC"
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: swaption implied normal volatility curve
@@ -658,7 +724,7 @@ def swaption_atm_fwd_rate(asset: Asset, expiration_tenor: str = None, terminatio
                                termination_tenor=termination_tenor, clearing_house=clearing_house, source=source,
                                real_time=real_time, start=DataContext.current.start_date,
                                end=DataContext.current.end_date,
-                               query_type=QueryType.ATM_FWD_RATE)
+                               query_type=QueryType.ATM_FWD_RATE, location=location)
     return _extract_series_from_df(df, QueryType.ATM_FWD_RATE)
 
 
@@ -668,7 +734,7 @@ def swaption_atm_fwd_rate(asset: Asset, expiration_tenor: str = None, terminatio
 def swaption_vol(asset: Asset, expiration_tenor: str = None, termination_tenor: str = None,
                  relative_strike: float = None, benchmark_type: str = None,
                  floating_rate_tenor: str = None,
-                 clearing_house: str = None, *, source: str = None,
+                 clearing_house: str = None, location: PricingLocation = None, *, source: str = None,
                  real_time: bool = False) -> Series:
     """
     GS end-of-day implied normal volatility for swaption vol matrices.
@@ -680,6 +746,7 @@ def swaption_vol(asset: Asset, expiration_tenor: str = None, termination_tenor: 
     :param benchmark_type: benchmark type e.g. LIBOR
     :param floating_rate_tenor: floating index rate
     :param clearing_house: Example - "LCH", "EUREX", "JSCC", "CME"
+    :param location: Example - "TKO", "LDN", "NYC"
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: swaption implied normal volatility curve
@@ -687,7 +754,7 @@ def swaption_vol(asset: Asset, expiration_tenor: str = None, termination_tenor: 
     df = _get_swaption_measure(asset, benchmark_type, floating_rate_tenor, "0b", expiration_tenor,
                                termination_tenor, relative_strike, clearing_house, source=source, real_time=real_time,
                                query_type=QueryType.SWAPTION_VOL, start=DataContext.current.start_date,
-                               end=DataContext.current.end_date)
+                               end=DataContext.current.end_date, location=location)
     return _extract_series_from_df(df, QueryType.SWAPTION_VOL)
 
 
@@ -697,7 +764,7 @@ def swaption_vol(asset: Asset, expiration_tenor: str = None, termination_tenor: 
 def midcurve_vol(asset: Asset, expiration_tenor: str, forward_tenor: str, termination_tenor: str,
                  relative_strike: float = None, benchmark_type: str = None,
                  floating_rate_tenor: str = None,
-                 clearing_house: str = None, *, source: str = None,
+                 clearing_house: str = None, location: PricingLocation = None, *, source: str = None,
                  real_time: bool = False) -> Series:
     """
     GS end-of-day implied normal volatility for swaption vol matrices.
@@ -710,6 +777,7 @@ def midcurve_vol(asset: Asset, expiration_tenor: str, forward_tenor: str, termin
     :param benchmark_type: benchmark type e.g. LIBOR
     :param floating_rate_tenor: floating index rate
     :param clearing_house: Example - "LCH", "EUREX", "JSCC", "CME"
+    :param location: Example - "TKO", "LDN", "NYC"
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: swaption implied normal volatility curve
@@ -717,7 +785,7 @@ def midcurve_vol(asset: Asset, expiration_tenor: str, forward_tenor: str, termin
     df = _get_swaption_measure(asset, benchmark_type, floating_rate_tenor, forward_tenor, expiration_tenor,
                                termination_tenor, relative_strike, clearing_house, source=source, real_time=real_time,
                                query_type=QueryType.MIDCURVE_VOL, start=DataContext.current.start_date,
-                               end=DataContext.current.end_date)
+                               end=DataContext.current.end_date, location=location)
     return _extract_series_from_df(df, QueryType.MIDCURVE_VOL)
 
 
@@ -727,7 +795,7 @@ def midcurve_vol(asset: Asset, expiration_tenor: str, forward_tenor: str, termin
 def midcurve_atm_fwd_rate(asset: Asset, expiration_tenor: str, forward_tenor: str, termination_tenor: str,
                           benchmark_type: str = None,
                           floating_rate_tenor: str = None,
-                          clearing_house: str = None, *, source: str = None,
+                          clearing_house: str = None, location: PricingLocation = None, *, source: str = None,
                           real_time: bool = False) -> Series:
     """
     GS end-of-day atm forward rate for swaption vol matrices.
@@ -739,6 +807,7 @@ def midcurve_atm_fwd_rate(asset: Asset, expiration_tenor: str, forward_tenor: st
     :param benchmark_type: benchmark type e.g. LIBOR
     :param floating_rate_tenor: floating index rate
     :param clearing_house: Example - "LCH", "EUREX", "JSCC", "CME"
+    :param location: Example - "TKO", "LDN", "NYC"
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: swaption implied normal volatility curve
@@ -748,7 +817,7 @@ def midcurve_atm_fwd_rate(asset: Asset, expiration_tenor: str, forward_tenor: st
                                termination_tenor=termination_tenor, clearing_house=clearing_house, source=source,
                                real_time=real_time, start=DataContext.current.start_date,
                                end=DataContext.current.end_date,
-                               query_type=QueryType.MIDCURVE_ATM_FWD_RATE)
+                               query_type=QueryType.MIDCURVE_ATM_FWD_RATE, location=location)
     return _extract_series_from_df(df, QueryType.MIDCURVE_ATM_FWD_RATE)
 
 
@@ -759,7 +828,8 @@ def _get_swaption_measure(asset: Asset, benchmark_type: str = None, floating_rat
                           clearing_house: str = None,
                           start: str = DataContext.current.start_date, end: str = DataContext.current.end_date,
                           source: str = None, real_time: bool = False, allow_many: bool = False,
-                          query_type: QueryType = QueryType.SWAPTION_PREMIUM) -> Series:
+                          query_type: QueryType = QueryType.SWAPTION_PREMIUM,
+                          location: PricingLocation = None) -> Series:
     if real_time:
         raise NotImplementedError(f'realtime {query_type.value} not implemented')
     currency = CurrencyEnum(asset.get_identifier(AssetIdentifier.BLOOMBERG_ID))
@@ -775,8 +845,16 @@ def _get_swaption_measure(asset: Asset, benchmark_type: str = None, floating_rat
     rate_mqid = _get_tdapi_rates_assets(**query, allow_many=allow_many)
     if isinstance(rate_mqid, str):
         rate_mqid = [rate_mqid]
+
+    if location is None:
+        pricing_location = _default_pricing_location(currency)
+    else:
+        pricing_location = PricingLocation(location)
+    pricing_location = _pricing_location_normalized(pricing_location, currency)
+
+    where = dict(pricingLocation=pricing_location.value)
     with DataContext(start, end):
-        q = GsDataApi.build_market_data_query(rate_mqid, query_type, source=source,
+        q = GsDataApi.build_market_data_query(rate_mqid, query_type, where=where, source=source,
                                               real_time=real_time)
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
@@ -787,7 +865,7 @@ def _swaption_build_asset_query(currency, benchmark_type=None, effective_date=No
                                 expiration_tenor=None,
                                 floating_rate_tenor=None, strike_reference=None,
                                 termination_tenor=None,
-                                clearingHouse=None):
+                                clearinghouse=None):
     benchmark_type = swaptions_defaults_provider.get_swaption_parameter(currency, 'benchmarkType', benchmark_type)
 
     floating_rate_option = swaptions_defaults_provider.get_floating_rate_option_for_benchmark(currency, benchmark_type)
@@ -809,7 +887,7 @@ def _swaption_build_asset_query(currency, benchmark_type=None, effective_date=No
                                benchmark_type)
     forward_tenor = _check_forward_tenor(effective_date)
     strike_reference = _check_strike_reference(strike_reference)
-    clearingHouse = swaptions_defaults_provider.get_swaption_parameter(currency, 'clearingHouse', clearingHouse)
+    clearinghouse = swaptions_defaults_provider.get_swaption_parameter(currency, 'clearingHouse', clearinghouse)
     query = dict(type='Swaption', asset_parameters_notional_currency=currency.name)
     if termination_tenor is not None:
         query["asset_parameters_termination_date"] = termination_tenor
@@ -821,8 +899,8 @@ def _swaption_build_asset_query(currency, benchmark_type=None, effective_date=No
         query["asset_parameters_expiration_date"] = expiration_tenor
     if strike_reference is not None:
         query["asset_parameters_strike"] = strike_reference
-    if clearingHouse is not None:
-        query["asset_parameters_clearing_house"] = clearingHouse
+    if clearinghouse is not None:
+        query["asset_parameters_clearing_house"] = clearinghouse
     if forward_tenor is not None:
         query["asset_parameters_effective_date"] = forward_tenor
     if expiration_tenor is not None:
@@ -868,7 +946,7 @@ def _is_valid_relative_date_tenor(tenor):
 def swaption_vol_smile(asset: Asset, expiration_tenor: str, termination_tenor: str,
                        pricing_date: Optional[GENERIC_DATE] = None, benchmark_type: str = None,
                        floating_rate_tenor: str = None,
-                       clearing_house: str = None, *, source: str = None,
+                       clearing_house: str = None, location: PricingLocation = None, *, source: str = None,
                        real_time: bool = False) -> Series:
     """
     GS end-of-day implied normal volatility for swaption vol matrices.
@@ -880,6 +958,7 @@ def swaption_vol_smile(asset: Asset, expiration_tenor: str, termination_tenor: s
     :param benchmark_type: benchmark type e.g. LIBOR
     :param floating_rate_tenor: floating index rate
     :param clearing_house: Example - "LCH", "EUREX", "JSCC", "CME"
+    :param location: Example - "TKO", "LDN", "NYC"
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: swaption implied normal volatility curve
@@ -889,14 +968,16 @@ def swaption_vol_smile(asset: Asset, expiration_tenor: str, termination_tenor: s
 
     _logger.debug('where expiry=%s, tenor=%s', expiration_tenor, termination_tenor)
     currency = CurrencyEnum(asset.get_identifier(AssetIdentifier.BLOOMBERG_ID))
-    location = swaptions_defaults_provider.get_swaption_parameter(currency, "pricingLocation")
+    if location is None:
+        location = PricingLocation(swaptions_defaults_provider.get_swaption_parameter(currency, "pricingLocation"))
+
     start, end = _range_from_pricing_date(location, pricing_date)
     df = _get_swaption_measure(asset, expiration_tenor=expiration_tenor, termination_tenor=termination_tenor,
                                strike_reference=TdapiRatesDefaultsProvider.EMPTY_PROPERTY, source=source,
                                query_type=QueryType.SWAPTION_VOL,
                                benchmark_type=benchmark_type,
                                floating_rate_tenor=floating_rate_tenor,
-                               clearing_house=clearing_house,
+                               clearing_house=clearing_house, location=location,
                                start=start, end=end, allow_many=True)
 
     dataset_ids = getattr(df, 'dataset_ids', ())
@@ -921,7 +1002,7 @@ def swaption_vol_smile(asset: Asset, expiration_tenor: str, termination_tenor: s
 def swaption_vol_term(asset: Asset, tenor_type: SwaptionTenorType, tenor: str, relative_strike: float,
                       pricing_date: Optional[GENERIC_DATE] = None, benchmark_type: str = None,
                       floating_rate_tenor: str = None,
-                      clearing_house: str = None, *, source: str = None,
+                      clearing_house: str = None, location: PricingLocation = None, *, source: str = None,
                       real_time: bool = False) -> Series:
     """
     Term structure of GS end-of-day implied normal volatility for swaption vol matrices.
@@ -934,6 +1015,7 @@ def swaption_vol_term(asset: Asset, tenor_type: SwaptionTenorType, tenor: str, r
     :param benchmark_type: benchmark type e.g. LIBOR
     :param floating_rate_tenor: floating index rate
     :param clearing_house: Example - "LCH", "EUREX", "JSCC", "CME"
+    :param location: Example - "TKO", "LDN", "NYC"
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: swaption implied normal volatility term structure
@@ -943,8 +1025,9 @@ def swaption_vol_term(asset: Asset, tenor_type: SwaptionTenorType, tenor: str, r
         raise NotImplementedError('realtime swaption_vol not implemented')
 
     currency = CurrencyEnum(asset.get_identifier(AssetIdentifier.BLOOMBERG_ID))
-    location = swaptions_defaults_provider.get_swaption_parameter(currency, "pricingLocation")
-    start, end = _range_from_pricing_date(location, pricing_date)
+    if location is None:
+        location = PricingLocation(swaptions_defaults_provider.get_swaption_parameter(currency, "pricingLocation"))
+    start, end = _range_from_pricing_date(location.value, pricing_date)
     if tenor_type == SwaptionTenorType.OPTION_EXPIRY:
         tenor_to_plot = 'terminationTenor'
         df = _get_swaption_measure(asset, expiration_tenor=tenor,
@@ -953,7 +1036,7 @@ def swaption_vol_term(asset: Asset, tenor_type: SwaptionTenorType, tenor: str, r
                                    query_type=QueryType.SWAPTION_VOL,
                                    benchmark_type=benchmark_type,
                                    floating_rate_tenor=floating_rate_tenor,
-                                   clearing_house=clearing_house,
+                                   clearing_house=clearing_house, location=location,
                                    source=source,
                                    start=start, end=end, allow_many=True)
     else:
@@ -987,7 +1070,8 @@ def swaption_vol_term(asset: Asset, tenor_type: SwaptionTenorType, tenor: str, r
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
               [MeasureDependency(id_provider=_currency_to_tdapi_swap_rate_asset, query_type=QueryType.SWAP_RATE)])
 def swap_rate(asset: Asset, swap_tenor: str, benchmark_type: str = None, floating_rate_tenor: str = None,
-              forward_tenor: Optional[GENERIC_DATE] = None, clearing_house: _ClearingHouse = None, *,
+              forward_tenor: Optional[GENERIC_DATE] = None, clearing_house: _ClearingHouse = None,
+              location: PricingLocation = None, *,
               source: str = None, real_time: bool = False) -> Series:
     """
     GS end-of-day Fixed-Floating interest rate swap (IRS) curves across major currencies.
@@ -1000,6 +1084,7 @@ def swap_rate(asset: Asset, swap_tenor: str, benchmark_type: str = None, floatin
     :param forward_tenor: absolute / relative date representation of forward starting point eg: '1y' or 'Spot' for
             spot starting swaps, 'imm1' or 'frb1'
     :param clearing_house: Example - "LCH", "EUREX", "JSCC", "CME"
+    :param location: Example - "TKO", "LDN", "NYC"
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: swap rate curve
@@ -1007,7 +1092,7 @@ def swap_rate(asset: Asset, swap_tenor: str, benchmark_type: str = None, floatin
     df = _get_swap_data(asset=asset, swap_tenor=swap_tenor, benchmark_type=benchmark_type,
                         floating_rate_tenor=floating_rate_tenor, forward_tenor=forward_tenor,
                         clearing_house=clearing_house, source=source,
-                        real_time=real_time, query_type=QueryType.SWAP_RATE)
+                        real_time=real_time, query_type=QueryType.SWAP_RATE, location=location)
 
     series = ExtendedSeries() if df.empty else ExtendedSeries(df['swapRate'])
     series.dataset_ids = getattr(df, 'dataset_ids', ())
@@ -1016,9 +1101,10 @@ def swap_rate(asset: Asset, swap_tenor: str, benchmark_type: str = None, floatin
 
 def _get_basis_swap_kwargs(asset: Asset, spread_benchmark_type: str = None, spread_tenor: str = None,
                            reference_benchmark_type: str = None, reference_tenor: str = None,
-                           forward_tenor: Optional[GENERIC_DATE] = None, clearing_house: _ClearingHouse = None) -> dict:
+                           forward_tenor: Optional[GENERIC_DATE] = None, clearing_house: _ClearingHouse = None,
+                           location: PricingLocation = None) -> dict:
     currency = CurrencyEnum(asset.get_identifier(AssetIdentifier.BLOOMBERG_ID))
-    if currency.value not in ['JPY', 'EUR', 'USD', 'GBP']:
+    if currency.value not in ['JPY', 'EUR', 'USD', 'GBP', 'CHF', 'DKK', 'NOK', 'SEK', 'CAD', 'AUD', 'NZD']:
         raise NotImplementedError('Data not available for {} basis swap rates'.format(currency.value))
 
     clearing_house = _check_clearing_house(clearing_house)
@@ -1036,13 +1122,20 @@ def _get_basis_swap_kwargs(asset: Asset, spread_benchmark_type: str = None, spre
                                leg['benchmark_type'])
 
     forward_tenor = _check_forward_tenor(forward_tenor)
+
+    if location is None:
+        pricing_location = PricingLocation(legs_w_defaults['spread']['pricing_location'].value)
+    else:
+        pricing_location = PricingLocation(location)
+    pricing_location = _pricing_location_normalized(pricing_location, currency)
+
     kwargs = dict(type='BasisSwap', asset_parameters_payer_rate_option=legs_w_defaults['spread']['benchmark_type'],
                   asset_parameters_payer_designated_maturity=legs_w_defaults['spread']['floating_rate_tenor'],
                   asset_parameters_receiver_rate_option=legs_w_defaults['reference']['benchmark_type'],
                   asset_parameters_receiver_designated_maturity=legs_w_defaults['reference']['floating_rate_tenor'],
                   asset_parameters_clearing_house=clearing_house.value, asset_parameters_effective_date=forward_tenor,
                   asset_parameters_notional_currency=currency.name,
-                  pricing_location=legs_w_defaults['spread']['pricing_location'].value)
+                  pricing_location=pricing_location)
     kwargs = _match_floating_tenors(kwargs)
     return kwargs
 
@@ -1053,7 +1146,8 @@ def _get_basis_swap_kwargs(asset: Asset, spread_benchmark_type: str = None, spre
 def basis_swap_spread(asset: Asset, swap_tenor: str = '1y',
                       spread_benchmark_type: str = None, spread_tenor: str = None,
                       reference_benchmark_type: str = None, reference_tenor: str = None,
-                      forward_tenor: Optional[GENERIC_DATE] = None, clearing_house: _ClearingHouse = None, *,
+                      forward_tenor: Optional[GENERIC_DATE] = None, clearing_house: _ClearingHouse = None,
+                      location: PricingLocation = None, *,
                       source: str = None, real_time: bool = False, ) -> Series:
     """
     GS end-of-day Floating-Floating interest rate swap (IRS) curves across major currencies.
@@ -1068,6 +1162,7 @@ def basis_swap_spread(asset: Asset, swap_tenor: str = '1y',
     :param forward_tenor: absolute / relative date representation of forward starting point eg: '1y' or 'Spot' for
             spot starting swaps, 'imm1' or 'frb1'
     :param clearing_house: Example - "LCH", "EUREX", "JSCC", "CME"
+    :param location: Example - "TKO", "LDN", "NYC"
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: swap rate curve
@@ -1080,7 +1175,7 @@ def basis_swap_spread(asset: Asset, swap_tenor: str = '1y',
 
     kwargs = _get_basis_swap_kwargs(asset=asset, spread_benchmark_type=spread_benchmark_type, spread_tenor=spread_tenor,
                                     reference_benchmark_type=reference_benchmark_type, reference_tenor=reference_tenor,
-                                    forward_tenor=forward_tenor, clearing_house=clearing_house)
+                                    forward_tenor=forward_tenor, clearing_house=clearing_house, location=location)
     kwargs['asset_parameters_termination_date'] = swap_tenor
 
     rate_mqid = _get_tdapi_rates_assets(**kwargs)
@@ -1094,6 +1189,8 @@ def basis_swap_spread(asset: Asset, swap_tenor: str = '1y',
     where = _get_basis_swap_csa_terms(kwargs['asset_parameters_notional_currency'],
                                       kwargs['asset_parameters_payer_rate_option'],
                                       kwargs['asset_parameters_receiver_rate_option'])
+
+    where['pricingLocation'] = kwargs['pricing_location'].value
 
     q = GsDataApi.build_market_data_query([rate_mqid], QueryType.BASIS_SWAP_RATE, where=where,
                                           source=source, real_time=real_time)
@@ -1109,7 +1206,8 @@ def basis_swap_spread(asset: Asset, swap_tenor: str = '1y',
               [MeasureDependency(id_provider=_currency_to_tdapi_swap_rate_asset, query_type=QueryType.SWAP_RATE)])
 def swap_term_structure(asset: Asset, benchmark_type: str = None, floating_rate_tenor: str = None,
                         tenor_type: _SwapTenorType = None, tenor: Optional[GENERIC_DATE] = None,
-                        clearing_house: _ClearingHouse = None, pricing_date: Optional[GENERIC_DATE] = None,
+                        clearing_house: _ClearingHouse = None, location: PricingLocation = None,
+                        pricing_date: Optional[GENERIC_DATE] = None,
                         *, source: str = None, real_time: bool = False) -> Series:
     """
     GS end-of-day Fixed-Floating interest rate swap (IRS) term structure across major currencies.
@@ -1120,6 +1218,7 @@ def swap_term_structure(asset: Asset, benchmark_type: str = None, floating_rate_
     :param tenor_type: specify which tenor should be fixed, SWAP_TENOR or FORWARD_TENOR
     :param tenor: absolute / relative date representation of forward starting point or swap maturity
     :param clearing_house: Example - "LCH", "EUREX", "JSCC", "CME"
+    :param location: Example - "TKO", "LDN", "NYC"
     :param pricing_date: YYYY-MM-DD or relative date
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
@@ -1143,17 +1242,26 @@ def swap_term_structure(asset: Asset, benchmark_type: str = None, floating_rate_
         raise MqValueError('invalid floating rate tenor ' + defaults['floating_rate_tenor'] + ' for index: ' +
                            defaults['benchmark_type'])
 
-    calendar = defaults['pricing_location'].value
+    if location is None:
+        pricing_location = _default_pricing_location(currency)
+    else:
+        pricing_location = location
+    pricing_location = _pricing_location_normalized(pricing_location, currency)
+
+    calendar = pricing_location.value
     if pricing_date is not None and pricing_date in list(GsCalendar.get(calendar).holidays):
         raise MqValueError('Specified pricing date is a holiday in {} calendar'.format(calendar))
 
     fixed_rate = 'ATM'
+
+    where = dict(pricingLocation=pricing_location.value)
+
     kwargs = dict(type='Swap', asset_parameters_floating_rate_option=defaults['benchmark_type'],
                   asset_parameters_fixed_rate=fixed_rate, asset_parameters_clearing_house=clearing_house.value,
                   asset_parameters_floating_rate_designated_maturity=defaults['floating_rate_tenor'],
-                  asset_parameters_notional_currency=currency.name, pricing_location=defaults['pricing_location'].value)
+                  asset_parameters_notional_currency=currency.name, pricing_location=pricing_location.value)
     kwargs[tenor_dict['tenor_dataset_field']] = tenor_dict['tenor']
-    rate_mqids = _get_tdapi_rates_assets(**kwargs)
+    rate_mqids = _get_tdapi_rates_assets(allow_many=True, **kwargs)
     if isinstance(rate_mqids, str):
         rate_mqids = [rate_mqids]
     _logger.debug('assets returned %s', ', '.join(rate_mqids))
@@ -1162,7 +1270,7 @@ def swap_term_structure(asset: Asset, benchmark_type: str = None, floating_rate_
                   tenor_dict['tenor'], defaults['pricing_location'].value)
     start, end = _range_from_pricing_date(calendar, pricing_date)
     with DataContext(start, end):
-        q = GsDataApi.build_market_data_query(rate_mqids, QueryType.SWAP_RATE,
+        q = GsDataApi.build_market_data_query(rate_mqids, QueryType.SWAP_RATE, where=where,
                                               source=source, real_time=real_time)
         _logger.debug('q %s', q)
         df = _market_data_timed(q)
@@ -1198,6 +1306,7 @@ def basis_swap_term_structure(asset: Asset, spread_benchmark_type: str = None, s
                               reference_benchmark_type: str = None, reference_tenor: str = None,
                               tenor_type: _SwapTenorType = None, tenor: Optional[GENERIC_DATE] = None,
                               clearing_house: _ClearingHouse = None,
+                              location: PricingLocation = None,
                               pricing_date: Optional[GENERIC_DATE] = None,
                               *, source: str = None, real_time: bool = False, ) -> Series:
     """
@@ -1212,6 +1321,7 @@ def basis_swap_term_structure(asset: Asset, spread_benchmark_type: str = None, s
     :param tenor_type: specify which tenor should be fixed, SWAP_TENOR or FORWARD_TENOR
     :param tenor: absolute / relative date representation of forward starting point or swap maturity
     :param clearing_house: Example - "LCH", "EUREX", "JSCC", "CME"
+    :param location: Example - "TKO", "LDN", "NYC"
     :param pricing_date: YYYY-MM-DD or relative date
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
@@ -1223,13 +1333,13 @@ def basis_swap_term_structure(asset: Asset, spread_benchmark_type: str = None, s
     tenor_dict = _check_term_structure_tenor(tenor_type=tenor_type, tenor=tenor)
     kwargs = _get_basis_swap_kwargs(asset=asset, spread_benchmark_type=spread_benchmark_type, spread_tenor=spread_tenor,
                                     reference_benchmark_type=reference_benchmark_type, reference_tenor=reference_tenor,
-                                    clearing_house=clearing_house)
+                                    clearing_house=clearing_house, location=location)
     kwargs[tenor_dict['tenor_dataset_field']] = tenor_dict['tenor']
-    calendar = kwargs['pricing_location']
+    calendar = kwargs['pricing_location'].value
     if pricing_date is not None and pricing_date in list(GsCalendar.get(calendar).holidays):
         raise MqValueError('Specified pricing date is a holiday in {} calendar'.format(calendar))
 
-    rate_mqids = _get_tdapi_rates_assets(**kwargs)
+    rate_mqids = _get_tdapi_rates_assets(allow_many=True, **kwargs)
     if isinstance(rate_mqids, str):  # single asset returned
         rate_mqids = [rate_mqids]
     _logger.debug('assets returned %s', ', '.join(rate_mqids))
@@ -1238,11 +1348,13 @@ def basis_swap_term_structure(asset: Asset, spread_benchmark_type: str = None, s
                   kwargs['asset_parameters_payer_rate_option'], kwargs['asset_parameters_payer_designated_maturity'],
                   kwargs['asset_parameters_receiver_rate_option'],
                   kwargs['asset_parameters_receiver_designated_maturity'],
-                  kwargs[tenor_dict['tenor_dataset_field']], tenor_dict['tenor'], kwargs['pricing_location'])
+                  kwargs[tenor_dict['tenor_dataset_field']], tenor_dict['tenor'], kwargs['pricing_location'].value)
 
     where = _get_basis_swap_csa_terms(kwargs['asset_parameters_notional_currency'],
                                       kwargs['asset_parameters_payer_rate_option'],
                                       kwargs['asset_parameters_receiver_rate_option'])
+
+    where['pricingLocation'] = kwargs['pricing_location'].value
     start, end = _range_from_pricing_date(calendar, pricing_date)
     with DataContext(start, end):
         q = GsDataApi.build_market_data_query(rate_mqids, QueryType.BASIS_SWAP_RATE, where=where,
