@@ -211,7 +211,7 @@ class GsPortfolioApi:
                        end_date: dt.date = None) -> dict:
         url = f'/portfolios/{portfolio_id}/aum?'
         if start_date:
-            url += f'&startDate={start_date}'
+            url += f"&startDate={start_date.strftime('%Y-%m-%d')}"
         if end_date:
-            url += f'&endDate={end_date}'
+            url += f"&endDate={end_date.strftime('%Y-%m-%d')}"
         return GsSession.current._get(url)['data']
