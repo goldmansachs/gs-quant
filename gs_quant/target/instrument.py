@@ -1278,8 +1278,9 @@ class EqFuture(Instrument):
         multiplier: float = None,
         expiration_date: Union[datetime.date, str] = None,
         buy_sell: Union[BuySell, str] = None,
-        price: float = 0.0,
         quantity: float = None,
+        currency: Union[Currency, str] = None,
+        traded_price: float = 0.0,
         name: str = None
     ):        
         super().__init__()
@@ -1289,8 +1290,9 @@ class EqFuture(Instrument):
         self.multiplier = multiplier
         self.expiration_date = expiration_date
         self.buy_sell = buy_sell
-        self.price = price
         self.quantity = quantity
+        self.currency = currency
+        self.traded_price = traded_price
         self.name = name
 
     @property
@@ -1362,16 +1364,6 @@ class EqFuture(Instrument):
         self.__buy_sell = get_enum_value(BuySell, value)        
 
     @property
-    def price(self) -> float:
-        """Traded price"""
-        return self.__price
-
-    @price.setter
-    def price(self, value: float):
-        self._property_changed('price')
-        self.__price = value        
-
-    @property
     def quantity(self) -> float:
         return self.__quantity
 
@@ -1379,6 +1371,26 @@ class EqFuture(Instrument):
     def quantity(self, value: float):
         self._property_changed('quantity')
         self.__quantity = value        
+
+    @property
+    def currency(self) -> Union[Currency, str]:
+        """Currency"""
+        return self.__currency
+
+    @currency.setter
+    def currency(self, value: Union[Currency, str]):
+        self._property_changed('currency')
+        self.__currency = get_enum_value(Currency, value)        
+
+    @property
+    def traded_price(self) -> float:
+        """Traded price"""
+        return self.__traded_price
+
+    @traded_price.setter
+    def traded_price(self, value: float):
+        self._property_changed('traded_price')
+        self.__traded_price = value        
 
 
 class EqOption(Instrument):
@@ -1848,8 +1860,8 @@ class EqStock(Instrument):
         identifier: str = None,
         identifier_type: Union[UnderlierType, str] = None,
         buy_sell: Union[BuySell, str] = None,
-        price: float = 0.0,
-        currency: str = None,
+        traded_price: float = 0.0,
+        currency: Union[Currency, str] = None,
         quantity: float = None,
         settlement_date: datetime.date = None,
         name: str = None
@@ -1858,7 +1870,7 @@ class EqStock(Instrument):
         self.identifier = identifier
         self.identifier_type = identifier_type
         self.buy_sell = buy_sell
-        self.price = price
+        self.traded_price = traded_price
         self.currency = currency
         self.quantity = quantity
         self.settlement_date = settlement_date
@@ -1904,23 +1916,24 @@ class EqStock(Instrument):
         self.__buy_sell = get_enum_value(BuySell, value)        
 
     @property
-    def price(self) -> float:
+    def traded_price(self) -> float:
         """Traded price"""
-        return self.__price
+        return self.__traded_price
 
-    @price.setter
-    def price(self, value: float):
-        self._property_changed('price')
-        self.__price = value        
+    @traded_price.setter
+    def traded_price(self, value: float):
+        self._property_changed('traded_price')
+        self.__traded_price = value        
 
     @property
-    def currency(self) -> str:
+    def currency(self) -> Union[Currency, str]:
+        """Currency"""
         return self.__currency
 
     @currency.setter
-    def currency(self, value: str):
+    def currency(self, value: Union[Currency, str]):
         self._property_changed('currency')
-        self.__currency = value        
+        self.__currency = get_enum_value(Currency, value)        
 
     @property
     def quantity(self) -> float:

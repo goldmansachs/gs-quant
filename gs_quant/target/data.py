@@ -25,7 +25,7 @@ class DelayExclusionType(EnumBase, Enum):
     
     """Type of the delay exclusion"""
 
-    LAST_DAY_OF_THE_MONTH = 'LAST_DAY_OF_THE_MONTH'    
+    LAST_DAY_OF_THE_MONTH = 'LAST_DAY_OF_THE_MONTH'
 
 
 class DevelopmentStatus(EnumBase, Enum):    
@@ -33,7 +33,7 @@ class DevelopmentStatus(EnumBase, Enum):
     """The status of development of this dataset. Controls rate limit on query/upload."""
 
     Development = 'Development'
-    Production = 'Production'    
+    Production = 'Production'
 
 
 class FieldFormat(EnumBase, Enum):    
@@ -42,13 +42,13 @@ class FieldFormat(EnumBase, Enum):
        formats (from JSON schema specification)."""
 
     date = 'date'
-    date_time = 'date-time'    
+    date_time = 'date-time'
 
 
 class MarketDataFrequency(EnumBase, Enum):    
     
     Real_Time = 'Real Time'
-    End_Of_Day = 'End Of Day'    
+    End_Of_Day = 'End Of Day'
 
 
 class MarketDataMeasure(EnumBase, Enum):    
@@ -56,7 +56,7 @@ class MarketDataMeasure(EnumBase, Enum):
     Last = 'Last'
     Curve = 'Curve'
     Close_Change = 'Close Change'
-    Previous_Close = 'Previous Close'    
+    Previous_Close = 'Previous Close'
 
 
 class MeasureEntityType(EnumBase, Enum):    
@@ -71,7 +71,7 @@ class MeasureEntityType(EnumBase, Enum):
     REPORT = 'REPORT'
     HEDGE = 'HEDGE'
     PORTFOLIO = 'PORTFOLIO'
-    RISK_MODEL = 'RISK_MODEL'    
+    RISK_MODEL = 'RISK_MODEL'
 
 
 class AdvancedFilter(Base):
@@ -2596,6 +2596,229 @@ class DataSetCatalogEntry(Base):
         self.last_updated_time = last_updated_time
         self.start_date = start_date
         self.mdapi = mdapi
+
+    @property
+    def id(self) -> str:
+        """Marquee unique identifier"""
+        return self.__id
+
+    @id.setter
+    def id(self, value: str):
+        self._property_changed('id')
+        self.__id = value        
+
+    @property
+    def name(self) -> str:
+        """Display name of Dataset"""
+        return self.__name
+
+    @name.setter
+    def name(self, value: str):
+        self._property_changed('name')
+        self.__name = value        
+
+    @property
+    def description(self) -> str:
+        """Description of Dataset"""
+        return self.__description
+
+    @description.setter
+    def description(self, value: str):
+        self._property_changed('description')
+        self.__description = value        
+
+    @property
+    def short_description(self) -> str:
+        """Short description of dataset."""
+        return self.__short_description
+
+    @short_description.setter
+    def short_description(self, value: str):
+        self._property_changed('short_description')
+        self.__short_description = value        
+
+    @property
+    def vendor(self) -> str:
+        """Vendor who publishes the dataset"""
+        return self.__vendor
+
+    @vendor.setter
+    def vendor(self, value: str):
+        self._property_changed('vendor')
+        self.__vendor = value        
+
+    @property
+    def data_product(self) -> str:
+        """Product that dataset belongs to."""
+        return self.__data_product
+
+    @data_product.setter
+    def data_product(self, value: str):
+        self._property_changed('data_product')
+        self.__data_product = value        
+
+    @property
+    def terms(self) -> str:
+        """Terms and conditions associated with this dataset"""
+        return self.__terms
+
+    @terms.setter
+    def terms(self, value: str):
+        self._property_changed('terms')
+        self.__terms = value        
+
+    @property
+    def fields(self) -> dict:
+        """An object mapping the field names supported by this dataset to JSON schema
+           definitions"""
+        return self.__fields
+
+    @fields.setter
+    def fields(self, value: dict):
+        self._property_changed('fields')
+        self.__fields = value        
+
+    @property
+    def internal_only(self) -> bool:
+        """Whether the dataset is internal only"""
+        return self.__internal_only
+
+    @internal_only.setter
+    def internal_only(self, value: bool):
+        self._property_changed('internal_only')
+        self.__internal_only = value        
+
+    @property
+    def actions(self) -> Tuple[str, ...]:
+        """Actions on this object for which the current user is entitled."""
+        return self.__actions
+
+    @actions.setter
+    def actions(self, value: Tuple[str, ...]):
+        self._property_changed('actions')
+        self.__actions = value        
+
+    @property
+    def default_start_seconds(self) -> float:
+        """Default start time, in seconds before end time"""
+        return self.__default_start_seconds
+
+    @default_start_seconds.setter
+    def default_start_seconds(self, value: float):
+        self._property_changed('default_start_seconds')
+        self.__default_start_seconds = value        
+
+    @property
+    def identifier_mapper_name(self) -> str:
+        """Name of identifier mapper"""
+        return self.__identifier_mapper_name
+
+    @identifier_mapper_name.setter
+    def identifier_mapper_name(self, value: str):
+        self._property_changed('identifier_mapper_name')
+        self.__identifier_mapper_name = value        
+
+    @property
+    def identifier_updater_name(self) -> str:
+        """Name of identifier updater"""
+        return self.__identifier_updater_name
+
+    @identifier_updater_name.setter
+    def identifier_updater_name(self, value: str):
+        self._property_changed('identifier_updater_name')
+        self.__identifier_updater_name = value        
+
+    @property
+    def default_delay_minutes(self) -> float:
+        """Default delay for market data in minutes"""
+        return self.__default_delay_minutes
+
+    @default_delay_minutes.setter
+    def default_delay_minutes(self, value: float):
+        self._property_changed('default_delay_minutes')
+        self.__default_delay_minutes = value        
+
+    @property
+    def apply_market_data_entitlements(self) -> bool:
+        """True if market data entitlements are to be applied"""
+        return self.__apply_market_data_entitlements
+
+    @apply_market_data_entitlements.setter
+    def apply_market_data_entitlements(self, value: bool):
+        self._property_changed('apply_market_data_entitlements')
+        self.__apply_market_data_entitlements = value        
+
+    @property
+    def sample(self) -> Tuple[FieldValueMap, ...]:
+        """Sample row(s) from dataset"""
+        return self.__sample
+
+    @sample.setter
+    def sample(self, value: Tuple[FieldValueMap, ...]):
+        self._property_changed('sample')
+        self.__sample = value        
+
+    @property
+    def parameters(self) -> DataSetParameters:
+        """Dataset parameters."""
+        return self.__parameters
+
+    @parameters.setter
+    def parameters(self, value: DataSetParameters):
+        self._property_changed('parameters')
+        self.__parameters = value        
+
+    @property
+    def tags(self) -> Tuple[str, ...]:
+        """Metadata associated with the object. Provide an array of strings which will be
+           indexed for search and locating related objects"""
+        return self.__tags
+
+    @tags.setter
+    def tags(self, value: Tuple[str, ...]):
+        self._property_changed('tags')
+        self.__tags = value        
+
+    @property
+    def created_time(self) -> str:
+        """Time of creation for dataset definition."""
+        return self.__created_time
+
+    @created_time.setter
+    def created_time(self, value: str):
+        self._property_changed('created_time')
+        self.__created_time = value        
+
+    @property
+    def last_updated_time(self) -> str:
+        """Time of most recent change to dataset definition."""
+        return self.__last_updated_time
+
+    @last_updated_time.setter
+    def last_updated_time(self, value: str):
+        self._property_changed('last_updated_time')
+        self.__last_updated_time = value        
+
+    @property
+    def start_date(self) -> datetime.date:
+        """The start of this data set"""
+        return self.__start_date
+
+    @start_date.setter
+    def start_date(self, value: datetime.date):
+        self._property_changed('start_date')
+        self.__start_date = value        
+
+    @property
+    def mdapi(self) -> MDAPI:
+        """Defines MDAPI fields."""
+        return self.__mdapi
+
+    @mdapi.setter
+    def mdapi(self, value: MDAPI):
+        self._property_changed('mdapi')
+        self.__mdapi = value        
+
 
 class DataSetFieldEntity(Base):
         

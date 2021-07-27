@@ -2582,7 +2582,7 @@ class AssetToInstrumentResponse(Base):
         asset_id: str,
         name: str,
         instrument: InstrumentBase,
-        size_field: str
+        size_field: str = None
     ):        
         super().__init__()
         self.asset_id = asset_id

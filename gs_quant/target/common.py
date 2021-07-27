@@ -115,12 +115,12 @@ class AssetType(EnumBase, Enum):
     Custom_Basket = 'Custom Basket'
     Cryptocurrency = 'Cryptocurrency'
     Default_Swap = 'Default Swap'
-    DoubleKnockout = 'Double Knockout'
-    DoubleTouch = 'Double Touch'
+    DoubleKnockout = 'DoubleKnockout'
+    DoubleTouch = 'DoubleTouch'
     Economic = 'Economic'
     Endowment = 'Endowment'
-    EuropeanKnockout = 'European Knockout'
     Equity_Basket = 'Equity Basket'
+    EuropeanKnockout = 'EuropeanKnockout'
     ETF = 'ETF'
     ETN = 'ETN'
     Event = 'Event'
@@ -151,7 +151,7 @@ class AssetType(EnumBase, Enum):
     MultiCrossBinaryLeg = 'MultiCrossBinaryLeg'
     Mutual_Fund = 'Mutual Fund'
     Note = 'Note'
-    OneTouch = 'One Touch'
+    OneTouch = 'OneTouch'
     Option = 'Option'
     OptionLeg = 'OptionLeg'
     OptionStrategy = 'OptionStrategy'
@@ -10581,8 +10581,8 @@ class FieldFilterMap(Base):
         self.portfolio_type = kwargs.get('portfolio_type')
         self.vendor = kwargs.get('vendor')
         self.popularity = kwargs.get('popularity')
-        self.currency = kwargs.get('currency')
         self.term = kwargs.get('term')
+        self.currency = kwargs.get('currency')
         self.real_time_restriction_status = kwargs.get('real_time_restriction_status')
         self.asset_parameters_clearing_house = kwargs.get('asset_parameters_clearing_house')
         self.rating_fitch = kwargs.get('rating_fitch')
@@ -10810,8 +10810,8 @@ class FieldFilterMap(Base):
         self.alias = kwargs.get('alias')
         self.ext_mkt_point1 = kwargs.get('ext_mkt_point1')
         self.product_type = kwargs.get('product_type')
-        self.sub_region_code = kwargs.get('sub_region_code')
         self.ext_mkt_point2 = kwargs.get('ext_mkt_point2')
+        self.sub_region_code = kwargs.get('sub_region_code')
         self.asset_parameters_option_type = kwargs.get('asset_parameters_option_type')
         self.asset_parameters_fixed_rate = kwargs.get('asset_parameters_fixed_rate')
         self.last_returns_end_date = kwargs.get('last_returns_end_date')
@@ -11282,15 +11282,6 @@ class FieldFilterMap(Base):
         self.__popularity = value        
 
     @property
-    def currency(self) -> dict:
-        return self.__currency
-
-    @currency.setter
-    def currency(self, value: dict):
-        self._property_changed('currency')
-        self.__currency = value        
-
-    @property
     def term(self) -> dict:
         return self.__term
 
@@ -11298,6 +11289,15 @@ class FieldFilterMap(Base):
     def term(self, value: dict):
         self._property_changed('term')
         self.__term = value        
+
+    @property
+    def currency(self) -> dict:
+        return self.__currency
+
+    @currency.setter
+    def currency(self, value: dict):
+        self._property_changed('currency')
+        self.__currency = value        
 
     @property
     def real_time_restriction_status(self) -> dict:
@@ -13298,15 +13298,6 @@ class FieldFilterMap(Base):
         self.__product_type = value        
 
     @property
-    def sub_region_code(self) -> dict:
-        return self.__sub_region_code
-
-    @sub_region_code.setter
-    def sub_region_code(self, value: dict):
-        self._property_changed('sub_region_code')
-        self.__sub_region_code = value        
-
-    @property
     def ext_mkt_point2(self) -> dict:
         return self.__ext_mkt_point2
 
@@ -13314,6 +13305,15 @@ class FieldFilterMap(Base):
     def ext_mkt_point2(self, value: dict):
         self._property_changed('ext_mkt_point2')
         self.__ext_mkt_point2 = value        
+
+    @property
+    def sub_region_code(self) -> dict:
+        return self.__sub_region_code
+
+    @sub_region_code.setter
+    def sub_region_code(self, value: dict):
+        self._property_changed('sub_region_code')
+        self.__sub_region_code = value        
 
     @property
     def asset_parameters_option_type(self) -> dict:
