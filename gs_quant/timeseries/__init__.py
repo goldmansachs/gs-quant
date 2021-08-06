@@ -29,6 +29,7 @@ from .measures_portfolios import *
 from .measures_rates import *
 from .measures_inflation import *
 from .measures_xccy import *
+from .measures_fx_vol import *
 from .helper import *
 
 __name__ = 'timeseries'

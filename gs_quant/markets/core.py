@@ -350,6 +350,11 @@ class PricingContext(ContextBaseWithDefault):
 
     def _calc(self, instrument: InstrumentBase, risk_key: RiskKey) -> PricingFuture:
         pending = self.active_context.__pending
+
+        from gs_quant.instrument import DummyInstrument
+        if isinstance(instrument, DummyInstrument):
+            return PricingFuture(StringWithInfo(value=instrument.dummy_result, risk_key=risk_key))
+
         future = pending.get((risk_key, instrument))
 
         if future is None:

@@ -2342,7 +2342,7 @@ def _forward_price_elec(asset: Asset, price_method: str = 'LMP', bucket: str = '
 
 
 @plot_measure((AssetClass.Commod,), (AssetType.Index, AssetType.CommodityPowerAggregatedNodes,
-                                     AssetType.CommodityPowerNode,), [QueryType.FORWARD_PRICE],)
+                                     AssetType.CommodityPowerNode,), [QueryType.FORWARD_PRICE], )
 def forward_price(asset: Asset, price_method: str = 'LMP', bucket: str = 'PEAK',
                   contract_range: str = 'F20', *, source: str = None, real_time: bool = False) -> pd.Series:
     """
@@ -2423,7 +2423,8 @@ def eu_ng_hub_to_swap(asset_spec: ASSET_SPEC) -> str:
 
 
 @plot_measure((AssetClass.Commod,), (AssetType.CommodityNaturalGasHub, AssetType.CommodityEUNaturalGasHub),
-              [MeasureDependency(id_provider=eu_ng_hub_to_swap, query_type=QueryType.FORWARD_PRICE)])
+              [MeasureDependency(id_provider=eu_ng_hub_to_swap, query_type=QueryType.FORWARD_PRICE)],
+              display_name='forward_price')
 def forward_price_ng(asset: Asset, contract_range: str = 'F20', price_method: str = 'GDD', *, source: str = None,
                      real_time: bool = False) -> pd.Series:
     """
@@ -2673,10 +2674,10 @@ def policy_rate_expectation(asset: Asset, rate_type: MeetingType = MeetingType.M
         meeting_date = parse_meeting_date(meeting_date)
         if meeting_date == '':
             raise MqValueError('Meeting date string must be of the format: YYYY-MM-DD')
-        cbw_df = ds.get_data(assetId=[mqid], rateType=rate_type, meeting_date=meeting_date,
+        cbw_df = ds.get_data(assetId=[mqid], rateType=rate_type, meetingDate=meeting_date,
                              start=CENTRAL_BANK_WATCH_START_DATE)
     else:
-        cbw_df = ds.get_data(assetId=[mqid], rateType=rate_type, meeting_date=meeting_date,
+        cbw_df = ds.get_data(assetId=[mqid], rateType=rate_type, meetingDate=meeting_date,
                              start=CENTRAL_BANK_WATCH_START_DATE)
 
     if cbw_df.empty:
@@ -3814,7 +3815,7 @@ def get_historical_and_last_for_measure(asset_ids: List[str],
     return result
 
 
-@plot_measure((AssetClass.Commod,), (AssetType.FutureMarket,), [QueryType.SETTLEMENT_PRICE],)
+@plot_measure((AssetClass.Commod,), (AssetType.FutureMarket,), [QueryType.SETTLEMENT_PRICE], )
 def settlement_price(asset: Asset, contract: str = 'F22', *, source: str = None, real_time: bool = False) -> pd.Series:
     """
     Settlement price from exchanges for Commod FutureMarket
@@ -3839,8 +3840,8 @@ def settlement_price(asset: Asset, contract: str = 'F22', *, source: str = None,
                     asset_product == EUPowerDataReference.CARBON_CREDIT_PRODUCT.value:
                 ds = Dataset(EUPowerDataReference.CARBON_CREDIT_DATASET.value)
             elif (asset_exchange == EUPowerDataReference.EEX_EXCHANGE.value or
-                    asset_exchange == EUPowerDataReference.ICE_EXCHANGE.value or
-                    asset_exchange == EUPowerDataReference.NASDAQ_EXCHANGE.value) and \
+                  asset_exchange == EUPowerDataReference.ICE_EXCHANGE.value or
+                  asset_exchange == EUPowerDataReference.NASDAQ_EXCHANGE.value) and \
                     asset_product == EUPowerDataReference.EU_POWER_PRODUCT.value:
                 ds = Dataset(EUPowerDataReference.EU_POWER_EXCHANGE_DATASET.value)
             else:

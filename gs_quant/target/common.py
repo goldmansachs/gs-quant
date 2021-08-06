@@ -3516,7 +3516,8 @@ class IndexNotTradingReasons(EnumBase, Enum):
     Cost = 'Cost'
     Client_does_not_like_the_construction = 'Client does not like the construction'
     Basket_created_prematurely = 'Basket created prematurely'
-    Economics_of_the_basket_changed__client_no_longer_interested_in_trading = 'Economics of the basket changed: client no longer interested in trading'
+    Economics_of_the_basket_changed__client_no_longer_interested_in_trading = \
+        'Economics of the basket changed: client no longer interested in trading'
     GS_booking_OVER_operational_issues = 'GS booking/operational issues'
     _ = ''    
 
@@ -7996,7 +7997,10 @@ class CarryScenario(Scenario):
         
     """A scenario to manipulate time along the forward curve"""
 
-    @deprecation.deprecated(deprecated_in='0.8.216', removed_in='1.0.0', details='CarryScenario is now deprecated, please use RollFwd instead. CarryScenario will not be supported in all versions of gs-quant starting 2021.')
+    @deprecation.deprecated(
+        deprecated_in='0.8.216', removed_in='1.0.0',
+        details='CarryScenario is now deprecated, please use RollFwd instead. CarryScenario will not be supported in '
+                'all versions of gs-quant starting 2021.')
     @camel_case_translate
     def __init__(
         self,
@@ -8556,7 +8560,9 @@ class FiniteDifferenceParameter(Base):
 
 class ISelectNewParameter(Base):
         
-    _name_mappings = {'is_fsr_target_factor': 'isFSRTargetFactor', 'trend_signal_0': 'trendSignal_0', 'trend_signal_1': 'trendSignal_1', 'trend_signal_2': 'trendSignal_2', 'trend_signal_3': 'trendSignal_3'}
+    _name_mappings = {'is_fsr_target_factor': 'isFSRTargetFactor', 'trend_signal_0': 'trendSignal_0',
+                      'trend_signal_1': 'trendSignal_1', 'trend_signal_2': 'trendSignal_2',
+                      'trend_signal_3': 'trendSignal_3'}
 
     @camel_case_translate
     def __init__(
@@ -10659,6 +10665,7 @@ class FieldFilterMap(Base):
         self.title = kwargs.get('title')
         self.net_exposure_classification = kwargs.get('net_exposure_classification')
         self.asset_parameters_strike_price = kwargs.get('asset_parameters_strike_price')
+        self.asset_parameters_strike_price_relative = kwargs.get('asset_parameters_strike_price_relative')
         self.coupon_type = kwargs.get('coupon_type')
         self.last_updated_by_id = kwargs.get('last_updated_by_id')
         self.clone_parent_id = kwargs.get('clone_parent_id')
@@ -10814,6 +10821,8 @@ class FieldFilterMap(Base):
         self.sub_region_code = kwargs.get('sub_region_code')
         self.asset_parameters_option_type = kwargs.get('asset_parameters_option_type')
         self.asset_parameters_fixed_rate = kwargs.get('asset_parameters_fixed_rate')
+        self.asset_parameters_premium_payment_date = kwargs.get('asset_parameters_premium_payment_date')
+        self.asset_parameters_expiration_time = kwargs.get('asset_parameters_expiration_time')
         self.last_returns_end_date = kwargs.get('last_returns_end_date')
         self.position_source_type = kwargs.get('position_source_type')
         self.minimum_denomination = kwargs.get('minimum_denomination')
@@ -11963,7 +11972,16 @@ class FieldFilterMap(Base):
     @asset_parameters_strike_price.setter
     def asset_parameters_strike_price(self, value: dict):
         self._property_changed('asset_parameters_strike_price')
-        self.__asset_parameters_strike_price = value        
+        self.__asset_parameters_strike_price = value
+
+    @property
+    def asset_parameters_strike_price_relative(self) -> dict:
+        return self.__asset_parameters_strike_price_relative
+
+    @asset_parameters_strike_price_relative.setter
+    def asset_parameters_strike_price_relative(self, value: dict):
+        self._property_changed('asset_parameters_strike_price_relative')
+        self.__asset_parameters_strike_price_relative = value
 
     @property
     def coupon_type(self) -> dict:
@@ -13322,7 +13340,25 @@ class FieldFilterMap(Base):
     @asset_parameters_option_type.setter
     def asset_parameters_option_type(self, value: dict):
         self._property_changed('asset_parameters_option_type')
-        self.__asset_parameters_option_type = value        
+        self.__asset_parameters_option_type = value
+
+    @property
+    def asset_parameters_premium_payment_date(self) -> dict:
+        return self.__asset_parameters_premium_payment_date
+
+    @asset_parameters_premium_payment_date.setter
+    def asset_parameters_premium_payment_date(self, value: dict):
+        self._property_changed('asset_parameters_premium_payment_date')
+        self.__asset_parameters_premium_payment_date = value
+
+    @property
+    def asset_parameters_expiration_time(self) -> dict:
+        return self.__asset_parameters_expiration_time
+
+    @asset_parameters_expiration_time.setter
+    def asset_parameters_expiration_time(self, value: dict):
+        self._property_changed('asset_parameters_expiration_time')
+        self.__asset_parameters_expiration_time = value
 
     @property
     def asset_parameters_fixed_rate(self) -> dict:
@@ -13949,7 +13985,8 @@ class PCOExposureLeg(Base):
 
 class User(Base):
         
-    _name_mappings = {'root_oe_id': 'rootOEId', 'root_oe_name': 'rootOEName', 'internal_id': 'internalID', 'mi_fidii_trade_idea_declined': 'miFIDIITradeIdeaDeclined'}
+    _name_mappings = {'root_oe_id': 'rootOEId', 'root_oe_name': 'rootOEName', 'internal_id': 'internalID',
+                      'mi_fidii_trade_idea_declined': 'miFIDIITradeIdeaDeclined'}
 
     @camel_case_translate
     def __init__(

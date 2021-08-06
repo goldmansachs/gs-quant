@@ -41,7 +41,7 @@ class AssetTreeNode:
 
     def __str__(self):
         result = self.bbid if self.bbid is not None else self.id
-        return 'Tree Node - ' + result
+        return f'Tree Node - {result}'
 
     def to_frame(self) -> pd.DataFrame:
         if len(self.constituents_df) > 0:
@@ -188,3 +188,27 @@ class TreeHelper:
             self.build_tree()
 
         return self.root
+
+    def get_visualisation(self, visualise_by: Optional[str] = 'asset_name'):
+        try:
+            from treelib import Tree
+        except ModuleNotFoundError:
+            raise RuntimeError('You must install treelib to be able use this function.')
+
+        if not self.tree_built:
+            self.build_tree()
+
+        if visualise_by in ['asset_name', 'bbid']:
+            parent_field = 'assetName' if visualise_by == 'asset_name' else 'assetBbid'
+            child_field = 'underlyingAssetName' if visualise_by == 'asset_name' else 'underlyingAssetBbid'
+
+            df = self.to_frame()
+            tree_vis = Tree()
+            tree_vis.create_node(f'0 - {df[parent_field][0]}', df[parent_field][0])
+            for depth, parent, child in zip(df['depth'], df[parent_field], df[child_field]):
+                tree_vis.create_node(f'{depth} - {child}', child, parent=parent)
+
+        else:
+            raise MqValueError('visualise_by argument has to be either asset_name or bbid')
+
+        return tree_vis.show()

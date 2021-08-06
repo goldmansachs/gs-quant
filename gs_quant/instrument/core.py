@@ -13,26 +13,25 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import datetime as dt
+import inspect
+import logging
 import warnings
+from abc import ABCMeta
+from copy import deepcopy
+from typing import Iterable, Optional, Tuple, Union
 
 from gs_quant.api.gs.parser import GsParserApi
 from gs_quant.api.gs.risk import GsRiskApi
 from gs_quant.base import get_enum_value, InstrumentBase, QuotableBuilder
 from gs_quant.common import AssetClass, AssetType, XRef
 from gs_quant.context_base import do_not_serialise
-from gs_quant.markets import HistoricalPricingContext, MarketDataCoordinate, PricingCache, PricingContext
+from gs_quant.markets import HistoricalPricingContext, MarketDataCoordinate, PricingContext
 from gs_quant.priceable import PriceableImpl
 from gs_quant.risk import FloatWithInfo, DataFrameWithInfo, SeriesWithInfo, ResolvedInstrumentValues, RiskMeasure, \
     DEPRECATED_MEASURES
 from gs_quant.risk.results import ErrorValue, MultipleRiskMeasureFuture, PricingFuture
 from gs_quant.session import GsSession
-
-from abc import ABCMeta
-from copy import deepcopy
-import datetime as dt
-import logging
-from typing import Iterable, Optional, Tuple, Union
-import inspect
 
 _logger = logging.getLogger(__name__)
 
@@ -175,7 +174,6 @@ class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
                    for r in ((risk_measure,) if isinstance(risk_measure, RiskMeasure) else risk_measure)}
         future = MultipleRiskMeasureFuture(self, futures) if len(futures) > 1 else futures[
             risk_measure if isinstance(risk_measure, RiskMeasure) else risk_measure[0]]
-
 
         # throw warning upon usage of deprecated measures
         def warning_on_one_line(message, category, filename, lineno, file=None, line=None):
@@ -320,6 +318,25 @@ class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
         new_inst = deepcopy(self)
         new_inst.scale(scaling)
         return new_inst
+
+
+class DummyInstrument(Instrument):
+    def __init__(self, dummy_result: Union[str, float] = None):
+        super().__init__()
+        self.dummy_result = dummy_result
+
+    @property
+    def dummy_result(self) -> Union[str, float]:
+        return self.__dummy_result
+
+    @dummy_result.setter
+    def dummy_result(self, value: Union[str, float]):
+        self._property_changed('dummy_result')
+        self.__dummy_result = value
+
+    @property
+    def type(self) -> AssetType:
+        return AssetType.Any
 
 
 class Security(XRef, Instrument):

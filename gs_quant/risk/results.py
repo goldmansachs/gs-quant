@@ -736,3 +736,10 @@ class PortfolioRiskResult(CompositeResultFuture):
 
         return res[risk_measure] \
             if risk_measure and isinstance(res, (MultipleRiskMeasureResult, PortfolioRiskResult)) else res
+
+    def get(self, item, default):
+        try:
+            value = self.__getitem__(item)
+        except (KeyError, ValueError):
+            value = default
+        return value

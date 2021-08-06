@@ -49,6 +49,9 @@ class DataHandler(object):
         self._clock = Clock()
         self._tz = tz
 
+    def reset_clock(self):
+        self._clock.reset()
+
     def update(self, state: dt.datetime):
         self._clock.update(state)
 

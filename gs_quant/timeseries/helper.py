@@ -16,6 +16,7 @@ under the License.
 import datetime
 import inspect
 import logging
+import os
 from enum import Enum, IntEnum
 from functools import wraps
 from typing import Optional, Union, List, Iterable
@@ -27,6 +28,10 @@ from gs_quant.data import DataContext
 from gs_quant.datetime.relative_date import RelativeDate
 from gs_quant.entities.entity import EntityType
 from gs_quant.errors import MqValueError
+from gs_quant.timeseries.measure_registry import register_measure
+
+ENABLE_DISPLAY_NAME = 'GSQ_ENABLE_MEASURE_DISPLAY_NAME'
+USE_DISPLAY_NAME = os.environ.get(ENABLE_DISPLAY_NAME)
 
 
 def _create_enum(name, members):
@@ -167,12 +172,14 @@ def check_forward_looking(pricing_date, source, name="function"):
         raise MqValueError(msg)
 
 
-def plot_measure(asset_class: Optional[tuple] = None, asset_type: Optional[tuple] = None,
-                 dependencies: Optional[List[QueryType]] = tuple(), asset_type_excluded: Optional[tuple] = None):
+def plot_measure(asset_class: tuple, asset_type: Optional[tuple] = None,
+                 dependencies: Optional[List[QueryType]] = tuple(), asset_type_excluded: Optional[tuple] = None,
+                 display_name: Optional[str] = None):
     # Indicates that fn should be exported to plottool as a member function / pseudo-measure.
     # Set category to None for no restrictions, else provide a tuple of allowed values.
     def decorator(fn):
-        assert asset_class is None or isinstance(asset_class, tuple)
+        assert isinstance(asset_class, tuple)
+        assert len(asset_class) >= 1
         assert asset_type is None or isinstance(asset_type, tuple)
         assert asset_type_excluded is None or isinstance(asset_type_excluded, tuple)
         assert asset_type is None or asset_type_excluded is None
@@ -184,8 +191,14 @@ def plot_measure(asset_class: Optional[tuple] = None, asset_type: Optional[tuple
         fn.asset_type_excluded = asset_type_excluded
         fn.dependencies = dependencies
 
-        return fn
+        if USE_DISPLAY_NAME:
+            fn.display_name = display_name
 
+            multi_measure = register_measure(fn)
+            multi_measure.entity_type = EntityType.ASSET
+            return multi_measure
+        else:
+            return fn
     return decorator
 
 

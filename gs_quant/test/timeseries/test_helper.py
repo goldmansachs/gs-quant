@@ -50,7 +50,7 @@ def pf():
     pass
 
 
-@plot_measure(asset_type=('abc',))
+@plot_measure(('xyz', ), asset_type=('abc',))
 def pm():
     pass
 
@@ -64,7 +64,7 @@ def test_decorators():
     assert pf.plot_function
     assert pm.plot_measure
     assert pmt.plot_method
-    assert pm.asset_class is None
+    assert pm.asset_class == ('xyz',)
     assert pm.asset_type == ('abc',)
     assert pm.asset_type_excluded is None
     assert pmt(1, real_time=True) == 1

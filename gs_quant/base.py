@@ -134,6 +134,9 @@ class Base(metaclass=ABCMeta):
     def __setattr__(self, key, value):
         properties = __getattribute__(self, 'properties')()
 
+        # tolist converts scalar or array to native python type if not already native.
+        value = getattr(value, "tolist", lambda: value)()
+
         if key.startswith('_') or key == 'name' or key in properties:
             return __setattr__(self, key, value)
 

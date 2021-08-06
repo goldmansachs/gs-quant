@@ -13,7 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from .core import Instrument, Security
+from .core import Instrument, Security, DummyInstrument
 from gs_quant.target.instrument import *
 from gs_quant.target.common import SwapClearingHouse, SwapSettlement
 from .overrides import *

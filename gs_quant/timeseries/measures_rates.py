@@ -498,7 +498,7 @@ def _get_swap_data(asset: Asset, swap_tenor: str, benchmark_type: str = None, fl
     else:
         pricing_location = PricingLocation(location)
 
-    kwargs = dict(type='Swap', asset_parameters_termination_date=swap_tenor,
+    kwargs = dict(asset_class='Rates', type='Swap', asset_parameters_termination_date=swap_tenor,
                   asset_parameters_floating_rate_option=defaults['benchmark_type'],
                   asset_parameters_fixed_rate=fixed_rate, asset_parameters_clearing_house=clearing_house.value,
                   asset_parameters_floating_rate_designated_maturity=defaults['floating_rate_tenor'],
@@ -888,7 +888,7 @@ def _swaption_build_asset_query(currency, benchmark_type=None, effective_date=No
     forward_tenor = _check_forward_tenor(effective_date)
     strike_reference = _check_strike_reference(strike_reference)
     clearinghouse = swaptions_defaults_provider.get_swaption_parameter(currency, 'clearingHouse', clearinghouse)
-    query = dict(type='Swaption', asset_parameters_notional_currency=currency.name)
+    query = dict(asset_class='Rates', type='Swaption', asset_parameters_notional_currency=currency.name)
     if termination_tenor is not None:
         query["asset_parameters_termination_date"] = termination_tenor
     if floating_rate_option is not None:

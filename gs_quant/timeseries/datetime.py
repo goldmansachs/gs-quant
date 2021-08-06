@@ -616,7 +616,12 @@ def bucketize(series: pd.Series, aggregate_function: AggregateFunction, period: 
     series.index = pd.to_datetime(series.index)
     frequency = period.value[0].upper()
     agg = aggregate_function.value
-    return series.resample(frequency).apply(agg)
+    result = series.resample(frequency).apply(agg)
+
+    last_timestamp = min(series.index[-1], result.index[-1])
+    idx = result.index[:-1].insert(len(result) - 1, last_timestamp)
+    result.index = idx
+    return result
 
 
 @plot_function

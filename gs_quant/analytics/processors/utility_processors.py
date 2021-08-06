@@ -414,3 +414,44 @@ class OneDayProcessor(BaseProcessor):
 
     def get_plot_expression(self):
         pass
+
+
+class NthLastProcessor(BaseProcessor):
+
+    def __init__(self,
+                 a: DataCoordinateOrProcessor,
+                 *,
+                 n: int = 1,
+                 start: Optional[DateOrDatetimeOrRDate] = None,
+                 end: Optional[DateOrDatetimeOrRDate] = None,
+                 **kwargs):
+        """ LastProcessor returns the last value of the series
+
+        :param a: DataCoordinate or BaseProcessor for the first coordinate
+        :param start: start date or time used in the underlying data query
+        :param end: end date or time used in the underlying data query
+        """
+        super().__init__(**kwargs)
+        # coordinates
+        self.children['a'] = a
+
+        # datetime
+        self.start = start
+        self.end = end
+        self.n = n
+
+    def process(self):
+        """ Calculate the result and store it as the processor value """
+        a_data = self.children_data.get('a')
+        if isinstance(a_data, ProcessorResult):
+            if a_data.success and isinstance(a_data.data, Series):
+                index = -1 * self.n
+                self.value = ProcessorResult(True, pd.Series(a_data.data[index]))
+            else:
+                self.value = ProcessorResult(False, "NthLastProcessor does not have 'a' series values yet")
+        else:
+            self.value = ProcessorResult(False, "NthLastProcessor does not have 'a' series values yet")
+        return self.value
+
+    def get_plot_expression(self):
+        pass

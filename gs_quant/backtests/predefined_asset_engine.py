@@ -143,9 +143,10 @@ class PredefinedAssetEngine(BacktestBaseEngine):
         else:
             return prev_business_date(date, self.calendars)
 
-    def run_backtest(self, strategy, start, end, frequency="B"):
+    def run_backtest(self, strategy, start, end, frequency="B", initial_value=100):
         # initialize backtest object
-        backtest = PredefinedAssetBacktest(self.data_handler)
+        self.data_handler.reset_clock()
+        backtest = PredefinedAssetBacktest(self.data_handler, initial_value)
 
         # if start is a holiday, go back to the previous day on the backtest calendar
         adjusted_start = self._adjust_date(start)

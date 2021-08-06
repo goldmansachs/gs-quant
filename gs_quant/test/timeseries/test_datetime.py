@@ -435,7 +435,7 @@ def test_bucketize():
     series = pd.Series(range(len(dates)), index=dates)
 
     actual = bucketize(series, AggregateFunction.MAX, AggregatePeriod.MONTH)
-    expected_index = pd.DatetimeIndex([date(2021, 1, 31), date(2021, 2, 28), date(2021, 3, 31), date(2021, 4, 30)])
+    expected_index = pd.DatetimeIndex([date(2021, 1, 31), date(2021, 2, 28), date(2021, 3, 31), date(2021, 4, 23)])
     expected = pd.Series([20, 40, 63, 80], index=expected_index)
     actual.index.freq = None  # Ignore the index freq
     assert_series_equal(actual, expected, check_index_type=False)

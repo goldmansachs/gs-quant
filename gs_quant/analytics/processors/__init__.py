@@ -21,5 +21,5 @@ from .special_processors import EntityProcessor, CoordinateProcessor
 from .statistics_processors import PercentilesProcessor, PercentileProcessor, \
     CovarianceProcessor, ZscoresProcessor, MeanProcessor, VarianceProcessor, SumProcessor, StdDevProcessor
 from .utility_processors import LastProcessor, AppendProcessor, AdditionProcessor, SubtractionProcessor, \
-    MultiplicationProcessor, DivisionProcessor, MinProcessor, MaxProcessor
+    MultiplicationProcessor, DivisionProcessor, MinProcessor, MaxProcessor, NthLastProcessor
 from .scale_processors import ScaleProcessor, BarMarkerProcessor, SpotMarkerProcessor, ScaleShape

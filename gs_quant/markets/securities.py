@@ -13,12 +13,16 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-
+import datetime
 import datetime as dt
+import functools
 import json
+import logging
 import threading
+import time
 from abc import ABCMeta, abstractmethod
-from enum import Enum
+from copy import deepcopy
+from enum import Enum, auto
 from typing import Dict, Optional, Tuple, Union
 
 import cachetools
@@ -34,10 +38,12 @@ from gs_quant.data import DataMeasure, DataFrequency
 from gs_quant.data.coordinate import DataDimensions
 from gs_quant.data.coordinate import DateOrDatetime
 from gs_quant.entities.entity import Entity, EntityIdentifier, EntityType, PositionedEntity
-from gs_quant.errors import MqValueError
+from gs_quant.errors import MqValueError, MqTypeError
 from gs_quant.json_encoder import JSONEncoder
 from gs_quant.markets import PricingContext
 from gs_quant.markets.indices_utils import *
+
+_logger = logging.getLogger(__name__)
 
 
 class ExchangeCode(Enum):
@@ -171,6 +177,21 @@ class AssetIdentifier(EntityIdentifier):
     TICKER = "TICKER"  #: Exchange ticker (GS)
     PLOT_ID = "PLOT_ID"  #: ID for Marquee PlotTool
     GSID = "GSID"
+
+
+class SecurityIdentifier(EntityIdentifier):
+    GSID = "GSID"
+    RIC = "RIC"
+    ID = "ID"
+    CUSIP = "CUSIP"
+    SEDOL = "SEDOL"
+    ISIN = "ISIN"
+    TICKER = "TICKER"
+    BBID = "BBID"
+    BCID = "BCID"
+    GSS = "GSS"
+    PRIMEID = "PRIMEID"
+    BBG = "BBG"
 
 
 class ReturnType(Enum):
@@ -850,6 +871,26 @@ class DefaultSwap(Asset):
         return AssetType.DEFAULT_SWAP
 
 
+class SecurityMasterSource(Enum):
+    ASSET_SERVICE = auto()
+    SECURITY_MASTER = auto()
+
+
+class Security:
+    def __init__(self, json: dict):
+        for k, v in json.items():
+            if k == 'identifiers':
+                self._ids = {inner_k.upper(): inner_v for inner_k, inner_v in v.items()}
+            else:
+                setattr(self, k, v)
+
+    def __str__(self):
+        return str({k: v for k, v in self.__dict__.items() if not k.startswith("_")})
+
+    def get_identifiers(self):
+        return deepcopy(self._ids)
+
+
 class SecurityMaster:
     """Security Master
 
@@ -864,6 +905,9 @@ class SecurityMaster:
     :class:`Asset`
 
      """
+    _source = SecurityMasterSource.ASSET_SERVICE
+    _page_size = 1000
+    _result_limit = 10000
 
     @classmethod
     def __gs_asset_to_asset(cls, gs_asset: GsAsset) -> Asset:
@@ -975,13 +1019,17 @@ class SecurityMaster:
         return asset_map.get(asset_type)
 
     @classmethod
+    def set_source(cls, source: SecurityMasterSource):
+        cls._source = source
+
+    @classmethod
     def get_asset(cls,
                   id_value: str,
-                  id_type: AssetIdentifier,
+                  id_type: Union[AssetIdentifier, SecurityIdentifier],
                   as_of: Union[dt.date, dt.datetime] = None,
                   exchange_code: ExchangeCode = None,
                   asset_type: AssetType = None,
-                  sort_by_rank: bool = False) -> Asset:
+                  sort_by_rank: bool = False) -> Union[Asset, Security]:
         """
         Get an asset by identifier and identifier type
 
@@ -1018,6 +1066,12 @@ class SecurityMaster:
         :func:`get_many_assets`
 
         """
+        if cls._source == SecurityMasterSource.SECURITY_MASTER:
+            if not isinstance(id_type, SecurityIdentifier):
+                raise MqTypeError('expected a security identifier')
+            if exchange_code or asset_type or sort_by_rank:
+                raise NotImplementedError('argument not implemented for Security Master (supported in Asset Service)')
+            return cls._get_security(id_value, id_type, as_of=as_of)
 
         if not as_of:
             as_of = PricingContext.current.pricing_date
@@ -1049,3 +1103,129 @@ class SecurityMaster:
 
         if result:
             return cls.__gs_asset_to_asset(result)
+
+    @classmethod
+    def _get_security(cls,
+                      id_value: str,
+                      id_type: SecurityIdentifier,
+                      as_of: Union[dt.date, dt.datetime] = None) -> Optional[Security]:
+        as_of = as_of or datetime.datetime(2100, 1, 1)
+        type_ = id_type.value.lower()
+        params = {
+            type_: id_value,
+            'asOfDate': as_of.strftime('%Y-%m-%d')  # TODO: update endpoint to take times
+        }
+        r = GsSession.current._get('/markets/securities', payload=params)
+        if r['totalResults'] == 0:
+            return None
+        return Security(r['results'][0])
+
+    @classmethod
+    def get_identifiers(cls, id_values: List[str], id_type: SecurityIdentifier, as_of: datetime.datetime = None,
+                        start: datetime.datetime = None, end: datetime.datetime = None) -> dict:
+        """
+        Get identifiers for assets.
+
+        :param id_values: identifier values e.g. ['GS UN']
+        :param id_type: identifier type e.g. BBID
+        :param as_of: point in time to use for resolving given ids to assets
+        :param start: restrict results to ids updated after this time
+        :param end: restrict results to ids updated before this time
+        :return: dict from IDs (of id_type) to available identifiers
+        """
+        if cls._source != SecurityMasterSource.SECURITY_MASTER:
+            raise NotImplementedError("method not available when using Asset Service")
+
+        as_of = as_of or datetime.datetime.now()
+        start = start or datetime.datetime(1970, 1, 1)
+        end = end or datetime.datetime(2100, 1, 1)
+
+        type_ = id_type.value.lower()
+        params = {
+            type_: id_values,
+            'fields': ['id', 'identifiers'],
+            'asOfDate': as_of.strftime('%Y-%m-%d')  # TODO: update endpoint to take times
+        }
+
+        r = GsSession.current._get('/markets/securities', payload=params)
+        id_map = {}
+        for asset in r['results']:
+            id_map[asset['identifiers'][type_]] = asset['id']
+
+        if len(id_map) == 0:
+            return {}
+
+        output = {}
+        for k, v in id_map.items():
+            r = GsSession.current._get(f'/markets/securities/{v}/identifiers')
+            piece = []
+            for e in r['results']:
+                time_str = e['updateTime'].split('.')[0]
+                if time_str.endswith('Z'):
+                    time_str = time_str[0:-1]
+                time = datetime.datetime.strptime(time_str, '%Y-%m-%dT%H:%M:%S')
+                if start <= time <= end:
+                    e['type'] = e.get('type', "").upper()
+                    piece.append(e)
+            output[k] = piece
+
+        return output
+
+    @staticmethod
+    def asset_type_to_str(asset_class: AssetClass, asset_type: AssetType):
+        if asset_type == AssetType.STOCK:
+            return "Common Stock"
+        if asset_type == AssetType.ETF:
+            return "ETF"
+        if asset_type == AssetType.INDEX and asset_class == AssetClass.Equity:
+            return "Equity Index"
+        raise MqValueError(f"{asset_class.value}: {asset_type.value} is not supported")
+
+    @classmethod
+    def get_all_identifiers(cls, class_: AssetClass = None, types: List[AssetType] = None,
+                            as_of: datetime.datetime = None, limit: int = 0, id_type: SecurityIdentifier = None):
+        """
+        Get identifiers for all matching assets.
+
+        :param class_: class of assets e.g. Equity
+        :param types: types of assets (within the class) e.g. Stock
+        :param as_of: point in time for which identifiers are fetched
+        :param limit: maximum number of assets to fetch
+        :param id_type: identifier type to use for keys of result dict
+        :return: dict from ID (of the id_type) to available identifiers
+        """
+        if cls._source != SecurityMasterSource.SECURITY_MASTER:
+            raise NotImplementedError("method not available when using Asset Service")
+
+        as_of = as_of or datetime.datetime.now()
+        limit = limit or cls._result_limit
+        id_type = id_type or SecurityIdentifier.ID
+        if types is not None:
+            p = functools.partial(cls.asset_type_to_str, class_)
+            types = set(map(p, types))
+
+        params = {
+            'fields': ['id', 'identifiers', 'assetClass', 'type'],
+            'asOfDate': as_of.date(),
+            'limit': cls._page_size,
+            'offset': 0
+        }
+
+        output = {}
+        while params['offset'] < cls._result_limit:
+            r = GsSession.current._get('/markets/securities', payload=params)
+            for e in r['results']:
+                if (class_ is None or e['assetClass'] == class_.value) and (types is None or e['type'] in types):
+                    box = {k.upper(): v for k, v in e['identifiers'].items()}
+                    output[box[id_type.value]] = box
+                    if len(output) >= limit:
+                        break
+            if r['totalResults'] == 0 or len(output) >= limit:
+                break
+
+            params['offset'] += cls._page_size
+            time.sleep(0.5)
+        else:
+            _logger.warning('too many rows; results have been truncated')
+
+        return output

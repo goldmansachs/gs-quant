@@ -351,6 +351,30 @@ class Index(Asset, PositionedEntity):
         else:
             raise MqValueError('This method currently supports STS indices only')
 
+    def visualise_tree(self,
+                       visualise_by: Optional[str] = 'asset_name'):
+
+        """
+        Visualise the tree by printing the structure of the entire tree.
+        The visualise_by argument can be either 'asset_name' or 'bbid'. Currently supports STS indices only.
+
+        :param visualise_by: Parameter to visualise by. Default uses Asset Name to label the nodes
+        :return: treelib Tree object, which can be printed to see the tree structure.
+
+        **Examples**
+
+        >>> from gs_quant.markets.index import Index
+        >>>
+        >>> index = Index.get("GSMBXXXX")
+        >>> print(index.visualise_tree())
+        """
+
+        if self.__is_sts_index():
+            return self.tree_helper.get_visualisation(visualise_by)
+
+        else:
+            raise MqValueError('This method currently supports STS indices only')
+
     def get_latest_constituents(self) -> pd.DataFrame:
         """
         Fetch the latest constituents of the index in a pandas dataframe.
