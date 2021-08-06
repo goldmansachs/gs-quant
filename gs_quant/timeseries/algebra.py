@@ -737,6 +737,18 @@ def if_(flags: pd.Series, x: Union[pd.Series, float], y: Union[pd.Series, float]
     :param x: values to use when flag is 1
     :param y: values to use when flag is 0
     :return: result series
+
+    **Usage**
+
+    Returns a series based off the given conditional series. If the condition is true it shows the first series's value
+    else it shows the second series's value.
+
+    **PlotTool Example**
+
+    if(SPX.spot() > 4000, SPX.spot(), GSTHHVIP.spot())
+
+    The above expression would show SPX.spot() if the spot price is above 4000 else it shows GSTHHVIP.spot().
+
     """
     if not all(map(lambda a: a in (0, 1), flags.values)):
         raise MqValueError(f'cannot perform "if" on series with value(s) other than 1 and 0: {flags.values}')

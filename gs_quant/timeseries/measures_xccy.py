@@ -350,7 +350,8 @@ def _get_crosscurrency_swap_data(asset1: Asset, asset2: Asset, swap_tenor: str, 
 
     forward_tenor = tm_rates._check_forward_tenor(forward_tenor)
     fixed_rate = 'ATM'
-    kwargs = dict(type='XccySwapMTM',
+    kwargs = dict(asset_class='Rates',
+                  type='XccySwapMTM',
                   asset_parameters_termination_date=swap_tenor,
                   asset_parameters_effective_date=forward_tenor,
                   asset_parameters_payer_spread=fixed_rate,

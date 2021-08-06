@@ -39,6 +39,7 @@ class OrderBase(metaclass=ABCMeta):
         self.quantity = quantity
         self.generation_time = generation_time
         self.source = source
+        self.executed_price = None
 
     def execution_end_time(self) -> dt.datetime:
         raise RuntimeError('The method execution_end_time is not implemented on OrderBase')
@@ -53,11 +54,11 @@ class OrderBase(metaclass=ABCMeta):
         else:
             return price
 
-    def execution_quantity(self, data_handler: DataHandler) -> float:
+    def execution_quantity(self) -> float:
         raise RuntimeError('The method execution_price is not implemented on OrderBase')
 
     def execution_notional(self, data_hander: DataHandler) -> float:
-        return self.execution_price(data_hander) * self.execution_quantity(data_hander)
+        return self.execution_price(data_hander) * self.execution_quantity()
 
     def _short_name(self) -> str:
         raise RuntimeError('The method _short_name is not implemented on OrderBase')
@@ -66,7 +67,7 @@ class OrderBase(metaclass=ABCMeta):
         return {'Instrument': self.instrument.ric,
                 'Type': self._short_name(),
                 'Price': self.execution_price(data_hander),
-                'Quantity': self.execution_quantity(data_hander)
+                'Quantity': self.execution_quantity()
                 }
 
 
@@ -88,11 +89,13 @@ class OrderTWAP(OrderBase):
         return self.window.end
 
     def _execution_price(self, data_handler: DataHandler) -> float:
-        fixings = data_handler.get_data_range(self.window.start, self.window.end,
-                                              self.instrument, ValuationFixingType.PRICE)
-        return np.mean(fixings)
+        if self.executed_price is None:
+            fixings = data_handler.get_data_range(self.window.start, self.window.end,
+                                                  self.instrument, ValuationFixingType.PRICE)
+            self.executed_price = np.mean(fixings)
+        return self.executed_price
 
-    def execution_quantity(self, data_handler: DataHandler) -> float:
+    def execution_quantity(self) -> float:
         return self.quantity
 
     def _short_name(self) -> str:
@@ -113,9 +116,11 @@ class OrderMarketOnClose(OrderBase):
         return dt.datetime.combine(self.execution_date, dt.time(23, 0, 0))
 
     def _execution_price(self, data_handler: DataHandler) -> float:
-        return data_handler.get_data(self.execution_date, self.instrument, ValuationFixingType.PRICE)
+        if self.executed_price is None:
+            self.executed_price = data_handler.get_data(self.execution_date, self.instrument, ValuationFixingType.PRICE)
+        return self.executed_price
 
-    def execution_quantity(self, data_handler: DataHandler) -> float:
+    def execution_quantity(self) -> float:
         return self.quantity
 
     def _short_name(self) -> str:
@@ -135,9 +140,11 @@ class OrderCost(OrderBase):
         return self.execution_time
 
     def _execution_price(self, data_handler: DataHandler) -> float:
-        return 0
+        if self.executed_price is None:
+            self.executed_price = 0
+        return self.executed_price
 
-    def execution_quantity(self, data_handler: DataHandler) -> float:
+    def execution_quantity(self) -> float:
         return self.quantity
 
     def _short_name(self) -> str:
@@ -165,9 +172,12 @@ class OrderAtMarket(OrderBase):
         return self.execution_datetime
 
     def _execution_price(self, data_handler: DataHandler) -> float:
-        return data_handler.get_data(self.execution_datetime, self.instrument, ValuationFixingType.PRICE)
+        if self.executed_price is None:
+            self.executed_price = data_handler.get_data(self.execution_datetime,
+                                                        self.instrument, ValuationFixingType.PRICE)
+        return self.executed_price
 
-    def execution_quantity(self, data_handler: DataHandler) -> float:
+    def execution_quantity(self) -> float:
         return self.quantity
 
     def _short_name(self) -> str:
@@ -191,12 +201,13 @@ class OrderTwapBTIC(OrderTWAP):
         self.future_underlying = future_underlying
 
     def _execution_price(self, data_handler: DataHandler) -> float:
-        btic_fixings = data_handler.get_data_range(self.window.start, self.window.end,
-                                                   self.btic_instrument, ValuationFixingType.PRICE)
-        btic_twap = np.mean(btic_fixings)
-        close = data_handler.get_data(self.window.end.date(), self.future_underlying)
-
-        return close + btic_twap
+        if self.executed_price is None:
+            btic_fixings = data_handler.get_data_range(self.window.start, self.window.end,
+                                                       self.btic_instrument, ValuationFixingType.PRICE)
+            btic_twap = np.mean(btic_fixings)
+            close = data_handler.get_data(self.window.end.date(), self.future_underlying)
+            self.executed_price = close + btic_twap
+        return self.executed_price
 
     def _short_name(self) -> str:
         return 'TwapBTIC'

@@ -236,7 +236,8 @@ def _get_inflation_swap_data(asset: Asset, swap_tenor: str, index_type: str = No
     forward_tenor = tm_rates._check_forward_tenor(forward_tenor)
 
     fixed_rate = 'ATM'
-    kwargs = dict(type='InflationSwap', asset_parameters_termination_date=swap_tenor,
+    kwargs = dict(asset_class='Rates',
+                  type='InflationSwap', asset_parameters_termination_date=swap_tenor,
                   asset_parameters_index=defaults['index_type'],
                   asset_parameters_fixed_rate=fixed_rate,
                   asset_parameters_clearing_house=clearing_house.value,

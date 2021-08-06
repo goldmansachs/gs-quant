@@ -73,7 +73,7 @@ class AddTradeActionImpl(ActionHandler):
             pos = []
             for create_date, portfolio in orders.items():
                 pos += [inst for inst in portfolio.instruments
-                        if get_final_date(inst, create_date, self.action.trade_duration) >= s >= create_date]
+                        if get_final_date(inst, create_date, self.action.trade_duration) > s >= create_date]
             if len(pos):
                 backtest.portfolio_dict[s].append(pos)
 
@@ -146,7 +146,7 @@ class GenericEngine(BacktestBaseEngine):
         return True
 
     def run_backtest(self, strategy, start=None, end=None, frequency='BM', states=None, risks=Price,
-                     show_progress=True, csa_term=None, visible_to_gs=False):
+                     show_progress=True, csa_term=None, visible_to_gs=False, initial_value=0):
         """
         run the backtest following the triggers and actions defined in the strategy.  If states are entered run on
         those dates otherwise build a schedule from the start, end, frequency using pd.date_range
@@ -159,6 +159,7 @@ class GenericEngine(BacktestBaseEngine):
         :param show_progress: boolean default true
         :param csa_term: the csa term to use
         :param visible_to_gs: are the contents of risk requests visible to GS (defaults to False)
+        :param initial_value: initial cash value of strategy defaults to 0
         :return: a backtest object containing the portfolios on each day and results which show all risks on all days
 
         """
@@ -241,34 +242,42 @@ class GenericEngine(BacktestBaseEngine):
                                 self.get_action_handler(action).apply_action(d, backtest)
 
         # run any additional calcs to handle cash scaling (e.g. unwinds)
-        cash_results = defaultdict(list)
+        cash_calcs = defaultdict(list)
         with PricingContext(is_batch=True, csa_term=csa_term):
+            backtest.calc_calls += 1
             for _, cash_payments in backtest.cash_payments.items():
                 for cp in cash_payments:
                     # only calc if additional point is required
-                    if cp.effective_date and cp.effective_date <= end and \
-                            cp.trade not in backtest.results[cp.effective_date]:
-                        with PricingContext(cp.effective_date):
-                            backtest.calc_calls += 1
-                            backtest.calculations += len(risks)
-                            cash_results[cp.effective_date].append(Portfolio([cp.trade]).calc(tuple(risks)))
+                    if cp.effective_date and cp.effective_date <= end:
+                        if cp.effective_date not in backtest.results or \
+                                cp.trade not in backtest.results[cp.effective_date]:
+                            with PricingContext(cp.effective_date):
+                                backtest.calculations += len(risks)
+                                cash_calcs[cp.effective_date].append(Portfolio([cp.trade]).calc(Price))
 
-        # add cash to risk results
-        for day, risk_results in cash_results.items():
-            for rr in risk_results:
-                backtest.add_results(day, rr)
+        cash_results = {}
+        for day, risk_results in cash_calcs.items():
+            cash_results[day] = risk_results[0]
+            if len(risk_results) > 1:
+                for i in range(1, len(risk_results)):
+                    cash_results[day] += risk_results[i]
 
         # handle cash
-        for day, cash_payments in backtest.cash_payments.items():
-            if day <= end:
-                for cp in cash_payments:
+        current_value = initial_value
+        for d in sorted(set(dates + list(backtest.cash_payments.keys()))):
+            backtest.cash_dict[d] = current_value
+            if d in backtest.cash_payments and d <= end:
+                for cp in backtest.cash_payments[d]:
+                    value = cash_results.get(cp.effective_date, {}).get(Price, {}).get(cp.trade.name, {})
+                    value = value or backtest.results[cp.effective_date][Price][cp.trade.name]
                     if cp.scale_date:
                         scale_notional = backtest.portfolio_dict[cp.scale_date][cp.trade.name].notional_amount
                         scale_date_adj = scale_notional / cp.trade.notional_amount
-                        backtest.cash_dict[cp.effective_date] += \
-                            backtest.results[cp.effective_date][Price][cp.trade] * scale_date_adj * cp.direction
+                        backtest.cash_dict[d] += \
+                            value * scale_date_adj * cp.direction
                     else:
-                        backtest.cash_dict[day] += backtest.results[day][Price][cp.trade] * cp.direction
+                        backtest.cash_dict[d] += value * cp.direction
+                current_value = backtest.cash_dict[d]
 
         if stored_pc:
             PricingContext.current = stored_pc

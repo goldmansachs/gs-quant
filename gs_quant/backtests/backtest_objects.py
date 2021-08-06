@@ -26,6 +26,7 @@ from gs_quant.backtests.event import FillEvent
 from gs_quant.backtests.data_handler import DataHandler
 import numpy as np
 import datetime as dt
+from queue import Queue as FifoQueue
 
 
 class BackTest:
@@ -110,8 +111,8 @@ class BackTest:
     def result_summary(self, allow_mismatch_risk_keys=True):
         summary = pd.DataFrame({date: {risk: results[risk].aggregate(allow_mismatch_risk_keys)
                                        for risk in results.risk_measures} for date, results in self._results.items()}).T
-        summary['Cash'] = pd.Series(self._cash_dict)
-        return summary.fillna(0)
+        cash = pd.Series(self._cash_dict, name='Cash')
+        return pd.concat([summary, cash], axis=1, sort=True).fillna(0)
 
 
 class ScalingPortfolio:
@@ -143,7 +144,7 @@ class PredefinedAssetBacktest:
     :param initial_value: the initial value of the index
     :param results: a dictionary which can be used to store intermediate results
     """
-    def __init__(self, data_handler: DataHandler):
+    def __init__(self, data_handler: DataHandler, initial_value: float):
         self.data_handler = data_handler
         self.performance = pd.Series()
         self.cash_asset = Cash('USD')
@@ -151,7 +152,7 @@ class PredefinedAssetBacktest:
         self.historical_holdings = pd.Series()
         self.historical_weights = pd.Series()
         self.orders = []
-        self.initial_value = 100
+        self.initial_value = initial_value
         self.results = {}
 
     def set_start_date(self, start: dt.date):
@@ -165,6 +166,52 @@ class PredefinedAssetBacktest:
         inst = fill.order.instrument
         self.holdings[self.cash_asset] -= fill.filled_price * fill.filled_units
         self.holdings[inst] += fill.filled_units
+
+    def trade_ledger(self):
+        instrument_queues = {}
+        order_pairs = {}
+        for o in self.orders:
+            if o.instrument not in instrument_queues:
+                instrument_queues[o.instrument] = (FifoQueue(), FifoQueue())  # (longs, shorts)
+            longs, shorts = instrument_queues[o.instrument]
+            if o.quantity < 0:
+                shorts.put(o)
+            else:
+                longs.put(o)
+
+        # match up the longs and shorts
+        for inst in instrument_queues.keys():
+            longs, shorts = instrument_queues[inst]
+            open_close_order_pairs = []
+            while not longs.empty() and not shorts.empty():
+                long, short = longs.get(), shorts.get()
+                open_order, close_order = (long, short) if long.execution_end_time() < short.execution_end_time()\
+                    else (short, long)
+                open_close_order_pairs.append((open_order, close_order))
+
+            # handle unmatched longs or shorts i.e. positions currently open
+            while not longs.empty() or not shorts.empty():
+                unclosed_open_order = longs.get() if not longs.empty() else shorts.get()
+                open_close_order_pairs.append((unclosed_open_order, None))
+            order_pairs[inst] = open_close_order_pairs
+
+        trade_df = []
+        for inst in order_pairs.keys():
+            for open_order, close_order in [(o, c) for o, c in order_pairs[inst]]:
+                if close_order:
+                    end_dt = close_order.execution_end_time()
+                    end_value = close_order.executed_price
+                    status = 'closed'
+                else:
+                    end_dt = None
+                    end_value = None
+                    status = 'open'
+                start_dt, open_value = open_order.execution_end_time(), open_order.executed_price
+                long_or_short = np.sign(open_order.quantity)
+                trade_df.append((inst, start_dt, end_dt, open_value, end_value, long_or_short, status,
+                                 (end_value - open_value) * long_or_short if status == 'closed' else None))
+        return pd.DataFrame(trade_df, columns=['Instrument', 'Open', 'Close', 'Open Value', 'Close Value',
+                                               'Long Short', 'Status', 'Trade PnL'])
 
     def mark_to_market(self, state: dt.datetime, valuation_method: ValuationMethod):
         epsilon = 1e-12

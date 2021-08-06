@@ -137,8 +137,8 @@ def get_data_policy_rate_expectation_mocker(
     if 'meetingNumber' in kwargs:
         if kwargs['meetingNumber'] == 0:
             return mock_meeting_spot()
-    elif 'meeting_date' in kwargs:
-        if kwargs['meeting_date'] == dt.date(2019, 10, 24):
+    elif 'meetingDate' in kwargs:
+        if kwargs['meetingDate'] == dt.date(2019, 10, 24):
             return mock_meeting_spot()
     return mock_meeting_expectation()
 
