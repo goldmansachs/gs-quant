@@ -180,18 +180,18 @@ class AssetIdentifier(EntityIdentifier):
 
 
 class SecurityIdentifier(EntityIdentifier):
-    GSID = "GSID"
-    RIC = "RIC"
-    ID = "ID"
-    CUSIP = "CUSIP"
-    SEDOL = "SEDOL"
-    ISIN = "ISIN"
-    TICKER = "TICKER"
-    BBID = "BBID"
-    BCID = "BCID"
-    GSS = "GSS"
-    PRIMEID = "PRIMEID"
-    BBG = "BBG"
+    GSID = "gsid"
+    RIC = "ric"
+    ID = "id"
+    CUSIP = "cusip"
+    SEDOL = "sedol"
+    ISIN = "isin"
+    TICKER = "ticker"
+    BBID = "bbid"
+    BCID = "bcid"
+    GSS = "gss"
+    PRIMEID = "primeId"
+    BBG = "bbg"
 
 
 class ReturnType(Enum):
@@ -880,7 +880,7 @@ class Security:
     def __init__(self, json: dict):
         for k, v in json.items():
             if k == 'identifiers':
-                self._ids = {inner_k.upper(): inner_v for inner_k, inner_v in v.items()}
+                self._ids = {inner_k: inner_v for inner_k, inner_v in v.items()}
             else:
                 setattr(self, k, v)
 
@@ -1029,7 +1029,8 @@ class SecurityMaster:
                   as_of: Union[dt.date, dt.datetime] = None,
                   exchange_code: ExchangeCode = None,
                   asset_type: AssetType = None,
-                  sort_by_rank: bool = False) -> Union[Asset, Security]:
+                  sort_by_rank: bool = False,
+                  fields: Optional[List[str]] = None) -> Union[Asset, Security]:
         """
         Get an asset by identifier and identifier type
 
@@ -1039,6 +1040,7 @@ class SecurityMaster:
         :param asset_type: asset type
         :param as_of: As of date for query
         :param sort_by_rank: whether to sort assets by rank.
+        :param fields: asset fields to return
         :return: Asset object or None
 
         **Usage**
@@ -1071,7 +1073,7 @@ class SecurityMaster:
                 raise MqTypeError('expected a security identifier')
             if exchange_code or asset_type or sort_by_rank:
                 raise NotImplementedError('argument not implemented for Security Master (supported in Asset Service)')
-            return cls._get_security(id_value, id_type, as_of=as_of)
+            return cls._get_security(id_value, id_type, as_of=as_of, fields=fields)
 
         if not as_of:
             as_of = PricingContext.current.pricing_date
@@ -1108,13 +1110,19 @@ class SecurityMaster:
     def _get_security(cls,
                       id_value: str,
                       id_type: SecurityIdentifier,
-                      as_of: Union[dt.date, dt.datetime] = None) -> Optional[Security]:
+                      as_of: Union[dt.date, dt.datetime] = None,
+                      fields: Optional[List[str]] = None) -> Optional[Security]:
         as_of = as_of or datetime.datetime(2100, 1, 1)
-        type_ = id_type.value.lower()
+        type_ = id_type.value
         params = {
             type_: id_value,
             'asOfDate': as_of.strftime('%Y-%m-%d')  # TODO: update endpoint to take times
         }
+        if fields is not None:
+            if 'identifiers' not in fields:
+                fields.append('identifiers')
+            params['fields'] = fields
+
         r = GsSession.current._get('/markets/securities', payload=params)
         if r['totalResults'] == 0:
             return None
@@ -1140,7 +1148,7 @@ class SecurityMaster:
         start = start or datetime.datetime(1970, 1, 1)
         end = end or datetime.datetime(2100, 1, 1)
 
-        type_ = id_type.value.lower()
+        type_ = id_type.value
         params = {
             type_: id_values,
             'fields': ['id', 'identifiers'],
@@ -1165,7 +1173,6 @@ class SecurityMaster:
                     time_str = time_str[0:-1]
                 time = datetime.datetime.strptime(time_str, '%Y-%m-%dT%H:%M:%S')
                 if start <= time <= end:
-                    e['type'] = e.get('type', "").upper()
                     piece.append(e)
             output[k] = piece
 
@@ -1216,7 +1223,7 @@ class SecurityMaster:
             r = GsSession.current._get('/markets/securities', payload=params)
             for e in r['results']:
                 if (class_ is None or e['assetClass'] == class_.value) and (types is None or e['type'] in types):
-                    box = {k.upper(): v for k, v in e['identifiers'].items()}
+                    box = e['identifiers']
                     output[box[id_type.value]] = box
                     if len(output) >= limit:
                         break
