@@ -258,6 +258,41 @@ def test_get_security(mocker):
     assert ids[SecurityIdentifier.GSID.value] == 901026
 
 
+def test_get_security_fields(mocker):
+    mock_response = {
+        "results": [
+            {
+                "name": "GOLDMAN SACHS GROUP INC (New York Stock)",
+                "id": "GSPD901026E154",
+                "identifiers": {
+                    "gsid": 901026,
+                    "ric": "GS.N",
+                    "id": "GSPD901026E154",
+                    "cusip": "38141G10",
+                    "sedol": "2407966",
+                    "isin": "US38141G1040",
+                    "ticker": "GS",
+                    "bbid": "GS UN",
+                    "bcid": "GS US",
+                    "gss": "GS",
+                    "primeId": "1003232152"
+                }
+            }
+        ],
+        "totalResults": 1
+    }
+    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+
+    with SecMasterContext():
+        asset = SecurityMaster.get_asset('GS UN', SecurityIdentifier.BBID, fields=['name', 'id'])
+    assert asset.id == 'GSPD901026E154'
+    assert asset.name == 'GOLDMAN SACHS GROUP INC (New York Stock)'
+    ids = asset.get_identifiers()
+    assert ids[SecurityIdentifier.BBID.value] == 'GS UN'
+    assert ids[SecurityIdentifier.RIC.value] == 'GS.N'
+    assert ids[SecurityIdentifier.PRIMEID.value] == '1003232152'
+
+
 def test_get_identifiers(mocker):
     assets = {
         "results": [
@@ -321,10 +356,6 @@ def test_get_identifiers(mocker):
     assert identifiers['AAPL UW'] == ids_ap['results']
 
 
-def full_caps_keys(d):
-    return {k.upper(): v for k, v in d.items()}
-
-
 def test_get_all_identifiers(mocker):
     p1 = {
         "results": [
@@ -366,15 +397,15 @@ def test_get_all_identifiers(mocker):
     with SecMasterContext():
         output = SecurityMaster.get_all_identifiers()
     assert len(output) == 2
-    assert output['GSPD901026E154'] == full_caps_keys(p1['results'][0]['identifiers'])
-    assert output['GSPD14593E459'] == full_caps_keys(p2['results'][0]['identifiers'])
+    assert output['GSPD901026E154'] == p1['results'][0]['identifiers']
+    assert output['GSPD14593E459'] == p2['results'][0]['identifiers']
 
     mocker.patch.object(GsSession.current, '_get', side_effect=[p1, p2, p3])
     with SecMasterContext():
         output = SecurityMaster.get_all_identifiers(id_type=SecurityIdentifier.BBID)
     assert len(output) == 2
-    assert output['GS UN'] == full_caps_keys(p1['results'][0]['identifiers'])
-    assert output['AAPL UW'] == full_caps_keys(p2['results'][0]['identifiers'])
+    assert output['GS UN'] == p1['results'][0]['identifiers']
+    assert output['AAPL UW'] == p2['results'][0]['identifiers']
 
 
 if __name__ == "__main__":
