@@ -19,7 +19,6 @@ import re
 from gs_quant.datetime import relative_date_add
 from gs_quant.timeseries.datetime import *
 from .helper import plot_function
-
 """
 Timeseries analysis library contains functions used to analyze properties of timeseries, including laging, differencing,
 autocorrelation, co-integration and other operations
@@ -196,7 +195,9 @@ class LagMode(Enum):
 
 
 @plot_function
-def lag(x: pd.Series, obs: Union[Window, int, str] = 1, mode: LagMode = LagMode.EXTEND) -> pd.Series:
+def lag(x: pd.Series,
+        obs: Union[Window, int, str] = 1,
+        mode: LagMode = LagMode.EXTEND) -> pd.Series:
     """
     Lag timeseries by a number of observations or a relative date.
 
@@ -248,7 +249,8 @@ def lag(x: pd.Series, obs: Union[Window, int, str] = 1, mode: LagMode = LagMode.
     # Determine how we want to handle observations prior to start date
     if mode == LagMode.EXTEND:
         if x.index.resolution != 'day':
-            raise MqValueError(f'unable to extend index with resolution {x.index.resolution}')
+            raise MqValueError(
+                f'unable to extend index with resolution {x.index.resolution}')
         kwargs = {'periods': abs(obs) + 1, 'freq': 'D'}
         if obs > 0:
             kwargs['start'] = x.index[-1]
