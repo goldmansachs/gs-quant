@@ -132,7 +132,7 @@ class PredefinedAssetEngine(BacktestBaseEngine):
 
         all_times = []
         for d in dates:
-            if is_business_day(d.date(), self.calendars):
+            if self.calendars == 'Weekend' or is_business_day(d.date(), self.calendars):
                 for t in times:
                     all_times.append(dt.datetime.combine(d, t))
         return all_times

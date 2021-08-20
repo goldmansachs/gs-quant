@@ -79,7 +79,7 @@ setuptools.setup(
         "tqdm",
         "certifi",
         "deprecation",
-        "plotly>=5.1.0"
+        "plotly==5.1.0"
     ],
     extras_require={
         "internal": ["gs_quant_internal>=1.1.30", "requests_kerberos"],

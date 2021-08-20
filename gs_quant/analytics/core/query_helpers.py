@@ -21,6 +21,7 @@ from typing import Dict, Tuple, Union
 
 from pandas import DataFrame, to_datetime
 
+from gs_quant.analytics.core.processor import MeasureQueryInfo
 from gs_quant.analytics.core.processor_result import ProcessorResult
 from gs_quant.data import DataFrequency
 from gs_quant.session import GsSession
@@ -31,6 +32,8 @@ _logger = logging.getLogger(__name__)
 def aggregate_queries(query_infos):
     mappings = defaultdict(dict)  # DataSet -> start/end
     for query_info in query_infos:
+        if isinstance(query_info, MeasureQueryInfo):
+            continue
         query = query_info.query
         coordinate = query.coordinate
         dataset_id = coordinate.dataset_id

@@ -16,7 +16,7 @@ under the License.
 
 import datetime as dt
 import logging
-from typing import Tuple, Dict, List
+from typing import Tuple, Dict, List, Union
 
 from gs_quant.session import GsSession
 from gs_quant.target.risk_models import RiskModel, RiskModelCalendar, RiskModelFactor, Term, RiskModelData, \
@@ -142,7 +142,7 @@ class GsFactorRiskModelApi(GsRiskModelApi):
         if end_date is not None:
             url += f'&endDate={end_date.strftime("%Y-%m-%d")}'
         if identifiers is not None:
-            url += '&identifier={ids}'.format(ids='&identifier='.join(identifiers))
+            url += '&identifiers={ids}'.format(ids='&identifiers='.join(identifiers))
         if include_performance_curve:
             url += '&includePerformanceCurve=true'
         return GsSession.current._get(url)['results']
@@ -164,7 +164,7 @@ class GsFactorRiskModelApi(GsRiskModelApi):
     @classmethod
     def upload_risk_model_data(cls,
                                model_id: str,
-                               model_data: RiskModelData,
+                               model_data: Union[Dict, RiskModelData],
                                partial_upload: bool = False,
                                target_universe_size: float = None) -> str:
         url = f'/risk/models/data/{model_id}'

@@ -68,9 +68,9 @@ def test_get_schedule_dates(mocker):
     # run test
     pm = PortfolioManager('MP')
     dates = pm.get_schedule_dates(backcast=True)
-    assert dates == [dt.date(2019, 1, 1), dt.date(2020, 1, 2)]
+    assert dates[0] == dt.date(2019, 1, 1)
     dates = pm.get_schedule_dates(backcast=False)
-    assert dates == [dt.date(2020, 1, 2), dt.date(2020, 3, 1)]
+    assert dates[0] == dt.date(2020, 1, 2)
 
 
 def test_set_entitlements(mocker):

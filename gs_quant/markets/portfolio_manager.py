@@ -24,14 +24,45 @@ from dateutil.relativedelta import relativedelta
 from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.datetime import business_day_offset
 from gs_quant.entities.entitlements import Entitlements
+from gs_quant.entities.entity import PositionedEntity, EntityType
 from gs_quant.errors import MqValueError
-from gs_quant.markets.report import FactorRiskReport, PerformanceReport, ReportJobFuture, Report
-from gs_quant.target.reports import ReportType
+from gs_quant.markets.report import ReportJobFuture
+from gs_quant.target.portfolios import RiskAumSource
 
 _logger = logging.getLogger(__name__)
 
 
-class PortfolioManager:
+class CustomAUMDataPoint:
+    """
+
+    Custom AUM Data Point represents a portfolio's AUM value for a specific date
+
+    """
+
+    def __init__(self,
+                 date: dt.date,
+                 aum: float):
+        self.__date = date
+        self.__aum = aum
+
+    @property
+    def date(self) -> dt.date:
+        return self.__date
+
+    @date.setter
+    def date(self, value: dt.date):
+        self.__date = value
+
+    @property
+    def aum(self) -> float:
+        return self.__aum
+
+    @aum.setter
+    def aum(self, value: float):
+        self.__aum = value
+
+
+class PortfolioManager(PositionedEntity):
     """
 
     Portfolio Manager is used to manage Marquee portfolios (setting entitlements, running and retrieving reports, etc)
@@ -45,6 +76,7 @@ class PortfolioManager:
         :param portfolio_id: Portfolio ID
         """
         self.__portfolio_id = portfolio_id
+        PositionedEntity.__init__(self, portfolio_id, EntityType.PORTFOLIO)
 
     @property
     def portfolio_id(self) -> str:
@@ -53,20 +85,6 @@ class PortfolioManager:
     @portfolio_id.setter
     def portfolio_id(self, value: str):
         self.__portfolio_id = value
-
-    def get_reports(self) -> List[Report]:
-        """
-        Get a list of all reports associated with the portfolio
-        :return: list of Report objects
-        """
-        reports = []
-        reports_as_targets = GsPortfolioApi.get_reports(self.__portfolio_id)
-        for report_target in reports_as_targets:
-            if report_target.type in [ReportType.Portfolio_Factor_Risk, ReportType.Asset_Factor_Risk]:
-                reports.append(FactorRiskReport.from_target(report_target))
-            if report_target.type == ReportType.Portfolio_Performance_Analytics:
-                reports.append(PerformanceReport.from_target(report_target))
-        return reports
 
     def schedule_reports(self,
                          start_date: dt.date = None,
@@ -133,5 +151,50 @@ class PortfolioManager:
             end_date = min(position_dates)
         else:
             start_date = min(position_dates)
-            end_date = max(position_dates)
+            end_date = business_day_offset(dt.date.today(), -1, roll='forward')
         return [start_date, end_date]
+
+    def get_aum_source(self) -> RiskAumSource:
+        """
+        Get portfolio AUM Source
+        :return: AUM Source
+        """
+        portfolio = GsPortfolioApi.get_portfolio(self.portfolio_id)
+        return portfolio.aum_source if portfolio.aum_source is not None else RiskAumSource.Long
+
+    def set_aum_source(self,
+                       aum_source: RiskAumSource):
+        """
+        Set portfolio AUM Source
+        :param aum_source: aum source for portfolio
+        :return:
+        """
+        portfolio = GsPortfolioApi.get_portfolio(self.portfolio_id)
+        portfolio.aum_source = aum_source
+        GsPortfolioApi.update_portfolio(portfolio)
+
+    def get_custom_aum(self,
+                       start_date: dt.date = None,
+                       end_date: dt.date = None) -> List[CustomAUMDataPoint]:
+        """
+        Get AUM data for portfolio
+        :param start_date: start date
+        :param end_date: end date
+        :return: list of AUM data between the specified range
+        """
+        aum_data = GsPortfolioApi.get_custom_aum(self.portfolio_id, start_date, end_date)
+        return [CustomAUMDataPoint(date=dt.datetime.strptime(data['date'], '%Y-%m-%d'),
+                                   aum=data['aum']) for data in aum_data]
+
+    def upload_custom_aum(self,
+                          aum_data: List[CustomAUMDataPoint],
+                          clear_existing_data: bool = None):
+        """
+        Add AUM data for portfolio
+        :param aum_data: list of AUM data to upload
+        :param clear_existing_data: delete all previously uploaded AUM data for the portfolio
+        (defaults to false)
+        :return:
+        """
+        formatted_aum_data = [{'date': data.date.strftime('%Y-%m-%d'), 'aum': data.aum} for data in aum_data]
+        GsPortfolioApi.upload_custom_aum(self.portfolio_id, formatted_aum_data, clear_existing_data)

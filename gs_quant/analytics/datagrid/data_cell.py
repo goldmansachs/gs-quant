@@ -16,13 +16,13 @@ under the License.
 
 import copy
 import uuid
-from typing import List, Optional, Dict, Set, Tuple
+from typing import List, Optional, Dict, Set, Tuple, Union
 
 from pandas import Series
 
 from gs_quant.analytics.common import DATA_CELL_NOT_CALCULATED
 from gs_quant.analytics.core import BaseProcessor
-from gs_quant.analytics.core.processor import DataQueryInfo
+from gs_quant.analytics.core.processor import DataQueryInfo, MeasureQueryInfo
 from gs_quant.analytics.core.processor_result import ProcessorResult
 from gs_quant.analytics.datagrid import Override
 from gs_quant.analytics.datagrid.utils import get_utc_now
@@ -61,7 +61,8 @@ class DataCell:
         # Store the cell data queries
         self.data_queries: List[DataQueryInfo] = []
 
-    def build_cell_graph(self, all_queries: List[DataQueryInfo], rdate_entity_map: Dict[str, Set[Tuple]]) -> None:
+    def build_cell_graph(self, all_queries: List[Union[DataQueryInfo, MeasureQueryInfo]],
+                         rdate_entity_map: Dict[str, Set[Tuple]]) -> None:
         """ Generate and store the cell graph and data queries
 
             This can be modified to return the data queries rather than store on the cell

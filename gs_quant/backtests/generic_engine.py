@@ -269,14 +269,15 @@ class GenericEngine(BacktestBaseEngine):
             if d in backtest.cash_payments and d <= end:
                 for cp in backtest.cash_payments[d]:
                     value = cash_results.get(cp.effective_date, {}).get(Price, {}).get(cp.trade.name, {})
-                    value = value or backtest.results[cp.effective_date][Price][cp.trade.name]
+                    value = backtest.results[cp.effective_date][Price][cp.trade.name] if value == {} else value
                     if cp.scale_date:
                         scale_notional = backtest.portfolio_dict[cp.scale_date][cp.trade.name].notional_amount
                         scale_date_adj = scale_notional / cp.trade.notional_amount
-                        backtest.cash_dict[d] += \
-                            value * scale_date_adj * cp.direction
+                        cp.cash_paid = value * scale_date_adj * cp.direction
+                        backtest.cash_dict[d] += cp.cash_paid
                     else:
-                        backtest.cash_dict[d] += value * cp.direction
+                        cp.cash_paid = value * cp.direction
+                        backtest.cash_dict[d] += cp.cash_paid
                 current_value = backtest.cash_dict[d]
 
         if stored_pc:

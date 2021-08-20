@@ -17,6 +17,9 @@ from typing import List
 import pandas as pd
 import datetime as dt
 import math
+
+from gs_quant.target.risk_models import RiskModelData
+
 from gs_quant.api.gs.risk_models import GsFactorRiskModelApi
 
 
@@ -126,51 +129,118 @@ def divide_request(data, n):
         yield data[i:i + n]
 
 
-def batch_and_upload_partial_data(model_id: str, data: dict):
+def batch_and_upload_partial_data(model_id: str, data: dict, max_asset_size):
     """ Takes in total risk model data for one day and batches requests according to
     asset data size, returns a list of messages from resulting post calls"""
     date = data.get('date')
-    target_universe_size = len(data.get('assetData').get('universe'))
-    factor_data = {
-        'date': date,
-        'factorData': data.get('factorData'),
-        'covarianceMatrix': data.get('covarianceMatrix')}
-    print('Uploading factor data')
-    print(GsFactorRiskModelApi.upload_risk_model_data(
-        model_id,
-        factor_data,
-        partial_upload=True)
-    )
-    split_num = math.ceil(target_universe_size / 20000) if math.ceil(target_universe_size / 20000) else 1
-    split_idx = math.ceil(target_universe_size / split_num)
-    for i in range(split_num):
-        end_idx = (i + 1) * split_idx if split_num != i + 1 else target_universe_size + 1
-        asset_data_subset = {'universe': data.get('assetData').get('universe')[i * split_idx:end_idx],
-                             'specificRisk': data.get('assetData').get('specificRisk')[i * split_idx:end_idx],
-                             'factorExposure': data.get('assetData').get('factorExposure')[i * split_idx:end_idx]}
-        optional_asset_inputs = ['totalRisk', 'historicalBeta']
-        for optional_input in optional_asset_inputs:
-            if data.get('assetData').get(optional_input):
-                asset_data_subset[optional_input] = data.get('assetData').get(optional_input)[i * split_idx:end_idx]
-
-        asset_data_request = {'date': date, 'assetData': asset_data_subset}
+    if data.get('factorData'):
+        factor_data = {
+            'date': date,
+            'factorData': data.get('factorData'),
+            'covarianceMatrix': data.get('covarianceMatrix')}
+        print('Uploading factor data')
         print(GsFactorRiskModelApi.upload_risk_model_data(
             model_id,
-            asset_data_request,
-            partial_upload=True,
-            target_universe_size=target_universe_size)
+            factor_data,
+            partial_upload=True)
         )
+
+    if data.get('assetData'):
+        asset_data_list, target_size = _batch_input_data({'assetData': data.get('assetData')}, max_asset_size)
+        for asset_data_batch in asset_data_list:
+            print(GsFactorRiskModelApi.upload_risk_model_data(
+                model_id,
+                {'assetData': asset_data_batch, 'date': date},
+                partial_upload=True,
+                target_universe_size=target_size)
+            )
 
     if 'issuerSpecificCovariance' in data.keys() or 'factorPortfolios' in data.keys():
-        optional_data = {}
-        for optional_input in ['issuerSpecificCovariance', 'factorPortfolios']:
-            if data.get(optional_input):
-                optional_data[optional_input] = data.get(optional_input)
-        print(f'{list(optional_data.keys())} being uploaded for {date}...')
-        optional_data['date'] = date
-        print(GsFactorRiskModelApi.upload_risk_model_data(
-            model_id,
-            optional_data,
-            partial_upload=True,
-            target_universe_size=target_universe_size)
-        )
+        for optional_input_key in ['issuerSpecificCovariance', 'factorPortfolios']:
+            if data.get(optional_input_key):
+                optional_data = data.get(optional_input_key)
+                optional_data_list, target_size = _batch_input_data({optional_input_key: optional_data}, max_asset_size)
+                print(f'{optional_input_key} being uploaded for {date}...')
+                for optional_data_batch in optional_data_list:
+                    print(GsFactorRiskModelApi.upload_risk_model_data(
+                        model_id,
+                        {optional_input_key: optional_data_batch, 'date': date},
+                        partial_upload=True,
+                        target_universe_size=target_size)
+                    )
+
+
+def risk_model_data_to_json(risk_model_data: RiskModelData) -> dict:
+    risk_model_data = risk_model_data.to_json()
+    risk_model_data['assetData'] = risk_model_data.get('assetData').to_json()
+    if risk_model_data.get('factorPortfolios'):
+        risk_model_data['factorPortfolios'] = risk_model_data.get('factorPortfolios').to_json()
+        risk_model_data['factorPortfolios']['portfolio'] = [portfolio.to_json() for portfolio in
+                                                            risk_model_data.get('factorPortfolios').get(
+                                                                'portfolio')]
+    if risk_model_data.get('issuerSpecificCovariance'):
+        risk_model_data['issuerSpecificCovariance'] = risk_model_data.get('issuerSpecificCovariance').to_json()
+    return risk_model_data
+
+
+def get_universe_size(data_to_split: dict) -> int:
+    data_to_split = list(data_to_split.values())[0]
+    if 'universe' in data_to_split.keys():
+        return len(data_to_split.get('universe'))
+    else:
+        return len(set(data_to_split.get('universeId1') +
+                       data_to_split.get('universeId1')))
+
+
+def _batch_input_data(input_data: dict, max_asset_size: int):
+    data_key = list(input_data.keys())[0]
+    target_universe_size = get_universe_size(input_data)
+    split_num = math.ceil(target_universe_size / max_asset_size) if math.ceil(
+        target_universe_size / max_asset_size) else 1
+    split_idx = math.ceil(target_universe_size / split_num)
+    batched_data_list = []
+    for i in range(split_num):
+        if data_key == 'assetData':
+            data_batched = _batch_asset_input(input_data.get('assetData'), i, split_idx, split_num,
+                                              target_universe_size)
+        elif data_key == 'factorPortfolios':
+            data_batched = _batch_pfp_input(input_data.get('factorPortfolios'), i, split_idx,
+                                            split_num, target_universe_size)
+        else:
+            data_batched = _batch_isc_input(input_data.get('issuerSpecificCovariance'), i, split_idx, split_num,
+                                            target_universe_size)
+        batched_data_list.append(data_batched)
+    return batched_data_list, target_universe_size
+
+
+def _batch_asset_input(input_data: dict, i: int, split_idx: int, split_num: int, target_universe_size: int) -> dict:
+    end_idx = (i + 1) * split_idx if split_num != i + 1 else target_universe_size + 1
+    asset_data_subset = {'universe': input_data.get('universe')[i * split_idx:end_idx],
+                         'specificRisk': input_data.get('specificRisk')[i * split_idx:end_idx],
+                         'factorExposure': input_data.get('factorExposure')[i * split_idx:end_idx]}
+    optional_asset_inputs = ['totalRisk', 'historicalBeta']
+    for optional_input in optional_asset_inputs:
+        if input_data.get(optional_input):
+            asset_data_subset[optional_input] = input_data.get(optional_input)[i * split_idx:end_idx]
+    return asset_data_subset
+
+
+def _batch_pfp_input(input_data: dict, i: int, split_idx: int, split_num: int, target_universe_size: int) -> dict:
+    end_idx = (i + 1) * split_idx if split_num != i + 1 else target_universe_size + 1
+    pfp_data_subset = dict()
+    universe_slice = input_data.get('universe')[i * split_idx:end_idx]
+    pfp_data_subset['universe'] = universe_slice
+    portfolio_slice = list()
+    for portfolio in input_data.get('portfolio'):
+        factor_id = portfolio.get('factorId')
+        weights_slice = portfolio.get('weights')[i * split_idx:end_idx]
+        portfolio_slice.append({"factorId": factor_id, "weights": weights_slice})
+    pfp_data_subset['portfolio'] = portfolio_slice
+    return pfp_data_subset
+
+
+def _batch_isc_input(input_data: dict, i: int, split_idx: int, split_num: int, target_universe_size: int) -> dict:
+    end_idx = (i + 1) * split_idx if split_num != i + 1 else target_universe_size + 1
+    return {'universeId1': input_data.get('universeId1')[i * split_idx:end_idx],
+            'universeId2': input_data.get('universeId2')[i * split_idx:end_idx],
+            'covariance': input_data.get('factorExposure')[i * split_idx:end_idx]}

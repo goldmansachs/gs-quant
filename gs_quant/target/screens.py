@@ -14,39 +14,39 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.common import (AssetScreenerRequestFilterLimits, AssetScreenerRequestFilterDateLimits,
-                             AssetScreenerCreditStandardAndPoorsRatingOptions, Entitlements)
+from gs_quant.target.common import *
 import datetime
-from typing import Tuple
-from gs_quant.base import Base, camel_case_translate
+from typing import Mapping, Tuple, Union
+from gs_quant.base import Base, InstrumentBase, camel_case_translate, get_enum_value
 
 
 class ScreenParameters(Base):
+        
     """Filters for credit asset screener in saved screen."""
 
     @camel_case_translate
     def __init__(
-            self,
-            face_value: float = None,
-            direction: str = None,
-            currency: Tuple[str, ...] = None,
-            gs_liquidity_score: AssetScreenerRequestFilterLimits = None,
-            gs_charge_bps: AssetScreenerRequestFilterLimits = None,
-            gs_charge_dollars: AssetScreenerRequestFilterLimits = None,
-            modified_duration: AssetScreenerRequestFilterLimits = None,
-            issue_date: AssetScreenerRequestFilterDateLimits = None,
-            yield_to_convention: AssetScreenerRequestFilterLimits = None,
-            spread_to_benchmark: AssetScreenerRequestFilterLimits = None,
-            z_spread: AssetScreenerRequestFilterLimits = None,
-            g_spread: AssetScreenerRequestFilterLimits = None,
-            bval_mid_price: AssetScreenerRequestFilterLimits = None,
-            maturity: AssetScreenerRequestFilterLimits = None,
-            amount_outstanding: AssetScreenerRequestFilterLimits = None,
-            rating_standard_and_poors: AssetScreenerCreditStandardAndPoorsRatingOptions = None,
-            seniority: Tuple[str, ...] = None,
-            sector: Tuple[str, ...] = None,
-            name: str = None
-    ):
+        self,
+        face_value: float = None,
+        direction: str = None,
+        currency: Tuple[str, ...] = None,
+        gs_liquidity_score: AssetScreenerRequestFilterLimits = None,
+        gs_charge_bps: AssetScreenerRequestFilterLimits = None,
+        gs_charge_dollars: AssetScreenerRequestFilterLimits = None,
+        modified_duration: AssetScreenerRequestFilterLimits = None,
+        issue_date: AssetScreenerRequestFilterDateLimits = None,
+        yield_to_convention: AssetScreenerRequestFilterLimits = None,
+        spread_to_benchmark: AssetScreenerRequestFilterLimits = None,
+        z_spread: AssetScreenerRequestFilterLimits = None,
+        g_spread: AssetScreenerRequestFilterLimits = None,
+        bval_mid_price: AssetScreenerRequestFilterLimits = None,
+        maturity: AssetScreenerRequestFilterLimits = None,
+        amount_outstanding: AssetScreenerRequestFilterLimits = None,
+        rating_standard_and_poors: AssetScreenerCreditStandardAndPoorsRatingOptions = None,
+        seniority: Tuple[str, ...] = None,
+        sector: Tuple[str, ...] = None,
+        name: str = None
+    ):        
         super().__init__()
         self.face_value = face_value
         self.direction = direction
@@ -76,7 +76,7 @@ class ScreenParameters(Base):
     @face_value.setter
     def face_value(self, value: float):
         self._property_changed('face_value')
-        self.__face_value = value
+        self.__face_value = value        
 
     @property
     def direction(self) -> str:
@@ -86,7 +86,7 @@ class ScreenParameters(Base):
     @direction.setter
     def direction(self, value: str):
         self._property_changed('direction')
-        self.__direction = value
+        self.__direction = value        
 
     @property
     def currency(self) -> Tuple[str, ...]:
@@ -96,7 +96,7 @@ class ScreenParameters(Base):
     @currency.setter
     def currency(self, value: Tuple[str, ...]):
         self._property_changed('currency')
-        self.__currency = value
+        self.__currency = value        
 
     @property
     def gs_liquidity_score(self) -> AssetScreenerRequestFilterLimits:
@@ -106,7 +106,7 @@ class ScreenParameters(Base):
     @gs_liquidity_score.setter
     def gs_liquidity_score(self, value: AssetScreenerRequestFilterLimits):
         self._property_changed('gs_liquidity_score')
-        self.__gs_liquidity_score = value
+        self.__gs_liquidity_score = value        
 
     @property
     def gs_charge_bps(self) -> AssetScreenerRequestFilterLimits:
@@ -116,7 +116,7 @@ class ScreenParameters(Base):
     @gs_charge_bps.setter
     def gs_charge_bps(self, value: AssetScreenerRequestFilterLimits):
         self._property_changed('gs_charge_bps')
-        self.__gs_charge_bps = value
+        self.__gs_charge_bps = value        
 
     @property
     def gs_charge_dollars(self) -> AssetScreenerRequestFilterLimits:
@@ -126,7 +126,7 @@ class ScreenParameters(Base):
     @gs_charge_dollars.setter
     def gs_charge_dollars(self, value: AssetScreenerRequestFilterLimits):
         self._property_changed('gs_charge_dollars')
-        self.__gs_charge_dollars = value
+        self.__gs_charge_dollars = value        
 
     @property
     def modified_duration(self) -> AssetScreenerRequestFilterLimits:
@@ -136,7 +136,7 @@ class ScreenParameters(Base):
     @modified_duration.setter
     def modified_duration(self, value: AssetScreenerRequestFilterLimits):
         self._property_changed('modified_duration')
-        self.__modified_duration = value
+        self.__modified_duration = value        
 
     @property
     def issue_date(self) -> AssetScreenerRequestFilterDateLimits:
@@ -146,7 +146,7 @@ class ScreenParameters(Base):
     @issue_date.setter
     def issue_date(self, value: AssetScreenerRequestFilterDateLimits):
         self._property_changed('issue_date')
-        self.__issue_date = value
+        self.__issue_date = value        
 
     @property
     def yield_to_convention(self) -> AssetScreenerRequestFilterLimits:
@@ -156,7 +156,7 @@ class ScreenParameters(Base):
     @yield_to_convention.setter
     def yield_to_convention(self, value: AssetScreenerRequestFilterLimits):
         self._property_changed('yield_to_convention')
-        self.__yield_to_convention = value
+        self.__yield_to_convention = value        
 
     @property
     def spread_to_benchmark(self) -> AssetScreenerRequestFilterLimits:
@@ -167,7 +167,7 @@ class ScreenParameters(Base):
     @spread_to_benchmark.setter
     def spread_to_benchmark(self, value: AssetScreenerRequestFilterLimits):
         self._property_changed('spread_to_benchmark')
-        self.__spread_to_benchmark = value
+        self.__spread_to_benchmark = value        
 
     @property
     def z_spread(self) -> AssetScreenerRequestFilterLimits:
@@ -177,7 +177,7 @@ class ScreenParameters(Base):
     @z_spread.setter
     def z_spread(self, value: AssetScreenerRequestFilterLimits):
         self._property_changed('z_spread')
-        self.__z_spread = value
+        self.__z_spread = value        
 
     @property
     def g_spread(self) -> AssetScreenerRequestFilterLimits:
@@ -188,7 +188,7 @@ class ScreenParameters(Base):
     @g_spread.setter
     def g_spread(self, value: AssetScreenerRequestFilterLimits):
         self._property_changed('g_spread')
-        self.__g_spread = value
+        self.__g_spread = value        
 
     @property
     def bval_mid_price(self) -> AssetScreenerRequestFilterLimits:
@@ -198,7 +198,7 @@ class ScreenParameters(Base):
     @bval_mid_price.setter
     def bval_mid_price(self, value: AssetScreenerRequestFilterLimits):
         self._property_changed('bval_mid_price')
-        self.__bval_mid_price = value
+        self.__bval_mid_price = value        
 
     @property
     def maturity(self) -> AssetScreenerRequestFilterLimits:
@@ -208,7 +208,7 @@ class ScreenParameters(Base):
     @maturity.setter
     def maturity(self, value: AssetScreenerRequestFilterLimits):
         self._property_changed('maturity')
-        self.__maturity = value
+        self.__maturity = value        
 
     @property
     def amount_outstanding(self) -> AssetScreenerRequestFilterLimits:
@@ -219,7 +219,7 @@ class ScreenParameters(Base):
     @amount_outstanding.setter
     def amount_outstanding(self, value: AssetScreenerRequestFilterLimits):
         self._property_changed('amount_outstanding')
-        self.__amount_outstanding = value
+        self.__amount_outstanding = value        
 
     @property
     def rating_standard_and_poors(self) -> AssetScreenerCreditStandardAndPoorsRatingOptions:
@@ -229,7 +229,7 @@ class ScreenParameters(Base):
     @rating_standard_and_poors.setter
     def rating_standard_and_poors(self, value: AssetScreenerCreditStandardAndPoorsRatingOptions):
         self._property_changed('rating_standard_and_poors')
-        self.__rating_standard_and_poors = value
+        self.__rating_standard_and_poors = value        
 
     @property
     def seniority(self) -> Tuple[str, ...]:
@@ -239,7 +239,7 @@ class ScreenParameters(Base):
     @seniority.setter
     def seniority(self, value: Tuple[str, ...]):
         self._property_changed('seniority')
-        self.__seniority = value
+        self.__seniority = value        
 
     @property
     def sector(self) -> Tuple[str, ...]:
@@ -249,26 +249,27 @@ class ScreenParameters(Base):
     @sector.setter
     def sector(self, value: Tuple[str, ...]):
         self._property_changed('sector')
-        self.__sector = value
+        self.__sector = value        
 
 
 class Screen(Base):
+        
     """Object representation of a Screen"""
 
     @camel_case_translate
     def __init__(
-            self,
-            name: str,
-            parameters: ScreenParameters,
-            id_: str = None,
-            active: bool = None,
-            owner_id: str = None,
-            created_by_id: str = None,
-            created_time: datetime.datetime = None,
-            last_updated_by_id: str = None,
-            last_updated_time: datetime.datetime = None,
-            entitlements: Entitlements = None
-    ):
+        self,
+        name: str,
+        parameters: ScreenParameters,
+        id_: str = None,
+        active: bool = None,
+        owner_id: str = None,
+        created_by_id: str = None,
+        created_time: datetime.datetime = None,
+        last_updated_by_id: str = None,
+        last_updated_time: datetime.datetime = None,
+        entitlements: Entitlements = None
+    ):        
         super().__init__()
         self.__id = id_
         self.active = active
@@ -289,7 +290,7 @@ class Screen(Base):
     @id.setter
     def id(self, value: str):
         self._property_changed('id')
-        self.__id = value
+        self.__id = value        
 
     @property
     def active(self) -> bool:
@@ -298,7 +299,7 @@ class Screen(Base):
     @active.setter
     def active(self, value: bool):
         self._property_changed('active')
-        self.__active = value
+        self.__active = value        
 
     @property
     def owner_id(self) -> str:
@@ -308,7 +309,7 @@ class Screen(Base):
     @owner_id.setter
     def owner_id(self, value: str):
         self._property_changed('owner_id')
-        self.__owner_id = value
+        self.__owner_id = value        
 
     @property
     def created_by_id(self) -> str:
@@ -318,7 +319,7 @@ class Screen(Base):
     @created_by_id.setter
     def created_by_id(self, value: str):
         self._property_changed('created_by_id')
-        self.__created_by_id = value
+        self.__created_by_id = value        
 
     @property
     def created_time(self) -> datetime.datetime:
@@ -328,7 +329,7 @@ class Screen(Base):
     @created_time.setter
     def created_time(self, value: datetime.datetime):
         self._property_changed('created_time')
-        self.__created_time = value
+        self.__created_time = value        
 
     @property
     def last_updated_by_id(self) -> str:
@@ -338,7 +339,7 @@ class Screen(Base):
     @last_updated_by_id.setter
     def last_updated_by_id(self, value: str):
         self._property_changed('last_updated_by_id')
-        self.__last_updated_by_id = value
+        self.__last_updated_by_id = value        
 
     @property
     def last_updated_time(self) -> datetime.datetime:
@@ -348,7 +349,7 @@ class Screen(Base):
     @last_updated_time.setter
     def last_updated_time(self, value: datetime.datetime):
         self._property_changed('last_updated_time')
-        self.__last_updated_time = value
+        self.__last_updated_time = value        
 
     @property
     def entitlements(self) -> Entitlements:
@@ -358,7 +359,7 @@ class Screen(Base):
     @entitlements.setter
     def entitlements(self, value: Entitlements):
         self._property_changed('entitlements')
-        self.__entitlements = value
+        self.__entitlements = value        
 
     @property
     def name(self) -> str:
@@ -368,7 +369,7 @@ class Screen(Base):
     @name.setter
     def name(self, value: str):
         self._property_changed('name')
-        self.__name = value
+        self.__name = value        
 
     @property
     def parameters(self) -> ScreenParameters:
@@ -378,4 +379,4 @@ class Screen(Base):
     @parameters.setter
     def parameters(self, value: ScreenParameters):
         self._property_changed('parameters')
-        self.__parameters = value
+        self.__parameters = value        

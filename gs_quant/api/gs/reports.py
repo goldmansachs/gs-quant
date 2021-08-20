@@ -20,7 +20,7 @@ from typing import Tuple, List
 
 from gs_quant.session import GsSession
 from gs_quant.target.common import Currency
-from gs_quant.target.reports import Report
+from gs_quant.target.reports import Report, FactorRiskTableMode, OrderType
 
 _logger = logging.getLogger(__name__)
 
@@ -64,11 +64,13 @@ class GsReportApi:
         return GsSession.current._delete('/reports/{id}'.format(id=report_id))
 
     @classmethod
-    def schedule_report(cls, report_id: str, start_date: dt.date, end_date: dt.date) -> dict:
+    def schedule_report(cls, report_id: str, start_date: dt.date, end_date: dt.date, backcast: bool = False) -> dict:
         report_schedule_request = {
             'startDate': start_date.strftime('%Y-%m-%d'),
             'endDate': end_date.strftime('%Y-%m-%d')
         }
+        if backcast:
+            report_schedule_request['parameters'] = {'backcast': backcast}
         return GsSession.current._post('/reports/{id}/schedule'.format(id=report_id), report_schedule_request)
 
     @classmethod
@@ -103,21 +105,46 @@ class GsReportApi:
                                      currency: Currency = None,
                                      start_date: dt.date = None,
                                      end_date: dt.date = None) -> dict:
-        url = ''
+        url = f'/risk/factors/reports/{risk_report_id}/results?'
         if factors is not None:
             factors = map(urllib.parse.quote, factors)  # to support factors like "Automobiles & Components"
-            url += '&factors={factors}'.format(factors='&factors='.join(factors))
+            url += f'&factors={"&factors=".join(factors)}'
         if factor_categories is not None:
-            url += '&factorCategories={categories}'.format(categories='&factorCategories='.join(factor_categories))
+            url += f'&factorCategories={"&factorCategories=".join(factor_categories)}'
         if currency is not None:
             url += f'&currency={currency.value}'
         if start_date is not None:
-            url += '&startDate={date}'.format(date=start_date.strftime('%Y-%m-%d'))
+            url += f'&startDate={start_date.strftime("%Y-%m-%d")}'
         if end_date is not None:
-            url += '&endDate={date}'.format(date=end_date.strftime('%Y-%m-%d'))
+            url += f'&endDate={end_date.strftime("%Y-%m-%d")}'
 
-        if url:
-            url = f'/risk/factors/reports/{risk_report_id}/results?' + url[1:]
-        else:
-            url = f'/risk/factors/reports/{risk_report_id}/results'
+        return GsSession.current._get(url)
+
+    @classmethod
+    def get_factor_risk_report_table(cls,
+                                     risk_report_id: str,
+                                     mode: FactorRiskTableMode = None,
+                                     factors: List[str] = None,
+                                     factor_categories: List[str] = None,
+                                     currency: Currency = None,
+                                     date: dt.date = None,
+                                     order_by_column: str = None,
+                                     order_type: OrderType = None) -> dict:
+        url = f'/risk/factors/reports/{risk_report_id}/tables?'
+        if mode is not None:
+            url += f'&mode={mode}'
+        if currency is not None:
+            url += f'&currency={currency.value}'
+        if date is not None:
+            url += f'&date={date.strftime("%Y-%m-%d")}'
+        if factors is not None:
+            factors = map(urllib.parse.quote, factors)
+            url += f'&factor={"&factor=".join(factors)}'
+        if factor_categories is not None:
+            url += f'&factorCategory={"&factorCategory=".join(factor_categories)}'
+        if order_by_column is not None:
+            url += f'&orderByColumn={order_by_column}'
+        if order_type is not None:
+            url += f'&orderType={order_type}'
+
         return GsSession.current._get(url)

@@ -325,5 +325,5 @@ def test_get_risk_factor_data_results(mocker):
     # run test
     response = GsReportApi.get_risk_factor_data_results('reportId')
 
-    GsSession.current._get.assert_called_with('/risk/factors/reports/reportId/results')
+    GsSession.current._get.assert_called_with('/risk/factors/reports/reportId/results?')
     assert response == mock_response

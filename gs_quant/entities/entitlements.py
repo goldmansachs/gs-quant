@@ -30,9 +30,9 @@ _logger = logging.getLogger(__name__)
 class User:
     def __init__(self,
                  user_id: str,
-                 name: str,
-                 email: str,
-                 company: str):
+                 name: str = None,
+                 email: str = None,
+                 company: str = None):
         self.__id = user_id
         self.__email = email
         self.__name = name
@@ -105,7 +105,7 @@ class User:
         """
         user_ids = user_ids if user_ids else []
         names = names if names else []
-        emails = emails if emails else []
+        emails = [email.lower() for email in emails] if emails else []
         companies = companies if companies else []
 
         if not user_ids + names + emails + companies:

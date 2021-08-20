@@ -72,7 +72,7 @@ def test_create_risk_model(mocker):
                                 0.1,
                                 entitlements={},
                                 description='Test')
-    new_model.upload()
+    new_model.save()
     assert new_model.id == mock_risk_model_obj.id
     assert new_model.name == mock_risk_model_obj.name
     assert new_model.description == mock_risk_model_obj.description

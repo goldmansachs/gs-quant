@@ -21,7 +21,21 @@ from enum import Enum
 from gs_quant.base import Base, EnumBase, InstrumentBase, camel_case_translate, get_enum_value
 
 
-class PositionSourceType(EnumBase, Enum):    
+class OrderType(EnumBase, Enum):
+    """Source object for position data"""
+
+    Ascending = 'Ascending'
+    Descending = 'Descending'
+
+
+class FactorRiskTableMode(EnumBase, Enum):
+    """Source object for position data"""
+
+    Exposure = 'Exposure'
+    ZScore = 'ZScore'
+
+
+class PositionSourceType(EnumBase, Enum):
     
     """Source object for position data"""
 
@@ -61,8 +75,8 @@ class ReportMeasures(EnumBase, Enum):
     exposure = 'exposure'
     sensitivity = 'sensitivity'
     mctr = 'mctr'
-    mctRisk = 'mctRisk'
-    rmctRisk = 'rmctRisk'
+    annualizedMCTRisk = 'annualizedMCTRisk'
+    annualizedRMCTRisk = 'annualizedRMCTRisk'
     poRisk = 'poRisk'
     price = 'price'
     basePrice = 'basePrice'    
@@ -142,6 +156,7 @@ class Report(Base):
         created_by_id: str = None,
         created_time: datetime.datetime = None,
         entitlements: Entitlements = None,
+        earliest_start_date: datetime.date = None,
         entitlement_exclusions: EntitlementExclusions = None,
         id_: str = None,
         last_updated_by_id: str = None,
@@ -161,6 +176,7 @@ class Report(Base):
         self.created_by_id = created_by_id
         self.created_time = created_time
         self.entitlements = entitlements
+        self.earliest_start_date = earliest_start_date
         self.entitlement_exclusions = entitlement_exclusions
         self.__id = id_
         self.last_updated_by_id = last_updated_by_id
@@ -236,6 +252,16 @@ class Report(Base):
     def entitlements(self, value: Entitlements):
         self._property_changed('entitlements')
         self.__entitlements = value        
+
+    @property
+    def earliest_start_date(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__earliest_start_date
+
+    @earliest_start_date.setter
+    def earliest_start_date(self, value: datetime.date):
+        self._property_changed('earliest_start_date')
+        self.__earliest_start_date = value        
 
     @property
     def entitlement_exclusions(self) -> EntitlementExclusions:

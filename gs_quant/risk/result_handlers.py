@@ -182,11 +182,10 @@ def risk_vector_handler(result: dict, risk_key: RiskKey, _instrument: Instrument
         ('mkt_quoting_style', 'quoteStyle'),
         ('value', 'value')
     )
-
     return __dataframe_handler(result['points'], mappings, risk_key, request_id=request_id)
 
 
-def risk_theta_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
+def risk_float_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
                        request_id: Optional[str] = None) -> FloatWithInfo:
     return FloatWithInfo(risk_key, result['values'][0], request_id=request_id)
 
@@ -233,7 +232,8 @@ result_handlers = {
     'Risk': risk_handler,
     'RiskByClass': risk_by_class_handler,
     'RiskVector': risk_vector_handler,
-    'RiskTheta': risk_theta_handler,
+    'RiskSecondOrderVector': risk_float_handler,
+    'RiskTheta': risk_float_handler,
     'Market': market_handler,
     'Unsupported': unsupported_handler
 }

@@ -103,17 +103,18 @@ class Index(Asset, PositionedEntity):
     def get_fundamentals(self,
                          start: dt.date = DateLimit.LOW_LIMIT.value,
                          end: dt.date = dt.date.today(),
-                         period: FundamentalMetricPeriod = FundamentalMetricPeriod.ONE_YEAR.value,
-                         direction: FundamentalMetricPeriodDirection = FundamentalMetricPeriodDirection.FORWARD.value,
+                         period: DataMeasure = DataMeasure.ONE_YEAR.value,
+                         direction: DataMeasure = DataMeasure.FORWARD.value,
                          metrics: List[DataMeasure] = DataMeasure.list_fundamentals()) -> pd.DataFrame:
         """
         Retrieve fundamentals data for an index across a date range. Currently supports STS indices only
 
-        :param start: start date (default minimum date value)
+        :param start: start date (default is 1 January, 1970)
         :param end: end date (default is today)
-        :param period: period for the relevant metric (default is 1y)
-        :param direction: direction of the outlook period (default is forward)
-        :param metrics: list of fundamentals metrics (default is all)
+        :param period: period for the relevant metric.  Can be one of ONE_YEAR('1y'), TWO_YEARS('2y'), \
+            THREE_YEARS('3y') (default is 1y)
+        :param direction: direction of the outlook period. Can be one of 'forward' or 'trailing' (default is forward)
+        :param metrics: list of fundamentals metrics. (default is all)
         :return: dataframe with fundamentals information
 
         **Usage**
@@ -186,7 +187,7 @@ class Index(Asset, PositionedEntity):
         """
         Retrieve close prices for an index. Only STS indices support indicative prices.
 
-        :param date: date of the required prices (default today)
+        :param date: date of the required prices (default is today)
         :param price_type: Type of prices to return. Default returns official close price
         :return: dataframe with date's close prices
 
@@ -230,7 +231,7 @@ class Index(Asset, PositionedEntity):
         """
         Retrieve close prices for an index for a date range. Only STS indices support indicative prices.
 
-        :param start: start date (default is minimum date value)
+        :param start: start date (default is 1 January, 1970)
         :param end: end date (default is today)
         :param price_type: Type of prices to return. Default returns official close price
         :return: dataframe with the close price between start and end date

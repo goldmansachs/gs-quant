@@ -16,7 +16,8 @@ under the License.
 
 import pytest
 
-from gs_quant.markets.report import FactorRiskReport, PerformanceReport
+from gs_quant.api.gs.data import GsDataApi
+from gs_quant.markets.report import FactorRiskReport, PerformanceReport, ThematicReport
 from gs_quant.session import *
 from gs_quant.target.reports import ReportStatus, PositionSourceType, ReportType, ReportParameters, Report
 
@@ -36,6 +37,13 @@ fake_ppa = PerformanceReport(report_id='PPAID',
                              parameters=None,
                              status=ReportStatus.done
                              )
+fake_pta = ThematicReport(report_id='PTAID',
+                          position_source_type=PositionSourceType.Portfolio,
+                          position_source_id='PORTFOLIOID',
+                          report_type=ReportType.Portfolio_Thematic_Analytics,
+                          parameters=None,
+                          status=ReportStatus.done
+                          )
 
 factor_risk_results = [
     {
@@ -64,6 +72,45 @@ factor_risk_results = [
         'exposure': 150,
         'annualRisk': 39,
         'dailyRisk': 22
+    }
+]
+
+thematic_results = [
+    {
+        "date": "2021-07-12",
+        "reportId": "PTAID",
+        "basketId": "MA01GPR89HZF1FZ5",
+        "region": "Asia",
+        "grossExposure": 3.448370345015856E8,
+        "thematicExposure": 1.1057087573594835E8,
+        "updateTime": "2021-07-20T23:43:38Z"
+    },
+    {
+        "date": "2021-07-13",
+        "reportId": "PTAID",
+        "basketId": "MA01GPR89HZF1FZ5",
+        "region": "Asia",
+        "grossExposure": 3.375772519907556E8,
+        "thematicExposure": 1.0511196135243121E8,
+        "updateTime": "2021-07-20T23:43:38Z"
+    },
+    {
+        "date": "2021-07-14",
+        "reportId": "PTAID",
+        "basketId": "MA01GPR89HZF1FZ5",
+        "region": "Asia",
+        "grossExposure": 3.321189950666118E8,
+        "thematicExposure": 1.0089556961211234E8,
+        "updateTime": "2021-07-20T23:43:38Z"
+    },
+    {
+        "date": "2021-07-15",
+        "reportId": "PTAID",
+        "basketId": "MA01GPR89HZF1FZ5",
+        "region": "Asia",
+        "grossExposure": 3.274071805135091E8,
+        "thematicExposure": 9.706991264825605E7,
+        "updateTime": "2021-07-20T23:43:38Z"
     }
 ]
 
@@ -207,6 +254,22 @@ def test_get_daily_risk(mocker):
     # run test
     response = fake_pfr.get_daily_risk('factor1')
     assert len(response) == 3
+
+
+def test_get_pta_measures(mocker):
+    # mock GsSession
+    mocker.patch.object(
+        GsSession.__class__,
+        'default_value',
+        return_value=GsSession.get(
+            Environment.QA,
+            'client_id',
+            'secret'))
+    mocker.patch.object(GsDataApi, 'query_data', return_value=thematic_results)
+
+    # run test
+    response = fake_pta._get_pta_measures(["grossExposure", "thematicExposure"])
+    assert len(response) == 4
 
 
 if __name__ == '__main__':

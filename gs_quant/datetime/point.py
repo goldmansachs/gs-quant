@@ -314,4 +314,6 @@ def point_sort_order(point: str, ref_date: dt.date = dt.date.today()) -> float:
         date_str = res.group(1)
         format_str = '%d%b%y'
         days = (dt.datetime.strptime(date_str, format_str).date() - ref_date).days
+    else:
+        days = 0
     return days

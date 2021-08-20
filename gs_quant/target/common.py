@@ -4142,6 +4142,116 @@ class AssetIdPriceable(Priceable):
         self._property_changed('asset_id')
         self.__asset_id = value        
 
+class AssetScreenerCreditStandardAndPoorsRatingOptions(Base):
+        
+    """Options for credit screener rating filter."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        min_: str = None,
+        max_: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.__min = min_
+        self.__max = max_
+        self.name = name
+
+    @property
+    def min(self) -> str:
+        """Minimum rating the user chooses to filter on"""
+        return self.__min
+
+    @min.setter
+    def min(self, value: str):
+        self._property_changed('min')
+        self.__min = value        
+
+    @property
+    def max(self) -> str:
+        """Maximum rating the user chooses to filter on"""
+        return self.__max
+
+    @max.setter
+    def max(self, value: str):
+        self._property_changed('max')
+        self.__max = value        
+
+
+class AssetScreenerRequestFilterDateLimits(Base):
+        
+    """Min and max date limits for filters on asset screener."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        min_: datetime.date = None,
+        max_: datetime.date = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.__min = min_
+        self.__max = max_
+        self.name = name
+
+    @property
+    def min(self) -> datetime.date:
+        """lower constraint value"""
+        return self.__min
+
+    @min.setter
+    def min(self, value: datetime.date):
+        self._property_changed('min')
+        self.__min = value        
+
+    @property
+    def max(self) -> datetime.date:
+        """upper constraint value"""
+        return self.__max
+
+    @max.setter
+    def max(self, value: datetime.date):
+        self._property_changed('max')
+        self.__max = value        
+
+
+class AssetScreenerRequestFilterLimits(Base):
+        
+    """Min and max limits for filters on asset screener."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        min_: float = None,
+        max_: float = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.__min = min_
+        self.__max = max_
+        self.name = name
+
+    @property
+    def min(self) -> float:
+        """lower constraint value"""
+        return self.__min
+
+    @min.setter
+    def min(self, value: float):
+        self._property_changed('min')
+        self.__min = value        
+
+    @property
+    def max(self) -> float:
+        """upper constraint value"""
+        return self.__max
+
+    @max.setter
+    def max(self, value: float):
+        self._property_changed('max')
+        self.__max = value        
+
 
 class CSLDate(Base):
         
