@@ -284,11 +284,11 @@ class FactorPortfolio(Base):
     def __init__(
             self,
             factor_id: str,
-            weight: List[float]
+            weights: List[float]
     ):
         super().__init__()
         self.factor_id = factor_id
-        self.weight = weight
+        self.weights = weights
 
     @property
     def factor_id(self) -> str:
@@ -301,12 +301,12 @@ class FactorPortfolio(Base):
         self.__factor_id = value
 
     @property
-    def weight(self) -> List[float]:
+    def weights(self) -> List[float]:
         """Weights for each asset in the portfolio"""
         return self.__weight
 
-    @weight.setter
-    def weight(self, value: List[float]):
+    @weights.setter
+    def weights(self, value: List[float]):
         self._property_changed('weight')
         self.__weight = value
 

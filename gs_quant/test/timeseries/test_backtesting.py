@@ -14,11 +14,17 @@ specific language governing permissions and limitations
 under the License.
 """
 
+import datetime
+
+import pandas as pd
 import pytest
 from pandas.testing import assert_series_equal
-from gs_quant.timeseries import *
 from testfixtures import Replacer
 from testfixtures.mock import Mock
+
+from gs_quant.timeseries import EdrDataReference
+from gs_quant.timeseries.backtesting import Basket, basket_series, MqValueError, MqTypeError, RebalFreq, date, \
+    DataContext, np
 
 
 def test_basket_series():

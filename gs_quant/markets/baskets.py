@@ -31,6 +31,7 @@ from gs_quant.api.gs.indices import GsIndexApi
 from gs_quant.api.gs.reports import GsReportApi
 from gs_quant.api.gs.users import GsUsersApi
 from gs_quant.common import DateLimit, PositionType
+from gs_quant.data.fields import DataMeasure
 from gs_quant.entities.entity import EntityType, PositionedEntity
 from gs_quant.entities.entitlements import Entitlements as BasketEntitlements
 from gs_quant.errors import MqError, MqValueError
@@ -449,9 +450,9 @@ class Basket(Asset, PositionedEntity):
     def get_fundamentals(self,
                          start: dt.date = DateLimit.LOW_LIMIT.value,
                          end: dt.date = dt.date.today(),
-                         period: FundamentalMetricPeriod = FundamentalMetricPeriod.ONE_YEAR.value,
-                         direction: FundamentalMetricPeriodDirection = FundamentalMetricPeriodDirection.FORWARD.value,
-                         metrics: List[FundamentalsMetrics] = FundamentalsMetrics.to_list()) -> pd.DataFrame:
+                         period: DataMeasure = DataMeasure.ONE_YEAR.value,
+                         direction: DataMeasure = DataMeasure.FORWARD.value,
+                         metrics: List[DataMeasure] = DataMeasure.list_fundamentals()) -> pd.DataFrame:
         """
         Retrieve fundamentals data for a basket across a date range
 
@@ -470,11 +471,11 @@ class Basket(Asset, PositionedEntity):
 
         Retrieve historical dividend yield data for a basket
 
+        >>> from gs_quant.data.fields import DataMeasure
         >>> from gs_quant.markets.baskets import Basket
-        >>> from gs_quant.markets.indices_utils import FundamentalsMetrics
         >>>
         >>> basket = Basket.get("GSMBXXXX")
-        >>> basket.get_corporate_actions(metrics=[FundamentalsMetrics.DIVIDEND_YIELD])
+        >>> basket.get_fundamentals(metrics=[DataMeasure.DIVIDEND_YIELD])
 
         **See also**
 

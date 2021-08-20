@@ -16,9 +16,9 @@ under the License.
 
 from .analysis_processors import DiffProcessor
 from .econometrics_processors import SharpeRatioProcessor, VolatilityProcessor, CorrelationProcessor, ChangeProcessor, \
-    ReturnsProcessor, BetaProcessor
+    ReturnsProcessor, BetaProcessor, FXImpliedCorrProcessor
 from .special_processors import EntityProcessor, CoordinateProcessor
-from .statistics_processors import PercentilesProcessor, PercentileProcessor, \
+from .statistics_processors import PercentilesProcessor, PercentileProcessor, StdMoveProcessor, \
     CovarianceProcessor, ZscoresProcessor, MeanProcessor, VarianceProcessor, SumProcessor, StdDevProcessor
 from .utility_processors import LastProcessor, AppendProcessor, AdditionProcessor, SubtractionProcessor, \
     MultiplicationProcessor, DivisionProcessor, MinProcessor, MaxProcessor, NthLastProcessor

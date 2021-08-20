@@ -19,16 +19,18 @@ import pandas as pd
 from pydash import decapitalize
 
 from gs_quant.api.gs.data import QueryType
+from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.data.core import DataContext
 from gs_quant.entities.entity import EntityType
 from gs_quant.errors import MqValueError, MqError
+from gs_quant.markets.baskets import Basket
 from gs_quant.markets.factor import Factor
 from gs_quant.markets.report import FactorRiskReport, PerformanceReport
+from gs_quant.markets.report import ThematicReport
 from gs_quant.models.risk_model import ReturnFormat
 from gs_quant.target.portfolios import RiskAumSource
 from gs_quant.timeseries import plot_measure_entity
 from gs_quant.timeseries.measures import _extract_series_from_df
-from gs_quant.api.gs.portfolios import GsPortfolioApi
 
 
 @plot_measure_entity(EntityType.REPORT, [QueryType.FACTOR_EXPOSURE])
@@ -176,6 +178,54 @@ def normalized_performance(report_id: str, aum_source: str = None, *, source: st
     data['normalizedPerformance'] = data['pnlOverNormalizedExposure'].cumsum(axis=0) + 1
     data.loc[data.normalizedExposure < 0, 'normalizedPerformance'] = 1 / data.loc[:, 'normalizedPerformance']
     return pd.Series(data['normalizedPerformance'], name="normalizedPerformance").dropna()
+
+
+@plot_measure_entity(EntityType.REPORT, [QueryType.THEMATIC_EXPOSURE])
+def thematic_exposure(report_id: str, basket_ticker: str, *, source: str = None,
+                      real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+    """
+    Thematic exposure of a portfolio to a requested GS thematic flagship basket
+
+    :param report_id: portfolio thematic analytics report id
+    :param basket_ticker: ticker for thematic basket
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: Timeseries of daily thematic beta of portfolio to requested flagship basket
+    """
+    thematic_report = ThematicReport.get(report_id)
+    thematic_basket = Basket.get(basket_ticker)
+    df = thematic_report.get_thematic_exposure(start_date=DataContext.current.start_time,
+                                               end_date=DataContext.current.end_time,
+                                               basket_ids=[thematic_basket.get_marquee_id()])
+    if not df.empty:
+        df.set_index('date', inplace=True)
+        df.index = pd.to_datetime(df.index)
+    return _extract_series_from_df(df, QueryType.THEMATIC_EXPOSURE)
+
+
+@plot_measure_entity(EntityType.REPORT, [QueryType.THEMATIC_EXPOSURE])
+def thematic_beta(report_id: str, basket_ticker: str, *, source: str = None,
+                  real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+    """
+    Thematic beta values of a portfolio to a requested GS thematic flagship basket
+
+    :param report_id: portfolio thematic analytics report id
+    :param basket_ticker: ticker for thematic basket
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: Timeseries of daily thematic beta of portfolio to requested flagship basket
+    """
+    thematic_report = ThematicReport.get(report_id)
+    thematic_basket = Basket.get(basket_ticker)
+    df = thematic_report.get_thematic_betas(start_date=DataContext.current.start_time,
+                                            end_date=DataContext.current.end_time,
+                                            basket_ids=[thematic_basket.get_marquee_id()])
+    if not df.empty:
+        df.set_index('date', inplace=True)
+        df.index = pd.to_datetime(df.index)
+    return _extract_series_from_df(df, QueryType.THEMATIC_BETA)
 
 
 def _get_factor_data(report_id: str, factor_name: str, query_type: QueryType) -> pd.Series:

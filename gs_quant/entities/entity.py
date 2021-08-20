@@ -371,24 +371,11 @@ class PositionedEntity(metaclass=ABCMeta):
         raise NotImplementedError
 
     def update_positions(self,
-                         position_sets: List[PositionSet],
-                         schedule_reports: bool = True):
+                         position_sets: List[PositionSet]):
         if self.positioned_entity_type == EntityType.PORTFOLIO:
             if not position_sets:
                 return
-            existing_positions_dates = self.get_position_dates()
-            new_position_dates = [p.date for p in position_sets] if position_sets else []
-            reports = [r.latest_end_date for r in self.get_reports() if r.latest_end_date]
-            latest_date_covered_by_reports = min(reports) if reports else None
-            latest_position_date_in_reports = max([d for d in existing_positions_dates
-                                                   if d <= latest_date_covered_by_reports]) \
-                if latest_date_covered_by_reports else min(new_position_dates)
-            start_date = min(latest_position_date_in_reports, min(new_position_dates))
-            end_date = max(new_position_dates)
             GsPortfolioApi.update_positions(portfolio_id=self.id, position_sets=[p.to_target() for p in position_sets])
-            if schedule_reports:
-                self._schedule_reports(start_date=start_date,
-                                       end_date=end_date)
         else:
             raise NotImplementedError
 
@@ -460,14 +447,6 @@ class PositionedEntity(metaclass=ABCMeta):
             if len(reports) == 0:
                 raise MqError(f'This {position_source_type} has no factor risk reports that match your parameters.')
             return FactorRiskReport.from_target(reports[0])
-        raise NotImplementedError
-
-    def create_report(self, report: Report):
-        if self.positioned_entity_type == EntityType.PORTFOLIO:
-            report.set_position_source(self.id)
-            report.save()
-            self._schedule_first_reports([pos_set.date for pos_set in self.get_position_sets()])
-            return report
         raise NotImplementedError
 
     def poll_report(self, report_id: str, timeout: int = 600, step: int = 30) -> ReportStatus:

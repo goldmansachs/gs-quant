@@ -21,12 +21,14 @@ from pandas import Series
 from gs_quant.analytics.core.processor import BaseProcessor, DataCoordinateOrProcessor, DataQueryInfo, \
     DateOrDatetimeOrRDate
 from gs_quant.analytics.core.processor_result import ProcessorResult
+from gs_quant.analytics.processors.special_processors import MeasureProcessor
 from gs_quant.data.coordinate import DataCoordinate
 from gs_quant.data.query import DataQuery
 from gs_quant.entities.entity import Entity
-from gs_quant.markets.securities import Stock
+from gs_quant.markets.securities import Stock, Cross
 from gs_quant.target.common import Currency
-from gs_quant.timeseries import correlation, Window, SeriesType, DataMeasure, DataFrequency
+from gs_quant.timeseries import correlation, Window, SeriesType, DataMeasure, DataFrequency, DataContext, \
+    fx_implied_correlation
 from gs_quant.timeseries import excess_returns_pure
 from gs_quant.timeseries.econometrics import get_ratio_pure, SharpeAssets, change, returns
 from gs_quant.timeseries.econometrics import volatility, Returns, beta
@@ -344,6 +346,50 @@ class BetaProcessor(BaseProcessor):
                 self.value = ProcessorResult(False, "BetaProcessor does not have 'a' series values yet")
         else:
             self.value = ProcessorResult(False, "BetaProcessor does not have 'a' series yet")
+
+        return self.value
+
+    def get_plot_expression(self):
+        pass
+
+
+class FXImpliedCorrProcessor(MeasureProcessor):
+
+    def __init__(self,
+                 *,
+                 cross2: Entity = None,
+                 tenor: str = '3m',
+                 start: Optional[DateOrDatetimeOrRDate] = None,
+                 end: Optional[DateOrDatetimeOrRDate] = None,
+                 **kwargs):
+        """ CorrelationProcessor
+
+        :param a: DataCoordinate or BaseProcessor for the series
+        :param benchmark: benchmark to compare price series
+        :param start: start date or time used in the underlying data query
+        :param end: end date or time used in the underlying data query
+        :param w: Window, int, or str: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window
+                size and 10 the ramp up value. If w is a string, it should be a relative date like '1m', '1d', etc.
+                Window size defaults to length of series.
+        :param type_: type of both input series: prices or returns
+        """
+        super().__init__(**kwargs, )
+        self.cross2: Entity = cross2
+        self.tenor: str = tenor
+        # datetime
+        self.start = start
+        self.end = end
+
+    def process(self, cross1: Entity) -> ProcessorResult:
+        if isinstance(cross1, Cross) and isinstance(self.cross2, Cross):
+            try:
+                with DataContext(self.start, self.end):
+                    result = fx_implied_correlation(cross1, self.cross2, self.tenor)
+                    self.value = ProcessorResult(True, result)
+            except Exception as e:
+                self.value = ProcessorResult(False, str(e))
+        else:
+            self.value = ProcessorResult(False, "Processor does not have valid crosses as inputs")
 
         return self.value
 

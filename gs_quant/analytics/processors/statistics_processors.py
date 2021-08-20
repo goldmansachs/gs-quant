@@ -20,6 +20,7 @@ import pandas as pd
 
 from gs_quant.analytics.core.processor import BaseProcessor, DataCoordinateOrProcessor, DateOrDatetimeOrRDate
 from gs_quant.analytics.core.processor_result import ProcessorResult
+from gs_quant.timeseries import returns
 from gs_quant.timeseries.statistics import percentiles, percentile, Window, mean, sum_, std, var, cov, zscores
 
 
@@ -436,6 +437,56 @@ class ZscoresProcessor(BaseProcessor):
         else:
             self.value = ProcessorResult(False, "ZscoresProcessor does not have 'a' series yet")
 
+        return self.value
+
+    def get_plot_expression(self):
+        pass
+
+
+class StdMoveProcessor(BaseProcessor):
+    def __init__(self,
+                 a: DataCoordinateOrProcessor,
+                 *,
+                 start: Optional[DateOrDatetimeOrRDate] = None,
+                 end: Optional[DateOrDatetimeOrRDate] = None,
+                 w: Union[Window, int] = None,
+                 **kwargs):
+        """ StdMoveProcessor: Returns normalized by std deviation of series a
+
+        :param a: DataCoordinate or BaseProcessor for the first series
+        :param start: start date or time used in the underlying data query
+        :param end: end date or time used in the underlying data query
+        :param w:  Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+              and 10 the ramp up value.  If w is a string, it should be a relative date like '1m', '1d', etc.
+              Window size defaults to length of series.
+        """
+        super().__init__(**kwargs)
+        self.children['a'] = a
+
+        self.start = start
+        self.end = end
+        self.w = w
+
+    def process(self):
+        a_data = self.children_data.get('a')
+        if isinstance(a_data, ProcessorResult):
+            if a_data.success:
+                data_series = a_data.data
+                change_pd = data_series.tail(2)
+                change = returns(change_pd).iloc[-1]
+
+                # Pass in all values except last value (which is last value)
+                returns_series = returns(data_series.head(-1))
+                std_result = std(returns_series, w=Window(None, 0) if self.w is None else self.w).iloc[-1]
+
+                if change is not None and std_result != 0:
+                    self.value = ProcessorResult(True, pd.Series([change / std_result]))
+                else:
+                    self.value = ProcessorResult(False, "StdMoveProcessor returns a NaN")
+            else:
+                self.value = ProcessorResult(False, "StdMoveProcessor does not have 'a' series values yet")
+        else:
+            self.value = ProcessorResult(False, "StdMoveProcessor does not have 'a' series yet")
         return self.value
 
     def get_plot_expression(self):

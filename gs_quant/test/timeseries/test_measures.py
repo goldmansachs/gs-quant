@@ -1628,6 +1628,29 @@ def test_cds_implied_vol():
     replace.restore()
 
 
+def test_implied_vol_credit():
+    replace = Replacer()
+    mock_cds = Index('MA890', AssetClass.Equity, 'CDS')
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_eq)
+    actual = tm.implied_volatility_credit(mock_cds, '1m', tm.CdsVolReference.DELTA_CALL, 10)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='impliedVolatilityByDeltaStrike'),
+                        pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+    actual = tm.implied_volatility_credit(mock_cds, '1m', tm.CdsVolReference.DELTA_PUT, 10)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='impliedVolatilityByDeltaStrike'),
+                        pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+    actual = tm.implied_volatility_credit(mock_cds, '1m', tm.CdsVolReference.FORWARD, 100)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='impliedVolatilityByDeltaStrike'),
+                        pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+    with pytest.raises(NotImplementedError):
+        tm.implied_volatility_credit(..., '1m', tm.CdsVolReference.DELTA_PUT, 75, real_time=True)
+    with pytest.raises(NotImplementedError):
+        tm.implied_volatility_credit(..., '1m', "", 75)
+    replace.restore()
+
+
 def test_avg_impl_vol(mocker):
     replace = Replacer()
     mock_spx = Index('MA890', AssetClass.Equity, 'SPX')

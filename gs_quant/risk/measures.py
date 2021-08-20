@@ -351,6 +351,11 @@ CDTheta = __risk_measure_with_doc_string(
     'Credit Theta',
     RiskMeasureType.Theta,
     asset_class=AssetClass.Credit)
+CDATMSpread = __risk_measure_with_doc_string(
+    'CDATMSpread',
+    'Credit ATM Spread',
+    RiskMeasureType.ATM_Spread,
+    asset_class=AssetClass.Credit)
 CRIFIRCurve = __risk_measure_with_doc_string(
     'CRIFIRCurve',
     'CRIF IR Curve',

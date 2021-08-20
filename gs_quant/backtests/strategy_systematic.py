@@ -13,16 +13,13 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from dateutil.parser import isoparse
 import logging
-import re
 from typing import Iterable
 
 import gs_quant.target.backtests as backtests
 from gs_quant.api.gs.backtests import GsBacktestApi
 from gs_quant.backtests.core import Backtest, TradeInMethod, MarketModel
 from gs_quant.errors import MqValueError
-from gs_quant.markets import PricingContext
 from gs_quant.target.backtests import *
 from gs_quant.target.instrument import EqOption, EqVarianceSwap
 
@@ -117,15 +114,6 @@ class StrategySystematic:
     def check_underlier_fields(
             underlier: Union[EqOption, EqVarianceSwap]
     ) -> Union[EqOption, EqVarianceSwap]:
-        # validation for different fields
-        if isinstance(underlier.expiration_date, datetime.date):
-            underlier = underlier.clone()
-            underlier.expiration_date = '{}d'.format(
-                (underlier.expiration_date - PricingContext.current.pricing_date).days)
-        elif re.search(ISO_FORMAT, underlier.expiration_date) is not None:
-            underlier = underlier.clone()
-            underlier.expiration_date = '{}d'.format(
-                (isoparse(underlier.expiration_date).date() - PricingContext.current.pricing_date).days)
 
         if isinstance(underlier, EqOption):
             underlier.number_of_options = None

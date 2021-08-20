@@ -14,21 +14,24 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime
+
 import pandas as pd
 import pytest
 from testfixtures import Replacer
 from testfixtures.mock import Mock
 
 import gs_quant.timeseries.measures_reports as mr
+from gs_quant.api.gs.assets import GsAsset
 from gs_quant.api.gs.data import MarketDataResponseFrame
 from gs_quant.data.core import DataContext
 from gs_quant.errors import MqValueError, MqError
+from gs_quant.markets.baskets import Basket
+from gs_quant.markets.report import PerformanceReport, ThematicReport
 from gs_quant.models.risk_model import FactorRiskModel as Factor_Risk_Model
-from gs_quant.target.common import ReportParameters
+from gs_quant.target.common import ReportParameters, AssetType
+from gs_quant.target.portfolios import RiskAumSource, Portfolio
 from gs_quant.target.reports import Report, PositionSourceType, ReportType
 from gs_quant.target.risk_models import RiskModel, CoverageType, Term, UniverseIdentifier
-from gs_quant.markets.report import PerformanceReport
-from gs_quant.target.portfolios import RiskAumSource, Portfolio
 
 risk_model = RiskModel(coverage=CoverageType.Country, id_='model_id', name='Fake Risk Model',
                        term=Term.Long, universe_identifier=UniverseIdentifier.gsid, vendor='GS',
@@ -148,6 +151,49 @@ ppa_data = {
 }
 
 aum = [{'date': '2020-01-02', 'aum': 2}, {'date': '2020-01-03', 'aum': 2.2}, {'date': '2020-01-04', 'aum': 2.4}]
+
+thematic_data = [
+    {
+        "date": "2021-07-12",
+        "reportId": "PTAID",
+        "basketId": "MA01GPR89HZF1FZ5",
+        "region": "Asia",
+        "grossExposure": 3.448370345015856E8,
+        "thematicExposure": 2,
+        "thematicBeta": 1,
+        "updateTime": "2021-07-20T23:43:38Z"
+    },
+    {
+        "date": "2021-07-13",
+        "reportId": "PTAID",
+        "basketId": "MA01GPR89HZF1FZ5",
+        "region": "Asia",
+        "grossExposure": 3.375772519907556E8,
+        "thematicExposure": 2,
+        "thematicBeta": 1,
+        "updateTime": "2021-07-20T23:43:38Z"
+    },
+    {
+        "date": "2021-07-14",
+        "reportId": "PTAID",
+        "basketId": "MA01GPR89HZF1FZ5",
+        "region": "Asia",
+        "grossExposure": 3.321189950666118E8,
+        "thematicExposure": 2,
+        "thematicBeta": 1,
+        "updateTime": "2021-07-20T23:43:38Z"
+    },
+    {
+        "date": "2021-07-15",
+        "reportId": "PTAID",
+        "basketId": "MA01GPR89HZF1FZ5",
+        "region": "Asia",
+        "grossExposure": 3.274071805135091E8,
+        "thematicExposure": 2,
+        "thematicBeta": 1,
+        "updateTime": "2021-07-20T23:43:38Z"
+    }
+]
 
 
 def mock_risk_model():
@@ -489,6 +535,54 @@ def test_normalized_performance_no_custom_aum():
         with pytest.raises(MqError):
             mr.normalized_performance('MP1', 'Custom AUM')
         replace.restore()
+
+
+def test_thematic_exposure():
+    replace = Replacer()
+
+    # mock getting PTA report
+    mock = replace('gs_quant.markets.report.ThematicReport.get', Mock())
+    mock.return_value = ThematicReport(id='report_id')
+
+    # mock getting thematic exposure
+    mock = replace('gs_quant.markets.report.ThematicReport.get_thematic_exposure', Mock())
+    mock.return_value = pd.DataFrame(thematic_data)
+
+    # mock getting thematic basket
+    mock = replace('gs_quant.markets.baskets.Basket.get', Mock())
+    mock.return_value = Basket(GsAsset(id_='basket_id', asset_class='Equity',
+                                       type_=AssetType.Custom_Basket,
+                                       name='Basket'))
+
+    with DataContext(datetime.date(2020, 7, 12), datetime.date(2020, 7, 15)):
+        actual = mr.thematic_exposure('report_id', 'basket_ticker')
+        assert all(actual.values == [2, 2, 2, 2])
+
+    replace.restore()
+
+
+def test_thematic_beta():
+    replace = Replacer()
+
+    # mock getting PTA report
+    mock = replace('gs_quant.markets.report.ThematicReport.get', Mock())
+    mock.return_value = ThematicReport(id='report_id')
+
+    # mock getting thematic exposure
+    mock = replace('gs_quant.markets.report.ThematicReport.get_thematic_betas', Mock())
+    mock.return_value = pd.DataFrame(thematic_data)
+
+    # mock getting thematic basket
+    mock = replace('gs_quant.markets.baskets.Basket.get', Mock())
+    mock.return_value = Basket(GsAsset(id_='basket_id', asset_class='Equity',
+                                       type_=AssetType.Custom_Basket,
+                                       name='Basket'))
+
+    with DataContext(datetime.date(2020, 7, 12), datetime.date(2020, 7, 15)):
+        actual = mr.thematic_beta('report_id', 'basket_ticker')
+        assert all(actual.values == [1, 1, 1, 1])
+
+    replace.restore()
 
 
 if __name__ == '__main__':

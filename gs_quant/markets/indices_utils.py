@@ -95,47 +95,6 @@ class CustomBasketStyles(EnumBase, Enum):
         return self.value
 
 
-class FundamentalsMetrics(EnumBase, Enum):
-    """ Metric for the associated asset """
-    DIVIDEND_YIELD = 'Dividend Yield'
-    EARNINGS_PER_SHARE = 'Earnings per Share'
-    EARNINGS_PER_SHARE_POSITIVE = 'Earnings per Share Positive'
-    NET_DEBT_TO_EBITDA = 'Net Debt to EBITDA'
-    PRICE_TO_BOOK = 'Price to Book'
-    PRICE_TO_CASH = 'Price to Cash'
-    PRICE_TO_EARNINGS = 'Price to Earnings'
-    PRICE_TO_EARNINGS_POSITIVE = 'Price to Earnings Positive'
-    PRICE_TO_SALES = 'Price to Sales'
-    RETURN_ON_EQUITY = 'Return on Equity'
-    SALES_PER_SHARE = 'Sales per Share'
-
-    def __repr__(self):
-        return self.value
-
-    @classmethod
-    def to_list(cls):
-        return [metric.value for metric in cls]
-
-
-class FundamentalMetricPeriod(EnumBase, Enum):
-    """ Period for the relevant metric """
-    ONE_YEAR = '1y'
-    TWO_YEARS = '2y'
-    THREE_YEARS = '3y'
-
-    def __repr__(self):
-        return self.value
-
-
-class FundamentalMetricPeriodDirection(EnumBase, Enum):
-    """	Direction of the outlook period """
-    FORWARD = 'forward'
-    TRAILING = 'trailing'
-
-    def __repr__(self):
-        return self.value
-
-
 class IndicesDatasets(EnumBase, Enum):
     """ Indices Datasets """
     BASKET_FUNDAMENTALS = 'BASKET_FUNDAMENTALS'

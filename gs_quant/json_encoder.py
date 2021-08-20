@@ -24,7 +24,12 @@ from gs_quant.base import Base
 
 def default(o):
     if isinstance(o, datetime.datetime):
-        return o.strftime('%Y-%m-%dT%H:%M:%S.') + '{:06d}'.format(o.microsecond)[:-3] + 'Z'
+        try:
+            iso_formatted = o.isoformat(timespec='milliseconds')
+        except TypeError:
+            # Pandas Timestamp objects don't take timespec, will raise TypeError (as of 1.2.4)
+            iso_formatted = o.isoformat()
+        return iso_formatted if o.tzinfo else iso_formatted + 'Z'  # Make sure to be explict about timezone
     if isinstance(o, datetime.date):
         return o.isoformat()
     elif isinstance(o, Enum):

@@ -135,6 +135,8 @@ class QueryType(Enum):
     USD_OIS = "Usd Ois"
     NON_USD_OIS = "Non Usd Ois"
     SETTLEMENT_PRICE = "Settlement Price"
+    THEMATIC_EXPOSURE = "Thematic Exposure"
+    THEMATIC_BETA = "Thematic Beta"
 
 
 class GsDataApi(DataApi):

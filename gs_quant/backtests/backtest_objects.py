@@ -114,6 +114,32 @@ class BackTest:
         cash = pd.Series(self._cash_dict, name='Cash')
         return pd.concat([summary, cash], axis=1, sort=True).fillna(0)
 
+    def trade_ledger(self):
+        # this is a ledger of each instrument when it was entered and when it was closed out.  The cash associated
+        # with the entry and exit are used in the open value and close value and PnL calc.  If the PnL is None it
+        # means the instrument is still live and therefore will show up in the PV
+        ledger = {}
+        names = []
+        for date, cash_list in self.cash_payments.items():
+            for cash in cash_list:
+                if cash.trade.name in names:
+                    if cash.cash_paid:
+                        ledger[cash.trade.name]['Close'] = date
+                        ledger[cash.trade.name]['Close Value'] += cash.cash_paid
+                        open_value = ledger[cash.trade.name]['Open Value']
+                        ledger[cash.trade.name]['Trade PnL'] = ledger[cash.trade.name]['Close Value'] - open_value
+                        ledger[cash.trade.name]['Status'] = 'closed'
+                else:
+                    names.append(cash.trade.name)
+                    ledger[cash.trade.name] = {'Open': date,
+                                               'Close': None,
+                                               'Open Value': cash.cash_paid,
+                                               'Close Value': 0,
+                                               'Long Short': cash.direction,
+                                               'Status': 'open',
+                                               'Trade PnL': None}
+        return pd.DataFrame(ledger).T.sort_index()
+
 
 class ScalingPortfolio:
     def __init__(self, trade, dates, risk, csa_term=None, scaling_parameter='notional_amount'):
@@ -131,6 +157,7 @@ class CashPayment:
         self.effective_date = effective_date
         self.scale_date = scale_date
         self.direction = direction
+        self.cash_paid = None
 
 
 class PredefinedAssetBacktest:

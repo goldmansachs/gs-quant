@@ -14,6 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 import asyncio
+import functools
 import logging
 import uuid
 from abc import ABCMeta, abstractmethod
@@ -57,6 +58,13 @@ class DataQueryInfo:
     data: Series = None
 
 
+@dataclass
+class MeasureQueryInfo:
+    attr: str
+    processor: 'BaseProcessor'
+    entity: Entity
+
+
 DateOrDatetimeOrRDate = Union[DateOrDatetime, RelativeDate]
 
 
@@ -70,6 +78,7 @@ class BaseProcessor(metaclass=ABCMeta):
         self.children_data: Dict[str, ProcessorResult] = {}
         self.data_cell = None
         self.last_value = kwargs.get('last_value', False)
+        self.measure_processor = kwargs.get('measure_processor', False)
 
     @abstractmethod
     def process(self, *args):
@@ -86,7 +95,7 @@ class BaseProcessor(metaclass=ABCMeta):
                             result,
                             rdate_entity_map: Dict[str, date]):
         """
-        Applies a date/datetime mask on the result using the start/end parameters on a processoor
+        Applies a date/datetime mask on the result using the start/end parameters on a processor
         :param result:
         :param rdate_entity_map: map of entity, rule, base_date to date value
         :return: None
@@ -125,23 +134,32 @@ class BaseProcessor(metaclass=ABCMeta):
                      attribute: str,
                      result: ProcessorResult,
                      rdate_entity_map: Dict[str, date],
-                     pool: ProcessPoolExecutor = None):
+                     pool: ProcessPoolExecutor = None,
+                     query_info: Union[DataQueryInfo, MeasureQueryInfo] = None):
         """ Handle the update of a single coordinate and recalculate the value
 
         :param attribute: Attribute alinging to data coordinate in the processor
         :param result: Processor result including success and series from data query
         """
-        self.__handle_date_range(result, rdate_entity_map)
+        if not self.measure_processor:
+            self.__handle_date_range(result, rdate_entity_map)
         self.children_data[attribute] = result
 
         if isinstance(result, ProcessorResult):
             if result.success:
                 try:
                     if pool:
-                        value = await asyncio.get_running_loop().run_in_executor(pool, self.process)
+                        if self.measure_processor:
+                            value = await asyncio.get_running_loop()\
+                                .run_in_executor(pool, functools.partial(self.process, query_info.entity))
+                        else:
+                            value = await asyncio.get_running_loop().run_in_executor(pool, self.process)
                         self.value = value
                     else:
-                        self.process()
+                        if self.measure_processor:
+                            self.process(query_info.entity)
+                        else:
+                            self.process()
                     self.post_process()
                 except Exception as e:
                     self.value = ProcessorResult(False,
@@ -168,7 +186,7 @@ class BaseProcessor(metaclass=ABCMeta):
     def build_graph(self,
                     entity: Entity,
                     cell,
-                    queries: List[DataQueryInfo],
+                    queries: List[Union[DataQueryInfo, MeasureQueryInfo]],
                     rdate_entity_map: Dict[str, Set[Tuple]],
                     overrides: Optional[List]):
         """ Generates the nested cell graph and keeps a map of leaf data queries to processors"""
@@ -176,6 +194,9 @@ class BaseProcessor(metaclass=ABCMeta):
         self.__add_required_rdates(entity, rdate_entity_map)
 
         attributes = self.__dict__
+
+        if self.measure_processor:
+            queries.append(MeasureQueryInfo(attr='a', processor=self, entity=entity))
 
         for attr_name, child in self.children.items():
             if isinstance(child, DataCoordinate):
@@ -212,14 +233,15 @@ class BaseProcessor(metaclass=ABCMeta):
                         attribute: str,
                         result: ProcessorResult,
                         rdate_entity_map: Dict[str, date],
-                        pool: ProcessPoolExecutor = None):
+                        pool: ProcessPoolExecutor = None,
+                        query_info: Union[DataQueryInfo, MeasureQueryInfo] = None):
         """ Sets the result on the processor and recursively calls parent to set and calculate value
 
             :param attribute: Attribute alinging to data coordinate in the processor
             :param result: Processor result including success and series from data query
         """
         # update the result
-        await self.update(attribute, result, rdate_entity_map, pool)
+        await self.update(attribute, result, rdate_entity_map, pool, query_info)
 
         # if there is a parent, traverse up and recompute
         if self.parent:

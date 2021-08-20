@@ -29,7 +29,7 @@ from pandas import DataFrame, Series, concat
 from gs_quant.analytics.common import DATAGRID_HELP_MSG
 from gs_quant.analytics.common.helpers import resolve_entities, get_entity_rdate_key, get_entity_rdate_key_from_rdate, \
     get_rdate_cache_key
-from gs_quant.analytics.core.processor import DataQueryInfo
+from gs_quant.analytics.core.processor import DataQueryInfo, MeasureQueryInfo
 from gs_quant.analytics.core.processor_result import ProcessorResult
 from gs_quant.analytics.core.query_helpers import aggregate_queries, fetch_query, build_query_string, valid_dimensions
 from gs_quant.analytics.datagrid.data_cell import DataCell
@@ -125,7 +125,7 @@ class DataGrid:
         # store the graph, data queries to leaf processors and results
         self._primary_column_index: int = kwargs.get('primary_column_index', 0)
         self._cells: List[DataCell] = []
-        self._data_queries: List[DataQueryInfo] = []
+        self._data_queries: List[Union[DataQueryInfo, MeasureQueryInfo]] = []
         self._entity_cells: List[DataCell] = []
         self._coord_processor_cells: List[DataCell] = []
         self._value_cells: List[DataCell] = []
@@ -152,7 +152,7 @@ class DataGrid:
 
         Upon providing data to a leaf, the leaf processor is calculated and propagated up the graph to the cell level.
         """
-        all_queries: List[DataQueryInfo] = []
+        all_queries: List[Union[DataQueryInfo, MeasureQueryInfo]] = []
         entity_cells: List[DataCell] = []
         current_row_group = None
 
@@ -201,6 +201,8 @@ class DataGrid:
                         cell.processor.children['a'].set_dimensions(data_overrides[-1].dimensions)
 
                     self._coord_processor_cells.append(cell)
+                elif column_processor.measure_processor:
+                    all_queries.append(MeasureQueryInfo(attr='', entity=entity, processor=column_processor))
                 else:
                     # append the required queries to the map
                     cell.build_cell_graph(all_queries, self.rdate_entity_map)
@@ -342,7 +344,8 @@ class DataGrid:
 
         for query in self._data_queries:
             entity = query.entity
-            if isinstance(entity, str):  # If we were unable to fetch entity (404/403)
+            if isinstance(entity, str) or isinstance(query, MeasureQueryInfo):
+                # If we were unable to fetch entity (404/403) or if we're processing a measure processor
                 continue
             query = query.query
             coord = query.coordinate
@@ -397,7 +400,13 @@ class DataGrid:
                             query_info.data = Series()
 
         for query_info in self._data_queries:
-            if query_info.data is None or len(query_info.data) == 0:
+            if isinstance(query_info, MeasureQueryInfo):
+                asyncio.get_event_loop().run_until_complete(
+                    query_info.processor.calculate(query_info.attr,
+                                                   ProcessorResult(True, None),
+                                                   self.rule_cache,
+                                                   query_info=query_info))
+            elif query_info.data is None or len(query_info.data) == 0:
                 asyncio.get_event_loop().run_until_complete(
                     query_info.processor.calculate(query_info.attr,
                                                    ProcessorResult(False,

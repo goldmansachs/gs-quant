@@ -95,3 +95,14 @@ class CoordinateProcessor(BaseProcessor):
 
     def get_plot_expression(self):
         pass
+
+
+class MeasureProcessor(BaseProcessor):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs, measure_processor=True)
+
+    def process(self, *args):
+        pass
+
+    def get_plot_expression(self):
+        pass

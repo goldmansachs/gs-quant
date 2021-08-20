@@ -154,7 +154,7 @@ class OrderCost(OrderBase):
         return {'Instrument': self.instrument.currency,
                 'Type': self._short_name(),
                 'Price': self.execution_price(data_hander),
-                'Quantity': self.execution_quantity(data_hander)
+                'Quantity': self.execution_quantity()
                 }
 
 

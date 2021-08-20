@@ -15,7 +15,7 @@ under the License.
 """
 import datetime as dt
 import logging
-from typing import Tuple, Union, List
+from typing import Tuple, Union, List, Dict
 
 from gs_quant.common import PositionType
 from gs_quant.instrument import Instrument
@@ -215,3 +215,14 @@ class GsPortfolioApi:
         if end_date:
             url += f"&endDate={end_date.strftime('%Y-%m-%d')}"
         return GsSession.current._get(url)['data']
+
+    @classmethod
+    def upload_custom_aum(cls,
+                          portfolio_id: str,
+                          aum_data: List[Dict],
+                          clear_existing_data: bool = None) -> dict:
+        url = f'/portfolios/{portfolio_id}/aum'
+        payload = {'data': aum_data}
+        if clear_existing_data:
+            url += '?clearExistingData=true'
+        return GsSession.current._post(url, payload)

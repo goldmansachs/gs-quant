@@ -62,6 +62,11 @@ class DataMeasure(Enum):
     PRICE_TO_SALES = 'Price to Sales'
     RETURN_ON_EQUITY = 'Return on Equity'
     SALES_PER_SHARE = 'Sales per Share'
+    ONE_YEAR = '1y'
+    TWO_YEARS = '2y'
+    THREE_YEARS = '3y'
+    FORWARD = 'forward'
+    TRAILING = 'trailing'
 
     def __repr__(self):
         return self.value
