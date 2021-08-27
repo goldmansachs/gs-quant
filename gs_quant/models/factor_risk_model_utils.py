@@ -184,12 +184,17 @@ def risk_model_data_to_json(risk_model_data: RiskModelData) -> dict:
 
 
 def get_universe_size(data_to_split: dict) -> int:
-    data_to_split = list(data_to_split.values())[0]
-    if 'universe' in data_to_split.keys():
-        return len(data_to_split.get('universe'))
-    else:
-        return len(set(data_to_split.get('universeId1') +
-                       data_to_split.get('universeId1')))
+    # takes any chunk of risk model data and returns the universe size
+    if 'assetData' in data_to_split.keys():
+        return len(data_to_split.get('assetData').get('universe'))
+    data_to_split = list(data_to_split.values())
+    for data in data_to_split:
+        if 'universe' in data.keys():
+            return len(data.get('universe'))
+        if 'universeId1' in data.keys():
+            return len(set(data.get('universeId1') +
+                           data.get('universeId1')))
+    raise ValueError(f'No universe found for data {data_to_split}')
 
 
 def _batch_input_data(input_data: dict, max_asset_size: int):
@@ -243,4 +248,4 @@ def _batch_isc_input(input_data: dict, i: int, split_idx: int, split_num: int, t
     end_idx = (i + 1) * split_idx if split_num != i + 1 else target_universe_size + 1
     return {'universeId1': input_data.get('universeId1')[i * split_idx:end_idx],
             'universeId2': input_data.get('universeId2')[i * split_idx:end_idx],
-            'covariance': input_data.get('factorExposure')[i * split_idx:end_idx]}
+            'covariance': input_data.get('covariance')[i * split_idx:end_idx]}

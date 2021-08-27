@@ -78,8 +78,7 @@ setuptools.setup(
         "pydash",
         "tqdm",
         "certifi",
-        "deprecation",
-        "plotly==5.1.0"
+        "deprecation"
     ],
     extras_require={
         "internal": ["gs_quant_internal>=1.1.30", "requests_kerberos"],

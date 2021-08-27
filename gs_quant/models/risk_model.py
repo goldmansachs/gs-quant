@@ -14,7 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime as dt
-from enum import auto
+from enum import Enum, auto
 from typing import List, Dict, Union
 import pandas as pd
 
@@ -23,10 +23,10 @@ from gs_quant.api.gs.risk_models import GsFactorRiskModelApi, GsRiskModelApi
 from gs_quant.models.factor_risk_model_utils import build_asset_data_map, build_factor_data_map, \
     build_factor_data_dataframe, build_pfp_data_dataframe, get_isc_dataframe, get_covariance_matrix_dataframe, \
     get_closest_date_index, divide_request, batch_and_upload_partial_data, risk_model_data_to_json, get_universe_size
-from gs_quant.target.common import Enum
-from gs_quant.target.risk_models import RiskModel as RiskModelBuilder
+
+from gs_quant.target.risk_models import RiskModel as RiskModelBuilder, RiskModelEventType
 from gs_quant.target.risk_models import RiskModelData, RiskModelCalendar, RiskModelFactor, \
-    DataAssetsRequest, Measure, CoverageType, UniverseIdentifier, Entitlements, Term
+    DataAssetsRequest, Measure, CoverageType, UniverseIdentifier, Entitlements, Term, RiskModelUniverseIdentifierRequest
 
 
 class ReturnFormat(Enum):
@@ -88,15 +88,18 @@ class RiskModel:
         """ Delete existing risk model object from Marquee """
         return GsRiskModelApi.delete_risk_model(self.id)
 
-    def get_dates(self, start_date: dt.date = None, end_date: dt.date = None) -> List[str]:
+    def get_dates(self, start_date: dt.date = None, end_date: dt.date = None, event_type: RiskModelEventType = None)\
+            -> List[dt.date]:
         """ Get risk model dates for existing risk model
 
         :param start_date: list returned including and after start_date
         :param end_date: list returned up to and including end_date
+        :param event_type: which event type to retrieve
 
         :return: list of dates where risk model data is present
         """
-        return GsRiskModelApi.get_risk_model_dates(self.id, start_date, end_date)
+        return [dt.datetime.strptime(date, "%Y-%m-%d").date() for date in
+                GsRiskModelApi.get_risk_model_dates(self.id, start_date, end_date, event_type=event_type)]
 
     def get_calendar(self, start_date: dt.date = None, end_date: dt.date = None) -> RiskModelCalendar:
         """ Get risk model calendar for existing risk model between start and end date
@@ -121,7 +124,7 @@ class RiskModel:
         """
         return GsRiskModelApi.upload_risk_model_calendar(self.id, calendar)
 
-    def get_missing_dates(self, end_date: dt.date = None):
+    def get_missing_dates(self, start_date: dt.date = None, end_date: dt.date = None) -> List[dt.date]:
         """ Get any dates where data is not published according to expected days returned from the risk model calendar
 
         :param end_date: date to truncate missing dates at
@@ -129,13 +132,16 @@ class RiskModel:
             If no end_date is provided, end_date defaults to T-1 date according
                 to the risk model calendar
         """
-        posted_results = self.get_dates()
+
+        posted_dates = self.get_dates()
+        if not start_date:
+            start_date = posted_dates[0]
         if not end_date:
             end_date = dt.date.today() - dt.timedelta(days=1)
-        calendar = self.get_calendar(
-            start_date=dt.datetime.strptime((posted_results[0]), '%Y-%m-%d').date(),
-            end_date=end_date).business_dates
-        return [date for date in calendar if date not in posted_results]
+        calendar = [dt.datetime.strptime(date, "%Y-%m-%d").date() for date in self.get_calendar(
+            start_date=start_date,
+            end_date=end_date).business_dates]
+        return [date for date in calendar if date not in posted_dates]
 
     def get_most_recent_date_from_calendar(self) -> dt.date:
         """ Get T-1 date according to risk model calendar """
@@ -360,7 +366,7 @@ class FactorRiskModel(RiskModel):
     def get_asset_universe(self,
                            start_date: dt.date,
                            end_date: dt.date = None,
-                           assets: DataAssetsRequest = DataAssetsRequest(UniverseIdentifier.gsid, []),
+                           assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
                            format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
         """ Get asset universe data for existing risk model
 
@@ -391,7 +397,7 @@ class FactorRiskModel(RiskModel):
     def get_historical_beta(self,
                             start_date: dt.date,
                             end_date: dt.date = None,
-                            assets: DataAssetsRequest = DataAssetsRequest(UniverseIdentifier.gsid, []),
+                            assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
                             format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
         """ Get historical beta data for existing risk model
 
@@ -419,7 +425,7 @@ class FactorRiskModel(RiskModel):
     def get_total_risk(self,
                        start_date: dt.date,
                        end_date: dt.date = None,
-                       assets: DataAssetsRequest = DataAssetsRequest(UniverseIdentifier.gsid, []),
+                       assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
                        format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
         """ Get total risk data for existing risk model
 
@@ -447,7 +453,7 @@ class FactorRiskModel(RiskModel):
     def get_specific_risk(self,
                           start_date: dt.date,
                           end_date: dt.date = None,
-                          assets: DataAssetsRequest = DataAssetsRequest(UniverseIdentifier.gsid, []),
+                          assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
                           format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
         """ Get specific risk data for existing risk model
 
@@ -475,7 +481,8 @@ class FactorRiskModel(RiskModel):
     def get_residual_variance(self,
                               start_date: dt.date,
                               end_date: dt.date = None,
-                              assets: DataAssetsRequest = DataAssetsRequest(UniverseIdentifier.gsid, []),
+                              assets: DataAssetsRequest = DataAssetsRequest(
+                                  RiskModelUniverseIdentifierRequest.gsid, []),
                               format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
         """ Get residual variance data for existing risk model
 
@@ -503,7 +510,8 @@ class FactorRiskModel(RiskModel):
     def get_universe_factor_exposure(self,
                                      start_date: dt.date,
                                      end_date: dt.date = None,
-                                     assets: DataAssetsRequest = DataAssetsRequest(UniverseIdentifier.gsid, []),
+                                     assets: DataAssetsRequest = DataAssetsRequest(
+                                         RiskModelUniverseIdentifierRequest.gsid, []),
                                      format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
         """ Get universe factor exposure data for existing risk model
 
@@ -607,7 +615,8 @@ class FactorRiskModel(RiskModel):
     def get_issuer_specific_covariance(self,
                                        start_date: dt.date,
                                        end_date: dt.date = None,
-                                       assets: DataAssetsRequest = DataAssetsRequest(UniverseIdentifier.gsid, []),
+                                       assets: DataAssetsRequest = DataAssetsRequest(
+                                           RiskModelUniverseIdentifierRequest.gsid, []),
                                        format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
         """ Get issuer specific covariance data for existing risk model
 
@@ -632,7 +641,8 @@ class FactorRiskModel(RiskModel):
     def get_factor_portfolios(self,
                               start_date: dt.date,
                               end_date: dt.date = None,
-                              assets: DataAssetsRequest = DataAssetsRequest(UniverseIdentifier.gsid, []),
+                              assets: DataAssetsRequest = DataAssetsRequest(
+                                  RiskModelUniverseIdentifierRequest.gsid, []),
                               format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
         """ Get factor portfolios data for existing risk model
 
@@ -658,7 +668,8 @@ class FactorRiskModel(RiskModel):
                  measures: List[Measure],
                  start_date: dt.date,
                  end_date: dt.date = None,
-                 assets: DataAssetsRequest = DataAssetsRequest(UniverseIdentifier.gsid, []),
+                 assets: DataAssetsRequest = DataAssetsRequest(
+                     RiskModelUniverseIdentifierRequest.gsid, []),
                  limit_factors: bool = True) -> Dict:
         """ Get data for multiple measures for existing risk model
 
@@ -693,6 +704,7 @@ class FactorRiskModel(RiskModel):
 
         data = risk_model_data_to_json(data) if type(data) == RiskModelData else data
         target_universe_size = get_universe_size(data)
+        print(target_universe_size)
         if target_universe_size > max_asset_batch_size:
             print('Batching uploads due to universe size')
             batch_and_upload_partial_data(self.id, data, max_asset_batch_size)

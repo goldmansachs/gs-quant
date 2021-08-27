@@ -33,7 +33,8 @@ class MqexsAssetClass(EnumBase, Enum):
     Earon = 'Earon'
     FICC = 'FICC'
     Prime = 'Prime'
-    IOI = 'IOI'    
+    IOI = 'IOI'
+    Rates = 'Rates'    
 
 
 class MqexsAssetClassExt(EnumBase, Enum):    

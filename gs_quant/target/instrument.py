@@ -164,7 +164,7 @@ class Bond(Instrument):
 
     @property
     def settlement_date(self) -> Union[datetime.date, str]:
-        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21, 7Mar"""
         return self.__settlement_date
 
     @settlement_date.setter
@@ -1079,7 +1079,7 @@ class EqCliquet(Instrument):
 
     @property
     def expiration_date(self) -> Union[datetime.date, str]:
-        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21, 7Mar"""
         return self.__expiration_date
 
     @expiration_date.setter
@@ -1236,7 +1236,7 @@ class EqForward(Instrument):
 
     @property
     def expiration_date(self) -> Union[datetime.date, str]:
-        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21, 7Mar"""
         return self.__expiration_date
 
     @expiration_date.setter
@@ -1345,7 +1345,7 @@ class EqFuture(Instrument):
 
     @property
     def expiration_date(self) -> Union[datetime.date, str]:
-        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21, 7Mar"""
         return self.__expiration_date
 
     @expiration_date.setter
@@ -1463,7 +1463,7 @@ class EqOption(Instrument):
 
     @property
     def expiration_date(self) -> Union[datetime.date, str]:
-        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21, 7Mar"""
         return self.__expiration_date
 
     @expiration_date.setter
@@ -1534,7 +1534,7 @@ class EqOption(Instrument):
 
     @property
     def settlement_date(self) -> Union[datetime.date, str]:
-        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21, 7Mar"""
         return self.__settlement_date
 
     @settlement_date.setter
@@ -1749,7 +1749,7 @@ class EqOptionLeg(Instrument):
 
     @property
     def settlement_date(self) -> Union[datetime.date, str]:
-        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21, 7Mar"""
         return self.__settlement_date
 
     @settlement_date.setter
@@ -1841,7 +1841,7 @@ class EqOptionLeg(Instrument):
 
     @property
     def expiration_date(self) -> Union[datetime.date, str]:
-        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21, 7Mar"""
         return self.__expiration_date
 
     @expiration_date.setter
@@ -2301,7 +2301,7 @@ class FXBinary(Instrument):
 
     @property
     def expiration_date(self) -> Union[datetime.date, str]:
-        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21, 7Mar"""
         return self.__expiration_date
 
     @expiration_date.setter
@@ -2524,7 +2524,7 @@ class FXDoubleKnockout(Instrument):
 
     @property
     def expiration_date(self) -> Union[datetime.date, str]:
-        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21, 7Mar"""
         return self.__expiration_date
 
     @expiration_date.setter
@@ -2768,7 +2768,7 @@ class FXDoubleOneTouch(Instrument):
 
     @property
     def expiration_date(self) -> Union[datetime.date, str]:
-        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21, 7Mar"""
         return self.__expiration_date
 
     @expiration_date.setter
@@ -3159,7 +3159,7 @@ class FXForward(Instrument):
 
     @property
     def settlement_date(self) -> Union[datetime.date, str]:
-        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21, 7Mar"""
         return self.__settlement_date
 
     @settlement_date.setter
@@ -3382,7 +3382,7 @@ class FXKnockout(Instrument):
 
     @property
     def expiration_date(self) -> Union[datetime.date, str]:
-        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21, 7Mar"""
         return self.__expiration_date
 
     @expiration_date.setter
@@ -3706,7 +3706,7 @@ class FXOneTouch(Instrument):
 
     @property
     def expiration_date(self) -> Union[datetime.date, str]:
-        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21, 7Mar"""
         return self.__expiration_date
 
     @expiration_date.setter
@@ -3952,7 +3952,7 @@ class FXOption(Instrument):
 
     @property
     def expiration_date(self) -> Union[datetime.date, str]:
-        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21, 7Mar"""
         return self.__expiration_date
 
     @expiration_date.setter
@@ -4117,7 +4117,7 @@ class FXOptionLeg(Instrument):
 
     @property
     def expiration_date(self) -> Union[datetime.date, str]:
-        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21, 7Mar"""
         return self.__expiration_date
 
     @expiration_date.setter
@@ -4324,7 +4324,7 @@ class FXVolatilitySwap(Instrument):
 
     @property
     def settlement_date(self) -> Union[datetime.date, str]:
-        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21, 7Mar"""
         return self.__settlement_date
 
     @settlement_date.setter
@@ -4414,7 +4414,7 @@ class Forward(Instrument):
 
     @property
     def expiration_date(self) -> Union[datetime.date, str]:
-        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21, 7Mar"""
         return self.__expiration_date
 
     @expiration_date.setter
@@ -4509,7 +4509,7 @@ class IRBondFuture(Instrument):
 
     @property
     def expiration_date(self) -> Union[datetime.date, str]:
-        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21, 7Mar"""
         return self.__expiration_date
 
     @expiration_date.setter
@@ -6425,7 +6425,7 @@ class EqOptionStrategy(Instrument):
 
     @property
     def expiration_date(self) -> Union[datetime.date, str]:
-        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21, 7Mar"""
         return self.__expiration_date
 
     @expiration_date.setter
@@ -6487,7 +6487,7 @@ class EqOptionStrategy(Instrument):
 
     @property
     def settlement_date(self) -> Union[datetime.date, str]:
-        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21, 7Mar"""
         return self.__settlement_date
 
     @settlement_date.setter
@@ -6919,7 +6919,7 @@ class FXMultiCrossBinary(Instrument):
 
     @property
     def expiration_date(self) -> Union[datetime.date, str]:
-        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21, 7Mar"""
         return self.__expiration_date
 
     @expiration_date.setter
@@ -7159,7 +7159,7 @@ class FXOptionStrategy(Instrument):
 
     @property
     def expiration_date(self) -> Union[datetime.date, str]:
-        """Date or tenor, e.g. 2018-09-03, 3m, Dec21"""
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21, 7Mar"""
         return self.__expiration_date
 
     @expiration_date.setter

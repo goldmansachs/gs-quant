@@ -20,7 +20,7 @@ from typing import Tuple, Dict, List, Union
 
 from gs_quant.session import GsSession
 from gs_quant.target.risk_models import RiskModel, RiskModelCalendar, RiskModelFactor, Term, RiskModelData, \
-    DataAssetsRequest, Measure
+    DataAssetsRequest, Measure, RiskModelEventType
 
 _logger = logging.getLogger(__name__)
 
@@ -94,12 +94,18 @@ class GsRiskModelApi:
         return GsSession.current._put(f'/risk/models/{model_id}/calendar', model_calendar, cls=RiskModelCalendar)
 
     @classmethod
-    def get_risk_model_dates(cls, model_id: str, start_date: dt.date = None, end_date: dt.date = None) -> List:
+    def get_risk_model_dates(cls,
+                             model_id: str,
+                             start_date: dt.date = None,
+                             end_date: dt.date = None,
+                             event_type: RiskModelEventType = None) -> List:
         url = f'/risk/models/{model_id}/dates?'
         if start_date is not None:
             url += f'&startDate={start_date.strftime("%Y-%m-%d")}'
         if end_date is not None:
             url += f'&endDate={end_date.strftime("%Y-%m-%d")}'
+        if event_type is not None:
+            url += f'&eventType={event_type.value}'
         return GsSession.current._get(url)['results']
 
 

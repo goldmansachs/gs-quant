@@ -680,7 +680,8 @@ def _tenor_month_to_year(tenor: str):
     return tenor
 
 
-@plot_measure((AssetClass.Commod,), (AssetType.CommodityNaturalGasHub,), [QueryType.IMPLIED_VOLATILITY])
+@plot_measure((AssetClass.Commod,), (AssetType.CommodityNaturalGasHub,), [QueryType.IMPLIED_VOLATILITY],
+              display_name='implied_volatility')
 def implied_volatility_ng(asset: Asset, contract_range: str = 'F20', price_method: str = 'GDD', *, source: str = None,
                           real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
@@ -2470,7 +2471,7 @@ def eu_ng_hub_to_swap(asset_spec: ASSET_SPEC) -> str:
 
 @plot_measure((AssetClass.Commod,), (AssetType.CommodityNaturalGasHub, AssetType.CommodityEUNaturalGasHub),
               [MeasureDependency(id_provider=eu_ng_hub_to_swap, query_type=QueryType.FORWARD_PRICE)],
-              display_name='forward_price_ng')
+              display_name='forward_price')
 def forward_price_ng(asset: Asset, contract_range: str = 'F20', price_method: str = 'GDD', *, source: str = None,
                      real_time: bool = False) -> pd.Series:
     """

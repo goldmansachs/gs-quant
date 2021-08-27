@@ -14,9 +14,9 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.target.common import *
+from gs_quant.common import *
 import datetime
-from typing import Mapping, Tuple, Union
+from typing import Mapping, Tuple, Union, Optional
 from gs_quant.base import Base, InstrumentBase, camel_case_translate, get_enum_value
 
 

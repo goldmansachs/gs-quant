@@ -277,8 +277,8 @@ class Portfolio(PriceableImpl):
             position_date=self.__position_context.position_date,
             positions=tuple(Position(asset_id=GsAssetApi.get_or_create_asset_from_instrument(i))
                             for i in self.instruments))
-
-        GsPortfolioApi.update_positions(self.__id, [position_set])
+        if len(position_set.positions) > 0:
+            GsPortfolioApi.update_positions(self.__id, [position_set])
 
     def save_as_quote(self, overwrite: Optional[bool] = False):
         if self.portfolios:

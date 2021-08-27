@@ -25,7 +25,7 @@ from gs_quant.markets.factor import Factor
 from gs_quant.markets.securities import Asset
 from gs_quant.models.risk_model import FactorRiskModel, ReturnFormat
 from gs_quant.target.common import AssetClass, AssetType
-from gs_quant.target.risk_models import Measure, DataAssetsRequest, UniverseIdentifier
+from gs_quant.target.risk_models import Measure, DataAssetsRequest, RiskModelUniverseIdentifierRequest
 from gs_quant.timeseries import plot_measure_entity, plot_measure, prices
 from gs_quant.timeseries.measures import _extract_series_from_df
 
@@ -53,7 +53,7 @@ def factor_zscore(asset: Asset, risk_model_id: str, factor_name: str, *,
         measures=[Measure.Factor_Name, Measure.Universe_Factor_Exposure, Measure.Asset_Universe],
         start_date=DataContext.current.start_time,
         end_date=DataContext.current.end_time,
-        assets=DataAssetsRequest(identifier=UniverseIdentifier.gsid, universe=[gsid])
+        assets=DataAssetsRequest(identifier=RiskModelUniverseIdentifierRequest.gsid, universe=[gsid])
     ).get('results', [])
 
     # Get the factor data from query results
