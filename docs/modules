@@ -34,9 +34,11 @@
       FundamentalMetricPeriodDirection
       FundamentalsMetrics
       IndicesDatasets
+      PriceType
       Region
       ResearchBasketStyles
       ReturnType
+      STSIndexType
       WeightingStrategy
    
    

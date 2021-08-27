@@ -25,7 +25,7 @@ class DelayExclusionType(EnumBase, Enum):
     
     """Type of the delay exclusion"""
 
-    LAST_DAY_OF_THE_MONTH = 'LAST_DAY_OF_THE_MONTH'
+    LAST_DAY_OF_THE_MONTH = 'LAST_DAY_OF_THE_MONTH'    
 
 
 class DevelopmentStatus(EnumBase, Enum):    
@@ -33,7 +33,7 @@ class DevelopmentStatus(EnumBase, Enum):
     """The status of development of this dataset. Controls rate limit on query/upload."""
 
     Development = 'Development'
-    Production = 'Production'
+    Production = 'Production'    
 
 
 class FieldFormat(EnumBase, Enum):    
@@ -42,13 +42,13 @@ class FieldFormat(EnumBase, Enum):
        formats (from JSON schema specification)."""
 
     date = 'date'
-    date_time = 'date-time'
+    date_time = 'date-time'    
 
 
 class MarketDataFrequency(EnumBase, Enum):    
     
     Real_Time = 'Real Time'
-    End_Of_Day = 'End Of Day'
+    End_Of_Day = 'End Of Day'    
 
 
 class MarketDataMeasure(EnumBase, Enum):    
@@ -56,7 +56,7 @@ class MarketDataMeasure(EnumBase, Enum):
     Last = 'Last'
     Curve = 'Curve'
     Close_Change = 'Close Change'
-    Previous_Close = 'Previous Close'
+    Previous_Close = 'Previous Close'    
 
 
 class MeasureEntityType(EnumBase, Enum):    
@@ -71,7 +71,7 @@ class MeasureEntityType(EnumBase, Enum):
     REPORT = 'REPORT'
     HEDGE = 'HEDGE'
     PORTFOLIO = 'PORTFOLIO'
-    RISK_MODEL = 'RISK_MODEL'
+    RISK_MODEL = 'RISK_MODEL'    
 
 
 class AdvancedFilter(Base):
@@ -2541,38 +2541,39 @@ class DataQuery(Base):
     @snapshot.setter
     def snapshot(self, value: bool):
         self._property_changed('snapshot')
-        self.__snapshot = value
+        self.__snapshot = value        
 
 
 class DataSetCatalogEntry(Base):
+        
     """Information about a data set that is available in the catalog"""
 
     @camel_case_translate
     def __init__(
-            self,
-            id_: str,
-            name: str,
-            vendor: str,
-            fields: dict,
-            description: str = None,
-            short_description: str = None,
-            data_product: str = None,
-            terms: str = None,
-            internal_only: bool = None,
-            actions: Tuple[str, ...] = None,
-            default_start_seconds: float = None,
-            identifier_mapper_name: str = None,
-            identifier_updater_name: str = None,
-            default_delay_minutes: float = None,
-            apply_market_data_entitlements: bool = None,
-            sample: Tuple[FieldValueMap, ...] = None,
-            parameters: DataSetParameters = None,
-            tags: Tuple[str, ...] = None,
-            created_time: str = None,
-            last_updated_time: str = None,
-            start_date: datetime.date = None,
-            mdapi: MDAPI = None
-    ):
+        self,
+        id_: str,
+        name: str,
+        vendor: str,
+        fields: dict,
+        description: str = None,
+        short_description: str = None,
+        data_product: str = None,
+        terms: str = None,
+        internal_only: bool = None,
+        actions: Tuple[str, ...] = None,
+        default_start_seconds: float = None,
+        identifier_mapper_name: str = None,
+        identifier_updater_name: str = None,
+        default_delay_minutes: float = None,
+        apply_market_data_entitlements: bool = None,
+        sample: Tuple[FieldValueMap, ...] = None,
+        parameters: DataSetParameters = None,
+        tags: Tuple[str, ...] = None,
+        created_time: str = None,
+        last_updated_time: str = None,
+        start_date: datetime.date = None,
+        mdapi: MDAPI = None
+    ):        
         super().__init__()
         self.__id = id_
         self.name = name
@@ -3626,6 +3627,7 @@ class DataSetEntity(Base):
         self,
         id_: str,
         name: str,
+        org_id: str = None,
         description: str = None,
         short_description: str = None,
         mappings: Tuple[MarketDataMapping, ...] = None,
@@ -3647,6 +3649,7 @@ class DataSetEntity(Base):
         tags: Tuple[str, ...] = None
     ):        
         super().__init__()
+        self.org_id = org_id
         self.__id = id_
         self.name = name
         self.description = description
@@ -3668,6 +3671,16 @@ class DataSetEntity(Base):
         self.last_updated_by_id = last_updated_by_id
         self.last_updated_time = last_updated_time
         self.tags = tags
+
+    @property
+    def org_id(self) -> str:
+        """Marquee unique identifier for organization that is associated with the object."""
+        return self.__org_id
+
+    @org_id.setter
+    def org_id(self, value: str):
+        self._property_changed('org_id')
+        self.__org_id = value        
 
     @property
     def id(self) -> str:

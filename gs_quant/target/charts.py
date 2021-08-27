@@ -70,6 +70,7 @@ class ChartAnnotationType(EnumBase, Enum):
     arrow = 'arrow'
     circle = 'circle'
     line = 'line'
+    rect = 'rect'
     text = 'text'    
 
 
@@ -407,6 +408,7 @@ class YAxisSettings(Base):
         max_: int = None,
         min_: int = None,
         show_grid_lines: bool = None,
+        hide: bool = None,
         name: str = None
     ):        
         super().__init__()
@@ -417,6 +419,7 @@ class YAxisSettings(Base):
         self.__max = max_
         self.__min = min_
         self.show_grid_lines = show_grid_lines
+        self.hide = hide
         self.name = name
 
     @property
@@ -489,6 +492,16 @@ class YAxisSettings(Base):
         self._property_changed('show_grid_lines')
         self.__show_grid_lines = value        
 
+    @property
+    def hide(self) -> bool:
+        """Whether or not the axis lines will be rendered on the chart."""
+        return self.__hide
+
+    @hide.setter
+    def hide(self, value: bool):
+        self._property_changed('hide')
+        self.__hide = value        
+
 
 class ChartAnnotation(Base):
         
@@ -508,12 +521,15 @@ class ChartAnnotation(Base):
         font_size: float = None,
         font_style: Union[ChartAnnotationFontStyle, str] = None,
         font_weight: Union[ChartAnnotationFontWeight, str] = None,
+        label: str = None,
         line_height: float = None,
         line_type: Union[ChartAnnotationLineType, str] = None,
         line_width: float = None,
         radius: float = None,
         text_align: Union[ChartAnnotationTextAlign, str] = None,
         text_decoration: Union[ChartAnnotationTextDecoration, str] = None,
+        text_width: float = None,
+        y_axis_index: float = None,
         name: str = None
     ):        
         super().__init__()
@@ -528,12 +544,15 @@ class ChartAnnotation(Base):
         self.font_size = font_size
         self.font_style = font_style
         self.font_weight = font_weight
+        self.label = label
         self.line_height = line_height
         self.line_type = line_type
         self.line_width = line_width
         self.radius = radius
         self.text_align = text_align
         self.text_decoration = text_decoration
+        self.text_width = text_width
+        self.y_axis_index = y_axis_index
         self.name = name
 
     @property
@@ -647,6 +666,16 @@ class ChartAnnotation(Base):
         self.__font_weight = get_enum_value(ChartAnnotationFontWeight, value)        
 
     @property
+    def label(self) -> str:
+        """Label of the text annotation."""
+        return self.__label
+
+    @label.setter
+    def label(self, value: str):
+        self._property_changed('label')
+        self.__label = value        
+
+    @property
     def line_height(self) -> float:
         """Height of the line."""
         return self.__line_height
@@ -705,6 +734,26 @@ class ChartAnnotation(Base):
     def text_decoration(self, value: Union[ChartAnnotationTextDecoration, str]):
         self._property_changed('text_decoration')
         self.__text_decoration = get_enum_value(ChartAnnotationTextDecoration, value)        
+
+    @property
+    def text_width(self) -> float:
+        """Width of the text annotation container."""
+        return self.__text_width
+
+    @text_width.setter
+    def text_width(self, value: float):
+        self._property_changed('text_width')
+        self.__text_width = value        
+
+    @property
+    def y_axis_index(self) -> float:
+        """Y axis index annotation is tied to."""
+        return self.__y_axis_index
+
+    @y_axis_index.setter
+    def y_axis_index(self, value: float):
+        self._property_changed('y_axis_index')
+        self.__y_axis_index = value        
 
 
 class ChartExpression(Base):

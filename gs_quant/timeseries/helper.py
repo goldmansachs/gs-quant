@@ -31,7 +31,7 @@ from gs_quant.errors import MqValueError
 from gs_quant.timeseries.measure_registry import register_measure
 
 ENABLE_DISPLAY_NAME = 'GSQ_ENABLE_MEASURE_DISPLAY_NAME'
-USE_DISPLAY_NAME = os.environ.get(ENABLE_DISPLAY_NAME)
+USE_DISPLAY_NAME = os.environ.get(ENABLE_DISPLAY_NAME) == "1"
 
 
 def _create_enum(name, members):

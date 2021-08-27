@@ -41,6 +41,17 @@ class Term(EnumBase, Enum):
         return self.value
 
 
+class RiskModelEventType(EnumBase, Enum):
+    """Indicates what type of risk model event to check for"""
+
+    risk_model = 'Risk Model'
+    risk_model_pfp_data = 'Risk Model PFP Data'
+    risk_model_isc_data = 'Risk Model ISC Data'
+
+    def __repr__(self):
+        return self.value
+
+
 class UniverseIdentifier(EnumBase, Enum):
     """Identifier by which risk model is uploaded"""
 
@@ -48,6 +59,21 @@ class UniverseIdentifier(EnumBase, Enum):
     bcid = 'bcid'
     cusip = 'cusip'
     gsid = 'gsid'
+
+    def __repr__(self):
+        return self.value
+
+
+class RiskModelUniverseIdentifierRequest(EnumBase, Enum):
+    """Identifier by which risk model data is queried"""
+
+    gsid = 'gsid'
+    bbid = 'bbid'
+    cusip = 'cusip'
+    sedol = 'sedol'
+    ric = 'ric'
+    ticker = 'ticker'
+    prime_id = 'primeId'
 
     def __repr__(self):
         return self.value
@@ -349,22 +375,22 @@ class DataAssetsRequest(Base):
     @camel_case_translate
     def __init__(
             self,
-            identifier: Union[UniverseIdentifier, str],
+            identifier: Union[RiskModelUniverseIdentifierRequest, str],
             universe: List[str]
     ):
         super().__init__()
-        self.identifier = get_enum_value(UniverseIdentifier, identifier)
+        self.identifier = get_enum_value(RiskModelUniverseIdentifierRequest, identifier)
         self.universe = universe
 
     @property
-    def identifier(self) -> Union[UniverseIdentifier, str]:
+    def identifier(self) -> Union[RiskModelUniverseIdentifierRequest, str]:
         """The identifier by which the risk model is queried"""
         return self.__identifier
 
     @identifier.setter
-    def identifier(self, value: Union[UniverseIdentifier, str]):
+    def identifier(self, value: Union[RiskModelUniverseIdentifierRequest, str]):
         self._property_changed('identifier')
-        self.__identifier = get_enum_value(UniverseIdentifier, value)
+        self.__identifier = get_enum_value(RiskModelUniverseIdentifierRequest, value)
 
     @property
     def universe(self) -> List[str]:

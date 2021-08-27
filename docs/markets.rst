@@ -42,6 +42,24 @@ Basket
    indices_utils
 
 
+Index
+----------
+
+.. currentmodule:: gs_quant.markets.index
+
+.. autosummary::
+   :toctree: classes
+
+   Index
+
+.. currentmodule:: gs_quant.markets
+
+.. autosummary::
+   :toctree: modules
+
+   indices_utils
+
+
 Portfolio
 ---------
 

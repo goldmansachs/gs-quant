@@ -25,6 +25,7 @@ from gs_quant.backtests.data_sources import DataManager
 from gs_quant.backtests.order import *
 from gs_quant.datetime import is_business_day, prev_business_date, business_day_offset
 from pandas import bdate_range
+from pandas.tseries.offsets import BDay
 from collections import deque
 from pytz import timezone
 from functools import reduce
@@ -138,7 +139,8 @@ class PredefinedAssetEngine(BacktestBaseEngine):
         return all_times
 
     def _adjust_date(self, date):
-        if is_business_day(date, self.calendars):
+        date = (date + BDay(1) - BDay(1)).date()  # 1st move to latest weekday.
+        if self.calendars == 'Weekend' or is_business_day(date, self.calendars):
             return date
         else:
             return prev_business_date(date, self.calendars)
@@ -156,7 +158,8 @@ class PredefinedAssetEngine(BacktestBaseEngine):
         self.execution_engine = SimulatedExecutionEngine(self.data_handler)
 
         # create timer
-        timer_start = business_day_offset(adjusted_start, 1, roll='forward', calendars=self.calendars)
+        timer_start = (adjusted_start + BDay(1)).date() if self.calendars == 'Weekend' \
+            else business_day_offset(adjusted_start, 1, roll='forward', calendars=self.calendars)
         timer_end = self._adjust_date(end)
         timer = self._timer(strategy, timer_start, timer_end, frequency)
         self._run(strategy, timer, backtest)

@@ -21,21 +21,7 @@ from enum import Enum
 from gs_quant.base import Base, EnumBase, InstrumentBase, camel_case_translate, get_enum_value
 
 
-class OrderType(EnumBase, Enum):
-    """Source object for position data"""
-
-    Ascending = 'Ascending'
-    Descending = 'Descending'
-
-
-class FactorRiskTableMode(EnumBase, Enum):
-    """Source object for position data"""
-
-    Exposure = 'Exposure'
-    ZScore = 'ZScore'
-
-
-class PositionSourceType(EnumBase, Enum):
+class PositionSourceType(EnumBase, Enum):    
     
     """Source object for position data"""
 
@@ -52,6 +38,20 @@ class ReportGenerateTemplateId(EnumBase, Enum):
 
     analytics_factor_attribution_pdf = 'analytics-factor-attribution-pdf'
     analytics_factor_risk_pdf = 'analytics-factor-risk-pdf'    
+
+
+class OrderType(EnumBase, Enum):
+    """Source object for position data"""
+
+    Ascending = 'Ascending'
+    Descending = 'Descending'
+
+
+class FactorRiskTableMode(EnumBase, Enum):
+    """Source object for position data"""
+
+    Exposure = 'Exposure'
+    ZScore = 'ZScore'
 
 
 class ReportMeasures(EnumBase, Enum):    
