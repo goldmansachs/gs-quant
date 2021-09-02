@@ -1414,7 +1414,7 @@ def _get_fxfwd_xccy_swp_rates_data(asset: Asset, tenor: str, real_time: bool = F
     return df
 
 
-@plot_measure((AssetClass.FX,), (AssetType.Forward,),
+@plot_measure((AssetClass.FX,), (AssetType.Forward, AssetType.Cross),
               [MeasureDependency(id_provider=_cross_to_fxfwd_xcswp_asset, query_type=QueryType.OIS_XCCY)])
 def ois_xccy(asset: Asset, tenor: str = None, *, source: str = None, real_time: bool = False) -> Series:
     """
@@ -1434,7 +1434,7 @@ def ois_xccy(asset: Asset, tenor: str = None, *, source: str = None, real_time: 
     return series
 
 
-@plot_measure((AssetClass.FX,), (AssetType.Forward,),
+@plot_measure((AssetClass.FX,), (AssetType.Forward, AssetType.Cross),
               [MeasureDependency(id_provider=_cross_to_fxfwd_xcswp_asset,
                                  query_type=QueryType.OIS_XCCY_EX_SPIKE)])
 def ois_xccy_ex_spike(asset: Asset, tenor: str = None, *, source: str = None, real_time: bool = False) -> Series:
@@ -1455,7 +1455,7 @@ def ois_xccy_ex_spike(asset: Asset, tenor: str = None, *, source: str = None, re
     return series
 
 
-@plot_measure((AssetClass.FX,), (AssetType.Forward,),
+@plot_measure((AssetClass.FX,), (AssetType.Forward, AssetType.Cross),
               [MeasureDependency(id_provider=_cross_to_fxfwd_xcswp_asset, query_type=QueryType.NON_USD_OIS)])
 def non_usd_ois(asset: Asset, tenor: str = None, *, source: str = None, real_time: bool = False) -> Series:
     """
@@ -1475,7 +1475,7 @@ def non_usd_ois(asset: Asset, tenor: str = None, *, source: str = None, real_tim
     return series
 
 
-@plot_measure((AssetClass.FX,), (AssetType.Forward,),
+@plot_measure((AssetClass.FX,), (AssetType.Forward, AssetType.Cross),
               [MeasureDependency(id_provider=_cross_to_fxfwd_xcswp_asset, query_type=QueryType.USD_OIS)])
 def usd_ois(asset: Asset, tenor: str = None, *, source: str = None, real_time: bool = False) -> Series:
     """

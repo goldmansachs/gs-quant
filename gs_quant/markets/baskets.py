@@ -96,7 +96,7 @@ class Basket(Asset, PositionedEntity):
             self.__finish_initialization()
 
     @classmethod
-    def get(cls, identifier: str):
+    def get(cls, identifier: str, **kwargs):
         """
         Fetch an existing basket
 
@@ -116,7 +116,7 @@ class Basket(Asset, PositionedEntity):
         >>> basket = Basket.get("GSMBXXXX")
         """
         gs_asset = cls.__get_gs_asset(identifier)
-        return cls(gs_asset=gs_asset, _finish_init=True)
+        return cls(gs_asset=gs_asset, _finish_init=get(kwargs, '_finish_init', True))
 
     @_validate()
     def get_details(self) -> pd.DataFrame:

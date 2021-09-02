@@ -291,7 +291,7 @@ def test_update_report_job(mocker):
     assert response == mock_response
 
 
-def test_get_risk_factor_data_results(mocker):
+def test_get_factor_risk_report_results(mocker):
     mock_response = [
         {
             "date": "2003-01-03",
@@ -323,7 +323,38 @@ def test_get_risk_factor_data_results(mocker):
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
     # run test
-    response = GsReportApi.get_risk_factor_data_results('reportId')
+    response = GsReportApi.get_factor_risk_report_results('reportId')
 
     GsSession.current._get.assert_called_with('/risk/factors/reports/reportId/results?')
+    assert response == mock_response
+
+
+def test_get_factor_risk_report_view(mocker):
+    report_id = 'RP123'
+    mock_response = {
+        "summary": {
+            "riskModel": "BARRA_USSLOWL",
+            "fxHedged": True,
+            "assetCount": 1,
+            "longExposure": 415,
+            "shortExposure": 0,
+            "factorProportionOfRisk": 70.28206437467601,
+            "specificProportionOfRisk": 29.71793562532398,
+            "date": "2021-08-12"
+        }
+    }
+    # mock GsSession
+    mocker.patch.object(
+        GsSession.__class__,
+        'default_value',
+        return_value=GsSession.get(
+            Environment.QA,
+            'client_id',
+            'secret'))
+    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+
+    # run test
+    response = GsReportApi.get_factor_risk_report_view(report_id, view='Risk')
+
+    GsSession.current._get.assert_called_with(f'/risk/factors/reports/{report_id}/views?view=Risk')
     assert response == mock_response

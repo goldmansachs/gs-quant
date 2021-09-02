@@ -190,6 +190,77 @@ def diff(x: pd.Series, obs: int = 1) -> pd.Series:
     return ret_series
 
 
+@plot_function
+def compare(x: Union[pd.Series, Real], y: Union[pd.Series, Real], relation: Operator,
+            method: Interpolate = Interpolate.STEP) \
+        -> Union[pd.Series, Real]:
+    """
+    Compare two series or scalars against each other
+
+    :param x: timeseries or scalar
+    :param y: timeseries or scalar
+    :param relation: comparison operator (greater, less, greater_equal, less_equal, equal, or not_equal).
+    :param method: interpolation method (default: step). Only used when both x and y are timeseries
+    :return: binary timeseries with the result of x relation y or the comparison of the given real numbers
+
+    **Usage**
+
+    Compare two series or scalar variables applying the given interpolation method
+
+    :math:`R_t =  X_t ? Y_t`
+
+    Comparison operators:
+
+    ==============  ========================================================================
+    Relation        Behavior
+    ==============  ========================================================================
+    greater         :math:`x > y`
+    less            :math:`x < y`
+    equal           :math:`x = y`
+    not_equal       :math:`x \\neq y`
+    greater_equal   :math:`x \\geq y`
+    less_equal      :math:`x \\leq y`
+    ==============  ========================================================================
+
+    Alignment operators:
+
+    =========   ========================================================================
+    Method      Behavior
+    =========   ========================================================================
+    intersect   Resultant series only has values on the intersection of dates.
+                Values for dates present in only one series will be ignored
+    nan         Resultant series has values on the union of dates in both series. Values
+                for dates only available in one series will be treated as nan in the
+                other series, and therefore in the resultant series
+    zero        Resultant series has values on the union of dates in both series. Values
+                for dates only available in one series will be treated as zero in the
+                other series
+    step        Resultant series has values on the union of dates in both series. Values
+                for dates only available in one series will be interpolated via step
+                function in the other series
+    time        Resultant series have values on the union of dates / times. Missing
+                values surrounded by valid values will be interpolated given length of
+                interval. Input series must use DateTimeIndex.
+    =========   ========================================================================
+    """
+    x, y = align(x, y, method)
+
+    if relation == Operator.EQUAL:
+        return (x == y) * 1.0
+    elif relation == Operator.NOT_EQUAL:
+        return (x != y) * 1.0
+    elif relation == Operator.GREATER:
+        return (x > y) * 1.0
+    elif relation == Operator.LESS:
+        return (x < y) * 1.0
+    elif relation == Operator.GREATER_EQUAL:
+        return (x >= y) * 1.0
+    elif relation == Operator.LESS_EQUAL:
+        return (x <= y) * 1.0
+    else:
+        raise MqValueError('Unknown operator type: ' + relation)
+
+
 class LagMode(Enum):
     TRUNCATE = "truncate"
     EXTEND = "extend"

@@ -40,20 +40,6 @@ class ReportGenerateTemplateId(EnumBase, Enum):
     analytics_factor_risk_pdf = 'analytics-factor-risk-pdf'    
 
 
-class OrderType(EnumBase, Enum):
-    """Source object for position data"""
-
-    Ascending = 'Ascending'
-    Descending = 'Descending'
-
-
-class FactorRiskTableMode(EnumBase, Enum):
-    """Source object for position data"""
-
-    Exposure = 'Exposure'
-    ZScore = 'ZScore'
-
-
 class ReportMeasures(EnumBase, Enum):    
     
     """Enums for measures to be outputted for the report"""

@@ -54,7 +54,7 @@ class GsRiskModelApi:
         if limit is not None:
             url += f'&limit={limit}'
         if ids is not None:
-            url += f'&id={ids}'
+            url += '&id={ids}'.format(ids='&id='.join(ids))
         if offset is not None:
             url += f'&offset={offset}'
         if terms is not None:
@@ -128,8 +128,9 @@ class GsFactorRiskModelApi(GsRiskModelApi):
         return GsSession.current._get(f'/risk/models/{model_id}/factors/{factor_id}')
 
     @classmethod
-    def update_risk_model_factor(cls, model_id: str, factor_id: str, factor: RiskModelFactor) -> RiskModelFactor:
-        return GsSession.current._put(f'/risk/models/{model_id}/factors/{factor_id}', factor, cls=RiskModelFactor)
+    def update_risk_model_factor(cls, model_id: str, factor: RiskModelFactor) -> RiskModelFactor:
+        url = f'/risk/models/{model_id}/factors/{factor.identifier}'
+        return GsSession.current._put(url, factor, cls=RiskModelFactor)
 
     @classmethod
     def delete_risk_model_factor(cls, model_id: str, factor_id: str) -> Dict:

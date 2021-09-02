@@ -13,7 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-import math
+from enum import auto
 from math import sqrt
 from typing import Dict, Union
 
@@ -22,20 +22,37 @@ import pandas as pd
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.data.core import DataContext
 from gs_quant.datetime import date
-from gs_quant.errors import MqValueError
-from gs_quant.models.risk_model import FactorRiskModel, ReturnFormat
 from gs_quant.session import GsSession
+from gs_quant.target.common import Enum
 from gs_quant.target.data import DataQuery
+from gs_quant.target.risk_models import FactorType
+
+
+class ReturnFormat(Enum):
+    """Alternative format for data to be returned from get_data functions"""
+    JSON = auto()
+    DATA_FRAME = auto()
 
 
 class Factor:
 
-    def __init__(self, risk_model_id: str, id_: str, name: str, type: str, category: str):
+    def __init__(self,
+                 risk_model_id: str,
+                 id_: str,
+                 type_: FactorType,
+                 name: str = None,
+                 category: str = None,
+                 tooltip: str = None,
+                 description: str = None,
+                 glossary_description: str = None):
         self.__risk_model_id = risk_model_id
         self.__id = id_
         self.__name = name
-        self.__type = type
+        self.__type = type_
         self.__category = category
+        self.__tooltip = tooltip
+        self.__description = description
+        self.__glossary_description = glossary_description
 
     @property
     def id(self):
@@ -46,28 +63,28 @@ class Factor:
         return self.__name
 
     @property
-    def type(self):
+    def type(self) -> FactorType:
         return self.__type
 
     @property
-    def category(self):
+    def category(self) -> str:
         return self.__category
+
+    @property
+    def tooltip(self):
+        return self.__tooltip
+
+    @property
+    def description(self):
+        return self.__description
+
+    @property
+    def glossary_description(self):
+        return self.__glossary_description
 
     @property
     def risk_model_id(self):
         return self.__risk_model_id
-
-    @classmethod
-    def get(cls, risk_model_id: str, factor_name: str):
-        risk_model = FactorRiskModel.get(risk_model_id)
-        factor_data = risk_model.get_factor_data(format=ReturnFormat.JSON)
-        name_matches = [factor for factor in factor_data if factor['name'] == factor_name]
-
-        if not name_matches:
-            raise MqValueError(f'Factor with name {factor_name} does not in exist in risk model {risk_model_id}')
-
-        factor = name_matches.pop()
-        return Factor(risk_model_id, factor['identifier'], factor['name'], factor['type'], factor.get('factorCategory'))
 
     def covariance(self,
                    factor,
@@ -93,7 +110,7 @@ class Factor:
             date = data['date']
             if date_to_matrix_order.get(date):
                 matrix_order_on_date = date_to_matrix_order[date]
-                covariance_data[date] = data[matrix_order_on_date] * math.sqrt(252)
+                covariance_data[date] = data[matrix_order_on_date] * 252
 
         if format == ReturnFormat.DATA_FRAME:
             return pd.DataFrame.from_dict(covariance_data, orient='index', columns=['covariance'])

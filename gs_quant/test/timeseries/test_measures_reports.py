@@ -21,14 +21,14 @@ from testfixtures import Replacer
 from testfixtures.mock import Mock
 
 import gs_quant.timeseries.measures_reports as mr
-from gs_quant.api.gs.assets import GsAsset
+from gs_quant.api.gs.assets import GsTemporalXRef
 from gs_quant.api.gs.data import MarketDataResponseFrame
 from gs_quant.data.core import DataContext
 from gs_quant.errors import MqValueError, MqError
-from gs_quant.markets.baskets import Basket
 from gs_quant.markets.report import PerformanceReport, ThematicReport
+from gs_quant.markets.securities import Stock
 from gs_quant.models.risk_model import FactorRiskModel as Factor_Risk_Model
-from gs_quant.target.common import ReportParameters, AssetType
+from gs_quant.target.common import ReportParameters, XRef
 from gs_quant.target.portfolios import RiskAumSource, Portfolio
 from gs_quant.target.reports import Report, PositionSourceType, ReportType
 from gs_quant.target.risk_models import RiskModel, CoverageType, Term, UniverseIdentifier
@@ -223,7 +223,7 @@ def test_factor_exposure():
     mock.return_value = factor_risk_report
 
     # mock getting report factor data
-    mock = replace('gs_quant.api.gs.reports.GsReportApi.get_risk_factor_data_results', Mock())
+    mock = replace('gs_quant.api.gs.reports.GsReportApi.get_factor_risk_report_results', Mock())
     mock.return_value = factor_data
 
     # mock getting risk model dates
@@ -269,7 +269,7 @@ def test_factor_pnl():
     mock.return_value = factor_risk_report
 
     # mock getting report factor data
-    mock = replace('gs_quant.api.gs.reports.GsReportApi.get_risk_factor_data_results', Mock())
+    mock = replace('gs_quant.api.gs.reports.GsReportApi.get_factor_risk_report_results', Mock())
     mock.return_value = factor_data
 
     # mock getting risk model dates
@@ -315,7 +315,7 @@ def test_factor_proportion_of_risk():
     mock.return_value = factor_risk_report
 
     # mock getting report factor data
-    mock = replace('gs_quant.api.gs.reports.GsReportApi.get_risk_factor_data_results', Mock())
+    mock = replace('gs_quant.api.gs.reports.GsReportApi.get_factor_risk_report_results', Mock())
     mock.return_value = factor_data
 
     # mock getting risk model dates
@@ -372,7 +372,7 @@ def test_aggregate_factor_support():
     mock.return_value = factor_risk_report
 
     # mock getting report factor data
-    mock = replace('gs_quant.api.gs.reports.GsReportApi.get_risk_factor_data_results', Mock())
+    mock = replace('gs_quant.api.gs.reports.GsReportApi.get_factor_risk_report_results', Mock())
     mock.return_value = aggregate_factor_data
 
     # mock getting risk model dates
@@ -548,11 +548,15 @@ def test_thematic_exposure():
     mock = replace('gs_quant.markets.report.ThematicReport.get_thematic_exposure', Mock())
     mock.return_value = pd.DataFrame(thematic_data)
 
-    # mock getting thematic basket
-    mock = replace('gs_quant.markets.baskets.Basket.get', Mock())
-    mock.return_value = Basket(GsAsset(id_='basket_id', asset_class='Equity',
-                                       type_=AssetType.Custom_Basket,
-                                       name='Basket'))
+    # mock getting asset
+    mock = Stock('MAA0NE9QX2ABETG6', 'Test Asset')
+    xrefs = replace('gs_quant.timeseries.measures.GsAssetApi.get_asset_xrefs', Mock())
+    xrefs.return_value = [
+        GsTemporalXRef(datetime.date(2019, 1, 1),
+                       datetime.date(2952, 12, 31),
+                       XRef(ticker='basket_ticker', ))
+    ]
+    replace('gs_quant.markets.securities.SecurityMaster.get_asset', Mock()).return_value = mock
 
     with DataContext(datetime.date(2020, 7, 12), datetime.date(2020, 7, 15)):
         actual = mr.thematic_exposure('report_id', 'basket_ticker')
@@ -572,11 +576,15 @@ def test_thematic_beta():
     mock = replace('gs_quant.markets.report.ThematicReport.get_thematic_betas', Mock())
     mock.return_value = pd.DataFrame(thematic_data)
 
-    # mock getting thematic basket
-    mock = replace('gs_quant.markets.baskets.Basket.get', Mock())
-    mock.return_value = Basket(GsAsset(id_='basket_id', asset_class='Equity',
-                                       type_=AssetType.Custom_Basket,
-                                       name='Basket'))
+    # mock getting asset
+    mock = Stock('MAA0NE9QX2ABETG6', 'Test Asset')
+    xrefs = replace('gs_quant.timeseries.measures.GsAssetApi.get_asset_xrefs', Mock())
+    xrefs.return_value = [
+        GsTemporalXRef(datetime.date(2019, 1, 1),
+                       datetime.date(2952, 12, 31),
+                       XRef(ticker='basket_ticker', ))
+    ]
+    replace('gs_quant.markets.securities.SecurityMaster.get_asset', Mock()).return_value = mock
 
     with DataContext(datetime.date(2020, 7, 12), datetime.date(2020, 7, 15)):
         actual = mr.thematic_beta('report_id', 'basket_ticker')

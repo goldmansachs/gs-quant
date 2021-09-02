@@ -33,6 +33,7 @@ from gs_quant.priceable import PriceableImpl
 from gs_quant.risk import RiskMeasure, ResolvedInstrumentValues
 from gs_quant.risk.results import CompositeResultFuture, PortfolioRiskResult, PortfolioPath, PricingFuture
 from gs_quant.target.common import RiskPosition
+from gs_quant.target.portfolios import Portfolio as MarqueePortfolio
 from gs_quant.target.portfolios import Position, PositionSet, RiskRequest, PricingDateAndMarketDataAsOf
 
 _logger = logging.getLogger(__name__)
@@ -262,16 +263,8 @@ class Portfolio(PriceableImpl):
         else:
             if not self.__name:
                 raise ValueError('name not set')
-
-            try:
-                self.__id = GsPortfolioApi.get_portfolio_by_name(self.__name).id
-                if not overwrite:
-                    raise RuntimeError(
-                        f'Portfolio {self.__name} with id {self.__id} already exists. Use overwrite=True to overwrite')
-            except ValueError:
-                from gs_quant.target.portfolios import Portfolio as MarqueePortfolio
-                self.__id = GsPortfolioApi.create_portfolio(MarqueePortfolio('USD', self.__name)).id
-                _logger.info(f'Created Marquee portfolio {self.__name} with id {self.__id}')
+            self.__id = GsPortfolioApi.create_portfolio(MarqueePortfolio('USD', self.__name)).id
+            _logger.info(f'Created Marquee portfolio {self.__name} with id {self.__id}')
 
         position_set = PositionSet(
             position_date=self.__position_context.position_date,

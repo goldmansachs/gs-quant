@@ -23,7 +23,7 @@ from dateutil.relativedelta import relativedelta
 
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.api.gs.portfolios import GsPortfolioApi
-from gs_quant.api.gs.reports import GsReportApi
+from gs_quant.api.gs.reports import GsReportApi, OrderType, FactorRiskTableMode
 from gs_quant.datetime import business_day_offset
 from gs_quant.errors import MqValueError
 from gs_quant.markets.report_utils import _get_ppaa_batches
@@ -31,8 +31,7 @@ from gs_quant.models.risk_model import ReturnFormat
 from gs_quant.target.common import ReportParameters, Currency
 from gs_quant.target.coordinates import MDAPIDataBatchResponse
 from gs_quant.target.data import DataQuery, DataQueryResponse
-from gs_quant.target.reports import Report as TargetReport, FactorRiskTableMode, OrderType
-from gs_quant.target.reports import ReportType, PositionSourceType, ReportStatus
+from gs_quant.target.reports import Report as TargetReport, ReportType, PositionSourceType, ReportStatus
 
 
 class ReportDataset(Enum):
@@ -42,6 +41,16 @@ class ReportDataset(Enum):
     PTA_DATASET = "PTA"
     PTAA_DATASET = "PTAA"
     PORTFOLIO_CONSTITUENTS = "PORTFOLIO_CONSTITUENTS"
+
+
+class FactorRiskViewsMode(Enum):
+    Risk = 'Risk'
+    Attribution = 'Attribution'
+
+
+class FactorRiskResultsMode(Enum):
+    Portfolio = 'Portfolio'
+    Positions = 'Positions'
 
 
 class ReportJobFuture:
@@ -73,9 +82,9 @@ class ReportJobFuture:
         if status != ReportStatus.done:
             raise MqValueError('This report job is not done. Cannot retrieve results.')
         if self.__report_type in [ReportType.Portfolio_Factor_Risk, ReportType.Asset_Factor_Risk]:
-            results = GsReportApi.get_risk_factor_data_results(risk_report_id=self.__report_id,
-                                                               start_date=self.__start_date,
-                                                               end_date=self.__end_date)
+            results = GsReportApi.get_factor_risk_report_results(risk_report_id=self.__report_id,
+                                                                 start_date=self.__start_date,
+                                                                 end_date=self.__end_date)
             return pd.DataFrame(results)
         if self.__report_type == ReportType.Portfolio_Performance_Analytics:
             query = DataQuery(where={'reportId': self.__report_id},
@@ -410,10 +419,13 @@ class PerformanceReport(Report):
         return pd.DataFrame(results) if return_format == ReturnFormat.DATA_FRAME else results
 
     def get_many_measures(self,
-                          measures: Tuple[str, ...],
+                          measures: Tuple[str, ...] = None,
                           start_date: dt.date = None,
                           end_date: dt.date = None,
                           return_format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
+
+        if measures is None:
+            measures = []
         fields = tuple(measure for measure in measures)
         where = {'reportId': self.id}
         query = DataQuery(where=where, fields=fields, start_date=start_date, end_date=end_date)
@@ -482,19 +494,38 @@ class FactorRiskReport(Report):
         return self.parameters.risk_model
 
     def get_results(self,
+                    mode: FactorRiskResultsMode = FactorRiskResultsMode.Portfolio,
                     factors: List[str] = None,
                     factor_categories: List[str] = None,
                     start_date: dt.date = None,
                     end_date: dt.date = None,
                     currency: Currency = None,
                     return_format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
-        results = GsReportApi.get_risk_factor_data_results(risk_report_id=self.id,
-                                                           factors=factors,
-                                                           factor_categories=factor_categories,
-                                                           currency=currency,
-                                                           start_date=start_date,
-                                                           end_date=end_date)
+        results = GsReportApi.get_factor_risk_report_results(risk_report_id=self.id,
+                                                             view=mode.value,
+                                                             factors=factors,
+                                                             factor_categories=factor_categories,
+                                                             currency=currency,
+                                                             start_date=start_date,
+                                                             end_date=end_date)
         return pd.DataFrame(results) if return_format == ReturnFormat.DATA_FRAME else results
+
+    def get_view(self,
+                 mode: FactorRiskViewsMode,
+                 factor: str = None,
+                 factor_category: str = None,
+                 start_date: dt.date = None,
+                 end_date: dt.date = None,
+                 currency: Currency = None) -> Dict:
+        return GsReportApi.get_factor_risk_report_view(
+            risk_report_id=self.id,
+            view=mode.value,
+            factor=factor,
+            factor_category=factor_category,
+            currency=currency,
+            start_date=start_date,
+            end_date=end_date
+        )
 
     def get_table(self,
                   mode: FactorRiskTableMode = None,
@@ -527,59 +558,86 @@ class FactorRiskReport(Report):
         return table
 
     def get_factor_pnl(self,
-                       factor_name: str,
+                       factor_name: Union[str, List[str]],
                        start_date: dt.date = None,
                        end_date: dt.date = None,
                        currency: Currency = None) -> pd.DataFrame:
-        factor_data = self.get_results(factors=[factor_name],
+        factors = [factor_name] if isinstance(factor_name, str) else factor_name
+        factor_data = self.get_results(factors=factors,
                                        start_date=start_date,
                                        end_date=end_date,
-                                       currency=currency)
-        return factor_data.filter(items=['date', 'pnl'])
+                                       currency=currency,
+                                       return_format=ReturnFormat.JSON)
+
+        return _format_multiple_factor_table(factor_data, 'pnl')
 
     def get_factor_exposure(self,
-                            factor_name: str,
+                            factor_name: Union[str, List[str]],
                             start_date: dt.date = None,
                             end_date: dt.date = None,
                             currency: Currency = None) -> pd.DataFrame:
-        factor_data = self.get_results(factors=[factor_name],
+        factors = [factor_name] if isinstance(factor_name, str) else factor_name
+        factor_data = self.get_results(factors=factors,
                                        start_date=start_date,
                                        end_date=end_date,
-                                       currency=currency)
-        return factor_data.filter(items=['date', 'exposure'])
+                                       currency=currency,
+                                       return_format=ReturnFormat.JSON)
+        return _format_multiple_factor_table(factor_data, 'exposure')
 
     def get_factor_proportion_of_risk(self,
-                                      factor_name: str,
+                                      factor_name: Union[str, List[str]],
                                       start_date: dt.date = None,
                                       end_date: dt.date = None,
                                       currency: Currency = None) -> pd.DataFrame:
-        factor_data = self.get_results(factors=[factor_name],
+        factors = [factor_name] if isinstance(factor_name, str) else factor_name
+        factor_data = self.get_results(factors=factors,
                                        start_date=start_date,
                                        end_date=end_date,
-                                       currency=currency)
-        return factor_data.filter(items=['date', 'proportionOfRisk'])
+                                       currency=currency,
+                                       return_format=ReturnFormat.JSON)
+        return _format_multiple_factor_table(factor_data, 'proportionOfRisk')
 
     def get_annual_risk(self,
-                        factor_name: str,
+                        factor_name: Union[str, List[str]],
                         start_date: dt.date = None,
                         end_date: dt.date = None,
                         currency: Currency = None) -> pd.DataFrame:
-        factor_data = self.get_results(factors=[factor_name],
+        factors = [factor_name] if isinstance(factor_name, str) else factor_name
+        factor_data = self.get_results(factors=factors,
                                        start_date=start_date,
                                        end_date=end_date,
-                                       currency=currency)
-        return factor_data.filter(items=['date', 'annualRisk'])
+                                       currency=currency,
+                                       return_format=ReturnFormat.JSON)
+        return _format_multiple_factor_table(factor_data, 'annualRisk')
 
     def get_daily_risk(self,
-                       factor_name: str,
+                       factor_name: Union[str, List[str]],
                        start_date: dt.date = None,
                        end_date: dt.date = None,
                        currency: Currency = None) -> pd.DataFrame:
-        factor_data = self.get_results(factors=[factor_name],
+        factors = [factor_name] if isinstance(factor_name, str) else factor_name
+        factor_data = self.get_results(factors=factors,
                                        start_date=start_date,
                                        end_date=end_date,
-                                       currency=currency)
-        return factor_data.filter(items=['date', 'dailyRisk'])
+                                       currency=currency,
+                                       return_format=ReturnFormat.JSON)
+        return _format_multiple_factor_table(factor_data, 'dailyRisk')
+
+
+def _format_multiple_factor_table(factor_data: List[Dict],
+                                  key: str) -> pd.DataFrame:
+    formatted_data = {}
+    for data in factor_data:
+        date = data['date']
+        if date in formatted_data:
+            formatted_data[date][data['factor']] = data[key]
+        else:
+            formatted_data[date] = {
+                'date': date,
+                data['factor']: data[key]
+            }
+
+    return pd.DataFrame(formatted_data.values())
 
 
 class ThematicReport(Report):
@@ -628,7 +686,7 @@ class ThematicReport(Report):
                                              ReturnFormat.JSON)
         for result in pta_results:
             result['thematicBeta'] = result['thematicExposure'] / result['grossExposure']
-        return pd.DataFrame(pta_results)
+        return pd.DataFrame(pta_results).filter(items=['date', 'thematicExposure', 'thematicBeta'])
 
     def get_thematic_exposure(self,
                               start_date: dt.date = None,

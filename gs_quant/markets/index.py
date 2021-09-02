@@ -60,6 +60,9 @@ class Index(Asset, PositionedEntity):
             self.tree_helper = TreeHelper(id_, tree_underlier_dataset='STS_UNDERLIER_WEIGHTS')
             self.tree_df = pd.DataFrame()
 
+    def __str__(self):
+        return self.name
+
     def get_type(self) -> AssetType:
         return self.asset_type
 
@@ -73,7 +76,7 @@ class Index(Asset, PositionedEntity):
         return ReturnType(self.parameters.index_return_type)
 
     @classmethod
-    def get(cls, identifier: str):
+    def get(cls, identifier: str) -> Optional['Index']:
         """
         Fetch an existing index
 

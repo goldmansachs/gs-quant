@@ -65,9 +65,9 @@ def test_create_risk_model(mocker):
     mocker.patch.object(GsSession.current, '_post', return_value=mock_risk_model_obj)
     new_model = FactorRiskModel(risk_model_id,
                                 'Fake Risk Model',
-                                'Country',
-                                'Long',
-                                'gsid',
+                                CoverageType.Country,
+                                Term.Long,
+                                UniverseIdentifier.gsid,
                                 'GS',
                                 0.1,
                                 entitlements={},

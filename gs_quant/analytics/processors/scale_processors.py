@@ -49,7 +49,7 @@ class SpotMarkerProcessor(BaseProcessor):
             if a_data.success:
                 self.value = ProcessorResult(True, {
                     'name': self.name,
-                    'value': a_data.data.get(0),
+                    'value': a_data.data.get(-1),
                     'shape': self.shape.value
                 })
             else:

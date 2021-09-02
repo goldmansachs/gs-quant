@@ -79,6 +79,7 @@ class AssetType(EnumBase, Enum):
     AssetSwapFxdFlt = 'AssetSwapFxdFlt'
     AssetSwapFxdFxd = 'AssetSwapFxdFxd'
     Any = 'Any'
+    Autoroll = 'Autoroll'
     AveragePriceOption = 'AveragePriceOption'
     Basis = 'Basis'
     BasisSwap = 'BasisSwap'
@@ -2223,7 +2224,6 @@ class Field(EnumBase, Enum):
     blockOffFacility = 'blockOffFacility'
     unrealizedVwapPerformanceUSD = 'unrealizedVwapPerformanceUSD'
     paceOfRollp75 = 'paceOfRollp75'
-    highTax = 'highTax'
     earningsPerSharePositive = 'earningsPerSharePositive'
     numIcuBeds = 'numIcuBeds'
     bucketVolumeInPercentage = 'bucketVolumeInPercentage'
@@ -2508,6 +2508,7 @@ class Field(EnumBase, Enum):
     buy15cents = 'buy15cents'
     unadjustedAsk = 'unadjustedAsk'
     dynamicVolumeForecast = 'dynamicVolumeForecast'
+    margin = 'margin'
     contributionName = 'contributionName'
     givenPlusPaid = 'givenPlusPaid'
     lastFillPrice = 'lastFillPrice'
@@ -2920,7 +2921,6 @@ class Field(EnumBase, Enum):
     maturity = 'maturity'
     deltaChange = 'deltaChange'
     index = 'index'
-    lowTax = 'lowTax'
     finalIndexLevel = 'finalIndexLevel'
     unrealizedArrivalPerformanceUSD = 'unrealizedArrivalPerformanceUSD'
     icebergSlippage = 'icebergSlippage'
@@ -3045,6 +3045,7 @@ class Field(EnumBase, Enum):
     blockTradeElectionIndicator = 'blockTradeElectionIndicator'
     testStatus = 'testStatus'
     mktType = 'mktType'
+    covidDisrupted = 'covidDisrupted'
     lastUpdatedTime = 'lastUpdatedTime'
     yield30Day = 'yield30Day'
     optionPutPremium = 'optionPutPremium'
@@ -3396,6 +3397,7 @@ class Field(EnumBase, Enum):
     averageRealizedVolatility = 'averageRealizedVolatility'
     traceAdvBuy = 'traceAdvBuy'
     newConfirmed = 'newConfirmed'
+    tax = 'tax'
     sell8bps = 'sell8bps'
     bidPrice = 'bidPrice'
     optionCallPremium = 'optionCallPremium'
@@ -4525,7 +4527,7 @@ class CurveOverlay(Scenario):
     @camel_case_translate
     def __init__(
         self,
-        dates: Tuple[str, ...] = None,
+        dates: Tuple[datetime.date, ...] = None,
         discount_factors: Tuple[float, ...] = None,
         denominated: str = None,
         csa_term: str = None,
@@ -4552,11 +4554,12 @@ class CurveOverlay(Scenario):
         return 'CurveOverlay'        
 
     @property
-    def dates(self) -> Tuple[str, ...]:
+    def dates(self) -> Tuple[datetime.date, ...]:
+        """ISO 8601-formatted date"""
         return self.__dates
 
     @dates.setter
-    def dates(self, value: Tuple[str, ...]):
+    def dates(self, value: Tuple[datetime.date, ...]):
         self._property_changed('dates')
         self.__dates = value        
 
@@ -5763,6 +5766,41 @@ class PerformanceStats(Base):
     def volume(self, value: float):
         self._property_changed('volume')
         self.__volume = value        
+
+
+class PositionTag(Base):
+        
+    """Tag name and value associated with a portfolio position."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        name: str,
+        value: str
+    ):        
+        super().__init__()
+        self.name = name
+        self.value = value
+
+    @property
+    def name(self) -> str:
+        """Tag name."""
+        return self.__name
+
+    @name.setter
+    def name(self, value: str):
+        self._property_changed('name')
+        self.__name = value        
+
+    @property
+    def value(self) -> str:
+        """Tag value."""
+        return self.__value
+
+    @value.setter
+    def value(self, value: str):
+        self._property_changed('value')
+        self.__value = value        
 
 
 class RefMarket(Base):
@@ -10813,8 +10851,8 @@ class FieldFilterMap(Base):
         self.portfolio_type = kwargs.get('portfolio_type')
         self.vendor = kwargs.get('vendor')
         self.popularity = kwargs.get('popularity')
-        self.currency = kwargs.get('currency')
         self.term = kwargs.get('term')
+        self.currency = kwargs.get('currency')
         self.real_time_restriction_status = kwargs.get('real_time_restriction_status')
         self.asset_parameters_clearing_house = kwargs.get('asset_parameters_clearing_house')
         self.rating_fitch = kwargs.get('rating_fitch')
@@ -10950,8 +10988,8 @@ class FieldFilterMap(Base):
         self.last_updated_message = kwargs.get('last_updated_message')
         self.rcic = kwargs.get('rcic')
         self.trading_restriction = kwargs.get('trading_restriction')
-        self.name_raw = kwargs.get('name_raw')
         self.status = kwargs.get('status')
+        self.name_raw = kwargs.get('name_raw')
         self.asset_parameters_pay_or_receive = kwargs.get('asset_parameters_pay_or_receive')
         self.client_name = kwargs.get('client_name')
         self.asset_parameters_index_series = kwargs.get('asset_parameters_index_series')
@@ -11542,15 +11580,6 @@ class FieldFilterMap(Base):
         self.__popularity = value        
 
     @property
-    def currency(self) -> dict:
-        return self.__currency
-
-    @currency.setter
-    def currency(self, value: dict):
-        self._property_changed('currency')
-        self.__currency = value        
-
-    @property
     def term(self) -> dict:
         return self.__term
 
@@ -11558,6 +11587,15 @@ class FieldFilterMap(Base):
     def term(self, value: dict):
         self._property_changed('term')
         self.__term = value        
+
+    @property
+    def currency(self) -> dict:
+        return self.__currency
+
+    @currency.setter
+    def currency(self, value: dict):
+        self._property_changed('currency')
+        self.__currency = value        
 
     @property
     def real_time_restriction_status(self) -> dict:
@@ -12739,15 +12777,6 @@ class FieldFilterMap(Base):
         self.__trading_restriction = value        
 
     @property
-    def name_raw(self) -> dict:
-        return self.__name_raw
-
-    @name_raw.setter
-    def name_raw(self, value: dict):
-        self._property_changed('name_raw')
-        self.__name_raw = value        
-
-    @property
     def status(self) -> dict:
         return self.__status
 
@@ -12755,6 +12784,15 @@ class FieldFilterMap(Base):
     def status(self, value: dict):
         self._property_changed('status')
         self.__status = value        
+
+    @property
+    def name_raw(self) -> dict:
+        return self.__name_raw
+
+    @name_raw.setter
+    def name_raw(self, value: dict):
+        self._property_changed('name_raw')
+        self.__name_raw = value        
 
     @property
     def asset_parameters_pay_or_receive(self) -> dict:
@@ -15334,6 +15372,7 @@ class Position(Base):
         party_from: SimpleParty = None,
         external_ids: Tuple[dict, ...] = None,
         margin_ids: Tuple[dict, ...] = None,
+        tags: Tuple[PositionTag, ...] = None,
         instrument: InstrumentBase = None,
         description: str = None,
         name: str = None
@@ -15346,6 +15385,7 @@ class Position(Base):
         self.party_from = party_from
         self.external_ids = external_ids
         self.margin_ids = margin_ids
+        self.tags = tags
         self.instrument = instrument
         self.description = description
         self.name = name
@@ -15417,6 +15457,16 @@ class Position(Base):
     def margin_ids(self, value: Tuple[dict, ...]):
         self._property_changed('margin_ids')
         self.__margin_ids = value        
+
+    @property
+    def tags(self) -> Tuple[PositionTag, ...]:
+        """Array of tag name and values associated with the position."""
+        return self.__tags
+
+    @tags.setter
+    def tags(self, value: Tuple[PositionTag, ...]):
+        self._property_changed('tags')
+        self.__tags = value        
 
     @property
     def instrument(self) -> InstrumentBase:

@@ -27,15 +27,18 @@ from pydash import get
 
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.data import GsDataApi
+from gs_quant.api.gs.esg import ESGMeasure, GsEsgApi, ESGCard
 from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.api.gs.reports import GsReportApi
 from gs_quant.common import DateLimit, PositionType
 from gs_quant.data import DataCoordinate, DataFrequency, DataMeasure
 from gs_quant.data.coordinate import DataDimensions
+from gs_quant.datetime import business_day_offset
 from gs_quant.entities.entitlements import Entitlements
 from gs_quant.errors import MqError
 from gs_quant.markets.position_set import PositionSet
 from gs_quant.markets.report import PerformanceReport, FactorRiskReport, Report
+from gs_quant.models.risk_model import FactorRiskModel
 from gs_quant.session import GsSession
 from gs_quant.target.reports import ReportStatus, ReportType
 
@@ -376,6 +379,7 @@ class PositionedEntity(metaclass=ABCMeta):
             if not position_sets:
                 return
             GsPortfolioApi.update_positions(portfolio_id=self.id, position_sets=[p.to_target() for p in position_sets])
+            time.sleep(3)
         else:
             raise NotImplementedError
 
@@ -414,6 +418,19 @@ class PositionedEntity(metaclass=ABCMeta):
                 report_objects.append(Report.from_target(report))
         return report_objects
 
+    def get_report_factor_risk_models(self) -> Tuple[FactorRiskModel, ...]:
+        all_reports = self.get_reports()
+        risk_model_ids = []
+        for report in all_reports:
+            if report.parameters.risk_model is not None and report.parameters.risk_model not in risk_model_ids:
+                risk_model_ids.append(report.parameters.risk_model)
+        if not len(risk_model_ids):
+            raise ValueError('No factor risk models available for ' + self.id)
+
+        risk_models = FactorRiskModel.get_many(risk_model_ids)
+
+        return risk_models
+
     def get_status_of_reports(self) -> pd.DataFrame:
         reports = self.get_reports()
         reports_dict = {
@@ -427,9 +444,7 @@ class PositionedEntity(metaclass=ABCMeta):
 
         return pd.DataFrame.from_dict(reports_dict)
 
-    def get_factor_risk_report(self,
-                               risk_model_id: str = None,
-                               fx_hedged: bool = None) -> FactorRiskReport:
+    def get_factor_risk_reports(self, fx_hedged: bool = None) -> List[FactorRiskReport]:
         if self.positioned_entity_type in [EntityType.PORTFOLIO, EntityType.ASSET]:
             position_source_type = self.positioned_entity_type.value.capitalize()
             reports = GsReportApi.get_reports(limit=100,
@@ -438,16 +453,23 @@ class PositionedEntity(metaclass=ABCMeta):
                                               report_type=f'{position_source_type} Factor Risk')
             if fx_hedged:
                 reports = [report for report in reports if report.parameters.fx_hedged == fx_hedged]
-            if risk_model_id:
-                reports = [report for report in reports if report.parameters.risk_model == risk_model_id]
-            if len(reports) > 1:
-                raise MqError(f'This {position_source_type} has more than one factor risk report that matches '
-                              'your parameters. Please specify the risk model ID and fxHedged value in the '
-                              'function parameters.')
             if len(reports) == 0:
                 raise MqError(f'This {position_source_type} has no factor risk reports that match your parameters.')
-            return FactorRiskReport.from_target(reports[0])
+            return [FactorRiskReport.from_target(report) for report in reports]
         raise NotImplementedError
+
+    def get_factor_risk_report(self,
+                               risk_model_id: str = None,
+                               fx_hedged: bool = None) -> FactorRiskReport:
+        position_source_type = self.positioned_entity_type.value.capitalize()
+        reports = self.get_factor_risk_reports(fx_hedged=fx_hedged)
+        if risk_model_id:
+            reports = [report for report in reports if report.parameters.risk_model == risk_model_id]
+        if len(reports) > 1:
+            raise MqError(f'This {position_source_type} has more than one factor risk report that matches '
+                          'your parameters. Please specify the risk model ID and fxHedged value in the '
+                          'function parameters.')
+        return reports[0]
 
     def poll_report(self, report_id: str, timeout: int = 600, step: int = 30) -> ReportStatus:
         poll = True
@@ -478,3 +500,81 @@ class PositionedEntity(metaclass=ABCMeta):
 
         raise MqError('The report is taking longer than expected to complete. \
                        Please check again later or reach out to the Marquee team for assistance.')
+
+    def get_all_esg_data(self,
+                         measures: List[ESGMeasure] = None,
+                         cards: List[ESGCard] = None,
+                         pricing_date: dt.date = business_day_offset(dt.date.today(), -1, roll='forward'),
+                         benchmark_id: str = None) -> Dict:
+        return GsEsgApi.get_esg(entity_id=self.id,
+                                pricing_date=pricing_date,
+                                cards=cards if cards else [c for c in ESGCard],
+                                measures=measures if measures else [m for m in ESGMeasure],
+                                benchmark_id=benchmark_id)
+
+    def get_esg_summary(self,
+                        pricing_date: dt.date = business_day_offset(dt.date.today(), -1,
+                                                                    roll='forward')) -> pd.DataFrame:
+        summary_data = GsEsgApi.get_esg(entity_id=self.id,
+                                        pricing_date=pricing_date,
+                                        cards=[ESGCard.SUMMARY]).get('summary')
+        return pd.DataFrame(summary_data)
+
+    def get_esg_quintiles(self,
+                          measure: ESGMeasure,
+                          pricing_date: dt.date = business_day_offset(dt.date.today(), -1,
+                                                                      roll='forward')) -> pd.DataFrame:
+        quintile_data = GsEsgApi.get_esg(entity_id=self.id,
+                                         pricing_date=pricing_date,
+                                         cards=[ESGCard.QUINTILES],
+                                         measures=[measure]).get('quintiles')[0].get('results')
+        df = pd.DataFrame(quintile_data)
+        df = df.filter(items=['description', 'gross', 'long', 'short'])
+        return df.set_index('description')
+
+    def get_esg_by_sector(self,
+                          measure: ESGMeasure,
+                          pricing_date: dt.date = business_day_offset(dt.date.today(), -1,
+                                                                      roll='forward')) -> pd.DataFrame:
+        return self._get_esg_breakdown(ESGCard.MEASURES_BY_SECTOR, measure, pricing_date)
+
+    def get_esg_by_region(self,
+                          measure: ESGMeasure,
+                          pricing_date: dt.date = business_day_offset(dt.date.today(), -1,
+                                                                      roll='forward')) -> pd.DataFrame:
+        return self._get_esg_breakdown(ESGCard.MEASURES_BY_REGION, measure, pricing_date)
+
+    def get_esg_top_ten(self,
+                        measure: ESGMeasure,
+                        pricing_date: dt.date = business_day_offset(dt.date.today(), -1, roll='forward')):
+        return self._get_esg_ranked_card(ESGCard.TOP_TEN_RANKED, measure, pricing_date)
+
+    def get_esg_bottom_ten(self,
+                           measure: ESGMeasure,
+                           pricing_date: dt.date = business_day_offset(dt.date.today(), -1,
+                                                                       roll='forward')) -> pd.DataFrame:
+        return self._get_esg_ranked_card(ESGCard.BOTTOM_TEN_RANKED, measure, pricing_date)
+
+    def _get_esg_ranked_card(self,
+                             card: ESGCard,
+                             measure: ESGMeasure,
+                             pricing_date: dt.date = business_day_offset(dt.date.today(), -1,
+                                                                         roll='forward')) -> pd.DataFrame:
+        data = GsEsgApi.get_esg(entity_id=self.id,
+                                pricing_date=pricing_date,
+                                cards=[card],
+                                measures=[measure]).get(card.value)[0].get('results')
+        df = pd.DataFrame(data)
+        return df.set_index('assetId')
+
+    def _get_esg_breakdown(self,
+                           card: ESGCard,
+                           measure: ESGMeasure,
+                           pricing_date: dt.date = business_day_offset(dt.date.today(), -1,
+                                                                       roll='forward')) -> pd.DataFrame:
+        sector_data = GsEsgApi.get_esg(entity_id=self.id,
+                                       pricing_date=pricing_date,
+                                       cards=[card],
+                                       measures=[measure]).get(card.value)[0].get('results')
+        df = pd.DataFrame(sector_data)
+        return df.set_index('name')

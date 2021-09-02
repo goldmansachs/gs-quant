@@ -299,7 +299,7 @@ def test_update_risk_model_factor(mocker):
     mocker.patch.object(GsSession.current, '_put', return_value=factor)
 
     # run test
-    response = GsFactorRiskModelApi.update_risk_model_factor(model_id='id', factor_id='factor', factor=factor)
+    response = GsFactorRiskModelApi.update_risk_model_factor(model_id='id', factor=factor)
     GsSession.current._put.assert_called_with('/risk/models/{id}/factors/{identifier}'
                                               .format(id='id', identifier='factor'), factor, cls=RiskModelFactor)
     assert response == factor

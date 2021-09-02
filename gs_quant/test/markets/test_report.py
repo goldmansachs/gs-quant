@@ -185,7 +185,7 @@ def test_get_factor_pnl(mocker):
             Environment.QA,
             'client_id',
             'secret'))
-    mocker.patch.object(GsSession.current, '_get', return_value=pd.DataFrame(factor_risk_results))
+    mocker.patch.object(GsSession.current, '_get', return_value=factor_risk_results)
 
     # run test
     response = fake_pfr.get_factor_pnl('factor1')
@@ -201,7 +201,7 @@ def test_get_factor_proportion_of_risk(mocker):
             Environment.QA,
             'client_id',
             'secret'))
-    mocker.patch.object(GsSession.current, '_get', return_value=pd.DataFrame(factor_risk_results))
+    mocker.patch.object(GsSession.current, '_get', return_value=factor_risk_results)
 
     # run test
     response = fake_pfr.get_factor_proportion_of_risk('factor1')
@@ -217,7 +217,7 @@ def test_get_factor_exposure(mocker):
             Environment.QA,
             'client_id',
             'secret'))
-    mocker.patch.object(GsSession.current, '_get', return_value=pd.DataFrame(factor_risk_results))
+    mocker.patch.object(GsSession.current, '_get', return_value=factor_risk_results)
 
     # run test
     response = fake_pfr.get_factor_exposure('factor1')
@@ -233,7 +233,7 @@ def test_get_annual_risk(mocker):
             Environment.QA,
             'client_id',
             'secret'))
-    mocker.patch.object(GsSession.current, '_get', return_value=pd.DataFrame(factor_risk_results))
+    mocker.patch.object(GsSession.current, '_get', return_value=factor_risk_results)
 
     # run test
     response = fake_pfr.get_annual_risk('factor1')
@@ -249,7 +249,7 @@ def test_get_daily_risk(mocker):
             Environment.QA,
             'client_id',
             'secret'))
-    mocker.patch.object(GsSession.current, '_get', return_value=pd.DataFrame(factor_risk_results))
+    mocker.patch.object(GsSession.current, '_get', return_value=factor_risk_results)
 
     # run test
     response = fake_pfr.get_daily_risk('factor1')
